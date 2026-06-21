@@ -115,11 +115,11 @@ Comme les règles sont **génériques et posées une fois**, le plus simple **ET
 |---|---|---|---|
 | 1 | Statuts modifiables | Statuts dynamiques | ✅ FAIT |
 | 2 | Équipe + personne + chef | `Entites`/`Team.entite` + chef (annuaire) | Lot 3 |
-| 3 | Actions (Kanban only, hors Gantt) | Niveau de travail configurable + filtre par widget | Lot travail |
+| 3 | Actions (Kanban only, hors Gantt) | Filtre de niveau par widget (Tous/Actions/Synthèses) | ✅ FAIT (visibilité) |
 | 4 | Gantt auto (action faite → fin tâche) | Règle dérivée (`dependDe` + recalcul existant) | Lot travail |
 | 5 | Droits chef projet / chef au-dessus | ACL (`chaine_chefs`) | Lot 3 |
 | 6 | Assigné modifie les siens | ACL (`assignees`) | Lot 3 |
-| 7 | Action = 1 personne 100 % | Contrainte UI du type `action` | Lot travail |
+| 7 | Action = 1 personne 100 % | Contrainte UI du niveau `action` (extension du filtre #3) | Lot travail (reste) |
 | 8 | Charge réglable par personne | `charges [{teamId,heures}]` | ✅ FAIT |
 | 9 | Page saisie des temps | Widget + table `TimeEntries` | Lot temps |
 | 10 | Charge par équipe/projet/personne | Plan (groupement Équipe) + **org-chart roll-up** | Lot 3 / Plan |
