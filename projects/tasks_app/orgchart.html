@@ -165,9 +165,13 @@ body { background: var(--bg); color: var(--text); display: flex; flex-direction:
 <div class="modal-ov" id="aclModal">
   <div class="modal">
     <h2>Configurer les droits (annuaire)</h2>
-    <div class="sub">Pose une regle Grist native : chaque tache n'est <b>modifiable</b> que par ses <b>assignes</b>, le <b>chef de projet</b>, et les <b>chefs au-dessus</b> (via l'annuaire). Lecture seule pour les autres. <b>Reversible</b> a tout moment.</div>
+    <div class="sub">Pose les regles Grist natives de toute la suite, derivees de l'annuaire (<b>chaine_chefs</b>) :<br>
+      &bull; <b>Taches</b> : modifiables par les <b>assignes</b>, le <b>chef de projet</b> et les <b>chefs au-dessus</b> ;<br>
+      &bull; <b>Saisies de temps</b> : chacun n'edite que <b>les siennes</b> ;<br>
+      &bull; <b>Feuilles de temps</b> : l'<b>agent</b> soumet, son ou ses <b>chefs</b> valident.<br>
+      Lecture seule pour les autres. <b>Reversible</b> a tout moment. Les droits du temps ne sont poses que si la <b>Feuille de temps</b> est activee.</div>
     <div class="status off" id="aclStatus">Verification...</div>
-    <div class="prereq">Prerequis : les <b>emails</b> de la table Team doivent correspondre aux logins Grist (pivot d'identite). Action reservee au <b>proprietaire</b> du document, appliquee une seule fois.</div>
+    <div class="prereq">Prerequis : <b>annuaire actif</b> (chaine_chefs) et <b>emails</b> Team = logins Grist (pivot d'identite). Reserve au <b>proprietaire</b> du document.</div>
     <details><summary>Ce qui sera pose (apercu exact)</summary><pre id="aclPreview"></pre></details>
     <div class="acts">
       <button class="danger" id="aclRemove">Retirer les droits</button>
@@ -592,41 +596,67 @@ async function activateAnnuaire() {
 const ACL_MEMO = 'taskflow-droits-annuaire';
 const ACL_EDITORS_FORMULA = "emails = set()\nfor a in $assignees:\n    emails.add(a.email)\nif $projet and $projet.responsable:\n    emails.add($projet.responsable.email)\n    for c in $projet.responsable.chaine_chefs:\n        emails.add(c.email)\n',' + ','.join(sorted(e for e in emails if e)) + ','";
 const ACL_RULE_FORMULA = "not (user.Access == 'owners' or (user.Email and (',' + user.Email + ',') in rec.editorsEmails))";
+// Droits du TEMPS (anciennement dans la CRA) — memes formules/memos, regroupes ici (foyer annuaire).
+const F_MEMBRE_EMAIL = "$membre.email if $membre else ''";
+const F_OWNER_CHEFS = "emails = set()\nif $membre:\n    emails.add($membre.email)\n    for c in $membre.chaine_chefs:\n        emails.add(c.email)\n',' + ','.join(sorted(e for e in emails if e)) + ','";
+const CRA_RULE_TE = "not (user.Access == 'owners' or user.Email == rec.membreEmail)";
+const CRA_RULE_FE = "not (user.Access == 'owners' or (user.Email and (',' + user.Email + ',') in rec.ownerChefsEmails))";
+// Tout l'ACL de la suite, derive de l'annuaire. Memos conserves a l'identique (compat retro
+// avec une config posee jadis par la CRA). Les scopes du temps ne s'appliquent que si la table existe.
+const ACL_SCOPES = [
+  { table: 'Tasks',       col: 'editorsEmails',    cf: ACL_EDITORS_FORMULA, rule: ACL_RULE_FORMULA, memo: ACL_MEMO,                 label: 'Taches' },
+  { table: 'TimeEntries', col: 'membreEmail',      cf: F_MEMBRE_EMAIL,      rule: CRA_RULE_TE,      memo: 'taskflow-droits-cra-te', label: 'Saisies de temps' },
+  { table: 'Feuilles',    col: 'ownerChefsEmails', cf: F_OWNER_CHEFS,       rule: CRA_RULE_FE,      memo: 'taskflow-droits-cra-fe', label: 'Feuilles de temps' }
+];
 
 function aclSetStatus(txt, cls) { const el = document.getElementById('aclStatus'); el.textContent = txt; el.className = 'status ' + (cls || 'off'); }
-async function aclConfigured() {
-  return colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).some(r => r.memo === ACL_MEMO);
+async function _aclMeta(t) { return colObjToRows(await grist.docApi.fetchTable(t)); }
+async function _aclColIds(tableId) { const cols = await _aclMeta('_grist_Tables_column'); const tt = (await _aclMeta('_grist_Tables')).find(t => t.tableId === tableId); return tt ? cols.filter(c => c.parentId === tt.id).map(c => c.colId) : []; }
+// Etat par scope : ACTIF (memo present) et APPLICABLE (table existante).
+async function aclState() {
+  const memos = new Set((await _aclMeta('_grist_ACLRules')).map(r => r.memo));
+  const tables = await grist.docApi.listTables();
+  return ACL_SCOPES.map(s => ({ label: s.label, active: memos.has(s.memo), applicable: tables.includes(s.table) }));
 }
 async function openAclModal() {
-  document.getElementById('aclPreview').textContent =
-    'Colonne Tasks.editorsEmails (formule) :\n' + ACL_EDITORS_FORMULA + '\n\nRegle Tasks (retire Update/Create/Delete) :\n' + ACL_RULE_FORMULA;
+  document.getElementById('aclPreview').textContent = ACL_SCOPES.map(s =>
+    '[' + s.table + '] colonne ' + s.col + ' (formule) :\n' + s.cf + '\nRegle (retire Update/Create/Delete) :\n' + s.rule).join('\n\n');
   document.getElementById('aclModal').classList.add('open');
   aclSetStatus('Verification...', 'off');
   try {
-    const on = await aclConfigured();
-    aclSetStatus(on ? 'Droits ACTIFS : edition restreinte par l\'annuaire.' : 'Droits NON configures : edition libre (defaut Grist).', on ? 'ok' : 'off');
-    document.getElementById('aclApply').disabled = on;
-    document.getElementById('aclRemove').disabled = !on;
+    const st = await aclState();
+    const on = st.filter(s => s.active).map(s => s.label);
+    const skip = st.filter(s => !s.applicable).map(s => s.label);
+    aclSetStatus(on.length ? ('Droits ACTIFS : ' + on.join(' · ') + (skip.length ? ' — non applicable (table absente) : ' + skip.join(', ') : '')) : 'Droits NON configures : edition libre (defaut Grist).', on.length ? 'ok' : 'off');
+    document.getElementById('aclRemove').disabled = !on.length;
   } catch (e) { aclSetStatus('Etat indeterminable : ' + (e.message || e), 'err'); }
 }
 function aclCloseModal() { document.getElementById('aclModal').classList.remove('open'); }
 async function aclApply() {
   aclSetStatus('Application...', 'off');
   try {
-    if (!(await grist.docApi.listTables()).includes('Tasks')) { aclSetStatus('Table Tasks absente.', 'err'); return; }
-    const cols = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
-    const tasksTbl = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(t => t.tableId === 'Tasks');
-    const tasksColIds = cols.filter(c => c.parentId === tasksTbl.id).map(c => c.colId);
-    if (!tasksColIds.includes('editorsEmails'))
-      await grist.docApi.applyUserActions([['AddColumn', 'Tasks', 'editorsEmails', { type: 'Any', isFormula: true, formula: ACL_EDITORS_FORMULA }]]);
-    const resources = colObjToRows(await grist.docApi.fetchTable('_grist_ACLResources'));
-    const resRow = resources.find(r => r.tableId === 'Tasks' && r.colIds === '*');
-    const resRef = resRow ? resRow.id : (await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLResources', null, { tableId: 'Tasks', colIds: '*' }]])).retValues[0];
-    const rules = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules'));
-    if (!rules.some(r => r.memo === ACL_MEMO))
-      await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLRules', null, { resource: resRef, aclFormula: ACL_RULE_FORMULA, permissionsText: '-U-C-D', rulePos: 1, memo: ACL_MEMO }]]);
-    aclSetStatus('Droits configures : edition restreinte par l\'annuaire.', 'ok');
-    document.getElementById('aclApply').disabled = true; document.getElementById('aclRemove').disabled = false;
+    const tables = await grist.docApi.listTables();
+    if (!tables.includes('Tasks')) { aclSetStatus('Table Tasks absente.', 'err'); return; }
+    if (!(await _aclColIds('Team')).includes('chaine_chefs')) { aclSetStatus('Activez d\'abord l\'annuaire (colonne chaine_chefs manquante).', 'err'); return; }
+    const scopes = ACL_SCOPES.filter(s => tables.includes(s.table));
+    const skip = ACL_SCOPES.filter(s => !tables.includes(s.table)).map(s => s.label);
+    const resources = await _aclMeta('_grist_ACLResources');
+    const memos = new Set((await _aclMeta('_grist_ACLRules')).map(r => r.memo));
+    // TOUT en UN SEUL bundle atomique : ecrire dans _grist_ACLResources/_grist_ACLRules recharge la page Grist ;
+    // ids de resource EXPLICITES pour que la regle reference la resource creee dans le meme bundle.
+    let nextResId = resources.reduce((m, r) => Math.max(m, r.id), 0) + 1;
+    const acts = [];
+    for (const s of scopes) {
+      if (!(await _aclColIds(s.table)).includes(s.col)) acts.push(['AddColumn', s.table, s.col, { type: 'Any', isFormula: true, formula: s.cf }]);
+      if (memos.has(s.memo)) continue; // regle deja posee
+      const res = resources.find(r => r.tableId === s.table && r.colIds === '*');
+      let resId;
+      if (res) resId = res.id; else { resId = nextResId++; acts.push(['AddRecord', '_grist_ACLResources', resId, { tableId: s.table, colIds: '*' }]); }
+      acts.push(['AddRecord', '_grist_ACLRules', null, { resource: resId, aclFormula: s.rule, permissionsText: '-U-C-D', rulePos: 1, memo: s.memo }]);
+    }
+    if (acts.length) await grist.docApi.applyUserActions(acts);
+    aclSetStatus('Droits poses : ' + scopes.map(s => s.label).join(' · ') + (skip.length ? ' — non pose (table absente) : ' + skip.join(', ') : ''), 'ok');
+    document.getElementById('aclRemove').disabled = false;
   } catch (e) {
     aclSetStatus(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : ('Erreur : ' + (e.message || e)), 'err');
   }
@@ -634,19 +664,19 @@ async function aclApply() {
 async function aclRemove() {
   aclSetStatus('Retrait...', 'off');
   try {
-    const ours = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).filter(r => r.memo === ACL_MEMO);
-    if (ours.length) await grist.docApi.applyUserActions(ours.map(r => ['RemoveRecord', '_grist_ACLRules', r.id]));
-    const cols = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
-    const tasksTbl = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(t => t.tableId === 'Tasks');
-    if (tasksTbl && cols.some(c => c.parentId === tasksTbl.id && c.colId === 'editorsEmails'))
-      await grist.docApi.applyUserActions([['RemoveColumn', 'Tasks', 'editorsEmails']]);
-    const resRow = colObjToRows(await grist.docApi.fetchTable('_grist_ACLResources')).find(r => r.tableId === 'Tasks' && r.colIds === '*');
-    if (resRow) {
-      const left = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).filter(r => r.resource === resRow.id);
-      if (!left.length) await grist.docApi.applyUserActions([['RemoveRecord', '_grist_ACLResources', resRow.id]]);
+    const memos = new Set(ACL_SCOPES.map(s => s.memo));
+    // Colonnes formules d'abord (pas de reload Grist).
+    for (const s of ACL_SCOPES) if ((await _aclColIds(s.table)).includes(s.col)) await grist.docApi.applyUserActions([['RemoveColumn', s.table, s.col]]);
+    // Regles + resources devenues vides en UN SEUL batch atomique (un seul reload).
+    const allRules = await _aclMeta('_grist_ACLRules');
+    const ourRules = allRules.filter(r => memos.has(r.memo));
+    const acts = ourRules.map(r => ['RemoveRecord', '_grist_ACLRules', r.id]);
+    for (const resId of new Set(ourRules.map(r => r.resource))) {
+      if (allRules.filter(r => r.resource === resId).every(r => memos.has(r.memo))) acts.push(['RemoveRecord', '_grist_ACLResources', resId]);
     }
+    if (acts.length) await grist.docApi.applyUserActions(acts);
     aclSetStatus('Droits retires : edition libre (defaut Grist).', 'off');
-    document.getElementById('aclApply').disabled = false; document.getElementById('aclRemove').disabled = true;
+    document.getElementById('aclRemove').disabled = true;
   } catch (e) {
     aclSetStatus(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : ('Erreur : ' + (e.message || e)), 'err');
   }

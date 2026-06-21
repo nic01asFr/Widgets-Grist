@@ -114,7 +114,6 @@ tfoot td.left { text-align: left; color: var(--text-muted); font-weight: 600; }
   </div>
   <button class="btn" id="submitBtn">Soumettre la semaine</button>
   <button class="btn ghost" id="exportBtn" title="Export Excel (CSV)">Export</button>
-  <button class="btn ghost" id="craAclBtn" title="Configurer les droits (qui saisit / qui valide)">Droits</button>
 </div>
 
 <div class="main" id="main"><div class="empty-cta">Chargement...</div></div>
@@ -124,21 +123,6 @@ tfoot td.left { text-align: left; color: var(--text-muted); font-weight: 600; }
   <span style="margin-left:auto">Saisie du realise par jour - validation par le chef (annuaire) - export Excel</span>
 </div>
 <div class="toast" id="toast"></div>
-
-<div class="modal-ov" id="craAclModal">
-  <div class="modal">
-    <h2>Configurer les droits — Feuille de temps</h2>
-    <div class="csub">Règles Grist natives : chaque agent édite <b>ses</b> saisies ; sa feuille est modifiable par <b>lui et ses chefs</b> (l'agent soumet, le chef valide). Le reste est en lecture seule. Réversible.</div>
-    <div class="cstatus off" id="craAclStatus">Verification...</div>
-    <div class="cprereq">Prérequis : emails <b>Team</b> = logins Grist + annuaire actif (<b>chaine_chefs</b>). Réservé au <b>propriétaire</b>, appliqué une seule fois.</div>
-    <details><summary>Aperçu exact</summary><pre id="craAclPrev"></pre></details>
-    <div class="cacts">
-      <button class="cbtn danger" id="craAclRemove">Retirer</button>
-      <button class="cbtn" id="craAclClose">Fermer</button>
-      <button class="cbtn primary" id="craAclApply">Appliquer</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // =========================================================================
@@ -364,11 +348,6 @@ document.getElementById('unitSeg').querySelectorAll('button').forEach(b => b.onc
 });
 document.getElementById('tabSeg').querySelectorAll('button').forEach(b => b.onclick = () => { S.tab = b.dataset.t; render(); });
 document.getElementById('exportBtn').onclick = () => exportCSV();
-document.getElementById('craAclBtn').onclick = openCraAcl;
-document.getElementById('craAclClose').onclick = () => document.getElementById('craAclModal').classList.remove('open');
-document.getElementById('craAclApply').onclick = craAclApply;
-document.getElementById('craAclRemove').onclick = craAclRemove;
-document.getElementById('craAclModal').addEventListener('click', (e) => { if (e.target.id === 'craAclModal') e.currentTarget.classList.remove('open'); });
 
 // ---- Workflow : soumission / validation par le chef (via l'annuaire) ------
 function myStatut() { const f = S.feuilles.find(x => x.membre === S.me && sameDay(gristToMs(x.semaine), S.weekStart)); return f ? f.statut : 'brouillon'; }
@@ -401,57 +380,6 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'feuilles-de-temps.csv'; a.click();
 }
 
-// ---- Configurer les droits CRA (one-shot owner, pattern ACL prouve) -------
-// La recursivite vit dans des colonnes formules ; l'ACL ne fait qu'un test simple.
-const CRA_MEMO_TE = 'taskflow-droits-cra-te';
-const CRA_MEMO_FE = 'taskflow-droits-cra-fe';
-const F_MEMBRE_EMAIL = "$membre.email if $membre else ''";
-const F_OWNER_CHEFS = "emails = set()\nif $membre:\n    emails.add($membre.email)\n    for c in $membre.chaine_chefs:\n        emails.add(c.email)\n',' + ','.join(sorted(e for e in emails if e)) + ','";
-const CRA_RULE_TE = "not (user.Access == 'owners' or user.Email == rec.membreEmail)";
-const CRA_RULE_FE = "not (user.Access == 'owners' or (user.Email and (',' + user.Email + ',') in rec.ownerChefsEmails))";
-function craAclMsg(t, c) { const el = document.getElementById('craAclStatus'); el.textContent = t; el.className = 'cstatus ' + (c || 'off'); }
-async function _meta(t) { return colObjToRows(await grist.docApi.fetchTable(t)); }
-async function _ensureCol(table, col, formula) {
-  const cols = await _meta('_grist_Tables_column'), tt = (await _meta('_grist_Tables')).find(t => t.tableId === table);
-  if (tt && !cols.some(c => c.parentId === tt.id && c.colId === col)) await grist.docApi.applyUserActions([['AddColumn', table, col, { type: 'Any', isFormula: true, formula: formula }]]);
-}
-async function _ensureRule(table, formula, memo) {
-  const res = (await _meta('_grist_ACLResources')).find(r => r.tableId === table && r.colIds === '*');
-  const ref = res ? res.id : (await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLResources', null, { tableId: table, colIds: '*' }]])).retValues[0];
-  if (!(await _meta('_grist_ACLRules')).some(r => r.memo === memo)) await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLRules', null, { resource: ref, aclFormula: formula, permissionsText: '-U-C-D', rulePos: 1, memo: memo }]]);
-}
-async function craAclApply() {
-  craAclMsg('Application...', 'off');
-  try {
-    await _ensureCol('TimeEntries', 'membreEmail', F_MEMBRE_EMAIL);
-    await _ensureCol('Feuilles', 'ownerChefsEmails', F_OWNER_CHEFS);
-    await _ensureRule('TimeEntries', CRA_RULE_TE, CRA_MEMO_TE);
-    await _ensureRule('Feuilles', CRA_RULE_FE, CRA_MEMO_FE);
-    craAclMsg('Droits configures : chacun edite SES temps ; agent + chefs editent SA feuille.', 'ok');
-    document.getElementById('craAclApply').disabled = true; document.getElementById('craAclRemove').disabled = false;
-  } catch (e) { craAclMsg(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : 'Erreur : ' + (e.message || e), 'err'); }
-}
-async function craAclRemove() {
-  craAclMsg('Retrait...', 'off');
-  try {
-    const rules = (await _meta('_grist_ACLRules')).filter(r => r.memo === CRA_MEMO_TE || r.memo === CRA_MEMO_FE);
-    if (rules.length) await grist.docApi.applyUserActions(rules.map(r => ['RemoveRecord', '_grist_ACLRules', r.id]));
-    for (const [tbl, col] of [['TimeEntries', 'membreEmail'], ['Feuilles', 'ownerChefsEmails']]) {
-      const cols = await _meta('_grist_Tables_column'), tt = (await _meta('_grist_Tables')).find(t => t.tableId === tbl);
-      if (tt && cols.some(c => c.parentId === tt.id && c.colId === col)) await grist.docApi.applyUserActions([['RemoveColumn', tbl, col]]);
-      const res = (await _meta('_grist_ACLResources')).find(r => r.tableId === tbl && r.colIds === '*');
-      if (res) { const left = (await _meta('_grist_ACLRules')).filter(r => r.resource === res.id); if (!left.length) await grist.docApi.applyUserActions([['RemoveRecord', '_grist_ACLResources', res.id]]); }
-    }
-    craAclMsg('Droits CRA retires (edition libre par defaut).', 'off');
-    document.getElementById('craAclApply').disabled = false; document.getElementById('craAclRemove').disabled = true;
-  } catch (e) { craAclMsg(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : 'Erreur : ' + (e.message || e), 'err'); }
-}
-async function openCraAcl() {
-  document.getElementById('craAclPrev').textContent = 'TimeEntries.membreEmail = ' + F_MEMBRE_EMAIL + '\nRegle TimeEntries : ' + CRA_RULE_TE + '\n\nFeuilles.ownerChefsEmails (membre + chaine_chefs)\nRegle Feuilles : ' + CRA_RULE_FE;
-  document.getElementById('craAclModal').classList.add('open');
-  craAclMsg('Verification...', 'off');
-  try { const on = (await _meta('_grist_ACLRules')).some(r => r.memo === CRA_MEMO_TE); craAclMsg(on ? 'Droits CRA ACTIFS.' : 'Droits CRA non configures (edition libre).', on ? 'ok' : 'off'); document.getElementById('craAclApply').disabled = on; document.getElementById('craAclRemove').disabled = !on; } catch (e) { craAclMsg('Etat indeterminable : ' + (e.message || e), 'err'); }
-}
 
 // ---- Grist ----------------------------------------------------------------
 function colObjToRows(d) { const rows = []; const ids = d.id || []; for (let i = 0; i < ids.length; i++) { const o = {}; for (const k in d) o[k] = d[k][i]; rows.push(o); } return rows; }
