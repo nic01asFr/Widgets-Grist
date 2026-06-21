@@ -33,7 +33,7 @@ Pivot données = table **`Team`** (voir §6). Tout est **opt-in** (sweet-spot) :
 | **Respect ACL widgets (#7)** | Garde transverse (`TF.guardWrites`/`isReadOnly`/`readOnlyBanner` au core ; inline pour orgchart/cra) : bandeau lecture seule, blocage des écritures, refus ACL ligne géré proprement ; câblé sur les 7 widgets | ✅ fait + testé (unit + Grist réel) |
 | **Filtre de niveau (#9)** | Select « Niveau » par widget (Tous/Actions/Synthèses) sur l'arbre `parentTask` ; Kanban=actions, Gantt=synthèses simultanément ; persistance locale, opt-in défaut « Tous » | ✅ fait + testé démo (kanban/gantt/calendar) |
 | **Plan réalisé daté (#5)** | En Réalisé/Reste, lecture des `TimeEntries` datés → heures placées dans leur période réelle (au lieu d'étaler `tempsPasse`) ; opt-in (si table existe) | ✅ fait + **testé Grist réel** (6h en S25) |
-| **Validation chef (#3)** | Soumettre/valider via la CRA ; mécanisme `UpdateRecord Feuilles` | ✅ écriture/lecture **prouvée live** (soumission) ; ⚠️ listing subordonné via **relais launcher** non remonté (sérialisation formule RefList `agents_geres`) — valable en widget direct, à confirmer |
+| **Validation chef (#3)** | Soumettre → valider/rejeter par le chef via la CRA (annuaire) | ✅ **validé bout-en-bout en Grist réel via le launcher** (Nicolas valide la feuille d'Alice → `statut=valide`, `validePar`, `dateValidation` en base). Fix : `mesGeres` recalculé côté client (les formules RefList se vident via le relais — cf. [[taskflow-launcher-relay]]) |
 | **Lot 2** | Column mapping (config tables/colonnes dans le widget) | ⬜ à faire |
 
 **Anti-doublon réalisé** (clé d'intégration) : `TimeEntries` (réel daté, CRA) → `Tasks.tempsPasse` (rollup synchronisé) → **tous les widgets** ; saisie manuelle de `tempsPasse` figée quand la CRA est active.
@@ -63,7 +63,7 @@ Mémoire agent : `genci-lot3-annuaire-acl`, `taskflow-cra-lot-temps`, `taskflow-
 | # | Item | Effort | Impact | Garde-fou |
 |---|---|---|---|---|
 | ~~5~~ | **Plan « Réalisé » daté exact** — ✅ **fait + testé Grist réel** (cf. §2) | — | raffinement livré | — |
-| ~~3~~ | **Validation chef** — ✅ écriture/lecture `Feuilles` prouvée live ; ⚠️ listing subordonné bloqué par le **relais launcher** (formule RefList `agents_geres`) — reste à confirmer en widget direct | ⭐ | mécanisme prouvé | finding relais (cf. [[taskflow-launcher-relay]]) |
+| ~~3~~ | **Validation chef** — ✅ **fait + validé bout-en-bout en Grist réel** (via launcher). Fix `mesGeres` côté client (formules RefList nulles via relais) | — | mécanisme prouvé live | — |
 | ~~7~~ | ~~**Respect ACL dans les widgets**~~ — ✅ **fait** (`TF.guardWrites`/`isReadOnly`/`readOnlyBanner` + cablage 7 widgets, cf. §2) | — | widgets respectent les droits | — |
 | ~~8~~ | ~~**Portefeuille**~~ — ✅ **fait** (groupement Plan opt-in, cf. §2) | — | besoin JPP #11 couvert | — |
 | ~~9~~ | **Filtre de niveau par widget** (Tous/Actions/Synthèses, basé sur l'arbre `parentTask`) — ✅ **fait** (kanban/gantt/calendar, cf. §2). *Reste en extension : niveaux **nommés** configurables (champ `Tasks.niveau`) + contrainte JPP « action = 1 personne 100% ».* | ⭐ | besoin JPP #3/#7 (visibilité) couvert | opt-in, défaut « Tous » |
@@ -71,7 +71,7 @@ Mémoire agent : `genci-lot3-annuaire-acl`, `taskflow-cra-lot-temps`, `taskflow-
 | — | **Compétences (#4)** + GEC | ⭐⭐⭐ | différé (étude faite) | satellite opt-in |
 | — | Durcissement `charges` JSON → table `Allocations` | ⭐⭐ | intégrité (seul lien « mou ») | optionnel |
 
-**Ordre conseillé** : **confirmer priorités avec JPP** (montrer §9) → 10 (Gantt auto) → fix relais launcher (formule RefList pour finaliser #3) → extensions #9 (niveaux nommés, action=1 pers). *(#3 partiel, #5 réalisé daté, #7 ACL, #8 portefeuille, #9 filtre de niveau déjà livrés.)*
+**Ordre conseillé** : **confirmer priorités avec JPP** (montrer §9) → 10 (Gantt auto) → extensions #9 (niveaux nommés, action=1 pers) ; compétences/GEC ; durcir `charges`→`Allocations`. *(#3 validation chef, #5 réalisé daté, #7 ACL, #8 portefeuille, #9 filtre de niveau déjà livrés.)*
 
 ---
 
