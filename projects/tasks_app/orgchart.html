@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskFlow - Organigramme</title>
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<style>
+:root {
+  --primary: #3e5de7; --primary-dark: #2845c1; --primary-light: #dce6ff;
+  --bg: #f8fafc; --card-bg: #fff; --text: #1e293b; --text-muted: #64748b; --text-light: #94a3b8;
+  --border: #e2e8f0; --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --ok: #10b981; --warn: #f59e0b; --over: #ef4444;
+  --ink: #1e293b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #6b7cff; --primary-dark: #8b9bff; --primary-light: #232f52;
+    --bg: #0f1525; --card-bg: #1a2236; --text: #e2e8f0; --text-muted: #94a3b8; --text-light: #64748b;
+    --border: #2a3550; --shadow: 0 1px 3px rgba(0,0,0,.35);
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.topbar { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); }
+.topbar h1 { font-size: 1.15rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.topbar .sp { flex: 1; }
+.seg { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: none; background: transparent; color: var(--text-muted); padding: 6px 12px; font-size: .78rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.seg button.active { background: var(--primary); color: #fff; }
+.period { display: flex; align-items: center; gap: 4px; }
+.pbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 9px; font-size: .78rem; cursor: pointer; font-family: inherit; line-height: 1; }
+.pbtn:hover { color: var(--text); }
+.pbtn.now { font-weight: 600; }
+.plabel { font-size: .78rem; font-weight: 600; min-width: 130px; text-align: center; }
+.pchip { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; padding: 3px 8px; }
+.status { font-size: .72rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-light); }
+.status .dot.ok { background: var(--ok); }
+
+.main { flex: 1; display: flex; overflow: hidden; }
+.tree-wrap { flex: 1; overflow: auto; padding: 14px 16px; }
+.panel { width: 320px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--card-bg); overflow-y: auto; padding: 16px; display: none; }
+.panel.open { display: block; }
+
+/* Lignes d'arbre */
+.node { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+.node:hover { background: var(--primary-light); }
+.node.sel { background: var(--primary-light); box-shadow: inset 0 0 0 1px var(--primary); }
+.node.me { box-shadow: inset 0 0 0 1px var(--primary); }
+.twirl { width: 16px; flex-shrink: 0; color: var(--text-light); font-size: .7rem; text-align: center; transition: transform .12s; }
+.twirl.collapsed { transform: rotate(-90deg); }
+.twirl.leaf { visibility: hidden; }
+.nlabel { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.nname { font-size: .9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nmeta { font-size: .68rem; color: var(--text-muted); display: flex; gap: 8px; }
+.lvl { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 1px 6px; border-radius: 6px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.lvl.personne { background: var(--primary-light); color: var(--primary); border-color: transparent; }
+.chef-badge { font-size: .58rem; font-weight: 700; color: var(--warn); }
+
+.load { width: 180px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.bar { flex: 1; height: 8px; background: var(--bg); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+.bar > span { display: block; height: 100%; border-radius: 5px; transition: width .3s; }
+.load-txt { font-size: .68rem; font-variant-numeric: tabular-nums; color: var(--text-muted); white-space: nowrap; min-width: 88px; text-align: right; }
+
+.children { margin-left: 18px; border-left: 1px dashed var(--border); padding-left: 4px; }
+.children.collapsed { display: none; }
+
+.legend { display: flex; gap: 14px; padding: 8px 16px; font-size: .68rem; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
+.legend .li { display: flex; align-items: center; gap: 5px; }
+.legend .sw { width: 12px; height: 8px; border-radius: 3px; }
+
+/* Panneau drill */
+.panel h2 { font-size: .95rem; margin-bottom: 4px; }
+.panel .sub { font-size: .72rem; color: var(--text-muted); margin-bottom: 14px; }
+.kpi-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.kpi { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.kpi .v { font-size: 1.1rem; font-weight: 700; }
+.kpi .l { font-size: .62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; }
+.plist { display: flex; flex-direction: column; gap: 6px; }
+.prow { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--bg); border-radius: 7px; }
+.av { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .62rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.prow .pn { flex: 1; font-size: .8rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prow .pc { font-size: .7rem; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.empty-cta { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+.btn { display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 12px; }
+.btn:hover { background: var(--primary-dark); }
+/* Edition */
+.edit { margin-bottom: 14px; }
+.etitle { width: 100%; font-size: 1.1rem; font-weight: 700; border: none; background: transparent; color: var(--text); border-bottom: 2px solid var(--border); padding: 4px 0; margin-bottom: 10px; outline: none; }
+.etitle:focus { border-color: var(--primary); }
+.erow { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.erow label { font-size: .66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; width: 88px; flex-shrink: 0; }
+.erow input, .erow select { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 5px 7px; font-size: .8rem; font-family: inherit; }
+.erow input[type=number] { flex: 0 0 64px; }
+.eact { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.eact button { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 7px; padding: 6px 10px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.eact button:hover { border-color: var(--primary); color: var(--primary); }
+.eact button.del { color: var(--over); border-color: transparent; margin-left: auto; }
+.eact button.del:hover { background: var(--over); color: #fff; }
+.prow { cursor: pointer; }
+/* Bouton + modale Droits (ACL) */
+.acl-btn { display: none; align-items: center; gap: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 10px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.acl-btn:hover { color: var(--primary); border-color: var(--primary); }
+.acl-btn.on { display: inline-flex; }
+.modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal-ov.open { display: flex; }
+.modal { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; width: min(560px, 92vw); max-height: 88vh; overflow: auto; padding: 22px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.modal h2 { font-size: 1.1rem; margin-bottom: 6px; }
+.modal .sub { font-size: .82rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.45; }
+.modal .status { font-size: .8rem; font-weight: 600; padding: 8px 11px; border-radius: 8px; margin-bottom: 14px; }
+.modal .status.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.modal .status.off { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.modal .status.err { background: color-mix(in srgb, var(--over) 16%, transparent); color: var(--over); }
+.modal details { margin-bottom: 12px; }
+.modal summary { font-size: .78rem; font-weight: 600; cursor: pointer; color: var(--text-muted); }
+.modal pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: .72rem; overflow: auto; white-space: pre-wrap; color: var(--text); margin-top: 8px; }
+.modal .prereq { font-size: .74rem; color: var(--text-muted); background: var(--bg); border-left: 3px solid var(--warn); padding: 8px 11px; border-radius: 0 6px 6px 0; margin-bottom: 16px; }
+.modal .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.modal .acts button { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; padding: 8px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.modal .acts button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.modal .acts button.danger { color: var(--over); }
+.modal .acts button:disabled { opacity: .5; cursor: default; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>Organigramme</h1>
+  <div class="status"><span class="dot" id="stDot"></span><span id="stTxt">Demo</span></div>
+  <span class="sp"></span>
+  <div class="period" id="periodCtl">
+    <span class="pchip">Periode courante</span>
+    <span class="plabel" id="pLabel"></span>
+  </div>
+  <div class="seg" id="granSeg">
+    <button data-g="semaine" class="active">Sem.</button>
+    <button data-g="mois">Mois</button>
+    <button data-g="trimestre">Trim.</button>
+  </div>
+  <div class="seg" id="measureSeg">
+    <button data-m="charge" class="active">Charge</button>
+    <button data-m="realise">Realise</button>
+    <button data-m="effectif">Effectif</button>
+  </div>
+  <button class="acl-btn" id="aclBtn" title="Configurer les droits selon l'annuaire">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Droits
+  </button>
+</div>
+
+<div class="main">
+  <div class="tree-wrap" id="tree"><div class="empty-cta">Chargement...</div></div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="legend">
+  <span class="li"><span class="sw" style="background:var(--ok)"></span> charge OK (&lt; 85%)</span>
+  <span class="li"><span class="sw" style="background:var(--warn)"></span> tension (85-100%)</span>
+  <span class="li"><span class="sw" style="background:var(--over)"></span> surcharge (&gt; 100%)</span>
+  <span class="li" style="margin-left:auto">Charge agregee par unite, periode courante — detail temporel par personne dans le widget Plan</span>
+</div>
+
+<div class="modal-ov" id="aclModal">
+  <div class="modal">
+    <h2>Configurer les droits (annuaire)</h2>
+    <div class="sub">Pose une regle Grist native : chaque tache n'est <b>modifiable</b> que par ses <b>assignes</b>, le <b>chef de projet</b>, et les <b>chefs au-dessus</b> (via l'annuaire). Lecture seule pour les autres. <b>Reversible</b> a tout moment.</div>
+    <div class="status off" id="aclStatus">Verification...</div>
+    <div class="prereq">Prerequis : les <b>emails</b> de la table Team doivent correspondre aux logins Grist (pivot d'identite). Action reservee au <b>proprietaire</b> du document, appliquee une seule fois.</div>
+    <details><summary>Ce qui sera pose (apercu exact)</summary><pre id="aclPreview"></pre></details>
+    <div class="acts">
+      <button class="danger" id="aclRemove">Retirer les droits</button>
+      <button id="aclClose">Fermer</button>
+      <button class="primary" id="aclApply">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+//  TaskFlow - Organigramme (lentille pilotage de la repartition)
+//  v0 : arbre Entites/Team + roll-up de charge + drill. Mode demo + Grist.
+// =========================================================================
+
+const S = {
+  alone: false, gOk: false,
+  entites: [], team: [], tasks: [], projects: [],
+  charge: {},            // teamId -> heures planifiees (sur la periode consideree)
+  realise: {},           // teamId -> heures REELLES saisies (TimeEntries) sur la periode
+  entries: [],           // TimeEntries (si la CRA est active)
+  measure: 'charge',     // charge (planifie) | realise (reel) | effectif
+  gran: 'semaine',   // granularite de la periode COURANTE (semaine/mois/trimestre, sans navigation)
+  selId: null,           // 'e:<id>' ou 'p:<id>'
+  collapsed: new Set(),
+  meUserId: null,        // userId Grist du connecte
+};
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const initials = (nom) => { const p = (nom || '').trim().split(/\s+/); return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'; };
+const refIds = (v) => (Array.isArray(v) && v[0] === 'L') ? v.slice(1).map(Number) : [];
+
+// ---- Periode -------------------------------------------------------------
+const DAY = 86400000;
+function mondayOf(ms) { const x = new Date(ms); const dow = (x.getDay() + 6) % 7; x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - dow); return x; }
+// Periode CALENDAIRE COURANTE (snapshot, pas de navigation) : semaine / mois / trimestre en cours
+function periodWindow() {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  let start, end;
+  if (S.gran === 'mois') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = new Date(now.getFullYear(), now.getMonth() + 1, 1); }
+  else if (S.gran === 'trimestre') { const q = Math.floor(now.getMonth() / 3); start = new Date(now.getFullYear(), q * 3, 1); end = new Date(now.getFullYear(), q * 3 + 3, 1); }
+  else { start = mondayOf(now.getTime()); end = new Date(start.getTime() + 7 * DAY); }
+  return { start: start.getTime(), end: end.getTime(), weeks: (end.getTime() - start.getTime()) / (7 * DAY) };  // end exclusif
+}
+function periodLabel() {
+  const w = periodWindow(), d = new Date(w.start);
+  if (S.gran === 'mois') return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  if (S.gran === 'trimestre') return 'T' + (Math.floor(d.getMonth() / 3) + 1) + ' ' + d.getFullYear();
+  const f = (x) => x.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return 'du ' + f(d) + ' au ' + f(new Date(w.end - DAY));
+}
+function capPersonne(p) { return (Number(p.capaciteHebdo) || 0) * periodWindow().weeks; }
+// Charge de chaque personne SUR LA PERIODE : charges reparties au prorata de la duree de tache
+function computeCharge() {
+  const w = periodWindow();
+  S.charge = {};
+  for (const t of (S.tasks || [])) {
+    let parts = [];
+    try { parts = JSON.parse(t.charges || '[]'); } catch (e) {}
+    if (!parts.length) {
+      const asg = refIds(t.assignees), est = Number(t.estimationH) || 0;
+      if (asg.length && est) { const per = est / asg.length; parts = asg.map(a => ({ teamId: a, heures: per })); }
+    }
+    if (!parts.length) continue;
+    let frac = 1;
+    if (t.dateDebut) {
+      const tStart = t.dateDebut * 1000;
+      const tEnd = ((t.dateEcheance || t.dateDebut) * 1000) + DAY;
+      const dur = Math.max(DAY, tEnd - tStart);
+      frac = Math.max(0, Math.min(tEnd, w.end) - Math.max(tStart, w.start)) / dur;
+    }
+    if (frac <= 0) continue;
+    for (const c of parts) S.charge[c.teamId] = (S.charge[c.teamId] || 0) + (Number(c.heures) || 0) * frac;
+  }
+}
+// Realise = heures REELLES saisies (TimeEntries) tombant DANS la periode, par personne.
+function computeRealise() {
+  const w = periodWindow();
+  S.realise = {};
+  for (const e of (S.entries || [])) {
+    const ms = (Number(e.date) || 0) * 1000;
+    if (ms >= w.start && ms < w.end) S.realise[e.membre] = (S.realise[e.membre] || 0) + (Number(e.heures) || 0);
+  }
+}
+// source d'heures active selon la mesure (planifie vs reel)
+function hoursOf(id) { return ((S.measure === 'realise' ? S.realise : S.charge)[id]) || 0; }
+
+// ---- Demo ----------------------------------------------------------------
+function loadDemo() {
+  S.alone = true;
+  S.entites = [
+    { id: 1, nom: 'Direction Technique', parent: null, niveau: 'direction', chef: 1 },
+    { id: 2, nom: 'Service Etudes', parent: 1, niveau: 'service', chef: 2 },
+    { id: 3, nom: 'Service Exploitation', parent: 1, niveau: 'service', chef: 5 },
+    { id: 4, nom: 'Equipe Web', parent: 2, niveau: 'equipe', chef: 2 },
+    { id: 5, nom: 'Equipe Data', parent: 2, niveau: 'equipe', chef: 6 },
+  ];
+  S.team = [
+    { id: 1, nom: 'Carole Dupont', email: 'carole.dupont@example.fr', role: 'Directrice', entite: 1, responsable: null, capaciteHebdo: 35 },
+    { id: 2, nom: 'Alice Martin', email: 'alice.martin@example.fr', role: 'Cheffe de projet', entite: 4, responsable: 1, capaciteHebdo: 35 },
+    { id: 3, nom: 'Bob Durant', email: 'bob.durant@example.fr', role: 'Developpeur', entite: 4, responsable: 2, capaciteHebdo: 35 },
+    { id: 4, nom: 'Claire Bernard', email: 'claire.bernard@example.fr', role: 'Designer', entite: 4, responsable: 2, capaciteHebdo: 28 },
+    { id: 5, nom: 'David Leroy', email: 'david.leroy@example.fr', role: 'Responsable exploitation', entite: 3, responsable: 1, capaciteHebdo: 35 },
+    { id: 6, nom: 'Emma Petit', email: 'emma.petit@example.fr', role: 'Data engineer', entite: 5, responsable: 5, capaciteHebdo: 35 },
+    { id: 7, nom: 'Farid Aziz', email: 'farid.aziz@example.fr', role: 'Analyste', entite: 5, responsable: 6, capaciteHebdo: 35 },
+  ];
+  const wk = Math.floor(mondayOf(Date.now()).getTime() / 1000), we = wk + 6 * 86400;
+  const dch = { 1: 8, 2: 31, 3: 38, 4: 14, 5: 20, 6: 40, 7: 18 };
+  S.tasks = Object.keys(dch).map(id => ({ assignees: ['L', Number(id)], charges: JSON.stringify([{ teamId: Number(id), heures: dch[id] }]), dateDebut: wk, dateEcheance: we }));
+  const dr = { 1: 6, 2: 22, 3: 30, 4: 9, 5: 16, 6: 28, 7: 12 };  // realise (TimeEntries) demo < planifie
+  S.entries = Object.keys(dr).map(id => ({ membre: Number(id), date: wk, heures: dr[id] }));
+  computeCharge();
+  computeRealise();
+  render();
+}
+
+// ---- Arbre & roll-up -----------------------------------------------------
+function childEntites(eid) { return S.entites.filter(e => e.parent === eid); }
+function peopleOf(eid) { return S.team.filter(t => t.entite === eid); }
+function rootEntites() {
+  const ids = new Set(S.entites.map(e => e.id));
+  return S.entites.filter(e => e.parent == null || !ids.has(e.parent));
+}
+
+// charge & capacite cumulees d'une entite (descendants inclus)
+function rollup(eid, seen) {
+  seen = seen || new Set();
+  if (seen.has(eid)) return { charge: 0, capacite: 0, effectif: 0 };
+  seen.add(eid);
+  let ch = 0, cap = 0, eff = 0;
+  for (const p of peopleOf(eid)) { ch += hoursOf(p.id); cap += capPersonne(p); eff += 1; }
+  for (const c of childEntites(eid)) { const r = rollup(c.id, seen); ch += r.charge; cap += r.capacite; eff += r.effectif; }
+  return { charge: ch, capacite: cap, effectif: eff };
+}
+
+function heat(ratio) { return ratio > 1 ? 'var(--over)' : (ratio >= 0.85 ? 'var(--warn)' : 'var(--ok)'); }
+
+// ---- Rendu ---------------------------------------------------------------
+function loadCell(charge, capacite) {
+  if (S.measure === 'effectif') return ''; // mesure effectif geree au niveau ligne
+  const ratio = capacite > 0 ? charge / capacite : 0;
+  const pct = Math.min(100, Math.round(ratio * 100));
+  return '<div class="load"><div class="bar"><span style="width:' + pct + '%;background:' + heat(ratio) + '"></span></div>'
+    + '<span class="load-txt">' + Math.round(charge) + ' / ' + Math.round(capacite) + ' h</span></div>';
+}
+
+function nodeRow(kind, id, nom, niveau, extra, charge, capacite, effectif, depth) {
+  const key = kind + ':' + id;
+  const hasKids = kind === 'e' && (childEntites(id).length || peopleOf(id).length);
+  const isCol = S.collapsed.has(key);
+  const me = (kind === 'p' && S.meUserId != null && id === S.meUserId);
+  let right;
+  if (S.measure === 'effectif') {
+    right = '<div class="load"><span class="load-txt">' + (kind === 'e' ? (effectif + (effectif > 1 ? ' personnes' : ' personne')) : '') + '</span></div>';
+  } else {
+    right = loadCell(charge, capacite);
+  }
+  return '<div class="node' + (S.selId === key ? ' sel' : '') + (me ? ' me' : '') + '" data-key="' + key + '">'
+    + '<span class="twirl' + (hasKids ? (isCol ? ' collapsed' : '') : ' leaf') + '" data-tw="' + key + '">' + (hasKids ? '▼' : '') + '</span>'
+    + '<div class="nlabel"><div class="nname">' + esc(nom) + (me ? ' <span class="chef-badge">(moi)</span>' : '') + '</div>'
+    + '<div class="nmeta"><span class="lvl ' + (kind === 'p' ? 'personne' : esc(niveau || '')) + '">' + esc(kind === 'p' ? 'personne' : (niveau || 'unite')) + '</span>' + (extra || '') + '</div></div>'
+    + right + '</div>';
+}
+
+function renderEntite(e, depth) {
+  const r = rollup(e.id);
+  const chef = e.chef ? S.team.find(t => t.id === e.chef) : null;
+  const extra = chef ? '<span class="chef-badge">chef : ' + esc(chef.nom) + '</span>' : '';
+  let html = nodeRow('e', e.id, e.nom, e.niveau, extra, r.charge, r.capacite, r.effectif, depth);
+  const isCol = S.collapsed.has('e:' + e.id);
+  html += '<div class="children' + (isCol ? ' collapsed' : '') + '">';
+  for (const c of childEntites(e.id)) html += renderEntite(c, depth + 1);
+  for (const p of peopleOf(e.id)) {
+    const ch = hoursOf(p.id), cap = capPersonne(p);
+    html += nodeRow('p', p.id, p.nom, 'personne', '', ch, cap, 1, depth + 1);
+  }
+  html += '</div>';
+  return html;
+}
+
+function render() {
+  // status
+  document.getElementById('stDot').className = 'dot' + (S.gOk ? ' ok' : '');
+  document.getElementById('stTxt').textContent = S.gOk ? 'Connecte' : 'Demo';
+  const pl = document.getElementById('pLabel'); if (pl) pl.textContent = periodLabel();
+  const pc = document.getElementById('periodCtl'); if (pc) pc.style.visibility = (S.measure !== 'effectif') ? 'visible' : 'hidden';
+  const ab = document.getElementById('aclBtn'); if (ab) ab.classList.toggle('on', S.gOk && S.entites.length > 0);
+  const wrap = document.getElementById('tree');
+  if (!S.entites.length) {
+    wrap.innerHTML = '<div class="empty-cta">Aucune entite d\'organisation.<br>'
+      + (S.gOk ? '<button class="btn" id="activate">Activer l\'annuaire (creer la table Entites)</button>' : 'Mode demo sans donnees.') + '</div>';
+    const b = document.getElementById('activate'); if (b) b.onclick = activateAnnuaire;
+    return;
+  }
+  let html = '';
+  for (const e of rootEntites()) html += renderEntite(e, 0);
+  wrap.innerHTML = html;
+  // listeners
+  wrap.querySelectorAll('.twirl[data-tw]').forEach(t => t.onclick = (ev) => {
+    ev.stopPropagation(); const k = t.dataset.tw;
+    if (S.collapsed.has(k)) S.collapsed.delete(k); else S.collapsed.add(k); render();
+  });
+  wrap.querySelectorAll('.node[data-key]').forEach(n => n.onclick = () => selectNode(n.dataset.key));
+  if (S.selId) renderPanel();
+}
+
+// ---- Drill panel ---------------------------------------------------------
+function selectNode(key) { S.selId = key; renderPanel(); render(); }
+
+function descendantsPeople(eid, acc, seen) {
+  acc = acc || []; seen = seen || new Set();
+  if (seen.has(eid)) return acc; seen.add(eid);
+  for (const p of peopleOf(eid)) acc.push(p);
+  for (const c of childEntites(eid)) descendantsPeople(c.id, acc, seen);
+  return acc;
+}
+
+// ---- Helpers d'edition ----
+function erow(label, ctl) { return '<div class="erow"><label>' + label + '</label>' + ctl + '</div>'; }
+const NIVEAUX = ['organisation', 'direction', 'service', 'equipe'];
+function nivOpts(sel) { return NIVEAUX.map(n => '<option' + (n === sel ? ' selected' : '') + '>' + n + '</option>').join(''); }
+function entOpts(sel, excludeId) {
+  let h = '<option value="0"' + (!sel ? ' selected' : '') + '>—</option>';
+  for (const e of S.entites) { if (e.id === excludeId) continue; h += '<option value="' + e.id + '"' + (e.id === sel ? ' selected' : '') + '>' + esc(e.nom) + '</option>'; }
+  return h;
+}
+function teamOpts(sel, excludeId) {
+  let h = '<option value="0"' + (!sel ? ' selected' : '') + '>—</option>';
+  for (const p of S.team) { if (p.id === excludeId) continue; h += '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.nom) + '</option>'; }
+  return h;
+}
+async function applyAct(actions) {
+  if (S.alone) return;  // demo : optimiste local suffit
+  try { await grist.docApi.applyUserActions(actions); } catch (e) { console.warn('orgchart write:', e && e.message); }
+}
+window.ocSaveE = async (id, f, v) => { const e = S.entites.find(x => x.id === id); if (e) e[f] = v; render(); await applyAct([['UpdateRecord', 'Entites', id, { [f]: v }]]); };
+window.ocSaveP = async (id, f, v) => { const p = S.team.find(x => x.id === id); if (p) p[f] = v; if (f === 'capaciteHebdo') computeCharge(); render(); await applyAct([['UpdateRecord', 'Team', id, { [f]: v }]]); };
+window.ocAddSous = async (pid) => {
+  if (S.alone) { const nid = Math.max(0, ...S.entites.map(e => e.id)) + 1; S.entites.push({ id: nid, nom: 'Nouvelle entite', niveau: 'equipe', parent: pid, chef: 0 }); S.selId = 'e:' + nid; render(); return; }
+  const r = await grist.docApi.applyUserActions([['AddRecord', 'Entites', null, { nom: 'Nouvelle entite', niveau: 'equipe', parent: pid }]]).catch(() => null);
+  if (r) S.selId = 'e:' + r.retValues[0]; await loadGrist();
+};
+window.ocAddPers = async (eid) => {
+  if (S.alone) { const nid = Math.max(0, ...S.team.map(p => p.id)) + 1; S.team.push({ id: nid, nom: 'Nouvelle personne', entite: eid, capaciteHebdo: 35 }); S.selId = 'p:' + nid; render(); return; }
+  const r = await grist.docApi.applyUserActions([['AddRecord', 'Team', null, { nom: 'Nouvelle personne', entite: eid, capaciteHebdo: 35 }]]).catch(() => null);
+  if (r) S.selId = 'p:' + r.retValues[0]; await loadGrist();
+};
+window.ocDelE = async (id) => { S.entites = S.entites.filter(e => e.id !== id); S.selId = null; render(); await applyAct([['RemoveRecord', 'Entites', id]]); };
+window.ocDelP = async (id) => { S.team = S.team.filter(p => p.id !== id); S.selId = null; computeCharge(); render(); await applyAct([['RemoveRecord', 'Team', id]]); };
+
+function renderPanel() {
+  const panel = document.getElementById('panel');
+  if (!S.selId) { panel.classList.remove('open'); return; }
+  panel.classList.add('open');
+  const [kind, idStr] = S.selId.split(':'); const id = Number(idStr);
+  let html = '';
+  if (kind === 'e') {
+    const e = S.entites.find(x => x.id === id); if (!e) { panel.classList.remove('open'); return; }
+    const people = descendantsPeople(id);
+    let ch = 0, cap = 0; for (const p of people) { ch += hoursOf(p.id); cap += capPersonne(p); }
+    const ratio = cap > 0 ? ch / cap : 0;
+    html += '<div class="edit">'
+      + '<input class="etitle" value="' + esc(e.nom) + '" onchange="ocSaveE(' + id + ',\'nom\',this.value)">'
+      + erow('Niveau', '<select onchange="ocSaveE(' + id + ',\'niveau\',this.value)">' + nivOpts(e.niveau) + '</select>')
+      + erow('Parent', '<select onchange="ocSaveE(' + id + ',\'parent\',+this.value)">' + entOpts(e.parent, id) + '</select>')
+      + erow('Chef', '<select onchange="ocSaveE(' + id + ',\'chef\',+this.value)">' + teamOpts(e.chef, null) + '</select>')
+      + '<div class="eact"><button onclick="ocAddSous(' + id + ')">+ Sous-entite</button><button onclick="ocAddPers(' + id + ')">+ Personne</button><button class="del" onclick="ocDelE(' + id + ')">Supprimer</button></div>'
+      + '</div>';
+    html += '<div class="kpi-row">'
+      + '<div class="kpi"><div class="v">' + people.length + '</div><div class="l">' + (people.length > 1 ? 'Personnes' : 'Personne') + '</div></div>'
+      + '<div class="kpi"><div class="v">' + Math.round(ch) + ' h</div><div class="l">Charge</div></div>'
+      + '<div class="kpi"><div class="v" style="color:' + heat(ratio) + '">' + Math.round(ratio * 100) + '%</div><div class="l">vs capacite</div></div>'
+      + '</div><div class="plist">';
+    for (const p of people.slice().sort((a, b) => hoursOf(b.id) - hoursOf(a.id))) {
+      const pc = hoursOf(p.id), pcap = capPersonne(p), pr = pcap > 0 ? pc / pcap : 0;
+      html += '<div class="prow" onclick="selectNode(\'p:' + p.id + '\')"><div class="av">' + esc(initials(p.nom)) + '</div>'
+        + '<span class="pn">' + esc(p.nom) + '</span>'
+        + '<span class="pc" style="color:' + heat(pr) + '">' + Math.round(pc) + '/' + Math.round(pcap) + ' h</span></div>';
+    }
+    html += '</div>';
+  } else {
+    const p = S.team.find(x => x.id === id); if (!p) { panel.classList.remove('open'); return; }
+    const pc = hoursOf(id), pcap = capPersonne(p), pr = pcap > 0 ? pc / pcap : 0;
+    html += '<div class="edit">'
+      + '<input class="etitle" value="' + esc(p.nom) + '" onchange="ocSaveP(' + id + ',\'nom\',this.value)">'
+      + erow('Email', '<input value="' + esc(p.email || '') + '" placeholder="login Grist (pivot droits)" onchange="ocSaveP(' + id + ',\'email\',this.value)">')
+      + erow('Role', '<input value="' + esc(p.role || '') + '" onchange="ocSaveP(' + id + ',\'role\',this.value)">')
+      + erow('Cap./sem', '<input type="number" value="' + (p.capaciteHebdo || '') + '" onchange="ocSaveP(' + id + ',\'capaciteHebdo\',+this.value)"> h')
+      + erow('Entite', '<select onchange="ocSaveP(' + id + ',\'entite\',+this.value)">' + entOpts(p.entite, null) + '</select>')
+      + erow('Responsable', '<select onchange="ocSaveP(' + id + ',\'responsable\',+this.value)">' + teamOpts(p.responsable, id) + '</select>')
+      + '<div class="eact"><button class="del" onclick="ocDelP(' + id + ')">Supprimer</button></div>'
+      + '</div>';
+    html += '<div class="kpi-row">'
+      + '<div class="kpi"><div class="v">' + Math.round(pc) + ' h</div><div class="l">Charge</div></div>'
+      + '<div class="kpi"><div class="v">' + Math.round(pcap) + ' h</div><div class="l">Capacite</div></div>'
+      + '<div class="kpi"><div class="v" style="color:' + heat(pr) + '">' + Math.round(pr * 100) + '%</div><div class="l">Taux</div></div>'
+      + '</div>';
+  }
+  panel.innerHTML = html;
+}
+
+// ---- Mesure --------------------------------------------------------------
+document.getElementById('measureSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#measureSeg button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); S.measure = b.dataset.m; render();
+});
+function recompute() { computeCharge(); computeRealise(); render(); }
+document.getElementById('granSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#granSeg button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); S.gran = b.dataset.g; recompute();
+});
+
+// =========================================================================
+//  Grist
+// =========================================================================
+const colObjToRows = (data) => {
+  if (!data || !data.id) return [];
+  return data.id.map((_, i) => { const o = {}; for (const k in data) o[k] = data[k][i]; return o; });
+};
+
+async function getMyUserId() {
+  try {
+    const t = await grist.docApi.getAccessToken({ readOnly: true });
+    const p = (t.token || '').split('.');
+    if (p.length === 3) return JSON.parse(atob(p[1].replace(/-/g, '+').replace(/_/g, '/'))).userId || null;
+  } catch (e) {}
+  return null;
+}
+
+async function loadGrist() {
+  const tables = await grist.docApi.listTables();
+  // Team + Tasks + Projects (peuvent exister) ; Entites = annuaire (opt-in)
+  const fetch = async (t) => tables.includes(t) ? colObjToRows(await grist.docApi.fetchTable(t)) : null;
+  const team = await fetch('Team') || [];
+  const tasks = await fetch('Tasks') || [];
+  S.projects = await fetch('Projects') || [];
+  const entites = await fetch('Entites');
+
+  S.team = team.map(t => ({ id: t.id, nom: t.nom, email: t.email || '', role: t.role || '', entite: t.entite || null, responsable: t.responsable || null, capaciteHebdo: Number(t.capaciteHebdo) || 35 }));
+  S.tasks = tasks;
+  S.entites = entites ? entites.map(e => ({ id: e.id, nom: e.nom, parent: e.parent || null, niveau: e.niveau || 'unite', chef: e.chef || null })) : [];
+
+  S.entries = (await fetch('TimeEntries') || []).map(e => ({ membre: e.membre, date: e.date, heures: e.heures }));
+  computeCharge();   // planifie (Tasks.charges) sur la periode
+  computeRealise();  // reel (TimeEntries) sur la periode
+  S.meUserId = await getMyUserId();
+  S.gOk = true;
+  render();
+}
+
+// Affichage des Ref par le NOM (visibleCol + display formula) — noms vs ids
+async function setRefDisplay(specs) {
+  try {
+    const cols = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
+    const tbls = colObjToRows(await grist.docApi.fetchTable('_grist_Tables'));
+    const tidOf = (name) => { const t = tbls.find(x => x.tableId === name); return t ? t.id : null; };
+    const colOf = (tid, colId) => cols.find(c => c.parentId === tid && c.colId === colId);
+    const actions = [];
+    for (const s of specs) {
+      const refCol = colOf(tidOf(s.table), s.column);
+      const visCol = colOf(tidOf(s.targetTable), s.visibleColId);
+      if (!refCol || !visCol || refCol.visibleCol === visCol.id) continue;
+      actions.push(['SetDisplayFormula', s.table, null, refCol.id, '$' + s.column + '.' + s.visibleColId]);
+      actions.push(['UpdateRecord', '_grist_Tables_column', refCol.id, { visibleCol: visCol.id }]);
+    }
+    if (actions.length) await grist.docApi.applyUserActions(actions);
+  } catch (e) { console.warn('setRefDisplay:', e && e.message); }
+}
+
+// Activation opt-in de l'annuaire : cree la table Entites + colonnes Team
+async function activateAnnuaire() {
+  try {
+    const tables = await grist.docApi.listTables();
+    const actions = [];
+    if (!tables.includes('Entites')) {
+      actions.push(['AddTable', 'Entites', [
+        { id: 'nom', type: 'Text' },
+        { id: 'parent', type: 'Ref:Entites' },
+        { id: 'niveau', type: 'Choice', widgetOptions: JSON.stringify({ choices: ['organisation', 'direction', 'service', 'equipe'] }) },
+        { id: 'chef', type: 'Ref:Team' },
+      ]]);
+    }
+    // Colonnes annuaire sur Team (opt-in)
+    const teamMeta = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
+    const teamTbl = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(x => x.tableId === 'Team');
+    const teamCols = teamTbl ? teamMeta.filter(c => c.parentId === teamTbl.id).map(c => c.colId) : [];
+    if (teamTbl && !teamCols.includes('entite')) actions.push(['AddColumn', 'Team', 'entite', { type: 'Ref:Entites' }]);
+    if (teamTbl && !teamCols.includes('responsable')) actions.push(['AddColumn', 'Team', 'responsable', { type: 'Ref:Team' }]);
+    // Colonnes DERIVEES (formules) — socle de l'ACL ; la recursivite vit ici, pas dans l'ACL
+    const entTbl2 = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(x => x.tableId === 'Entites');
+    const entCols = entTbl2 ? teamMeta.filter(c => c.parentId === entTbl2.id).map(c => c.colId) : [];
+    const F_ANCETRES = 'res, cur, seen = [], $parent, set()\nwhile cur and cur.id not in seen:\n    seen.add(cur.id); res.append(cur); cur = cur.parent\nres';
+    const F_CHAINE = 'chefs, e, seen = [], $entite, set()\nwhile e and e.id not in seen:\n    seen.add(e.id)\n    if e.chef: chefs.append(e.chef)\n    e = e.parent\nchefs';
+    const F_GERES = '[a for a in Team.lookupRecords() if $id in [c.id for c in a.chaine_chefs]]';
+    if (!tables.includes('Entites') || (entTbl2 && !entCols.includes('ancetres'))) actions.push(['AddColumn', 'Entites', 'ancetres', { type: 'Any', isFormula: true, formula: F_ANCETRES }]);
+    if (teamTbl && !teamCols.includes('chaine_chefs')) actions.push(['AddColumn', 'Team', 'chaine_chefs', { type: 'Any', isFormula: true, formula: F_CHAINE }]);
+    if (teamTbl && !teamCols.includes('agents_geres')) actions.push(['AddColumn', 'Team', 'agents_geres', { type: 'Any', isFormula: true, formula: F_GERES }]);
+    if (actions.length) await grist.docApi.applyUserActions(actions);
+    // Ordre : APRES creation des tables/colonnes -> on lie l'affichage des Ref au nom (les colonnes cibles existent)
+    await setRefDisplay([
+      { table: 'Entites', column: 'chef', targetTable: 'Team', visibleColId: 'nom' },
+      { table: 'Entites', column: 'parent', targetTable: 'Entites', visibleColId: 'nom' },
+      { table: 'Team', column: 'entite', targetTable: 'Entites', visibleColId: 'nom' },
+      { table: 'Team', column: 'responsable', targetTable: 'Team', visibleColId: 'nom' },
+    ]);
+    await loadGrist();
+  } catch (e) {
+    console.error('activateAnnuaire:', e);
+    document.getElementById('tree').innerHTML = '<div class="empty-cta">Erreur activation : ' + esc(e && e.message || e) + '</div>';
+  }
+}
+
+// ---- Configurer les droits (ACL derivee de l'annuaire) ------------------
+// One-shot, owner-only, jamais au render (anti-boucle). La recursivite vit dans
+// la colonne formule Tasks.editorsEmails ; l'ACL ne fait qu'un test substring.
+const ACL_MEMO = 'taskflow-droits-annuaire';
+const ACL_EDITORS_FORMULA = "emails = set()\nfor a in $assignees:\n    emails.add(a.email)\nif $projet and $projet.responsable:\n    emails.add($projet.responsable.email)\n    for c in $projet.responsable.chaine_chefs:\n        emails.add(c.email)\n',' + ','.join(sorted(e for e in emails if e)) + ','";
+const ACL_RULE_FORMULA = "not (user.Access == 'owners' or (user.Email and (',' + user.Email + ',') in rec.editorsEmails))";
+
+function aclSetStatus(txt, cls) { const el = document.getElementById('aclStatus'); el.textContent = txt; el.className = 'status ' + (cls || 'off'); }
+async function aclConfigured() {
+  return colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).some(r => r.memo === ACL_MEMO);
+}
+async function openAclModal() {
+  document.getElementById('aclPreview').textContent =
+    'Colonne Tasks.editorsEmails (formule) :\n' + ACL_EDITORS_FORMULA + '\n\nRegle Tasks (retire Update/Create/Delete) :\n' + ACL_RULE_FORMULA;
+  document.getElementById('aclModal').classList.add('open');
+  aclSetStatus('Verification...', 'off');
+  try {
+    const on = await aclConfigured();
+    aclSetStatus(on ? 'Droits ACTIFS : edition restreinte par l\'annuaire.' : 'Droits NON configures : edition libre (defaut Grist).', on ? 'ok' : 'off');
+    document.getElementById('aclApply').disabled = on;
+    document.getElementById('aclRemove').disabled = !on;
+  } catch (e) { aclSetStatus('Etat indeterminable : ' + (e.message || e), 'err'); }
+}
+function aclCloseModal() { document.getElementById('aclModal').classList.remove('open'); }
+async function aclApply() {
+  aclSetStatus('Application...', 'off');
+  try {
+    if (!(await grist.docApi.listTables()).includes('Tasks')) { aclSetStatus('Table Tasks absente.', 'err'); return; }
+    const cols = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
+    const tasksTbl = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(t => t.tableId === 'Tasks');
+    const tasksColIds = cols.filter(c => c.parentId === tasksTbl.id).map(c => c.colId);
+    if (!tasksColIds.includes('editorsEmails'))
+      await grist.docApi.applyUserActions([['AddColumn', 'Tasks', 'editorsEmails', { type: 'Any', isFormula: true, formula: ACL_EDITORS_FORMULA }]]);
+    const resources = colObjToRows(await grist.docApi.fetchTable('_grist_ACLResources'));
+    const resRow = resources.find(r => r.tableId === 'Tasks' && r.colIds === '*');
+    const resRef = resRow ? resRow.id : (await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLResources', null, { tableId: 'Tasks', colIds: '*' }]])).retValues[0];
+    const rules = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules'));
+    if (!rules.some(r => r.memo === ACL_MEMO))
+      await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLRules', null, { resource: resRef, aclFormula: ACL_RULE_FORMULA, permissionsText: '-U-C-D', rulePos: 1, memo: ACL_MEMO }]]);
+    aclSetStatus('Droits configures : edition restreinte par l\'annuaire.', 'ok');
+    document.getElementById('aclApply').disabled = true; document.getElementById('aclRemove').disabled = false;
+  } catch (e) {
+    aclSetStatus(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : ('Erreur : ' + (e.message || e)), 'err');
+  }
+}
+async function aclRemove() {
+  aclSetStatus('Retrait...', 'off');
+  try {
+    const ours = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).filter(r => r.memo === ACL_MEMO);
+    if (ours.length) await grist.docApi.applyUserActions(ours.map(r => ['RemoveRecord', '_grist_ACLRules', r.id]));
+    const cols = colObjToRows(await grist.docApi.fetchTable('_grist_Tables_column'));
+    const tasksTbl = colObjToRows(await grist.docApi.fetchTable('_grist_Tables')).find(t => t.tableId === 'Tasks');
+    if (tasksTbl && cols.some(c => c.parentId === tasksTbl.id && c.colId === 'editorsEmails'))
+      await grist.docApi.applyUserActions([['RemoveColumn', 'Tasks', 'editorsEmails']]);
+    const resRow = colObjToRows(await grist.docApi.fetchTable('_grist_ACLResources')).find(r => r.tableId === 'Tasks' && r.colIds === '*');
+    if (resRow) {
+      const left = colObjToRows(await grist.docApi.fetchTable('_grist_ACLRules')).filter(r => r.resource === resRow.id);
+      if (!left.length) await grist.docApi.applyUserActions([['RemoveRecord', '_grist_ACLResources', resRow.id]]);
+    }
+    aclSetStatus('Droits retires : edition libre (defaut Grist).', 'off');
+    document.getElementById('aclApply').disabled = false; document.getElementById('aclRemove').disabled = true;
+  } catch (e) {
+    aclSetStatus(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : ('Erreur : ' + (e.message || e)), 'err');
+  }
+}
+document.getElementById('aclBtn').onclick = openAclModal;
+document.getElementById('aclClose').onclick = aclCloseModal;
+document.getElementById('aclApply').onclick = aclApply;
+document.getElementById('aclRemove').onclick = aclRemove;
+document.getElementById('aclModal').addEventListener('click', (e) => { if (e.target.id === 'aclModal') aclCloseModal(); });
+
+// ---- Init ----------------------------------------------------------------
+(async () => {
+  try {
+    grist.ready({ requiredAccess: 'full' });
+    await new Promise(r => setTimeout(r, 250));
+    await grist.docApi.listTables(); // test API
+    grist.onRecords(() => { if (S.gOk) loadGrist().catch(() => {}); });
+    await loadGrist();
+  } catch (e) {
+    loadDemo();
+  }
+})();
+</script>
+</body>
+</html>
