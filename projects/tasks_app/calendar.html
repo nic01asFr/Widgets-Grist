@@ -667,6 +667,11 @@
                 <option value="assignee">Couleur: Assigné</option>
                 <option value="status">Couleur: Statut</option>
             </select>
+            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau de travail affiché (Actions = nœuds feuilles ; Synthèses = nœuds parents)" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.72rem;background:var(--card-bg)">
+                <option value="all">Niveau : Tous</option>
+                <option value="actions">Niveau : Actions</option>
+                <option value="parents">Niveau : Synthèses</option>
+            </select>
             <div class="filter-dropdown">
                 <button class="filter-btn" id="filterBtn" onclick="toggleFilter('all')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtres<span class="filter-count" id="filterCount" style="display:none">0</span></button>
                 <div class="filter-menu wide" id="filterAllMenu"></div>
@@ -1143,6 +1148,8 @@
         let filters = { project: [], priority: [], assignee: [] };  // GEN-02: Ajout assignee pour compatibilité inter-widgets
         let colorMode = localStorage.getItem('taskflow_calendar_colormode') || 'priority';
         let showSubtasks = localStorage.getItem('taskflow_calendar_showsubs') === '1';  // WBS-03
+        // #9 niveau de travail (par widget, opt-in, defaut 'all') : 'actions' = feuilles, 'parents' = noeuds de synthese.
+        let workLevel = localStorage.getItem('taskflow_calendar_worklevel') || 'all';
         let saveTimeout = null;
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -1501,7 +1508,10 @@
         
         function getFilteredTasks() {
             return tasks.filter(t => {
-                if (!showSubtasks && t.parentTask) return false;  // WBS-03
+                // #9 filtre de niveau (orthogonal) : Actions = feuilles, Syntheses = parents.
+                if (workLevel === 'actions') { if (hasChildren(t)) return false; }
+                else if (workLevel === 'parents') { if (!hasChildren(t)) return false; }
+                else if (!showSubtasks && t.parentTask) return false;  // WBS-03 (niveau 'all')
                 if (filters.project.length && !filters.project.includes(t.projet)) return false;
                 if (filters.priority.length && !filters.priority.includes(getPriority(t))) return false;
                 if (filters.assignee.length && !getAssignees(t).some(a => filters.assignee.includes(a))) return false;
@@ -1514,6 +1524,13 @@
             const btn = document.getElementById('btnShowSubs');
             if (btn) btn.classList.toggle('active', showSubtasks);
             updateFilterMenus();
+            render();
+        }
+        // #9 : niveau de travail affiche (persistance locale par widget).
+        function changeWorkLevel(v) {
+            workLevel = v;
+            localStorage.setItem('taskflow_calendar_worklevel', v);
+            const s = document.getElementById('levelSelect'); if (s) s.value = v;
             render();
         }
 
@@ -3210,6 +3227,7 @@
         if (_initGridId) { const el = document.getElementById(_initGridId); if (el) el.style.display = VIEW_CONFIG[currentView].display; }
         // Sync du select couleur avant init (évite flash)
         { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
+        { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
         { const b = document.getElementById('btnShowSubs'); if (b) b.classList.toggle('active', showSubtasks); }
         // Décorateur panneau (look « Propriétés / B ») : icône devant chaque libellé, sans toucher au rendu
         (function(){

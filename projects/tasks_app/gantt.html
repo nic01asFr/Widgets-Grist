@@ -600,6 +600,11 @@
                     <option value="assignee">Couleur: Assigné</option>
                     <option value="status">Couleur: Statut</option>
                 </select>
+                <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau de travail affiché (Tous = arbre ; Synthèses = nœuds parents ; Actions = nœuds feuilles, vue aplatie)">
+                    <option value="all">Niveau : Tous</option>
+                    <option value="parents">Niveau : Synthèses</option>
+                    <option value="actions">Niveau : Actions</option>
+                </select>
             </div>
         </div>
         <div class="header-center">
@@ -1094,6 +1099,8 @@
         let selectedTaskId = null;
         let sortMode = localStorage.getItem('taskflow_gantt_sort') || 'priority';
         let colorMode = localStorage.getItem('taskflow_gantt_colormode') || 'priority';
+        // #9 niveau de travail (par widget, opt-in, defaut 'all' = arbre) : 'actions'/'parents' = vue aplatie du niveau.
+        let workLevel = localStorage.getItem('taskflow_gantt_worklevel') || 'all';
         // WBS-02: état expand/collapse par tâche parente
         let expandedTasks = new Set();
         try { expandedTasks = new Set(JSON.parse(localStorage.getItem('taskflow_gantt_expanded') || '[]').map(Number).filter(n => !isNaN(n))); } catch (e) {}
@@ -1319,6 +1326,9 @@
         // Renvoie [{task, depth, dimmed}]
         function buildVisibleTasks() {
             const filtered = getFilteredTasks();
+            // #9 : niveau != 'all' -> vue APLATIE du niveau (pas d'arbre), coherent avec le Kanban.
+            if (workLevel === 'actions') return filtered.filter(t => !hasChildren(t)).map(t => ({ task: t, depth: 0, dimmed: false }));
+            if (workLevel === 'parents') return filtered.filter(t => hasChildren(t)).map(t => ({ task: t, depth: 0, dimmed: false }));
             const directMatches = new Set(filtered.map(t => t.id));
             // branches = tâches dont elles-mêmes OU un ancêtre OU un descendant match
             const branchTasks = new Set();
@@ -1527,6 +1537,13 @@
         function changeColorMode(mode) {
             colorMode = mode;
             localStorage.setItem('taskflow_gantt_colormode', mode);
+            render();
+        }
+        // #9 : niveau de travail affiche (persistance locale par widget).
+        function changeWorkLevel(v) {
+            workLevel = v;
+            localStorage.setItem('taskflow_gantt_worklevel', v);
+            const s = document.getElementById('levelSelect'); if (s) s.value = v;
             render();
         }
         // Édite la couleur d'un projet (lue par tous les widgets TaskFlow via getProjectColor)
@@ -3156,6 +3173,7 @@
         { const s = document.getElementById('sortSelect'); if (s) s.value = sortMode; }
         // Idem pour le <select> de couleur
         { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
+        { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
         // Relancer le rendu quand le widget est redimensionné (ex: panel ouvert/fermé, fenêtre)
         new ResizeObserver(() => render()).observe(document.getElementById('timelineScroll'));
         // Décorateur panneau (look « Propriétés / B ») : icône devant chaque libellé, sans toucher au rendu

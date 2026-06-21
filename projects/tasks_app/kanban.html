@@ -575,6 +575,11 @@
                 <option value="assignee">Couleur : Assigné</option>
                 <option value="status">Couleur : Statut</option>
             </select>
+            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau de travail affiché (Actions = nœuds feuilles ; Synthèses = nœuds parents)">
+                <option value="all">Niveau : Tous</option>
+                <option value="actions">Niveau : Actions</option>
+                <option value="parents">Niveau : Synthèses</option>
+            </select>
             <div class="filter-dropdown" id="moreDropdown">
                 <button class="btn icon-btn" onclick="toggleFilterMenu('more')" title="Plus d'actions"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg></button>
                 <div class="filter-menu" id="filterMoreMenu" style="right:0;left:auto;min-width:200px">
@@ -1012,6 +1017,8 @@
         let groupBy = 'statut', searchQuery = '', selectedTaskId = null;
         let colorMode = localStorage.getItem('taskflow_kanban_colormode') || 'priority';
         let showSubtasks = localStorage.getItem('taskflow_kanban_showsubs') === '1';  // WBS-03: afficher enfants
+        // #9 niveau de travail (par widget, opt-in, defaut 'all') : 'actions' = feuilles, 'parents' = noeuds de synthese.
+        let workLevel = localStorage.getItem('taskflow_kanban_worklevel') || 'all';
         let filters = { project: [], priority: [], assignee: [], status: [] };  // KAN-01: Ajout filtre statut
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, columnTasks: [], columnKey: null, editData: null };
         let sortableInstances = [];
@@ -1293,8 +1300,11 @@
         }
         function getFilteredTasks() {
             return tasks.filter(t => {
-                // WBS-03: par défaut afficher uniquement les racines (pas les sous-tâches)
-                if (!showSubtasks && t.parentTask) return false;
+                // #9 filtre de niveau (orthogonal a la hierarchie) : Actions = feuilles, Syntheses = parents.
+                if (workLevel === 'actions') { if (hasChildren(t)) return false; }
+                else if (workLevel === 'parents') { if (!hasChildren(t)) return false; }
+                // WBS-03 (niveau 'all' uniquement) : par défaut afficher uniquement les racines (pas les sous-tâches)
+                else if (!showSubtasks && t.parentTask) return false;
                 if (filters.project.length && !filters.project.includes(t.projet)) return false;
                 if (filters.priority.length && !filters.priority.includes(getPriority(t))) return false;
                 if (filters.assignee.length && !getAssignees(t).some(a => filters.assignee.includes(a))) return false;
@@ -1302,6 +1312,14 @@
                 if (searchQuery && !(t.titre||'').toLowerCase().includes(searchQuery)) return false;
                 return true;
             });
+        }
+        // #9 : change le niveau de travail affiche (persistance locale par widget, comme colorMode).
+        function changeWorkLevel(v) {
+            workLevel = v;
+            localStorage.setItem('taskflow_kanban_worklevel', v);
+            const s = document.getElementById('levelSelect'); if (s) s.value = v;
+            updateFilterMenus();
+            render();
         }
         // WBS-03: toggle d'inclusion des sous-tâches dans le kanban
         function toggleShowSubtasks() {
@@ -2057,6 +2075,7 @@
                     }
                 });
                 { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
+                { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
             } catch (e) { console.error('Grist listeners error:', e); }
         }
         
@@ -2138,6 +2157,7 @@
 
         // Sync du select couleur avant même que Grist ne réponde (évite flash)
         { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
+        { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
         { const b = document.getElementById('btnShowSubs'); if (b) b.classList.toggle('active', showSubtasks); }
         // Décorateur panneau (look « Propriétés / B ») : icône devant chaque libellé, sans toucher au rendu
         (function(){
