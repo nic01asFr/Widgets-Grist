@@ -401,7 +401,13 @@ function teamOpts(sel, excludeId) {
 }
 async function applyAct(actions) {
   if (S.alone) return;  // demo : optimiste local suffit
-  try { await grist.docApi.applyUserActions(actions); } catch (e) { console.warn('orgchart write:', e && e.message); }
+  try { await grist.docApi.applyUserActions(actions); }
+  catch (e) {
+    const msg = (e && e.message) || '';
+    // #7 : refus de droits (lecture seule ou ACL ligne) -> on recharge pour annuler le rendu optimiste.
+    if ((e && e.tfReadOnly) || /access|denied|permission|not allowed|forbidden|read[- ]?only/i.test(msg)) { try { await loadGrist(); } catch (e2) {} }
+    else console.warn('orgchart write:', msg);
+  }
 }
 window.ocSaveE = async (id, f, v) => { const e = S.entites.find(x => x.id === id); if (e) e[f] = v; render(); await applyAct([['UpdateRecord', 'Entites', id, { [f]: v }]]); };
 window.ocSaveP = async (id, f, v) => { const p = S.team.find(x => x.id === id); if (p) p[f] = v; if (f === 'capaciteHebdo') computeCharge(); render(); await applyAct([['UpdateRecord', 'Team', id, { [f]: v }]]); };
@@ -655,6 +661,12 @@ document.getElementById('aclModal').addEventListener('click', (e) => { if (e.tar
 (async () => {
   try {
     grist.ready({ requiredAccess: 'full' });
+    // #7 respect des droits (standalone, sans TF) : bandeau lecture seule + garde sur les ecritures.
+    (function () {
+      const ro = () => { try { return new URLSearchParams(location.search).get('readonly') === 'true'; } catch (e) { return false; } };
+      if (ro() && !document.getElementById('tf-ro-banner')) { const b = document.createElement('div'); b.id = 'tf-ro-banner'; b.textContent = 'Lecture seule — vos droits ne permettent pas la modification'; b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center;padding:5px 10px'; document.body.appendChild(b); }
+      if (window.grist && grist.docApi && !grist.docApi._tfGuarded) { const raw = grist.docApi.applyUserActions.bind(grist.docApi); grist.docApi._tfGuarded = true; grist.docApi.applyUserActions = async function (a) { if (ro()) { const e = new Error('Document en lecture seule'); e.tfReadOnly = true; throw e; } return await raw(a); }; }
+    })();
     await new Promise(r => setTimeout(r, 250));
     await grist.docApi.listTables(); // test API
     grist.onRecords(() => { if (S.gOk) loadGrist().catch(() => {}); });

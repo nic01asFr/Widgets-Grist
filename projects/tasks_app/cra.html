@@ -505,6 +505,12 @@ async function activate() {
 (async () => {
   try {
     grist.ready({ requiredAccess: 'full' });
+    // #7 respect des droits (standalone, sans TF) : bandeau lecture seule + garde sur les ecritures.
+    (function () {
+      const ro = () => { try { return new URLSearchParams(location.search).get('readonly') === 'true'; } catch (e) { return false; } };
+      if (ro() && !document.getElementById('tf-ro-banner')) { const b = document.createElement('div'); b.id = 'tf-ro-banner'; b.textContent = 'Lecture seule — vos droits ne permettent pas la modification'; b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center;padding:5px 10px'; document.body.appendChild(b); }
+      if (window.grist && grist.docApi && !grist.docApi._tfGuarded) { const raw = grist.docApi.applyUserActions.bind(grist.docApi); grist.docApi._tfGuarded = true; grist.docApi.applyUserActions = async function (a) { if (ro()) { toast('Lecture seule : modification non autorisee'); const e = new Error('Document en lecture seule'); e.tfReadOnly = true; throw e; } try { return await raw(a); } catch (err) { if (/access|denied|permission|not allowed|forbidden/i.test((err && err.message) || '')) toast('Modification refusee par vos droits'); throw err; } }; }
+    })();
     await new Promise(r => setTimeout(r, 250));
     await grist.docApi.listTables();
     grist.onRecords(() => { if (S.gOk) loadGrist().catch(() => {}); });

@@ -301,6 +301,56 @@ const TF = (function () {
         return out;
     }
 
+    /* ----- #7 : respect des droits (ACL) ------------------------------------
+     * Deux niveaux : (a) acces document lecture seule -> Grist passe
+     * `readonly=true` dans l'URL de l'iframe ; (b) ACL au niveau ligne ->
+     * l'acces widget peut etre `full` mais une ecriture sur une ligne donnee
+     * est refusee par le serveur. safeApply absorbe ce refus proprement.
+     * --------------------------------------------------------------------- */
+    function _qp(name) { try { return new URLSearchParams(location.search).get(name); } catch (e) { return null; } }
+    // Vrai si Grist a ouvert le widget en lecture seule (acces doc restreint).
+    function isReadOnly() { return _qp('readonly') === 'true'; }
+    // Niveau d'acces accorde au widget : 'full' | 'read table' | 'none' (defaut 'full').
+    function accessLevel() { return _qp('access') || 'full'; }
+    // Detecte un message d'erreur Grist correspondant a un refus de droits.
+    function isAccessError(e) {
+        const msg = (e && (e.message || e.toString())) || '';
+        return /access denied|not allowed|permission|forbidden|read[- ]?only|cannot (modify|add|remove)|acl/i.test(msg);
+    }
+    // Applique des actions en absorbant un refus de droits.
+    // Retourne { ok:true } ou { ok:false, denied:bool, message }. Ne fait PAS d'UI
+    // (chaque widget affiche son propre toast et recharge pour annuler l'optimiste).
+    async function safeApply(grist, actions) {
+        if (isReadOnly()) return { ok: false, denied: true, message: 'Document en lecture seule' };
+        try { const r = await grist.docApi.applyUserActions(actions); return { ok: true, ret: r }; }
+        catch (e) { return { ok: false, denied: isAccessError(e), message: (e && (e.message || e.toString())) || 'Erreur' }; }
+    }
+    // Garde transverse : enrobe grist.docApi.applyUserActions une seule fois pour
+    // respecter les droits sur TOUS les sites d'ecriture sans les modifier un a un.
+    // - lecture seule -> bloque + opts.onReadOnly()
+    // - refus ACL au niveau ligne -> opts.onDenied(err) (le widget toast + recharge)
+    // Les erreurs continuent d'etre levees (les try/catch existants les absorbent).
+    function guardWrites(grist, opts) {
+        opts = opts || {};
+        if (!grist || !grist.docApi || grist.docApi._tfGuarded) return;
+        const raw = grist.docApi.applyUserActions.bind(grist.docApi);
+        grist.docApi._tfGuarded = true;
+        grist.docApi.applyUserActions = async function (actions) {
+            if (isReadOnly()) { try { opts.onReadOnly && opts.onReadOnly(); } catch (e) {} const err = new Error('Document en lecture seule'); err.tfReadOnly = true; throw err; }
+            try { return await raw(actions); }
+            catch (e) { if (isAccessError(e)) { try { opts.onDenied && opts.onDenied(e); } catch (e2) {} } throw e; }
+        };
+    }
+    // Bandeau "lecture seule" auto-contenu (aucun markup widget requis).
+    function readOnlyBanner() {
+        if (!isReadOnly() || (typeof document === 'undefined') || document.getElementById('tf-ro-banner')) return;
+        const b = document.createElement('div');
+        b.id = 'tf-ro-banner';
+        b.textContent = 'Lecture seule — vos droits ne permettent pas la modification';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:5px 10px;letter-spacing:.2px';
+        document.body.appendChild(b);
+    }
+
     return {
         DEFAULT_STATUSES: DEFAULT_STATUSES,
         columnarToRows: columnarToRows,
@@ -318,6 +368,12 @@ const TF = (function () {
         chargeByMemberPeriod: chargeByMemberPeriod,
         shiftPeriods: shiftPeriods,
         periodRange: periodRange,
-        chargeMatrix: chargeMatrix
+        chargeMatrix: chargeMatrix,
+        isReadOnly: isReadOnly,
+        accessLevel: accessLevel,
+        isAccessError: isAccessError,
+        safeApply: safeApply,
+        guardWrites: guardWrites,
+        readOnlyBanner: readOnlyBanner
     };
 })();
