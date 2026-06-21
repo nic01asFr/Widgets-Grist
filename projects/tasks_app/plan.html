@@ -134,6 +134,7 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
     <label class="chk"><span>Grouper</span>
       <select class="btn" id="selGroup">
         <option value="person">Personne</option>
+        <option value="portefeuille">Portefeuille</option>
         <option value="project">Projet</option>
         <option value="role">Rôle</option>
       </select>
@@ -588,7 +589,7 @@ const TF = (function () {
 // État
 // ============================================================================
 const S = {
-  tasks: [], team: [], projects: [],
+  tasks: [], team: [], projects: [], portefeuilles: [], hasPortef: false,
   granularity: 'week', offset: 0, horizon: 12,
   groupBy: 'person', unit: 'pct', includeDone: false, derive: false, mode: 'prevu', workdays: false, allocUnit: 'h',
   demo: false, extFilters: null, timeline: false
@@ -600,6 +601,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<':
 const getRefList = (v) => Array.isArray(v) && v[0] === 'L' ? v.slice(1).map(Number) : [];
 const teamById = (id) => S.team.find(m => m.id === id);
 const projById = (id) => S.projects.find(p => p.id === id);
+const portefById = (id) => S.portefeuilles.find(p => p.id === id);
+// Portefeuille d'une tâche = portefeuille de son projet (clé string ; '0' = sans portefeuille).
+function portefKeyOf(t) { const p = projById(t.projet); return (p && p.portefeuille) ? String(p.portefeuille) : '0'; }
+const groupLabel = (g) => g === 'project' ? 'Projet' : g === 'role' ? 'Rôle' : g === 'portefeuille' ? 'Portefeuille' : 'Personne';
 const activeTeam = () => S.team.filter(m => m.actif !== false);
 const isTerminal = (t) => TF.isTerminal(statusCfg, t.statut);
 const capOf = (m) => (Number(m && m.capaciteHebdo) > 0 ? Number(m.capaciteHebdo) : 35);
@@ -648,6 +653,7 @@ const gToInput = (ts) => ts ? new Date(ts * 1000).toISOString().slice(0, 10) : '
 const inputToG = (s) => s ? Math.floor(Date.parse(s + 'T00:00:00Z') / 1000) : null;
 function tasksForKey(key) {
   if (S.groupBy === 'project') return planTasks().filter(t => String(t.projet || '0') === String(key)).map(t => t.id);
+  if (S.groupBy === 'portefeuille') return planTasks().filter(t => portefKeyOf(t) === String(key)).map(t => t.id);
   if (S.groupBy === 'person') return planTasks().filter(t => getRefList(t.assignees).includes(Number(key))).map(t => t.id);
   return [];
 }
@@ -656,6 +662,7 @@ function toast(msg) { const el = document.getElementById('toast'); if (!el) retu
 function keyFn() {
   // Projet/Rôle = clé COMPOSITE "groupe|personne" → on garde la personne (vue ressource, distincte du Gantt).
   if (S.groupBy === 'project') return (t, c) => (t.projet ? String(t.projet) : '0') + '|' + c.teamId;
+  if (S.groupBy === 'portefeuille') return (t, c) => portefKeyOf(t) + '|' + c.teamId;
   if (S.groupBy === 'role') return (t, c) => { const m = teamById(c.teamId); return ((m && m.role) ? m.role : '—') + '|' + c.teamId; };
   return (t, c) => String(c.teamId);
 }
@@ -668,6 +675,21 @@ function buildRows() {
     for (const t of planTasks()) {
       const pk = t.projet ? String(t.projet) : '0';
       if (!ps[pk]) { const p = projById(t.projet); ps[pk] = { label: p ? p.nom : 'Sans projet', color: p ? p.couleur : '#64748b', mem: new Map() }; }
+      for (const c of effCharges(t)) { const m = teamById(c.teamId); if (m) ps[pk].mem.set(m.id, m); }
+    }
+    const out = [];
+    for (const pk of Object.keys(ps)) {
+      const g = ps[pk]; const mems = [...g.mem.values()];
+      out.push({ key: 'h:' + pk, isHeader: true, label: g.label, color: g.color, members: mems, gkeys: mems.map(m => pk + '|' + m.id) });
+      for (const m of mems) out.push({ key: pk + '|' + m.id, isSub: true, teamId: m.id, label: m.nom, color: m.couleur || '#6366f1', cap: capOf(m), members: [m] });
+    }
+    return out;
+  }
+  if (S.groupBy === 'portefeuille') {
+    const ps = {};
+    for (const t of planTasks()) {
+      const pk = portefKeyOf(t);
+      if (!ps[pk]) { const pf = portefById(Number(pk)); ps[pk] = { label: pf ? pf.nom : 'Sans portefeuille', color: (pf && pf.couleur) ? pf.couleur : '#64748b', mem: new Map() }; }
       for (const c of effCharges(t)) { const m = teamById(c.teamId); if (m) ps[pk].mem.set(m.id, m); }
     }
     const out = [];
@@ -834,7 +856,7 @@ function renderTimeline() {
   const body = document.getElementById('tlBody');
   const periods = TF.periodRange(TF.shiftPeriods(new Date(), S.granularity, S.offset), S.granularity, S.horizon);
   const starts = periodStarts(TF.shiftPeriods(new Date(), S.granularity, S.offset), S.granularity, S.horizon);
-  const gName = S.groupBy === 'project' ? 'projet' : S.groupBy === 'role' ? 'rôle' : 'personne';
+  const gName = groupLabel(S.groupBy).toLowerCase();
   const ttl = document.querySelector('#tlPanel .tlhead strong'); if (ttl) ttl.textContent = 'Timeline par ' + gName;
   document.getElementById('tlRange').textContent = '  ' + plabel(periods[0]) + ' → ' + plabel(periods[periods.length - 1]);
   const winStart = starts[0].getTime();
@@ -1241,7 +1263,20 @@ function bindToolbar() {
   document.getElementById('navPrev').onclick = () => { S.offset--; render(); };
   document.getElementById('navNext').onclick = () => { S.offset++; render(); };
   document.getElementById('navToday').onclick = () => { S.offset = 0; render(); };
-  document.getElementById('selGroup').onchange = (e) => { S.groupBy = e.target.value; if (S.groupBy !== 'person' && S.mode === 'dispo') { S.mode = 'prevu'; toast('Dispo indisponible en groupement « ' + (S.groupBy === 'project' ? 'Projet' : 'Rôle') + ' » (marge = notion globale) — vue Prévu rétablie'); } render(); };
+  document.getElementById('selGroup').onchange = async (e) => {
+    const v = e.target.value;
+    // Portefeuille = opt-in : si la colonne Projects.portefeuille n'existe pas, proposer l'activation (création table + colonne).
+    if (v === 'portefeuille' && !S.hasPortef && !S.demo) {
+      const ok = await confirmModal('Activer les portefeuilles', 'Regrouper la charge par portefeuille nécessite la table « Portefeuilles » et la colonne « Projects.portefeuille ».\nLes créer maintenant ? (rétro-compatible, sans impact sur l\'existant)');
+      if (!ok) { e.target.value = S.groupBy; return; }
+      await ensurePortefSchema();
+      if (!S.hasPortef) { toast('Activation impossible (droits ?).'); e.target.value = S.groupBy; return; }
+      toast('Portefeuilles activés. Affectez les projets dans la table « Projects » (colonne Portefeuille).');
+    }
+    S.groupBy = v;
+    if (S.groupBy !== 'person' && S.mode === 'dispo') { S.mode = 'prevu'; toast('Dispo indisponible en groupement « ' + groupLabel(S.groupBy) + ' » (marge = notion globale) — vue Prévu rétablie'); }
+    render();
+  };
   document.getElementById('chkDone').onchange = (e) => { S.includeDone = e.target.checked; render(); };
   document.getElementById('chkDerive').onchange = (e) => { S.derive = e.target.checked; render(); };
   document.getElementById('chkWorkdays').onchange = (e) => { S.workdays = e.target.checked; render(); };
@@ -1254,17 +1289,21 @@ function bindToolbar() {
 }
 
 async function loadGrist() {
-  let [tasks, team, projects, dispos] = await Promise.all([
+  let [tasks, team, projects, dispos, portef] = await Promise.all([
     grist.docApi.fetchTable('Tasks').catch(() => null),
     grist.docApi.fetchTable('Team').catch(() => null),
     grist.docApi.fetchTable('Projects').catch(() => null),
-    grist.docApi.fetchTable('Disponibilites').catch(() => null)
+    grist.docApi.fetchTable('Disponibilites').catch(() => null),
+    grist.docApi.fetchTable('Portefeuilles').catch(() => null)
   ]);
   const ensured = await ensurePlanColumns(team, tasks, dispos); team = ensured.team; tasks = ensured.tasks; dispos = ensured.dispos;
   S.tasks = tasks ? TF.columnarToRows(tasks) : [];
   S.team = team ? TF.columnarToRows(team) : [];
   S.projects = projects ? TF.columnarToRows(projects) : [];
   S.dispos = dispos ? TF.columnarToRows(dispos) : [];
+  S.portefeuilles = portef ? TF.columnarToRows(portef) : [];
+  // Portefeuille = opt-in : actif seulement si la colonne Projects.portefeuille existe. Sinon le groupement propose l'activation.
+  S.hasPortef = !!(projects && ('portefeuille' in projects) && portef);
   buildDispoIndex();
   try { statusCfg = await TF.loadStatusConfig(grist, 'Tasks', 'statut', S.tasks.map(t => t && t.statut)); } catch (e) {}
   render();
@@ -1295,6 +1334,30 @@ async function ensurePlanColumns(team, tasks, dispos) {
   } catch (e) { return { team, tasks, dispos }; }
 }
 
+// Portefeuille (JPP #11) : regroupement simple de projets. Satellite opt-in, créé seulement sur action
+// explicite (sélection du groupement Portefeuille). Table Portefeuilles + colonne Projects.portefeuille.
+// L'affectation projet -> portefeuille se fait nativement dans la table Projects (colonne Ref).
+async function ensurePortefSchema() {
+  try {
+    const projects = await grist.docApi.fetchTable('Projects').catch(() => null);
+    const portefExists = await grist.docApi.fetchTable('Portefeuilles').then(() => true).catch(() => false);
+    const acts = [];
+    if (!portefExists) acts.push(['AddTable', 'Portefeuilles', [
+      { id: 'nom', type: 'Text' }, { id: 'couleur', type: 'Text' },
+      { id: 'responsable', type: 'Ref:Team' }, { id: 'description', type: 'Text' }, { id: 'actif', type: 'Bool' }
+    ]]);
+    if (projects && !('portefeuille' in projects)) acts.push(['AddColumn', 'Projects', 'portefeuille', { type: 'Ref:Portefeuilles' }]);
+    if (acts.length) await grist.docApi.applyUserActions(acts);
+    const [pj2, pf2] = await Promise.all([
+      grist.docApi.fetchTable('Projects').catch(() => null),
+      grist.docApi.fetchTable('Portefeuilles').catch(() => null)
+    ]);
+    S.projects = pj2 ? TF.columnarToRows(pj2) : S.projects;
+    S.portefeuilles = pf2 ? TF.columnarToRows(pf2) : S.portefeuilles;
+    S.hasPortef = !!(pj2 && ('portefeuille' in pj2) && pf2);
+  } catch (e) { /* droits insuffisants : hasPortef reste false */ }
+}
+
 function loadDemo() {
   S.demo = true;
   const day = 86400000, today = new Date(); today.setHours(0, 0, 0, 0);
@@ -1306,7 +1369,9 @@ function loadDemo() {
     { id: 3, nom: 'Claire Bernard', role: 'Design', couleur: '#f59e0b', capaciteHebdo: 28, actif: true },
     { id: 4, nom: 'David Roy', role: 'PM', couleur: '#ec4899', capaciteHebdo: 35, actif: true, indispos: '[{"start":"' + isoD(8) + '","end":"' + isoD(14) + '","label":"Congés"}]' }
   ];
-  S.projects = [{ id: 1, nom: 'Refonte Portail', couleur: '#6366f1' }, { id: 2, nom: 'App Mobile', couleur: '#10b981' }];
+  S.portefeuilles = [{ id: 1, nom: 'Portail & services', couleur: '#6366f1', actif: true }, { id: 2, nom: 'Mobilité', couleur: '#f59e0b', actif: true }];
+  S.projects = [{ id: 1, nom: 'Refonte Portail', couleur: '#6366f1', portefeuille: 1 }, { id: 2, nom: 'App Mobile', couleur: '#10b981', portefeuille: 2 }];
+  S.hasPortef = true;
   S.tasks = [
     { id: 1, titre: 'Dev Backend', statut: 'inprogress', projet: 1, dateDebut: g(-3), dateEcheance: g(9), charges: '[{"teamId":1,"heures":24},{"teamId":2,"heures":12}]', tempsPasse: 20 },
     { id: 2, titre: 'Design UI', statut: 'inprogress', projet: 2, dateDebut: g(0), dateEcheance: g(6), charges: '[{"teamId":3,"heures":30}]', tempsPasse: 24 },
