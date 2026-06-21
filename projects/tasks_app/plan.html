@@ -162,7 +162,7 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
     <span>· = complet / en surcharge</span>
   </div>
   <div class="legend" id="legendRealise" style="display:none">
-    <span>réalisé = temps passé saisi · <b>estimé</b> (= prévu) pour les tâches clôturées sans temps</span>
+    <span id="legendRealiseTxt">réalisé = temps passé saisi · <b>estimé</b> (= prévu) pour les tâches clôturées sans temps</span>
   </div>
 </div>
 <div class="overlay" id="overlay"></div>
@@ -645,7 +645,7 @@ const TF = (function () {
 // État
 // ============================================================================
 const S = {
-  tasks: [], team: [], projects: [], portefeuilles: [], hasPortef: false,
+  tasks: [], team: [], projects: [], portefeuilles: [], hasPortef: false, entries: [], hasEntries: false,
   granularity: 'week', offset: 0, horizon: 12,
   groupBy: 'person', unit: 'pct', includeDone: false, derive: false, mode: 'prevu', workdays: false, allocUnit: 'h',
   demo: false, extFilters: null, timeline: false
@@ -703,6 +703,26 @@ function chargesFor(t) {
   if (S.mode === 'realise') return realisedCharges(t);
   if (S.mode === 'reste') { const rm = {}; for (const c of realisedCharges(t)) rm[c.teamId] = c.heures; return effCharges(t).map(c => ({ teamId: c.teamId, heures: Math.max(c.heures - (rm[c.teamId] || 0), 0) })).filter(c => c.heures > 0); }
   return effCharges(t);
+}
+// #5 : matrice du réalisé EXACT depuis les TimeEntries datées — chaque saisie est placée dans SA période réelle
+// (au lieu d'étaler tempsPasse sur la durée de la tâche). Même clé de regroupement que la matrice prévue.
+function entriesMatrix() {
+  const out = {}; const kf = keyFn();
+  const byId = {}; for (const t of planTasks()) byId[t.id] = t; // respecte les filtres de tâches
+  for (const e of (S.entries || [])) {
+    const t = byId[Number(e.tache)]; if (!t) continue;
+    const mid = Number(e.membre), h = Number(e.heures) || 0; if (!mid || !h || e.date == null) continue;
+    const key = kf(t, { teamId: mid, heures: h }); if (key == null) continue;
+    const pk = TF.periodKey(new Date(e.date * 1000), S.granularity);
+    (out[key] || (out[key] = {}))[pk] = (out[key][pk] || 0) + h;
+  }
+  return out;
+}
+// Reste daté = prévu − réalisé(daté), borné à 0, par (clé, période).
+function subtractMatrix(a, b) {
+  const out = {};
+  for (const key in a) { out[key] = {}; for (const p in a[key]) out[key][p] = Math.max(a[key][p] - ((b[key] && b[key][p]) || 0), 0); }
+  return out;
 }
 const taskWeeks = (t) => Math.max((Math.floor(t.dateEcheance * 1000 / 86400000) - Math.floor(t.dateDebut * 1000 / 86400000) + 1) / 7, 1 / 7);
 const gToInput = (ts) => ts ? new Date(ts * 1000).toISOString().slice(0, 10) : '';
@@ -825,10 +845,16 @@ function render() {
   const _rmode = S.mode === 'realise' || S.mode === 'reste';
   const tasks = planTasks().map(t => (_rmode && isTerminal(t) && t.dateCloture && t.dateCloture >= t.dateDebut) ? Object.assign({}, t, { dateEcheance: t.dateCloture }) : t); // réalisé/reste : redater les tâches clôturées sur leur date de clôture réelle
   const dispo = S.mode === 'dispo';  // mode "capacité disponible" = cap - charge planifiée
+  // #5 : en Réalisé/Reste, si la Feuille de temps existe, on place les heures dans leur période RÉELLE (datée) au lieu d'étaler tempsPasse.
+  const exactReal = S.hasEntries && (S.mode === 'realise' || S.mode === 'reste');
   document.getElementById('legend').style.display = dispo ? 'none' : 'flex';
   document.getElementById('legendDispo').style.display = dispo ? 'flex' : 'none';
   document.getElementById('legendRealise').style.display = (S.mode === 'realise') ? 'flex' : 'none';
-  const matrix = TF.chargeMatrix(tasks, keyFn(), S.granularity, dispo ? effCharges : chargesFor, S.workdays);
+  { const lr = document.getElementById('legendRealiseTxt'); if (lr) lr.innerHTML = exactReal ? 'réalisé <b>daté</b> (Feuille de temps) — heures placées dans leur période réelle' : 'réalisé = temps passé saisi · <b>estimé</b> (= prévu) pour les tâches clôturées sans temps'; }
+  let matrix;
+  if (exactReal && S.mode === 'realise') matrix = entriesMatrix();
+  else if (exactReal && S.mode === 'reste') matrix = subtractMatrix(TF.chargeMatrix(tasks, keyFn(), S.granularity, effCharges, S.workdays), entriesMatrix());
+  else matrix = TF.chargeMatrix(tasks, keyFn(), S.granularity, dispo ? effCharges : chargesFor, S.workdays);
   const periods = TF.periodRange(TF.shiftPeriods(new Date(), S.granularity, S.offset), S.granularity, S.horizon);
   const nowKey = TF.periodKey(new Date(), S.granularity);
   document.getElementById('navRange').textContent = plabel(periods[0]) + ' → ' + plabel(periods[periods.length - 1]);
@@ -1345,12 +1371,13 @@ function bindToolbar() {
 }
 
 async function loadGrist() {
-  let [tasks, team, projects, dispos, portef] = await Promise.all([
+  let [tasks, team, projects, dispos, portef, entries] = await Promise.all([
     grist.docApi.fetchTable('Tasks').catch(() => null),
     grist.docApi.fetchTable('Team').catch(() => null),
     grist.docApi.fetchTable('Projects').catch(() => null),
     grist.docApi.fetchTable('Disponibilites').catch(() => null),
-    grist.docApi.fetchTable('Portefeuilles').catch(() => null)
+    grist.docApi.fetchTable('Portefeuilles').catch(() => null),
+    grist.docApi.fetchTable('TimeEntries').catch(() => null)
   ]);
   const ensured = await ensurePlanColumns(team, tasks, dispos); team = ensured.team; tasks = ensured.tasks; dispos = ensured.dispos;
   S.tasks = tasks ? TF.columnarToRows(tasks) : [];
@@ -1358,6 +1385,9 @@ async function loadGrist() {
   S.projects = projects ? TF.columnarToRows(projects) : [];
   S.dispos = dispos ? TF.columnarToRows(dispos) : [];
   S.portefeuilles = portef ? TF.columnarToRows(portef) : [];
+  // #5 : réalisé daté EXACT depuis la Feuille de temps (TimeEntries). Opt-in : actif seulement si la table existe.
+  S.entries = entries ? TF.columnarToRows(entries) : [];
+  S.hasEntries = !!(entries && S.entries.length);
   // Portefeuille = opt-in : actif seulement si la colonne Projects.portefeuille existe. Sinon le groupement propose l'activation.
   S.hasPortef = !!(projects && ('portefeuille' in projects) && portef);
   buildDispoIndex();
@@ -1440,6 +1470,13 @@ function loadDemo() {
   S.dispos = [
     { id: 1, membre: 3, type: 'Mi-temps', dateDebut: g(0), dateFin: g(6), dispo: 0.5 } // Claire à 50% cette semaine (teste partiel + table) ; David garde son JSON legacy (teste fallback)
   ];
+  // #5 : Feuille de temps démo (réalisé daté) — heures placées à des dates précises (vs étalement de tempsPasse).
+  S.entries = [
+    { id: 1, membre: 1, tache: 1, date: g(-3), heures: 6 }, { id: 2, membre: 1, tache: 1, date: g(-2), heures: 6 },
+    { id: 3, membre: 2, tache: 1, date: g(-1), heures: 4 }, { id: 4, membre: 3, tache: 2, date: g(0), heures: 7 },
+    { id: 5, membre: 3, tache: 2, date: g(1), heures: 7 }, { id: 6, membre: 1, tache: 5, date: g(8), heures: 5 }
+  ];
+  S.hasEntries = true;
   buildDispoIndex();
   render();
 }
