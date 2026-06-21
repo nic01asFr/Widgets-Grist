@@ -30,6 +30,7 @@ Pivot données = table **`Team`** (voir §6). Tout est **opt-in** (sweet-spot) :
 | **Lot 3 — ACL dérivée** | Droits = schéma (assigné / chef projet / chef au-dessus) | ✅ **prouvée live** (matrice « View as ») |
 | **Lot temps — CRA** | Saisie hebdo, identité (`gristUserId`), workflow soumettre/valider/rejeter (chef via annuaire), export Excel, **droits CRA**, **intégration anti-doublon** | ✅ **complet** (cf. `CRA_FEUILLE_DE_TEMPS_SPEC.md`) |
 | **Portefeuille (JPP #11)** | Satellite `Portefeuilles` + `Projects.portefeuille` (opt-in) ; groupement **Portefeuille** dans le Plan (roll-up charge au-dessus des projets) | ✅ fait + testé démo |
+| **Respect ACL widgets (#7)** | Garde transverse (`TF.guardWrites`/`isReadOnly`/`readOnlyBanner` au core ; inline pour orgchart/cra) : bandeau lecture seule, blocage des écritures, refus ACL ligne géré proprement ; câblé sur les 7 widgets | ✅ fait + testé (unit + Grist réel) |
 | **Lot 2** | Column mapping (config tables/colonnes dans le widget) | ⬜ à faire |
 
 **Anti-doublon réalisé** (clé d'intégration) : `TimeEntries` (réel daté, CRA) → `Tasks.tempsPasse` (rollup synchronisé) → **tous les widgets** ; saisie manuelle de `tempsPasse` figée quand la CRA est active.
@@ -60,14 +61,14 @@ Mémoire agent : `genci-lot3-annuaire-acl`, `taskflow-cra-lot-temps`, `taskflow-
 |---|---|---|---|---|
 | 5 | **Plan « Réalisé » par période exact** (lire `TimeEntries` datés vs étaler `tempsPasse`) | ⭐⭐ | raffinement (total déjà juste) | tour dédié — `plan.html` complexe |
 | 3 | **Test validation chef en Grist réel** | ⭐ | confirmation (logique prouvée démo) | — |
-| 7 | **Respect ACL dans les widgets** (Chantier A : `TF.safeApply` + mode lecture) | ⭐⭐⭐ | important (widgets respectent les droits) | transverse, dans le core |
+| ~~7~~ | ~~**Respect ACL dans les widgets**~~ — ✅ **fait** (`TF.guardWrites`/`isReadOnly`/`readOnlyBanner` + cablage 7 widgets, cf. §2) | — | widgets respectent les droits | — |
 | ~~8~~ | ~~**Portefeuille**~~ — ✅ **fait** (groupement Plan opt-in, cf. §2) | — | besoin JPP #11 couvert | — |
 | 9 | **Actions = niveau configurable** + filtre par widget | ⭐⭐⭐ | besoin JPP #3/#7 | **opt-in** (défaut « tous niveaux ») sinon casse l'affichage |
 | 10 | **Gantt auto** (recalcul dates depuis `dependDe`) | ⭐⭐⭐⭐ | besoin JPP #4 | **bouton** (pas auto) sinon écrase les dates manuelles |
 | — | **Compétences (#4)** + GEC | ⭐⭐⭐ | différé (étude faite) | satellite opt-in |
 | — | Durcissement `charges` JSON → table `Allocations` | ⭐⭐ | intégrité (seul lien « mou ») | optionnel |
 
-**Ordre conseillé** : **confirmer priorités avec JPP** (montrer §9) → 7 (respect ACL, transverse) → 9 (actions/niveaux, besoin JPP nommé) → 5/3 (raffinements lot temps) → 10. *(#8 portefeuille déjà livré.)*
+**Ordre conseillé** : **confirmer priorités avec JPP** (montrer §9) → 9 (actions/niveaux, besoin JPP nommé) → 5/3 (raffinements lot temps) → 10. *(#7 respect ACL et #8 portefeuille déjà livrés.)*
 
 ---
 
