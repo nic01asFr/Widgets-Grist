@@ -239,7 +239,7 @@ const toGristChoiceList  = (arr) => arr?.length ? ['L', ...arr] : null;
 
 ### Plan (v16) — plan de charge
 
-- **Heatmap** capacité vs charge par ressource × période (semaine/mois), groupable par **Personne / Projet / Rôle** (Projet/Rôle = en-tête + sous-lignes par membre)
+- **Heatmap** capacité vs charge par ressource × période (semaine/mois), groupable par **Personne / Portefeuille / Projet / Rôle** (Portefeuille/Projet/Rôle = en-tête + sous-lignes par membre)
 - **Modes** : Prévu / Réalisé / Reste / **Dispo** (voir modèle ci-dessous)
 - Unités **% / h**, options **Inclure terminé / Estimer / Jours ouvrés**
 - **Allocation éditable** (drill sur cellule) : heures, %, **réaffectation** entre membres, **replanification** des dates — écriture réelle dans `Tasks.charges` / dates
@@ -285,6 +285,38 @@ JSON `[{teamId, heures}]` = répartition de l'effort par assigné. `effCharges(t
 ### `dateCloture`
 
 Posée automatiquement au passage en **statut terminal** (`TF.isTerminal`), effacée si réouverture. Pilote le réalisé-sur-clôture et le calcul de **délai**. Écrite par Kanban/Gantt/Calendar (au changement de statut / drag), **seulement si la colonne existe** (opt-in).
+
+### Portefeuille — regroupement de projets (opt-in, JPP #11)
+
+Niveau « au-dessus des projets » = **regroupement simple** (pas une hiérarchie de tables rigide). Le Plan ajoute un groupement **Portefeuille** qui agrège la charge par portefeuille (en-tête + sous-lignes par membre, comme le groupement Projet).
+
+- **Satellite opt-in** : table `Portefeuilles` (`nom, couleur, responsable Ref:Team, description, actif`) + colonne `Projects.portefeuille` (`Ref:Portefeuilles`). Créées **uniquement** à l'activation explicite (sélection du groupement Portefeuille → `confirmModal` → `ensurePortefSchema`). Un doc qui n'active pas reste sans empreinte ; détection via `S.hasPortef` (colonne présente + table existante).
+- **Affectation projet → portefeuille** = native dans Grist (la colonne Ref s'édite dans la table `Projects`). Les widgets ne font que **regrouper**, ils ne gèrent pas la structure — cohérent avec l'annuaire (`Entites`/`responsable` édités en table).
+- Helpers Plan : `portefById(id)`, `portefKeyOf(t)` (= portefeuille du projet de la tâche, `'0'` = sans portefeuille). Le groupement réutilise toute la mécanique « Projet » (`buildRows`/`keyFn`/`tasksForKey`/allocation éditable).
+
+---
+
+## Feuille de temps / CRA — `cra.html` (6ᵉ widget, opt-in)
+
+Saisie du **réalisé daté par personne** (lot temps GENCI #9 + export Excel #12). Spec : `CRA_FEUILLE_DE_TEMPS_SPEC.md`. Standalone (hors `build-taskflow`). Onglet dans le launcher.
+
+- **Tables satellites opt-in** (créées par la CRA uniquement, comme le Plan pour `charges`) :
+  - `TimeEntries` : `membre Ref:Team, tache Ref:Tasks, date (le JOUR), heures (canonique), imputation, description`.
+  - `Feuilles` : enveloppe personne×semaine — `membre, semaine, statut (brouillon/soumis/valide/rejete), validePar, dateValidation, motifRejet`.
+- **Identité du connecté** : `getAccessToken().userId` → ligne `Team` via `Team.gristUserId` (pont, colonne ajoutée à l'usage). L'API plugin n'expose pas l'email au widget (cf. mémoire ACL).
+- **Grille hebdo** (lignes tâches × jours, totaux), unité configurable **heures/jours/½j** (stockage canonique en heures + `heuresParJour`, modèle Odoo).
+- **Workflow** : soumettre → **valider/rejeter par le chef** (onglet « À valider » via `Team.agents_geres` de l'annuaire ; verrouille la grille).
+- **Export** CSV+BOM (Excel).
+
+### ⚠️ Modèle de données du RÉALISÉ — source unique, pas de doublon
+
+`tempsPasse` reste la colonne lue par **tous** les widgets (Plan/Dashboard/Kanban/Gantt/Calendar). Pour éviter le doublon réalisé-daté (`TimeEntries`) vs réalisé-total (`tempsPasse`) :
+
+> **`TimeEntries` = SOURCE du réalisé** → la CRA écrit **`Tasks.tempsPasse = somme des `TimeEntries` de la tâche** à chaque saisie (`taskRealizedHours` dans `setCell`). Donc tous les widgets qui lisent `tempsPasse` reflètent le réalisé **exact** sans modification ni duplication.
+
+- Sans CRA : `tempsPasse` reste saisi à la main (panels Kanban/Gantt/Calendar) — comportement actuel.
+- Avec CRA : `tempsPasse` devient un **rollup CRA-owned** (la saisie manuelle des panels sera écrasée à la prochaine entrée — à terme, masquer/figer ce champ quand `TimeEntries` existe).
+- Raffinement futur : le Plan « Réalisé » **par période** (heatmap hebdo) peut lire `TimeEntries` datés pour un étalement exact au lieu d'étaler le total `tempsPasse`.
 
 ---
 
