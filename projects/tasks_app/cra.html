@@ -464,7 +464,10 @@ async function loadGrist() {
   S.weekStart = S.weekStart || mondayOf(Date.now());
   const tables = await grist.docApi.listTables();
   S.hasTable = tables.includes('TimeEntries');
-  S.team = colObjToRows(await grist.docApi.fetchTable('Team')).map(r => ({ id: r.id, nom: r.nom, email: r.email, gristUserId: r.gristUserId, agentsGeres: refIds(r.agents_geres) }));
+  S.team = colObjToRows(await grist.docApi.fetchTable('Team')).map(r => ({ id: r.id, nom: r.nom, email: r.email, gristUserId: r.gristUserId, entite: Number(r.entite) || 0, agentsGeres: refIds(r.agents_geres) }));
+  // Annuaire (Entites) : Refs SIMPLES parent/chef — necessaires pour recalculer "qui je gere" cote client
+  // (la colonne FORMULE Team.agents_geres se vide en passant par le relais launcher : valeurs null).
+  S.entites = tables.includes('Entites') ? colObjToRows(await grist.docApi.fetchTable('Entites')).map(e => ({ id: e.id, parent: Number(e.parent) || 0, chef: Number(e.chef) || 0 })) : [];
   S.tasks = tables.includes('Tasks') ? colObjToRows(await grist.docApi.fetchTable('Tasks')).map(r => ({ id: r.id, titre: r.titre, projet: r.projet, assignees: r.assignees })) : [];
   S.projects = tables.includes('Projects') ? colObjToRows(await grist.docApi.fetchTable('Projects')).map(r => ({ id: r.id, nom: r.nom })) : [];
   S.entries = S.hasTable ? colObjToRows(await grist.docApi.fetchTable('TimeEntries')).map(r => ({ id: r.id, membre: r.membre, tache: r.tache, date: r.date, heures: r.heures })) : [];
@@ -475,9 +478,25 @@ async function loadGrist() {
   S.me = me ? me.id : (S.team[0] ? S.team[0].id : null);
   const meRow = S.team.find(t => t.id === S.me);
   S.meName = meRow ? meRow.nom : '';
-  S.mesGeres = meRow ? (meRow.agentsGeres || []).filter(id => id !== S.me) : [];
+  // "Qui je gere" : recalcul cote client depuis l'annuaire (Refs simples, robuste au relais) ;
+  // repli sur la formule agents_geres si pas d'Entites mais ids valides (widget direct hors relais).
+  S.mesGeres = S.me ? computeMesGeres(S.me) : [];
+  if (!S.mesGeres.length && meRow) { const f = (meRow.agentsGeres || []).filter(id => id && id !== S.me); if (f.length) S.mesGeres = f; }
   S.gOk = true;
   render();
+}
+// chaine_chefs d'une personne = chefs de son entite + entites ancetres (Entites.parent), borne anti-cycle.
+function chaineChefsOf(entiteId) {
+  const byId = {}; for (const e of (S.entites || [])) byId[e.id] = e;
+  const chefs = []; const seen = new Set(); let e = byId[entiteId];
+  while (e && !seen.has(e.id)) { seen.add(e.id); if (e.chef) chefs.push(e.chef); e = e.parent ? byId[e.parent] : null; }
+  return chefs;
+}
+// agents_geres de "me" = personnes (hors soi) dont la chaine_chefs contient me. Replique F_GERES de l'annuaire.
+function computeMesGeres(me) {
+  const out = [];
+  for (const a of (S.team || [])) { if (a.id === me) continue; if (chaineChefsOf(a.entite).includes(me)) out.push(a.id); }
+  return out;
 }
 
 async function activate() {
