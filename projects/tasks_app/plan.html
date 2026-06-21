@@ -32,6 +32,7 @@ label.chk{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:
 .alerts{padding:7px 14px;font-size:0.78rem;color:var(--text-muted);border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap}
 .alerts .warn{color:var(--warn)} .alerts .over{color:var(--over)}
 .gridwrap{flex:1;overflow:auto;position:relative}
+.pf-hint{position:sticky;top:0;z-index:5;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--warn);border-radius:6px;margin:8px;padding:7px 10px;font-size:.76rem;color:var(--text-muted)}
 :root{--res-col:184px;--sum-col:80px}
 table.grid{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;font-size:0.8rem}
 table.grid th,table.grid td{padding:0;border-bottom:1px solid var(--border)}
@@ -604,13 +605,17 @@ const TF = (function () {
         };
     }
     // Bandeau "lecture seule" auto-contenu (aucun markup widget requis).
+    // Pousse le contenu vers le bas (padding-top sur body) pour NE PAS recouvrir l'en-tete du widget.
     function readOnlyBanner() {
         if (!isReadOnly() || (typeof document === 'undefined') || document.getElementById('tf-ro-banner')) return;
         const b = document.createElement('div');
         b.id = 'tf-ro-banner';
         b.textContent = 'Lecture seule — vos droits ne permettent pas la modification';
-        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:5px 10px;letter-spacing:.2px';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:6px 10px;letter-spacing:.2px;box-sizing:border-box';
         document.body.appendChild(b);
+        const h = b.offsetHeight || 28;
+        const prev = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+        document.body.style.paddingTop = (prev + h) + 'px';
     }
 
     return {
@@ -920,6 +925,10 @@ function render() {
     }
   }
   h += '<td class="sum"><div class="sh">' + r1(grand) + ' h</div></td></tr></tfoot></table>';
+  // #6 : groupement Portefeuille sans aucune affectation -> tout sous « Sans portefeuille » : on guide l'utilisateur.
+  if (S.groupBy === 'portefeuille' && !S.projects.some(p => Number(p.portefeuille) > 0)) {
+    h = '<div class="pf-hint">Aucun projet n\'est rattaché à un portefeuille — tout apparaît sous « Sans portefeuille ». Affectez vos projets dans la table <b>Projects</b> (colonne <b>Portefeuille</b>).</div>' + h;
+  }
   wrap.innerHTML = h;
   wrap.querySelectorAll('td.cell').forEach(td => td.addEventListener('click', () => openCell(td.dataset.key, td.dataset.period)));
   wrap.querySelectorAll('td.colres.clk').forEach(td => td.addEventListener('click', () => openResource(td.dataset.res)));

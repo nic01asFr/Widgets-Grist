@@ -48,6 +48,7 @@
         .nav-group { display: flex; align-items: center; gap: 4px; }
         .current-period { font-weight: 600; font-size: 0.9rem; min-width: 120px; text-align: center; white-space: nowrap; }
         .header-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .header-right select { max-width: 185px; }
         .icon-btn { width: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
         .filter-count { background: var(--primary); color: #fff; border-radius: 999px; min-width: 17px; height: 17px; padding: 0 4px; font-size: 0.62rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; }
         .filter-menu.wide { min-width: 234px; max-height: 62vh; overflow-y: auto; padding: 4px; }
@@ -450,7 +451,7 @@
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .demo-badge { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); background: var(--warning); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; z-index: 1000; }
+        .demo-badge { position: fixed; bottom: 10px; right: 10px; background: var(--warning); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; z-index: 1000; opacity: .9; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
@@ -667,7 +668,7 @@
                 <option value="assignee">Couleur: Assigné</option>
                 <option value="status">Couleur: Statut</option>
             </select>
-            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau de travail affiché (Actions = nœuds feuilles ; Synthèses = nœuds parents)" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.72rem;background:var(--card-bg)">
+            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.72rem;background:var(--card-bg)">
                 <option value="all">Niveau : Tous</option>
                 <option value="actions">Niveau : Actions</option>
                 <option value="parents">Niveau : Synthèses</option>
@@ -1086,13 +1087,17 @@
                 };
             }
             // Bandeau "lecture seule" auto-contenu (aucun markup widget requis).
+            // Pousse le contenu vers le bas (padding-top sur body) pour NE PAS recouvrir l'en-tete du widget.
             function readOnlyBanner() {
                 if (!isReadOnly() || (typeof document === 'undefined') || document.getElementById('tf-ro-banner')) return;
                 const b = document.createElement('div');
                 b.id = 'tf-ro-banner';
                 b.textContent = 'Lecture seule — vos droits ne permettent pas la modification';
-                b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:5px 10px;letter-spacing:.2px';
+                b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:6px 10px;letter-spacing:.2px;box-sizing:border-box';
                 document.body.appendChild(b);
+                const h = b.offsetHeight || 28;
+                const prev = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+                document.body.style.paddingTop = (prev + h) + 'px';
             }
 
             return {
@@ -1445,7 +1450,7 @@
             if (menu) menu.innerHTML = grp('Projets', projHtml, true) + grp('Priorités', prioHtml) + grp('Équipe', assHtml) + (total ? '<div class="fm-foot"><span class="fm-clear" onclick="clearAllCalFilters()">Tout effacer</span></div>' : '');
             const cnt = document.getElementById('filterCount'); if (cnt) { cnt.textContent = total; cnt.style.display = total ? 'inline-flex' : 'none'; }
             const fbtn = document.getElementById('filterBtn'); if (fbtn) fbtn.classList.toggle('has-filter', total > 0);
-            const ms = document.getElementById('moreSubsToggle'); if (ms) ms.classList.toggle('on', showSubtasks);
+            const ms = document.getElementById('moreSubsToggle'); if (ms) { ms.classList.toggle('on', showSubtasks); const off = workLevel !== 'all'; ms.style.opacity = off ? '0.45' : ''; ms.style.pointerEvents = off ? 'none' : ''; ms.title = off ? 'Indisponible : le filtre « Niveau » prime sur ce reglage' : ''; }
             renderFilterChips();
         }
         function clearAllCalFilters() { filters = { project: [], priority: [], assignee: [] }; updateFilterMenus(); broadcastFilters(); render(); }

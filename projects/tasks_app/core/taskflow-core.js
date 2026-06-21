@@ -342,13 +342,17 @@ const TF = (function () {
         };
     }
     // Bandeau "lecture seule" auto-contenu (aucun markup widget requis).
+    // Pousse le contenu vers le bas (padding-top sur body) pour NE PAS recouvrir l'en-tete du widget.
     function readOnlyBanner() {
         if (!isReadOnly() || (typeof document === 'undefined') || document.getElementById('tf-ro-banner')) return;
         const b = document.createElement('div');
         b.id = 'tf-ro-banner';
         b.textContent = 'Lecture seule — vos droits ne permettent pas la modification';
-        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:5px 10px;letter-spacing:.2px';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:6px 10px;letter-spacing:.2px;box-sizing:border-box';
         document.body.appendChild(b);
+        const h = b.offsetHeight || 28;
+        const prev = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+        document.body.style.paddingTop = (prev + h) + 'px';
     }
 
     return {

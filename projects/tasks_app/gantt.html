@@ -36,6 +36,7 @@
         .header h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .header-center { display: flex; align-items: center; gap: 8px; }
         .header-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .header-right select { max-width: 185px; }
         .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; transition: all 0.15s; color: var(--text); }
         .btn:hover { background: var(--bg); }
         .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -600,7 +601,7 @@
                     <option value="assignee">Couleur: Assigné</option>
                     <option value="status">Couleur: Statut</option>
                 </select>
-                <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau de travail affiché (Tous = arbre ; Synthèses = nœuds parents ; Actions = nœuds feuilles, vue aplatie)">
+                <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Tous = arbre ; Synthèses = tâches mères (parents) ; Actions = tâches sans sous-tâche (feuilles), vue aplatie">
                     <option value="all">Niveau : Tous</option>
                     <option value="parents">Niveau : Synthèses</option>
                     <option value="actions">Niveau : Actions</option>
@@ -1048,13 +1049,17 @@
                 };
             }
             // Bandeau "lecture seule" auto-contenu (aucun markup widget requis).
+            // Pousse le contenu vers le bas (padding-top sur body) pour NE PAS recouvrir l'en-tete du widget.
             function readOnlyBanner() {
                 if (!isReadOnly() || (typeof document === 'undefined') || document.getElementById('tf-ro-banner')) return;
                 const b = document.createElement('div');
                 b.id = 'tf-ro-banner';
                 b.textContent = 'Lecture seule — vos droits ne permettent pas la modification';
-                b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:5px 10px;letter-spacing:.2px';
+                b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,-apple-system,sans-serif;text-align:center;padding:6px 10px;letter-spacing:.2px;box-sizing:border-box';
                 document.body.appendChild(b);
+                const h = b.offsetHeight || 28;
+                const prev = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+                document.body.style.paddingTop = (prev + h) + 'px';
             }
 
             return {

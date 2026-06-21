@@ -165,13 +165,17 @@ body { background: var(--bg); color: var(--text); display: flex; flex-direction:
 <div class="modal-ov" id="aclModal">
   <div class="modal">
     <h2>Configurer les droits (annuaire)</h2>
-    <div class="sub">Pose les regles Grist natives de toute la suite, derivees de l'annuaire (<b>chaine_chefs</b>) :<br>
-      &bull; <b>Taches</b> : modifiables par les <b>assignes</b>, le <b>chef de projet</b> et les <b>chefs au-dessus</b> ;<br>
-      &bull; <b>Saisies de temps</b> : chacun n'edite que <b>les siennes</b> ;<br>
-      &bull; <b>Feuilles de temps</b> : l'<b>agent</b> soumet, son ou ses <b>chefs</b> valident.<br>
-      Lecture seule pour les autres. <b>Reversible</b> a tout moment. Les droits du temps ne sont poses que si la <b>Feuille de temps</b> est activee.</div>
+    <div class="sub">Applique les droits de toute la suite (qui peut modifier quoi), <b>dérivés de l'annuaire</b>. Chacun garde la main sur ce qui le concerne ; lecture seule ailleurs. <b>Réversible</b>.</div>
     <div class="status off" id="aclStatus">Verification...</div>
-    <div class="prereq">Prerequis : <b>annuaire actif</b> (chaine_chefs) et <b>emails</b> Team = logins Grist (pivot d'identite). Reserve au <b>proprietaire</b> du document.</div>
+    <details><summary>Détail des 3 périmètres</summary>
+      <div class="sub" style="margin:6px 0 0">
+        &bull; <b>Taches</b> : modifiables par les <b>assignes</b>, le <b>chef de projet</b> et les <b>chefs au-dessus</b> ;<br>
+        &bull; <b>Saisies de temps</b> : chacun n'edite que <b>les siennes</b> ;<br>
+        &bull; <b>Feuilles de temps</b> : l'<b>agent</b> soumet, son ou ses <b>chefs</b> valident.<br>
+        <i>Les droits du temps ne sont posés que si la Feuille de temps est activée.</i>
+      </div>
+    </details>
+    <div class="prereq">Prerequis : <b>annuaire actif</b> (chaine_chefs) et <b>emails</b> Team = logins Grist. Reserve au <b>proprietaire</b>.</div>
     <details><summary>Ce qui sera pose (apercu exact)</summary><pre id="aclPreview"></pre></details>
     <div class="acts">
       <button class="danger" id="aclRemove">Retirer les droits</button>
@@ -694,7 +698,7 @@ document.getElementById('aclModal').addEventListener('click', (e) => { if (e.tar
     // #7 respect des droits (standalone, sans TF) : bandeau lecture seule + garde sur les ecritures.
     (function () {
       const ro = () => { try { return new URLSearchParams(location.search).get('readonly') === 'true'; } catch (e) { return false; } };
-      if (ro() && !document.getElementById('tf-ro-banner')) { const b = document.createElement('div'); b.id = 'tf-ro-banner'; b.textContent = 'Lecture seule — vos droits ne permettent pas la modification'; b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center;padding:5px 10px'; document.body.appendChild(b); }
+      if (ro() && !document.getElementById('tf-ro-banner')) { const b = document.createElement('div'); b.id = 'tf-ro-banner'; b.textContent = 'Lecture seule — vos droits ne permettent pas la modification'; b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center;padding:6px 10px;box-sizing:border-box'; document.body.appendChild(b); document.body.style.paddingTop = ((parseFloat(getComputedStyle(document.body).paddingTop) || 0) + (b.offsetHeight || 28)) + 'px'; }
       if (window.grist && grist.docApi && !grist.docApi._tfGuarded) { const raw = grist.docApi.applyUserActions.bind(grist.docApi); grist.docApi._tfGuarded = true; grist.docApi.applyUserActions = async function (a) { if (ro()) { const e = new Error('Document en lecture seule'); e.tfReadOnly = true; throw e; } return await raw(a); }; }
     })();
     await new Promise(r => setTimeout(r, 250));
