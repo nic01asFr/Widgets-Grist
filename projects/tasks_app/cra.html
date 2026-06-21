@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskFlow - Feuille de temps</title>
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<style>
+:root {
+  --primary: #3e5de7; --primary-dark: #2845c1;
+  --bg: #f8fafc; --card-bg: #fff; --text: #1e293b; --text-muted: #64748b;
+  --border: #e2e8f0; --ok: #10b981; --warn: #f59e0b; --over: #ef4444;
+  --cell: #fff; --cell-fill: #eef2ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #6b7cff; --primary-dark: #8b9bff;
+    --bg: #0f1525; --card-bg: #1a2236; --text: #e2e8f0; --text-muted: #94a3b8;
+    --border: #2a3550; --ok: #34d399; --warn: #fbbf24; --over: #f87171;
+    --cell: #141b2e; --cell-fill: #232f52;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+body { display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden; }
+.topbar { flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--card-bg); flex-wrap: wrap; }
+h1 { font-size: 1.15rem; font-weight: 700; }
+.status { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.dot.ok { background: var(--ok); }
+.sp { flex: 1; }
+.week { display: flex; align-items: center; gap: 4px; }
+.wbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 9px; font-size: .78rem; cursor: pointer; font-family: inherit; line-height: 1; }
+.wbtn:hover { color: var(--text); }
+.wlabel { font-size: .82rem; font-weight: 600; min-width: 150px; text-align: center; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: none; background: var(--bg); color: var(--text-muted); padding: 6px 11px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.seg button.active { background: var(--primary); color: #fff; }
+.btn { border: 1px solid var(--primary); background: var(--primary); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn.ghost { background: var(--bg); color: var(--text); border-color: var(--border); }
+.btn:hover { background: var(--primary-dark); }
+.main { flex: 1; overflow: auto; padding: 18px 20px; }
+.empty-cta { text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: .9rem; line-height: 1.7; }
+table.grid { border-collapse: collapse; width: 100%; font-size: .82rem; }
+table.grid th, table.grid td { border: 1px solid var(--border); padding: 0; }
+table.grid thead th { background: var(--card-bg); font-weight: 600; padding: 8px 10px; text-align: center; white-space: nowrap; color: var(--text-muted); }
+table.grid thead th.left { text-align: left; }
+table.grid th.today { color: var(--primary); }
+.tcell { padding: 8px 10px; }
+.tcell .tt { font-weight: 600; }
+.tcell .tp { font-size: .72rem; color: var(--text-muted); }
+td.day { width: 70px; }
+td.day input { width: 100%; height: 38px; border: none; background: var(--cell); color: var(--text); text-align: center; font-family: inherit; font-size: .82rem; outline: none; }
+td.day input:focus { background: var(--cell-fill); box-shadow: inset 0 0 0 2px var(--primary); }
+td.day.filled input { background: var(--cell-fill); font-weight: 600; }
+td.today { background: color-mix(in srgb, var(--primary) 7%, transparent); }
+td.total, th.total { text-align: center; font-weight: 700; background: var(--card-bg); padding: 8px 10px; }
+tfoot td { background: var(--card-bg); font-weight: 700; text-align: center; padding: 9px 10px; }
+tfoot td.left { text-align: left; color: var(--text-muted); font-weight: 600; }
+.over { color: var(--over); }
+.addrow { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+.addrow select { background: var(--card-bg); border: 1px solid var(--border); border-radius: 7px; color: var(--text); padding: 7px 9px; font-size: .8rem; font-family: inherit; }
+.legend { flex-shrink: 0; display: flex; gap: 16px; padding: 8px 20px; border-top: 1px solid var(--border); background: var(--card-bg); font-size: .72rem; color: var(--text-muted); }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--card-bg); padding: 9px 16px; border-radius: 8px; font-size: .8rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+.toast.show { opacity: 1; }
+.fstatus { padding: 8px 12px; border-radius: 8px; font-size: .78rem; font-weight: 700; margin-bottom: 12px; }
+.fstatus.soumis { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.fstatus.valide { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.fstatus.rejete { background: color-mix(in srgb, var(--over) 18%, transparent); color: var(--over); }
+.fbadge { font-size: .66rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+.fbadge.brouillon { background: var(--border); color: var(--text-muted); }
+.fbadge.soumis { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+.fbadge.valide { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+.fbadge.rejete { background: color-mix(in srgb, var(--over) 20%, transparent); color: var(--over); }
+.tcell .btn { padding: 5px 10px; font-size: .74rem; }
+.modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal-ov.open { display: flex; }
+.modal { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; width: min(560px,92vw); max-height: 88vh; overflow: auto; padding: 22px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.modal h2 { font-size: 1.05rem; margin-bottom: 6px; }
+.csub { font-size: .82rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.45; }
+.cstatus { font-size: .8rem; font-weight: 600; padding: 8px 11px; border-radius: 8px; margin-bottom: 12px; }
+.cstatus.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.cstatus.off { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.cstatus.err { background: color-mix(in srgb, var(--over) 16%, transparent); color: var(--over); }
+.cprereq { font-size: .74rem; color: var(--text-muted); background: var(--bg); border-left: 3px solid var(--warn); padding: 8px 11px; border-radius: 0 6px 6px 0; margin-bottom: 14px; }
+.modal details { margin-bottom: 12px; } .modal summary { font-size: .78rem; font-weight: 600; cursor: pointer; color: var(--text-muted); }
+.modal pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: .7rem; overflow: auto; white-space: pre-wrap; color: var(--text); margin-top: 8px; }
+.cacts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.cbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; padding: 8px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.cbtn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.cbtn.danger { color: var(--over); }
+.cbtn:disabled { opacity: .5; cursor: default; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>Feuille de temps</h1>
+  <div class="status"><span class="dot" id="stDot"></span><span id="stTxt">Demo</span></div>
+  <div class="seg" id="tabSeg">
+    <button data-t="saisie" class="active">Ma semaine</button>
+    <button data-t="valider" id="tabValider">A valider</button>
+  </div>
+  <span class="sp"></span>
+  <div class="week">
+    <button class="wbtn" id="wPrev" title="Semaine precedente">&lsaquo;</button>
+    <span class="wlabel" id="wLabel"></span>
+    <button class="wbtn" id="wNext" title="Semaine suivante">&rsaquo;</button>
+    <button class="wbtn" id="wNow" title="Semaine courante">Auj.</button>
+  </div>
+  <div class="seg" id="unitSeg">
+    <button data-u="heures" class="active">h</button>
+    <button data-u="jours">j</button>
+    <button data-u="demi">&frac12;j</button>
+  </div>
+  <button class="btn" id="submitBtn">Soumettre la semaine</button>
+  <button class="btn ghost" id="exportBtn" title="Export Excel (CSV)">Export</button>
+  <button class="btn ghost" id="craAclBtn" title="Configurer les droits (qui saisit / qui valide)">Droits</button>
+</div>
+
+<div class="main" id="main"><div class="empty-cta">Chargement...</div></div>
+
+<div class="legend">
+  <span id="lgUnit"></span>
+  <span style="margin-left:auto">Saisie du realise par jour - validation par le chef (annuaire) - export Excel</span>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="modal-ov" id="craAclModal">
+  <div class="modal">
+    <h2>Configurer les droits — Feuille de temps</h2>
+    <div class="csub">Règles Grist natives : chaque agent édite <b>ses</b> saisies ; sa feuille est modifiable par <b>lui et ses chefs</b> (l'agent soumet, le chef valide). Le reste est en lecture seule. Réversible.</div>
+    <div class="cstatus off" id="craAclStatus">Verification...</div>
+    <div class="cprereq">Prérequis : emails <b>Team</b> = logins Grist + annuaire actif (<b>chaine_chefs</b>). Réservé au <b>propriétaire</b>, appliqué une seule fois.</div>
+    <details><summary>Aperçu exact</summary><pre id="craAclPrev"></pre></details>
+    <div class="cacts">
+      <button class="cbtn danger" id="craAclRemove">Retirer</button>
+      <button class="cbtn" id="craAclClose">Fermer</button>
+      <button class="cbtn primary" id="craAclApply">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+//  TaskFlow - Feuille de temps / CRA  (saisie du realise date, par personne)
+//  Spec : CRA_FEUILLE_DE_TEMPS_SPEC.md. Opt-in, configurable, natif Grist.
+// =========================================================================
+const DAY = 86400000;
+const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+const S = {
+  alone: false, gOk: false,
+  me: null,                 // id Team du connecte
+  meName: '',               // nom du connecte
+  meUserId: null,           // userId Grist
+  team: [], tasks: [], projects: [], entries: [], feuilles: [],
+  weekStart: 0,             // ms, lundi
+  unit: 'heures',           // heures | jours | demi
+  hoursPerDay: 7,
+  extraRows: [],            // taches ajoutees manuellement a la grille (ids)
+  hasTable: false,
+  tab: 'saisie',            // saisie | valider
+  feuilles: [],             // enveloppes personne x semaine (workflow)
+  mesGeres: [],             // ids Team que je supervise (agents_geres de l'annuaire)
+};
+
+// ---- Utils ----------------------------------------------------------------
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const gristToMs = (ts) => ts ? ts * 1000 : 0;
+const msToGrist = (ms) => Math.floor(ms / 1000);
+function refIds(v) { return Array.isArray(v) && v[0] === 'L' ? v.slice(1).map(Number) : []; }
+function mondayOf(ms) { const x = new Date(ms); const dow = (x.getDay() + 6) % 7; x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - dow); return x.getTime(); }
+function weekDays() { const r = []; for (let i = 0; i < 7; i++) r.push(S.weekStart + i * DAY); return r; }
+function sameDay(a, b) { return mondayOf(a) === mondayOf(b) && new Date(a).getDate() === new Date(b).getDate(); }
+
+// unite : facteur de conversion heures <-> unite
+function unitFactor() { return S.unit === 'jours' ? S.hoursPerDay : (S.unit === 'demi' ? S.hoursPerDay / 2 : 1); }
+function unitLabel() { return S.unit === 'jours' ? 'jours' : (S.unit === 'demi' ? 'demi-journees' : 'heures'); }
+function hoursToQty(h) { const q = h / unitFactor(); return Math.round(q * 100) / 100; }
+function qtyToHours(q) { return (Number(q) || 0) * unitFactor(); }
+function fmtQty(h) { if (!h) return ''; const q = hoursToQty(h); return String(q); }
+
+// somme heures d'une (tache, jour) pour moi
+function cellHours(taskId, dayMs) {
+  let h = 0;
+  for (const e of S.entries) if (e.membre === S.me && e.tache === taskId && sameDay(gristToMs(e.date), dayMs)) h += (Number(e.heures) || 0);
+  return h;
+}
+function dayHours(dayMs) { let h = 0; for (const e of S.entries) if (e.membre === S.me && sameDay(gristToMs(e.date), dayMs)) h += (Number(e.heures) || 0); return h; }
+function taskWeekHours(taskId) { let h = 0; for (const d of weekDays()) h += cellHours(taskId, d); return h; }
+function weekHours() { let h = 0; for (const d of weekDays()) h += dayHours(d); return h; }
+
+// taches de la grille = mes taches assignees + celles avec saisie cette semaine + ajoutees
+function gridTasks() {
+  const ids = new Set();
+  for (const t of S.tasks) if (refIds(t.assignees).includes(S.me)) ids.add(t.id);
+  for (const e of S.entries) if (e.membre === S.me && weekDays().some(d => sameDay(gristToMs(e.date), d))) ids.add(e.tache);
+  for (const id of S.extraRows) ids.add(id);
+  return [...ids].map(id => S.tasks.find(t => t.id === id)).filter(Boolean);
+}
+function projName(t) { const p = S.projects.find(x => x.id === t.projet); return p ? p.nom : ''; }
+
+// ---- Demo -----------------------------------------------------------------
+function loadDemo() {
+  S.alone = true; S.gOk = false; S.hasTable = true;
+  S.team = [{ id: 1, nom: 'Alice Martin' }, { id: 2, nom: 'Bob Durant' }, { id: 3, nom: 'Claire Bernard' }];
+  S.me = 1; S.meName = 'Alice Martin';
+  S.projects = [{ id: 1, nom: 'Refonte Portail' }, { id: 2, nom: 'App Mobile' }];
+  S.tasks = [
+    { id: 1, titre: 'Analyse besoins', projet: 1, assignees: ['L', 1] },
+    { id: 2, titre: 'Dev Backend', projet: 1, assignees: ['L', 1, 2] },
+    { id: 3, titre: 'Design UI', projet: 2, assignees: ['L', 3] },
+    { id: 6, titre: 'Revue de code', projet: 1, assignees: ['L', 1] },
+  ];
+  S.weekStart = mondayOf(Date.now());
+  const d = (i) => msToGrist(S.weekStart + i * DAY);
+  S.entries = [
+    { id: 1, membre: 1, tache: 1, date: d(0), heures: 4 },
+    { id: 2, membre: 1, tache: 2, date: d(0), heures: 3 },
+    { id: 3, membre: 1, tache: 2, date: d(1), heures: 7 },
+    { id: 4, membre: 1, tache: 1, date: d(2), heures: 5 },
+    { id: 5, membre: 2, tache: 2, date: d(0), heures: 6 },
+    { id: 6, membre: 2, tache: 2, date: d(1), heures: 7 },
+  ];
+  S.feuilles = [
+    { id: 1, membre: 2, semaine: msToGrist(S.weekStart), statut: 'soumis' },
+    { id: 2, membre: 3, semaine: msToGrist(S.weekStart), statut: 'soumis' },
+  ];
+  S.mesGeres = [2, 3];   // demo : Alice supervise Bob + Claire
+  render();
+}
+
+// ---- Rendu : grille hebdo -------------------------------------------------
+function render() {
+  document.getElementById('stDot').className = 'dot' + (S.gOk ? ' ok' : '');
+  document.getElementById('stTxt').textContent = (S.gOk ? 'Connecte' : 'Demo') + (S.meName ? ' · ' + S.meName : '');
+  document.getElementById('wLabel').textContent = weekLabel();
+  document.getElementById('lgUnit').textContent = 'Unite : ' + unitLabel() + (S.unit !== 'heures' ? ' (' + S.hoursPerDay + ' h/jour)' : '');
+  // Onglet "A valider" : visible seulement si je supervise des agents (annuaire)
+  const tv = document.getElementById('tabValider');
+  const pending = S.feuilles.filter(f => S.mesGeres.includes(f.membre) && f.statut === 'soumis').length;
+  tv.style.display = S.mesGeres.length ? 'inline-block' : 'none';
+  tv.textContent = 'A valider' + (pending ? ' (' + pending + ')' : '');
+  document.querySelectorAll('#tabSeg button').forEach(b => b.classList.toggle('active', b.dataset.t === S.tab));
+  updateSubmitBtn();
+  const main = document.getElementById('main');
+  if (!S.hasTable) {
+    main.innerHTML = '<div class="empty-cta">La feuille de temps n\'est pas encore activee sur ce document.<br>'
+      + 'Elle cree les tables <b>TimeEntries</b> + <b>Feuilles</b> (opt-in, non destructif).<br><br>'
+      + '<button class="btn" id="activateBtn">Activer la feuille de temps</button></div>';
+    const b = document.getElementById('activateBtn'); if (b) b.onclick = activate;
+    return;
+  }
+  if (!S.me) { main.innerHTML = '<div class="empty-cta">Impossible de t\'identifier dans la table Team.<br>Verifie que ta ligne Team a le bon email / gristUserId.</div>'; return; }
+  if (S.tab === 'valider') return renderValider();
+  renderSaisie();
+}
+
+function updateSubmitBtn() {
+  const sb = document.getElementById('submitBtn'), eb = document.getElementById('exportBtn');
+  eb.style.display = (S.hasTable && S.me) ? '' : 'none';
+  if (!(S.tab === 'saisie' && S.hasTable && S.me)) { sb.style.display = 'none'; return; }
+  sb.style.display = '';
+  const st = myStatut();
+  if (st === 'valide') { sb.textContent = 'Semaine validee'; sb.disabled = true; sb.className = 'btn ghost'; sb.onclick = null; }
+  else if (st === 'soumis') { sb.textContent = 'Retirer (soumise)'; sb.disabled = false; sb.className = 'btn ghost'; sb.onclick = withdrawWeek; }
+  else { sb.textContent = 'Soumettre la semaine' + (st === 'rejete' ? ' (rejetee)' : ''); sb.disabled = false; sb.className = 'btn'; sb.onclick = submitWeek; }
+}
+
+function renderSaisie() {
+  const main = document.getElementById('main');
+  const days = weekDays(), todayMs = Date.now(), locked = isLocked(), st = myStatut();
+  let html = '';
+  if (st !== 'brouillon') html += '<div class="fstatus ' + st + '">Feuille ' + ({ soumis: 'SOUMISE - en attente de validation', valide: 'VALIDEE', rejete: 'REJETEE - a corriger et resoumettre' }[st] || st) + '</div>';
+  html += '<table class="grid"><thead><tr><th class="left">Tache</th><th class="left">Projet / imputation</th>';
+  days.forEach((d, i) => { const dt = new Date(d); html += '<th class="day' + (sameDay(d, todayMs) ? ' today' : '') + '">' + JOURS[i] + '<br><small>' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</small></th>'; });
+  html += '<th class="total">Total</th></tr></thead><tbody>';
+  const tasks = gridTasks();
+  if (!tasks.length) html += '<tr><td class="tcell" colspan="' + (days.length + 3) + '" style="color:var(--text-muted)">Aucune tache. Ajoute-en une ci-dessous.</td></tr>';
+  for (const t of tasks) {
+    html += '<tr><td class="tcell"><div class="tt">' + esc(t.titre) + '</div></td><td class="tcell"><div class="tp">' + esc(projName(t)) + '</div></td>';
+    days.forEach((d) => {
+      const h = cellHours(t.id, d);
+      html += '<td class="day' + (h ? ' filled' : '') + (sameDay(d, todayMs) ? ' today' : '') + '">'
+        + '<input type="number" min="0" step="' + (S.unit === 'heures' ? '0.5' : '0.25') + '" value="' + fmtQty(h) + '"' + (locked ? ' disabled' : '') + ' onchange="setCell(' + t.id + ',' + d + ',this.value)"></td>';
+    });
+    html += '<td class="total">' + (fmtQty(taskWeekHours(t.id)) || '0') + '</td></tr>';
+  }
+  html += '</tbody><tfoot><tr><td class="left" colspan="2">Total ' + unitLabel() + '</td>';
+  days.forEach((d) => html += '<td>' + (fmtQty(dayHours(d)) || '0') + '</td>');
+  html += '<td class="total">' + (fmtQty(weekHours()) || '0') + '</td></tr></tfoot></table>';
+  if (!locked) {
+    const inGrid = new Set(tasks.map(t => t.id));
+    const addable = S.tasks.filter(t => !inGrid.has(t.id));
+    if (addable.length) html += '<div class="addrow"><select id="addSel"><option value="">+ Ajouter une tache...</option>' + addable.map(t => '<option value="' + t.id + '">' + esc(t.titre) + ' (' + esc(projName(t)) + ')</option>').join('') + '</select></div>';
+  }
+  main.innerHTML = html;
+  const sel = document.getElementById('addSel');
+  if (sel) sel.onchange = () => { if (sel.value) { S.extraRows.push(Number(sel.value)); render(); } };
+}
+
+function renderValider() {
+  const main = document.getElementById('main');
+  const subs = S.feuilles.filter(f => S.mesGeres.includes(f.membre)).sort((a, b) => (a.statut === 'soumis' ? 0 : 1) - (b.statut === 'soumis' ? 0 : 1));
+  if (!subs.length) { main.innerHTML = '<div class="empty-cta">Aucune feuille de ton equipe pour l\'instant.</div>'; return; }
+  let html = '<table class="grid"><thead><tr><th class="left">Agent</th><th class="left">Semaine</th><th class="total">Total</th><th class="left">Statut</th><th class="left">Action</th></tr></thead><tbody>';
+  for (const f of subs) {
+    const p = S.team.find(t => t.id === f.membre), wk = gristToMs(f.semaine);
+    const act = f.statut === 'soumis'
+      ? '<button class="btn" onclick="validerFeuille(' + f.id + ')">Valider</button> <button class="btn ghost" onclick="rejeterFeuille(' + f.id + ')">Rejeter</button>' : '';
+    html += '<tr><td class="tcell">' + esc(p ? p.nom : '?') + '</td>'
+      + '<td class="tcell">' + new Date(wk).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</td>'
+      + '<td class="total">' + (fmtQty(weekTotalFor(f.membre, wk)) || '0') + '</td>'
+      + '<td class="tcell"><span class="fbadge ' + f.statut + '">' + f.statut + '</span></td>'
+      + '<td class="tcell">' + act + '</td></tr>';
+  }
+  html += '</tbody></table>';
+  main.innerHTML = html;
+}
+
+function weekLabel() {
+  const s = new Date(S.weekStart), e = new Date(S.weekStart + 6 * DAY);
+  const f = (x) => x.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return 'Semaine du ' + f(s) + ' au ' + f(e);
+}
+
+// ---- Saisie d'une cellule -------------------------------------------------
+async function setCell(taskId, dayMs, qtyStr) {
+  const hours = qtyToHours(qtyStr);
+  const ex = S.entries.find(e => e.membre === S.me && e.tache === taskId && sameDay(gristToMs(e.date), dayMs));
+  if (S.alone) {
+    if (ex) { if (hours > 0) ex.heures = hours; else S.entries = S.entries.filter(e => e !== ex); }
+    else if (hours > 0) { const nid = Math.max(0, ...S.entries.map(e => e.id)) + 1; S.entries.push({ id: nid, membre: S.me, tache: taskId, date: msToGrist(dayMs), heures: hours }); }
+    render(); return;
+  }
+  try {
+    if (ex && hours > 0) { ex.heures = hours; await grist.docApi.applyUserActions([['UpdateRecord', 'TimeEntries', ex.id, { heures: hours }]]); }
+    else if (ex && hours <= 0) { S.entries = S.entries.filter(e => e !== ex); await grist.docApi.applyUserActions([['RemoveRecord', 'TimeEntries', ex.id]]); }
+    else if (!ex && hours > 0) {
+      const r = await grist.docApi.applyUserActions([['AddRecord', 'TimeEntries', null, { membre: S.me, tache: taskId, date: msToGrist(dayMs), heures: hours }]]);
+      S.entries.push({ id: r.retValues[0], membre: S.me, tache: taskId, date: msToGrist(dayMs), heures: hours });
+    }
+    // INTEGRATION (source unique du realise) : la CRA alimente Tasks.tempsPasse
+    // = somme des TimeEntries de la tache. Ainsi Plan/Dashboard/Kanban/Gantt/Calendar
+    // (qui lisent deja tempsPasse) refletent le realise EXACT, sans le dupliquer.
+    // Echoue en silence si la colonne n'existe pas (doc hors TaskFlow).
+    try { await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { tempsPasse: taskRealizedHours(taskId) }]]); } catch (e) {}
+    render();
+  } catch (e) { toast('Ecriture refusee : ' + (e.message || e)); render(); }
+}
+window.setCell = setCell;
+// realise total d'une tache = somme des heures saisies (tous agents) = source de tempsPasse
+function taskRealizedHours(taskId) { let h = 0; for (const e of S.entries) if (e.tache === taskId) h += Number(e.heures) || 0; return h; }
+
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2600); }
+
+// ---- Controles ------------------------------------------------------------
+document.getElementById('wPrev').onclick = () => { S.weekStart -= 7 * DAY; render(); };
+document.getElementById('wNext').onclick = () => { S.weekStart += 7 * DAY; render(); };
+document.getElementById('wNow').onclick = () => { S.weekStart = mondayOf(Date.now()); render(); };
+document.getElementById('unitSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#unitSeg button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); S.unit = b.dataset.u; render();
+});
+document.getElementById('tabSeg').querySelectorAll('button').forEach(b => b.onclick = () => { S.tab = b.dataset.t; render(); });
+document.getElementById('exportBtn').onclick = () => exportCSV();
+document.getElementById('craAclBtn').onclick = openCraAcl;
+document.getElementById('craAclClose').onclick = () => document.getElementById('craAclModal').classList.remove('open');
+document.getElementById('craAclApply').onclick = craAclApply;
+document.getElementById('craAclRemove').onclick = craAclRemove;
+document.getElementById('craAclModal').addEventListener('click', (e) => { if (e.target.id === 'craAclModal') e.currentTarget.classList.remove('open'); });
+
+// ---- Workflow : soumission / validation par le chef (via l'annuaire) ------
+function myStatut() { const f = S.feuilles.find(x => x.membre === S.me && sameDay(gristToMs(x.semaine), S.weekStart)); return f ? f.statut : 'brouillon'; }
+function isLocked() { return ['soumis', 'valide'].includes(myStatut()); }
+function weekTotalFor(membre, wkMs) { let h = 0; for (let i = 0; i < 7; i++) { const d = wkMs + i * DAY; for (const e of S.entries) if (e.membre === membre && sameDay(gristToMs(e.date), d)) h += Number(e.heures) || 0; } return h; }
+async function setFeuille(membre, wkSec, patch) {
+  const ex = S.feuilles.find(f => f.membre === membre && sameDay(gristToMs(f.semaine), wkSec * 1000));
+  if (ex) { Object.assign(ex, patch); if (!S.alone) await grist.docApi.applyUserActions([['UpdateRecord', 'Feuilles', ex.id, patch]]); return ex; }
+  const base = Object.assign({ membre: membre, semaine: wkSec }, patch);
+  if (S.alone) { const nid = Math.max(0, ...S.feuilles.map(f => f.id)) + 1; const f = Object.assign({ id: nid }, base); S.feuilles.push(f); return f; }
+  const r = await grist.docApi.applyUserActions([['AddRecord', 'Feuilles', null, base]]);
+  const f = Object.assign({ id: r.retValues[0] }, base); S.feuilles.push(f); return f;
+}
+async function submitWeek() { try { await setFeuille(S.me, msToGrist(S.weekStart), { statut: 'soumis' }); render(); toast('Semaine soumise pour validation'); } catch (e) { toast('Refuse : ' + (e.message || e)); } }
+async function withdrawWeek() { try { await setFeuille(S.me, msToGrist(S.weekStart), { statut: 'brouillon' }); render(); toast('Soumission retiree'); } catch (e) { toast('Refuse : ' + (e.message || e)); } }
+window.validerFeuille = async (id) => { const f = S.feuilles.find(x => x.id === id); if (!f) return; f.statut = 'valide'; render(); if (!S.alone) { try { await grist.docApi.applyUserActions([['UpdateRecord', 'Feuilles', id, { statut: 'valide', validePar: S.me, dateValidation: msToGrist(Date.now()) }]]); } catch (e) { toast('Refuse : ' + (e.message || e)); } } toast('Feuille validee'); };
+window.rejeterFeuille = async (id) => { const f = S.feuilles.find(x => x.id === id); if (!f) return; f.statut = 'rejete'; render(); if (!S.alone) { try { await grist.docApi.applyUserActions([['UpdateRecord', 'Feuilles', id, { statut: 'rejete' }]]); } catch (e) { toast('Refuse : ' + (e.message || e)); } } toast('Feuille rejetee'); };
+
+// ---- Export Excel (CSV + BOM, comme le Plan) ------------------------------
+function exportCSV() {
+  const nameOf = (id) => { const p = S.team.find(t => t.id === id); return p ? p.nom : id; };
+  const taskOf = (id) => { const t = S.tasks.find(x => x.id === id); return t ? t.titre : id; };
+  const projOf = (id) => { const t = S.tasks.find(x => x.id === id); if (!t) return ''; const p = S.projects.find(x => x.id === t.projet); return p ? p.nom : ''; };
+  const statutOf = (membre, dateSec) => { const wk = mondayOf(dateSec * 1000); const f = S.feuilles.find(x => x.membre === membre && sameDay(gristToMs(x.semaine), wk)); return f ? f.statut : 'brouillon'; };
+  const fmtDate = (sec) => { const d = new Date(sec * 1000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const rows = [['Agent', 'Date', 'Projet/Imputation', 'Tache', 'Heures', 'Statut feuille']];
+  S.entries.slice().sort((a, b) => a.date - b.date).forEach(e => rows.push([nameOf(e.membre), fmtDate(e.date), projOf(e.tache), taskOf(e.tache), String(e.heures), statutOf(e.membre, e.date)]));
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'feuilles-de-temps.csv'; a.click();
+}
+
+// ---- Configurer les droits CRA (one-shot owner, pattern ACL prouve) -------
+// La recursivite vit dans des colonnes formules ; l'ACL ne fait qu'un test simple.
+const CRA_MEMO_TE = 'taskflow-droits-cra-te';
+const CRA_MEMO_FE = 'taskflow-droits-cra-fe';
+const F_MEMBRE_EMAIL = "$membre.email if $membre else ''";
+const F_OWNER_CHEFS = "emails = set()\nif $membre:\n    emails.add($membre.email)\n    for c in $membre.chaine_chefs:\n        emails.add(c.email)\n',' + ','.join(sorted(e for e in emails if e)) + ','";
+const CRA_RULE_TE = "not (user.Access == 'owners' or user.Email == rec.membreEmail)";
+const CRA_RULE_FE = "not (user.Access == 'owners' or (user.Email and (',' + user.Email + ',') in rec.ownerChefsEmails))";
+function craAclMsg(t, c) { const el = document.getElementById('craAclStatus'); el.textContent = t; el.className = 'cstatus ' + (c || 'off'); }
+async function _meta(t) { return colObjToRows(await grist.docApi.fetchTable(t)); }
+async function _ensureCol(table, col, formula) {
+  const cols = await _meta('_grist_Tables_column'), tt = (await _meta('_grist_Tables')).find(t => t.tableId === table);
+  if (tt && !cols.some(c => c.parentId === tt.id && c.colId === col)) await grist.docApi.applyUserActions([['AddColumn', table, col, { type: 'Any', isFormula: true, formula: formula }]]);
+}
+async function _ensureRule(table, formula, memo) {
+  const res = (await _meta('_grist_ACLResources')).find(r => r.tableId === table && r.colIds === '*');
+  const ref = res ? res.id : (await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLResources', null, { tableId: table, colIds: '*' }]])).retValues[0];
+  if (!(await _meta('_grist_ACLRules')).some(r => r.memo === memo)) await grist.docApi.applyUserActions([['AddRecord', '_grist_ACLRules', null, { resource: ref, aclFormula: formula, permissionsText: '-U-C-D', rulePos: 1, memo: memo }]]);
+}
+async function craAclApply() {
+  craAclMsg('Application...', 'off');
+  try {
+    await _ensureCol('TimeEntries', 'membreEmail', F_MEMBRE_EMAIL);
+    await _ensureCol('Feuilles', 'ownerChefsEmails', F_OWNER_CHEFS);
+    await _ensureRule('TimeEntries', CRA_RULE_TE, CRA_MEMO_TE);
+    await _ensureRule('Feuilles', CRA_RULE_FE, CRA_MEMO_FE);
+    craAclMsg('Droits configures : chacun edite SES temps ; agent + chefs editent SA feuille.', 'ok');
+    document.getElementById('craAclApply').disabled = true; document.getElementById('craAclRemove').disabled = false;
+  } catch (e) { craAclMsg(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : 'Erreur : ' + (e.message || e), 'err'); }
+}
+async function craAclRemove() {
+  craAclMsg('Retrait...', 'off');
+  try {
+    const rules = (await _meta('_grist_ACLRules')).filter(r => r.memo === CRA_MEMO_TE || r.memo === CRA_MEMO_FE);
+    if (rules.length) await grist.docApi.applyUserActions(rules.map(r => ['RemoveRecord', '_grist_ACLRules', r.id]));
+    for (const [tbl, col] of [['TimeEntries', 'membreEmail'], ['Feuilles', 'ownerChefsEmails']]) {
+      const cols = await _meta('_grist_Tables_column'), tt = (await _meta('_grist_Tables')).find(t => t.tableId === tbl);
+      if (tt && cols.some(c => c.parentId === tt.id && c.colId === col)) await grist.docApi.applyUserActions([['RemoveColumn', tbl, col]]);
+      const res = (await _meta('_grist_ACLResources')).find(r => r.tableId === tbl && r.colIds === '*');
+      if (res) { const left = (await _meta('_grist_ACLRules')).filter(r => r.resource === res.id); if (!left.length) await grist.docApi.applyUserActions([['RemoveRecord', '_grist_ACLResources', res.id]]); }
+    }
+    craAclMsg('Droits CRA retires (edition libre par defaut).', 'off');
+    document.getElementById('craAclApply').disabled = false; document.getElementById('craAclRemove').disabled = true;
+  } catch (e) { craAclMsg(/owner|permission|forbidden|403/i.test(e.message || '') ? 'Reserve au proprietaire du document.' : 'Erreur : ' + (e.message || e), 'err'); }
+}
+async function openCraAcl() {
+  document.getElementById('craAclPrev').textContent = 'TimeEntries.membreEmail = ' + F_MEMBRE_EMAIL + '\nRegle TimeEntries : ' + CRA_RULE_TE + '\n\nFeuilles.ownerChefsEmails (membre + chaine_chefs)\nRegle Feuilles : ' + CRA_RULE_FE;
+  document.getElementById('craAclModal').classList.add('open');
+  craAclMsg('Verification...', 'off');
+  try { const on = (await _meta('_grist_ACLRules')).some(r => r.memo === CRA_MEMO_TE); craAclMsg(on ? 'Droits CRA ACTIFS.' : 'Droits CRA non configures (edition libre).', on ? 'ok' : 'off'); document.getElementById('craAclApply').disabled = on; document.getElementById('craAclRemove').disabled = !on; } catch (e) { craAclMsg('Etat indeterminable : ' + (e.message || e), 'err'); }
+}
+
+// ---- Grist ----------------------------------------------------------------
+function colObjToRows(d) { const rows = []; const ids = d.id || []; for (let i = 0; i < ids.length; i++) { const o = {}; for (const k in d) o[k] = d[k][i]; rows.push(o); } return rows; }
+
+async function getMyUserId() {
+  try { const tok = await grist.docApi.getAccessToken({ readOnly: true }); const p = JSON.parse(atob(tok.token.split('.')[1])); return p.userId || null; } catch (e) { return null; }
+}
+
+async function loadGrist() {
+  S.weekStart = S.weekStart || mondayOf(Date.now());
+  const tables = await grist.docApi.listTables();
+  S.hasTable = tables.includes('TimeEntries');
+  S.team = colObjToRows(await grist.docApi.fetchTable('Team')).map(r => ({ id: r.id, nom: r.nom, email: r.email, gristUserId: r.gristUserId, agentsGeres: refIds(r.agents_geres) }));
+  S.tasks = tables.includes('Tasks') ? colObjToRows(await grist.docApi.fetchTable('Tasks')).map(r => ({ id: r.id, titre: r.titre, projet: r.projet, assignees: r.assignees })) : [];
+  S.projects = tables.includes('Projects') ? colObjToRows(await grist.docApi.fetchTable('Projects')).map(r => ({ id: r.id, nom: r.nom })) : [];
+  S.entries = S.hasTable ? colObjToRows(await grist.docApi.fetchTable('TimeEntries')).map(r => ({ id: r.id, membre: r.membre, tache: r.tache, date: r.date, heures: r.heures })) : [];
+  S.feuilles = tables.includes('Feuilles') ? colObjToRows(await grist.docApi.fetchTable('Feuilles')).map(r => ({ id: r.id, membre: r.membre, semaine: r.semaine, statut: r.statut, validePar: r.validePar, motifRejet: r.motifRejet })) : [];
+  S.meUserId = await getMyUserId();
+  // resolution "moi" : par gristUserId (si pont present) sinon 1er membre (fallback demo-like)
+  let me = S.team.find(t => t.gristUserId && t.gristUserId === S.meUserId);
+  S.me = me ? me.id : (S.team[0] ? S.team[0].id : null);
+  const meRow = S.team.find(t => t.id === S.me);
+  S.meName = meRow ? meRow.nom : '';
+  S.mesGeres = meRow ? (meRow.agentsGeres || []).filter(id => id !== S.me) : [];
+  S.gOk = true;
+  render();
+}
+
+async function activate() {
+  try {
+    const tables = await grist.docApi.listTables();
+    const actions = [];
+    if (!tables.includes('TimeEntries')) actions.push(['AddTable', 'TimeEntries', [
+      { id: 'membre', type: 'Ref:Team' }, { id: 'tache', type: 'Ref:Tasks' },
+      { id: 'date', type: 'Date' }, { id: 'heures', type: 'Numeric' },
+      { id: 'imputation', type: 'Text' }, { id: 'description', type: 'Text' },
+    ]]);
+    if (!tables.includes('Feuilles')) actions.push(['AddTable', 'Feuilles', [
+      { id: 'membre', type: 'Ref:Team' }, { id: 'semaine', type: 'Date' },
+      { id: 'statut', type: 'Choice', widgetOptions: JSON.stringify({ choices: ['brouillon', 'soumis', 'valide', 'rejete'] }) },
+      { id: 'validePar', type: 'Ref:Team' }, { id: 'dateValidation', type: 'Date' }, { id: 'motifRejet', type: 'Text' },
+    ]]);
+    if (actions.length) await grist.docApi.applyUserActions(actions);
+    await loadGrist();
+  } catch (e) {
+    document.getElementById('main').innerHTML = '<div class="empty-cta">Erreur activation : ' + esc(e.message || e) + '</div>';
+  }
+}
+
+// ---- Init -----------------------------------------------------------------
+(async () => {
+  try {
+    grist.ready({ requiredAccess: 'full' });
+    await new Promise(r => setTimeout(r, 250));
+    await grist.docApi.listTables();
+    grist.onRecords(() => { if (S.gOk) loadGrist().catch(() => {}); });
+    await loadGrist();
+  } catch (e) {
+    loadDemo();
+  }
+})();
+</script>
+</body>
+</html>

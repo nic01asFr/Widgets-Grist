@@ -951,6 +951,7 @@
         // ═══════════════════════════════════════════════════════════════════════
         let tasks = [], team = [], projects = [], gristReady = false;
         let TASK_COLS = new Set(); // colonnes reelles de la table Tasks (sweet spot : charges/dateCloture n'existent que si le widget Plan a ete ouvert)
+        let CRA_ACTIVE = false; // si la Feuille de temps (TimeEntries) est active, tempsPasse devient un rollup CRA -> saisie manuelle figee (anti-doublon)
         let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig en mode Grist
         let groupBy = 'statut', searchQuery = '', selectedTaskId = null;
         let colorMode = localStorage.getItem('taskflow_kanban_colormode') || 'priority';
@@ -1671,7 +1672,7 @@
                         <div class="prop-value">
                             <div class="tc-grid">
                                 <div class="tc-box"><div class="tcl">Estimé</div><div class="tcv"><input type="number" min="0" step="0.5" value="${estim || ''}" placeholder="0" onchange="updateField('estimationH', parseFloat(this.value) || null)"><small>h</small></div></div>
-                                <div class="tc-box"><div class="tcl">Passé</div><div class="tcv"><input type="number" min="0" step="0.5" value="${passe || ''}" placeholder="0" onchange="updateField('tempsPasse', parseFloat(this.value) || null)"><small>h</small></div></div>
+                                <div class="tc-box"><div class="tcl">Passé${CRA_ACTIVE ? ' <span style="font-weight:400;opacity:.6">(Feuille de temps)</span>' : ''}</div><div class="tcv"><input type="number" min="0" step="0.5" value="${passe || ''}" placeholder="0" ${CRA_ACTIVE ? 'readonly title="Saisi via la Feuille de temps"' : ''} onchange="updateField('tempsPasse', parseFloat(this.value) || null)"><small>h</small></div></div>
                             </div>
                             ${estim > 0 ? `<div class="tc-bar"><i class="${timeOver ? 'over' : ''}" style="width:${timePercent}%"></i></div><div class="tc-foot"><span>${Math.round((passe/estim)*100)}% consommé</span><span>reste ${Math.max(estim-passe,0)} h</span></div>` : ''}
                             ${(data.assignees.length && TASK_COLS.has('charges')) ? `<div style="margin-top:13px"><div class="prop-label" style="margin-bottom:6px">Charge par personne</div>${data.assignees.map(id => `<div class="charge-row"><span class="an">${escapeHtml(getTeamMemberName(id))}</span><input type="number" min="0" step="0.5" value="${chargeOf(id)}" onchange="updateCharge(${id}, this.value)"><span style="font-size:0.75rem;color:var(--text-muted)">h</span></div>`).join('')}<div style="margin-top:6px;font-size:0.78rem;color:var(--text-muted)">Total : <strong>${chargeTotalH}</strong> h</div></div>` : ''}${chargeConsolHtml}
@@ -1977,6 +1978,7 @@
             }
             // Phase 2 : ici on est dans Grist. Toute erreur est logguée mais ne bascule PAS en démo.
             try { await ensureSchema(); } catch (e) { console.error('ensureSchema error (continuing):', e); showToast('Schéma: ' + (e?.message || e), 'error'); }
+            try { CRA_ACTIVE = (await grist.docApi.listTables()).includes('TimeEntries'); } catch (e) {}
             try { await loadAllData(); } catch (e) { console.error('loadAllData error (continuing):', e); showToast('Chargement: ' + (e?.message || e), 'error'); }
             try {
                 grist.onRecords(async () => await loadAllData());
