@@ -305,8 +305,9 @@ Saisie du **réalisé daté par personne** (lot temps GENCI #9 + export Excel #1
   - `Feuilles` : enveloppe personne×semaine — `membre, semaine, statut (brouillon/soumis/valide/rejete), validePar, dateValidation, motifRejet`.
 - **Identité du connecté** : `getAccessToken().userId` → ligne `Team` via `Team.gristUserId` (pont, colonne ajoutée à l'usage). L'API plugin n'expose pas l'email au widget (cf. mémoire ACL).
 - **Grille hebdo** (lignes tâches × jours, totaux), unité configurable **heures/jours/½j** (stockage canonique en heures + `heuresParJour`, modèle Odoo).
-- **Workflow** : soumettre → **valider/rejeter par le chef** (onglet « À valider » via `Team.agents_geres` de l'annuaire ; verrouille la grille).
+- **Workflow** : soumettre → **valider/rejeter par le chef** (onglet « À valider » ; verrouille la grille). Le « qui je gère » est **recalculé côté client** depuis l'annuaire (`Team.entite` + `Entites.parent/chef`) : la colonne formule `Team.agents_geres` se **vide** en passant par le relais launcher (valeurs null ; les Refs simples passent, pas les RefList calculées par formule).
 - **Export** CSV+BOM (Excel).
+- **Droits/ACL** : configurés **dans l'organigramme** (bouton « Droits » unique pour Tasks + TimeEntries + Feuilles), PAS dans la CRA. La CRA est un outil de saisie pur.
 
 ### ⚠️ Modèle de données du RÉALISÉ — source unique, pas de doublon
 
