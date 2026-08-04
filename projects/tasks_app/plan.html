@@ -129,7 +129,7 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
       <button class="btn ghost" id="navPrev">◀</button>
       <span class="range" id="navRange">—</span>
       <button class="btn ghost" id="navNext">▶</button>
-      <button class="btn ghost" id="navToday" style="display:none">Aujourd'hui</button>
+      <button class="btn ghost" id="navToday">Aujourd'hui</button>
     </div>
     <div class="spacer"></div>
     <label class="chk"><span>Grouper</span>
@@ -137,7 +137,6 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
         <option value="person">Personne</option>
         <option value="portefeuille">Portefeuille</option>
         <option value="project">Projet</option>
-        <option value="role">Rôle</option>
       </select>
     </label>
     <div class="seg" id="segMode"></div>
@@ -222,6 +221,12 @@ body.panel-open #app { margin-right: min(380px, 92vw); }
 .pbanner.under { background: rgba(21,160,107,.12); color: #54d2a4; border-left-color: #15a06b; }
 .phint { font-size: .75rem; color: var(--text-muted, #94a3b8); margin-bottom: 12px; line-height: 1.55; }
 .phint b { color: var(--text, #cbd5e1); font-weight: 600; }
+.palloc { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.palloc .dl { display: block; font-size: .74rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+.palloc-row { display: flex; gap: 6px; align-items: center; }
+.palloc-row select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface, var(--card-bg)); color: var(--text); font-size: .8rem; }
+.palloc-row input { width: 72px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface, var(--card-bg)); color: var(--text); font-size: .8rem; }
+.palloc-empty { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: .78rem; color: var(--text-muted); line-height: 1.5; }
 .tlpop { position: fixed; z-index: 60; width: 272px; max-width: 88vw; background: var(--surface, #1a2236); border: 1px solid var(--border, #2a3550); border-radius: 12px; box-shadow: 0 14px 44px rgba(0,0,0,.5); padding: 13px; }
 .tpc-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 7px; }
 .tpc-prio, .tpc-status, .tpc-mil { font-size: .64rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; line-height: 1.45; }
@@ -295,6 +300,35 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion. --------------------------------------------------- */
+    const DONE_HINT = /valid|termin|clos|done|fini|achev|r[ée]alis|complet/i;
+    const DEAD_HINT = /annul|abandon|rejet|cancel|caduc/i;
+
+    // Metadonnees de type de tache (source unique : icone + libelle).
+    const TYPE_META = {
+        tache:   { label: 'Tâche',   icon: '' },
+        jalon:   { label: 'Jalon',   icon: '◆' },
+        reunion: { label: 'Réunion', icon: '☰' }
+    };
+    function typeMeta(type) { return TYPE_META[type] || TYPE_META.tache; }
+
+    // Index {id(string): row} depuis un tableau de lignes (projets, team...).
+    function indexById(rows) { const m = {}; for (const r of (rows || [])) if (r && r.id != null) m[String(r.id)] = r; return m; }
+    // Portefeuille (departement) d'une tache via son projet. projIndex = indexById(projects).
+    function portefeuilleOf(t, projIndex) {
+        if (!t || !projIndex) return 0;
+        const p = projIndex[String(t.projet)];
+        return (p && (p.portefeuille || 0)) || 0;
+    }
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -333,11 +367,19 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier de la liste (ancienne convention) pour ne rien casser.
+        let doneValue = null;
+        for (const s of final) { if (DONE_HINT.test(s.label) || DONE_HINT.test(s.value)) doneValue = s.value; }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => (DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value)) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -386,6 +428,20 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+    // Tache en retard : echeance passee, ni faite ni annulee, progression < 100.
+    // dateEcheance = timestamp Unix SECONDES. now = ms (defaut Date.now()).
+    function isLate(t, cfg, now) {
+        if (!t || t.dateEcheance == null) return false;
+        if (isDone(cfg, t.statut) || isDead(cfg, t.statut)) return false;
+        if ((Number(t.progression) || 0) >= 100) return false;
+        return (t.dateEcheance * 1000) < (now != null ? now : Date.now());
+    }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -625,6 +681,14 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
+        isLate: isLate,
+        TYPE_META: TYPE_META,
+        typeMeta: typeMeta,
+        indexById: indexById,
+        portefeuilleOf: portefeuilleOf,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
@@ -651,7 +715,7 @@ const TF = (function () {
 // ============================================================================
 const S = {
   tasks: [], team: [], projects: [], portefeuilles: [], hasPortef: false, entries: [], hasEntries: false,
-  granularity: 'week', offset: 0, horizon: 12,
+  granularity: 'month', offset: 0, horizon: 12,
   groupBy: 'person', unit: 'pct', includeDone: false, derive: false, mode: 'prevu', workdays: false, allocUnit: 'h',
   demo: false, extFilters: null, timeline: false
 };
@@ -667,7 +731,8 @@ const portefById = (id) => S.portefeuilles.find(p => p.id === id);
 function portefKeyOf(t) { const p = projById(t.projet); return (p && p.portefeuille) ? String(p.portefeuille) : '0'; }
 const groupLabel = (g) => g === 'project' ? 'Projet' : g === 'role' ? 'Rôle' : g === 'portefeuille' ? 'Portefeuille' : 'Personne';
 const activeTeam = () => S.team.filter(m => m.actif !== false);
-const isTerminal = (t) => TF.isTerminal(statusCfg, t.statut);
+// « terminé » = clôture positive (Validé), pas le dernier statut (Annulé).
+const isTerminal = (t) => TF.isDone(statusCfg, t.statut);
 const capOf = (m) => (Number(m && m.capaciteHebdo) > 0 ? Number(m.capaciteHebdo) : 35);
 const capPeriod = (cap) => S.granularity === 'month' ? cap * 52 / 12 : cap;
 const plabel = (p) => S.granularity === 'month' ? (p.slice(5) + '/' + p.slice(2, 4)) : ('S' + p.slice(6));
@@ -838,14 +903,14 @@ function cellColor(h, cap) {
 // ============================================================================
 function render() {
   // segments
-  renderSeg('segGran', [['week', 'Sem'], ['month', 'Mois']], S.granularity, v => { S.granularity = v; S.offset = 0; render(); });
+  renderSeg('segGran', [['week', 'Semaine'], ['month', 'Mois']], S.granularity, v => { S.granularity = v; S.offset = 0; render(); });
   renderSeg('segMode', [['prevu', 'Prévu'], ['realise', 'Réalisé'], ['reste', 'Reste'], ['dispo', 'Dispo']], S.mode, v => { S.mode = v; if (v === 'dispo' && S.groupBy !== 'person') { S.groupBy = 'person'; document.getElementById('selGroup').value = 'person'; toast('Vue Dispo : groupement « Personne » (la marge ne se mesure qu\'au global, tous projets confondus)'); } render(); });
   renderSeg('segUnit', [['pct', '%'], ['hours', 'h']], S.unit, v => { S.unit = v; render(); });
   document.getElementById('selGroup').value = S.groupBy;
   document.getElementById('chkDone').checked = S.includeDone;
   document.getElementById('chkDerive').checked = S.derive;
   document.getElementById('chkWorkdays').checked = S.workdays;
-  document.getElementById('navToday').style.display = S.offset !== 0 ? '' : 'none';
+  document.getElementById('navToday').style.display = '';
 
   const _rmode = S.mode === 'realise' || S.mode === 'reste';
   const tasks = planTasks().map(t => (_rmode && isTerminal(t) && t.dateCloture && t.dateCloture >= t.dateDebut) ? Object.assign({}, t, { dateEcheance: t.dateCloture }) : t); // réalisé/reste : redater les tâches clôturées sur leur date de clôture réelle
@@ -870,7 +935,20 @@ function render() {
   if (!S.team.length) { wrap.innerHTML = '<div class="empty"><div class="ic">▦</div><div>Aucun membre dans la table Team</div></div>'; renderAlerts(matrix, []); return; }
   const hasData = Object.keys(matrix).length > 0;
   const undated = tasks.filter(t => effCharges(t).length && (t.dateDebut == null || t.dateEcheance == null)).length;
-  if (!hasData && !undated) { wrap.innerHTML = '<div class="empty"><div class="ic">▦</div><div>Aucune charge datée à planifier</div><div style="font-size:.78rem">Renseignez la charge par personne + des dates sur les tâches.</div></div>'; renderAlerts(matrix, periods); return; }
+  // Amorçage : s'il existe des tâches datées+assignées (groupement Personne), on rend la grille (0%)
+  // pour permettre l'allocation par clic de cellule ; sinon empty-state orienté vers la saisie.
+  const canAlloc = S.groupBy === 'person' && S.tasks.some(t => t.dateDebut != null && t.dateEcheance != null && getRefList(t.assignees).length);
+  let emptyHint = '';
+  if (!hasData && !undated) {
+    if (!canAlloc) {
+      const est = S.tasks.filter(t => (Number(t.estimationH) || 0) > 0 && !TF.parseCharges(t.charges).length && getRefList(t.assignees).length).length;
+      const cta = est
+        ? '<div style="font-size:.78rem;max-width:360px">' + est + ' tâche(s) estimée(s) et assignée(s), non réparties.</div><div style="display:flex;gap:8px;margin-top:10px;justify-content:center"><button class="btn" onclick="document.getElementById(\'chkDerive\').checked=true;S.derive=true;render()">Estimer (aperçu)</button><button class="btn" onclick="initCharges()">⚙ Initialiser</button></div>'
+        : '<div style="font-size:.78rem;max-width:360px">Assignez des tâches datées (Kanban/Gantt) avec une estimation, puis répartissez la charge ici.</div>';
+      wrap.innerHTML = '<div class="empty"><div class="ic">▦</div><div>Aucune charge datée à planifier</div>' + cta + '</div>'; renderAlerts(matrix, periods); return;
+    }
+    emptyHint = '<div class="pf-hint">Aucune charge encore répartie — cliquez une cellule pour <b>allouer une tâche</b>, ou activez « Estimer » / « ⚙ Init. charges ».</div>';
+  }
 
   const starts = periodStarts(TF.shiftPeriods(new Date(), S.granularity, S.offset), S.granularity, S.horizon);
   let h = '<table class="grid"><thead><tr><th class="colres">Ressource</th>';
@@ -908,7 +986,7 @@ function render() {
   }
   h += '</tbody>';
   // pied : total équipe par période vs capacité (ajustée des indisponibilités)
-  h += '<tfoot><tr><td class="colres" style="text-align:left;padding:7px 10px">' + (dispo ? 'Dispo équipe' : 'Capacité équipe') + '</td>';
+  h += '<tfoot><tr><td class="colres" style="text-align:left;padding:7px 10px">' + (dispo ? 'Dispo équipe' : (S.mode === 'realise' ? 'Réalisé équipe' : S.mode === 'reste' ? 'Reste équipe' : 'Charge équipe')) + '</td>';
   let grand = 0;
   for (let pi = 0; pi < periods.length; pi++) {
     const p = periods[pi];
@@ -929,7 +1007,7 @@ function render() {
   if (S.groupBy === 'portefeuille' && !S.projects.some(p => Number(p.portefeuille) > 0)) {
     h = '<div class="pf-hint">Aucun projet n\'est rattaché à un portefeuille — tout apparaît sous « Sans portefeuille ». Affectez vos projets dans la table <b>Projects</b> (colonne <b>Portefeuille</b>).</div>' + h;
   }
-  wrap.innerHTML = h;
+  wrap.innerHTML = emptyHint + h;
   wrap.querySelectorAll('td.cell').forEach(td => td.addEventListener('click', () => openCell(td.dataset.key, td.dataset.period)));
   wrap.querySelectorAll('td.colres.clk').forEach(td => td.addEventListener('click', () => openResource(td.dataset.res)));
   renderAlerts(matrix, periods);
@@ -1162,6 +1240,14 @@ function tasksInCell(key, period) {
   return out.sort((a, b) => b.slice - a.slice);
 }
 
+// Une tâche a-t-elle au moins un jour dans la période (clé) ? (pour l'amorçage de charge)
+function taskInPeriod(t, period) {
+  if (!t || t.dateDebut == null || t.dateEcheance == null) return false;
+  const d0 = Math.floor((t.dateDebut * 1000) / 86400000), d1 = Math.floor((t.dateEcheance * 1000) / 86400000);
+  for (let dd = d0; dd <= d1; dd++) if (TF.periodKey(new Date(dd * 86400000), S.granularity) === period) return true;
+  return false;
+}
+
 // Disponibilité par membre sur une période (charge TOTALE tous projets vs capacité) → guide la réaffectation.
 function memberAvail(period) {
   const pr = TF.periodRange(TF.shiftPeriods(new Date(), S.granularity, S.offset), S.granularity, S.horizon);
@@ -1211,6 +1297,14 @@ function openCell(key, period) {
   }
   const sorted = items.slice().sort((a, b) => b.slice - a.slice); // la plus grosse contribution en premier
   const unitToggle = editable ? '<div class="unitbar">Allouer en <button class="' + (S.allocUnit === 'h' ? 'on' : '') + '" onclick="setAllocUnit(\'h\')">heures</button><button class="' + (S.allocUnit === 'pct' ? 'on' : '') + '" onclick="setAllocUnit(\'pct\')">% capacité</button></div>' : '';
+  // Amorçage : permettre d'allouer une tâche datée sans charge (sinon cellule vide = cul-de-sac).
+  const allocSection = editable ? (() => {
+    const chargedIds = new Set(items.map(i => i.task.id));
+    const addable = planTasks().filter(t => !chargedIds.has(t.id) && getRefList(t.assignees).includes(Number(tid)) && taskInPeriod(t, period));
+    const who = ((teamById(tid) || {}).nom || '').split(' ')[0];
+    if (!addable.length) return '<div class="palloc-empty">Aucune tâche' + (who ? ' de ' + esc(who) : '') + ' à allouer sur cette période. Assignez des tâches datées (Kanban/Gantt), puis répartissez la charge ici.</div>';
+    return '<div class="palloc"><span class="dl">+ Allouer une tâche</span><div class="palloc-row"><select id="allocTaskSel"><option value="">Choisir une tâche…</option>' + addable.map(t => '<option value="' + t.id + '">' + esc(t.titre) + '</option>').join('') + '</select><input type="number" id="allocTaskH" min="0" step="0.5" placeholder="h total"><button class="btn" onclick="allocNewTask(' + tid + ')">Ajouter</button></div></div>';
+  })() : '';
   document.getElementById('pBody').innerHTML = banner + hint + unitToggle + (sorted.length ? sorted.map(i => {
     const p = projById(i.task.projet);
     const sliceTxt = (p ? esc(p.nom) : 'Sans projet') + ' · ' + i.slice + ' h cette ' + per;
@@ -1223,7 +1317,7 @@ function openCell(key, period) {
       : '<div class="th">' + i.total + ' h</div>';
     const dates = editable ? '<div class="tkdates"><span class="dl">📅 Dates</span><input type="date" name="dateDebut" value="' + gToInput(i.task.dateDebut) + '" title="Début" onchange="setDates(' + i.task.id + ',this.value,null)"><span>→</span><input type="date" name="dateEcheance" value="' + gToInput(i.task.dateEcheance) + '" title="Échéance" onchange="setDates(' + i.task.id + ',null,this.value)"></div>' : '';
     return '<div class="tk"><div class="tkmain"><span class="pdot" style="background:' + (p ? p.couleur : '#64748b') + '"></span><div class="tinfo"><div class="tt">' + esc(i.task.titre) + '</div><div class="tm">' + sliceTxt + '</div></div>' + right + '</div>' + dates + '</div>';
-  }).join('') : '<div style="color:var(--text-muted);font-size:.82rem">Aucune tâche ' + (S.mode === 'realise' ? 'réalisée' : 'planifiée') + ' sur cette période.</div>');
+  }).join('') : '<div style="color:var(--text-muted);font-size:.82rem">Aucune tâche ' + (S.mode === 'realise' ? 'réalisée' : 'planifiée') + ' sur cette période.</div>') + allocSection;
   document.getElementById('overlay').classList.add('show');
   document.getElementById('panel').classList.add('show'); document.body.classList.add('panel-open');
   // lien heatmap → cellule surlignée + timeline focalisée
@@ -1234,6 +1328,13 @@ function openCell(key, period) {
 function closePanel() { S._cellKey = null; S._resId = null; document.getElementById('overlay').classList.remove('show'); document.getElementById('panel').classList.remove('show'); document.body.classList.remove('panel-open'); document.querySelectorAll('#gridwrap td.cell.sel').forEach(td => td.classList.remove('sel')); if (S.timeline) renderTimeline(); }
 function refreshCell() { if (S._cellKey != null) openCell(S._cellKey, S._cellPeriod); }
 function setAllocUnit(u) { S.allocUnit = u; refreshCell(); }
+// Amorçage : alloue une charge (heures totales) à une tâche jusque-là sans charge pour cette personne.
+function allocNewTask(tid) {
+  const sel = document.getElementById('allocTaskSel'); const inp = document.getElementById('allocTaskH');
+  const taskId = sel ? parseInt(sel.value) : 0; const h = inp ? (parseFloat(inp.value) || 0) : 0;
+  if (!taskId || h <= 0) { toast('Choisissez une tâche et des heures (> 0).'); return; }
+  setCharge(taskId, tid, h); // persiste charges + assignation cohérente + refreshCell
+}
 // Allocation éditable : agit sur Tasks.charges + COHÉRENCE assignés (option A) — recalcule la heatmap.
 const toRefList = (ids) => (ids && ids.length) ? ['L'].concat(ids.map(Number)) : null;
 async function persistTask(taskId, updates) {

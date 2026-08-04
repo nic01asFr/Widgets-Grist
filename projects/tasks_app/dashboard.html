@@ -173,7 +173,7 @@
         /* ── Bars ── */
         .bar-chart { display: flex; flex-direction: column; gap: 9px; }
         .bar-row { display: flex; align-items: center; gap: 9px; }
-        .bar-label { width: 66px; font-size: 0.76rem; text-align: right; color: var(--text-muted); flex-shrink: 0; }
+        .bar-label { width: 66px; font-size: 0.76rem; text-align: right; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 5px; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width 0.4s ease; }
         .bar-fill span { font-size: 0.67rem; font-weight: 600; color: white; }
@@ -318,7 +318,7 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
                 Filtres<span class="filter-count" id="filterCount" style="display:none">0</span>
             </button>
-            <button class="btn" id="btnLeavesOnly" onclick="toggleLeavesOnly()" title="Compter uniquement les feuilles (éviter double-compte parent+enfants)">
+            <button class="btn" id="btnLeavesOnly" onclick="toggleLeavesOnly()" title="Niveau de comptage : Feuilles (sous-tâches) → Principales (racines) → Toutes">
                 ↳ Feuilles
             </button>
             <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">
@@ -387,8 +387,9 @@ const CATALOG = {
 
 const CONFIG_FIELDS = {
     kpi:      [{ key:'metric',  label:'Métrique',     options:[['total','Total tâches'],['inprogress','En cours'],['done','Terminées (tout)'],['done_week','Terminées ce sem.'],['late','En retard'],['rate','Taux de complétion %']] }],
-    donut:    [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type']] }],
-    bars:     [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type'],['assignee','Assigné']] }],
+    donut:    [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['projet','Projet'],['portefeuille','Portefeuille'],['assignee','Assigné'],['priorite','Priorité'],['type','Type']] }],
+    bars:     [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['projet','Projet'],['portefeuille','Portefeuille'],['assignee','Assigné'],['priorite','Priorité'],['type','Type']] },
+                { key:'limit',   label:'Top',          options:[['5','5'],['8','8'],['12','12'],['999','Tous']] }],
     list:     [
         { key:'preset', label:'Preset',  options:[['all','Toutes'],['overdue','En retard'],['today',"Auj."],['upcoming','À venir 14j'],['inprogress','En cours']] },
         { key:'limit',  label:'Limite',  options:[['5','5'],['10','10'],['20','20']] },
@@ -414,16 +415,19 @@ const FILTER_FIELDS = [
     ['type',     'Type'],
 ];
 
+// Layout par défaut (générique) : total + en retard, répartitions par statut /
+// portefeuille / projet / type, charge équipe, échéances, projets. Personnalisable
+// par document via le mode Modifier (les axes Portefeuille/Type/etc. sont dans les options).
 const DEFAULT_LAYOUT = [
-    { id:'c1', type:'kpi',      colSpan:1, title:'Total',      config:{ metric:'total' } },
-    { id:'c2', type:'kpi',      colSpan:1, title:'En cours',   config:{ metric:'inprogress' } },
-    { id:'c3', type:'kpi',      colSpan:1, title:'Terminées',  config:{ metric:'done' } },
-    { id:'c4', type:'kpi',      colSpan:1, title:'En retard',  config:{ metric:'late' } },
-    { id:'c5', type:'donut',    colSpan:2, title:'Par statut', config:{ groupBy:'statut' } },
-    { id:'c6', type:'bars',     colSpan:2, title:'Par priorité', config:{ groupBy:'priorite' } },
+    { id:'c1', type:'kpi',      colSpan:1, title:'Total tâches', config:{ metric:'total' } },
+    { id:'c2', type:'kpi',      colSpan:1, title:'En retard',    config:{ metric:'late' } },
+    { id:'c3', type:'donut',    colSpan:2, title:'Par statut',   config:{ groupBy:'statut' } },
+    { id:'c4', type:'bars',     colSpan:2, title:'Par portefeuille', config:{ groupBy:'portefeuille' } },
+    { id:'c5', type:'bars',     colSpan:2, title:'Par projet',   config:{ groupBy:'projet' } },
+    { id:'c6', type:'bars',     colSpan:2, title:'Par type',     config:{ groupBy:'type' } },
     { id:'c7', type:'workload', colSpan:2, title:'Charge équipe', config:{} },
-    { id:'c8', type:'upcoming', colSpan:2, title:'Échéances',  config:{ horizon:14 } },
-    { id:'c9', type:'projects', colSpan:2, title:'Projets',    config:{} },
+    { id:'c8', type:'upcoming', colSpan:2, title:'Échéances (jalons & réunions)', config:{ horizon:30 } },
+    { id:'c9', type:'projects', colSpan:2, title:'Projets',      config:{} },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -466,6 +470,35 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion. --------------------------------------------------- */
+    const DONE_HINT = /valid|termin|clos|done|fini|achev|r[ée]alis|complet/i;
+    const DEAD_HINT = /annul|abandon|rejet|cancel|caduc/i;
+
+    // Metadonnees de type de tache (source unique : icone + libelle).
+    const TYPE_META = {
+        tache:   { label: 'Tâche',   icon: '' },
+        jalon:   { label: 'Jalon',   icon: '◆' },
+        reunion: { label: 'Réunion', icon: '☰' }
+    };
+    function typeMeta(type) { return TYPE_META[type] || TYPE_META.tache; }
+
+    // Index {id(string): row} depuis un tableau de lignes (projets, team...).
+    function indexById(rows) { const m = {}; for (const r of (rows || [])) if (r && r.id != null) m[String(r.id)] = r; return m; }
+    // Portefeuille (departement) d'une tache via son projet. projIndex = indexById(projects).
+    function portefeuilleOf(t, projIndex) {
+        if (!t || !projIndex) return 0;
+        const p = projIndex[String(t.projet)];
+        return (p && (p.portefeuille || 0)) || 0;
+    }
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -504,11 +537,19 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier de la liste (ancienne convention) pour ne rien casser.
+        let doneValue = null;
+        for (const s of final) { if (DONE_HINT.test(s.label) || DONE_HINT.test(s.value)) doneValue = s.value; }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => (DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value)) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -557,6 +598,20 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+    // Tache en retard : echeance passee, ni faite ni annulee, progression < 100.
+    // dateEcheance = timestamp Unix SECONDES. now = ms (defaut Date.now()).
+    function isLate(t, cfg, now) {
+        if (!t || t.dateEcheance == null) return false;
+        if (isDone(cfg, t.statut) || isDead(cfg, t.statut)) return false;
+        if ((Number(t.progression) || 0) >= 100) return false;
+        return (t.dateEcheance * 1000) < (now != null ? now : Date.now());
+    }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -796,6 +851,14 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
+        isLate: isLate,
+        TYPE_META: TYPE_META,
+        typeMeta: typeMeta,
+        indexById: indexById,
+        portefeuilleOf: portefeuilleOf,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
@@ -817,15 +880,16 @@ const TF = (function () {
 })();
 // </taskflow-core>
 
-let tasks = [], projects = [], team = [];
+let tasks = [], projects = [], team = [], portefeuilles = [];
 let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig
 let gristReady = false;
 let isEditMode = false;
 let selectedCompId = null;
 let dashConfig = { layout: DEFAULT_LAYOUT.map(c => ({...c, config:{...c.config}})) };
 let filters = { periode: 'all', projets: [], assignes: [], statuts: [] };
-// WBS-04: par défaut compter uniquement les feuilles (pas les parents) pour éviter double-compte
-let leavesOnly = localStorage.getItem('taskflow_dashboard_leavesonly') !== '0';
+// WBS-04: niveau de comptage — 'leaves' (feuilles, défaut, évite double-compte) / 'roots' (tâches principales = racines) / 'all' (tout)
+let countLevel = localStorage.getItem('taskflow_dashboard_countlevel') || 'leaves';
+const COUNT_LABELS = { leaves: '↳ Actions', roots: '◆ Principales', all: 'Σ Tout' };
 
 // WBS (hiérarchie sous-tâches) — API commune
 let childrenByParent = new Map();
@@ -904,7 +968,7 @@ function getFilteredTasks(compFilter, ignoreLeaves) {
     let ft = tasks;
     // WBS-04: feuilles seulement par défaut — évite double-compte parent+enfants.
     // ignoreLeaves: la charge (#3) somme les charges PROPRES de toutes les tâches (parents inclus, coordination), une seule fois.
-    if (leavesOnly && !ignoreLeaves) ft = ft.filter(t => !hasChildren(t));
+    if (!ignoreLeaves) { if (countLevel === 'leaves') ft = ft.filter(t => !hasChildren(t)); else if (countLevel === 'roots') ft = ft.filter(isRoot); }
     if (filters.periode !== 'all') {
         const pStart = getPeriodStart(filters.periode);
         ft = ft.filter(t => { const d=gristToDate(t.dateEcheance); return d && d >= pStart; });
@@ -1214,11 +1278,11 @@ function renderKPI(comp, ft) {
     let value = 0, label = '';
     switch (metric) {
         case 'total':     value = ft.length;                                                                            label = 'tâches au total'; break;
-        case 'inprogress':value = ft.filter(t=>!TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches actives'; break;
-        case 'done':      value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches terminées'; break;
-        case 'done_week': value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length; label = 'terminées cette semaine'; break;
-        case 'late':      value = ft.filter(t=>{ const d=gristToDate(t.dateEcheance); return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t)); }).length; label = 'en retard'; break;
-        case 'rate':      { const done=ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length; value=ft.length?Math.round(done/ft.length*100):0; label='% complété'; break; }
+        case 'inprogress':value = ft.filter(t=>TF.isLive(statusCfg, getStatus(t))).length;                                              label = 'tâches actives'; break;
+        case 'done':      value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length;                                              label = 'tâches terminées'; break;
+        case 'done_week': value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length;    label = 'terminées cette semaine'; break;
+        case 'late':      value = ft.filter(t=>TF.isLate(t, statusCfg)).length;                                                        label = 'en retard'; break;
+        case 'rate':      { const done=ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length; const denom=ft.filter(t=>!TF.isDead(statusCfg, getStatus(t))).length; value=denom?Math.round(done/denom*100):0; label='% complété'; break; }
     }
     const cls = { total:'kpi-total', inprogress:'kpi-inprogress', done:'kpi-done', done_week:'kpi-done_week', late:'kpi-late', rate:'kpi-rate' }[metric]||'';
     const lateClass = metric==='late'&&value>0 ? 'kpi-late-border' : '';
@@ -1227,21 +1291,29 @@ function renderKPI(comp, ft) {
 }
 
 function groupByField(ft, field) {
+    // Portefeuille (regroupement de projets) via le projet de la tâche ; repli sur « projet » si aucun portefeuille.
+    if (field==='portefeuille' && !portefeuilles.length) field = 'projet';
+    const projPf = {};
+    if (field==='portefeuille') projects.forEach(p => { projPf[String(p.id)] = String(p.portefeuille||'0'); });
     const counts = {};
     ft.forEach(t => {
         if (field==='assignee') { getAssigneesArray(t).forEach(a=>{ counts[String(a)]=(counts[String(a)]||0)+1; }); return; }
+        if (field==='role') { getAssigneesArray(t).forEach(a=>{ const m=team.find(x=>x.id===a); const r=(m&&m.role)?m.role:'—'; counts[r]=(counts[r]||0)+1; }); return; }
         let key;
         if (field==='statut')   key = getStatus(t);
         else if (field==='priorite') key = String(getPriority(t));
         else if (field==='projet')   key = String(t.projet||'');
+        else if (field==='portefeuille') key = projPf[String(t.projet||'')] || '0';
         else if (field==='type')     key = t.type||'tache';
         if (key!==undefined) counts[key]=(counts[key]||0)+1;
     });
     if (field==='statut')   return statusCfg.list.map(s=>({ key:s.value, label:s.label, count:counts[s.value]||0, color:s.fillColor }));
     if (field==='priorite') return [1,2,3,4].map(k=>({ key:String(k), label:PRIORITY_LABELS[k], count:counts[String(k)]||0, color:PRIORITY_COLORS[k] }));
     if (field==='projet')   return projects.filter(p=>counts[String(p.id)]).map(p=>({ key:String(p.id), label:p.nom, count:counts[String(p.id)]||0, color:p.couleur||'#6366f1' }));
+    if (field==='portefeuille') return portefeuilles.filter(pf=>counts[String(pf.id)]).map(pf=>({ key:String(pf.id), label:pf.nom, count:counts[String(pf.id)]||0, color:pf.couleur||'#6366f1' })).concat(counts['0']?[{ key:'0', label:'Sans portefeuille', count:counts['0'], color:'#94a3b8' }]:[]);
     if (field==='type')     return [['tache','Tâche','#3b82f6'],['jalon','Jalon','#f59e0b'],['reunion','Réunion','#10b981']].map(([k,l,c])=>({ key:k, label:l, count:counts[k]||0, color:c }));
     if (field==='assignee') return team.filter(m=>counts[String(m.id)]).map(m=>({ key:String(m.id), label:(m.nom||'?').split(' ')[0], count:counts[String(m.id)]||0, color:m.couleur||'#4f46e5' }));
+    if (field==='role') { const RPAL=['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#14b8a6']; const roles=[...new Set(team.filter(m=>m.actif!==false&&m.role).map(m=>m.role))]; return roles.map((r,i)=>({ key:r, label:r, count:counts[r]||0, color:RPAL[i%RPAL.length] })); }
     return [];
 }
 
@@ -1267,10 +1339,18 @@ function renderDonut(comp, ft) {
 }
 
 function renderBars(comp, ft) {
-    const groups = groupByField(ft, comp.config.groupBy||'statut');
+    // Tri décroissant + top-N (le reste agrégé) : lisible même avec beaucoup de catégories.
+    let groups = groupByField(ft, comp.config.groupBy||'statut').filter(g=>g.count>0).sort((a,b)=>b.count-a.count);
+    if (!groups.length) return '<div class="empty-state"><div class="empty-text">Aucune donnée</div></div>';
+    const lim = parseInt(comp.config.limit)||8;
+    if (groups.length > lim) {
+        const rest = groups.slice(lim);
+        groups = groups.slice(0, lim);
+        groups.push({ label:'+'+rest.length+' autres', count:rest.reduce((s,g)=>s+g.count,0), color:'#94a3b8' });
+    }
     const max = Math.max(...groups.map(g=>g.count), 1);
     return `<div class="bar-chart">${groups.map(g => `
-        <div class="bar-row">
+        <div class="bar-row" title="${escapeHtml(g.label)} : ${g.count}">
             <div class="bar-label">${escapeHtml(g.label)}</div>
             <div class="bar-track"><div class="bar-fill" style="width:${Math.round(g.count/max*100)}%;background:${g.color}"><span>${g.count}</span></div></div>
         </div>`).join('')}</div>`;
@@ -1286,7 +1366,7 @@ function renderWorkload(comp, ft) {
             const id = resolveMember(a); if (id == null) return;
             if (!byAssignee[id]) byAssignee[id]={ total:0, active:0 };
             byAssignee[id].total++;
-            if (!TF.isTerminal(statusCfg, getStatus(t))) byAssignee[id].active++;
+            if (TF.isLive(statusCfg, getStatus(t))) byAssignee[id].active++;
         });
     });
     const maxActive = Math.max(...team.map(m=>(byAssignee[m.id]||{}).active||0), 1);
@@ -1341,7 +1421,7 @@ function renderPlanCharge(comp, ft) {
     const includeDone = comp.config.includeDone === 'oui';
     const defaultCap = parseFloat(comp.config.capacite) || 35;
     let planTasks = ft;
-    if (!includeDone) planTasks = planTasks.filter(t => !TF.isTerminal(statusCfg, getStatus(t)));
+    if (!includeDone) planTasks = planTasks.filter(t => !TF.isDone(statusCfg, getStatus(t)) && !TF.isDead(statusCfg, getStatus(t)));
     const byMP = TF.chargeByMemberPeriod(planTasks, granularity);
     const undated = planTasks.filter(t => TF.parseCharges(t.charges).length && (t.dateDebut == null || t.dateEcheance == null)).length;
     if (!Object.keys(byMP).length && !undated) return '<div class="empty-state"><div class="empty-icon">▦</div><div class="empty-text">Aucune charge datée à planifier</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Renseignez la charge par personne + des dates sur les tâches.</div></div>';
@@ -1379,7 +1459,7 @@ function renderUpcoming(comp, ft) {
     const today = new Date(); today.setHours(0,0,0,0);
     const upcoming = ft.filter(t => {
         const d=gristToDate(t.dateEcheance);
-        if (!d || TF.isTerminal(statusCfg, getStatus(t))) return false;
+        if (!d || !TF.isLive(statusCfg, getStatus(t))) return false;
         return Math.ceil((d-today)/86400000) <= horizon;
     }).map(t => ({ t, d:gristToDate(t.dateEcheance), days:Math.ceil((gristToDate(t.dateEcheance)-today)/86400000) }))
       .sort((a,b)=>a.d-b.d).slice(0,8);
@@ -1411,12 +1491,12 @@ function renderProjects(comp, ft) {
         if (!t.projet) return;
         if (!stats[t.projet]) stats[t.projet]={ total:0, done:0, prog:0 };
         stats[t.projet].total++;
-        if (TF.isTerminal(statusCfg, getStatus(t))) stats[t.projet].done++;
+        if (TF.isDone(statusCfg, getStatus(t))) stats[t.projet].done++;
         stats[t.projet].prog += (t.progression||0);
     });
     return `<div class="projects-list">${active.filter(p=>stats[p.id]).map(p => {
-        const s=stats[p.id]||{total:0,done:0};
-        const pct=s.total>0?Math.round(s.done/s.total*100):0;
+        const s=stats[p.id]||{total:0,done:0,prog:0};
+        const pct=s.total>0?Math.round(s.prog/s.total):0;
         return `<div class="project-item">
             <div class="project-color" style="background:${p.couleur||'#6366f1'}"></div>
             <div class="project-info"><div class="project-name">${escapeHtml(p.nom)}</div><div class="project-stats">${s.done}/${s.total} terminées</div></div>
@@ -1433,16 +1513,16 @@ function renderList(comp, ft) {
     const limit  = parseInt(comp.config.limit)||10;
     const today  = new Date(); today.setHours(0,0,0,0);
     let list = ft;
-    if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t));});
+    if (preset==='overdue')   list = ft.filter(t=>TF.isLate(t, statusCfg));
     else if (preset==='today')     list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&isSameDay(d,today);});
-    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&!TF.isTerminal(statusCfg, getStatus(t));});
-    else if (preset==='inprogress')list = ft.filter(t=>getStatus(t)==='inprogress');
+    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&TF.isLive(statusCfg, getStatus(t));});
+    else if (preset==='inprogress')list = ft.filter(t=>TF.isLive(statusCfg, getStatus(t)));
     if (!list.length) return '<div class="empty-state"><div class="empty-text">Aucune tâche</div></div>';
     return `<div class="list-items">${list.slice(0,limit).map(t=>{
         const p=getPriority(t), s=getStatus(t);
         const d=gristToDate(t.dateEcheance);
         const proj=projects.find(x=>x.id===t.projet);
-        const isLate=d&&d<today&&!TF.isTerminal(statusCfg, s);
+        const isLate=TF.isLate(t, statusCfg);
         return `<div class="list-item" onclick="selectTask(${t.id})">
             <div class="list-prio p${p}"></div>
             <div class="list-info">
@@ -1465,9 +1545,9 @@ function renderVelocity(comp, ft) {
         const start = startOfWeek(addDays(today, -w*7));
         const end   = addDays(start, 7);
         const count = ft.filter(t => {
-            if (!TF.isTerminal(statusCfg, getStatus(t))) return false;
+            if (!TF.isDone(statusCfg, getStatus(t))) return false;
             const d=gristToDate(t.dateEcheance);
-            return d && d>=start && d<end;
+            return (t.dateCloture ? gristToDate(t.dateCloture) : d) && (t.dateCloture ? gristToDate(t.dateCloture) : d)>=start && (t.dateCloture ? gristToDate(t.dateCloture) : d)<end;
         }).length;
         buckets.push({ label:'S'+getWeekNumber(start), count });
     }
@@ -1576,16 +1656,22 @@ async function loadAllData() {
             grist.docApi.fetchTable('Team'),
         ]);
         tasks=convert(td); projects=convert(pd); team=convert(md);
+        // Portefeuilles (departement) = table opt-in ; repli silencieux si absente.
+        try { portefeuilles = convert(await grist.docApi.fetchTable('Portefeuilles')); } catch(e) { portefeuilles = []; }
         rebuildChildrenCache();
         try { statusCfg = await TF.loadStatusConfig(grist, 'Tasks', 'statut', tasks.map(t => t && t.statut)); } catch (e) {}
         render();
     } catch(e) { console.log('Error loading data:', e); }
 }
-// WBS-04: toggle "Feuilles uniquement"
+// WBS-04: cycle niveau de comptage Feuilles → Principales (racines) → Toutes
+function updateCountLevelBtn() {
+    const b = document.getElementById('btnLeavesOnly');
+    if (b) { b.textContent = COUNT_LABELS[countLevel]; b.classList.toggle('active', countLevel !== 'all'); }
+}
 function toggleLeavesOnly() {
-    leavesOnly = !leavesOnly;
-    localStorage.setItem('taskflow_dashboard_leavesonly', leavesOnly ? '1' : '0');
-    const b = document.getElementById('btnLeavesOnly'); if (b) b.classList.toggle('active', leavesOnly);
+    countLevel = countLevel === 'leaves' ? 'roots' : countLevel === 'roots' ? 'all' : 'leaves';
+    localStorage.setItem('taskflow_dashboard_countlevel', countLevel);
+    updateCountLevelBtn();
     render();
 }
 
@@ -1597,7 +1683,7 @@ async function markDone(taskId, event) {
     event.stopPropagation();
     if (!gristReady) return;
     try {
-        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.terminalValue, progression: 100 }]]);
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.doneValue, progression: 100 }]]);
         await loadAllData();
     } catch(e) { console.error(e); }
 }
@@ -1660,7 +1746,7 @@ renderDashSkeleton();  // 06 · squelette pendant le chargement
 // Repli auto vers données d'exemple si Grist ne renvoie rien sous 2.8s (aperçu / hors-ligne)
 setTimeout(function(){ try { if ((typeof tasks==='undefined' || !tasks || !tasks.length) && typeof useDemoMode==='function') useDemoMode(); } catch(e){ console.log(e); } }, 2800);
 // WBS-04: sync bouton "Feuilles uniquement" au chargement
-{ const b = document.getElementById('btnLeavesOnly'); if (b) b.classList.toggle('active', leavesOnly); }
+updateCountLevelBtn();
 try { if (new URLSearchParams(location.search).has('nav')) document.body.classList.add('suite-nav'); } catch (e) {}
 init();
 </script>

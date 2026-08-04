@@ -75,6 +75,7 @@
         .kanban-column { min-width: 280px; max-width: 320px; flex: 1; background: var(--bg); border-radius: 12px; display: flex; flex-direction: column; max-height: 100%; }
         .column-header { padding: 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
         .column-title { font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+        .col-avatar { width: 20px; height: 20px; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 700; flex-shrink: 0; }
         .column-count { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
         .column-add { width: 28px; height: 28px; border: none; background: var(--card-bg); border-radius: 6px; cursor: pointer; color: var(--text-muted); font-size: 1rem; }
         .column-add:hover { background: var(--primary-light); color: var(--primary); }
@@ -222,6 +223,14 @@
         .multi-select-arrow { color: var(--text-muted); font-size: 0.7rem; }
         .multi-select-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 100; display: none; max-height: 180px; overflow-y: auto; }
         .multi-select.open .multi-select-dropdown { display: block; }
+        .parent-picker { position: relative; }
+        .parent-picker .parent-search { width: 100%; }
+        .parent-results { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 100; display: none; max-height: 220px; overflow-y: auto; }
+        .parent-results.open { display: block; }
+        .parent-opt { padding: 8px 12px; font-size: 0.82rem; cursor: pointer; color: var(--text); border-bottom: 1px solid var(--border); }
+        .parent-opt:last-child { border-bottom: none; }
+        .parent-opt:hover { background: var(--primary-light); color: var(--primary); }
+        .parent-opt-empty, .parent-opt-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text-muted); }
         .multi-select-option { padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
         .multi-select-option:hover { background: var(--bg); }
         /* A15: Color picker membres d'équipe */
@@ -559,7 +568,7 @@
                 <div class="group-selector">
                     <button class="btn active" onclick="setGroupBy('statut')" id="groupStatut">Statut</button>
                     <button class="btn" onclick="setGroupBy('priorite')" id="groupPriorite">Priorité</button>
-                    <button class="btn" onclick="setGroupBy('projet')" id="groupProjet">Projet</button>
+                    <button class="btn" onclick="setGroupBy('assignee')" id="groupAssignee">Assigné</button>
                 </div>
             </div>
         </div>
@@ -571,21 +580,13 @@
             </div>
             <div class="hdr-sep"></div>
             <select id="colorSelect" onchange="changeColorMode(this.value)" title="Couleur des cartes">
-                <option value="priority">Couleur : Priorité</option>
                 <option value="project">Couleur : Projet</option>
                 <option value="assignee">Couleur : Assigné</option>
-                <option value="status">Couleur : Statut</option>
             </select>
-            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)">
-                <option value="all">Niveau : Tous</option>
-                <option value="actions">Niveau : Actions</option>
-                <option value="parents">Niveau : Synthèses</option>
-            </select>
+            <button class="btn" id="btnShowSubs" onclick="toggleShowSubtasks()" title="Afficher aussi les sous-tâches (par défaut : seulement les tâches principales)">↳ Sous-tâches</button>
             <div class="filter-dropdown" id="moreDropdown">
                 <button class="btn icon-btn" onclick="toggleFilterMenu('more')" title="Plus d'actions"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg></button>
                 <div class="filter-menu" id="filterMoreMenu" style="right:0;left:auto;min-width:200px">
-                    <div class="filter-option" id="moreSubsToggle" onclick="toggleShowSubtasks()"><span class="ms-ic">↳</span> Sous-tâches (hiérarchie)</div>
-                    <div class="filter-sep"></div>
                     <div class="filter-option" onclick="exportPrint()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimer / PDF</div>
                     <div class="filter-option" onclick="exportPNG()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Image PNG</div>
                 </div>
@@ -621,7 +622,7 @@
         // A15: Palette de couleurs prédéfinies pour les membres d'équipe
         const COLOR_PRESETS = ['#3e5de7','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
         // STATUS_CONFIG / STATUS_LABELS supprimes : statuts (libelles + couleurs + ordre) lus dynamiquement via statusCfg (#1)
-        const TYPE_ICONS = { tache: '', jalon: '◆', reunion: '' };
+        const TYPE_ICONS = { tache: '', jalon: '◆', reunion: '☰' };
 
         // ═══════════════════════════════════════════════════════════════════════
         // MODULE COMMUN TASKFLOW (genere — voir projects/tasks_app/core/taskflow-core.js)
@@ -661,6 +662,35 @@
             const DEFAULTS_BY_VALUE = {};
             for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+            /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+             * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+             * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+             *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+             *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+             *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+             * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+             * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+             * piloter la completion. --------------------------------------------------- */
+            const DONE_HINT = /valid|termin|clos|done|fini|achev|r[ée]alis|complet/i;
+            const DEAD_HINT = /annul|abandon|rejet|cancel|caduc/i;
+
+            // Metadonnees de type de tache (source unique : icone + libelle).
+            const TYPE_META = {
+                tache:   { label: 'Tâche',   icon: '' },
+                jalon:   { label: 'Jalon',   icon: '◆' },
+                reunion: { label: 'Réunion', icon: '☰' }
+            };
+            function typeMeta(type) { return TYPE_META[type] || TYPE_META.tache; }
+
+            // Index {id(string): row} depuis un tableau de lignes (projets, team...).
+            function indexById(rows) { const m = {}; for (const r of (rows || [])) if (r && r.id != null) m[String(r.id)] = r; return m; }
+            // Portefeuille (departement) d'une tache via son projet. projIndex = indexById(projects).
+            function portefeuilleOf(t, projIndex) {
+                if (!t || !projIndex) return 0;
+                const p = projIndex[String(t.projet)];
+                return (p && (p.portefeuille || 0)) || 0;
+            }
+
             // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
             function columnarToRows(data) {
                 if (!data || Array.isArray(data)) return data || [];
@@ -699,11 +729,19 @@
                 const final = clean.length ? clean : DEFAULT_STATUSES.slice();
                 const byValue = {};
                 for (const s of final) byValue[s.value] = s;
+                // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+                // repli = dernier de la liste (ancienne convention) pour ne rien casser.
+                let doneValue = null;
+                for (const s of final) { if (DONE_HINT.test(s.label) || DONE_HINT.test(s.value)) doneValue = s.value; }
+                if (doneValue == null) doneValue = final[final.length - 1].value;
+                const deadValues = final.filter(s => (DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value)) && s.value !== doneValue).map(s => s.value);
                 return {
                     list: final,
                     byValue,
                     values: final.map(s => s.value),
-                    terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+                    terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+                    doneValue: doneValue,      // statut = "fait" (cloture positive)
+                    deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
                     firstValue: final[0].value,
                     source: clean.length ? source : 'default'
                 };
@@ -752,6 +790,20 @@
                 return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
             }
             function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+            // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+            function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+            // Cloture "negative" (annule/abandonne/rejete).
+            function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+            // Ni fait ni annule = actif.
+            function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+            // Tache en retard : echeance passee, ni faite ni annulee, progression < 100.
+            // dateEcheance = timestamp Unix SECONDES. now = ms (defaut Date.now()).
+            function isLate(t, cfg, now) {
+                if (!t || t.dateEcheance == null) return false;
+                if (isDone(cfg, t.statut) || isDead(cfg, t.statut)) return false;
+                if ((Number(t.progression) || 0) >= 100) return false;
+                return (t.dateEcheance * 1000) < (now != null ? now : Date.now());
+            }
 
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -991,6 +1043,14 @@
                 buildStatusConfig: buildStatusConfig,
                 getStatus: getStatus,
                 isTerminal: isTerminal,
+                isDone: isDone,
+                isDead: isDead,
+                isLive: isLive,
+                isLate: isLate,
+                TYPE_META: TYPE_META,
+                typeMeta: typeMeta,
+                indexById: indexById,
+                portefeuilleOf: portefeuilleOf,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -1020,11 +1080,12 @@
         let CRA_ACTIVE = false; // si la Feuille de temps (TimeEntries) est active, tempsPasse devient un rollup CRA -> saisie manuelle figee (anti-doublon)
         let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig en mode Grist
         let groupBy = 'statut', searchQuery = '', selectedTaskId = null;
-        let colorMode = localStorage.getItem('taskflow_kanban_colormode') || 'priority';
+        let colorMode = (m => (m === 'assignee' ? m : 'project'))(localStorage.getItem('taskflow_kanban_colormode'));
         let showSubtasks = localStorage.getItem('taskflow_kanban_showsubs') === '1';  // WBS-03: afficher enfants
         // #9 niveau de travail (par widget, opt-in, defaut 'all') : 'actions' = feuilles, 'parents' = noeuds de synthese.
-        let workLevel = localStorage.getItem('taskflow_kanban_worklevel') || 'all';
-        let filters = { project: [], priority: [], assignee: [], status: [] };  // KAN-01: Ajout filtre statut
+        let filters = { project: [], priority: [], assignee: [], status: [], type: [] };  // type = tâche/jalon/réunion
+        const TYPE_FILTER_OPTS = [['tache', 'Tâche', '▭'], ['jalon', 'Jalon', '◆'], ['reunion', 'Réunion', '☰']];
+        const typeLabel = v => (TYPE_FILTER_OPTS.find(o => o[0] === v) || [v, v])[1];
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, columnTasks: [], columnKey: null, editData: null };
         let sortableInstances = [];
         let saveTimeout = null;
@@ -1271,12 +1332,12 @@
             const team2 = team.filter(m => m.actif !== false);
             const assHtml = team2.length ? team2.map(m => `<div class="filter-option" onclick="toggleFilterValue('assignee', ${m.id})"><input type="checkbox" ${filters.assignee.includes(m.id)?'checked':''}>${escapeHtml(m.nom)}</div>`).join('') : '<div class="filter-option muted">Aucun membre</div>';
             const statHtml = statusCfg.list.map(sc => `<div class="filter-option" data-status="${escapeHtml(sc.value)}" onclick="toggleFilterValue('status', this.dataset.status)"><input type="checkbox" ${filters.status.includes(sc.value)?'checked':''}><span style="color:${sc.fillColor}">●</span> ${escapeHtml(sc.label)}</div>`).join('');
-            const total = filters.project.length + filters.priority.length + filters.assignee.length + filters.status.length;
+            const typeHtml = TYPE_FILTER_OPTS.map(([v,l,ic]) => `<div class="filter-option" onclick="toggleFilterValue('type', '${v}')"><input type="checkbox" ${filters.type.includes(v)?'checked':''}><span>${ic}</span> ${l}</div>`).join('');
+            const total = filters.project.length + filters.priority.length + filters.assignee.length + filters.status.length + filters.type.length;
             const menu = document.getElementById('filterAllMenu');
-            if (menu) menu.innerHTML = grp('Projets', projHtml, true) + grp('Priorités', prioHtml) + grp('Assignés', assHtml) + grp('Statuts', statHtml) + (total ? '<div class="fm-foot"><span class="fm-clear" onclick="clearAllFilters()">Tout effacer</span></div>' : '');
+            if (menu) menu.innerHTML = grp('Statuts', statHtml, true) + grp('Types', typeHtml) + grp('Priorités', prioHtml) + grp('Assignés', assHtml) + grp('Projets', projHtml) + (total ? '<div class="fm-foot"><span class="fm-clear" onclick="clearAllFilters()">Tout effacer</span></div>' : '');
             const cnt = document.getElementById('filterCount'); if (cnt) { cnt.textContent = total; cnt.style.display = total ? 'inline-flex' : 'none'; }
             const fbtn = document.getElementById('filterBtn'); if (fbtn) fbtn.classList.toggle('has-filter', total > 0);
-            const ms = document.getElementById('moreSubsToggle'); if (ms) { ms.classList.toggle('on', showSubtasks); const off = workLevel !== 'all'; ms.style.opacity = off ? '0.45' : ''; ms.style.pointerEvents = off ? 'none' : ''; ms.title = off ? 'Indisponible : le filtre « Niveau » prime sur ce reglage' : ''; }
             renderFilterChips();
         }
         function renderFilterChips() {
@@ -1288,6 +1349,7 @@
             filters.priority.forEach(v => chips.push(chip('priority', v, PRIORITY_LABELS[v], PRIORITY_COLORS[v])));
             filters.assignee.forEach(id => { const m = team.find(x=>x.id===id); chips.push(chip('assignee', id, m?escapeHtml(m.nom):'Membre')); });
             filters.status.forEach(v => { const sc = statusCfg.byValue[v]; chips.push(chip('status', v, sc?escapeHtml(sc.label):v, sc&&sc.fillColor)); });
+            filters.type.forEach(v => chips.push(chip('type', v, typeLabel(v))));
             if (searchQuery) chips.push(`<span class="fc-chip">« ${escapeHtml(searchQuery)} »<span class="fc-x" title="Effacer la recherche" onclick="clearSearchChip()">${X}</span></span>`);
             if (!chips.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
             bar.style.display = 'flex';
@@ -1298,34 +1360,30 @@
         function toggleFilterValue(type, val) { const arr = filters[type]; const idx = arr.indexOf(val); if (idx === -1) arr.push(val); else arr.splice(idx, 1); updateFilterMenus(); broadcastFilters(); render(); }
         function handleSearch(q) { searchQuery = q.toLowerCase(); render(); }
         function clearAllFilters() {
-            filters = { project: [], priority: [], assignee: [], status: [] };
+            filters = { project: [], priority: [], assignee: [], status: [], type: [] };
             searchQuery = '';
             const si = document.getElementById('searchInput'); if (si) si.value = '';
             updateFilterMenus(); broadcastFilters(); render();
         }
+        // Filtres hors hiérarchie (projet/priorité/assigné/statut/recherche) — réutilisé par le groupement « Tâche mère ».
+        function taskMatchesFilters(t) {
+            if (filters.project.length && !filters.project.includes(t.projet)) return false;
+            if (filters.priority.length && !filters.priority.includes(getPriority(t))) return false;
+            if (filters.assignee.length && !getAssignees(t).some(a => filters.assignee.includes(a))) return false;
+            if (filters.status.length && !filters.status.includes(t.statut || statusCfg.firstValue)) return false;
+            if (filters.type.length && !filters.type.includes(t.type || 'tache')) return false;
+            if (searchQuery && !(t.titre||'').toLowerCase().includes(searchQuery)) return false;
+            return true;
+        }
         function getFilteredTasks() {
             return tasks.filter(t => {
-                // #9 filtre de niveau (orthogonal a la hierarchie) : Actions = feuilles, Syntheses = parents.
-                if (workLevel === 'actions') { if (hasChildren(t)) return false; }
-                else if (workLevel === 'parents') { if (!hasChildren(t)) return false; }
-                // WBS-03 (niveau 'all' uniquement) : par défaut afficher uniquement les racines (pas les sous-tâches)
-                else if (!showSubtasks && t.parentTask) return false;
-                if (filters.project.length && !filters.project.includes(t.projet)) return false;
-                if (filters.priority.length && !filters.priority.includes(getPriority(t))) return false;
-                if (filters.assignee.length && !getAssignees(t).some(a => filters.assignee.includes(a))) return false;
-                if (filters.status.length && !filters.status.includes(t.statut || 'todo')) return false;
-                if (searchQuery && !(t.titre||'').toLowerCase().includes(searchQuery)) return false;
-                return true;
+                // Hiérarchie : par défaut on n'affiche que les tâches principales (racines).
+                // Le toggle « ↳ Sous-tâches » ajoute les sous-tâches.
+                if (!showSubtasks && t.parentTask) return false;
+                return taskMatchesFilters(t);
             });
         }
         // #9 : change le niveau de travail affiche (persistance locale par widget, comme colorMode).
-        function changeWorkLevel(v) {
-            workLevel = v;
-            localStorage.setItem('taskflow_kanban_worklevel', v);
-            const s = document.getElementById('levelSelect'); if (s) s.value = v;
-            updateFilterMenus();
-            render();
-        }
         // WBS-03: toggle d'inclusion des sous-tâches dans le kanban
         function toggleShowSubtasks() {
             showSubtasks = !showSubtasks;
@@ -1356,8 +1414,10 @@
                 </div>
             `).join('');
             
-            // Initialize Sortable
-            columns.forEach(col => {
+            // Initialize Sortable — drag actif seulement quand la colonne = une propriété mono-valeur.
+            // En 'assignee'/'role' (multi-assignés, carte dupliquée sous chaque contributeur), le drag serait ambigu → lecture seule.
+            const dragEnabled = (groupBy === 'statut' || groupBy === 'priorite' || groupBy === 'projet');
+            if (dragEnabled) columns.forEach(col => {
                 const el = document.getElementById(`col-${col.key}`);
                 if (el) {
                     sortableInstances.push(new Sortable(el, {
@@ -1369,7 +1429,7 @@
         }
 
         function renderEmptyColumn(col) {
-            const hasFilters = searchQuery || filters.project.length || filters.priority.length || filters.assignee.length || filters.status.length;
+            const hasFilters = searchQuery || filters.project.length || filters.priority.length || filters.assignee.length || filters.status.length || filters.type.length;
             const inbox = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>';
             const search = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
             if (hasFilters) {
@@ -1412,6 +1472,25 @@
                 const cols = projects.filter(p => p.actif !== false).map(p => ({ key: String(p.id), label: p.nom, icon: `<span style="color:${p.couleur}">●</span>`, tasks: ft.filter(t => t.projet === p.id) }));
                 cols.push({ key: 'none', label: 'Sans projet', icon: '', tasks: ft.filter(t => !t.projet) });
                 return cols;
+            } else if (groupBy === 'assignee') {
+                // "sous chaque" : une tâche multi-assignés apparaît dans la colonne de chaque contributeur
+                const avatar = (m) => `<span class="col-avatar" style="background:${getTeamMemberColor(m.id)}">${getInitials(m.nom)}</span>`;
+                const cols = team.filter(m => m.actif !== false).map(m => ({ key: 'a' + m.id, memberId: m.id, label: m.nom, icon: avatar(m), tasks: ft.filter(t => getAssignees(t).includes(m.id)) }));
+                cols.push({ key: 'none', label: 'Non assigné', icon: '', tasks: ft.filter(t => !getAssignees(t).length) });
+                return cols;
+            } else if (groupBy === 'role') {
+                const roleOf = (id) => { const m = team.find(x => x.id === id); return m ? m.role : null; };
+                const roles = [...new Set(team.filter(m => m.actif !== false).map(m => m.role).filter(Boolean))];
+                const cols = roles.map(r => ({ key: 'r_' + r, label: r, icon: '', tasks: ft.filter(t => getAssignees(t).some(id => roleOf(id) === r)) }));
+                cols.push({ key: 'none', label: 'Sans rôle', icon: '', tasks: ft.filter(t => !getAssignees(t).some(id => roleOf(id))) });
+                return cols;
+            } else if (groupBy === 'affaire') {
+                // Colonnes = tâches principales (racines) ; cartes = leurs sous-tâches.
+                // Montre toujours les sous-tâches (c'est l'objet du groupement) ; une tâche mère sans sous-tâche s'affiche elle-même.
+                return tasks.filter(t => !t.parentTask && taskMatchesFilters(t)).map(aff => {
+                    const kids = getChildren(aff.id).filter(taskMatchesFilters);
+                    return { key: 'aff' + aff.id, label: aff.titre, icon: `<span style="color:${getProjectColor(aff.projet)}">●</span>`, tasks: kids.length ? kids : [aff] };
+                });
             }
             return [];
         }
@@ -1429,34 +1508,42 @@
             const isChild = !!t.parentTask;
 
             const barColor = getTaskColor(t);
+            // T4 : en couleur=assigné, une tâche multi-assignés reçoit un dégradé (pas la couleur du 1er seulement)
+            let borderCss = `border-left-color:${barColor}`;
+            if (colorMode === 'assignee' && assignees.length > 1) {
+                const cols = assignees.map(id => getTeamMemberColor(id));
+                const n = cols.length;
+                const stops = cols.map((c, i) => `${c} ${Math.round(i * 100 / n)}% ${Math.round((i + 1) * 100 / n)}%`).join(',');
+                borderCss = `border-left-color:${cols[0]};border-image:linear-gradient(to bottom,${stops}) 1`;
+            }
             const prog = t.progression || 0;
             let dueHtml = '';
-            if (t.dateEcheance && t.type !== 'jalon') {
+            if (t.dateEcheance) {
                 const _e = gristToDate(t.dateEcheance);
                 if (_e) {
                     const _t0 = new Date(); _t0.setHours(0,0,0,0);
                     const _d = new Date(_e); _d.setHours(0,0,0,0);
                     const _days = Math.round((_d - _t0) / 86400000);
-                    const _done = TF.isTerminal(statusCfg, t.statut);
+                    const _done = TF.isDone(statusCfg, t.statut);
                     const _st = _done ? '' : _days < 0 ? 'over' : _days <= 2 ? 'soon' : '';
                     const _MO = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
                     dueHtml = `<span class="tf-due ${_st}">${_d.getDate()} ${_MO[_d.getMonth()]}</span>`;
                 }
             }
-            return `<div class="task-card p${p} ${TF.isTerminal(statusCfg, t.statut) ? 'done' : ''} ${t.id === selectedTaskId ? 'selected' : ''}" data-id="${t.id}" style="border-left-color:${barColor}" onclick="openTaskPanel(${t.id})">
+            return `<div class="task-card p${p} ${TF.isDone(statusCfg, t.statut) ? 'done' : ''} ${t.id === selectedTaskId ? 'selected' : ''}" data-id="${t.id}" style="${borderCss}" onclick="openTaskPanel(${t.id})">
                 <div class="card-header">
                     <span class="card-title">${isChild ? '↳ ' : ''}${escapeHtml(t.titre) || 'Sans titre'}</span>
                     ${typeIcon ? `<span class="card-type">${typeIcon}</span>` : ''}
                 </div>
                 <div class="card-meta">
-                    <span class="tf-badge tf-p${p}">${PRIORITY_LABELS[p]}</span>
+                    ${t.priorite ? `<span class="tf-badge tf-p${p}">${PRIORITY_LABELS[p]}</span>` : ''}
                     ${projectName ? `<span class="card-project"><span style="color:${projectColor}">●</span> ${escapeHtml(projectName)}</span>` : ''}
                     ${deps.length ? `<span class="card-deps">← ${deps.length}</span>` : ''}
                     ${subs.length ? `<span class="card-subs${subsDone === subs.length ? ' complete' : ''}" title="Sous-tâches (checklist)">◎ ${subsDone}/${subs.length}</span>` : ''}
                     ${nChildren ? `<span class="card-subs" title="Sous-tâches (hiérarchie)" onclick="event.stopPropagation();openTaskPanel(${t.id})">↳ ${nChildren}</span>` : ''}
                     ${dueHtml}
                 </div>
-                ${t.type !== 'jalon' ? `<div class="card-progress-row"><div class="card-progress" onclick="event.stopPropagation();setCardProgress(event, ${t.id})"><div class="card-progress-fill p${p}" style="width:${prog}%"></div></div><span class="card-progress-pct">${prog}%</span></div>` : ''}
+                ${t.type !== 'jalon' && prog > 0 ? `<div class="card-progress-row"><div class="card-progress" onclick="event.stopPropagation();setCardProgress(event, ${t.id})"><div class="card-progress-fill p${p}" style="width:${prog}%"></div></div><span class="card-progress-pct">${prog}%</span></div>` : ''}
                 ${assignees.length ? `<div class="card-assignees">${assignees.slice(0, 3).map(id => `<div class="card-avatar" style="background:${getTeamMemberColor(id)}">${getInitials(getTeamMemberName(id))}</div>`).join('')}${assignees.length > 3 ? `<div class="card-avatar more">+${assignees.length - 3}</div>` : ''}</div>` : ''}
             </div>`;
         }
@@ -1472,7 +1559,7 @@
             if (colKey === null) return;
 
             let updates = {};
-            if (groupBy === 'statut') { updates.statut = colKey; const _wasT = TF.isTerminal(statusCfg, task.statut), _nowT = TF.isTerminal(statusCfg, colKey); if (_nowT) { updates.progression = 100; if (!_wasT) updates.dateCloture = Math.floor(Date.now() / 1000); } else if (_wasT) updates.dateCloture = null; }
+            if (groupBy === 'statut') { updates.statut = colKey; const _wasT = TF.isDone(statusCfg, task.statut), _nowT = TF.isDone(statusCfg, colKey); if (_nowT) { updates.progression = 100; if (!_wasT) updates.dateCloture = Math.floor(Date.now() / 1000); } else if (_wasT) updates.dateCloture = null; }
             else if (groupBy === 'priorite') updates.priorite = parseInt(colKey, 10);
             else if (groupBy === 'projet') updates.projet = colKey === 'none' ? null : parseInt(colKey, 10);
             
@@ -1538,7 +1625,7 @@
             render();
         }
 
-        function openCreatePanel() { openCreatePanelForColumn(groupBy === 'statut' ? 'todo' : groupBy === 'priorite' ? '3' : projects.length ? String(projects[0].id) : 'none'); }
+        function openCreatePanel() { openCreatePanelForColumn(groupBy === 'statut' ? statusCfg.firstValue : groupBy === 'priorite' ? '3' : groupBy === 'projet' ? (projects.length ? String(projects[0].id) : 'none') : 'none'); }
 
         function openCreatePanelForColumn(colKey) {
             const today = new Date();
@@ -1546,10 +1633,12 @@
             if (groupBy === 'statut') preset.statut = colKey;
             else if (groupBy === 'priorite') preset.priorite = colKey;
             else if (groupBy === 'projet') preset.projet = colKey === 'none' ? null : parseInt(colKey);
+            else if (groupBy === 'assignee') preset.assignees = (colKey === 'none') ? [] : [parseInt(colKey.slice(1))];
+            else if (groupBy === 'affaire') preset.parentTask = (colKey && colKey.startsWith('aff')) ? parseInt(colKey.slice(3)) : null;
 
             panelState = {
                 open: true, isNew: true, taskId: null, taskIndex: -1, columnTasks: [], columnKey: colKey,
-                editData: { titre: '', description: '', type: 'tache', priorite: preset.priorite || '3', statut: preset.statut || 'todo', progression: 0, dateDebut: dateToGrist(today), dateEcheance: dateToGrist(addDays(today, 7)), projet: preset.projet !== undefined ? preset.projet : (projects.length > 0 ? projects[0].id : null), assignees: [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [], couleur: null, parentTask: null, charges: [] }
+                editData: { titre: '', description: '', type: 'tache', priorite: preset.priorite || '3', statut: preset.statut || statusCfg.firstValue, progression: 0, dateDebut: dateToGrist(today), dateEcheance: dateToGrist(addDays(today, 7)), projet: preset.projet !== undefined ? preset.projet : (projects.length > 0 ? projects[0].id : null), assignees: preset.assignees || [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [], couleur: null, parentTask: preset.parentTask || null, charges: [] }
             };
             renderPanelTask();
             openPanel();
@@ -1562,7 +1651,7 @@
             const parent = parentId ? tasks.find(t => t.id === parentId) : null;
             panelState = {
                 open: true, isNew: true, taskId: null, taskIndex: -1, columnTasks: [], columnKey: null,
-                editData: { titre: '', description: '', type: 'tache', priorite: '3', statut: 'todo', progression: 0, dateDebut: dateToGrist(today), dateEcheance: dateToGrist(addDays(today, 7)), projet: parent?.projet || (projects.length > 0 ? projects[0].id : null), assignees: [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [], couleur: null, parentTask: parentId || null, charges: [] }
+                editData: { titre: '', description: '', type: 'tache', priorite: '3', statut: statusCfg.firstValue, progression: 0, dateDebut: dateToGrist(today), dateEcheance: dateToGrist(addDays(today, 7)), projet: parent?.projet || (projects.length > 0 ? projects[0].id : null), assignees: [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [], couleur: null, parentTask: parentId || null, charges: [] }
             };
             renderPanelTask();
             openPanel();
@@ -1577,6 +1666,22 @@
             }
             updateField('parentTask', newParentId);
         }
+
+        // WBS-03 : combobox recherchable pour choisir un parent (remplace le <select>).
+        function renderParentResults(q) {
+            const box = document.getElementById('parentResults');
+            if (!box || !panelState) return;
+            const query = (q || '').trim().toLowerCase();
+            const opts = tasks.filter(t => t.id !== panelState.taskId && canSetParent(panelState.taskId, t.id)
+                && (!query || (t.titre || '').toLowerCase().includes(query)));
+            const shown = opts.slice(0, 60);
+            box.innerHTML = shown.length
+                ? shown.map(t => `<div class="parent-opt" onmousedown="setParent(${t.id})">${escapeHtml(t.titre)}</div>`).join('')
+                  + (opts.length > shown.length ? `<div class="parent-opt-more">${opts.length - shown.length} autre(s)… affinez la recherche</div>` : '')
+                : '<div class="parent-opt-empty">Aucune tâche correspondante</div>';
+            box.classList.add('open');
+        }
+        function hideParentResults() { const box = document.getElementById('parentResults'); if (box) setTimeout(() => box.classList.remove('open'), 150); }
 
         function cloneTaskData(task) { return { titre: task.titre || '', description: task.description || '', type: task.type || 'tache', priorite: String(task.priorite || '3'), statut: task.statut || 'todo', progression: task.progression || 0, dateDebut: task.dateDebut, dateEcheance: task.dateEcheance, projet: task.projet || null, assignees: getAssignees(task), dependDe: getDependsOn(task), tags: getTags(task), estimationH: task.estimationH || null, tempsPasse: task.tempsPasse || null, subtasks: getSubtasks(task), couleur: task.couleur || null, parentTask: task.parentTask || null, charges: TF.parseCharges(task.charges), dateCloture: task.dateCloture || null }; }
         
@@ -1666,12 +1771,12 @@
             const timePercent = estim > 0 ? Math.min((passe / estim) * 100, 100) : 0, timeOver = passe > estim && estim > 0;
 
             // Prérequis jalon (auto depuis dependDe)
-            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isTerminal(statusCfg, t?.statut); }).length;
+            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isDone(statusCfg, t?.statut); }).length;
             const prereqHtml = data.dependDe.map(id => {
                 const t = tasks.find(x => x.id === id);
                 if (!t) return '';
-                const st = t.statut || 'todo';
-                return `<div class="prereq-item ${TF.isTerminal(statusCfg, st) ? 'done' : ''}" onclick="openTaskPanel(${id})"><span class="prereq-item-icon">${TF.isTerminal(statusCfg, st) ? '✓' : '○'}</span><span class="prereq-item-title">${escapeHtml(t.titre)}</span><span class="prereq-badge" style="background:${TF.getStatus(statusCfg, st).fillColor};color:${TF.getStatus(statusCfg, st).textColor}">${escapeHtml(TF.getStatus(statusCfg, st).label)}</span></div>`;
+                const st = t.statut || statusCfg.firstValue;
+                return `<div class="prereq-item ${TF.isDone(statusCfg, st) ? 'done' : ''}" onclick="openTaskPanel(${id})"><span class="prereq-item-icon">${TF.isDone(statusCfg, st) ? '✓' : '○'}</span><span class="prereq-item-title">${escapeHtml(t.titre)}</span><span class="prereq-badge" style="background:${TF.getStatus(statusCfg, st).fillColor};color:${TF.getStatus(statusCfg, st).textColor}">${escapeHtml(TF.getStatus(statusCfg, st).label)}</span></div>`;
             }).join('');
 
             content.innerHTML = `
@@ -1688,7 +1793,7 @@
                     <div class="prop-row pr-status">
                         <span class="prop-label">Statut</span>
                         <div class="prop-value"><div class="status-selector">
-                            ${(data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.terminalValue)).map(s => `<div class="status-pill ${data.statut === s.value ? 'selected' : ''}" data-status="${escapeHtml(s.value)}" onclick="updateField('statut', this.dataset.status)"><span class="panel-pill-dot" style="background:${s.fillColor}"></span>${escapeHtml(s.label)}</div>`).join('')}
+                            ${(data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.doneValue)).map(s => `<div class="status-pill ${data.statut === s.value ? 'selected' : ''}" data-status="${escapeHtml(s.value)}" onclick="updateField('statut', this.dataset.status)"><span class="panel-pill-dot" style="background:${s.fillColor}"></span>${escapeHtml(s.label)}</div>`).join('')}
                         </div></div>
                     </div>
                     ${data.type !== 'reunion' ? `
@@ -1735,7 +1840,7 @@
                                     <span class="multi-select-chip" ${panelState.isNew ? '' : `onclick="openTaskPanel(${data.parentTask})"`} style="${panelState.isNew ? '' : 'cursor:pointer;'}background:var(--primary-light);color:var(--primary)">↑ ${escapeHtml((tasks.find(t => t.id === data.parentTask) || {}).titre || '(inconnu)')}</span>
                                     <button class="btn" style="padding:4px 10px;font-size:0.72rem" onclick="detachFromParent()">Détacher</button>
                                   </div>`
-                                : `<select class="form-select" onchange="if(this.value)setParent(parseInt(this.value))"><option value="">— Tâche racine —</option>${tasks.filter(t => t.id !== panelState.taskId && canSetParent(panelState.taskId, t.id)).map(t => `<option value="${t.id}">${escapeHtml(t.titre)}</option>`).join('')}</select>`}
+                                : `<div class="parent-picker"><input type="text" class="form-select parent-search" placeholder="Rechercher une tâche parente…" autocomplete="off" oninput="renderParentResults(this.value)" onfocus="renderParentResults(this.value)" onblur="hideParentResults()"><div class="parent-results" id="parentResults"></div></div>`}
                         </div>
                     </div>` : ''}
                     <div class="prop-row">
@@ -1794,7 +1899,7 @@
                         return `<div class="prereq-item" onclick="openTaskPanel(${k.id})">
                             <span class="card-project" style="width:3px;height:16px;border-radius:2px;flex-shrink:0;background:${PRIORITY_COLORS[kp]}"></span>
                             <span class="prereq-item-title">${escapeHtml(k.titre)}</span>
-                            <span class="prereq-badge ${k.statut || 'todo'}">${kprog}%</span>
+                            <span class="prereq-badge" style="background:${TF.getStatus(statusCfg, k.statut || statusCfg.firstValue).fillColor};color:${TF.getStatus(statusCfg, k.statut || statusCfg.firstValue).textColor}">${kprog}%</span>
                         </div>`;
                     }).join('');
                     return `<div class="panel-section">
@@ -1845,7 +1950,7 @@
             // BUG-01 FIX: Utiliser parseInputDate pour éviter problèmes de timezone
             if (field === 'dateDebut' || field === 'dateEcheance') value = value ? dateToGrist(parseInputDate(value)) : null;
             // dateCloture auto : posee quand on passe au statut terminal, effacee si on rouvre
-            if (field === 'statut') { const _wasT = TF.isTerminal(statusCfg, data.statut), _nowT = TF.isTerminal(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
+            if (field === 'statut') { const _wasT = TF.isDone(statusCfg, data.statut), _nowT = TF.isDone(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
             data[field] = value;
             if (field === 'type' && value === 'jalon' && data.dateDebut) data.dateEcheance = data.dateDebut;
             
@@ -1899,7 +2004,7 @@
             if (!task) return;
             
             task.progression = clampedPercent;
-            if (task.progression === 100 && !TF.isTerminal(statusCfg, task.statut)) task.statut = statusCfg.terminalValue;
+            if (task.progression === 100 && !TF.isDone(statusCfg, task.statut)) task.statut = statusCfg.doneValue;
             
             if (gristReady) {
                 try {
@@ -2080,7 +2185,6 @@
                     }
                 });
                 { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
-                { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
             } catch (e) { console.error('Grist listeners error:', e); }
         }
         
@@ -2162,7 +2266,6 @@
 
         // Sync du select couleur avant même que Grist ne réponde (évite flash)
         { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
-        { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
         { const b = document.getElementById('btnShowSubs'); if (b) b.classList.toggle('active', showSubtasks); }
         // Décorateur panneau (look « Propriétés / B ») : icône devant chaque libellé, sans toucher au rendu
         (function(){

@@ -32,6 +32,35 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion. --------------------------------------------------- */
+    const DONE_HINT = /valid|termin|clos|done|fini|achev|r[ée]alis|complet/i;
+    const DEAD_HINT = /annul|abandon|rejet|cancel|caduc/i;
+
+    // Metadonnees de type de tache (source unique : icone + libelle).
+    const TYPE_META = {
+        tache:   { label: 'Tâche',   icon: '' },
+        jalon:   { label: 'Jalon',   icon: '◆' },
+        reunion: { label: 'Réunion', icon: '☰' }
+    };
+    function typeMeta(type) { return TYPE_META[type] || TYPE_META.tache; }
+
+    // Index {id(string): row} depuis un tableau de lignes (projets, team...).
+    function indexById(rows) { const m = {}; for (const r of (rows || [])) if (r && r.id != null) m[String(r.id)] = r; return m; }
+    // Portefeuille (departement) d'une tache via son projet. projIndex = indexById(projects).
+    function portefeuilleOf(t, projIndex) {
+        if (!t || !projIndex) return 0;
+        const p = projIndex[String(t.projet)];
+        return (p && (p.portefeuille || 0)) || 0;
+    }
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -70,11 +99,19 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier de la liste (ancienne convention) pour ne rien casser.
+        let doneValue = null;
+        for (const s of final) { if (DONE_HINT.test(s.label) || DONE_HINT.test(s.value)) doneValue = s.value; }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => (DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value)) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -123,6 +160,20 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+    // Tache en retard : echeance passee, ni faite ni annulee, progression < 100.
+    // dateEcheance = timestamp Unix SECONDES. now = ms (defaut Date.now()).
+    function isLate(t, cfg, now) {
+        if (!t || t.dateEcheance == null) return false;
+        if (isDone(cfg, t.statut) || isDead(cfg, t.statut)) return false;
+        if ((Number(t.progression) || 0) >= 100) return false;
+        return (t.dateEcheance * 1000) < (now != null ? now : Date.now());
+    }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -362,6 +413,14 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
+        isLate: isLate,
+        TYPE_META: TYPE_META,
+        typeMeta: typeMeta,
+        indexById: indexById,
+        portefeuilleOf: portefeuilleOf,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,

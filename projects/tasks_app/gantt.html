@@ -77,7 +77,7 @@
         .month-cell { padding: 4px 0; text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); border-right: 1px solid var(--border); flex-shrink: 0; }
         .timeline-header-days { display: flex; }
         .day-cell { width: var(--cell-width); min-width: var(--cell-width); padding: 6px 2px; text-align: center; font-size: 0.68rem; color: var(--text-muted); border-right: 1px solid var(--border); background: var(--bg); }
-        .day-cell.weekend { background: #fef2f2; color: #ef4444; }
+        .day-cell.weekend { background: var(--bg-weekend, #fef2f2); color: var(--danger, #ef4444); }
         .day-cell.today { background: var(--primary); color: white; font-weight: 700; }
         .day-cell.month-start { border-left: 2px solid var(--border); }
 
@@ -115,7 +115,7 @@
         .task-priority-bar.p4 { background: var(--text-muted); }
         .task-info { flex: 1; min-width: 0; }
         .task-name { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; overflow: hidden; }
         .task-dates { font-size: 0.65rem; color: var(--text-muted); }
         .task-progress-badge { font-size: 0.6rem; color: var(--text-muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; }
         .task-subtask-badge { font-size: 0.6rem; color: var(--text-muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center; gap: 2px; }
@@ -145,14 +145,16 @@
         .timeline-grid { position: relative; min-height: 100%; }
         .grid-row { height: var(--row-height); border-bottom: 1px solid var(--border); display: flex; }
         .grid-cell { width: var(--cell-width); min-width: var(--cell-width); border-right: 1px solid #f1f5f9; height: 100%; }
-        .grid-cell.weekend { background: #fef2f2; }
-        .grid-cell.today { background: rgba(79, 70, 229, 0.08); }
+        .grid-cell.weekend { background: var(--bg-weekend, #fef2f2); }
+        .grid-cell.today { background: var(--p-50, rgba(79, 70, 229, 0.08)); }
         .grid-cell.month-start { border-left: 1px solid var(--border); }
 
         /* Gantt Bars */
         .gantt-bar { position: absolute; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; padding: 0 8px; font-size: 0.7rem; font-weight: 500; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 10; transition: all 0.15s; }
         .gantt-bar:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 20; }
         .gantt-bar.selected { outline: 2px solid var(--primary); outline-offset: 2px; z-index: 25; }
+        .gantt-bar.late { outline: 2px solid var(--danger); outline-offset: 1px; }
+        .gantt-milestone.late .milestone-diamond { outline: 2px solid var(--danger); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(239,68,68,0.25); }
         .gantt-bar.p1 { background: linear-gradient(135deg, var(--danger), #f87171); }
         .gantt-bar.p2 { background: linear-gradient(135deg, var(--warning), #fbbf24); }
         .gantt-bar.p3 { background: linear-gradient(135deg, var(--info), #60a5fa); }
@@ -279,6 +281,14 @@
         .multi-select-arrow { color: var(--text-muted); font-size: 0.7rem; }
         .multi-select-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 100; display: none; max-height: 180px; overflow-y: auto; }
         .multi-select.open .multi-select-dropdown { display: block; }
+        .parent-picker { position: relative; }
+        .parent-picker .parent-search { width: 100%; }
+        .parent-results { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 100; display: none; max-height: 220px; overflow-y: auto; }
+        .parent-results.open { display: block; }
+        .parent-opt { padding: 8px 12px; font-size: 0.82rem; cursor: pointer; color: var(--text); border-bottom: 1px solid var(--border); }
+        .parent-opt:last-child { border-bottom: none; }
+        .parent-opt:hover { background: var(--primary-light); color: var(--primary); }
+        .parent-opt-empty, .parent-opt-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text-muted); }
         .multi-select-option { padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
         .multi-select-option:hover { background: var(--bg); }
         .multi-select-option.selected { background: var(--primary-light); }
@@ -371,7 +381,7 @@
         .toast.error { background: var(--danger); }
         .demo-badge { position: fixed; top: 8px; right: 8px; background: var(--warning); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; z-index: 100; }
 
-        @media (max-width: 900px) { :root { --task-list-width: 200px; --cell-width: 28px; --panel-width: 360px; } }
+        @media (max-width: 900px) { :root { --task-list-width: 240px; --cell-width: 28px; --panel-width: 360px; } }
         @media (max-width: 700px) { :root { --task-list-width: 140px; --cell-width: 24px; --panel-width: 100%; } .gantt-wrapper.panel-open { margin-right: 0; } .panel { left: 0; width: 100%; } .task-dates, .task-progress-badge { display: none; } .form-row { grid-template-columns: 1fr; } }
         
         /* GEN-03: Export Print/PDF */
@@ -555,7 +565,7 @@
             .current-period { order: -1; flex: 1; }
             .view-controls { overflow-x: auto; max-width: 100%; }
             .btn, .filter-btn { min-height: 38px; }
-            :root { --task-list-width: 132px; --cell-width: 26px; }
+            :root { --task-list-width: 172px; --cell-width: 26px; }
             /* Panneau → feuille glissant du bas (bottom-sheet) */
             .panel { top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: 88%;
                      transform: translateY(100%); border-left: none; border-top: 1px solid var(--border);
@@ -577,6 +587,7 @@
                 --border:#283145; --border-dark:#3a455c;
                 --shadow:0 1px 2px rgba(0,0,0,0.4); --shadow-lg:0 24px 60px -16px rgba(0,0,0,0.7);
                 --p-50:#1a2150; --p-100:#22306e; --surface-2:#161f33; --warn-ink:#f5b454;
+                --bg-weekend:#141c2e;
             }
             .demo-badge { color: #1f2738; }
             .toast { background: #060a14; }
@@ -596,16 +607,10 @@
             </div>
             <div class="sort-selector">
                 <select id="colorSelect" onchange="changeColorMode(this.value)" title="Couleur des barres">
-                    <option value="priority">Couleur: Priorité</option>
                     <option value="project">Couleur: Projet</option>
                     <option value="assignee">Couleur: Assigné</option>
-                    <option value="status">Couleur: Statut</option>
                 </select>
-                <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Tous = arbre ; Synthèses = tâches mères (parents) ; Actions = tâches sans sous-tâche (feuilles), vue aplatie">
-                    <option value="all">Niveau : Tous</option>
-                    <option value="parents">Niveau : Synthèses</option>
-                    <option value="actions">Niveau : Actions</option>
-                </select>
+                <button class="btn" id="btnShowSubs" onclick="toggleShowSubtasks()" title="Afficher aussi les sous-tâches (par défaut : seulement les tâches principales)">↳ Sous-tâches</button>
             </div>
         </div>
         <div class="header-center">
@@ -615,11 +620,10 @@
             <button class="btn btn-nav" onclick="navigate(1)">▶</button>
             <span class="current-period" id="currentPeriod"></span>
             <div class="view-controls">
-                <button class="btn" data-view="week" onclick="setView('week')">Sem</button>
+                <button class="btn" data-view="week" onclick="setView('week')">Semaine</button>
                 <button class="btn active" data-view="month" onclick="setView('month')">Mois</button>
-                <button class="btn" data-view="quarter" onclick="setView('quarter')">Trim</button>
-                <button class="btn" data-view="semester" onclick="setView('semester')">6M</button>
-                <button class="btn" data-view="year" onclick="setView('year')">An</button>
+                <button class="btn" data-view="quarter" onclick="setView('quarter')">Trimestre</button>
+                <button class="btn" data-view="year" onclick="setView('year')">Année</button>
             </div>
         </div>
         <div class="header-right">
@@ -697,7 +701,7 @@
         // STATUS_COLORS / STATUS_LABELS supprimes : statuts lus dynamiquement via statusCfg (#1)
         // Palette standard TaskFlow (partagée entre widgets) — utilisée pour les pickers Projects/Team/Tasks
         const COLOR_PRESETS = ['#3e5de7','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
-        const TYPE_ICONS = { tache: '', jalon: '◆', reunion: '' };
+        const TYPE_ICONS = { tache: '', jalon: '◆', reunion: '☰' };
         const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
         const MONTHS_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -739,6 +743,35 @@
             const DEFAULTS_BY_VALUE = {};
             for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+            /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+             * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+             * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+             *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+             *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+             *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+             * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+             * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+             * piloter la completion. --------------------------------------------------- */
+            const DONE_HINT = /valid|termin|clos|done|fini|achev|r[ée]alis|complet/i;
+            const DEAD_HINT = /annul|abandon|rejet|cancel|caduc/i;
+
+            // Metadonnees de type de tache (source unique : icone + libelle).
+            const TYPE_META = {
+                tache:   { label: 'Tâche',   icon: '' },
+                jalon:   { label: 'Jalon',   icon: '◆' },
+                reunion: { label: 'Réunion', icon: '☰' }
+            };
+            function typeMeta(type) { return TYPE_META[type] || TYPE_META.tache; }
+
+            // Index {id(string): row} depuis un tableau de lignes (projets, team...).
+            function indexById(rows) { const m = {}; for (const r of (rows || [])) if (r && r.id != null) m[String(r.id)] = r; return m; }
+            // Portefeuille (departement) d'une tache via son projet. projIndex = indexById(projects).
+            function portefeuilleOf(t, projIndex) {
+                if (!t || !projIndex) return 0;
+                const p = projIndex[String(t.projet)];
+                return (p && (p.portefeuille || 0)) || 0;
+            }
+
             // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
             function columnarToRows(data) {
                 if (!data || Array.isArray(data)) return data || [];
@@ -777,11 +810,19 @@
                 const final = clean.length ? clean : DEFAULT_STATUSES.slice();
                 const byValue = {};
                 for (const s of final) byValue[s.value] = s;
+                // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+                // repli = dernier de la liste (ancienne convention) pour ne rien casser.
+                let doneValue = null;
+                for (const s of final) { if (DONE_HINT.test(s.label) || DONE_HINT.test(s.value)) doneValue = s.value; }
+                if (doneValue == null) doneValue = final[final.length - 1].value;
+                const deadValues = final.filter(s => (DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value)) && s.value !== doneValue).map(s => s.value);
                 return {
                     list: final,
                     byValue,
                     values: final.map(s => s.value),
-                    terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+                    terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+                    doneValue: doneValue,      // statut = "fait" (cloture positive)
+                    deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
                     firstValue: final[0].value,
                     source: clean.length ? source : 'default'
                 };
@@ -830,6 +871,20 @@
                 return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
             }
             function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+            // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+            function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+            // Cloture "negative" (annule/abandonne/rejete).
+            function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+            // Ni fait ni annule = actif.
+            function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+            // Tache en retard : echeance passee, ni faite ni annulee, progression < 100.
+            // dateEcheance = timestamp Unix SECONDES. now = ms (defaut Date.now()).
+            function isLate(t, cfg, now) {
+                if (!t || t.dateEcheance == null) return false;
+                if (isDone(cfg, t.statut) || isDead(cfg, t.statut)) return false;
+                if ((Number(t.progression) || 0) >= 100) return false;
+                return (t.dateEcheance * 1000) < (now != null ? now : Date.now());
+            }
 
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -1069,6 +1124,14 @@
                 buildStatusConfig: buildStatusConfig,
                 getStatus: getStatus,
                 isTerminal: isTerminal,
+                isDone: isDone,
+                isDead: isDead,
+                isLive: isLive,
+                isLate: isLate,
+                TYPE_META: TYPE_META,
+                typeMeta: typeMeta,
+                indexById: indexById,
+                portefeuilleOf: portefeuilleOf,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -1099,18 +1162,20 @@
         let CRA_ACTIVE = false; // Feuille de temps active -> tempsPasse = rollup CRA, saisie manuelle figee (anti-doublon)
         function pruneTaskRecord(rec) { if (TASK_COLS.size) { for (const k in rec) if (!TASK_COLS.has(k)) delete rec[k]; } return rec; }
         let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig
-        let currentView = localStorage.getItem('taskflow_gantt_view') || 'month';
+        let currentView = (v => (['week','month','quarter','year'].includes(v) ? v : 'month'))(localStorage.getItem('taskflow_gantt_view'));
         let viewStartDate = new Date();
         let selectedTaskId = null;
         let sortMode = localStorage.getItem('taskflow_gantt_sort') || 'priority';
-        let colorMode = localStorage.getItem('taskflow_gantt_colormode') || 'priority';
+        let colorMode = (m => (m === 'assignee' ? m : 'project'))(localStorage.getItem('taskflow_gantt_colormode'));
         // #9 niveau de travail (par widget, opt-in, defaut 'all' = arbre) : 'actions'/'parents' = vue aplatie du niveau.
-        let workLevel = localStorage.getItem('taskflow_gantt_worklevel') || 'all';
+        let showSubtasks = localStorage.getItem('taskflow_gantt_showsubs') === '1'; // défaut : masqué (tâches principales)
         // WBS-02: état expand/collapse par tâche parente
         let expandedTasks = new Set();
         try { expandedTasks = new Set(JSON.parse(localStorage.getItem('taskflow_gantt_expanded') || '[]').map(Number).filter(n => !isNaN(n))); } catch (e) {}
         let sortableInstance = null;
-        let filters = { project: [], assignee: [], priority: [] };  // GEN-02: Arrays pour compatibilité inter-widgets
+        let filters = { project: [], assignee: [], priority: [], status: [], type: [] };  // GEN-02: Arrays pour compatibilité inter-widgets
+        const TYPE_FILTER_OPTS = [['tache', 'Tâche', '▭'], ['jalon', 'Jalon', '◆'], ['reunion', 'Réunion', '☰']];
+        const typeLabel = v => (TYPE_FILTER_OPTS.find(o => o[0] === v) || [v, v])[1];
         let dragState = { active: false, type: null, taskId: null, startX: 0, originalLeft: 0, originalWidth: 0, originalStart: null, originalEnd: null };
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, taskList: [], editData: null };
         let overlayPointerStart = { x: 0, y: 0 };
@@ -1218,6 +1283,16 @@
             }
         }
         function getTaskBarGradient(t) {
+            // T4 : en couleur=assigné, barre en dégradé des couleurs de TOUS les contributeurs (pas le 1er seulement)
+            if (colorMode === 'assignee') {
+                const ids = getAssigneesArray(t);
+                if (ids.length > 1) {
+                    // Segments de largeur FIXE (répétés) pour rester visibles même sur une barre très longue (dates année-pleine)
+                    const cols = ids.map(id => getTeamMemberColor(id)), seg = 14, parts = [];
+                    cols.forEach((c, i) => { parts.push(`${c} ${i * seg}px`, `${c} ${(i + 1) * seg}px`); });
+                    return `repeating-linear-gradient(135deg, ${parts.join(', ')}, ${cols[0]} ${cols.length * seg}px)`;
+                }
+            }
             const c = getTaskColor(t);
             return 'linear-gradient(135deg, ' + c + ', color-mix(in srgb, ' + c + ' 70%, white))';
         }
@@ -1331,9 +1406,6 @@
         // Renvoie [{task, depth, dimmed}]
         function buildVisibleTasks() {
             const filtered = getFilteredTasks();
-            // #9 : niveau != 'all' -> vue APLATIE du niveau (pas d'arbre), coherent avec le Kanban.
-            if (workLevel === 'actions') return filtered.filter(t => !hasChildren(t)).map(t => ({ task: t, depth: 0, dimmed: false }));
-            if (workLevel === 'parents') return filtered.filter(t => hasChildren(t)).map(t => ({ task: t, depth: 0, dimmed: false }));
             const directMatches = new Set(filtered.map(t => t.id));
             // branches = tâches dont elles-mêmes OU un ancêtre OU un descendant match
             const branchTasks = new Set();
@@ -1352,7 +1424,7 @@
             const walk = (node, depth) => {
                 const dimmed = !directMatches.has(node.id);
                 visible.push({ task: node, depth, dimmed });
-                if (hasChildren(node) && expandedTasks.has(node.id)) {
+                if (showSubtasks && hasChildren(node) && expandedTasks.has(node.id)) {
                     const kids = sortFratrie(getChildren(node.id).filter(k => branchTasks.has(k.id)));
                     for (const k of kids) walk(k, depth + 1);
                 }
@@ -1502,10 +1574,8 @@
                 currentView = 'week';
             } else if (spanDays <= 60) {
                 currentView = 'month';
-            } else if (spanDays <= 120) {
+            } else if (spanDays <= 150) {
                 currentView = 'quarter';
-            } else if (spanDays <= 200) {
-                currentView = 'semester';
             } else {
                 currentView = 'year';
             }
@@ -1544,11 +1614,11 @@
             localStorage.setItem('taskflow_gantt_colormode', mode);
             render();
         }
-        // #9 : niveau de travail affiche (persistance locale par widget).
-        function changeWorkLevel(v) {
-            workLevel = v;
-            localStorage.setItem('taskflow_gantt_worklevel', v);
-            const s = document.getElementById('levelSelect'); if (s) s.value = v;
+        // Toggle « Sous-tâches » (persistance locale) — masqué = seulement les tâches principales.
+        function toggleShowSubtasks() {
+            showSubtasks = !showSubtasks;
+            localStorage.setItem('taskflow_gantt_showsubs', showSubtasks ? '1' : '0');
+            const b = document.getElementById('btnShowSubs'); if (b) b.classList.toggle('active', showSubtasks);
             render();
         }
         // Édite la couleur d'un projet (lue par tous les widgets TaskFlow via getProjectColor)
@@ -1601,13 +1671,15 @@
             const prioHtml = [1,2,3,4].map(p => `<div class="filter-option" onclick="toggleFilter('priority', ${p})"><input type="checkbox" ${filters.priority.includes(p)?'checked':''}><span class="dot" style="background:${PRIORITY_COLORS[p]}"></span>${PRIORITY_LABELS[p]}</div>`).join('');
             const team2 = team.filter(m => m.actif !== false);
             const assHtml = team2.length ? team2.map(m => `<div class="filter-option" onclick="toggleFilter('assignee', ${m.id})"><input type="checkbox" ${filters.assignee.includes(m.id)?'checked':''}>${escapeHtml(m.nom)}</div>`).join('') : '<div class="filter-option muted">Aucun membre</div>';
-            const total = filters.project.length + filters.priority.length + filters.assignee.length;
+            const statHtml = statusCfg.list.map(s => `<div class="filter-option" onclick="toggleFilter('status', '${s.value}')"><input type="checkbox" ${filters.status.includes(s.value)?'checked':''}><span class="dot" style="background:${s.fillColor}"></span>${escapeHtml(s.label)}</div>`).join('');
+            const typeHtml = TYPE_FILTER_OPTS.map(([v,l,ic]) => `<div class="filter-option" onclick="toggleFilter('type', '${v}')"><input type="checkbox" ${filters.type.includes(v)?'checked':''}><span class="dot" style="background:transparent">${ic}</span>${l}</div>`).join('');
+            const total = filters.project.length + filters.priority.length + filters.assignee.length + filters.status.length + filters.type.length;
             const menu = document.getElementById('filterAllMenu');
-            if (menu) menu.innerHTML = grp('Projets', projHtml, true) + grp('Priorités', prioHtml) + grp('Assignés', assHtml) + (total ? '<div class="fm-foot"><span class="fm-clear" onclick="clearAllGanttFilters()">Tout effacer</span></div>' : '');
+            if (menu) menu.innerHTML = grp('Statuts', statHtml, true) + grp('Types', typeHtml) + grp('Priorités', prioHtml) + grp('Assignés', assHtml) + grp('Projets', projHtml) + (total ? '<div class="fm-foot"><span class="fm-clear" onclick="clearAllGanttFilters()">Tout effacer</span></div>' : '');
             updateFilterUI();
         }
         function updateFilterUI() {
-            const total = filters.project.length + filters.priority.length + filters.assignee.length;
+            const total = filters.project.length + filters.priority.length + filters.assignee.length + filters.status.length + filters.type.length;
             const cnt = document.getElementById('filterCount'); if (cnt) { cnt.textContent = total; cnt.style.display = total ? 'inline-flex' : 'none'; }
             const fbtn = document.querySelector('#filterGantt .filter-btn'); if (fbtn) fbtn.classList.toggle('has-filter', total > 0);
             renderFilterChips();
@@ -1617,14 +1689,18 @@
             const X = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
             const chip = (key, val, label, color) => { const dot = color ? `<span class="fc-dot" style="background:${color}"></span>` : ''; return `<span class="fc-chip">${dot}${label}<span class="fc-x" title="Retirer" onclick="toggleFilter('${key}', ${val})">${X}</span></span>`; };
             const chips = [];
+            filters.status.forEach(v => { const s = TF.getStatus(statusCfg, v); chips.push(chip('status', `'${v}'`, s?escapeHtml(s.label):v, s&&s.fillColor)); });
             filters.project.forEach(id => { const p = projects.find(x=>x.id===id); chips.push(chip('project', id, p?escapeHtml(p.nom):'Projet', p&&p.couleur)); });
             filters.priority.forEach(v => chips.push(chip('priority', v, PRIORITY_LABELS[v], PRIORITY_COLORS[v])));
             filters.assignee.forEach(id => { const m = team.find(x=>x.id===id); chips.push(chip('assignee', id, m?escapeHtml(m.nom):'Membre')); });
+            filters.type.forEach(v => chips.push(chip('type', `'${v}'`, typeLabel(v))));
             if (!chips.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
             bar.style.display = 'flex';
             bar.innerHTML = '<span class="fc-label">Filtres actifs</span>' + chips.join('') + '<span class="fc-clear-all" onclick="clearAllGanttFilters()">Tout effacer</span>';
         }
                 function taskMatchesFilters(t) {
+            if (filters.status.length && !filters.status.includes(t.statut || statusCfg.firstValue)) return false;
+            if (filters.type.length && !filters.type.includes(t.type || 'tache')) return false;
             if (filters.project.length && !filters.project.includes(t.projet)) return false;
             if (filters.assignee.length && !getAssigneesArray(t).some(a => filters.assignee.includes(a))) return false;
             if (filters.priority.length && !filters.priority.includes(getTaskPriority(t))) return false;
@@ -1656,7 +1732,7 @@
             ov.innerHTML = '<div class="tf-gskel">'+rows+'</div>';
             ov.style.display = "flex";
         }
-        function clearAllGanttFilters() { filters = { project: [], assignee: [], priority: [] }; updateFilterUI(); broadcastFilters(); render(); }
+        function clearAllGanttFilters() { filters = { project: [], assignee: [], priority: [], status: [], type: [] }; updateFilterUI(); broadcastFilters(); render(); }
         function updateGanttOverlay() {
             const ov = document.getElementById("ganttOverlay"); if (!ov) return;
             if (currentVisible && currentVisible.length > 0) { ov.style.display = "none"; ov.innerHTML = ""; return; }
@@ -1863,8 +1939,8 @@
                     '<div class="task-info">' +
                         '<div class="task-name">' + (jalon ? '◆ ' : '') + (escapeHtml(t.titre) || 'Sans titre') + '</div>' +
                         '<div class="task-meta">' +
-                            '<span class="task-dates">' + formatDateShort(start) + ' → ' + formatDateShort(end) + '</span>' +
-                            (!jalon ? '<span class="task-progress-badge">' + progress + '%</span>' : '') +
+                            // Dates retirées du libellé (déjà visibles sur les barres) — déclutter (G-FIX-2)
+                            (!jalon && progress > 0 ? '<span class="task-progress-badge">' + progress + '%</span>' : '') +
                             subBadge +
                             childBadge +
                             avatarsHtml +
@@ -1989,12 +2065,13 @@
                 const width = Math.round(duration * pxPerDay);
                 const selected = t.id === selectedTaskId;
                 const dimmed = dimmedSet.has(t.id);
+                const late = TF.isLate(t, statusCfg); // échéance passée, ni faite ni annulée
 
                 if (left + width < -50 || left > totalWidth + 50) return;
 
                 if (jalon) {
                     const m = document.createElement('div');
-                    m.className = 'gantt-milestone p' + p + (selected ? ' selected' : '') + (dimmed ? ' dimmed' : '');
+                    m.className = 'gantt-milestone p' + p + (selected ? ' selected' : '') + (dimmed ? ' dimmed' : '') + (late ? ' late' : '');
                     m.dataset.id = t.id;
                     m.style.left = Math.max(0, left + Math.round(pxPerDay / 2) - 7) + 'px';
                     m.style.top = top + 'px';
@@ -2009,7 +2086,7 @@
                     const barWidth = Math.max(width - (barLeft - left), 12);
                     const isNarrow = barWidth < 60;
                     const progVal = isParent ? aggregateProgress(t) : (t.progression || 0);
-                    bar.className = 'gantt-bar p' + p + (selected ? ' selected' : '') + (isNarrow ? ' narrow-bar' : '') + (isParent ? ' parent' : '') + (dimmed ? ' dimmed' : '');
+                    bar.className = 'gantt-bar p' + p + (selected ? ' selected' : '') + (isNarrow ? ' narrow-bar' : '') + (isParent ? ' parent' : '') + (dimmed ? ' dimmed' : '') + (late && !isParent ? ' late' : '');
                     bar.dataset.id = t.id;
                     bar.style.left = barLeft + 'px';
                     bar.style.top = top + 'px';
@@ -2216,6 +2293,22 @@
             updateField('parentTask', newParentId);
         }
 
+        // WBS-03 : combobox recherchable pour choisir un parent (remplace le <select>).
+        function renderParentResults(q) {
+            const box = document.getElementById('parentResults');
+            if (!box || !panelState) return;
+            const query = (q || '').trim().toLowerCase();
+            const opts = tasks.filter(t => t.id !== panelState.taskId && canSetParent(panelState.taskId, t.id)
+                && (!query || (t.titre || '').toLowerCase().includes(query)));
+            const shown = opts.slice(0, 60);
+            box.innerHTML = shown.length
+                ? shown.map(t => '<div class="parent-opt" onmousedown="setParent(' + t.id + ')">' + escapeHtml(t.titre) + '</div>').join('')
+                  + (opts.length > shown.length ? '<div class="parent-opt-more">' + (opts.length - shown.length) + ' autre(s)… affinez la recherche</div>' : '')
+                : '<div class="parent-opt-empty">Aucune tâche correspondante</div>';
+            box.classList.add('open');
+        }
+        function hideParentResults() { const box = document.getElementById('parentResults'); if (box) setTimeout(function () { box.classList.remove('open'); }, 150); }
+
         function cloneTaskData(task) {
             return {
                 titre: task.titre || '', description: task.description || '', type: task.type || 'tache',
@@ -2340,12 +2433,12 @@
             const timeOver = passe > estim && estim > 0;
 
             // Prérequis jalon (auto depuis dependDe)
-            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isTerminal(statusCfg, t?.statut); }).length;
+            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isDone(statusCfg, t?.statut); }).length;
             const prereqHtml = data.dependDe.map(id => {
                 const t = tasks.find(x => x.id === id);
                 if (!t) return '';
                 const st = t.statut || 'todo';
-                return '<div class="prereq-item ' + (TF.isTerminal(statusCfg, st) ? 'done' : '') + '" onclick="openTaskPanel(' + id + ')"><span class="prereq-item-icon">' + (TF.isTerminal(statusCfg, st) ? '✓' : '○') + '</span><span class="prereq-item-title">' + escapeHtml(t.titre) + '</span><span class="prereq-badge" style="background:' + TF.getStatus(statusCfg, st).fillColor + ';color:' + TF.getStatus(statusCfg, st).textColor + '">' + escapeHtml(TF.getStatus(statusCfg, st).label) + '</span></div>';
+                return '<div class="prereq-item ' + (TF.isDone(statusCfg, st) ? 'done' : '') + '" onclick="openTaskPanel(' + id + ')"><span class="prereq-item-icon">' + (TF.isDone(statusCfg, st) ? '✓' : '○') + '</span><span class="prereq-item-title">' + escapeHtml(t.titre) + '</span><span class="prereq-badge" style="background:' + TF.getStatus(statusCfg, st).fillColor + ';color:' + TF.getStatus(statusCfg, st).textColor + '">' + escapeHtml(TF.getStatus(statusCfg, st).label) + '</span></div>';
             }).join('');
 
             content.innerHTML =
@@ -2360,7 +2453,7 @@
 
                 '<div class="props-list">' +
                     '<div class="prop-row pr-status"><span class="prop-label">Statut</span><div class="prop-value"><div class="status-selector">' +
-                        (data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.terminalValue)).map(s => '<div class="status-pill ' + (data.statut === s.value ? 'selected' : '') + '" data-status="' + escapeHtml(s.value) + '" onclick="updateField(\'statut\', this.dataset.status)"><span class="panel-pill-dot" style="background:' + s.fillColor + '"></span>' + escapeHtml(s.label) + '</div>').join('') +
+                        (data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.doneValue)).map(s => '<div class="status-pill ' + (data.statut === s.value ? 'selected' : '') + '" data-status="' + escapeHtml(s.value) + '" onclick="updateField(\'statut\', this.dataset.status)"><span class="panel-pill-dot" style="background:' + s.fillColor + '"></span>' + escapeHtml(s.label) + '</div>').join('') +
                     '</div></div></div>' +
                     (data.type !== 'reunion' ?
                         '<div class="prop-row"><span class="prop-label">Priorité</span><div class="prop-value"><div class="priority-selector">' +
@@ -2392,9 +2485,7 @@
                                     '<span class="multi-select-chip" ' + (panelState.isNew ? '' : 'onclick="openTaskPanel(' + data.parentTask + ')"') + ' style="' + (panelState.isNew ? '' : 'cursor:pointer;') + 'background:var(--primary-light);color:var(--primary)">↑ ' + escapeHtml((tasks.find(t => t.id === data.parentTask) || {}).titre || '(inconnu)') + '</span>' +
                                     '<button class="btn" style="padding:4px 10px;font-size:0.72rem" onclick="detachFromParent()">Détacher</button>' +
                                   '</div>'
-                                : '<select class="form-select" onchange="if(this.value)setParent(parseInt(this.value))"><option value="">— Tâche racine —</option>' +
-                                    tasks.filter(t => t.id !== panelState.taskId && canSetParent(panelState.taskId, t.id)).map(t => '<option value="' + t.id + '">' + escapeHtml(t.titre) + '</option>').join('') +
-                                  '</select>') +
+                                : '<div class="parent-picker"><input type="text" class="form-select parent-search" placeholder="Rechercher une tâche parente…" autocomplete="off" oninput="renderParentResults(this.value)" onfocus="renderParentResults(this.value)" onblur="hideParentResults()"><div class="parent-results" id="parentResults"></div></div>') +
                         '</div></div>'
                         : '') +
                     '<div class="prop-row"><span class="prop-label">Couleur</span><div class="prop-value"><div style="display:flex;gap:8px;align-items:center">' +
@@ -2499,7 +2590,7 @@
                 value = value ? dateToGrist(new Date(value)) : null;
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
-            if (field === 'statut') { const _wasT = TF.isTerminal(statusCfg, data.statut), _nowT = TF.isTerminal(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
+            if (field === 'statut') { const _wasT = TF.isDone(statusCfg, data.statut), _nowT = TF.isDone(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
 
             data[field] = value;
 
@@ -3178,7 +3269,7 @@
         { const s = document.getElementById('sortSelect'); if (s) s.value = sortMode; }
         // Idem pour le <select> de couleur
         { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
-        { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
+        { const b = document.getElementById('btnShowSubs'); if (b) b.classList.toggle('active', showSubtasks); }
         // Relancer le rendu quand le widget est redimensionné (ex: panel ouvert/fermé, fenêtre)
         new ResizeObserver(() => render()).observe(document.getElementById('timelineScroll'));
         // Décorateur panneau (look « Propriétés / B ») : icône devant chaque libellé, sans toucher au rendu
