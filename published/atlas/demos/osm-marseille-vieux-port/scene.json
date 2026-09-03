@@ -1,0 +1,326 @@
+{
+  "version": "0.2.2",
+  "manifest_version": "V0.2",
+  "title": "Marseille — Vieux-Port (OSM 3D)",
+  "project_name": "Marseille Vieux-Port OSM 3D",
+  "provenance": {
+    "producer": "atlas-demo/overpass",
+    "attribution": "© OpenStreetMap contributors (ODbL)",
+    "extracted_at": "2026-08-26T11:49:16.056Z",
+    "bbox": "43.2925,5.3605,43.2995,5.3745"
+  },
+  "layers": [
+    {
+      "id": "osm-bati-3d",
+      "name": "Bâtiments OSM 3D",
+      "order": 0,
+      "geometry_type": "polygon",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "height_field": "height_m",
+      "style": {
+        "polygonMode": "extruded",
+        "declarative": {
+          "kind": "single",
+          "color": "#c4a574",
+          "opacity": 0.92
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./buildings.geojson",
+      "bbox": [
+        5.3590281,
+        43.2918813,
+        5.3781057,
+        43.304786
+      ],
+      "featureCount": 1315,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "building",
+          "gType": "Text"
+        },
+        {
+          "name": "height_m",
+          "gType": "Numeric"
+        },
+        {
+          "name": "height_source",
+          "gType": "Text"
+        },
+        {
+          "name": "levels",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "osm-voirie",
+      "name": "Voirie OSM",
+      "order": 1,
+      "geometry_type": "line",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "declarative": {
+          "kind": "single",
+          "color": "#5c6570",
+          "opacity": 0.85
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./roads.geojson",
+      "bbox": [
+        5.3590281,
+        43.2918813,
+        5.3781057,
+        43.304786
+      ],
+      "featureCount": 720,
+      "crs": "EPSG:4326"
+    },
+    {
+      "id": "osm-landmarks",
+      "name": "Lieux remarquables",
+      "order": 2,
+      "geometry_type": "point",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false
+      },
+      "style": {
+        "declarative": {
+          "kind": "single",
+          "color": "#c44536",
+          "opacity": 1
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./landmarks.geojson",
+      "bbox": [
+        5.3590281,
+        43.2918813,
+        5.3781057,
+        43.304786
+      ],
+      "featureCount": 37,
+      "crs": "EPSG:4326"
+    }
+  ],
+  "story": {
+    "version": "0.2.1",
+    "steps": [
+      {
+        "id": "step-1",
+        "title": "Le Vieux-Port vu du ciel",
+        "description": "Emprise OSM autour du Vieux-Port de Marseille. Le bâti est extrudé depuis les tags height / building:levels (sinon 10 m).",
+        "state": {
+          "camera": {
+            "center": [
+              5.368566899999999,
+              43.298333650000004
+            ],
+            "zoom": 15.2,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 840,
+          "terrain3D": false,
+          "layers": [
+            {
+              "id": "osm-bati-3d",
+              "name": "Bâtiments OSM 3D",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "polygonMode": "extruded",
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-voirie",
+              "name": "Voirie OSM",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-landmarks",
+              "name": "Lieux remarquables",
+              "sourceTable": null,
+              "visible": false,
+              "controls": [],
+              "controlDeclaratives": []
+            }
+          ]
+        }
+      },
+      {
+        "id": "step-2",
+        "title": "Plongée dans le tissu urbain",
+        "description": "Perspective oblique : volumes issus d’OpenStreetMap. Attribution ODbL — © contributeurs OpenStreetMap.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3695,
+              43.2958
+            ],
+            "zoom": 16.4,
+            "pitch": 58,
+            "bearing": -28
+          },
+          "projection": "mercator",
+          "timeOfDay": 1020,
+          "terrain3D": false,
+          "layers": [
+            {
+              "id": "osm-bati-3d",
+              "name": "Bâtiments OSM 3D",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "polygonMode": "extruded",
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-voirie",
+              "name": "Voirie OSM",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-landmarks",
+              "name": "Lieux remarquables",
+              "sourceTable": null,
+              "visible": false,
+              "controls": [],
+              "controlDeclaratives": []
+            }
+          ]
+        }
+      },
+      {
+        "id": "step-3",
+        "title": "Repères et quai",
+        "description": "Musées, sites historiques et embarcadères tagués dans OSM — points d’ancrage du récit.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3648,
+              43.2962
+            ],
+            "zoom": 16.8,
+            "pitch": 52,
+            "bearing": 42
+          },
+          "projection": "mercator",
+          "timeOfDay": 600,
+          "terrain3D": false,
+          "layers": [
+            {
+              "id": "osm-bati-3d",
+              "name": "Bâtiments OSM 3D",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "polygonMode": "extruded",
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-voirie",
+              "name": "Voirie OSM",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-landmarks",
+              "name": "Lieux remarquables",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            }
+          ]
+        }
+      },
+      {
+        "id": "step-4",
+        "title": "Morphologie au crépuscule",
+        "description": "1315 bâtiments · 337 avec hauteur OSM explicite · 720 tronçons · 37 lieux.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3702,
+              43.2949
+            ],
+            "zoom": 15.8,
+            "pitch": 62,
+            "bearing": 110
+          },
+          "projection": "mercator",
+          "timeOfDay": 1140,
+          "terrain3D": false,
+          "layers": [
+            {
+              "id": "osm-bati-3d",
+              "name": "Bâtiments OSM 3D",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "polygonMode": "extruded",
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-voirie",
+              "name": "Voirie OSM",
+              "sourceTable": null,
+              "visible": false,
+              "controls": [],
+              "controlDeclaratives": []
+            },
+            {
+              "id": "osm-landmarks",
+              "name": "Lieux remarquables",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "camera": {
+    "center": [
+      5.3695,
+      43.2958
+    ],
+    "zoom": 16.4,
+    "pitch": 58,
+    "bearing": -28
+  }
+}

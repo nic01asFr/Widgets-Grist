@@ -861,6 +861,50 @@ ${cadre({ url, image, alt: `Aperçu du widget ${p.presentation.nom || p.id}` })}
 }
 
 /**
+ * La demonstration : le widget avec de vraies donnees.
+ *
+ * L'apercu de tete montre le widget SEUL, sans document — c'est deliberé, une
+ * page publique ne doit pas dependre d'un document de travail. Mais un widget
+ * vide ne dit pas ce qu'il sait faire : il faut une scene, et une scene reelle.
+ *
+ * D'ou un second cadre, plus bas, apres que la page a explique de quoi il
+ * retourne. Il tire une scene publiee sous `published/`, donc rien qui puisse
+ * disparaitre sans qu'on le sache. Le script des cadres (`JS_CADRES`) etait
+ * ecrit pour ce second usage bien avant qu'il existe.
+ *
+ * Deux gardes, parce qu'une demonstration cassee est pire qu'une absente : la
+ * page la propose, on clique, et on juge le widget sur un cadre vide.
+ */
+function sectionDemo(p, racine) {
+  const d = (p.presentation.produit || {}).demonstration;
+  if (!d || !d.url || !d.image) return '';
+  const img = path.join(racine, 'w', p.id, d.image);
+  if (!fs.existsSync(img)) {
+    console.error(`  demonstration ignoree — image absente : w/${p.id}/${d.image}`);
+    return '';
+  }
+  // L'URL de scene doit pointer sur un fichier reellement publie.
+  const m = /[?&]scene=([^&]+)/.exec(d.url);
+  if (m) {
+    const cible = decodeURIComponent(m[1]).replace(/^\.?\//, '');
+    const local = cible.startsWith('http') ? null : path.join(racine, cible);
+    if (local && !fs.existsSync(local)) {
+      console.error(`  demonstration ignoree — scene absente : ${cible}`);
+      return '';
+    }
+  }
+  return `  <section class="demo">
+    <h2>${echapper(d.titre || 'La démonstration')}</h2>
+${d.texte ? `    <p>${echapper(d.texte)}</p>
+` : ''}${cadre({
+    url: d.url, image: d.image, alt: d.alt || `Démonstration de ${p.presentation.nom || p.id}`,
+    libelle: d.libelle || 'Ouvrir la démonstration',
+  })}
+${d.mention ? `    <p class="mention">${echapper(d.mention)}</p>` : ''}
+  </section>`;
+}
+
+/**
  * Le widget mis en avant.
  *
  * Ce n'est pas forcement le premier du manifeste : une v2 y arrive apres la v1
@@ -903,6 +947,9 @@ function rendreProjet(p, maintenant, base = '') {
   const ap = sectionApercu(p, image);
   if (ap) sections.push(ap);
   for (const bloc of [blocChiffres(produit), blocContextes(produit)]) if (bloc) sections.push(bloc);
+
+  const dm = sectionDemo(p, PUBLIE);
+  if (dm) sections.push(dm);
 
   if ((v.points || []).length) {
     sections.push(`  <section>
@@ -1057,4 +1104,4 @@ if (require.main === module) {
   if (sans.length) console.log(`\nSans vitrine.json (presentation minimale) : ${sans.join(', ')}`);
 }
 
-module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreSitemap, baseDe };
+module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreSitemap, baseDe, sectionDemo };

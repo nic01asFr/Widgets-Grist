@@ -4,9 +4,10 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.3.0';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.4.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -14,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.3.0';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.3.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.3.0';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.3.0';
+} from './lib/scene-loader.js?v=1.4.0';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.4.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.4.0';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.4.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.3.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.3.0';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.3.0';
+} from './lib/layer-order.js?v=1.4.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.4.0';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.4.0';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.3.0';
+} from './lib/terrain-base.js?v=1.4.0';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -36,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.3.0';
+} from './lib/grist-sync.js?v=1.4.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -48,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.3.0';
+} from './lib/declarative-style.js?v=1.4.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.3.0';
+} from './lib/geo-tables.js?v=1.4.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -70,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.3.0';
+} from './lib/controls.js?v=1.4.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.3.0';
+} from './lib/story.js?v=1.4.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.3.0';
+} from './lib/manifest-binding.js?v=1.4.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.3.0';
+} from './lib/viewport.js?v=1.4.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -94,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.3.0';
+} from './lib/view-mode.js?v=1.4.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.3.0';
+} from './lib/viewer-controls.js?v=1.4.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.3.0';
+} from './lib/scene-prefs.js?v=1.4.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -211,6 +212,7 @@ let _openDockPill = null;
 let _sunArcDragging = false;
 let _preStorySnapshot = null;
 let _preStoryOrder = null;
+let _preStorySettings = null;
 let _persistStoryTimer = null;
 let _cameraSaveTimer = null;
 let _initialViewportApplied = false;
@@ -773,6 +775,7 @@ const MODEL3D_ZOOM_GATE = 11;          // sous ce zoom on cache la 3D si beaucou
 const GLOBE_MERCATOR_ZOOM = 12;
 const MODEL3D_GATE_COUNT = 4000;
 const SHADOW_FEATURE_CAP = 1500;       // ombres portées réelles seulement sous ce nombre d'objets visibles
+const EXTRUSION_SHADOW_CAP = 650;      // casters d'ombre pour bâti extrudé MapLibre (hors GLB)
 
 /** Ecart d'altitude a l'origine au-dela duquel la scene 3D est recalculee, en metres. */
 const DERIVE_ORIGINE_M = 0.5;
@@ -790,6 +793,7 @@ const Models3D = {
     protoCache: new Map(),  // url -> [{geometry, material, mat}] | null
     groups: new Map(),      // url -> { meshes:[{im, protoMat}], items:[{layerId, idx, lng, lat}] }
     slotIndex: new Map(),   // `${layerId}:${idx}` -> { url, slot }
+    extrusionShadows: [],   // Mesh[] — casters invisibles pour bâti fill-extrusion
     origin: null, originMC: null, originScale: 1, originElev: 0,
     elevCache: new Map(),
     sunDir: new THREE.Vector3(0.4, 0.7, 0.4).normalize(),
@@ -805,6 +809,72 @@ const Models3D = {
     // alias rétro-compat (anciens appels)
     rebuildScene() { this.build(); },
     scheduleRebuild() { this.scheduleBuild(); },
+
+    /**
+     * Centre lumière + taille du frustum d'ombre sur l'emprise **écran** visible.
+     * Un ortho fixe (±400 m) créait une pastille / triangle net au pan — moche.
+     */
+    syncShadowRig() {
+        if (!this.dirLight?.shadow || !map || !this.origin) return;
+        const c = map.getCenter();
+        const lmC = this.localMeters(c.lng, c.lat);
+        const cx = lmC.x, cz = -lmC.y;
+
+        // Coins + bords du canvas → lng/lat → mètres locaux (gère le pitch mieux que getBounds seul).
+        const canvas = map.getCanvas();
+        const w = canvas?.clientWidth || 800, h = canvas?.clientHeight || 600;
+        const screenPts = [
+            [0, 0], [w, 0], [0, h], [w, h],
+            [w / 2, 0], [w / 2, h], [0, h / 2], [w, h / 2],
+        ];
+        let maxR = 0;
+        for (const [sx, sy] of screenPts) {
+            let ll;
+            try { ll = map.unproject([sx, sy]); } catch (_) { continue; }
+            if (!ll || !Number.isFinite(ll.lng)) continue;
+            const lm = this.localMeters(ll.lng, ll.lat);
+            maxR = Math.max(maxR, Math.hypot(lm.x - cx, (-lm.y) - cz));
+        }
+        // Repli : emprise géographique si unproject échoue (globe extrême).
+        if (!(maxR > 10)) {
+            const b = map.getBounds();
+            for (const p of [
+                this.localMeters(b.getWest(), b.getSouth()),
+                this.localMeters(b.getWest(), b.getNorth()),
+                this.localMeters(b.getEast(), b.getSouth()),
+                this.localMeters(b.getEast(), b.getNorth()),
+            ]) {
+                maxR = Math.max(maxR, Math.hypot(p.x - cx, (-p.y) - cz));
+            }
+        }
+
+        let half = Math.max(maxR * 1.3, 320);
+        half = Math.min(half, 2200);
+
+        const sh = this.dirLight.shadow;
+        const cam = sh.camera;
+        cam.left = -half; cam.right = half; cam.top = half; cam.bottom = -half;
+        cam.near = 1;
+        cam.far = Math.max(half * 4.5, 1400);
+        cam.updateProjectionMatrix();
+
+        const side = half > 800 ? 4096 : 2048;
+        if (sh.mapSize.x !== side) {
+            sh.mapSize.set(side, side);
+            if (sh.map) { sh.map.dispose(); sh.map = null; }
+        }
+
+        const dist = Math.max(half * 1.5, 400);
+        this.dirLight.target.position.set(cx, 0, cz);
+        this.dirLight.position.set(
+            cx + this.sunDir.x * dist,
+            Math.max(this.sunDir.y * dist, dist * 0.4),
+            cz + this.sunDir.z * dist,
+        );
+        this.dirLight.target.updateMatrixWorld();
+        cam.updateMatrixWorld?.();
+        if (this.groundShadow) this.groundShadow.position.set(cx, 0.02, cz);
+    },
 
     makeLayer() {
         const self = this;
@@ -828,20 +898,46 @@ const Models3D = {
                     self.dirLight.castShadow = true;
                     const sh = self.dirLight.shadow;
                     sh.mapSize.set(2048, 2048);
-                    sh.camera.near = 1; sh.camera.far = 1400;
-                    sh.camera.left = -260; sh.camera.right = 260; sh.camera.top = 260; sh.camera.bottom = -260;
-                    sh.bias = -0.0005; sh.normalBias = 0.6;
+                    sh.camera.near = 1; sh.camera.far = 2500;
+                    // Frustum initial ; recalé chaque frame sur l'emprise visible (cf. syncShadowRig).
+                    sh.camera.left = -600; sh.camera.right = 600; sh.camera.top = 600; sh.camera.bottom = -600;
+                    sh.camera.updateProjectionMatrix();
+                    sh.bias = -0.0008; sh.normalBias = 0.35;
                     self.scene.add(self.dirLight.target);
-                    const g = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.ShadowMaterial({ opacity: 0.34 }));
+                    const g = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.ShadowMaterial({ opacity: 0.32 }));
                     g.rotation.x = -Math.PI / 2; g.position.y = 0.02; g.receiveShadow = true; g.frustumCulled = false;
                     self.groundShadow = g; self.scene.add(g);
                 } catch (e) { console.warn('shadow setup', e.message); }
                 self.build();
             },
             render(gl, matrix) {
-                if (!self.renderer || !self.origin) return;
-                const arr = Array.isArray(matrix) ? matrix : (matrix && (matrix.defaultProjectionData?.mainMatrix || matrix.mainMatrix));
-                if (!arr) return;
+                if (!self.renderer || !self.origin) {
+                    self._skipReason = !self.renderer ? 'no-renderer' : 'no-origin';
+                    return;
+                }
+                // MapLibre 5 : objet CustomRenderMethodInput.
+                // Exemple officiel three.js : defaultProjectionData.mainMatrix
+                // (modelViewProjectionMatrix en premier projetait hors écran).
+                let arr = null;
+                if (matrix) {
+                    if (Array.isArray(matrix) || ArrayBuffer.isView(matrix)) arr = matrix;
+                    else {
+                        arr = matrix.defaultProjectionData?.mainMatrix
+                            || matrix.modelViewProjectionMatrix
+                            || matrix.mainMatrix
+                            || matrix.matrix
+                            || null;
+                    }
+                }
+                if (!arr || !(arr.length >= 16 || arr.byteLength >= 64)) {
+                    self._skipReason = 'no-matrix';
+                    self._matrixHint = matrix == null ? 'null'
+                        : (ArrayBuffer.isView(matrix) ? 'view'
+                            : (typeof matrix === 'object' ? Object.keys(matrix).slice(0, 12).join(',') : typeof matrix));
+                    return;
+                }
+                self._skipReason = null;
+                self._renderFrames = (self._renderFrames || 0) + 1;
                 // L'altitude qui translate la scene DOIT etre celle qui a servi a
                 // calculer la position verticale des instances (`placement`). La
                 // sonder ici a chaque frame les desynchronisait : `originElev` ne
@@ -866,18 +962,37 @@ const Models3D = {
                 self.dirLight.castShadow = wantShadow;
                 if (self.groundShadow) self.groundShadow.visible = wantShadow;
                 if (wantShadow) {
-                    // centrer la lumière/ombre sur le centre de vue (mètres locaux)
-                    const c = map.getCenter(), lm = self.localMeters(c.lng, c.lat);
-                    const cx = lm.x, cz = -lm.y;
-                    self.dirLight.target.position.set(cx, 0, cz);
-                    self.dirLight.position.set(cx + self.sunDir.x * 300, self.sunDir.y * 300, cz + self.sunDir.z * 300);
-                    self.dirLight.target.updateMatrixWorld();
+                    // Frustum = emprise visible (pas un carré fixe de 400 m) :
+                    // sinon une « pastille » d'ombre suit le centre et coupe net.
+                    self.syncShadowRig();
+                    // Soleil bas → ombres très longues = tache noire moche : adoucir.
+                    if (self.groundShadow?.material) {
+                        const al = Math.max(0, Math.min(1, self.sunDir.y));
+                        self.groundShadow.material.opacity = 0.16 + al * 0.2;
+                    }
                 } else {
                     self.dirLight.position.copy(self.sunDir).multiplyScalar(300);
                 }
                 self._m4VP.fromArray(arr).multiply(self._m4Origin);
                 self.camera.projectionMatrix.copy(self._m4VP);
                 self.renderer.resetState();
+                // Ne PAS vider le depth buffer ici, et ne pas repasser la couche
+                // en `renderingMode: '2d'`.
+                //
+                // Les deux avaient ete introduits ensemble contre un symptome :
+                // un GLB masque sur fond raster. Mesure sur la demo Vieille-
+                // Charite, etape « La matiere » (GLB seul, ortho IGN, aucune
+                // couche extrudee) : sans eux le modele est **net et porte son
+                // ombre** ; avec eux il perd son auto-occlusion — les faces
+                // arriere se peignent par-dessus les faces avant, ce qui se lit
+                // comme des normales inversees — et son ombre disparait.
+                //
+                // Le cas ou ils aidaient est autre : une couche extrudee de la
+                // scene occupe le meme volume que le GLB (l'emprise cadastrale
+                // du monument, presente dans le bati). Les faire passer devant
+                // masquait cette superposition au lieu de la resoudre, et le
+                // prix se payait partout ailleurs. La correction appartient a la
+                // scene : ne pas montrer deux representations du meme batiment.
                 // three.js releve la taille du canvas A SA CREATION et ne la
                 // revoit jamais : le canvas etant celui de MapLibre, toute
                 // largeur qui change ensuite — l'ouverture d'un panneau, la
@@ -904,6 +1019,20 @@ const Models3D = {
         }
         return this.gltfCache.get(url);
     },
+    /** Matériaux GLB : opaques, faces doubles (échelle Y négative mercator). */
+    fixGltfMaterial(m) {
+        const c = m.clone();
+        c.side = THREE.DoubleSide;
+        // Photogrammétrie / Sketchfab : éviter le « fantôme » (alpha / depth).
+        c.transparent = false;
+        c.opacity = 1;
+        c.depthWrite = true;
+        c.depthTest = true;
+        c.alphaTest = 0;
+        if (c.map) { c.map.colorSpace = THREE.SRGBColorSpace; c.map.needsUpdate = true; }
+        c.needsUpdate = true;
+        return c;
+    },
     // prototypes = liste de sous-mailles {geometry, material, mat(local)} pour l'instancing
     async ensureProto(url) {
         if (this.protoCache.has(url)) return this.protoCache.get(url);
@@ -911,16 +1040,31 @@ const Models3D = {
         if (!scene) { this.protoCache.set(url, null); return null; }
         scene.updateMatrixWorld(true);
         const parts = [];
-        // La matrice d'origine par frame contient une mise à l'échelle Y négative
-        // (mercator) → on force DoubleSide pour éviter le culling des faces avant.
-        const fix = (m) => { const c = m.clone(); c.side = THREE.DoubleSide; return c; };
         scene.traverse((o) => {
             if (!o.isMesh || !o.geometry) return;
-            const material = Array.isArray(o.material) ? o.material.map(fix) : fix(o.material);
+            const material = Array.isArray(o.material)
+                ? o.material.map((m) => this.fixGltfMaterial(m))
+                : this.fixGltfMaterial(o.material);
             parts.push({ geometry: o.geometry, material, mat: o.matrixWorld.clone() });
         });
         const v = parts.length ? parts : null;
         this.protoCache.set(url, v); return v;
+    },
+    /** Clone de scène pour 1 monument (hors InstancedMesh — textures plus fiables). */
+    async ensureMonumentRoot(url) {
+        const scene = await this.ensureGLTF(url);
+        if (!scene) return null;
+        const root = scene.clone(true);
+        root.traverse((o) => {
+            if (!o.isMesh) return;
+            o.castShadow = true;
+            o.receiveShadow = true;
+            o.frustumCulled = false;
+            if (Array.isArray(o.material)) o.material = o.material.map((m) => this.fixGltfMaterial(m));
+            else if (o.material) o.material = this.fixGltfMaterial(o.material);
+        });
+        root.matrixAutoUpdate = false;
+        return root;
     },
 
     /**
@@ -1000,53 +1144,192 @@ const Models3D = {
         return out;
     },
 
+    /**
+     * Bâti Atlas extrudé (MapLibre fill-extrusion) → volumes three.js invisibles
+     * qui castent sur le même plan d'ombre que les GLB.
+     * MapLibre ne projette pas d'ombres sur le fill-extrusion : sans ce pont,
+     * seuls les modèles importés portent une ombre.
+     */
+    collectExtrusionsForShadow() {
+        const out = [];
+        if (!map || !STATE.settings.shadows || STATE.settings.terrain3D) return out;
+        if (map.getZoom() < 14) return out;
+        const b = map.getBounds(), buf = 0.004; // marge large : éviter le « trou » d'ombre au pan
+        const cCenter = map.getCenter();
+        const scored = [];
+        for (const layer of STATE.layers) {
+            if (layer.visible === false) continue;
+            const gt = layer.geometryType;
+            if (gt !== 'Polygon' && gt !== 'MultiPolygon') continue;
+            if (layer.style?.polygonMode === 'flat') continue;
+            const feats = featuresForExtrusionShadow(layer);
+            for (let i = 0; i < feats.length; i++) {
+                const f = feats[i];
+                const c = featureCentroidLngLat(f);
+                if (!c) continue;
+                const [lng, lat] = c;
+                if (lng < b.getWest() - buf || lng > b.getEast() + buf || lat < b.getSouth() - buf || lat > b.getNorth() + buf) continue;
+                const h = featureExtrusionHeightM(f, layer);
+                if (!(h > 0.5)) continue;
+                // Distance en mètres approx. (pas en degrés) pour prioriser le bâti vraiment proche.
+                const dx = (lng - cCenter.lng) * 85000;
+                const dy = (lat - cCenter.lat) * 111000;
+                const d2 = dx * dx + dy * dy;
+                scored.push({ layer, feature: f, lng, lat, height: h, d2 });
+            }
+        }
+        scored.sort((a, b2) => a.d2 - b2.d2);
+        return scored.slice(0, EXTRUSION_SHADOW_CAP);
+    },
+
+    disposeExtrusionShadows() {
+        if (!this.extrusionShadows?.length) { this.extrusionShadows = []; return; }
+        for (const mesh of this.extrusionShadows) {
+            this.scene?.remove(mesh);
+            mesh.geometry?.dispose?.();
+            if (mesh.material) {
+                if (Array.isArray(mesh.material)) mesh.material.forEach((m) => m.dispose?.());
+                else mesh.material.dispose?.();
+            }
+        }
+        this.extrusionShadows = [];
+    },
+
+    buildExtrusionShadowMeshes(items) {
+        if (!this.scene || !this.origin || !items?.length) return;
+        // Empreintes exactes fusionnées en un seul Mesh (même matériau que les
+        // ombres GLB). Les AABB axis-alignées dépassaient / décalaieent du bâti.
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            roughness: 1,
+            metalness: 0,
+            side: THREE.DoubleSide,
+            shadowSide: THREE.DoubleSide,
+            colorWrite: false,
+            depthWrite: false,
+        });
+        const toLocal = (lng, lat) => this.localMeters(lng, lat);
+        const geoms = [];
+        for (const it of items) {
+            const geom = extrudeFeatureToGeometry(it.feature, Math.max(it.height || 8, 2), toLocal);
+            if (!geom) continue;
+            // Shape XY = est/nord, +Z = hauteur → Y-up / Z=-nord
+            geom.rotateX(-Math.PI / 2);
+            geoms.push(geom);
+        }
+        if (!geoms.length) return;
+        const merged = geoms.length === 1 ? geoms[0] : mergeGeometries(geoms, false);
+        if (!merged) {
+            geoms.forEach((g) => g.dispose?.());
+            return;
+        }
+        if (geoms.length > 1) geoms.forEach((g) => g.dispose?.());
+        const mesh = new THREE.Mesh(merged, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = false;
+        mesh.frustumCulled = false;
+        this.scene.add(mesh);
+        this.extrusionShadows.push(mesh);
+    },
+
     async build() {
         if (this._disabled || CONFIG.light3d) { map?.triggerRepaint(); return; }
         if (!this.scene || !map) return;
         const token = (this._buildToken = (this._buildToken || 0) + 1);
         this.disposeInstances();
+        this.disposeExtrusionShadows();
+        // GeoJSON distant : charger le FC complet (querySourceFeatures est tuilé / incomplet).
+        //
+        // Mais seulement si une ombre peut en sortir. `collectExtrusionsForShadow`
+        // écarte ensuite les mêmes cas — ombres coupées, relief actif, zoom trop
+        // large, couche à plat — et se retrouvait donc à ne rien faire d'entités
+        // qu'on venait de retélécharger. Mesuré sur une scène à plat : neuf
+        // requêtes vers une couche qui ne produira jamais de caster.
+        //
+        // Les conditions sont celles du consommateur, et elles doivent le rester :
+        // les dissocier ramènerait le téléchargement inutile sans que rien ne le
+        // signale.
+        const ombresPossibles = !!STATE.settings.shadows
+            && !STATE.settings.terrain3D
+            && map.getZoom() >= 14;
+        if (ombresPossibles) {
+            await Promise.all(
+                STATE.layers
+                    .filter((l) => l.visible !== false
+                        && (l.geometryType === 'Polygon' || l.geometryType === 'MultiPolygon')
+                        && l.style?.polygonMode !== 'flat')
+                    .map((l) => ensureShadowFeatures(l)),
+            );
+        }
+        if (!this.scene || token !== this._buildToken) return;
         const all = this.collect();
+        const extrusions = this.collectExtrusionsForShadow();
         const z = map.getZoom();
-        this._shadowFeasible = all.length > 0 && all.length <= SHADOW_FEATURE_CAP; // ombres réelles seulement sous ce plafond
-        // Sous le seuil de bascule vers Mercator, le custom layer three.js est
-        // faux par construction : il pose une translation plane alors que
-        // MapLibre projette sur une sphere. Mesure au banc, projection globe :
-        // 570 px d'ecart a z3, 2337 px a z11, exactement 0 des z12. Le garde
-        // historique (`MODEL3D_ZOOM_GATE`, et seulement au-dela de 4000 objets)
-        // laissait donc une petite couche s'afficher grossierement decalee en
-        // vue regionale. A ces echelles un lampadaire mesure de toute facon
-        // moins d'un pixel : mieux vaut ne rien montrer qu'un placement faux.
+        // Ombres : GLB sous plafond, ou bâti extrudé à proximité (même si aucun GLB).
+        this._shadowFeasible = (all.length > 0 && all.length <= SHADOW_FEATURE_CAP) || extrusions.length > 0;
         if (z < GLOBE_MERCATOR_ZOOM && (STATE.settings.projection || 'globe') === 'globe') { map.triggerRepaint(); return; }
-        if ((z < MODEL3D_ZOOM_GATE && all.length > MODEL3D_GATE_COUNT) || all.length === 0) { map.triggerRepaint(); return; }
-        if (!this.origin) this.setOrigin(all[0].lng, all[0].lat);
+
+        if (!this.origin) {
+            if (all[0]) this.setOrigin(all[0].lng, all[0].lat);
+            else if (extrusions[0]) this.setOrigin(extrusions[0].lng, extrusions[0].lat);
+            else {
+                const c = map.getCenter();
+                this.setOrigin(c.lng, c.lat);
+            }
+        }
         this.originElev = this.readOriginElev();
 
-        const byUrl = new Map();
-        for (const it of all) { if (!byUrl.has(it.url)) byUrl.set(it.url, []); byUrl.get(it.url).push(it); }
-        const urls = [...byUrl.keys()];
-        const protos = await Promise.all(urls.map((u) => this.ensureProto(u)));
-        if (!this.scene || token !== this._buildToken) return; // superseded / style changé
+        const skipGltf = (z < MODEL3D_ZOOM_GATE && all.length > MODEL3D_GATE_COUNT) || all.length === 0;
+        if (!skipGltf) {
+            const byUrl = new Map();
+            for (const it of all) { if (!byUrl.has(it.url)) byUrl.set(it.url, []); byUrl.get(it.url).push(it); }
+            const urls = [...byUrl.keys()];
+            if (!this.scene || token !== this._buildToken) return;
 
-        this.slotIndex.clear();
-        urls.forEach((url, ui) => {
-            const proto = protos[ui]; const items = byUrl.get(url);
-            if (!proto) return;
-            const meshes = proto.map((part) => {
-                const im = new THREE.InstancedMesh(part.geometry, part.material, items.length);
-                im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
-                return { im, protoMat: part.mat };
-            });
-            items.forEach((it, slot) => {
-                const layer = STATE.layers.find((l) => l.id === it.layerId);
-                const feature = layer?.geojson?.features?.[it.idx];
-                if (!feature) return;
-                const place = this.placement(layer, feature);
-                meshes.forEach(({ im, protoMat }) => { this._m4.multiplyMatrices(place, protoMat); im.setMatrixAt(slot, this._m4); });
-                this.slotIndex.set(it.layerId + ':' + it.idx, { url, slot });
-            });
-            meshes.forEach(({ im }) => { im.instanceMatrix.needsUpdate = true; this.scene.add(im); });
-            this.groups.set(url, { meshes, items });
-        });
+            this.slotIndex.clear();
+            for (const url of urls) {
+                const items = byUrl.get(url);
+                // 1 exemplaire (monument GLB) : Group cloné — InstancedMesh abîme souvent
+                // les textures photogrammétriques (chapelle « fantôme »).
+                if (items.length === 1) {
+                    const root = await this.ensureMonumentRoot(url);
+                    if (!this.scene || token !== this._buildToken) return;
+                    if (!root) continue;
+                    const it = items[0];
+                    const layer = STATE.layers.find((l) => l.id === it.layerId);
+                    const feature = layer?.geojson?.features?.[it.idx];
+                    if (!feature) continue;
+                    const place = this.placement(layer, feature);
+                    root.matrix.copy(place);
+                    root.updateMatrixWorld(true);
+                    this.scene.add(root);
+                    this.slotIndex.set(it.layerId + ':' + it.idx, { url, slot: 0, monument: true });
+                    this.groups.set(url, { meshes: [], roots: [root], items });
+                    continue;
+                }
+                const proto = await this.ensureProto(url);
+                if (!this.scene || token !== this._buildToken) return;
+                if (!proto) continue;
+                const meshes = proto.map((part) => {
+                    const im = new THREE.InstancedMesh(part.geometry, part.material, items.length);
+                    im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+                    return { im, protoMat: part.mat };
+                });
+                items.forEach((it, slot) => {
+                    const layer = STATE.layers.find((l) => l.id === it.layerId);
+                    const feature = layer?.geojson?.features?.[it.idx];
+                    if (!feature) return;
+                    const place = this.placement(layer, feature);
+                    meshes.forEach(({ im, protoMat }) => { this._m4.multiplyMatrices(place, protoMat); im.setMatrixAt(slot, this._m4); });
+                    this.slotIndex.set(it.layerId + ':' + it.idx, { url, slot });
+                });
+                meshes.forEach(({ im }) => { im.instanceMatrix.needsUpdate = true; this.scene.add(im); });
+                this.groups.set(url, { meshes, roots: [], items });
+            }
+        }
+
+        if (token !== this._buildToken) return;
+        if (extrusions.length) this.buildExtrusionShadowMeshes(extrusions);
         map.triggerRepaint();
     },
 
@@ -1056,6 +1339,16 @@ const Models3D = {
         this.elevCache.clear();
         this.originElev = this.readOriginElev();
         for (const [, g] of this.groups) {
+            if (g.roots?.length) {
+                g.items.forEach((it, i) => {
+                    const layer = STATE.layers.find((l) => l.id === it.layerId);
+                    const feature = layer?.geojson?.features?.[it.idx];
+                    if (!feature || !g.roots[i]) return;
+                    g.roots[i].matrix.copy(this.placement(layer, feature));
+                    g.roots[i].updateMatrixWorld(true);
+                });
+                continue;
+            }
             g.items.forEach((it, slot) => {
                 const layer = STATE.layers.find((l) => l.id === it.layerId);
                 const feature = layer?.geojson?.features?.[it.idx];
@@ -1075,10 +1368,16 @@ const Models3D = {
         let touched = false, missing = false;
         for (const idx of indices) {
             const ref = this.slotIndex.get(layerId + ':' + idx);
-            if (!ref) { missing = true; continue; } // hors emprise / non instancié
+            if (!ref) { missing = true; continue; }
             const g = this.groups.get(ref.url); if (!g) continue;
             const feature = layer.geojson.features[idx]; if (!feature) continue;
             const place = this.placement(layer, feature);
+            if (ref.monument && g.roots?.[ref.slot]) {
+                g.roots[ref.slot].matrix.copy(place);
+                g.roots[ref.slot].updateMatrixWorld(true);
+                touched = true;
+                continue;
+            }
             g.meshes.forEach(({ im, protoMat }) => { this._m4.multiplyMatrices(place, protoMat); im.setMatrixAt(ref.slot, this._m4); im.instanceMatrix.needsUpdate = true; });
             touched = true;
         }
@@ -1089,8 +1388,12 @@ const Models3D = {
     cull() { clearTimeout(this._cullTimer); this._cullTimer = setTimeout(() => this.build(), 200); },
 
     disposeInstances() {
+        this.disposeExtrusionShadows();
         if (!this.scene) { this.groups.clear(); this.slotIndex.clear(); return; }
-        for (const [, g] of this.groups) g.meshes.forEach(({ im }) => { this.scene.remove(im); im.dispose?.(); });
+        for (const [, g] of this.groups) {
+            (g.meshes || []).forEach(({ im }) => { this.scene.remove(im); im.dispose?.(); });
+            (g.roots || []).forEach((r) => { this.scene.remove(r); });
+        }
         this.groups.clear(); this.slotIndex.clear();
     },
 
@@ -1106,6 +1409,198 @@ const Models3D = {
         map && map.triggerRepaint();
     },
 };
+
+/**
+ * Entités pour ombres d'extrusion : en mémoire si Atlas les détient, sinon
+ * via la source MapLibre (couches `geojson: url` distantes).
+ * Préfère `_data` complet de la source GeoJSON à `querySourceFeatures`
+ * (index tuilé incomplet → bâti proche souvent absent).
+ */
+function featuresForExtrusionShadow(layer) {
+    const gj = filteredGeoJSON(layer);
+    if (gj && typeof gj === 'object' && Array.isArray(gj.features)) return gj.features;
+    if (layer._shadowFeatCache?.length) return layer._shadowFeatCache;
+    const src = map?.getSource?.(layer.id);
+    // GeoJSONSource MapLibre : `_data` = FeatureCollection entière après fetch.
+    const raw = src?._data ?? src?._options?.data;
+    if (raw && typeof raw === 'object' && Array.isArray(raw.features)) {
+        layer._shadowFeatCache = raw.features;
+        return raw.features;
+    }
+    if (!src) return [];
+    try {
+        const feats = map.querySourceFeatures(layer.id) || [];
+        const seen = new Set();
+        const out = [];
+        for (const f of feats) {
+            const id = f.id ?? f.properties?._idx ?? f.properties?._osmId
+                ?? JSON.stringify(f.geometry?.coordinates?.[0]?.[0]);
+            if (seen.has(id)) continue;
+            seen.add(id);
+            out.push(f);
+        }
+        return out;
+    } catch (_) {
+        return [];
+    }
+}
+
+/** Précharge le GeoJSON distant pour les ombres bâti (une fois par couche). */
+async function ensureShadowFeatures(layer) {
+    if (layer._shadowFeatCache?.length) return layer._shadowFeatCache;
+    const local = filteredGeoJSON(layer);
+    if (local && typeof local === 'object' && Array.isArray(local.features)) {
+        layer._shadowFeatCache = local.features;
+        return layer._shadowFeatCache;
+    }
+    const fromSrc = featuresForExtrusionShadow(layer);
+    if (fromSrc.length > 100) { // _data déjà peuplé
+        layer._shadowFeatCache = fromSrc;
+        return fromSrc;
+    }
+    const url = typeof layer.geojson === 'string' ? layer.geojson : null;
+    if (!url) return fromSrc;
+    try {
+        const r = await fetch(url);
+        if (!r.ok) return fromSrc;
+        const gj = await r.json();
+        layer._shadowFeatCache = gj.features || [];
+        return layer._shadowFeatCache;
+    } catch (_) {
+        return fromSrc;
+    }
+}
+
+/** Centroïde lng/lat grossier d'une feature polygone (ombres bâti). */
+function featureCentroidLngLat(feature) {
+    const g = feature?.geometry;
+    if (!g) return null;
+    if (g.type === 'Point') return g.coordinates;
+    let ring = null;
+    if (g.type === 'Polygon') ring = g.coordinates?.[0];
+    else if (g.type === 'MultiPolygon') ring = g.coordinates?.[0]?.[0];
+    if (!ring?.length) return null;
+    let x = 0, y = 0, n = 0;
+    for (const p of ring) {
+        if (p?.[0] == null) continue;
+        x += p[0]; y += p[1]; n++;
+    }
+    return n ? [x / n, y / n] : null;
+}
+
+function featureExtrusionHeightM(feature, layer) {
+    const p = feature?.properties || {};
+    if (layer?.heightField != null && p[layer.heightField] != null && p[layer.heightField] !== '') {
+        const h = Number(p[layer.heightField]);
+        if (Number.isFinite(h) && h > 0) return Math.min(h, 120);
+    }
+    for (const k of ['height_m', 'height', 'building:levels']) {
+        if (p[k] == null || p[k] === '') continue;
+        let h = Number(p[k]);
+        if (k === 'building:levels' && Number.isFinite(h)) h *= 3.2;
+        if (Number.isFinite(h) && h > 0) return Math.min(h, 120);
+    }
+    const sym = layer?.style?.symbolization?.size;
+    const v = Number(sym?.value);
+    return Number.isFinite(v) && v > 0 ? v : 12;
+}
+
+function simplifyRingLngLat(ring, maxPts = 28) {
+    if (!ring?.length) return [];
+    // drop closing duplicate
+    const open = ring.length > 1
+        && ring[0][0] === ring[ring.length - 1][0]
+        && ring[0][1] === ring[ring.length - 1][1]
+        ? ring.slice(0, -1)
+        : ring.slice();
+    if (open.length <= maxPts) return open;
+    const step = Math.ceil(open.length / maxPts);
+    const out = [];
+    for (let i = 0; i < open.length; i += step) out.push(open[i]);
+    const last = open[open.length - 1];
+    if (out[out.length - 1] !== last) out.push(last);
+    return out;
+}
+
+/** Emprise approx. en mètres locaux (bbox) pour caster d'ombre bâti. */
+function featureFootprintMeters(feature, toLocal) {
+    const g = feature?.geometry;
+    let ring = null;
+    if (g?.type === 'Polygon') ring = g.coordinates?.[0];
+    else if (g?.type === 'MultiPolygon') ring = g.coordinates?.[0]?.[0];
+    if (!ring?.length) return { w: 8, d: 8 };
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const pt of ring) {
+        if (pt?.[0] == null) continue;
+        const lm = toLocal(pt[0], pt[1]);
+        if (lm.x < minX) minX = lm.x;
+        if (lm.x > maxX) maxX = lm.x;
+        if (lm.y < minY) minY = lm.y;
+        if (lm.y > maxY) maxY = lm.y;
+    }
+    if (!Number.isFinite(minX)) return { w: 8, d: 8 };
+    return { w: Math.min(maxX - minX, 80), d: Math.min(maxY - minY, 80) };
+}
+
+/**
+ * Emprise GeoJSON → ExtrudeGeometry en mètres locaux (plan XY = est/nord).
+ * `toLocal(lng,lat) -> {x,y}` avec y = nord.
+ * Conservé pour debug / raffinement futur (casters footprint exact).
+ */
+function extrudeFeatureToGeometry(feature, heightM, toLocal) {
+    const g = feature?.geometry;
+    if (!g || !(heightM > 0)) return null;
+    const polys = g.type === 'Polygon' ? [g.coordinates]
+        : g.type === 'MultiPolygon' ? g.coordinates
+            : null;
+    if (!polys?.length) return null;
+    // Plus grand anneau extérieur
+    let best = null, bestArea = -1;
+    for (const poly of polys) {
+        const outer = poly?.[0];
+        if (!outer || outer.length < 3) continue;
+        let a = 0;
+        for (let i = 0; i < outer.length - 1; i++) {
+            a += outer[i][0] * outer[i + 1][1] - outer[i + 1][0] * outer[i][1];
+        }
+        a = Math.abs(a);
+        if (a > bestArea) { bestArea = a; best = poly; }
+    }
+    if (!best) return null;
+    const ring = simplifyRingLngLat(best[0]);
+    if (ring.length < 3) return null;
+    const shape = new THREE.Shape();
+    ring.forEach((pt, i) => {
+        const lm = toLocal(pt[0], pt[1]);
+        if (i === 0) shape.moveTo(lm.x, lm.y);
+        else shape.lineTo(lm.x, lm.y);
+    });
+    shape.closePath();
+    // Trous (cours intérieures) — utile pour l'écrin Vieille Charité
+    for (let h = 1; h < best.length; h++) {
+        const holeRing = simplifyRingLngLat(best[h], 20);
+        if (holeRing.length < 3) continue;
+        const hole = new THREE.Path();
+        holeRing.forEach((pt, i) => {
+            const lm = toLocal(pt[0], pt[1]);
+            if (i === 0) hole.moveTo(lm.x, lm.y);
+            else hole.lineTo(lm.x, lm.y);
+        });
+        hole.closePath();
+        shape.holes.push(hole);
+    }
+    try {
+        return new THREE.ExtrudeGeometry(shape, {
+            depth: heightM,
+            bevelEnabled: false,
+            curveSegments: 1,
+        });
+    } catch (e) {
+        console.warn('[Atlas] extrusion ombre', e.message);
+        return null;
+    }
+}
+
 function getLayerModelUrl(layer) {
     const s = layer.style;
     if (!s) return null;
@@ -1159,6 +1654,8 @@ function initMap() {
         antialias: true,
         maxPitch: 80,
     });
+    // Accès debug (couche custom / matrices MapLibre 5).
+    try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
 
     map.on('load', onStyleReady);
 
@@ -1195,6 +1692,13 @@ function initMap() {
         clearTimeout(_cameraSaveTimer);
         _cameraSaveTimer = setTimeout(saveMapCamera, 400);
     });
+    // Pendant le pan avec ombres : recaler les casters avant le moveend,
+    // sinon l'emprise ombrée reste celle de l'arrêt précédent.
+    map.on('move', () => {
+        if (!STATE.settings.shadows || STATE.settings.terrain3D) return;
+        clearTimeout(Models3D._shadowMoveTimer);
+        Models3D._shadowMoveTimer = setTimeout(() => Models3D.cull(), 140);
+    });
 
     try {
         map.addControl(new maplibregl.GeolocateControl({
@@ -1227,8 +1731,17 @@ function onStyleReady() {
     applyTerrain();
     applySky();
 
-    // Re-add the three.js custom layer
+    // Re-add the three.js custom layer (au-dessus du fond raster / ortho).
     if (!map.getLayer(Models3D.layerId)) map.addLayer(Models3D.makeLayer());
+    try {
+        // Remonter en tête de pile après un setStyle (sinon l'ortho IGN
+        // peut rester peinte au-dessus et masquer entièrement le GLB).
+        const layers = map.getStyle()?.layers || [];
+        const top = layers.length ? layers[layers.length - 1].id : null;
+        if (top && top !== Models3D.layerId && map.getLayer(Models3D.layerId)) {
+            map.moveLayer(Models3D.layerId);
+        }
+    } catch (_) { /* style encore incomplet */ }
 
     // Reapply all data layers après idle (style + tuiles prêts à peindre)
     scheduleMapLayersSync(() => {
@@ -1324,6 +1837,7 @@ function applyBuildingVisibility() {
 
 /** Libellés du fond (rues, villes) — pas les étiquettes des couches Atlas. */
 function applyLabelsVisibility() {
+    if (!map?.getStyle()?.layers) return;
     const vis = STATE.settings.labels ? 'visible' : 'none';
     setBasemapLayersVisibility('symbol', vis);
 }
@@ -1396,9 +1910,10 @@ function updateLighting() {
     }
     Models3D.setSun(azimuth, altitude, moon);
     // Teinte nocturne de la scène (le fond vecteur ne s'assombrit pas seul) — atténuée par la lune
-    const tint = clamp((6 - altitude) / 26, 0, 0.62) * (moon && moon.isUp ? (1 - moon.moonIntensity * 0.35) : 1);
+    // Seuil large (alt < 12°) pour que crépuscule / aube se lisent aussi en récit.
+    const tint = clamp((12 - altitude) / 28, 0, 0.68) * (moon && moon.isUp ? (1 - moon.moonIntensity * 0.35) : 1);
     const nt = $('night-tint');
-    if (nt) nt.style.background = tint <= 0.015 ? 'transparent' : `rgba(16,24,58,${tint.toFixed(3)})`;
+    if (nt) nt.style.background = tint <= 0.02 ? 'transparent' : `rgba(16,24,58,${tint.toFixed(3)})`;
     updateSunStrip();
 }
 
@@ -2045,6 +2560,11 @@ function applyLayerOrder() {
     for (const id of moveSequence(STATE.layers, (i) => !!map.getLayer(i))) {
         try { map.moveLayer(id); } catch (_) { /* couche retirée entre-temps */ }
     }
+    // Les GLB (custom layer three.js) doivent rester AU-DESSUS du bâti MapLibre
+    // et du fond ortho — sinon on ne voit que le raster / les extrusions.
+    try {
+        if (map.getLayer(Models3D.layerId)) map.moveLayer(Models3D.layerId);
+    } catch (_) { /* ignore */ }
 }
 
 function syncAllLayersToMap() {
@@ -2167,6 +2687,20 @@ function capturePreStorySnapshot() {
     // Une étape peut imposer son ordre de superposition : il faut pouvoir
     // rendre à l'utilisateur celui qu'il avait réglé.
     _preStoryOrder = STATE.layers.map((l) => l.id);
+    // Ambiance / fond : le récit les écrase aussi — à restituer en sortant.
+    _preStorySettings = {
+        timeOfDay: STATE.settings.timeOfDay,
+        date: STATE.settings.date instanceof Date
+            ? STATE.settings.date.toISOString()
+            : STATE.settings.date,
+        labels: STATE.settings.labels,
+        shadows: STATE.settings.shadows,
+        sky: STATE.settings.sky,
+        basemap: STATE.settings.basemap,
+        buildings3D: STATE.settings.buildings3D,
+        terrain3D: STATE.settings.terrain3D,
+        projection: STATE.settings.projection,
+    };
 }
 
 function restorePreStorySnapshot() {
@@ -2193,6 +2727,71 @@ function restorePreStorySnapshot() {
         _preStoryOrder = null;
     }
     _preStorySnapshot = null;
+    if (_preStorySettings) {
+        const prevBm = STATE.settings.basemap;
+        const wantBm = _preStorySettings.basemap;
+        const switching = !!(wantBm && BASEMAPS[wantBm] && wantBm !== prevBm);
+        applyStoryEnvironment(_preStorySettings, {
+            allowBasemapSwitch: true,
+            onBasemapReady: () => {
+                remountAllLayers();
+                updateLegend();
+            },
+        });
+        _preStorySettings = null;
+        return switching;
+    }
+    return false;
+}
+
+/**
+ * Applique l'ambiance d'une étape (ou du snapshot pré-récit).
+ * Le fond (`basemap`) contourne le filtre `exposed` / allowed de la lecture :
+ * rejouer une capture n'est pas une action utilisateur sur le dock.
+ */
+function applyStoryEnvironment(s, opts = {}) {
+    if (!s) return;
+    if (s.projection && s.projection !== STATE.settings.projection) {
+        STATE.settings.projection = s.projection;
+        applyProjection();
+    }
+    if (s.terrain3D != null && s.terrain3D !== STATE.settings.terrain3D) {
+        STATE.settings.terrain3D = !!s.terrain3D;
+        applyTerrain();
+        recalerRelief();
+    }
+    if (typeof s.buildings3D === 'boolean') {
+        STATE.settings.buildings3D = s.buildings3D;
+        applyBuildingVisibility();
+    }
+    if (s.timeOfDay != null) STATE.settings.timeOfDay = Number(s.timeOfDay);
+    if (s.date) STATE.settings.date = new Date(s.date);
+    if (typeof s.labels === 'boolean') {
+        STATE.settings.labels = s.labels;
+        applyLabelsVisibility();
+    }
+    if (typeof s.shadows === 'boolean') STATE.settings.shadows = s.shadows;
+    if (typeof s.sky === 'boolean') {
+        STATE.settings.sky = s.sky;
+        applySky();
+    }
+    updateLighting();
+    map?.triggerRepaint?.();
+
+    const want = s.basemap;
+    if (!opts.allowBasemapSwitch || !want || !BASEMAPS[want] || !map) return;
+    if (want === STATE.settings.basemap) return;
+    STATE.settings.basemap = want;
+    _styleUsable = false;
+    const b = BASEMAPS[want];
+    map.setStyle(b.style ? b.style() : b.url);
+    map.once('idle', () => {
+        onStyleReady();
+        applyLabelsVisibility();
+        updateLighting();
+        map.triggerRepaint?.();
+        opts.onBasemapReady?.();
+    });
 }
 
 function applyControls(layer, opts = {}) {
@@ -2371,21 +2970,19 @@ function applyStoryState(s) {
     applyLayerOrder();
     Models3D.rebuildScene();
     updateLegend();
-    if (s.projection && s.projection !== STATE.settings.projection) {
-        STATE.settings.projection = s.projection;
-        applyProjection();
-    }
-    if (s.terrain3D != null && s.terrain3D !== STATE.settings.terrain3D) {
-        STATE.settings.terrain3D = s.terrain3D;
-        applyTerrain();
-        recalerRelief();
-    }
-    if (s.timeOfDay != null) STATE.settings.timeOfDay = s.timeOfDay;
-    if (s.date) STATE.settings.date = new Date(s.date);
-    updateLighting();
-    if (s.camera) {
+
+    const wantBasemap = s.basemap && BASEMAPS[s.basemap] ? s.basemap : null;
+    const basemapChanging = !!(wantBasemap && wantBasemap !== STATE.settings.basemap);
+
+    const finishCamera = () => {
+        if (!_storyPresenting || !s.camera || !map) return;
         const snap = cloneStoryState(s);
-        const reapply = () => { if (_storyPresenting) reapplyStoryFilters(snap); };
+        const reapply = () => {
+            if (!_storyPresenting) return;
+            applyStoryEnvironment(snap, { allowBasemapSwitch: false });
+            reapplyStoryFilters(snap);
+            map.triggerRepaint?.();
+        };
         map.once('moveend', reapply);
         map.flyTo({
             center: s.camera.center,
@@ -2394,7 +2991,26 @@ function applyStoryState(s) {
             bearing: s.camera.bearing,
             duration: 1500,
         });
-    }
+    };
+
+    applyStoryEnvironment(s, {
+        allowBasemapSwitch: true,
+        onBasemapReady: () => {
+            // Après setStyle, re-synchroniser les couches de l'étape puis voler.
+            (s.layers || []).forEach((ls) => {
+                const l = findStoryLayer(ls);
+                if (!l) return;
+                applyStoryLayerMeta(l, ls);
+                syncStoryLayerToMap(l);
+            });
+            applyLayerOrder();
+            Models3D.rebuildScene();
+            updateLegend();
+            finishCamera();
+        },
+    });
+
+    if (!basemapChanging) finishCamera();
 }
 
 // ============================================================
@@ -3194,15 +3810,59 @@ function renderRecit() {
     body.innerHTML = html;
 }
 
+/**
+ * Le moment d'une étape, tel qu'il s'affiche sous son titre.
+ *
+ * **L'étape peut le nommer elle-même** (`ambiance`), et c'est alors ce nom qui
+ * s'affiche. Aucun découpage horaire ne peut être juste partout : 7 h est l'aube
+ * en décembre et le plein jour en juin, et la latitude déplace encore les
+ * bornes. Surtout, l'auteur d'un récit veut souvent dire autre chose que l'heure
+ * — « avant l'ouverture », « à la sortie des classes ».
+ *
+ * Le découpage ci-dessous n'est qu'un **repli**, pour les étapes qui ne disent
+ * rien. Il reste approximatif, et il est écrit pour ne jamais être grossièrement
+ * faux : le tour de minuit appartient à la nuit, pas à l'aube.
+ */
+function storyAmbianceLabel(state) {
+    const min = Number(state?.timeOfDay);
+    const bits = [];
+    const dit = typeof state?.ambiance === 'string' ? state.ambiance.trim() : '';
+    if (Number.isFinite(min)) {
+        const h = Math.floor(min / 60), m = min % 60;
+        const clock = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        let phase;
+        if (dit) phase = dit;
+        else if (min < 300) phase = 'Nuit';          // 00:00–04:59
+        else if (min < 480) phase = 'Aube';          // 05:00–07:59
+        else if (min < 660) phase = 'Matin';
+        else if (min < 960) phase = 'Midi';
+        else if (min < 1140) phase = 'Après-midi';
+        else if (min < 1260) phase = 'Crépuscule';
+        else phase = 'Nuit';                          // 21:00–23:59
+        bits.push(phase, clock);
+    } else if (dit) {
+        // Une étape peut nommer son moment sans fixer d'heure — « avant
+        // l'ouverture » n'a pas d'horloge. Ce qu'elle dit doit s'afficher quand
+        // même, sinon déclarer une ambiance n'aurait d'effet que par accident.
+        bits.push(dit);
+    }
+    if (state?.basemap && BASEMAPS[state.basemap]) bits.push(BASEMAPS[state.basemap].label);
+    if (state?.shadows === false) bits.push('sans ombres');
+    else if (state?.shadows === true) bits.push('ombres');
+    if (state?.labels === true) bits.push('toponymes');
+    return bits.join(' · ');
+}
+
 function renderStoryPresentation() {
     const ov = document.getElementById('story-present');
     if (!ov) return;
     const s = STATE.story[_storyIdx];
     const n = STATE.story.length;
     if (!s) return;
+    const ambiance = storyAmbianceLabel(s.state);
     ov.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
         <button class="btn btn-soft" onclick="A.storyStep(-1)" ${_storyIdx === 0 ? 'disabled' : ''}>◀</button>
-        <div style="flex:1;text-align:center"><div style="font-weight:600;font-size:15px">${s.title || ('Étape ' + (_storyIdx + 1))}</div><div style="font-size:10px;color:#6b6256;letter-spacing:.05em">${_storyIdx + 1} / ${n}</div></div>
+        <div style="flex:1;text-align:center"><div style="font-weight:600;font-size:15px">${s.title || ('Étape ' + (_storyIdx + 1))}</div><div style="font-size:10px;color:#6b6256;letter-spacing:.05em">${_storyIdx + 1} / ${n}${ambiance ? ' · ' + ambiance : ''}</div></div>
         <button class="btn btn-soft" onclick="A.storyStep(1)" ${_storyIdx === n - 1 ? 'disabled' : ''}>▶</button>
         <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter">✕</button>
     </div>${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${s.text}</div>` : ''}`;
@@ -3379,12 +4039,20 @@ function buildLayerLegendHtml(layer) {
         const vals = filteredUniqueValues(layer, sym.field, 30);
         const fieldEsc = escLegend(sym.field);
         if (!vals.length) {
-            return `<div class="legend-group"><div class="legend-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${layer.color}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">0</span></div></div>`;
+            // `total` et non zéro : sur une couche dont Atlas ne détient pas les
+            // entités, aucune classe n'est mesurable, mais le manifeste sait
+            // combien il y en a. Écrire « 0 » ici annonçait une couche vide
+            // sous une carte qui la peignait — le compte est le seul endroit
+            // où le lecteur va chercher pourquoi il ne voit rien.
+            return `<div class="legend-group"><div class="legend-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${layer.color}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
         }
         const catRows = vals.map((v, i) => {
             const col = legendCategoryColor(sym, v.value, i, vals.length);
             const focused = isLegendFocused(layer.id, sym.field, v.value) ? ' legend-focused' : '';
-            return `<div class="legend-row legend-sub${clickable}${focused}" data-legend="cat" data-layer-id="${lid}" data-field="${fieldEsc}" data-value="${escLegend(v.value)}"><span class="swatch" style="background:${col}"></span><span class="nm" title="${escLegend(v.value)}">${escLegend(v.value)}</span><span class="ct">${v.count}</span></div>`;
+            // Un compte inconnu (classe déclarée, entités absentes) s'affiche
+            // « — », jamais « null » ni « 0 ».
+            const ct = v.count == null ? '—' : v.count;
+            return `<div class="legend-row legend-sub${clickable}${focused}" data-legend="cat" data-layer-id="${lid}" data-field="${fieldEsc}" data-value="${escLegend(v.value)}"><span class="swatch" style="background:${col}"></span><span class="nm" title="${escLegend(v.value)}">${escLegend(v.value)}</span><span class="ct">${ct}</span></div>`;
         }).join('');
         const headFocus = isLegendFocused(layer.id, null, null) ? ' legend-focused' : '';
         return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}${headFocus}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${catRows}</div>`;
@@ -3749,7 +4417,9 @@ function symModelPanel(layer, sym) {
         </div></div>`;
     if (!is3D) return repr + `<div class="hint">Couche en cercles 2D (couleur/taille dans les onglets dédiés). Passe en « Modèle 3D » pour choisir un objet du catalogue.</div>`;
 
-    const cat = layer._modelCat || 'lighting';
+    const catRaw = layer._modelCat || 'lighting';
+    const cat = MODEL_LIBRARY.categories[catRaw] ? catRaw : 'lighting';
+    if (cat !== catRaw) layer._modelCat = cat;
     const grid = MODEL_LIBRARY.categories[cat].models;
     const selId = layer.style?.library?.modelId;
     const models = allModels();
@@ -3877,15 +4547,15 @@ function renderObjectInspector() {
                 slider('f-rotationZ', '🔄 Rotation Z (azimut)', r.rotationZ, 0, 360, 5, '°') +
                 slider('f-rotationX', '↕️ Rotation X', r.rotationX, -90, 90, 5, '°') +
                 slider('f-offsetZ', '⬆️ Altitude', r.offsetZ, 0, 20, 0.5, 'm') +
-                slider('f-offsetX', '↔️ Décalage X', r.offsetX, -10, 10, 0.1, 'm') +
-                slider('f-offsetY', '↕️ Décalage Y', r.offsetY, -10, 10, 0.1, 'm');
+                slider('f-offsetX', '↔️ Décalage X', r.offsetX, -100, 100, 0.5, 'm') +
+                slider('f-offsetY', '↕️ Décalage Y', r.offsetY, -100, 100, 0.5, 'm');
         } else {
             $('insp-body').innerHTML = `<div class="hint">Modifications relatives appliquées aux ${count} objets.</div>` +
                 slider('m-scale', '📏 Échelle (×)', 1, 0.1, 5, 0.05, '×') +
                 slider('m-rotationZ', '🔄 Rotation Z (+/-)', 0, -180, 180, 5, '°') +
                 slider('m-offsetZ', '⬆️ Altitude (+/-)', 0, -5, 10, 0.5, 'm') +
-                slider('m-offsetX', '↔️ Décalage X (+/-)', 0, -5, 5, 0.1, 'm') +
-                slider('m-offsetY', '↕️ Décalage Y (+/-)', 0, -5, 5, 0.1, 'm');
+                slider('m-offsetX', '↔️ Décalage X (+/-)', 0, -50, 50, 0.5, 'm') +
+                slider('m-offsetY', '↕️ Décalage Y (+/-)', 0, -50, 50, 0.5, 'm');
         }
     } else {
         // Aucun onglet : sélection multiple sur des objets sans réglage commun.
@@ -4590,7 +5260,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.3.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.4.0');
     return Feuille;
 }
 
@@ -4707,10 +5377,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.3.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.4.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.3.0');
+        const dc = await import('./lib/data-client.js?v=1.4.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -5022,12 +5692,53 @@ async function monterSceneExterne(manifest) {
             const el = $('project-name');
             if (el) el.textContent = projectName;
         }
+
+        // Ambiance déclarée dans le manifeste portable (labels, soleil…).
+        // Le fond (basemap) est appliqué après le premier idle — un setStyle
+        // pendant le montage faisait planter `getStyle().layers`.
+        const ms = manifest.settings;
+        let wantBasemap = null;
+        if (ms && typeof ms === 'object') {
+            if (ms.basemap && BASEMAPS[ms.basemap]) wantBasemap = ms.basemap;
+            if (typeof ms.labels === 'boolean') STATE.settings.labels = ms.labels;
+            if (typeof ms.shadows === 'boolean') STATE.settings.shadows = ms.shadows;
+            if (typeof ms.sky === 'boolean') STATE.settings.sky = ms.sky;
+            if (Number.isFinite(ms.timeOfDay)) STATE.settings.timeOfDay = ms.timeOfDay;
+            if (typeof ms.terrain3D === 'boolean') STATE.settings.terrain3D = ms.terrain3D;
+        }
+
         mountLoadedLayers(boundsFromVisibleLayers(layers) || rawBounds);
+        applyLabelsVisibility();
+        updateLighting();
+        if (wantBasemap && map) {
+            map.once('idle', () => {
+                try {
+                    A.setBasemap?.(wantBasemap);
+                    // Après setStyle, re-couper les labels si demandé.
+                    map.once('idle', () => applyLabelsVisibility());
+                } catch (_) { /* ignore */ }
+            });
+        }
 
         if (!layers.length) {
             showToast('Scène chargée, mais aucune couche affichable', 'warning');
         } else {
             showToast(`Scène externe · ${layers.length} couche(s)`, 'success');
+        }
+
+        // Récit embarqué dans le Scene Manifest (story.steps) — pas de table Grist.
+        const steps = manifest.story?.steps;
+        if (Array.isArray(steps) && steps.length) {
+            STATE.story = steps.map((s) => ({
+                title: s.title || '',
+                text: s.description || s.text || '',
+                state: s.state || {},
+            }));
+            refreshStoryNavChrome();
+            // Lancer après le premier idle carte (caméra + couches montées).
+            setTimeout(() => {
+                try { A.storyPlay?.(0); } catch (e) { console.warn('[Atlas] récit externe', e); }
+            }, 800);
         }
 
         // Pas de validation contre le schéma ici, et c'est délibéré : elle
@@ -5676,11 +6387,13 @@ const A = {
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
         // Rend la scène telle qu'elle était avant la présentation : visibilité,
-        // filtres et symbolisation. Sans cela on sort du récit sur l'état de la
-        // dernière étape.
-        restorePreStorySnapshot();
-        remountAllLayers();
-        updateLegend();
+        // filtres, symbolisation et ambiance. Sans cela on sort du récit sur
+        // l'état de la dernière étape.
+        const basemapSwitching = restorePreStorySnapshot();
+        if (!basemapSwitching) {
+            remountAllLayers();
+            updateLegend();
+        }
         refreshControlsDock();
         if (STATE.currentModule === 'couches' || STATE.currentModule === 'symbo') {
             renderLayersPanel(STATE.currentModule);
@@ -5798,7 +6511,14 @@ const A = {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         l.style.mode = mode;
         if (mode === 'library' && !l.style.library?.modelId) {
-            const cat = l._modelCat || 'lighting';
+            // Une couche peut porter une categorie que la bibliotheque ne connait
+            // pas — `scene-loader` pose « landmark » pour une couche a modele
+            // venue d'un manifeste. Sans ce repli, `.models[0]` leve sur undefined
+            // et l'interface tombe au clic. La meme garde existe deja cote
+            // inspecteur (`symModelPanel`) : elle manquait ici seulement.
+            const catRaw = l._modelCat || 'lighting';
+            const cat = MODEL_LIBRARY.categories[catRaw] ? catRaw : 'lighting';
+            if (cat !== catRaw) l._modelCat = cat;
             const first = MODEL_LIBRARY.categories[cat].models[0];
             l.style.library = { modelId: first.id };
             l.style.common = { ...(l.style.common || {}), scale: first.scale || 1 };
@@ -5874,7 +6594,11 @@ const A = {
         else if (key === 'terrain3D') { applyTerrain(); _palierDemCale = null; recalerRelief(); }
         else if (key === 'labels') applyLabelsVisibility();
         else if (key === 'sky') applySky();
-        else if (key === 'shadows') { updateLighting(); $('shadow-toggle')?.classList.toggle('on', STATE.settings.shadows); }
+        else if (key === 'shadows') {
+            updateLighting();
+            Models3D.scheduleBuild();
+            $('shadow-toggle')?.classList.toggle('on', STATE.settings.shadows);
+        }
         if (STATE.currentModule === 'vues') renderVues(); else if (STATE.currentModule === 'soleil') renderSoleil();
     },
 
@@ -5908,6 +6632,192 @@ const A = {
     setTerrainSource(src) { setTerrainSource(src); renderVues(); },
     setProjection(p) { STATE.settings.projection = p; applyProjection(); renderVues(); },
     resetView() { map.easeTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, bearing: -18, duration: 1000 }); },
+    debugShowExtrusionCasters(on = true) {
+        for (const mesh of Models3D.extrusionShadows || []) {
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach((m) => {
+                if (!m) return;
+                m.colorWrite = !!on;
+                if (on) {
+                    m.color?.set?.(0xff00ff);
+                    m.emissive?.set?.(0xaa00aa);
+                    m.opacity = 0.4;
+                    m.transparent = true;
+                    m.depthTest = false;
+                } else {
+                    m.color?.set?.(0x111111);
+                    m.emissive?.set?.(0x000000);
+                    m.opacity = 1;
+                    m.transparent = false;
+                    m.depthTest = true;
+                }
+                m.needsUpdate = true;
+            });
+            mesh.visible = true;
+            mesh.frustumCulled = false;
+        }
+        map?.triggerRepaint?.();
+        return { n: Models3D.extrusionShadows?.length || 0, isIM: !!Models3D.extrusionShadows?.[0]?.isInstancedMesh };
+    },
+
+    /**
+     * Protocole navigateur : isole le bâti (sans GLB), ombres on/off.
+     * Usage : await A.validateBatiShadows()
+     */
+    async validateBatiShadows() {
+        if (!map || !Models3D.scene) return { ok: false, err: 'map/scene absents' };
+        const bati = STATE.layers.find((l) => /bati/i.test(l.id) || /bati/i.test(l.name));
+        if (!bati) return { ok: false, err: 'pas de couche bâti' };
+
+        // Figé lecture : on force quand même pour le test runtime
+        bati.visible = true;
+        bati.style = bati.style || {};
+        bati.style.polygonMode = 'extruded';
+        STATE.settings.shadows = true;
+        STATE.settings.terrain3D = false;
+
+        // Masquer tous les GLB (instances three.js)
+        for (const [, g] of Models3D.groups || []) {
+            (g.meshes || []).forEach(({ im }) => { if (im) im.visible = false; });
+            (g.roots || []).forEach((r) => { if (r) r.visible = false; });
+        }
+        // Masquer les autres couches MapLibre sauf bâti (visibilité source)
+        for (const l of STATE.layers) {
+            if (l === bati) continue;
+            try { applyMapLayerVisibility(l, false); } catch (_) {}
+        }
+        try { applyMapLayerVisibility(bati, true); applyLayerStyle(bati); } catch (_) {}
+
+        // Vue rue dense près Charité, sans plonger dans le GLB
+        map.jumpTo({
+            center: [5.3682, 43.3008],
+            zoom: 17.4,
+            pitch: 58,
+            bearing: -35,
+        });
+        await new Promise((r) => setTimeout(r, 200));
+        Models3D.forceBuild();
+        await new Promise((r) => setTimeout(r, 1200));
+        // GLB peut revenir au rebuild — re-masquer
+        for (const [, g] of Models3D.groups || []) {
+            (g.meshes || []).forEach(({ im }) => { if (im) im.visible = false; });
+            (g.roots || []).forEach((r) => { if (r) r.visible = false; });
+        }
+        map.triggerRepaint();
+        await new Promise((r) => setTimeout(r, 400));
+
+        const withShadows = Models3D.extrusionShadows?.length || 0;
+        const candidates = Models3D.collectExtrusionsForShadow?.()?.length || 0;
+
+        // Phase A : ombres ON, casters invisibles
+        this.debugShowExtrusionCasters(false);
+        STATE.settings.shadows = true;
+        if (Models3D.renderer) Models3D.renderer.shadowMap.enabled = true;
+        map.triggerRepaint();
+        await new Promise((r) => setTimeout(r, 500));
+
+        // Phase B data (l’appelant fait les screenshots entre les appels)
+        return {
+            ok: true,
+            phase: 'shadows-on',
+            withShadows,
+            candidates,
+            gltfHidden: [...(Models3D.groups?.values?.() || [])].every((g) =>
+                (g.meshes || []).every(({ im }) => im && im.visible === false)),
+            shadows: STATE.settings.shadows,
+            zoom: map.getZoom(),
+            center: map.getCenter()?.toArray?.(),
+        };
+    },
+
+    async validateBatiShadowsOff() {
+        STATE.settings.shadows = false;
+        if (Models3D.renderer) Models3D.renderer.shadowMap.enabled = false;
+        if (Models3D.groundShadow) Models3D.groundShadow.visible = false;
+        map?.triggerRepaint?.();
+        await new Promise((r) => setTimeout(r, 500));
+        return { phase: 'shadows-off', shadows: false };
+    },
+
+    async validateBatiShadowsCastersVisible() {
+        STATE.settings.shadows = true;
+        if (Models3D.renderer) Models3D.renderer.shadowMap.enabled = true;
+        if (Models3D.groundShadow) Models3D.groundShadow.visible = true;
+        const r = this.debugShowExtrusionCasters(true);
+        await new Promise((r2) => setTimeout(r2, 400));
+        return { phase: 'casters-visible', ...r };
+    },
+    debugModels3D() {
+        const extrusions = Models3D.collectExtrusionsForShadow?.() || [];
+        const bati = STATE.layers.find((l) => /bati/i.test(l.id) || /bati/i.test(l.name));
+        let queryN = null, queryErr = null, geoType = bati ? typeof bati.geojson : null;
+        let queryNear80 = 0, querySample = [];
+        if (bati && map) {
+            try {
+                const feats = map.querySourceFeatures(bati.id) || [];
+                queryN = feats.length;
+                for (const f of feats) {
+                    const c = featureCentroidLngLat(f);
+                    if (!c) continue;
+                    const lm = Models3D.localMeters(c[0], c[1]);
+                    const d = Math.hypot(lm.x, lm.y);
+                    if (d < 80) queryNear80++;
+                    if (querySample.length < 5) {
+                        querySample.push({
+                            d: Math.round(d),
+                            h: featureExtrusionHeightM(f, bati),
+                            t: f.geometry?.type,
+                        });
+                    }
+                }
+                // also sample by sorting all
+                const scored = [];
+                for (const f of feats) {
+                    const c = featureCentroidLngLat(f);
+                    if (!c) continue;
+                    const lm = Models3D.localMeters(c[0], c[1]);
+                    scored.push(Math.hypot(lm.x, lm.y));
+                }
+                scored.sort((a, b) => a - b);
+                querySample = { nearest5: scored.slice(0, 5).map((d) => Math.round(d)), near80: queryNear80, n: queryN };
+            } catch (e) { queryErr = e.message; }
+        }
+        return {
+            shadowFeasible: Models3D._shadowFeasible,
+            extrusionMeshes: Models3D.extrusionShadows?.length || 0,
+            extrusionInstances: Models3D.extrusionShadows?.reduce((n, m) => n + (m.count || 0), 0) || 0,
+            firstMatrix: (() => {
+                const im = Models3D.extrusionShadows?.[0];
+                if (!im?.instanceMatrix) return null;
+                const m = new THREE.Matrix4();
+                im.getMatrixAt(0, m);
+                return Array.from(m.elements);
+            })(),
+            matColorWrite: Models3D.extrusionShadows?.[0]?.material?.colorWrite,
+            matEmissive: Models3D.extrusionShadows?.[0]?.material?.emissive?.getHexString?.(),
+            extrusionCandidates: extrusions.length,
+            near80: extrusions.filter((e) => {
+                const lm = Models3D.localMeters(e.lng, e.lat);
+                return Math.hypot(lm.x, lm.y) < 80;
+            }).length,
+            nearestM: extrusions[0] ? Math.hypot(
+                Models3D.localMeters(extrusions[0].lng, extrusions[0].lat).x,
+                Models3D.localMeters(extrusions[0].lng, extrusions[0].lat).y,
+            ) : null,
+            querySample,
+            shadows: STATE.settings.shadows,
+            terrain3D: STATE.settings.terrain3D,
+            zoom: map?.getZoom?.(),
+            bati: bati ? {
+                id: bati.id,
+                geoType,
+                poly: bati.style?.polygonMode,
+                geomType: bati.geometryType,
+                queryErr,
+                hasSource: !!map?.getSource?.(bati.id),
+            } : null,
+        };
+    },
 
     // Symbology
     setSymTab(t) { inspSymTab = t; renderInspector(); },
@@ -5981,7 +6891,9 @@ const A = {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         l.style = l.style || { mode: 'mapbox' };
         l.style.polygonMode = mode === 'flat' ? 'flat' : 'extruded';
-        applyLayerStyle(l); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+        applyLayerStyle(l);
+        Models3D.scheduleBuild();
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
     },
     /** Opacité de couche ; 'auto' rend la main au style déclaratif. */
     setSymOpacity(id, v) {
@@ -6138,7 +7050,7 @@ const A = {
     },
 
     // Project
-    saveProject, loadProject, exportProject,
+    saveProject, loadProject, restoreProject, exportProject,
 };
 function regenCategories(layer, param) {
     const sym = layer.style.symbolization[param];
@@ -6168,6 +7080,8 @@ function nav(dir) {
     }
 }
 window.A = A;
+// Debug runtime (à retirer) : inspection Models3D depuis le navigateur
+window.__Models3D = Models3D;
 
 // ============================================================
 // EVENT WIRING
@@ -6371,9 +7285,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.3.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.4.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.3.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.4.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

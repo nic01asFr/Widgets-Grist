@@ -7,7 +7,7 @@ import {
   parsePropertyNumber,
   resolveFeaturePropertyKey,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.3.0';
+} from './declarative-style.js?v=1.4.0';
 
 export function layerFieldNames(layer) {
   if (layer._fields?.length) {
@@ -74,7 +74,34 @@ export function controlUniqueValues(layer, field, max = 40) {
   return declarees.slice(0, max).map((value) => ({ value, count: null }));
 }
 
-/** Valeurs distinctes sur les features actuellement visibles (filtres contrôles appliqués). */
+/**
+ * Les classes que le style déclaratif nomme, quand on ne peut pas les compter.
+ *
+ * Une symbologie catégorisée **porte la liste de ses classes** : ce sont ses
+ * `stops`. Sur une couche dont Atlas ne détient pas les entités, c'est la seule
+ * source qui reste — et elle est exacte, puisque c'est elle qui peint la carte.
+ * Les `controls[].options` complètent, pour les couches stylées autrement.
+ */
+function classesDeclarees(layer, field) {
+  const d = layer?._declarative;
+  if (d?.kind === 'categorized' && d.field === field && Array.isArray(d.stops)) {
+    const vals = d.stops.map((s) => s?.value).filter((v) => v != null && v !== '');
+    if (vals.length) return vals;
+  }
+  return optionsDeclarees(layer, field);
+}
+
+/**
+ * Valeurs distinctes sur les features actuellement visibles (filtres appliqués).
+ *
+ * Le repli sur les classes déclarées ne vaut **que** pour une couche qui ne
+ * détient pas ses entités. La distinction est celle qui compte : une couche
+ * locale dont le filtre ne laisse rien doit rendre une liste vide — c'est un
+ * renseignement juste, et le masquer ferait passer un filtre trop strict pour
+ * une légende normale. Une couche distante, elle, n'a rien à compter : lui
+ * faire dire « aucune valeur » serait affirmer une absence qu'on n'a pas
+ * constatée.
+ */
 export function filteredUniqueValues(layer, field, max = 40) {
   const gj = filteredGeoJSON(layer);
   const propKey = resolveFeaturePropertyKey(layer, field);
@@ -83,6 +110,12 @@ export function filteredUniqueValues(layer, field, max = 40) {
     const key = normalizePropertyValue(f.properties?.[propKey]);
     if (!key) continue;
     counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  if (!counts.size && !Array.isArray(layer?.geojson?.features)) {
+    const declarees = classesDeclarees(layer, field);
+    // `count: null` et non zéro : on ignore combien d'entités portent cette
+    // classe, et zéro se lirait comme « aucune », ce qu'on n'a pas vérifié.
+    if (declarees) return declarees.slice(0, max).map((value) => ({ value, count: null }));
   }
   return Array.from(counts.entries())
     .map(([value, count]) => ({ value, count }))

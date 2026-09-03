@@ -363,3 +363,78 @@ test('l’accueil cite l’ecosysteme, et renvoie chaque equipe a son propre fil
   assert.match(html, /les-widgets-proposes-par-lequipe-grist-gouv[^"]*"[^>]*>Leur fil sur le forum/,
     'l’equipe doit etre renvoyee a sa propre presentation');
 });
+
+/* ---------- la section de demonstration ---------- */
+
+const projetDemo = (demo) => ({
+  id: 'atlas',
+  presentation: { nom: 'Atlas', produit: { demonstration: demo } },
+});
+
+test('sans declaration, aucune section de demonstration', () => {
+  assert.equal(V.sectionDemo(projetDemo(undefined), __dirname), '');
+  assert.equal(V.sectionDemo({ id: 'x', presentation: {} }, __dirname), '');
+});
+
+test('une demonstration incomplete est ignoree, pas rendue a moitie', () => {
+  // Sans URL il n'y a rien a ouvrir ; sans image le cadre serait un rectangle
+  // vide qu'on prendrait pour un widget casse.
+  assert.equal(V.sectionDemo(projetDemo({ image: 'demo.jpg' }), __dirname), '');
+  assert.equal(V.sectionDemo(projetDemo({ url: 'https://h.fr/a' }), __dirname), '');
+});
+
+test('une image absente du disque ecarte la demonstration', () => {
+  // La page la proposerait, on cliquerait, et on jugerait le widget sur un
+  // cadre vide : une demonstration cassee est pire qu'une demonstration absente.
+  const html = V.sectionDemo(
+    projetDemo({ url: 'https://h.fr/atlas/', image: 'introuvable.jpg' }), __dirname);
+  assert.equal(html, '');
+});
+
+test('une scene locale absente ecarte aussi la demonstration', () => {
+  // Le cas qui arrive vraiment : on renomme un dossier de demo et la page
+  // continue de pointer sur l'ancien chemin.
+  const racine = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vitrine-'));
+  fs.mkdirSync(path.join(racine, 'w', 'atlas'), { recursive: true });
+  fs.writeFileSync(path.join(racine, 'w', 'atlas', 'demo.jpg'), 'x');
+  const html = V.sectionDemo(projetDemo({
+    url: 'https://h.fr/atlas/?scene=' + encodeURIComponent('atlas/demos/partie/scene.json'),
+    image: 'demo.jpg',
+  }), racine);
+  assert.equal(html, '');
+});
+
+test('une demonstration complete rend un cadre, un bouton et sa mention', () => {
+  const racine = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vitrine-'));
+  fs.mkdirSync(path.join(racine, 'w', 'atlas'), { recursive: true });
+  fs.writeFileSync(path.join(racine, 'w', 'atlas', 'demo.jpg'), 'x');
+  const html = V.sectionDemo(projetDemo({
+    titre: 'La démonstration',
+    texte: 'Une scène réelle.',
+    url: 'https://h.fr/atlas/',
+    image: 'demo.jpg',
+    libelle: 'Ouvrir',
+    mention: 'Données © OpenStreetMap',
+  }), racine);
+  assert.match(html, /<section class="demo">/);
+  assert.match(html, /La démonstration/);
+  assert.match(html, /data-widget="https:\/\/h\.fr\/atlas\/"/);
+  assert.match(html, /Ouvrir<\/button>/);
+  assert.match(html, /Données © OpenStreetMap/);
+  // Le widget n'est pas charge d'emblee : une carte tire une bibliotheque, des
+  // tuiles et un rendu 3D. L'image tient lieu d'apercu jusqu'au clic.
+  assert.ok(!/<iframe/.test(html), 'le cadre ne doit pas contenir d’iframe');
+});
+
+test('le texte d’une demonstration est echappe, pas injecte', () => {
+  const racine = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vitrine-'));
+  fs.mkdirSync(path.join(racine, 'w', 'atlas'), { recursive: true });
+  fs.writeFileSync(path.join(racine, 'w', 'atlas', 'demo.jpg'), 'x');
+  const html = V.sectionDemo(projetDemo({
+    titre: '<img src=x onerror="alert(1)">',
+    url: 'https://h.fr/a',
+    image: 'demo.jpg',
+  }), racine);
+  assert.ok(!/<img src=x/.test(html), 'le titre doit ressortir echappe');
+  assert.match(html, /&lt;img/);
+});

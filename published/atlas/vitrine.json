@@ -1,6 +1,6 @@
 {
   "nom": "Atlas",
-  "pitch": "La carte n’est pas un export de vos données : c’en est une vue. Les couches, la symbolisation, le relief et le récit vivent dans le document Grist — et quand la table change, la carte a déjà changé.",
+  "pitch": "La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.",
   "couleur": "#C44536",
   "tags": [
     "Cartographie",
@@ -28,7 +28,7 @@
     },
     {
       "titre": "Les droits du document font foi",
-      "texte": "aucune liste d’accès propre à Atlas : en lecture seule l’édition disparaît, le récit reste consultable."
+      "texte": "aucune liste d’accès propre à Atlas : en lecture seule l’édition disparaît, le récit reste consultable. ACL et link keys Grist s’appliquent tels quels."
     }
   ],
   "encart": {
@@ -40,6 +40,10 @@
     }
   },
   "journal": [
+    {
+      "version": "vitrine",
+      "texte": "Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (`?scene=`). L’aperçu restera enrichi d’exemples chargeables."
+    },
     {
       "version": "v1.2.0",
       "texte": "Atlas sait où il tourne : dans un document il ne change pas, ouvert seul il explique et propose l’application, sur un téléphone les panneaux deviennent des feuilles qu’on écarte d’un geste. Enregistrer, charger et exporter deviennent accessibles en mobile, où ils manquaient."
@@ -58,7 +62,7 @@
     }
   ],
   "produit": {
-    "accroche": "Pas de fichier à exporter, pas de plateforme où recopier, pas de droits à reconfigurer : on partage un document Grist, la carte suit.",
+    "accroche": "Dans Grist, on partage le document : la carte suit, avec les droits du document. On peut aussi publier une scène seule (manifeste) pour l’ouvrir hors document — même moteur, autre hôte.",
     "chiffres": [
       {
         "valeur": "0",
@@ -70,14 +74,14 @@
       },
       {
         "valeur": "3",
-        "libelle": "usages : concevoir, diffuser, relever sur le terrain"
+        "libelle": "voies : document, iframe document, scène publiée"
       }
     ],
     "titreSequence": "Le parcours",
     "sequence": [
       {
         "titre": "Je charge mes données",
-        "texte": "Une table du document, un GeoJSON, OpenStreetMap, ou un projet QGIS converti par qgis2grist — avec ses couches et sa symbologie."
+        "texte": "Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist — ou une couche publiée par URL dans un Scene Manifest."
       },
       {
         "titre": "J’édite",
@@ -89,11 +93,11 @@
       },
       {
         "titre": "Je règle les accès dans Grist",
-        "texte": "Atlas n’a pas son propre système de droits : il applique ceux du document. Un lecteur voit la scène et le récit, sans l’édition."
+        "texte": "Atlas n’a pas son propre système de droits. Public Access, ACL et link keys du document décident qui voit quoi — y compris dans une iframe."
       },
       {
-        "titre": "Je partage, et on travaille à plusieurs",
-        "texte": "Le lien d’un document Grist suffit. Chacun voit la même scène, et deux personnes qui éditent voient les modifications de l’autre."
+        "titre": "Je partage",
+        "texte": "Soit le lien d’une page du document (`embed` ou `singlePage`), soit une scène publiée ouverte avec Atlas seul (`?scene=`). Dans les deux cas, rien n’est recopié vers une autre plateforme carto."
       }
     ],
     "titreContextes": "Construire, diffuser, relever",
@@ -101,9 +105,13 @@
       {
         "titre": "Construire, dans votre document",
         "texte": "Atlas est un widget de votre document, à côté de vos tables. Ce que vous modifiez sur la carte est écrit dans la table, et l’inverse. Les règles d’accès du document s’appliquent telles quelles : qui peut écrire édite, qui ne peut que lire voit la scène et le récit, sans que l’édition lui soit proposée.",
-        "pourquoi": "Il n’y a pas de droits Atlas à configurer en plus de ceux de Grist. C’est le document qui décide, y compris au niveau d’une table ou d’une ligne.",
+        "pourquoi": "Il n’y a pas de droits Atlas à configurer en plus de ceux de Grist. C’est le document qui décide, y compris au niveau d’une table ou d’une ligne — et c’est aussi là que la persistance se voit : tables système, couches, récit.",
         "format": "large",
         "images": [
+          {
+            "image": "dans-grist.jpg",
+            "legende": "La scène vit dans le document : à côté des tables (couches, récit, manifeste), pas dans un export figé."
+          },
           {
             "image": "apercu.jpg",
             "legende": "Les outils d’édition : lieu, couches, soleil, vues, contrôles, récit — et la carte en volume."
@@ -111,20 +119,20 @@
         ]
       },
       {
-        "titre": "Diffuser en lecture, sans rien installer",
-        "texte": "Grist sait s’intégrer dans une page : en ajoutant `?embed=true&style=singlePage` à l’adresse d’une page de votre document, vous obtenez la scène seule, plein cadre. Ce lien se met dans un courriel, un intranet, un article — et la personne qui l’ouvre voit la carte et peut jouer le récit, sans compte et sans installation.",
-        "pourquoi": "C’est le partage d’un document Grist, pas une publication à part : si vous retirez l’accès, le lien cesse de fonctionner. Rien n’a été recopié ailleurs.",
+        "titre": "Diffuser, proprement",
+        "texte": "Deux paramètres Grist, deux intentions. `?embed=true` : page minimale en lecture forcée. `?style=singlePage` : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.",
+        "pourquoi": "Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via `?scene=`). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.",
         "format": "large",
         "images": [
           {
-            "image": "dans-grist.jpg",
-            "legende": "La même scène ouverte par un visiteur sans compte : le badge « Lecture » remplace l’édition, la carte et la légende restent entières."
+            "image": "apercu.jpg",
+            "legende": "Cible de diffusion : la carte (et le récit) plein cadre. Une capture « lecture seule » sans barre de tables remplacera bientôt cette illustration."
           }
         ]
       },
       {
         "titre": "Relever sur le terrain",
-        "texte": "Une application Android ouvre les scènes de votre compte sans passer par un document. Ce n’est pas une interface différente pour le plaisir : c’est le seul moyen d’être authentifié hors du navigateur, celui-ci ne pouvant pas présenter de clé API à l’instance.",
+        "texte": "Une application Android ouvre les scènes de votre compte sans passer par un document dans le navigateur. Ce n’est pas une interface différente pour le plaisir : c’est le seul moyen d’être authentifié hors du moteur web, celui-ci ne pouvant pas présenter de clé API à l’instance.",
         "format": "mobile",
         "images": [
           {
@@ -135,7 +143,16 @@
       }
     ],
     "apercu": {
-      "mention": "L’aperçu est Atlas seul, sans document : chargez un GeoJSON ou importez depuis OpenStreetMap pour le voir travailler. Dans un document Grist, ce sont vos tables qui deviennent les couches."
+      "mention": "L’aperçu est Atlas seul (`vitrine=1`), sans document. La démo à venir sera un pack métier dédié (ou une scène publique hors Grist) — pas un export d’un document de travail existant."
+    },
+    "demonstration": {
+      "titre": "La démonstration : une scène réelle",
+      "texte": "Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches OpenStreetMap, huit étapes de récit, deux sortes de 3D : les modèles du catalogue posés sur du mobilier relevé, et un relevé photogrammétrique de la cascade elle-même.",
+      "url": "https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fcascade-aygalades-marseille%2Fscene.json",
+      "image": "demo.jpg",
+      "alt": "Relevé 3D de la cascade des Aygalades posé sur le tracé du ruisseau, avec son ombre portée",
+      "libelle": "Ouvrir la démonstration",
+      "mention": "Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; relevé 3D de M.Dailly (CC BY 4.0)."
     }
   },
   "forum": {
@@ -151,9 +168,9 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.2.0. Le widget est utilisé sur des scènes réelles ; l’application Android reste une version de test, non signée."
+    "texte": "Version 1.2.0 en ligne ; le runtime accepte déjà les scènes externes et les couches distantes. L’application Android reste une version de test, non signée."
   },
-  "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont.",
+  "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [
     {
       "titre": "Risques et prévention",

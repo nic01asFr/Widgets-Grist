@@ -45,6 +45,60 @@ for (const f of fs.readdirSync(libSrc)) {
   modules++;
 }
 
+/**
+ * Les scenes de demonstration.
+ *
+ * Elles doivent vivre sous `published/` pour etre servies par GitHub Pages : la
+ * page de presentation les ouvre dans une iframe, et `projects/` n'est pas
+ * deploye. Seuls les fichiers que la scene sert sont copies — les scripts
+ * d'extraction et les archives de travail restent en developpement.
+ *
+ * Une demo ignoree par git (licence non etablie) ne doit pas remonter ici par
+ * la copie : `existsSync` ne suffirait pas, elle est bien sur le disque. On
+ * copie donc une liste NOMMEE, pas le contenu d'un dossier.
+ */
+const DEMOS = ['cascade-aygalades-marseille', 'osm-marseille-vieux-port'];
+const SERVIS = /\.(json|geojson|glb)$/;
+const demSrc = path.join(src, 'demos');
+const demPub = path.join(pub, 'demos');
+let fichiersDemo = 0;
+for (const d of DEMOS) {
+  const from = path.join(demSrc, d);
+  if (!fs.existsSync(from)) {
+    console.error(`Echec : demo « ${d} » introuvable dans projects/Atlas/demos`);
+    process.exit(1);
+  }
+  const to = path.join(demPub, d);
+  fs.mkdirSync(to, { recursive: true });
+  for (const f of fs.readdirSync(from)) {
+    // `_bbox.json` et les archives de travail ne sont pas servis a la page.
+    if (!SERVIS.test(f) || f.startsWith('_')) continue;
+    fs.copyFileSync(path.join(from, f), path.join(to, f));
+    fichiersDemo++;
+  }
+  // La scene doit rester lisible apres copie : une demo muette en ligne est
+  // pire qu'une demo absente, car la page la propose quand meme.
+  const scene = path.join(to, 'scene.json');
+  if (!fs.existsSync(scene)) {
+    console.error(`Echec : « ${d} » n'a pas de scene.json`);
+    process.exit(1);
+  }
+  const m = JSON.parse(fs.readFileSync(scene, 'utf8'));
+  for (const l of m.layers || []) {
+    if (typeof l.geojson === 'string' && l.geojson.startsWith('./')
+        && !fs.existsSync(path.join(to, l.geojson.slice(2)))) {
+      console.error(`Echec : « ${d} » reclame ${l.geojson}, absent de la copie publiee`);
+      process.exit(1);
+    }
+    const glb = l.style?.custom?.url || l.gltf_url;
+    if (typeof glb === 'string' && glb.startsWith('./')
+        && !fs.existsSync(path.join(to, glb.slice(2)))) {
+      console.error(`Echec : « ${d} » reclame ${glb}, absent de la copie publiee`);
+      process.exit(1);
+    }
+  }
+}
+
 // Controle : tout module importe doit exister dans la copie publiee.
 const publie = fs.readFileSync(path.join(pub, 'app.js'), 'utf8');
 const requis = [...new Set([...publie.matchAll(/\.\/lib\/([a-z0-9-]+\.js)/g)].map((m) => m[1]))];
@@ -54,4 +108,5 @@ if (absents.length) {
   process.exit(1);
 }
 
-console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js`);
+console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js, `
+  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes)`);

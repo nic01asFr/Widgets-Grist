@@ -7,7 +7,7 @@ import {
   boundsFromGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.3.0';
+} from './grist-rows.js?v=1.4.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
@@ -15,9 +15,9 @@ import {
   colorFnFromDeclarative,
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
-} from './declarative-style.js?v=1.3.0';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.3.0';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.3.0';
+} from './declarative-style.js?v=1.4.0';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.4.0';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.4.0';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
@@ -228,6 +228,17 @@ function coucheHorsTable(ml, origine, widgetConfig) {
   const fallbackColor = primaryColorFromDeclarative(declarative, cfgLayer?.color || '#808080');
   const geometryType = manifestGeometryType(ml.geometry_type || ml.geomType || cfgLayer?.geomType);
 
+  // Surfaces : à plat par défaut (analyse). Une scène 3D (bâti OSM…) peut
+  // déclarer `style.polygonMode: "extruded"` + `height_field`.
+  const polygonModeDeclare = ml.style?.polygonMode || ml.polygonMode
+    || (geometryType === 'Polygon' || geometryType === 'MultiPolygon' ? 'flat' : undefined);
+  const heightField = ml.height_field || ml.heightField || null;
+
+  const gltfUrl = ml.style?.custom?.url || ml.gltf_url || ml.gltfUrl || null;
+  const modeModele = (gltfUrl || ml.style?.mode === 'custom' || ml.style?.mode === 'library')
+    ? (ml.style?.mode === 'library' ? 'library' : 'custom')
+    : 'mapbox';
+
   const layer = {
     id: 'layer-scene-' + String(ml.id || nom).replace(/[^a-zA-Z0-9_-]/g, '_'),
     name: nom,
@@ -239,8 +250,17 @@ function coucheHorsTable(ml, origine, widgetConfig) {
     manifestLayerId: ml.id || nom,
     // Objet GeoJSON, ou adresse : MapLibre reçoit l'un ou l'autre tel quel.
     geojson: origine.valeur,
-    style: { mode: 'mapbox', polygonMode: geometryType === 'Polygon' ? 'flat' : undefined },
-    _modelCat: 'furniture',
+    ...(heightField ? { heightField } : {}),
+    style: {
+      mode: modeModele,
+      polygonMode: polygonModeDeclare,
+      ...(modeModele === 'custom' && gltfUrl ? { custom: { url: gltfUrl, ...(ml.style?.custom || {}) } } : {}),
+      ...(modeModele === 'library' && ml.style?.library ? { library: ml.style.library } : {}),
+      ...(ml.style?.common ? { common: { ...ml.style.common } } : {
+        common: { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
+      }),
+    },
+    _modelCat: ml._modelCat || (modeModele !== 'mapbox' ? 'landmark' : 'furniture'),
     _declarative: declarative,
     // La config widget qgis2grist n'existe pas pour une couche distante : ses
     // champs viennent alors du manifeste, qui les declare (`fields[]`, avec le

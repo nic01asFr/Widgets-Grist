@@ -2,13 +2,13 @@
  * Récit / storymaps — étapes caméra + état scène, persistance Atlas_Story.
  * Binding : caméra, visibilité, contrôles, symbolisation (interop interactive_map).
  */
-import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.3.0';
+import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.4.0';
 import {
   captureSelectControlValues,
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=1.3.0';
+} from './controls.js?v=1.4.0';
 
 export const STORY_SCHEMA = [
   { id: 'Step', fields: { label: 'Étape', type: 'Int' } },
@@ -40,6 +40,11 @@ export function captureStoryState(map, state) {
     timeOfDay: state.settings.timeOfDay,
     date: state.settings.date instanceof Date ? state.settings.date.toISOString() : state.settings.date,
     terrain3D: state.settings.terrain3D,
+    labels: state.settings.labels,
+    shadows: state.settings.shadows,
+    sky: state.settings.sky,
+    basemap: state.settings.basemap,
+    buildings3D: state.settings.buildings3D,
     layers: (state.layers || []).map((l) => ({
       id: l.id,
       name: l.name,
