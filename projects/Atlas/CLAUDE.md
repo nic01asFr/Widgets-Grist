@@ -81,6 +81,11 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## Points d’attention
 
+- **Cadrage portable / partage iframe (26/08/2026)** :
+  `docs/CADRAGE-PORTABLE-PARTAGE-IFRAME.md` — Grist = socle droits ; Atlas
+  portable = Scene Manifest existant ; embed privé = session document + ACL /
+  link keys ; Component Manifest hub hors contrat Atlas.
+
 - **Colonnes géométriques** : `source.geometry_fields` du manifest prime sur la
   convention `latitude`/`longitude`/`geometry_json`. Sans lui (imports anciens),
   repli sur les variantes suffixées (`latitude2`) quand lat/lon valent 0 —
@@ -472,6 +477,35 @@ n’avait plus aucun point d’entrée une fois le rail retiré.
   recouvrent la thématique (cas de `nb_bat`, absent de 67 % des mailles de la
   grille sarde). Transmis par `applyStoryControlsToLayer` et conservé par
   `captureStoryState`.
+
+## Ombres portées — ce que la carte montre, et où elle s'écarte du réel
+
+Les ombres sont calculées par three.js sur les modèles 3D et sur un bâti
+d'appoint (`ensureShadowFeatures`), pas par une shadow map MapLibre au sol.
+
+**Le soleil ne descend jamais vraiment.** La lumière directionnelle est
+contrainte en hauteur :
+
+```js
+Math.max(this.sunDir.y * dist, dist * 0.4)   // jamais sous 40 % de la distance
+```
+
+Ce n'est pas un défaut à corriger mais un **compromis assumé** : à soleil
+rasant, la caméra orthographique de la shadow map devient quasi parallèle au
+sol, sa profondeur utile s'effondre et les ombres deviennent inexploitables
+(bandes, acné, ombres infinies). Le clamp garde une carte lisible.
+
+> **Conséquence à connaître** : aux heures basses — avant 8 h, après 18 h — les
+> ombres sont **plus courtes que la réalité**. Atlas affiche l'heure solaire
+> exacte, ce qui invite à lire la longueur d'ombre comme une mesure ; elle n'en
+> est pas une à ces heures-là. Une étude d'ensoleillement ne doit pas s'appuyer
+> dessus sans le savoir.
+
+**Les matériaux de modèles ne sont pas libérés.** `fixGltfMaterial` clone le
+matériau de chaque sous-maille, et aucun `dispose()` ne les reprend au retrait
+d'une couche. La fuite est **bornée** — un clone par URL de modèle, pas par
+image ni par instance — donc sans effet sur une scène ordinaire. Elle mordrait
+sur une session qui enchaînerait des dizaines de modèles distincts.
 
 - Ombres = éclairage modèles three.js (pas shadow map MapLibre au sol).
 - Modèles GLB via **`published/atlas/models/`** (GitHub Pages) — sous le widget,

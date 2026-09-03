@@ -296,6 +296,28 @@ describe('story', () => {
     assert.equal(state.layers.length, 1);
   });
 
+  it('captureStoryState retient fond et ambiance', () => {
+    const state = captureStoryState(null, {
+      settings: {
+        projection: 'mercator',
+        timeOfDay: 1185,
+        date: new Date('2026-08-27'),
+        terrain3D: false,
+        labels: false,
+        shadows: true,
+        sky: true,
+        basemap: 'ortho-ign',
+        buildings3D: false,
+      },
+      layers: [],
+    });
+    assert.equal(state.basemap, 'ortho-ign');
+    assert.equal(state.buildings3D, false);
+    assert.equal(state.shadows, true);
+    assert.equal(state.labels, false);
+    assert.equal(state.timeOfDay, 1185);
+  });
+
   it('captureStoryState retient le rendu surfacique', () => {
     const state = captureStoryState(null, {
       settings: { projection: 'globe', timeOfDay: 600, date: new Date('2026-06-15') },

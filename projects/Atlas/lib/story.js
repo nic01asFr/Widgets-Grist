@@ -40,6 +40,11 @@ export function captureStoryState(map, state) {
     timeOfDay: state.settings.timeOfDay,
     date: state.settings.date instanceof Date ? state.settings.date.toISOString() : state.settings.date,
     terrain3D: state.settings.terrain3D,
+    labels: state.settings.labels,
+    shadows: state.settings.shadows,
+    sky: state.settings.sky,
+    basemap: state.settings.basemap,
+    buildings3D: state.settings.buildings3D,
     layers: (state.layers || []).map((l) => ({
       id: l.id,
       name: l.name,

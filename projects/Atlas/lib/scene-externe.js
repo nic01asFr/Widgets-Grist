@@ -118,6 +118,34 @@ export function deballerScene(brut) {
 }
 
 /**
+ * Adresses de couches relatives → absolues, ancrées sur l'URL de la scène.
+ *
+ * Un pack portable pose souvent `geojson: "./bati.geojson"`. Sans résolution,
+ * MapLibre interprète le chemin par rapport à la page Atlas, pas au manifeste.
+ */
+export function resoudreAdressesCouches(manifest, baseUrl) {
+  if (!manifest?.layers?.length || !baseUrl) return manifest;
+  let base;
+  try { base = new URL(baseUrl); } catch { return manifest; }
+  for (const ml of manifest.layers) {
+    for (const cle of ['geojson', 'data_url', 'gltf_url', 'gltfUrl']) {
+      const v = ml[cle];
+      if (typeof v === 'string' && v && !/^(https?:|data:|blob:)/i.test(v)) {
+        try { ml[cle] = new URL(v, base).href; } catch { /* laisser tel quel */ }
+      }
+    }
+    // GLB custom : même règle — sinon le loader cherche ./chapelle.glb sous index_v7.
+    const customUrl = ml.style?.custom?.url;
+    if (typeof customUrl === 'string' && customUrl && !/^(https?:|data:|blob:)/i.test(customUrl)) {
+      try {
+        ml.style.custom.url = new URL(customUrl, base).href;
+      } catch { /* laisser tel quel */ }
+    }
+  }
+  return manifest;
+}
+
+/**
  * Charger la scène désignée par l'URL.
  *
  * @param {string} url
@@ -162,5 +190,6 @@ export async function chargerSceneExterne(url, deps = {}) {
   // lit là, plutôt que de relire l'URL. Une seule source pour une seule règle.
   manifest.externe = true;
   manifest._origine = url;
+  resoudreAdressesCouches(manifest, url);
   return { manifest, echec: null };
 }
