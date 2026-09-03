@@ -3594,13 +3594,50 @@ async function syncScenePrefsFromGrist() {
     if (!CONFIG.grist.ready) return;
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
+
+    // Les réglages retenus la fois d'avant priment sur les défauts du code :
+    // qui a choisi un fond veut le retrouver, pas repartir de « liberty ». Ils
+    // ne priment pas sur une étape de récit, qui décrit un état voulu par
+    // l'auteur et s'applique après.
+    const s = prefs.settings;
+    if (!s || !Object.keys(s).length) return;
+
+    // Ceux que `applyStoryEnvironment` ne connaît pas, posés d'abord pour que
+    // l'application du relief les voie.
+    if (Number.isFinite(s.terrainExaggeration)) STATE.settings.terrainExaggeration = s.terrainExaggeration;
+    if (s.terrainSource) STATE.settings.terrainSource = s.terrainSource;
+    if (s.modelSet) { STATE.settings.modelSet = s.modelSet; MODEL_LIBRARY.set = s.modelSet; }
+
+    // Le reste passe par le chemin du récit, qui **applique** au lieu de se
+    // contenter d'affecter : un `Object.assign` sur `STATE.settings` changerait
+    // la valeur sans toucher la carte — le fond mémorisé serait lu, écrit dans
+    // l'état, et la carte garderait le style déjà chargé. `setStyle` détruit
+    // les couches montées ; `applyStoryEnvironment` les remonte, via
+    // `onStyleReady`.
+    applyStoryEnvironment(s, { allowBasemapSwitch: true });
+}
+
+/**
+ * Enregistre les réglages de scène, une fois le calme revenu.
+ *
+ * Le débounce n'est pas un confort : l'arc solaire émet un réglage par pixel
+ * parcouru, et le curseur d'exagération autant. Écrire à chaque émission
+ * enverrait des dizaines d'actions à Grist pour un seul geste.
+ */
+let _persistPrefsTimer = null;
+function persistScenePrefsDifferee(delai = 600) {
+    clearTimeout(_persistPrefsTimer);
+    _persistPrefsTimer = setTimeout(() => { persistScenePrefs(); }, delai);
 }
 
 async function persistScenePrefs() {
     if (!CONFIG.grist.ready || CONFIG.viewMode) return;
-    if (!assertCanWrite('enregistrer les contrôles scène')) return;
+    if (!assertCanWrite('enregistrer les réglages de scène')) return;
     try {
-        await saveScenePrefs(grist.docApi, { viewerControls: STATE.viewerControls }, { viewMode: false });
+        await saveScenePrefs(grist.docApi, {
+            viewerControls: STATE.viewerControls,
+            settings: STATE.settings,
+        }, { viewMode: false });
     } catch (e) {
         console.warn('[Atlas] saveScenePrefs', e.message);
     }
@@ -6604,7 +6641,7 @@ const A = {
         } else min = { dawn: 390, day: 750, dusk: 1110, night: 1380 }[p];
         STATE.settings.timeOfDay = min; updateLighting(); renderSoleil();
     },
-    setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; },
+    setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; persistScenePrefsDifferee(); },
     setSunDate(v) { STATE.settings.date = new Date(v + 'T12:00:00'); updateLighting(); renderSoleil(); },
     toggleSetting(key) {
         STATE.settings[key] = !STATE.settings[key];
@@ -6618,6 +6655,7 @@ const A = {
             $('shadow-toggle')?.classList.toggle('on', STATE.settings.shadows);
         }
         if (STATE.currentModule === 'vues') renderVues(); else if (STATE.currentModule === 'soleil') renderSoleil();
+        persistScenePrefsDifferee();
     },
 
     // Vue
@@ -6627,7 +6665,7 @@ const A = {
     },
     setPitch(v) { map.setPitch(+v); $('v-pitch').textContent = Math.round(v) + '°'; },
     setBearing(v) { map.setBearing(+v); $('v-bearing').textContent = Math.round(v) + '°'; },
-    setExag(v) { STATE.settings.terrainExaggeration = +v; $('v-exag').textContent = v + '×'; if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); } },
+    setExag(v) { STATE.settings.terrainExaggeration = +v; $('v-exag').textContent = v + '×'; if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); } persistScenePrefsDifferee(); },
     setBasemap(k) {
         if (CONFIG.viewMode) {
             const allowed = basemapChoicesForDock();
@@ -6642,6 +6680,10 @@ const A = {
         map.setStyle(b.style ? b.style() : b.url);
         map.once('idle', onStyleReady);
         refreshControlsDock();
+        // Le fond est le réglage qu'on remarque le plus en revenant sur un
+        // document : le retrouver au défaut donne l'impression que rien n'a
+        // été gardé, même quand tout le reste l'a été.
+        persistScenePrefsDifferee(200);
     },
     setView3d(on) {
         if (!map) return;
@@ -7130,6 +7172,9 @@ function wireMapControlsDock() {
             STATE.settings.timeOfDay = Math.round(360 + r * 840);
             updateLighting();
             if (STATE.currentModule === 'soleil') renderSoleil();
+            // Le débounce absorbe le geste : un glissement d'arc émet une
+            // valeur par pixel parcouru, on n'écrit qu'à l'arrêt.
+            persistScenePrefsDifferee();
         };
         // Pointer Events : un seul jeu d'écouteurs pour souris, doigt et stylet.
         // La capture est prise sur l'hôte, pas sur l'arc : `renderDockSlotHost`

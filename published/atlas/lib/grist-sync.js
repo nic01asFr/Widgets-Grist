@@ -7,20 +7,20 @@ import {
   flattenCoords2D,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.4.1';
+} from './grist-rows.js?v=1.5.0';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.4.1';
+} from './manifest-binding.js?v=1.5.0';
 import { parseGristBool } from './grist-bool.js';
-import { isModelLayer } from './model-layer.js?v=1.4.1';
+import { isModelLayer } from './model-layer.js?v=1.5.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.4.1';
+} from './declarative-style.js?v=1.5.0';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 

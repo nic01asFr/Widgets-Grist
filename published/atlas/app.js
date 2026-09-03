@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.4.1';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.4.1';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.4.1';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.4.1';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.4.1';
+} from './lib/scene-loader.js?v=1.5.0';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.0';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.4.1';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.4.1';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.4.1';
+} from './lib/layer-order.js?v=1.5.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.0';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.0';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.4.1';
+} from './lib/terrain-base.js?v=1.5.0';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.4.1';
+} from './lib/grist-sync.js?v=1.5.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.4.1';
+} from './lib/declarative-style.js?v=1.5.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.4.1';
+} from './lib/geo-tables.js?v=1.5.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.4.1';
+} from './lib/controls.js?v=1.5.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.4.1';
+} from './lib/story.js?v=1.5.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.4.1';
+} from './lib/manifest-binding.js?v=1.5.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.4.1';
+} from './lib/viewport.js?v=1.5.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.4.1';
+} from './lib/view-mode.js?v=1.5.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.4.1';
+} from './lib/viewer-controls.js?v=1.5.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.4.1';
+} from './lib/scene-prefs.js?v=1.5.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3594,13 +3594,50 @@ async function syncScenePrefsFromGrist() {
     if (!CONFIG.grist.ready) return;
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
+
+    // Les réglages retenus la fois d'avant priment sur les défauts du code :
+    // qui a choisi un fond veut le retrouver, pas repartir de « liberty ». Ils
+    // ne priment pas sur une étape de récit, qui décrit un état voulu par
+    // l'auteur et s'applique après.
+    const s = prefs.settings;
+    if (!s || !Object.keys(s).length) return;
+
+    // Ceux que `applyStoryEnvironment` ne connaît pas, posés d'abord pour que
+    // l'application du relief les voie.
+    if (Number.isFinite(s.terrainExaggeration)) STATE.settings.terrainExaggeration = s.terrainExaggeration;
+    if (s.terrainSource) STATE.settings.terrainSource = s.terrainSource;
+    if (s.modelSet) { STATE.settings.modelSet = s.modelSet; MODEL_LIBRARY.set = s.modelSet; }
+
+    // Le reste passe par le chemin du récit, qui **applique** au lieu de se
+    // contenter d'affecter : un `Object.assign` sur `STATE.settings` changerait
+    // la valeur sans toucher la carte — le fond mémorisé serait lu, écrit dans
+    // l'état, et la carte garderait le style déjà chargé. `setStyle` détruit
+    // les couches montées ; `applyStoryEnvironment` les remonte, via
+    // `onStyleReady`.
+    applyStoryEnvironment(s, { allowBasemapSwitch: true });
+}
+
+/**
+ * Enregistre les réglages de scène, une fois le calme revenu.
+ *
+ * Le débounce n'est pas un confort : l'arc solaire émet un réglage par pixel
+ * parcouru, et le curseur d'exagération autant. Écrire à chaque émission
+ * enverrait des dizaines d'actions à Grist pour un seul geste.
+ */
+let _persistPrefsTimer = null;
+function persistScenePrefsDifferee(delai = 600) {
+    clearTimeout(_persistPrefsTimer);
+    _persistPrefsTimer = setTimeout(() => { persistScenePrefs(); }, delai);
 }
 
 async function persistScenePrefs() {
     if (!CONFIG.grist.ready || CONFIG.viewMode) return;
-    if (!assertCanWrite('enregistrer les contrôles scène')) return;
+    if (!assertCanWrite('enregistrer les réglages de scène')) return;
     try {
-        await saveScenePrefs(grist.docApi, { viewerControls: STATE.viewerControls }, { viewMode: false });
+        await saveScenePrefs(grist.docApi, {
+            viewerControls: STATE.viewerControls,
+            settings: STATE.settings,
+        }, { viewMode: false });
     } catch (e) {
         console.warn('[Atlas] saveScenePrefs', e.message);
     }
@@ -5278,7 +5315,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.4.1');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.0');
     return Feuille;
 }
 
@@ -5395,10 +5432,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.4.1'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.5.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.4.1');
+        const dc = await import('./lib/data-client.js?v=1.5.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -6604,7 +6641,7 @@ const A = {
         } else min = { dawn: 390, day: 750, dusk: 1110, night: 1380 }[p];
         STATE.settings.timeOfDay = min; updateLighting(); renderSoleil();
     },
-    setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; },
+    setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; persistScenePrefsDifferee(); },
     setSunDate(v) { STATE.settings.date = new Date(v + 'T12:00:00'); updateLighting(); renderSoleil(); },
     toggleSetting(key) {
         STATE.settings[key] = !STATE.settings[key];
@@ -6618,6 +6655,7 @@ const A = {
             $('shadow-toggle')?.classList.toggle('on', STATE.settings.shadows);
         }
         if (STATE.currentModule === 'vues') renderVues(); else if (STATE.currentModule === 'soleil') renderSoleil();
+        persistScenePrefsDifferee();
     },
 
     // Vue
@@ -6627,7 +6665,7 @@ const A = {
     },
     setPitch(v) { map.setPitch(+v); $('v-pitch').textContent = Math.round(v) + '°'; },
     setBearing(v) { map.setBearing(+v); $('v-bearing').textContent = Math.round(v) + '°'; },
-    setExag(v) { STATE.settings.terrainExaggeration = +v; $('v-exag').textContent = v + '×'; if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); } },
+    setExag(v) { STATE.settings.terrainExaggeration = +v; $('v-exag').textContent = v + '×'; if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); } persistScenePrefsDifferee(); },
     setBasemap(k) {
         if (CONFIG.viewMode) {
             const allowed = basemapChoicesForDock();
@@ -6642,6 +6680,10 @@ const A = {
         map.setStyle(b.style ? b.style() : b.url);
         map.once('idle', onStyleReady);
         refreshControlsDock();
+        // Le fond est le réglage qu'on remarque le plus en revenant sur un
+        // document : le retrouver au défaut donne l'impression que rien n'a
+        // été gardé, même quand tout le reste l'a été.
+        persistScenePrefsDifferee(200);
     },
     setView3d(on) {
         if (!map) return;
@@ -7130,6 +7172,9 @@ function wireMapControlsDock() {
             STATE.settings.timeOfDay = Math.round(360 + r * 840);
             updateLighting();
             if (STATE.currentModule === 'soleil') renderSoleil();
+            // Le débounce absorbe le geste : un glissement d'arc émet une
+            // valeur par pixel parcouru, on n'écrit qu'à l'arrêt.
+            persistScenePrefsDifferee();
         };
         // Pointer Events : un seul jeu d'écouteurs pour souris, doigt et stylet.
         // La capture est prise sur l'hôte, pas sur l'arc : `renderDockSlotHost`
@@ -7303,9 +7348,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.4.1');
+        const { capacites } = await import('./lib/data-client.js?v=1.5.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.4.1');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

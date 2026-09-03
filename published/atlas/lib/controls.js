@@ -7,7 +7,7 @@ import {
   parsePropertyNumber,
   resolveFeaturePropertyKey,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.4.1';
+} from './declarative-style.js?v=1.5.0';
 
 export function layerFieldNames(layer) {
   if (layer._fields?.length) {
