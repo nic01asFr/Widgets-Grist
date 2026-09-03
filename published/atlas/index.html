@@ -805,6 +805,21 @@
         body.view-mode #map-controls-dock:not(.has-pills) { display: none !important; }
         body.view-mode #map-controls-dock.has-pills { display: flex !important; }
         body.story-presenting #map-controls-dock { display: none !important; }
+        /* Récit : la bulle occupe le bas de la carte, la légende le coin bas
+           gauche. Les deux tiennent côte à côte sur un large écran ; sous
+           ~1080 px la bulle recouvre la légende — mesuré à 824 px de large :
+           49 % de sa hauteur, c'est-à-dire les classes que l'étape est
+           justement en train de montrer. Cette largeur n'a rien d'un cas
+           limite : c'est celle d'un widget Grist dans une colonne.
+
+           On remonte la légende plutôt que de la replier — elle nomme ce qu'on
+           regarde — et on borne sa hauteur pour qu'elle ne sorte pas par le
+           haut sur une fenêtre courte. Sous 720 px, le mode mobile a ses
+           propres ancrages : la règle s'arrête avant, pour ne pas les défaire. */
+        @media (min-width: 721px) and (max-width: 1080px) {
+            body.story-presenting .legend { bottom: 196px; }
+            body.story-presenting .legend-body { max-height: min(220px, 32vh); }
+        }
         body.view-mode .selection-bar,
         body.view-mode .selection-bar.open { display: none !important; }
         body.view-mode .inspector { display: none !important; }
@@ -1253,6 +1268,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.4.0"></script>
+    <script type="module" src="./app.js?v=1.4.1"></script>
 </body>
 </html>

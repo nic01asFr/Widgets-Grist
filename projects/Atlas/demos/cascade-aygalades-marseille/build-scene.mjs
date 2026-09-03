@@ -362,7 +362,7 @@ const scene = {
       polygonMode: 'flat',
       controls: [
         { field: 'usage', type: 'select', label: 'Usage du sol', active: false,
-          options: ['Activité', 'Ferroviaire', 'Espace vert'] },
+          values: ['Activité', 'Ferroviaire', 'Espace vert'] },
       ],
       popup: '<b>{name}</b><br>{usage} — {detail}',
       fields: [
@@ -388,7 +388,7 @@ const scene = {
         { field: 'height_m', type: 'range', label: 'Hauteur (m)', active: true,
           min: 3, max: 71, dataMin: 3.2, dataMax: 70.4 },
         { field: 'height_source', type: 'select', label: 'Origine de la hauteur',
-          active: false, options: ['osm', 'defaut'] },
+          active: false, values: ['osm', 'defaut'] },
       ],
       popup: '<b>{name}</b><br>Hauteur : {height_m} m ({height_source})<br><small>OSM {osm_id}</small>',
       fields: [
@@ -412,7 +412,7 @@ const scene = {
     geo(COUCHES.eau, 'Ruisseau et canal', 4, 'line', './eau.geojson', N.eau, EAU_COUVERT, {
       controls: [
         { field: 'couvert', type: 'select', label: 'Tracé', active: true,
-          options: ['à ciel ouvert', 'busé'] },
+          values: ['à ciel ouvert', 'busé'] },
       ],
       popup: '<b>{name}</b><br>{nature} — {couvert}<br><small>OSM {osm_id}</small>',
       fields: [
@@ -454,7 +454,7 @@ const scene = {
       crs: 'EPSG:4326',
       controls: [
         { field: 'type', type: 'select', label: 'Type de mobilier', active: false,
-          options: ['Arbre', 'Lampadaire', 'Banc', 'Arrêt de bus'] },
+          values: ['Arbre', 'Lampadaire', 'Banc', 'Arrêt de bus'] },
       ],
       popup_template: '<b>{type}</b><br>{name}<br><small>OSM {osm_id}</small>',
       fields: [

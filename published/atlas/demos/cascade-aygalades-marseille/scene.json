@@ -6,7 +6,7 @@
   "provenance": {
     "producer": "atlas-demo/overpass",
     "attribution": "© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)",
-    "extracted_at": "2026-09-03T10:24:15.487Z",
+    "extracted_at": "2026-09-03T13:02:59.729Z",
     "bbox": [
       5.3533904,
       43.3454196,
@@ -82,7 +82,7 @@
           "type": "select",
           "label": "Usage du sol",
           "active": false,
-          "options": [
+          "values": [
             "Activité",
             "Ferroviaire",
             "Espace vert"
@@ -160,7 +160,7 @@
           "type": "select",
           "label": "Origine de la hauteur",
           "active": false,
-          "options": [
+          "values": [
             "osm",
             "defaut"
           ]
@@ -330,7 +330,7 @@
           "type": "select",
           "label": "Tracé",
           "active": true,
-          "options": [
+          "values": [
             "à ciel ouvert",
             "busé"
           ]
@@ -6771,7 +6771,7 @@
           "type": "select",
           "label": "Type de mobilier",
           "active": false,
-          "options": [
+          "values": [
             "Arbre",
             "Lampadaire",
             "Banc",

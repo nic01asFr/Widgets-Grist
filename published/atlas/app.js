@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.4.0';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.4.1';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.4.0';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.4.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.4.0';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.4.0';
+} from './lib/scene-loader.js?v=1.4.1';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.4.1';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.4.1';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.4.1';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.4.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.4.0';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.4.0';
+} from './lib/layer-order.js?v=1.4.1';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.4.1';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.4.1';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.4.0';
+} from './lib/terrain-base.js?v=1.4.1';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.4.0';
+} from './lib/grist-sync.js?v=1.4.1';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.4.0';
+} from './lib/declarative-style.js?v=1.4.1';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.4.0';
+} from './lib/geo-tables.js?v=1.4.1';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.4.0';
+} from './lib/controls.js?v=1.4.1';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.4.0';
+} from './lib/story.js?v=1.4.1';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.4.0';
+} from './lib/manifest-binding.js?v=1.4.1';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.4.0';
+} from './lib/viewport.js?v=1.4.1';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.4.0';
+} from './lib/view-mode.js?v=1.4.1';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.4.0';
+} from './lib/viewer-controls.js?v=1.4.1';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.4.0';
+} from './lib/scene-prefs.js?v=1.4.1';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3541,6 +3541,24 @@ function refreshControlsDock() {
         dock.classList.add('collapsed');
     }
 
+    // Sans pastille ouverte, le seul état cohérent est « replié ».
+    //
+    // Le CSS lie les deux moitiés du dock : `.collapsed` montre les pastilles et
+    // cache le panneau, son absence fait l'inverse. Or `wireMapControlsDock` part
+    // sur `collapsed = false` quand rien n'est mémorisé — le cas de toute
+    // première ouverture. Le panneau, lui, ne se remplit que s'il y a une
+    // pastille ouverte. Les deux moitiés se retrouvaient donc vides en même
+    // temps : les pastilles rendues mais masquées par
+    // `:not(.collapsed) .dock-fabs { display: none }`, le panneau affiché mais
+    // sans contenu.
+    //
+    // À l'écran : un rectangle nu de 61 px portant le seul bouton « Replier »,
+    // et des contrôles inatteignables. Le défaut est resté invisible tant
+    // qu'aucune scène ne déclarait de contrôle **actif** — `listDockPills` ne
+    // retenant que ceux-là, `hasPills` était faux et la fonction sortait avant
+    // d'en arriver ici.
+    if (!_openDockPill) dock.classList.add('collapsed');
+
     fabsHost.innerHTML = pills.map((p) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
@@ -5260,7 +5278,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.4.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.4.1');
     return Feuille;
 }
 
@@ -5377,10 +5395,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.4.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.4.1'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.4.0');
+        const dc = await import('./lib/data-client.js?v=1.4.1');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7285,9 +7303,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.4.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.4.1');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.4.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.4.1');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

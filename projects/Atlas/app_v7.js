@@ -3541,6 +3541,24 @@ function refreshControlsDock() {
         dock.classList.add('collapsed');
     }
 
+    // Sans pastille ouverte, le seul état cohérent est « replié ».
+    //
+    // Le CSS lie les deux moitiés du dock : `.collapsed` montre les pastilles et
+    // cache le panneau, son absence fait l'inverse. Or `wireMapControlsDock` part
+    // sur `collapsed = false` quand rien n'est mémorisé — le cas de toute
+    // première ouverture. Le panneau, lui, ne se remplit que s'il y a une
+    // pastille ouverte. Les deux moitiés se retrouvaient donc vides en même
+    // temps : les pastilles rendues mais masquées par
+    // `:not(.collapsed) .dock-fabs { display: none }`, le panneau affiché mais
+    // sans contenu.
+    //
+    // À l'écran : un rectangle nu de 61 px portant le seul bouton « Replier »,
+    // et des contrôles inatteignables. Le défaut est resté invisible tant
+    // qu'aucune scène ne déclarait de contrôle **actif** — `listDockPills` ne
+    // retenant que ceux-là, `hasPills` était faux et la fonction sortait avant
+    // d'en arriver ici.
+    if (!_openDockPill) dock.classList.add('collapsed');
+
     fabsHost.innerHTML = pills.map((p) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
