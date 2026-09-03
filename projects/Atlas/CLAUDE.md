@@ -788,6 +788,46 @@ Trois orthographes sont lues (`visibility.minZoom`, `visibility.min_zoom`,
 `min_zoom` de la cascade de tuiles) : n'en lire qu'une serait un pont rompu de
 plus.
 
+### Une couche à modèles 3D doit porter ses entités
+
+Les instances sont construites en parcourant `filteredGeoJSON(layer).features`
+et en lisant `feature.geometry.coordinates`. Sur une couche servie par **URL**,
+Atlas ne détient pas les entités : MapLibre les a, lui, mais Atlas n'y accède
+pas. La liste est vide, et **rien n'est instancié**.
+
+Le symptôme est trompeur : la couche est bien montée, la légende l'affiche avec
+son compte déclaré et ses classes, le catalogue est chargé — et la carte reste
+nue. Rien ne signale que le placement n'a jamais eu lieu ; on cherche du côté du
+modèle, de l'échelle ou du zoom.
+
+> **La règle** : `style.mode: 'library'` comme `'custom'` exigent une couche
+> `inline` ou `table`. Éprouvé sur la démo des Aygalades — 374 objets de
+> mobilier servis par URL n'affichaient rien ; les mêmes en `inline` (76 Ko)
+> donnent 1 245 instances.
+
+Corollaire visible, et voulu : une couche `inline` étant comptée pour de vrai,
+sa légende affiche « Lampadaire 239 » sans le « ≈ » des couches distantes.
+
+**`_modelId` par entité prime sur `style.library.modelId`.** Une seule couche
+peut donc porter plusieurs modèles — lampadaires, arbres, bancs, abribus — et le
+choix appartient à la donnée, pas à la couche. `style.library.modelId` n'est
+alors qu'un repli pour les entités qui n'en déclarent aucun.
+
+### Un contrôle inactif n'existe pas pour le lecteur
+
+Seuls les contrôles `active: true` deviennent des pastilles (`listDockPills`).
+Le schéma pose pourtant `active: false` par défaut, avec une bonne raison — « un
+contrôle proposé n'est pas un contrôle appliqué ».
+
+Les deux règles se combinent mal sur une **scène publiée** : le mode vitrine
+refuse aussi le rail d'auteur, donc un contrôle déclaré mais inactif n'a
+strictement aucun point d'entrée. Il est dans le manifeste, il n'est nulle part
+à l'écran.
+
+> Une scène destinée à être lue doit activer ce qu'elle veut rendre manipulable,
+> avec des bornes couvrant toute la plage : le filtre est alors visible sans rien
+> retrancher tant qu'on n'y touche pas.
+
 ### Couches de service externe — `xyz` seulement
 
 Une couche `source.type: "xyz"` devient une source `raster` : MapLibre va

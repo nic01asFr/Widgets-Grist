@@ -6,7 +6,7 @@
   "provenance": {
     "producer": "atlas-demo/overpass",
     "attribution": "© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)",
-    "extracted_at": "2026-09-03T09:26:43.954Z",
+    "extracted_at": "2026-09-03T10:24:15.487Z",
     "bbox": [
       5.3533904,
       43.3454196,
@@ -75,7 +75,21 @@
           "name": "detail",
           "gType": "Text"
         }
-      ]
+      ],
+      "controls": [
+        {
+          "field": "usage",
+          "type": "select",
+          "label": "Usage du sol",
+          "active": false,
+          "options": [
+            "Activité",
+            "Ferroviaire",
+            "Espace vert"
+          ]
+        }
+      ],
+      "popup_template": "<b>{name}</b><br>{usage} — {detail}"
     },
     {
       "id": "aygalades-bati",
@@ -129,7 +143,30 @@
           "name": "levels",
           "gType": "Text"
         }
-      ]
+      ],
+      "controls": [
+        {
+          "field": "height_m",
+          "type": "range",
+          "label": "Hauteur (m)",
+          "active": true,
+          "min": 3,
+          "max": 71,
+          "dataMin": 3.2,
+          "dataMax": 70.4
+        },
+        {
+          "field": "height_source",
+          "type": "select",
+          "label": "Origine de la hauteur",
+          "active": false,
+          "options": [
+            "osm",
+            "defaut"
+          ]
+        }
+      ],
+      "popup_template": "<b>{name}</b><br>Hauteur : {height_m} m ({height_source})<br><small>OSM {osm_id}</small>"
     },
     {
       "id": "aygalades-rail",
@@ -286,12 +323,6482 @@
           "name": "couvert",
           "gType": "Text"
         }
+      ],
+      "controls": [
+        {
+          "field": "couvert",
+          "type": "select",
+          "label": "Tracé",
+          "active": true,
+          "options": [
+            "à ciel ouvert",
+            "busé"
+          ]
+        }
+      ],
+      "popup_template": "<b>{name}</b><br>{nature} — {couvert}<br><small>OSM {osm_id}</small>"
+    },
+    {
+      "id": "aygalades-mobilier",
+      "name": "Mobilier urbain",
+      "order": 5,
+      "geometry_type": "point",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false,
+        "minZoom": 16
+      },
+      "style": {
+        "mode": "library",
+        "library": {
+          "modelId": "streetlamp"
+        },
+        "common": {
+          "scale": 1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "offsetX": 0,
+          "offsetY": 0,
+          "offsetZ": 0
+        },
+        "declarative": {
+          "kind": "categorized",
+          "field": "type",
+          "stops": [
+            {
+              "value": "Arbre",
+              "color": "#5b8c4a",
+              "opacity": 1
+            },
+            {
+              "value": "Lampadaire",
+              "color": "#c9a227",
+              "opacity": 1
+            },
+            {
+              "value": "Banc",
+              "color": "#a0724a",
+              "opacity": 1
+            },
+            {
+              "value": "Arrêt de bus",
+              "color": "#4a7fa0",
+              "opacity": 1
+            }
+          ],
+          "fallback": "#8a8478"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/1965116469",
+              "name": "Saint-Louis Camau",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588539,
+                43.3499828
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203251626",
+              "name": "Aygalades Village",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3667411,
+                43.353399
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203251627",
+              "name": "Aygalades Village",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3672085,
+                43.3533322
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203251628",
+              "name": "Boulevard de la Gare",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366838,
+                43.3571872
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203251629",
+              "name": "Boulevard de la Gare",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3671521,
+                43.3572498
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203251685",
+              "name": "Les Aygalades",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3685695,
+                43.35696
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203619483",
+              "name": "Cité des Arts de la Rue",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365282,
+                43.3516155
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/2203619484",
+              "name": "Cité des Arts de la Rue",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3655097,
+                43.3521516
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550925917",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663871,
+                43.35123
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550926269",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3665487,
+                43.3510204
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550926655",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3665099,
+                43.3510311
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550926673",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366367,
+                43.3512622
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550926686",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663348,
+                43.3513007
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4550927489",
+              "name": null,
+              "type": "Banc",
+              "_modelId": "bench",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663731,
+                43.35133
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901244913",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582325,
+                43.3517802
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901244993",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586969,
+                43.3498747
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901244994",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586942,
+                43.3499411
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245007",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587019,
+                43.3508352
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245011",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586663,
+                43.3509122
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245017",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586181,
+                43.3509951
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245071",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586808,
+                43.3499986
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245108",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3585396,
+                43.3511712
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245120",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581024,
+                43.3516105
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245132",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358494,
+                43.3512579
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245139",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582654,
+                43.351667
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245143",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581923,
+                43.3518406
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245147",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581011,
+                43.3520279
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/4901245375",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581487,
+                43.3519523
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537546390",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3664874,
+                43.3542626
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537546391",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3661776,
+                43.3543074
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549076",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3664055,
+                43.3544596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549118",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366077,
+                43.3543152
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549189",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663479,
+                43.3544635
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549190",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366533,
+                43.3543893
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549191",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3661561,
+                43.3544615
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549192",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366191,
+                43.3542421
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549193",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366073,
+                43.3543669
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549737",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3664659,
+                43.3544605
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549738",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3662916,
+                43.3544557
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549739",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663197,
+                43.3545941
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549740",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3661695,
+                43.3543835
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549741",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3660837,
+                43.3542294
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5537549742",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3660488,
+                43.354443
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/5872864840",
+              "name": "Saint-Louis Camau",
+              "type": "Arrêt de bus",
+              "_modelId": "bus_shelter",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586835,
+                43.3502785
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174688",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3652924,
+                43.3534912
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174689",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3653729,
+                43.3534708
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174690",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3655982,
+                43.3534269
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174691",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3654695,
+                43.3534513
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174692",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3654574,
+                43.3533781
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174693",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3655633,
+                43.3532894
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174694",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3656505,
+                43.353263
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/7158174695",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365672,
+                43.3533372
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555273272",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366209,
+                43.354875
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555317892",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367815,
+                43.357208
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555317895",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368519,
+                43.356956
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555326253",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362655,
+                43.354877
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555326254",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362685,
+                43.354588
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555326255",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358873,
+                43.350983
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555332376",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367449,
+                43.357903
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555336506",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362808,
+                43.354004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555336507",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362561,
+                43.353578
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555336640",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367859,
+                43.354263
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555336684",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366232,
+                43.355091
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337344",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368771,
+                43.354546
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337345",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368641,
+                43.354774
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337346",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368417,
+                43.354904
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337347",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368165,
+                43.355045
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337348",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36787,
+                43.35516
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337349",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367561,
+                43.355186
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337350",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36842,
+                43.355209
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555337975",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3672571,
+                43.355217
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339430",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365678,
+                43.353172
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339431",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367191,
+                43.355041
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339535",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358321,
+                43.353756
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339536",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358095,
+                43.353836
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339540",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358222,
+                43.355228
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339541",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358597,
+                43.354958
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339544",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586531,
+                43.352695
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339545",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358351,
+                43.355019
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339582",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360874,
+                43.352249
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339604",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359546,
+                43.352173
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339605",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359379,
+                43.35202
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339747",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365345,
+                43.353407
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339748",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365507,
+                43.353172
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339749",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367281,
+                43.356758
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339750",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366811,
+                43.354965
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339751",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365257,
+                43.354958
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339752",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36532,
+                43.35421
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339957",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366781,
+                43.355324
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555339958",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663061,
+                43.355244
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555340379",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362205,
+                43.353001
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555340381",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358962,
+                43.356436
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555340403",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360395,
+                43.351829
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341125",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.364054,
+                43.353802
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341175",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358696,
+                43.351753
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341538",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362685,
+                43.354279
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341539",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35839,
+                43.35453
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341540",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358299,
+                43.354275
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341541",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358214,
+                43.354053
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341567",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365586,
+                43.352478
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341568",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365538,
+                43.352253
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341569",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365434,
+                43.35181
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341570",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365382,
+                43.351585
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341571",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3653,
+                43.351101
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341572",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365354,
+                43.350872
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341573",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365468,
+                43.350636
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341620",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.363904,
+                43.354012
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341621",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.363777,
+                43.354191
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341722",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3651459,
+                43.352623
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555341757",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.364887,
+                43.352859
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342030",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3617145,
+                43.3555997
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342031",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361715,
+                43.355415
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342344",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365943,
+                43.357815
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342763",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35994,
+                43.352139
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342764",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359229,
+                43.351646
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342765",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359432,
+                43.351425
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342766",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590859,
+                43.351326
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342767",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359693,
+                43.351524
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342768",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359766,
+                43.351707
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342774",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3663651,
+                43.356785
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342775",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366518,
+                43.356274
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555342776",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366237,
+                43.354874
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555343115",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.364414,
+                43.353344
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555343150",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366678,
+                43.357388
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555344606",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367115,
+                43.35725
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555344670",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367479,
+                43.35696
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555344747",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3657969,
+                43.357979
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555344808",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367482,
+                43.357227
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555344948",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3655129,
+                43.354971
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345082",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365677,
+                43.355367
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345140",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361013,
+                43.352879
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345142",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361989,
+                43.349987
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345143",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36202,
+                43.350609
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345280",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362046,
+                43.352772
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345281",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36211,
+                43.352406
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345282",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362061,
+                43.35181
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345283",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362014,
+                43.351219
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345284",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3606541,
+                43.353584
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345285",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360604,
+                43.352238
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345286",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361268,
+                43.352299
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345287",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3618429,
+                43.352661
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345437",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3598109,
+                43.351925
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345438",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368159,
+                43.357105
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345577",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365511,
+                43.355152
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345645",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367098,
+                43.356567
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345646",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366849,
+                43.356312
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345824",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359581,
+                43.351219
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345906",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581881,
+                43.355068
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345907",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581,
+                43.354786
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345908",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3580129,
+                43.3523795
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345909",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359402,
+                43.3523537
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555345913",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358417,
+                43.351059
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555346124",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365614,
+                43.352867
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555346205",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358472,
+                43.356281
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555347285",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365485,
+                43.352032
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555347286",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365325,
+                43.351345
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348043",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367468,
+                43.349579
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348111",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365546,
+                43.352688
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348165",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362387,
+                43.353298
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348276",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359014,
+                43.351871
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348278",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362134,
+                43.352695
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348279",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3626721,
+                43.353764
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348395",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362086,
+                43.352112
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348396",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362035,
+                43.351501
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348397",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36204,
+                43.3503
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555348398",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361932,
+                43.349663
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349508",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366144,
+                43.357689
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349509",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366489,
+                43.357494
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349510",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366876,
+                43.357284
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349511",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3672321,
+                43.357094
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349922",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35928,
+                43.35244
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555349923",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358187,
+                43.352242
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350367",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358647,
+                43.351467
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350384",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587769,
+                43.3512161
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350385",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358533,
+                43.351685
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350411",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358878,
+                43.352543
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350461",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35887,
+                43.356248
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350503",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368044,
+                43.353672
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350504",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3681559,
+                43.353477
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350605",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358167,
+                43.349949
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350606",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361575,
+                43.354225
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350607",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361432,
+                43.353996
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350608",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361271,
+                43.353687
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350609",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361214,
+                43.353344
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350651",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360622,
+                43.352486
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350659",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3606145,
+                43.353354
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350661",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360299,
+                43.353878
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350662",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360996,
+                43.353752
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350721",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367971,
+                43.35387
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350725",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367995,
+                43.354015
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350738",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35805,
+                43.351833
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350739",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358725,
+                43.349751
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350857",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360257,
+                43.352524
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350858",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361788,
+                43.355194
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350859",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36195,
+                43.354969
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350864",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360517,
+                43.353153
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350880",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361952,
+                43.354717
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8555350881",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361731,
+                43.354481
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556901863",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3686271,
+                43.357288
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556901864",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368323,
+                43.357437
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556903358",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358545,
+                43.350809
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556903359",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358631,
+                43.350533
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556903360",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586589,
+                43.350292
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556903405",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360169,
+                43.352795
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556903874",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367095,
+                43.357883
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904328",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368087,
+                43.357754
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904329",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36769,
+                43.357872
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904367",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367857,
+                43.356728
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904768",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367758,
+                43.355732
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904769",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3679329,
+                43.356487
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904838",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3687421,
+                43.355034
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556904839",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368058,
+                43.355415
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556906468",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3656979,
+                43.353443
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556906563",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360406,
+                43.352962
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556906619",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365532,
+                43.354244
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556907263",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.35889,
+                43.350601
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556907494",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365415,
+                43.352467
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556907723",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361726,
+                43.355793
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908010",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583349,
+                43.351971
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908011",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359943,
+                43.352219
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908013",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3662059,
+                43.357079
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908014",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366758,
+                43.355511
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908015",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36714,
+                43.355453
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908016",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366702,
+                43.354889
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908017",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366566,
+                43.356033
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908018",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366313,
+                43.35569
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908046",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361661,
+                43.352478
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908073",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36463,
+                43.353096
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908157",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3641941,
+                43.3536
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908640",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.366449,
+                43.356556
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908641",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367623,
+                43.356832
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908642",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36605,
+                43.357368
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908749",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3636601,
+                43.354246
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908996",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3668,
+                43.355118
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556908997",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36593,
+                43.354862
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556909155",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360157,
+                43.35194
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556910448",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359874,
+                43.35207
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556910449",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.362916,
+                43.354195
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556911380",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361129,
+                43.353073
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556911381",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360895,
+                43.35268
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556911805",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359676,
+                43.352345
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556912046",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581111,
+                43.353245
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556912047",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358958,
+                43.35075
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556912189",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360683,
+                43.353779
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556932951",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368958,
+                43.357793
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934409",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367899,
+                43.356277
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934488",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.365593,
+                43.35297
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934489",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367836,
+                43.356045
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934573",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582931,
+                43.353062
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934646",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36885,
+                43.356792
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934666",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3602981,
+                43.352219
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934701",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581839,
+                43.351547
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934778",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3633429,
+                43.354275
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934782",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.361985,
+                43.350883
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/8556934858",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358468,
+                43.352882
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442964",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588895,
+                43.3553515
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442965",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3591175,
+                43.3554966
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442966",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582062,
+                43.3556655
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442967",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590246,
+                43.3555458
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442968",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586044,
+                43.355943
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442969",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586861,
+                43.3559387
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442970",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588157,
+                43.3559358
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442971",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590119,
+                43.3559273
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442972",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590953,
+                43.3559256
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442973",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3591922,
+                43.3557677
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442974",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3592903,
+                43.3557647
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442975",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358447,
+                43.3558087
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442976",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583568,
+                43.3558054
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442977",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587036,
+                43.3557927
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442978",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587975,
+                43.3557899
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442979",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588807,
+                43.3557854
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442980",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588029,
+                43.3557031
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442981",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3601992,
+                43.3558251
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442982",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3602847,
+                43.3558282
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442983",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3602034,
+                43.3557812
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442984",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3603014,
+                43.3557721
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442985",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3603702,
+                43.3557736
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442986",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3601284,
+                43.35581
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442987",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3601325,
+                43.3558828
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442988",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3603952,
+                43.3558267
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442993",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3581425,
+                43.3556038
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442996",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586352,
+                43.3558147
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442997",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583059,
+                43.3558164
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442998",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590017,
+                43.3558004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070442999",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593741,
+                43.355863
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070443000",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3597201,
+                43.3558218
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070443001",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3594518,
+                43.3556193
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070443002",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3592214,
+                43.3553418
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460639",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3599007,
+                43.3556703
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460666",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3599202,
+                43.3566017
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460749",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360088,
+                43.3557729
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460750",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3603395,
+                43.3556776
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460751",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3600768,
+                43.3561561
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460752",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3600681,
+                43.3560458
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460753",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3600572,
+                43.3558821
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460754",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3600862,
+                43.3562665
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460755",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3601334,
+                43.3566298
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460756",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3600797,
+                43.3564413
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460757",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3605677,
+                43.3566224
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460758",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608523,
+                43.3565532
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460759",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608378,
+                43.3563684
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460760",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3609228,
+                43.3565527
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460761",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608247,
+                43.3561836
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460762",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360963,
+                43.3567599
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460763",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608729,
+                43.356749
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460764",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360978,
+                43.3569346
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460765",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608996,
+                43.3569322
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460766",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3610046,
+                43.3571851
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460767",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3608838,
+                43.3571573
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460768",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3613744,
+                43.3571545
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460769",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.360628,
+                43.3572742
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460770",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3603091,
+                43.357287
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460771",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3598859,
+                43.3573178
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460772",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593743,
+                43.357274
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460773",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590291,
+                43.3572935
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460774",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586869,
+                43.3573167
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460775",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358366,
+                43.3573253
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460776",
+              "name": null,
+              "type": "Lampadaire",
+              "_modelId": "streetlamp",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3580094,
+                43.3573544
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460821",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593963,
+                43.3557401
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460822",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593921,
+                43.3556843
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460823",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593554,
+                43.355634
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460835",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590909,
+                43.3561172
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460836",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3593364,
+                43.3561246
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460837",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359436,
+                43.3561181
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460838",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3595265,
+                43.3561748
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460839",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.359599,
+                43.3561929
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460840",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358937,
+                43.3561156
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460841",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588951,
+                43.3561543
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460842",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587593,
+                43.3561674
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460843",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358688,
+                43.356174
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460844",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3585386,
+                43.3561814
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460845",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583576,
+                43.3561748
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460846",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582976,
+                43.3561847
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460848",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3595786,
+                43.3565953
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460849",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3596589,
+                43.3566356
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460850",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3595616,
+                43.3567179
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460851",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3596273,
+                43.3565632
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9070460852",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3599113,
+                43.3566644
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677564",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587316,
+                43.3554433
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677565",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588215,
+                43.3554497
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677566",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3589178,
+                43.3554497
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677567",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590056,
+                43.3554492
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677568",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590827,
+                43.3554436
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677569",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590118,
+                43.3554878
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677570",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3589594,
+                43.3554985
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677571",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3591404,
+                43.3554537
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677572",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587222,
+                43.355401
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677573",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586367,
+                43.3554268
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677574",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3585481,
+                43.3554514
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677575",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3584549,
+                43.3554777
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677576",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.358364,
+                43.3555052
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677577",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582831,
+                43.3555304
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677578",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582404,
+                43.3554358
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677579",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583175,
+                43.3554109
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677580",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3584074,
+                43.3553812
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677581",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3584885,
+                43.3553602
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677582",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3585804,
+                43.3553334
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677583",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3586722,
+                43.355309
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677584",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3587527,
+                43.3552861
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677585",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3588305,
+                43.3552574
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677586",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3589264,
+                43.3552305
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677587",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3590815,
+                43.3555333
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677588",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3583955,
+                43.3555587
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677589",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3584532,
+                43.3555548
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677590",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3582708,
+                43.3555782
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677591",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3580514,
+                43.3557775
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9254677592",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3580893,
+                43.3558178
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820670",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3620964,
+                43.3530309
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820671",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3620172,
+                43.352955
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820672",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3621456,
+                43.353116
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820673",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3624511,
+                43.3535962
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820676",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3625657,
+                43.3540947
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9266820677",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3626389,
+                43.3541034
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "osm_id": "node/9410161345",
+              "name": null,
+              "type": "Arbre",
+              "_modelId": "tree_deciduous",
+              "source": "OpenStreetMap"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3580855,
+                43.3512778
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 374,
+      "crs": "EPSG:4326",
+      "controls": [
+        {
+          "field": "type",
+          "type": "select",
+          "label": "Type de mobilier",
+          "active": false,
+          "options": [
+            "Arbre",
+            "Lampadaire",
+            "Banc",
+            "Arrêt de bus"
+          ]
+        }
+      ],
+      "popup_template": "<b>{type}</b><br>{name}<br><small>OSM {osm_id}</small>",
+      "fields": [
+        {
+          "name": "type",
+          "gType": "Text"
+        },
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "osm_id",
+          "gType": "Text"
+        }
       ]
     },
     {
       "id": "aygalades-cascade-3d",
       "name": "Cascade (relevé 3D)",
-      "order": 5,
+      "order": 6,
       "geometry_type": "point",
       "visible": true,
       "visibility": {
@@ -860,6 +7367,257 @@
       },
       {
         "id": "aygalades-6",
+        "title": "Le catalogue, posé sur de vraies données",
+        "description": "374 objets de mobilier relevés dans OSM — 239 lampadaires, 120 arbres, 6 bancs, 9 arrêts de bus. Chacun choisit son modèle dans le catalogue embarqué d'Atlas : une seule couche, quatre modèles, décidés par la donnée et non par la couche.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3639,
+              43.3534
+            ],
+            "zoom": 18.3,
+            "pitch": 62,
+            "bearing": -30
+          },
+          "projection": "mercator",
+          "timeOfDay": 1020,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "single",
+                "color": "#cabfae",
+                "opacity": 0.85
+              }
+            },
+            {
+              "id": "aygalades-voirie",
+              "name": "Voirie",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Autoroute",
+                    "color": "#c4453a",
+                    "opacity": 0.95
+                  },
+                  {
+                    "value": "Voie principale",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#9aa2ad",
+                    "opacity": 0.6
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            },
+            {
+              "id": "aygalades-mobilier",
+              "name": "Mobilier urbain",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "type",
+                "stops": [
+                  {
+                    "value": "Arbre",
+                    "color": "#5b8c4a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Lampadaire",
+                    "color": "#c9a227",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Banc",
+                    "color": "#a0724a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Arrêt de bus",
+                    "color": "#4a7fa0",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#8a8478"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-7",
+        "title": "Le vallon a une forme",
+        "description": "Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le tracé du ruisseau comme celui de l'autoroute. Les volumes reposent sur le sol échantillonné, pas sur le niveau de la mer — sans quoi le bâti d'un coteau s'enfoncerait sous la carte.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3652,
+              43.3524
+            ],
+            "zoom": 15,
+            "pitch": 68,
+            "bearing": 42
+          },
+          "projection": "mercator",
+          "timeOfDay": 540,
+          "terrain3D": true,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "graduated",
+                "field": "height_m",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 9,
+                    "color": "#e8dcc8",
+                    "opacity": 0.9
+                  },
+                  {
+                    "lower": 9,
+                    "upper": 15,
+                    "color": "#d4b483",
+                    "opacity": 0.9
+                  },
+                  {
+                    "lower": 15,
+                    "upper": 25,
+                    "color": "#c17f4a",
+                    "opacity": 0.92
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 200,
+                    "color": "#8c4a2f",
+                    "opacity": 0.95
+                  }
+                ],
+                "fallback": "#cfc7bb"
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            },
+            {
+              "id": "aygalades-voirie",
+              "name": "Voirie",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Autoroute",
+                    "color": "#c4453a",
+                    "opacity": 0.95
+                  },
+                  {
+                    "value": "Voie principale",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#9aa2ad",
+                    "opacity": 0.6
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-8",
         "title": "Ce qui reste ouvert",
         "description": "Les espaces verts déjà là — parcs Brégante, de l'Oasis, Varella — et le fond de vallon industriel, emprise du futur parc des Aygalades. La carte ne dit pas ce qui va advenir ; elle dit ce qu'il y a, et où il y a de la place.",
         "state": {

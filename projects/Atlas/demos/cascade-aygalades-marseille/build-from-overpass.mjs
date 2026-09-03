@@ -37,13 +37,24 @@ const QUERY = `[out:json][timeout:180];
 );
 out body geom;`;
 
-function postOverpass(body) {
-  return new Promise((resolve, reject) => {
+/**
+ * Les serveurs Overpass sont publics, gratuits et souvent satures.
+ *
+ * Le 504 n'est pas un cas rare a traiter par un message d'erreur : il est arrive
+ * a chaque instance essayee, en quelques minutes, sur une requete qui passait
+ * l'heure d'avant. Un script d'extraction qui abandonne au premier refus oblige
+ * a relancer a la main jusqu'a ce que ca tombe bien — donc on bascule.
+ */
+const MIROIRS = ['overpass-api.de', 'overpass.kumi.systems', 'overpass.private.coffee'];
+
+function unEssai(hote, body) {
+  return new Promise((resolve) => {
     const data = 'data=' + encodeURIComponent(body);
     const req = https.request({
-      hostname: 'overpass-api.de',
+      hostname: hote,
       path: '/api/interpreter',
       method: 'POST',
+      timeout: 180000,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(data),
@@ -55,16 +66,33 @@ function postOverpass(body) {
       res.on('end', () => {
         const raw = Buffer.concat(chunks).toString('utf8');
         if (res.statusCode !== 200) {
-          reject(new Error('HTTP ' + res.statusCode + ' ' + raw.slice(0, 240)));
+          resolve({ ok: false, pourquoi: `HTTP ${res.statusCode}` });
           return;
         }
-        try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
+        try { resolve({ ok: true, json: JSON.parse(raw) }); }
+        catch (e) { resolve({ ok: false, pourquoi: 'reponse illisible : ' + e.message }); }
       });
     });
-    req.on('error', reject);
+    req.on('error', (e) => resolve({ ok: false, pourquoi: e.message }));
+    req.on('timeout', () => { req.destroy(); resolve({ ok: false, pourquoi: 'delai depasse' }); });
     req.write(data);
     req.end();
   });
+}
+
+async function postOverpass(body) {
+  const echecs = [];
+  for (const hote of MIROIRS) {
+    const r = await unEssai(hote, body);
+    if (r.ok) {
+      if (echecs.length) console.error(`  (${hote} a repondu apres ${echecs.length} refus)`);
+      return r.json;
+    }
+    echecs.push(`${hote} : ${r.pourquoi}`);
+  }
+  // Nommer TOUS les refus : un seul nom ferait chercher la panne au mauvais
+  // endroit — « 504 » d'un miroir ne dit pas que les trois sont satures.
+  throw new Error('aucun serveur Overpass ne repond — ' + echecs.join(' | '));
 }
 
 /** Hauteur déclarée, sinon déduite des niveaux, sinon rien — jamais inventée. */
@@ -91,6 +119,40 @@ function ferme(coords) {
 function centre(coords) {
   return [coords.reduce((s, c) => s + c[0], 0) / coords.length,
           coords.reduce((s, c) => s + c[1], 0) / coords.length];
+}
+
+/**
+ * Le mobilier fait l'objet d'une requete SEPAREE.
+ *
+ * Tout demander d'un coup fait tomber Overpass en 504 — mesure faite : la
+ * requete jointe echoue sur overpass-api.de comme sur le miroir kumi, la
+ * requete scindee passe. Et le mobilier a sa propre emprise, plus serree : ces
+ * objets ne se lisent qu'a grande echelle.
+ */
+const BBOX_MOBILIER = '43.3495,5.3580,43.3580,5.3690';
+const QUERY_MOBILIER = `[out:json][timeout:90];
+(
+  node["natural"="tree"](${BBOX_MOBILIER});
+  node["highway"="street_lamp"](${BBOX_MOBILIER});
+  node["amenity"="bench"](${BBOX_MOBILIER});
+  node["highway"="bus_stop"](${BBOX_MOBILIER});
+);
+out body;`;
+
+/**
+ * Le modele 3D d'un objet de mobilier, choisi d'apres son tag OSM.
+ *
+ * `_modelId` est lu PAR ENTITE (`app_v7.js`, `modelPlacement`) avant tout repli
+ * sur `style.library.modelId` de la couche. Une seule couche peut donc porter
+ * quatre modeles differents — c'est ce qui permet de montrer le catalogue sans
+ * eclater le mobilier en quatre couches qui diraient la meme chose.
+ */
+function modeleDe(tags) {
+  if (tags.natural === 'tree') return { modelId: 'tree_deciduous', type: 'Arbre' };
+  if (tags.highway === 'street_lamp') return { modelId: 'streetlamp', type: 'Lampadaire' };
+  if (tags.amenity === 'bench') return { modelId: 'bench', type: 'Banc' };
+  if (tags.highway === 'bus_stop') return { modelId: 'bus_shelter', type: 'Arret de bus' };
+  return null;
 }
 
 const data = await postOverpass(QUERY);
@@ -193,6 +255,33 @@ for (const el of data.elements || []) {
   }
 }
 
+const mobilier = [];
+try {
+  const dataMob = await postOverpass(QUERY_MOBILIER);
+  for (const el of dataMob.elements || []) {
+    if (el.type !== 'node' || el.lat == null) continue;
+    const t = el.tags || {};
+    const m = modeleDe(t);
+    if (!m) continue;
+    mobilier.push({
+      type: 'Feature',
+      properties: {
+        osm_id: `node/${el.id}`,
+        name: t.name || null,
+        type: m.type,
+        // Lu par entite : c'est lui qui choisit le modele du catalogue.
+        _modelId: m.modelId,
+        source: 'OpenStreetMap',
+      },
+      geometry: { type: 'Point', coordinates: [el.lon, el.lat] },
+    });
+  }
+} catch (e) {
+  // Le mobilier est un complement : son absence ne doit pas emporter le bati,
+  // l'eau et la voirie qu'on vient d'obtenir. On le dit, et on continue.
+  console.error('  mobilier non recupere — ' + e.message);
+}
+
 function bboxOf(features) {
   let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
   for (const f of features) {
@@ -217,6 +306,7 @@ ecrire('voirie.geojson', voirie);
 ecrire('rail.geojson', rail);
 ecrire('emprises.geojson', emprises);
 ecrire('memoire.geojson', memoire);
+ecrire('mobilier.geojson', mobilier);
 
 const bbox = bboxOf([...bati, ...eau, ...voirie, ...rail, ...emprises, ...memoire]);
 fs.writeFileSync(path.join(__dirname, '_bbox.json'), JSON.stringify({ bbox, cascade: CASCADE }, null, 2));
@@ -230,5 +320,7 @@ console.log(JSON.stringify({
   rail: rail.length,
   emprises: emprises.length,
   memoire: memoire.length,
+  mobilier: mobilier.length,
+  mobilierParType: mobilier.reduce((a, f) => { a[f.properties.type] = (a[f.properties.type] || 0) + 1; return a; }, {}),
   bbox,
 }, null, 2));

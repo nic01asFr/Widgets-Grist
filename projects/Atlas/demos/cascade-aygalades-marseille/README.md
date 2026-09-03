@@ -28,11 +28,28 @@ exactement ce qu'une symbologie catégorisée sait montrer.
 | Voies ferrées | 20 | les deux lignes qui franchissent le vallon |
 | Emprises | 19 | Activité · Ferroviaire · Espace vert |
 | Ruisseau et canal | 15 | catégorisée : à ciel ouvert · **busé** |
+| Mobilier urbain | 374 | **inline** — 239 lampadaires, 120 arbres, 6 bancs, 9 abribus, chacun avec son modèle du catalogue |
 | Cascade (relevé 3D) | 1 | GLB photogrammétrique posé à ses coordonnées |
 
-Poids total : ~7,4 Mo, dont 6,0 pour le modèle 3D et 1,0 pour le bâti.
+Poids total : ~7,5 Mo, dont 6,0 pour le modèle 3D et 1,0 pour le bâti.
 
-## Le récit — six étapes
+### Pourquoi le mobilier est *inline* et pas servi par URL
+
+Les instances 3D sont construites en parcourant `filteredGeoJSON(layer).features`
+et en lisant `feature.geometry.coordinates`. Sur une couche servie par URL,
+**Atlas ne détient pas les entités** — MapLibre les a, lui, mais Atlas n'y accède
+pas. La liste est donc vide et rien n'est instancié : la couche apparaît dans la
+légende avec son compte déclaré, et la carte reste nue.
+
+C'est un échec parfaitement silencieux, et la règle qui en découle vaut pour
+toute scène : **une couche à modèles 3D doit porter ses entités** (inline, ou
+table du document). 76 Ko ici.
+
+Effet de bord visible et voulu : la légende affiche « Lampadaire 239 » en compte
+**exact**, sans le « ≈ » des couches distantes — parce qu'ici Atlas compte
+vraiment.
+
+## Le récit — huit étapes
 
 | # | Titre | Ce qui est démontré |
 |---|---|---|
@@ -40,8 +57,28 @@ Poids total : ~7,4 Mo, dont 6,0 pour le modèle 3D et 1,0 pour le bâti.
 | 2 | Le ruisseau, et là où il disparaît | catégorisation sur un attribut qui *dit* quelque chose |
 | 3 | Ce qui est passé par-dessus | superposition, ordre des couches, vue oblique |
 | 4 | Le bâti en volume | extrusion + graduation par bornes + **ombres** |
-| 5 | La cascade | modèle 3D éclairé, ombre portée, calage géographique |
-| 6 | Ce qui reste ouvert | retour au plan, lecture d'ensemble |
+| 5 | La cascade | modèle 3D **réaliste** (photogrammétrie) éclairé, ombre portée |
+| 6 | Le catalogue, posé sur de vraies données | modèles 3D **représentatifs** du catalogue, un par entité |
+| 7 | Le vallon a une forme | **relief 3D**, volumes posés sur le sol échantillonné |
+| 8 | Ce qui reste ouvert | retour au plan, lecture d'ensemble |
+
+### Contrôles exposés
+
+Deux pastilles sont actives et manipulables par le lecteur : **Hauteur (m)**
+(plage, sur le bâti) et **Tracé** (sélection busé / à ciel ouvert, sur l'eau).
+Trois autres sont déclarés mais inactifs (usage du sol, type de mobilier,
+origine de la hauteur).
+
+> `active: true` n'est pas cosmétique : **seul un contrôle actif devient une
+> pastille**. À `false` — le défaut du schéma, « un contrôle proposé n'est pas
+> un contrôle appliqué » — le lecteur d'une scène publiée ne le voit jamais,
+> puisque le mode vitrine lui refuse aussi le rail d'auteur. Les bornes
+> couvrent toute la plage : le filtre est visible sans rien retrancher tant
+> qu'on n'y touche pas.
+
+Chaque couche porte aussi un `popup_template` : le clic ouvre une fiche. Venu
+d'une adresse, ce gabarit est rendu **comme du texte** — les valeurs sont
+échappées, rien n'y est exécutable.
 
 Chaque étape emporte sa propre copie de la symbolisation, son heure solaire et
 son état d'ombres.
@@ -49,7 +86,7 @@ son état d'ombres.
 ## Reconstruire
 
 ```bash
-node build-from-overpass.mjs   # interroge Overpass -> les 6 GeoJSON + _bbox.json
+node build-from-overpass.mjs   # interroge Overpass -> les 7 GeoJSON + _bbox.json
 node build-scene.mjs           # relit les GeoJSON -> scene.json (comptes inclus)
 ```
 
@@ -108,6 +145,11 @@ le masque aux azimuts est, d'où le cadrage de l'étape 5 par l'ouest
   pas dans la couche « mémoire » : ce sont des polygones `building`, captés
   comme tels. La couche `memoire.geojson` ne retient donc que 4 points
   (monuments aux morts, fontaine) et n'est pas exposée dans le récit.
-- `terrain3D` est à `false` sur toutes les étapes. Le relief n'a pas été éprouvé
-  ici, et le calage d'altitude d'une couche distante n'a qu'une valeur par
-  emprise.
+- Le relief n'est activé qu'à l'**étape 7**, et le calage d'altitude d'une
+  couche distante n'a qu'une valeur par emprise : sur un vallon, l'approximation
+  se voit aux bords. Les autres étapes restent en plan, où la question ne se
+  pose pas.
+- L'extraction dépend d'Overpass, dont les instances publiques répondent 504
+  sous charge. `postOverpass` bascule sur trois miroirs et nomme tous les refus ;
+  le mobilier, lui, est non bloquant — son absence ne doit pas emporter le bâti
+  et la voirie déjà obtenus.

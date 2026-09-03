@@ -27,6 +27,7 @@ const COUCHES = {
   rail: 'aygalades-rail',
   emprises: 'aygalades-emprises',
   cascade: 'aygalades-cascade-3d',
+  mobilier: 'aygalades-mobilier',
 };
 
 const compte = (n) => lire(n).features.length;
@@ -36,10 +37,14 @@ const N = {
   voirie: compte('voirie.geojson'),
   rail: compte('rail.geojson'),
   emprises: compte('emprises.geojson'),
+  mobilier: compte('mobilier.geojson'),
 };
 
 const batiOsm = lire('bati.geojson').features
   .filter((f) => f.properties.height_source === 'osm').length;
+const mobilierParType = lire('mobilier.geojson').features
+  .reduce((a, f) => { a[f.properties.type] = (a[f.properties.type] || 0) + 1; return a; }, {});
+
 const eauBusee = lire('eau.geojson').features
   .filter((f) => f.properties.couvert === 'busé').length;
 
@@ -106,6 +111,17 @@ const VOIRIE = {
   fallback: '#9aa2ad',
 };
 const RAIL = { kind: 'single', color: '#4a4038', opacity: 0.9 };
+const MOBILIER = {
+  kind: 'categorized',
+  field: 'type',
+  stops: [
+    { value: 'Arbre', color: '#5b8c4a', opacity: 1 },
+    { value: 'Lampadaire', color: '#c9a227', opacity: 1 },
+    { value: 'Banc', color: '#a0724a', opacity: 1 },
+    { value: 'Arrêt de bus', color: '#4a7fa0', opacity: 1 },
+  ],
+  fallback: '#8a8478',
+};
 const EMPRISES = {
   kind: 'categorized',
   field: 'usage',
@@ -232,6 +248,52 @@ const story = {
     },
     {
       id: 'aygalades-6',
+      title: 'Le catalogue, posé sur de vraies données',
+      description:
+        `${N.mobilier} objets de mobilier relevés dans OSM — `
+        + `${mobilierParType['Lampadaire'] || 0} lampadaires, ${mobilierParType['Arbre'] || 0} arbres, `
+        + `${mobilierParType['Banc'] || 0} bancs, ${mobilierParType['Arrêt de bus'] || 0} arrêts de bus. `
+        + `Chacun choisit son modèle dans le catalogue embarqué d'Atlas : une seule `
+        + `couche, quatre modèles, décidés par la donnée et non par la couche.`,
+      state: {
+        camera: { center: [5.3639, 43.3534], zoom: 18.3, pitch: 62, bearing: -30 },
+        projection: 'mercator',
+        timeOfDay: heure(17),
+        terrain3D: false,
+        shadows: true,
+        ...AMBIANCE,
+        layers: [
+          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_UNI }),
+          etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
+          etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
+          etat(COUCHES.mobilier, 'Mobilier urbain', true, { declarative: MOBILIER }),
+        ],
+      },
+    },
+    {
+      id: 'aygalades-7',
+      title: 'Le vallon a une forme',
+      description:
+        `Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le `
+        + `tracé du ruisseau comme celui de l'autoroute. Les volumes reposent sur le `
+        + `sol échantillonné, pas sur le niveau de la mer — sans quoi le bâti d'un `
+        + `coteau s'enfoncerait sous la carte.`,
+      state: {
+        camera: { center: [5.3652, 43.3524], zoom: 15, pitch: 68, bearing: 42 },
+        projection: 'mercator',
+        timeOfDay: heure(9),
+        terrain3D: true,
+        shadows: false,
+        ...AMBIANCE,
+        layers: [
+          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_HAUTEUR }),
+          etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
+          etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
+        ],
+      },
+    },
+    {
+      id: 'aygalades-8',
       title: 'Ce qui reste ouvert',
       description:
         `Les espaces verts déjà là — parcs Brégante, de l'Oasis, Varella — et le fond `
@@ -273,6 +335,11 @@ const geo = (id, name, order, type, geojson, n, decl, extra = {}) => ({
   crs: 'EPSG:4326',
   ...(extra.height_field ? { height_field: extra.height_field } : {}),
   ...(extra.fields ? { fields: extra.fields } : {}),
+  ...(extra.controls ? { controls: extra.controls } : {}),
+  // Le gabarit est rendu COMME DU TEXTE quand la scene vient d'une adresse :
+  // les valeurs sont echappees, le gabarit ne l'est pas, et une scene chargee
+  // par URL n'est pas de confiance. Il n'y a donc rien d'executable ici.
+  ...(extra.popup ? { popup_template: extra.popup } : {}),
 });
 
 const scene = {
@@ -293,6 +360,11 @@ const scene = {
   layers: [
     geo(COUCHES.emprises, 'Emprises', 0, 'polygon', './emprises.geojson', N.emprises, EMPRISES, {
       polygonMode: 'flat',
+      controls: [
+        { field: 'usage', type: 'select', label: 'Usage du sol', active: false,
+          options: ['Activité', 'Ferroviaire', 'Espace vert'] },
+      ],
+      popup: '<b>{name}</b><br>{usage} — {detail}',
       fields: [
         { name: 'name', gType: 'Text' },
         { name: 'usage', gType: 'Text' },
@@ -302,6 +374,23 @@ const scene = {
     geo(COUCHES.bati, 'Bâti', 1, 'polygon', './bati.geojson', N.bati, BATI_UNI, {
       polygonMode: 'flat',
       height_field: 'height_m',
+      controls: [
+        // `dataMin`/`dataMax` sont les bornes OBSERVEES : Atlas ne detient pas
+        // les entites d'une couche servie par URL, il ne peut pas les mesurer.
+        // Sans elles, le curseur s'ouvrirait de 0 a 1.
+        // `active: true` : seuls les controles actifs deviennent des pastilles
+        // manipulables (app_v7.js, listDockPills). A `false` — le defaut du
+        // schema, « un controle propose n'est pas un controle applique » — le
+        // lecteur d'une scene publiee ne les voit jamais, puisque le mode
+        // vitrine lui refuse aussi le rail d'auteur. Les bornes couvrent toute
+        // la plage : le filtre est donc visible sans rien retrancher tant qu'on
+        // n'y touche pas.
+        { field: 'height_m', type: 'range', label: 'Hauteur (m)', active: true,
+          min: 3, max: 71, dataMin: 3.2, dataMax: 70.4 },
+        { field: 'height_source', type: 'select', label: 'Origine de la hauteur',
+          active: false, options: ['osm', 'defaut'] },
+      ],
+      popup: '<b>{name}</b><br>Hauteur : {height_m} m ({height_source})<br><small>OSM {osm_id}</small>',
       fields: [
         { name: 'name', gType: 'Text' },
         { name: 'building', gType: 'Text' },
@@ -321,6 +410,11 @@ const scene = {
       ],
     }),
     geo(COUCHES.eau, 'Ruisseau et canal', 4, 'line', './eau.geojson', N.eau, EAU_COUVERT, {
+      controls: [
+        { field: 'couvert', type: 'select', label: 'Tracé', active: true,
+          options: ['à ciel ouvert', 'busé'] },
+      ],
+      popup: '<b>{name}</b><br>{nature} — {couvert}<br><small>OSM {osm_id}</small>',
       fields: [
         { name: 'name', gType: 'Text' },
         { name: 'nature', gType: 'Text' },
@@ -328,9 +422,51 @@ const scene = {
       ],
     }),
     {
+      id: COUCHES.mobilier,
+      name: 'Mobilier urbain',
+      order: 5,
+      geometry_type: 'point',
+      visible: false,
+      // Masquee a l'ouverture : 374 modeles 3D instancies n'ont aucun sens en
+      // vue d'ensemble, ou chacun mesure moins d'un pixel. Le recit l'allume au
+      // moment ou l'echelle le permet.
+      visibility: { defaultVisible: false, minZoom: 16 },
+      style: {
+        // `library` : les modeles viennent du catalogue embarque d'Atlas, pas
+        // d'un fichier livre avec la scene. `modelId` ici n'est qu'un REPLI —
+        // chaque entite porte le sien dans `_modelId`, lu en priorite.
+        mode: 'library',
+        library: { modelId: 'streetlamp' },
+        common: { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
+        declarative: MOBILIER,
+      },
+      source: { type: 'geojson', classe: 'externe' },
+      // INLINE, et ce n'est pas un detail de poids : les instances 3D sont
+      // construites en iterant `filteredGeoJSON(layer).features` et en lisant
+      // `feature.geometry.coordinates` (app_v7.js). Sur une couche servie par
+      // URL, Atlas ne detient pas les entites — MapLibre les a, lui, mais Atlas
+      // n'y accede pas — donc la liste est vide et RIEN n'est instancie. La
+      // couche s'affiche dans la legende, avec son compte declare, et la carte
+      // reste nue : un echec parfaitement silencieux. 76 Ko dans le manifeste.
+      geojson: lire('mobilier.geojson'),
+      bbox,
+      featureCount: N.mobilier,
+      crs: 'EPSG:4326',
+      controls: [
+        { field: 'type', type: 'select', label: 'Type de mobilier', active: false,
+          options: ['Arbre', 'Lampadaire', 'Banc', 'Arrêt de bus'] },
+      ],
+      popup_template: '<b>{type}</b><br>{name}<br><small>OSM {osm_id}</small>',
+      fields: [
+        { name: 'type', gType: 'Text' },
+        { name: 'name', gType: 'Text' },
+        { name: 'osm_id', gType: 'Text' },
+      ],
+    },
+    {
       id: COUCHES.cascade,
       name: 'Cascade (relevé 3D)',
-      order: 5,
+      order: 6,
       geometry_type: 'point',
       visible: true,
       visibility: { defaultVisible: true },
