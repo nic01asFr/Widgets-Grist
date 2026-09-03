@@ -1,0 +1,968 @@
+{
+  "version": "0.2.2",
+  "title": "Cascade des Aygalades — Marseille 15ᵉ",
+  "subtitle": "Un ruisseau busé, une friche, et ce qui refait surface",
+  "project_name": "Cascade des Aygalades — Marseille 15ᵉ",
+  "provenance": {
+    "producer": "atlas-demo/overpass",
+    "attribution": "© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)",
+    "extracted_at": "2026-09-03T09:26:43.954Z",
+    "bbox": [
+      5.3533904,
+      43.3454196,
+      5.3822693,
+      43.3683347
+    ]
+  },
+  "layers": [
+    {
+      "id": "aygalades-emprises",
+      "name": "Emprises",
+      "order": 0,
+      "geometry_type": "polygon",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "polygonMode": "flat",
+        "declarative": {
+          "kind": "categorized",
+          "field": "usage",
+          "stops": [
+            {
+              "value": "Activité",
+              "color": "#b08968",
+              "opacity": 0.5
+            },
+            {
+              "value": "Ferroviaire",
+              "color": "#7d7466",
+              "opacity": 0.45
+            },
+            {
+              "value": "Espace vert",
+              "color": "#6f9457",
+              "opacity": 0.5
+            }
+          ],
+          "fallback": "#a8a29a"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./emprises.geojson",
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 19,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "usage",
+          "gType": "Text"
+        },
+        {
+          "name": "detail",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "aygalades-bati",
+      "name": "Bâti",
+      "order": 1,
+      "geometry_type": "polygon",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "polygonMode": "flat",
+        "declarative": {
+          "kind": "single",
+          "color": "#cabfae",
+          "opacity": 0.85
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./bati.geojson",
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 2820,
+      "crs": "EPSG:4326",
+      "height_field": "height_m",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "building",
+          "gType": "Text"
+        },
+        {
+          "name": "height_m",
+          "gType": "Numeric"
+        },
+        {
+          "name": "height_source",
+          "gType": "Text"
+        },
+        {
+          "name": "levels",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "aygalades-rail",
+      "name": "Voies ferrées",
+      "order": 2,
+      "geometry_type": "line",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "declarative": {
+          "kind": "single",
+          "color": "#4a4038",
+          "opacity": 0.9
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./rail.geojson",
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 20,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "railway",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "aygalades-voirie",
+      "name": "Voirie",
+      "order": 3,
+      "geometry_type": "line",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "declarative": {
+          "kind": "categorized",
+          "field": "rang",
+          "stops": [
+            {
+              "value": "Autoroute",
+              "color": "#c4453a",
+              "opacity": 0.95
+            },
+            {
+              "value": "Voie principale",
+              "color": "#7a8290",
+              "opacity": 0.85
+            },
+            {
+              "value": "Desserte",
+              "color": "#9aa2ad",
+              "opacity": 0.6
+            }
+          ],
+          "fallback": "#9aa2ad"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./voirie.geojson",
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 175,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "highway",
+          "gType": "Text"
+        },
+        {
+          "name": "rang",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "aygalades-eau",
+      "name": "Ruisseau et canal",
+      "order": 4,
+      "geometry_type": "line",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "style": {
+        "declarative": {
+          "kind": "categorized",
+          "field": "couvert",
+          "stops": [
+            {
+              "value": "à ciel ouvert",
+              "color": "#2e8fc4",
+              "opacity": 1
+            },
+            {
+              "value": "busé",
+              "color": "#8a6a4f",
+              "opacity": 0.75
+            }
+          ],
+          "fallback": "#6b7b8c"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": "./eau.geojson",
+      "bbox": [
+        5.3533904,
+        43.3454196,
+        5.3822693,
+        43.3683347
+      ],
+      "featureCount": 15,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "nature",
+          "gType": "Text"
+        },
+        {
+          "name": "couvert",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "aygalades-cascade-3d",
+      "name": "Cascade (relevé 3D)",
+      "order": 5,
+      "geometry_type": "point",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "gltf_url": "./cascade.glb",
+      "style": {
+        "mode": "custom",
+        "custom": {
+          "url": "./cascade.glb",
+          "filename": "cascade.glb"
+        },
+        "common": {
+          "scale": 1.8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "offsetX": 0,
+          "offsetY": 0,
+          "offsetZ": 0
+        },
+        "declarative": {
+          "kind": "single",
+          "color": "#8fa8b5",
+          "opacity": 1
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Cascade des Aygalades",
+              "osm_id": "node/789366740",
+              "releve": "photogrammétrie (Agisoft Metashape)",
+              "auteur": "M.Dailly",
+              "licence": "CC BY 4.0",
+              "source_modele": "https://sketchfab.com/3d-models/la-cascade-820f7441157546949d07e3ce52b2287a"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3632144,
+                43.3531876
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.3632144,
+        43.3531876,
+        5.3632144,
+        43.3531876
+      ],
+      "featureCount": 1,
+      "crs": "EPSG:4326",
+      "fields": [
+        {
+          "name": "name",
+          "gType": "Text"
+        },
+        {
+          "name": "releve",
+          "gType": "Text"
+        },
+        {
+          "name": "auteur",
+          "gType": "Text"
+        },
+        {
+          "name": "licence",
+          "gType": "Text"
+        }
+      ]
+    }
+  ],
+  "story": {
+    "version": "0.2.1",
+    "steps": [
+      {
+        "id": "aygalades-1",
+        "title": "Un vallon au nord de Marseille",
+        "description": "Le quartier des Aygalades, 15ᵉ arrondissement. 2 820 bâtiments extraits d'OpenStreetMap, entre l'autoroute et le faisceau ferroviaire. Rien ici ne signale encore qu'un ruisseau traverse tout cela.",
+        "state": {
+          "camera": {
+            "center": [
+              5.36782985,
+              43.35687715
+            ],
+            "zoom": 13.6,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 840,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#cabfae",
+                "opacity": 0.85
+              }
+            },
+            {
+              "id": "aygalades-voirie",
+              "name": "Voirie",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Autoroute",
+                    "color": "#c4453a",
+                    "opacity": 0.95
+                  },
+                  {
+                    "value": "Voie principale",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#9aa2ad",
+                    "opacity": 0.6
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            },
+            {
+              "id": "aygalades-rail",
+              "name": "Voies ferrées",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#4a4038",
+                "opacity": 0.9
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-2",
+        "title": "Le ruisseau, et là où il disparaît",
+        "description": "Le ruisseau des Aygalades et la sous-dérivation du canal de Marseille. Sur 15 tronçons cartographiés, 6 sont busés — en brun. Un cours d'eau busé n'est pas absent : il est invisible, et c'est la donnée qui le dit, pas la carte qui le devine.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3648,
+              43.354
+            ],
+            "zoom": 14.4,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 660,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#ded7cb",
+                "opacity": 0.4
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-3",
+        "title": "Ce qui est passé par-dessus",
+        "description": "Emprises d'activité, faisceau ferroviaire, autoroute A7. La Savonnerie du Midi et Artizanord occupent le fond de vallon ; deux lignes ferroviaires et une autoroute le franchissent. Le ruisseau reste affiché : il passe dessous.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3648,
+              43.3545
+            ],
+            "zoom": 14.2,
+            "pitch": 42,
+            "bearing": -18
+          },
+          "projection": "mercator",
+          "timeOfDay": 900,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-emprises",
+              "name": "Emprises",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "usage",
+                "stops": [
+                  {
+                    "value": "Activité",
+                    "color": "#b08968",
+                    "opacity": 0.5
+                  },
+                  {
+                    "value": "Ferroviaire",
+                    "color": "#7d7466",
+                    "opacity": 0.45
+                  },
+                  {
+                    "value": "Espace vert",
+                    "color": "#6f9457",
+                    "opacity": 0.5
+                  }
+                ],
+                "fallback": "#a8a29a"
+              }
+            },
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#ded7cb",
+                "opacity": 0.45
+              }
+            },
+            {
+              "id": "aygalades-rail",
+              "name": "Voies ferrées",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#4a4038",
+                "opacity": 0.9
+              }
+            },
+            {
+              "id": "aygalades-voirie",
+              "name": "Voirie",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Autoroute",
+                    "color": "#c4453a",
+                    "opacity": 0.95
+                  },
+                  {
+                    "value": "Voie principale",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#9aa2ad",
+                    "opacity": 0.6
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-4",
+        "title": "Le bâti en volume — et ce qu'on en sait vraiment",
+        "description": "Bâti extrudé, gradué par hauteur. Attention à ce que montre cette carte : 151 bâtiments sur 2 820 portent une hauteur dans OSM, soit 5 %. Les autres sont dessinés à 9 m par défaut. La classe la plus claire est donc surtout une classe d'ignorance.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3639,
+              43.3536
+            ],
+            "zoom": 15.6,
+            "pitch": 58,
+            "bearing": -24
+          },
+          "projection": "mercator",
+          "timeOfDay": 960,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "graduated",
+                "field": "height_m",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 9,
+                    "color": "#e8dcc8",
+                    "opacity": 0.9
+                  },
+                  {
+                    "lower": 9,
+                    "upper": 15,
+                    "color": "#d4b483",
+                    "opacity": 0.9
+                  },
+                  {
+                    "lower": 15,
+                    "upper": 25,
+                    "color": "#c17f4a",
+                    "opacity": 0.92
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 200,
+                    "color": "#8c4a2f",
+                    "opacity": 0.95
+                  }
+                ],
+                "fallback": "#cfc7bb"
+              }
+            },
+            {
+              "id": "aygalades-voirie",
+              "name": "Voirie",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Autoroute",
+                    "color": "#c4453a",
+                    "opacity": 0.95
+                  },
+                  {
+                    "value": "Voie principale",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#9aa2ad",
+                    "opacity": 0.6
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-5",
+        "title": "La cascade",
+        "description": "Relevé photogrammétrique de la cascade, posé à ses coordonnées réelles (nœud OSM 789366740). Soleil de fin d'après-midi : le modèle reçoit l'éclairage et projette son ombre, comme le bâti autour de lui.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3632144,
+              43.3531876
+            ],
+            "zoom": 19.3,
+            "pitch": 56,
+            "bearing": 250
+          },
+          "projection": "mercator",
+          "timeOfDay": 1050,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "single",
+                "color": "#cabfae",
+                "opacity": 0.85
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            },
+            {
+              "id": "aygalades-cascade-3d",
+              "name": "Cascade (relevé 3D)",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": []
+            }
+          ]
+        }
+      },
+      {
+        "id": "aygalades-6",
+        "title": "Ce qui reste ouvert",
+        "description": "Les espaces verts déjà là — parcs Brégante, de l'Oasis, Varella — et le fond de vallon industriel, emprise du futur parc des Aygalades. La carte ne dit pas ce qui va advenir ; elle dit ce qu'il y a, et où il y a de la place.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3655,
+              43.3548
+            ],
+            "zoom": 14,
+            "pitch": 30,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 1110,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "aygalades-emprises",
+              "name": "Emprises",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "usage",
+                "stops": [
+                  {
+                    "value": "Activité",
+                    "color": "#b08968",
+                    "opacity": 0.5
+                  },
+                  {
+                    "value": "Ferroviaire",
+                    "color": "#7d7466",
+                    "opacity": 0.45
+                  },
+                  {
+                    "value": "Espace vert",
+                    "color": "#6f9457",
+                    "opacity": 0.5
+                  }
+                ],
+                "fallback": "#a8a29a"
+              }
+            },
+            {
+              "id": "aygalades-bati",
+              "name": "Bâti",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#ded7cb",
+                "opacity": 0.5
+              }
+            },
+            {
+              "id": "aygalades-eau",
+              "name": "Ruisseau et canal",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "couvert",
+                "stops": [
+                  {
+                    "value": "à ciel ouvert",
+                    "color": "#2e8fc4",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "busé",
+                    "color": "#8a6a4f",
+                    "opacity": 0.75
+                  }
+                ],
+                "fallback": "#6b7b8c"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "camera": {
+    "center": [
+      5.36782985,
+      43.35687715
+    ],
+    "zoom": 13.6,
+    "pitch": 0,
+    "bearing": 0
+  }
+}

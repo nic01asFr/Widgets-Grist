@@ -59,3 +59,11 @@ UUID
 # Les brouillons de posts de forum : rendus par scripts/generate-post.js depuis
 # la fiche du projet, jamais publies ni versionnes.
 .forum/
+
+# Démo Vieille-Charité — le relevé 3D qu'elle embarque est d'origine inconnue
+# (pas de `asset.copyright`, modèle non retrouvé sur Sketchfab). Tout ce qu'on
+# en sait est « CC BY-NC », ce qui ne satisfait ni le « BY » — auteur et lien
+# manquants — ni la MIT du dépôt, que la clause NC contredit. Ignorée tant que
+# son origine n'est pas établie, pour qu'un `git add demos/` ne la publie pas
+# par inadvertance. Voir CREDITS.md.
+projects/Atlas/demos/vieille-charite-marseille/

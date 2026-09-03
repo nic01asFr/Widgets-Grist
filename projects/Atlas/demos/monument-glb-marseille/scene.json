@@ -1,0 +1,169 @@
+{
+  "version": "0.2.2",
+  "manifest_version": "V0.2",
+  "title": "Marseille — Monument GLB streamé",
+  "project_name": "Marseille Monument GLB",
+  "provenance": {
+    "producer": "atlas-demo/glb-stream",
+    "glb": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "glb_credit": "Damaged Helmet — Khronos / Battle Damaged Sci-fi Helmet by theblueturtle_ (CC BY 4.0) — stand-in technique pour un monument détaillé",
+    "context": "OSM Vieux-Port (ODbL)"
+  },
+  "layers": [
+    {
+      "id": "osm-bati-contexte",
+      "name": "Bâti OSM (contexte)",
+      "order": 0,
+      "geometry_type": "polygon",
+      "visible": true,
+      "visibility": { "defaultVisible": true },
+      "height_field": "height_m",
+      "style": {
+        "polygonMode": "extruded",
+        "declarative": { "kind": "single", "color": "#8a8478", "opacity": 0.55 }
+      },
+      "source": { "type": "geojson", "classe": "externe" },
+      "geojson": "../osm-marseille-vieux-port/buildings.geojson",
+      "bbox": [5.359, 43.292, 5.378, 43.305],
+      "featureCount": 1315,
+      "crs": "EPSG:4326"
+    },
+    {
+      "id": "osm-voirie-contexte",
+      "name": "Voirie OSM",
+      "order": 1,
+      "geometry_type": "line",
+      "visible": true,
+      "visibility": { "defaultVisible": true },
+      "style": {
+        "declarative": { "kind": "single", "color": "#5c6570", "opacity": 0.7 }
+      },
+      "source": { "type": "geojson", "classe": "externe" },
+      "geojson": "../osm-marseille-vieux-port/roads.geojson",
+      "bbox": [5.359, 43.292, 5.378, 43.305],
+      "featureCount": 720,
+      "crs": "EPSG:4326"
+    },
+    {
+      "id": "monument-glb",
+      "name": "Monument (GLB streamé)",
+      "order": 2,
+      "geometry_type": "point",
+      "visible": true,
+      "visibility": { "defaultVisible": true },
+      "gltf_url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+      "style": {
+        "mode": "custom",
+        "custom": {
+          "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+          "filename": "DamagedHelmet.glb"
+        },
+        "common": {
+          "scale": 28,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 35,
+          "offsetX": 0,
+          "offsetY": 0,
+          "offsetZ": 0
+        },
+        "declarative": { "kind": "single", "color": "#c44536", "opacity": 1 }
+      },
+      "source": { "type": "geojson", "classe": "externe" },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Ancrage démo GLB (stand-in monument)",
+              "credit": "Khronos DamagedHelmet CC BY 4.0"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [5.3646, 43.2954]
+            }
+          }
+        ]
+      },
+      "bbox": [5.3646, 43.2954, 5.3646, 43.2954],
+      "featureCount": 1,
+      "crs": "EPSG:4326"
+    }
+  ],
+  "story": {
+    "version": "0.2.1",
+    "steps": [
+      {
+        "id": "step-1",
+        "title": "Approche du quai",
+        "description": "Contexte OSM du Vieux-Port. Un GLB détaillé est streamé depuis une URL distante (Khronos DamagedHelmet, ~3,7 Mo) — stand-in technique pour un monument.",
+        "state": {
+          "camera": { "center": [5.3685, 43.2948], "zoom": 15.6, "pitch": 48, "bearing": -40 },
+          "projection": "mercator",
+          "timeOfDay": 600,
+          "terrain3D": false,
+          "layers": [
+            { "id": "osm-bati-contexte", "name": "Bâti OSM (contexte)", "visible": true, "polygonMode": "extruded", "controls": [] },
+            { "id": "osm-voirie-contexte", "name": "Voirie OSM", "visible": true, "controls": [] },
+            { "id": "monument-glb", "name": "Monument (GLB streamé)", "visible": true, "controls": [] }
+          ]
+        }
+      },
+      {
+        "id": "step-2",
+        "title": "Focus monument",
+        "description": "Cadrage serré sur le GLB ancré. Le réalisme vient du PBR du fichier streamé ; l’orbit se joue avec les étapes du récit Atlas actuel.",
+        "state": {
+          "camera": { "center": [5.3646, 43.2954], "zoom": 18.2, "pitch": 62, "bearing": 20 },
+          "projection": "mercator",
+          "timeOfDay": 840,
+          "terrain3D": false,
+          "layers": [
+            { "id": "osm-bati-contexte", "name": "Bâti OSM (contexte)", "visible": true, "polygonMode": "extruded", "controls": [] },
+            { "id": "osm-voirie-contexte", "name": "Voirie OSM", "visible": false, "controls": [] },
+            { "id": "monument-glb", "name": "Monument (GLB streamé)", "visible": true, "controls": [] }
+          ]
+        }
+      },
+      {
+        "id": "step-3",
+        "title": "Tour d’ambiance",
+        "description": "Même objet, autre bearing — le récit actuel suffit pour « en faire le tour » avant une vraie timeline d’étape.",
+        "state": {
+          "camera": { "center": [5.3646, 43.2954], "zoom": 18.4, "pitch": 58, "bearing": 140 },
+          "projection": "mercator",
+          "timeOfDay": 1020,
+          "terrain3D": false,
+          "layers": [
+            { "id": "osm-bati-contexte", "name": "Bâti OSM (contexte)", "visible": true, "polygonMode": "extruded", "controls": [] },
+            { "id": "osm-voirie-contexte", "name": "Voirie OSM", "visible": false, "controls": [] },
+            { "id": "monument-glb", "name": "Monument (GLB streamé)", "visible": true, "controls": [] }
+          ]
+        }
+      },
+      {
+        "id": "step-4",
+        "title": "Crépuscule sur le port",
+        "description": "Ambiance soleil du soir + recul. Prochaine étape produit : pistes d’anim dans l’étape ; ici on valide stream GLB + récit.",
+        "state": {
+          "camera": { "center": [5.3658, 43.2946], "zoom": 16.8, "pitch": 55, "bearing": -110 },
+          "projection": "mercator",
+          "timeOfDay": 1170,
+          "terrain3D": false,
+          "layers": [
+            { "id": "osm-bati-contexte", "name": "Bâti OSM (contexte)", "visible": true, "polygonMode": "extruded", "controls": [] },
+            { "id": "osm-voirie-contexte", "name": "Voirie OSM", "visible": true, "controls": [] },
+            { "id": "monument-glb", "name": "Monument (GLB streamé)", "visible": true, "controls": [] }
+          ]
+        }
+      }
+    ]
+  },
+  "camera": {
+    "center": [5.3646, 43.2954],
+    "zoom": 17.5,
+    "pitch": 55,
+    "bearing": 20
+  }
+}
