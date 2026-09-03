@@ -645,6 +645,27 @@ Le filtrage de ces couches passe par **`expressionFiltreControles`** : on décri
 L'habillage suit (`-outline`, `-label`, `-hit`, `-pts`), sinon on verrait le
 contour d'un objet écarté, et on pourrait encore cliquer dessus.
 
+**La légende avait gardé le défaut que les contrôles n'avaient plus.**
+`controlUniqueValues` sait retomber sur ce que le manifeste déclare ;
+`filteredUniqueValues`, sa jumelle, ne le savait pas — et c'est elle qui
+alimente la légende. Deux conséquences, vues à l'écran sur la démo des
+Aygalades :
+
+| | Avant | Maintenant |
+|---|---|---|
+| compte de la couche | **`0` écrit en dur** (`app_v7.js`, branche catégorisée) alors que `total` valait « ≈175 » | `total`, comme partout ailleurs |
+| classes affichées | aucune — donc aucune clé de lecture sous une carte en trois couleurs | celles des `stops` du déclaratif, comptes à `—` |
+
+Le repli ne vaut **que** pour une couche qui ne détient pas ses entités
+(`geojson` n'est pas un tableau de features). Une couche locale dont le filtre
+ne laisse rien doit continuer à rendre une liste vide : là, l'absence est
+constatée, et la masquer ferait passer un filtre trop strict pour une légende
+normale. `tests/controles-couche-distante.test.js` verrouille les deux sens.
+
+> Le correctif avait été écrit une fois, appliqué à une seule des deux fonctions.
+> C'est le pont rompu de `skills/echecs-silencieux.md` dans sa forme la plus
+> coûteuse : **la version corrigée existe et prouve qu'on savait**.
+
 > **La règle du couple** : `expressionFiltreControles` et `buildControlPredicate`
 > doivent **classer pareil**. C'est la même scène et les mêmes bornes ; un écart
 > donnerait deux cartes selon l'origine de la donnée, et on l'attribuerait à la
@@ -671,6 +692,14 @@ ne se présentait comme une ignorance.
 > ce que ses valeurs ont l'air d'être — et il répond même quand il n'y a rien à
 > échantillonner. Sans lui, `detectFieldType` rendait « text » par défaut, ce qui
 > **retire le champ des choix d'une symbologie graduée**.
+
+### Le nom d'une scène se lit sous `title`, et sous lui seul
+
+`scene-loader.js` lit `manifest.title`, la clé **normative** du contrat 0.2.2 —
+`project_name` n'est pas au schéma. Une scène qui ne porte que `project_name`
+s'affiche « Import QGIS », le libellé de repli : un nom plausible, donc qu'on ne
+songe pas à mettre en doute. Les scènes attestées déclarent les deux ; une scène
+neuve doit au minimum déclarer `title`.
 
 ### Le compte se lit sous deux clés, et il en existe deux
 

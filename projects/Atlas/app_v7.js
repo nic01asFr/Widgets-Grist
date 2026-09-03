@@ -3379,12 +3379,20 @@ function buildLayerLegendHtml(layer) {
         const vals = filteredUniqueValues(layer, sym.field, 30);
         const fieldEsc = escLegend(sym.field);
         if (!vals.length) {
-            return `<div class="legend-group"><div class="legend-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${layer.color}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">0</span></div></div>`;
+            // `total` et non zéro : sur une couche dont Atlas ne détient pas les
+            // entités, aucune classe n'est mesurable, mais le manifeste sait
+            // combien il y en a. Écrire « 0 » ici annonçait une couche vide
+            // sous une carte qui la peignait — le compte est le seul endroit
+            // où le lecteur va chercher pourquoi il ne voit rien.
+            return `<div class="legend-group"><div class="legend-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${layer.color}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
         }
         const catRows = vals.map((v, i) => {
             const col = legendCategoryColor(sym, v.value, i, vals.length);
             const focused = isLegendFocused(layer.id, sym.field, v.value) ? ' legend-focused' : '';
-            return `<div class="legend-row legend-sub${clickable}${focused}" data-legend="cat" data-layer-id="${lid}" data-field="${fieldEsc}" data-value="${escLegend(v.value)}"><span class="swatch" style="background:${col}"></span><span class="nm" title="${escLegend(v.value)}">${escLegend(v.value)}</span><span class="ct">${v.count}</span></div>`;
+            // Un compte inconnu (classe déclarée, entités absentes) s'affiche
+            // « — », jamais « null » ni « 0 ».
+            const ct = v.count == null ? '—' : v.count;
+            return `<div class="legend-row legend-sub${clickable}${focused}" data-legend="cat" data-layer-id="${lid}" data-field="${fieldEsc}" data-value="${escLegend(v.value)}"><span class="swatch" style="background:${col}"></span><span class="nm" title="${escLegend(v.value)}">${escLegend(v.value)}</span><span class="ct">${ct}</span></div>`;
         }).join('');
         const headFocus = isLegendFocused(layer.id, null, null) ? ' legend-focused' : '';
         return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}${headFocus}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${catRows}</div>`;

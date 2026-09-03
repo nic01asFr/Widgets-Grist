@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   controlUniqueValues, controlBounds, optionsDeclarees,
   filteredGeoJSON, expressionFiltreControles, buildControlPredicate,
+  filteredUniqueValues,
 } from '../lib/controls.js';
 import { evaluer } from './aide-expressions.js';
 import { applyManifestControlsToLayer } from '../lib/manifest-binding.js';
@@ -308,4 +309,54 @@ test('une couche par URL, elle, reste distante et réclame son emprise', async (
   assert.equal(layers[0]._distant, true);
   assert.equal(echecs.length, 1);
   assert.match(echecs[0].raison, /emprise déclarée|bbox/);
+});
+
+/* ------------------------------------------------- la légende d'une couche distante */
+
+test('les classes d’une couche distante viennent du style, jamais d’un compte à zéro', () => {
+  // La légende passait par `filteredUniqueValues`, restée sans le repli qu’avait
+  // reçu sa jumelle `controlUniqueValues`. Résultat vu à l’écran sur la démo des
+  // Aygalades : « Voirie · 0 » sous une carte qui peignait 175 tronçons. Le
+  // correctif avait été appliqué à l’une des deux fonctions seulement.
+  const couche = {
+    id: 'voirie', name: 'Voirie',
+    geojson: 'https://h.fr/voirie.geojson', // une ADRESSE, pas des entités
+    _distant: true,
+    _declarative: {
+      kind: 'categorized', field: 'rang',
+      stops: [
+        { value: 'Autoroute', color: '#c4453a' },
+        { value: 'Voie principale', color: '#7a8290' },
+        { value: 'Desserte', color: '#9aa2ad' },
+      ],
+    },
+  };
+  const vals = filteredUniqueValues(couche, 'rang');
+  assert.deepEqual(vals.map((v) => v.value), ['Autoroute', 'Voie principale', 'Desserte']);
+  // `null` et non zéro : on ignore le compte par classe, on ne l’a pas mesuré.
+  assert.ok(vals.every((v) => v.count === null), 'un compte non mesuré ne vaut pas zéro');
+});
+
+test('une couche locale filtrée à zéro rend bien une liste vide', () => {
+  // La nuance qui justifie la garde : ici l’absence est CONSTATÉE. Retomber sur
+  // les classes déclarées ferait passer un filtre trop strict pour une légende
+  // normale — on masquerait la seule trace du problème.
+  const couche = {
+    id: 'local', name: 'Local',
+    geojson: { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { rang: 'Desserte' }, geometry: null }] },
+    _declarative: { kind: 'categorized', field: 'rang', stops: [{ value: 'Autoroute' }] },
+    _filterPredicate: () => false, // tout est exclu
+  };
+  assert.deepEqual(filteredUniqueValues(couche, 'rang'), []);
+});
+
+test('sans style catégorisé, le repli reste celui des options déclarées', () => {
+  const couche = {
+    id: 'x', name: 'X',
+    geojson: 'https://h.fr/x.geojson',
+    _distant: true,
+    controls: [{ field: 'usage', options: ['Activité', 'Espace vert'] }],
+  };
+  assert.deepEqual(filteredUniqueValues(couche, 'usage').map((v) => v.value),
+    ['Activité', 'Espace vert']);
 });
