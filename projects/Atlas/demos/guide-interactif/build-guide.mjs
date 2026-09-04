@@ -298,11 +298,18 @@ const etapes = [
     id: 'g9',
     title: 'La Terre est ronde',
     description:
-      'Atlas peut rendre en projection globe : en dézoomant, la carte devient une '
-      + 'sphère. 👉 Dézoomez à la molette — la bascule se fait toute seule vers '
-      + 'z12.',
+      'Atlas peut rendre en projection globe. À cette distance la Terre est une '
+      + 'sphère, avec la limite du jour et de la nuit ; en approchant, MapLibre '
+      + 'repasse au plan de lui-même, sans rupture. Les trente îlots sont toujours '
+      + 'là — ils font moins d’un pixel. 👉 Zoomez à la molette et regardez la '
+      + 'courbure s’effacer.',
     state: {
-      camera: { center: CENTRE, zoom: 9, pitch: 30, bearing: 0 },
+      // z2,5 et non z9 : réglé à l'écran. À z9 la sphère est déjà rendue à plat,
+      // et l'étape annonçait une rondeur qu'on ne voyait pas. La bascule visuelle
+      // se joue vers z5-6 — à ne pas confondre avec `GLOBE_MERCATOR_ZOOM` (12),
+      // qui est le seuil interne au-delà duquel Atlas cesse de rendre les modèles
+      // 3D en projection globe.
+      camera: { center: CENTRE, zoom: 2.5, pitch: 0, bearing: 0 },
       projection: 'globe', timeOfDay: heure(14),
       terrain3D: false, shadows: false, ...AMBIANCE,
       layers: [ilots({ polygonMode: 'flat', declarative: PAR_FAMILLE })],

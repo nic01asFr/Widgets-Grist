@@ -1938,15 +1938,15 @@
       {
         "id": "g9",
         "title": "La Terre est ronde",
-        "description": "Atlas peut rendre en projection globe : en dézoomant, la carte devient une sphère. 👉 Dézoomez à la molette — la bascule se fait toute seule vers z12.",
+        "description": "Atlas peut rendre en projection globe. À cette distance la Terre est une sphère, avec la limite du jour et de la nuit ; en approchant, MapLibre repasse au plan de lui-même, sans rupture. Les trente îlots sont toujours là — ils font moins d’un pixel. 👉 Zoomez à la molette et regardez la courbure s’effacer.",
         "state": {
           "camera": {
             "center": [
               5.3698,
               43.2965
             ],
-            "zoom": 9,
-            "pitch": 30,
+            "zoom": 2.5,
+            "pitch": 0,
             "bearing": 0
           },
           "projection": "globe",

@@ -898,6 +898,17 @@
             color: var(--ink); cursor: pointer;
         }
         body.view-mode.view-has-story.mobile-layout #viewer-story-fab { display: inline-flex; }
+        /* Sur petit écran, le bouton flottant REMPLACE celui de la barre, il ne
+           s'y ajoute pas : les deux règles étaient indépendantes et
+           s'appliquaient ensemble, si bien qu'on proposait deux fois la même
+           action — dont une à demi cachée sous la bulle. La barre mobile est
+           étroite (le titre y est déjà tronqué), c'est elle qu'on allège. */
+        body.view-mode.mobile-layout .header-actions #btn-story.has-story { display: none; }
+        /* Et pendant que le récit joue, aucun des deux : il a ses propres
+           commandes, et « Lancer le récit » pendant qu'il tourne ne veut rien
+           dire. */
+        body.story-presenting #viewer-story-fab,
+        body.story-presenting .header-actions #btn-story { display: none !important; }
 
         /* Feuille des modules supplémentaires — mobile seulement. */
         #mobile-plus { position: fixed; inset: 0; z-index: 60; }
@@ -1040,6 +1051,17 @@
             /* Lecture : pas de bottom nav — carte plein écran */
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
             body.view-mode.mobile-layout .legend { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+            /* Récit sur petit écran : la bulle occupe le bas, la légende aussi, et
+               il n'y a pas la place pour les deux. Au-delà de 720 px on remonte la
+               légende au-dessus de la bulle ; ici la remonter la planterait au
+               milieu de la carte. On la replie donc — son en-tête reste tactile,
+               qui veut la liste des classes la rouvre d'un doigt. Sans cette
+               règle, elle était recouverte à plus des trois quarts : on voyait
+               « Légende » et le début de la première ligne. */
+            body.story-presenting.mobile-layout .legend-body { display: none; }
+            body.story-presenting.mobile-layout .legend {
+                bottom: auto; top: calc(var(--topbar-h, 64px) + 12px); left: 12px;
+            }
             body.view-mode.mobile-layout .toasts { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             body.view-mode.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
             body.view-mode.mobile-layout #viewer-controls {
@@ -1279,6 +1301,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.5.3"></script>
+    <script type="module" src="./app.js?v=1.5.4"></script>
 </body>
 </html>

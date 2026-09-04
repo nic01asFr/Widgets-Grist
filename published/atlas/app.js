@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.3';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.4';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.5.3';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.3';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.3';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.3';
+} from './lib/scene-loader.js?v=1.5.4';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.4';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.4';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.4';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.5.3';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.3';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.3';
+} from './lib/layer-order.js?v=1.5.4';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.4';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.4';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.5.3';
+} from './lib/terrain-base.js?v=1.5.4';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.5.3';
+} from './lib/grist-sync.js?v=1.5.4';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.5.3';
+} from './lib/declarative-style.js?v=1.5.4';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.5.3';
+} from './lib/geo-tables.js?v=1.5.4';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.5.3';
+} from './lib/controls.js?v=1.5.4';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.5.3';
+} from './lib/story.js?v=1.5.4';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.5.3';
+} from './lib/manifest-binding.js?v=1.5.4';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.5.3';
+} from './lib/viewport.js?v=1.5.4';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.5.3';
+} from './lib/view-mode.js?v=1.5.4';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.5.3';
+} from './lib/viewer-controls.js?v=1.5.4';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.5.3';
+} from './lib/scene-prefs.js?v=1.5.4';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -1703,6 +1703,11 @@ function initMap() {
         if (!STATE.settings.terrain3D) return;
         if (e.sourceId !== 'terrain-dem' || e.sourceDataType !== 'content') return;
         clearTimeout(_tuilesDemTimer);
+        // Le cache d'altitude n'a pas à être purgé ici : `recalerRelief` appelle
+        // `Models3D.recomputeAll()`, qui le vide en entrée. Vérifié — l'origine
+        // est toujours posée (à défaut de modèle, sur le centre de la carte) et
+        // la scène three.js est créée inconditionnellement, donc la garde de
+        // `recomputeAll` est franchie et la purge a bien lieu.
         _tuilesDemTimer = setTimeout(() => recalerRelief(0), 600);
     });
 
@@ -5348,7 +5353,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.3');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.4');
     return Feuille;
 }
 
@@ -5465,10 +5470,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.5.3'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.5.4'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.5.3');
+        const dc = await import('./lib/data-client.js?v=1.5.4');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7381,9 +7386,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.5.3');
+        const { capacites } = await import('./lib/data-client.js?v=1.5.4');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.3');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.4');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
