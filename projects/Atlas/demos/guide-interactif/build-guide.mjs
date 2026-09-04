@@ -137,12 +137,54 @@ const points = LIEUX.map((l) => ({
   geometry: { type: 'Point', coordinates: [CENTRE[0] + l.k[0] * PAS, CENTRE[1] + l.k[1] * PAS] },
 }));
 
+/**
+ * Une plantation : trois essences, réparties dans les allées.
+ *
+ * Elle sert à montrer la **catégorisation d'objets** — un modèle 3D choisi
+ * d'après un attribut, ici l'essence. La démo des Aygalades obtient le même
+ * résultat en posant `_modelId` sur chacun de ses 374 objets ; ici la règle est
+ * déclarée une fois dans le manifeste, et changer le modèle d'une essence tient
+ * en une ligne au lieu d'une réextraction.
+ */
+const ESSENCES = [
+  { nom: 'Platane', essence: 'Feuillu', modelId: 'tree_deciduous' },
+  { nom: 'Pin', essence: 'Conifère', modelId: 'tree_conifer' },
+  { nom: 'Palmier', essence: 'Palmier', modelId: 'tree_palm' },
+];
+const arbres = [];
+{
+  // Deux rangées dans les allées, alternant les essences : la catégorisation se
+  // lit d'un coup d'œil si les voisins diffèrent.
+  let n = 0;
+  for (const ligne of [-0.6, 1.4]) {
+    for (let i = 0; i < 7; i++) {
+      const e = ESSENCES[(i + (ligne > 0 ? 1 : 0)) % ESSENCES.length];
+      n++;
+      arbres.push({
+        type: 'Feature',
+        properties: {
+          nom: `${e.nom} ${String(n).padStart(2, '0')}`,
+          essence: e.essence,
+          hauteur_m: 6 + ((n * 7) % 5),
+          // PAS de `_modelId` ici, volontairement : c'est le manifeste qui
+          // décide, via `style.model`. L'attribut suffit.
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [CENTRE[0] + (i - 3) * PAS * 0.95, CENTRE[1] + ligne * PAS],
+        },
+      });
+    }
+  }
+}
+
 const ecrire = (nom, features) =>
   fs.writeFileSync(path.join(__dirname, nom), JSON.stringify({ type: 'FeatureCollection', features }));
 
 ecrire('ilots.geojson', carres);
 ecrire('axes.geojson', lignes);
 ecrire('lieux.geojson', points);
+ecrire('arbres.geojson', arbres);
 ecrire('reperes.geojson', REPERES.map((r) => ({
   type: 'Feature',
   properties: { nom: r.nom, type: r.type, _modelId: 'streetlamp' },
@@ -192,6 +234,16 @@ const AXES_STYLE = {
   ],
   fallback: '#9aa2ad',
 };
+const ARBRES_STYLE = {
+  kind: 'categorized',
+  field: 'essence',
+  stops: [
+    { value: 'Feuillu', color: '#5b8c4a', opacity: 1 },
+    { value: 'Conifère', color: '#2f6b4f', opacity: 1 },
+    { value: 'Palmier', color: '#8fa83f', opacity: 1 },
+  ],
+  fallback: '#8a8478',
+};
 const LIEUX_STYLE = {
   kind: 'categorized',
   field: 'type',
@@ -207,6 +259,7 @@ const COUCHES = {
   reperes: 'guide-reperes',
   axes: 'guide-axes',
   lieux: 'guide-lieux',
+  arbres: 'guide-arbres',
 };
 
 /* ------------------------------------------------------------------ récit -- */
@@ -395,6 +448,29 @@ const etapes = [
     },
   },
   {
+    id: 'g7c-categories-objets',
+    title: 'Un modèle par catégorie',
+    description:
+      'Quatorze arbres, trois essences, trois modèles. La règle est déclarée une '
+      + 'fois — « le modèle suit l’essence » — et non recopiée sur chaque objet. '
+      + 'Changer le modèle des conifères, c’est changer une ligne. '
+      + '👉 La pastille « Essence » filtre la plantation : ne gardez que les '
+      + 'palmiers.',
+    state: {
+      // Assez pres pour comparer les trois formes : a z17,2 les arbres
+      // faisaient une dizaine de pixels et les essences se confondaient.
+      camera: vue(18.2, 62, 25), projection: 'mercator', timeOfDay: heure(15),
+      terrain3D: false, shadows: true, ...AMBIANCE,
+      layers: [
+        ilots({ polygonMode: 'flat', declarative: { kind: 'single', color: '#ece4d8', opacity: 0.55 } }),
+        etat(COUCHES.arbres, 'Plantation', true, {
+          declarative: ARBRES_STYLE,
+          controls: [{ field: 'essence', type: 'select', values: ['Feuillu', 'Conifère', 'Palmier'] }],
+        }),
+      ],
+    },
+  },
+  {
     id: 'g8',
     title: 'Des objets, pas seulement des formes',
     description:
@@ -492,6 +568,27 @@ const etapes = [
     },
   },
   {
+    id: 'g9c-editer',
+    title: 'Éditer — mais pas ici',
+    description:
+      'Dans un document Grist, chaque objet s’ouvre au clic et s’y modifie : ses '
+      + 'attributs, et pour un modèle 3D son échelle, ses rotations, son '
+      + 'altitude. On peut aussi en sélectionner plusieurs — Maj + glisser à la '
+      + 'souris, appui long au doigt — et leur appliquer le même réglage d’un '
+      + 'coup. Ce guide, lui, est une scène publiée : elle n’a pas de document, '
+      + 'donc pas de propriétaire, donc rien où écrire. C’est voulu — un lien '
+      + 'qu’on partage ne doit pas pouvoir modifier vos données.',
+    state: {
+      camera: vue(17.6, 58, 25), projection: 'mercator', timeOfDay: heure(14),
+      terrain3D: false, shadows: true, ...AMBIANCE,
+      layers: [
+        ilots({ polygonMode: 'flat', declarative: { kind: 'single', color: '#ece4d8', opacity: 0.55 } }),
+        etat(COUCHES.arbres, 'Plantation', true, { declarative: ARBRES_STYLE }),
+        etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
+      ],
+    },
+  },
+  {
     id: 'g10',
     title: 'Et maintenant, la vôtre',
     description:
@@ -586,9 +683,51 @@ const scene = {
       fields: [{ name: 'nom', gType: 'Text' }, { name: 'type', gType: 'Text' }],
     },
     {
+      id: COUCHES.arbres,
+      name: 'Plantation',
+      order: 3,
+      geometry_type: 'point',
+      visible: false,
+      visibility: { defaultVisible: false },
+      // INLINE : les instances 3D se construisent en parcourant les entités.
+      style: {
+        mode: 'library',
+        // Repli, pour une entité dont l'essence ne serait pas reconnue.
+        library: { modelId: 'tree_deciduous' },
+        // La règle, déclarée UNE fois : le modèle suit l'essence. Sans elle il
+        // faudrait poser `_modelId` sur chacun des quatorze arbres.
+        model: {
+          field: 'essence',
+          categories: [
+            { value: 'Feuillu', modelId: 'tree_deciduous' },
+            { value: 'Conifère', modelId: 'tree_conifer' },
+            { value: 'Palmier', modelId: 'tree_palm' },
+          ],
+          defaultModelId: 'tree_deciduous',
+        },
+        common: { scale: 1.4, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
+        declarative: ARBRES_STYLE,
+      },
+      source: { type: 'geojson', classe: 'externe' },
+      geojson: JSON.parse(fs.readFileSync(path.join(__dirname, 'arbres.geojson'), 'utf8')),
+      bbox,
+      featureCount: arbres.length,
+      crs: 'EPSG:4326',
+      controls: [
+        { field: 'essence', type: 'select', label: 'Essence', active: true,
+          values: ['Feuillu', 'Conifère', 'Palmier'] },
+      ],
+      popup_template: '<b>{nom}</b><br>{essence} · {hauteur_m} m',
+      fields: [
+        { name: 'nom', gType: 'Text' },
+        { name: 'essence', gType: 'Text' },
+        { name: 'hauteur_m', gType: 'Numeric' },
+      ],
+    },
+    {
       id: COUCHES.reperes,
       name: 'Repères',
-      order: 3,
+      order: 4,
       geometry_type: 'point',
       visible: false,
       visibility: { defaultVisible: false },

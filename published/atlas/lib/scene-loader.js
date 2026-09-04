@@ -7,7 +7,7 @@ import {
   boundsFromGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.6.0';
+} from './grist-rows.js?v=1.6.1';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
@@ -15,9 +15,9 @@ import {
   colorFnFromDeclarative,
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
-} from './declarative-style.js?v=1.6.0';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.6.0';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.6.0';
+} from './declarative-style.js?v=1.6.1';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.6.1';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.6.1';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
@@ -280,6 +280,27 @@ function coucheHorsTable(ml, origine, widgetConfig) {
           field: ml.style.label.field,
           ...(ml.style.label.size != null ? { size: ml.style.label.size } : {}),
           ...(ml.style.label.color ? { color: ml.style.label.color } : {}),
+        },
+      } : {}),
+      // Un modèle 3D par catégorie, déclaré par le manifeste.
+      //
+      // Atlas sait choisir le modèle d'après un attribut (`sym.model.mode =
+      // 'categorized'`), mais une scène ne pouvait pas le demander : seul
+      // `_modelId`, posé sur chaque entité, y parvenait. C'est possible, et
+      // c'est même ce que fait la démo des Aygalades — au prix d'une propriété
+      // recopiée sur 374 objets, qu'il faut regénérer pour changer un modèle.
+      // Déclarer la règle une fois vaut mieux que la recopier partout.
+      //
+      // Même précaution que pour `label` : posé sur `style.model`, jamais dans
+      // `style.symbolization`, qui doit rester créée d'un bloc.
+      ...(ml.style?.model?.field && Array.isArray(ml.style.model.categories) ? {
+        model: {
+          mode: 'categorized',
+          field: ml.style.model.field,
+          categories: ml.style.model.categories
+            .filter((c) => c && c.value != null && c.modelId)
+            .map((c) => ({ value: c.value, modelId: c.modelId })),
+          defaultModelId: ml.style.model.defaultModelId || null,
         },
       } : {}),
     },

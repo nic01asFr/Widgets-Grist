@@ -1456,9 +1456,329 @@
       ]
     },
     {
+      "id": "guide-arbres",
+      "name": "Plantation",
+      "order": 3,
+      "geometry_type": "point",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false
+      },
+      "style": {
+        "mode": "library",
+        "library": {
+          "modelId": "tree_deciduous"
+        },
+        "model": {
+          "field": "essence",
+          "categories": [
+            {
+              "value": "Feuillu",
+              "modelId": "tree_deciduous"
+            },
+            {
+              "value": "Conifère",
+              "modelId": "tree_conifer"
+            },
+            {
+              "value": "Palmier",
+              "modelId": "tree_palm"
+            }
+          ],
+          "defaultModelId": "tree_deciduous"
+        },
+        "common": {
+          "scale": 1.4,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "offsetX": 0,
+          "offsetY": 0,
+          "offsetZ": 0
+        },
+        "declarative": {
+          "kind": "categorized",
+          "field": "essence",
+          "stops": [
+            {
+              "value": "Feuillu",
+              "color": "#5b8c4a",
+              "opacity": 1
+            },
+            {
+              "value": "Conifère",
+              "color": "#2f6b4f",
+              "opacity": 1
+            },
+            {
+              "value": "Palmier",
+              "color": "#8fa83f",
+              "opacity": 1
+            }
+          ],
+          "fallback": "#8a8478"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Platane 01",
+              "essence": "Feuillu",
+              "hauteur_m": 8
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367235,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Pin 02",
+              "essence": "Conifère",
+              "hauteur_m": 10
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36809,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Palmier 03",
+              "essence": "Palmier",
+              "hauteur_m": 7
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368945,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Platane 04",
+              "essence": "Feuillu",
+              "hauteur_m": 9
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3698,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Pin 05",
+              "essence": "Conifère",
+              "hauteur_m": 6
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.370654999999999,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Palmier 06",
+              "essence": "Palmier",
+              "hauteur_m": 8
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.37151,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Platane 07",
+              "essence": "Feuillu",
+              "hauteur_m": 10
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.372364999999999,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Pin 08",
+              "essence": "Conifère",
+              "hauteur_m": 7
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.367235,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Palmier 09",
+              "essence": "Palmier",
+              "hauteur_m": 9
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36809,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Platane 10",
+              "essence": "Feuillu",
+              "hauteur_m": 6
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.368945,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Pin 11",
+              "essence": "Conifère",
+              "hauteur_m": 8
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.3698,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Palmier 12",
+              "essence": "Palmier",
+              "hauteur_m": 10
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.370654999999999,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Platane 13",
+              "essence": "Feuillu",
+              "hauteur_m": 7
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.37151,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Pin 14",
+              "essence": "Conifère",
+              "hauteur_m": 9
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.372364999999999,
+                43.297760000000004
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.36674,
+        43.293800000000005,
+        5.373399999999999,
+        43.29956
+      ],
+      "featureCount": 14,
+      "crs": "EPSG:4326",
+      "controls": [
+        {
+          "field": "essence",
+          "type": "select",
+          "label": "Essence",
+          "active": true,
+          "values": [
+            "Feuillu",
+            "Conifère",
+            "Palmier"
+          ]
+        }
+      ],
+      "popup_template": "<b>{nom}</b><br>{essence} · {hauteur_m} m",
+      "fields": [
+        {
+          "name": "nom",
+          "gType": "Text"
+        },
+        {
+          "name": "essence",
+          "gType": "Text"
+        },
+        {
+          "name": "hauteur_m",
+          "gType": "Numeric"
+        }
+      ]
+    },
+    {
       "id": "guide-reperes",
       "name": "Repères",
-      "order": 3,
+      "order": 4,
       "geometry_type": "point",
       "visible": false,
       "visibility": {
@@ -2409,6 +2729,103 @@
         }
       },
       {
+        "id": "g7c-categories-objets",
+        "title": "Un modèle par catégorie",
+        "description": "Quatorze arbres, trois essences, trois modèles. La règle est déclarée une fois — « le modèle suit l’essence » — et non recopiée sur chaque objet. Changer le modèle des conifères, c’est changer une ligne. 👉 La pastille « Essence » filtre la plantation : ne gardez que les palmiers.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 18.2,
+            "pitch": 62,
+            "bearing": 25
+          },
+          "projection": "mercator",
+          "timeOfDay": 900,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#ece4d8",
+                "opacity": 0.55
+              }
+            },
+            {
+              "id": "guide-arbres",
+              "name": "Plantation",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "essence",
+                  "type": "select",
+                  "values": [
+                    "Feuillu",
+                    "Conifère",
+                    "Palmier"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "essence",
+                "stops": [
+                  {
+                    "value": "Feuillu",
+                    "color": "#5b8c4a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Conifère",
+                    "color": "#2f6b4f",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Palmier",
+                    "color": "#8fa83f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#8a8478"
+              }
+            }
+          ]
+        }
+      },
+      {
         "id": "g8",
         "title": "Des objets, pas seulement des formes",
         "description": "Deux repères viennent d’apparaître, rendus par un modèle 3D du catalogue embarqué. Une couche ponctuelle peut être un cercle, une icône, ou un objet posé au sol. 👉 Cliquez sur un îlot : sa fiche s’ouvre avec ses attributs.",
@@ -2836,6 +3253,106 @@
                   }
                 ],
                 "fallback": "#b9b2a7"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g9c-editer",
+        "title": "Éditer — mais pas ici",
+        "description": "Dans un document Grist, chaque objet s’ouvre au clic et s’y modifie : ses attributs, et pour un modèle 3D son échelle, ses rotations, son altitude. On peut aussi en sélectionner plusieurs — Maj + glisser à la souris, appui long au doigt — et leur appliquer le même réglage d’un coup. Ce guide, lui, est une scène publiée : elle n’a pas de document, donc pas de propriétaire, donc rien où écrire. C’est voulu — un lien qu’on partage ne doit pas pouvoir modifier vos données.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 17.6,
+            "pitch": 58,
+            "bearing": 25
+          },
+          "projection": "mercator",
+          "timeOfDay": 840,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#ece4d8",
+                "opacity": 0.55
+              }
+            },
+            {
+              "id": "guide-arbres",
+              "name": "Plantation",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "essence",
+                "stops": [
+                  {
+                    "value": "Feuillu",
+                    "color": "#5b8c4a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Conifère",
+                    "color": "#2f6b4f",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Palmier",
+                    "color": "#8fa83f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#8a8478"
+              }
+            },
+            {
+              "id": "guide-reperes",
+              "name": "Repères",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#c9a227",
+                "opacity": 1
               }
             }
           ]

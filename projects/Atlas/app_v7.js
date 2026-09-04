@@ -687,6 +687,12 @@ function initSymbolization(layer) {
     if (!sym.label.field && layer.style.label?.field) {
         sym.label = { ...sym.label, ...layer.style.label };
     }
+    // Même règle pour la catégorisation de modèles : reprise du manifeste une
+    // seule fois, tant que la couche n'a pas la sienne. Ensuite c'est le réglage
+    // de l'utilisateur qui fait foi.
+    if (sym.model && sym.model.mode !== 'categorized' && layer.style.model?.field) {
+        sym.model = { ...sym.model, ...layer.style.model };
+    }
     if (sym.label.size == null) sym.label.size = 12;
     if (!sym.label.color) sym.label.color = '#2D2820';
     return sym;
