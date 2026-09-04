@@ -225,11 +225,28 @@ garder — la carte qu'on a montrée, pas la base entière.
 
 ## Ce qui reste ouvert par ailleurs
 
-- Le **calage relief** d'une couche distante ne casse pas, mais sa précision n'est
-  pas éprouvée : une altitude unique pour toute l'emprise, à vérifier sur un
-  relief marqué.
+- Le **calage relief** d'une couche distante a été éprouvé (03/09/2026, vallon des
+  Aygalades) et **ne tient pas** sur un relief marqué : l'altitude unique est
+  juste au seul point où elle est sondée — écart mesuré de +57 m au fond de
+  vallon à −148 m sur le coteau, pour 220 m d'amplitude. Le bâti forme une nappe
+  suspendue que les lignes drapées traversent. Contourné dans la démo (surfaces à
+  plat, drapées par MapLibre) ; **non résolu dans Atlas**. Deux voies : refuser
+  l'extrusion dans ce cas avec un message qui l'explique, ou charger le GeoJSON
+  quand le relief est actif — au prix du téléchargement qu'on cherchait à éviter.
+  MapLibre n'offre pas de raccourci : `fill-extrusion-base-alignment` est une
+  propriété Mapbox GL v3, refusée en MapLibre 5.6.1.
 - Un avertissement MapLibre `type number, found null` non élucidé — il vient d'un
   *worker*, hors de portée d'une interception dans la page.
 - L'**index de recherche** ne trouve pas les objets d'une couche distante.
-- Seul le **polygone** est éprouvé en distant : ligne, point, récit et mode mobile
-  ne l'ont pas été.
+- En distant sont désormais éprouvés : **polygone** (plat et extrudé), **ligne**
+  (voirie, rail, cours d'eau) et le **récit** (huit étapes). Restent non éprouvés
+  le **mode mobile** et le clic sur un **modèle 3D**, qui n'ouvre pas de fiche.
+- Les **modèles 3D exigent une couche qui porte ses entités** (inline ou table) :
+  servis par URL, rien n'est instancié — la légende annonce son compte, le
+  catalogue se charge, et la carte reste nue. Mesuré : 374 objets par URL
+  n'affichaient rien, les mêmes en inline donnent 1 245 instances.
+- Les **réglages globaux de scène** (fond, soleil, relief, ombres, ciel,
+  étiquettes) sont enregistrés depuis la v1.5.0 dans `Atlas_ScenePrefs`. Le cycle
+  complet — écrire, fermer, rouvrir, retrouver — **reste à éprouver dans un
+  document Grist réel** ; seuls les tests unitaires et le maillon d'application
+  sont vérifiés.
