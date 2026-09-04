@@ -1197,9 +1197,268 @@
       ]
     },
     {
+      "id": "guide-axes",
+      "name": "Axes",
+      "order": 1,
+      "geometry_type": "line",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false
+      },
+      "style": {
+        "declarative": {
+          "kind": "categorized",
+          "field": "rang",
+          "stops": [
+            {
+              "value": "Principal",
+              "color": "#c4453a",
+              "opacity": 1
+            },
+            {
+              "value": "Desserte",
+              "color": "#7a8290",
+              "opacity": 0.85
+            }
+          ],
+          "fallback": "#9aa2ad"
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Axe principal",
+              "rang": "Principal"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.3669199999999995,
+                  43.29696838785518
+                ],
+                [
+                  5.3689,
+                  43.296684936639785
+                ],
+                [
+                  5.370699999999999,
+                  43.29721506336022
+                ],
+                [
+                  5.37304,
+                  43.29681060606036
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Desserte nord",
+              "rang": "Desserte"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.3669199999999995,
+                  43.29876838785518
+                ],
+                [
+                  5.3689,
+                  43.29848493663979
+                ],
+                [
+                  5.370699999999999,
+                  43.299015063360216
+                ],
+                [
+                  5.37304,
+                  43.298610606060365
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Desserte sud",
+              "rang": "Desserte"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.3669199999999995,
+                  43.295168387855185
+                ],
+                [
+                  5.3689,
+                  43.29488493663979
+                ],
+                [
+                  5.370699999999999,
+                  43.29541506336022
+                ],
+                [
+                  5.37304,
+                  43.295010606060366
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.36674,
+        43.293800000000005,
+        5.373399999999999,
+        43.29956
+      ],
+      "featureCount": 3,
+      "crs": "EPSG:4326",
+      "popup_template": "<b>{nom}</b><br>{rang}",
+      "fields": [
+        {
+          "name": "nom",
+          "gType": "Text"
+        },
+        {
+          "name": "rang",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
+      "id": "guide-lieux",
+      "name": "Lieux",
+      "order": 2,
+      "geometry_type": "point",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false
+      },
+      "style": {
+        "declarative": {
+          "kind": "categorized",
+          "field": "type",
+          "stops": [
+            {
+              "value": "Équipement",
+              "color": "#3f7d8c",
+              "opacity": 1
+            },
+            {
+              "value": "Commerce",
+              "color": "#d99a2b",
+              "opacity": 1
+            }
+          ],
+          "fallback": "#8a8478"
+        },
+        "label": {
+          "enabled": true,
+          "field": "nom",
+          "size": 12
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Halle",
+              "type": "Équipement"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36782,
+                43.297760000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Marché",
+              "type": "Commerce"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.37034,
+                43.29542
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "École",
+              "type": "Équipement"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.37196,
+                43.298120000000004
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Kiosque",
+              "type": "Commerce"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.369079999999999,
+                43.29884
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.36674,
+        43.293800000000005,
+        5.373399999999999,
+        43.29956
+      ],
+      "featureCount": 4,
+      "crs": "EPSG:4326",
+      "popup_template": "<b>{nom}</b><br>{type}",
+      "fields": [
+        {
+          "name": "nom",
+          "gType": "Text"
+        },
+        {
+          "name": "type",
+          "gType": "Text"
+        }
+      ]
+    },
+    {
       "id": "guide-reperes",
       "name": "Repères",
-      "order": 1,
+      "order": 3,
       "geometry_type": "point",
       "visible": false,
       "visibility": {
@@ -1346,6 +1605,113 @@
         }
       },
       {
+        "id": "g1b-geometries",
+        "title": "Trois géométries, une même logique",
+        "description": "Tout ce qu’Atlas affiche tient en trois formes : des « points », des « lignes », des « surfaces ». Ici les quatre lieux, les trois axes et les trente îlots, ensemble. Chacune se symbolise, se filtre et s’interroge de la même façon — ce qui change, c’est ce qu’on peut en faire ensuite : une surface se lève en volume, un point devient un objet, une ligne se drape. 👉 Cliquez sur n’importe quel objet : sa fiche s’ouvre.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.9,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#8aa4b8",
+                "opacity": 1
+              }
+            },
+            {
+              "id": "guide-axes",
+              "name": "Axes",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Principal",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  }
+                ],
+                "fallback": "#9aa2ad"
+              }
+            },
+            {
+              "id": "guide-lieux",
+              "name": "Lieux",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "type",
+                "stops": [
+                  {
+                    "value": "Équipement",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerce",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#8a8478"
+              }
+            }
+          ]
+        }
+      },
+      {
         "id": "g2",
         "title": "Une couleur, une catégorie",
         "description": "Les mêmes trente carrés, lus autrement : la couleur suit maintenant leur famille. La donnée n’a pas changé — la carte n’est pas la donnée, c’en est une vue. 👉 Cliquez sur « Écoles » dans la légende : Atlas isole cette classe. Cliquez encore pour tout revoir.",
@@ -1427,7 +1793,7 @@
       {
         "id": "g3",
         "title": "Une couleur, une mesure — et ce qu’on ne sait pas",
-        "description": "Cette fois la couleur suit une valeur numérique, rangée en quatre classes aux bornes choisies. Regardez les deux carrés gris : leur valeur est vide. Ils ne sont pas « bas », ils sont **non classés** — une carte honnête distingue les deux. 👉 Comparez leur position avec l’étape précédente.",
+        "description": "Cette fois la couleur suit une valeur numérique, rangée en quatre classes aux bornes choisies. Regardez les deux carrés gris : leur valeur est vide. Ils ne sont pas « bas », ils sont « non classés » — une carte honnête distingue les deux. 👉 Comparez leur position avec l’étape précédente.",
         "state": {
           "camera": {
             "center": [
@@ -1585,6 +1951,114 @@
                   }
                 ],
                 "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g4b-surfaces",
+        "title": "Ce qu’une surface peut être",
+        "description": "Une même surface se rend de plusieurs façons : « à plat », drapée sur le sol et translucide pour laisser lire le fond ; « en volume », opaque, avec une hauteur portée par un attribut. S’y ajoutent un contour, une opacité, une étiquette. 👉 L’étape suivante les lève : regardez ce qui change, et ce qui ne change pas.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 16.3,
+            "pitch": 35,
+            "bearing": -10
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            },
+            {
+              "id": "guide-axes",
+              "name": "Axes",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "rang",
+                "stops": [
+                  {
+                    "value": "Principal",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Desserte",
+                    "color": "#7a8290",
+                    "opacity": 0.85
+                  }
+                ],
+                "fallback": "#9aa2ad"
               }
             }
           ]
@@ -1840,6 +2314,101 @@
         }
       },
       {
+        "id": "g7b-points",
+        "title": "Ce qu’un point peut être",
+        "description": "Les quatre « Lieux » sont des cercles 2D avec leur nom ; les deux « Repères », un modèle 3D posé au sol. Même géométrie, deux rendus — c’est le style qui décide, pas la donnée. Un point peut donc être une pastille lisible de loin, ou un objet qu’on reconnaît de près. 👉 Zoomez : les cercles gardent leur taille à l’écran, le modèle grandit.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 16.6,
+            "pitch": 55,
+            "bearing": 10
+          },
+          "projection": "mercator",
+          "timeOfDay": 900,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#e6ded2",
+                "opacity": 0.6
+              }
+            },
+            {
+              "id": "guide-lieux",
+              "name": "Lieux",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "categorized",
+                "field": "type",
+                "stops": [
+                  {
+                    "value": "Équipement",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerce",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#8a8478"
+              }
+            },
+            {
+              "id": "guide-reperes",
+              "name": "Repères",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#c9a227",
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      },
+      {
         "id": "g8",
         "title": "Des objets, pas seulement des formes",
         "description": "Deux repères viennent d’apparaître, rendus par un modèle 3D du catalogue embarqué. Une couche ponctuelle peut être un cercle, une icône, ou un objet posé au sol. 👉 Cliquez sur un îlot : sa fiche s’ouvre avec ses attributs.",
@@ -1887,6 +2456,264 @@
               ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            },
+            {
+              "id": "guide-reperes",
+              "name": "Repères",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#c9a227",
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g9-fond",
+        "title": "Changer de fond, garder sa donnée",
+        "description": "Le fond de carte passe à l’orthophotographie de l’IGN. Vos couches ne bougent pas : elles sont posées SUR le fond, elles n’en font pas partie. Un plan pour lire, une photo pour reconnaître — c’est la même scène. 👉 Comparez avec l’étape précédente : mêmes îlots, autre décor.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 16.4,
+            "pitch": 50,
+            "bearing": 15
+          },
+          "projection": "mercator",
+          "timeOfDay": 780,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "ortho-ign",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "famille",
+                "stops": [
+                  {
+                    "value": "Écoles",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerces",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Bureaux",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Logements",
+                    "color": "#6f9457",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#b9b2a7"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g10-relief",
+        "title": "Le terrain a du relief",
+        "description": "Relief activé : la carte cesse d’être une feuille. Les îlots sont posés à plat — MapLibre les drape sur le terrain, entité par entité, et ils épousent la pente. En volume il faudrait une altitude par îlot, ce qui suppose qu’Atlas détienne les entités. 👉 Inclinez la vue avec un clic droit glissé pour voir la butte du Panier.",
+        "state": {
+          "camera": {
+            "center": [
+              5.369,
+              43.298
+            ],
+            "zoom": 15.3,
+            "pitch": 68,
+            "bearing": -30
+          },
+          "projection": "mercator",
+          "timeOfDay": 600,
+          "terrain3D": true,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g11-ambiance",
+        "title": "Le décor complet",
+        "description": "Ciel, bâti du fond de carte, toponymes : trois interrupteurs, chacun déclaré par l’étape. Une scène peut tout allumer pour une vue d’ensemble, ou tout éteindre pour ne montrer que la donnée. 👉 Le bâti gris autour des îlots vient d’OpenStreetMap, pas de vous.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 16.8,
+            "pitch": 62,
+            "bearing": -15
+          },
+          "projection": "mercator",
+          "timeOfDay": 960,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "liberty",
+          "buildings3D": true,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
               "declarative": {
                 "kind": "graduated",
                 "field": "valeur",

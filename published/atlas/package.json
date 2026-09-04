@@ -1,6 +1,6 @@
 {
   "name": "atlas",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "description": "Atlas — maquette 3D territoriale MapLibre + Scene Manifest (qgis2grist)",
   "authors": [
     {

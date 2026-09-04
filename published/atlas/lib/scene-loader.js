@@ -7,7 +7,7 @@ import {
   boundsFromGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.5.4';
+} from './grist-rows.js?v=1.6.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
@@ -15,9 +15,9 @@ import {
   colorFnFromDeclarative,
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
-} from './declarative-style.js?v=1.5.4';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.5.4';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.5.4';
+} from './declarative-style.js?v=1.6.0';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.6.0';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.6.0';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
@@ -259,6 +259,29 @@ function coucheHorsTable(ml, origine, widgetConfig) {
       ...(ml.style?.common ? { common: { ...ml.style.common } } : {
         common: { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
       }),
+      // Étiquettes déclarées par le manifeste.
+      //
+      // Atlas sait poser un texte sur chaque objet — c'est un réglage de couche,
+      // persisté dans `Atlas_LayerPrefs` — mais une scène ne pouvait pas le
+      // demander : `style.label` n'était pas repris ici, et le `label` du style
+      // déclaratif désigne le libellé d'une CLASSE, pas un texte sur la carte.
+      // Une scène publiée ne pouvait donc pas nommer ses objets.
+      //
+      // Posé sur `style.label`, JAMAIS dans `style.symbolization` : cette
+      // dernière est créée d'un bloc par `initSymbolization`, qui ne la
+      // construit que si elle est absente. Y déposer une structure partielle la
+      // rend « déjà là » et prive la couche de ses branches `color`, `size` et
+      // `model` — le chargement plante alors sur `sym.color.mode`, en silence,
+      // et la scène n'apparaît pas du tout. `initSymbolization` reprend
+      // `style.label` en fin d'initialisation.
+      ...(ml.style?.label?.field ? {
+        label: {
+          enabled: ml.style.label.enabled !== false,
+          field: ml.style.label.field,
+          ...(ml.style.label.size != null ? { size: ml.style.label.size } : {}),
+          ...(ml.style.label.color ? { color: ml.style.label.color } : {}),
+        },
+      } : {}),
     },
     _modelCat: ml._modelCat || (modeModele !== 'mapbox' ? 'landmark' : 'furniture'),
     _declarative: declarative,

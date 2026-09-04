@@ -95,10 +95,54 @@ const REPERES = [
   { nom: 'Le point d’arrivée', type: 'Repère', c: [CENTRE[0] + PAS * 1.4, CENTRE[1] + PAS * 0.4] },
 ];
 
+/**
+ * Des lignes : trois axes qui traversent la grille, de rang différent.
+ *
+ * Le guide n'en avait aucune — il montrait des surfaces et des points, et
+ * laissait croire qu'Atlas ne sait faire que cela. Une ligne se symbolise, se
+ * catégorise et se drape comme le reste ; elle mérite d'être là.
+ */
+const AXES = [
+  { nom: 'Axe principal', rang: 'Principal', dy: 0.5 },
+  { nom: 'Desserte nord', rang: 'Desserte', dy: 2.5 },
+  { nom: 'Desserte sud', rang: 'Desserte', dy: -1.5 },
+];
+const lignes = AXES.map((a) => ({
+  type: 'Feature',
+  properties: { nom: a.nom, rang: a.rang },
+  geometry: {
+    type: 'LineString',
+    coordinates: [-3.2, -1, 1, 3.6].map((k) => [
+      CENTRE[0] + k * PAS,
+      CENTRE[1] + (a.dy + Math.sin(k) * 0.35) * PAS,
+    ]),
+  },
+}));
+
+/**
+ * Des points « nus » : rendus en cercle 2D, avec étiquette.
+ *
+ * Distincts des repères, qui portent un modèle 3D. La même géométrie ponctuelle
+ * peut être l'un ou l'autre — c'est le style qui décide, pas la donnée.
+ */
+const LIEUX = [
+  { nom: 'Halle', type: 'Équipement', k: [-2.2, 1.4] },
+  { nom: 'Marché', type: 'Commerce', k: [0.6, -1.2] },
+  { nom: 'École', type: 'Équipement', k: [2.4, 1.8] },
+  { nom: 'Kiosque', type: 'Commerce', k: [-0.8, 2.6] },
+];
+const points = LIEUX.map((l) => ({
+  type: 'Feature',
+  properties: { nom: l.nom, type: l.type },
+  geometry: { type: 'Point', coordinates: [CENTRE[0] + l.k[0] * PAS, CENTRE[1] + l.k[1] * PAS] },
+}));
+
 const ecrire = (nom, features) =>
   fs.writeFileSync(path.join(__dirname, nom), JSON.stringify({ type: 'FeatureCollection', features }));
 
 ecrire('ilots.geojson', carres);
+ecrire('axes.geojson', lignes);
+ecrire('lieux.geojson', points);
 ecrire('reperes.geojson', REPERES.map((r) => ({
   type: 'Feature',
   properties: { nom: r.nom, type: r.type, _modelId: 'streetlamp' },
@@ -139,7 +183,31 @@ const PAR_VALEUR = {
 };
 const REPERE_STYLE = { kind: 'single', color: '#c9a227', opacity: 1 };
 
-const COUCHES = { ilots: 'guide-ilots', reperes: 'guide-reperes' };
+const AXES_STYLE = {
+  kind: 'categorized',
+  field: 'rang',
+  stops: [
+    { value: 'Principal', color: '#c4453a', opacity: 1 },
+    { value: 'Desserte', color: '#7a8290', opacity: 0.85 },
+  ],
+  fallback: '#9aa2ad',
+};
+const LIEUX_STYLE = {
+  kind: 'categorized',
+  field: 'type',
+  stops: [
+    { value: 'Équipement', color: '#3f7d8c', opacity: 1 },
+    { value: 'Commerce', color: '#d99a2b', opacity: 1 },
+  ],
+  fallback: '#8a8478',
+};
+
+const COUCHES = {
+  ilots: 'guide-ilots',
+  reperes: 'guide-reperes',
+  axes: 'guide-axes',
+  lieux: 'guide-lieux',
+};
 
 /* ------------------------------------------------------------------ récit -- */
 
@@ -189,6 +257,26 @@ const etapes = [
     },
   },
   {
+    id: 'g1b-geometries',
+    title: 'Trois géométries, une même logique',
+    description:
+      'Tout ce qu’Atlas affiche tient en trois formes : des « points », des '
+      + '« lignes », des « surfaces ». Ici les quatre lieux, les trois axes et les '
+      + 'trente îlots, ensemble. Chacune se symbolise, se filtre et s’interroge de '
+      + 'la même façon — ce qui change, c’est ce qu’on peut en faire ensuite : '
+      + 'une surface se lève en volume, un point devient un objet, une ligne se '
+      + 'drape. 👉 Cliquez sur n’importe quel objet : sa fiche s’ouvre.',
+    state: {
+      camera: vue(15.9, 0, 0), projection: 'mercator', timeOfDay: heure(12),
+      terrain3D: false, shadows: false, ...AMBIANCE,
+      layers: [
+        ilots({ polygonMode: 'flat', declarative: UNI }),
+        etat(COUCHES.axes, 'Axes', true, { declarative: AXES_STYLE }),
+        etat(COUCHES.lieux, 'Lieux', true, { declarative: LIEUX_STYLE }),
+      ],
+    },
+  },
+  {
     id: 'g2',
     title: 'Une couleur, une catégorie',
     description:
@@ -208,7 +296,7 @@ const etapes = [
     description:
       'Cette fois la couleur suit une valeur numérique, rangée en quatre classes '
       + 'aux bornes choisies. Regardez les deux carrés gris : leur valeur est vide. '
-      + 'Ils ne sont pas « bas », ils sont **non classés** — une carte honnête '
+      + 'Ils ne sont pas « bas », ils sont « non classés » — une carte honnête '
       + 'distingue les deux. 👉 Comparez leur position avec l’étape précédente.',
     state: {
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
@@ -227,6 +315,24 @@ const etapes = [
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
       layers: [ilots({ polygonMode: 'flat', declarative: PAR_VALEUR })],
+    },
+  },
+  {
+    id: 'g4b-surfaces',
+    title: 'Ce qu’une surface peut être',
+    description:
+      'Une même surface se rend de plusieurs façons : « à plat », drapée sur le '
+      + 'sol et translucide pour laisser lire le fond ; « en volume », opaque, '
+      + 'avec une hauteur portée par un attribut. S’y ajoutent un contour, une '
+      + 'opacité, une étiquette. 👉 L’étape suivante les lève : regardez ce qui '
+      + 'change, et ce qui ne change pas.',
+    state: {
+      camera: vue(16.3, 35, -10), projection: 'mercator', timeOfDay: heure(12),
+      terrain3D: false, shadows: false, ...AMBIANCE,
+      layers: [
+        ilots({ polygonMode: 'flat', declarative: PAR_VALEUR }),
+        etat(COUCHES.axes, 'Axes', true, { declarative: AXES_STYLE }),
+      ],
     },
   },
   {
@@ -270,6 +376,25 @@ const etapes = [
     },
   },
   {
+    id: 'g7b-points',
+    title: 'Ce qu’un point peut être',
+    description:
+      'Les quatre « Lieux » sont des cercles 2D avec leur nom ; les deux '
+      + '« Repères », un modèle 3D posé au sol. Même géométrie, deux rendus — '
+      + 'c’est le style qui décide, pas la donnée. Un point peut donc être une '
+      + 'pastille lisible de loin, ou un objet qu’on reconnaît de près. '
+      + '👉 Zoomez : les cercles gardent leur taille à l’écran, le modèle grandit.',
+    state: {
+      camera: vue(16.6, 55, 10), projection: 'mercator', timeOfDay: heure(15),
+      terrain3D: false, shadows: true, ...AMBIANCE,
+      layers: [
+        ilots({ polygonMode: 'flat', declarative: { kind: 'single', color: '#e6ded2', opacity: 0.6 } }),
+        etat(COUCHES.lieux, 'Lieux', true, { declarative: LIEUX_STYLE }),
+        etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
+      ],
+    },
+  },
+  {
     id: 'g8',
     title: 'Des objets, pas seulement des formes',
     description:
@@ -290,6 +415,57 @@ const etapes = [
         // Le propos ici est « une couche ponctuelle peut être un objet », pas le
         // volume, qui a eu ses deux étapes.
         ilots({ polygonMode: 'flat', declarative: PAR_VALEUR }),
+        etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
+      ],
+    },
+  },
+  {
+    id: 'g9-fond',
+    title: 'Changer de fond, garder sa donnée',
+    description:
+      'Le fond de carte passe à l’orthophotographie de l’IGN. Vos couches ne '
+      + 'bougent pas : elles sont posées SUR le fond, elles n’en font pas partie. '
+      + 'Un plan pour lire, une photo pour reconnaître — c’est la même scène. '
+      + '👉 Comparez avec l’étape précédente : mêmes îlots, autre décor.',
+    state: {
+      camera: vue(16.4, 50, 15), projection: 'mercator', timeOfDay: heure(13),
+      terrain3D: false, shadows: false,
+      // Seul `basemap` change ; le reste de l'ambiance est celui d'AMBIANCE.
+      labels: true, sky: true, basemap: 'ortho-ign', buildings3D: false,
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_FAMILLE })],
+    },
+  },
+  {
+    id: 'g10-relief',
+    title: 'Le terrain a du relief',
+    description:
+      'Relief activé : la carte cesse d’être une feuille. Les îlots sont posés '
+      + 'à plat — MapLibre les drape sur le terrain, entité par entité, et ils '
+      + 'épousent la pente. En volume il faudrait une altitude par îlot, ce qui '
+      + 'suppose qu’Atlas détienne les entités. 👉 Inclinez la vue avec un clic '
+      + 'droit glissé pour voir la butte du Panier.',
+    state: {
+      camera: { center: [5.3690, 43.2980], zoom: 15.3, pitch: 68, bearing: -30 },
+      projection: 'mercator', timeOfDay: heure(10),
+      terrain3D: true, shadows: false,
+      labels: true, sky: true, basemap: 'positron', buildings3D: false,
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_VALEUR })],
+    },
+  },
+  {
+    id: 'g11-ambiance',
+    title: 'Le décor complet',
+    description:
+      'Ciel, bâti du fond de carte, toponymes : trois interrupteurs, chacun '
+      + 'déclaré par l’étape. Une scène peut tout allumer pour une vue '
+      + 'd’ensemble, ou tout éteindre pour ne montrer que la donnée. '
+      + '👉 Le bâti gris autour des îlots vient d’OpenStreetMap, pas de vous.',
+    state: {
+      camera: vue(16.8, 62, -15), projection: 'mercator', timeOfDay: heure(16),
+      terrain3D: false, shadows: true,
+      labels: true, sky: true, basemap: 'liberty', buildings3D: true,
+      layers: [
+        ilots({ polygonMode: 'extruded', declarative: PAR_VALEUR }),
         etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
       ],
     },
@@ -375,9 +551,44 @@ const scene = {
       ],
     },
     {
+      id: COUCHES.axes,
+      name: 'Axes',
+      order: 1,
+      geometry_type: 'line',
+      visible: false,
+      visibility: { defaultVisible: false },
+      style: { declarative: AXES_STYLE },
+      source: { type: 'geojson', classe: 'externe' },
+      geojson: JSON.parse(fs.readFileSync(path.join(__dirname, 'axes.geojson'), 'utf8')),
+      bbox,
+      featureCount: lignes.length,
+      crs: 'EPSG:4326',
+      popup_template: '<b>{nom}</b><br>{rang}',
+      fields: [{ name: 'nom', gType: 'Text' }, { name: 'rang', gType: 'Text' }],
+    },
+    {
+      id: COUCHES.lieux,
+      name: 'Lieux',
+      order: 2,
+      geometry_type: 'point',
+      visible: false,
+      visibility: { defaultVisible: false },
+      // Aucun `mode` : la couche reste en cercle 2D. C'est la même géométrie
+      // ponctuelle que « Repères », et c'est le style qui les sépare.
+      // `field` est indispensable : sans lui l'étiquette n'a rien à écrire.
+      style: { declarative: LIEUX_STYLE, label: { enabled: true, field: 'nom', size: 12 } },
+      source: { type: 'geojson', classe: 'externe' },
+      geojson: JSON.parse(fs.readFileSync(path.join(__dirname, 'lieux.geojson'), 'utf8')),
+      bbox,
+      featureCount: points.length,
+      crs: 'EPSG:4326',
+      popup_template: '<b>{nom}</b><br>{type}',
+      fields: [{ name: 'nom', gType: 'Text' }, { name: 'type', gType: 'Text' }],
+    },
+    {
       id: COUCHES.reperes,
       name: 'Repères',
-      order: 1,
+      order: 3,
       geometry_type: 'point',
       visible: false,
       visibility: { defaultVisible: false },

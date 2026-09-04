@@ -680,6 +680,13 @@ function initSymbolization(layer) {
     // toute la symbolisation — arrivait sans `label`, et l'onglet Etiquette
     // lisait alors `undefined.enabled`.
     if (!sym.label) sym.label = { enabled: false, field: null };
+    // Étiquette déclarée par le manifeste (`style.label`) : reprise ici, une
+    // seule fois, quand la symbolisation n'en porte pas encore. Après quoi
+    // c'est le réglage de la couche qui fait foi — sans quoi un manifeste
+    // rejouerait sa valeur à chaque passage et empêcherait de la modifier.
+    if (!sym.label.field && layer.style.label?.field) {
+        sym.label = { ...sym.label, ...layer.style.label };
+    }
     if (sym.label.size == null) sym.label.size = 12;
     if (!sym.label.color) sym.label.color = '#2D2820';
     return sym;
@@ -7334,7 +7341,15 @@ async function init() {
     // Autosave : standalone uniquement — pas en doc Grist (Scene Manifest charge déjà les couches)
     try {
         const auto = localStorage.getItem('atlas_autosave');
-        if (auto && !CONFIG.grist.ready && STATE.layers.length === 0) {
+        // Pas de proposition de restauration quand une scène est demandée par
+        // son adresse : `?scene=` dit exactement quoi ouvrir, et l'accepter
+        // remplacerait cette scène par un travail local sans rapport. Le
+        // dialogue apparaissait pourtant — il ne testait que l'absence de Grist
+        // et de couches, or les couches d'une scène externe arrivent APRÈS ce
+        // point. Quelqu'un qui suit un lien vers un guide se voyait proposer
+        // d'écraser ce qu'il venait d'ouvrir.
+        const sceneDemandee = new URLSearchParams(location.search).get('scene');
+        if (auto && !sceneDemandee && !CONFIG.grist.ready && STATE.layers.length === 0) {
             const p = JSON.parse(auto);
             if (p.layers?.length && confirm(`Restaurer la sauvegarde locale (${p.layers.length} couches) ?`)) {
                 restoreProject(p);

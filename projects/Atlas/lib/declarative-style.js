@@ -532,6 +532,21 @@ export function applyDeclarativeToLayer(layer, declarative) {
   } else {
     sym.color.mode = 'single';
     sym.color.value = decl.color || fb;
+    layer._declarative = decl;
+    // **Repeindre les entités**, comme le font les deux branches ci-dessus.
+    //
+    // Sans cela, `_fill_color` garde la valeur posée par la symbologie
+    // précédente, et le paint MapLibre — `['coalesce', ['get','_fill_color'],
+    // couleur]` — la préfère à la couleur unie qu'on vient de déclarer. Une
+    // couche passait donc de graduée à unie sans changer d'aspect.
+    //
+    // Le défaut ne se voyait que dans un sens : uni → catégorisé fonctionnait,
+    // puisque la branche d'arrivée repeignait. C'est le retour qui restait
+    // muet — exactement ce qu'un récit fait quand il revient à une vue neutre
+    // après avoir montré une thématique.
+    if (layer.geojson?.features?.length) {
+      applySingleColorToFeatures(layer, sym.color.value);
+    }
   }
   return sym;
 }

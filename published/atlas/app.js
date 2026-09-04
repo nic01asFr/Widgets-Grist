@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.4';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.5.4';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.4';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.4';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.4';
+} from './lib/scene-loader.js?v=1.6.0';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.0';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.5.4';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.4';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.4';
+} from './lib/layer-order.js?v=1.6.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.0';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.0';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.5.4';
+} from './lib/terrain-base.js?v=1.6.0';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.5.4';
+} from './lib/grist-sync.js?v=1.6.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.5.4';
+} from './lib/declarative-style.js?v=1.6.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.5.4';
+} from './lib/geo-tables.js?v=1.6.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.5.4';
+} from './lib/controls.js?v=1.6.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.5.4';
+} from './lib/story.js?v=1.6.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.5.4';
+} from './lib/manifest-binding.js?v=1.6.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.5.4';
+} from './lib/viewport.js?v=1.6.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.5.4';
+} from './lib/view-mode.js?v=1.6.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.5.4';
+} from './lib/viewer-controls.js?v=1.6.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.5.4';
+} from './lib/scene-prefs.js?v=1.6.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -680,6 +680,13 @@ function initSymbolization(layer) {
     // toute la symbolisation — arrivait sans `label`, et l'onglet Etiquette
     // lisait alors `undefined.enabled`.
     if (!sym.label) sym.label = { enabled: false, field: null };
+    // Étiquette déclarée par le manifeste (`style.label`) : reprise ici, une
+    // seule fois, quand la symbolisation n'en porte pas encore. Après quoi
+    // c'est le réglage de la couche qui fait foi — sans quoi un manifeste
+    // rejouerait sa valeur à chaque passage et empêcherait de la modifier.
+    if (!sym.label.field && layer.style.label?.field) {
+        sym.label = { ...sym.label, ...layer.style.label };
+    }
     if (sym.label.size == null) sym.label.size = 12;
     if (!sym.label.color) sym.label.color = '#2D2820';
     return sym;
@@ -5353,7 +5360,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.4');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.0');
     return Feuille;
 }
 
@@ -5470,10 +5477,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.5.4'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.6.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.5.4');
+        const dc = await import('./lib/data-client.js?v=1.6.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7334,7 +7341,15 @@ async function init() {
     // Autosave : standalone uniquement — pas en doc Grist (Scene Manifest charge déjà les couches)
     try {
         const auto = localStorage.getItem('atlas_autosave');
-        if (auto && !CONFIG.grist.ready && STATE.layers.length === 0) {
+        // Pas de proposition de restauration quand une scène est demandée par
+        // son adresse : `?scene=` dit exactement quoi ouvrir, et l'accepter
+        // remplacerait cette scène par un travail local sans rapport. Le
+        // dialogue apparaissait pourtant — il ne testait que l'absence de Grist
+        // et de couches, or les couches d'une scène externe arrivent APRÈS ce
+        // point. Quelqu'un qui suit un lien vers un guide se voyait proposer
+        // d'écraser ce qu'il venait d'ouvrir.
+        const sceneDemandee = new URLSearchParams(location.search).get('scene');
+        if (auto && !sceneDemandee && !CONFIG.grist.ready && STATE.layers.length === 0) {
             const p = JSON.parse(auto);
             if (p.layers?.length && confirm(`Restaurer la sauvegarde locale (${p.layers.length} couches) ?`)) {
                 restoreProject(p);
@@ -7386,9 +7401,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.5.4');
+        const { capacites } = await import('./lib/data-client.js?v=1.6.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.4');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

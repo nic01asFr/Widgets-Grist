@@ -162,3 +162,54 @@ describe('classes graduées bornées', () => {
     assert.deepEqual(l.geojson.features.map((f) => f.properties._fill_color), ['#000000', '#ffffff']);
   });
 });
+
+describe('retour à une couleur unie — le récit repasse en vue neutre', () => {
+  const couche = () => ({
+    id: 'c', color: '#888888', geometryType: 'Polygon', style: {},
+    _fields: [{ name: 'v', gType: 'Numeric' }, { name: 'fam', gType: 'Text' }],
+    geojson: {
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', properties: { v: 5, fam: 'A' }, geometry: null },
+        { type: 'Feature', properties: { v: 80, fam: 'B' }, geometry: null },
+      ],
+    },
+  });
+
+  it('une couleur unie efface la peinture de la graduation précédente', () => {
+    // Le paint MapLibre lit `['coalesce', ['get','_fill_color'], couleur]` :
+    // tant que `_fill_color` survit, la couleur unie déclarée n'a aucun effet.
+    // Une étape revenant à une vue neutre gardait donc l'aspect de la
+    // thématique qui la précédait.
+    const l = couche();
+    applyDeclarativeToLayer(l, {
+      kind: 'graduated', field: 'v',
+      stops: [{ lower: 0, upper: 50, color: '#111111' }, { lower: 50, upper: 100, color: '#999999' }],
+    });
+    assert.deepEqual(l.geojson.features.map((f) => f.properties._fill_color), ['#111111', '#999999']);
+
+    applyDeclarativeToLayer(l, { kind: 'single', color: '#e6ded2' });
+    assert.deepEqual(l.geojson.features.map((f) => f.properties._fill_color), ['#e6ded2', '#e6ded2']);
+  });
+
+  it('et celle d’une catégorisation', () => {
+    const l = couche();
+    applyDeclarativeToLayer(l, {
+      kind: 'categorized', field: 'fam',
+      stops: [{ value: 'A', color: '#aa0000' }, { value: 'B', color: '#00aa00' }],
+    });
+    assert.notEqual(l.geojson.features[0].properties._fill_color,
+                    l.geojson.features[1].properties._fill_color);
+
+    applyDeclarativeToLayer(l, { kind: 'single', color: '#123456' });
+    assert.deepEqual(l.geojson.features.map((f) => f.properties._fill_color), ['#123456', '#123456']);
+  });
+
+  it('sans entités, l’unie se contente de régler la symbolisation', () => {
+    // Couche distante : rien à repeindre, et surtout rien à casser.
+    const l = { id: 'd', color: '#888888', geometryType: 'Polygon', style: {}, geojson: 'https://h.fr/x.geojson' };
+    const sym = applyDeclarativeToLayer(l, { kind: 'single', color: '#abcdef' });
+    assert.equal(sym.color.mode, 'single');
+    assert.equal(sym.color.value, '#abcdef');
+  });
+});
