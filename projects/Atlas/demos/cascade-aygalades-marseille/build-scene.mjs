@@ -87,19 +87,28 @@ const EAU_COUVERT = {
 };
 
 /** Hauteurs du bâti — bornes explicites : l'étalement min/max verserait tout dans la première classe. */
+/**
+ * Hauteurs du bâti — bornes explicites, et **opacité 1**.
+ *
+ * Sous 1, MapLibre bascule `fill-extrusion` en rendu transparent : il cesse
+ * d'écrire la profondeur, chaque bloc laisse voir sa face arrière au travers de
+ * sa face avant, et deux couches extrudées se traversent au lieu de se masquer.
+ * Le basculement est binaire — mesuré, 0,95 suffit à le déclencher. Ces stops
+ * portaient 0,9 à 0,95 : la démo montrait l'artefact qu'elle aurait dû éviter.
+ */
 const BATI_HAUTEUR = {
   kind: 'graduated',
   field: 'height_m',
   stops: [
-    { lower: 0, upper: 9, color: '#e8dcc8', opacity: 0.9 },
-    { lower: 9, upper: 15, color: '#d4b483', opacity: 0.9 },
-    { lower: 15, upper: 25, color: '#c17f4a', opacity: 0.92 },
-    { lower: 25, upper: 200, color: '#8c4a2f', opacity: 0.95 },
+    { lower: 0, upper: 9, color: '#e8dcc8', opacity: 1 },
+    { lower: 9, upper: 15, color: '#d4b483', opacity: 1 },
+    { lower: 15, upper: 25, color: '#c17f4a', opacity: 1 },
+    { lower: 25, upper: 200, color: '#8c4a2f', opacity: 1 },
   ],
   fallback: '#cfc7bb',
 };
 
-const BATI_UNI = { kind: 'single', color: '#cabfae', opacity: 0.85 };
+const BATI_UNI = { kind: 'single', color: '#cabfae', opacity: 1 };
 const VOIRIE = {
   kind: 'categorized',
   field: 'rang',

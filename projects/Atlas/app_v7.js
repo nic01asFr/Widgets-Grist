@@ -624,12 +624,32 @@ function interpolateValue(value, range, outRange, method) {
     return outRange[0] + r * (outRange[1] - outRange[0]);
 }
 
-/** Opacité de rendu par défaut, selon la géométrie et le mode surfacique. */
+/**
+ * Opacité de rendu par défaut, selon la géométrie et le mode surfacique.
+ *
+ * **Un volume est opaque, et ce n'est pas un goût.** `fill-extrusion-opacity`
+ * sous 1 fait basculer MapLibre en rendu transparent : il cesse d'écrire la
+ * profondeur, et l'occlusion est perdue. Chaque bloc laisse alors voir sa face
+ * arrière au travers de sa face avant — un double contour sur chaque objet —,
+ * les recouvrements s'assombrissent par accumulation d'alpha, et deux couches
+ * extrudées se traversent au lieu de se masquer. Sur une grille d'analyse dense,
+ * le relief de l'information disparaît dans une bouillie.
+ *
+ * Le basculement est **binaire** : mesuré à 0,999, 0,99 et 0,95, l'artefact est
+ * déjà là — seule son intensité suit l'opacité. Il n'y a donc pas de « presque
+ * opaque » utilisable, et le défaut d'un volume ne peut être que 1.
+ *
+ * À plat, c'est l'inverse : la semi-transparence laisse lire le fond de carte
+ * sous la donnée, et MapLibre drape sans problème de profondeur. D'où 0,55.
+ *
+ * Une opacité explicitement choisie reste respectée — on peut vouloir voir au
+ * travers, en connaissance de cause.
+ */
 function defaultLayerOpacity(layer) {
     const g = layer.geometryType;
     if (g === 'Point' || g === 'MultiPoint') return 0.92;
     if (g === 'Polygon' || g === 'MultiPolygon') {
-        return layer.style?.polygonMode === 'flat' ? 0.55 : 0.85;
+        return layer.style?.polygonMode === 'flat' ? 0.55 : 1;
     }
     return 0.9;
 }
@@ -2274,7 +2294,9 @@ function applyPolygonStyle(layer) {
             'fill-extrusion-color': layerPaintColor(layer),
             'fill-extrusion-height': ext.height,
             'fill-extrusion-base': ext.base,
-            'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 0.85,
+            // 1 par défaut, comme `defaultLayerOpacity` : sous 1, MapLibre perd
+            // l'écriture de profondeur et les volumes cessent de s'occulter.
+            'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 1,
         } }, layer));
     } else {
         const stroke = layerStrokePaint(layer);

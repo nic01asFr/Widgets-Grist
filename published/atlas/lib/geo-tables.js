@@ -1,7 +1,7 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.5.1';
+import { normalizePropertyValue } from './declarative-style.js?v=1.5.2';
 
 export const GEO_SKIP_TABLES = new Set([
   'Maquette_Layers',

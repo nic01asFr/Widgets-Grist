@@ -6,7 +6,7 @@
   "provenance": {
     "producer": "atlas-demo/overpass",
     "attribution": "© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)",
-    "extracted_at": "2026-09-04T08:20:10.010Z",
+    "extracted_at": "2026-09-04T09:58:08.442Z",
     "bbox": [
       5.3533904,
       43.3454196,
@@ -105,7 +105,7 @@
         "declarative": {
           "kind": "single",
           "color": "#cabfae",
-          "opacity": 0.85
+          "opacity": 1
         }
       },
       "source": {
@@ -6918,7 +6918,7 @@
               "declarative": {
                 "kind": "single",
                 "color": "#cabfae",
-                "opacity": 0.85
+                "opacity": 1
               }
             },
             {
@@ -7210,25 +7210,25 @@
                     "lower": 0,
                     "upper": 9,
                     "color": "#e8dcc8",
-                    "opacity": 0.9
+                    "opacity": 1
                   },
                   {
                     "lower": 9,
                     "upper": 15,
                     "color": "#d4b483",
-                    "opacity": 0.9
+                    "opacity": 1
                   },
                   {
                     "lower": 15,
                     "upper": 25,
                     "color": "#c17f4a",
-                    "opacity": 0.92
+                    "opacity": 1
                   },
                   {
                     "lower": 25,
                     "upper": 200,
                     "color": "#8c4a2f",
-                    "opacity": 0.95
+                    "opacity": 1
                   }
                 ],
                 "fallback": "#cfc7bb"
@@ -7326,7 +7326,7 @@
               "declarative": {
                 "kind": "single",
                 "color": "#cabfae",
-                "opacity": 0.85
+                "opacity": 1
               }
             },
             {
@@ -7399,7 +7399,7 @@
               "declarative": {
                 "kind": "single",
                 "color": "#cabfae",
-                "opacity": 0.85
+                "opacity": 1
               }
             },
             {
@@ -7534,25 +7534,25 @@
                     "lower": 0,
                     "upper": 9,
                     "color": "#e8dcc8",
-                    "opacity": 0.9
+                    "opacity": 1
                   },
                   {
                     "lower": 9,
                     "upper": 15,
                     "color": "#d4b483",
-                    "opacity": 0.9
+                    "opacity": 1
                   },
                   {
                     "lower": 15,
                     "upper": 25,
                     "color": "#c17f4a",
-                    "opacity": 0.92
+                    "opacity": 1
                   },
                   {
                     "lower": 25,
                     "upper": 200,
                     "color": "#8c4a2f",
-                    "opacity": 0.95
+                    "opacity": 1
                   }
                 ],
                 "fallback": "#cfc7bb"

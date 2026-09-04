@@ -119,6 +119,28 @@ Réglages portés par `style.symbolization` (persistés dans `Atlas_LayerPrefs`)
 | Étiquette | `label: {size, color}` | 12 px, `#2D2820` |
 | Rendu surfacique | `style.polygonMode` | `'flat'` pour les imports qgis2grist |
 
+- **Un volume est opaque, et ce n'est pas un goût.** `fill-extrusion-opacity`
+  sous 1 fait basculer MapLibre en rendu transparent : il cesse d'écrire la
+  profondeur, et l'occlusion est perdue. Chaque bloc laisse alors voir sa face
+  arrière au travers de sa face avant — un double contour sur chaque objet —,
+  les recouvrements s'assombrissent par accumulation d'alpha, et **deux couches
+  extrudées se traversent** au lieu de se masquer. Sur une grille d'analyse
+  dense, le relief de l'information disparaît dans une bouillie.
+
+  Le basculement est **binaire** : éprouvé à 0,999, 0,99 et 0,95 sur deux
+  couches superposées, l'artefact est déjà là — seule son intensité suit
+  l'opacité. Il n'existe pas de « presque opaque » utilisable. Le défaut d'un
+  volume est donc **1**, dans `defaultLayerOpacity` comme dans le repli en dur
+  d'`applyPolygonStyle`.
+
+  À plat, c'est l'inverse : la semi-transparence laisse lire le fond sous la
+  donnée, et MapLibre drape sans problème de profondeur — d'où 0,55.
+
+  > Une opacité explicitement choisie reste respectée : on peut vouloir voir au
+  > travers, en connaissance de cause. Mais une scène qui déclare `opacity: 0.9`
+  > sur du bâti extrudé demande l'artefact sans le savoir — c'était le cas de la
+  > démo des Aygalades avant correction.
+
 - **Ordre de priorité de l’opacité** : valeur fixée par l’utilisateur → `_fill_opacity`
   de l’entité (issue des `stops[].opacity` du style déclaratif, lue par
   `opacityFnFromDeclarative`) → défaut de la géométrie.

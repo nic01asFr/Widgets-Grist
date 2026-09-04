@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.1';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.2';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.5.1';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.1';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.1';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.1';
+} from './lib/scene-loader.js?v=1.5.2';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.2';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.2';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.2';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.5.1';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.1';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.1';
+} from './lib/layer-order.js?v=1.5.2';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.2';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.2';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.5.1';
+} from './lib/terrain-base.js?v=1.5.2';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.5.1';
+} from './lib/grist-sync.js?v=1.5.2';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.5.1';
+} from './lib/declarative-style.js?v=1.5.2';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.5.1';
+} from './lib/geo-tables.js?v=1.5.2';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.5.1';
+} from './lib/controls.js?v=1.5.2';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.5.1';
+} from './lib/story.js?v=1.5.2';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.5.1';
+} from './lib/manifest-binding.js?v=1.5.2';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.5.1';
+} from './lib/viewport.js?v=1.5.2';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.5.1';
+} from './lib/view-mode.js?v=1.5.2';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.5.1';
+} from './lib/viewer-controls.js?v=1.5.2';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.5.1';
+} from './lib/scene-prefs.js?v=1.5.2';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -624,12 +624,32 @@ function interpolateValue(value, range, outRange, method) {
     return outRange[0] + r * (outRange[1] - outRange[0]);
 }
 
-/** Opacité de rendu par défaut, selon la géométrie et le mode surfacique. */
+/**
+ * Opacité de rendu par défaut, selon la géométrie et le mode surfacique.
+ *
+ * **Un volume est opaque, et ce n'est pas un goût.** `fill-extrusion-opacity`
+ * sous 1 fait basculer MapLibre en rendu transparent : il cesse d'écrire la
+ * profondeur, et l'occlusion est perdue. Chaque bloc laisse alors voir sa face
+ * arrière au travers de sa face avant — un double contour sur chaque objet —,
+ * les recouvrements s'assombrissent par accumulation d'alpha, et deux couches
+ * extrudées se traversent au lieu de se masquer. Sur une grille d'analyse dense,
+ * le relief de l'information disparaît dans une bouillie.
+ *
+ * Le basculement est **binaire** : mesuré à 0,999, 0,99 et 0,95, l'artefact est
+ * déjà là — seule son intensité suit l'opacité. Il n'y a donc pas de « presque
+ * opaque » utilisable, et le défaut d'un volume ne peut être que 1.
+ *
+ * À plat, c'est l'inverse : la semi-transparence laisse lire le fond de carte
+ * sous la donnée, et MapLibre drape sans problème de profondeur. D'où 0,55.
+ *
+ * Une opacité explicitement choisie reste respectée — on peut vouloir voir au
+ * travers, en connaissance de cause.
+ */
 function defaultLayerOpacity(layer) {
     const g = layer.geometryType;
     if (g === 'Point' || g === 'MultiPoint') return 0.92;
     if (g === 'Polygon' || g === 'MultiPolygon') {
-        return layer.style?.polygonMode === 'flat' ? 0.55 : 0.85;
+        return layer.style?.polygonMode === 'flat' ? 0.55 : 1;
     }
     return 0.9;
 }
@@ -2274,7 +2294,9 @@ function applyPolygonStyle(layer) {
             'fill-extrusion-color': layerPaintColor(layer),
             'fill-extrusion-height': ext.height,
             'fill-extrusion-base': ext.base,
-            'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 0.85,
+            // 1 par défaut, comme `defaultLayerOpacity` : sous 1, MapLibre perd
+            // l'écriture de profondeur et les volumes cessent de s'occulter.
+            'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 1,
         } }, layer));
     } else {
         const stroke = layerStrokePaint(layer);
@@ -5315,7 +5337,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.1');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.2');
     return Feuille;
 }
 
@@ -5432,10 +5454,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.5.1'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.5.2'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.5.1');
+        const dc = await import('./lib/data-client.js?v=1.5.2');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7348,9 +7370,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.5.1');
+        const { capacites } = await import('./lib/data-client.js?v=1.5.2');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.1');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.2');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
