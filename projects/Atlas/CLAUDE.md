@@ -188,9 +188,17 @@ sur une surface, une ligne ou un point rendu en cercle 2D.
 - « Reset » ne rétablit que les surcharges de placement : il n'apparaît qu'avec
   l'onglet 3D. « Enregistrer » reste, car `applySelected` persiste aussi les
   attributs.
-- Reste à faire : la règle est encore réécrite à la main en 7 points d'`app_v7.js`
-  (943, 1906, 1944, 2770, 2865, 2903, 2944), dont **1906, 1944 et 2944 sans la
-  condition ponctuelle**. À remplacer par `isModelLayer`.
+- La règle est réécrite à la main en **8 points** d'`app_v7.js` (les numéros
+  autrefois notés ici étaient périmés — le fichier a gagné 900 lignes). Audit du
+  04/09/2026 : la dette est **cosmétique**, pas fonctionnelle. Cinq sites
+  omettent la condition ponctuelle, mais quatre sont protégés par un aiguillage
+  en amont — `applyPointStyle` n'est appelée que sur des points, l'onglet
+  « Modèle 3D » n'apparaît que si `isPoint`, `resolveFeatureProps` ne sert qu'aux
+  instances. Restent `renderLayersPanel` et `renderLayersPanelLecture`, qui
+  posent un **badge « 3D »** sur une couche non ponctuelle déclarant un
+  `gltf_url` — et seulement en édition, le panneau Couches étant refusé en mode
+  vitrine. Vérifié sur une scène d'essai : un polygone portant un `gltf_url` est
+  bien rendu en surface, jamais en cercles.
 
 ## Scène 3D — trois causes distinctes de décalage
 
@@ -622,10 +630,19 @@ portant **les deux origines à la fois** :
 `Atlas_LayerPrefs` est bien créée et écrite : l'écriture des préférences n'a pas
 régressé.
 
-**Effet de bord constaté, non corrigé** : la présence d'une couche distante fait
-créer `Maquette_Layers`. `saveLayerPref` exige `source === 'qgis2grist'` **et**
-`sourceTable` ; une couche distante n'a ni l'un ni l'autre, donc elle retombe sur
-la table de maquette, qui n'est pas faite pour ça.
+**Effet de bord constaté, non corrigé** — précisé le 04/09/2026 : ce n'est pas
+la *présence* d'une couche distante qui crée `Maquette_Layers`. `initGristTables`
+n'est appelée que **hors** mode Scene Manifest, donc une scène n'y touche pas au
+chargement. Deux conséquences distinctes :
+
+1. **Régler l'apparence d'une couche distante n'enregistre rien.**
+   `saveLayerPrefIfSynced` exige `source === 'qgis2grist'`, et sort **en
+   silence** sinon. Le réglage est perdu au rechargement, sans message.
+2. **« Enregistrer » sur cette couche écrit une donnée fausse.** La branche
+   non-`qgis2grist` crée `Maquette_Layers` et y pose
+   `GeoJSON: JSON.stringify(layer.geojson)` — or sur une couche distante,
+   `layer.geojson` est une **adresse**. On écrit une URL dans une colonne censée
+   porter des entités.
 
 **La réponse est arrêtée** (cadrage §« Ce qui reste indéterminé ») : indexer sur
 `sourceTable || id` et reformuler le garde en « cette couche vient du manifeste
@@ -882,18 +899,31 @@ des tuiles mais du GeoJSON par requête : il relèvera du chemin URL déjà écr
 > fournisseur `wms` ; seul `type=xyz` dans la datasource les distingue. Sans
 > cette lecture, un fond OSM serait annoncé comme un service WMS.
 
-### Un avertissement MapLibre non élucidé
+### L'avertissement MapLibre vient du fond de carte, pas d'Atlas
 
-`Expected value to be of type number, but found null instead`, six fois, au
-montage d'une scène. **Ce qui est établi** : il n'apparaît pas sans scène (ce
-n'est donc pas le style de fond), ni à un remontage de couche, et la carte est
-juste — les classes ont été vérifiées au pixel près.
+`Expected value to be of type number, but found null instead`, quelques fois au
+montage d'une scène. **Élucidé le 04/09/2026** — il ne vient pas de nos données.
 
-**Ce qui bloque le diagnostic** : MapLibre évalue les expressions dans un
-*worker*, donc remplacer `console.warn` dans la page ne l'intercepte pas. La
-piste reste l'évaluation d'une expression sur les données. Non bloquant, mais à
-ne pas laisser s'installer : un avertissement qu'on apprend à ignorer occupe la
-place d'un garde-fou.
+Le raisonnement qui bloquait était : « il n'apparaît pas sans scène, ce n'est
+donc pas le style de fond ». Il est **faux**, et pour une raison qu'on ne voit
+pas : sans scène, Atlas affiche son écran d'accueil et **la carte n'est jamais
+montée**. Le fond n'étant pas rendu, il ne pouvait rien signaler. L'absence
+d'avertissement ne prouvait rien du tout.
+
+Le test qui tranche : une scène **triviale** — un point, couleur fixe, aucune
+expression lisant un attribut — cadrée sur la même zone dense. L'avertissement
+apparaît quand même. Compté sur cette scène : **zéro** couche de scène porte une
+expression numérique lisant un attribut, contre **16 couches du fond**
+OpenFreeMap qui en portent (boucliers d'autoroute, noms de routes, libellés de
+plans d'eau).
+
+> Ce n'est donc pas un garde-fou d'Atlas qui parle, et il n'y a rien à corriger
+> chez nous. À savoir avant de repartir en chasse : le prochain qui verra ce
+> message perdra le même temps.
+
+**Leçon de méthode** : « le symptôme disparaît quand je retire X » ne prouve que
+quelque chose si retirer X laisse le reste en état. Ici, retirer la scène
+retirait aussi la carte.
 
 ### `fitToLayer` cadre aussi sur ce qui est déclaré
 
