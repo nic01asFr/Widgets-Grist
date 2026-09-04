@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.2';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.5.3';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.5.2';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.2';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.2';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.2';
+} from './lib/scene-loader.js?v=1.5.3';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.5.3';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.5.3';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.5.3';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.5.2';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.2';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.2';
+} from './lib/layer-order.js?v=1.5.3';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.5.3';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.5.3';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.5.2';
+} from './lib/terrain-base.js?v=1.5.3';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.5.2';
+} from './lib/grist-sync.js?v=1.5.3';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.5.2';
+} from './lib/declarative-style.js?v=1.5.3';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.5.2';
+} from './lib/geo-tables.js?v=1.5.3';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.5.2';
+} from './lib/controls.js?v=1.5.3';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.5.2';
+} from './lib/story.js?v=1.5.3';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.5.2';
+} from './lib/manifest-binding.js?v=1.5.3';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.5.2';
+} from './lib/viewport.js?v=1.5.3';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.5.2';
+} from './lib/view-mode.js?v=1.5.3';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.5.2';
+} from './lib/viewer-controls.js?v=1.5.3';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.5.2';
+} from './lib/scene-prefs.js?v=1.5.3';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -2945,6 +2945,13 @@ function reapplyStoryFilters(state) {
     });
     Models3D.rebuildScene();
     updateLegend();
+    // Le dock doit suivre : une étape désactive tout contrôle qu'elle ne cite
+    // pas (`applyStoryControlsToLayer`), et sans ce rafraîchissement les
+    // pastilles rendues avant l'étape restaient à l'écran, devenues inertes —
+    // au clic, la pastille était introuvable dans la liste et le panneau
+    // s'ouvrait vide. Une pastille qui ne fait rien est pire qu'une pastille
+    // absente : on la croit cassée, alors que la scène l'a éteinte.
+    refreshControlsDock();
 }
 
 function applyStoryState(s) {
@@ -2992,6 +2999,10 @@ function applyStoryState(s) {
     applyLayerOrder();
     Models3D.rebuildScene();
     updateLegend();
+    // Le dock suit l'étape, au même titre que la légende : celle-ci vient
+    // d'être reconstruite parce que les couches ont changé, et les contrôles
+    // ont changé aussi — une étape désactive tout filtre qu'elle ne cite pas.
+    refreshControlsDock();
 
     const wantBasemap = s.basemap && BASEMAPS[s.basemap] ? s.basemap : null;
     const basemapChanging = !!(wantBasemap && wantBasemap !== STATE.settings.basemap);
@@ -5337,7 +5348,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.2');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.5.3');
     return Feuille;
 }
 
@@ -5454,10 +5465,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.5.2'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.5.3'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.5.2');
+        const dc = await import('./lib/data-client.js?v=1.5.3');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7370,9 +7381,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.5.2');
+        const { capacites } = await import('./lib/data-client.js?v=1.5.3');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.2');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.5.3');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

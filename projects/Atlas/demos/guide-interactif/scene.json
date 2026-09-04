@@ -1316,7 +1316,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1356,7 +1373,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1418,7 +1452,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1484,7 +1535,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1550,7 +1618,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "extruded",
               "declarative": {
@@ -1616,7 +1701,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "extruded",
               "declarative": {
@@ -1682,7 +1784,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "extruded",
               "declarative": {
@@ -1748,7 +1867,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1827,7 +1963,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {
@@ -1889,7 +2042,24 @@
               "name": "Îlots",
               "sourceTable": null,
               "visible": true,
-              "controls": [],
+              "controls": [
+                {
+                  "field": "valeur",
+                  "type": "range",
+                  "min": 0,
+                  "max": 100
+                },
+                {
+                  "field": "famille",
+                  "type": "select",
+                  "values": [
+                    "Écoles",
+                    "Commerces",
+                    "Bureaux",
+                    "Logements"
+                  ]
+                }
+              ],
               "controlDeclaratives": [],
               "polygonMode": "flat",
               "declarative": {

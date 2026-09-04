@@ -143,11 +143,31 @@ const COUCHES = { ilots: 'guide-ilots', reperes: 'guide-reperes' };
 
 /* ------------------------------------------------------------------ récit -- */
 
+/**
+ * Les contrôles que les étapes gardent actifs.
+ *
+ * **Une étape qui ne cite pas un contrôle le désactive** — `applyStoryControlsToLayer`
+ * met à `false` tout ce qui n'est pas dans son `stepFields`. C'est la même règle
+ * que pour les couches : une étape décrit l'état complet de la scène.
+ *
+ * Le symptôme, quand on l'ignore, est trompeur : les pastilles restent visibles
+ * (le dock a été rendu avant l'application de l'étape) mais deviennent inertes —
+ * au clic, la pastille est introuvable dans la liste et le panneau s'ouvre vide.
+ * On croit à un bug d'affichage ; c'est la scène qui a éteint ses propres filtres.
+ */
+const FILTRES = [
+  { field: 'valeur', type: 'range', min: 0, max: 100 },
+  { field: 'famille', type: 'select', values: FAMILLES },
+];
+
 const etat = (id, name, visible, extra = {}) => {
   const s = { id, name, sourceTable: null, visible, controls: [], controlDeclaratives: [], ...extra };
   for (const k of ['symbolization', 'declarative']) if (s[k] == null) delete s[k];
   return s;
 };
+
+/** La couche d'îlots, avec ses filtres maintenus actifs. */
+const ilots = (extra = {}) => etat(COUCHES.ilots, 'Îlots', true, { controls: FILTRES, ...extra });
 
 const AMBIANCE = { labels: true, sky: true, basemap: 'positron', buildings3D: false };
 const vue = (zoom, pitch, bearing) => ({ center: CENTRE, zoom, pitch, bearing });
@@ -165,7 +185,7 @@ const etapes = [
     state: {
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: UNI })],
+      layers: [ilots({ polygonMode: 'flat', declarative: UNI })],
     },
   },
   {
@@ -179,7 +199,7 @@ const etapes = [
     state: {
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_FAMILLE })],
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_FAMILLE })],
     },
   },
   {
@@ -193,7 +213,7 @@ const etapes = [
     state: {
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_VALEUR })],
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_VALEUR })],
     },
   },
   {
@@ -206,7 +226,7 @@ const etapes = [
     state: {
       camera: vue(15.6, 0, 0), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_VALEUR })],
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_VALEUR })],
     },
   },
   {
@@ -220,7 +240,7 @@ const etapes = [
     state: {
       camera: vue(15.9, 55, -25), projection: 'mercator', timeOfDay: heure(12),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'extruded', declarative: PAR_VALEUR })],
+      layers: [ilots({ polygonMode: 'extruded', declarative: PAR_VALEUR })],
     },
   },
   {
@@ -233,7 +253,7 @@ const etapes = [
     state: {
       camera: vue(15.9, 58, -25), projection: 'mercator', timeOfDay: heure(17.5),
       terrain3D: false, shadows: true, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'extruded', declarative: PAR_VALEUR })],
+      layers: [ilots({ polygonMode: 'extruded', declarative: PAR_VALEUR })],
     },
   },
   {
@@ -246,7 +266,7 @@ const etapes = [
     state: {
       camera: vue(15.9, 58, -25), projection: 'mercator', timeOfDay: heure(9),
       terrain3D: false, shadows: true, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'extruded', declarative: PAR_VALEUR })],
+      layers: [ilots({ polygonMode: 'extruded', declarative: PAR_VALEUR })],
     },
   },
   {
@@ -269,7 +289,7 @@ const etapes = [
         // oblique, sont masqués — trois cadrages successifs n'y ont rien changé.
         // Le propos ici est « une couche ponctuelle peut être un objet », pas le
         // volume, qui a eu ses deux étapes.
-        etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_VALEUR }),
+        ilots({ polygonMode: 'flat', declarative: PAR_VALEUR }),
         etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
       ],
     },
@@ -285,7 +305,7 @@ const etapes = [
       camera: { center: CENTRE, zoom: 9, pitch: 30, bearing: 0 },
       projection: 'globe', timeOfDay: heure(14),
       terrain3D: false, shadows: false, ...AMBIANCE,
-      layers: [etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_FAMILLE })],
+      layers: [ilots({ polygonMode: 'flat', declarative: PAR_FAMILLE })],
     },
   },
   {
@@ -300,7 +320,7 @@ const etapes = [
       camera: vue(15.4, 25, 0), projection: 'mercator', timeOfDay: heure(13),
       terrain3D: false, shadows: false, ...AMBIANCE,
       layers: [
-        etat(COUCHES.ilots, 'Îlots', true, { polygonMode: 'flat', declarative: PAR_FAMILLE }),
+        ilots({ polygonMode: 'flat', declarative: PAR_FAMILLE }),
         etat(COUCHES.reperes, 'Repères', true, { declarative: REPERE_STYLE }),
       ],
     },

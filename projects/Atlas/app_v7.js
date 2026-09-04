@@ -2945,6 +2945,13 @@ function reapplyStoryFilters(state) {
     });
     Models3D.rebuildScene();
     updateLegend();
+    // Le dock doit suivre : une étape désactive tout contrôle qu'elle ne cite
+    // pas (`applyStoryControlsToLayer`), et sans ce rafraîchissement les
+    // pastilles rendues avant l'étape restaient à l'écran, devenues inertes —
+    // au clic, la pastille était introuvable dans la liste et le panneau
+    // s'ouvrait vide. Une pastille qui ne fait rien est pire qu'une pastille
+    // absente : on la croit cassée, alors que la scène l'a éteinte.
+    refreshControlsDock();
 }
 
 function applyStoryState(s) {
@@ -2992,6 +2999,10 @@ function applyStoryState(s) {
     applyLayerOrder();
     Models3D.rebuildScene();
     updateLegend();
+    // Le dock suit l'étape, au même titre que la légende : celle-ci vient
+    // d'être reconstruite parce que les couches ont changé, et les contrôles
+    // ont changé aussi — une étape désactive tout filtre qu'elle ne cite pas.
+    refreshControlsDock();
 
     const wantBasemap = s.basemap && BASEMAPS[s.basemap] ? s.basemap : null;
     const basemapChanging = !!(wantBasemap && wantBasemap !== STATE.settings.basemap);
