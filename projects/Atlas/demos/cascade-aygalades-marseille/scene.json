@@ -6,7 +6,7 @@
   "provenance": {
     "producer": "atlas-demo/overpass",
     "attribution": "© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)",
-    "extracted_at": "2026-09-03T13:02:59.729Z",
+    "extracted_at": "2026-09-04T08:20:10.010Z",
     "bbox": [
       5.3533904,
       43.3454196,
@@ -7498,7 +7498,7 @@
       {
         "id": "aygalades-7",
         "title": "Le vallon a une forme",
-        "description": "Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le tracé du ruisseau comme celui de l'autoroute. Les volumes reposent sur le sol échantillonné, pas sur le niveau de la mer — sans quoi le bâti d'un coteau s'enfoncerait sous la carte.",
+        "description": "Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le tracé du ruisseau comme celui de l'autoroute. Le bâti est ici posé à plat : MapLibre le drape sur le terrain, entité par entité. En volume il aurait fallu une altitude par bâtiment — Atlas ne détient pas ces entités, il n'en connaît qu'une pour toute la couche, et le relief varie de 220 m sur cette emprise.",
         "state": {
           "camera": {
             "center": [
@@ -7525,7 +7525,7 @@
               "visible": true,
               "controls": [],
               "controlDeclaratives": [],
-              "polygonMode": "extruded",
+              "polygonMode": "flat",
               "declarative": {
                 "kind": "graduated",
                 "field": "height_m",
@@ -7556,6 +7556,37 @@
                   }
                 ],
                 "fallback": "#cfc7bb"
+              }
+            },
+            {
+              "id": "aygalades-emprises",
+              "name": "Emprises",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "usage",
+                "stops": [
+                  {
+                    "value": "Activité",
+                    "color": "#b08968",
+                    "opacity": 0.5
+                  },
+                  {
+                    "value": "Ferroviaire",
+                    "color": "#7d7466",
+                    "opacity": 0.45
+                  },
+                  {
+                    "value": "Espace vert",
+                    "color": "#6f9457",
+                    "opacity": 0.5
+                  }
+                ],
+                "fallback": "#a8a29a"
               }
             },
             {

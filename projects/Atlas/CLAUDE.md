@@ -769,6 +769,40 @@ elle est là, elle est peinte, et on ne la voit pas. L'altitude est sondée au
 centre de la `bbox` déclarée. C'est approximatif (le relief varie sur une
 emprise) et c'est assumé : cela sépare « mal calée » de « disparue ».
 
+### Relief + couche distante extrudée = une nappe suspendue
+
+`extrusionExpressions` accepte un `solConstant` pour les couches dont Atlas ne
+détient pas les entités : une altitude sondée **au centre de la bbox**, faute de
+pouvoir en sonder une par bâtiment. Le CLAUDE.md la disait « approximative et
+assumée ». Mesuré sur les Aygalades, l'approximation ne tient pas :
+
+| Lieu | Sol réel | Altitude posée | Écart |
+|---|---:|---:|---:|
+| Cascade, fond de vallon | 80 m | 136,9 m | **flotte 57 m** |
+| Coteau ouest | 99 m | 136,9 m | flotte 38 m |
+| Coteau est | 285 m | 136,9 m | **enfoui 148 m** |
+| Centre de la bbox | 137 m | 136,9 m | exact |
+
+Le sol constant n'est juste qu'au seul point où il a été sondé. Sur une emprise
+au relief marqué — 220 m d'amplitude ici — le bâti forme **une nappe plate
+suspendue** au-dessus d'un terrain qui, lui, ondule ; et les lignes drapées
+(voirie, cours d'eau) le traversent, puisqu'elles suivent le sol.
+
+> **La règle** : `terrain3D` et une couche **distante extrudée** ne vont pas
+> ensemble. Soit la couche porte ses entités (inline, ou table du document) et
+> chacune reçoit son `_sol`, soit on la passe **à plat** — MapLibre la drape
+> alors entité par entité, ce qui est exact par construction et se lit très bien
+> sur un relief.
+
+MapLibre ne sait pas aligner nativement une extrusion sur le terrain :
+`fill-extrusion-base-alignment` existe chez Mapbox GL v3, **pas** dans MapLibre
+(vérifié en 5.6.1, la propriété est refusée). Il n'y a donc pas de raccourci.
+
+L'étape « relief » de la démo des Aygalades applique cette règle : bâti et
+emprises à plat, et le texte le dit — une démo qui affirme poser les volumes sur
+le sol échantillonné pendant qu'ils flottent apprend le contraire de ce qu'elle
+montre.
+
 ### Les bornes de zoom du manifeste sont appliquées
 
 `visibility.minZoom`/`maxZoom` étaient **ignorées** — seul `defaultVisible`

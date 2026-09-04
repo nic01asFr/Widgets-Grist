@@ -275,9 +275,11 @@ const story = {
       title: 'Le vallon a une forme',
       description:
         `Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le `
-        + `tracé du ruisseau comme celui de l'autoroute. Les volumes reposent sur le `
-        + `sol échantillonné, pas sur le niveau de la mer — sans quoi le bâti d'un `
-        + `coteau s'enfoncerait sous la carte.`,
+        + `tracé du ruisseau comme celui de l'autoroute. Le bâti est ici posé à plat : `
+        + `MapLibre le drape sur le terrain, entité par entité. En volume il aurait `
+        + `fallu une altitude par bâtiment — Atlas ne détient pas ces entités, il `
+        + `n'en connaît qu'une pour toute la couche, et le relief varie de 220 m sur `
+        + `cette emprise.`,
       state: {
         camera: { center: [5.3652, 43.3524], zoom: 15, pitch: 68, bearing: 42 },
         projection: 'mercator',
@@ -286,7 +288,15 @@ const story = {
         shadows: false,
         ...AMBIANCE,
         layers: [
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_HAUTEUR }),
+          // A PLAT, et c'est le sujet de l'etape : une surface drapee suit le sol
+          // par construction. En volume, `fill-extrusion-base` se compte depuis le
+          // niveau de la mer, et Atlas ne peut poser qu'UNE altitude pour toute une
+          // couche dont il ne detient pas les entites (`solConstantDeCouche`).
+          // Mesure sur ce vallon : sol reel de 53 a 273 m, altitude posee 136,9 m —
+          // le bati flotte de 57 m a la cascade et s'enfonce de 148 m sur le coteau
+          // est. Une nappe plate suspendue au-dessus d'un terrain qui, lui, ondule.
+          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: BATI_HAUTEUR }),
+          etat(COUCHES.emprises, 'Emprises', true, { polygonMode: 'flat', declarative: EMPRISES }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
           etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
         ],
