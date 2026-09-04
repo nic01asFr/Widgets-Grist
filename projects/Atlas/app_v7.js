@@ -1703,6 +1703,11 @@ function initMap() {
         if (!STATE.settings.terrain3D) return;
         if (e.sourceId !== 'terrain-dem' || e.sourceDataType !== 'content') return;
         clearTimeout(_tuilesDemTimer);
+        // Le cache d'altitude n'a pas à être purgé ici : `recalerRelief` appelle
+        // `Models3D.recomputeAll()`, qui le vide en entrée. Vérifié — l'origine
+        // est toujours posée (à défaut de modèle, sur le centre de la carte) et
+        // la scène three.js est créée inconditionnellement, donc la garde de
+        // `recomputeAll` est franchie et la purge a bien lieu.
         _tuilesDemTimer = setTimeout(() => recalerRelief(0), 600);
     });
 

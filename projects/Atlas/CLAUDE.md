@@ -269,6 +269,37 @@ calage, groupé sur 600 ms, en plus du recalage par palier de zoom
 - `recalerRelief()` est le point d’entrée unique : modèles et surfaces lisent le
   même cache, les recaler séparément les ferait diverger.
 
+## Calage vertical par type d'objet — éprouvé le 04/09/2026
+
+Transect de neuf points à travers le vallon des Aygalades, 89 m de dénivelé,
+tous les types d'objets aux mêmes coordonnées :
+
+| Type d'objet | Couche `inline` / `table` | Couche **distante** (URL) |
+|---|---|---|
+| Surface à plat | drapée par MapLibre, exacte | idem — le drapage ne dépend pas d'Atlas |
+| Ligne | drapée, exacte | idem |
+| Point en cercle 2D | drapé, exact | idem |
+| **Surface en volume** | `_sol` **par entité** ✓ | ✗ une seule altitude pour toute la couche |
+| **Modèle 3D** | **exact au décimètre** ✓ | ✗ rien n'est instancié — Atlas n'a pas les entités |
+
+Mesure des modèles 3D : altitudes locales de −12,3 à +76,9 m pour une amplitude
+de terrain de 89 m — **89,2 m d'amplitude rendue**, et chaque objet à moins de
+50 cm de son sol (91,7 contre 92 ; 119,8 contre 120 ; 180,9 contre 181).
+
+> **`_sol` n'est pas l'altitude du centre**, et le confondre fait conclure à un
+> biais qui n'existe pas. C'est le **point culminant** sous l'entité, plus une
+> marge proportionnelle à la rugosité locale (`margeRelief`, plafonnée à 8 m).
+> Les deux raisons : un volume calé sur son centre s'enfonce dans la bosse qu'il
+> couvre, et MapLibre simplifie le maillage selon la distance, si bien que
+> l'altitude rendue s'écarte de celle mesurée. Vérifié entité par entité :
+> `_sol` = `haut + marge`, écart nul.
+
+Le cache d'altitude n'a pas à être purgé à l'arrivée des tuiles : `recalerRelief`
+appelle `recomputeAll`, qui le vide en entrée. Sa garde
+(`!this.origin || !map || !this.scene`) est franchie en pratique — l'origine est
+toujours posée, à défaut de modèle sur le centre de la carte, et la scène
+three.js est créée inconditionnellement.
+
 ## Surfaces en volume posées sur le relief (`lib/terrain-base.js`)
 
 `fill-extrusion-base` et `fill-extrusion-height` se comptent depuis le **niveau
