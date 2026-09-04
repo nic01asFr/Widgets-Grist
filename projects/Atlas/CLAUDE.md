@@ -294,6 +294,33 @@ de terrain de 89 m — **89,2 m d'amplitude rendue**, et chaque objet à moins d
 > l'altitude rendue s'écarte de celle mesurée. Vérifié entité par entité :
 > `_sol` = `haut + marge`, écart nul.
 
+### Mais conforme au modèle ne veut pas dire juste à l'écran
+
+Le contrôle **visuel** de ce même transect dit autre chose que les chiffres, et
+les deux ont raison. Modèles 3D et lignes sont impeccables — les mâts partent du
+sol, la ligne épouse le vallon. **Les volumes, eux, flottent** :
+
+| Maille | sol bas | sol haut | base posée | écart au point bas |
+|---|---:|---:|---:|---:|
+| 0 | 85 | 99 | 106 | **21 m** |
+| 3 | 100 | 137 | 145 | **45 m** |
+
+Caler sur le point culminant garantit qu'aucun volume ne s'enfonce. Le prix est
+qu'une entité **large au regard de la rugosité** se retrouve suspendue au-dessus
+de sa propre emprise : sur une maille de 78 m couvrant 37 m de dénivelé, la base
+est 45 m au-dessus du point bas, et cela se voit — le bloc est dans le ciel.
+
+> Le compromis a été réglé pour des prismes plats qui traversaient le sol. Il
+> n'a pas été éprouvé sur de grandes mailles en relief accidenté, où il produit
+> le défaut symétrique. Trois voies, à arbitrer selon l'usage : caler sur le
+> point **bas** (le volume s'enfonce d'un côté mais reste ancré — c'est ce que
+> font la plupart des SIG 3D), sur la **médiane** (il mord un peu des deux
+> côtés), ou faire dépendre le choix de la taille de l'entité.
+
+**La leçon de méthode** : les chiffres validaient (`_sol` = `haut + marge`,
+écart nul) parce qu'ils mesuraient la conformité au modèle, pas la justesse du
+modèle. Seul le regard a montré que le modèle lui-même était en cause ici.
+
 Le cache d'altitude n'a pas à être purgé à l'arrivée des tuiles : `recalerRelief`
 appelle `recomputeAll`, qui le vide en entrée. Sa garde
 (`!this.origin || !map || !this.scene`) est franchie en pratique — l'origine est
