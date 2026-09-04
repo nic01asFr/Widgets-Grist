@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"nom":"Le point de départ","type":"Repère","_modelId":"streetlamp"},"geometry":{"type":"Point","coordinates":[5.36836,43.29596]}},{"type":"Feature","properties":{"nom":"Le point d’arrivée","type":"Repère","_modelId":"streetlamp"},"geometry":{"type":"Point","coordinates":[5.37106,43.29686]}}]}

@@ -804,7 +804,18 @@
         body.view-mode .module-panel.open { display: none !important; }
         body.view-mode #map-controls-dock:not(.has-pills) { display: none !important; }
         body.view-mode #map-controls-dock.has-pills { display: flex !important; }
-        body.story-presenting #map-controls-dock { display: none !important; }
+        /* Récit : le dock d'environnement disparaît — soleil, vue, fond sont
+           pilotés par l'étape, les proposer en même temps serait contradictoire.
+           Mais les pastilles de DONNÉES (filtres exposés) restent : une étape
+           peut inviter à filtrer, et un guide interactif n'a pas d'autre moyen.
+
+           Cette distinction tenait jusqu'ici à un accident : la règle de lecture
+           ci-dessus (`.has-pills`, spécificité 1-2-1) l'emportait d'un cheveu sur
+           celle-ci (1-1-1), toutes deux en `!important`. Personne ne l'avait
+           décidé, et un nettoyage des sélecteurs aurait fait disparaître les
+           filtres sans que rien ne le signale. C'est désormais écrit. */
+        body.story-presenting #map-controls-dock:not(.has-pills) { display: none !important; }
+        body.story-presenting #map-controls-dock.has-pills { display: flex !important; }
         /* Récit : la bulle occupe le bas de la carte, la légende le coin bas
            gauche. Les deux tiennent côte à côte sur un large écran ; sous
            ~1080 px la bulle recouvre la légende — mesuré à 824 px de large :

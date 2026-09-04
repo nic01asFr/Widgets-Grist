@@ -1,0 +1,1950 @@
+{
+  "version": "0.2.2",
+  "title": "Atlas — guide interactif",
+  "subtitle": "Dix étapes pour prendre l’outil en main",
+  "layers": [
+    {
+      "id": "guide-ilots",
+      "name": "Îlots",
+      "order": 0,
+      "geometry_type": "polygon",
+      "visible": true,
+      "visibility": {
+        "defaultVisible": true
+      },
+      "height_field": "hauteur_m",
+      "style": {
+        "polygonMode": "flat",
+        "declarative": {
+          "kind": "single",
+          "color": "#8aa4b8",
+          "opacity": 1
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 01",
+              "famille": "Écoles",
+              "valeur": 5,
+              "hauteur_m": 6,
+              "livraison": 1705276800000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36755,
+                    43.2947
+                  ],
+                  [
+                    5.368288,
+                    43.2947
+                  ],
+                  [
+                    5.368288,
+                    43.295438
+                  ],
+                  [
+                    5.36755,
+                    43.295438
+                  ],
+                  [
+                    5.36755,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 02",
+              "famille": "Commerces",
+              "valeur": 24,
+              "hauteur_m": 6,
+              "livraison": 1713139200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.368449999999999,
+                    43.2947
+                  ],
+                  [
+                    5.369187999999999,
+                    43.2947
+                  ],
+                  [
+                    5.369187999999999,
+                    43.295438
+                  ],
+                  [
+                    5.368449999999999,
+                    43.295438
+                  ],
+                  [
+                    5.368449999999999,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 03",
+              "famille": "Bureaux",
+              "valeur": 43,
+              "hauteur_m": 6,
+              "livraison": 1721001600000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36935,
+                    43.2947
+                  ],
+                  [
+                    5.370088,
+                    43.2947
+                  ],
+                  [
+                    5.370088,
+                    43.295438
+                  ],
+                  [
+                    5.36935,
+                    43.295438
+                  ],
+                  [
+                    5.36935,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 04",
+              "famille": "Logements",
+              "valeur": 62,
+              "hauteur_m": 6,
+              "livraison": 1728950400000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.3702499999999995,
+                    43.2947
+                  ],
+                  [
+                    5.370988,
+                    43.2947
+                  ],
+                  [
+                    5.370988,
+                    43.295438
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.295438
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 05",
+              "famille": "Écoles",
+              "valeur": 81,
+              "hauteur_m": 6,
+              "livraison": 1736899200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37115,
+                    43.2947
+                  ],
+                  [
+                    5.371888,
+                    43.2947
+                  ],
+                  [
+                    5.371888,
+                    43.295438
+                  ],
+                  [
+                    5.37115,
+                    43.295438
+                  ],
+                  [
+                    5.37115,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 06",
+              "famille": "Commerces",
+              "valeur": 100,
+              "hauteur_m": 6,
+              "livraison": 1744675200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37205,
+                    43.2947
+                  ],
+                  [
+                    5.372788,
+                    43.2947
+                  ],
+                  [
+                    5.372788,
+                    43.295438
+                  ],
+                  [
+                    5.37205,
+                    43.295438
+                  ],
+                  [
+                    5.37205,
+                    43.2947
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 07",
+              "famille": "Commerces",
+              "valeur": null,
+              "hauteur_m": 17,
+              "livraison": 1705276800000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36755,
+                    43.2956
+                  ],
+                  [
+                    5.368288,
+                    43.2956
+                  ],
+                  [
+                    5.368288,
+                    43.296338
+                  ],
+                  [
+                    5.36755,
+                    43.296338
+                  ],
+                  [
+                    5.36755,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 08",
+              "famille": "Bureaux",
+              "valeur": 24,
+              "hauteur_m": 17,
+              "livraison": 1713139200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.368449999999999,
+                    43.2956
+                  ],
+                  [
+                    5.369187999999999,
+                    43.2956
+                  ],
+                  [
+                    5.369187999999999,
+                    43.296338
+                  ],
+                  [
+                    5.368449999999999,
+                    43.296338
+                  ],
+                  [
+                    5.368449999999999,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 09",
+              "famille": "Logements",
+              "valeur": 43,
+              "hauteur_m": 17,
+              "livraison": 1721001600000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36935,
+                    43.2956
+                  ],
+                  [
+                    5.370088,
+                    43.2956
+                  ],
+                  [
+                    5.370088,
+                    43.296338
+                  ],
+                  [
+                    5.36935,
+                    43.296338
+                  ],
+                  [
+                    5.36935,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 10",
+              "famille": "Écoles",
+              "valeur": 62,
+              "hauteur_m": 17,
+              "livraison": 1728950400000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.3702499999999995,
+                    43.2956
+                  ],
+                  [
+                    5.370988,
+                    43.2956
+                  ],
+                  [
+                    5.370988,
+                    43.296338
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.296338
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 11",
+              "famille": "Commerces",
+              "valeur": 81,
+              "hauteur_m": 17,
+              "livraison": 1736899200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37115,
+                    43.2956
+                  ],
+                  [
+                    5.371888,
+                    43.2956
+                  ],
+                  [
+                    5.371888,
+                    43.296338
+                  ],
+                  [
+                    5.37115,
+                    43.296338
+                  ],
+                  [
+                    5.37115,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 12",
+              "famille": "Bureaux",
+              "valeur": 100,
+              "hauteur_m": 17,
+              "livraison": 1744675200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37205,
+                    43.2956
+                  ],
+                  [
+                    5.372788,
+                    43.2956
+                  ],
+                  [
+                    5.372788,
+                    43.296338
+                  ],
+                  [
+                    5.37205,
+                    43.296338
+                  ],
+                  [
+                    5.37205,
+                    43.2956
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 13",
+              "famille": "Bureaux",
+              "valeur": 5,
+              "hauteur_m": 28,
+              "livraison": 1705276800000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36755,
+                    43.2965
+                  ],
+                  [
+                    5.368288,
+                    43.2965
+                  ],
+                  [
+                    5.368288,
+                    43.297238
+                  ],
+                  [
+                    5.36755,
+                    43.297238
+                  ],
+                  [
+                    5.36755,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 14",
+              "famille": "Logements",
+              "valeur": 24,
+              "hauteur_m": 28,
+              "livraison": 1713139200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.368449999999999,
+                    43.2965
+                  ],
+                  [
+                    5.369187999999999,
+                    43.2965
+                  ],
+                  [
+                    5.369187999999999,
+                    43.297238
+                  ],
+                  [
+                    5.368449999999999,
+                    43.297238
+                  ],
+                  [
+                    5.368449999999999,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 15",
+              "famille": "Écoles",
+              "valeur": 43,
+              "hauteur_m": 28,
+              "livraison": 1721001600000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36935,
+                    43.2965
+                  ],
+                  [
+                    5.370088,
+                    43.2965
+                  ],
+                  [
+                    5.370088,
+                    43.297238
+                  ],
+                  [
+                    5.36935,
+                    43.297238
+                  ],
+                  [
+                    5.36935,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 16",
+              "famille": "Commerces",
+              "valeur": 62,
+              "hauteur_m": 28,
+              "livraison": 1728950400000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.3702499999999995,
+                    43.2965
+                  ],
+                  [
+                    5.370988,
+                    43.2965
+                  ],
+                  [
+                    5.370988,
+                    43.297238
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.297238
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 17",
+              "famille": "Bureaux",
+              "valeur": 81,
+              "hauteur_m": 28,
+              "livraison": 1736899200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37115,
+                    43.2965
+                  ],
+                  [
+                    5.371888,
+                    43.2965
+                  ],
+                  [
+                    5.371888,
+                    43.297238
+                  ],
+                  [
+                    5.37115,
+                    43.297238
+                  ],
+                  [
+                    5.37115,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 18",
+              "famille": "Logements",
+              "valeur": 100,
+              "hauteur_m": 28,
+              "livraison": 1744675200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37205,
+                    43.2965
+                  ],
+                  [
+                    5.372788,
+                    43.2965
+                  ],
+                  [
+                    5.372788,
+                    43.297238
+                  ],
+                  [
+                    5.37205,
+                    43.297238
+                  ],
+                  [
+                    5.37205,
+                    43.2965
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 19",
+              "famille": "Logements",
+              "valeur": null,
+              "hauteur_m": 39,
+              "livraison": 1705276800000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36755,
+                    43.2974
+                  ],
+                  [
+                    5.368288,
+                    43.2974
+                  ],
+                  [
+                    5.368288,
+                    43.298138
+                  ],
+                  [
+                    5.36755,
+                    43.298138
+                  ],
+                  [
+                    5.36755,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 20",
+              "famille": "Écoles",
+              "valeur": 24,
+              "hauteur_m": 39,
+              "livraison": 1713139200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.368449999999999,
+                    43.2974
+                  ],
+                  [
+                    5.369187999999999,
+                    43.2974
+                  ],
+                  [
+                    5.369187999999999,
+                    43.298138
+                  ],
+                  [
+                    5.368449999999999,
+                    43.298138
+                  ],
+                  [
+                    5.368449999999999,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 21",
+              "famille": "Commerces",
+              "valeur": 43,
+              "hauteur_m": 39,
+              "livraison": 1721001600000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36935,
+                    43.2974
+                  ],
+                  [
+                    5.370088,
+                    43.2974
+                  ],
+                  [
+                    5.370088,
+                    43.298138
+                  ],
+                  [
+                    5.36935,
+                    43.298138
+                  ],
+                  [
+                    5.36935,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 22",
+              "famille": "Bureaux",
+              "valeur": 62,
+              "hauteur_m": 39,
+              "livraison": 1728950400000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.3702499999999995,
+                    43.2974
+                  ],
+                  [
+                    5.370988,
+                    43.2974
+                  ],
+                  [
+                    5.370988,
+                    43.298138
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.298138
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 23",
+              "famille": "Logements",
+              "valeur": 81,
+              "hauteur_m": 39,
+              "livraison": 1736899200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37115,
+                    43.2974
+                  ],
+                  [
+                    5.371888,
+                    43.2974
+                  ],
+                  [
+                    5.371888,
+                    43.298138
+                  ],
+                  [
+                    5.37115,
+                    43.298138
+                  ],
+                  [
+                    5.37115,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 24",
+              "famille": "Écoles",
+              "valeur": 100,
+              "hauteur_m": 39,
+              "livraison": 1744675200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37205,
+                    43.2974
+                  ],
+                  [
+                    5.372788,
+                    43.2974
+                  ],
+                  [
+                    5.372788,
+                    43.298138
+                  ],
+                  [
+                    5.37205,
+                    43.298138
+                  ],
+                  [
+                    5.37205,
+                    43.2974
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 25",
+              "famille": "Écoles",
+              "valeur": 5,
+              "hauteur_m": 50,
+              "livraison": 1705276800000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36755,
+                    43.298300000000005
+                  ],
+                  [
+                    5.368288,
+                    43.298300000000005
+                  ],
+                  [
+                    5.368288,
+                    43.299038
+                  ],
+                  [
+                    5.36755,
+                    43.299038
+                  ],
+                  [
+                    5.36755,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 26",
+              "famille": "Commerces",
+              "valeur": 24,
+              "hauteur_m": 50,
+              "livraison": 1713139200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.368449999999999,
+                    43.298300000000005
+                  ],
+                  [
+                    5.369187999999999,
+                    43.298300000000005
+                  ],
+                  [
+                    5.369187999999999,
+                    43.299038
+                  ],
+                  [
+                    5.368449999999999,
+                    43.299038
+                  ],
+                  [
+                    5.368449999999999,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 27",
+              "famille": "Bureaux",
+              "valeur": 43,
+              "hauteur_m": 50,
+              "livraison": 1721001600000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.36935,
+                    43.298300000000005
+                  ],
+                  [
+                    5.370088,
+                    43.298300000000005
+                  ],
+                  [
+                    5.370088,
+                    43.299038
+                  ],
+                  [
+                    5.36935,
+                    43.299038
+                  ],
+                  [
+                    5.36935,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 28",
+              "famille": "Logements",
+              "valeur": 62,
+              "hauteur_m": 50,
+              "livraison": 1728950400000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.3702499999999995,
+                    43.298300000000005
+                  ],
+                  [
+                    5.370988,
+                    43.298300000000005
+                  ],
+                  [
+                    5.370988,
+                    43.299038
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.299038
+                  ],
+                  [
+                    5.3702499999999995,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 29",
+              "famille": "Écoles",
+              "valeur": 81,
+              "hauteur_m": 50,
+              "livraison": 1736899200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37115,
+                    43.298300000000005
+                  ],
+                  [
+                    5.371888,
+                    43.298300000000005
+                  ],
+                  [
+                    5.371888,
+                    43.299038
+                  ],
+                  [
+                    5.37115,
+                    43.299038
+                  ],
+                  [
+                    5.37115,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Îlot 30",
+              "famille": "Commerces",
+              "valeur": 100,
+              "hauteur_m": 50,
+              "livraison": 1744675200000
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.37205,
+                    43.298300000000005
+                  ],
+                  [
+                    5.372788,
+                    43.298300000000005
+                  ],
+                  [
+                    5.372788,
+                    43.299038
+                  ],
+                  [
+                    5.37205,
+                    43.299038
+                  ],
+                  [
+                    5.37205,
+                    43.298300000000005
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.36674,
+        43.293800000000005,
+        5.373399999999999,
+        43.29956
+      ],
+      "featureCount": 30,
+      "crs": "EPSG:4326",
+      "controls": [
+        {
+          "field": "valeur",
+          "type": "range",
+          "label": "Valeur",
+          "active": true,
+          "min": 0,
+          "max": 100,
+          "dataMin": 5,
+          "dataMax": 100
+        },
+        {
+          "field": "famille",
+          "type": "select",
+          "label": "Famille",
+          "active": true,
+          "values": [
+            "Écoles",
+            "Commerces",
+            "Bureaux",
+            "Logements"
+          ]
+        }
+      ],
+      "popup_template": "<b>{nom}</b><br>{famille} · valeur {valeur}<br>hauteur {hauteur_m} m",
+      "fields": [
+        {
+          "name": "nom",
+          "gType": "Text"
+        },
+        {
+          "name": "famille",
+          "gType": "Text"
+        },
+        {
+          "name": "valeur",
+          "gType": "Numeric"
+        },
+        {
+          "name": "hauteur_m",
+          "gType": "Numeric"
+        },
+        {
+          "name": "livraison",
+          "gType": "Date"
+        }
+      ]
+    },
+    {
+      "id": "guide-reperes",
+      "name": "Repères",
+      "order": 1,
+      "geometry_type": "point",
+      "visible": false,
+      "visibility": {
+        "defaultVisible": false
+      },
+      "style": {
+        "mode": "library",
+        "library": {
+          "modelId": "streetlamp"
+        },
+        "common": {
+          "scale": 2.2,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "offsetX": 0,
+          "offsetY": 0,
+          "offsetZ": 0
+        },
+        "declarative": {
+          "kind": "single",
+          "color": "#c9a227",
+          "opacity": 1
+        }
+      },
+      "source": {
+        "type": "geojson",
+        "classe": "externe"
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Le point de départ",
+              "type": "Repère",
+              "_modelId": "streetlamp"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.36836,
+                43.29596
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "nom": "Le point d’arrivée",
+              "type": "Repère",
+              "_modelId": "streetlamp"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.37106,
+                43.29686
+              ]
+            }
+          }
+        ]
+      },
+      "bbox": [
+        5.36674,
+        43.293800000000005,
+        5.373399999999999,
+        43.29956
+      ],
+      "featureCount": 2,
+      "crs": "EPSG:4326",
+      "popup_template": "<b>{nom}</b><br>{type}",
+      "fields": [
+        {
+          "name": "nom",
+          "gType": "Text"
+        },
+        {
+          "name": "type",
+          "gType": "Text"
+        }
+      ]
+    }
+  ],
+  "story": {
+    "version": "0.2.1",
+    "steps": [
+      {
+        "id": "g1",
+        "title": "Bienvenue — ceci est un récit",
+        "description": "Ce guide est lui-même une scène Atlas : trente carrés, deux repères, et dix étapes décrites dans un fichier. Rien de ce que vous allez voir n’est codé en dur — tout est déclaré. ▶ pour avancer, ◀ pour revenir. 👉 Essayez déjà : faites glisser la carte, elle reste à vous pendant le récit.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.6,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "single",
+                "color": "#8aa4b8",
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g2",
+        "title": "Une couleur, une catégorie",
+        "description": "Les mêmes trente carrés, lus autrement : la couleur suit maintenant leur famille. La donnée n’a pas changé — la carte n’est pas la donnée, c’en est une vue. 👉 Cliquez sur « Écoles » dans la légende : Atlas isole cette classe. Cliquez encore pour tout revoir.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.6,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "famille",
+                "stops": [
+                  {
+                    "value": "Écoles",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerces",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Bureaux",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Logements",
+                    "color": "#6f9457",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#b9b2a7"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g3",
+        "title": "Une couleur, une mesure — et ce qu’on ne sait pas",
+        "description": "Cette fois la couleur suit une valeur numérique, rangée en quatre classes aux bornes choisies. Regardez les deux carrés gris : leur valeur est vide. Ils ne sont pas « bas », ils sont **non classés** — une carte honnête distingue les deux. 👉 Comparez leur position avec l’étape précédente.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.6,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g4",
+        "title": "Filtrer — la carte répond",
+        "description": "Deux pastilles sont apparues en haut à droite. 📊 filtre par valeur, 🏷️ par famille. 👉 Ouvrez 📊 et poussez la borne basse : les carrés pâles disparaissent. Le filtre ne modifie rien — il choisit ce qu’on regarde.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.6,
+            "pitch": 0,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g5",
+        "title": "Le volume — une seconde variable",
+        "description": "Les carrés se lèvent : la hauteur porte un attribut, la couleur en porte un autre. Deux informations sur un même objet, sans le dédoubler. 👉 Faites un clic droit glissé pour pivoter — le volume ne se lit qu’en tournant autour.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.9,
+            "pitch": 55,
+            "bearing": -25
+          },
+          "projection": "mercator",
+          "timeOfDay": 720,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g6",
+        "title": "Le soleil est daté, les ombres aussi",
+        "description": "Même scène, 17 h 30, ombres portées. L’heure n’est pas un habillage : elle est calculée pour ce lieu et cette date. 👉 Avancez d’une étape pour voir la même vue au matin — l’ombre bascule de l’autre côté.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.9,
+            "pitch": 58,
+            "bearing": -25
+          },
+          "projection": "mercator",
+          "timeOfDay": 1050,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g7",
+        "title": "Neuf heures — la même scène, une autre lumière",
+        "description": "Rien n’a changé sauf l’heure. C’est ce qui permet d’étudier un ensoleillement, ou simplement de choisir le moment où une maquette se lit le mieux. 👉 Revenez en arrière et comparez les deux étapes.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.9,
+            "pitch": 58,
+            "bearing": -25
+          },
+          "projection": "mercator",
+          "timeOfDay": 540,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "extruded",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g8",
+        "title": "Des objets, pas seulement des formes",
+        "description": "Deux repères viennent d’apparaître, rendus par un modèle 3D du catalogue embarqué. Une couche ponctuelle peut être un cercle, une icône, ou un objet posé au sol. 👉 Cliquez sur un îlot : sa fiche s’ouvre avec ses attributs.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 17.2,
+            "pitch": 55,
+            "bearing": 20
+          },
+          "projection": "mercator",
+          "timeOfDay": 900,
+          "terrain3D": false,
+          "shadows": true,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "graduated",
+                "field": "valeur",
+                "stops": [
+                  {
+                    "lower": 0,
+                    "upper": 25,
+                    "color": "#f2e6d4",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 25,
+                    "upper": 50,
+                    "color": "#e0b877",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 50,
+                    "upper": 75,
+                    "color": "#c17f4a",
+                    "opacity": 1
+                  },
+                  {
+                    "lower": 75,
+                    "upper": 100,
+                    "color": "#8c4a2f",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#9a938a"
+              }
+            },
+            {
+              "id": "guide-reperes",
+              "name": "Repères",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#c9a227",
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g9",
+        "title": "La Terre est ronde",
+        "description": "Atlas peut rendre en projection globe : en dézoomant, la carte devient une sphère. 👉 Dézoomez à la molette — la bascule se fait toute seule vers z12.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 9,
+            "pitch": 30,
+            "bearing": 0
+          },
+          "projection": "globe",
+          "timeOfDay": 840,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "famille",
+                "stops": [
+                  {
+                    "value": "Écoles",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerces",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Bureaux",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Logements",
+                    "color": "#6f9457",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#b9b2a7"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "g10",
+        "title": "Et maintenant, la vôtre",
+        "description": "Vous avez vu l’essentiel de ce qu’Atlas montre : symboliser, filtrer, lever en volume, éclairer, poser des objets, raconter. Tout cela tient dans un fichier de scène — celui de ce guide fait quelques kilo-octets. Dans un document Grist, ce sont vos tables qui deviennent ces couches.",
+        "state": {
+          "camera": {
+            "center": [
+              5.3698,
+              43.2965
+            ],
+            "zoom": 15.4,
+            "pitch": 25,
+            "bearing": 0
+          },
+          "projection": "mercator",
+          "timeOfDay": 780,
+          "terrain3D": false,
+          "shadows": false,
+          "labels": true,
+          "sky": true,
+          "basemap": "positron",
+          "buildings3D": false,
+          "layers": [
+            {
+              "id": "guide-ilots",
+              "name": "Îlots",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "famille",
+                "stops": [
+                  {
+                    "value": "Écoles",
+                    "color": "#c4453a",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Commerces",
+                    "color": "#d99a2b",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Bureaux",
+                    "color": "#3f7d8c",
+                    "opacity": 1
+                  },
+                  {
+                    "value": "Logements",
+                    "color": "#6f9457",
+                    "opacity": 1
+                  }
+                ],
+                "fallback": "#b9b2a7"
+              }
+            },
+            {
+              "id": "guide-reperes",
+              "name": "Repères",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "declarative": {
+                "kind": "single",
+                "color": "#c9a227",
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "camera": {
+    "center": [
+      5.3698,
+      43.2965
+    ],
+    "zoom": 15.6,
+    "pitch": 0,
+    "bearing": 0
+  }
+}
