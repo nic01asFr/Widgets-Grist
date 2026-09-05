@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.3';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.4';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.6.3';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.3';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.3';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.3';
+} from './lib/scene-loader.js?v=1.6.4';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.4';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.4';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.4';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.6.3';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.3';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.3';
+} from './lib/layer-order.js?v=1.6.4';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.4';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.4';
 import {
-  applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
+  extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.6.3';
+} from './lib/terrain-base.js?v=1.6.4';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.6.3';
+} from './lib/grist-sync.js?v=1.6.4';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.6.3';
+} from './lib/declarative-style.js?v=1.6.4';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.6.3';
+} from './lib/geo-tables.js?v=1.6.4';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.6.3';
+} from './lib/controls.js?v=1.6.4';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.6.3';
+} from './lib/story.js?v=1.6.4';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.6.3';
+} from './lib/manifest-binding.js?v=1.6.4';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.6.3';
+} from './lib/viewport.js?v=1.6.4';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.6.3';
+} from './lib/view-mode.js?v=1.6.4';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.6.3';
+} from './lib/viewer-controls.js?v=1.6.4';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.6.3';
+} from './lib/scene-prefs.js?v=1.6.4';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -2177,95 +2177,11 @@ function applyLineStyle(layer) {
 }
 
 /**
- * Pose les entites d'une couche sur le relief.
+ * Rejoue l'echantillonnage du relief quand la resolution du MNT change.
  *
- * L'echantillonnage passe par `Models3D.elevRaw` — le meme que celui qui place
- * les modeles 3D, cache compris. Un lampadaire et le bati sous lui reposent
- * ainsi a la meme altitude par construction, quelle que soit l'exageration.
- */
-/**
- * L'altitude unique d'une couche distante, sondee au centre de son emprise.
- *
- * Faute d'entites, on ne peut pas poser chaque objet sur le sol qui lui revient.
- * Le centre de la `bbox` declaree donne un ordre de grandeur juste : sur une
- * emprise urbaine il vaut mieux que zero de plusieurs dizaines de metres, et
- * c'est ce qui separe « la couche est mal calee » de « la couche a disparu ».
- *
- * @returns {number|null} null si le MNT n'a pas encore repondu — auquel cas on
- *   ne pose rien plutot que de figer une altitude fausse ; `recalerRelief`
- *   repassera quand les tuiles seront la.
- */
-function solConstantDeCouche(layer) {
-    const b = layer?._bboxDeclaree;
-    if (!b) return null;
-    const lng = (b[0][0] + b[1][0]) / 2;
-    const lat = (b[0][1] + b[1][1]) / 2;
-    const z = Models3D.elevRaw(lng, lat);
-    return Number.isFinite(z) ? z : null;
-}
-
-/**
- * La hauteur d'extrusion d'une entité, pour décider où la poser sur le relief.
- *
- * `applyTerrainBase` en a besoin : une entité descend d'autant plus bas qu'elle
- * est haute, sans quoi elle lévite ou disparaît (cf. `baseSurTerrain`).
- *
- * Trois provenances, dans l'ordre exact où `applyPolygonStyle` les consulte —
- * graduation (seulement si la plage est mesurable), champ de hauteur, valeur
- * fixe — plus le décalage de base, qui compte dans l'épaisseur vue du sol. Pour
- * une hauteur **graduée**, on retient la borne **basse** de la plage : c'est le
- * cas le plus contraignant — les entités les plus plates sont celles qu'une
- * base trop basse enfouirait, et surestimer leur épaisseur les ferait
- * disparaître.
- *
- * @returns {(feature: object) => number|null}
- */
-function hauteurExtrusionDe(layer) {
-    const sym = initSymbolization(layer);
-    // Le decalage de base fait partie de l'epaisseur vue depuis le sol : le
-    // sommet est a `sol + base + hauteur`, et c'est lui qui doit rester visible.
-    const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
-    const plus = (h) => (Number.isFinite(h) ? h + base : null);
-
-    if (sym.size?.mode === 'graduated' && sym.size.field
-        && getNumericRange(layer, sym.size.field).count) {
-        const b = Array.isArray(sym.size.outputRange) ? Number(sym.size.outputRange[0]) : NaN;
-        const h = plus(Number.isFinite(b) ? b : null);
-        return () => h;
-    }
-    if (layer.heightField) {
-        const champ = layer.heightField;
-        return (f) => plus(Number(f?.properties?.[champ]));
-    }
-    const fixe = Number(sym.size?.value);
-    const h = plus(Number.isFinite(fixe) && fixe > 0 ? fixe : 12);
-    return () => h;
-}
-
-function poserCoucheSurTerrain(layer) {
-    // Rien a poser entite par entite : on retient une altitude de couche, lue
-    // par `extrusionExpressions`.
-    if (layer._distant) {
-        layer._solConstant = solConstantDeCouche(layer);
-        return 0;
-    }
-    const t0 = performance.now();
-    const n = applyTerrainBase(layer.geojson, (lng, lat) => Models3D.elevRaw(lng, lat), pointsSondes,
-        hauteurExtrusionDe(layer));
-    if (!n) return 0;
-    syncLayerSourceData(layer);
-    const ms = Math.round(performance.now() - t0);
-    if (ms > 500) console.warn(`[Atlas terrain] ${layer.name} : ${n} entites posees en ${ms} ms`);
-    return n;
-}
-
-/**
- * Rejoue les deux echantillonnages du relief quand la resolution du MNT change.
- *
- * Modeles 3D et surfaces en volume lisent le meme cache d'altitude : les
- * recaler separement les ferait diverger — un lampadaire flotterait au-dessus
- * du batiment qui le porte. Ils repartent donc ensemble, et seulement au
- * franchissement d'un palier entier de zoom.
+ * Ne concerne que les modeles 3D : eux seuls sont places par Atlas. MapLibre
+ * drape lui-meme les surfaces, les lignes et les points sur le terrain, et n'a
+ * besoin de rien.
  */
 function recalerSiPalierDem() {
     if (!map || !STATE.settings.terrain3D) return;
@@ -2280,13 +2196,11 @@ function recalerSiPalierDem() {
 }
 
 /**
- * Recale modeles 3D et surfaces en volume sur le relief, apres un delai.
+ * Recale les modeles 3D sur le relief, apres un delai.
  *
- * Les deux lisent le meme cache d'altitude : les recaler separement les ferait
- * diverger. Ce point d'entree unique remplace les quatre paires d'appels
- * dispersees, qui pouvaient s'entrelacer — un changement d'exageration suivi
- * d'un changement de source rejouait deux calages concurrents sur des donnees
- * differentes.
+ * Point d'entree unique : il remplace les paires d'appels dispersees, qui
+ * pouvaient s'entrelacer — un changement d'exageration suivi d'un changement de
+ * source rejouait deux calages concurrents sur des donnees differentes.
  *
  * Le delai laisse le MNT arriver : sonder trop tot ne rend que l'ancienne
  * resolution, et le calcul est paye pour rien.
@@ -2296,38 +2210,7 @@ function recalerRelief(delai = 250) {
     _recalageTimer = setTimeout(() => {
         if (map) _palierDemCale = map.getZoom();
         Models3D.recomputeAll();
-        refreshTerrainBases();
     }, delai);
-}
-
-/**
- * Rejoue le calage sur le relief pour toutes les couches concernees.
- *
- * A appeler quand le relief change d'etat, de source ou d'exageration, et quand
- * ses tuiles arrivent : `queryTerrainElevation` ne repond qu'une fois le MNT
- * charge, donc le premier passage laisse souvent des entites non posees.
- */
-function refreshTerrainBases() {
-    if (!map || !mapStyleUsable()) return;
-    const actif = !!STATE.settings.terrain3D;
-    let touchees = 0;
-    for (const l of STATE.layers) {
-        const surfaciqueVolume = (l.geometryType === 'Polygon' || l.geometryType === 'MultiPolygon')
-            && l.style?.polygonMode !== 'flat';
-        if (!surfaciqueVolume) continue;
-        if (!actif && clearTerrainBase(l.geojson)) {
-            // Relief coupe : sans nettoyage les entites resteraient en
-            // levitation au-dessus d'une carte redevenue plate.
-            syncLayerSourceData(l);
-            touchees++;
-        }
-        // Un seul passage : `applyLayerStyle` -> `applyPolygonStyle` pose les
-        // entites quand le relief est actif, et choisit les expressions selon
-        // son etat. Poser ici en plus doublait le cout — mesure a 2,3 s sur la
-        // grille de 42 182 mailles au lieu de 1,1 s.
-        if (map.getLayer(l.id)) { applyLayerStyle(l); touchees++; }
-    }
-    if (touchees) applyLayerOrder(); // applyLayerStyle remonte les couches au sommet
 }
 
 function applyPolygonStyle(layer) {
@@ -2341,12 +2224,8 @@ function applyPolygonStyle(layer) {
             if (r.count) height = buildNumGraduated(sym.size.field, [r.min, r.max], sym.size.outputRange, sym.size.method);
         } else if (layer.heightField) height = ['to-number', ['get', layer.heightField]];
         const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
-        // Sur relief, l'extrusion se compte depuis le niveau de la mer : sans
-        // decalage, une maille de 12 m posee sur une colline de 50 m est
-        // enfouie. On pose donc chaque entite sur le sol.
-        const surTerrain = needsTerrainBase(layer, !!STATE.settings.terrain3D);
-        if (surTerrain) poserCoucheSurTerrain(layer);
-        const ext = extrusionExpressions(base, height, surTerrain, layer._solConstant);
+        // Rien a poser : MapLibre drape lui-meme l'extrusion sur le relief.
+        const ext = extrusionExpressions(base, height);
         map.addLayer(poserBornesZoom({ id: layer.id, type: 'fill-extrusion', source: layer.id, paint: {
             'fill-extrusion-color': layerPaintColor(layer),
             'fill-extrusion-height': ext.height,
@@ -5420,7 +5299,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.3');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.4');
     return Feuille;
 }
 
@@ -5537,10 +5416,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.6.3'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.6.4'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.6.3');
+        const dc = await import('./lib/data-client.js?v=1.6.4');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7461,9 +7340,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.6.3');
+        const { capacites } = await import('./lib/data-client.js?v=1.6.4');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.3');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.4');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

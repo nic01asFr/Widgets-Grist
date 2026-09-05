@@ -247,21 +247,20 @@ test('les bornes de zoom se lisent sous leurs trois orthographes', () => {
     'zéro est une borne valide, pas une absence');
 });
 
-test('le sol d’une couche distante est constant, pas nul', () => {
-  // Sans `_sol` par entité, l'expression retombait sur 0 — le niveau de la mer.
-  // Sur un relief à 50 m, toute la couche disparaissait sous le sol : elle est
-  // là, elle est peinte, et on ne la voit pas.
-  const surRelief = extrusionExpressions(0, 12, true, 47.5);
-  assert.deepEqual(surRelief.base.slice(0, 2), ['+', 47.5],
-    'l’altitude de couche entre en dur dans l’expression');
-
-  const parEntite = extrusionExpressions(0, 12, true, null);
-  assert.deepEqual(parEntite.base[1], ['coalesce', ['get', '_sol'], 0],
-    'une couche détenue garde son altitude par entité');
-
-  assert.deepEqual(extrusionExpressions(0, 12, false, 47.5), { base: 0, height: 12 },
-    'sans relief, aucun décalage — ni constant ni par entité');
+test('une couche distante extrudee n’a plus besoin d’altitude de couche', () => {
+  // Atlas sondait une altitude unique au centre de la bbox declaree, faute de
+  // pouvoir en sonder une par batiment. Mesure sur les Aygalades, elle etait
+  // juste au seul point sonde : le bati formait une nappe plate suspendue
+  // 57 m au-dessus du fond de vallon et enfouie 148 m sous le coteau est.
+  //
+  // MapLibre drapant lui-meme l'extrusion sommet par sommet, ce calage n'a
+  // plus lieu d'etre — et le defaut disparait avec lui. Une couche distante
+  // extrudee se rend maintenant comme une couche detenue.
+  assert.deepEqual(extrusionExpressions(0, 12), { base: 0, height: ['+', 0, ['max', 12, 0.5]] });
+  assert.equal(extrusionExpressions.length, 2,
+    'plus de parametre `surTerrain` ni `solConstant` : le relief ne change rien');
 });
+
 
 /* ---------- une couche portée par le manifeste n'est pas une couche distante ---------- */
 

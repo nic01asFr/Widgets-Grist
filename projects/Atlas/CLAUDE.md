@@ -279,7 +279,7 @@ tous les types d'objets aux mêmes coordonnées :
 | Surface à plat | drapée par MapLibre, exacte | idem — le drapage ne dépend pas d'Atlas |
 | Ligne | drapée, exacte | idem |
 | Point en cercle 2D | drapé, exact | idem |
-| **Surface en volume** | `_sol` **par entité** ✓ | ✗ une seule altitude pour toute la couche |
+| **Surface en volume** | drapée par MapLibre, exacte | idem — le drapage ne dépend pas d'Atlas |
 | **Modèle 3D** | **exact au décimètre** ✓ | ✗ rien n'est instancié — Atlas n'a pas les entités |
 
 Mesure des modèles 3D : altitudes locales de −12,3 à +76,9 m pour une amplitude
@@ -294,90 +294,72 @@ de terrain de 89 m — **89,2 m d'amplitude rendue**, et chaque objet à moins d
 > l'altitude rendue s'écarte de celle mesurée. Vérifié entité par entité :
 > `_sol` = `haut + marge`, écart nul.
 
-### Où poser un volume — la règle dépend de sa hauteur (05/09/2026)
+### Le relief, c'est MapLibre qui s'en charge (05/09/2026)
 
-Les deux règles fixes ont chacune leur cas de ruine :
+**MapLibre pose lui-même sur le terrain tout ce qu'il rend** — surfaces à plat,
+lignes, cercles, et aussi les **extrusions**, sommet par sommet. Sur relief
+actif, `fill-extrusion-base` et `fill-extrusion-height` se comptent depuis le
+**sol**, pas depuis le niveau de la mer.
 
-| Calage | Ce qu'il garantit | Ce qu'il casse |
-|---|---|---|
-| Point **culminant** | aucun volume ne traverse le sol | une grande maille sur pente **lévite** — mesuré : 45 m au-dessus de son point bas |
-| Point **bas** | tout est ancré | un prisme **plat** disparaît dans la bosse qu'il couvre |
+Atlas ajoutait par-dessus l'altitude qu'il sondait lui-même (`_sol`). Elle était
+donc **comptée deux fois**, et chaque volume soulevé de sa propre altitude — de
+85 m en fond de vallon à 245 m sur le coteau, sur le transect des Aygalades.
+C'était la cause, unique, des « volumes qui flottent ».
 
-Le bon choix n'est ni l'un ni l'autre : **il dépend de la hauteur du volume**. Un
-bloc de 60 m sur 37 m de dénivelé peut descendre au point bas sans disparaître ;
-un bloc de 2 m, non.
+Trois observations concordantes, à l'écran :
 
-```
-base = max(bas, plafond − hauteur)      // plafond = point culminant + marge
-```
+| Épreuve | Ce qu'elle montre |
+|---|---|
+| `_sol = 0` sur une dalle, à z17,2 | elle se pose **au sol** — avec `_sol` (179,75 m) elle était 238 px plus haut, la conversion exacte de 179,75 m à cette échelle |
+| Neutralisation à **caméra fixe** | tous les blocs **redescendent** sur le terrain, rien d'autre ne change |
+| Dalle de 6 m sur 23 m de dénivelé | elle **épouse la pente**, paroi plus haute en aval — le drapage est par sommet |
 
-On descend aussi bas que possible **sans que le sommet passe sous le point
-culminant**. Le volume reste donc toujours visible, et ne décolle que de ce
-qu'il faut pour le rester. La transition est continue — pas de seuil, donc pas
-de saut quand une hauteur graduée franchit une borne.
+Conséquences, toutes des simplifications :
 
-Éprouvé sur le transect des Aygalades, volumes de 60 m et de 6 m alternés :
+- `extrusionExpressions(base, height)` ne compose plus rien : les hauteurs
+  déclarées sont déjà des hauteurs au-dessus du sol. Restent l'épaisseur
+  plancher et l'inclusion de la base dans le sommet ;
+- `_sol`, l'échantillonnage par entité et son coût (**1,1 s pour 42 182
+  mailles**) disparaissent, avec `applyTerrainBase`, `clearTerrainBase`,
+  `needsTerrainBase`, `pointsSondes` et `margeRelief` ;
+- **une couche distante extrudée n'est plus un cas à part** : plus de « nappe
+  plate suspendue », plus de `solConstant` sondé au centre de la bbox ;
+- rien à rejouer quand le relief change d'état, de source ou d'exagération pour
+  les surfaces. Seuls les **modèles 3D** three.js — rendus dans un custom layer
+  que MapLibre ne connaît pas — interrogent encore le MNT.
 
-| Hauteur | Écart au point bas | Sommet au-dessus du culminant |
-|---:|---:|---:|
-| 60 m | **0 m** — posé au sol | +46 à +52 m |
-| 6 m | 8 à 39 m | +5 à +8 m |
+> **`height` est une épaisseur, et le sommet inclut la base.** Les deux branches
+> d'origine ne s'accordaient pas : sans relief le sommet valait `height` seul,
+> avec relief `base + height`. Une entité à base 3 et hauteur 12 mesurait donc
+> 9 m à plat et 12 m sur relief. La seconde lecture est retenue partout. Sans
+> base déclarée — le cas courant — les deux se confondent, ce qui explique que
+> l'écart soit passé inaperçu.
 
-> **Le cas plat sur forte pente reste irréductible**, et c'est assumé : 6 m
-> d'épaisseur sur 37 m de dénivelé n'ont aucune position à la fois ancrée et
-> visible. La règle choisit visible. Avant, *tous* les volumes lévitaient, y
-> compris ceux qui avaient largement de quoi descendre.
+### Ce que cette erreur a coûté, et pourquoi
 
-La hauteur vient de `hauteurExtrusionDe(layer)`, dans l'ordre où l'extrusion la
-consulte elle-même. Pour une hauteur **graduée**, on retient la borne **basse**
-de la plage : c'est le cas le plus contraignant, et surestimer l'épaisseur des
-entités les plus plates les enfouirait.
+Le défaut a survécu à **deux corrections** qui l'ont chacune un peu réduit sans
+le voir :
 
-### La leçon de méthode : conforme au modèle n'est pas juste à l'écran
+1. caler sur le point **culminant** (l'origine) — les grandes mailles lévitent ;
+2. caler selon la **hauteur** du volume — mieux, mais le décalage restait, et la
+   marge anti-scintillement pouvait à elle seule porter une dalle de 6 m
+   au-dessus du point culminant.
 
-C'est le regard qui a trouvé ce défaut, pas la mesure. Les chiffres validaient —
-`_sol` = `haut + marge`, écart nul, entité par entité — parce qu'ils mesuraient
-la **conformité au modèle**, pas la justesse du modèle. Il a fallu regarder le
-transect pour voir les blocs dans le ciel, alors que modèles 3D et lignes
-partaient bien du sol.
+Les deux réglaient la **répartition** d'un décalage qui n'aurait pas dû exister.
+Aucune mesure ne pouvait le dire : les chiffres validaient à chaque fois, parce
+qu'ils mesuraient la conformité au modèle, pas la justesse du modèle. Le
+`CLAUDE.md` affirmait le contraire de la réalité, et cette affirmation était le
+point de départ de tout raisonnement — c'est ce qui l'a rendue si coûteuse à
+remettre en cause.
 
-> Un contrôle numérique ne peut pas invalider la règle qu'il applique. Quand un
-> calcul est correct et que le résultat semble faux, c'est la règle qu'il faut
-> mettre en cause — et seule l'observation peut le dire.
+> **Ce qui a fini par trancher** : neutraliser la variable suspecte et regarder.
+> Pas la raffiner. Quand deux corrections successives d'un même mécanisme
+> laissent le symptôme, c'est le mécanisme qu'il faut mettre à zéro pour voir ce
+> qui se passe sans lui.
 
-Le cache d'altitude n'a pas à être purgé à l'arrivée des tuiles : `recalerRelief`
-appelle `recomputeAll`, qui le vide en entrée. Sa garde
-(`!this.origin || !map || !this.scene`) est franchie en pratique — l'origine est
-toujours posée, à défaut de modèle sur le centre de la carte, et la scène
-three.js est créée inconditionnellement.
-
-## Surfaces en volume posées sur le relief (`lib/terrain-base.js`)
-
-`fill-extrusion-base` et `fill-extrusion-height` se comptent depuis le **niveau
-de la mer**, pas depuis le sol. Une maille extrudée de 0 à 12 m était donc
-ancrée à l’altitude zéro : sur un relief à 50 m elle disparaissait, à 10 m seuls
-deux mètres dépassaient — d’où les interférences entre la donnée et le terrain.
-
-- Chaque entité reçoit l’altitude du sol sous son centre (`_sol`), et les
-  expressions deviennent `['+', sol, base]` / `['+', sol, base, height]`. Le
-  sommet **inclut la base**, sinon l’épaisseur repartirait du sol.
-- L’échantillonnage passe par **`Models3D.elevRaw`**, le même que celui qui pose
-  les modèles 3D, cache compris : un lampadaire et le bâti sous lui reposent à
-  la même altitude par construction. Avant, seuls les modèles étaient posés —
-  un bâtiment extrudé traversait la colline.
-- **`0` est une altitude valide** (bord de mer) : `elevRaw` renvoie `null` quand
-  la tuile MNT manque, et l’entité est laissée intacte plutôt que collée au
-  niveau zéro. `elevAt` conserve son contrat historique (nombre, zéro à défaut).
-- **`queryTerrainElevation` retourne l’altitude exagérée** — vérifié à l’écran à
-  ×3. Le calage doit donc être rejoué à chaque changement d’exagération, de
-  source, de bascule du relief, et sur les étapes de récit qui l’activent.
-- Couper le relief **nettoie** `_sol` : sans cela les entités resteraient en
-  lévitation au-dessus d’une carte redevenue plate.
-- Seules les surfaces **en volume** sont concernées : à plat, MapLibre drape
-  déjà le remplissage, comme pour les points et les lignes.
-- Coût mesuré : **~1,1 s pour 42 182 mailles**, sur action explicite seulement.
-  Ne pas poser les entités dans `refreshTerrainBases` **et** dans
-  `applyLayerStyle` — le doublon coûtait 2,3 s.
+C'était sans doute vrai d'une version antérieure de MapLibre — la note d'origine
+décrivait un vrai symptôme. Rien ne garantissait que ce soit encore vrai en
+5.6.1, et rien ne l'avait revérifié.
 
 ## Montage des couches — `isStyleLoaded()` n’est pas le bon prérequis
 
@@ -909,39 +891,26 @@ elle est là, elle est peinte, et on ne la voit pas. L'altitude est sondée au
 centre de la `bbox` déclarée. C'est approximatif (le relief varie sur une
 emprise) et c'est assumé : cela sépare « mal calée » de « disparue ».
 
-### Relief + couche distante extrudée = une nappe suspendue
+### Relief + couche distante extrudée — le problème n'existe plus
 
-`extrusionExpressions` accepte un `solConstant` pour les couches dont Atlas ne
-détient pas les entités : une altitude sondée **au centre de la bbox**, faute de
-pouvoir en sonder une par bâtiment. Le CLAUDE.md la disait « approximative et
-assumée ». Mesuré sur les Aygalades, l'approximation ne tient pas :
+Atlas sondait une altitude unique **au centre de la bbox** pour les couches dont
+il ne détient pas les entités. Mesuré sur les Aygalades, elle n'était juste
+qu'au seul point sondé : le bâti formait une nappe plate suspendue 57 m au-dessus
+du fond de vallon et enfouie 148 m sous le coteau est, traversée par les lignes
+drapées.
 
-| Lieu | Sol réel | Altitude posée | Écart |
-|---|---:|---:|---:|
-| Cascade, fond de vallon | 80 m | 136,9 m | **flotte 57 m** |
-| Coteau ouest | 99 m | 136,9 m | flotte 38 m |
-| Coteau est | 285 m | 136,9 m | **enfoui 148 m** |
-| Centre de la bbox | 137 m | 136,9 m | exact |
+`solConstant` a disparu avec tout le calage : **MapLibre drape l'extrusion
+lui-même**, qu'Atlas détienne ou non les entités — c'est son affaire de rendu,
+pas la nôtre. Une couche distante extrudée se comporte donc exactement comme une
+couche détenue.
 
-Le sol constant n'est juste qu'au seul point où il a été sondé. Sur une emprise
-au relief marqué — 220 m d'amplitude ici — le bâti forme **une nappe plate
-suspendue** au-dessus d'un terrain qui, lui, ondule ; et les lignes drapées
-(voirie, cours d'eau) le traversent, puisqu'elles suivent le sol.
+> La règle « `terrain3D` et une couche distante extrudée ne vont pas ensemble »
+> **est levée**. L'étape « relief » de la démo des Aygalades pose ses emprises à
+> plat pour cette raison ; ce n'est plus nécessaire, seulement inoffensif.
 
-> **La règle** : `terrain3D` et une couche **distante extrudée** ne vont pas
-> ensemble. Soit la couche porte ses entités (inline, ou table du document) et
-> chacune reçoit son `_sol`, soit on la passe **à plat** — MapLibre la drape
-> alors entité par entité, ce qui est exact par construction et se lit très bien
-> sur un relief.
-
-MapLibre ne sait pas aligner nativement une extrusion sur le terrain :
-`fill-extrusion-base-alignment` existe chez Mapbox GL v3, **pas** dans MapLibre
-(vérifié en 5.6.1, la propriété est refusée). Il n'y a donc pas de raccourci.
-
-L'étape « relief » de la démo des Aygalades applique cette règle : bâti et
-emprises à plat, et le texte le dit — une démo qui affirme poser les volumes sur
-le sol échantillonné pendant qu'ils flottent apprend le contraire de ce qu'elle
-montre.
+MapLibre n'expose toujours pas `fill-extrusion-base-alignment` (propriété Mapbox
+GL v3, refusée en 5.6.1) — mais on n'en a pas besoin : l'alignement sur le
+terrain est le comportement par défaut.
 
 ### Les bornes de zoom du manifeste sont appliquées
 

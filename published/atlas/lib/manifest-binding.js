@@ -5,13 +5,13 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.6.3';
+} from './declarative-style.js?v=1.6.4';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=1.6.3';
+} from './controls.js?v=1.6.4';
 import { parseGristBool } from './grist-bool.js';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */

@@ -7498,7 +7498,7 @@
       {
         "id": "aygalades-7",
         "title": "Le vallon a une forme",
-        "description": "Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le tracé du ruisseau comme celui de l'autoroute. Le bâti est ici posé à plat : MapLibre le drape sur le terrain, entité par entité. En volume il aurait fallu une altitude par bâtiment — Atlas ne détient pas ces entités, il n'en connaît qu'une pour toute la couche, et le relief varie de 220 m sur cette emprise.",
+        "description": "Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le tracé du ruisseau comme celui de l'autoroute. Le bâti est ici posé à plat pour laisser voir la forme du terrain — mais en volume il tiendrait aussi : MapLibre drape l'extrusion sur le relief, sommet par sommet, qu'Atlas détienne ou non les entités.",
         "state": {
           "camera": {
             "center": [
