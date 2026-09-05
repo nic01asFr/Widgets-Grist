@@ -244,7 +244,37 @@ MapLibre projette sur une **sphère**. Écart mesuré :
 
     z3 → 570 px · z6 → 1692 px · z9 → 2248 px · z11 → 2337 px · z12 → 0 px
 
-Rien n’est à sa place sous z12. `MODEL3D_ZOOM_GATE` ne s’appliquait qu’au-delà de
+Rien n’est à sa place sous z12.
+
+> **Toujours vrai en MapLibre 5.6.1 — re-mesuré le 05/09/2026** au banc
+> (`tests/manuel/projection-3d.html`), et reproduit au pixel : 569,7 · 1693,8 ·
+> 2250,7 · 2341,7, puis **0 dès z12**. La falaise est nette entre z11,9
+> (2365 px) et z12 : c'est là que MapLibre bascule son globe en mercator. Le
+> seuil `GLOBE_MERCATOR_ZOOM = 12` tombe donc exactement au bon endroit.
+>
+> **Impasse à ne pas refaire : `defaultProjectionData.fallbackMatrix`.** Elle
+> donne 0 px partout dans le balayage standard du banc, ce qui donne
+> irrésistiblement envie de retirer la garde. C'est un artefact : les points du
+> banc tiennent dans ±0,0015° **au centre de l'écran**, là où mercator et globe
+> coïncident par construction. En éloignant la caméra, la mesure se retourne —
+>
+> | vue (globe, z3) | `mainMatrix` | `fallbackMatrix` |
+> |---|--:|--:|
+> | centre | 334 px | **0** |
+> | +20° est | 169 px | 29,6 px |
+> | **bord du globe** | 220 px | **253 px — pire** |
+>
+> `fallbackMatrix` **est** la matrice mercator : MapLibre la fournit pour ce qui
+> ne sait pas dessiner sur une sphère. Elle ne vaut qu'au voisinage du centre de
+> projection. Il n'y a pas de matrice toute faite qui sauve un custom layer
+> plan sur un globe.
+>
+> **Portée réelle de la garde**, pour ne pas la surestimer : sous z12 un
+> lampadaire de 6 m mesure **0,1 px** — le masquage ne retire rien de visible.
+> Seul un modèle fortement mis à l'échelle est concerné (`monument-glb` est à
+> `scale: 28`, soit plusieurs pixels dès z11), et seulement en projection
+> **globe** : la garde lit `STATE.settings.projection`, donc une scène en
+> mercator n'est jamais concernée. Aucune démo actuelle ne tombe dans ce cas. `MODEL3D_ZOOM_GATE` ne s’appliquait qu’au-delà de
 4 000 objets : une couche de quinze lampadaires s’affichait donc grossièrement
 décalée en vue régionale. Sous `GLOBE_MERCATOR_ZOOM` (12) et en projection globe,
 les modèles ne sont plus rendus — à ces échelles un lampadaire mesure de toute
