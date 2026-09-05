@@ -286,13 +286,14 @@ Mesure des modèles 3D : altitudes locales de −12,3 à +76,9 m pour une amplit
 de terrain de 89 m — **89,2 m d'amplitude rendue**, et chaque objet à moins de
 50 cm de son sol (91,7 contre 92 ; 119,8 contre 120 ; 180,9 contre 181).
 
-> **`_sol` n'est pas l'altitude du centre**, et le confondre fait conclure à un
-> biais qui n'existe pas. C'est le **point culminant** sous l'entité, plus une
-> marge proportionnelle à la rugosité locale (`margeRelief`, plafonnée à 8 m).
-> Les deux raisons : un volume calé sur son centre s'enfonce dans la bosse qu'il
-> couvre, et MapLibre simplifie le maillage selon la distance, si bien que
-> l'altitude rendue s'écarte de celle mesurée. Vérifié entité par entité :
-> `_sol` = `haut + marge`, écart nul.
+> **Ce tableau a d'abord été lu de travers.** Les colonnes « surface en volume »
+> disaient alors `_sol` par entité d'un côté, altitude unique de l'autre — un
+> mécanisme d'Atlas qui n'aurait jamais dû exister (voir la section suivante).
+> Éprouvé à nouveau le 05/09/2026 : le drapage ne dépend pas d'Atlas, donc
+> l'origine de la donnée ne change rien pour tout ce que MapLibre rend
+> lui-même. Seuls les **modèles 3D** distinguent encore les deux colonnes,
+> parce qu'eux seuls sont placés par Atlas — et il lui faut les entités pour
+> cela.
 
 ### Le relief, c'est MapLibre qui s'en charge (05/09/2026)
 

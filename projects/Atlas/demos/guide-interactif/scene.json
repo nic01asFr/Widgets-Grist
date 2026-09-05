@@ -3003,7 +3003,7 @@
       {
         "id": "g10-relief",
         "title": "Le terrain a du relief",
-        "description": "Relief activé : la carte cesse d’être une feuille. Les îlots sont posés à plat — MapLibre les drape sur le terrain, entité par entité, et ils épousent la pente. En volume il faudrait une altitude par îlot, ce qui suppose qu’Atlas détienne les entités. 👉 Inclinez la vue avec un clic droit glissé pour voir la butte du Panier.",
+        "description": "Relief activé : la carte cesse d’être une feuille. Les îlots sont posés à plat — MapLibre les drape sur le terrain, entité par entité, et ils épousent la pente. En volume ce serait pareil : MapLibre drape aussi l’extrusion, sommet par sommet, et un bâtiment sur un versant y montre sa paroi la plus haute en aval. 👉 Inclinez la vue avec un clic droit glissé pour voir la butte du Panier.",
         "state": {
           "camera": {
             "center": [
