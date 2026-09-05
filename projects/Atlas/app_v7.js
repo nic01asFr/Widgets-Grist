@@ -17,6 +17,8 @@ import {
   boundsFromVisibleLayers,
 } from './lib/scene-loader.js?v=20260826a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
+import { moteurDisponible, formDefPourCouche, valeursDepuisEntite, pontFormulaire }
+  from './lib/fiche-formulaire.js?v=20260905a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
 import {
@@ -4542,6 +4544,38 @@ function renderAttrFields(layer, props, opts = {}) {
     }).join('');
 }
 
+/**
+ * Monte le moteur de formulaire dans le corps de l'inspecteur d'objet.
+ *
+ * Le pont est passe explicitement : sans lui, le moteur retombe sur
+ * `window.grist.docApi` et court-circuite le garde d'ecriture d'Atlas.
+ */
+function monterFormulaireEntite(layer, props, formDef) {
+    const hote = $('insp-body');
+    hote.innerHTML = '';
+    const rowId = props?._row_id;
+    if (rowId == null) {
+        hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
+        return;
+    }
+    try {
+        window.FormEngine.mount(hote, { ...formDef, values: valeursDepuisEntite(formDef, props) },
+            pontFormulaire({
+                couche: layer,
+                rowId,
+                docApi: grist.docApi,
+                peutEcrire: () => canWrite(CONFIG.viewMode),
+                signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
+                // Relit la couche depuis sa table : la carte doit montrer ce
+                // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
+                apresEcriture: () => { A.refreshLayer(layer.id); },
+            }));
+    } catch (e) {
+        console.error('[Atlas formulaire] mount', e);
+        hote.innerHTML = `<div class="hint">Formulaire indisponible : ${e.message}</div>`;
+    }
+}
+
 function renderObjectInspector() {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
     if (!layer) return;
@@ -4585,10 +4619,19 @@ function renderObjectInspector() {
     // sélection multiple, mode lecture).
     if (_inspObjTab === 'Attributs') {
         const readOnly = view || !isQgis;
-        const entete = readOnly
-            ? (isQgis ? '' : '<div class="hint" style="margin-bottom:10px">Attributs de la couche — lecture seule (source hors table Grist).</div>')
-            : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
-        $('insp-body').innerHTML = entete + renderAttrFields(layer, props, { readOnly });
+        // Quand le document decrit cette table par un FormDef, c'est LUI la
+        // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
+        // `renderAttrFields` reste le repli — il devine les champs, et n'a que
+        // deux types.
+        const formDef = multi ? null : formDefPourCouche(layer, STATE.formulaires);
+        if (formDef && !readOnly && moteurDisponible()) {
+            monterFormulaireEntite(layer, props, formDef);
+        } else {
+            const entete = readOnly
+                ? (isQgis ? '' : '<div class="hint" style="margin-bottom:10px">Attributs de la couche — lecture seule (source hors table Grist).</div>')
+                : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
+            $('insp-body').innerHTML = entete + renderAttrFields(layer, props, { readOnly });
+        }
     } else if (_inspObjTab === 'Placement 3D') {
         if (view) {
             $('insp-body').innerHTML = multi
@@ -5202,6 +5245,33 @@ const TABLE_SCHEMAS = {
         { id: 'GeoJSON', fields: { label: 'GeoJSON', type: 'Text' } },
     ],
 };
+/**
+ * Les FormDef du document, s'il y en a.
+ *
+ * Table creee a la demande par qgis2grist : absente sur la plupart des
+ * documents, et c'est le cas normal. On garde une liste vide plutot que `null`
+ * pour que l'appelant n'ait pas a distinguer « pas de table » de « pas de
+ * formulaire pour cette couche » — les deux donnent le meme repli.
+ */
+async function chargerFormulaires() {
+    STATE.formulaires = [];
+    if (!CONFIG.grist.ready) return;
+    try {
+        const tables = await grist.docApi.listTables();
+        if (!tables.includes('Formulaires')) return;
+        const rec = await grist.docApi.fetchTable('Formulaires');
+        const n = (rec.id || []).length;
+        for (let i = 0; i < n; i++) {
+            try {
+                const def = JSON.parse(rec.Def?.[i] || 'null');
+                if (def && def.tableId) STATE.formulaires.push(def);
+            } catch (_) { /* une definition illisible n'empeche pas les autres */ }
+        }
+    } catch (e) {
+        console.warn('[Atlas formulaire] chargement', e.message);
+    }
+}
+
 async function syncStoryFromGrist() {
     if (!CONFIG.grist.ready) return;
     // Une seule lecture rend le recit et le nombre de lignes qui le portent.
@@ -5612,6 +5682,7 @@ async function initGrist() {
             await loadLayersFromGrist();
         }
         await syncStoryFromGrist();
+        await chargerFormulaires();
         await syncScenePrefsFromGrist();
         refreshControlsDock();
         if (CONFIG.viewMode) {

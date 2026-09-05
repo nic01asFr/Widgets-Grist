@@ -31,6 +31,20 @@
     }
     </script>
 
+    <!-- BANC — moteur de formulaire de grist_forms (marche 1).
+         Chargé AVANT le <style> d'Atlas : la règle `body` de dsfr-like.css est
+         ainsi écrasée par le `html, body` d'Atlas, qui vient après à égalité de
+         spécificité. C'est la seule collision du fichier — ses 17 variables
+         n'ont aucun nom commun avec les 22 d'Atlas, et son `box-sizing` global
+         est déjà posé ici.
+         Chemins relatifs au dépôt : valables sur le serveur de dev, PAS dans
+         published/atlas/. Le vendoring est une décision d'après-banc. -->
+    <link rel="stylesheet" href="../grist_forms/shared/dsfr-like.css" />
+    <script src="../grist_forms/shared/types.js"></script>
+    <script src="../grist_forms/shared/attachments.js"></script>
+    <script src="../grist_forms/shared/session-context.js"></script>
+    <script src="../grist_forms/runtime/engine.js"></script>
+
     <style>
         /* ============================================
            ATLAS — TOKENS (papier, serif, terre cuite)
