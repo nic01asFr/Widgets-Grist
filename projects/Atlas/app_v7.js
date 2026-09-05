@@ -34,6 +34,7 @@ import {
 import {
   loadLayerPrefs,
   clePrefsCouche,
+  coucheAvecLignes,
   applyLayerPrefs,
   saveLayerPref,
   parseGristBool,
@@ -4645,7 +4646,9 @@ function renderObjectInspector() {
     const props = f?.properties || {};
     const label = props.name || props._label || props._osmId || `Objet #${idx + 1}`;
     const r = resolveFeatureProps(f, layer);
-    const isQgis = layer.source === 'qgis2grist';
+    // « Puis-je ecrire cet objet ? » se decide sur la capacite — une table et
+    // un `_row_id` —, jamais sur le producteur de la couche.
+    const isQgis = coucheAvecLignes(layer);
     const view = !!CONFIG.viewMode;
     const is3D = isModelLayer(layer);
     const revue = !!STATE.selection.revue;
@@ -6518,7 +6521,7 @@ const A = {
         if (!c) return;
         c.label = String(label || field).trim() || field;
         markDirty();
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
+        if (coucheAvecLignes(l) && CONFIG.grist.ready) {
             saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
         }
     },
