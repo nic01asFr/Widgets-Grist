@@ -130,7 +130,7 @@ export function pointsSondes(feature, max = MAX_POINTS_SONDES) {
  * @param {(feature: object) => Array<[number, number]>} points
  * @returns {number} nombre d'entités effectivement posées
  */
-export function applyTerrainBase(geojson, echantillonner, points = pointsSondes) {
+export function applyTerrainBase(geojson, echantillonner, points = pointsSondes, hauteurDe = null) {
   const feats = geojson?.features;
   if (!Array.isArray(feats) || typeof echantillonner !== 'function') return 0;
   let posees = 0;
@@ -144,10 +144,50 @@ export function applyTerrainBase(geojson, echantillonner, points = pointsSondes)
       if (bas === null || v < bas) bas = v;
     }
     if (haut === null) continue;
-    (f.properties = f.properties || {})[TERRAIN_BASE_PROP] = haut + margeRelief(haut - bas);
+    const plafond = haut + margeRelief(haut - bas);
+    const h = typeof hauteurDe === 'function' ? hauteurDe(f) : null;
+    (f.properties = f.properties || {})[TERRAIN_BASE_PROP] = baseSurTerrain(bas, plafond, h);
     posees++;
   }
   return posees;
+}
+
+/**
+ * L'altitude à laquelle poser un volume, entre s'enfouir et léviter.
+ *
+ * Poser sur le **point culminant** garantit qu'aucun volume ne traverse le sol —
+ * c'était la règle, et elle vient d'un vrai défaut : un prisme plat calé plus
+ * bas disparaît entièrement dans la bosse qu'il couvre. Mais elle en produit un
+ * symétrique, mesuré sur le vallon des Aygalades : une maille de 78 m couvrant
+ * 37 m de dénivelé se retrouve **45 m au-dessus de son point bas**, suspendue
+ * au-dessus de sa propre emprise, traversée par les lignes drapées qui, elles,
+ * suivent le sol.
+ *
+ * Les deux règles fixes ont donc chacune leur cas de ruine, et le bon choix
+ * n'est ni l'une ni l'autre : **il dépend de la hauteur du volume**. Un bloc de
+ * 60 m sur 37 m de dénivelé peut descendre au point bas sans disparaître ; un
+ * bloc de 2 m, non.
+ *
+ * D'où la règle : on descend aussi bas que possible, **sans que le sommet passe
+ * sous le point culminant**. Le volume reste donc toujours visible, et ne
+ * décolle que de ce qu'il faut pour le rester.
+ *
+ *     base = max(bas, plafond − hauteur)
+ *
+ * - hauteur nulle ou inconnue → `plafond` : l'ancien comportement, le seul sûr
+ *   quand on ignore l'épaisseur ;
+ * - hauteur ≥ amplitude → `bas` : le volume est posé au sol, ancré ;
+ * - entre les deux, la transition est continue — pas de seuil, donc pas de
+ *   saut visible quand une hauteur graduée franchit une borne.
+ *
+ * @param {number|null} bas altitude la plus basse sous l'entité
+ * @param {number} plafond point culminant + marge anti-scintillement
+ * @param {number|null} hauteur épaisseur du volume, en mètres
+ */
+export function baseSurTerrain(bas, plafond, hauteur) {
+  if (!Number.isFinite(hauteur) || hauteur <= 0) return plafond;
+  if (!Number.isFinite(bas)) return plafond;
+  return Math.max(bas, plafond - hauteur);
 }
 
 /**

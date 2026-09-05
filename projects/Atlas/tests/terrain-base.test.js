@@ -11,6 +11,7 @@ import {
   MARGE_MAX_M,
   EPAISSEUR_MIN_M,
   margeRelief,
+  baseSurTerrain,
   paliersDemDifferents,
   altitudeOrigineStable,
   ecartAuSol,
@@ -365,4 +366,61 @@ test('le placement 3D n’est valable qu’une fois MapLibre passe au plan', () 
     if (Number(zoom) < SEUIL) assert.ok(ecart > 100, `z${zoom} devrait etre faux`);
     else assert.equal(ecart, 0, `z${zoom} devrait etre exact`);
   }
+});
+
+/* ---------- où poser un volume : entre s'enfouir et léviter ---------- */
+
+test('un volume haut descend jusqu’au point bas — il reste visible', () => {
+  // 60 m d'épaisseur sur 37 m de dénivelé : le sommet dépasse largement le
+  // point culminant, rien n'oblige à le suspendre.
+  assert.equal(baseSurTerrain(100, 145, 60), 100);
+});
+
+test('un volume plat reste au plafond — descendre l’enfouirait', () => {
+  // 2 m sur 37 m de dénivelé : le poser au point bas le ferait disparaître
+  // entièrement dans la bosse qu'il couvre. C'est le défaut d'origine, celui
+  // pour lequel la règle du point culminant avait été écrite.
+  assert.equal(baseSurTerrain(100, 145, 2), 143);
+});
+
+test('entre les deux, la transition est continue', () => {
+  // Pas de seuil, donc pas de saut visible quand une hauteur graduée franchit
+  // une borne : deux entités de hauteurs voisines se posent à des altitudes
+  // voisines.
+  const a = baseSurTerrain(100, 145, 24);
+  const b = baseSurTerrain(100, 145, 26);
+  assert.equal(a, 121);
+  assert.equal(b, 119);
+  assert.ok(Math.abs(a - b) === 2, 'la base suit la hauteur, pas un palier');
+});
+
+test('hauteur inconnue : on garde le seul comportement sûr', () => {
+  // Sans épaisseur, impossible de savoir jusqu'où descendre sans enfouir.
+  for (const h of [null, undefined, NaN, 0, -5]) {
+    assert.equal(baseSurTerrain(100, 145, h), 145);
+  }
+});
+
+test('sans point bas mesuré, on ne descend pas', () => {
+  // Une seule sonde a répondu : l'amplitude est inconnue, descendre serait un
+  // pari sur un terrain qu'on n'a pas mesuré.
+  assert.equal(baseSurTerrain(null, 145, 60), 145);
+});
+
+test('sur terrain plat, la règle ne change rien', () => {
+  // bas == haut : le plafond n'est que la marge anti-scintillement, et la base
+  // ne peut pas descendre plus bas que le sol.
+  const plafond = 50 + margeRelief(0);
+  assert.equal(baseSurTerrain(50, plafond, 30), 50);
+});
+
+test('appliqué aux entités : le volume suit sa hauteur', () => {
+  const fc = { features: [maille(9.1, 39.2, { h: 60 }), maille(9.2, 39.3, { h: 2 })] };
+  // Un relief en pente sous chaque maille : le point sondé varie.
+  let appels = 0;
+  const echantillon = () => [100, 137, 120, 110][(appels++) % 4];
+  applyTerrainBase(fc, echantillon, (f) => [[0, 0], [1, 1], [2, 2], [3, 3]],
+    (f) => f.properties.h);
+  const [gros, plat] = fc.features.map((f) => f.properties[TERRAIN_BASE_PROP]);
+  assert.ok(gros < plat, 'le volume haut se pose plus bas que le volume plat');
 });

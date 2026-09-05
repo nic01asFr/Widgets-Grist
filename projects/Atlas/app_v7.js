@@ -2204,6 +2204,44 @@ function solConstantDeCouche(layer) {
     return Number.isFinite(z) ? z : null;
 }
 
+/**
+ * La hauteur d'extrusion d'une entité, pour décider où la poser sur le relief.
+ *
+ * `applyTerrainBase` en a besoin : une entité descend d'autant plus bas qu'elle
+ * est haute, sans quoi elle lévite ou disparaît (cf. `baseSurTerrain`).
+ *
+ * Trois provenances, dans l'ordre exact où `applyPolygonStyle` les consulte —
+ * graduation (seulement si la plage est mesurable), champ de hauteur, valeur
+ * fixe — plus le décalage de base, qui compte dans l'épaisseur vue du sol. Pour
+ * une hauteur **graduée**, on retient la borne **basse** de la plage : c'est le
+ * cas le plus contraignant — les entités les plus plates sont celles qu'une
+ * base trop basse enfouirait, et surestimer leur épaisseur les ferait
+ * disparaître.
+ *
+ * @returns {(feature: object) => number|null}
+ */
+function hauteurExtrusionDe(layer) {
+    const sym = initSymbolization(layer);
+    // Le decalage de base fait partie de l'epaisseur vue depuis le sol : le
+    // sommet est a `sol + base + hauteur`, et c'est lui qui doit rester visible.
+    const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
+    const plus = (h) => (Number.isFinite(h) ? h + base : null);
+
+    if (sym.size?.mode === 'graduated' && sym.size.field
+        && getNumericRange(layer, sym.size.field).count) {
+        const b = Array.isArray(sym.size.outputRange) ? Number(sym.size.outputRange[0]) : NaN;
+        const h = plus(Number.isFinite(b) ? b : null);
+        return () => h;
+    }
+    if (layer.heightField) {
+        const champ = layer.heightField;
+        return (f) => plus(Number(f?.properties?.[champ]));
+    }
+    const fixe = Number(sym.size?.value);
+    const h = plus(Number.isFinite(fixe) && fixe > 0 ? fixe : 12);
+    return () => h;
+}
+
 function poserCoucheSurTerrain(layer) {
     // Rien a poser entite par entite : on retient une altitude de couche, lue
     // par `extrusionExpressions`.
@@ -2212,7 +2250,8 @@ function poserCoucheSurTerrain(layer) {
         return 0;
     }
     const t0 = performance.now();
-    const n = applyTerrainBase(layer.geojson, (lng, lat) => Models3D.elevRaw(lng, lat), pointsSondes);
+    const n = applyTerrainBase(layer.geojson, (lng, lat) => Models3D.elevRaw(lng, lat), pointsSondes,
+        hauteurExtrusionDe(layer));
     if (!n) return 0;
     syncLayerSourceData(layer);
     const ms = Math.round(performance.now() - t0);

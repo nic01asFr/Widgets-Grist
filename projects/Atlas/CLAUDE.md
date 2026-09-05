@@ -294,32 +294,56 @@ de terrain de 89 m — **89,2 m d'amplitude rendue**, et chaque objet à moins d
 > l'altitude rendue s'écarte de celle mesurée. Vérifié entité par entité :
 > `_sol` = `haut + marge`, écart nul.
 
-### Mais conforme au modèle ne veut pas dire juste à l'écran
+### Où poser un volume — la règle dépend de sa hauteur (05/09/2026)
 
-Le contrôle **visuel** de ce même transect dit autre chose que les chiffres, et
-les deux ont raison. Modèles 3D et lignes sont impeccables — les mâts partent du
-sol, la ligne épouse le vallon. **Les volumes, eux, flottent** :
+Les deux règles fixes ont chacune leur cas de ruine :
 
-| Maille | sol bas | sol haut | base posée | écart au point bas |
-|---|---:|---:|---:|---:|
-| 0 | 85 | 99 | 106 | **21 m** |
-| 3 | 100 | 137 | 145 | **45 m** |
+| Calage | Ce qu'il garantit | Ce qu'il casse |
+|---|---|---|
+| Point **culminant** | aucun volume ne traverse le sol | une grande maille sur pente **lévite** — mesuré : 45 m au-dessus de son point bas |
+| Point **bas** | tout est ancré | un prisme **plat** disparaît dans la bosse qu'il couvre |
 
-Caler sur le point culminant garantit qu'aucun volume ne s'enfonce. Le prix est
-qu'une entité **large au regard de la rugosité** se retrouve suspendue au-dessus
-de sa propre emprise : sur une maille de 78 m couvrant 37 m de dénivelé, la base
-est 45 m au-dessus du point bas, et cela se voit — le bloc est dans le ciel.
+Le bon choix n'est ni l'un ni l'autre : **il dépend de la hauteur du volume**. Un
+bloc de 60 m sur 37 m de dénivelé peut descendre au point bas sans disparaître ;
+un bloc de 2 m, non.
 
-> Le compromis a été réglé pour des prismes plats qui traversaient le sol. Il
-> n'a pas été éprouvé sur de grandes mailles en relief accidenté, où il produit
-> le défaut symétrique. Trois voies, à arbitrer selon l'usage : caler sur le
-> point **bas** (le volume s'enfonce d'un côté mais reste ancré — c'est ce que
-> font la plupart des SIG 3D), sur la **médiane** (il mord un peu des deux
-> côtés), ou faire dépendre le choix de la taille de l'entité.
+```
+base = max(bas, plafond − hauteur)      // plafond = point culminant + marge
+```
 
-**La leçon de méthode** : les chiffres validaient (`_sol` = `haut + marge`,
-écart nul) parce qu'ils mesuraient la conformité au modèle, pas la justesse du
-modèle. Seul le regard a montré que le modèle lui-même était en cause ici.
+On descend aussi bas que possible **sans que le sommet passe sous le point
+culminant**. Le volume reste donc toujours visible, et ne décolle que de ce
+qu'il faut pour le rester. La transition est continue — pas de seuil, donc pas
+de saut quand une hauteur graduée franchit une borne.
+
+Éprouvé sur le transect des Aygalades, volumes de 60 m et de 6 m alternés :
+
+| Hauteur | Écart au point bas | Sommet au-dessus du culminant |
+|---:|---:|---:|
+| 60 m | **0 m** — posé au sol | +46 à +52 m |
+| 6 m | 8 à 39 m | +5 à +8 m |
+
+> **Le cas plat sur forte pente reste irréductible**, et c'est assumé : 6 m
+> d'épaisseur sur 37 m de dénivelé n'ont aucune position à la fois ancrée et
+> visible. La règle choisit visible. Avant, *tous* les volumes lévitaient, y
+> compris ceux qui avaient largement de quoi descendre.
+
+La hauteur vient de `hauteurExtrusionDe(layer)`, dans l'ordre où l'extrusion la
+consulte elle-même. Pour une hauteur **graduée**, on retient la borne **basse**
+de la plage : c'est le cas le plus contraignant, et surestimer l'épaisseur des
+entités les plus plates les enfouirait.
+
+### La leçon de méthode : conforme au modèle n'est pas juste à l'écran
+
+C'est le regard qui a trouvé ce défaut, pas la mesure. Les chiffres validaient —
+`_sol` = `haut + marge`, écart nul, entité par entité — parce qu'ils mesuraient
+la **conformité au modèle**, pas la justesse du modèle. Il a fallu regarder le
+transect pour voir les blocs dans le ciel, alors que modèles 3D et lignes
+partaient bien du sol.
+
+> Un contrôle numérique ne peut pas invalider la règle qu'il applique. Quand un
+> calcul est correct et que le résultat semble faux, c'est la règle qu'il faut
+> mettre en cause — et seule l'observation peut le dire.
 
 Le cache d'altitude n'a pas à être purgé à l'arrivée des tuiles : `recalerRelief`
 appelle `recomputeAll`, qui le vide en entrée. Sa garde

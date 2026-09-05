@@ -7,7 +7,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "IDE no-code dans Grist : créer/éditer ses widgets (React, HTML, SVG, Mermaid, Markdown) avec assistant IA optionnel",
-    "lastUpdatedAt": "2026-09-05T03:09:08.532Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.803Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -23,7 +23,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Maquette territoriale 3D : couches Grist, Scene Manifest, symbolisation, contrôles, récit, soleil",
-    "lastUpdatedAt": "2026-09-05T03:09:08.532Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.804Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -39,7 +39,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Questionnaires liés aux tables Grist : conditions, audience, chemins, publication figée intra-doc",
-    "lastUpdatedAt": "2026-09-05T03:09:08.547Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.804Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -55,7 +55,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "v1 Leaflet — importez qgis2web / QGZ / QField / GPKG dans Grist (schéma auto)",
-    "lastUpdatedAt": "2026-09-05T03:09:08.553Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -71,7 +71,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "v2 MapLibre + Scene Manifest + contrôles + pack terrain (interop Atlas)",
-    "lastUpdatedAt": "2026-09-05T03:09:08.553Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -87,7 +87,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Suite tout-en-un : Dashboard, Kanban, Gantt, Calendar, Plan, Feuille de temps, Organigramme, Whiteboard dans un seul widget",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -103,7 +103,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Tableau Kanban avec drag & drop pour la gestion de tâches",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -119,7 +119,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Diagramme de Gantt interactif pour la planification",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -135,7 +135,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Calendrier interactif avec vue mois/semaine/jour",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -151,7 +151,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Tableau de bord avec KPIs et statistiques des tâches",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -167,7 +167,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Plan de charge : capacité/charge par personne, prévu/réalisé/reste/dispo, disponibilités",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -183,7 +183,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Saisie hebdomadaire du temps passé par tâche, avec validation par le chef",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",
@@ -199,7 +199,7 @@
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Annuaire et organigramme des entités, avec droits d'accès dérivés de la hiérarchie",
-    "lastUpdatedAt": "2026-09-05T03:09:08.560Z",
+    "lastUpdatedAt": "2026-09-05T04:56:03.805Z",
     "authors": [
       {
         "name": "nic01asfr",

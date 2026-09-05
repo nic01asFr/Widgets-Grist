@@ -2,13 +2,13 @@
  * Récit / storymaps — étapes caméra + état scène, persistance Atlas_Story.
  * Binding : caméra, visibilité, contrôles, symbolisation (interop interactive_map).
  */
-import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.6.2';
+import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.6.3';
 import {
   captureSelectControlValues,
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=1.6.2';
+} from './controls.js?v=1.6.3';
 
 export const STORY_SCHEMA = [
   { id: 'Step', fields: { label: 'Étape', type: 'Int' } },

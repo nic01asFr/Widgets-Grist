@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.2';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.3';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.6.2';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.2';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.2';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.2';
+} from './lib/scene-loader.js?v=1.6.3';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.3';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.3';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.3';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.6.2';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.2';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.2';
+} from './lib/layer-order.js?v=1.6.3';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.3';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.3';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.6.2';
+} from './lib/terrain-base.js?v=1.6.3';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.6.2';
+} from './lib/grist-sync.js?v=1.6.3';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.6.2';
+} from './lib/declarative-style.js?v=1.6.3';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.6.2';
+} from './lib/geo-tables.js?v=1.6.3';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.6.2';
+} from './lib/controls.js?v=1.6.3';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.6.2';
+} from './lib/story.js?v=1.6.3';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.6.2';
+} from './lib/manifest-binding.js?v=1.6.3';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.6.2';
+} from './lib/viewport.js?v=1.6.3';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.6.2';
+} from './lib/view-mode.js?v=1.6.3';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.6.2';
+} from './lib/viewer-controls.js?v=1.6.3';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.6.2';
+} from './lib/scene-prefs.js?v=1.6.3';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -2204,6 +2204,44 @@ function solConstantDeCouche(layer) {
     return Number.isFinite(z) ? z : null;
 }
 
+/**
+ * La hauteur d'extrusion d'une entité, pour décider où la poser sur le relief.
+ *
+ * `applyTerrainBase` en a besoin : une entité descend d'autant plus bas qu'elle
+ * est haute, sans quoi elle lévite ou disparaît (cf. `baseSurTerrain`).
+ *
+ * Trois provenances, dans l'ordre exact où `applyPolygonStyle` les consulte —
+ * graduation (seulement si la plage est mesurable), champ de hauteur, valeur
+ * fixe — plus le décalage de base, qui compte dans l'épaisseur vue du sol. Pour
+ * une hauteur **graduée**, on retient la borne **basse** de la plage : c'est le
+ * cas le plus contraignant — les entités les plus plates sont celles qu'une
+ * base trop basse enfouirait, et surestimer leur épaisseur les ferait
+ * disparaître.
+ *
+ * @returns {(feature: object) => number|null}
+ */
+function hauteurExtrusionDe(layer) {
+    const sym = initSymbolization(layer);
+    // Le decalage de base fait partie de l'epaisseur vue depuis le sol : le
+    // sommet est a `sol + base + hauteur`, et c'est lui qui doit rester visible.
+    const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
+    const plus = (h) => (Number.isFinite(h) ? h + base : null);
+
+    if (sym.size?.mode === 'graduated' && sym.size.field
+        && getNumericRange(layer, sym.size.field).count) {
+        const b = Array.isArray(sym.size.outputRange) ? Number(sym.size.outputRange[0]) : NaN;
+        const h = plus(Number.isFinite(b) ? b : null);
+        return () => h;
+    }
+    if (layer.heightField) {
+        const champ = layer.heightField;
+        return (f) => plus(Number(f?.properties?.[champ]));
+    }
+    const fixe = Number(sym.size?.value);
+    const h = plus(Number.isFinite(fixe) && fixe > 0 ? fixe : 12);
+    return () => h;
+}
+
 function poserCoucheSurTerrain(layer) {
     // Rien a poser entite par entite : on retient une altitude de couche, lue
     // par `extrusionExpressions`.
@@ -2212,7 +2250,8 @@ function poserCoucheSurTerrain(layer) {
         return 0;
     }
     const t0 = performance.now();
-    const n = applyTerrainBase(layer.geojson, (lng, lat) => Models3D.elevRaw(lng, lat), pointsSondes);
+    const n = applyTerrainBase(layer.geojson, (lng, lat) => Models3D.elevRaw(lng, lat), pointsSondes,
+        hauteurExtrusionDe(layer));
     if (!n) return 0;
     syncLayerSourceData(layer);
     const ms = Math.round(performance.now() - t0);
@@ -5381,7 +5420,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.2');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.3');
     return Feuille;
 }
 
@@ -5498,10 +5537,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.6.2'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.6.3'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.6.2');
+        const dc = await import('./lib/data-client.js?v=1.6.3');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7422,9 +7461,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.6.2');
+        const { capacites } = await import('./lib/data-client.js?v=1.6.3');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.2');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.3');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

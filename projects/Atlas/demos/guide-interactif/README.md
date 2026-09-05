@@ -129,9 +129,10 @@ node ../../../../scripts/valider-schema.js \
   pas confondre avec `GLOBE_MERCATOR_ZOOM` (12), seuil interne des modèles 3D.
 - **Les essences à z18,2.** Plus loin, les trois formes d'arbres se confondent
   et la catégorisation ne se démontre plus.
-- **Le relief avec les surfaces à plat.** Une couche extrudée s'y poserait sur
-  le point culminant de chaque entité, plus une marge : sur un relief marqué,
-  les volumes flottent. Drapées, les surfaces épousent le sol par construction.
+- **Le relief avec les surfaces à plat.** Non par contrainte : les îlots du
+  guide font 75 m pour 6 m de haut, et un prisme aussi plat ne peut pas descendre
+  au niveau du sol sans y disparaître (cf. le calage par hauteur, CLAUDE.md).
+  Drapées, les surfaces épousent le terrain exactement.
 - **Opacité 1 partout.** Sous 1, MapLibre perd l'écriture de profondeur et les
   volumes cessent de s'occulter.
 
