@@ -207,6 +207,19 @@ remplissage et contour pour les surfaces, contour pour les lignes, anneau pour
 les points. Les trois sont dans `SYSTEM_TOP_IDS`, sinon le contour d'un objet
 sélectionné passerait sous la couche qui le porte.
 
+### Le halo, éprouvé sur les trois familles
+
+Vérifié dans le widget sur une couche mêlant volontairement les trois
+géométries : 5 surfaces → rectangles sur leur emprise, 1 point → **un** anneau,
+1 ligne → une polyligne suivant ses sommets. C'est le seul contrôle qui vaille,
+puisque `?scene=` ne donne pas accès au mode sélection.
+
+> **Au passage** : une `LineString` dans une couche `polygonMode: 'volume'` est
+> **fermée en anneau et extrudée** par MapLibre — trois sommets donnaient un
+> grand triangle translucide sur tout un pâté de maisons. Rien ne le signale.
+> Une table mêlant les géométries est un cas de saisie plausible ; Atlas n'a
+> aujourd'hui ni garde ni avertissement pour cela.
+
 ### `manualSort` était un attribut éditable, et il repartait en base
 
 La même règle — « ces colonnes appartiennent à Grist » — était écrite en
