@@ -262,6 +262,24 @@ servi en https local :
 | La préservation | `nom`, `hauteur` et la géométrie **intacts** après soumission |
 | Le CSS | Atlas strictement inchangé |
 
+## La chaîne « importer → éditer », prouvée de bout en bout (05/09/2026)
+
+| Étape | Constaté |
+|---|---|
+| Import OSM · 10 arbres | une **seule ligne** dans `Maquette_Layers`, fiche en lecture seule |
+| « Enregistrer dans Grist » | table `Atlas_Arbres`, **10 lignes**, colonnes `geometry_json` · `natural` (Text, inférée) · `model_id` · `model_glb` (Attachments) |
+| Le blob | **retiré** — `Maquette_Layers` inchangée |
+| La couche liée | badge `⛓ table`, reconnue par le scan géo d'Atlas lui-même |
+| La fiche | **« Modifications enregistrées dans Atlas_Arbres »** — champs éditables |
+
+> **Le défaut que cette épreuve a révélé** : la couche était entablée, son badge
+> disait `table`, la fiche montrait les colonnes de la nouvelle table — et elle
+> affichait toujours « les objets de cette couche ne sont pas des lignes Grist ».
+> Le test posait `source === 'qgis2grist'` quand `entableLayer` produit
+> `grist-table`, alors que l'écriture ne demande qu'une `sourceTable` et un
+> `_row_id`. `coucheAvecLignes` remplace la condition : **une capacité, pas un
+> producteur.** Troisième occurrence du même motif dans la journée.
+
 Et un point de conception confirmé plutôt que supposé : **le formulaire n'envoie
 que ses champs**. La géométrie n'a pas bougé. Le « deux écrivains » que je
 craignais se résout donc de lui-même — le moteur écrit les attributs, Atlas garde
