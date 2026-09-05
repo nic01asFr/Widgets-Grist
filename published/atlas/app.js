@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.1';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.2';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,20 +15,20 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.6.1';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.1';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.1';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.1';
+} from './lib/scene-loader.js?v=1.6.2';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.2';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.2';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.2';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.6.1';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.1';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.1';
+} from './lib/layer-order.js?v=1.6.2';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.2';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.2';
 import {
   applyTerrainBase, clearTerrainBase, extrusionExpressions, needsTerrainBase, pointsSondes,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.6.1';
+} from './lib/terrain-base.js?v=1.6.2';
 import {
   loadLayerPrefs,
   applyLayerPrefs,
@@ -37,7 +37,7 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.6.1';
+} from './lib/grist-sync.js?v=1.6.2';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +49,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.6.1';
+} from './lib/declarative-style.js?v=1.6.2';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.6.1';
+} from './lib/geo-tables.js?v=1.6.2';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +71,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.6.1';
+} from './lib/controls.js?v=1.6.2';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.6.1';
+} from './lib/story.js?v=1.6.2';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.6.1';
+} from './lib/manifest-binding.js?v=1.6.2';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.6.1';
+} from './lib/viewport.js?v=1.6.2';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +95,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.6.1';
+} from './lib/view-mode.js?v=1.6.2';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.6.1';
+} from './lib/viewer-controls.js?v=1.6.2';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.6.1';
+} from './lib/scene-prefs.js?v=1.6.2';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -2334,11 +2334,26 @@ function applyPolygonStyle(layer) {
             map.addLayer({ id: pointFallbackId(layer), type: 'circle', source: pointFallbackId(layer),
                 maxzoom: zFallback,
                 paint: {
-                    // Au moins MIN_FEATURE_PX à l'écran : en deçà, le repli
-                    // reproduirait l'invisibilité qu'il est censé corriger.
-                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 2.2, 10, 4],
+                    // **Un point ne doit pas être plus gros que la maille qu'il
+                    // remplace.** Le rayon montait à 4 px — soit 8 de diamètre —
+                    // juste sous le seuil de bascule, où une maille de 200 m en
+                    // occupe 5. Les points se chevauchaient alors en bourrelets
+                    // saturés : le repli grossissait la donnée au lieu de la
+                    // représenter, et la structure de la grille disparaissait.
+                    //
+                    // Calé à la moitié de l'espacement : les points se touchent
+                    // sans se recouvrir, la trame redevient lisible et la
+                    // symbologie avec elle. Le plancher tient toujours — sous
+                    // MIN_FEATURE_PX, le repli reproduirait l'invisibilité qu'il
+                    // corrige.
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 1.4, 8, 2, 11, 2.6],
                     'circle-color': layerPaintColor(layer),
-                    'circle-opacity': layerPaintOpacity(layer),
+                    // Opacité franche, et non celle de la surface. Une surface à
+                    // plat est translucide pour laisser lire le fond sous elle ;
+                    // un point de 2,6 px ne masque rien, et la même translucidité
+                    // n'y sert qu'à délaver les classes claires jusqu'à les
+                    // confondre avec la carte.
+                    'circle-opacity': 0.9,
                     'circle-stroke-width': 0,
                 } });
         }
@@ -5366,7 +5381,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.1');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.2');
     return Feuille;
 }
 
@@ -5483,10 +5498,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.6.1'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.6.2'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.6.1');
+        const dc = await import('./lib/data-client.js?v=1.6.2');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7407,9 +7422,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.6.1');
+        const { capacites } = await import('./lib/data-client.js?v=1.6.2');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.1');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.2');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

@@ -2334,11 +2334,26 @@ function applyPolygonStyle(layer) {
             map.addLayer({ id: pointFallbackId(layer), type: 'circle', source: pointFallbackId(layer),
                 maxzoom: zFallback,
                 paint: {
-                    // Au moins MIN_FEATURE_PX à l'écran : en deçà, le repli
-                    // reproduirait l'invisibilité qu'il est censé corriger.
-                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 2.2, 10, 4],
+                    // **Un point ne doit pas être plus gros que la maille qu'il
+                    // remplace.** Le rayon montait à 4 px — soit 8 de diamètre —
+                    // juste sous le seuil de bascule, où une maille de 200 m en
+                    // occupe 5. Les points se chevauchaient alors en bourrelets
+                    // saturés : le repli grossissait la donnée au lieu de la
+                    // représenter, et la structure de la grille disparaissait.
+                    //
+                    // Calé à la moitié de l'espacement : les points se touchent
+                    // sans se recouvrir, la trame redevient lisible et la
+                    // symbologie avec elle. Le plancher tient toujours — sous
+                    // MIN_FEATURE_PX, le repli reproduirait l'invisibilité qu'il
+                    // corrige.
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 1.4, 8, 2, 11, 2.6],
                     'circle-color': layerPaintColor(layer),
-                    'circle-opacity': layerPaintOpacity(layer),
+                    // Opacité franche, et non celle de la surface. Une surface à
+                    // plat est translucide pour laisser lire le fond sous elle ;
+                    // un point de 2,6 px ne masque rien, et la même translucidité
+                    // n'y sert qu'à délaver les classes claires jusqu'à les
+                    // confondre avec la carte.
+                    'circle-opacity': 0.9,
                     'circle-stroke-width': 0,
                 } });
         }

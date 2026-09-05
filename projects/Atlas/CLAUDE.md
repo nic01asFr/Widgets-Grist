@@ -467,6 +467,25 @@ leurs centres (rayon fixe à l’écran), au-delà les surfaces reprennent la ma
 
 - Le rayon des points ne descend pas sous `MIN_FEATURE_PX` : un repli plus fin
   que le seuil reproduirait l'invisibilité qu'il corrige.
+- **Mais il ne doit pas non plus dépasser la maille qu'il remplace.** Le rayon
+  montait à 4 px — 8 de diamètre — juste sous le seuil de bascule, où une maille
+  de 200 m en occupe 5 : les points se chevauchaient en bourrelets saturés, et
+  la trame de la grille disparaissait. Le repli grossissait la donnée au lieu de
+  la représenter. Calé à la moitié de l'espacement (2,6 px à z11), les points se
+  touchent sans se recouvrir et la symbologie redevient lisible.
+- **Opacité franche (0,9), pas celle de la surface.** Une surface à plat est
+  translucide pour laisser lire le fond sous elle ; un point de 2,6 px ne masque
+  rien, et la même translucidité n'y sert qu'à délaver les classes claires
+  jusqu'à les confondre avec la carte.
+
+> **La saturation revient en dézoomant, et c'est irréductible.** Mesuré sur
+> 400 mailles : l'espacement tombe de 4,9 px à z10,5 à 0,2 px à z6, quand le
+> plancher de visibilité impose 3,4 px de diamètre. On ne peut pas montrer
+> 400 points distincts sur 20 pixels. À ces échelles la tache est légitime :
+> elle dit « il y a une donnée ici », ce qui est tout ce qu'on peut dire. Le
+> réglage vise donc la **transition** — les deux ou trois niveaux sous le seuil,
+> là où le lecteur vient de perdre ses surfaces et doit reconnaître ce qui les
+> remplace.
 - Le masquage d'une couche couvre tous ses habillages (`-outline`, `-label`,
   `-hit`, `-pts`) : sans `-pts`, le repli restait à l'écran après extinction ;
   sans `-hit`, la zone de clic restait active sur une couche invisible.
