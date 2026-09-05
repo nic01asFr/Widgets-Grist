@@ -16,7 +16,15 @@
  */
 
 /** Couches système à maintenir au-dessus des données, dans cet ordre. */
-export const SYSTEM_TOP_IDS = ['sel-hl-ring'];
+/**
+ * Habillages systeme toujours peints au-dessus des couches de donnees.
+ *
+ * Le halo de selection compte trois couches — remplissage, contour, anneau —
+ * car une couche `circle` posee sur un polygone dessine un disque par sommet.
+ * Les trois doivent remonter ensemble, sinon le contour d'un objet selectionne
+ * passerait sous la couche qui le porte.
+ */
+export const SYSTEM_TOP_IDS = ['sel-hl-fill', 'sel-hl-line', 'sel-hl-ring'];
 
 /**
  * Habillages d'une couche, **du plus bas au plus haut**.

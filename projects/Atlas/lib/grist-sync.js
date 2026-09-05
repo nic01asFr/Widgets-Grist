@@ -13,6 +13,7 @@ import {
   applyLayerPrefsBinding,
 } from './manifest-binding.js?v=20260729p';
 import { parseGristBool } from './grist-bool.js';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
 import { isModelLayer } from './model-layer.js?v=20260803a';
 import {
   manifestGeometryType,
@@ -32,6 +33,7 @@ const ATLAS_PREFS_SCHEMA = [
 ];
 
 const SKIP_PROPS = new Set([
+  ...COLONNES_INTERNES_GRIST,
   '_row_id', '_fill_color', '_visible', '_fill_opacity', '_line_opacity', '_idx',
   '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId',
 ]);

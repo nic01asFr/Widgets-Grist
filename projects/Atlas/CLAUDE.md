@@ -187,6 +187,66 @@ Réglages portés par `style.symbolization` (persistés dans `Atlas_LayerPrefs`)
   (`mergeAppearancePrefs`) : un `declarative` dans les prefs ne doit pas effacer
   opacité, contour ni base d’extrusion.
 
+## Ce que seul un vrai document révèle (05/09/2026)
+
+`?scene=` n'appelle jamais `grist.ready()` : tout ce qui touche à l'écriture, aux
+droits et au mode édition lui est **hors de portée**. C'est pourquoi le mode
+édition n'avait jamais été examiné. Une session dans le document de
+non-régression, widget servi en https local, a sorti trois défauts en une heure.
+
+### Un halo `circle` sur un polygone dessine un disque par sommet
+
+`updateHighlight` versait la géométrie entière dans une source et la peignait
+avec **une seule couche `circle`**. Sélectionner un bâtiment rectangulaire
+donnait quatre pastilles de 16 px empilées, qui **recouvraient entièrement**
+l'objet qu'elles désignaient — à z16 un bâtiment de 15 m fait une poignée de
+pixels. Le halo avait été conçu pour des points et jamais repris.
+
+`HALO_SELECTION` porte désormais trois couches filtrées sur `['geometry-type']` :
+remplissage et contour pour les surfaces, contour pour les lignes, anneau pour
+les points. Les trois sont dans `SYSTEM_TOP_IDS`, sinon le contour d'un objet
+sélectionné passerait sous la couche qui le porte.
+
+### `manualSort` était un attribut éditable, et il repartait en base
+
+La même règle — « ces colonnes appartiennent à Grist » — était écrite en
+**quatre endroits**, et ils divergeaient :
+
+| Site | `id` | `manualSort` |
+|---|:-:|:-:|
+| `tableToGeoJSON` (chemin maquette) | ✓ | ✓ |
+| **`rowToFeature`** (chemin manifeste — celui qui compte) | ✓ | ✗ |
+| `SKIP_PROPS` (écriture) | ✗ | ✗ |
+| `renderAttrFields` (inspecteur) | ✗ | ✗ |
+
+Conséquence mesurée en Grist réel, charge utile d'un enregistrement :
+
+```json
+["UpdateRecord","Batiments_locaux",3,{"manualSort":3,"hauteur":12.5,"nom":"Mairie",…}]
+```
+
+`manualSort` porte l'ordre des lignes. Exposé comme attribut, il devenait un
+champ **éditable** : y taper une valeur réordonne la table de l'utilisateur,
+sans rapport avec quoi que ce soit de géographique. `COLONNES_INTERNES_GRIST`
+(dans `lib/grist-rows.js`) est maintenant la liste unique, lue par les quatre.
+
+### Une erreur attendue qui s'affiche comme une vraie use la vigilance
+
+`syncStoryFromGrist` relisait `Atlas_Story` par un `fetchTable` direct, **sans
+vérifier que la table existe**, pour compter ses lignes brutes — alors que
+`loadStoryFromGrist` venait de le faire proprement. Sur tout document sans
+récit, cela produisait un `[Sandbox] KeyError 'Atlas_Story'` dans la console **à
+chaque chargement**, avalé par un `catch` muet.
+
+`chargerRecitGrist` rend maintenant `{ recit, lignesBrutes }` en une seule
+lecture. Le comptage garde son rôle — `normalizeStoryRows` déduplique par étape,
+donc un écart signale des lignes à nettoyer.
+
+> **À savoir** : `listTables()` coûte un `fetchTable('_grist_Tables')` complet,
+> et il est appelé **six fois** au chargement d'une scène. Ce n'est pas corrigé.
+> C'est la même famille que le scan des tables géo (126 Mo → 27 Mo), en beaucoup
+> moins grave.
+
 ## Placement 3D réservé aux couches à modèles (`lib/model-layer.js`)
 
 `isModelLayer(layer)` = mode `library`/`custom` **et** géométrie ponctuelle. Les

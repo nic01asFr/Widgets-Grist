@@ -2,13 +2,13 @@
  * Récit / storymaps — étapes caméra + état scène, persistance Atlas_Story.
  * Binding : caméra, visibilité, contrôles, symbolisation (interop interactive_map).
  */
-import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.6.5';
+import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.6.6';
 import {
   captureSelectControlValues,
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=1.6.5';
+} from './controls.js?v=1.6.6';
 
 export const STORY_SCHEMA = [
   { id: 'Step', fields: { label: 'Étape', type: 'Int' } },
@@ -137,11 +137,25 @@ export function normalizeStoryRows(rows) {
   return Array.from(byStep.values()).sort((a, b) => a.step - b.step);
 }
 
-export async function loadStoryFromGrist(docApi) {
-  if (!docApi) return [];
+/**
+ * Charge le recit ET le nombre de lignes brutes qui le portent.
+ *
+ * `normalizeStoryRows` deduplique par etape : la table peut donc contenir plus
+ * de lignes que le recit n'a d'etapes, reliquat d'un enregistrement interrompu.
+ * L'appelant s'en sert pour reecrire proprement.
+ *
+ * > **Pourquoi rendre les deux ensemble.** L'appelant relisait la table une
+ * > seconde fois, `fetchTable` en direct, pour compter ces lignes — sans
+ * > verifier d'abord que la table existe. Sur tout document sans recit, cela
+ * > provoquait un `[Sandbox] KeyError 'Atlas_Story'` dans la console a CHAQUE
+ * > chargement, avale par un `catch` muet. Une erreur attendue qui s'affiche
+ * > comme une vraie use la vigilance : on finit par ne plus lire la console.
+ */
+export async function chargerRecitGrist(docApi) {
+  if (!docApi) return { recit: [], lignesBrutes: 0 };
   try {
     const tables = await docApi.listTables();
-    if (!tables.includes(ATLAS_STORY_TABLE)) return [];
+    if (!tables.includes(ATLAS_STORY_TABLE)) return { recit: [], lignesBrutes: 0 };
     const rec = await docApi.fetchTable(ATLAS_STORY_TABLE);
     const n = (rec.id || []).length;
     const rows = [];
@@ -156,13 +170,21 @@ export async function loadStoryFromGrist(docApi) {
         state,
       });
     }
-    return normalizeStoryRows(rows).map((r) => ({
-      title: r.title,
-      text: r.text,
-      state: r.state,
-    }));
+    return {
+      recit: normalizeStoryRows(rows).map((r) => ({
+        title: r.title,
+        text: r.text,
+        state: r.state,
+      })),
+      lignesBrutes: n,
+    };
   } catch (e) {
     console.warn('[Atlas story] load', e.message);
-    return [];
+    return { recit: [], lignesBrutes: 0 };
   }
+}
+
+/** Le recit seul — forme historique, conservee pour les appelants qui s'en contentent. */
+export async function loadStoryFromGrist(docApi) {
+  return (await chargerRecitGrist(docApi)).recit;
 }

@@ -7,20 +7,21 @@ import {
   flattenCoords2D,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.6.5';
+} from './grist-rows.js?v=1.6.6';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.6.5';
+} from './manifest-binding.js?v=1.6.6';
 import { parseGristBool } from './grist-bool.js';
-import { isModelLayer } from './model-layer.js?v=1.6.5';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
+import { isModelLayer } from './model-layer.js?v=1.6.6';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.6.5';
+} from './declarative-style.js?v=1.6.6';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
@@ -32,6 +33,7 @@ const ATLAS_PREFS_SCHEMA = [
 ];
 
 const SKIP_PROPS = new Set([
+  ...COLONNES_INTERNES_GRIST,
   '_row_id', '_fill_color', '_visible', '_fill_opacity', '_line_opacity', '_idx',
   '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId',
 ]);

@@ -1,7 +1,8 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.6.5';
+import { normalizePropertyValue } from './declarative-style.js?v=1.6.6';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
 
 export const GEO_SKIP_TABLES = new Set([
   'Maquette_Layers',
@@ -57,7 +58,7 @@ export function tableToGeoJSON(columnar, geomCol) {
   const ids = columnar.id || [];
   const isLatLng = !!(geomCol && geomCol.lat);
   const skip = new Set([
-    'id', 'manualSort',
+    ...COLONNES_INTERNES_GRIST,
     isLatLng ? geomCol.lat : geomCol,
     isLatLng ? geomCol.lng : null,
   ].filter(Boolean));

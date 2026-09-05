@@ -61,6 +61,23 @@ export function flattenCoords2D(geom) {
  * @param {object} row
  * @param {{ geomType?: string, fields?: object[] }} layerMeta
  */
+/**
+ * Colonnes que Grist tient pour lui, jamais des attributs de la donnee.
+ *
+ * `manualSort` porte l'ordre des lignes dans la table. Expose comme un attribut,
+ * il devient un champ **editable** dans l'inspecteur d'objet — et y taper une
+ * valeur reordonne la table de l'utilisateur, sans rapport avec quoi que ce
+ * soit de geographique. Verifie en Grist reel : la charge utile d'un
+ * enregistrement contenait bien `{"manualSort":3, ...}`.
+ *
+ * > **La regle etait ecrite en quatre endroits, et ils divergeaient.**
+ * > `tableToGeoJSON` (chemin maquette) sautait `id` et `manualSort` ;
+ * > `rowToFeature` — le chemin qu'empruntent les couches de manifeste, donc
+ * > celui qui compte — ne sautait que `id`. Une liste unique, lue par tous,
+ * > est la seule forme qui ne puisse pas se desynchroniser.
+ */
+export const COLONNES_INTERNES_GRIST = Object.freeze(['id', 'manualSort']);
+
 export function rowToFeature(row, layerMeta, fillColor, visible) {
   const geomType = layerMeta?.geomType || 'Polygon';
   // Colonnes géométriques déclarées par le manifest (source.geometry_fields) —
@@ -114,7 +131,7 @@ export function rowToFeature(row, layerMeta, fillColor, visible) {
     : (typeof layerMeta?.opacityFn === 'function' ? layerMeta.opacityFn(row) : null);
   if (Number.isFinite(declaredOpacity)) props._fill_opacity = declaredOpacity;
   if (row._line_opacity != null) props._line_opacity = row._line_opacity;
-  const skip = new Set(['geometry_json', 'centroid_lat', 'centroid_lon', 'latitude', 'longitude', 'id']);
+  const skip = new Set(['geometry_json', 'centroid_lat', 'centroid_lon', 'latitude', 'longitude', ...COLONNES_INTERNES_GRIST]);
   // Colonnes géométriques suffixées (latitude2…) : données techniques, pas des attributs.
   for (const k of Object.values(geomCols || {})) skip.add(k);
 

@@ -16,7 +16,7 @@ import {
   materializeDeferredLayer,
   boundsFromVisibleLayers,
 } from './lib/scene-loader.js?v=20260826a';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=20260730a';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
 import {
@@ -76,7 +76,7 @@ import {
 import {
   captureStoryState,
   saveStoryToGrist,
-  loadStoryFromGrist,
+  chargerRecitGrist,
   storyToManifestFragment,
 } from './lib/story.js?v=20260827h';
 import {
@@ -4517,7 +4517,12 @@ function symLabelPanel(layer, sym) {
 // ---- Object inspector (selection) ----
 function renderAttrFields(layer, props, opts = {}) {
     const readOnly = !!opts.readOnly;
-    const fields = getLayerFields(layer).filter((f) => !['geometry_json', 'latitude', 'longitude', 'fill_color', 'atlas_3d_json'].includes(f.id));
+    // Les colonnes internes de Grist ne sont pas des attributs. Les afficher
+    // les rendait EDITABLES, et `manualSort` porte l'ordre des lignes : y taper
+    // une valeur reordonne la table de l'utilisateur.
+    const caches = ['geometry_json', 'latitude', 'longitude', 'fill_color', 'atlas_3d_json',
+        ...COLONNES_INTERNES_GRIST];
+    const fields = getLayerFields(layer).filter((f) => !caches.includes(f.id));
     if (!fields.length) return '<div class="hint">Aucun attribut.</div>';
     return fields.map((f) => {
         const val = props[f.id] ?? '';
@@ -4959,17 +4964,45 @@ function afterSelectionChange() {
     renderInspector();
 }
 
+/**
+ * Couches du halo de selection, une par famille de geometrie.
+ *
+ * **Une couche `circle` posee sur un polygone dessine un disque par SOMMET.**
+ * Le halo n'avait qu'elle : selectionner un batiment rectangulaire donnait
+ * quatre pastilles de 16 px empilees, qui recouvraient entierement l'objet
+ * qu'elles etaient censees designer — a z16, un batiment de 15 m fait une
+ * poignee de pixels. Le halo avait ete concu pour des points, et n'avait jamais
+ * ete repris pour les surfaces ni les lignes.
+ *
+ * Chacune est donc filtree sur le type de geometrie qu'elle sait rendre.
+ */
+const HALO_SELECTION = [
+    { id: 'sel-hl-fill', type: 'fill', types: ['Polygon', 'MultiPolygon'],
+      paint: { 'fill-color': '#C44536', 'fill-opacity': 0.18 } },
+    { id: 'sel-hl-line', type: 'line', types: ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'],
+      paint: { 'line-color': '#C44536', 'line-width': 3 } },
+    { id: 'sel-hl-ring', type: 'circle', types: ['Point', 'MultiPoint'],
+      paint: { 'circle-radius': 16, 'circle-color': 'rgba(196,69,54,0.08)',
+               'circle-stroke-color': '#C44536', 'circle-stroke-width': 3 } },
+];
+
 function updateHighlight() {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
     if (!layer) return;
     const data = { type: 'FeatureCollection', features: STATE.selection.features.map((i) => layer.geojson.features[i]).filter(Boolean) };
-    if (!map.getSource('sel-hl')) {
-        map.addSource('sel-hl', { type: 'geojson', data });
-        map.addLayer({ id: 'sel-hl-ring', type: 'circle', source: 'sel-hl', paint: { 'circle-radius': 16, 'circle-color': 'rgba(196,69,54,0.08)', 'circle-stroke-color': '#C44536', 'circle-stroke-width': 3 } });
-    } else map.getSource('sel-hl').setData(data);
+    if (!map.getSource('sel-hl')) map.addSource('sel-hl', { type: 'geojson', data });
+    else map.getSource('sel-hl').setData(data);
+    for (const h of HALO_SELECTION) {
+        if (map.getLayer(h.id)) continue;
+        map.addLayer({
+            id: h.id, type: h.type, source: 'sel-hl',
+            filter: ['in', ['geometry-type'], ['literal', h.types]],
+            paint: h.paint,
+        });
+    }
 }
 function clearHighlight() {
-    if (map.getLayer('sel-hl-ring')) map.removeLayer('sel-hl-ring');
+    for (const h of HALO_SELECTION) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
     if (map.getSource('sel-hl')) map.removeSource('sel-hl');
 }
 function flyToFeature(layer, idx) {
@@ -5171,15 +5204,18 @@ const TABLE_SCHEMAS = {
 };
 async function syncStoryFromGrist() {
     if (!CONFIG.grist.ready) return;
-    STATE.story = await loadStoryFromGrist(grist.docApi);
+    // Une seule lecture rend le recit et le nombre de lignes qui le portent.
+    // Les compter par un second `fetchTable` provoquait un `[Sandbox] KeyError
+    // 'Atlas_Story'` a chaque chargement d'un document sans recit.
+    const { recit, lignesBrutes } = await chargerRecitGrist(grist.docApi);
+    STATE.story = recit;
     refreshStoryNavChrome();
     if (CONFIG.viewMode) return;
-    try {
-        const rec = await grist.docApi.fetchTable('Atlas_Story');
-        if ((rec.id?.length || 0) > STATE.story.length) {
-            await saveStoryToGrist(grist.docApi, STATE.story, { viewMode: CONFIG.viewMode });
-        }
-    } catch (_) { /* table absente */ }
+    // Plus de lignes que d'etapes : `normalizeStoryRows` en a ecarte des
+    // doublons d'etape. On reecrit la table proprement.
+    if (lignesBrutes > STATE.story.length) {
+        await saveStoryToGrist(grist.docApi, STATE.story, { viewMode: CONFIG.viewMode });
+    }
 }
 
 function assertCanWrite(actionLabel) {
