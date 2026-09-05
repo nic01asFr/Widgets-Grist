@@ -81,6 +81,14 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## Points d’attention
 
+- **Fiche d'entité = formulaire (05/09/2026)** :
+  `docs/CADRAGE-FICHE-ENTITE.md` — la fiche d'objet devient le moteur de
+  `grist_forms`, alimenté par le FormDef que qgis2grist extrait de QField.
+  Éprouvé en Grist réel ; branche `atlas-formulaire-entite`. Y sont consignés :
+  la peau Atlas qui remplace `dsfr-like.css`, les deux manques à porter dans
+  `engine.js` (valeurs initiales, mode consultation), et les trois acquis sur
+  les droits — dont la sonde d'écriture qui teste la mauvaise table.
+
 - **Cadrage portable / partage iframe (26/08/2026)** :
   `docs/CADRAGE-PORTABLE-PARTAGE-IFRAME.md` — Grist = socle droits ; Atlas
   portable = Scene Manifest existant ; embed privé = session document + ACL /
