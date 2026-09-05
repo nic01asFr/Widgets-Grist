@@ -7519,6 +7519,37 @@
           "buildings3D": false,
           "layers": [
             {
+              "id": "aygalades-emprises",
+              "name": "Emprises",
+              "sourceTable": null,
+              "visible": true,
+              "controls": [],
+              "controlDeclaratives": [],
+              "polygonMode": "flat",
+              "declarative": {
+                "kind": "categorized",
+                "field": "usage",
+                "stops": [
+                  {
+                    "value": "Activité",
+                    "color": "#b08968",
+                    "opacity": 0.5
+                  },
+                  {
+                    "value": "Ferroviaire",
+                    "color": "#7d7466",
+                    "opacity": 0.45
+                  },
+                  {
+                    "value": "Espace vert",
+                    "color": "#6f9457",
+                    "opacity": 0.5
+                  }
+                ],
+                "fallback": "#a8a29a"
+              }
+            },
+            {
               "id": "aygalades-bati",
               "name": "Bâti",
               "sourceTable": null,
@@ -7556,37 +7587,6 @@
                   }
                 ],
                 "fallback": "#cfc7bb"
-              }
-            },
-            {
-              "id": "aygalades-emprises",
-              "name": "Emprises",
-              "sourceTable": null,
-              "visible": true,
-              "controls": [],
-              "controlDeclaratives": [],
-              "polygonMode": "flat",
-              "declarative": {
-                "kind": "categorized",
-                "field": "usage",
-                "stops": [
-                  {
-                    "value": "Activité",
-                    "color": "#b08968",
-                    "opacity": 0.5
-                  },
-                  {
-                    "value": "Ferroviaire",
-                    "color": "#7d7466",
-                    "opacity": 0.45
-                  },
-                  {
-                    "value": "Espace vert",
-                    "color": "#6f9457",
-                    "opacity": 0.5
-                  }
-                ],
-                "fallback": "#a8a29a"
               }
             },
             {
