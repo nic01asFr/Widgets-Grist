@@ -31,15 +31,12 @@
     }
     </script>
 
-    <!-- BANC — moteur de formulaire de grist_forms (marche 1).
-         Chargé AVANT le <style> d'Atlas : la règle `body` de dsfr-like.css est
-         ainsi écrasée par le `html, body` d'Atlas, qui vient après à égalité de
-         spécificité. C'est la seule collision du fichier — ses 17 variables
-         n'ont aucun nom commun avec les 22 d'Atlas, et son `box-sizing` global
-         est déjà posé ici.
+    <!-- Moteur de formulaire de grist_forms : la fiche d'entité, quand la table
+         est décrite par un FormDef. Voir docs/CADRAGE-FICHE-ENTITE.md.
+         `dsfr-like.css` n'est PAS chargé — `lib/formulaire-atlas.css` habille
+         les mêmes classes avec les jetons d'Atlas, et reste confiné au panneau.
          Chemins relatifs au dépôt : valables sur le serveur de dev, PAS dans
-         published/atlas/. Le vendoring est une décision d'après-banc. -->
-    <link rel="stylesheet" href="../grist_forms/shared/dsfr-like.css" />
+         published/atlas/, où ces fichiers devront être embarqués. -->
     <script src="../grist_forms/shared/types.js"></script>
     <script src="../grist_forms/shared/attachments.js"></script>
     <script src="../grist_forms/shared/session-context.js"></script>
@@ -1097,6 +1094,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="couches"] { display: none !important; }
         }
     </style>
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20260905a" />
 </head>
 <body>
     <div class="app">

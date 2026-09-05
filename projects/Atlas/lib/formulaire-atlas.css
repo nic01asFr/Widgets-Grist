@@ -1,0 +1,289 @@
+/*
+ * Peau Atlas pour le moteur de formulaire de `grist_forms`.
+ *
+ * Le moteur n'embarque aucun style : il émet 33 classes `fr-*` et compte sur
+ * l'hôte. `grist_forms/shared/dsfr-like.css` les fournit — mais il pose aussi
+ * `:root`, `*` et `body`, et surtout il apporte l'identité de l'État (bleu
+ * France, ses rayons, sa typographie) dans un widget ivoire et serif.
+ *
+ * Cette feuille le remplace. Deux règles, et elles suppriment la collision au
+ * lieu de la contourner :
+ *
+ *   1. TOUT est confiné sous `#insp-body` — aucun sélecteur global, ni `:root`,
+ *      ni `body`, ni `*`. La peau ne peut pas déborder sur l'interface d'Atlas.
+ *   2. AUCUNE couleur en dur : tout passe par les jetons d'Atlas, donc la fiche
+ *      suit la palette si elle change.
+ *
+ * Les composants imités sont ceux d'Atlas — `.input`, `.btn-dark`, `.btn-soft`,
+ * `.input-label`, `.hint`, `.section-title` — pour qu'un formulaire monté dans
+ * le panneau ne se distingue pas d'un panneau de symbologie.
+ */
+
+/* ---------- structure ---------- */
+
+#insp-body .fr-form { display: flex; flex-direction: column; gap: 0; }
+
+#insp-body .fr-form__header { margin-bottom: 14px; }
+
+#insp-body .fr-h4 {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 4px;
+  line-height: 1.25;
+}
+
+/* Le pas de l'espacement est celui des `.section` d'Atlas. */
+#insp-body .fr-input-group,
+#insp-body .fr-select-group,
+#insp-body .fr-checkbox-group,
+#insp-body .fr-radio-group,
+#insp-body .fr-fieldset { margin-bottom: 14px; }
+
+/* ---------- libellés et aides ---------- */
+
+#insp-body .fr-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+#insp-body .fr-hint-text {
+  display: block;
+  font-size: 11px;
+  color: var(--muted-light);
+  margin-top: 4px;
+}
+
+#insp-body .fr-error-text {
+  display: block;
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+/* ---------- champs ---------- */
+
+#insp-body .fr-input,
+#insp-body .fr-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-family: var(--sans);
+  transition: var(--t-fast);
+}
+
+#insp-body .fr-select { cursor: pointer; }
+
+#insp-body .fr-input:focus,
+#insp-body .fr-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+#insp-body textarea.fr-input { min-height: 76px; resize: vertical; }
+
+/* ---------- cases et boutons radio ---------- */
+
+/*
+ * Cible tactile : le moteur rend `<input type="checkbox">` + `<label>`. Une
+ * case de 13 px est inatteignable au doigt, et pénible à la souris — on
+ * l'agrandit et on rend le libellé cliquable en lui donnant de la place.
+ */
+#insp-body .fr-checkbox-group,
+#insp-body .fr-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+#insp-body .fr-checkbox-group input[type="checkbox"],
+#insp-body .fr-radio-group input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
+
+#insp-body .fr-checkbox-group .fr-label,
+#insp-body .fr-radio-group .fr-label {
+  margin-bottom: 0;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---------- groupes ---------- */
+
+#insp-body .fr-fieldset {
+  border: none;
+  padding: 0;
+  margin-inline: 0;
+}
+
+#insp-body .fr-fieldset__legend {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+#insp-body .fr-fieldset__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Likert : une rangée qui doit pouvoir défiler dans 360 px. */
+#insp-body .fr-likert__scale {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+/* ---------- messages ---------- */
+
+/* Reprend la forme de `.hint` : filet à gauche, fond très léger. */
+#insp-body .fr-alert {
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 10px 0;
+  border-left: 2px solid var(--accent2);
+  background: rgba(46, 78, 84, 0.08);
+  color: var(--accent2);
+}
+
+#insp-body .fr-alert--success,
+#insp-body .fr-form__success {
+  border-left-color: var(--green);
+  background: rgba(91, 122, 79, 0.10);
+  color: var(--green);
+}
+
+#insp-body .fr-alert--error {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- actions ---------- */
+
+#insp-body .fr-btns-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#insp-body .fr-btns-group--inline { flex-direction: row; }
+
+#insp-body .fr-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--ink);
+  color: var(--bg);
+  transition: var(--t-fast);
+}
+
+#insp-body .fr-btn:hover:not(:disabled) { background: #34302A; }
+
+#insp-body .fr-btn:disabled { opacity: 0.55; cursor: default; }
+
+#insp-body .fr-btn--secondary {
+  background: var(--surface-muted);
+  color: var(--text);
+  border: 1px solid var(--hairline);
+}
+
+#insp-body .fr-btn--secondary:hover:not(:disabled) { background: #F1EADB; }
+
+/* ---------- pièces jointes ---------- */
+
+#insp-body input[type="file"].fr-input {
+  padding: 8px;
+  font-size: 12px;
+  background: var(--surface-muted);
+}
+
+/* ---------- fil des étapes ---------- */
+
+/*
+ * `fr-stepper__state` est un `<span>` DANS le `<p>` du titre : sans `display:
+ * block`, on lit « RelevéÉtape 1 sur 1 » d'un seul tenant. Vu à l'écran.
+ */
+#insp-body .fr-stepper {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+#insp-body .fr-stepper__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+#insp-body .fr-stepper__state {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ---------- reste du vocabulaire du moteur ---------- */
+
+#insp-body .fr-text--sm { font-size: 11px; color: var(--muted); }
+
+#insp-body .fr-alert--info {
+  border-left-color: var(--accent2);
+  background: rgba(46, 78, 84, 0.08);
+  color: var(--accent2);
+}
+
+/* Choix « riche » : la carte cliquable d'un radio, pas une simple ligne. */
+#insp-body .fr-radio-rich {
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+#insp-body .fr-radio-rich:hover { background: var(--surface-muted); }
+
+#insp-body .fr-upload-group { margin-bottom: 14px; }
+
+#insp-body .fr-upload {
+  width: 100%;
+  padding: 8px;
+  font-size: 12px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px dashed var(--hairline-strong);
+  border-radius: 8px;
+}

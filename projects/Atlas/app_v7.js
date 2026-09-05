@@ -4251,6 +4251,27 @@ function renderInspector() {
     closeInspectorPanel();
 }
 
+/**
+ * L'entree en revue objet par objet, depuis l'inspecteur de couche.
+ *
+ * Elle etait reservee aux couches de points, alors que l'edition fonctionne
+ * pour tous les types — `enterSelectionMode` est appele au clic sans condition
+ * de geometrie. Une couche de lignes ou de surfaces n'avait donc aucune
+ * affordance : il fallait deviner qu'on pouvait cliquer la carte.
+ *
+ * Le libelle annonce ce qui s'ouvrira, parce que ce n'est pas la meme chose
+ * selon que la table est decrite par un formulaire ou non.
+ */
+function boutonRevueObjets(layer) {
+    if (!layer?.geojson?.features?.length) return '';
+    const formDef = formDefPourCouche(layer, STATE.formulaires);
+    const libelle = formDef
+        ? `📝 Saisir sur les objets · ${formDef.title || 'formulaire'}`
+        : '✏️ Éditer les objets un par un';
+    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
+        onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
+}
+
 let inspSymTab = 'Couleur';
 function renderSymbologyInspector(layer) {
     const sym = initSymbolization(layer);
@@ -4279,7 +4300,7 @@ function renderSymbologyInspector(layer) {
         <div class="insp-title">${layer.name}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
-        ${isPoint ? `<button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.editLayerObjects('${layer.id}')">✏️ Éditer les objets un par un</button>` : ''}`;
+        ${boutonRevueObjets(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
     const body = $('insp-body');
@@ -4559,9 +4580,13 @@ function renderAttrFields(layer, props, opts = {}) {
  */
 let _formulaireMonte = false;
 
-function monterFormulaireEntite(layer, props, formDef) {
+function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
     const hote = $('insp-body');
-    hote.innerHTML = '';
+    // En revue, la selection porte toute la couche : sans ce rappel, on croirait
+    // modifier les N objets alors qu'on n'ecrit que sur celui du curseur.
+    hote.innerHTML = totalRevue > 1
+        ? `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`
+        : '';
     const rowId = props?._row_id;
     if (rowId == null) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
@@ -4569,7 +4594,9 @@ function monterFormulaireEntite(layer, props, formDef) {
     }
     const valeurs = valeursDepuisEntite(formDef, props);
     try {
-        window.FormEngine.mount(hote, formDef,
+        const bloc = document.createElement('div');
+        hote.appendChild(bloc);
+        window.FormEngine.mount(bloc, formDef,
             pontFormulaire({
                 couche: layer,
                 rowId,
@@ -4581,7 +4608,7 @@ function monterFormulaireEntite(layer, props, formDef) {
                 apresEcriture: () => { A.refreshLayer(layer.id); },
             }));
         // Apres le montage : le moteur vient de rendre ses champs, vides.
-        amorcerValeurs(hote, formDef, valeurs);
+        amorcerValeurs(bloc, formDef, valeurs);
         _formulaireMonte = true;
     } catch (e) {
         console.error('[Atlas formulaire] mount', e);
@@ -4602,7 +4629,8 @@ function renderObjectInspector() {
     const isQgis = layer.source === 'qgis2grist';
     const view = !!CONFIG.viewMode;
     const is3D = isModelLayer(layer);
-    const tabs = objectInspectorTabs({ layer, multi });
+    const revue = !!STATE.selection.revue;
+    const tabs = objectInspectorTabs({ layer, multi, revue });
     if (!_inspObjTab || !tabs.includes(_inspObjTab)) _inspObjTab = tabs[0] || null;
 
     $('insp-head').innerHTML = `
@@ -4640,9 +4668,9 @@ function renderObjectInspector() {
         // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
         // deux types.
-        const formDef = multi ? null : formDefPourCouche(layer, STATE.formulaires);
+        const formDef = (multi && !revue) ? null : formDefPourCouche(layer, STATE.formulaires);
         if (formDef && !readOnly && moteurDisponible()) {
-            monterFormulaireEntite(layer, props, formDef);
+            monterFormulaireEntite(layer, props, formDef, revue && multi ? count : 0);
         } else {
             const entete = readOnly
                 ? (isQgis ? '' : '<div class="hint" style="margin-bottom:10px">Attributs de la couche — lecture seule (source hors table Grist).</div>')
@@ -4996,6 +5024,9 @@ function enterSelectionMode(layerId, idx) {
     STATE.selection.layerId = layerId;
     STATE.selection.features = idx != null ? [idx] : [];
     STATE.selection.multiIndex = 0;
+    // Une selection ordinaire n'est pas une revue : le drapeau ne se leve que
+    // dans `editLayerObjects`, apres cet appel.
+    STATE.selection.revue = false;
     $('map-frame').classList.add('select-mode');
     $('selection-bar').classList.add('open');
     const layer = STATE.layers.find((l) => l.id === layerId);
@@ -6705,11 +6736,20 @@ const A = {
     openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Modèle 3D'; openModule('couches'); },
     editLayerObjects(id) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const n = l.geojson?.features?.length || 0;
+        if (!n) { showToast('Aucun objet dans cette couche', 'warning'); return; }
+        // Ce bouton n'ouvrait que le mode selection, VIDE, avec un toast disant
+        // d'aller cliquer la carte. Il ne dispensait donc pas du clic — le
+        // defaut meme qu'il est cense corriger. Il selectionne maintenant toute
+        // la couche et se pose sur le premier objet : la barre « ◀ 1 / N ▶ »
+        // devient une revue, et la fiche s'ouvre sans toucher la carte.
         enterSelectionMode(id);
-        // L'astuce du geste dépend du matériel : l'annoncer au doigt évite de
-        // chercher une touche Maj qui n'existe pas.
-        const zone = matchMedia?.('(pointer: coarse)')?.matches ? 'Appui long = zone' : 'Maj+glisser = zone';
-        showToast(`Cliquez un objet à éditer · ${zone} · ✓ Tout = toute la couche`, 'info');
+        STATE.selection.features = l.geojson.features.map((_, i) => i);
+        STATE.selection.multiIndex = 0;
+        STATE.selection.revue = true;
+        afterSelectionChange();
+        flyToFeature(l, 0);
+        showToast(`${n} objet${n > 1 ? 's' : ''} · ◀ ▶ pour parcourir`, 'info');
     },
     setModelSet(set) {
         MODEL_LIBRARY.set = set; STATE.settings.modelSet = set;

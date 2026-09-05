@@ -51,6 +51,16 @@ describe('objectInspectorTabs', () => {
     assert.deepEqual(objectInspectorTabs({ layer: surface, multi: false }), ['Attributs']);
   });
 
+  it('revue — les attributs reviennent, ils portent sur l’objet courant', () => {
+    // Parcourir une couche objet par objet EST une selection multiple, mais avec
+    // un curseur. La regle « pas d'edition d'attributs en masse » tient : on
+    // modifie celui sur lequel on est, et le corps doit le dire.
+    assert.deepEqual(objectInspectorTabs({ layer: surface, multi: true, revue: true }),
+      ['Attributs']);
+    assert.deepEqual(objectInspectorTabs({ layer: modele, multi: true, revue: true }),
+      ['Attributs', 'Placement 3D']);
+  });
+
   it('sélection multiple non 3D — aucun onglet', () => {
     // Cas atteignable : le corps de l'inspecteur doit alors afficher un état vide
     // au lieu de retomber sur les curseurs relatifs.

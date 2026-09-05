@@ -26,9 +26,23 @@ export function isModelLayer(layer) {
  *
  * @returns {string[]} liste ordonnée, éventuellement vide (multi-sélection non 3D)
  */
-export function objectInspectorTabs({ layer, multi = false } = {}) {
+/**
+ * Les onglets de l'inspecteur d'objet.
+ *
+ * « Attributs » disparaît en sélection multiple, et c'est voulu : **on n'édite
+ * pas des attributs en masse**. Le corps retomberait sinon sur les valeurs d'un
+ * objet arbitraire, qu'on croirait appliquer à tous.
+ *
+ * `revue` est le troisième cas, que le modèle n'avait pas prévu : parcourir une
+ * couche objet par objet est bien une sélection multiple, mais **avec un
+ * curseur**. Les attributs y portent sur l'objet courant, pas sur le groupe —
+ * l'onglet revient donc, et le corps doit dire lequel il modifie.
+ *
+ * @param {{layer?: object, multi?: boolean, revue?: boolean}} o
+ */
+export function objectInspectorTabs({ layer, multi = false, revue = false } = {}) {
   const tabs = [];
-  if (!multi) tabs.push('Attributs');
+  if (!multi || revue) tabs.push('Attributs');
   if (isModelLayer(layer)) tabs.push('Placement 3D');
   return tabs;
 }
