@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.4';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.5';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,29 +15,30 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.6.4';
-import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.4';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.4';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.4';
+} from './lib/scene-loader.js?v=1.6.5';
+import { boundsFromGeoJSON } from './lib/grist-rows.js?v=1.6.5';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.5';
+import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.5';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.6.4';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.4';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.4';
+} from './lib/layer-order.js?v=1.6.5';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.5';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.5';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.6.4';
+} from './lib/terrain-base.js?v=1.6.5';
 import {
   loadLayerPrefs,
+  clePrefsCouche,
   applyLayerPrefs,
   saveLayerPref,
   parseGristBool,
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.6.4';
+} from './lib/grist-sync.js?v=1.6.5';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -49,13 +50,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.6.4';
+} from './lib/declarative-style.js?v=1.6.5';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.6.4';
+} from './lib/geo-tables.js?v=1.6.5';
 import {
   layerFieldNames,
   controlFieldType,
@@ -71,21 +72,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.6.4';
+} from './lib/controls.js?v=1.6.5';
 import {
   captureStoryState,
   saveStoryToGrist,
   loadStoryFromGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.6.4';
+} from './lib/story.js?v=1.6.5';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.6.4';
+} from './lib/manifest-binding.js?v=1.6.5';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.6.4';
+} from './lib/viewport.js?v=1.6.5';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,16 +96,16 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.6.4';
+} from './lib/view-mode.js?v=1.6.5';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.6.4';
+} from './lib/viewer-controls.js?v=1.6.5';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.6.4';
+} from './lib/scene-prefs.js?v=1.6.5';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -507,9 +508,17 @@ function layerPaintOpacity(layer) {
     return ['coalesce', ['get', '_fill_opacity'], defaultLayerOpacity(layer)];
 }
 
-/** Persiste les prefs d'une couche qgis2grist (no-op hors Grist / mode lecture). */
+/**
+ * Persiste l'apparence d'une couche decrite par le manifeste (no-op hors Grist
+ * / mode lecture).
+ *
+ * La garde portait sur `source === 'qgis2grist'`, donc sur les seules couches
+ * lues dans une table. Regler l'apparence d'une couche **distante** ne
+ * s'enregistrait nulle part, et sortait **en silence** : le reglage etait perdu
+ * au rechargement, sans message.
+ */
 function saveLayerPrefIfSynced(layer) {
-    if (layer?.source !== 'qgis2grist' || !CONFIG.grist.ready) return;
+    if (!clePrefsCouche(layer) || !CONFIG.grist.ready) return;
     saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode }).catch(() => {});
 }
 
@@ -5299,7 +5308,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.4');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.5');
     return Feuille;
 }
 
@@ -5416,10 +5425,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.6.4'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.6.5'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.6.4');
+        const dc = await import('./lib/data-client.js?v=1.6.5');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -5880,7 +5889,10 @@ async function ensureMaquetteLayersTable() {
 async function saveLayerToGrist(layer, silent) {
     if (!CONFIG.grist.ready) return;
     if (!assertCanWrite('enregistrer les préférences')) return;
-    if (layer.source === 'qgis2grist') {
+    // Une couche que le manifeste decrit n'a que son apparence a enregistrer :
+    // la donnee est deja quelque part. C'est cet aiguillage qui protegeait mal
+    // `Maquette_Layers` — voir `clePrefsCouche`.
+    if (clePrefsCouche(layer)) {
         try {
             await saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode });
             if (!silent) showToast(`Préférences Atlas · ${layer.name}`, 'success');
@@ -7340,9 +7352,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.6.4');
+        const { capacites } = await import('./lib/data-client.js?v=1.6.5');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.4');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.5');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

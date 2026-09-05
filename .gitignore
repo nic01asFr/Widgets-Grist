@@ -67,3 +67,6 @@ UUID
 # son origine n'est pas établie, pour qu'un `git add demos/` ne la publie pas
 # par inadvertance. Voir CREDITS.md.
 projects/Atlas/demos/vieille-charite-marseille/
+
+# Certificat auto-signe du serveur de dev HTTPS (jamais versionne)
+.dev-tls/

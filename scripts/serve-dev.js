@@ -2,16 +2,36 @@
 /*
  * serve-dev.js — Serveur statique minimal pour tester les widgets dans Grist.
  *
- * Zero dependance (http + fs natifs). Sert le dossier projects/ par defaut, avec
- * en-tetes CORS et SANS X-Frame-Options (Grist doit pouvoir charger le widget en
- * iframe). http://localhost est traite comme origine sure par les navigateurs,
- * donc utilisable depuis un Grist en HTTPS (docs.getgrist.com) sans souci de
- * mixed-content.
+ * Zero dependance (http/https + fs natifs). Sert le dossier projects/ par
+ * defaut, avec en-tetes CORS et SANS X-Frame-Options (Grist doit pouvoir
+ * charger le widget en iframe).
  *
- * Usage : node scripts/serve-dev.js [--root projects] [--port 3001]
+ * ## Pourquoi un mode HTTPS
+ *
+ * Un document Grist servi en HTTPS **refuse** une iframe en `http://localhost`.
+ * La specification Mixed Content classe pourtant `localhost` parmi les origines
+ * « potentiellement sures » ; en pratique, l'essai en Grist reel a ete refuse
+ * (25/08/2026), et le widget de test est configure sur `https://localhost:8443`.
+ * Ce fichier affirmait l'inverse : la remarque est corrigee ici plutot que
+ * laissee a re-decouvrir.
+ *
+ * ## Usage
+ *
+ *     node scripts/serve-dev.js [--root projects] [--port 3001]
+ *     node scripts/serve-dev.js --root . --https --port 8443
+ *
+ * Le certificat auto-signe se fabrique une fois, dans `.dev-tls/` (gitignore) :
+ *
+ *     openssl req -x509 -newkey rsa:2048 -nodes -days 365  *       -keyout .dev-tls/localhost-key.pem -out .dev-tls/localhost-cert.pem  *       -subj "//CN=localhost"  *       -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+ *
+ * Un certificat auto-signe dans une iframe echoue **en silence** : le navigateur
+ * ne propose pas d'exception depuis un cadre. Il faut ouvrir une fois
+ * `https://localhost:8443/` dans un onglet et accepter l'avertissement ; le
+ * widget se charge ensuite normalement.
  */
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
@@ -20,8 +40,12 @@ function arg(name, def) {
     return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
 }
 
+function drapeau(nom) { return process.argv.includes('--' + nom); }
+
 const ROOT = path.resolve(__dirname, '..', arg('root', 'projects'));
-const PORT = parseInt(arg('port', '3001'), 10);
+const TLS = drapeau('https');
+const PORT = parseInt(arg('port', TLS ? '8443' : '3001'), 10);
+const DOSSIER_TLS = path.resolve(__dirname, '..', '.dev-tls');
 
 const TYPES = {
     '.html': 'text/html; charset=utf-8',
@@ -44,7 +68,18 @@ function send(res, code, body, headers) {
     res.end(body);
 }
 
-const server = http.createServer((req, res) => {
+function optionsTls() {
+    const cle = path.join(DOSSIER_TLS, 'localhost-key.pem');
+    const cert = path.join(DOSSIER_TLS, 'localhost-cert.pem');
+    if (!fs.existsSync(cle) || !fs.existsSync(cert)) {
+        console.error("Certificat absent dans .dev-tls/");
+        console.error("  la commande openssl est dans l'en-tete de ce fichier");
+        process.exit(1);
+    }
+    return { key: fs.readFileSync(cle), cert: fs.readFileSync(cert) };
+}
+
+const servir = (req, res) => {
     if (req.method === 'OPTIONS') return send(res, 204, '');
 
     let urlPath;
@@ -62,11 +97,17 @@ const server = http.createServer((req, res) => {
             send(res, 200, data, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream' });
         });
     });
-});
+};
+
+const server = TLS ? https.createServer(optionsTls(), servir) : http.createServer(servir);
 
 server.listen(PORT, () => {
-    console.log('TaskFlow dev server');
+    const schema = TLS ? 'https' : 'http';
+    console.log('Serveur de dev' + (TLS ? ' (TLS auto-signe)' : ''));
     console.log('  racine : ' + ROOT);
-    console.log('  url    : http://localhost:' + PORT + '/');
-    console.log('  ex.    : http://localhost:' + PORT + '/tasks_app/kanban.html');
+    console.log('  url    : ' + schema + '://localhost:' + PORT + '/');
+    if (TLS) {
+        console.log("  ! ouvrir cette url dans un onglet et accepter l'avertissement,");
+        console.log("    sinon l'iframe Grist echouera sans message.");
+    }
 });

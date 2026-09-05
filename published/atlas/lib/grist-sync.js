@@ -7,20 +7,20 @@ import {
   flattenCoords2D,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.6.4';
+} from './grist-rows.js?v=1.6.5';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.6.4';
+} from './manifest-binding.js?v=1.6.5';
 import { parseGristBool } from './grist-bool.js';
-import { isModelLayer } from './model-layer.js?v=1.6.4';
+import { isModelLayer } from './model-layer.js?v=1.6.5';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.6.4';
+} from './declarative-style.js?v=1.6.5';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
@@ -90,17 +90,48 @@ export async function loadLayerPrefs(docApi) {
 }
 
 export function applyLayerPrefs(layer, prefsMap) {
-  const p = prefsMap?.get(layer.sourceTable);
+  // Meme cle qu'a l'ecriture : les deux sens vont ensemble, sinon on ecrit
+  // d'un cote et on lit de l'autre — le pont rompu de skills/echecs-silencieux.
+  const p = prefsMap?.get(clePrefsCouche(layer));
   if (!p) return;
   applyLayerPrefsBinding(layer, p);
 }
 
+/**
+ * La cle sous laquelle s'enregistre l'apparence d'une couche — ou `null` si
+ * elle ne se range pas la.
+ *
+ * Le bon critere de tri n'est pas « d'ou viennent les donnees » mais **« que
+ * faut-il enregistrer »** :
+ *
+ * | Table | Contenu | Pour quelles couches |
+ * |---|---|---|
+ * | `Atlas_LayerPrefs` | style + visibilite, **aucune geometrie** | celles que le manifeste du document decrit deja |
+ * | `Maquette_Layers` | style **et entites** | celles qu'Atlas detient et dont il est seul depositaire |
+ *
+ * Une couche portee par le manifeste — table, `inline` ou distante — releve de
+ * la premiere : le manifeste tient la donnee, les prefs tiennent l'apparence.
+ * Une couche qui n'a de cle nulle part n'est decrite par rien : elle doit
+ * emporter ses entites, donc aller dans `Maquette_Layers`.
+ *
+ * `sourceTable` d'abord, pour ne pas perdre les prefs deja ecrites sous ce nom.
+ * Sinon `manifestLayerId`, l'`id` que le producteur a fixe dans le manifeste,
+ * **stable par construction**.
+ *
+ * > **Jamais l'URL comme cle.** Elle change quand un jeton expire, et les
+ * > preferences seraient perdues au renouvellement, sans que rien ne le dise.
+ */
+export function clePrefsCouche(layer) {
+  return layer?.sourceTable || layer?.manifestLayerId || null;
+}
+
 export async function saveLayerPref(docApi, layer, opts = {}) {
   if (opts.viewMode) return;
-  if (layer.source !== 'qgis2grist' || !layer.sourceTable) return;
+  const cle = clePrefsCouche(layer);
+  if (!cle) return;
   await ensureAtlasPrefsTable(docApi, opts);
   const data = {
-    source_table: layer.sourceTable,
+    source_table: cle,
     StyleJSON: JSON.stringify(layerPrefsPayload(layer)),
     Visible: layer.visible !== false,
     UpdatedAt: Math.floor(Date.now() / 1000),

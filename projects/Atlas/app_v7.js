@@ -31,6 +31,7 @@ import {
 } from './lib/terrain-base.js?v=20260818b';
 import {
   loadLayerPrefs,
+  clePrefsCouche,
   applyLayerPrefs,
   saveLayerPref,
   parseGristBool,
@@ -507,9 +508,17 @@ function layerPaintOpacity(layer) {
     return ['coalesce', ['get', '_fill_opacity'], defaultLayerOpacity(layer)];
 }
 
-/** Persiste les prefs d'une couche qgis2grist (no-op hors Grist / mode lecture). */
+/**
+ * Persiste l'apparence d'une couche decrite par le manifeste (no-op hors Grist
+ * / mode lecture).
+ *
+ * La garde portait sur `source === 'qgis2grist'`, donc sur les seules couches
+ * lues dans une table. Regler l'apparence d'une couche **distante** ne
+ * s'enregistrait nulle part, et sortait **en silence** : le reglage etait perdu
+ * au rechargement, sans message.
+ */
 function saveLayerPrefIfSynced(layer) {
-    if (layer?.source !== 'qgis2grist' || !CONFIG.grist.ready) return;
+    if (!clePrefsCouche(layer) || !CONFIG.grist.ready) return;
     saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode }).catch(() => {});
 }
 
@@ -5880,7 +5889,10 @@ async function ensureMaquetteLayersTable() {
 async function saveLayerToGrist(layer, silent) {
     if (!CONFIG.grist.ready) return;
     if (!assertCanWrite('enregistrer les préférences')) return;
-    if (layer.source === 'qgis2grist') {
+    // Une couche que le manifeste decrit n'a que son apparence a enregistrer :
+    // la donnee est deja quelque part. C'est cet aiguillage qui protegeait mal
+    // `Maquette_Layers` — voir `clePrefsCouche`.
+    if (clePrefsCouche(layer)) {
         try {
             await saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode });
             if (!silent) showToast(`Préférences Atlas · ${layer.name}`, 'success');
