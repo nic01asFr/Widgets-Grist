@@ -66,6 +66,42 @@ export function valeursDepuisEntite(formDef, props) {
 }
 
 /**
+ * Amorce les champs rendus avec les valeurs de l'entité.
+ *
+ * > **Le moteur ne sait pas prérremplir.** `mount` ouvre sur `var values = {}`,
+ * > en dur : `editRowId` le fait *écrire* dans une ligne existante, mais jamais
+ * > la *lire*. Et `collectSubmitData` envoie **tous** les champs visibles, sans
+ * > exception — donc ouvrir un objet, cocher une case et enregistrer
+ * > **effacerait** son nom et sa hauteur. C'est un chemin câblé depuis
+ * > toujours et jamais exercé : son seul consommateur, l'app terrain, ne fait
+ * > que de la création.
+ *
+ * Amorcer le DOM suffit, parce que le moteur relit ses champs
+ * (`readSectionValues`) avant chaque `render`, avant chaque étape et **avant la
+ * soumission**. Une valeur posée ici est donc reprise dans `values` dès la
+ * première interaction, et au plus tard à l'envoi.
+ *
+ * Ça reste un contournement. Le vrai correctif — `mount` acceptant des valeurs
+ * initiales — appartient à `grist_forms`, et il vaut pour tout consommateur qui
+ * voudra éditer, pas seulement Atlas.
+ */
+export function amorcerValeurs(hote, formDef, valeurs) {
+  let poses = 0;
+  for (const section of (formDef?.sections || [])) {
+    for (const champ of (section.fields || [])) {
+      const v = valeurs?.[champ.colId];
+      if (v === undefined || v === null) continue;
+      const el = hote.querySelector(`[name="${CSS.escape(champ.colId)}"]`);
+      if (!el) continue;
+      if (el.type === 'checkbox') el.checked = !!v && v !== 'false';
+      else el.value = String(v);
+      poses++;
+    }
+  }
+  return poses;
+}
+
+/**
  * Le pont entre le moteur et Atlas.
  *
  * @param {object} o

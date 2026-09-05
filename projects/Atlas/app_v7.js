@@ -17,7 +17,7 @@ import {
   boundsFromVisibleLayers,
 } from './lib/scene-loader.js?v=20260826a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
-import { moteurDisponible, formDefPourCouche, valeursDepuisEntite, pontFormulaire }
+import { moteurDisponible, formDefPourCouche, valeursDepuisEntite, amorcerValeurs, pontFormulaire }
   from './lib/fiche-formulaire.js?v=20260905a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
@@ -4550,6 +4550,15 @@ function renderAttrFields(layer, props, opts = {}) {
  * Le pont est passe explicitement : sans lui, le moteur retombe sur
  * `window.grist.docApi` et court-circuite le garde d'ecriture d'Atlas.
  */
+/**
+ * Vrai quand le moteur tient le corps du panneau.
+ *
+ * Le pied d'Atlas doit alors se taire : le moteur porte son propre bouton de
+ * soumission, et deux « Enregistrer » dans le meme panneau feraient deux choses
+ * differentes.
+ */
+let _formulaireMonte = false;
+
 function monterFormulaireEntite(layer, props, formDef) {
     const hote = $('insp-body');
     hote.innerHTML = '';
@@ -4558,8 +4567,9 @@ function monterFormulaireEntite(layer, props, formDef) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
         return;
     }
+    const valeurs = valeursDepuisEntite(formDef, props);
     try {
-        window.FormEngine.mount(hote, { ...formDef, values: valeursDepuisEntite(formDef, props) },
+        window.FormEngine.mount(hote, formDef,
             pontFormulaire({
                 couche: layer,
                 rowId,
@@ -4570,6 +4580,9 @@ function monterFormulaireEntite(layer, props, formDef) {
                 // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
                 apresEcriture: () => { A.refreshLayer(layer.id); },
             }));
+        // Apres le montage : le moteur vient de rendre ses champs, vides.
+        amorcerValeurs(hote, formDef, valeurs);
+        _formulaireMonte = true;
     } catch (e) {
         console.error('[Atlas formulaire] mount', e);
         hote.innerHTML = `<div class="hint">Formulaire indisponible : ${e.message}</div>`;
@@ -4617,6 +4630,10 @@ function renderObjectInspector() {
     // Le corps suit l'onglet actif. Une cascade parallèle laisserait passer les
     // réglages 3D là où l'onglet a justement été retiré (objet non qgis2grist,
     // sélection multiple, mode lecture).
+    // Remis a faux avant la cascade : sans cela, passer de la fiche a l'onglet
+    // « Placement 3D » laisserait le pied muet, donc sans bouton d'enregistrement.
+    _formulaireMonte = false;
+
     if (_inspObjTab === 'Attributs') {
         const readOnly = view || !isQgis;
         // Quand le document decrit cette table par un FormDef, c'est LUI la
@@ -4658,7 +4675,9 @@ function renderObjectInspector() {
         $('insp-body').innerHTML = `<div class="hint">${count} objets sélectionnés — aucun réglage groupé pour ce type d’objet.</div>`;
     }
 
-    if (view) {
+    if (_formulaireMonte) {
+        $('insp-foot').innerHTML = '';
+    } else if (view) {
         $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Mode lecture — consultation seule</div>`;
     } else if (!tabs.length) {
         $('insp-foot').innerHTML = '';
