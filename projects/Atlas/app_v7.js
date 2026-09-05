@@ -4580,6 +4580,25 @@ function renderAttrFields(layer, props, opts = {}) {
  */
 let _formulaireMonte = false;
 
+/**
+ * L'en-tete d'une fiche qu'on ne peut pas editer, et la sortie quand il y en a une.
+ *
+ * Une couche importee (OSM, fichier) porte ses entites comme un blob dans
+ * `Maquette_Layers` : aucun objet n'a de ligne Grist, donc rien a mettre a jour.
+ * Le dire est necessaire ; s'arreter la ne l'est pas — `entableLayer` sait
+ * exactement lever ce blocage.
+ */
+function enteteSansTable(layer, view) {
+    const peut = !view && CONFIG.grist.ready && layer.kind !== 'table'
+        && (layer.geojson?.features?.length || 0) > 0;
+    const msg = '<div class="hint" style="margin-bottom:10px">Attributs en lecture seule — '
+        + 'les objets de cette couche ne sont pas des lignes Grist.</div>';
+    if (!peut) return msg;
+    const n = layer.geojson.features.length;
+    return msg + `<button class="btn btn-soft btn-full" style="margin-bottom:12px"
+        onclick="A.enregistrerDansGrist('${layer.id}')">💾 Enregistrer dans Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+}
+
 function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
     const hote = $('insp-body');
     // En revue, la selection porte toute la couche : sans ce rappel, on croirait
@@ -4672,8 +4691,10 @@ function renderObjectInspector() {
         if (formDef && !readOnly && moteurDisponible()) {
             monterFormulaireEntite(layer, props, formDef, revue && multi ? count : 0);
         } else {
+            // Constater un blocage sans donner la sortie, c'est le laisser
+            // chercher. L'offre se pose donc LA ou le blocage se lit.
             const entete = readOnly
-                ? (isQgis ? '' : '<div class="hint" style="margin-bottom:10px">Attributs de la couche — lecture seule (source hors table Grist).</div>')
+                ? (isQgis ? '' : enteteSansTable(layer, view))
                 : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
             $('insp-body').innerHTML = entete + renderAttrFields(layer, props, { readOnly });
         }
@@ -5181,6 +5202,107 @@ function makeLayer(name, geomType, geojson, category, modelId) {
     initSymbolization(layer);
     return layer;
 }
+
+// ============================================================
+// ENREGISTRER UNE COUCHE DANS GRIST (« entabler »)
+// ============================================================
+/**
+ * Porte depuis `app.js` (pre-v7), ou cette fonctionnalite existait et a ete
+ * perdue au passage a la v7 — sans decision, comme l'export QGIS et le modele
+ * 3D en piece jointe. Le CLAUDE.md signalait ces deux-la ; celle-ci est une
+ * TROISIEME perte, non documentee.
+ *
+ * ## Ce que ca change, et pourquoi c'est le prealable a tout le reste
+ *
+ * Un import OSM ou fichier depose aujourd'hui **une seule ligne** dans
+ * `Maquette_Layers`, contenant tout le GeoJSON. Vingt-quatre arbres y font une
+ * ligne. Aucun objet n'a donc de `_row_id`, et la fiche d'entite est en lecture
+ * seule — non par choix, mais parce qu'il n'y a rien a mettre a jour.
+ *
+ * `entableLayer` cree une vraie table de donnees : une ligne par objet, la
+ * geometrie en `geometry_json`, les attributs en colonnes typees. La couche est
+ * ensuite reliee a cette table. Alors chaque objet a son `_row_id`, la fiche
+ * devient editable, et le formulaire s'y applique.
+ *
+ * ## L'ecriture se fait par lots
+ *
+ * `BATCH = 200`. Un import OSM se compte en milliers d'entites ; une seule
+ * `applyUserActions` avec tout dedans est un pari sur la taille de la charge
+ * utile. Les lots donnent aussi un progres visible plutot qu'un long gel.
+ */
+function inferGristType(vals) {
+    let seen = false, allBool = true, allInt = true, allNum = true;
+    for (const v of vals) {
+        if (v == null || v === '') continue; seen = true;
+        if (typeof v !== 'boolean') allBool = false;
+        const n = Number(v);
+        const isNum = (typeof v === 'number') || (typeof v === 'string' && v.trim() !== '' && isFinite(n));
+        if (!isNum) { allNum = false; allInt = false; }
+        else if (!Number.isInteger(n)) allInt = false;
+    }
+    if (!seen) return 'Text';
+    if (allBool) return 'Bool';
+    if (allInt) return 'Int';
+    if (allNum) return 'Numeric';
+    return 'Text';
+}
+
+function sanitizeId(s) {
+    const v = String(s == null ? '' : s).trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return (/^[a-zA-Z]/.test(v) ? v : '_' + v) || 'Col';
+}
+
+async function entableLayer(layer) {
+    const feats = layer.geojson?.features || [];
+    if (!feats.length) throw new Error('couche vide');
+    const propNames = new Set();
+    feats.forEach((f) => Object.keys(f.properties || {}).forEach((k) => { if (!k.startsWith('_') && k !== 'geometry_json') propNames.add(k); }));
+    const attrCols = [...propNames];
+    const colId = {}; attrCols.forEach((n) => colId[n] = sanitizeId(n));
+    const OV = { _scale: 'scale', _rotationX: 'rotation_x', _rotationY: 'rotation_y', _rotationZ: 'rotation_z', _offsetX: 'offset_x', _offsetY: 'offset_y', _offsetZ: 'offset_z' };
+    const ovMap = { scale: 'scale', rotation_x: 'rotationX', rotation_y: 'rotationY', rotation_z: 'rotationZ', offset_x: 'offsetX', offset_y: 'offsetY', offset_z: 'offsetZ' };
+    const ovUsed = {};
+    feats.forEach((f) => { const p = f.properties || {}; for (const k in OV) if (p[k] != null && p[k] !== '') ovUsed[OV[k]] = 1; });
+    const is3D = layer.style?.mode === 'library' || layer.style?.mode === 'custom';
+    const isPt = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const colDefs = [
+        { id: 'geometry_json', fields: { label: 'Géométrie (GeoJSON)', type: 'Text' } },
+        ...attrCols.map((n) => ({ id: colId[n], fields: { label: n, type: inferGristType(feats.map((f) => f.properties?.[n])) } })),
+        ...Object.keys(ovUsed).map((cn) => ({ id: cn, fields: { label: cn, type: 'Numeric' } })),
+    ];
+    if (is3D) colDefs.push({ id: 'model_id', fields: { label: 'model_id', type: 'Text' } });
+    const tableName = sanitizeId('Atlas_' + layer.name);
+    const addRes = await grist.docApi.applyUserActions([['AddTable', tableName, colDefs]]);
+    const actualTable = addRes?.retValues?.[0]?.table_id || tableName;
+    if (isPt) { try { await grist.docApi.applyUserActions([['AddColumn', actualTable, 'model_glb', { type: 'Attachments', label: 'Modèle 3D (PJ)' }]]); } catch (e) {} }
+    const BATCH = 200;
+    for (let i = 0; i < feats.length; i += BATCH) {
+        const batch = feats.slice(i, i + BATCH);
+        const colData = { geometry_json: batch.map((f) => JSON.stringify(f.geometry)) };
+        attrCols.forEach((n) => { colData[colId[n]] = batch.map((f) => { const v = f.properties?.[n]; return v == null ? null : (typeof v === 'object' ? JSON.stringify(v) : v); }); });
+        for (const cn in ovUsed) colData[cn] = batch.map((f) => resolveFeatureProps(f, layer)[ovMap[cn]] ?? null);
+        if (is3D) colData.model_id = batch.map((f) => resolveFeatureProps(f, layer).modelId || null);
+        await grist.docApi.applyUserActions([['BulkAddRecord', actualTable, Array(batch.length).fill(null), colData]]);
+    }
+    const cols = await grist.docApi.fetchTable(actualTable);
+    layer.geojson = tableToGeoJSON(cols, 'geometry_json');
+    layer.kind = 'table'; layer.sourceTable = actualTable; layer.geometryColumn = 'geometry_json'; layer.source = 'grist-table';
+    layer._perObjectColor = layer.geojson.features.some((f) => f.properties && f.properties.fill_color);
+    indexFeatures(layer); removeLayerGfx(layer); addLayerToMap(layer); Models3D.scheduleBuild();
+    // La couche est maintenant portee par une table : son apparence va dans
+    // `Atlas_LayerPrefs` (cf. `clePrefsCouche`), et le blob de `Maquette_Layers`
+    // n'a plus de raison d'exister. Le laisser ferait une copie perimee des
+    // entites, que rien ne relirait jamais.
+    const ancienBlob = layer.gristId;
+    layer.gristId = null;
+    if (ancienBlob) {
+        grist.docApi.applyUserActions([['RemoveRecord', 'Maquette_Layers', ancienBlob]])
+            .catch((e) => console.warn('[Atlas entable] blob non retire', e.message));
+    }
+    saveLayerToGrist(layer, true); markDirty();
+    return layer.geojson.features.length;
+}
+
 function finalizeNewLayer(layer) {
     // Empiler au sommet mettrait un bâti importé après un réseau par-dessus lui.
     // On insère sous les géométries plus fines : surfaces, puis lignes, puis points.
@@ -6734,6 +6856,34 @@ const A = {
         applyPointStyle(l); Models3D.forceBuild(); renderInspector(); markDirty();
     },
     openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Modèle 3D'; openModule('couches'); },
+    /**
+     * Cree la table de donnees d'une couche importee, et l'y relie.
+     *
+     * Repli assume : en cas d'echec, la couche reste ce qu'elle etait — un blob
+     * dans `Maquette_Layers`. On ne perd donc jamais les entites, meme si
+     * l'ecriture s'arrete en cours de lots.
+     */
+    async enregistrerDansGrist(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        if (!assertCanWrite('enregistrer la couche')) return;
+        const n = l.geojson?.features?.length || 0;
+        if (!n) { showToast('Couche vide', 'warning'); return; }
+        showLoading(`Enregistrement dans Grist… ${n} objets`);
+        try {
+            const ecrits = await entableLayer(l);
+            hideLoading();
+            showToast(`${ecrits} objets enregistrés · ${l.sourceTable}`, 'success');
+            await chargerFormulaires();
+            if (STATE.currentModule === 'couches') renderLayersPanel(STATE.currentModule);
+            renderInspector();
+        } catch (e) {
+            hideLoading();
+            console.warn('[Atlas entable]', e);
+            showToast('Enregistrement impossible : ' + e.message + ' — la couche reste locale', 'error');
+        }
+    },
+
     editLayerObjects(id) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         const n = l.geojson?.features?.length || 0;

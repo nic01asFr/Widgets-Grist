@@ -34,10 +34,20 @@ Atlas/
 ```
 
 > **`projects/Atlas/app.js` sur `origin/main` — ne pas écraser.**
-> Cette entrée pré-v7 (3 110 lignes) porte deux fonctionnalités **absentes de la
+> Cette entrée pré-v7 (3 110 lignes) porte des fonctionnalités **absentes de la
 > v7 et de la version en ligne** : l'export QGIS (`layerToQML`, `qgisSymbol`,
 > `hexToQgisColor`, `downloadFile`) et le modèle 3D par objet en pièce jointe
-> Grist (`model_glb`, colonne `Attachments`). Elles ont quitté le widget lors du
+> Grist (`model_glb`, colonne `Attachments`).
+>
+> **Elles étaient trois, pas deux.** `entableLayer` — écrire une couche importée
+> dans une vraie table Grist, une ligne par objet, par lots de 200 — s'y trouvait
+> aussi, et n'avait jamais été signalée. Sans elle, un import OSM dépose une
+> **seule ligne** dans `Maquette_Layers` avec tout le GeoJSON : aucun objet n'a de
+> `_row_id`, et la fiche d'entité est en lecture seule faute de ligne à mettre à
+> jour. **Récupérée le 05/09/2026** sur la branche `atlas-formulaire-entite`
+> (voir `docs/CADRAGE-FICHE-ENTITE.md`). La leçon vaut pour les deux qui restent :
+> l'inventaire de ce fichier n'était pas complet, et rien ne dit qu'il l'est
+> maintenant. Elles ont quitté le widget lors du
 > passage à la v7, le 30 juillet 2026 — sans décision explicite : la v7 a été
 > développée sur une branche qui ignorait cette lignée.
 >
