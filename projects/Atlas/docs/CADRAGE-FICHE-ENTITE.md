@@ -194,23 +194,57 @@ La barre d'onglets doit défiler : `.insp-tabs` n'a ni `overflow-x` ni
 `white-space: nowrap`, et 320 px utiles ne tiennent que trois libellés avant
 qu'ils se coupent en deux lignes. Deux déclarations.
 
-### Masquer un champ, c'est composer
+### Cadrer un formulaire, ce n'est pas le composer
 
-En édition, chaque champ rendu porte sa bascule de visibilité — **là où le champ
-se voit**, pas dans une liste parallèle. Le moteur pose `data-colid` sur les
-**neuf** enveloppes de champ (seuls libellés et images n'en ont pas, et ce ne
-sont pas des champs) : la bascule s'y accroche **sans le modifier**.
+Atlas ne compose aucun formulaire. Il en **découvre**, il en **expose**, il les
+**remplit** — et il **cadre** ce qu'il montre de chacun. Ce quatrième verbe est
+le seul qui touche au contenu d'un formulaire, et il n'en modifie aucun.
 
-> **Et ce geste crée l'enregistrement.** Un formulaire dérivé n'existe nulle
-> part ; toucher ses champs en fait une ligne de `Formulaires`. Il faut donc que
-> ça se dise à l'écran, sinon Atlas écrirait en silence — ce que la règle « rien
-> n'existe tant que l'utilisateur ne l'a pas fait » interdit.
+Un **masque** est un réglage de scène : il vit avec la couche, à côté
+d'`exposes`, et dit « cette scène ne montre pas ce champ ». Le FormDef, lui,
+reste la propriété de qui l'a fait — le builder, ou QField par `qgis2grist`. Un
+formulaire qu'on n'a pas le droit de toucher n'est pas touché.
+
+    couche.formulaire = { fiche, exposes: [...], masques: { [formId]: [colId] } }
+
+> **Ce qu'on enregistre, c'est ce que la scène RETIRE.** Une liste blanche
+> aurait tu en silence tout champ ajouté plus tard au formulaire amont ; un
+> masque le laisse apparaître. Et quand une colonne disparaît, un masque devient
+> inerte au lieu de devenir faux.
+
+**Le filtrage porte sur le FormDef remis au moteur, jamais sur le DOM.** C'est
+ce qui fait tenir le reste, et ça se lit dans `engine.js` :
+
+| Ce que fait le moteur | Ce que ça donne |
+|---|---|
+| `validateRequired` reçoit `getVisibleFields(section, …)` — les champs **rendus** (`engine.js:724`) | un champ retiré n'est jamais réclamé : pas d'obligatoire invisible qui bloque l'envoi |
+| `collectSubmitData` parcourt les sections du FormDef (`engine.js:155`) | un champ retiré n'est **pas écrit** — sur `updateRow`, mise à jour partielle, le reste de la ligne intact |
+
+Deux garde-fous, faute de quoi le cadrage casserait ce qu'il prétend seulement
+réduire :
+
+1. **Une section vidée doit disparaître.** `getVisibleSections` ne filtre que
+   sur les conditions, pas sur le vide : retirer tous les champs d'une étape
+   laisserait une étape blanche avec son bouton « Suivant ».
+2. **Un champ dont dépend une condition ne se retire pas.** `isFieldVisible`
+   évalue `field.condition`, qui peut viser un autre champ. Le masquer laisserait
+   le dépendant coincé — sans erreur, sans message.
+
+**Et l'interface va dans le module de gauche**, pas sur le formulaire rendu à
+droite : un formulaire s'y déplie, ses champs s'y décochent.
+
+> **Une version antérieure de ce cadrage plaçait la bascule sur le champ rendu
+> et en faisait une composition** : toucher un champ du dérivé en aurait fait une
+> ligne de `Formulaires`. C'était un second chemin de composition, concurrent du
+> builder, pour un besoin qui n'en demande aucun. Le masque obtient le même
+> résultat sans rien écrire dans `Formulaires` — et il s'applique aussi bien à un
+> formulaire venu de QField, qu'on ne doit surtout pas réécrire.
 
 ### Ce que le module de gauche garde
 
 Il liste les formulaires de table **et** ceux qu'on a créés, y compris ceux qui
 portent sur plusieurs tables ; chaque table y montre celui qui la concerne. On y
-crée, et on y expose. Un formulaire lié y apparaît **sous sa propre table** —
+enregistre, on y expose, et on y masque. Un formulaire lié y apparaît **sous sa propre table** —
 c'est là qu'on l'expose —, tandis qu'à droite il apparaît **sous l'objet qu'il
 référence** — c'est là qu'on s'en sert. Deux endroits, deux gestes, aucun
 doublon.
@@ -456,6 +490,12 @@ Retenu : **B, formulé comme du travail sur `grist_forms`**, avec **A en repli
 immédiat** le temps que B soit prêt. Un renvoi vers une page coûte une ligne ;
 il débloque l'usage pendant que le pont se termine.
 
+> **Et A suffit déjà.** `published/grist_forms/builder.html` est publié : la voie
+> A est ouverte aujourd'hui, sans rien écrire. Depuis que le cadrage sépare
+> **cadrer** de **composer**, B n'est plus un préalable à quoi que ce soit — c'est
+> un confort. Dans les deux voies, c'est le builder qui compose et Atlas qui
+> montre : embarquer le builder ne ferait pas d'Atlas un compositeur.
+
 ## Trois frictions d'usage, relevées avant d'être livrées
 
 1. **On ne voit pas les observations passées.** Le formulaire ajoute une ligne ;
@@ -488,15 +528,17 @@ il débloque l'usage pendant que le pont se termine.
 
 ## Ce qui reste, au 06/09/2026
 
-Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
-éprouvés en Grist réel. Trois choses restent, dans cet ordre :
+Le formulaire d'entité, le module, la saisie hors édition **et les formulaires
+liés** sont livrés et éprouvés en Grist réel. Trois choses restent, dans cet
+ordre :
 
 | | | Pourquoi là |
 |---|---|---|
-| **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
-| **1 bis** | les **formulaires liés** — code écrit et testé, **jamais exercé** | il faut une table qui référence une couche pour l'éprouver ; le document de test n'en a aucune |
+| **1** | les **masques de champs** | petit, cohérent avec `exposes` qu'il prolonge, et il complète la chaîne qu'on vient de prouver. Il rend aussi `Attributs` réglable : aujourd'hui c'est tout ou rien |
+| **2** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
+| ~~**1 bis**~~ | ~~les **formulaires liés** — jamais exercés~~ — **fait** | éprouvés le 06/09/2026 : `addRow` et la référence injectée par le clic, dans le document de test |
 | ~~**2**~~ | ~~le **vendoring**~~ — **fait** | `promote-atlas.js` embarque les six scripts sous `vendor/`, copie la peau, et refuse de publier une page qui réclame un fichier absent |
-| **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
+| **3** | la **marche 3** — ACL dérivée du FormDef | **pas l'optimum, et pas entièrement de notre ressort.** Sans elle le comportement dégrade correctement : un refus d'écriture s'affiche dans le formulaire concerné, garde les valeurs, et ne touche pas la session — `enterViewModeOnWriteFail` sort immédiatement quand `viewMode` est déjà vrai, et le chemin du formulaire ne l'appelle jamais. Et Grist ne laisse pas poser la règle proprement : son moteur ACL ne traverse pas les `Ref`, or dériver l'ACL d'un FormDef lié est exactement une traversée de `Ref` (`tasks_app/ACL_RULES_GENCI.md`, 20/06/2026) |
 
 Deux questions restent ouvertes et ne se tranchent pas seules : **l'historique
 des observations** (six choix, dont un point dur — rien ne dit quelles colonnes
@@ -775,3 +817,34 @@ la géométrie.
 
 Non éprouvé : la case à cocher n'a pas répondu à l'outil d'automatisation. Je ne
 sais pas si c'est l'outil ou la page, et ce n'est pas présenté comme un défaut.
+
+
+## Le formulaire lié, prouvé de bout en bout (06/09/2026)
+
+Le point qui restait sans épreuve : une table qui référence une couche. Créée
+dans le document de test — `Visites`, avec `batiment` en `Ref:Batiments_locaux`.
+
+| | Constaté |
+|---|---|
+| La découverte | `Visites` apparaît sous **AJOUTER UNE LIGNE**, `→ Visites · par batiment · déduit` — sans rien déclarer, par la seule lecture du `Ref:` |
+| L'enregistrement | « Enregistrer » pose la ligne ; la bascule la publie et l'expose |
+| En terrain | deux onglets sur l'objet cliqué — `Bâtiment — relevé` et `Visites` —, `Attributs` absent parce que non coché |
+| Le mode | formulaire **vide**, bouton « **Envoyer** » et non « Enregistrer » : le pont est bien construit sans `editRowId` |
+| La colonne de référence | **absente du formulaire** — elle n'est pas une saisie |
+| L'écriture | ligne créée portant `batiment: 3`, l'objet cliqué. La référence entre par le pont, jamais par le formulaire |
+| En édition | quatre onglets — `Attributs`, `Bâtiment — relevé`, `Saisie — Batiments_locaux`, `Visites` |
+| `updateRow` | `verifie` passé à `true` puis rendu à `false` sur la ligne 3, `hauteur` `nom` `etat` intacts à chaque fois |
+
+Et le libellé du bouton n'est pas cosmétique : « Envoyer » contre
+« Enregistrer » est la seule chose qui, à l'écran, distingue les deux modes.
+
+> **Le défaut que cette épreuve a révélé** : l'héritage de l'ancien booléen
+> `expose` visait « le premier formulaire de la couche ». Depuis que le dérivé
+> ouvre la liste, ce premier est `Attributs` — qui n'est pas enregistré, donc
+> jamais offrable. L'héritage pointait sur rien, et la première écriture de la
+> liste effaçait l'exposition réelle : un relevé publié s'est retrouvé retiré,
+> sans erreur ni message. Le report vise désormais le premier formulaire
+> **enregistré**, et ne retombe sur le dérivé qu'à défaut.
+
+La case à cocher, non éprouvée le 05/09, l'est ici : cochée, écrite, relue
+cochée depuis la base, décochée. C'était bien l'outil d'automatisation.
