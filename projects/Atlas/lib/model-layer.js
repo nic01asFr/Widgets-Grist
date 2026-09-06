@@ -8,6 +8,7 @@
  * cercle 2D. Ce critère décide où ces réglages ont le droit d'apparaître, et où
  * ils ont le droit d'être écrits.
  */
+import { libelleFormulaire } from './fiche-formulaire.js';
 
 /** La couche est-elle rendue par des modèles 3D instanciés sur des points ? */
 export function isModelLayer(layer) {
@@ -46,11 +47,15 @@ export const ONGLET_3D = 'Placement 3D';
 /**
  * Les onglets de la fiche d'un objet.
  *
- * > **Un onglet par formulaire**, et `Attributs` en est un : c'est celui de la
- * > table de la couche. Le tenir à part en aurait fait une exception, alors
- * > qu'il fait la même chose que les autres — rendre un FormDef. La liste des
- * > formulaires décide donc du nombre d'onglets, et l'ordre ne varie pas : le
- * > premier fait toujours la même chose.
+ * > **Un onglet par formulaire**, et `Attributs` en est un : c'est le formulaire
+ * > déduit des colonnes de la table de la couche. Le tenir à part en aurait
+ * > fait une exception, alors qu'il fait la même chose que les autres — rendre
+ * > un FormDef. La liste des formulaires décide donc du nombre d'onglets, et
+ * > l'ordre ne varie pas : le premier fait toujours la même chose.
+ * >
+ * > Le libellé vient de `libelleFormulaire` : un formulaire enregistré porte
+ * > **son nom**, pas « Attributs » — l'afficher ainsi effacerait ce que son
+ * > auteur a écrit.
  *
  * Deux exclusions, chacune pour une raison :
  *
@@ -67,7 +72,7 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
   if (!multi || revue) {
     for (const f of formulaires) {
       if (!f || !f.id) continue;
-      tabs.push({ cle: f.id, libelle: f.principal ? 'Attributs' : f.titre, formulaire: f });
+      tabs.push({ cle: f.id, libelle: libelleFormulaire(f), formulaire: f });
     }
   }
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });

@@ -145,7 +145,7 @@ export function choisirFormulaire(entrees, { table, prefereId = null } = {}) {
  * >
  * > L'ancienne forme se relit sans rien perdre : `expose: true` voulait dire
  * > « la fiche de cette couche est exposée », ce que `exposeHerite` reporte au
- * > formulaire principal — le seul qui existait alors.
+ * > premier formulaire de la couche — le seul qui existait alors.
  *
  * @returns {{fiche: string|null, exposes: string[]|null, exposeHerite: boolean}}
  *   `exposes` vaut `null` quand la couche n'a jamais rien décidé, ce qui n'est
@@ -176,21 +176,34 @@ export function colonnesHorsFormulaire(couche) {
 /**
  * Tous les formulaires d'une couche, dans l'ordre où ils s'affichent.
  *
- * **Le principal d'abord** — celui de la table de la couche, qui corrige
- * l'objet — puis **les liés**, ceux dont la table porte un `Ref:` vers la
- * sienne, qui ajoutent une ligne. C'est l'ordre des onglets, et il ne varie
- * pas : le premier onglet fait toujours la même chose.
+ * **La table de la couche d'abord** — ce qui corrige l'objet — puis **les
+ * tables qui la référencent**, qui ajoutent une ligne. C'est l'ordre des
+ * onglets, et il ne varie pas.
  *
- * Chaque entrée est **enregistrée** ou **dérivée**. Une ligne de `Formulaires`
- * prime toujours sur la déduction, y compris pour une table liée : c'est ainsi
- * qu'un pack QField, ou un formulaire composé ici, remplace le brouillon sans
- * qu'aucun chemin ne soit privilégié.
+ * ## Un onglet par formulaire, vraiment
+ *
+ * Une table peut en porter **plusieurs** : un relevé importé de QField, un
+ * formulaire composé ici, un troisième pour une campagne. Chacun a son onglet
+ * et **son nom**. Ce code n'en retenait qu'un — il appelait `choisirFormulaire`,
+ * qui tranche — et la règle « un onglet par formulaire » n'était donc pas
+ * tenue.
+ *
+ * ## Le dérivé de la couche ne disparaît jamais
+ *
+ * La fiche d'Atlas a toujours montré **tous** les attributs de l'objet. Ce
+ * n'est pas parce qu'un formulaire a été importé sur la table que cette vue
+ * doit disparaître : un formulaire importé montre ce que son auteur a choisi,
+ * pas ce que la table contient.
+ *
+ * Le dérivé de la table de la couche est donc **toujours** présent, en premier,
+ * sous le nom `Attributs` — c'est ce qu'il est. Pour les tables liées, il n'est
+ * qu'un **repli** : dès qu'un enregistré existe, il suffit.
  *
  * @param {object} o
  * @param {object} o.couche
  * @param {object[]} [o.entrees] les lignes de `Formulaires`
  * @param {object} [o.schema]    le schéma du document — sans lui, pas de dérivé
- * @returns {Array<{id, titre, tableId, def, statut, derive, principal, via}>}
+ * @returns {Array<{id, titre, tableId, def, statut, derive, surLaCouche, via, expose}>}
  */
 export function formulairesPourCouche({ couche, entrees = [], schema = null } = {}) {
   const table = couche?.sourceTable;
@@ -199,37 +212,47 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   const reglages = reglagesFormulaire(couche);
   const out = [];
 
-  const ajouter = ({ tableCible, principal, via, titre, ignorer }) => {
-    const enregistre = choisirFormulaire(entrees, {
-      table: tableCible,
-      prefereId: principal ? reglages.fiche : null,
-    });
-    let entree = enregistre;
-    if (!entree && D && schema) {
-      const def = D.formDefDepuisColonnes({
-        tableId: tableCible,
-        colonnes: schema[tableCible] || [],
-        titre,
-        ignorer,
-      });
-      if (def) entree = { formId: def.id, titre: def.title, tableCible, version: 0, statut: null, def, derive: true };
-    }
-    if (!entree) return;
+  const pousser = ({ entree, surLaCouche, via, derive }) => {
     out.push({
       id: entree.formId || entree.def?.id || null,
-      titre: entree.titre || entree.def?.title || tableCible,
-      tableId: tableCible,
+      titre: entree.titre || entree.def?.title || entree.tableCible,
+      tableId: entree.def?.tableId || entree.tableCible,
       def: entree.def,
       statut: entree.statut || null,
-      derive: !!entree.derive,
-      principal: !!principal,
+      derive: !!derive,
+      // **Porte sur la table de la couche**, et non « le formulaire principal ».
+      // C'est ce fait-là qui decide `updateRow` contre `addRow` — pas le rang.
+      surLaCouche: !!surLaCouche,
       via: via || null,
     });
   };
 
-  ajouter({
+  const ajouterTable = ({ tableCible, surLaCouche, via, titre, ignorer }) => {
+    const enregistres = formulairesPourTable(entrees, tableCible);
+    const deriver = () => {
+      if (!D || !schema) return null;
+      const def = D.formDefDepuisColonnes({
+        tableId: tableCible, colonnes: schema[tableCible] || [], titre, ignorer,
+      });
+      return def ? { formId: def.id, titre, tableCible, statut: null, def } : null;
+    };
+
+    // Sur la couche, le dérivé vient EN PREMIER : « Attributs » est le premier
+    // onglet, et le premier onglet fait toujours la même chose.
+    if (surLaCouche) {
+      const d = deriver();
+      if (d) pousser({ entree: d, surLaCouche, via, derive: true });
+    }
+    for (const e of enregistres) pousser({ entree: e, surLaCouche, via, derive: false });
+    if (!surLaCouche && !enregistres.length) {
+      const d = deriver();
+      if (d) pousser({ entree: d, surLaCouche, via, derive: true });
+    }
+  };
+
+  ajouterTable({
     tableCible: table,
-    principal: true,
+    surLaCouche: true,
     titre: 'Attributs',
     ignorer: colonnesHorsFormulaire(couche),
   });
@@ -237,17 +260,33 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   for (const { table: liee, via } of (schema ? tablesReferencant(schema, table) : [])) {
     // La colonne qui porte la référence n'est pas une saisie : c'est le clic
     // qui la remplit. La montrer ferait choisir l'objet qu'on vient de choisir.
-    ajouter({ tableCible: liee, principal: false, via, titre: liee, ignorer: [via] });
+    ajouterTable({ tableCible: liee, surLaCouche: false, via, titre: liee, ignorer: [via] });
   }
 
   // « Exposé » se décide par identifiant. L'ancien booléen ne connaissait que la
-  // fiche : on le reporte sur le principal, le seul qui existait alors.
+  // fiche : on le reporte sur le premier formulaire de la couche, le seul qui
+  // existait alors.
+  const premierDeLaCouche = out.find((f) => f.surLaCouche)?.id || null;
   for (const f of out) {
     f.expose = reglages.exposes
       ? reglages.exposes.includes(f.id)
-      : (reglages.exposeHerite && f.principal);
+      : (reglages.exposeHerite && f.id === premierDeLaCouche);
   }
   return out;
+}
+
+/**
+ * Le libellé d'un onglet.
+ *
+ * Un formulaire enregistré porte **son nom** : l'afficher comme « Attributs »
+ * effacerait ce que son auteur a écrit, et laisserait croire qu'il montre
+ * toutes les colonnes alors qu'il montre celles qu'on a choisies. Seul le
+ * dérivé de la table de la couche s'appelle « Attributs » — parce que c'est
+ * exactement ce qu'il est.
+ */
+export function libelleFormulaire(f) {
+  if (!f) return '';
+  return (f.derive && f.surLaCouche) ? 'Attributs' : (f.titre || f.tableId || '');
 }
 
 /**
@@ -449,8 +488,11 @@ export function valeursPourMoteur(formDef, props) {
  *
  * | | `editRowId` | Ce qui se passe |
  * |---|---|---|
- * | **principal** | l'objet | `updateRow` — on **corrige** la ligne cliquée |
+ * | **sur la couche** | l'objet | `updateRow` — on **corrige** la ligne cliquée |
  * | **lié** | **absent** | `addRow` — on **ajoute** une ligne qui la référence |
+ *
+ * Ce qui distingue les deux, c'est **la table visée**, pas le rang : une table
+ * peut porter plusieurs formulaires, et ils corrigent tous l'objet.
  *
  * > **L'absence d'`editRowId` n'est pas un oubli, c'est la condition.**
  * > `defaultSubmit` du moteur teste `bridge.editRowId` **avant** `bridge.addRow`
@@ -470,7 +512,7 @@ export function valeursPourMoteur(formDef, props) {
  * @param {number} o.rowId         `_row_id` de l'entité — l'identifiant Grist
  * @param {object} o.docApi        `grist.docApi`
  * @param {object} [o.formulaire]  l'entrée de `formulairesPourCouche` — son
- *                                 `principal` et son `via` décident du mode
+ *                                 `surLaCouche` et son `via` décident du mode
  * @param {object} [o.valeurs]     lues avant le premier rendu
  * @param {() => boolean} o.peutEcrire  le garde d'Atlas, consulté à CHAQUE soumission
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
@@ -482,7 +524,7 @@ export function pontFormulaire({
   const dire = typeof signaler === 'function' ? signaler : () => {};
   // Pas de `formulaire` ⇒ l'appelant vise la table de la couche : c'est le
   // comportement d'avant les formulaires liés, et il reste le défaut.
-  const lie = !!formulaire && formulaire.principal === false;
+  const lie = !!formulaire && formulaire.surLaCouche === false;
   const table = lie ? formulaire.tableId : couche?.sourceTable;
 
   const garde = () => {

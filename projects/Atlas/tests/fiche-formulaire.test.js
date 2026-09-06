@@ -363,6 +363,7 @@ import {
   formulairesPourCouche,
   colonnesHorsFormulaire,
   formulairesOffertsEnLecture,
+  libelleFormulaire,
 } from '../lib/fiche-formulaire.js';
 import { schemaDepuisMeta } from '../lib/schema-grist.js';
 
@@ -387,11 +388,61 @@ const SCHEMA = schemaDepuisMeta(
 
 const COUCHE = { id: 'l1', name: 'Bâtiments', sourceTable: 'Batiments_locaux', geometryColumn: 'geometry_json' };
 
-test('le principal d’abord, puis les liees — c’est l’ordre des onglets', () => {
+test('la table de la couche d’abord, puis les liees — c’est l’ordre des onglets', () => {
   const liste = formulairesPourCouche({ couche: COUCHE, entrees: [], schema: SCHEMA });
   assert.deepEqual(liste.map((f) => f.tableId), ['Batiments_locaux', 'Visites', 'Desordres']);
-  assert.deepEqual(liste.map((f) => f.principal), [true, false, false]);
+  assert.deepEqual(liste.map((f) => f.surLaCouche), [true, false, false]);
   assert.deepEqual(liste.map((f) => f.via), [null, 'batiment', 'bati']);
+});
+
+test('« surLaCouche » dit la table visee, pas le rang', () => {
+  // Une table peut porter plusieurs formulaires, et ils corrigent tous l'objet.
+  const entrees = [
+    { formId: 'a', titre: 'Relevé A', statut: 'publie', def: { id: 'a', tableId: 'Batiments_locaux', sections: [] } },
+    { formId: 'b', titre: 'Relevé B', statut: 'publie', def: { id: 'b', tableId: 'Batiments_locaux', sections: [] } },
+  ];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.surLaCouche).map((f) => f.id),
+    ['derive:Batiments_locaux', 'a', 'b']);
+});
+
+test('tous les enregistres d’une table ont leur onglet, pas seulement un', () => {
+  // La regle « un onglet par formulaire » n'etait pas tenue : le code appelait
+  // choisirFormulaire, qui tranche.
+  const entrees = [
+    { formId: 'a', titre: 'Relevé A', statut: 'publie', def: { id: 'a', tableId: 'Visites', sections: [] } },
+    { formId: 'b', titre: 'Relevé B', statut: 'terrain', def: { id: 'b', tableId: 'Visites', sections: [] } },
+  ];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.tableId === 'Visites').map((f) => f.id), ['a', 'b']);
+});
+
+test('le derive de la couche ne disparait jamais, meme avec un formulaire importe', () => {
+  // Un formulaire importe montre ce que son auteur a choisi, pas ce que la
+  // table contient. La vue « tous les attributs » ne doit pas s'evaporer.
+  const entrees = [{ formId: 'releve', titre: 'Bâtiment — relevé', statut: 'terrain', def: { id: 'releve', tableId: 'Batiments_locaux', sections: [] } }];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.surLaCouche).map((f) => f.id),
+    ['derive:Batiments_locaux', 'releve']);
+  assert.deepEqual(liste.filter((f) => f.surLaCouche).map(libelleFormulaire),
+    ['Attributs', 'Bâtiment — relevé']);
+});
+
+test('mais pour une table liee, le derive n’est qu’un repli', () => {
+  const entrees = [{ formId: 'v', titre: 'Visite', statut: 'publie', def: { id: 'v', tableId: 'Visites', sections: [] } }];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.tableId === 'Visites').map((f) => f.id), ['v']);
+  // Desordres n'a rien d'enregistre : son derive reste.
+  assert.deepEqual(liste.filter((f) => f.tableId === 'Desordres').map((f) => f.id), ['derive:Desordres']);
+});
+
+test('un enregistre porte SON nom, jamais « Attributs »', () => {
+  // L'afficher comme « Attributs » effacerait ce que son auteur a ecrit, et
+  // laisserait croire qu'il montre toutes les colonnes.
+  assert.equal(libelleFormulaire({ derive: true, surLaCouche: true, titre: 'Attributs' }), 'Attributs');
+  assert.equal(libelleFormulaire({ derive: false, surLaCouche: true, titre: 'Bâtiment — relevé' }), 'Bâtiment — relevé');
+  assert.equal(libelleFormulaire({ derive: true, surLaCouche: false, titre: 'Desordres' }), 'Desordres');
+  assert.equal(libelleFormulaire(null), '');
 });
 
 test('sans formulaire enregistre, tout est derive — et rien n’est ecrit', () => {
@@ -400,16 +451,17 @@ test('sans formulaire enregistre, tout est derive — et rien n’est ecrit', ()
   assert.deepEqual(liste.map((f) => f.id), ['derive:Batiments_locaux', 'derive:Visites', 'derive:Desordres']);
 });
 
-test('un enregistre prime sur le derive, sur la table geo comme sur une liee', () => {
-  // C'est ainsi qu'un pack QField, ou un formulaire compose ici, remplace le
-  // brouillon sans qu'aucun chemin ne soit privilegie.
+test('un enregistre s’ajoute, et sur une table liee il remplace le repli', () => {
+  // C'est ainsi qu'un pack QField, ou un formulaire compose ici, prend sa place
+  // sans qu'aucun chemin ne soit privilegie.
   const entrees = [
     { formId: 'bati-terrain', titre: 'Bâtiment — relevé', statut: 'terrain', def: { id: 'bati-terrain', tableId: 'Batiments_locaux', sections: [] } },
     { formId: 'visite-v2', titre: 'Visite', statut: 'publie', def: { id: 'visite-v2', tableId: 'Visites', sections: [] } },
   ];
   const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
-  assert.deepEqual(liste.map((f) => f.id), ['bati-terrain', 'visite-v2', 'derive:Desordres']);
-  assert.deepEqual(liste.map((f) => f.derive), [false, false, true]);
+  assert.deepEqual(liste.map((f) => f.id),
+    ['derive:Batiments_locaux', 'bati-terrain', 'visite-v2', 'derive:Desordres']);
+  assert.deepEqual(liste.map((f) => f.derive), [true, false, false, true]);
 });
 
 test('la geometrie et la memoire d’Atlas ne se saisissent pas', () => {
@@ -499,7 +551,7 @@ test('un formulaire lie N’A PAS d’editRowId — c’est la condition, pas un
   const api = fauxDocApi();
   const p = pontFormulaire({
     couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => true,
-    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+    formulaire: { surLaCouche: false, tableId: 'Visites', via: 'batiment' },
   });
   assert.equal(p.editRowId, undefined);
   assert.equal(typeof p.updateRow, 'undefined');
@@ -512,7 +564,7 @@ test('la reference entre par le pont, jamais par le formulaire', async () => {
   const api = fauxDocApi();
   const p = pontFormulaire({
     couche: COUCHE_PONT, rowId: 7, docApi: api, peutEcrire: () => true,
-    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+    formulaire: { surLaCouche: false, tableId: 'Visites', via: 'batiment' },
   });
   await p.addRow('Visites', { etat: 'Bon' });
   assert.deepEqual(api.actions[0], ['AddRecord', 'Visites', null, { etat: 'Bon', batiment: 7 }]);
@@ -522,7 +574,7 @@ test('un formulaire lie sans colonne de reference refuse plutot que d’orphelin
   const api = fauxDocApi();
   const p = pontFormulaire({
     couche: COUCHE_PONT, rowId: 7, docApi: api, peutEcrire: () => true,
-    formulaire: { principal: false, tableId: 'Visites', via: null },
+    formulaire: { surLaCouche: false, tableId: 'Visites', via: null },
   });
   await assert.rejects(() => p.addRow('Visites', { etat: 'Bon' }), /référence/);
   assert.equal(api.actions.length, 0, 'rien n’a été écrit');
@@ -534,7 +586,7 @@ test('le garde d’ecriture vaut pour les deux modes', async () => {
   const api = fauxDocApi();
   const lie = pontFormulaire({
     couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => false,
-    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+    formulaire: { surLaCouche: false, tableId: 'Visites', via: 'batiment' },
   });
   await assert.rejects(() => lie.addRow('Visites', {}), /lecture/);
 
@@ -549,7 +601,7 @@ test('les valeurs de depart passent par le pont dans les deux modes', () => {
   assert.deepEqual(pontFormulaire({ couche: COUCHE_PONT, rowId: 1, docApi: api, valeurs: v }).values, v);
   assert.deepEqual(pontFormulaire({
     couche: COUCHE_PONT, rowId: 1, docApi: api, valeurs: v,
-    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+    formulaire: { surLaCouche: false, tableId: 'Visites', via: 'batiment' },
   }).values, v);
   assert.deepEqual(pontFormulaire({ couche: COUCHE_PONT, rowId: 1, docApi: api }).values, {});
 });

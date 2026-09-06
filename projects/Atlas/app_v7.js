@@ -18,8 +18,8 @@ import {
 } from './lib/scene-loader.js?v=20260826a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
 import {
-  moteurDisponible, formDefPourCouche, valeursPourMoteur, pontFormulaire,
-  lireFormulaires, formulaireOffrable, reglagesFormulaire,
+  moteurDisponible, valeursPourMoteur, pontFormulaire,
+  lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
 } from './lib/fiche-formulaire.js?v=20260906e';
 import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
@@ -3888,58 +3888,95 @@ function renderFormulaires() {
 }
 
 /**
- * Une couche, et les formulaires qui la concernent.
+ * Une couche, et les formulaires qui la concernent, groupes par **verbe**.
  *
- * Le principal d'abord — celui de sa table, qui corrige l'objet — puis ceux
- * dont la table la reference, qui ajoutent une ligne. C'est l'ordre des
- * onglets, et il ne varie pas.
+ * La liste les alignait a plat, chacun suivi de la meme phrase — « la table de
+ * la couche — corrige l'objet » — repetee autant de fois qu'il y avait de
+ * lignes. C'est un fait de groupe, pas de ligne : dit une fois, il tient dans
+ * un intertitre et rend chaque ligne lisible d'un coup d'oeil.
+ *
+ * Deux groupes, dans l'ordre des onglets :
+ *
+ * | | |
+ * |---|---|
+ * | **corriger l'objet** | la table de la couche — \`updateRow\` |
+ * | **ajouter une ligne** | une table qui la reference — \`addRow\` |
+ *
+ * Et un pied qui dit **ce que les cases produisent** : le nombre d'onglets hors
+ * edition. Sans lui, on coche sans voir le resultat, et au-dela de trois la
+ * barre d'onglets se met a defiler sans que rien ne l'ait annonce.
  */
 function blocCoucheFormulaires(couche) {
     const esc = (s) => String(s).replace(/'/g, "\\'");
     const formulaires = formulairesDeLaCouche(couche);
+    const nb = (couche.geojson?.features?.length) || 0;
+    const entete = `<div class="section-title">${couche.name}</div>
+        <div class="hint" style="margin-bottom:10px">${couche.sourceTable}${nb ? ` · ${nb} objet${nb > 1 ? 's' : ''}` : ''}</div>`;
 
     if (!formulaires.length) {
-        return `<div class="section">
-            <div class="toggle-row"><span class="tlabel">⛓ <strong>${couche.name}</strong></span></div>
-            <div class="hint" style="margin-bottom:0">Aucune colonne saisissable dans <strong>${couche.sourceTable}</strong>.</div>
+        return `<div class="section">${entete}
+            <div class="hint" style="margin-bottom:0">Aucune colonne saisissable — rien à proposer.</div>
         </div>`;
     }
 
-    const lignes = formulaires.map((f) => {
-        // Un derive n'existe pas en base : l'exposer demanderait de
-        // l'enregistrer d'abord, ce qui est un geste et pas un effet de bord.
-        const offrable = !f.derive && formulaireOffrable(f);
-        const bascule = `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
+    const groupe = (titre, liste, vide) => {
+        if (!liste.length) return vide ? `<div class="section-title" style="margin-top:12px">${titre}</div><div class="hint" style="margin-bottom:0">${vide}</div>` : '';
+        return `<div class="section-title" style="margin-top:12px">${titre}</div>`
+            + liste.map((f) => ligneFormulaire(couche, f, esc)).join('');
+    };
+
+    const surLaCouche = formulaires.filter((f) => f.surLaCouche);
+    const liees = formulaires.filter((f) => !f.surLaCouche);
+    // Ce qui sera vraiment proposé, pas ce qui est coché : un dérivé peut
+    // figurer dans la liste enregistrée — d'une version antérieure, ou d'un
+    // clic d'avant qu'il perde sa bascule — sans pouvoir être offert.
+    const exposes = formulairesOffertsEnLecture(formulaires).length;
+
+    return `<div class="section">${entete}
+        ${groupe('Corriger l’objet', surLaCouche)}
+        ${groupe('Ajouter une ligne', liees,
+            'Aucune table ne référence celle-ci. Un formulaire créé sur une nouvelle table, avec une colonne <code>Ref:</code> vers elle, apparaîtrait ici.')}
+        <div class="hint" style="margin:12px 0 0">${exposes
+            ? `<strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet hors édition.${exposes > 3 ? ' Au-delà de trois, la barre défile.' : ''}`
+            : 'Rien de proposé hors édition — la fiche restera en consultation.'}</div>
+    </div>`;
+}
+
+/**
+ * Une ligne de la liste : ce qu'est le formulaire, et s'il est proposé.
+ *
+ * Un formulaire **dérivé** n'a pas de bascule. Il n'existe pas en base, donc il
+ * ne peut pas être proposé : offrir un interrupteur qui ne peut rien allumer
+ * aurait été une promesse creuse. On dit ce qu'il faut faire à la place.
+ */
+function ligneFormulaire(couche, f, esc) {
+    const detail = f.surLaCouche
+        ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`)
+        : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${libelleStatut(f.statut)}`}`;
+
+    const commande = f.derive
+        ? '<span class="hint" style="display:inline;padding:2px 6px;margin:0">à enregistrer</span>'
+        : `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
             aria-checked="${f.expose}"
             aria-label="Proposer ${esc(f.titre)} hors édition"
-            title="${offrable ? 'Proposé hors édition' : 'À enregistrer avant de pouvoir le proposer'}"
+            title="Proposé hors édition"
             onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
 
-        const nature = f.principal
-            ? 'la table de la couche — corrige l’objet'
-            : `→ ${f.tableId} · rattaché par <code>${f.via}</code> — ajoute une ligne`;
-        const etat = f.derive
-            ? '<span class="hint" style="display:inline;padding:1px 5px;margin:0">dérivé</span>'
-            : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`;
-
-        const alerte = (f.expose && !offrable)
-            ? `<div class="hint" style="margin:6px 0 0">Ce formulaire est déduit des colonnes : enregistrez-le pour qu'il soit proposé hors édition.</div>`
-            : '';
-
-        return `<div class="section" style="margin-bottom:8px">
-            <div class="toggle-row">
-                <span class="tlabel">${f.principal ? '📋' : '➕'} <strong>${f.principal ? 'Attributs' : f.titre}</strong> ${etat}</span>
-                ${bascule}
-            </div>
-            <div class="hint" style="margin-bottom:0">${nature}</div>
-            ${alerte}
-        </div>`;
-    }).join('');
-
-    return `<div class="section">
-        <div class="section-title">${couche.name} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${couche.sourceTable}</span></div>
-        ${lignes}
+    // Le nom et la commande sur une ligne, le detail en dessous : les mettre
+    // cote a cote faisait passer le detail a la ligne et laissait la pastille
+    // au milieu de la phrase.
+    return `<div style="margin-bottom:10px">
+        <div class="toggle-row" style="margin-bottom:2px">
+            <span class="tlabel"><strong>${libelleFormulaire(f)}</strong></span>
+            ${commande}
+        </div>
+        <div style="color:var(--muted);font-size:10.5px;line-height:1.4">${detail}</div>
     </div>`;
+}
+
+/** Combien de champs un formulaire porte — ce que « dérivé » recouvre. */
+function nbChamps(f) {
+    return (f.def?.sections || []).reduce((n, s) => n + (s.fields?.length || 0), 0);
 }
 
 function libelleStatut(statut) {
@@ -4400,54 +4437,16 @@ function renderInspector() {
  */
 function boutonRevueObjets(layer) {
     if (!layer?.geojson?.features?.length) return '';
-    const formDef = formDefPourCouche(layer, STATE.formulaires);
-    const libelle = formDef
-        ? `📝 Saisir sur les objets · ${formDef.title || 'formulaire'}`
+    // Il nommait le formulaire — « Saisir sur les objets · Bâtiment — relevé ».
+    // C'etait vrai quand une couche n'en portait qu'un ; depuis qu'elle en a
+    // autant que de tables qui la referencent, nommer le premier laisserait
+    // croire qu'il est le seul.
+    const combien = formulairesDeLaCouche(layer).length;
+    const libelle = combien
+        ? `📝 Saisir sur les objets${combien > 1 ? ` · ${combien} formulaires` : ''}`
         : '✏️ Éditer les objets un par un';
     return `<button class="btn btn-soft btn-full" style="margin-top:8px"
         onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
-}
-
-let inspSymTab = 'Couleur';
-function renderSymbologyInspector(layer) {
-    const sym = initSymbolization(layer);
-    const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
-    const tabs = ['Couleur', 'Taille'];
-    if (isPoint) tabs.push('Modèle 3D');
-    tabs.push('Étiquette');
-    if (!tabs.includes(inspSymTab)) inspSymTab = 'Couleur';
-
-    // Chip du modèle 3D lié à la couche (toujours visible dans l'inspecteur)
-    const is3D = isPoint && (layer.style?.mode === 'library' || layer.style?.mode === 'custom');
-    let modelChip = '';
-    if (is3D) {
-        const mm = sym.model || {};
-        let label, icon = '📦';
-        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${mm.field} »`; }
-        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = layer.style.custom.filename; }
-        else { const m = findModel(layer.style?.library?.modelId); icon = m?.icon || '📦'; label = m ? m.name : 'aucun modèle'; }
-        modelChip = `<div style="margin-top:8px;display:flex;align-items:center;gap:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid rgba(196,69,54,0.2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink)"><span style="font-size:15px">${icon}</span>${label}</span>
-            <button onclick="A.openLayerModel('${layer.id}')" style="background:transparent;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">changer</button>
-        </div>`;
-    }
-    $('insp-head').innerHTML = `
-        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>Symboliser${is3D ? ' · <span style="color:var(--accent2)">3D</span>' : ''}</div>
-        <div class="insp-title">${layer.name}</div>
-        <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
-        ${modelChip}
-        ${boutonRevueObjets(layer)}`;
-    $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
-
-    const body = $('insp-body');
-    if (inspSymTab === 'Couleur') body.innerHTML = symColorPanel(layer, sym);
-    else if (inspSymTab === 'Taille') body.innerHTML = symSizePanel(layer, sym);
-    else if (inspSymTab === 'Modèle 3D') body.innerHTML = symModelPanel(layer, sym);
-    else body.innerHTML = symLabelPanel(layer, sym);
-
-    $('insp-foot').innerHTML = `
-        <button class="btn btn-soft" style="flex:1" onclick="A.resetSymbology('${layer.id}')">Réinitialiser</button>
-        <button class="btn btn-primary" style="flex:2" onclick="A.saveLayer('${layer.id}')">Enregistrer</button>`;
 }
 
 function fieldSelect(layer, param, current, type) {
@@ -4782,7 +4781,7 @@ function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisie
                 // Un formulaire LIE part vide : il cree une ligne qui n'existe
                 // pas encore, et la prealimenter avec les attributs du batiment
                 // ecrirait ceux-la dans la table des visites.
-                valeurs: formulaire.principal ? valeursPourMoteur(formDef, props) : {},
+                valeurs: formulaire.surLaCouche ? valeursPourMoteur(formDef, props) : {},
                 // `saisieTerrain` porte deja `peutSaisir` parmi ses conditions :
                 // le repeter ici ecrirait la meme regle a deux endroits.
                 peutEcrire: () => canWrite(CONFIG.viewMode) || saisieTerrain,
@@ -4791,7 +4790,7 @@ function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisie
                 // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
                 // Un formulaire lie n'a rien change a la couche — il a ecrit
                 // ailleurs — donc rien a relire.
-                apresEcriture: formulaire.principal ? () => { A.refreshLayer(layer.id); } : null,
+                apresEcriture: formulaire.surLaCouche ? () => { A.refreshLayer(layer.id); } : null,
             }));
         _formulaireMonte = true;
     } catch (e) {
@@ -4895,14 +4894,14 @@ function renderObjectInspector() {
         // pas du droit de corriger l'objet. Le confondre avec le principal
         // fermerait la saisie de terrain a qui peut relever sans pouvoir
         // modifier le bati — la configuration saine, justement.
-        const readOnly = formActif.principal ? attrsReadOnly : (view && !saisieTerrain);
+        const readOnly = formActif.surLaCouche ? attrsReadOnly : (view && !saisieTerrain);
         // Quand le document decrit cette table par un FormDef, c'est LUI la
         // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
         // deux types.
         if (formActif.def && !readOnly && moteurDisponible()) {
             monterFormulaireEntite(layer, props, formActif, revue && multi ? count : 0, saisieTerrain);
-        } else if (!formActif.principal) {
+        } else if (!formActif.surLaCouche) {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + `<div class="hint">Relevé « ${formActif.titre} » — indisponible ici : `
                 + (readOnly ? 'la saisie est fermée en lecture.' : 'le moteur de formulaire n’est pas chargé.')
@@ -4948,7 +4947,7 @@ function renderObjectInspector() {
         $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Mode lecture — consultation seule</div>`;
     } else if (!tabs.length) {
         $('insp-foot').innerHTML = '';
-    } else if (formActif?.principal && attrsReadOnly) {
+    } else if (formActif?.surLaCouche && attrsReadOnly) {
         // « Enregistrer » promettait d'ecrire des champs que l'onglet venait
         // d'afficher en lecture seule. La sortie est dans le corps de la fiche
         // (« Enregistrer dans Grist »), la ou le blocage se lit ; le pied dit
@@ -6707,7 +6706,18 @@ const A = {
         const couche = STATE.layers.find((l) => l.id === layerId);
         if (!couche || !formId) return;
         const actuels = formulairesDeLaCouche(couche);
-        const exposes = new Set(actuels.filter((f) => f.expose).map((f) => f.id));
+        const vise = actuels.find((f) => f.id === formId);
+        // Un dérivé n'existe pas en base : il ne peut pas être proposé, et
+        // l'accepter laisserait dans la liste un identifiant que rien ne
+        // pourra jamais honorer.
+        if (vise?.derive) {
+            showToast('Enregistrez ce formulaire avant de le proposer', 'warning');
+            return;
+        }
+        // On repart des seuls identifiants encore honorables : ceux d'un
+        // formulaire enregistré qui existe toujours. Les autres — dérivés,
+        // formulaires supprimés — disparaissent à la première décision.
+        const exposes = new Set(actuels.filter((f) => f.expose && !f.derive).map((f) => f.id));
         const actif = !exposes.has(formId);
         if (actif) exposes.add(formId); else exposes.delete(formId);
         // `exposes` remplace l'ancien booleen : une liste, meme vide, dit que

@@ -39,9 +39,9 @@ describe('objectInspectorTabs', () => {
   const surface = couche('mapbox', 'Polygon');
 
   /** Ce que `formulairesPourCouche` rend : le principal, puis les liés. */
-  const principal = { id: 'derive:Batiments', titre: 'Batiments', principal: true };
-  const visite = { id: 'visite-v2', titre: 'Visite', principal: false };
-  const desordre = { id: 'derive:Desordres', titre: 'Désordre constaté', principal: false };
+  const principal = { id: 'derive:Batiments', titre: 'Attributs', derive: true, surLaCouche: true };
+  const visite = { id: 'visite-v2', titre: 'Visite', derive: false, surLaCouche: false };
+  const desordre = { id: 'derive:Desordres', titre: 'Désordre constaté', derive: true, surLaCouche: false };
   const cles = (r) => r.map((o) => o.cle);
   const libelles = (r) => r.map((o) => o.libelle);
 
@@ -92,7 +92,7 @@ describe('objectInspectorTabs', () => {
 
   it('un formulaire sans identifiant n’a pas d’onglet', () => {
     // Sans cle stable, l'onglet actif ne survivrait pas au rendu suivant.
-    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [{ titre: 'X', principal: true }] }), []);
+    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [{ titre: 'X', surLaCouche: true }] }), []);
   });
 });
 
