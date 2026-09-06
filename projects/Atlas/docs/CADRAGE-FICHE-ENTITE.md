@@ -162,6 +162,93 @@ Une ligne, pas un onglet : quel formulaire s'applique, ou le bouton
 **découverte**, pas le lieu du réglage — et ça évite un cinquième onglet à un
 inspecteur qui en a déjà quatre.
 
+## Deux modes, et c'est le cœur du modèle
+
+Un formulaire ne fait pas toujours la même chose selon la table qu'il vise :
+
+| | Table visée | Mode | Ce que ça produit |
+|---|---|---|---|
+| **Sur la couche** | celle de la couche | `editRowId` + `updateRow` | on corrige l'objet |
+| **Liés à la couche** | une table qui la référence | `addRow` | on **ajoute** une observation |
+
+Un bâtiment inspecté douze fois, ce sont douze lignes dans `Visites` — pas douze
+écrasements du bâtiment. C'est le motif que le terrain demande réellement, et
+c'est celui que l'app terrain pratique déjà (elle ne fait que de la création).
+
+**Un formulaire est lié à une couche si sa table cible porte une colonne `Ref:`
+vers la table de la couche.** Rien à déclarer : Atlas le dérive du schéma, comme
+il dérive déjà les tables géo.
+
+### Atlas porte la référence, le formulaire n'a pas à la déclarer
+
+La référence n'est pas une saisie, c'est un **fait du contexte** : on a cliqué
+cet objet. Le pont l'injecte donc à la soumission —
+
+```js
+addRow: (table, data) => applyUserActions([['AddRecord', table, null,
+    { ...data, [colonneRef]: rowIdDeLObjetClique }]]),
+```
+
+Ce qui supprime d'un coup le besoin que le FormDef déclare le champ, celui de le
+préremplir, celui de le **verrouiller** — et, pour ce cas, le correctif
+`hidden` / `defaultValue` côté `grist_forms`.
+
+> **C'est le clic qui fait foi.** Un formulaire hérité de QField n'expose pas
+> forcément son `Ref` : conçu pour l'app terrain, il n'a pas à demander « quel
+> bâtiment ? », la personne l'a choisi avant. Sans injection, la soumission
+> créerait une ligne au `Ref` vide — **une observation rattachée à rien**, sans
+> erreur ni message. Le silence est le mode de panne habituel de ce dépôt.
+
+Seul cas ambigu : une table satellite qui référencerait **deux fois** la même
+table (`batiment_avant`, `batiment_apres`). Atlas ne peut pas deviner — un choix
+posé une fois dans l'onglet, jamais à la saisie.
+
+## Trois surfaces, trois rôles
+
+```
+Onglet « Formulaire » (couche)      CHOISIR ce qu'on peut faire sur ces objets
+   ├─ sur la couche  → éditer        (défaut, généré depuis les colonnes)
+   ├─ liés           → ajouter       (dérivés des Ref)
+   └─ créer          → passe la main au builder, avec le contexte
+
+Module « Formulaires » (document)   EXPOSER — quels formulaires existent,
+                                    lesquels sont disponibles hors édition
+
+Builder (grist_forms)               DÉFINIR et MATÉRIALISER
+```
+
+Les deux sens de dérivation existent déjà, et se complètent :
+
+| Sens | Qui | Quand |
+|---|---|---|
+| **Table → FormDef** | `qgis2grist/lib/qgis-form-to-formdef.js` | la table existe (bâtiments, arbres entablés) |
+| **FormDef → Table** | `grist_forms/shared/ensure-schema.js` | rien n'existe (visites, relevés) — le formulaire dessiné fait naître la table |
+
+`ensure-schema` se décrit lui-même comme « le dual du bind », pose `AddTable`
+quand la table manque, `AddColumn` quand elle est incomplète, et ne remplace
+**jamais** une colonne d'un type incompatible.
+
+> **Atlas ne crée donc ni table satellite ni formulaire.** Il choisit, il expose,
+> il tend la main. `entableLayer` reste son seul cas de création de table, pour
+> une raison qui n'appartient qu'à lui : transformer une couche importée en
+> lignes. Un seul créateur par objet, comme partout ailleurs dans le dépôt.
+
+## Trois frictions d'usage, relevées avant d'être livrées
+
+1. **On ne voit pas les observations passées.** Le formulaire ajoute une ligne ;
+   il ne montre pas les douze précédentes. Sur le terrain c'est la première
+   question — « quand est-elle passée la dernière fois ? ». Le moteur ne sait
+   pas le faire. **À cadrer avant de promettre le mode « ajout lié »**, sinon on
+   livre une saisie aveugle.
+2. **Après l'enregistrement, que fait le panneau ?** Il reste, ou il avance au
+   suivant ? En revue avec `◀ ▶`, avancer est le rythme d'une tournée. Décision
+   à prendre, pas détail.
+3. **Atteindre l'objet.** La couche `-hit` **n'est jamais créée** : la cible
+   d'une ligne est son trait de 4 px, celle d'un modèle 3D un disque de 2 à
+   4,5 px. Au doigt, c'est là que ça bloque — **avant** tout formulaire. Un
+   formulaire qu'on n'arrive pas à ouvrir ne sert à rien : ce point remonte
+   juste après le module, et il profite à tout Atlas, pas seulement à cet axe.
+
 ## Le style — une peau Atlas, pas le DSFR## Le style — une peau Atlas, pas le DSFR
 
 Le moteur n'embarque aucun style : il émet **31 classes `fr-*`** et compte sur
