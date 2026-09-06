@@ -6077,12 +6077,22 @@ async function initGrist() {
             // Une lecture demandee par l'URL n'est PAS une privation de droits :
             // c'est le cas du lien de terrain, ou l'on veut precisement que la
             // personne remplisse un formulaire sans voir les outils d'auteur.
-            // Grist annonce alors `access=full`, ce qui ne prouve rien — les
-            // regles d'acces s'appliquent par-dessus, cote bac a sable. Seule la
-            // sonde tranche, et elle ne coute qu'un aller-retour.
-            CONFIG.peutSaisir = acc.reason === 'mode-view'
-                ? await probeCanWriteDoc(grist.docApi)
-                : false;
+            //
+            // > **On ne predit pas ce que Grist repondra.** Une sonde ici serait
+            // > une PREDICTION du verdict des regles d'acces — et elle sondait
+            // > une table choisie par `resolveProbeTableId`, pas celle de la
+            // > couche : sous une ACL par table, elle aurait declare en lecture
+            // > seule exactement les personnes pour qui le formulaire est
+            // > expose. Le cadrage identite le dit deja : « le widget n'a pas
+            // > besoin de connaitre l'email pour que les regles s'appliquent,
+            // > c'est Grist qui filtre ».
+            //
+            // Atteindre cette branche signifie deja que Grist n'a PAS annonce la
+            // lecture seule (sinon `resolveAccess` aurait rendu
+            // `grist-readonly`). C'est tout ce qu'on peut savoir de vrai avant
+            // d'ecrire, et c'est assez : un refus reel bascule la session par
+            // `enterViewModeOnWriteFail`, avec son motif.
+            CONFIG.peutSaisir = acc.reason === 'mode-view';
         }
         // Identité : le jeton livre l'userId — suffisant pour marquer l'auteur
         // d'une préférence ou d'un récit. Le nom, lui, n'est pas accessible par

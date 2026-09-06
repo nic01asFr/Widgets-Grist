@@ -420,7 +420,7 @@ Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
 |---|---|---|
 | **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
 | **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
-| **3** | la **marche 3** — ACL dérivée du FormDef | et son premier geste est la sonde par table, cf. la réserve plus bas |
+| **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
 
 Deux questions restent ouvertes et ne se tranchent pas seules : **l'historique
 des observations** (six choix, dont un point dur — rien ne dit quelles colonnes
@@ -493,7 +493,7 @@ liste, des bascules. Rien de nouveau côté UI.
 L'inspecteur de couche ne garde qu'une ligne, qui existe déjà à moitié
 (`enteteSansTable`).
 
-**Ce que ça n'atteint pas** : la sonde par table, le mode Exploitation et l'ACL
+**Ce que ça n'atteint pas** : le mode Exploitation et l'ACL
 restent inchangés et hors de cette marche.
 
 ## Le pont, et pourquoi il est obligatoire
@@ -567,20 +567,48 @@ Rappel du découpage, qui ne change pas :
 | Marche | Contenu | Droits touchés | État |
 |---|---|---|---|
 | **1** | le formulaire est la fiche en édition · configurable par couche | aucun | **fait** |
-| **2** | disponible en lecture — mode **Exploitation** | sonde par table | **fait, avec une réserve** |
+| **2** | disponible en lecture — mode **Exploitation** | aucun — c'est Grist qui filtre | **fait** |
 | **3** | l'activation pose l'ACL dérivée du FormDef | propriétaire | à faire |
 
-> **La réserve de la marche 2, et il faut la lire avant de bâtir la 3.** Le mode
-> exploitation repose sur `CONFIG.peutSaisir`, établi par `probeCanWriteDoc` —
-> qui sonde la table choisie par `resolveProbeTableId`, **pas celle de la
-> couche**. Tant qu'aucune règle d'accès ne distingue les tables, toutes
-> répondent la même chose et le mode est juste. **Dès la marche 3**, où l'ACL
-> refusera précisément `Atlas_LayerPrefs` au releveur, la sonde déclarera en
-> lecture seule exactement les personnes pour qui le formulaire est exposé.
->
-> La sonde par table est donc le **premier geste de la marche 3**, pas un
-> raffinement de la 2. Elle n'a pas été faite ici pour ne pas livrer, en fin de
-> chantier, un changement de droits non éprouvé en Grist réel.
+### La sonde par table n'existera pas — et c'est mieux
+
+Le mode exploitation reposait d'abord sur une **prédiction** : une sonde
+d'écriture au chargement, censée deviner ce que les règles d'accès répondraient.
+Elle sondait la table choisie par `resolveProbeTableId`, **pas celle de la
+couche** — sous une ACL par table, elle aurait donc déclaré en lecture seule
+exactement les personnes pour qui le formulaire est exposé. On a d'abord noté
+qu'il faudrait la corriger. C'est la question qui était mauvaise.
+
+**Il n'y a rien à prédire.** `CADRAGE-IDENTITE-ACL.md` le disait déjà :
+
+> le widget n'a pas besoin de connaître l'email pour que les règles
+> s'appliquent — **c'est Grist qui filtre**.
+
+La règle tient donc en une phrase, et elle ne demande aucune machinerie :
+
+| | |
+|---|---|
+| **la présentation** | édition ou lecture, selon les droits — inchangé |
+| **le formulaire** | c'est une surface d'écriture : il n'apparaît que là où écrire est possible |
+| **qui en décide** | **Grist**, et lui seul. Un refus réel bascule la session par `enterViewModeOnWriteFail`, avec son motif |
+
+Atteindre le mode exploitation signifie déjà que Grist **n'a pas** annoncé la
+lecture seule — sinon `resolveAccess` aurait rendu `grist-readonly`. C'est tout
+ce qu'on peut savoir de vrai avant d'écrire, et c'est assez.
+
+> **Ce qu'on accepte en échange** : une personne authentifiée sans droit
+> d'écriture voit le formulaire et se fait refuser à l'envoi. La sonde ne l'en
+> protégeait pas — elle interrogeait une autre table, que cette personne pouvait
+> parfaitement avoir le droit d'écrire. La protection était illusoire ; le refus,
+> lui, est nommé.
+
+**Et la connexion ?** Elle n'a pas à être vérifiée par Atlas : sur un document
+public en lecture, Grist envoie `readonly=true` et la porte est déjà fermée.
+Le seul cas restant est un document partagé « tout le monde peut modifier », où
+l'écriture anonyme est un choix de l'auteur — une question de politique, pas de
+code. Atlas ne peut d'ailleurs pas l'établir : l'utilisateur anonyme de Grist a
+lui aussi un `userId`, et `session-context.js` pose `isLoggedIn` par
+approximation dès qu'on est dans un widget.
 
 Trois points acquis, à ne pas redécouvrir :
 
