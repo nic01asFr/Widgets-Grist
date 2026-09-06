@@ -163,7 +163,7 @@ gère L'ENSEMBLE.**
 
 | | Portée | Ce qu'on y fait |
 |---|---|---|
-| **Panneau droit** — objet sélectionné | cet objet | `Attributs` **corrige** · `Formulaires` **ajoute** — la liste de ceux qui référencent sa couche |
+| **Panneau droit** — objet sélectionné | cet objet | **un onglet par formulaire retenu** — `Attributs` corrige, les autres ajoutent |
 | **Module gauche** « Formulaires » | le document | lister, choisir celui qui sert de fiche, **exposer** hors édition, **créer**, et renvoyer vers le générateur |
 
 > **Ce partage supprime l'onglet de couche** au lieu de le trancher. Ce cadrage
@@ -174,25 +174,37 @@ gère L'ENSEMBLE.**
 > garde sa ligne, « Saisir sur les objets », qui est un point de découverte et
 > rien d'autre.
 
-Deux précisions de vocabulaire, parce qu'un mot sert deux fois :
+**`Attributs` est un formulaire parmi les autres**, pas une exception à côté
+d'eux : c'est celui de la table principale. Ce qui supprime le cas particulier
+— chaque onglet porte un formulaire, chacun nommé par le sien, et « Enregistrer »
+veut dire une seule chose dans chacun.
 
-- l'onglet de droite **nomme sa couche** — « Formulaires · Batiments_locaux » —
-  sinon rien ne dit pourquoi ces formulaires-là et pas d'autres ;
-- `Attributs` reste ce qu'il est. Le formulaire de la table géo y est **la**
-  fiche quand il existe ; les liés n'y entrent pas. *Corriger* et *ajouter* sont
-  deux verbes, et les fondre ferait qu'« Enregistrer » voudrait dire deux choses
-  dans le même panneau — le piège que ce cadrage a déjà relevé une fois.
+### La case veut dire « visible en terrain », et rien d'autre
 
-### Ce que l'onglet « Formulaires » de droite montre
+| | Ce qui a un onglet |
+|---|---|
+| **en édition** | **tous** les formulaires de la couche — sinon on ne pourrait pas composer celui qu'on n'a pas encore exposé |
+| **en terrain** | **seulement les cochés** |
 
-Les formulaires dont la table porte un `Ref:` vers celle de la couche. Pour
-chacun : son titre, et de quoi l'ouvrir sur **cet** objet. Quand il n'y en a
-qu'un, l'ouvrir directement ; l'onglet n'existe pas quand il n'y en a aucun.
+Retirer `Attributs` est un usage, pas un oubli : le releveur ajoute des relevés
+**sans pouvoir modifier** l'objet. C'est la configuration saine du terrain, et
+elle demande des **droits par table** — pas un seul droit d'écriture.
 
-Au-dessus, ce que l'objet a déjà reçu — **la question ouverte du cadrage**, cf.
-« Trois frictions ». Un relevé qui n'affiche pas les onze précédents est une
-saisie aveugle, et rien ne dit quelles colonnes résument une visite : ça se
-**déclare**, ça ne se devine pas.
+La barre d'onglets doit défiler : `.insp-tabs` n'a ni `overflow-x` ni
+`white-space: nowrap`, et 320 px utiles ne tiennent que trois libellés avant
+qu'ils se coupent en deux lignes. Deux déclarations.
+
+### Masquer un champ, c'est composer
+
+En édition, chaque champ rendu porte sa bascule de visibilité — **là où le champ
+se voit**, pas dans une liste parallèle. Le moteur pose `data-colid` sur les
+**neuf** enveloppes de champ (seuls libellés et images n'en ont pas, et ce ne
+sont pas des champs) : la bascule s'y accroche **sans le modifier**.
+
+> **Et ce geste crée l'enregistrement.** Un formulaire dérivé n'existe nulle
+> part ; toucher ses champs en fait une ligne de `Formulaires`. Il faut donc que
+> ça se dise à l'écran, sinon Atlas écrirait en silence — ce que la règle « rien
+> n'existe tant que l'utilisateur ne l'a pas fait » interdit.
 
 ### Ce que le module de gauche garde
 
@@ -301,9 +313,10 @@ déjà `valeursPourMoteur`, il n'y a pas de mécanique à inventer.
 ## Trois surfaces, trois rôles
 
 ```
-Panneau droit (objet)               SE SERVIR — sur CET objet
-   ├─ Attributs    → corriger        le formulaire de la table géo
-   └─ Formulaires  → ajouter         ceux qui référencent sa couche
+Panneau droit (objet)               SE SERVIR — un onglet par formulaire
+   ├─ Attributs         → corriger    celui de la table géo
+   ├─ Visite            → ajouter     table qui référence la couche
+   └─ Désordre constaté → ajouter     idem — autant d'onglets que retenus
 
 Module « Formulaires » (document)   GÉRER L'ENSEMBLE — lister, choisir celui
                                     qui sert de fiche, exposer hors édition,
@@ -481,7 +494,7 @@ Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
 | | | Pourquoi là |
 |---|---|---|
 | **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
-| **1 bis** | les **formulaires liés** — onglet « Formulaires » du panneau droit, pont `addRow`, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas ; reste à trancher la forme de la fiche |
+| **1 bis** | les **formulaires liés** — un onglet par formulaire, pont `addRow`, composition des champs, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas, et maquetté |
 | **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
 | **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
 
