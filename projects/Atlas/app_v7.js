@@ -4456,6 +4456,59 @@ function boutonRevueObjets(layer) {
         onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
 }
 
+/**
+ * Le panneau de symbologie d'une couche.
+ *
+ * > **Il a disparu une fois, et rien ne l'a dit.** Le commit a5ce269 reecrivait
+ * > `boutonRevueObjets`, juste au-dessus, et a emporte cette fonction et sa
+ * > variable d'onglet avec elle. Selectionner une couche levait des lors un
+ * > ReferenceError depuis un `onclick` : le panneau ne s'ouvrait plus, et
+ * > l'erreur restait invisible depuis la page Grist hote, l'iframe etant d'une
+ * > autre origine. `verifier-imports.mjs` ne voit que les imports, pas les
+ * > references internes -- d'ou `verifier-references.mjs`.
+ */
+let inspSymTab = 'Couleur';
+function renderSymbologyInspector(layer) {
+    const sym = initSymbolization(layer);
+    const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const tabs = ['Couleur', 'Taille'];
+    if (isPoint) tabs.push('Modèle 3D');
+    tabs.push('Étiquette');
+    if (!tabs.includes(inspSymTab)) inspSymTab = 'Couleur';
+
+    // Chip du modèle 3D lié à la couche (toujours visible dans l'inspecteur)
+    const is3D = isPoint && (layer.style?.mode === 'library' || layer.style?.mode === 'custom');
+    let modelChip = '';
+    if (is3D) {
+        const mm = sym.model || {};
+        let label, icon = '📦';
+        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${mm.field} »`; }
+        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = layer.style.custom.filename; }
+        else { const m = findModel(layer.style?.library?.modelId); icon = m?.icon || '📦'; label = m ? m.name : 'aucun modèle'; }
+        modelChip = `<div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+            <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid rgba(196,69,54,0.2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink)"><span style="font-size:15px">${icon}</span>${label}</span>
+            <button onclick="A.openLayerModel('${layer.id}')" style="background:transparent;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">changer</button>
+        </div>`;
+    }
+    $('insp-head').innerHTML = `
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>Symboliser${is3D ? ' · <span style="color:var(--accent2)">3D</span>' : ''}</div>
+        <div class="insp-title">${layer.name}</div>
+        <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
+        ${modelChip}
+        ${boutonRevueObjets(layer)}`;
+    $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
+
+    const body = $('insp-body');
+    if (inspSymTab === 'Couleur') body.innerHTML = symColorPanel(layer, sym);
+    else if (inspSymTab === 'Taille') body.innerHTML = symSizePanel(layer, sym);
+    else if (inspSymTab === 'Modèle 3D') body.innerHTML = symModelPanel(layer, sym);
+    else body.innerHTML = symLabelPanel(layer, sym);
+
+    $('insp-foot').innerHTML = `
+        <button class="btn btn-soft" style="flex:1" onclick="A.resetSymbology('${layer.id}')">Réinitialiser</button>
+        <button class="btn btn-primary" style="flex:2" onclick="A.saveLayer('${layer.id}')">Enregistrer</button>`;
+}
+
 function fieldSelect(layer, param, current, type) {
     const fields = getLayerFields(layer).filter((f) => !type || f.type === type);
     return `<select class="input" onchange="A.setSymField('${layer.id}','${param}', this.value)">
