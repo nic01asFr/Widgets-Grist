@@ -4784,7 +4784,9 @@ function monterFormulaireEntite(layer, props, formDef, totalRevue = 0, saisieTer
                 // temps, le choix « Bon » restait decoche a l'etape 2 alors que
                 // la ligne le portait.
                 valeurs: valeursPourMoteur(formDef, props),
-                peutEcrire: () => canWrite(CONFIG.viewMode) || (CONFIG.peutSaisir && saisieTerrain),
+                // `saisieTerrain` porte deja `peutSaisir` parmi ses conditions :
+                // le repeter ici ecrirait la meme regle a deux endroits.
+                peutEcrire: () => canWrite(CONFIG.viewMode) || saisieTerrain,
                 signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
                 // Relit la couche depuis sa table : la carte doit montrer ce
                 // qui vient d'etre ecrit, sinon on doute de l'enregistrement.

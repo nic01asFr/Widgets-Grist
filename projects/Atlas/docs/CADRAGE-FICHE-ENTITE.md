@@ -231,8 +231,8 @@ auteur le sont aussi — mais elles ne se traitent pas pareil :
 | **position GPS** | | ✓ elle est fausse en intérieur |
 
 Ce qui est **factuel** passe par le pont sans se montrer ; ce qui est
-**probable** se préremplit et reste modifiable — c'est déjà ce que fait
-`amorcerValeurs`, il n'y a pas de mécanique à inventer.
+**probable** se préremplit et reste modifiable — c'est le chemin qu'emprunte
+déjà `valeursPourMoteur`, il n'y a pas de mécanique à inventer.
 
 > **Réserve sur le GPS, à lever avant de le promettre.** Le bouton de
 > géolocalisation d'Atlas affiche « Location not available » et reste
@@ -518,17 +518,23 @@ FormEngine.mount(hote, formDef, {
 Deux manques, tous deux dans `runtime/engine.js`, et tous deux valables pour
 **tout** consommateur qui voudra éditer — pas seulement Atlas :
 
-1. **`mount` doit accepter des valeurs initiales.** Il ouvre sur
-   `var values = {}` en dur : `editRowId` le fait *écrire* dans une ligne
-   existante, jamais la *lire*. Et `collectSubmitData` envoie **tous** les champs
-   visibles, sans exception. Monté tel quel, ouvrir un objet, cocher une case et
-   enregistrer **efface** les champs qu'on n'a pas retapés.
-   *Contourné pour l'instant par `amorcerValeurs`, qui pose les valeurs dans le
-   DOM après le montage — le moteur relit ses champs avant chaque rendu et avant
-   la soumission, donc elles sont reprises.*
+1. ~~**`mount` doit accepter des valeurs initiales.**~~ — **fait** (06/09/2026).
+   Il ouvrait sur `var values = {}` en dur : `editRowId` le faisait *écrire* dans
+   une ligne existante, jamais la *lire*. Et `collectSubmitData` envoie **tous**
+   les champs visibles, sans exception — ouvrir un objet, cocher une case et
+   enregistrer **effaçait** le reste.
+
+   > Le contournement d'abord tenté, amorcer le DOM après le montage, **ne
+   > pouvait pas marcher** : un formulaire multi-étapes ne rend que l'étape
+   > courante, et les champs des suivantes n'existent pas encore. Le choix
+   > « Bon » restait décoché à l'étape 2 alors que la ligne le portait. Le
+   > correctif est allé là où il devait être, dans `mount` — `bridge.values`,
+   > filtré par ce que le formulaire déclare.
+
 2. **Un mode consultation.** Le moteur ne connaît aucun `readOnly` : il rend
-   toujours des champs éditables et un bouton de soumission. Sans lui,
-   « disponible en lecture » n'a pas de sens.
+   toujours des champs éditables et un bouton de soumission. **Reste à faire** —
+   Atlas s'en passe pour l'instant en ne montant le formulaire que là où l'on
+   peut écrire, et en retombant sinon sur `renderAttrFields` en lecture seule.
 
 ## Persistance
 

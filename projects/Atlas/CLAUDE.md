@@ -91,13 +91,33 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## Points d’attention
 
-- **Fiche d'entité = formulaire (05/09/2026)** :
-  `docs/CADRAGE-FICHE-ENTITE.md` — la fiche d'objet devient le moteur de
+- **Fiche d'entité = formulaire (06/09/2026)** :
+  `docs/CADRAGE-FICHE-ENTITE.md` — la fiche d'objet est le moteur de
   `grist_forms`, alimenté par le FormDef que qgis2grist extrait de QField.
-  Éprouvé en Grist réel ; branche `atlas-formulaire-entite`. Y sont consignés :
-  la peau Atlas qui remplace `dsfr-like.css`, les deux manques à porter dans
-  `engine.js` (valeurs initiales, mode consultation), et les trois acquis sur
-  les droits — dont la sonde d'écriture qui teste la mauvaise table.
+  Éprouvé en Grist réel ; branche `atlas-formulaire-entite`, **non poussée**.
+
+  Trois surfaces : la fiche d'objet, le **module « Formulaires »** du rail (après
+  Récit — liste par table, choix, bascule « disponible hors édition »), et le
+  générateur, qui reste hors d'Atlas. **Atlas ne crée aucun formulaire** et n'en
+  livre aucun : c'est l'utilisateur qui bâtit le sien, comme il écrit son récit.
+
+  Le **mode exploitation** : en lecture, un clic sur un objet ouvre la fiche au
+  lieu du popup quand la scène a publié le formulaire — `saisieHorsEdition`
+  (`lib/fiche-formulaire.js`) porte la règle, `coucheEnSaisie` (`app_v7.js`) en
+  est la seule porte. `CONFIG.peutSaisir` est **orthogonal** à `viewMode` :
+  l'un dit « on ne montre pas les outils d'auteur », l'autre « cette personne
+  peut écrire ».
+
+  Deux acquis à ne pas redécouvrir. **On ne prédit pas ce que Grist répondra** :
+  une sonde d'écriture au chargement interroge une table arbitraire
+  (`resolveProbeTableId`), pas celle qu'on veut écrire — c'est Grist qui filtre,
+  et un refus réel se nomme. Et **Grist impose son thème au widget en style EN
+  LIGNE** sur `<html>` : `color-scheme: light` exige `!important`, sans quoi les
+  contrôles natifs sont peints en sombre.
+
+  Reste : la couche `-hit`, le **vendoring** de `grist_forms` dans
+  `published/atlas/` (**bloquant pour toute fusion vers `main`**), le mode
+  consultation du moteur, et l'ACL dérivée du FormDef.
 
 - **Cadrage portable / partage iframe (26/08/2026)** :
   `docs/CADRAGE-PORTABLE-PARTAGE-IFRAME.md` — Grist = socle droits ; Atlas
