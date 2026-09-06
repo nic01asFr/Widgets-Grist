@@ -92,26 +92,77 @@ barre de sélection porte déjà `◀ 1 / N ▶` : on obtient alors une revue ob
 objet, formulaire compris, sans jamais toucher la carte. C'est la fonction que
 le bouton promet et n'a jamais rendue.
 
-## L'onglet « Fiche » dans l'inspecteur de couche
+## Le module « Formulaires » — pas un onglet de couche
 
-La barre se construit en une ligne (`app_v7.js:4256-4259`) :
-`['Couleur','Taille'] (+ 'Modèle 3D' si point) + ['Étiquette']`. On y ajoute
-`'Fiche'`.
+Il prend place **dans le rail, après Récit et avant Réglages**.
 
-| Ce qu'il porte | |
+### Pourquoi le rail, et pas l'inspecteur de couche
+
+**Un FormDef est indexé par table, pas par couche.** `formDefPourCouche` cherche
+sur `sourceTable`, et deux couches d'une même table partagent le formulaire —
+c'est la donnée qu'on saisit, pas sa représentation. Un onglet dans l'inspecteur
+de couche aurait donc **menti sur le modèle** : on aurait réglé « le formulaire
+de cette couche » alors qu'on règle celui de la table. Deux couches, deux
+onglets, un seul objet derrière.
+
+Et il rejoint la famille à laquelle il appartient : **Contrôles** et **Récit**
+sont les deux choses qu'un auteur configure *pour le lecteur*. Un formulaire
+disponible hors édition est de la même nature.
+
+Enfin, ça passe à l'échelle. Un document a plusieurs tables, donc plusieurs
+formulaires ; « choisir » suppose de voir l'ensemble, ce qu'un onglet de couche
+ne montre jamais.
+
+### Ce qu'il porte
+
+| | |
 |---|---|
-| **Quel formulaire** | titre, table cible, version — ou « aucun » |
-| **L'activer** | il devient la fiche en édition **et** disponible en lecture. Un geste, comme créer un récit. |
-| **L'état des droits** | une ligne, sur le modèle du bouton « Droits » de TaskFlow |
-| **Le modifier** | lien vers `grist_forms/builder.html` — 3 864 lignes déjà écrites |
-| **Le générer** | depuis les colonnes, via `qgis-form-to-formdef.js` |
+| La liste | les tables du document qui **peuvent** porter un formulaire — celles qui ont des lignes |
+| Par table | le formulaire trouvé (titre, version), ou « aucun » |
+| **Générer** | un FormDef depuis les colonnes, via `qgis-form-to-formdef.js` |
+| **Modifier** | vers le builder |
+| **Disponible hors édition** | la bascule, comme on active un contrôle |
 
-> **La génération est le point le plus rentable.** Aujourd'hui il faut un projet
-> QGIS pour avoir un formulaire. Le convertisseur existe déjà et travaille à
-> partir des colonnes : n'importe quelle couche de table peut en obtenir un en
-> un clic, sans QField.
+### Définition par table, exposition par couche
 
-## Le style — une peau Atlas, pas le DSFR
+Le formulaire est **défini** une fois, dans la table `Formulaires`, pour une
+table cible. Mais « disponible hors édition » est un choix de **scène** : on peut
+vouloir exposer le relevé du mobilier dans une scène et pas dans une autre,
+alors que la table est la même.
+
+La bascule voyage donc **avec la couche**, comme `_controls` — `saveLayerToGrist`
+a déjà ce chemin. Une seule source pour le formulaire, chaque scène décidant de
+ce qu'elle publie.
+
+### C'est un module d'auteur
+
+Il entre dans `VIEW_AUTHOR_MODULES` (`app_v7.js:3020`), qui liste les modules
+**refusés en lecture**.
+
+> `recit` n'y figure pas — non parce qu'il se configurerait en lecture, mais
+> parce qu'un lecteur doit pouvoir **jouer** le récit. Sa configuration est bien
+> réservée à l'édition, comme celle des formulaires. La distinction est entre
+> *jouer* et *régler*, pas entre les modules.
+
+En lecture, le lecteur obtient donc le formulaire **sur un objet**, jamais le
+module qui le règle.
+
+### L'état des droits n'est pas ici
+
+Les droits sont **du document**, pas d'un formulaire. Une ligne par formulaire
+répéterait dix fois la même information, et la rendrait invisible à force.
+
+S'il faut l'afficher, il se rattache au **bouton d'édition de la barre du haut**,
+à côté de `#view-mode-badge` — l'élément qui dit déjà ce qu'on peut faire ici.
+
+### Ce que garde l'inspecteur de couche
+
+Une ligne, pas un onglet : quel formulaire s'applique, ou le bouton
+« Enregistrer dans Grist » quand la couche n'a pas de table. C'est le point de
+**découverte**, pas le lieu du réglage — et ça évite un cinquième onglet à un
+inspecteur qui en a déjà quatre.
+
+## Le style — une peau Atlas, pas le DSFR## Le style — une peau Atlas, pas le DSFR
 
 Le moteur n'embarque aucun style : il émet **31 classes `fr-*`** et compte sur
 l'hôte. `dsfr-like.css` les fournit, mais impose aussi `:root`, `*` et `body`, et
@@ -152,9 +203,33 @@ Deux règles, et elles suppriment la collision au lieu de la contourner :
 | `lib/fiche-formulaire.js` | **le pont, et rien d'autre** — trouver le FormDef, amorcer les valeurs, traduire vers le contrat du moteur |
 | `lib/formulaire-atlas.css` | la peau, confinée |
 | `app_v7.js` · `renderObjectInspector` | monte le moteur ou retombe sur `renderAttrFields` |
-| `app_v7.js` · `renderSymbologyInspector` | l'onglet « Fiche », et le bouton pour tous les types |
+| `app_v7.js` · `renderSymbologyInspector` | la ligne « quel formulaire », et le bouton de revue pour tous les types |
+| `app_v7.js` · `renderFormulaires` | **le module** — liste des tables, génération, bascule d'exposition |
 | `app_v7.js` · `chargerFormulaires` | lit la table `Formulaires`, absente = repli silencieux |
 | `index_v7.html` | charge le moteur et ses trois dépendances |
+
+## Ce que coûte l'ajout du module
+
+Cinq points d'accroche, tous existants — aucun n'est une invention :
+
+| Où | Quoi |
+|---|---|
+| `index_v7.html` | une entrée `.rail-item` de plus, après Récit |
+| `MODULE_TITLES` (`:3016`) | `formulaires: 'Formulaires'` |
+| `VIEW_AUTHOR_MODULES` (`:3020`) | y ajouter `'formulaires'` — refusé en lecture |
+| `openModule` (`:3056`) | une branche `renderFormulaires()` |
+| `saveLayerToGrist` | `styleOut._formulaire` à côté de `_controls` — même chemin |
+
+Le module lui-même reprend la structure de `renderControles` : un sélecteur, une
+liste, des bascules. Rien de nouveau côté UI.
+
+**Ce que ça retire du plan** : l'onglet « Fiche » disparaît, et l'étape
+« générer un FormDef depuis les colonnes » est absorbée — c'est le même écran.
+L'inspecteur de couche ne garde qu'une ligne, qui existe déjà à moitié
+(`enteteSansTable`).
+
+**Ce que ça n'atteint pas** : la sonde par table, le mode Exploitation et l'ACL
+restent inchangés et hors de cette marche.
 
 ## Le pont, et pourquoi il est obligatoire
 
