@@ -232,18 +232,20 @@ Un bâtiment inspecté douze fois, ce sont douze lignes dans `Visites` — pas d
 c'est celui que l'app terrain pratique déjà (elle ne fait que de la création).
 
 **Un formulaire est lié à une couche si sa table cible porte une colonne `Ref:`
-vers la table de la couche.** Ce lien s'établit de deux façons, et l'ordre
-compte :
+vers la table de la couche.** C'est toute la règle, et il n'y en a pas d'autre.
 
-| | Quand | Ce qu'Atlas sait |
-|---|---|---|
-| **déclaré** | le formulaire a été créé depuis l'onglet d'une couche | la couche visée est un **fait enregistré**, posé par le geste de création |
-| **découvert** | le formulaire vient d'ailleurs — QField, une autre table | Atlas lit le schéma et cherche une colonne `Ref:` |
-
-Le déclaré l'emporte. C'est ce qui rend le cas courant sûr : quand on crée un
-formulaire de visite depuis la couche `Batiments`, `ensure-schema` matérialise
-`Visites` **avec** sa colonne `Ref:Batiments`, et plus rien n'est à deviner
-ensuite.
+> **Le lien ne se déclare pas : il se lit.** Ce cadrage a d'abord distingué un
+> lien « déclaré » — enregistré par le geste de création — d'un lien
+> « découvert » par lecture du schéma, le premier l'emportant sur le second.
+> C'était une pièce en trop. Créer un formulaire de visite depuis la couche
+> `Batiments` fait poser à `ensure-schema` une colonne `Ref:Batiments` sur
+> `Visites` : **la création ne déclare pas le lien, elle l'inscrit dans le
+> schéma**, où la lecture le retrouve comme n'importe quel autre.
+>
+> Ce qui suit de là : Atlas n'a **rien à stocker** — pas de colonne, pas de
+> préférence, pas de seconde vérité à tenir à jour. Le schéma Grist est la seule
+> source, et un formulaire hérité de QField est traité exactement comme un
+> formulaire créé ici.
 
 ### Atlas porte la référence, le formulaire n'a pas à la déclarer
 
@@ -265,12 +267,11 @@ préremplir, celui de le **verrouiller** — et, pour ce cas, le correctif
 > créerait une ligne au `Ref` vide — **une observation rattachée à rien**, sans
 > erreur ni message. Le silence est le mode de panne habituel de ce dépôt.
 
-Reste un cas ambigu, et il a rétréci : une table satellite **découverte** qui
-référencerait deux fois la même table (`batiment_avant`, `batiment_apres`). Un
-formulaire créé depuis Atlas n'est jamais dans ce cas. Conduite retenue :
-**prendre le premier `Ref:` et l'afficher** — « rattaché par `batiment` » — au
-lieu de choisir en silence. Le jour où un vrai cas se présente, le choix se pose
-là, et il sera visible qu'il manquait. Construire l'arbitrage maintenant serait
+Reste un cas ambigu : une table satellite qui référencerait **deux fois** la même
+table (`batiment_avant`, `batiment_apres`). Conduite retenue : **prendre le
+premier `Ref:` et l'afficher** — « rattaché par `batiment` » — au lieu de
+choisir en silence. Le jour où un vrai cas se présente, le choix se pose là, et
+il sera visible qu'il manquait. Construire l'arbitrage maintenant serait
 spéculatif ; ce dépôt paie déjà cher les règles écrites pour des cas jamais
 rencontrés.
 
