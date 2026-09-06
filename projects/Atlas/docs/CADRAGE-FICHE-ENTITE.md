@@ -155,12 +155,67 @@ répéterait dix fois la même information, et la rendrait invisible à force.
 S'il faut l'afficher, il se rattache au **bouton d'édition de la barre du haut**,
 à côté de `#view-mode-badge` — l'élément qui dit déjà ce qu'on peut faire ici.
 
-### Ce que garde l'inspecteur de couche
+### L'onglet « Formulaire » de la couche
 
-Une ligne, pas un onglet : quel formulaire s'applique, ou le bouton
-« Enregistrer dans Grist » quand la couche n'a pas de table. C'est le point de
-**découverte**, pas le lieu du réglage — et ça évite un cinquième onglet à un
-inspecteur qui en a déjà quatre.
+> **Une contradiction levée.** Ce cadrage a d'abord écrit « une ligne, pas un
+> onglet », pour épargner « un cinquième onglet à un inspecteur qui en a déjà
+> quatre ». L'argument était faux : `renderSymbologyInspector` en pose **trois**
+> — Couleur, Taille, Étiquette — et quatre seulement sur les points, où
+> « Modèle 3D » s'ajoute. Et cette phrase contredisait « Trois surfaces », qui
+> annonce l'onglet depuis le début.
+>
+> L'onglet l'emporte, et pour une raison qui n'est pas de place : **créer un
+> formulaire lié part d'une couche.** Sans onglet, ce geste n'a pas de lieu, et
+> le lien devrait se deviner au lieu de se déclarer.
+
+Ce qu'il porte, exactement :
+
+| | Ce qu'on y trouve | Ce que ça fait sur un objet |
+|---|---|---|
+| **sur la couche** | le formulaire de la table géo — celui par défaut, dérivé de ses colonnes | **corrige** l'objet (`editRowId` + `updateRow`) |
+| **liés** | ceux dont la table porte un `Ref:` vers celle-ci | **ajoute** une ligne (`addRow`, référence injectée) |
+| **créer** | passe la main au générateur, **avec le contexte** — table cible et colonne `Ref:` | — |
+
+La ligne « Enregistrer dans Grist », quand la couche n'a pas de table, reste où
+elle est : dans la fiche de l'objet, là où le blocage se lit.
+
+### Ce que le module garde, et pourquoi les deux ne font pas doublon
+
+L'onglet regarde **une couche** ; le module regarde **le document**. Il liste les
+formulaires de table **et** ceux qu'on a créés, y compris ceux qui portent sur
+plusieurs tables ; chaque table y montre celui qui la concerne. On peut y créer
+aussi — depuis la ligne d'une table, donc avec le même contexte qu'à l'onglet.
+
+Un formulaire lié apparaît donc **deux fois**, et c'est voulu : sous sa propre
+table dans le module (c'est là qu'on l'expose), et sous la couche qu'il
+référence dans l'onglet (c'est là qu'on s'en sert).
+
+### La fiche de l'objet avec plusieurs formulaires — **à trancher**
+
+C'est le seul point que la discussion n'a pas réglé, et il commande le code.
+Avec un formulaire d'édition **et** N formulaires liés, l'onglet « Attributs »
+ne peut pas être les deux : ce sont deux verbes, *corriger* et *ajouter*.
+
+Proposition : **deux onglets**, « Attributs » et « Relevés », le second portant
+un sélecteur quand plusieurs formulaires liés existent. Un onglet par formulaire
+exploserait ; les fondre dans « Attributs » ferait qu'enregistrer voudrait dire
+deux choses dans le même panneau — le piège que ce cadrage a déjà relevé pour
+« Enregistrer ».
+
+### Deux conséquences techniques, vérifiées dans le code
+
+1. **Les deux modes ne peuvent pas partager un pont.** `engine.js:555` :
+   `editRowId` présent ⇒ chemin `updateRow`, sans discussion. Le pont qui ajoute
+   doit donc être construit **sans** `editRowId`, sinon il corrigera le bâtiment
+   au lieu d'ajouter la visite.
+2. **Les droits cessent d'être uniformes.** Ajouter dans `Visites` n'est pas
+   écrire dans `Batiments` — et la configuration saine est justement celle-là :
+   le releveur ajoute des visites, il ne modifie pas le bâti. Or
+   `saisieHorsEdition` suppose aujourd'hui **un seul** droit d'écriture. C'est
+   une conséquence sur le code **déjà livré**, pas seulement sur ce qui vient.
+
+Une bonne nouvelle pour finir : trouver les colonnes `Ref:` ne coûte aucune
+capacité nouvelle. Atlas lit déjà `_grist_Tables_column` — `lib/geo-tables.js:106`.
 
 ## Deux modes, et c'est le cœur du modèle
 
@@ -419,6 +474,7 @@ Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
 | | | Pourquoi là |
 |---|---|---|
 | **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
+| **1 bis** | les **formulaires liés** — onglet de couche, pont `addRow`, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas ; reste à trancher la forme de la fiche |
 | **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
 | **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
 
