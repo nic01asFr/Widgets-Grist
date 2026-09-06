@@ -494,8 +494,8 @@ Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
 | | | Pourquoi là |
 |---|---|---|
 | **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
-| **1 bis** | les **formulaires liés** — un onglet par formulaire, pont `addRow`, composition des champs, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas, et maquetté |
-| **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
+| **1 bis** | les **formulaires liés** — code écrit et testé, **jamais exercé** | il faut une table qui référence une couche pour l'éprouver ; le document de test n'en a aucune |
+| ~~**2**~~ | ~~le **vendoring**~~ — **fait** | `promote-atlas.js` embarque les six scripts sous `vendor/`, copie la peau, et refuse de publier une page qui réclame un fichier absent |
 | **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
 
 Deux questions restent ouvertes et ne se tranchent pas seules : **l'historique
@@ -651,6 +651,32 @@ Rappel du découpage, qui ne change pas :
 | **1** | le formulaire est la fiche en édition · configurable par couche | aucun | **fait** |
 | **2** | disponible en lecture — mode **Exploitation** | aucun — c'est Grist qui filtre | **fait** |
 | **3** | l'activation pose l'ACL dérivée du FormDef | propriétaire | à faire |
+
+### Enregistrer, publier, proposer — trois mots, deux endroits
+
+Atlas écrit désormais dans `Formulaires`, et c'est le seul endroit où il le
+fait. Toujours à partir d'un clic, jamais de lui-même.
+
+| Le geste | Où il vit | Ce qu'il pose |
+|---|---|---|
+| **Composer** / **Enregistrer** | table `Formulaires` | une ligne, statut `brouillon` |
+| **Proposer** | la même ligne **et** la couche | `Statut = publie`, plus l'identifiant dans `exposes` |
+
+> **Proposer, c'est publier — et il a fallu s'en apercevoir.** Un formulaire
+> composé ici naît brouillon, ce qui est juste : personne ne l'a relu. Mais un
+> brouillon n'est jamais offert en lecture, et Atlas n'avait aucun autre endroit
+> où le publier. La bascule serait restée sans effet, et la personne aurait
+> cherché pourquoi. Le geste fait donc les deux.
+
+Le statut dit **« ce formulaire est prêt »** et appartient au document ;
+`exposes` dit **« cette scène le montre »** et voyage avec la couche. Deux faits
+distincts, qu'il ne faut pas confondre — une même table peut être proposée dans
+une scène et pas dans une autre.
+
+**Et le geste diffère selon l'endroit**, sans quoi il ferait un doublon : sur la
+table de la couche, `Attributs` reste la vue complète, donc on **compose** un
+formulaire distinct ; sur une table liée, le dérivé *est* déjà le formulaire de
+cette table, donc on l'**enregistre**, et rien de plus.
 
 ### La sonde par table n'existera pas — et c'est mieux
 
