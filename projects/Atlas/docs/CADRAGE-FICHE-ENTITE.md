@@ -176,8 +176,18 @@ Un bâtiment inspecté douze fois, ce sont douze lignes dans `Visites` — pas d
 c'est celui que l'app terrain pratique déjà (elle ne fait que de la création).
 
 **Un formulaire est lié à une couche si sa table cible porte une colonne `Ref:`
-vers la table de la couche.** Rien à déclarer : Atlas le dérive du schéma, comme
-il dérive déjà les tables géo.
+vers la table de la couche.** Ce lien s'établit de deux façons, et l'ordre
+compte :
+
+| | Quand | Ce qu'Atlas sait |
+|---|---|---|
+| **déclaré** | le formulaire a été créé depuis l'onglet d'une couche | la couche visée est un **fait enregistré**, posé par le geste de création |
+| **découvert** | le formulaire vient d'ailleurs — QField, une autre table | Atlas lit le schéma et cherche une colonne `Ref:` |
+
+Le déclaré l'emporte. C'est ce qui rend le cas courant sûr : quand on crée un
+formulaire de visite depuis la couche `Batiments`, `ensure-schema` matérialise
+`Visites` **avec** sa colonne `Ref:Batiments`, et plus rien n'est à deviner
+ensuite.
 
 ### Atlas porte la référence, le formulaire n'a pas à la déclarer
 
@@ -199,9 +209,37 @@ préremplir, celui de le **verrouiller** — et, pour ce cas, le correctif
 > créerait une ligne au `Ref` vide — **une observation rattachée à rien**, sans
 > erreur ni message. Le silence est le mode de panne habituel de ce dépôt.
 
-Seul cas ambigu : une table satellite qui référencerait **deux fois** la même
-table (`batiment_avant`, `batiment_apres`). Atlas ne peut pas deviner — un choix
-posé une fois dans l'onglet, jamais à la saisie.
+Reste un cas ambigu, et il a rétréci : une table satellite **découverte** qui
+référencerait deux fois la même table (`batiment_avant`, `batiment_apres`). Un
+formulaire créé depuis Atlas n'est jamais dans ce cas. Conduite retenue :
+**prendre le premier `Ref:` et l'afficher** — « rattaché par `batiment` » — au
+lieu de choisir en silence. Le jour où un vrai cas se présente, le choix se pose
+là, et il sera visible qu'il manquait. Construire l'arbitrage maintenant serait
+spéculatif ; ce dépôt paie déjà cher les règles écrites pour des cas jamais
+rencontrés.
+
+### Ce que le contexte remplit d'autre
+
+La référence n'est pas seule à être un fait de la situation. Date, position,
+auteur le sont aussi — mais elles ne se traitent pas pareil :
+
+| | Injecté, invisible | Prérempli, corrigeable |
+|---|---|---|
+| **référence à l'objet** | ✓ le clic fait foi | |
+| **auteur** | ✓ la session fait foi | |
+| **date du jour** | | ✓ on relève parfois le lendemain |
+| **position GPS** | | ✓ elle est fausse en intérieur |
+
+Ce qui est **factuel** passe par le pont sans se montrer ; ce qui est
+**probable** se préremplit et reste modifiable — c'est déjà ce que fait
+`amorcerValeurs`, il n'y a pas de mécanique à inventer.
+
+> **Réserve sur le GPS, à lever avant de le promettre.** Le bouton de
+> géolocalisation d'Atlas affiche « Location not available » et reste
+> **désactivé** dans le widget. Une iframe imbriquée n'a la géolocalisation que
+> si son parent la lui accorde (`allow="geolocation"`), et c'est Grist qui
+> contrôle cet attribut. Si elle n'est pas accordée, la position ne viendra que
+> de l'app terrain, jamais du widget.
 
 ## Trois surfaces, trois rôles
 
@@ -233,13 +271,70 @@ quand la table manque, `AddColumn` quand elle est incomplète, et ne remplace
 > une raison qui n'appartient qu'à lui : transformer une couche importée en
 > lignes. Un seul créateur par objet, comme partout ailleurs dans le dépôt.
 
+### Rien n'existe tant que l'utilisateur ne l'a pas fait
+
+**Atlas ne livre aucun formulaire.** Pas de fiche de visite type, pas de
+formulaire de relevé prêt à l'emploi. C'est l'utilisateur qui construit le sien
+depuis le module, comme il écrit son récit — et un document où personne n'en a
+fait n'en a pas.
+
+Ce qui suit de cette règle, et qu'il faut tenir :
+
+- **« Générer depuis les colonnes » produit un brouillon, pas un enregistrement.**
+  Tant que rien n'est enregistré dans `Formulaires`, l'onglet Attributs reste sur
+  `renderAttrFields` — le comportement d'aujourd'hui, inchangé.
+- **Le mode « lié » n'est pas une promesse d'Atlas.** Il n'existe que si
+  l'utilisateur a bâti un formulaire sur une autre table. Aucune table satellite
+  n'apparaît d'elle-même.
+- **Empreinte nulle par défaut**, exactement comme le Plan de charge dans
+  TaskFlow : la table `Formulaires` n'est lue que si elle existe, et son absence
+  est un repli silencieux, pas une erreur.
+
+### Où vit le builder — et pourquoi la question est mal posée
+
+Puisque c'est l'utilisateur qui bâtit son formulaire, il lui faut un endroit où
+le faire. Deux voies :
+
+| | Comment | Coût | Limite |
+|---|---|---|---|
+| **A · page du document** | l'utilisateur ajoute une page portant le builder ; Atlas y renvoie | nul | il faut que la page existe, et on quitte la carte |
+| **B · embarqué dans Atlas** | iframe, Atlas descend l'API Grist par un pont | réel | **mais le pont existe déjà** |
+
+La bonne formulation n'est pas « mettre le builder dans Atlas », c'est **finir de
+rendre le builder agnostique de son hôte** — Atlas devenant le premier à s'en
+servir, pas le seul. Le terrain est préparé des deux côtés :
+
+- `grist_forms/shared/grist-bridge.js` se décrit lui-même comme « portable, sans
+  dépendance, distribuable en `<script>` », et annonce deux hôtes possibles :
+  l'API Grist native, **ou un hôte qui injecte le pont** ;
+- `GristBridgeParent` (Artefactory) est exactement ce second hôte, et il répond
+  à n'importe quelle iframe descendante.
+
+Retenu : **B, formulé comme du travail sur `grist_forms`**, avec **A en repli
+immédiat** le temps que B soit prêt. Un renvoi vers une page coûte une ligne ;
+il débloque l'usage pendant que le pont se termine.
+
 ## Trois frictions d'usage, relevées avant d'être livrées
 
 1. **On ne voit pas les observations passées.** Le formulaire ajoute une ligne ;
    il ne montre pas les douze précédentes. Sur le terrain c'est la première
    question — « quand est-elle passée la dernière fois ? ». Le moteur ne sait
-   pas le faire. **À cadrer avant de promettre le mode « ajout lié »**, sinon on
-   livre une saisie aveugle.
+   pas le faire.
+
+   Ce n'est **plus un bloqueur du cadrage**, puisque aucun formulaire lié
+   n'existe avant que l'utilisateur en fabrique un : la question ne se pose qu'au
+   moment où il le fait. Elle reste entière à ce moment-là, et six choix la
+   composent — **où** (au-dessus du formulaire, plutôt qu'un onglet de plus),
+   **combien** (dans 360 px, « 12 visites · dernière le 14/03 » suffit),
+   **quoi** — le point dur : rien ne dit quelles colonnes résument une visite, et
+   une heuristique qui se trompe est pire que rien —, **à quel coût**
+   (`fetchTable` rapatrie toute la table, Grist ne filtre pas côté serveur),
+   **modifiable ou non** (ouvrir une observation passée serait un troisième
+   mode), et **visible par qui** (en lecture, voit-on les relevés des autres ?
+   c'est de l'ACL, pas de l'UI).
+
+   Piste retenue si le besoin vient : compte + dernière observation, résumé
+   déclaré dans le FormDef, consultation seule.
 2. **Après l'enregistrement, que fait le panneau ?** Il reste, ou il avance au
    suivant ? En revue avec `◀ ▶`, avancer est le rythme d'une tournée. Décision
    à prendre, pas détail.
@@ -249,7 +344,7 @@ quand la table manque, `AddColumn` quand elle est incomplète, et ne remplace
    formulaire qu'on n'arrive pas à ouvrir ne sert à rien : ce point remonte
    juste après le module, et il profite à tout Atlas, pas seulement à cet axe.
 
-## Le style — une peau Atlas, pas le DSFR## Le style — une peau Atlas, pas le DSFR
+## Le style — une peau Atlas, pas le DSFR
 
 Le moteur n'embarque aucun style : il émet **31 classes `fr-*`** et compte sur
 l'hôte. `dsfr-like.css` les fournit, mais impose aussi `:root`, `*` et `body`, et
