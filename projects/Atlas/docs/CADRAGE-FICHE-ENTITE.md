@@ -155,52 +155,53 @@ répéterait dix fois la même information, et la rendrait invisible à force.
 S'il faut l'afficher, il se rattache au **bouton d'édition de la barre du haut**,
 à côté de `#view-mode-badge` — l'élément qui dit déjà ce qu'on peut faire ici.
 
-### L'onglet « Formulaire » de la couche
+### Deux panneaux, deux portées
 
-> **Une contradiction levée.** Ce cadrage a d'abord écrit « une ligne, pas un
-> onglet », pour épargner « un cinquième onglet à un inspecteur qui en a déjà
-> quatre ». L'argument était faux : `renderSymbologyInspector` en pose **trois**
-> — Couleur, Taille, Étiquette — et quatre seulement sur les points, où
-> « Modèle 3D » s'ajoute. Et cette phrase contredisait « Trois surfaces », qui
-> annonce l'onglet depuis le début.
->
-> L'onglet l'emporte, et pour une raison qui n'est pas de place : **créer un
-> formulaire lié part d'une couche.** Sans onglet, ce geste n'a pas de lieu, et
-> le lien devrait se deviner au lieu de se déclarer.
+C'est le partage qui règle tout le reste, et il suit la géométrie de
+l'interface : **le panneau de droite gère UN formulaire, le module de gauche
+gère L'ENSEMBLE.**
 
-Ce qu'il porte, exactement :
-
-| | Ce qu'on y trouve | Ce que ça fait sur un objet |
+| | Portée | Ce qu'on y fait |
 |---|---|---|
-| **sur la couche** | le formulaire de la table géo — celui par défaut, dérivé de ses colonnes | **corrige** l'objet (`editRowId` + `updateRow`) |
-| **liés** | ceux dont la table porte un `Ref:` vers celle-ci | **ajoute** une ligne (`addRow`, référence injectée) |
-| **créer** | passe la main au générateur, **avec le contexte** — table cible et colonne `Ref:` | — |
+| **Panneau droit** — objet sélectionné | cet objet | `Attributs` **corrige** · `Formulaires` **ajoute** — la liste de ceux qui référencent sa couche |
+| **Module gauche** « Formulaires » | le document | lister, choisir celui qui sert de fiche, **exposer** hors édition, **créer**, et renvoyer vers le générateur |
 
-La ligne « Enregistrer dans Grist », quand la couche n'a pas de table, reste où
-elle est : dans la fiche de l'objet, là où le blocage se lit.
+> **Ce partage supprime l'onglet de couche** au lieu de le trancher. Ce cadrage
+> a hésité entre « une ligne » et « un onglet » dans l'inspecteur de couche, et
+> s'est contredit d'une section à l'autre. La question tombe : **créer est un
+> acte de document** — ça matérialise une table —, donc ça vit dans le module ;
+> **remplir est un acte d'objet**, donc ça vit à droite. L'inspecteur de couche
+> garde sa ligne, « Saisir sur les objets », qui est un point de découverte et
+> rien d'autre.
 
-### Ce que le module garde, et pourquoi les deux ne font pas doublon
+Deux précisions de vocabulaire, parce qu'un mot sert deux fois :
 
-L'onglet regarde **une couche** ; le module regarde **le document**. Il liste les
-formulaires de table **et** ceux qu'on a créés, y compris ceux qui portent sur
-plusieurs tables ; chaque table y montre celui qui la concerne. On peut y créer
-aussi — depuis la ligne d'une table, donc avec le même contexte qu'à l'onglet.
+- l'onglet de droite **nomme sa couche** — « Formulaires · Batiments_locaux » —
+  sinon rien ne dit pourquoi ces formulaires-là et pas d'autres ;
+- `Attributs` reste ce qu'il est. Le formulaire de la table géo y est **la**
+  fiche quand il existe ; les liés n'y entrent pas. *Corriger* et *ajouter* sont
+  deux verbes, et les fondre ferait qu'« Enregistrer » voudrait dire deux choses
+  dans le même panneau — le piège que ce cadrage a déjà relevé une fois.
 
-Un formulaire lié apparaît donc **deux fois**, et c'est voulu : sous sa propre
-table dans le module (c'est là qu'on l'expose), et sous la couche qu'il
-référence dans l'onglet (c'est là qu'on s'en sert).
+### Ce que l'onglet « Formulaires » de droite montre
 
-### La fiche de l'objet avec plusieurs formulaires — **à trancher**
+Les formulaires dont la table porte un `Ref:` vers celle de la couche. Pour
+chacun : son titre, et de quoi l'ouvrir sur **cet** objet. Quand il n'y en a
+qu'un, l'ouvrir directement ; l'onglet n'existe pas quand il n'y en a aucun.
 
-C'est le seul point que la discussion n'a pas réglé, et il commande le code.
-Avec un formulaire d'édition **et** N formulaires liés, l'onglet « Attributs »
-ne peut pas être les deux : ce sont deux verbes, *corriger* et *ajouter*.
+Au-dessus, ce que l'objet a déjà reçu — **la question ouverte du cadrage**, cf.
+« Trois frictions ». Un relevé qui n'affiche pas les onze précédents est une
+saisie aveugle, et rien ne dit quelles colonnes résument une visite : ça se
+**déclare**, ça ne se devine pas.
 
-Proposition : **deux onglets**, « Attributs » et « Relevés », le second portant
-un sélecteur quand plusieurs formulaires liés existent. Un onglet par formulaire
-exploserait ; les fondre dans « Attributs » ferait qu'enregistrer voudrait dire
-deux choses dans le même panneau — le piège que ce cadrage a déjà relevé pour
-« Enregistrer ».
+### Ce que le module de gauche garde
+
+Il liste les formulaires de table **et** ceux qu'on a créés, y compris ceux qui
+portent sur plusieurs tables ; chaque table y montre celui qui la concerne. On y
+crée, et on y expose. Un formulaire lié y apparaît **sous sa propre table** —
+c'est là qu'on l'expose —, tandis qu'à droite il apparaît **sous l'objet qu'il
+référence** — c'est là qu'on s'en sert. Deux endroits, deux gestes, aucun
+doublon.
 
 ### Deux conséquences techniques, vérifiées dans le code
 
@@ -299,16 +300,21 @@ déjà `valeursPourMoteur`, il n'y a pas de mécanique à inventer.
 ## Trois surfaces, trois rôles
 
 ```
-Onglet « Formulaire » (couche)      CHOISIR ce qu'on peut faire sur ces objets
-   ├─ sur la couche  → éditer        (défaut, généré depuis les colonnes)
-   ├─ liés           → ajouter       (dérivés des Ref)
-   └─ créer          → passe la main au builder, avec le contexte
+Panneau droit (objet)               SE SERVIR — sur CET objet
+   ├─ Attributs    → corriger        le formulaire de la table géo
+   └─ Formulaires  → ajouter         ceux qui référencent sa couche
 
-Module « Formulaires » (document)   EXPOSER — quels formulaires existent,
-                                    lesquels sont disponibles hors édition
+Module « Formulaires » (document)   GÉRER L'ENSEMBLE — lister, choisir celui
+                                    qui sert de fiche, exposer hors édition,
+                                    créer et renvoyer vers le générateur
 
 Builder (grist_forms)               DÉFINIR et MATÉRIALISER
 ```
+
+Le partage suit la géométrie de l'interface : **à droite un formulaire, à gauche
+l'ensemble.** Créer est un acte de document — ça matérialise une table — donc ça
+vit à gauche ; remplir est un acte d'objet, donc ça vit à droite. Voir « Deux
+panneaux, deux portées ».
 
 Les deux sens de dérivation existent déjà, et se complètent :
 
@@ -474,7 +480,7 @@ Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
 | | | Pourquoi là |
 |---|---|---|
 | **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
-| **1 bis** | les **formulaires liés** — onglet de couche, pont `addRow`, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas ; reste à trancher la forme de la fiche |
+| **1 bis** | les **formulaires liés** — onglet « Formulaires » du panneau droit, pont `addRow`, droits par table | c'est le cas que le terrain demande vraiment : douze visites, pas douze écrasements. Cadré plus bas ; reste à trancher la forme de la fiche |
 | **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
 | **3** | la **marche 3** — ACL dérivée du FormDef | il ne reste que celle-là côté droits : la présentation et la saisie sont réglées |
 
