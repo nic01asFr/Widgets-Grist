@@ -91,8 +91,22 @@ export function layerPrefsPayload(layer) {
     rank: Number.isFinite(layer._rank) ? layer._rank : null,
     symbolization: layer.style?.symbolization || null,
     controls: controlsPrefsPayload(layer),
+    // Quel formulaire sert cette couche, et si la scene l'offre hors edition.
+    // Le formulaire est defini UNE fois, dans la table `Formulaires`, pour une
+    // table cible ; mais l'exposer est un choix de scene — on peut vouloir
+    // publier le releve du mobilier ici et pas ailleurs, alors que la table est
+    // la meme. Le reglage voyage donc avec la couche, comme les controles.
+    formulaire: formulairePrefsPayload(layer),
     declarative: declarativeFromAtlasLayer(layer),
   };
+}
+
+/** `null` quand il n'y a rien a dire : une couche sans reglage n'ecrit rien. */
+function formulairePrefsPayload(layer) {
+  const id = layer?.formulaire?.id || null;
+  const expose = layer?.formulaire?.expose === true;
+  if (!id && !expose) return null;
+  return { id, expose };
 }
 
 /**
@@ -124,6 +138,16 @@ export function applyLayerPrefsBinding(layer, prefs) {
 
     // Le tri effectif revient à l'appelant, qui voit toutes les couches.
     if (Number.isFinite(payload.rank)) layer._rank = payload.rank;
+
+    // `expose` doit valoir vrai, pas seulement etre present : une valeur
+    // heritee d'un enregistrement ancien ne doit pas ouvrir un formulaire a un
+    // lecteur sans que personne l'ait decide.
+    if (payload.formulaire) {
+      layer.formulaire = {
+        id: payload.formulaire.id || null,
+        expose: payload.formulaire.expose === true,
+      };
+    }
 
     if (payload.controls?.length) {
       applyControlsFromPrefs(layer, payload.controls);

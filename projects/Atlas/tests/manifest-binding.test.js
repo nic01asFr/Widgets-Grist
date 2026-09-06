@@ -260,3 +260,39 @@ describe('story binding', () => {
     assert.equal(frag.version, '0.2.1');
   });
 });
+
+describe('reglages de formulaire — un choix de scene, pas de table', () => {
+  it('une couche sans reglage n’ecrit rien', () => {
+    assert.equal(layerPrefsPayload({ name: 'Bâti' }).formulaire, null);
+    assert.equal(layerPrefsPayload({ name: 'Bâti', formulaire: {} }).formulaire, null);
+  });
+
+  it('le choix et l’exposition font l’aller-retour', () => {
+    const source = { name: 'Bâti', formulaire: { id: 'bati-terrain', expose: true } };
+    const payload = layerPrefsPayload(source);
+    assert.deepEqual(payload.formulaire, { id: 'bati-terrain', expose: true });
+
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: payload });
+    assert.deepEqual(relu.formulaire, { id: 'bati-terrain', expose: true });
+  });
+
+  it('exposer sans choisir reste un reglage valable', () => {
+    // La scene publie « le » formulaire de la table, quel qu'il soit : on n'a
+    // pas a figer un identifiant pour cela.
+    const payload = layerPrefsPayload({ formulaire: { expose: true } });
+    assert.deepEqual(payload.formulaire, { id: null, expose: true });
+  });
+
+  it('une valeur douteuse n’ouvre rien a un lecteur', () => {
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: { formulaire: { id: 'x', expose: 'oui' } } });
+    assert.deepEqual(relu.formulaire, { id: 'x', expose: false });
+  });
+
+  it('des prefs anciennes, sans le champ, laissent la couche intacte', () => {
+    const relu = { name: 'Bâti', formulaire: { id: 'a', expose: true } };
+    applyLayerPrefsBinding(relu, { style: { mode: 'mapbox' } });
+    assert.deepEqual(relu.formulaire, { id: 'a', expose: true });
+  });
+});

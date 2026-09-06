@@ -818,7 +818,8 @@
         body.view-mode .rail-item[data-module="vues"],
         body.view-mode .rail-item[data-module="controles"],
         body.view-mode .rail-item[data-module="reglages"],
-        body.view-mode .rail-item[data-module="couches"] { display: none !important; }
+        body.view-mode .rail-item[data-module="couches"],
+        body.view-mode .rail-item[data-module="formulaires"] { display: none !important; }
         body.view-mode .rail-item[data-module="recit"] { display: none !important; }
         /* Lecture : carte pleine largeur — récit via FAB uniquement */
         body.view-mode { --rail-w: 0px; }
@@ -1103,7 +1104,8 @@
             body.view-mode.mobile-layout .rail-item[data-module="vues"],
             body.view-mode.mobile-layout .rail-item[data-module="controles"],
             body.view-mode.mobile-layout .rail-item[data-module="reglages"],
-            body.view-mode.mobile-layout .rail-item[data-module="couches"] { display: none !important; }
+            body.view-mode.mobile-layout .rail-item[data-module="couches"],
+            body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
     <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20260905a" />
@@ -1177,6 +1179,10 @@
                 <button class="rail-item" data-module="recit">
                     <span class="rail-icon-box"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M9 7h7M9 11h5"/></svg></span>
                     <span>Récit</span>
+                </button>
+                <button class="rail-item" data-module="formulaires">
+                    <span class="rail-icon-box"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg></span>
+                    <span>Formulaires</span>
                 </button>
                 <div class="rail-spacer"></div>
                 <div class="rail-divider"></div>

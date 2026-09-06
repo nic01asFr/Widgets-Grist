@@ -17,8 +17,10 @@ import {
   boundsFromVisibleLayers,
 } from './lib/scene-loader.js?v=20260826a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
-import { moteurDisponible, formDefPourCouche, valeursDepuisEntite, amorcerValeurs, pontFormulaire }
-  from './lib/fiche-formulaire.js?v=20260905a';
+import {
+  moteurDisponible, formDefPourCouche, valeursDepuisEntite, amorcerValeurs, pontFormulaire,
+  lireFormulaires, inventaireFormulaires, formulaireOffrable, reglagesFormulaire,
+} from './lib/fiche-formulaire.js?v=20260906a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
 import {
@@ -3015,9 +3017,19 @@ function applyStoryState(s) {
 const MODULE_TITLES = {
     lieu: 'Lieu', couches: 'Couches', controles: 'Contrôles', recit: 'Récit',
     soleil: 'Soleil', vues: 'Vue & rendu', reglages: 'Catalogue 3D',
+    formulaires: 'Formulaires',
 };
 
-const VIEW_AUTHOR_MODULES = new Set(['lieu', 'soleil', 'vues', 'controles', 'reglages', 'couches']);
+/**
+ * Les modules qu'un lecteur ne peut pas ouvrir.
+ *
+ * `recit` n'y figure pas — non parce qu'il se configurerait en lecture, mais
+ * parce qu'un lecteur doit pouvoir **jouer** le recit. La distinction est entre
+ * *jouer* et *regler*, pas entre les modules : `formulaires` regle, donc il y
+ * entre, et un lecteur obtient le formulaire **sur un objet**, jamais le module
+ * qui le decide.
+ */
+const VIEW_AUTHOR_MODULES = new Set(['lieu', 'soleil', 'vues', 'controles', 'reglages', 'couches', 'formulaires']);
 
 function openModule(name) {
     if (CONFIG.viewMode && name === 'recit') {
@@ -3058,6 +3070,7 @@ function openModule(name) {
     else if (name === 'symbo') renderLayersPanel(name);
     else if (name === 'controles') renderControles();
     else if (name === 'recit') renderRecit();
+    else if (name === 'formulaires') renderFormulaires();
     else if (name === 'reglages') renderModelsPanel();
     else if (name === 'soleil') renderSoleil();
     else if (name === 'vues') renderVues();
@@ -3296,6 +3309,7 @@ const IC = {
     loupe:     '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
     soleil:    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
     recit:     '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M9 7h7M9 11h5"/>',
+    formulaire: '<path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/>',
     controles: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
     reglages:  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     camera:    '<path d="M3 7h3l2-3h8l2 3h3v13H3z"/><circle cx="12" cy="13" r="3.2"/>',
@@ -3813,6 +3827,128 @@ function renderControles() {
     }
     html += '</div>';
     body.innerHTML = html;
+}
+
+/**
+ * Le module « Formulaires » — choisir ce que le document sait saisir.
+ *
+ * ## Pourquoi le rail, et pas un onglet de couche
+ *
+ * Un FormDef est indexe par **table**, pas par couche : deux couches d'une meme
+ * table partagent le formulaire, c'est la donnee qu'on saisit et non sa
+ * representation. Un onglet dans l'inspecteur aurait menti sur le modele — on
+ * aurait regle « le formulaire de cette couche » alors qu'on regle celui de la
+ * table. Et il faut voir l'ensemble pour choisir : un document a plusieurs
+ * tables, donc plusieurs formulaires.
+ *
+ * Il rejoint la famille a laquelle il appartient : Controles et Recit sont les
+ * deux choses qu'un auteur configure *pour le lecteur*. Un formulaire
+ * disponible hors edition est de la meme nature.
+ *
+ * ## Ce qu'il ne fait pas
+ *
+ * **Il ne cree aucun formulaire.** Atlas n'en livre pas non plus : c'est
+ * l'utilisateur qui batit le sien, comme il ecrit son recit — et un document ou
+ * personne n'en a fait n'en a pas. Le module liste, choisit, expose ; definir
+ * appartient au generateur de formulaires, materialiser une table a
+ * `ensure-schema`. Un seul createur par objet.
+ */
+function renderFormulaires() {
+    $('module-title').textContent = 'Formulaires';
+    const body = $('module-body');
+
+    if (!CONFIG.grist.ready) {
+        body.innerHTML = `<div class="empty"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
+            <div class="t">Hors Grist</div>
+            <div class="h">Les formulaires vivent dans le document.</div></div>`;
+        return;
+    }
+
+    const entrees = STATE.formulaires || [];
+    const lignes = inventaireFormulaires({ couches: STATE.layers, entrees });
+
+    let html = `<div class="hint">Un formulaire décrit comment se saisit une table. Choisissez celui qui sert de fiche au clic sur un objet, et publiez-le pour qu'il reste disponible hors édition.</div>`;
+
+    if (!STATE.formulairesTable) {
+        // L'absence de la table est le cas NORMAL : la plupart des documents
+        // n'ont jamais vu de formulaire. Ce n'est donc pas une anomalie qu'on
+        // signale, c'est un etat qu'on explique.
+        html += `<div class="section"><div class="hint" style="margin-bottom:0">
+            Ce document ne porte aucun formulaire. Ils se créent dans le widget
+            <strong>Form Builder</strong> — ajoutez-lui une page — ou arrivent avec un projet
+            QField importé par qgis2grist.</div></div>`;
+    }
+
+    if (!lignes.length) {
+        body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
+            <div class="t">Aucune table à saisir</div>
+            <div class="h">Une couche liée à une table Grist, et sa ligne apparaîtra ici.</div></div>`;
+        return;
+    }
+
+    html += lignes.map((l) => ligneFormulaireTable(l)).join('');
+    body.innerHTML = html;
+}
+
+/** Une table du document, ce qu'elle sait saisir, et ce que la scene en publie. */
+function ligneFormulaireTable(l) {
+    const esc = (s) => String(s).replace(/'/g, "\'");
+    const nbCouches = l.couches.length;
+    const choisi = l.choisi;
+
+    // Sans couche, la table ne se saisit pas depuis la carte : elle se remplit
+    // depuis un objet qui la reference. Rien a exposer ici, donc pas de bascule.
+    const exposable = nbCouches > 0 && !!choisi;
+    const bascule = exposable
+        ? `<div class="toggle ${l.expose ? 'on' : ''}" role="switch" tabindex="0" aria-checked="${l.expose}"
+            aria-label="Rendre le formulaire de ${esc(l.table)} disponible hors édition"
+            title="Disponible hors édition"
+            onclick="A.exposerFormulaire('${esc(l.table)}')"></div>`
+        : '';
+
+    let corps = '';
+    if (!choisi) {
+        corps = `<div class="hint" style="margin-bottom:0">Aucun formulaire pour cette table — la fiche devine
+            les champs, et n'a que deux types. En créer un dans le <strong>Form Builder</strong> donnerait
+            les listes, les cases, les dates et les champs obligatoires.</div>`;
+    } else {
+        const choix = l.formulaires.length > 1
+            ? `<select class="input" style="margin-bottom:8px" onchange="A.choisirFormulaire('${esc(l.table)}', this.value)">
+                ${l.formulaires.map((e) => `<option value="${esc(e.formId || '')}" ${e === choisi ? 'selected' : ''}>${e.titre} · ${libelleStatut(e.statut)}${e.version ? ` · v${e.version}` : ''}</option>`).join('')}
+               </select>`
+            : `<div class="hint" style="margin-bottom:8px"><strong>${choisi.titre}</strong> · ${libelleStatut(choisi.statut)}${choisi.version ? ` · v${choisi.version}` : ''}</div>`;
+        corps = choix;
+        if (l.expose && !formulaireOffrable(choisi)) {
+            // Exposer un brouillon n'est pas une erreur — c'est un ordre donne
+            // avant que le formulaire soit pret. Le dire evite de chercher
+            // pourquoi le lecteur ne voit rien.
+            corps += `<div class="hint" style="margin-bottom:8px">Ce formulaire est encore un brouillon :
+                il ne sera proposé hors édition qu'une fois publié, depuis le Form Builder.</div>`;
+        }
+        if (!nbCouches) {
+            corps += `<div class="hint" style="margin-bottom:0">Table sans géométrie — elle se remplit depuis
+                un objet qui la référence, pas depuis la carte.</div>`;
+        }
+    }
+
+    const couches = nbCouches
+        ? `<div class="hint" style="margin-bottom:0">${nbCouches > 1 ? 'Couches' : 'Couche'} : ${l.couches.map((c) => c.name).join(', ')}</div>`
+        : '';
+
+    return `<div class="section">
+        <div class="toggle-row">
+            <span class="tlabel">⛓ <strong>${l.table}</strong></span>
+            ${bascule}
+        </div>
+        ${corps}
+        ${couches}
+    </div>`;
+}
+
+function libelleStatut(statut) {
+    if (statut === 'terrain') return 'terrain';
+    if (statut === 'publie') return 'publié';
+    return 'brouillon';
 }
 
 function renderRecit() {
@@ -5452,18 +5588,13 @@ const TABLE_SCHEMAS = {
  */
 async function chargerFormulaires() {
     STATE.formulaires = [];
+    STATE.formulairesTable = false;
     if (!CONFIG.grist.ready) return;
     try {
         const tables = await grist.docApi.listTables();
         if (!tables.includes('Formulaires')) return;
-        const rec = await grist.docApi.fetchTable('Formulaires');
-        const n = (rec.id || []).length;
-        for (let i = 0; i < n; i++) {
-            try {
-                const def = JSON.parse(rec.Def?.[i] || 'null');
-                if (def && def.tableId) STATE.formulaires.push(def);
-            } catch (_) { /* une definition illisible n'empeche pas les autres */ }
-        }
+        STATE.formulairesTable = true;
+        STATE.formulaires = lireFormulaires(await grist.docApi.fetchTable('Formulaires'));
     } catch (e) {
         console.warn('[Atlas formulaire] chargement', e.message);
     }
@@ -6352,6 +6483,7 @@ function buildCmdItems(q) {
         { label: 'Couches', kind: 'module', run: () => openModule('couches'), ic: icTrait(IC.dossier) },
         { label: 'Contrôles', kind: 'module', run: () => openModule('controles'), ic: icTrait(IC.controles) },
         { label: 'Récit', kind: 'module', run: () => openModule('recit'), ic: icTrait(IC.recit) },
+        { label: 'Formulaires', kind: 'module', run: () => openModule('formulaires'), ic: icTrait(IC.formulaire) },
         { label: 'Catalogue 3D / Réglages', kind: 'module', run: () => openModule('reglages'), ic: icTrait(IC.reglages) },
         { label: 'Soleil', kind: 'module', run: () => openModule('soleil'), ic: icTrait(IC.soleil) },
         { label: 'Vue & rendu', kind: 'module', run: () => openModule('vues'), ic: icTrait(IC.cube) },
@@ -6412,6 +6544,41 @@ function updateRailBadge() {
 // ============================================================
 const A = {
     openModule, exitSelectionMode,
+
+    // ---------- Formulaires ----------
+
+    /**
+     * Publier — ou retirer — le formulaire d'une table hors edition.
+     *
+     * Le reglage voyage avec la COUCHE et non avec le formulaire : une meme
+     * table peut etre exposee dans une scene et pas dans une autre, alors que
+     * sa definition est unique. Toutes les couches de la table basculent
+     * ensemble — c'est la table qu'on publie, et deux couches d'une meme table
+     * qui divergeraient ne voudraient rien dire.
+     */
+    async exposerFormulaire(table) {
+        if (!assertCanWrite('publier un formulaire')) return;
+        const couches = STATE.layers.filter((l) => l.sourceTable === table);
+        if (!couches.length) return;
+        const actif = !couches.some((l) => reglagesFormulaire(l).expose);
+        for (const c of couches) c.formulaire = { ...reglagesFormulaire(c), expose: actif };
+        renderFormulaires();
+        for (const c of couches) await saveLayerToGrist(c, true);
+        showToast(actif ? `Formulaire publié · ${table}` : `Formulaire retiré · ${table}`, 'success');
+    },
+
+    /** Lequel des formulaires de cette table sert de fiche, dans cette scene. */
+    async choisirFormulaire(table, formId) {
+        if (!assertCanWrite('choisir un formulaire')) return;
+        const couches = STATE.layers.filter((l) => l.sourceTable === table);
+        if (!couches.length) return;
+        for (const c of couches) c.formulaire = { ...reglagesFormulaire(c), id: formId || null };
+        renderFormulaires();
+        // La fiche ouverte porte peut-etre le formulaire qu'on vient de
+        // remplacer : la laisser en place montrerait l'ancien.
+        renderInspector();
+        for (const c of couches) await saveLayerToGrist(c, true);
+    },
 
     // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },

@@ -34,16 +34,156 @@ export function moteurDisponible() {
 }
 
 /**
+ * Les statuts que la table `Formulaires` connaît — le vocabulaire est celui de
+ * `grist_forms/shared/formulaires-table.js`, et il ne s'invente pas ici.
+ *
+ * `terrain` est celui qu'écrit qgis2grist en important un projet QField : un
+ * pack de terrain arrive donc prêt à servir, ce qui est cohérent — importer un
+ * projet de terrain *est* le geste qui en demande.
+ */
+export const STATUTS = Object.freeze(['brouillon', 'publie', 'terrain']);
+
+/** Un brouillon se règle et se teste ; il ne s'offre pas à un lecteur. */
+export const STATUTS_OFFRABLES = Object.freeze(['publie', 'terrain']);
+
+/**
+ * La table `Formulaires`, lue une fois pour toutes.
+ *
+ * Atlas ne gardait que le `Def`, et perdait donc `Statut` — l'état que le
+ * document tient déjà sur chaque formulaire. Il l'aurait réinventé ailleurs,
+ * et deux vérités sur le même fait sont une panne en attente.
+ *
+ * Une définition illisible n'empêche pas les autres : c'est la même règle que
+ * partout dans Atlas, une donnée abîmée ne coûte que sa propre ligne.
+ *
+ * @param {object} rec table colonnaire renvoyée par `fetchTable('Formulaires')`
+ */
+export function lireFormulaires(rec) {
+  const ids = rec?.id || [];
+  const out = [];
+  for (let i = 0; i < ids.length; i++) {
+    let def = null;
+    try {
+      def = JSON.parse(rec.Def?.[i] || 'null');
+    } catch (_) {
+      continue;
+    }
+    if (!def || !def.tableId) continue;
+    const statut = String(rec.Statut?.[i] || '').trim();
+    out.push({
+      rowId: ids[i],
+      formId: def.id || rec.FormId?.[i] || null,
+      titre: def.title || rec.Titre?.[i] || rec.Nom?.[i] || def.tableId,
+      tableCible: rec.TableCible?.[i] || def.tableId,
+      version: Number(rec.Version?.[i]) || 0,
+      statut: STATUTS.includes(statut) ? statut : 'brouillon',
+      def,
+    });
+  }
+  return out;
+}
+
+/** Un formulaire qu'on peut proposer hors édition. */
+export function formulaireOffrable(entree) {
+  return !!entree && STATUTS_OFFRABLES.includes(entree.statut);
+}
+
+/** Tous les formulaires qui visent cette table. */
+export function formulairesPourTable(entrees, table) {
+  if (!table || !Array.isArray(entrees)) return [];
+  return entrees.filter((e) => e && e.def?.tableId === table);
+}
+
+/**
+ * Lequel sert la fiche, quand une table en porte plusieurs.
+ *
+ * `find` sur la table suffisait tant qu'il n'y en avait qu'un ; c'est faux dès
+ * que le module permet d'en avoir plusieurs, ce qui est son objet même. L'ordre
+ * de préférence dit ce qu'on veut : **le choix de la scène d'abord** — c'est
+ * l'auteur qui a tranché —, puis un formulaire abouti, puis le premier venu,
+ * pour ne jamais rendre `null` quand quelque chose existe.
+ *
+ * @param {object[]} entrees
+ * @param {{table: string, prefereId?: string|null}} o
+ */
+export function choisirFormulaire(entrees, { table, prefereId = null } = {}) {
+  const candidats = formulairesPourTable(entrees, table);
+  if (!candidats.length) return null;
+  if (prefereId) {
+    const voulu = candidats.find((e) => e.formId === prefereId);
+    if (voulu) return voulu;
+  }
+  return candidats.find((e) => e.statut !== 'brouillon') || candidats[0];
+}
+
+/**
+ * Les réglages de formulaire que porte une couche, normalisés.
+ *
+ * Ils voyagent avec la **scène**, pas avec le formulaire : on peut vouloir
+ * exposer le relevé du mobilier dans une scène et pas dans une autre, alors que
+ * la table est la même. Une seule définition, chaque scène décidant de ce
+ * qu'elle publie.
+ */
+export function reglagesFormulaire(couche) {
+  const r = couche?.formulaire || {};
+  return { id: r.id || null, expose: r.expose === true };
+}
+
+/**
  * Le FormDef qui décrit cette couche, ou `null`.
  *
  * La clé est la **table cible**, pas la couche : deux couches d'une même table
  * partagent le formulaire, ce qui est le comportement voulu — c'est la donnée
  * qu'on saisit, pas la représentation.
  */
-export function formDefPourCouche(couche, formulaires) {
-  const table = couche?.sourceTable;
-  if (!table || !Array.isArray(formulaires)) return null;
-  return formulaires.find((f) => f && f.tableId === table) || null;
+export function formDefPourCouche(couche, entrees) {
+  const entree = choisirFormulaire(entrees, {
+    table: couche?.sourceTable,
+    prefereId: reglagesFormulaire(couche).id,
+  });
+  return entree ? entree.def : null;
+}
+
+/**
+ * Ce que le module montre : une ligne par table, qu'elle porte un formulaire,
+ * des couches, ou les deux.
+ *
+ * Les deux inventaires se rejoignent ici, et aucun ne commande l'autre. Une
+ * table géo sans formulaire est une **occasion** — c'est là qu'on en crée un.
+ * Un formulaire dont aucune couche ne porte la table est **normal** : une table
+ * de visites n'a pas de géométrie, et elle se saisit depuis le bâtiment.
+ *
+ * @param {{couches: object[], entrees: object[]}} o
+ */
+export function inventaireFormulaires({ couches = [], entrees = [] } = {}) {
+  const tables = [];
+  const index = new Map();
+  const ligne = (table) => {
+    if (!index.has(table)) {
+      const l = { table, couches: [], formulaires: [], choisi: null, expose: false };
+      index.set(table, l);
+      tables.push(l);
+    }
+    return index.get(table);
+  };
+
+  // Les couches d'abord : l'ordre du panneau suit celui de la carte, qui est
+  // celui que l'auteur a sous les yeux.
+  for (const c of couches) {
+    if (!c?.sourceTable) continue;
+    const l = ligne(c.sourceTable);
+    l.couches.push(c);
+    if (reglagesFormulaire(c).expose) l.expose = true;
+  }
+  for (const e of entrees) {
+    if (!e?.def?.tableId) continue;
+    ligne(e.def.tableId).formulaires.push(e);
+  }
+  for (const l of tables) {
+    const prefere = l.couches.map((c) => reglagesFormulaire(c).id).find(Boolean) || null;
+    l.choisi = choisirFormulaire(entrees, { table: l.table, prefereId: prefere });
+  }
+  return tables;
 }
 
 /**
