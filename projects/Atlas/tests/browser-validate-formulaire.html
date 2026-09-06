@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Atlas — peau du formulaire d'entité</title>
+<!--
+  Banc visuel de `lib/formulaire-atlas.css`.
+
+  Le moteur de `grist_forms` n'embarque aucun style : il émet 33 classes `fr-*`
+  et compte sur l'hôte. Vérifier leur rendu dans Grist demande un document, un
+  serveur HTTPS et une couche liée — trop cher pour une question de peau.
+
+  Cette page rend le même balisage, avec les mêmes jetons, hors de tout Grist.
+  Elle sert à répondre à des questions précises : « pourquoi ce bouton radio
+  est-il noir ? » se mesure ici en une seconde, au lieu de se deviner là-bas.
+
+      node scripts/serve-dev.js --root . --port 3011
+      http://localhost:3011/projects/Atlas/tests/browser-validate-formulaire.html
+-->
+<style>
+  /* Les jetons d'Atlas, copiés de `index_v7.html` — la peau n'en connaît pas
+     d'autres, et c'est ce qu'on veut vérifier. */
+  :root {
+    --bg: #F4EFE3;
+    --surface: #FFFFFF;
+    --surface-muted: #FAF6EB;
+    --ink: #1F1B14;
+    --text: #2D2820;
+    --muted: #7A6F5E;
+    --muted-light: #A89E8B;
+    --hairline: #E2DBC8;
+    --hairline-strong: #C9C0A8;
+    --accent: #C44536;
+    --accent-soft: #F5E9DC;
+    --accent2: #2E4E54;
+    --green: #5B7A4F;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --serif: 'Playfair Display', Georgia, serif;
+    --t-fast: 140ms ease;
+    --inspector-w: 360px;
+    color-scheme: light;
+  }
+  body { margin: 0; background: var(--bg); font-family: var(--sans); color: var(--text); }
+  .cadre { display: flex; gap: 24px; padding: 24px; align-items: flex-start; }
+  /* La largeur réelle du panneau : c'est la contrainte qui compte. */
+  .insp-body, #insp-body {
+    width: var(--inspector-w); box-sizing: border-box;
+    background: var(--surface); border: 1px solid var(--hairline);
+    padding: 18px 20px; overflow-y: auto; max-height: 90vh;
+  }
+  #mesures {
+    font: 12px/1.6 ui-monospace, monospace; background: var(--surface);
+    border: 1px solid var(--hairline); padding: 12px 16px; white-space: pre;
+  }
+</style>
+<link rel="stylesheet" href="../lib/formulaire-atlas.css">
+</head>
+<body>
+<div class="cadre">
+  <div class="insp-body" id="insp-body"></div>
+  <div id="mesures">mesure…</div>
+</div>
+
+<script src="../../grist_forms/shared/types.js"></script>
+<script src="../../grist_forms/shared/attachments.js"></script>
+<script src="../../grist_forms/shared/session-context.js"></script>
+<script src="../../grist_forms/runtime/engine.js"></script>
+<script>
+/** Un formulaire qui exerce tous les widgets qu'Atlas rencontre. */
+const FORM_DEF = {
+  manifest_version: '1.0.0',
+  id: 'banc-peau',
+  title: 'Bâtiment — relevé',
+  description: 'Deux étapes : l’identité, puis l’état constaté.',
+  tableId: 'Batiments_locaux',
+  composeMode: 'bind',
+  sections: [
+    {
+      id: 's1', label: 'Identité', fields: [
+        { colId: 'nom', label: 'Nom', type: 'Text', widget: 'text', required: true },
+        { colId: 'hauteur', label: 'Hauteur (m)', type: 'Numeric', widget: 'number', required: false },
+        { colId: 'notes', label: 'Observations', type: 'Text', widget: 'textarea', required: false },
+        { colId: 'usage', label: 'Usage', type: 'Choice', widget: 'select', required: false,
+          options: { choices: ['Logement', 'Bureau', 'Commerce'] } },
+      ],
+    },
+    {
+      id: 's2', label: 'État constaté', fields: [
+        { colId: 'etat', label: 'État', type: 'Choice', widget: 'radio', required: true,
+          options: { choices: ['Neuf', 'Bon', 'Dégradé', 'Ruine'] } },
+        { colId: 'verifie', label: 'Vérifié sur place', type: 'Bool', widget: 'checkbox', required: false },
+        { colId: 'usages', label: 'Usages constatés', type: 'ChoiceList', widget: 'multiselect', required: false,
+          options: { choices: ['Marché', 'Bureau', 'Dépôt'] } },
+        { colId: 'visite', label: 'Date de visite', type: 'Date', widget: 'date', required: false },
+      ],
+    },
+  ],
+  choices: {},
+};
+
+const VALEURS = {
+  nom: 'Mairie', hauteur: '12.5', usage: 'Bureau',
+  etat: 'Bon', verifie: true, usages: ['Marché'], visite: '2026-03-14',
+};
+
+FormEngine.mount(document.getElementById('insp-body'), FORM_DEF, {
+  editRowId: 3,
+  values: VALEURS,
+  updateRow: () => Promise.resolve(),
+});
+
+/**
+ * Ce qu'on mesure, et pourquoi.
+ *
+ * Un bouton radio non coché apparaissait en disque noir dans Grist. Le lire à
+ * l'œil ne dit pas d'où ça vient : le navigateur peint les contrôles natifs
+ * lui-même, et seule la valeur calculée de `color-scheme` tranche entre « la
+ * feuille est mal écrite » et « la page n'a pas déclaré son thème ».
+ */
+function mesurer() {
+  const el = document.querySelector('#insp-body input[type="radio"], #insp-body input[type="checkbox"]');
+  const lignes = [
+    'color-scheme (:root) = ' + getComputedStyle(document.documentElement).colorScheme,
+    'thème du système     = ' + (matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair'),
+    'peau chargée         = ' + (getComputedStyle(document.querySelector('.fr-btn') || document.body).borderRadius === '8px' ? 'oui' : 'NON'),
+  ];
+  if (el) {
+    const cs = getComputedStyle(el);
+    lignes.push(
+      '',
+      'contrôle natif : ' + el.type,
+      '  taille       = ' + cs.width + ' × ' + cs.height,
+      '  accent-color = ' + cs.accentColor,
+      '  color-scheme = ' + cs.colorScheme,
+      '  background   = ' + cs.backgroundColor,
+      '  appearance   = ' + cs.appearance,
+    );
+  } else {
+    lignes.push('', 'aucun contrôle natif à cette étape — passez à « Suivant ».');
+  }
+  document.getElementById('mesures').textContent = lignes.join('\n');
+}
+
+mesurer();
+// Le formulaire se re-rend à chaque étape : on remesure ce qui est à l'écran.
+new MutationObserver(mesurer).observe(document.getElementById('insp-body'), { childList: true, subtree: true });
+</script>
+</body>
+</html>

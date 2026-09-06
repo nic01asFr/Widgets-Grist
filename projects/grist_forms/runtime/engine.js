@@ -618,10 +618,41 @@
   }
 
   // mount : multi-étapes + cascade Ref (loadTable) + editRowId (UpdateRecord) + context.
+  /**
+   * Valeurs de depart, filtrees par ce que le formulaire declare.
+   *
+   * `mount` ouvrait sur `{}` en dur : `editRowId` faisait ECRIRE dans une ligne
+   * existante, jamais LIRE la sienne. Et `collectSubmitData` emet TOUS les
+   * champs visibles — ouvrir un objet, cocher une case et enregistrer effacait
+   * donc son nom et sa hauteur. Le chemin etait cable depuis toujours et jamais
+   * exerce : son seul consommateur, l'app terrain, ne fait que de la creation.
+   *
+   * Un consommateur qui edite avait tente d'amorcer le DOM apres le montage.
+   * Cela ne tient pas : un formulaire multi-etapes ne rend que l'etape
+   * courante, et les champs des suivantes n'existent pas encore. Les valeurs
+   * doivent donc entrer ICI, avant le premier rendu.
+   *
+   * On ne retient que ce que le formulaire declare — une valeur qu'il ignore
+   * n'a rien a faire dans `values`.
+   */
+  function initialValues(formDef, fournies) {
+    var out = {};
+    if (!fournies) return out;
+    var sections = (formDef && formDef.sections) || [];
+    for (var i = 0; i < sections.length; i++) {
+      var fields = sections[i].fields || [];
+      for (var j = 0; j < fields.length; j++) {
+        var colId = fields[j].colId;
+        if (Object.prototype.hasOwnProperty.call(fournies, colId)) out[colId] = fournies[colId];
+      }
+    }
+    return out;
+  }
+
   function mount(rootEl, formDef, bridge) {
     if (!rootEl) return null;
     bridge = bridge || {};
-    var values = {};
+    var values = initialValues(formDef, bridge.values);
     var stepIndex = 0;
     var errorFields = [];
     var submitting = false;

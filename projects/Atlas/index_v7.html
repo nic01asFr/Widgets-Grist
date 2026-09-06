@@ -57,14 +57,26 @@
             --hairline: #E2DBC8;
             --hairline-strong: #C9C0A8;
             --accent: #C44536;
-            /* Atlas est une interface claire, et ne le disait a personne. Sans
-               ce jeton, un OS en theme sombre fait peindre par le navigateur
-               TOUS les controles natifs — cases, boutons radio, selecteur de
-               date, ascenseurs — dans sa propre palette : les cases du
-               formulaire d'entite apparaissaient en disques noirs, hors de la
-               palette d'Atlas. Un champ texte masquait le probleme, puisqu'il
-               est entierement repeint par la feuille. */
-            color-scheme: light;
+            /*
+             * Atlas est une interface claire, et ne le disait a personne. Sans
+             * ce jeton, le navigateur peint TOUS les controles natifs — cases,
+             * boutons radio, selecteur de date, ascenseurs — dans la palette du
+             * theme ambiant : les cases du formulaire d'entite apparaissaient en
+             * disques noirs. Un champ texte masquait le probleme, puisqu'il est
+             * entierement repeint par la feuille.
+             *
+             * > **Et il faut `!important`.** `grist-plugin-api.js` pousse le
+             * > theme du document DANS le widget, en style EN LIGNE sur `<html>`
+             * > (`style="color-scheme: dark"`, avec `data-grist-theme` et
+             * > `data-grist-appearance`). Un style en ligne bat toute feuille :
+             * > la declaration simple ne servait a rien, et c'est mesure — la
+             * > valeur calculee valait `dark` dans Grist et `light` hors de lui.
+             *
+             * Atlas n'a qu'une palette, claire. Suivre le theme sombre de Grist
+             * demanderait de la doubler entierement ; tant que ce n'est pas fait,
+             * annoncer clair est la seule chose vraie.
+             */
+            color-scheme: light !important;
             --accent-soft: #F5E9DC;
             --accent2: #2E4E54;
             --sun: #E8A234;
@@ -857,6 +869,17 @@
         }
         body.view-mode .selection-bar,
         body.view-mode .selection-bar.open { display: none !important; }
+        /*
+         * Le mode exploitation — lecture, mais saisie ouverte sur une couche
+         * dont la scene a publie le formulaire. La fiche et la barre de
+         * parcours reviennent, et elles seules : le rail, les modules et les
+         * outils d'auteur restent masques par les regles ci-dessus.
+         *
+         * La barre porte « ◀ 1/5 ▶ », « Tout » et « ✕ » : c'est exactement le
+         * geste d'une tournee, passer d'un objet au suivant et refermer.
+         */
+        body.view-mode.mode-saisie .inspector.open { display: flex !important; }
+        body.view-mode.mode-saisie .selection-bar.open { display: flex !important; }
         body.view-mode .inspector { display: none !important; }
         body.view-mode #mobile-nav { display: none !important; }
         .legend-row.legend-clickable { cursor: pointer; border-radius: 6px; margin: 0 -4px; padding: 3px 4px; }

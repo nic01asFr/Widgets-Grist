@@ -8,7 +8,7 @@ import {
   reglagesFormulaire,
   formDefPourCouche,
   inventaireFormulaires,
-  valeursDepuisEntite,
+  valeursPourMoteur,
 } from '../lib/fiche-formulaire.js';
 
 /* ---------- ce que la table Formulaires rend, et ce qu'elle perdait ---------- */
@@ -205,7 +205,130 @@ test('un inventaire vide est un inventaire, pas une erreur', () => {
 /* ---------- les valeurs de depart ---------- */
 
 test('on ne passe que ce que le formulaire declare', () => {
+  // `collectSubmitData` emet tout ce qu'il connait : lui donner une colonne
+  // qu'il n'affiche pas la ferait reecrire sans que personne l'ait vue.
   const def = { sections: [{ fields: [{ colId: 'nom' }, { colId: 'etat' }] }] };
-  const v = valeursDepuisEntite(def, { nom: 'Halle', etat: 'bon', hauteur: 12, _row_id: 4 });
+  const v = valeursPourMoteur(def, { nom: 'Halle', etat: 'bon', hauteur: 12, _row_id: 4 });
   assert.deepEqual(v, { nom: 'Halle', etat: 'bon' });
+});
+
+test('et on le passe dans la langue du champ, pas dans celle de Grist', () => {
+  const def = { sections: [{ fields: [
+    { colId: 'nom', type: 'Text' },
+    { colId: 'visite', type: 'Date', widget: 'date' },
+    { colId: 'verifie', type: 'Bool', widget: 'checkbox' },
+    { colId: 'usages', type: 'ChoiceList', widget: 'multiselect' },
+    { colId: 'absent', type: 'Text' },
+  ] }] };
+  assert.deepEqual(
+    valeursPourMoteur(def, { nom: 'Halle', visite: 1773446400, verifie: 'false', usages: ['L', 'marche'] }),
+    { nom: 'Halle', visite: '2026-03-14', verifie: false, usages: ['marche'] },
+  );
+});
+
+/* ---------- le mode exploitation : saisir hors edition ---------- */
+
+import { saisieHorsEdition } from '../lib/fiche-formulaire.js';
+
+/** Le cas nominal : un lien de terrain, un formulaire publie, des droits. */
+const terrain = {
+  view: true,
+  aDesLignes: true,
+  peutEcrire: true,
+  reglages: { id: null, expose: true },
+  entree: { statut: 'terrain' },
+  moteur: true,
+};
+
+test('le cas du terrain : lecture, formulaire publie, droits d’ecriture', () => {
+  assert.equal(saisieHorsEdition(terrain), true);
+});
+
+test('en edition, la question ne se pose pas', () => {
+  // Ce chemin ne decrit que ce qui reste ouvert HORS edition ; en edition,
+  // c'est le garde ordinaire qui repond.
+  assert.equal(saisieHorsEdition({ ...terrain, view: false }), false);
+});
+
+test('chacune des quatre conditions suffit a fermer', () => {
+  // Sans ligne : on ecrirait dans un blob GeoJSON, ou rien n'a d'identite.
+  assert.equal(saisieHorsEdition({ ...terrain, aDesLignes: false }), false);
+  // Sans droits : on ferait remplir un formulaire pour un refus.
+  assert.equal(saisieHorsEdition({ ...terrain, peutEcrire: false }), false);
+  // Sans publication : tout formulaire du document deviendrait saisissable.
+  assert.equal(saisieHorsEdition({ ...terrain, reglages: { expose: false } }), false);
+  // Sans moteur : le repli devine les champs, il n'a rien a ecrire ici.
+  assert.equal(saisieHorsEdition({ ...terrain, moteur: false }), false);
+});
+
+test('un brouillon publie par erreur ne part pas au terrain', () => {
+  assert.equal(saisieHorsEdition({ ...terrain, entree: { statut: 'brouillon' } }), false);
+  assert.equal(saisieHorsEdition({ ...terrain, entree: null }), false);
+});
+
+test('« expose » doit valoir vrai, pas seulement etre la', () => {
+  assert.equal(saisieHorsEdition({ ...terrain, reglages: { expose: 'oui' } }), false);
+  assert.equal(saisieHorsEdition({ ...terrain, reglages: {} }), false);
+  assert.equal(saisieHorsEdition({ ...terrain, reglages: null }), false);
+});
+
+test('sans argument, on ne saisit rien', () => {
+  assert.equal(saisieHorsEdition(), false);
+});
+
+/* ---------- ce qu'un champ rendu attend, depuis ce que Grist stocke ---------- */
+
+import { valeurPourFormulaire } from '../lib/fiche-formulaire.js';
+
+test('une date Grist est en SECONDES — l’input la veut en AAAA-MM-JJ', () => {
+  // 2026-03-14T00:00:00Z. Sans conversion, `el.value = "1773446400"` laisse le
+  // champ vide, sans la moindre erreur : la personne ressaisit et ne sait pas
+  // pourquoi.
+  const champ = { colId: 'visite', type: 'Date', widget: 'date' };
+  assert.deepEqual(valeurPourFormulaire(champ, 1773446400), { genre: 'date', valeur: '2026-03-14' });
+});
+
+test('des millisecondes se reconnaissent au seuil, pas au hasard', () => {
+  const champ = { colId: 'visite', type: 'Date' };
+  assert.equal(valeurPourFormulaire(champ, 1773446400000).valeur, '2026-03-14');
+});
+
+test('une date deja lisible n’est pas retraduite', () => {
+  const champ = { colId: 'visite', widget: 'date' };
+  assert.equal(valeurPourFormulaire(champ, '2026-03-14').valeur, '2026-03-14');
+});
+
+test('un DateTime garde son heure, la date seule la laisse', () => {
+  assert.equal(valeurPourFormulaire({ type: 'DateTime' }, 1773446400).valeur, '2026-03-14T00:00');
+  assert.equal(valeurPourFormulaire({ type: 'Date' }, 1773446400).valeur, '2026-03-14');
+});
+
+test('une date illisible ne pose rien plutot que n’importe quoi', () => {
+  assert.equal(valeurPourFormulaire({ type: 'Date' }, 'la semaine derniere'), null);
+});
+
+test('une liste Grist perd son marqueur « L », qui n’est pas un choix', () => {
+  const r = valeurPourFormulaire({ colId: 'usages', type: 'ChoiceList' }, ['L', 'bureau', 'commerce']);
+  assert.deepEqual(r, { genre: 'liste', valeur: ['bureau', 'commerce'] });
+  // Une liste vide n'a rien a cocher.
+  assert.equal(valeurPourFormulaire({ type: 'ChoiceList' }, ['L']), null);
+});
+
+test('un booleen se lit dans toutes ses ecritures', () => {
+  const champ = { colId: 'verifie', type: 'Bool' };
+  assert.deepEqual(valeurPourFormulaire(champ, true), { genre: 'coche', valeur: true });
+  assert.deepEqual(valeurPourFormulaire(champ, false), { genre: 'coche', valeur: false });
+  // Atlas ecrasait les types Grist en deux et renvoyait la chaine « false » :
+  // la lire comme vraie cochait la case a l'envers.
+  assert.deepEqual(valeurPourFormulaire(champ, 'false'), { genre: 'coche', valeur: false });
+  assert.deepEqual(valeurPourFormulaire(champ, 0), { genre: 'coche', valeur: false });
+  assert.deepEqual(valeurPourFormulaire(champ, 'true'), { genre: 'coche', valeur: true });
+});
+
+test('le reste part en texte, et rien ne part du vide', () => {
+  assert.deepEqual(valeurPourFormulaire({ colId: 'nom' }, 'Mairie'), { genre: 'valeur', valeur: 'Mairie' });
+  assert.deepEqual(valeurPourFormulaire({ colId: 'hauteur' }, 12.5), { genre: 'valeur', valeur: '12.5' });
+  for (const rien of [undefined, null, '']) {
+    assert.equal(valeurPourFormulaire({ colId: 'nom' }, rien), null);
+  }
 });

@@ -68,6 +68,30 @@ describe('resolveAccess — les droits Grist font autorite', () => {
     assert.equal(r.reason, 'mode-view');
   });
 
+  it('?mode=view masque les outils, il ne ferme pas l ecriture du widget', () => {
+    // C'est le lien de terrain : lecture a l'ecran, saisie possible dans un
+    // formulaire publie. Demander `read table` fermait l'ecriture AU WIDGET,
+    // avant tout examen des droits de la personne — la sonde echouait alors
+    // pour une raison qui n'avait rien a voir avec elle.
+    const r = resolveAccess({ search: '?access=full&readonly=false&mode=view' });
+    assert.equal(r.requiredAccess, 'full', 'le widget garde ce que le document lui accorde');
+  });
+
+  it('mais ?mode=view ne reclame jamais plus que ce qui est accorde', () => {
+    const r = resolveAccess({ search: '?access=read%20table&readonly=false&mode=view' });
+    assert.equal(r.requiredAccess, 'read table');
+    // Et un document en lecture seule reste juge par Grist, pas par l'URL.
+    const ro = resolveAccess({ search: '?access=full&readonly=true&mode=view' });
+    assert.equal(ro.reason, 'grist-readonly');
+    assert.equal(ro.requiredAccess, 'read table');
+  });
+
+  it('sans rien de transmis, ?mode=view reste prudent', () => {
+    const r = resolveAccess({ search: '?mode=view' });
+    assert.equal(r.viewMode, true);
+    assert.equal(r.requiredAccess, 'read table');
+  });
+
   it('rien de transmis : on retombe sur la sonde', () => {
     const r = resolveAccess({ search: '' });
     assert.equal(r.needsProbe, true);

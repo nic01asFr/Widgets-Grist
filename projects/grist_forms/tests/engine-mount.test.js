@@ -206,6 +206,51 @@ describe('Engine.mount — navigation, validation, submit', () => {
     assert.ok(root.innerHTML.includes('merci.png'));
   });
 
+  it('bridge.values preremplit toutes les etapes, pas seulement la premiere', () => {
+    // Un consommateur qui EDITE (Atlas, la fiche d'entite) avait tente
+    // d'amorcer le DOM apres le montage. Cela ne tient pas : un formulaire
+    // multi-etapes ne rend que l'etape courante, et les champs des suivantes
+    // n'existent pas encore. Vu a l'ecran — le choix « Bon » restait decoche a
+    // l'etape 2, alors que la ligne le portait.
+    const root = createRoot();
+    Engine.mount(root, buildFormDef(), { values: { Nom: 'Dupont', Ville: 'Lyon' } });
+
+    assert.equal(root.querySelector('[name="Nom"]').value, 'Dupont');
+    root.querySelector('[data-action="next"]').dispatchEvent('click');
+    assert.ok(root.innerHTML.includes('Étape 2 sur 2'), 'le requis de l etape 1 etait deja rempli');
+    // Le <select> arrive avec son option marquee — c'est ce que le DOM amorce
+    // apres coup ne pouvait pas faire, l'etape n'etant pas encore rendue.
+    assert.ok(root.innerHTML.includes('value="Lyon" selected'), 'l etape 2 arrive prete');
+  });
+
+  it('sans bridge.values, rien ne change — le chemin reste celui de la creation', () => {
+    const root = createRoot();
+    Engine.mount(root, buildFormDef(), {});
+    assert.equal(root.querySelector('[name="Nom"]').value, '');
+  });
+
+  it('une valeur que le formulaire ne declare pas n entre pas', async () => {
+    // `collectSubmitData` emet tout ce qu'il connait : laisser passer une
+    // colonne etrangere la ferait ecrire dans la table sans que le formulaire
+    // l ait jamais montree.
+    const root = createRoot();
+    let envoye = null;
+    Engine.mount(root, buildFormDef(), {
+      submit: (d) => { envoye = d; return Promise.resolve({ ok: true }); },
+      values: { Nom: 'Dupont', Ville: 'Lyon', ColonneEtrangere: 'a ne pas ecrire' },
+    });
+    root.querySelector('[data-action="next"]').dispatchEvent('click');
+    // Le faux DOM ne modelise pas l'option selectionnee d'un <select> : on pose
+    // la valeur comme le fait le test voisin, l'objet de celui-ci etant
+    // ailleurs.
+    root.querySelector('[name="Ville"]').value = 'Lyon';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush();
+    await flush();
+    assert.ok(envoye, 'la soumission a eu lieu');
+    assert.equal(Object.prototype.hasOwnProperty.call(envoye, 'ColonneEtrangere'), false);
+  });
+
   it('retombe sur applyUserActions BulkAddRecord quand bridge est un GristBridge natif (addRow)', async () => {
     const root = createRoot();
     let calledTable = null;

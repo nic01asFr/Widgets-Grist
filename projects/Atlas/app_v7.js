@@ -18,9 +18,10 @@ import {
 } from './lib/scene-loader.js?v=20260826a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
 import {
-  moteurDisponible, formDefPourCouche, valeursDepuisEntite, amorcerValeurs, pontFormulaire,
-  lireFormulaires, inventaireFormulaires, formulaireOffrable, reglagesFormulaire,
-} from './lib/fiche-formulaire.js?v=20260906a';
+  moteurDisponible, formDefPourCouche, valeursPourMoteur, pontFormulaire,
+  lireFormulaires, inventaireFormulaires, formulaireOffrable, reglagesFormulaire, choisirFormulaire,
+  saisieHorsEdition,
+} from './lib/fiche-formulaire.js?v=20260906d';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
 import {
@@ -166,6 +167,16 @@ const CONFIG = {
     pollIntervalMs: 30000,
     /** Mode lecture (pas d'écriture Grist) — URL ?mode=view ou droits insuffisants */
     viewMode: false,
+    /**
+     * Cette personne peut-elle ecrire dans le document ?
+     *
+     * Orthogonal a `viewMode`, qui dit seulement si Atlas montre ses outils
+     * d'auteur. Un lien de terrain (`?mode=view`) ouvre en lecture quelqu'un
+     * qui a parfaitement le droit d'ecrire : c'est le cas que ce drapeau
+     * existe pour servir. Faux par defaut — on n'ouvre l'ecriture qu'apres
+     * l'avoir etabli.
+     */
+    peutSaisir: false,
     /** Réduit / coupe Models3D (mobile lent ou ?no3d=1) */
     light3d: false,
 };
@@ -4751,7 +4762,7 @@ function rappelRevue(totalRevue) {
     return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
 }
 
-function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
+function monterFormulaireEntite(layer, props, formDef, totalRevue = 0, saisieTerrain = false) {
     const hote = $('insp-body');
     hote.innerHTML = rappelRevue(totalRevue);
     const rowId = props?._row_id;
@@ -4759,7 +4770,6 @@ function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
         return;
     }
-    const valeurs = valeursDepuisEntite(formDef, props);
     try {
         const bloc = document.createElement('div');
         hote.appendChild(bloc);
@@ -4768,19 +4778,49 @@ function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
                 couche: layer,
                 rowId,
                 docApi: grist.docApi,
-                peutEcrire: () => canWrite(CONFIG.viewMode),
+                // Les valeurs de la ligne entrent par le pont, donc avant le
+                // premier rendu. Les poser dans le DOM apres le montage ne
+                // couvrait que l'etape affichee : sur un formulaire en deux
+                // temps, le choix « Bon » restait decoche a l'etape 2 alors que
+                // la ligne le portait.
+                valeurs: valeursPourMoteur(formDef, props),
+                peutEcrire: () => canWrite(CONFIG.viewMode) || (CONFIG.peutSaisir && saisieTerrain),
                 signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
                 // Relit la couche depuis sa table : la carte doit montrer ce
                 // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
                 apresEcriture: () => { A.refreshLayer(layer.id); },
             }));
-        // Apres le montage : le moteur vient de rendre ses champs, vides.
-        amorcerValeurs(bloc, formDef, valeurs);
         _formulaireMonte = true;
     } catch (e) {
         console.error('[Atlas formulaire] mount', e);
         hote.innerHTML = `<div class="hint">Formulaire indisponible : ${e.message}</div>`;
     }
+}
+
+/**
+ * Cette couche se saisit-elle hors edition ?
+ *
+ * Deux endroits ont besoin de la reponse — le clic sur la carte, qui choisit
+ * entre le popup et la fiche, et la fiche elle-meme, qui choisit entre montrer
+ * et laisser ecrire. La regle, elle, n'existe qu'une fois : `saisieHorsEdition`.
+ *
+ * @param {object} layer
+ * @param {{entree?: object|null}} [opts] l'entree deja resolue, si l'appelant l'a
+ */
+function coucheEnSaisie(layer, opts = {}) {
+    if (!layer) return false;
+    const reglages = reglagesFormulaire(layer);
+    const entree = opts.entree !== undefined
+        ? opts.entree
+        : choisirFormulaire(STATE.formulaires, { table: layer.sourceTable, prefereId: reglages.id });
+    return saisieHorsEdition({
+        view: !!CONFIG.viewMode,
+        aDesLignes: coucheAvecLignes(layer),
+        peutEcrire: CONFIG.peutSaisir,
+        reglages,
+        entree,
+        moteur: moteurDisponible(),
+    });
 }
 
 function renderObjectInspector() {
@@ -4802,10 +4842,24 @@ function renderObjectInspector() {
     const tabs = objectInspectorTabs({ layer, multi, revue });
     if (!_inspObjTab || !tabs.includes(_inspObjTab)) _inspObjTab = tabs[0] || null;
 
+    // Le formulaire que cette scene a choisi pour cette table, s'il existe.
+    const reglages = reglagesFormulaire(layer);
+    const entreeForm = (multi && !revue) ? null : choisirFormulaire(STATE.formulaires, {
+        table: layer.sourceTable, prefereId: reglages.id,
+    });
+
+    // Le seul chemin d'ecriture ouvert hors edition : les attributs devines
+    // restent fermes, et rien d'autre ne bouge.
+    const saisieTerrain = coucheEnSaisie(layer, { entree: entreeForm });
+
+    // Hors de la branche : le pied de fiche en a besoin lui aussi, et le
+    // deduire une seconde fois la-bas ferait deux regles pour un seul fait.
+    const attrsReadOnly = (view && !saisieTerrain) || !isQgis;
+
     $('insp-head').innerHTML = `
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
-        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · Grist' : ''}${view ? ' · lecture' : ''}`}</div>`;
+        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
         `<button class="insp-tab ${_inspObjTab === t ? 'active' : ''}" onclick="A.setInspObjTab('${t}')">${t}</button>`
     ).join('');
@@ -4831,19 +4885,15 @@ function renderObjectInspector() {
     // « Placement 3D » laisserait le pied muet, donc sans bouton d'enregistrement.
     _formulaireMonte = false;
 
-    // Hors de la branche : le pied de fiche en a besoin lui aussi, et le
-    // deduire une seconde fois la-bas ferait deux regles pour un seul fait.
-    const attrsReadOnly = view || !isQgis;
-
     if (_inspObjTab === 'Attributs') {
         const readOnly = attrsReadOnly;
         // Quand le document decrit cette table par un FormDef, c'est LUI la
         // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
         // deux types.
-        const formDef = (multi && !revue) ? null : formDefPourCouche(layer, STATE.formulaires);
+        const formDef = entreeForm ? entreeForm.def : null;
         if (formDef && !readOnly && moteurDisponible()) {
-            monterFormulaireEntite(layer, props, formDef, revue && multi ? count : 0);
+            monterFormulaireEntite(layer, props, formDef, revue && multi ? count : 0, saisieTerrain);
         } else {
             // Constater un blocage sans donner la sortie, c'est le laisser
             // chercher. L'offre se pose donc LA ou le blocage se lit.
@@ -4932,8 +4982,17 @@ function setupInteraction() {
         if (!layer) return;
         const idx = f.properties?._idx ?? 0;
 
-        // Lecture : popup attributs (pas d’inspecteur édition)
+        // Lecture : popup attributs (pas d'inspecteur édition) — sauf quand la
+        // scene a publie un formulaire sur cette couche. Le popup dirait les
+        // valeurs ; il ne permettrait pas de les corriger, et c'est justement ce
+        // qu'on est venu faire sur le terrain. Sans cette porte, la bascule
+        // « disponible hors edition » n'aurait rien change a l'ecran.
         if (CONFIG.viewMode) {
+            if (coucheEnSaisie(layer)) {
+                closeViewPopup();
+                enterSelectionMode(layer.id, idx);
+                return;
+            }
             showViewFeaturePopup(layer, idx, e.lngLat, f);
             return;
         }
@@ -5197,11 +5256,16 @@ async function onLocationPick(e) {
     } catch (e2) {}
 }
 function enterSelectionMode(layerId, idx) {
-    if (CONFIG.viewMode) {
+    const enSaisie = coucheEnSaisie(STATE.layers.find((l) => l.id === layerId));
+    // En lecture, la selection est refusee — sauf sur une couche dont la scene
+    // a publie le formulaire : c'est tout l'objet du mode exploitation. Les
+    // autres gardent le popup, qui montre sans permettre de corriger.
+    if (CONFIG.viewMode && !enSaisie) {
         const layer = STATE.layers.find((l) => l.id === layerId);
         if (layer && idx != null) showViewFeaturePopup(layer, idx);
         return;
     }
+    document.body.classList.toggle('mode-saisie', enSaisie);
     STATE.selection.mode = true;
     STATE.selection.layerId = layerId;
     STATE.selection.features = idx != null ? [idx] : [];
@@ -5217,8 +5281,13 @@ function enterSelectionMode(layerId, idx) {
     if (idx != null) flyToFeature(layer, idx);
 }
 function exitSelectionMode() {
+    document.body.classList.remove('mode-saisie');
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
-    if (layer) { saveLayerToGrist(layer, true); }
+    // Refermer un objet enregistrait les preferences de la couche. En mode
+    // exploitation, ou l'on referme apres chaque saisie, cela ferait apparaitre
+    // « Mode lecture — enregistrer les preferences indisponible » a chaque
+    // objet — pour un reglage que personne n'a touche.
+    if (layer && !CONFIG.viewMode) { saveLayerToGrist(layer, true); }
     STATE.selection = { mode: false, layerId: null, features: [], multiIndex: 0 };
     $('map-frame').classList.remove('select-mode');
     $('selection-bar').classList.remove('open');
@@ -5625,6 +5694,9 @@ function assertCanWrite(actionLabel) {
 function enterViewModeOnWriteFail(err) {
     if (CONFIG.viewMode) return;
     CONFIG.viewMode = true;
+    // Un refus franc vaut pour toute la session : continuer d'offrir la saisie
+    // ferait remplir un formulaire pour rien.
+    CONFIG.peutSaisir = false;
     applyViewModeChrome();
     const msg = err?.message || String(err || '');
     showToast('Écriture refusée — passage en lecture' + (msg ? ` (${msg})` : ''), 'warning');
@@ -5641,7 +5713,12 @@ function updateUserBadge() {
     const el = $('user-badge');
     if (!el) return;
     const lecture = !!CONFIG.viewMode;
-    const droit = lecture ? 'Lecture seule — édition indisponible' : 'Édition autorisée';
+    // Trois etats, pas deux : « je ne peux rien ecrire » et « je peux remplir
+    // les formulaires publies » sont deux situations differentes, et c'est ici
+    // qu'un utilisateur vient chercher ce qu'il a le droit de faire.
+    const droit = lecture
+        ? (CONFIG.peutSaisir ? 'Lecture — saisie des formulaires publiés' : 'Lecture seule — édition indisponible')
+        : 'Édition autorisée';
     const u = CONFIG.grist.user;
     el.classList.toggle('ro', lecture);
     if (u?.initiales) {
@@ -5980,16 +6057,32 @@ async function initGrist() {
         grist.ready({ requiredAccess: acc.requiredAccess });
         CONFIG.grist.ready = true;
         CONFIG.viewMode = acc.viewMode;
+        // `viewMode` dit « Atlas ne montre pas ses outils d'auteur ».
+        // `peutSaisir` dit « cette personne peut ecrire dans le document ».
+        // Les deux se confondaient, et c'est pourquoi un formulaire expose hors
+        // edition n'aurait servi a personne : le garde d'ecriture le refusait
+        // avant meme de regarder les droits.
+        CONFIG.peutSaisir = !acc.viewMode;
         // Sonde uniquement quand Grist n'a rien transmis (ouverture hors Grist,
         // version ancienne) : sinon on croit ce que le document annonce.
         if (acc.needsProbe) {
             const writable = await probeCanWriteDoc(grist.docApi);
+            CONFIG.peutSaisir = writable;
             if (!writable) {
                 CONFIG.viewMode = true;
                 console.info('[Atlas] Accès sans écriture — mode lecture');
             }
         } else if (CONFIG.viewMode) {
             console.info('[Atlas] Mode lecture —', acc.reason);
+            // Une lecture demandee par l'URL n'est PAS une privation de droits :
+            // c'est le cas du lien de terrain, ou l'on veut precisement que la
+            // personne remplisse un formulaire sans voir les outils d'auteur.
+            // Grist annonce alors `access=full`, ce qui ne prouve rien — les
+            // regles d'acces s'appliquent par-dessus, cote bac a sable. Seule la
+            // sonde tranche, et elle ne coute qu'un aller-retour.
+            CONFIG.peutSaisir = acc.reason === 'mode-view'
+                ? await probeCanWriteDoc(grist.docApi)
+                : false;
         }
         // Identité : le jeton livre l'userId — suffisant pour marquer l'auteur
         // d'une préférence ou d'un récit. Le nom, lui, n'est pas accessible par
@@ -6023,6 +6116,9 @@ async function initGrist() {
                 grist.ready({ requiredAccess: 'read table' });
                 CONFIG.grist.ready = true;
                 CONFIG.viewMode = true;
+                // On est ici parce que l'acces complet a echoue : rien ne
+                // s'ecrira, formulaire ou pas.
+                CONFIG.peutSaisir = false;
                 applyViewModeChrome();
                 CONFIG.docMode = await detectDocMode(grist.docApi);
                 if (CONFIG.docMode === 'scene-manifest') {

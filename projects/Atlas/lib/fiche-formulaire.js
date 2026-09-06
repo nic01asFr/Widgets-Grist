@@ -187,58 +187,110 @@ export function inventaireFormulaires({ couches = [], entrees = [] } = {}) {
 }
 
 /**
- * Les valeurs de départ, dans le vocabulaire du formulaire.
+ * Le mode exploitation : peut-on saisir cet objet hors édition ?
  *
- * Le moteur lit `values[field.colId]` ; Atlas porte ses attributs dans
- * `feature.properties`, préfixés `_` pour les siens. On ne passe que ce que le
- * formulaire déclare : une valeur qu'il ne connaît pas n'a rien à faire là, et
- * la lui donner reviendrait à la lui faire réécrire.
+ * Atlas confondait deux choses sous un seul mot. « Lecture » disait à la fois
+ * *« Atlas ne montre pas ses outils d'auteur »* et *« vous ne pouvez rien
+ * écrire »* — or le lien de terrain veut précisément le premier sans le second.
+ *
+ * Quatre conditions, et aucune n'est de trop :
+ *
+ * | | Ce qu'elle empêche sans elle |
+ * |---|---|
+ * | l'objet a une ligne | on écrirait dans un blob GeoJSON, où rien n'a d'identité |
+ * | la scène l'a publié | tout formulaire du document deviendrait saisissable partout |
+ * | le formulaire est prêt | un brouillon en cours de réglage partirait au terrain |
+ * | la personne peut écrire | on ferait remplir un formulaire pour un refus |
+ *
+ * En édition (`view` faux) la question ne se pose pas : ce chemin ne décrit que
+ * ce qui reste ouvert **hors** édition.
+ *
+ * @param {{view: boolean, aDesLignes: boolean, peutEcrire: boolean, reglages: object, entree: object|null, moteur: boolean}} o
  */
-export function valeursDepuisEntite(formDef, props) {
-  const out = {};
-  for (const section of (formDef?.sections || [])) {
-    for (const champ of (section.fields || [])) {
-      const v = props?.[champ.colId];
-      if (v !== undefined) out[champ.colId] = v;
-    }
-  }
-  return out;
+export function saisieHorsEdition({ view, aDesLignes, peutEcrire, reglages, entree, moteur } = {}) {
+  return !!view && !!aDesLignes && !!peutEcrire && !!moteur
+    && reglages?.expose === true && formulaireOffrable(entree);
 }
 
 /**
- * Amorce les champs rendus avec les valeurs de l'entité.
+ * Au-delà, un horodatage est déjà en millisecondes.
  *
- * > **Le moteur ne sait pas prérremplir.** `mount` ouvre sur `var values = {}`,
- * > en dur : `editRowId` le fait *écrire* dans une ligne existante, mais jamais
- * > la *lire*. Et `collectSubmitData` envoie **tous** les champs visibles, sans
- * > exception — donc ouvrir un objet, cocher une case et enregistrer
- * > **effacerait** son nom et sa hauteur. C'est un chemin câblé depuis
- * > toujours et jamais exercé : son seul consommateur, l'app terrain, ne fait
- * > que de la création.
- *
- * Amorcer le DOM suffit, parce que le moteur relit ses champs
- * (`readSectionValues`) avant chaque `render`, avant chaque étape et **avant la
- * soumission**. Une valeur posée ici est donc reprise dans `values` dès la
- * première interaction, et au plus tard à l'envoi.
- *
- * Ça reste un contournement. Le vrai correctif — `mount` acceptant des valeurs
- * initiales — appartient à `grist_forms`, et il vaut pour tout consommateur qui
- * voudra éditer, pas seulement Atlas.
+ * 1e11 secondes tombe en l'an 5138 ; 1e11 millisecondes en 1973. Aucune donnée
+ * de terrain ne vit entre les deux, et le seuil sépare donc sans ambiguïté.
  */
-export function amorcerValeurs(hote, formDef, valeurs) {
-  let poses = 0;
+const SECONDES_OU_MILLISECONDES = 1e11;
+
+function versDate(v, avecHeure) {
+  if (v == null || v === '') return null;
+  const d = (typeof v === 'number' && Number.isFinite(v))
+    ? new Date(Math.abs(v) < SECONDES_OU_MILLISECONDES ? v * 1000 : v)
+    : new Date(String(v).trim());
+  if (Number.isNaN(d.getTime())) return null;
+  const iso = d.toISOString();
+  return avecHeure ? iso.slice(0, 16) : iso.slice(0, 10);
+}
+
+/**
+ * Ce qu'un champ rendu attend, depuis ce que Grist stocke.
+ *
+ * > **Grist garde les dates en secondes Unix.** Un `<input type="date">` veut
+ * > `AAAA-MM-JJ` et rejette tout le reste **en silence** : le champ reste vide,
+ * > la personne ressaisit, et rien ne dit pourquoi. Le sens inverse existait
+ * > déjà — `Types.coerceForWrite` — mais personne n'avait écrit la lecture.
+ *
+ * @param {object} champ le champ du FormDef (`type` Grist, `widget` de rendu)
+ * @param {*} v la valeur portée par l'entité
+ * @returns {{genre: 'date'|'coche'|'liste'|'valeur', valeur: *}|null} `null` = rien à poser
+ */
+export function valeurPourFormulaire(champ, v) {
+  if (v === undefined || v === null || v === '') return null;
+  const type = String(champ?.type || '').toLowerCase();
+  const widget = String(champ?.widget || '').toLowerCase();
+
+  if (type === 'datetime' || widget === 'datetime') {
+    const d = versDate(v, true);
+    return d == null ? null : { genre: 'date', valeur: d };
+  }
+  if (type === 'date' || widget === 'date') {
+    const d = versDate(v, false);
+    return d == null ? null : { genre: 'date', valeur: d };
+  }
+  // Une liste Grist arrive comme `['L', 'a', 'b']` : le marqueur n'est pas une
+  // valeur, et le laisser passer cocherait un choix qui n'existe pas.
+  if (Array.isArray(v)) {
+    const items = (v[0] === 'L' ? v.slice(1) : v).map(String);
+    return items.length ? { genre: 'liste', valeur: items } : null;
+  }
+  if (type === 'bool' || widget === 'checkbox') {
+    const faux = v === false || v === 0 || v === '0' || String(v).toLowerCase() === 'false';
+    return { genre: 'coche', valeur: !faux };
+  }
+  return { genre: 'valeur', valeur: String(v) };
+}
+
+/**
+ * Les valeurs de départ, dans le vocabulaire du formulaire.
+ *
+ * Deux tris en un. **Ce que le formulaire déclare** : une valeur qu'il ignore
+ * n'a rien à faire là, et `collectSubmitData` la réécrirait sans que personne
+ * l'ait vue. **Ce qu'un champ rendu attend** : Grist et le DOM ne parlent pas
+ * la même langue, et l'écart se solde en silence.
+ *
+ * > **Elles entrent par le pont, pas par le DOM.** Amorcer les champs après le
+ * > montage ne pouvait pas marcher : un formulaire multi-étapes ne rend que
+ * > l'étape courante, et les champs des suivantes n'existent pas encore — le
+ * > choix « Bon » restait décoché à l'étape 2, alors que la ligne le portait.
+ * > Le correctif est allé là où il devait être, dans `mount`.
+ */
+export function valeursPourMoteur(formDef, props) {
+  const out = {};
   for (const section of (formDef?.sections || [])) {
     for (const champ of (section.fields || [])) {
-      const v = valeurs?.[champ.colId];
-      if (v === undefined || v === null) continue;
-      const el = hote.querySelector(`[name="${CSS.escape(champ.colId)}"]`);
-      if (!el) continue;
-      if (el.type === 'checkbox') el.checked = !!v && v !== 'false';
-      else el.value = String(v);
-      poses++;
+      const cible = valeurPourFormulaire(champ, props?.[champ.colId]);
+      if (cible) out[champ.colId] = cible.valeur;
     }
   }
-  return poses;
+  return out;
 }
 
 /**
@@ -252,13 +304,17 @@ export function amorcerValeurs(hote, formDef, valeurs) {
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
  * @param {() => void} [o.apresEcriture]
  */
-export function pontFormulaire({ couche, rowId, docApi, peutEcrire, signaler, apresEcriture }) {
+export function pontFormulaire({ couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs }) {
   const table = couche?.sourceTable;
   const dire = typeof signaler === 'function' ? signaler : () => {};
 
   return {
     // Présent ⇒ le moteur est en édition de ligne, pas en création.
     editRowId: rowId,
+
+    // Lues AVANT le premier rendu : c'est `mount` qui les prend, et lui seul
+    // voit les étapes que le DOM n'a pas encore.
+    values: valeurs || {},
 
     async updateRow(_tableId, id, data) {
       // Le garde est consulté ici, pas à la construction du pont : les droits

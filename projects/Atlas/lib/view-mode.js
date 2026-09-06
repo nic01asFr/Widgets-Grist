@@ -56,8 +56,20 @@ export function resolveAccess({ search = '', mode } = {}) {
     return { viewMode: true, requiredAccess: 'read table', needsProbe: false, reason: 'grist-readonly' };
   }
   // L'utilisateur demande la lecture alors qu'il pourrait écrire : on respecte.
+  //
+  // > **Mais `?mode=` décrit ce qu'on MONTRE, pas ce qu'on PEUT.** Le widget
+  // > garde donc le niveau d'accès que le document lui a accordé. Demander
+  // > `read table` fermait l'écriture **au widget lui-même**, avant tout examen
+  // > des droits de la personne : la sonde échouait alors pour une raison qui
+  // > n'avait rien à voir avec elle, et un formulaire publié restait
+  // > insaisissable même par un éditeur. C'est le lien de terrain qui en
+  // > dépend — lecture à l'écran, saisie possible dans le formulaire.
+  //
+  // `viewMode` reste vrai : Atlas ne montre aucun outil d'auteur. Les deux
+  // réglages sont orthogonaux, et c'est le fond de l'affaire.
   if (wanted === 'view') {
-    return { viewMode: true, requiredAccess: 'read table', needsProbe: false, reason: 'mode-view' };
+    const accorde = grant.readonly === false && grant.access === 'full' ? 'full' : 'read table';
+    return { viewMode: true, requiredAccess: accorde, needsProbe: false, reason: 'mode-view' };
   }
   // Grist annonce l'ecriture — mais `access` decrit le niveau accorde AU WIDGET
   // (le reglage « Niveau d'acces » de la vue), pas les droits de la personne sur
