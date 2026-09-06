@@ -330,6 +330,33 @@ jeu pour ce cas, qui est le cas courant.
 Côté qgis2grist, `saveTerrainForms` fait un **upsert par `FormId`** : réimporter
 met à jour la ligne au lieu d'en ajouter une. Ce point-là est déjà sain.
 
+### Le mode exploitation, et les trois pièges qu'il a révélés
+
+Un formulaire publié se remplit **hors édition**. Atlas confondait deux choses
+sous le mot « lecture » : *il ne montre pas ses outils d'auteur* et *vous ne
+pouvez rien écrire*. Le lien de terrain veut le premier sans le second.
+
+`CONFIG.peutSaisir` porte désormais le second, et `saisieHorsEdition` décide sur
+quatre conditions — l'objet a une ligne, la scène l'a publié, le formulaire est
+prêt, la personne peut écrire.
+
+Trois pièges, tous **mesurés** plutôt que supposés :
+
+| | Ce qui se passait | Pourquoi |
+|---|---|---|
+| **accès** | la sonde d'écriture échouait toujours | `?mode=view` demandait `read table`, ce qui ferme l'écriture **au widget**, avant tout examen des droits |
+| **valeurs** | « Bon » restait décoché à l'étape 2 | amorcer le DOM après le montage n'atteint que l'étape affichée ; et écrire `el.value` sur un groupe de radios **remplace la valeur du premier bouton** — cocher « Neuf » aurait enregistré « Bon » |
+| **thème** | cases et radios en disques noirs | `grist-plugin-api.js` pousse le thème du document **en style en ligne** sur `<html>`, ce qui bat toute feuille |
+
+Le deuxième a été corrigé **dans `grist_forms`** — `mount` accepte des valeurs
+initiales — parce qu'il vaut pour tout consommateur qui édite, pas seulement
+pour Atlas. C'est l'item « valeurs initiales » de la liste, réglé.
+
+> **Un banc visuel entre au dépôt** : `tests/browser-validate-formulaire.html`
+> rend le même balisage hors de tout Grist et affiche les valeurs calculées.
+> Il a tranché la question du thème en une seconde, là où trois hypothèses
+> s'étaient succédé.
+
 ### Où vit le builder — et pourquoi la question est mal posée
 
 Puisque c'est l'utilisateur qui bâtit son formulaire, il lui faut un endroit où
