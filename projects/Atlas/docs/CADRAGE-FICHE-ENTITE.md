@@ -290,6 +290,46 @@ Ce qui suit de cette règle, et qu'il faut tenir :
   TaskFlow : la table `Formulaires` n'est lue que si elle existe, et son absence
   est un repli silencieux, pas une erreur.
 
+### L'import QField reste un chemin de plein droit
+
+Importer un projet QField par qgis2grist et s'en servir dans Atlas doit
+continuer de marcher. **C'est déjà le cas**, et la jointure est plus solide
+qu'on ne pouvait l'espérer, parce qu'aucun des deux côtés ne connaît l'autre :
+
+| Étape | Fichier | Ce qui est posé |
+|---|---|---|
+| QGIS → FormDef | `qgis2grist/lib/qgis-form-to-formdef.js:170` | `tableId` = le nom de la table Grist, `composeMode: 'bind'` |
+| FormDef → document | `qgis2grist/lib/terrain-provision.js` · `saveTerrainForms` | une ligne dans `Formulaires`, colonne `Def` = le JSON |
+| le schéma de cette table | `grist_forms/shared/formulaires-table.js` | **partagé** — `FormId`, `TableCible`, `Def`, `Statut`, `Version` |
+| document → Atlas | `Atlas/app_v7.js` · `chargerFormulaires` | relit `Def`, garde `def.tableId` |
+| la couche | `Atlas/lib/scene-loader.js:595` | `sourceTable` = le nom de la table, par son propre balayage |
+
+**La jointure se fait par le nom de la table Grist**, découvert de chaque côté
+séparément. Rien à câbler entre les deux projets : c'est ce qui la rend robuste.
+
+Et un formulaire QField vise **la table de sa propre couche** — il tombe donc
+dans le mode « sur la couche », en édition. Aucune découverte de `Ref` n'entre en
+jeu pour ce cas, qui est le cas courant.
+
+#### Trois choses que le module devra respecter
+
+1. **`Statut` existe déjà** — `brouillon | publie | terrain` — et qgis2grist y
+   écrit `'terrain'`. Atlas l'ignore aujourd'hui. La bascule « exposer hors
+   édition » doit lire et écrire **cette colonne**, pas en inventer une : deux
+   vérités sur le même fait seraient une source de panne, pas une commodité.
+2. **Un pack QField arrive donc déjà marqué exposé.** C'est cohérent — importer
+   un projet QField de terrain *est* le geste qui demande du terrain, et la règle
+   « rien par défaut » vise ce qu'Atlas fabrique tout seul, pas ce que
+   l'utilisateur importe délibérément. Mais le module doit le **montrer**, pour
+   que ça ne se découvre jamais après coup.
+3. **`formDefPourCouche` prend le premier** (`find` sur `tableId`). Correct tant
+   qu'il n'y a qu'un formulaire par table ; faux dès que le module permet d'en
+   avoir plusieurs — ce qui est précisément son objet. Choisir lequel sert la
+   fiche est le rôle de l'onglet de la couche.
+
+Côté qgis2grist, `saveTerrainForms` fait un **upsert par `FormId`** : réimporter
+met à jour la ligne au lieu d'en ajouter une. Ce point-là est déjà sain.
+
 ### Où vit le builder — et pourquoi la question est mal posée
 
 Puisque c'est l'utilisateur qui bâtit son formulaire, il lui faut un endroit où
