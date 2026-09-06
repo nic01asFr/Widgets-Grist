@@ -13,6 +13,7 @@
     "promote:grist-forms": "node scripts/promote-grist-forms.js",
     "build:taskflow": "node scripts/build-taskflow.js",
     "check:taskflow": "node scripts/build-taskflow.js --check",
+  "check:atlas": "node projects/Atlas/tools/verifier-imports.mjs && node projects/Atlas/tools/verifier-references.mjs",
     "serve:dev": "node scripts/serve-dev.js",
     "serve": "npx serve published -p 3000 --cors",
     "promote:qgis2grist": "node scripts/promote-qgis2grist.js",
