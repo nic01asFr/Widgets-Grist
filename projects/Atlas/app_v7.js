@@ -19,11 +19,12 @@ import {
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20260730a';
 import {
   moteurDisponible, formDefPourCouche, valeursPourMoteur, pontFormulaire,
-  lireFormulaires, inventaireFormulaires, formulaireOffrable, reglagesFormulaire, choisirFormulaire,
-  saisieHorsEdition,
-} from './lib/fiche-formulaire.js?v=20260906d';
+  lireFormulaires, formulaireOffrable, reglagesFormulaire,
+  saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
+} from './lib/fiche-formulaire.js?v=20260906e';
+import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=20260803a';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
@@ -3845,12 +3846,10 @@ function renderControles() {
  *
  * ## Pourquoi le rail, et pas un onglet de couche
  *
- * Un FormDef est indexe par **table**, pas par couche : deux couches d'une meme
- * table partagent le formulaire, c'est la donnee qu'on saisit et non sa
- * representation. Un onglet dans l'inspecteur aurait menti sur le modele — on
- * aurait regle « le formulaire de cette couche » alors qu'on regle celui de la
- * table. Et il faut voir l'ensemble pour choisir : un document a plusieurs
- * tables, donc plusieurs formulaires.
+ * Le partage suit la geometrie de l'interface : **le panneau de droite gere UN
+ * formulaire, ce module gere L'ENSEMBLE.** Creer est un acte de document — ca
+ * materialise une table — donc ca vit ici ; remplir est un acte d'objet, donc
+ * ca vit a droite. L'inspecteur de couche n'a pas besoin d'onglet.
  *
  * Il rejoint la famille a laquelle il appartient : Controles et Recit sont les
  * deux choses qu'un auteur configure *pour le lecteur*. Un formulaire
@@ -3858,11 +3857,10 @@ function renderControles() {
  *
  * ## Ce qu'il ne fait pas
  *
- * **Il ne cree aucun formulaire.** Atlas n'en livre pas non plus : c'est
- * l'utilisateur qui batit le sien, comme il ecrit son recit — et un document ou
- * personne n'en a fait n'en a pas. Le module liste, choisit, expose ; definir
- * appartient au generateur de formulaires, materialiser une table a
- * `ensure-schema`. Un seul createur par objet.
+ * **Il ne cree aucun formulaire.** Atlas n'en livre pas non plus. Un formulaire
+ * derive n'existe nulle part : il se deduit des colonnes a chaque ouverture, et
+ * rien n'est ecrit tant que personne ne l'ajuste. Definir appartient au
+ * generateur, materialiser une table a `ensure-schema`.
  */
 function renderFormulaires() {
     $('module-title').textContent = 'Formulaires';
@@ -3875,84 +3873,72 @@ function renderFormulaires() {
         return;
     }
 
-    const entrees = STATE.formulaires || [];
-    const lignes = inventaireFormulaires({ couches: STATE.layers, entrees });
+    const couches = STATE.layers.filter((l) => l.sourceTable);
+    let html = `<div class="hint">Un formulaire décrit comment se saisit une table. Cochez ceux qui seront proposés hors édition : chacun devient un onglet sur l'objet.</div>`;
 
-    let html = `<div class="hint">Un formulaire décrit comment se saisit une table. Choisissez celui qui sert de fiche au clic sur un objet, et publiez-le pour qu'il reste disponible hors édition.</div>`;
-
-    if (!STATE.formulairesTable) {
-        // L'absence de la table est le cas NORMAL : la plupart des documents
-        // n'ont jamais vu de formulaire. Ce n'est donc pas une anomalie qu'on
-        // signale, c'est un etat qu'on explique.
-        html += `<div class="section"><div class="hint" style="margin-bottom:0">
-            Ce document ne porte aucun formulaire. Ils se créent dans le widget
-            <strong>Form Builder</strong> — ajoutez-lui une page — ou arrivent avec un projet
-            QField importé par qgis2grist.</div></div>`;
-    }
-
-    if (!lignes.length) {
+    if (!couches.length) {
         body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
             <div class="t">Aucune table à saisir</div>
             <div class="h">Une couche liée à une table Grist, et sa ligne apparaîtra ici.</div></div>`;
         return;
     }
 
-    html += lignes.map((l) => ligneFormulaireTable(l)).join('');
+    html += couches.map((couche) => blocCoucheFormulaires(couche)).join('');
     body.innerHTML = html;
 }
 
-/** Une table du document, ce qu'elle sait saisir, et ce que la scene en publie. */
-function ligneFormulaireTable(l) {
-    const esc = (s) => String(s).replace(/'/g, "\'");
-    const nbCouches = l.couches.length;
-    const choisi = l.choisi;
+/**
+ * Une couche, et les formulaires qui la concernent.
+ *
+ * Le principal d'abord — celui de sa table, qui corrige l'objet — puis ceux
+ * dont la table la reference, qui ajoutent une ligne. C'est l'ordre des
+ * onglets, et il ne varie pas.
+ */
+function blocCoucheFormulaires(couche) {
+    const esc = (s) => String(s).replace(/'/g, "\\'");
+    const formulaires = formulairesDeLaCouche(couche);
 
-    // Sans couche, la table ne se saisit pas depuis la carte : elle se remplit
-    // depuis un objet qui la reference. Rien a exposer ici, donc pas de bascule.
-    const exposable = nbCouches > 0 && !!choisi;
-    const bascule = exposable
-        ? `<div class="toggle ${l.expose ? 'on' : ''}" role="switch" tabindex="0" aria-checked="${l.expose}"
-            aria-label="Rendre le formulaire de ${esc(l.table)} disponible hors édition"
-            title="Disponible hors édition"
-            onclick="A.exposerFormulaire('${esc(l.table)}')"></div>`
-        : '';
-
-    let corps = '';
-    if (!choisi) {
-        corps = `<div class="hint" style="margin-bottom:0">Aucun formulaire pour cette table — la fiche devine
-            les champs, et n'a que deux types. En créer un dans le <strong>Form Builder</strong> donnerait
-            les listes, les cases, les dates et les champs obligatoires.</div>`;
-    } else {
-        const choix = l.formulaires.length > 1
-            ? `<select class="input" style="margin-bottom:8px" onchange="A.choisirFormulaire('${esc(l.table)}', this.value)">
-                ${l.formulaires.map((e) => `<option value="${esc(e.formId || '')}" ${e === choisi ? 'selected' : ''}>${e.titre} · ${libelleStatut(e.statut)}${e.version ? ` · v${e.version}` : ''}</option>`).join('')}
-               </select>`
-            : `<div class="hint" style="margin-bottom:8px"><strong>${choisi.titre}</strong> · ${libelleStatut(choisi.statut)}${choisi.version ? ` · v${choisi.version}` : ''}</div>`;
-        corps = choix;
-        if (l.expose && !formulaireOffrable(choisi)) {
-            // Exposer un brouillon n'est pas une erreur — c'est un ordre donne
-            // avant que le formulaire soit pret. Le dire evite de chercher
-            // pourquoi le lecteur ne voit rien.
-            corps += `<div class="hint" style="margin-bottom:8px">Ce formulaire est encore un brouillon :
-                il ne sera proposé hors édition qu'une fois publié, depuis le Form Builder.</div>`;
-        }
-        if (!nbCouches) {
-            corps += `<div class="hint" style="margin-bottom:0">Table sans géométrie — elle se remplit depuis
-                un objet qui la référence, pas depuis la carte.</div>`;
-        }
+    if (!formulaires.length) {
+        return `<div class="section">
+            <div class="toggle-row"><span class="tlabel">⛓ <strong>${couche.name}</strong></span></div>
+            <div class="hint" style="margin-bottom:0">Aucune colonne saisissable dans <strong>${couche.sourceTable}</strong>.</div>
+        </div>`;
     }
 
-    const couches = nbCouches
-        ? `<div class="hint" style="margin-bottom:0">${nbCouches > 1 ? 'Couches' : 'Couche'} : ${l.couches.map((c) => c.name).join(', ')}</div>`
-        : '';
+    const lignes = formulaires.map((f) => {
+        // Un derive n'existe pas en base : l'exposer demanderait de
+        // l'enregistrer d'abord, ce qui est un geste et pas un effet de bord.
+        const offrable = !f.derive && formulaireOffrable(f);
+        const bascule = `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
+            aria-checked="${f.expose}"
+            aria-label="Proposer ${esc(f.titre)} hors édition"
+            title="${offrable ? 'Proposé hors édition' : 'À enregistrer avant de pouvoir le proposer'}"
+            onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
+
+        const nature = f.principal
+            ? 'la table de la couche — corrige l’objet'
+            : `→ ${f.tableId} · rattaché par <code>${f.via}</code> — ajoute une ligne`;
+        const etat = f.derive
+            ? '<span class="hint" style="display:inline;padding:1px 5px;margin:0">dérivé</span>'
+            : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`;
+
+        const alerte = (f.expose && !offrable)
+            ? `<div class="hint" style="margin:6px 0 0">Ce formulaire est déduit des colonnes : enregistrez-le pour qu'il soit proposé hors édition.</div>`
+            : '';
+
+        return `<div class="section" style="margin-bottom:8px">
+            <div class="toggle-row">
+                <span class="tlabel">${f.principal ? '📋' : '➕'} <strong>${f.principal ? 'Attributs' : f.titre}</strong> ${etat}</span>
+                ${bascule}
+            </div>
+            <div class="hint" style="margin-bottom:0">${nature}</div>
+            ${alerte}
+        </div>`;
+    }).join('');
 
     return `<div class="section">
-        <div class="toggle-row">
-            <span class="tlabel">⛓ <strong>${l.table}</strong></span>
-            ${bascule}
-        </div>
-        ${corps}
-        ${couches}
+        <div class="section-title">${couche.name} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${couche.sourceTable}</span></div>
+        ${lignes}
     </div>`;
 }
 
@@ -4762,7 +4748,15 @@ function rappelRevue(totalRevue) {
     return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
 }
 
-function monterFormulaireEntite(layer, props, formDef, totalRevue = 0, saisieTerrain = false) {
+/**
+ * Monte un formulaire dans la fiche.
+ *
+ * Il prend l'entree entiere et non sa seule definition, parce que `principal`
+ * et `via` decident du mode : corriger la ligne cliquee, ou en ajouter une qui
+ * la reference. Le pont en tire tout le reste.
+ */
+function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisieTerrain = false) {
+    const formDef = formulaire.def;
     const hote = $('insp-body');
     hote.innerHTML = rappelRevue(totalRevue);
     const rowId = props?._row_id;
@@ -4778,19 +4772,26 @@ function monterFormulaireEntite(layer, props, formDef, totalRevue = 0, saisieTer
                 couche: layer,
                 rowId,
                 docApi: grist.docApi,
+                formulaire,
                 // Les valeurs de la ligne entrent par le pont, donc avant le
                 // premier rendu. Les poser dans le DOM apres le montage ne
                 // couvrait que l'etape affichee : sur un formulaire en deux
                 // temps, le choix « Bon » restait decoche a l'etape 2 alors que
                 // la ligne le portait.
-                valeurs: valeursPourMoteur(formDef, props),
+                //
+                // Un formulaire LIE part vide : il cree une ligne qui n'existe
+                // pas encore, et la prealimenter avec les attributs du batiment
+                // ecrirait ceux-la dans la table des visites.
+                valeurs: formulaire.principal ? valeursPourMoteur(formDef, props) : {},
                 // `saisieTerrain` porte deja `peutSaisir` parmi ses conditions :
                 // le repeter ici ecrirait la meme regle a deux endroits.
                 peutEcrire: () => canWrite(CONFIG.viewMode) || saisieTerrain,
                 signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
                 // Relit la couche depuis sa table : la carte doit montrer ce
                 // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
-                apresEcriture: () => { A.refreshLayer(layer.id); },
+                // Un formulaire lie n'a rien change a la couche — il a ecrit
+                // ailleurs — donc rien a relire.
+                apresEcriture: formulaire.principal ? () => { A.refreshLayer(layer.id); } : null,
             }));
         _formulaireMonte = true;
     } catch (e) {
@@ -4811,16 +4812,11 @@ function monterFormulaireEntite(layer, props, formDef, totalRevue = 0, saisieTer
  */
 function coucheEnSaisie(layer, opts = {}) {
     if (!layer) return false;
-    const reglages = reglagesFormulaire(layer);
-    const entree = opts.entree !== undefined
-        ? opts.entree
-        : choisirFormulaire(STATE.formulaires, { table: layer.sourceTable, prefereId: reglages.id });
     return saisieHorsEdition({
         view: !!CONFIG.viewMode,
         aDesLignes: coucheAvecLignes(layer),
         peutEcrire: CONFIG.peutSaisir,
-        reglages,
-        entree,
+        formulaires: opts.formulaires || formulairesDeLaCouche(layer),
         moteur: moteurDisponible(),
     });
 }
@@ -4841,18 +4837,23 @@ function renderObjectInspector() {
     const view = !!CONFIG.viewMode;
     const is3D = isModelLayer(layer);
     const revue = !!STATE.selection.revue;
-    const tabs = objectInspectorTabs({ layer, multi, revue });
-    if (!_inspObjTab || !tabs.includes(_inspObjTab)) _inspObjTab = tabs[0] || null;
-
-    // Le formulaire que cette scene a choisi pour cette table, s'il existe.
-    const reglages = reglagesFormulaire(layer);
-    const entreeForm = (multi && !revue) ? null : choisirFormulaire(STATE.formulaires, {
-        table: layer.sourceTable, prefereId: reglages.id,
-    });
+    // Tous les formulaires de la couche : le principal, puis ceux dont la table
+    // la reference. On ne remplit pas un formulaire sur douze objets a la fois,
+    // sauf en revue, ou un curseur designe l'objet courant.
+    const tousFormulaires = (multi && !revue) ? [] : formulairesDeLaCouche(layer);
 
     // Le seul chemin d'ecriture ouvert hors edition : les attributs devines
     // restent fermes, et rien d'autre ne bouge.
-    const saisieTerrain = coucheEnSaisie(layer, { entree: entreeForm });
+    const saisieTerrain = coucheEnSaisie(layer, { formulaires: tousFormulaires });
+
+    // En terrain, seuls les formulaires que la scene a rendus disponibles ont un
+    // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
+    // celui qu'on n'a pas encore expose.
+    const formulaires = view ? formulairesOffertsEnLecture(tousFormulaires) : tousFormulaires;
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue });
+    if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
+    const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
+    const formActif = ongletActif?.formulaire || null;
 
     // Hors de la branche : le pied de fiche en a besoin lui aussi, et le
     // deduire une seconde fois la-bas ferait deux regles pour un seul fait.
@@ -4863,7 +4864,9 @@ function renderObjectInspector() {
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
         <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
-        `<button class="insp-tab ${_inspObjTab === t ? 'active' : ''}" onclick="A.setInspObjTab('${t}')">${t}</button>`
+        `<button class="insp-tab ${_inspObjTab === t.cle ? 'active' : ''}"
+            onclick="A.setInspObjTab('${String(t.cle).replace(/'/g, "\'")}')"
+            title="${t.formulaire?.tableId || ''}">${t.libelle}</button>`
     ).join('');
 
     const slider = (id, lbl, val, min, max, step, unit, mixed) => `
@@ -4887,15 +4890,23 @@ function renderObjectInspector() {
     // « Placement 3D » laisserait le pied muet, donc sans bouton d'enregistrement.
     _formulaireMonte = false;
 
-    if (_inspObjTab === 'Attributs') {
-        const readOnly = attrsReadOnly;
+    if (formActif) {
+        // Un formulaire LIE ajoute une ligne dans sa propre table : il ne depend
+        // pas du droit de corriger l'objet. Le confondre avec le principal
+        // fermerait la saisie de terrain a qui peut relever sans pouvoir
+        // modifier le bati — la configuration saine, justement.
+        const readOnly = formActif.principal ? attrsReadOnly : (view && !saisieTerrain);
         // Quand le document decrit cette table par un FormDef, c'est LUI la
         // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
         // deux types.
-        const formDef = entreeForm ? entreeForm.def : null;
-        if (formDef && !readOnly && moteurDisponible()) {
-            monterFormulaireEntite(layer, props, formDef, revue && multi ? count : 0, saisieTerrain);
+        if (formActif.def && !readOnly && moteurDisponible()) {
+            monterFormulaireEntite(layer, props, formActif, revue && multi ? count : 0, saisieTerrain);
+        } else if (!formActif.principal) {
+            $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
+                + `<div class="hint">Relevé « ${formActif.titre} » — indisponible ici : `
+                + (readOnly ? 'la saisie est fermée en lecture.' : 'le moteur de formulaire n’est pas chargé.')
+                + '</div>';
         } else {
             // Constater un blocage sans donner la sortie, c'est le laisser
             // chercher. L'offre se pose donc LA ou le blocage se lit.
@@ -4905,7 +4916,7 @@ function renderObjectInspector() {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + entete + renderAttrFields(layer, props, { readOnly });
         }
-    } else if (_inspObjTab === 'Placement 3D') {
+    } else if (_inspObjTab === ONGLET_3D) {
         if (view) {
             $('insp-body').innerHTML = multi
                 ? `<div class="hint">Mode lecture — sélection de ${count} objets (pas d’édition).</div>`
@@ -4937,7 +4948,7 @@ function renderObjectInspector() {
         $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Mode lecture — consultation seule</div>`;
     } else if (!tabs.length) {
         $('insp-foot').innerHTML = '';
-    } else if (_inspObjTab === 'Attributs' && attrsReadOnly) {
+    } else if (formActif?.principal && attrsReadOnly) {
         // « Enregistrer » promettait d'ecrire des champs que l'onglet venait
         // d'afficher en lecture seule. La sortie est dans le corps de la fiche
         // (« Enregistrer dans Grist »), la ou le blocage se lit ; le pied dit
@@ -5660,6 +5671,10 @@ const TABLE_SCHEMAS = {
 async function chargerFormulaires() {
     STATE.formulaires = [];
     STATE.formulairesTable = false;
+    // Le schema porte les types des colonnes, donc les `Ref:` qui disent quelles
+    // tables referencent une couche, et de quoi deduire un formulaire de celles
+    // qui n'en ont pas. Sans lui il ne reste que l'enregistre.
+    STATE.schema = CONFIG.grist.ready ? await chargerSchema(grist.docApi) : {};
     if (!CONFIG.grist.ready) return;
     try {
         const tables = await grist.docApi.listTables();
@@ -5669,6 +5684,22 @@ async function chargerFormulaires() {
     } catch (e) {
         console.warn('[Atlas formulaire] chargement', e.message);
     }
+}
+
+/**
+ * Les formulaires d'une couche — le principal, puis les lies.
+ *
+ * Une seule porte, parce que trois endroits en ont besoin : les onglets de la
+ * fiche, le clic sur la carte qui choisit entre le popup et la fiche, et le
+ * module qui les liste. Les recalculer chacun de son cote aurait fait trois
+ * verites pour une seule question.
+ */
+function formulairesDeLaCouche(layer) {
+    return formulairesPourCouche({
+        couche: layer,
+        entrees: STATE.formulaires,
+        schema: STATE.schema,
+    });
 }
 
 async function syncStoryFromGrist() {
@@ -6656,39 +6687,41 @@ const A = {
     // ---------- Formulaires ----------
 
     /**
-     * Publier — ou retirer — le formulaire d'une table hors edition.
+     * Proposer — ou retirer — un formulaire hors edition.
+     *
+     * > **La case ne veut dire qu'une chose : visible en terrain.** En edition
+     * > tous les formulaires de la couche ont leur onglet, sinon on ne pourrait
+     * > pas composer celui qu'on n'a pas encore expose.
      *
      * Le reglage voyage avec la COUCHE et non avec le formulaire : une meme
-     * table peut etre exposee dans une scene et pas dans une autre, alors que
-     * sa definition est unique. Toutes les couches de la table basculent
-     * ensemble — c'est la table qu'on publie, et deux couches d'une meme table
-     * qui divergeraient ne voudraient rien dire.
+     * table peut etre proposee dans une scene et pas dans une autre, alors que
+     * sa definition est unique.
+     *
+     * Il remplace les deux actions d'avant — « publier le formulaire d'une
+     * table » et « choisir lequel sert de fiche ». La premiere ne connaissait
+     * qu'un formulaire par table ; la seconde n'a plus d'objet depuis que tous
+     * ont leur onglet.
      */
-    async exposerFormulaire(table) {
-        if (!assertCanWrite('publier un formulaire')) return;
-        const couches = STATE.layers.filter((l) => l.sourceTable === table);
-        if (!couches.length) return;
-        const actif = !couches.some((l) => reglagesFormulaire(l).expose);
-        for (const c of couches) c.formulaire = { ...reglagesFormulaire(c), expose: actif };
+    async exposerFormulaire(layerId, formId) {
+        if (!assertCanWrite('proposer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        if (!couche || !formId) return;
+        const actuels = formulairesDeLaCouche(couche);
+        const exposes = new Set(actuels.filter((f) => f.expose).map((f) => f.id));
+        const actif = !exposes.has(formId);
+        if (actif) exposes.add(formId); else exposes.delete(formId);
+        // `exposes` remplace l'ancien booleen : une liste, meme vide, dit que
+        // cette couche a decide — et `expose` n'a plus a etre relu.
+        couche.formulaire = { fiche: reglagesFormulaire(couche).fiche, exposes: [...exposes] };
         renderFormulaires();
-        for (const c of couches) await saveLayerToGrist(c, true);
-        showToast(actif ? `Formulaire publié · ${table}` : `Formulaire retiré · ${table}`, 'success');
-    },
-
-    /** Lequel des formulaires de cette table sert de fiche, dans cette scene. */
-    async choisirFormulaire(table, formId) {
-        if (!assertCanWrite('choisir un formulaire')) return;
-        const couches = STATE.layers.filter((l) => l.sourceTable === table);
-        if (!couches.length) return;
-        for (const c of couches) c.formulaire = { ...reglagesFormulaire(c), id: formId || null };
-        renderFormulaires();
-        // La fiche ouverte porte peut-etre le formulaire qu'on vient de
-        // remplacer : la laisser en place montrerait l'ancien.
         renderInspector();
-        for (const c of couches) await saveLayerToGrist(c, true);
+        await saveLayerToGrist(couche, true);
+        const nom = actuels.find((f) => f.id === formId)?.titre || formId;
+        showToast(actif ? `Proposé hors édition · ${nom}` : `Retiré · ${nom}`, 'success');
     },
 
     // Lieu
+    recenter()    // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },
     searchLocation,
     pickSearch(name, lat, lng) {

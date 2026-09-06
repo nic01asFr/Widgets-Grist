@@ -131,12 +131,33 @@ test('formulairesPourTable ne rend que ce qui vise cette table', () => {
 /* ---------- ce que la couche porte ---------- */
 
 test('les reglages d’une couche sont normalises, jamais devines', () => {
-  assert.deepEqual(reglagesFormulaire({}), { id: null, expose: false });
-  assert.deepEqual(reglagesFormulaire(null), { id: null, expose: false });
-  // `expose` doit etre vrai, pas seulement present : une valeur heritee d'un
-  // ancien enregistrement ne doit pas ouvrir un formulaire a un lecteur.
-  assert.deepEqual(reglagesFormulaire({ formulaire: { expose: 'oui' } }), { id: null, expose: false });
-  assert.deepEqual(reglagesFormulaire({ formulaire: { id: 'x', expose: true } }), { id: 'x', expose: true });
+  const vide = { fiche: null, exposes: null, exposeHerite: false };
+  assert.deepEqual(reglagesFormulaire({}), vide);
+  assert.deepEqual(reglagesFormulaire(null), vide);
+  // `expose` devait valoir VRAI, pas seulement etre present : une valeur
+  // heritee d'un ancien enregistrement n'ouvre rien a un lecteur.
+  assert.deepEqual(reglagesFormulaire({ formulaire: { expose: 'oui' } }), vide);
+});
+
+test('l’ancien booleen se relit sans rien perdre', () => {
+  // `expose: true` voulait dire « la fiche de cette couche est exposee » — le
+  // seul formulaire qui existait alors. On le reporte sur le principal.
+  assert.deepEqual(reglagesFormulaire({ formulaire: { id: 'x', expose: true } }),
+    { fiche: 'x', exposes: null, exposeHerite: true });
+});
+
+test('une liste vide n’est pas l’absence de liste', () => {
+  // `null` dit « cette couche n'a jamais rien decide » ; `[]` dit « rien n'est
+  // expose ». Les confondre reactiverait l'ancien booleen sur une couche qu'on
+  // vient justement de vider.
+  assert.deepEqual(reglagesFormulaire({ formulaire: { exposes: [], expose: true } }),
+    { fiche: null, exposes: [], exposeHerite: false });
+  assert.deepEqual(reglagesFormulaire({ formulaire: { fiche: 'a', exposes: ['a', 'b'] } }),
+    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false });
+});
+
+test('une liste d’exposes filtre ce qui n’est pas un identifiant', () => {
+  assert.deepEqual(reglagesFormulaire({ formulaire: { exposes: ['a', 3, null, 'b'] } }).exposes, ['a', 'b']);
 });
 
 test('une couche sans table n’a pas de formulaire', () => {
@@ -230,17 +251,11 @@ test('et on le passe dans la langue du champ, pas dans celle de Grist', () => {
 
 import { saisieHorsEdition } from '../lib/fiche-formulaire.js';
 
-/** Le cas nominal : un lien de terrain, un formulaire publie, des droits. */
-const terrain = {
-  view: true,
-  aDesLignes: true,
-  peutEcrire: true,
-  reglages: { id: null, expose: true },
-  entree: { statut: 'terrain' },
-  moteur: true,
-};
+/** Le cas nominal : un lien de terrain, un formulaire offert, des droits. */
+const offert = { id: 'visites', statut: 'terrain', expose: true, derive: false };
+const terrain = { view: true, aDesLignes: true, peutEcrire: true, moteur: true, formulaires: [offert] };
 
-test('le cas du terrain : lecture, formulaire publie, droits d’ecriture', () => {
+test('le cas du terrain : lecture, formulaire offert, droits d’ecriture', () => {
   assert.equal(saisieHorsEdition(terrain), true);
 });
 
@@ -255,21 +270,29 @@ test('chacune des quatre conditions suffit a fermer', () => {
   assert.equal(saisieHorsEdition({ ...terrain, aDesLignes: false }), false);
   // Sans droits : on ferait remplir un formulaire pour un refus.
   assert.equal(saisieHorsEdition({ ...terrain, peutEcrire: false }), false);
-  // Sans publication : tout formulaire du document deviendrait saisissable.
-  assert.equal(saisieHorsEdition({ ...terrain, reglages: { expose: false } }), false);
   // Sans moteur : le repli devine les champs, il n'a rien a ecrire ici.
   assert.equal(saisieHorsEdition({ ...terrain, moteur: false }), false);
+  // Aucun formulaire offert : rien a saisir.
+  assert.equal(saisieHorsEdition({ ...terrain, formulaires: [] }), false);
 });
 
-test('un brouillon publie par erreur ne part pas au terrain', () => {
-  assert.equal(saisieHorsEdition({ ...terrain, entree: { statut: 'brouillon' } }), false);
-  assert.equal(saisieHorsEdition({ ...terrain, entree: null }), false);
+test('un formulaire non expose ne suffit pas, meme pret', () => {
+  assert.equal(saisieHorsEdition({ ...terrain, formulaires: [{ ...offert, expose: false }] }), false);
 });
 
-test('« expose » doit valoir vrai, pas seulement etre la', () => {
-  assert.equal(saisieHorsEdition({ ...terrain, reglages: { expose: 'oui' } }), false);
-  assert.equal(saisieHorsEdition({ ...terrain, reglages: {} }), false);
-  assert.equal(saisieHorsEdition({ ...terrain, reglages: null }), false);
+test('un brouillon expose par erreur ne part pas au terrain', () => {
+  assert.equal(saisieHorsEdition({ ...terrain, formulaires: [{ ...offert, statut: 'brouillon' }] }), false);
+});
+
+test('un derive n’est jamais offert : il n’existe pas en base', () => {
+  // L'exposer demande d'abord de l'enregistrer, ce qui est un geste et pas un
+  // effet de bord.
+  assert.equal(saisieHorsEdition({ ...terrain, formulaires: [{ ...offert, derive: true, statut: null }] }), false);
+});
+
+test('un seul formulaire offert parmi plusieurs suffit', () => {
+  const liste = [{ ...offert, expose: false }, { id: 'd', statut: 'publie', expose: true, derive: false }];
+  assert.equal(saisieHorsEdition({ ...terrain, formulaires: liste }), true);
 });
 
 test('sans argument, on ne saisit rien', () => {
@@ -331,4 +354,202 @@ test('le reste part en texte, et rien ne part du vide', () => {
   for (const rien of [undefined, null, '']) {
     assert.equal(valeurPourFormulaire({ colId: 'nom' }, rien), null);
   }
+});
+
+/* ---------- les formulaires d'une couche ---------- */
+
+import { createRequire } from 'node:module';
+import {
+  formulairesPourCouche,
+  colonnesHorsFormulaire,
+  formulairesOffertsEnLecture,
+} from '../lib/fiche-formulaire.js';
+import { schemaDepuisMeta } from '../lib/schema-grist.js';
+
+// La dérivation est chargée en UMD par la page ; en test on la pose comme la
+// page le ferait, sinon `formulairesPourCouche` ne rendrait que l'enregistré.
+const requis = createRequire(import.meta.url);
+globalThis.window = globalThis.window || {};
+globalThis.window.FormDefFromTable = requis('../../grist_forms/shared/formdef-from-table.js');
+
+const SCHEMA = schemaDepuisMeta(
+  { id: [1, 2, 3], tableId: ['Batiments_locaux', 'Visites', 'Desordres'] },
+  {
+    id: [1, 2, 3, 4, 5, 6, 7],
+    parentId: [1, 1, 2, 2, 3, 3, 1],
+    colId: ['geometry_json', 'nom', 'batiment', 'etat', 'bati', 'gravite', 'atlas_3d_json'],
+    type: ['Text', 'Text', 'Ref:Batiments_locaux', 'Choice', 'Ref:Batiments_locaux', 'Int', 'Text'],
+    label: ['', '', '', '', '', '', ''],
+    isFormula: [false, false, false, false, false, false, false],
+    widgetOptions: ['', '', '', '', '', '', ''],
+  },
+);
+
+const COUCHE = { id: 'l1', name: 'Bâtiments', sourceTable: 'Batiments_locaux', geometryColumn: 'geometry_json' };
+
+test('le principal d’abord, puis les liees — c’est l’ordre des onglets', () => {
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees: [], schema: SCHEMA });
+  assert.deepEqual(liste.map((f) => f.tableId), ['Batiments_locaux', 'Visites', 'Desordres']);
+  assert.deepEqual(liste.map((f) => f.principal), [true, false, false]);
+  assert.deepEqual(liste.map((f) => f.via), [null, 'batiment', 'bati']);
+});
+
+test('sans formulaire enregistre, tout est derive — et rien n’est ecrit', () => {
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees: [], schema: SCHEMA });
+  assert.deepEqual(liste.map((f) => f.derive), [true, true, true]);
+  assert.deepEqual(liste.map((f) => f.id), ['derive:Batiments_locaux', 'derive:Visites', 'derive:Desordres']);
+});
+
+test('un enregistre prime sur le derive, sur la table geo comme sur une liee', () => {
+  // C'est ainsi qu'un pack QField, ou un formulaire compose ici, remplace le
+  // brouillon sans qu'aucun chemin ne soit privilegie.
+  const entrees = [
+    { formId: 'bati-terrain', titre: 'Bâtiment — relevé', statut: 'terrain', def: { id: 'bati-terrain', tableId: 'Batiments_locaux', sections: [] } },
+    { formId: 'visite-v2', titre: 'Visite', statut: 'publie', def: { id: 'visite-v2', tableId: 'Visites', sections: [] } },
+  ];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.map((f) => f.id), ['bati-terrain', 'visite-v2', 'derive:Desordres']);
+  assert.deepEqual(liste.map((f) => f.derive), [false, false, true]);
+});
+
+test('la geometrie et la memoire d’Atlas ne se saisissent pas', () => {
+  // La geometrie se dessine, elle ne se tape pas. Les offrir ferait editer a la
+  // main ce que la carte regle.
+  assert.deepEqual(colonnesHorsFormulaire(COUCHE), ['atlas_3d_json', 'geometry_json']);
+  assert.deepEqual(colonnesHorsFormulaire({ geometryColumn: { lat: 'latitude', lng: 'longitude' } }),
+    ['atlas_3d_json', 'latitude', 'longitude']);
+  assert.deepEqual(colonnesHorsFormulaire(null), ['atlas_3d_json']);
+
+  const principal = formulairesPourCouche({ couche: COUCHE, entrees: [], schema: SCHEMA })[0];
+  assert.deepEqual(principal.def.sections[0].fields.map((f) => f.colId), ['nom']);
+});
+
+test('la colonne qui porte la reference n’est pas une saisie', () => {
+  // C'est le clic qui la remplit : la montrer ferait choisir l'objet qu'on
+  // vient de choisir.
+  const visite = formulairesPourCouche({ couche: COUCHE, entrees: [], schema: SCHEMA })[1];
+  assert.deepEqual(visite.def.sections[0].fields.map((f) => f.colId), ['etat']);
+});
+
+test('sans schema, il ne reste que ce qui est enregistre sur la table geo', () => {
+  const entrees = [{ formId: 'b', titre: 'B', statut: 'publie', def: { id: 'b', tableId: 'Batiments_locaux', sections: [] } }];
+  const liste = formulairesPourCouche({ couche: COUCHE, entrees });
+  assert.deepEqual(liste.map((f) => f.id), ['b']);
+});
+
+test('une couche sans table n’a aucun formulaire', () => {
+  assert.deepEqual(formulairesPourCouche({ couche: { name: 'Arbres importés' }, schema: SCHEMA }), []);
+  assert.deepEqual(formulairesPourCouche(), []);
+});
+
+test('l’exposition se decide par identifiant', () => {
+  const couche = { ...COUCHE, formulaire: { exposes: ['derive:Visites'] } };
+  const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
+  assert.deepEqual(liste.map((f) => f.expose), [false, true, false]);
+});
+
+test('l’ancien booleen se reporte sur le principal, et sur lui seul', () => {
+  const couche = { ...COUCHE, formulaire: { expose: true } };
+  const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
+  assert.deepEqual(liste.map((f) => f.expose), [true, false, false]);
+});
+
+test('un derive expose reste hors lecture — l’exposer demande de l’enregistrer', () => {
+  const couche = { ...COUCHE, formulaire: { exposes: ['derive:Visites'] } };
+  const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
+  assert.deepEqual(formulairesOffertsEnLecture(liste), []);
+});
+
+test('un enregistre publie et expose, lui, est offert', () => {
+  const entrees = [{ formId: 'visite-v2', titre: 'Visite', statut: 'terrain', def: { id: 'visite-v2', tableId: 'Visites', sections: [] } }];
+  const couche = { ...COUCHE, formulaire: { exposes: ['visite-v2'] } };
+  const liste = formulairesPourCouche({ couche, entrees, schema: SCHEMA });
+  assert.deepEqual(formulairesOffertsEnLecture(liste).map((f) => f.id), ['visite-v2']);
+});
+
+/* ---------- le pont : corriger l'objet, ou ajouter une ligne qui le référence ---------- */
+
+import { pontFormulaire } from '../lib/fiche-formulaire.js';
+
+/** Un faux `docApi` qui retient ce qu'on lui demande d'écrire. */
+function fauxDocApi() {
+  const actions = [];
+  return {
+    actions,
+    applyUserActions: (a) => { actions.push(...a); return Promise.resolve({ retValues: [1] }); },
+    fetchTable: () => Promise.resolve({}),
+    getAccessToken: () => Promise.resolve({ token: 'x' }),
+  };
+}
+
+const COUCHE_PONT = { sourceTable: 'Batiments_locaux' };
+
+test('sans formulaire designe, le pont corrige l’objet — le defaut d’avant les lies', async () => {
+  const api = fauxDocApi();
+  const p = pontFormulaire({ couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => true });
+  assert.equal(p.editRowId, 3);
+  assert.equal(typeof p.addRow, 'undefined');
+  await p.updateRow('ignoré', 3, { nom: 'Mairie' });
+  assert.deepEqual(api.actions[0], ['UpdateRecord', 'Batiments_locaux', 3, { nom: 'Mairie' }]);
+});
+
+test('un formulaire lie N’A PAS d’editRowId — c’est la condition, pas un oubli', async () => {
+  // `defaultSubmit` teste editRowId AVANT addRow et ne discute pas : le porter
+  // ici ferait corriger le batiment au lieu d'ajouter la visite.
+  const api = fauxDocApi();
+  const p = pontFormulaire({
+    couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => true,
+    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+  });
+  assert.equal(p.editRowId, undefined);
+  assert.equal(typeof p.updateRow, 'undefined');
+  assert.equal(typeof p.addRow, 'function');
+});
+
+test('la reference entre par le pont, jamais par le formulaire', async () => {
+  // C'est le clic qui fait foi. Un formulaire herite de QField n'expose pas
+  // forcement son Ref : sans injection, la ligne serait rattachee a rien.
+  const api = fauxDocApi();
+  const p = pontFormulaire({
+    couche: COUCHE_PONT, rowId: 7, docApi: api, peutEcrire: () => true,
+    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+  });
+  await p.addRow('Visites', { etat: 'Bon' });
+  assert.deepEqual(api.actions[0], ['AddRecord', 'Visites', null, { etat: 'Bon', batiment: 7 }]);
+});
+
+test('un formulaire lie sans colonne de reference refuse plutot que d’orpheliner', async () => {
+  const api = fauxDocApi();
+  const p = pontFormulaire({
+    couche: COUCHE_PONT, rowId: 7, docApi: api, peutEcrire: () => true,
+    formulaire: { principal: false, tableId: 'Visites', via: null },
+  });
+  await assert.rejects(() => p.addRow('Visites', { etat: 'Bon' }), /référence/);
+  assert.equal(api.actions.length, 0, 'rien n’a été écrit');
+});
+
+test('le garde d’ecriture vaut pour les deux modes', async () => {
+  // Consulte a CHAQUE soumission, pas a la construction : les droits peuvent
+  // avoir change entre l'ouverture de la fiche et l'envoi.
+  const api = fauxDocApi();
+  const lie = pontFormulaire({
+    couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => false,
+    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+  });
+  await assert.rejects(() => lie.addRow('Visites', {}), /lecture/);
+
+  const principal = pontFormulaire({ couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => false });
+  await assert.rejects(() => principal.updateRow('x', 3, {}), /lecture/);
+  assert.equal(api.actions.length, 0);
+});
+
+test('les valeurs de depart passent par le pont dans les deux modes', () => {
+  const api = fauxDocApi();
+  const v = { etat: 'Bon' };
+  assert.deepEqual(pontFormulaire({ couche: COUCHE_PONT, rowId: 1, docApi: api, valeurs: v }).values, v);
+  assert.deepEqual(pontFormulaire({
+    couche: COUCHE_PONT, rowId: 1, docApi: api, valeurs: v,
+    formulaire: { principal: false, tableId: 'Visites', via: 'batiment' },
+  }).values, v);
+  assert.deepEqual(pontFormulaire({ couche: COUCHE_PONT, rowId: 1, docApi: api }).values, {});
 });

@@ -267,32 +267,58 @@ describe('reglages de formulaire — un choix de scene, pas de table', () => {
     assert.equal(layerPrefsPayload({ name: 'Bâti', formulaire: {} }).formulaire, null);
   });
 
-  it('le choix et l’exposition font l’aller-retour', () => {
-    const source = { name: 'Bâti', formulaire: { id: 'bati-terrain', expose: true } };
+  it('la fiche choisie et les exposes font l’aller-retour', () => {
+    const source = { name: 'Bâti', formulaire: { fiche: 'bati-terrain', exposes: ['bati-terrain', 'visite-v2'] } };
     const payload = layerPrefsPayload(source);
-    assert.deepEqual(payload.formulaire, { id: 'bati-terrain', expose: true });
+    assert.deepEqual(payload.formulaire, { fiche: 'bati-terrain', exposes: ['bati-terrain', 'visite-v2'] });
 
     const relu = { name: 'Bâti' };
     applyLayerPrefsBinding(relu, { style: payload });
-    assert.deepEqual(relu.formulaire, { id: 'bati-terrain', expose: true });
+    assert.deepEqual(relu.formulaire, { fiche: 'bati-terrain', exposes: ['bati-terrain', 'visite-v2'] });
   });
 
-  it('exposer sans choisir reste un reglage valable', () => {
-    // La scene publie « le » formulaire de la table, quel qu'il soit : on n'a
-    // pas a figer un identifiant pour cela.
-    const payload = layerPrefsPayload({ formulaire: { expose: true } });
-    assert.deepEqual(payload.formulaire, { id: null, expose: true });
+  it('exposer sans choisir de fiche reste un reglage valable', () => {
+    // La scene publie un formulaire lie sans rien changer a la fiche.
+    const payload = layerPrefsPayload({ formulaire: { exposes: ['visite-v2'] } });
+    assert.deepEqual(payload.formulaire, { fiche: null, exposes: ['visite-v2'] });
+  });
+
+  it('une liste vide s’enregistre — elle dit « rien n’est expose »', () => {
+    // La confondre avec l'absence de liste reactiverait l'ancien booleen sur
+    // une couche qu'on vient justement de vider.
+    const payload = layerPrefsPayload({ formulaire: { exposes: [] } });
+    assert.deepEqual(payload.formulaire, { fiche: null, exposes: [] });
+  });
+
+  it('l’ancien booleen est recopie tant que personne n’a touche la liste', () => {
+    // Le supprimer ici desexposerait en silence une scene qu'on n'a fait
+    // qu'ouvrir.
+    const payload = layerPrefsPayload({ formulaire: { id: 'x', expose: true } });
+    assert.deepEqual(payload.formulaire, { fiche: 'x', expose: true });
+
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: payload });
+    assert.deepEqual(relu.formulaire, { fiche: 'x', expose: true });
+  });
+
+  it('et il disparait des que la liste prend le relais', () => {
+    const payload = layerPrefsPayload({ formulaire: { id: 'x', expose: true, exposes: ['x'] } });
+    assert.deepEqual(payload.formulaire, { fiche: 'x', exposes: ['x'] });
   });
 
   it('une valeur douteuse n’ouvre rien a un lecteur', () => {
     const relu = { name: 'Bâti' };
-    applyLayerPrefsBinding(relu, { style: { formulaire: { id: 'x', expose: 'oui' } } });
-    assert.deepEqual(relu.formulaire, { id: 'x', expose: false });
+    applyLayerPrefsBinding(relu, { style: { formulaire: { fiche: 'x', expose: 'oui' } } });
+    assert.deepEqual(relu.formulaire, { fiche: 'x' });
+
+    const abime = { name: 'Bâti' };
+    applyLayerPrefsBinding(abime, { style: { formulaire: { exposes: ['a', 3, null] } } });
+    assert.deepEqual(abime.formulaire, { fiche: null, exposes: ['a'] });
   });
 
   it('des prefs anciennes, sans le champ, laissent la couche intacte', () => {
-    const relu = { name: 'Bâti', formulaire: { id: 'a', expose: true } };
+    const relu = { name: 'Bâti', formulaire: { fiche: 'a', exposes: ['a'] } };
     applyLayerPrefsBinding(relu, { style: { mode: 'mapbox' } });
-    assert.deepEqual(relu.formulaire, { id: 'a', expose: true });
+    assert.deepEqual(relu.formulaire, { fiche: 'a', exposes: ['a'] });
   });
 });

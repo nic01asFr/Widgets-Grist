@@ -252,11 +252,25 @@
         .insp-eyebrow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .insp-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .insp-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
-        .insp-tabs { display: flex; border-bottom: 1px solid var(--hairline); padding: 0 20px; flex-shrink: 0; }
+        /*
+         * La barre defile, et il a fallu la mesurer pour le savoir.
+         *
+         * Elle portait deux onglets fixes — Attributs, Placement 3D — et rien
+         * n'imposait de largeur. Depuis qu'un onglet nait de chaque formulaire
+         * de la couche, il y en a autant que de tables qui la referencent : dans
+         * les 320 px utiles de l'inspecteur, trois libelles passent, le
+         * quatrieme se coupe en deux lignes. `nowrap` sur l'onglet, le
+         * defilement sur la barre.
+         */
+        .insp-tabs {
+            display: flex; border-bottom: 1px solid var(--hairline); padding: 0 20px; flex-shrink: 0;
+            overflow-x: auto; scrollbar-width: thin;
+        }
         .insp-tab {
             background: transparent; border: none; cursor: pointer; padding: 12px 0; margin-right: 22px;
             font-size: 12.5px; font-weight: 500; color: var(--muted);
             border-bottom: 2px solid transparent; margin-bottom: -1px;
+            white-space: nowrap; flex: 0 0 auto;
         }
         .insp-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
         .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }

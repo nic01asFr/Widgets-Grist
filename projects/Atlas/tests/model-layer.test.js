@@ -38,33 +38,61 @@ describe('objectInspectorTabs', () => {
   const modele = couche('library', 'Point');
   const surface = couche('mapbox', 'Polygon');
 
-  it('objet 3D seul — attributs puis placement', () => {
-    assert.deepEqual(objectInspectorTabs({ layer: modele, multi: false }),
-      ['Attributs', 'Placement 3D']);
+  /** Ce que `formulairesPourCouche` rend : le principal, puis les liés. */
+  const principal = { id: 'derive:Batiments', titre: 'Batiments', principal: true };
+  const visite = { id: 'visite-v2', titre: 'Visite', principal: false };
+  const desordre = { id: 'derive:Desordres', titre: 'Désordre constaté', principal: false };
+  const cles = (r) => r.map((o) => o.cle);
+  const libelles = (r) => r.map((o) => o.libelle);
+
+  it('un onglet par formulaire, le principal nommé « Attributs »', () => {
+    // Le tenir a part en aurait fait une exception, alors qu'il fait la meme
+    // chose que les autres : rendre un FormDef.
+    const r = objectInspectorTabs({ layer: surface, formulaires: [principal, visite, desordre] });
+    assert.deepEqual(libelles(r), ['Attributs', 'Visite', 'Désordre constaté']);
+    assert.deepEqual(cles(r), ['derive:Batiments', 'visite-v2', 'derive:Desordres']);
+  });
+
+  it('l’ordre ne varie pas — le premier onglet fait toujours la même chose', () => {
+    const r = objectInspectorTabs({ layer: surface, formulaires: [principal, visite] });
+    assert.equal(r[0].libelle, 'Attributs');
+    assert.equal(r[0].formulaire, principal);
+  });
+
+  it('objet 3D — le placement vient après les formulaires', () => {
+    const r = objectInspectorTabs({ layer: modele, formulaires: [principal] });
+    assert.deepEqual(libelles(r), ['Attributs', 'Placement 3D']);
+    assert.equal(r[1].formulaire, null, 'le placement n’est pas un formulaire');
   });
 
   it('objet 3D en sélection multiple — placement seul', () => {
-    assert.deepEqual(objectInspectorTabs({ layer: modele, multi: true }), ['Placement 3D']);
+    // On ne remplit pas un formulaire sur douze objets a la fois.
+    assert.deepEqual(libelles(objectInspectorTabs({ layer: modele, formulaires: [principal], multi: true })),
+      ['Placement 3D']);
   });
 
-  it('objet courant — attributs seuls, jamais de placement 3D', () => {
-    assert.deepEqual(objectInspectorTabs({ layer: surface, multi: false }), ['Attributs']);
-  });
-
-  it('revue — les attributs reviennent, ils portent sur l’objet courant', () => {
+  it('revue — les formulaires reviennent, ils portent sur l’objet courant', () => {
     // Parcourir une couche objet par objet EST une selection multiple, mais avec
-    // un curseur. La regle « pas d'edition d'attributs en masse » tient : on
-    // modifie celui sur lequel on est, et le corps doit le dire.
-    assert.deepEqual(objectInspectorTabs({ layer: surface, multi: true, revue: true }),
-      ['Attributs']);
-    assert.deepEqual(objectInspectorTabs({ layer: modele, multi: true, revue: true }),
+    // un curseur. La regle « pas d'edition en masse » tient : on modifie celui
+    // sur lequel on est, et le corps doit le dire.
+    assert.deepEqual(libelles(objectInspectorTabs({ layer: surface, formulaires: [principal, visite], multi: true, revue: true })),
+      ['Attributs', 'Visite']);
+    assert.deepEqual(libelles(objectInspectorTabs({ layer: modele, formulaires: [principal], multi: true, revue: true })),
       ['Attributs', 'Placement 3D']);
   });
 
-  it('sélection multiple non 3D — aucun onglet', () => {
-    // Cas atteignable : le corps de l'inspecteur doit alors afficher un état vide
-    // au lieu de retomber sur les curseurs relatifs.
-    assert.deepEqual(objectInspectorTabs({ layer: surface, multi: true }), []);
+  it('aucun formulaire — aucun onglet, et le corps devra le dire', () => {
+    // Cas atteignable : une couche sans table, ou dont rien n'est expose en
+    // terrain. Le corps affiche alors un etat vide au lieu de retomber sur les
+    // curseurs relatifs.
+    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [] }), []);
+    assert.deepEqual(objectInspectorTabs({ layer: surface }), []);
+    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [principal], multi: true }), []);
+  });
+
+  it('un formulaire sans identifiant n’a pas d’onglet', () => {
+    // Sans cle stable, l'onglet actif ne survivrait pas au rendu suivant.
+    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [{ titre: 'X', principal: true }] }), []);
   });
 });
 

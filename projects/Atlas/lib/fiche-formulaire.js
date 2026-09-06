@@ -28,9 +28,23 @@
  * > n'a pas le droit d'écrire. Le dépôt a déjà payé une fois pour ce défaut.
  */
 
+import { tablesReferencant } from './schema-grist.js';
+
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
   return typeof window !== 'undefined' && !!window.FormEngine && !!window.FormTypes;
+}
+
+/**
+ * La dérivation d'un FormDef depuis des colonnes, elle aussi en UMD.
+ *
+ * Elle vit dans `grist_forms/shared/` et non ici : la règle type → widget
+ * existe une fois, et un second site chez le consommateur aurait garanti deux
+ * comportements. Absente — page servie sans elle —, on rend `null` et il n'y a
+ * simplement pas de formulaire dérivé.
+ */
+function derivation() {
+  return (typeof window !== 'undefined' && window.FormDefFromTable) || null;
 }
 
 /**
@@ -123,10 +137,128 @@ export function choisirFormulaire(entrees, { table, prefereId = null } = {}) {
  * exposer le relevé du mobilier dans une scène et pas dans une autre, alors que
  * la table est la même. Une seule définition, chaque scène décidant de ce
  * qu'elle publie.
+ *
+ * > **D'un booléen à un ensemble.** Le réglage valait `{ id, expose }` — **un**
+ * > formulaire, **un** booléen — parce qu'une couche n'en portait qu'un. Depuis
+ * > que les tables qui la référencent en fournissent autant qu'elles sont,
+ * > « exposé » désigne **plusieurs** formulaires, par identifiant.
+ * >
+ * > L'ancienne forme se relit sans rien perdre : `expose: true` voulait dire
+ * > « la fiche de cette couche est exposée », ce que `exposeHerite` reporte au
+ * > formulaire principal — le seul qui existait alors.
+ *
+ * @returns {{fiche: string|null, exposes: string[]|null, exposeHerite: boolean}}
+ *   `exposes` vaut `null` quand la couche n'a jamais rien décidé, ce qui n'est
+ *   pas la même chose qu'une liste vide — celle-là dit « rien n'est exposé ».
  */
 export function reglagesFormulaire(couche) {
   const r = couche?.formulaire || {};
-  return { id: r.id || null, expose: r.expose === true };
+  return {
+    fiche: r.fiche || r.id || null,
+    exposes: Array.isArray(r.exposes) ? r.exposes.filter((x) => typeof x === 'string') : null,
+    exposeHerite: !Array.isArray(r.exposes) && r.expose === true,
+  };
+}
+
+/**
+ * Colonnes qu'aucun formulaire de couche ne saisit.
+ *
+ * La géométrie se dessine, elle ne se tape pas ; `atlas_3d_json` est une
+ * mémoire d'Atlas. Les offrir dans un formulaire ferait éditer à la main ce que
+ * la carte règle, et un relevé de terrain y perdrait son sens.
+ */
+export function colonnesHorsFormulaire(couche) {
+  const gc = couche?.geometryColumn;
+  const geo = typeof gc === 'string' ? [gc] : (gc ? [gc.lat, gc.lng].filter(Boolean) : []);
+  return ['atlas_3d_json', ...geo];
+}
+
+/**
+ * Tous les formulaires d'une couche, dans l'ordre où ils s'affichent.
+ *
+ * **Le principal d'abord** — celui de la table de la couche, qui corrige
+ * l'objet — puis **les liés**, ceux dont la table porte un `Ref:` vers la
+ * sienne, qui ajoutent une ligne. C'est l'ordre des onglets, et il ne varie
+ * pas : le premier onglet fait toujours la même chose.
+ *
+ * Chaque entrée est **enregistrée** ou **dérivée**. Une ligne de `Formulaires`
+ * prime toujours sur la déduction, y compris pour une table liée : c'est ainsi
+ * qu'un pack QField, ou un formulaire composé ici, remplace le brouillon sans
+ * qu'aucun chemin ne soit privilégié.
+ *
+ * @param {object} o
+ * @param {object} o.couche
+ * @param {object[]} [o.entrees] les lignes de `Formulaires`
+ * @param {object} [o.schema]    le schéma du document — sans lui, pas de dérivé
+ * @returns {Array<{id, titre, tableId, def, statut, derive, principal, via}>}
+ */
+export function formulairesPourCouche({ couche, entrees = [], schema = null } = {}) {
+  const table = couche?.sourceTable;
+  if (!table) return [];
+  const D = derivation();
+  const reglages = reglagesFormulaire(couche);
+  const out = [];
+
+  const ajouter = ({ tableCible, principal, via, titre, ignorer }) => {
+    const enregistre = choisirFormulaire(entrees, {
+      table: tableCible,
+      prefereId: principal ? reglages.fiche : null,
+    });
+    let entree = enregistre;
+    if (!entree && D && schema) {
+      const def = D.formDefDepuisColonnes({
+        tableId: tableCible,
+        colonnes: schema[tableCible] || [],
+        titre,
+        ignorer,
+      });
+      if (def) entree = { formId: def.id, titre: def.title, tableCible, version: 0, statut: null, def, derive: true };
+    }
+    if (!entree) return;
+    out.push({
+      id: entree.formId || entree.def?.id || null,
+      titre: entree.titre || entree.def?.title || tableCible,
+      tableId: tableCible,
+      def: entree.def,
+      statut: entree.statut || null,
+      derive: !!entree.derive,
+      principal: !!principal,
+      via: via || null,
+    });
+  };
+
+  ajouter({
+    tableCible: table,
+    principal: true,
+    titre: 'Attributs',
+    ignorer: colonnesHorsFormulaire(couche),
+  });
+
+  for (const { table: liee, via } of (schema ? tablesReferencant(schema, table) : [])) {
+    // La colonne qui porte la référence n'est pas une saisie : c'est le clic
+    // qui la remplit. La montrer ferait choisir l'objet qu'on vient de choisir.
+    ajouter({ tableCible: liee, principal: false, via, titre: liee, ignorer: [via] });
+  }
+
+  // « Exposé » se décide par identifiant. L'ancien booléen ne connaissait que la
+  // fiche : on le reporte sur le principal, le seul qui existait alors.
+  for (const f of out) {
+    f.expose = reglages.exposes
+      ? reglages.exposes.includes(f.id)
+      : (reglages.exposeHerite && f.principal);
+  }
+  return out;
+}
+
+/**
+ * Ceux qu'un lecteur peut ouvrir : exposés, et prêts.
+ *
+ * Un dérivé n'a pas de statut — il n'est pas « publié », il n'existe même pas
+ * en base. Il reste donc réservé à l'édition : l'exposer demande d'abord de
+ * l'enregistrer, ce qui est un geste et pas un effet de bord.
+ */
+export function formulairesOffertsEnLecture(formulaires) {
+  return (formulaires || []).filter((f) => f && f.expose && !f.derive && formulaireOffrable(f));
 }
 
 /**
@@ -139,7 +271,7 @@ export function reglagesFormulaire(couche) {
 export function formDefPourCouche(couche, entrees) {
   const entree = choisirFormulaire(entrees, {
     table: couche?.sourceTable,
-    prefereId: reglagesFormulaire(couche).id,
+    prefereId: reglagesFormulaire(couche).fiche,
   });
   return entree ? entree.def : null;
 }
@@ -173,21 +305,24 @@ export function inventaireFormulaires({ couches = [], entrees = [] } = {}) {
     if (!c?.sourceTable) continue;
     const l = ligne(c.sourceTable);
     l.couches.push(c);
-    if (reglagesFormulaire(c).expose) l.expose = true;
+    // Une table est dite exposée dès qu'une de ses couches offre quelque
+    // chose — l'ancien booléen comme la nouvelle liste.
+    const r = reglagesFormulaire(c);
+    if (r.exposeHerite || (r.exposes && r.exposes.length)) l.expose = true;
   }
   for (const e of entrees) {
     if (!e?.def?.tableId) continue;
     ligne(e.def.tableId).formulaires.push(e);
   }
   for (const l of tables) {
-    const prefere = l.couches.map((c) => reglagesFormulaire(c).id).find(Boolean) || null;
+    const prefere = l.couches.map((c) => reglagesFormulaire(c).fiche).find(Boolean) || null;
     l.choisi = choisirFormulaire(entrees, { table: l.table, prefereId: prefere });
   }
   return tables;
 }
 
 /**
- * Le mode exploitation : peut-on saisir cet objet hors édition ?
+ * Le mode exploitation : peut-on saisir sur cet objet hors édition ?
  *
  * Atlas confondait deux choses sous un seul mot. « Lecture » disait à la fois
  * *« Atlas ne montre pas ses outils d'auteur »* et *« vous ne pouvez rien
@@ -198,18 +333,24 @@ export function inventaireFormulaires({ couches = [], entrees = [] } = {}) {
  * | | Ce qu'elle empêche sans elle |
  * |---|---|
  * | l'objet a une ligne | on écrirait dans un blob GeoJSON, où rien n'a d'identité |
- * | la scène l'a publié | tout formulaire du document deviendrait saisissable partout |
- * | le formulaire est prêt | un brouillon en cours de réglage partirait au terrain |
+ * | au moins un formulaire offert | tout formulaire du document deviendrait saisissable partout |
+ * | le moteur est là | le repli devine les champs, il n'a rien à écrire ici |
  * | la personne peut écrire | on ferait remplir un formulaire pour un refus |
+ *
+ * > **La deuxième a changé de forme.** Elle valait `reglages.expose === true` —
+ * > un booléen pour la couche entière, du temps où celle-ci ne portait qu'un
+ * > formulaire. Elle porte maintenant sur **la liste** : un objet se saisit dès
+ * > qu'**un** de ses formulaires est offert, et `formulairesOffertsEnLecture`
+ * > dit lesquels. Un dérivé n'en fait jamais partie — il n'existe pas en base.
  *
  * En édition (`view` faux) la question ne se pose pas : ce chemin ne décrit que
  * ce qui reste ouvert **hors** édition.
  *
- * @param {{view: boolean, aDesLignes: boolean, peutEcrire: boolean, reglages: object, entree: object|null, moteur: boolean}} o
+ * @param {{view: boolean, aDesLignes: boolean, peutEcrire: boolean, formulaires: object[], moteur: boolean}} o
  */
-export function saisieHorsEdition({ view, aDesLignes, peutEcrire, reglages, entree, moteur } = {}) {
+export function saisieHorsEdition({ view, aDesLignes, peutEcrire, formulaires, moteur } = {}) {
   return !!view && !!aDesLignes && !!peutEcrire && !!moteur
-    && reglages?.expose === true && formulaireOffrable(entree);
+    && formulairesOffertsEnLecture(formulaires).length > 0;
 }
 
 /**
@@ -296,41 +437,91 @@ export function valeursPourMoteur(formDef, props) {
 /**
  * Le pont entre le moteur et Atlas.
  *
+ * Il traduit ce qu'Atlas sait — la couche, l'objet cliqué, la session Grist —
+ * dans le contrat que `FormEngine.mount` attend. Le moteur fait le reste.
+ *
+ * > **Le pont est obligatoire, et c'est une garde, pas une commodité.** Sans
+ * > lui, le moteur retombe sur `window.grist.docApi.applyUserActions` — or
+ * > Atlas expose `grist` globalement. Le garde d'écriture serait donc
+ * > court-circuité, et l'édition rouverte à qui n'a pas le droit d'écrire.
+ *
+ * ## Deux modes, et ils ne peuvent pas partager un pont
+ *
+ * | | `editRowId` | Ce qui se passe |
+ * |---|---|---|
+ * | **principal** | l'objet | `updateRow` — on **corrige** la ligne cliquée |
+ * | **lié** | **absent** | `addRow` — on **ajoute** une ligne qui la référence |
+ *
+ * > **L'absence d'`editRowId` n'est pas un oubli, c'est la condition.**
+ * > `defaultSubmit` du moteur teste `bridge.editRowId` **avant** `bridge.addRow`
+ * > et ne discute pas : le porter sur un formulaire lié ferait corriger le
+ * > bâtiment au lieu d'ajouter la visite, sans erreur ni message.
+ *
+ * ## La référence, Atlas la porte
+ *
+ * Elle n'est pas une saisie, c'est un **fait du contexte** : on a cliqué cet
+ * objet. Le pont l'injecte donc à la soumission, ce qui supprime d'un coup le
+ * besoin que le formulaire déclare le champ, celui de le préremplir et celui de
+ * le verrouiller. Un formulaire hérité de QField n'expose pas forcément son
+ * `Ref` — sans injection, la soumission créerait une ligne rattachée à rien.
+ *
  * @param {object} o
  * @param {object} o.couche        couche Atlas (porte `sourceTable`)
  * @param {number} o.rowId         `_row_id` de l'entité — l'identifiant Grist
  * @param {object} o.docApi        `grist.docApi`
+ * @param {object} [o.formulaire]  l'entrée de `formulairesPourCouche` — son
+ *                                 `principal` et son `via` décident du mode
+ * @param {object} [o.valeurs]     lues avant le premier rendu
  * @param {() => boolean} o.peutEcrire  le garde d'Atlas, consulté à CHAQUE soumission
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
  * @param {() => void} [o.apresEcriture]
  */
-export function pontFormulaire({ couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs }) {
-  const table = couche?.sourceTable;
+export function pontFormulaire({
+  couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs, formulaire,
+}) {
   const dire = typeof signaler === 'function' ? signaler : () => {};
+  // Pas de `formulaire` ⇒ l'appelant vise la table de la couche : c'est le
+  // comportement d'avant les formulaires liés, et il reste le défaut.
+  const lie = !!formulaire && formulaire.principal === false;
+  const table = lie ? formulaire.tableId : couche?.sourceTable;
 
-  return {
-    // Présent ⇒ le moteur est en édition de ligne, pas en création.
-    editRowId: rowId,
+  const garde = () => {
+    if (typeof peutEcrire === 'function' && !peutEcrire()) {
+      throw new Error('Mode lecture — enregistrement indisponible');
+    }
+    if (!table) throw new Error('Couche sans table source');
+  };
 
-    // Lues AVANT le premier rendu : c'est `mount` qui les prend, et lui seul
-    // voit les étapes que le DOM n'a pas encore.
+  const pont = {
     values: valeurs || {},
-
-    async updateRow(_tableId, id, data) {
-      // Le garde est consulté ici, pas à la construction du pont : les droits
-      // peuvent avoir changé entre l'ouverture de la fiche et la soumission.
-      if (typeof peutEcrire === 'function' && !peutEcrire()) {
-        throw new Error('Mode lecture — enregistrement indisponible');
-      }
-      if (!table) throw new Error('Couche sans table source');
-      await docApi.applyUserActions([['UpdateRecord', table, id ?? rowId, data]]);
-      dire('Enregistré', true);
-      if (typeof apresEcriture === 'function') apresEcriture();
-    },
-
-    // Cascades et listes de références : lecture seule, aucun garde nécessaire.
     loadTable: (t) => docApi.fetchTable(t),
-
     getAccessToken: (opts) => docApi.getAccessToken(opts),
   };
+
+  if (lie) {
+    pont.addRow = async (_tableId, data) => {
+      garde();
+      // La référence entre ici, jamais par le formulaire : c'est le clic qui
+      // fait foi. Sans `via`, on refuse plutôt que de créer un orphelin.
+      if (!formulaire.via) throw new Error('Formulaire lié sans colonne de référence');
+      const champs = { ...data, [formulaire.via]: rowId };
+      const r = await docApi.applyUserActions([['AddRecord', table, null, champs]]);
+      dire('Relevé ajouté', true);
+      if (typeof apresEcriture === 'function') apresEcriture();
+      return r;
+    };
+    return pont;
+  }
+
+  // Présent ⇒ le moteur est en édition de ligne, pas en création.
+  pont.editRowId = rowId;
+  pont.updateRow = async (_tableId, id, data) => {
+    // Le garde est consulté ici, pas à la construction du pont : les droits
+    // peuvent avoir changé entre l'ouverture de la fiche et la soumission.
+    garde();
+    await docApi.applyUserActions([['UpdateRecord', table, id ?? rowId, data]]);
+    dire('Enregistré', true);
+    if (typeof apresEcriture === 'function') apresEcriture();
+  };
+  return pont;
 }

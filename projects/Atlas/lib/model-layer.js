@@ -40,9 +40,36 @@ export function isModelLayer(layer) {
  *
  * @param {{layer?: object, multi?: boolean, revue?: boolean}} o
  */
-export function objectInspectorTabs({ layer, multi = false, revue = false } = {}) {
+/** L'onglet de placement 3D, qui n'est pas un formulaire. */
+export const ONGLET_3D = 'Placement 3D';
+
+/**
+ * Les onglets de la fiche d'un objet.
+ *
+ * > **Un onglet par formulaire**, et `Attributs` en est un : c'est celui de la
+ * > table de la couche. Le tenir à part en aurait fait une exception, alors
+ * > qu'il fait la même chose que les autres — rendre un FormDef. La liste des
+ * > formulaires décide donc du nombre d'onglets, et l'ordre ne varie pas : le
+ * > premier fait toujours la même chose.
+ *
+ * Deux exclusions, chacune pour une raison :
+ *
+ * - **sélection multiple hors revue** : on ne remplit pas un formulaire sur
+ *   douze objets à la fois ; la revue, elle, garde un objet courant ;
+ * - **le placement 3D** n'est pas un formulaire, il vient après, et seulement
+ *   sur une couche de modèles.
+ *
+ * @param {{layer: object, formulaires?: object[], multi?: boolean, revue?: boolean}} o
+ * @returns {Array<{cle: string, libelle: string, formulaire: object|null}>}
+ */
+export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false } = {}) {
   const tabs = [];
-  if (!multi || revue) tabs.push('Attributs');
-  if (isModelLayer(layer)) tabs.push('Placement 3D');
+  if (!multi || revue) {
+    for (const f of formulaires) {
+      if (!f || !f.id) continue;
+      tabs.push({ cle: f.id, libelle: f.principal ? 'Attributs' : f.titre, formulaire: f });
+    }
+  }
+  if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
   return tabs;
 }

@@ -101,12 +101,31 @@ export function layerPrefsPayload(layer) {
   };
 }
 
-/** `null` quand il n'y a rien a dire : une couche sans reglage n'ecrit rien. */
+/**
+ * `null` quand il n'y a rien a dire : une couche sans reglage n'ecrit rien.
+ *
+ * > **Deux formes cohabitent, et il faut les deux.** Le reglage valait
+ * > `{ id, expose }` — un formulaire, un booleen — du temps ou une couche n'en
+ * > portait qu'un. Il vaut maintenant `{ fiche, exposes }`, une liste
+ * > d'identifiants, parce que les tables qui referencent la couche en
+ * > fournissent autant qu'elles sont.
+ * >
+ * > L'ancien booleen est **recopie tel quel** tant que personne n'a touche a la
+ * > liste : le supprimer ici desexposerait en silence une scene qu'on n'a fait
+ * > qu'ouvrir. Il disparait le jour ou `exposes` prend le relais.
+ */
 function formulairePrefsPayload(layer) {
-  const id = layer?.formulaire?.id || null;
-  const expose = layer?.formulaire?.expose === true;
-  if (!id && !expose) return null;
-  return { id, expose };
+  const f = layer?.formulaire || {};
+  const fiche = f.fiche || f.id || null;
+  const exposes = Array.isArray(f.exposes)
+    ? f.exposes.filter((x) => typeof x === 'string')
+    : null;
+  const herite = !exposes && f.expose === true;
+  if (!fiche && !exposes && !herite) return null;
+  const out = { fiche };
+  if (exposes) out.exposes = exposes;
+  else if (herite) out.expose = true;
+  return out;
 }
 
 /**
@@ -139,14 +158,15 @@ export function applyLayerPrefsBinding(layer, prefs) {
     // Le tri effectif revient à l'appelant, qui voit toutes les couches.
     if (Number.isFinite(payload.rank)) layer._rank = payload.rank;
 
-    // `expose` doit valoir vrai, pas seulement etre present : une valeur
-    // heritee d'un enregistrement ancien ne doit pas ouvrir un formulaire a un
-    // lecteur sans que personne l'ait decide.
+    // Une valeur douteuse n'ouvre rien : `expose` doit valoir vrai, et une
+    // liste doit etre une liste de chaines. Sans quoi un enregistrement ancien
+    // ou abime offrirait un formulaire que personne n'a decide d'offrir.
     if (payload.formulaire) {
-      layer.formulaire = {
-        id: payload.formulaire.id || null,
-        expose: payload.formulaire.expose === true,
-      };
+      const p = payload.formulaire;
+      const f = { fiche: p.fiche || p.id || null };
+      if (Array.isArray(p.exposes)) f.exposes = p.exposes.filter((x) => typeof x === 'string');
+      else if (p.expose === true) f.expose = true;
+      layer.formulaire = f;
     }
 
     if (payload.controls?.length) {
