@@ -291,6 +291,44 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
 }
 
 /**
+ * Ce qu'enregistrer un formulaire dérivé veut dire — et ce n'est pas la même
+ * chose selon l'endroit.
+ *
+ * | | Le geste | Pourquoi |
+ * |---|---|---|
+ * | **sur la couche** | **composer** | `Attributs` reste la vue complète de la table ; l'enregistrer tel quel en ferait un doublon. Ce qu'on veut, c'est un formulaire **choisi**, qui part de là |
+ * | **lié** | **enregistrer** | le dérivé est déjà le formulaire de cette table ; l'enregistrer le rend proposable, et rien de plus |
+ *
+ * Dans les deux cas, une ligne apparaît dans `Formulaires` — et c'est bien un
+ * geste de l'utilisateur, pas un effet de bord : Atlas ne crée rien tout seul.
+ */
+export function gesteDEnregistrement(f) {
+  if (!f || !f.derive) return null;
+  return f.surLaCouche
+    ? { verbe: 'composer', libelle: 'Composer', titre: `Saisie — ${f.tableId}` }
+    : { verbe: 'enregistrer', libelle: 'Enregistrer', titre: f.titre || f.tableId };
+}
+
+/**
+ * Un identifiant libre pour un nouveau formulaire sur cette table.
+ *
+ * Il doit être **stable** — la liste des exposés s'y accroche — et **lisible**,
+ * parce qu'il finit dans une table que quelqu'un ouvrira. On numérote donc à
+ * partir du nom de la table, et on saute ce qui est déjà pris : deux
+ * formulaires sur `Visites` s'appellent `visites-1` et `visites-2`, et
+ * supprimer le premier ne fait pas réapparaître son identifiant.
+ */
+export function idFormulaireLibre(tableId, entrees = []) {
+  const base = String(tableId || 'formulaire')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'formulaire';
+  const pris = new Set((entrees || []).map((e) => e?.formId).filter(Boolean));
+  let n = 1;
+  while (pris.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
+/**
  * Le libellé d'un onglet.
  *
  * Un formulaire enregistré porte **son nom** : l'afficher comme « Attributs »

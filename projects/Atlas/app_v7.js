@@ -21,7 +21,8 @@ import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
-} from './lib/fiche-formulaire.js?v=20260906e';
+  gesteDEnregistrement, idFormulaireLibre,
+} from './lib/fiche-formulaire.js?v=20260906f';
 import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';
@@ -3954,8 +3955,14 @@ function ligneFormulaire(couche, f, esc) {
         ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`)
         : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${libelleStatut(f.statut)}`}`;
 
-    const commande = f.derive
-        ? '<span class="hint" style="display:inline;padding:2px 6px;margin:0">à enregistrer</span>'
+    // Un derive n'a pas de bascule : il ne peut pas etre propose. Mais dire
+    // « a enregistrer » sans offrir le geste etait une promesse creuse — c'est
+    // un bouton, pas une pastille.
+    const geste = gesteDEnregistrement(f);
+    const commande = geste
+        ? `<button class="btn btn-soft" style="padding:5px 10px;font-size:11.5px"
+            onclick="A.enregistrerFormulaire('${esc(couche.id)}','${esc(f.id)}')"
+            title="${geste.verbe === 'composer' ? 'Créer un formulaire à partir de ces colonnes' : 'L’enregistrer pour pouvoir le proposer'}">${geste.libelle}</button>`
         : `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
             aria-checked="${f.expose}"
             aria-label="Proposer ${esc(f.titre)} hors édition"
@@ -6707,6 +6714,9 @@ const A = {
         if (!couche || !formId) return;
         const actuels = formulairesDeLaCouche(couche);
         const vise = actuels.find((f) => f.id === formId);
+        // La ligne de la table Formulaires, pour pouvoir la publier : la liste
+        // par couche ne porte pas le rowId, qui n'existe que pour un enregistre.
+        const ligne = STATE.formulaires.find((e) => e.formId === formId);
         // Un dérivé n'existe pas en base : il ne peut pas être proposé, et
         // l'accepter laisserait dans la liste un identifiant que rien ne
         // pourra jamais honorer.
@@ -6723,11 +6733,79 @@ const A = {
         // `exposes` remplace l'ancien booleen : une liste, meme vide, dit que
         // cette couche a decide — et `expose` n'a plus a etre relu.
         couche.formulaire = { fiche: reglagesFormulaire(couche).fiche, exposes: [...exposes] };
+
+        // > **Proposer, c'est publier.** Un formulaire compose ici nait
+        // > brouillon — c'est juste, on vient de le deduire et personne ne l'a
+        // > relu. Mais un brouillon n'est jamais offert en lecture, et Atlas
+        // > n'a aucun autre endroit ou le publier : la bascule serait restee
+        // > sans effet, et la personne aurait cherche pourquoi.
+        //
+        // Le statut dit « ce formulaire est pret » et vit dans la table
+        // Formulaires ; `exposes` dit « cette scene le montre » et vit avec la
+        // couche. Deux faits distincts, et c'est le meme geste qui pose le
+        // premier.
+        if (actif && vise?.statut === 'brouillon' && ligne?.rowId) {
+            try {
+                await grist.docApi.applyUserActions([['UpdateRecord', 'Formulaires', ligne.rowId, { Statut: 'publie' }]]);
+                await chargerFormulaires();
+            } catch (e) {
+                showToast('Publication refusée : ' + e.message, 'error');
+                return;
+            }
+        }
+
         renderFormulaires();
+
         renderInspector();
         await saveLayerToGrist(couche, true);
         const nom = actuels.find((f) => f.id === formId)?.titre || formId;
         showToast(actif ? `Proposé hors édition · ${nom}` : `Retiré · ${nom}`, 'success');
+    },
+
+    /**
+     * Enregistrer un formulaire deduit — le seul chemin par lequel Atlas ecrit
+     * dans `Formulaires`, et il part toujours d'un clic.
+     *
+     * Sur la couche le geste est **composer** : `Attributs` reste la vue
+     * complete de la table, et ce qu'on cree est un formulaire distinct, qu'on
+     * pourra restreindre. Sur une table liee c'est **enregistrer** : le derive
+     * est deja le formulaire de cette table, l'ecrire le rend proposable.
+     *
+     * La definition ecrite est celle qu'on voit — meme champs, meme ordre.
+     * Partir d'autre chose surprendrait.
+     */
+    async enregistrerFormulaire(layerId, formId) {
+        if (!assertCanWrite('enregistrer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
+        const geste = gesteDEnregistrement(f);
+        if (!geste) return;
+
+        const T = window.FormulairesTable;
+        if (!T || !f.def) { showToast('Module formulaires indisponible', 'error'); return; }
+        try {
+            showLoading(`${geste.libelle}…`);
+            // La table est creee a la demande, avec le schema partage : Atlas ne
+            // decrit pas `Formulaires` de son cote, sinon deux definitions
+            // divergeraient au premier changement.
+            const tables = await grist.docApi.listTables();
+            if (!tables.includes('Formulaires')) {
+                await grist.docApi.applyUserActions(T.planCreateFormulairesTable());
+            }
+            const def = { ...f.def, id: idFormulaireLibre(f.tableId, STATE.formulaires), title: geste.titre };
+            const champs = T.rowFromFormDef(def, { statut: 'brouillon', version: 1 });
+            const colonnes = {};
+            for (const [k, v] of Object.entries(champs)) colonnes[k] = [v];
+            await grist.docApi.applyUserActions([['BulkAddRecord', 'Formulaires', [null], colonnes]]);
+            await chargerFormulaires();
+            hideLoading();
+            renderFormulaires();
+            renderInspector();
+            showToast(`« ${geste.titre} » enregistré — brouillon`, 'success');
+        } catch (e) {
+            hideLoading();
+            showToast('Grist : ' + e.message, 'error');
+        }
     },
 
     // Lieu

@@ -627,3 +627,46 @@ test('colonnesHorsFormulaire redemande la geometrie au schema', () => {
   // Sans schema ni couche, il ne reste que la memoire d'Atlas.
   assert.deepEqual(colonnesHorsFormulaire({}), ['atlas_3d_json']);
 });
+
+/* ---------- enregistrer un derive : deux gestes, pas un ---------- */
+
+import { gesteDEnregistrement, idFormulaireLibre } from '../lib/fiche-formulaire.js';
+
+test('sur la couche on COMPOSE, sur une liee on ENREGISTRE', () => {
+  // « Attributs » reste la vue complete de la table : l'enregistrer tel quel en
+  // ferait un doublon. Ce qu'on veut la, c'est un formulaire choisi.
+  const attributs = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Attributs' };
+  assert.deepEqual(gesteDEnregistrement(attributs),
+    { verbe: 'composer', libelle: 'Composer', titre: 'Saisie — Batiments_locaux' });
+
+  const lie = { derive: true, surLaCouche: false, tableId: 'Visites', titre: 'Visites' };
+  assert.deepEqual(gesteDEnregistrement(lie),
+    { verbe: 'enregistrer', libelle: 'Enregistrer', titre: 'Visites' });
+});
+
+test('un formulaire deja enregistre n’a aucun geste a proposer', () => {
+  assert.equal(gesteDEnregistrement({ derive: false, surLaCouche: true }), null);
+  assert.equal(gesteDEnregistrement(null), null);
+});
+
+test('l’identifiant est lisible, et saute ce qui est pris', () => {
+  // Il finit dans une table que quelqu'un ouvrira, et la liste des exposes s'y
+  // accroche : il doit etre stable.
+  assert.equal(idFormulaireLibre('Visites'), 'visites-1');
+  assert.equal(idFormulaireLibre('Batiments_locaux'), 'batiments-locaux-1');
+  assert.equal(idFormulaireLibre('Relevés Été'), 'releves-ete-1');
+  assert.equal(idFormulaireLibre('Visites', [{ formId: 'visites-1' }]), 'visites-2');
+  assert.equal(idFormulaireLibre('Visites', [{ formId: 'visites-1' }, { formId: 'visites-2' }]), 'visites-3');
+});
+
+test('supprimer un formulaire ne fait pas revenir son identifiant', () => {
+  // On numerote sur ce qui EXISTE : si visites-1 a disparu, le suivant reste
+  // visites-1 — mais aucune ligne ne le porte plus, donc rien ne se telescope.
+  assert.equal(idFormulaireLibre('Visites', [{ formId: 'visites-2' }]), 'visites-1');
+});
+
+test('une table sans nom exploitable garde un identifiant valable', () => {
+  assert.equal(idFormulaireLibre(''), 'formulaire-1');
+  assert.equal(idFormulaireLibre('___'), 'formulaire-1');
+  assert.equal(idFormulaireLibre(null), 'formulaire-1');
+});
