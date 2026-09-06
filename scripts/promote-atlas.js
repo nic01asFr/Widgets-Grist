@@ -28,6 +28,10 @@ html = html.replace(
   '<title>Atlas — Maquette 3D Territoriale</title>'
 );
 html = html.replace(/\.\/app_v7\.js\?v=[^"]+/, `./app.js?v=${VERSION}`);
+// `../grist_forms/` n'existe que sur le serveur de developpement, ou
+// `projects/` est servi. La page publiee lit sa copie embarquee.
+html = html.replace(/\.\.\/grist_forms\//g, './vendor/grist_forms/');
+html = normaliserVersions(html);
 fs.writeFileSync(path.join(pub, 'index.html'), html);
 
 fs.writeFileSync(
@@ -43,6 +47,49 @@ for (const f of fs.readdirSync(libSrc)) {
   if (!f.endsWith('.js')) continue;
   fs.writeFileSync(path.join(libPub, f), normaliserVersions(fs.readFileSync(path.join(libSrc, f), 'utf8')));
   modules++;
+}
+
+/**
+ * La peau du formulaire, qui n'est pas un module.
+ *
+ * La boucle ci-dessus ne copie que les `.js` : `formulaire-atlas.css` y serait
+ * reste. Sans elle, le moteur emet ses 33 classes `fr-*` et rien ne les
+ * habille — un formulaire nu au milieu d'un panneau soigne.
+ */
+for (const f of fs.readdirSync(libSrc)) {
+  if (f.endsWith('.css')) fs.copyFileSync(path.join(libSrc, f), path.join(libPub, f));
+}
+
+/**
+ * Le moteur de formulaire, embarque.
+ *
+ * La page charge six scripts de `../grist_forms/` — un chemin qui n'existe que
+ * sur le serveur de developpement. Publies tels quels, ils tombent en 404 : la
+ * fiche d'entite retombe silencieusement sur les champs devines, et personne ne
+ * voit pourquoi.
+ *
+ * La liste est NOMMEE, pas un `readdir` : ce qui entre dans une page publiee
+ * doit se lire, pas se deduire.
+ */
+const VENDOR = [
+  'shared/types.js',
+  'shared/attachments.js',
+  'shared/session-context.js',
+  'shared/formulaires-table.js',
+  'shared/formdef-from-table.js',
+  'runtime/engine.js',
+];
+const formsSrc = path.join(root, 'projects', 'grist_forms');
+const vendorPub = path.join(pub, 'vendor', 'grist_forms');
+for (const rel of VENDOR) {
+  const from = path.join(formsSrc, rel);
+  if (!fs.existsSync(from)) {
+    console.error(`Echec : ${rel} introuvable dans projects/grist_forms`);
+    process.exit(1);
+  }
+  const to = path.join(vendorPub, rel);
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.copyFileSync(from, to);
 }
 
 /**
@@ -99,6 +146,24 @@ for (const d of DEMOS) {
   }
 }
 
+/**
+ * Controle : tout ce que la page reclame en relatif doit exister dans la copie.
+ *
+ * Le controle des modules `lib/` existait deja ; il ne voyait ni les `<script
+ * src>` ni les feuilles de style. Six scripts pointaient hors du dossier publie
+ * sans que rien ne le signale — et un 404 de script ne casse pas la page : elle
+ * s'affiche, amputee, et le defaut se decouvre chez l'utilisateur.
+ */
+const pageHtml = fs.readFileSync(path.join(pub, 'index.html'), 'utf8');
+const reclames = [...pageHtml.matchAll(/(?:src|href)="(\.[^"]+)"/g)]
+  .map((m) => m[1].split('?')[0])
+  .filter((u) => !u.startsWith('./demos/'));
+const absentsPage = reclames.filter((u) => !fs.existsSync(path.join(pub, u)));
+if (absentsPage.length) {
+  console.error('Echec : la page publiee reclame des fichiers absents —', absentsPage.join(', '));
+  process.exit(1);
+}
+
 // Controle : tout module importe doit exister dans la copie publiee.
 const publie = fs.readFileSync(path.join(pub, 'app.js'), 'utf8');
 const requis = [...new Set([...publie.matchAll(/\.\/lib\/([a-z0-9-]+\.js)/g)].map((m) => m[1]))];
@@ -109,4 +174,5 @@ if (absents.length) {
 }
 
 console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js, `
+  + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
   + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes)`);
