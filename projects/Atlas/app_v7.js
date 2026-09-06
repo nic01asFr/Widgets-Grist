@@ -6721,7 +6721,6 @@ const A = {
     },
 
     // Lieu
-    recenter()    // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },
     searchLocation,
     pickSearch(name, lat, lng) {
