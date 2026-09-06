@@ -670,3 +670,23 @@ test('une table sans nom exploitable garde un identifiant valable', () => {
   assert.equal(idFormulaireLibre('___'), 'formulaire-1');
   assert.equal(idFormulaireLibre(null), 'formulaire-1');
 });
+
+test('l’ancien booleen se reporte sur le premier formulaire OFFRABLE', () => {
+  // Depuis que le derive ouvre la liste, « le premier » est Attributs, qui ne
+  // peut jamais etre offert. L'heritage pointait sur rien, et la premiere
+  // ecriture de la liste effacait l'exposition reelle — sans erreur, sans
+  // message. Constate sur le document de test.
+  const entrees = [{ formId: 'releve', titre: 'Relevé', statut: 'terrain', def: { id: 'releve', tableId: 'Batiments_locaux', sections: [] } }];
+  const couche = { ...COUCHE, formulaire: { expose: true } };
+  const liste = formulairesPourCouche({ couche, entrees, schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.expose).map((f) => f.id), ['releve']);
+  assert.deepEqual(formulairesOffertsEnLecture(liste).map((f) => f.id), ['releve']);
+});
+
+test('et sur le derive seulement quand la couche n’a rien d’enregistre', () => {
+  // Il ne sera pas offert pour autant — mais le reglage n'est pas perdu, et
+  // enregistrer le formulaire le rendra effectif.
+  const couche = { ...COUCHE, formulaire: { expose: true } };
+  const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
+  assert.deepEqual(liste.filter((f) => f.expose).map((f) => f.id), ['derive:Batiments_locaux']);
+});

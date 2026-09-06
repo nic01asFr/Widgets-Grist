@@ -278,10 +278,17 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     ajouterTable({ tableCible: liee, surLaCouche: false, via, titre: liee, ignorer: [via] });
   }
 
-  // « Exposé » se décide par identifiant. L'ancien booléen ne connaissait que la
-  // fiche : on le reporte sur le premier formulaire de la couche, le seul qui
-  // existait alors.
-  const premierDeLaCouche = out.find((f) => f.surLaCouche)?.id || null;
+  // « Exposé » se décide par identifiant. L'ancien booléen ne connaissait que
+  // la fiche : on le reporte sur le premier formulaire **offrable** de la
+  // couche — le seul qui existait quand ce booléen a été écrit.
+  //
+  // > **Pas le premier tout court.** Depuis que le dérivé ouvre la liste, « le
+  // > premier » est `Attributs`, qui ne peut jamais être offert. L'héritage
+  // > pointait donc sur rien, et la première écriture de la liste effaçait
+  // > l'exposition réelle — sans erreur, sans message. Constaté sur le document
+  // > de test : un relevé publié s'est retrouvé retiré.
+  const premierDeLaCouche = out.find((f) => f.surLaCouche && !f.derive)?.id
+    || out.find((f) => f.surLaCouche)?.id || null;
   for (const f of out) {
     f.expose = reglages.exposes
       ? reglages.exposes.includes(f.id)
