@@ -17,6 +17,9 @@
       node scripts/serve-dev.js --root . --port 3011
       http://localhost:3011/projects/Atlas/tests/browser-validate-formulaire.html
 -->
+<!-- Les memes fontes qu'Atlas : un banc de peau qui les remplace par celles du
+     systeme mesure autre chose que ce qu'il pretend. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   /* Les jetons d'Atlas, copiés de `index_v7.html` — la peau n'en connaît pas
      d'autres, et c'est ce qu'on veut vérifier. */
@@ -34,8 +37,9 @@
     --accent-soft: #F5E9DC;
     --accent2: #2E4E54;
     --green: #5B7A4F;
-    --sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'Hanken Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Newsreader', Georgia, serif;
     --t-fast: 140ms ease;
     --inspector-w: 360px;
     color-scheme: light;
