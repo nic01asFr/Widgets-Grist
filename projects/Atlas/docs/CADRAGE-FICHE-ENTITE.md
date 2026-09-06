@@ -411,6 +411,22 @@ il débloque l'usage pendant que le pont se termine.
    formulaire qu'on n'arrive pas à ouvrir ne sert à rien : ce point remonte
    juste après le module, et il profite à tout Atlas, pas seulement à cet axe.
 
+## Ce qui reste, au 06/09/2026
+
+Le formulaire d'entité, le module, et la saisie hors édition sont livrés et
+éprouvés en Grist réel. Trois choses restent, dans cet ordre :
+
+| | | Pourquoi là |
+|---|---|---|
+| **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
+| **2** | le **vendoring** de `grist_forms` dans `published/atlas/` | ~55 Ko ; `index_v7.html` charge `../grist_forms/`, un chemin qui n'existe que sur le serveur de développement. **Bloquant pour toute fusion vers `main`** |
+| **3** | la **marche 3** — ACL dérivée du FormDef | et son premier geste est la sonde par table, cf. la réserve plus bas |
+
+Deux questions restent ouvertes et ne se tranchent pas seules : **l'historique
+des observations** (six choix, dont un point dur — rien ne dit quelles colonnes
+résument une visite) et **ce que fait le panneau après l'enregistrement**, rester
+ou avancer au suivant.
+
 ## Le style — une peau Atlas, pas le DSFR
 
 Le moteur n'embarque aucun style : il émet **31 classes `fr-*`** et compte sur
@@ -548,11 +564,23 @@ C'est une dépendance entre projets, à assumer explicitement.
 
 Rappel du découpage, qui ne change pas :
 
-| Marche | Contenu | Droits touchés |
-|---|---|---|
-| **1** | le formulaire est la fiche en édition · configurable par couche | aucun |
-| **2** | disponible en lecture — mode **Exploitation** | sonde par table |
-| **3** | l'activation pose l'ACL dérivée du FormDef | propriétaire |
+| Marche | Contenu | Droits touchés | État |
+|---|---|---|---|
+| **1** | le formulaire est la fiche en édition · configurable par couche | aucun | **fait** |
+| **2** | disponible en lecture — mode **Exploitation** | sonde par table | **fait, avec une réserve** |
+| **3** | l'activation pose l'ACL dérivée du FormDef | propriétaire | à faire |
+
+> **La réserve de la marche 2, et il faut la lire avant de bâtir la 3.** Le mode
+> exploitation repose sur `CONFIG.peutSaisir`, établi par `probeCanWriteDoc` —
+> qui sonde la table choisie par `resolveProbeTableId`, **pas celle de la
+> couche**. Tant qu'aucune règle d'accès ne distingue les tables, toutes
+> répondent la même chose et le mode est juste. **Dès la marche 3**, où l'ACL
+> refusera précisément `Atlas_LayerPrefs` au releveur, la sonde déclarera en
+> lecture seule exactement les personnes pour qui le formulaire est exposé.
+>
+> La sonde par table est donc le **premier geste de la marche 3**, pas un
+> raffinement de la 2. Elle n'a pas été faite ici pour ne pas livrer, en fin de
+> chantier, un changement de droits non éprouvé en Grist réel.
 
 Trois points acquis, à ne pas redécouvrir :
 
