@@ -70,3 +70,7 @@ projects/Atlas/demos/vieille-charite-marseille/
 
 # Certificat auto-signe du serveur de dev HTTPS (jamais versionne)
 .dev-tls/
+
+# Bancs d'essai jetables des demos Atlas — le prefixe `_` est deja la
+# convention de `promote-atlas.js`, qui ne les sert jamais en ligne.
+projects/Atlas/demos/_*.json
