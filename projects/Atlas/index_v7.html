@@ -57,6 +57,14 @@
             --hairline: #E2DBC8;
             --hairline-strong: #C9C0A8;
             --accent: #C44536;
+            /* Atlas est une interface claire, et ne le disait a personne. Sans
+               ce jeton, un OS en theme sombre fait peindre par le navigateur
+               TOUS les controles natifs — cases, boutons radio, selecteur de
+               date, ascenseurs — dans sa propre palette : les cases du
+               formulaire d'entite apparaissaient en disques noirs, hors de la
+               palette d'Atlas. Un champ texte masquait le probleme, puisqu'il
+               est entierement repeint par la feuille. */
+            color-scheme: light;
             --accent-soft: #F5E9DC;
             --accent2: #2E4E54;
             --sun: #E8A234;
@@ -659,6 +667,10 @@
         .layer-meta { font-size: 10px; color: var(--muted-light); font-family: var(--mono); display: flex; gap: 5px; align-items: center; }
         .badge3d { background: var(--accent2); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .badge-saved { background: var(--green); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
+        /* Une couche copiee est DANS Grist elle aussi : sa pastille ne pouvait
+           pas dire « Grist » sans laisser croire que l'autre n'y est pas. Elle
+           dit donc ce qu'on peut en faire, et se distingue a l'oeil. */
+        .badge-copie { background: var(--muted); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .layer-del { background: transparent; border: none; cursor: pointer; opacity: 0.3; font-size: 13px; padding: 2px; border-radius: 4px; }
         .layer-item:hover .layer-del { opacity: 0.7; }
         .layer-del:hover { opacity: 1; background: rgba(196,69,54,0.15); }

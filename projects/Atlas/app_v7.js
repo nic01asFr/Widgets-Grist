@@ -3216,7 +3216,9 @@ function renderLayersPanel(mode) {
                     <span class="layer-swatch" style="background:${l.color}"></span>
                     <div class="layer-info">
                         <div class="layer-name">${l.name}</div>
-                        <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked ? '<span class="badge-saved">⛓ table</span>' : (l.gristId ? '<span class="badge-saved">Grist</span>' : '')}</div>
+                        <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked
+                            ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
+                            : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
                     </div>
                     ${linked ? `<button class="layer-act" onclick="A.refreshLayer('${l.id}', event)" title="Rafraîchir depuis la table">${icTrait(IC.rafraichir)}</button>` : ''}
                     <button class="layer-act" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche">${icTrait(IC.cible)}</button>
@@ -4600,13 +4602,22 @@ function enteteSansTable(layer, view) {
         onclick="A.enregistrerDansGrist('${layer.id}')">💾 Enregistrer dans Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
 }
 
+/**
+ * En revue, la selection porte toute la couche : sans ce rappel, on croirait
+ * modifier les N objets alors qu'on n'ecrit que sur celui du curseur.
+ *
+ * Il valait pour le formulaire et pas pour le repli, alors que le risque de
+ * malentendu est le meme des deux cotes — c'est la selection qui le cree, pas
+ * la maniere dont les champs sont rendus.
+ */
+function rappelRevue(totalRevue) {
+    if (!(totalRevue > 1)) return '';
+    return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
+}
+
 function monterFormulaireEntite(layer, props, formDef, totalRevue = 0) {
     const hote = $('insp-body');
-    // En revue, la selection porte toute la couche : sans ce rappel, on croirait
-    // modifier les N objets alors qu'on n'ecrit que sur celui du curseur.
-    hote.innerHTML = totalRevue > 1
-        ? `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`
-        : '';
+    hote.innerHTML = rappelRevue(totalRevue);
     const rowId = props?._row_id;
     if (rowId == null) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
@@ -4684,8 +4695,12 @@ function renderObjectInspector() {
     // « Placement 3D » laisserait le pied muet, donc sans bouton d'enregistrement.
     _formulaireMonte = false;
 
+    // Hors de la branche : le pied de fiche en a besoin lui aussi, et le
+    // deduire une seconde fois la-bas ferait deux regles pour un seul fait.
+    const attrsReadOnly = view || !isQgis;
+
     if (_inspObjTab === 'Attributs') {
-        const readOnly = view || !isQgis;
+        const readOnly = attrsReadOnly;
         // Quand le document decrit cette table par un FormDef, c'est LUI la
         // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
@@ -4699,7 +4714,8 @@ function renderObjectInspector() {
             const entete = readOnly
                 ? (isQgis ? '' : enteteSansTable(layer, view))
                 : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
-            $('insp-body').innerHTML = entete + renderAttrFields(layer, props, { readOnly });
+            $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
+                + entete + renderAttrFields(layer, props, { readOnly });
         }
     } else if (_inspObjTab === 'Placement 3D') {
         if (view) {
@@ -4733,6 +4749,12 @@ function renderObjectInspector() {
         $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Mode lecture — consultation seule</div>`;
     } else if (!tabs.length) {
         $('insp-foot').innerHTML = '';
+    } else if (_inspObjTab === 'Attributs' && attrsReadOnly) {
+        // « Enregistrer » promettait d'ecrire des champs que l'onglet venait
+        // d'afficher en lecture seule. La sortie est dans le corps de la fiche
+        // (« Enregistrer dans Grist »), la ou le blocage se lit ; le pied dit
+        // seulement pourquoi il n'y a rien a enregistrer ici.
+        $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Attributs non modifiables — cette couche n'a pas de lignes Grist.</div>`;
     } else {
         // « Reset » ne rétablit que les surcharges de placement 3D ; « Enregistrer »
         // persiste aussi les attributs, il reste donc dans tous les cas.
@@ -6112,11 +6134,24 @@ function startSceneManifestPolling() {
         },
     });
 }
+/**
+ * Monte les couches que `Maquette_Layers` detient.
+ *
+ * > **Idempotente, et il a fallu l'apprendre.** L'initialisation Grist retente
+ * > en lecture quand elle echoue — mais l'echec peut survenir APRES ce
+ * > chargement (`syncStoryFromGrist`, les prefs, une regle d'acces qui refuse une
+ * > ecriture). La reprise rappelait alors cette fonction sans remettre
+ * > `STATE.layers` a zero : chaque couche apparaissait DEUX FOIS dans le
+ * > panneau, avec deux entrees de legende, pour une seule ligne en base. On
+ * > accusait le document d'avoir des doublons ; ils n'etaient que dans l'ecran.
+ */
 async function loadLayersFromGrist() {
     try {
         const rec = await grist.docApi.fetchTable('Maquette_Layers');
         const ids = rec.id || [];
+        const dejaMontees = new Set(STATE.layers.map((l) => l.gristId).filter((v) => v != null));
         for (let i = 0; i < ids.length; i++) {
+            if (dejaMontees.has(ids[i])) continue;
             let geojson, style;
             try { geojson = JSON.parse(rec.GeoJSON[i]); } catch (e) { continue; }
             try { style = JSON.parse(rec.StyleJSON[i]); } catch (e) { style = { mode: 'mapbox' }; }
