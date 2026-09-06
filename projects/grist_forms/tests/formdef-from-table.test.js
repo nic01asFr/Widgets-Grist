@@ -118,3 +118,33 @@ describe('tableReferencee', () => {
     }
   });
 });
+
+describe('le libellé — et pourquoi celui de Grist ne suffit pas', () => {
+  it('Grist remplit label avec le colId : on ne peut pas s’y fier', () => {
+    // Le prendre tel quel affichait « nom » et « hauteur » en minuscules, à
+    // côté d'« État » que quelqu'un avait nommé.
+    assert.equal(F.libelleDeLaColonne({ colId: 'nom', label: 'nom' }), 'Nom');
+    assert.equal(F.libelleDeLaColonne({ colId: 'date_de_visite', label: 'date_de_visite' }), 'Date de visite');
+  });
+
+  it('mais un vrai libellé est respecté tel quel', () => {
+    assert.equal(F.libelleDeLaColonne({ colId: 'etat', label: 'État constaté' }), 'État constaté');
+    assert.equal(F.libelleDeLaColonne({ colId: 'etat', label: 'état' }), 'état', 'même en minuscule s’il est différent');
+  });
+
+  it('et sans libellé du tout, le colId se relit', () => {
+    assert.equal(F.libelleDeLaColonne({ colId: 'hauteur_m' }), 'Hauteur m');
+    assert.equal(F.libelleDeLaColonne({ colId: 'etat', label: '' }), 'Etat');
+  });
+
+  it('le champ dérivé en hérite', () => {
+    const def = F.formDefDepuisColonnes({
+      tableId: 'Batiments',
+      colonnes: [
+        { colId: 'nom', type: 'Text', label: 'nom' },
+        { colId: 'etat', type: 'Choice', label: 'État' },
+      ],
+    });
+    assert.deepEqual(def.sections[0].fields.map((f) => f.label), ['Nom', 'État']);
+  });
+});

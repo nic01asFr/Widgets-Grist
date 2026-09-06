@@ -29,6 +29,7 @@
  */
 
 import { tablesReferencant } from './schema-grist.js';
+import { detectGeometryColumn } from './geo-tables.js';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
@@ -166,9 +167,23 @@ export function reglagesFormulaire(couche) {
  * La géométrie se dessine, elle ne se tape pas ; `atlas_3d_json` est une
  * mémoire d'Atlas. Les offrir dans un formulaire ferait éditer à la main ce que
  * la carte règle, et un relevé de terrain y perdrait son sens.
+ *
+ * > **La couche ne porte pas toujours sa colonne de géométrie.** Selon le
+ * > chemin qui l'a montée, `geometryColumn` peut être absent — et le formulaire
+ * > offrait alors `geometry_json` en champ texte, au milieu du nom et de la
+ * > hauteur. On la redemande donc au schéma, avec la même détection que le scan
+ * > des couches : une seule règle pour reconnaître une géométrie.
+ *
+ * @param {object} couche
+ * @param {object[]} [colonnes] les colonnes de la table, si l'appelant les a
  */
-export function colonnesHorsFormulaire(couche) {
-  const gc = couche?.geometryColumn;
+export function colonnesHorsFormulaire(couche, colonnes) {
+  let gc = couche?.geometryColumn;
+  if (!gc && Array.isArray(colonnes) && colonnes.length) {
+    const noms = {};
+    for (const c of colonnes) if (c?.colId) noms[c.colId] = true;
+    gc = detectGeometryColumn(noms);
+  }
   const geo = typeof gc === 'string' ? [gc] : (gc ? [gc.lat, gc.lng].filter(Boolean) : []);
   return ['atlas_3d_json', ...geo];
 }
@@ -254,7 +269,7 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     tableCible: table,
     surLaCouche: true,
     titre: 'Attributs',
-    ignorer: colonnesHorsFormulaire(couche),
+    ignorer: colonnesHorsFormulaire(couche, schema?.[table]),
   });
 
   for (const { table: liee, via } of (schema ? tablesReferencant(schema, table) : [])) {

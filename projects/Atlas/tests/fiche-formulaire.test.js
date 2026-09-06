@@ -605,3 +605,25 @@ test('les valeurs de depart passent par le pont dans les deux modes', () => {
   }).values, v);
   assert.deepEqual(pontFormulaire({ couche: COUCHE_PONT, rowId: 1, docApi: api }).values, {});
 });
+
+/* ---------- ce qu'un formulaire de couche n'offre jamais ---------- */
+
+test('la geometrie est ecartee meme quand la couche ne la porte pas', () => {
+  // Selon le chemin qui l'a montee, `geometryColumn` peut etre absent — et le
+  // formulaire offrait alors `geometry_json` en champ texte, entre le nom et la
+  // hauteur.
+  const sansGeom = { sourceTable: 'Batiments_locaux' };
+  const liste = formulairesPourCouche({ couche: sansGeom, entrees: [], schema: SCHEMA });
+  const attributs = liste.find((f) => f.surLaCouche);
+  assert.deepEqual(attributs.def.sections[0].fields.map((f) => f.colId), ['nom']);
+});
+
+test('colonnesHorsFormulaire redemande la geometrie au schema', () => {
+  assert.deepEqual(colonnesHorsFormulaire({}, SCHEMA.Batiments_locaux),
+    ['atlas_3d_json', 'geometry_json']);
+  // Et la couche prime quand elle la connait : c'est elle qui a raison.
+  assert.deepEqual(colonnesHorsFormulaire({ geometryColumn: 'geom' }, SCHEMA.Batiments_locaux),
+    ['atlas_3d_json', 'geom']);
+  // Sans schema ni couche, il ne reste que la memoire d'Atlas.
+  assert.deepEqual(colonnesHorsFormulaire({}), ['atlas_3d_json']);
+});

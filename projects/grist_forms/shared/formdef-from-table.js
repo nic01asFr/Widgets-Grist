@@ -52,6 +52,20 @@
     return estDerive(id) ? String(id).slice(PREFIXE_DERIVE.length) : null;
   }
 
+  /**
+   * Le libellé d'une colonne — et pourquoi celui de Grist ne suffit pas.
+   *
+   * > **Grist remplit `label` avec le `colId` quand personne n'en a donné.**
+   * > Le prendre tel quel affichait « nom » et « hauteur » en minuscules, à
+   * > côté d'« État » et de « Date de visite » que quelqu'un avait nommés. On
+   * > ne peut donc pas se fier à sa présence : il faut le comparer.
+   */
+  function libelleDeLaColonne(col) {
+    var brut = col.label;
+    if (brut && brut !== col.colId) return brut;
+    return libelleDepuisColId(col.colId);
+  }
+
   /** Un libellé lisible depuis un `colId` qui ne l'est pas toujours. */
   function libelleDepuisColId(colId) {
     var mots = String(colId).replace(/[_-]+/g, ' ').trim();
@@ -98,7 +112,7 @@
 
     var champ = {
       colId: col.colId,
-      label: col.label || libelleDepuisColId(col.colId),
+      label: libelleDeLaColonne(col),
       type: col.type || 'Text',
       widget: Types && Types.defaultWidget ? Types.defaultWidget(col.type) : 'text',
       required: false,
@@ -155,6 +169,7 @@
     estDerive: estDerive,
     tableDuDerive: tableDuDerive,
     tableReferencee: tableReferencee,
+    libelleDeLaColonne: libelleDeLaColonne,
     champDepuisColonne: champDepuisColonne,
     formDefDepuisColonnes: formDefDepuisColonnes,
   };
