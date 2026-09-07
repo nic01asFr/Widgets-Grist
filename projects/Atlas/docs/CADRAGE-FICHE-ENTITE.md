@@ -526,17 +526,16 @@ il débloque l'usage pendant que le pont se termine.
    formulaire qu'on n'arrive pas à ouvrir ne sert à rien : ce point remonte
    juste après le module, et il profite à tout Atlas, pas seulement à cet axe.
 
-## Ce qui reste, au 06/09/2026
+## Ce qui reste, au 07/09/2026
 
-Le formulaire d'entité, le module, la saisie hors édition **et les formulaires
-liés** sont livrés et éprouvés en Grist réel. Trois choses restent, dans cet
-ordre :
+Le formulaire d'entité, le module, la saisie hors édition, les formulaires
+**liés** et le **cadrage** sont livrés et éprouvés en Grist réel. Il reste ceci :
 
 | | | Pourquoi là |
 |---|---|---|
-| **1** | les **masques de champs** | petit, cohérent avec `exposes` qu'il prolonge, et il complète la chaîne qu'on vient de prouver. Il rend aussi `Attributs` réglable : aujourd'hui c'est tout ou rien |
-| **2** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
+| **1** | la couche **`-hit`** | un objet qu'on n'atteint pas au doigt rend tout le reste inutile : une ligne offre 4 px, un modèle 3D un disque de 2 à 4,5 px. Ça profite à tout Atlas, pas seulement à cet axe |
 | ~~**1 bis**~~ | ~~les **formulaires liés** — jamais exercés~~ — **fait** | éprouvés le 06/09/2026 : `addRow` et la référence injectée par le clic, dans le document de test |
+| ~~**1**~~ | ~~les **masques de champs**~~ — **fait** | éprouvés le 07/09/2026 : le masque s'écrit à côté d'`exposes`, survit au rechargement, retire le champ de la fiche, et laisse la colonne intacte à l'enregistrement |
 | ~~**2**~~ | ~~le **vendoring**~~ — **fait** | `promote-atlas.js` embarque les six scripts sous `vendor/`, copie la peau, et refuse de publier une page qui réclame un fichier absent |
 | **3** | la **marche 3** — ACL dérivée du FormDef | **pas l'optimum, et pas entièrement de notre ressort.** Sans elle le comportement dégrade correctement : un refus d'écriture s'affiche dans le formulaire concerné, garde les valeurs, et ne touche pas la session — `enterViewModeOnWriteFail` sort immédiatement quand `viewMode` est déjà vrai, et le chemin du formulaire ne l'appelle jamais. Et Grist ne laisse pas poser la règle proprement : son moteur ACL ne traverse pas les `Ref`, or dériver l'ACL d'un FormDef lié est exactement une traversée de `Ref` (`tasks_app/ACL_RULES_GENCI.md`, 20/06/2026) |
 
@@ -848,3 +847,23 @@ Et le libellé du bouton n'est pas cosmétique : « Envoyer » contre
 
 La case à cocher, non éprouvée le 05/09, l'est ici : cochée, écrite, relue
 cochée depuis la base, décochée. C'était bien l'outil d'automatisation.
+
+## Le cadrage, prouvé de bout en bout (07/09/2026)
+
+Masquer « Date de visite » sur `Attributs`, couche `Batiments_locaux` :
+
+| | Constaté |
+|---|---|
+| L'écriture | `masques: {"derive:Batiments_locaux":["visite"]}` dans `Atlas_LayerPrefs`, **à côté** d'`exposes` qui n'a pas bougé |
+| Le compte | « Champs · 4 sur 5 » sur ce formulaire, « 5 sur 5 » sur les autres — le masque est par formulaire |
+| Après rechargement | la fiche de l'objet montre **quatre** champs, sans « Date de visite » |
+| À l'enregistrement | `nom` passe à « Mairie annexe » — et `visite` garde sa valeur, avec `hauteur`, `etat`, `verifie` |
+
+Ce dernier point est celui qui compte : un champ retiré du FormDef n'est pas
+dans la charge utile, donc `UpdateRecord` ne le cite pas, donc Grist n'y touche
+pas. Le cadrage ne peut pas effacer une donnée qu'il masque.
+
+> **Ce que l'épreuve n'a pas montré, et qu'il ne faut pas croire prouvé** : un
+> formulaire à conditions ou à cascades. Le document de test n'en porte aucun —
+> les garde-fous sur `champsDependants` sont couverts par les tests unitaires,
+> pas par l'écran.
