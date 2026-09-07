@@ -4818,6 +4818,10 @@ function renderAttrFields(layer, props, opts = {}) {
  * Le pied d'Atlas doit alors se taire : le moteur porte son propre bouton de
  * soumission, et deux « Enregistrer » dans le meme panneau feraient deux choses
  * differentes.
+ *
+ * Il vaut aussi quand l'onglet ne montre qu'un **message** — objet sans ligne
+ * Grist, tous les champs masques. Le pied offrait alors « Enregistrer · 1
+ * objet » sous une explication qui dit qu'il n'y a rien a enregistrer.
  */
 let _formulaireMonte = false;
 
@@ -4869,9 +4873,16 @@ function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisie
     const formDef = formDefCadre(formulaire.def, formulaire.masques);
     const hote = $('insp-body');
     hote.innerHTML = rappelRevue(totalRevue);
+    // > **Le drapeau se leve des que cet onglet tient le corps du panneau**, y
+    // > compris quand il n'y montre qu'un message. Sinon le pied d'Atlas offre
+    // > « Enregistrer · 1 objet » sous une explication qui dit justement qu'il
+    // > n'y a rien a enregistrer — et ce bouton-la ecrit par `applySelected`,
+    // > un chemin different de celui du formulaire. C'est le « deux Enregistrer
+    // > qui font deux choses » que ce drapeau existe pour empecher.
     const rowId = props?._row_id;
     if (rowId == null) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
+        _formulaireMonte = true;
         return;
     }
     // Tout masquer est un reglage possible, pas une erreur — mais le moteur
@@ -4879,6 +4890,7 @@ function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisie
     // qui n'existe pas. On nomme la vraie cause.
     if (!nbChampsDef(formDef)) {
         hote.innerHTML = '<div class="hint">Tous les champs de ce formulaire sont masqués pour cette scène.</div>';
+        _formulaireMonte = true;
         return;
     }
     try {
