@@ -158,7 +158,32 @@ export function reglagesFormulaire(couche) {
     fiche: r.fiche || r.id || null,
     exposes: Array.isArray(r.exposes) ? r.exposes.filter((x) => typeof x === 'string') : null,
     exposeHerite: !Array.isArray(r.exposes) && r.expose === true,
+    masques: masquesValides(r.masques),
   };
+}
+
+/**
+ * Ce que la scène **retire** de chaque formulaire, par identifiant.
+ *
+ * > **Un masque, pas une liste blanche.** On enregistre ce qu'on ôte : si le
+ * > formulaire amont gagne un champ plus tard, il apparaît. Une liste blanche
+ * > l'aurait tu en silence — et quand une colonne disparaît, un masque devient
+ * > inerte au lieu de devenir faux.
+ *
+ * Une valeur douteuse ne masque rien : un enregistrement abîmé doit retirer des
+ * champs par accident encore moins qu'il ne doit en offrir.
+ *
+ * @returns {Record<string, string[]>} vide quand la couche n'a rien décidé
+ */
+export function masquesValides(brut) {
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return {};
+  const out = {};
+  for (const [formId, cols] of Object.entries(brut)) {
+    if (typeof formId !== 'string' || !Array.isArray(cols)) continue;
+    const propres = cols.filter((c) => typeof c === 'string' && c);
+    if (propres.length) out[formId] = propres;
+  }
+  return out;
 }
 
 /**
@@ -293,6 +318,10 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     f.expose = reglages.exposes
       ? reglages.exposes.includes(f.id)
       : (reglages.exposeHerite && f.id === premierDeLaCouche);
+    // Ce que la scène retire de ce formulaire-là. Comme `expose`, c'est un
+    // réglage de couche : le même formulaire peut être complet dans une scène
+    // et resserré dans une autre.
+    f.masques = reglages.masques[f.id] || [];
   }
   return out;
 }
@@ -347,6 +376,120 @@ export function idFormulaireLibre(tableId, entrees = []) {
 export function libelleFormulaire(f) {
   if (!f) return '';
   return (f.derive && f.surLaCouche) ? 'Attributs' : (f.titre || f.tableId || '');
+}
+
+/**
+ * Les colonnes dont un autre champ dépend — celles qu'on ne peut pas masquer.
+ *
+ * Le moteur lit trois sortes de dépendance, et les trois cassent en silence si
+ * on retire ce qu'elles visent :
+ *
+ * | Dans le FormDef | Ce que ça fait | Si on masque la cible |
+ * |---|---|---|
+ * | `condition` (champ ou section) | affiche selon la valeur d'un autre champ | la valeur reste indéfinie : le dépendant ne paraît jamais, ou toujours |
+ * | `cascade.parentField` | filtre les choix d'un `Ref` selon un autre `Ref` | plus de parent, donc plus de choix |
+ * | `dynamicFilter.parentField` | même chose depuis un `Choice`/texte | idem |
+ *
+ * Une section porte aussi le `gate` hérité — un booléen qui l'ouvre.
+ *
+ * @param {object} def
+ * @returns {Set<string>} colIds verrouillés
+ */
+export function champsDependants(def) {
+  const out = new Set();
+  const cheminsDe = (cond) => {
+    if (!cond) return;
+    if (cond.op && Array.isArray(cond.rules)) {
+      for (const r of cond.rules) cheminsDe(r);
+      return;
+    }
+    // Même résolution que `resolveRuleSource` : la source par défaut est le
+    // champ, et un chemin préfixé désigne la session, pas une colonne.
+    const source = cond.source || 'field';
+    if (source !== 'field') return;
+    const chemin = cond.path != null && cond.path !== '' ? cond.path : (cond.field || '');
+    if (!chemin || chemin.startsWith('context.') || chemin.startsWith('audience.')) return;
+    out.add(chemin);
+  };
+  for (const section of def?.sections || []) {
+    cheminsDe(section.condition);
+    if (section.gate) out.add(section.gate);
+    for (const champ of section.fields || []) {
+      cheminsDe(champ.condition);
+      if (champ.cascade?.parentField) out.add(champ.cascade.parentField);
+      if (champ.dynamicFilter?.parentField) out.add(champ.dynamicFilter.parentField);
+    }
+  }
+  return out;
+}
+
+/**
+ * Ce que le module montre pour régler un formulaire : un champ par ligne.
+ *
+ * `requis` n'interdit pas de masquer — c'est le choix de la scène, et le moteur
+ * ne réclame que les champs **rendus** (`validateRequired` reçoit
+ * `getVisibleFields`). Mais il doit se voir : retirer un obligatoire fait créer
+ * des lignes incomplètes, et personne ne devrait le découvrir après coup.
+ *
+ * @param {object} def
+ * @param {string[]} [masques] colIds retirés par la scène
+ */
+export function champsDuFormulaire(def, masques = []) {
+  const verrous = champsDependants(def);
+  const retires = new Set(masques || []);
+  const out = [];
+  for (const section of def?.sections || []) {
+    for (const champ of section.fields || []) {
+      if (!champ?.colId) continue;
+      out.push({
+        colId: champ.colId,
+        label: champ.label || champ.colId,
+        section: section.label || null,
+        requis: !!champ.required,
+        verrouille: verrous.has(champ.colId),
+        masque: retires.has(champ.colId) && !verrous.has(champ.colId),
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Le formulaire tel que **cette scène** le montre.
+ *
+ * Le filtrage porte sur le FormDef remis au moteur, jamais sur le DOM : c'est
+ * ce qui fait tenir le reste. `validateRequired` ne voit que les champs rendus,
+ * donc un champ retiré n'est jamais réclamé ; `collectSubmitData` parcourt les
+ * sections du FormDef, donc un champ retiré n'est pas écrit — sur `updateRow`
+ * c'est une mise à jour partielle, et le reste de la ligne ne bouge pas.
+ *
+ * Rien n'est écrit dans `Formulaires` : le FormDef reste la propriété de qui
+ * l'a fait, le builder ou QField. Atlas ne compose pas, il cadre.
+ *
+ * @param {object} def
+ * @param {string[]} [masques]
+ * @returns {object} le def lui-même quand il n'y a rien à retirer
+ */
+export function formDefCadre(def, masques = []) {
+  if (!def) return def;
+  const verrous = champsDependants(def);
+  const retires = (masques || []).filter((c) => !verrous.has(c));
+  if (!retires.length) return def;
+  const ote = new Set(retires);
+  const sections = [];
+  for (const section of def.sections || []) {
+    const fields = (section.fields || []).filter((f) => !ote.has(f?.colId));
+    // Une section vidée doit disparaître : `getVisibleSections` ne filtre que
+    // sur les conditions, pas sur le vide, et laisserait une étape blanche
+    // avec son bouton « Suivant ».
+    if (fields.length) sections.push({ ...section, fields });
+  }
+  return { ...def, sections };
+}
+
+/** Combien de champs un FormDef porte — après cadrage, s'il y a lieu. */
+export function nbChampsDef(def) {
+  return (def?.sections || []).reduce((n, s) => n + (s.fields?.length || 0), 0);
 }
 
 /**

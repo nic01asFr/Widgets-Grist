@@ -131,7 +131,7 @@ test('formulairesPourTable ne rend que ce qui vise cette table', () => {
 /* ---------- ce que la couche porte ---------- */
 
 test('les reglages d’une couche sont normalises, jamais devines', () => {
-  const vide = { fiche: null, exposes: null, exposeHerite: false };
+  const vide = { fiche: null, exposes: null, exposeHerite: false, masques: {} };
   assert.deepEqual(reglagesFormulaire({}), vide);
   assert.deepEqual(reglagesFormulaire(null), vide);
   // `expose` devait valoir VRAI, pas seulement etre present : une valeur
@@ -143,7 +143,7 @@ test('l’ancien booleen se relit sans rien perdre', () => {
   // `expose: true` voulait dire « la fiche de cette couche est exposee » — le
   // seul formulaire qui existait alors. On le reporte sur le principal.
   assert.deepEqual(reglagesFormulaire({ formulaire: { id: 'x', expose: true } }),
-    { fiche: 'x', exposes: null, exposeHerite: true });
+    { fiche: 'x', exposes: null, exposeHerite: true, masques: {} });
 });
 
 test('une liste vide n’est pas l’absence de liste', () => {
@@ -151,9 +151,9 @@ test('une liste vide n’est pas l’absence de liste', () => {
   // expose ». Les confondre reactiverait l'ancien booleen sur une couche qu'on
   // vient justement de vider.
   assert.deepEqual(reglagesFormulaire({ formulaire: { exposes: [], expose: true } }),
-    { fiche: null, exposes: [], exposeHerite: false });
+    { fiche: null, exposes: [], exposeHerite: false, masques: {} });
   assert.deepEqual(reglagesFormulaire({ formulaire: { fiche: 'a', exposes: ['a', 'b'] } }),
-    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false });
+    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false, masques: {} });
 });
 
 test('une liste d’exposes filtre ce qui n’est pas un identifiant', () => {
@@ -689,4 +689,149 @@ test('et sur le derive seulement quand la couche n’a rien d’enregistre', () 
   const couche = { ...COUCHE, formulaire: { expose: true } };
   const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
   assert.deepEqual(liste.filter((f) => f.expose).map((f) => f.id), ['derive:Batiments_locaux']);
+});
+
+/* ---------- cadrer un formulaire : ce que la scene en montre ---------- */
+
+import {
+  masquesValides,
+  champsDependants,
+  champsDuFormulaire,
+  formDefCadre,
+  nbChampsDef,
+} from '../lib/fiche-formulaire.js';
+
+/** Un formulaire a deux etapes, avec une condition et une cascade. */
+const DEF_CADRE = {
+  id: 'releve',
+  tableId: 'Batiments_locaux',
+  sections: [
+    {
+      id: 's1',
+      label: 'Identité',
+      fields: [
+        { colId: 'nom', label: 'Nom', required: true },
+        { colId: 'etat', label: 'État' },
+      ],
+    },
+    {
+      id: 's2',
+      label: 'Détail',
+      fields: [
+        // Ne paraît que si `etat` vaut « Dégradé » : `etat` est donc verrouillé.
+        { colId: 'gravite', label: 'Gravité', condition: { field: 'etat', operator: '==', value: 'Dégradé' } },
+        { colId: 'hauteur', label: 'Hauteur' },
+      ],
+    },
+  ],
+};
+
+test('un masque douteux ne retire rien', () => {
+  // Un enregistrement abime doit oter des champs par accident encore moins
+  // qu'il ne doit en offrir : c'est une donnee qui disparait de l'ecran.
+  for (const v of [null, undefined, 'nom', 42, ['nom'], { r: 'nom' }, { r: [] }, { r: [1, null] }]) {
+    assert.deepEqual(masquesValides(v), {}, JSON.stringify(v));
+  }
+  assert.deepEqual(masquesValides({ releve: ['nom', 3, ''] }), { releve: ['nom'] });
+});
+
+test('les masques se lisent avec la couche, par formulaire', () => {
+  const r = reglagesFormulaire({ formulaire: { fiche: 'a', masques: { a: ['nom'], b: ['x', 'y'] } } });
+  assert.deepEqual(r.masques, { a: ['nom'], b: ['x', 'y'] });
+});
+
+test('un champ dont un autre depend est verrouille', () => {
+  // Le masquer laisserait le dependant coince : sa condition lirait une valeur
+  // que plus rien ne peut poser. Sans erreur, et sans message.
+  assert.deepEqual([...champsDependants(DEF_CADRE)], ['etat']);
+});
+
+test('les trois sortes de dependance sont lues, pas seulement les conditions', () => {
+  const def = {
+    sections: [{
+      gate: 'ouvre',
+      condition: { op: 'and', rules: [{ field: 'pays', operator: '==', value: 'FR' }] },
+      fields: [
+        { colId: 'ville', cascade: { parentField: 'departement', parentRefCol: 'dep' } },
+        { colId: 'rue', dynamicFilter: { parentField: 'ville', filterColumn: 'v' } },
+      ],
+    }],
+  };
+  assert.deepEqual([...champsDependants(def)].sort(), ['departement', 'ouvre', 'pays', 'ville']);
+});
+
+test('la session n’est pas une colonne', () => {
+  // `context.` et `audience.` visent la session, pas le formulaire : les
+  // verrouiller interdirait de masquer des champs sans aucune raison.
+  const def = {
+    sections: [{
+      fields: [
+        { colId: 'a', condition: { path: 'context.inGristWidget', operator: 'truthy' } },
+        { colId: 'b', condition: { source: 'audience', path: 'group', operator: 'in', value: ['x'] } },
+      ],
+    }],
+  };
+  assert.equal(champsDependants(def).size, 0);
+});
+
+test('le cadre retire les champs masques, et rien d’autre', () => {
+  const cadre = formDefCadre(DEF_CADRE, ['hauteur']);
+  assert.deepEqual(cadre.sections.map((s) => s.fields.map((f) => f.colId)),
+    [['nom', 'etat'], ['gravite']]);
+  assert.equal(nbChampsDef(cadre), 3);
+});
+
+test('une section videe disparait', () => {
+  // `getVisibleSections` ne filtre que sur les conditions, pas sur le vide :
+  // laisser la section produirait une etape blanche avec son bouton « Suivant ».
+  const cadre = formDefCadre(DEF_CADRE, ['gravite', 'hauteur']);
+  assert.deepEqual(cadre.sections.map((s) => s.id), ['s1']);
+});
+
+test('un champ verrouille resiste au masque', () => {
+  const cadre = formDefCadre(DEF_CADRE, ['etat', 'hauteur']);
+  assert.deepEqual(cadre.sections[0].fields.map((f) => f.colId), ['nom', 'etat']);
+});
+
+test('sans masque, le cadre rend la definition ELLE-MEME', () => {
+  // Pas une copie : le moteur compare des identites ailleurs, et cloner sans
+  // raison ferait payer un clone a chaque rendu de fiche.
+  assert.equal(formDefCadre(DEF_CADRE, []), DEF_CADRE);
+  assert.equal(formDefCadre(DEF_CADRE, ['etat']), DEF_CADRE, 'un masque sans effet ne clone pas');
+  assert.equal(formDefCadre(null, ['x']), null);
+});
+
+test('le cadre ne touche pas la definition d’origine', () => {
+  const avant = JSON.stringify(DEF_CADRE);
+  formDefCadre(DEF_CADRE, ['hauteur']);
+  assert.equal(JSON.stringify(DEF_CADRE), avant);
+});
+
+test('tout masquer est possible, et se voit', () => {
+  // C'est un reglage, pas une erreur — mais l'appelant doit pouvoir le dire :
+  // le moteur, lui, annoncerait « Aucune section visible ».
+  const cadre = formDefCadre(DEF_CADRE, ['nom', 'gravite', 'hauteur']);
+  assert.equal(nbChampsDef(cadre), 1, 'etat reste : il est verrouille');
+  const libre = formDefCadre({ sections: [{ fields: [{ colId: 'a' }, { colId: 'b' }] }] }, ['a', 'b']);
+  assert.equal(nbChampsDef(libre), 0);
+});
+
+test('le module liste les champs avec ce qu’il faut pour decider', () => {
+  const champs = champsDuFormulaire(DEF_CADRE, ['hauteur']);
+  assert.deepEqual(champs.map((c) => c.colId), ['nom', 'etat', 'gravite', 'hauteur']);
+  assert.equal(champs[0].requis, true, 'retirer un obligatoire cree des lignes incompletes');
+  assert.equal(champs[1].verrouille, true);
+  assert.equal(champs[1].masque, false, 'un verrouille n’est jamais montre comme masque');
+  assert.equal(champs[3].masque, true);
+  assert.equal(champs[2].section, 'Détail');
+});
+
+test('les masques arrivent sur chaque formulaire de la couche', () => {
+  const couche = { ...COUCHE, formulaire: { masques: { 'derive:Batiments_locaux': ['nom'] } } };
+  const liste = formulairesPourCouche({ couche, entrees: [], schema: SCHEMA });
+  const attributs = liste.find((f) => f.derive && f.surLaCouche);
+  assert.deepEqual(attributs.masques, ['nom']);
+  assert.ok(!nbChampsDef(formDefCadre(attributs.def, attributs.masques))
+    || !formDefCadre(attributs.def, attributs.masques).sections
+      .some((s) => s.fields.some((f) => f.colId === 'nom')));
 });

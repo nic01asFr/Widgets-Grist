@@ -121,10 +121,23 @@ function formulairePrefsPayload(layer) {
     ? f.exposes.filter((x) => typeof x === 'string')
     : null;
   const herite = !exposes && f.expose === true;
-  if (!fiche && !exposes && !herite) return null;
+  // Ce que la scene retire de chaque formulaire. Une entree vide n'est pas
+  // ecrite : un objet `{}` dirait « j'ai decide de ne rien masquer » la ou il
+  // n'y a rien a dire.
+  const masques = {};
+  if (f.masques && typeof f.masques === 'object' && !Array.isArray(f.masques)) {
+    for (const [id, cols] of Object.entries(f.masques)) {
+      if (typeof id !== 'string' || !Array.isArray(cols)) continue;
+      const propres = cols.filter((c) => typeof c === 'string' && c);
+      if (propres.length) masques[id] = propres;
+    }
+  }
+  const aDesMasques = Object.keys(masques).length > 0;
+  if (!fiche && !exposes && !herite && !aDesMasques) return null;
   const out = { fiche };
   if (exposes) out.exposes = exposes;
   else if (herite) out.expose = true;
+  if (aDesMasques) out.masques = masques;
   return out;
 }
 
@@ -166,6 +179,18 @@ export function applyLayerPrefsBinding(layer, prefs) {
       const f = { fiche: p.fiche || p.id || null };
       if (Array.isArray(p.exposes)) f.exposes = p.exposes.filter((x) => typeof x === 'string');
       else if (p.expose === true) f.expose = true;
+      // Meme prudence pour les masques : une valeur douteuse ne retire rien.
+      // Un enregistrement abime doit oter des champs par accident encore moins
+      // qu'il ne doit en offrir.
+      if (p.masques && typeof p.masques === 'object' && !Array.isArray(p.masques)) {
+        const m = {};
+        for (const [id, cols] of Object.entries(p.masques)) {
+          if (typeof id !== 'string' || !Array.isArray(cols)) continue;
+          const propres = cols.filter((c) => typeof c === 'string' && c);
+          if (propres.length) m[id] = propres;
+        }
+        if (Object.keys(m).length) f.masques = m;
+      }
       layer.formulaire = f;
     }
 

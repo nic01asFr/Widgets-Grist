@@ -22,7 +22,8 @@ import {
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
   gesteDEnregistrement, idFormulaireLibre,
-} from './lib/fiche-formulaire.js?v=20260906f';
+  formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
+} from './lib/fiche-formulaire.js?v=20260907a';
 import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';
@@ -3978,7 +3979,52 @@ function ligneFormulaire(couche, f, esc) {
             ${commande}
         </div>
         <div style="color:var(--muted);font-size:10.5px;line-height:1.4">${detail}</div>
+        ${cadreDesChamps(couche, f, esc)}
     </div>`;
+}
+
+/**
+ * Le cadrage : quels champs de ce formulaire cette scene montre.
+ *
+ * Il vit dans le panneau de GAUCHE, replie, et pas sur le formulaire rendu a
+ * droite. Le panneau de gauche regle, celui de droite sert — et une bascule
+ * posee sur le champ rendu aurait fait de ce geste une composition, concurrente
+ * du builder pour un besoin qui n'en demande aucun.
+ *
+ * Replie par defaut : la plupart des formulaires se montrent entiers, et
+ * derouler la liste des colonnes sous chaque ligne noierait ce qui compte.
+ */
+function cadreDesChamps(couche, f, esc) {
+    const champs = champsDuFormulaire(f.def, f.masques);
+    // Un champ unique ne se cadre pas : le retirer viderait le formulaire, et
+    // la case n'aurait qu'un seul effet possible.
+    if (champs.length < 2) return '';
+    const montres = champs.filter((c) => !c.masque).length;
+    const lignes = champs.map((c) => {
+        const badges = [
+            c.requis ? '<span style="color:var(--accent)">obligatoire</span>' : '',
+            c.verrouille ? '<span title="Un autre champ en dépend — condition ou liste liée">verrouillé</span>' : '',
+        ].filter(Boolean).join(' · ');
+        const bascule = c.verrouille
+            ? `<div class="toggle on" role="switch" aria-checked="true" aria-disabled="true"
+                title="Un autre champ en dépend — condition ou liste liée"
+                style="opacity:.45;cursor:not-allowed"></div>`
+            : `<div class="toggle ${c.masque ? '' : 'on'}" role="switch" tabindex="0"
+                aria-checked="${!c.masque}"
+                aria-label="Montrer ${esc(c.label)} dans cette scène"
+                title="Montré dans cette scène"
+                onclick="A.masquerChamp('${esc(couche.id)}','${esc(f.id)}','${esc(c.colId)}')"></div>`;
+        return `<div class="toggle-row" style="margin:0 0 4px;padding-left:10px">
+            <span class="tlabel" style="font-size:11.5px${c.masque ? ';opacity:.5' : ''}">${c.label}${
+                badges ? `<span style="color:var(--muted);font-size:10px"> · ${badges}</span>` : ''}</span>
+            ${bascule}
+        </div>`;
+    }).join('');
+
+    return `<details style="margin-top:6px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:10.5px;padding-left:2px">Champs · ${montres} sur ${champs.length}</summary>
+        <div style="margin-top:6px">${lignes}</div>
+    </details>`;
 }
 
 /** Combien de champs un formulaire porte — ce que « dérivé » recouvre. */
@@ -4815,12 +4861,24 @@ function rappelRevue(totalRevue) {
  * la reference. Le pont en tire tout le reste.
  */
 function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisieTerrain = false) {
-    const formDef = formulaire.def;
+    // Le cadrage se pose ICI, sur la definition remise au moteur, et nulle part
+    // ailleurs : c'est le seul point ou un formulaire atteint FormEngine, donc
+    // le seul ou un masque puisse etre a la fois complet et sans effet de bord.
+    // Le masquer dans le DOM aurait laisse `validateRequired` reclamer un champ
+    // invisible, et `collectSubmitData` l'ecrire quand meme.
+    const formDef = formDefCadre(formulaire.def, formulaire.masques);
     const hote = $('insp-body');
     hote.innerHTML = rappelRevue(totalRevue);
     const rowId = props?._row_id;
     if (rowId == null) {
         hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
+        return;
+    }
+    // Tout masquer est un reglage possible, pas une erreur — mais le moteur
+    // dirait « Aucune section visible », ce qui envoie chercher une condition
+    // qui n'existe pas. On nomme la vraie cause.
+    if (!nbChampsDef(formDef)) {
+        hote.innerHTML = '<div class="hint">Tous les champs de ce formulaire sont masqués pour cette scène.</div>';
         return;
     }
     try {
@@ -6761,6 +6819,43 @@ const A = {
      * qu'un formulaire par table ; la seconde n'a plus d'objet depuis que tous
      * ont leur onglet.
      */
+    /**
+     * Cadrer un formulaire : retirer un champ de ce que **cette scene** montre.
+     *
+     * Ce n'est pas une composition. Rien n'est ecrit dans `Formulaires` : le
+     * FormDef reste la propriete de qui l'a fait — le builder, ou QField par
+     * qgis2grist. Le masque vit avec la couche, a cote d'`exposes`, et dit
+     * « cette scene ne montre pas ce champ ».
+     *
+     * On enregistre ce qu'on RETIRE, jamais ce qu'on garde : un formulaire
+     * amont qui gagne un champ plus tard le montrera, et une colonne supprimee
+     * rend son masque inerte au lieu de faux.
+     */
+    async masquerChamp(layerId, formId, colId) {
+        if (!assertCanWrite('régler les champs')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        if (!couche || !formId || !colId) return;
+        const vise = formulairesDeLaCouche(couche).find((f) => f.id === formId);
+        if (!vise) return;
+        // Un champ dont un autre depend ne se retire pas : le dependant
+        // resterait coince, sans erreur et sans message.
+        if (champsDependants(vise.def).has(colId)) {
+            showToast('Un autre champ dépend de celui-ci', 'warning');
+            return;
+        }
+        const masques = { ...reglagesFormulaire(couche).masques };
+        const actuels = new Set(masques[formId] || []);
+        const retire = !actuels.has(colId);
+        if (retire) actuels.add(colId); else actuels.delete(colId);
+        // Une entree vide n'est pas conservee : elle dirait « j'ai decide de ne
+        // rien masquer » la ou il n'y a rien a dire.
+        if (actuels.size) masques[formId] = [...actuels]; else delete masques[formId];
+        couche.formulaire = { ...(couche.formulaire || {}), masques };
+
+        renderFormulaires();
+        renderInspector();
+        await saveLayerToGrist(couche, true);
+    },
     async exposerFormulaire(layerId, formId) {
         if (!assertCanWrite('proposer un formulaire')) return;
         const couche = STATE.layers.find((l) => l.id === layerId);
@@ -6785,7 +6880,16 @@ const A = {
         if (actif) exposes.add(formId); else exposes.delete(formId);
         // `exposes` remplace l'ancien booleen : une liste, meme vide, dit que
         // cette couche a decide — et `expose` n'a plus a etre relu.
-        couche.formulaire = { fiche: reglagesFormulaire(couche).fiche, exposes: [...exposes] };
+        //
+        // Les masques sont **reportes**, pas reecrits : ce sont deux reglages
+        // distincts, et cette ligne remplace l'objet entier. Sans le report,
+        // cocher un formulaire effacerait le cadrage de tous les autres.
+        const reglagesAvant = reglagesFormulaire(couche);
+        couche.formulaire = {
+            fiche: reglagesAvant.fiche,
+            exposes: [...exposes],
+            masques: reglagesAvant.masques,
+        };
 
         // > **Proposer, c'est publier.** Un formulaire compose ici nait
         // > brouillon — c'est juste, on vient de le deduire et personne ne l'a

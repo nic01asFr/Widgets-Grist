@@ -321,4 +321,41 @@ describe('reglages de formulaire — un choix de scene, pas de table', () => {
     applyLayerPrefsBinding(relu, { style: { mode: 'mapbox' } });
     assert.deepEqual(relu.formulaire, { fiche: 'a', exposes: ['a'] });
   });
+
+  it('les masques font l’aller-retour, par formulaire', () => {
+    const source = { formulaire: { fiche: 'a', exposes: ['a'], masques: { a: ['nom'], b: ['x', 'y'] } } };
+    const payload = layerPrefsPayload(source);
+    assert.deepEqual(payload.formulaire.masques, { a: ['nom'], b: ['x', 'y'] });
+
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: payload });
+    assert.deepEqual(relu.formulaire.masques, { a: ['nom'], b: ['x', 'y'] });
+  });
+
+  it('cadrer sans rien exposer reste un reglage valable', () => {
+    // Resserrer la fiche d'edition ne dit rien de ce qu'on propose au terrain.
+    const payload = layerPrefsPayload({ formulaire: { masques: { a: ['nom'] } } });
+    assert.deepEqual(payload.formulaire, { fiche: null, masques: { a: ['nom'] } });
+  });
+
+  it('un masque vide n’est pas ecrit', () => {
+    // `{}` dirait « j'ai decide de ne rien masquer » la ou il n'y a rien a dire.
+    assert.equal(layerPrefsPayload({ formulaire: { masques: {} } }).formulaire, null);
+    assert.equal(layerPrefsPayload({ formulaire: { masques: { a: [] } } }).formulaire, null);
+    const p = layerPrefsPayload({ formulaire: { exposes: ['a'], masques: { a: [] } } });
+    assert.deepEqual(p.formulaire, { fiche: null, exposes: ['a'] });
+  });
+
+  it('une valeur douteuse ne RETIRE rien', () => {
+    // Symetrique de la garde sur `exposes`, et plus grave : un enregistrement
+    // abime qui masque fait disparaitre une donnee de l'ecran sans le dire.
+    for (const masques of ['nom', 42, ['nom'], { a: 'nom' }, { a: [] }]) {
+      const relu = { name: 'Bâti' };
+      applyLayerPrefsBinding(relu, { style: { formulaire: { fiche: 'a', masques } } });
+      assert.deepEqual(relu.formulaire, { fiche: 'a' }, JSON.stringify(masques));
+    }
+    const partiel = { name: 'Bâti' };
+    applyLayerPrefsBinding(partiel, { style: { formulaire: { masques: { a: ['nom', 7, ''] } } } });
+    assert.deepEqual(partiel.formulaire, { fiche: null, masques: { a: ['nom'] } });
+  });
 });
