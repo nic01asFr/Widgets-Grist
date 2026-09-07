@@ -20,12 +20,16 @@
  *
  * ## Ce qu'il vérifie, et ce qu'il ne vérifie pas
  *
- * Deux passes, l'une et l'autre volontairement grossières mais sans faux
- * négatif sur la faute visée — une définition entièrement disparue :
+ * Trois passes, volontairement grossières mais sans faux négatif sur la faute
+ * visée — un nom qui n'existe plus :
  *
  * 1. **Les appels nus** `nom(...)` dont le `nom` n'est déclaré nulle part dans
  *    le fichier, ni importé, ni connu comme global.
- * 2. **Les gestionnaires en ligne** `A.nom(` écrits dans les gabarits HTML,
+ * 2. **Les lectures de propriété** `nom.quelquechose` sur un nom jamais
+ *    déclaré. Ajoutée le 07/09/2026 : un `catch` lisait `intent.viewModeForced`
+ *    alors que la variable s'appelait `acc` depuis un mois, et la passe 1 ne
+ *    voyait rien — ce n'est pas un appel.
+ * 3. **Les gestionnaires en ligne** `A.nom(` écrits dans les gabarits HTML,
  *    dont le `nom` n'est pas une clé de l'objet `A`. Ceux-là échouent au clic,
  *    des semaines après, et aucun outil de construction ne les voit.
  *
@@ -65,7 +69,7 @@ const GLOBAUX = new Set([
   'Node', 'Element', 'HTMLElement', 'XMLHttpRequest', 'CSS', 'AudioContext',
   'OffscreenCanvas', 'ImageData', 'Path2D', 'WebGLRenderingContext',
   // Fournis par la page
-  'maplibregl', 'grist', 'THREE', 'FormEngine', 'GristForms',
+  'maplibregl', 'grist', 'THREE', 'FormEngine', 'GristForms', 'SunCalc',
 ]);
 
 /** Les mots-clés qui, suivis d'une parenthèse, ressemblent à un appel. */
@@ -193,6 +197,16 @@ function declarations(source) {
   };
   ajouter(/(?:^|[\s(,=[{;!])(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)/g);
   ajouter(/(?:^|[\s(,;])(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g);
+  // `const sw = …, ne = …;` — une déclaration en porte plusieurs, et n'en lire
+  // que la première produisait sept faux positifs sur dix. On ratisse donc tout
+  // ce qui reçoit une valeur : sur-collecter des déclarations ne fait que
+  // relâcher la détection, alors qu'en manquer une invente un défaut.
+  for (const m of source.matchAll(/(?:^|[\s(,;])(?:const|let|var)\s+([^;\n]*)/g)) {
+    for (const brut of m[1].split(',')) {
+      const nom = brut.trim().split(/[=:.[(]/)[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(nom)) noms.add(nom);
+    }
+  }
   ajouter(/(?:^|[\s(,;])class\s+([A-Za-z_$][\w$]*)/g);
   // import { a, b as c } / import x from
   for (const m of source.matchAll(/import\s*\{([^}]+)\}/g)) {
@@ -228,7 +242,34 @@ function appels(source) {
   const out = new Map();
   const lignes = source.split('\n');
   lignes.forEach((ligne, i) => {
-    for (const m of ligne.matchAll(/(^|[^.\w$'"`?])([A-Za-z_$][\w$]*)\(/g)) {
+    for (const m of ligne.matchAll(/(^|[^.\w$'"`?\p{L}])([A-Za-z_$][\w$]*)\(/gu)) {
+      const nom = m[2];
+      if (MOTS_CLES.has(nom)) continue;
+      if (!out.has(nom)) out.set(nom, i + 1);
+    }
+  });
+  return out;
+}
+
+/**
+ * Les lectures de propriété `nom.quelquechose` sur un nom jamais déclaré.
+ *
+ * > **La passe sur les appels ne suffisait pas.** Le 07/09/2026, un `catch` de
+ * > `initGrist` lisait `intent.viewModeForced` alors que la variable avait été
+ * > renommée `acc` dans le `try` — vivant depuis un mois sur la version en
+ * > ligne. Ce n'est pas un appel : rien ne le voyait. Et comme il n'est atteint
+ * > que si le `try` échoue, il ne casse que le jour où quelque chose d'autre a
+ * > déjà mal tourné — c'est-à-dire au pire moment, en emportant le repli en
+ * > lecture qu'il était censé porter.
+ *
+ * On ne retient que la forme `nom.` : un accès de propriété. Une clé d'objet
+ * (`{ intent: 1 }`) ou une chaîne n'y ressemblent pas, ce qui garde le bruit
+ * au niveau des appels.
+ */
+function lecturesDeProprietes(source) {
+  const out = new Map();
+  source.split('\n').forEach((ligne, i) => {
+    for (const m of ligne.matchAll(/(^|[^.\w$'"`?\p{L}])([A-Za-z_$][\w$]*)\.[A-Za-z_$]/gu)) {
       const nom = m[2];
       if (MOTS_CLES.has(nom)) continue;
       if (!out.has(nom)) out.set(nom, i + 1);
@@ -279,6 +320,12 @@ for (const fichier of fichiers) {
   for (const [nom, ligne] of appels(code)) {
     if (connus.has(nom) || GLOBAUX.has(nom)) continue;
     console.error(`  appelée mais jamais définie  ${nom}()  —  ${fichier}:${ligne}`);
+    fautes++;
+  }
+
+  for (const [nom, ligne] of lecturesDeProprietes(code)) {
+    if (connus.has(nom) || GLOBAUX.has(nom)) continue;
+    console.error(`  lue mais jamais définie  ${nom}.…  —  ${fichier}:${ligne}`);
     fautes++;
   }
 

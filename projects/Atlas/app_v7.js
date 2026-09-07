@@ -6283,7 +6283,20 @@ async function initGrist() {
         }
     } catch (e) {
         console.warn('Grist init:', e.message);
-        if (!intent.viewModeForced && intent.preferFull) {
+        // > **`intent` n'existait plus.** La variable a ete renommee `acc` dans
+        // > le `try` le 05/08/2026 ; ce `catch` a garde l'ancien nom. Il ne
+        // > s'atteint que si l'initialisation a deja echoue — donc le repli en
+        // > lecture, sa seule raison d'etre, levait un ReferenceError au lieu
+        // > de s'executer, et emportait avec lui tout ce qui suit. Un mois en
+        // > ligne sans que rien ne le dise : `node --check` valide la syntaxe,
+        // > et une lecture de propriete n'est pas un appel.
+        //
+        // La condition d'origine — « ni lecture demandee, ni acces restreint »
+        // — se dit d'un mot avec `acc` : `viewMode` est vrai exactement dans
+        // ces deux cas. Redemander `read table` a une session deja en lecture
+        // fermerait d'ailleurs l'ecriture au widget lui-meme, ce qui est
+        // precisement le defaut corrige dans `resolveAccess`.
+        if (!acc.viewMode) {
             try {
                 grist.ready({ requiredAccess: 'read table' });
                 CONFIG.grist.ready = true;
