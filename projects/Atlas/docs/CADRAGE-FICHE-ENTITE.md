@@ -863,7 +863,27 @@ Ce dernier point est celui qui compte : un champ retiré du FormDef n'est pas
 dans la charge utile, donc `UpdateRecord` ne le cite pas, donc Grist n'y touche
 pas. Le cadrage ne peut pas effacer une donnée qu'il masque.
 
-> **Ce que l'épreuve n'a pas montré, et qu'il ne faut pas croire prouvé** : un
-> formulaire à conditions ou à cascades. Le document de test n'en porte aucun —
-> les garde-fous sur `champsDependants` sont couverts par les tests unitaires,
-> pas par l'écran.
+### La condition, éprouvée à son tour (07/09/2026)
+
+La réserve ci-dessus est levée. Un FormDef à deux étapes a été posé dans le
+document de test — `visite` conditionnée par `verifie`, `etat` obligatoire :
+
+| | Constaté |
+|---|---|
+| Le verrou | « Vérifié sur place · **verrouillé** », bascule désactivée ; cliquer dessus ne fait rien |
+| L'obligatoire | « État constaté · **obligatoire** » reste masquable — c'est le choix de la scène, mais il se voit |
+| Condition fausse | étape 2 ne montre qu'un champ : ni la date (condition), ni la hauteur (masque) |
+| Condition vraie | cocher la case fait apparaître la date — **et la hauteur reste masquée** |
+| En terrain | le masque s'applique aussi hors édition, sur le formulaire **lié** : `Visites` n'offre qu'`Etat` |
+| L'écriture liée | ligne créée avec `batiment: 3` et `etat`, sans `observations` ni `visite` |
+| Tout masquer | « Tous les champs de ce formulaire sont masqués pour cette scène. » |
+
+Condition du moteur et masque de la scène sont **orthogonaux** : l'un décide
+selon les valeurs, l'autre selon la scène, et aucun ne dépend de l'autre.
+
+> **Le défaut que cette épreuve a révélé** : sur un onglet dont tout est masqué,
+> le corps disait « rien à saisir » et le pied d'Atlas proposait juste dessous
+> « Enregistrer · 1 objet » — un bouton qui écrit par `applySelected`, un chemin
+> différent de celui du formulaire. `_formulaireMonte` n'était levé qu'après un
+> montage **réussi** ; il l'est désormais dès que l'onglet tient le corps du
+> panneau, message compris.
