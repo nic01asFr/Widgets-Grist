@@ -264,9 +264,16 @@
          * quatrieme se coupe en deux lignes. `nowrap` sur l'onglet, le
          * defilement sur la barre.
          */
+        /*
+         * `overflow-y: hidden` n'est pas decoratif. Declarer le seul `overflow-x`
+         * fait passer l'autre axe a `auto` — c'est la regle CSS —, et les onglets
+         * debordent de 1 px a cause de leur `margin-bottom: -1px`. Une barre de
+         * defilement VERTICALE apparaissait donc sur la barre d'onglets, volant
+         * 10 px de largeur (mesure dans le widget) pour un pixel de trop.
+         */
         .insp-tabs {
             display: flex; border-bottom: 1px solid var(--hairline); padding: 0 20px; flex-shrink: 0;
-            overflow-x: auto; scrollbar-width: thin;
+            overflow-x: auto; overflow-y: hidden; scrollbar-width: thin;
         }
         .insp-tab {
             background: transparent; border: none; cursor: pointer; padding: 12px 0; margin-right: 22px;

@@ -287,3 +287,37 @@
   border: 1px dashed var(--hairline-strong);
   border-radius: 8px;
 }
+
+/* ---------- ce que la fiche n'a pas besoin de redire ---------- */
+
+/*
+ * Le titre du formulaire repete l'onglet actif.
+ *
+ * Mesure faite dans le widget, panneau a sa largeur reelle de 360 px, sur le
+ * formulaire deduit de `Batiments_locaux` : 117 px separaient le haut du
+ * formulaire de son premier champ, soit 23 % de sa hauteur. « Attributs » y
+ * etait ecrit TROIS fois — l'onglet, ce titre, et le nom d'etape — en quatre
+ * lignes.
+ *
+ * On ne masque que le titre : une `description` ecrite par l'auteur du
+ * formulaire est du contenu, pas du chrome. L'en-tete disparait donc seulement
+ * quand il n'en reste rien.
+ */
+#insp-body .fr-form__header .fr-h4 { display: none; }
+#insp-body .fr-form__header:not(:has(p)):not(:has(img)) { display: none; }
+
+/*
+ * Le fil d'etapes, muet quand il n'y en a qu'une.
+ *
+ * `forme-mono-etape` est posee par `monterFormulaireEntite` : le moteur rend son
+ * fil sans condition — il ne sait pas ou il est monte — et c'est Atlas qui
+ * connait le nombre de sections. Sur deux etapes ou plus, le fil reste : il dit
+ * alors quelque chose de vrai.
+ */
+#insp-body.forme-mono-etape .fr-stepper { display: none; }
+
+/*
+ * Sans l'en-tete au-dessus, la mention d'edition collait au premier libelle :
+ * on lisait « Modification de la ligne #3 » et « Hauteur » d'un seul tenant.
+ */
+#insp-body .fr-form > p.fr-text--sm { margin-bottom: 12px; }

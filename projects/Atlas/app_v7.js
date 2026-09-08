@@ -3959,7 +3959,7 @@ function ligneFormulaire(couche, f, esc) {
     // Un derive n'a pas de bascule : il ne peut pas etre propose. Mais dire
     // « a enregistrer » sans offrir le geste etait une promesse creuse — c'est
     // un bouton, pas une pastille.
-    const geste = gesteDEnregistrement(f);
+    const geste = gesteDEnregistrement(f, STATE.formulaires);
     const commande = geste
         ? `<button class="btn btn-soft" style="padding:5px 10px;font-size:11.5px"
             onclick="A.enregistrerFormulaire('${esc(couche.id)}','${esc(f.id)}')"
@@ -4893,6 +4893,12 @@ function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisie
         _formulaireMonte = true;
         return;
     }
+    // > **« Étape 1 sur 1 » ne renseigne rien**, et coûte 60 px mesurés sur les
+    // > 360 du panneau. Le moteur rend son fil d'étapes sans condition — c'est
+    // > juste, il ne sait pas où il est monté. Atlas, lui, sait combien de
+    // > sections il remet : il pose la classe, la peau se tait. La decision est
+    // > donc la ou l'information se trouve, et le style la ou il se decrit.
+    hote.classList.toggle('forme-mono-etape', (formDef.sections || []).length <= 1);
     try {
         const bloc = document.createElement('div');
         hote.appendChild(bloc);
@@ -6960,7 +6966,7 @@ const A = {
         if (!assertCanWrite('enregistrer un formulaire')) return;
         const couche = STATE.layers.find((l) => l.id === layerId);
         const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
-        const geste = gesteDEnregistrement(f);
+        const geste = gesteDEnregistrement(f, STATE.formulaires);
         if (!geste) return;
 
         const T = window.FormulairesTable;

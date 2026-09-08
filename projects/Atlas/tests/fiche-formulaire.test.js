@@ -637,7 +637,7 @@ test('sur la couche on COMPOSE, sur une liee on ENREGISTRE', () => {
   // ferait un doublon. Ce qu'on veut la, c'est un formulaire choisi.
   const attributs = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Attributs' };
   assert.deepEqual(gesteDEnregistrement(attributs),
-    { verbe: 'composer', libelle: 'Composer', titre: 'Saisie — Batiments_locaux' });
+    { verbe: 'composer', libelle: 'Composer', titre: 'Saisie' });
 
   const lie = { derive: true, surLaCouche: false, tableId: 'Visites', titre: 'Visites' };
   assert.deepEqual(gesteDEnregistrement(lie),
@@ -834,4 +834,41 @@ test('les masques arrivent sur chaque formulaire de la couche', () => {
   assert.ok(!nbChampsDef(formDefCadre(attributs.def, attributs.masques))
     || !formDefCadre(attributs.def, attributs.masques).sections
       .some((s) => s.fields.some((f) => f.colId === 'nom')));
+});
+
+/* ---------- le titre ne redit pas ce que le contexte affiche ---------- */
+
+import { titreLibre } from '../lib/fiche-formulaire.js';
+
+test('le titre composé ne répète pas le nom de la table', () => {
+  // Il valait « Saisie — Batiments_locaux ». Or il ne paraît qu'à deux endroits,
+  // et les deux nomment la table juste au-dessus : le module en intertitre de
+  // bloc, la fiche dans son en-tête d'objet. Dans la table `Formulaires`,
+  // `TableCible` porte l'information. Restait l'onglet, où la place manque.
+  assert.equal(titreLibre('Saisie', 'Batiments_locaux', []), 'Saisie');
+});
+
+test('mais deux formulaires d’une même table ne sont pas homonymes', () => {
+  // Trois onglets « Saisie — Batiments_locaux » indistinguables, constaté à
+  // l'écran. Le rang lève l'ambiguïté là où elle existe, et nulle part ailleurs.
+  const e = (titre) => ({ titre, def: { tableId: 'Batiments_locaux' } });
+  assert.equal(titreLibre('Saisie', 'Batiments_locaux', [e('Saisie')]), 'Saisie 2');
+  assert.equal(titreLibre('Saisie', 'Batiments_locaux', [e('Saisie'), e('Saisie 2')]), 'Saisie 3');
+  // Un trou se rebouche : on cherche le premier libre, pas le suivant du dernier.
+  assert.equal(titreLibre('Saisie', 'Batiments_locaux', [e('Saisie'), e('Saisie 3')]), 'Saisie 2');
+});
+
+test('une autre table ne compte pas', () => {
+  // Deux tables peuvent porter chacune leur « Saisie » : ce sont deux onglets
+  // qui ne se voient jamais ensemble, sur des objets différents.
+  const surVisites = { titre: 'Saisie', def: { tableId: 'Visites' } };
+  assert.equal(titreLibre('Saisie', 'Batiments_locaux', [surVisites]), 'Saisie');
+});
+
+test('gesteDEnregistrement numérote à partir de ce qui est enregistré', () => {
+  const f = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Attributs' };
+  const deja = [{ titre: 'Saisie', def: { tableId: 'Batiments_locaux' } }];
+  assert.equal(gesteDEnregistrement(f, deja).titre, 'Saisie 2');
+  // Sans liste, le comportement reste celui d'une table vierge.
+  assert.equal(gesteDEnregistrement(f).titre, 'Saisie');
 });

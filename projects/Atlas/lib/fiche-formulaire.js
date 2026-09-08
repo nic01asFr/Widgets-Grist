@@ -338,11 +338,41 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
  * Dans les deux cas, une ligne apparaît dans `Formulaires` — et c'est bien un
  * geste de l'utilisateur, pas un effet de bord : Atlas ne crée rien tout seul.
  */
-export function gesteDEnregistrement(f) {
+export function gesteDEnregistrement(f, entrees = []) {
   if (!f || !f.derive) return null;
   return f.surLaCouche
-    ? { verbe: 'composer', libelle: 'Composer', titre: `Saisie — ${f.tableId}` }
+    ? { verbe: 'composer', libelle: 'Composer', titre: titreLibre('Saisie', f.tableId, entrees) }
     : { verbe: 'enregistrer', libelle: 'Enregistrer', titre: f.titre || f.tableId };
+}
+
+/**
+ * Un titre qui ne redit pas ce que le contexte affiche déjà.
+ *
+ * Le titre valait `Saisie — Batiments_locaux`. Or il ne paraît qu'à deux
+ * endroits, et les deux nomment la table juste au-dessus : le module la met en
+ * intertitre de bloc, la fiche l'a dans son en-tête d'objet. Dans la table
+ * `Formulaires` elle-même, `TableCible` porte l'information. Le nom de la table
+ * était donc écrit une troisième fois, dans le seul endroit où il ne servait
+ * pas — l'onglet, où la place manque.
+ *
+ * > **Et deux formulaires composés sur la même table étaient homonymes.** Trois
+ * > onglets « Saisie — Batiments_locaux » indistinguables, constaté à l'écran.
+ * > Le rang lève l'ambiguïté là où elle existe, et nulle part ailleurs : le
+ * > premier reste « Saisie ».
+ *
+ * @param {string} base
+ * @param {string} tableId
+ * @param {object[]} entrees les formulaires déjà enregistrés
+ */
+export function titreLibre(base, tableId, entrees = []) {
+  const pris = new Set(formulairesPourTable(entrees, tableId)
+    .map((e) => String(e?.titre || '').trim())
+    .filter(Boolean));
+  if (!pris.has(base)) return base;
+  for (let n = 2; n < 500; n++) {
+    if (!pris.has(`${base} ${n}`)) return `${base} ${n}`;
+  }
+  return base;
 }
 
 /**
