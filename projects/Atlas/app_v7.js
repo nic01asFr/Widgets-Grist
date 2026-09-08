@@ -104,6 +104,7 @@ import {
   canWrite,
   shouldEnableLight3d,
   parseNo3dParam,
+  parseNavbarParam,
   probeCanWriteDoc,
 } from './lib/view-mode.js?v=20260818a';
 import {
@@ -5928,6 +5929,23 @@ function refreshStoryButton() {
     const b = $('btn-story');
     if (b) b.classList.toggle('has-story', !!(STATE.story?.length));
 }
+
+/**
+ * `?navbar=false` retire la barre du haut.
+ *
+ * Pour une integration en cadre — une page qui porte deja son titre et sa
+ * navigation —, la barre d'Atlas fait doublon et prend une hauteur qu'on ne
+ * recupere pas.
+ *
+ * > **Posee une fois, au chargement.** Elle ne depend que de l'URL, qui ne
+ * > change pas : la mettre dans `updateMobileLayout` la faisait relire a chaque
+ * > redimensionnement, et surtout n'arrivait qu'apres la porte d'accueil — la
+ * > barre restait visible tant qu'on ne s'etait pas connecte. Une decision qui
+ * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
+ * > dont le nom promet autre chose.
+ */
+document.body.classList.toggle('sans-navbar',
+    !parseNavbarParam(typeof location !== 'undefined' ? location.search : ''));
 
 function applyViewModeChrome() {
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);

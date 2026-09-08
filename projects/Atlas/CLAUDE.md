@@ -818,7 +818,18 @@ Lus par `lib/view-mode.js`.
 | `?mode=…` | `lib/view-mode.js` | force le mode lecture, pour tester |
 | `?no3d` | `app_v7.js` | coupe les modèles 3D (appareil modeste) |
 | `?models=…` | `app_v7.js` | source du catalogue 3D |
-| `?nav` | `index_v7.html` | barre de navigation inter-vues |
+| `?navbar=false` | `lib/view-mode.js` | **retire la barre du haut** — intégration en cadre, où la page hôte porte déjà son titre |
+
+> **`?nav` n'a jamais existé.** Ce tableau l'a longtemps annoncé — « barre de
+> navigation inter-vues » — alors qu'**aucun code ne le lit** : vérifié le
+> 08/09/2026 sur `app_v7.js`, `lib/` et `index_v7.html`. Une doc qui décrit un
+> paramètre inerte coûte plus qu'une doc muette : on l'essaie, il ne fait rien,
+> et on cherche la panne ailleurs.
+>
+> `?navbar=false` ne peut que **retirer** : une valeur absente, vide ou
+> incomprise laisse la barre. Se tromper vers le bas masquerait la recherche, le
+> badge de droits et le bouton « Récit » — seul point d'entrée d'un récit publié
+> une fois le rail parti.
 
 ### `?scene=` — deux régimes de confiance, pas un réglage
 

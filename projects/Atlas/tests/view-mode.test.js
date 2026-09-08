@@ -10,6 +10,7 @@ import {
   canWrite,
   shouldEnableLight3d,
   parseNo3dParam,
+  parseNavbarParam,
   isWriteAclError,
   probeCanWriteDoc,
   resolveProbeTableId,
@@ -113,5 +114,32 @@ describe('shouldEnableLight3d / parseNo3dParam', () => {
       isNarrow: false,
       hardwareConcurrency: 8,
     }), false);
+  });
+});
+
+describe('parseNavbarParam — la barre du haut', () => {
+  it('est là par défaut', () => {
+    assert.equal(parseNavbarParam(''), true);
+    assert.equal(parseNavbarParam('?mode=view'), true);
+    assert.equal(parseNavbarParam(), true);
+  });
+
+  it('ne disparaît que sur une demande explicite', () => {
+    for (const v of ['false', 'FALSE', '0', 'no', 'non', ' false ']) {
+      assert.equal(parseNavbarParam('?navbar=' + v.trim()), false, v);
+    }
+  });
+
+  it('et reste sur tout le reste', () => {
+    // Se tromper vers le bas masquerait la recherche, le badge de droits et le
+    // bouton « Récit » — sans que rien ne dise pourquoi.
+    for (const v of ['true', '1', 'yes', '', 'oui', 'faux', 'xyz']) {
+      assert.equal(parseNavbarParam('?navbar=' + v), true, JSON.stringify(v));
+    }
+  });
+
+  it('cohabite avec les autres paramètres', () => {
+    assert.equal(parseNavbarParam('?mode=view&navbar=false&no3d=1'), false);
+    assert.equal(parseNo3dParam('?mode=view&navbar=false&no3d=1'), true);
   });
 });

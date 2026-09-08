@@ -238,3 +238,27 @@ export function parseNo3dParam(search = '') {
   const v = new URLSearchParams(q).get('no3d');
   return v === '1' || v === 'true' || v === 'yes';
 }
+
+/**
+ * `?navbar=false` retire la barre du haut.
+ *
+ * Pour une intégration en cadre — une page qui a déjà son propre titre et sa
+ * propre navigation —, la barre d'Atlas fait doublon : elle répète le nom du
+ * projet que la page hôte affiche, et ajoute une hauteur qu'on ne récupère pas.
+ *
+ * > **Le défaut est `true`, et le paramètre ne peut que RETIRER.** Une valeur
+ * > absente, vide ou incomprise laisse la barre : se tromper vers le bas
+ * > masquerait la recherche, le badge de droits et le bouton « Récit » — seul
+ * > point d'entrée d'un récit publié une fois le rail parti — sans que rien ne
+ * > dise pourquoi. On ne fait donc disparaître que sur une demande explicite.
+ *
+ * @param {string} [search] location.search
+ * @returns {boolean} vrai quand la barre doit être montrée
+ */
+export function parseNavbarParam(search = '') {
+  const q = String(search || '').replace(/^\?/, '');
+  const v = new URLSearchParams(q).get('navbar');
+  if (v == null) return true;
+  const n = v.trim().toLowerCase();
+  return !(n === 'false' || n === '0' || n === 'no' || n === 'non');
+}
