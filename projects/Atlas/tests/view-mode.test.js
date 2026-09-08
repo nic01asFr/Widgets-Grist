@@ -11,6 +11,7 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
+  resolveAccess,
   isWriteAclError,
   probeCanWriteDoc,
   resolveProbeTableId,
@@ -141,5 +142,27 @@ describe('parseNavbarParam — la barre du haut', () => {
   it('cohabite avec les autres paramètres', () => {
     assert.equal(parseNavbarParam('?mode=view&navbar=false&no3d=1'), false);
     assert.equal(parseNo3dParam('?mode=view&navbar=false&no3d=1'), true);
+  });
+});
+
+describe('« probe » veut dire : aucun hôte Grist', () => {
+  it('sans rien de transmis, le motif est « probe »', () => {
+    // C'est le seul signal qui distingue « Atlas ouvert seul » de « Atlas dans
+    // un document » : Grist pose toujours `access` et `readonly` sur l'iframe.
+    assert.equal(resolveAccess({ search: '' }).reason, 'probe');
+    assert.equal(resolveAccess({ search: '?no3d=1&navbar=false' }).reason, 'probe');
+  });
+
+  it('et il devient « grist-full-a-sonder » dès que Grist parle', () => {
+    assert.equal(resolveAccess({ search: '?access=full&readonly=false' }).reason, 'grist-full-a-sonder');
+  });
+
+  it('ce qui décide si le repli en lecture a un sens', () => {
+    // `initGrist` ne se replie en lecture QUE si Grist a parlé : sans hôte il
+    // n'y a rien à lire, et basculer la page autonome en lecture lui retirait
+    // le rail que sa porte d'accueil promet. Regression vue le 08/09/2026.
+    const autonome = resolveAccess({ search: '' });
+    assert.equal(autonome.viewMode, false);
+    assert.equal(autonome.reason === 'probe', true, 'le repli doit être refusé ici');
   });
 });

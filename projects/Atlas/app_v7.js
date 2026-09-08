@@ -6320,7 +6320,17 @@ async function initGrist() {
         // ces deux cas. Redemander `read table` a une session deja en lecture
         // fermerait d'ailleurs l'ecriture au widget lui-meme, ce qui est
         // precisement le defaut corrige dans `resolveAccess`.
-        if (!acc.viewMode) {
+        //
+        // > **Et il faut un document pour se replier dessus.** `reason: 'probe'`
+        // > veut dire que Grist n'a RIEN transmis : pas d'hote, donc rien a lire.
+        // > Reparer ce catch l'a rendu atteignable, et il a aussitot bascule la
+        // > page autonome en lecture — rail masque, badge 👁 — alors que sa porte
+        // > d'accueil promet exactement l'inverse : « vous pourrez charger un
+        // > fichier, importer depuis OpenStreetMap et travailler localement ».
+        // > Regression constatee a l'ecran le 08/09/2026, le jour meme de la
+        // > correction : un repli mort depuis un mois ne se reveille pas sans
+        // > qu'on regarde ou il atterrit.
+        if (!acc.viewMode && acc.reason !== 'probe') {
             try {
                 grist.ready({ requiredAccess: 'read table' });
                 CONFIG.grist.ready = true;
