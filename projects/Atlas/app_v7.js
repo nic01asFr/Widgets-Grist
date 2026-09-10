@@ -6330,6 +6330,14 @@ async function initGrist() {
         // > Regression constatee a l'ecran le 08/09/2026, le jour meme de la
         // > correction : un repli mort depuis un mois ne se reveille pas sans
         // > qu'on regarde ou il atterrit.
+        // > **Sans hote, `ready` doit retomber a faux.** Il est pose juste apres
+        // > `grist.ready()`, avant le premier appel reel — or hors Grist cet
+        // > appel echoue, et rien ne le remettait a faux. Les 28 chemins qui le
+        // > lisent croyaient donc tenir un document : le module Formulaires
+        // > affichait l'interface Grist au lieu de « Hors Grist », et la sonde
+        // > tentait un `applyUserActions` dans un document inexistant. Vu dans
+        // > la console de la page autonome, le 10/09/2026.
+        if (acc.reason === 'probe') CONFIG.grist.ready = false;
         if (!acc.viewMode && acc.reason !== 'probe') {
             try {
                 grist.ready({ requiredAccess: 'read table' });
