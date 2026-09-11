@@ -12,6 +12,7 @@ import {
   parseNo3dParam,
   parseNavbarParam,
   resolveAccess,
+  pastilleRecitRequise,
   isWriteAclError,
   probeCanWriteDoc,
   resolveProbeTableId,
@@ -164,5 +165,33 @@ describe('« probe » veut dire : aucun hôte Grist', () => {
     const autonome = resolveAccess({ search: '' });
     assert.equal(autonome.viewMode, false);
     assert.equal(autonome.reason === 'probe', true, 'le repli doit être refusé ici');
+  });
+});
+
+describe('pastilleRecitRequise — le récit garde une entrée sans barre', () => {
+  const base = { barreAbsente: true, lecture: true, nbEtapes: 8, enPresentation: false };
+
+  it('paraît dans la configuration de la vitrine, récit fermé', () => {
+    // `?scene=` + `?navbar=false` : le bouton de la barre est parti, le rail
+    // aussi. Sans la pastille, fermer le récit le rendait inatteignable.
+    assert.equal(pastilleRecitRequise(base), true);
+  });
+
+  it('se retire pendant la lecture — la bulle porte déjà la navigation', () => {
+    assert.equal(pastilleRecitRequise({ ...base, enPresentation: true }), false);
+  });
+
+  it('ne double pas le bouton de la barre', () => {
+    assert.equal(pastilleRecitRequise({ ...base, barreAbsente: false }), false);
+  });
+
+  it('ne double pas le module Récit du rail, en édition', () => {
+    assert.equal(pastilleRecitRequise({ ...base, lecture: false }), false);
+  });
+
+  it('ne promet rien quand il n’y a rien à lire', () => {
+    assert.equal(pastilleRecitRequise({ ...base, nbEtapes: 0 }), false);
+    assert.equal(pastilleRecitRequise({ ...base, nbEtapes: undefined }), false);
+    assert.equal(pastilleRecitRequise(), false);
   });
 });

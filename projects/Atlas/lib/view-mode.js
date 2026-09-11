@@ -262,3 +262,23 @@ export function parseNavbarParam(search = '') {
   const n = v.trim().toLowerCase();
   return !(n === 'false' || n === '0' || n === 'no' || n === 'non');
 }
+
+/**
+ * Faut-il une pastille « Récit » sur la carte ?
+ *
+ * En lecture, le seul point d'entrée d'un récit publié est le bouton de la
+ * barre du haut — le rail d'auteur est retiré. `?navbar=false` emporte donc ce
+ * bouton, et une fois le récit fermé il n'existait **plus aucun moyen de le
+ * rouvrir**. Constaté le 10/09/2026 dans la configuration exacte que la vitrine
+ * publique utilise : `?scene=` + `?navbar=false`.
+ *
+ * La pastille ne paraît que dans ce cas précis. Avec la barre, son bouton
+ * existe déjà, et deux boutons pour le même geste en font un de trop ; en
+ * édition, le module Récit du rail en tient lieu ; pendant la lecture, la bulle
+ * porte déjà la navigation.
+ *
+ * @param {{barreAbsente?: boolean, lecture?: boolean, nbEtapes?: number, enPresentation?: boolean}} etat
+ */
+export function pastilleRecitRequise({ barreAbsente, lecture, nbEtapes, enPresentation } = {}) {
+  return !!barreAbsente && !!lecture && Number(nbEtapes) > 0 && !enPresentation;
+}

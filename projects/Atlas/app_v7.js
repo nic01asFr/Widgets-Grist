@@ -105,6 +105,7 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
+  pastilleRecitRequise,
   probeCanWriteDoc,
 } from './lib/view-mode.js?v=20260818a';
 import {
@@ -3432,6 +3433,24 @@ function listDockPills() {
     if (getViewerControl(vcs, 'sun')?.exposed) {
         pills.push({ id: 'sun', kind: 'sun', icon: '☀', label: 'Soleil' });
     }
+    // Le recit n'a plus d'entree quand la barre est retiree : son bouton y
+    // vivait. La pastille le remplace, avec la meme figure et le meme geste.
+    // Elle vient EN TETE : c'est la seule qui lance quelque chose au lieu de
+    // regler, et le lecteur doit la trouver sans chercher.
+    if (pastilleRecitRequise({
+        barreAbsente: CONFIG.sansNavbar,
+        lecture: CONFIG.viewMode,
+        nbEtapes: STATE.story?.length || 0,
+        enPresentation: _storyPresenting,
+    })) {
+        pills.unshift({
+            id: 'recit',
+            kind: 'action',
+            icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>',
+            label: 'Lire le récit',
+            action: () => A.storyPlay(0),
+        });
+    }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
     // (U+FE0F). Un glyphe symbolique rare — ici `▦` U+25A6 — n'existe pas dans
     // les polices système courantes, et un emoji sans sélecteur bascule en
@@ -3599,6 +3618,11 @@ function refreshControlsDock() {
     fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const id = btn.dataset.pill;
+            // Toutes les pastilles devoilaient un reglage : le composant n'avait
+            // que ce geste-la. Une pastille d'ACTION agit et s'arrete — sans
+            // cela « Recit » aurait ouvert un panneau vide.
+            const pastille = pills.find((p) => p.id === id);
+            if (pastille?.action) { pastille.action(); return; }
             if (_openDockPill === id && !dock.classList.contains('collapsed')) {
                 dock.classList.add('collapsed');
             } else {
@@ -5944,8 +5968,8 @@ function refreshStoryButton() {
  * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
  * > dont le nom promet autre chose.
  */
-document.body.classList.toggle('sans-navbar',
-    !parseNavbarParam(typeof location !== 'undefined' ? location.search : ''));
+CONFIG.sansNavbar = !parseNavbarParam(typeof location !== 'undefined' ? location.search : '');
+document.body.classList.toggle('sans-navbar', CONFIG.sansNavbar);
 
 function applyViewModeChrome() {
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
