@@ -97,3 +97,46 @@ test('mode lecture : aucune ecriture', async () => {
   await saveLayerPref(doc, { ...distante, visible: true, style: {} }, { viewMode: true });
   assert.equal(doc.lignes.length, 0);
 });
+
+/* ---------- document sans manifeste : la couche en table garde sa place ---------- */
+
+import { ligneInventaireRequise, ligneInventaire } from '../lib/grist-sync.js';
+
+const entablee = {
+  kind: 'table', source: 'grist-table', sourceTable: 'Atlas_Eclairage', geometryColumn: 'geometry_json',
+  name: 'Éclairage', color: '#2E4E54', geometryType: 'Point', visible: true,
+  style: { mode: 'library' },
+  geojson: { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: null, properties: { _row_id: 1 } }] },
+};
+
+test('document sans manifeste : une couche en table garde sa ligne d’inventaire', () => {
+  // Sans elle, la couche disparaissait au rechargement : `loadLayersFromGrist`
+  // ne lit que `Maquette_Layers`, et les prefs ne disent pas qu'elle existe.
+  assert.equal(ligneInventaireRequise(entablee, 'maquette'), true);
+  assert.equal(ligneInventaireRequise(entablee, undefined), true);
+});
+
+test('le manifeste tient deja l’inventaire : pas de doublon', () => {
+  assert.equal(ligneInventaireRequise(entablee, 'scene-manifest'), false);
+  assert.equal(ligneInventaireRequise({ ...entablee, manifestLayerId: 'eclairage' }, 'maquette'), false);
+});
+
+test('une couche sans table emporte ses entites par l’autre chemin', () => {
+  assert.equal(ligneInventaireRequise(maquette, 'maquette'), false);
+  assert.equal(ligneInventaireRequise(null, 'maquette'), false);
+});
+
+test('la ligne dit ou retrouver la couche, sans copier ses entites', () => {
+  const ligne = ligneInventaire(entablee);
+  assert.equal(ligne.GeoJSON, '{}', 'aucune copie des entites');
+  assert.equal(ligne.Name, 'Éclairage');
+  assert.equal(ligne.Visible, true);
+  const style = JSON.parse(ligne.StyleJSON);
+  assert.deepEqual(style._binding, { kind: 'table', sourceTable: 'Atlas_Eclairage', geometryColumn: 'geometry_json' });
+  assert.equal(style.mode, 'library', 'le style de la couche est conserve');
+});
+
+test('la colonne de geometrie par defaut est celle qu’ecrit l’enregistrement en table', () => {
+  const ligne = ligneInventaire({ ...entablee, geometryColumn: undefined });
+  assert.equal(JSON.parse(ligne.StyleJSON)._binding.geometryColumn, 'geometry_json');
+});

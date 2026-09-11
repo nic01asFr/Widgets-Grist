@@ -145,6 +145,53 @@ export function coucheAvecLignes(layer) {
   return !!layer?.sourceTable;
 }
 
+/**
+ * Faut-il a cette couche une ligne d'inventaire dans `Maquette_Layers` ?
+ *
+ * `clePrefsCouche` range l'apparence de toute couche portee par une table dans
+ * `Atlas_LayerPrefs`, parce que « le manifeste tient la donnee ». Dans un
+ * document **sans manifeste**, rien ne la tient : `loadLayersFromGrist` ne lit
+ * que `Maquette_Layers`, et une couche enregistree en table disparaissait au
+ * rechargement — la table restait dans le document, la scene l'avait oubliee.
+ * Constate le 11/09/2026 dans un document vide.
+ *
+ * La ligne dit seulement que la scene contient cette table, et sous quel nom ;
+ * les entites restent dans la table, l'apparence dans les prefs.
+ *
+ * @param {object} layer
+ * @param {string} [docMode] `CONFIG.docMode`
+ */
+export function ligneInventaireRequise(layer, docMode) {
+  return docMode !== 'scene-manifest'
+    && layer?.kind === 'table'
+    && !!layer?.sourceTable
+    && !layer?.manifestLayerId;
+}
+
+/**
+ * La ligne d'inventaire : de quoi retrouver la couche, **jamais ses entites**.
+ *
+ * Une copie des entites a cote de la table serait perimee des la premiere
+ * saisie, et rien ne la relirait jamais.
+ */
+export function ligneInventaire(layer) {
+  const style = { ...(layer?.style || {}) };
+  if (layer?.controls?.length) style._controls = layer.controls;
+  style._binding = {
+    kind: 'table',
+    sourceTable: layer?.sourceTable,
+    geometryColumn: layer?.geometryColumn || 'geometry_json',
+  };
+  return {
+    Name: layer?.name || layer?.sourceTable,
+    Color: layer?.color,
+    Visible: layer?.visible !== false,
+    GeomType: layer?.geometryType,
+    StyleJSON: JSON.stringify(style),
+    GeoJSON: '{}',
+  };
+}
+
 export async function saveLayerPref(docApi, layer, opts = {}) {
   if (opts.viewMode) return;
   const cle = clePrefsCouche(layer);

@@ -47,7 +47,9 @@ import {
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=20260730a';
+  ligneInventaireRequise,
+  ligneInventaire,
+} from './lib/grist-sync.js?v=20260911a';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -4710,6 +4712,7 @@ function renderSymbologyInspector(layer) {
         <div class="insp-title">${layer.name}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
+        ${boutonEnTable(layer)}
         ${boutonRevueObjets(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
@@ -5010,7 +5013,26 @@ function enteteSansTable(layer, view) {
     if (!peut) return msg;
     const n = layer.geojson.features.length;
     return msg + `<button class="btn btn-soft btn-full" style="margin-bottom:12px"
-        onclick="A.enregistrerDansGrist('${layer.id}')">💾 Enregistrer dans Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+}
+
+/**
+ * Le passage en table, sur le panneau de la couche.
+ *
+ * Il n'existait que sur la fiche d'un objet : pour le trouver, il fallait
+ * ouvrir « Éditer les objets un par un » sur une couche dont on ne pouvait
+ * justement rien éditer. Constaté le 11/09/2026 dans un document vide : une
+ * couche OSM importée, le bouton « Enregistrer » du pied pressé — qui
+ * enregistre l'apparence, donc une copie dans `Maquette_Layers` —, et pas de
+ * fiche, puisque rien n'avait de ligne. Le geste se pose désormais là où on
+ * le cherche, tant que la couche n'est qu'une copie.
+ */
+function boutonEnTable(layer) {
+    const n = layer?.geojson?.features?.length || 0;
+    if (CONFIG.viewMode || !CONFIG.grist.ready || layer.kind === 'table' || layer._distant || !n) return '';
+    return `<div class="hint" style="margin:10px 0 0">Copie dans le document : ses objets n'ont pas de ligne Grist, donc pas de fiche à remplir.</div>
+        <button class="btn btn-soft btn-full" style="margin-top:8px"
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
 }
 
 /**
@@ -5795,7 +5817,11 @@ function inferGristType(vals) {
 }
 
 function sanitizeId(s) {
-    const v = String(s == null ? '' : s).trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    // Les accents sont translittérés, pas supprimés : « Éclairage » donnait
+    // `Atlas_clairage` (constaté le 11/09/2026), et un nom de table amputé ne
+    // se retrouve plus dans la liste du document.
+    const v = String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
     return (/^[a-zA-Z]/.test(v) ? v : '_' + v) || 'Col';
 }
 
@@ -5837,15 +5863,10 @@ async function entableLayer(layer) {
     layer._perObjectColor = layer.geojson.features.some((f) => f.properties && f.properties.fill_color);
     indexFeatures(layer); removeLayerGfx(layer); addLayerToMap(layer); Models3D.scheduleBuild();
     // La couche est maintenant portee par une table : son apparence va dans
-    // `Atlas_LayerPrefs` (cf. `clePrefsCouche`), et le blob de `Maquette_Layers`
-    // n'a plus de raison d'exister. Le laisser ferait une copie perimee des
-    // entites, que rien ne relirait jamais.
-    const ancienBlob = layer.gristId;
-    layer.gristId = null;
-    if (ancienBlob) {
-        grist.docApi.applyUserActions([['RemoveRecord', 'Maquette_Layers', ancienBlob]])
-            .catch((e) => console.warn('[Atlas entable] blob non retire', e.message));
-    }
+    // `Atlas_LayerPrefs` (cf. `clePrefsCouche`). La ligne de `Maquette_Layers`
+    // reste, mais VIDEE de ses entites : elle devient l'inventaire qui dit que
+    // la scene contient cette table (`ligneInventaire`). La supprimer, comme on
+    // le faisait, faisait disparaitre la couche au rechargement.
     saveLayerToGrist(layer, true); markDirty();
     return layer.geojson.features.length;
 }
@@ -6772,6 +6793,7 @@ async function loadLayersFromGrist() {
         const rec = await grist.docApi.fetchTable('Maquette_Layers');
         const ids = rec.id || [];
         const dejaMontees = new Set(STATE.layers.map((l) => l.gristId).filter((v) => v != null));
+        let prefsTables = null;
         for (let i = 0; i < ids.length; i++) {
             if (dejaMontees.has(ids[i])) continue;
             let geojson, style;
@@ -6791,11 +6813,32 @@ async function loadLayersFromGrist() {
             if (binding?.kind === 'table') {
                 layer.kind = 'table';
                 layer.sourceTable = binding.sourceTable;
-                layer.geometryColumn = binding.geometryColumn;
+                layer.geometryColumn = binding.geometryColumn || 'geometry_json';
+                layer.source = 'grist-table';
+                // Les entités vivent dans la table ; la ligne n'en garde pas de
+                // copie (et une ancienne copie serait périmée). L'apparence et
+                // les réglages de formulaire sont dans les prefs, comme pour une
+                // couche du manifeste.
+                try {
+                    const cols = await grist.docApi.fetchTable(layer.sourceTable);
+                    layer.geojson = tableToGeoJSON(cols, layer.geometryColumn);
+                } catch (e) {
+                    console.warn('[Atlas] table introuvable :', layer.sourceTable, e.message);
+                    showToast(`Table ${layer.sourceTable} introuvable — couche « ${layer.name} » ignorée`, 'warning');
+                    continue;
+                }
+                if (!prefsTables) prefsTables = await loadLayerPrefs(grist.docApi);
+                applyLayerPrefs(layer, prefsTables);
             }
             initSymbolization(layer);
             if (layer.controls?.length) applyControls(layer);
             STATE.layers.push(layer);
+        }
+        // Rangs enregistrés dans les prefs : même règle qu'en mode manifeste.
+        if (prefsTables) {
+            STATE.layers = sortByRank(STATE.layers, Object.fromEntries(
+                STATE.layers.filter((l) => Number.isFinite(l._rank)).map((l) => [l.sourceTable || l.id, l._rank])
+            ));
         }
         mountLoadedLayers(computeLayersBounds());
     } catch (e) { console.warn('loadLayers:', e.message); }
@@ -6825,6 +6868,18 @@ async function ensureMaquetteLayersTable() {
     _maquetteTablePrete = true;
 }
 
+/** Pose ou met à jour la ligne d'inventaire d'une couche portée par une table. */
+async function ecrireLigneInventaire(layer) {
+    await ensureMaquetteLayersTable();
+    const data = ligneInventaire(layer);
+    if (layer.gristId) {
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Maquette_Layers', layer.gristId, data]]);
+    } else {
+        const r = await grist.docApi.applyUserActions([['AddRecord', 'Maquette_Layers', null, data]]);
+        layer.gristId = r.retValues[0];
+    }
+}
+
 async function saveLayerToGrist(layer, silent) {
     if (!CONFIG.grist.ready) return;
     if (!assertCanWrite('enregistrer les préférences')) return;
@@ -6834,6 +6889,9 @@ async function saveLayerToGrist(layer, silent) {
     if (clePrefsCouche(layer)) {
         try {
             await saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode });
+            // Sans manifeste, rien d'autre ne dit que cette table fait partie de
+            // la scène : sans sa ligne, elle disparaissait au rechargement.
+            if (ligneInventaireRequise(layer, CONFIG.docMode)) await ecrireLigneInventaire(layer);
             if (!silent) showToast(`Préférences Atlas · ${layer.name}`, 'success');
             dirty = false;
             $('app-header')?.classList.remove('dirty');
@@ -7703,6 +7761,11 @@ const A = {
             showToast(`${ecrits} objets enregistrés · ${l.sourceTable}`, 'success');
             await chargerFormulaires();
             if (STATE.currentModule === 'couches') renderLayersPanel(STATE.currentModule);
+            // Le bouton est dans le panneau de droite ; le module Formulaires
+            // peut être ouvert à gauche au même moment. Il affichait encore
+            // « Aucune table à saisir » alors que la table et sa fiche
+            // « Attributs » venaient d'exister.
+            else if (STATE.currentModule === 'formulaires') renderFormulaires();
             renderInspector();
         } catch (e) {
             hideLoading();
