@@ -941,6 +941,15 @@
            cale sur sa hauteur réelle (`--bande-attrib`, mesurée : une longue
            liste de sources passe sur deux lignes). */
         body:not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0; }
+        /* Le bandeau d'infos carte (édition) est de l'étage : aligné sur le bas
+           de la légende, dans la colonne de droite. Il cède à la légende quand
+           la carte rétrécit — `majBandeauInfos` le réduit à zoom · pitch, puis
+           le retire — et pendant le récit, où la bulle occupe cette place. */
+        body:not(.mobile-layout) .map-hud { bottom: var(--etage-bas); right: var(--etage-marge); }
+        .map-hud.hud-compact #hud-coords,
+        .map-hud.hud-compact #hud-coords + .dot { display: none; }
+        .map-hud.hud-masque,
+        body.story-presenting .map-hud { display: none; }
         /* Le bouton de localisation de MapLibre : remplacé par la pastille du
            dock, sur mobile. Le contrôle reste posé — il porte le point bleu et
            le suivi de position. */

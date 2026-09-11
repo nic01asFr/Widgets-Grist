@@ -112,7 +112,8 @@ import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
-} from './lib/habillage-carte.js?v=20260911a';
+  formeBandeauInfos,
+} from './lib/habillage-carte.js?v=20260911b';
 import {
   createDefaultViewerControls,
   getViewerControl,
@@ -1732,6 +1733,7 @@ function initMap() {
     map.on('load', onStyleReady);
 
     map.on('move', updateHUD);
+    map.on('moveend', majBandeauInfos);
     map.on('pitchend', () => {
         if (_openDockPill === 'view3d') renderDockSlotHost();
     });
@@ -4248,6 +4250,31 @@ function majEtageCarte() {
     });
     document.body.classList.toggle('etage-cote-a-cote', cote);
     if (_storyPresenting) mesurerEtageRecit();
+    majBandeauInfos();
+}
+
+/**
+ * Le bandeau d'infos cède à la légende : il se mesure dans ses deux formes et
+ * prend la plus complète qui tient à droite de la colonne de la légende.
+ * Rappelé en fin de déplacement — son texte change avec le zoom.
+ */
+function majBandeauInfos() {
+    const frame = $('map-frame');
+    const hud = $('map-hud');
+    if (!frame || !hud) return;
+    hud.classList.remove('hud-compact', 'hud-masque');
+    const largeurComplete = hud.offsetWidth;
+    hud.classList.add('hud-compact');
+    const largeurCompacte = hud.offsetWidth;
+    hud.classList.remove('hud-compact');
+    const forme = formeBandeauInfos({
+        largeurCarte: frame.clientWidth,
+        largeurComplete,
+        largeurCompacte,
+        mobile: document.body.classList.contains('mobile-layout'),
+    });
+    if (forme === 'compact') hud.classList.add('hud-compact');
+    else if (forme === 'masque') hud.classList.add('hud-masque');
 }
 
 /**

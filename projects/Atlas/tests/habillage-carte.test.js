@@ -10,6 +10,7 @@ import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
+  formeBandeauInfos,
 } from '../lib/habillage-carte.js';
 
 describe('etageCoteACote — légende et bulle se partagent le bas', () => {
@@ -72,6 +73,37 @@ describe('margeBasseRecit — la caméra vise ce que la bulle laisse voir', () =
     assert.equal(margeBasseRecit({}), 0);
     assert.equal(margeBasseRecit(), 0);
     assert.equal(margeBasseRecit({ basCarte: 800, hautBulle: 640, hauteurCarte: 0 }), 0);
+  });
+});
+
+describe('formeBandeauInfos — le bandeau cède à la légende', () => {
+  // Largeurs relevées dans Chrome : bandeau complet et réduit à zoom · pitch.
+  const mesures = { largeurComplete: 330, largeurCompacte: 160 };
+
+  it('complet quand la colonne de droite le contient', () => {
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 1000 }), 'complet');
+    // 24 + 220 + 16 + 330 + 24 : pile la place.
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 614 }), 'complet');
+  });
+
+  it('abandonne les coordonnées avant de passer sous la légende', () => {
+    // La carte de la capture : 824 px de fenêtre, rail et panneau ouverts.
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 500 }), 'compact');
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 613 }), 'compact');
+  });
+
+  it('se retire quand même zoom et inclinaison ne tiennent plus', () => {
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 400 }), 'masque');
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 140 }), 'masque');
+  });
+
+  it('se retire sur mobile', () => {
+    assert.equal(formeBandeauInfos({ ...mesures, largeurCarte: 1000, mobile: true }), 'masque');
+  });
+
+  it('reste complet faute de mesure — mieux vaut montrer que cacher à tort', () => {
+    assert.equal(formeBandeauInfos({ largeurCarte: 500 }), 'complet');
+    assert.equal(formeBandeauInfos(), 'complet');
   });
 });
 

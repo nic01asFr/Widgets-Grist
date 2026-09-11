@@ -74,6 +74,31 @@ export function margeBasseRecit({ basCarte, hautBulle, hauteurCarte, respiration
 }
 
 /**
+ * Forme du bandeau d'infos carte (coordonnées, zoom, inclinaison — édition).
+ *
+ * Il partage l'étage du bas avec la légende : ancré à droite, il n'a que ce
+ * que la colonne de la légende laisse libre. Mesuré dans une fenêtre de
+ * 824 px, il passait sous la légende et en perdait les coordonnées. Quand il
+ * ne tient pas, il abandonne d'abord les coordonnées — zoom et inclinaison
+ * servent à composer une vue — puis se retire.
+ *
+ * Sur mobile, il se retire : la barre d'onglets occupe le bas, et un
+ * téléphone n'est pas l'endroit où l'on compose une vue au dixième de zoom.
+ *
+ * @param {{largeurCarte?: number, largeurComplete?: number, largeurCompacte?: number, mobile?: boolean}} mesures
+ *   largeurs du bandeau mesurées dans ses deux formes
+ * @returns {'complet'|'compact'|'masque'}
+ */
+export function formeBandeauInfos({ largeurCarte, largeurComplete, largeurCompacte, mobile } = {}) {
+  if (mobile) return 'masque';
+  const dispo = Number(largeurCarte) - (ETAGE.marge + ETAGE.legende + ETAGE.gouttiere + ETAGE.marge);
+  if (!Number.isFinite(dispo)) return 'complet';
+  if (!(Number(largeurComplete) > dispo)) return 'complet';
+  if (!(Number(largeurCompacte) > dispo)) return 'compact';
+  return 'masque';
+}
+
+/**
  * Faut-il une pastille « Me localiser » ?
  *
  * Sur mobile seulement. Au bureau, la position de la machine ne dit rien du
