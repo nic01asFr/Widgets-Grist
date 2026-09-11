@@ -338,18 +338,24 @@ describe('reglages de formulaire — un choix de scene, pas de table', () => {
     assert.deepEqual(payload.formulaire, { fiche: null, masques: { a: ['nom'] } });
   });
 
-  it('un masque vide n’est pas ecrit', () => {
-    // `{}` dirait « j'ai decide de ne rien masquer » la ou il n'y a rien a dire.
+  it('un objet sans entree n’est pas ecrit', () => {
     assert.equal(layerPrefsPayload({ formulaire: { masques: {} } }).formulaire, null);
-    assert.equal(layerPrefsPayload({ formulaire: { masques: { a: [] } } }).formulaire, null);
-    const p = layerPrefsPayload({ formulaire: { exposes: ['a'], masques: { a: [] } } });
-    assert.deepEqual(p.formulaire, { fiche: null, exposes: ['a'] });
+  });
+
+  it('une entree vide est une decision, et s’ecrit', () => {
+    // « Tout reaffiche dans a » : sans elle, les colonnes d'Atlas se
+    // remasqueraient au rechargement (masquesParDefaut).
+    const p = layerPrefsPayload({ formulaire: { masques: { a: [] } } });
+    assert.deepEqual(p.formulaire, { fiche: null, masques: { a: [] } });
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: p });
+    assert.deepEqual(relu.formulaire, { fiche: null, masques: { a: [] } });
   });
 
   it('une valeur douteuse ne RETIRE rien', () => {
     // Symetrique de la garde sur `exposes`, et plus grave : un enregistrement
     // abime qui masque fait disparaitre une donnee de l'ecran sans le dire.
-    for (const masques of ['nom', 42, ['nom'], { a: 'nom' }, { a: [] }]) {
+    for (const masques of ['nom', 42, ['nom'], { a: 'nom' }, { a: [7, null] }]) {
       const relu = { name: 'Bâti' };
       applyLayerPrefsBinding(relu, { style: { formulaire: { fiche: 'a', masques } } });
       assert.deepEqual(relu.formulaire, { fiche: 'a' }, JSON.stringify(masques));

@@ -170,8 +170,14 @@ export function reglagesFormulaire(couche) {
  * > l'aurait tu en silence — et quand une colonne disparaît, un masque devient
  * > inerte au lieu de devenir faux.
  *
+ * **Une entrée présente, même vide, est une décision.** Sans entrée, le
+ * formulaire prend `masquesParDefaut` ; une liste vide dit « j'ai tout
+ * réaffiché », et doit survivre au rechargement — sinon les colonnes d'Atlas
+ * se remasqueraient d'elles-mêmes.
+ *
  * Une valeur douteuse ne masque rien : un enregistrement abîmé doit retirer des
- * champs par accident encore moins qu'il ne doit en offrir.
+ * champs par accident encore moins qu'il ne doit en offrir. Une liste dont
+ * aucun élément n'est lisible est douteuse — on l'écarte, et le défaut vaut.
  *
  * @returns {Record<string, string[]>} vide quand la couche n'a rien décidé
  */
@@ -181,7 +187,36 @@ export function masquesValides(brut) {
   for (const [formId, cols] of Object.entries(brut)) {
     if (typeof formId !== 'string' || !Array.isArray(cols)) continue;
     const propres = cols.filter((c) => typeof c === 'string' && c);
-    if (propres.length) out[formId] = propres;
+    if (propres.length || !cols.length) out[formId] = propres;
+  }
+  return out;
+}
+
+/**
+ * Les colonnes qu'Atlas écrit pour lui-même en enregistrant une couche en
+ * table (`entableLayer`) : le modèle 3D et son placement.
+ *
+ * Elles se règlent sur la carte et dans l'onglet « Placement 3D » ; les offrir
+ * en tête de la fiche « Attributs », au milieu du nom et de l'état, ferait
+ * taper à la main un identifiant de modèle ou un décalage en mètres.
+ */
+export const COLONNES_ATLAS = Object.freeze([
+  'model_id', 'model_glb',
+  'scale', 'rotation_x', 'rotation_y', 'rotation_z',
+  'offset_x', 'offset_y', 'offset_z',
+]);
+
+/**
+ * Ce qu'un formulaire masque quand la scène n'a rien décidé : les colonnes
+ * d'Atlas qu'il contient. Masquées, pas retirées — le module Formulaires les
+ * réaffiche d'un clic, et ce choix est retenu.
+ */
+export function masquesParDefaut(def) {
+  const out = [];
+  for (const sec of def?.sections || []) {
+    for (const f of sec?.fields || []) {
+      if (f?.colId && COLONNES_ATLAS.includes(f.colId) && !out.includes(f.colId)) out.push(f.colId);
+    }
   }
   return out;
 }
@@ -321,7 +356,10 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     // Ce que la scène retire de ce formulaire-là. Comme `expose`, c'est un
     // réglage de couche : le même formulaire peut être complet dans une scène
     // et resserré dans une autre.
-    f.masques = reglages.masques[f.id] || [];
+    // Sans décision, les colonnes d'Atlas sont masquées (`masquesParDefaut`).
+    f.masques = Object.prototype.hasOwnProperty.call(reglages.masques, f.id)
+      ? reglages.masques[f.id]
+      : masquesParDefaut(f.def);
   }
   return out;
 }

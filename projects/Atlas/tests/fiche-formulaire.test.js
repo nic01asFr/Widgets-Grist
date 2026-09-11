@@ -729,10 +729,16 @@ const DEF_CADRE = {
 test('un masque douteux ne retire rien', () => {
   // Un enregistrement abime doit oter des champs par accident encore moins
   // qu'il ne doit en offrir : c'est une donnee qui disparait de l'ecran.
-  for (const v of [null, undefined, 'nom', 42, ['nom'], { r: 'nom' }, { r: [] }, { r: [1, null] }]) {
+  for (const v of [null, undefined, 'nom', 42, ['nom'], { r: 'nom' }, { r: [1, null] }]) {
     assert.deepEqual(masquesValides(v), {}, JSON.stringify(v));
   }
   assert.deepEqual(masquesValides({ releve: ['nom', 3, ''] }), { releve: ['nom'] });
+});
+
+test('une liste vide est une decision : tout est reaffiche', () => {
+  // Sans elle, « j'ai reaffiche les colonnes d'Atlas » se confondait avec
+  // « rien decide », et le defaut les remasquait au rechargement.
+  assert.deepEqual(masquesValides({ r: [] }), { r: [] });
 });
 
 test('les masques se lisent avec la couche, par formulaire', () => {
@@ -871,4 +877,47 @@ test('gesteDEnregistrement numérote à partir de ce qui est enregistré', () =>
   assert.equal(gesteDEnregistrement(f, deja).titre, 'Saisie 2');
   // Sans liste, le comportement reste celui d'une table vierge.
   assert.equal(gesteDEnregistrement(f).titre, 'Saisie');
+});
+
+/* ---------- les colonnes d'Atlas masquees par defaut ---------- */
+
+import { COLONNES_ATLAS, masquesParDefaut } from '../lib/fiche-formulaire.js';
+
+const DEF_ECLAIRAGE = {
+  id: 'derive:Atlas_Eclairage', tableId: 'Atlas_Eclairage', title: 'Attributs',
+  sections: [{ id: 's', fields: [
+    { colId: 'highway', label: 'Highway', type: 'Text', widget: 'text' },
+    { colId: 'ref', label: 'Ref', type: 'Text', widget: 'text' },
+    { colId: 'model_id', label: 'Model id', type: 'Text', widget: 'text' },
+    { colId: 'scale', label: 'scale', type: 'Numeric', widget: 'number' },
+  ] }],
+};
+
+test('les colonnes qu’Atlas ecrit pour lui-meme sont connues', () => {
+  // Celles d'`entableLayer` : le modele et son placement.
+  for (const c of ['model_id', 'model_glb', 'scale', 'rotation_x', 'rotation_y', 'rotation_z', 'offset_x', 'offset_y', 'offset_z']) {
+    assert.ok(COLONNES_ATLAS.includes(c), c);
+  }
+  assert.ok(!COLONNES_ATLAS.includes('ref'));
+});
+
+test('sans decision, un formulaire masque les colonnes d’Atlas qu’il contient', () => {
+  assert.deepEqual(masquesParDefaut(DEF_ECLAIRAGE), ['model_id', 'scale']);
+  assert.deepEqual(masquesParDefaut({ sections: [{ fields: [{ colId: 'nom' }] }] }), []);
+  assert.deepEqual(masquesParDefaut(null), []);
+});
+
+test('le defaut vaut tant que la scene n’a rien decide, et cede a sa decision', () => {
+  const couche = { sourceTable: 'Atlas_Eclairage', geometryColumn: 'geometry_json' };
+  const entree = { formId: 'releve', tableCible: 'Atlas_Eclairage', def: { ...DEF_ECLAIRAGE, id: 'releve' } };
+  const [sansDecision] = formulairesPourCouche({ couche, entrees: [entree] });
+  assert.deepEqual(sansDecision.masques, ['model_id', 'scale']);
+
+  const reaffiche = { ...couche, formulaire: { masques: { releve: [] } } };
+  const [apres] = formulairesPourCouche({ couche: reaffiche, entrees: [entree] });
+  assert.deepEqual(apres.masques, [], 'une liste vide reaffiche tout');
+
+  const autre = { ...couche, formulaire: { masques: { releve: ['ref'] } } };
+  const [choix] = formulairesPourCouche({ couche: autre, entrees: [entree] });
+  assert.deepEqual(choix.masques, ['ref'], 'la decision remplace le defaut');
 });

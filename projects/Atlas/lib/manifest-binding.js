@@ -121,15 +121,16 @@ function formulairePrefsPayload(layer) {
     ? f.exposes.filter((x) => typeof x === 'string')
     : null;
   const herite = !exposes && f.expose === true;
-  // Ce que la scene retire de chaque formulaire. Une entree vide n'est pas
-  // ecrite : un objet `{}` dirait « j'ai decide de ne rien masquer » la ou il
-  // n'y a rien a dire.
+  // Ce que la scene retire de chaque formulaire. Une entree presente, meme
+  // vide, est une decision : `{ a: [] }` dit « tout est reaffiche dans a », et
+  // doit etre ecrit — sans lui, les colonnes d'Atlas se remasqueraient au
+  // rechargement (`masquesParDefaut`). Un objet sans entree n'est pas ecrit.
   const masques = {};
   if (f.masques && typeof f.masques === 'object' && !Array.isArray(f.masques)) {
     for (const [id, cols] of Object.entries(f.masques)) {
       if (typeof id !== 'string' || !Array.isArray(cols)) continue;
       const propres = cols.filter((c) => typeof c === 'string' && c);
-      if (propres.length) masques[id] = propres;
+      if (propres.length || !cols.length) masques[id] = propres;
     }
   }
   const aDesMasques = Object.keys(masques).length > 0;
@@ -187,7 +188,8 @@ export function applyLayerPrefsBinding(layer, prefs) {
         for (const [id, cols] of Object.entries(p.masques)) {
           if (typeof id !== 'string' || !Array.isArray(cols)) continue;
           const propres = cols.filter((c) => typeof c === 'string' && c);
-          if (propres.length) m[id] = propres;
+          // Vide : une decision (« tout reaffiche »). Illisible : ecarte.
+          if (propres.length || !cols.length) m[id] = propres;
         }
         if (Object.keys(m).length) f.masques = m;
       }
