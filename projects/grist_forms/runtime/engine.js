@@ -658,6 +658,28 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+    // Un changement de champ redessine le formulaire : conditions, cascades et
+    // filtres dynamiques en dependent. Mais pour un champ texte, `change` part
+    // quand on le quitte — c'est-a-dire a l'instant ou l'on appuie sur
+    // « Enregistrer ». Redessiner a ce moment remplacait le bouton entre
+    // l'appui et le relachement : le navigateur n'emettait pas de clic, et il
+    // fallait cliquer deux fois. Constate le 11/09/2026 dans la fiche d'Atlas,
+    // en Grist reel. Au clavier, Tab perdait le focus pour la meme raison.
+    //
+    // Le rendu attend donc que le pointeur soit relache, passe au tour suivant
+    // sinon, et rend le focus au champ qui l'avait.
+    var renduEnAttente = false;
+    var pointeurEnfonce = false;
+    if (typeof rootEl.addEventListener === 'function') {
+      rootEl.addEventListener('pointerdown', function () {
+        var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
+        if (!doc || typeof doc.addEventListener !== 'function') return;
+        pointeurEnfonce = true;
+        // Sur le document : le doigt peut se lever hors du formulaire.
+        doc.addEventListener('pointerup', relacherPointeur, { capture: true, once: true });
+        doc.addEventListener('pointercancel', relacherPointeur, { capture: true, once: true });
+      }, true);
+    }
     var context = (SessionContext.emptyContext && SessionContext.emptyContext()) || {
       inGristWidget: false, canWriteNative: false, isLoggedIn: false, userEmail: '', groups: []
     };
@@ -710,6 +732,33 @@
           }
         });
       });
+    }
+
+    function planifierRendu() {
+      renduEnAttente = true;
+      if (!pointeurEnfonce) setTimeout(rendreEnAttente, 0);
+    }
+
+    function relacherPointeur() {
+      pointeurEnfonce = false;
+      // Apres le tour courant : le clic suit le relachement dans la meme tache.
+      if (renduEnAttente) setTimeout(rendreEnAttente, 0);
+    }
+
+    function rendreEnAttente() {
+      if (!renduEnAttente) return;
+      renduEnAttente = false;
+      // Le clic a lance l'envoi : son propre rendu fait foi.
+      if (submitting) return;
+      var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
+      var actif = doc && doc.activeElement;
+      var idActif = actif && typeof rootEl.contains === 'function' && rootEl.contains(actif)
+        ? actif.id : '';
+      render();
+      if (idActif && doc && typeof doc.getElementById === 'function') {
+        var cible = doc.getElementById(idActif);
+        if (cible && typeof cible.focus === 'function') cible.focus();
+      }
     }
 
     function render() {
@@ -777,7 +826,7 @@
           inputs[i].addEventListener('change', function () {
             readSectionValues(rootEl, fields, values);
             pruneInvalidFilteredValues();
-            render();
+            planifierRendu();
           });
         }
       }

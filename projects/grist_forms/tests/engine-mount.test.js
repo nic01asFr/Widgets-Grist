@@ -3,8 +3,24 @@ const assert = require('node:assert/strict');
 const Engine = require('../runtime/engine.js');
 const { createRoot } = require('./helpers/fake-dom.js');
 
+// Un `change` redessine au tour suivant (setTimeout) : on laisse passer les
+// minuteries avant de lire le DOM.
 function flush() {
-  return new Promise((resolve) => setImmediate(resolve));
+  return new Promise((resolve) => setTimeout(() => setImmediate(resolve), 1));
+}
+
+// Document minimal : recoit les ecouteurs de relachement du pointeur.
+function fakeDocument() {
+  const listeners = {};
+  return {
+    listeners,
+    addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
+    release(type) {
+      const fns = listeners[type] || [];
+      listeners[type] = [];
+      fns.forEach((fn) => fn({ type }));
+    },
+  };
 }
 
 describe('Engine.renderFieldHtml — échappement XSS', () => {
@@ -380,5 +396,55 @@ describe('Engine.mount — navigation, validation, submit', () => {
     const opts = [...autre.querySelectorAll('option')].map(o => o.getAttribute('value')).filter(v => v);
     assert.deepEqual(opts.sort(), ['1', '3']);
     assert.ok(!opts.includes('2'), 'Bob (Public) exclu');
+  });
+});
+
+describe('Engine.mount — le clic sur « Enregistrer » ne se perd pas', () => {
+  const formDef = {
+    tableId: 'Arbres', successMessage: 'OK',
+    sections: [{
+      id: 's1', label: 'Arbre', gate: null,
+      fields: [{ colId: 'Ref', label: 'Ref', type: 'Text', widget: 'text', required: false }]
+    }],
+    choices: {}
+  };
+
+  it('pointeur enfoncé : le change ne remplace pas le bouton sous le pointeur', async () => {
+    // Le geste reel : on tape dans un champ, on appuie sur « Enregistrer ».
+    // L'appui fait quitter le champ, donc `change` ; redessiner a cet instant
+    // remplacait le bouton, et le relachement tombait sur un autre element.
+    const root = createRoot();
+    const doc = fakeDocument();
+    root.ownerDocument = doc;
+    Engine.mount(root, formDef, { submit: () => Promise.resolve({ ok: true }) });
+    await flush();
+
+    const bouton = root.querySelector('[data-action="submit"]');
+    const champ = root.querySelector('[name="Ref"]');
+    root.dispatchEvent('pointerdown');
+    champ.value = 'ESSAI-1';
+    champ.dispatchEvent('change');
+    await flush();
+    assert.equal(root.querySelector('[data-action="submit"]'), bouton,
+      'le bouton est toujours celui qu’on presse');
+
+    doc.release('pointerup');
+    await flush();
+    assert.notEqual(root.querySelector('[data-action="submit"]'), bouton,
+      'le rendu a lieu une fois le pointeur relache');
+    assert.ok(root.innerHTML.includes('value="ESSAI-1"'), 'la saisie survit au rendu');
+  });
+
+  it('sans pointeur enfoncé, le change redessine au tour suivant', async () => {
+    const root = createRoot();
+    Engine.mount(root, formDef, { submit: () => Promise.resolve({ ok: true }) });
+    await flush();
+    const bouton = root.querySelector('[data-action="submit"]');
+    const champ = root.querySelector('[name="Ref"]');
+    champ.value = 'ESSAI-2';
+    champ.dispatchEvent('change');
+    assert.equal(root.querySelector('[data-action="submit"]'), bouton, 'pas pendant l’evenement');
+    await flush();
+    assert.notEqual(root.querySelector('[data-action="submit"]'), bouton, 'mais juste apres');
   });
 });
