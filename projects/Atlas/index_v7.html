@@ -316,6 +316,12 @@
             scrollbar-width: none;
         }
         .dock-fabs::-webkit-scrollbar { display: none; }
+        /* Sans pastille, pas de dock — en édition comme en lecture. Au premier
+           chargement il s'ouvrait sur son panneau, vide faute de pastille :
+           un rectangle portant le seul bouton « Replier », qui disparaissait au
+           clic. La règle de lecture plus bas (`!important`) disait déjà la même
+           chose pour le lecteur. */
+        #map-controls-dock:not(.has-pills) { display: none; }
         .map-controls-dock.collapsed .dock-fabs { display: flex; }
         .map-controls-dock:not(.collapsed) .dock-fabs { display: none; }
         .map-controls-dock.collapsed .dock-panel { display: none; }

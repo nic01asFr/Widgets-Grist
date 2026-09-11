@@ -3623,6 +3623,9 @@ function refreshControlsDock() {
     const hasPills = pills.length > 0;
     dock.classList.toggle('has-pills', hasPills);
     if (!hasPills) {
+        // Replié, pour qu'une première pastille apparaisse en pastille et non
+        // sur un panneau ouvert qu'aucune n'a demandé.
+        dock.classList.add('collapsed');
         fabsHost.innerHTML = '';
         if (slotHost) slotHost.innerHTML = '';
         _openDockPill = null;
