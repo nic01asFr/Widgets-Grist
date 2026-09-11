@@ -110,6 +110,7 @@ import {
   pastilleRecitRequise,
   probeCanWriteDoc,
 } from './lib/view-mode.js?v=20260911a';
+import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import {
   etageCoteACote,
   margeBasseRecit,
@@ -1736,6 +1737,7 @@ function initMap() {
 
     map.on('move', updateHUD);
     map.on('moveend', majBandeauInfos);
+    map.on('moveend', majEmpriseOSM);
     map.on('pitchend', () => {
         if (_openDockPill === 'view3d') renderDockSlotHost();
     });
@@ -5708,19 +5710,34 @@ function clearFeatureOverrides(layer, idx) {
 // ============================================================
 // IMPORT — OSM (Overpass) & fichier
 // ============================================================
-function openOSM() {
+async function openOSM() {
     $('module-title').textContent = 'Import OSM';
-    const b = map.getBounds();
     $('module-body').innerHTML = `
-        <div class="hint">Zone importée = emprise visible. Zoomez pour réduire.</div>
-        <div class="range-info" style="margin-bottom:12px">${b.getSouth().toFixed(4)}, ${b.getWest().toFixed(4)} → ${b.getNorth().toFixed(4)}, ${b.getEast().toFixed(4)}</div>
+        <div class="hint">Zone importée = emprise visible, vue à plat. Zoomez pour réduire.</div>
+        <div class="range-info" id="osm-emprise" style="margin-bottom:12px">…</div>
         <div class="section"><div class="section-title">Objets prédéfinis</div>
             <div class="model-grid">${Object.entries(OSM_PRESETS).map(([k, p]) => `<div class="model-card" onclick="A.runOSM('${k}')"><div class="mi">${p.icon}</div><div class="mn">${p.name}</div></div>`).join('')}</div>
         </div>
         <div class="section"><button class="btn btn-soft btn-full" onclick="A.openModule('couches')">← Retour</button></div>`;
+    majEmpriseOSM();
+    // Inclinée, la vue court jusqu'à l'horizon, et l'emprise importée avec
+    // elle : on importe ce qui est à l'écran, donc à plat (`lib/vue-import.js`).
+    if (await mettreAPlat(map)) majEmpriseOSM();
 }
+
+/** L'emprise affichée dans le panneau d'import suit la carte. */
+function majEmpriseOSM() {
+    const el = $('osm-emprise');
+    if (!el || !map) return;
+    const b = map.getBounds();
+    el.textContent = `${b.getSouth().toFixed(4)}, ${b.getWest().toFixed(4)} → ${b.getNorth().toFixed(4)}, ${b.getEast().toFixed(4)}`;
+}
+
 async function runOSM(key) {
     const preset = OSM_PRESETS[key]; if (!preset) return;
+    // Inclinée depuis l'ouverture du panneau ? On remet à plat avant de lire
+    // l'emprise.
+    await mettreAPlat(map);
     showLoading('Interrogation OpenStreetMap…');
     try {
         const b = map.getBounds();
@@ -7137,12 +7154,15 @@ const A = {
             return;
         }
         const masques = { ...reglagesFormulaire(couche).masques };
-        const actuels = new Set(masques[formId] || []);
+        // On part de ce qui est MASQUE A L'ECRAN — le defaut compris : partir de
+        // l'enregistre seul aurait reaffiche d'un coup toutes les colonnes
+        // d'Atlas au premier clic sur un autre champ.
+        const actuels = new Set(vise.masques || []);
         const retire = !actuels.has(colId);
         if (retire) actuels.add(colId); else actuels.delete(colId);
-        // Une entree vide n'est pas conservee : elle dirait « j'ai decide de ne
-        // rien masquer » la ou il n'y a rien a dire.
-        if (actuels.size) masques[formId] = [...actuels]; else delete masques[formId];
+        // L'entree est gardee meme vide : c'est une decision (« tout
+        // reaffiche »), et sans elle le defaut reviendrait au rechargement.
+        masques[formId] = [...actuels];
         couche.formulaire = { ...(couche.formulaire || {}), masques };
 
         renderFormulaires();
