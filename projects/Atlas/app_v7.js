@@ -107,7 +107,12 @@ import {
   parseNavbarParam,
   pastilleRecitRequise,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=20260818a';
+} from './lib/view-mode.js?v=20260911a';
+import {
+  etageCoteACote,
+  margeBasseRecit,
+  pastilleLocalisationRequise,
+} from './lib/habillage-carte.js?v=20260911a';
 import {
   createDefaultViewerControls,
   getViewerControl,
@@ -231,6 +236,10 @@ let _linkChoices = [];
 let _storyIdx = 0;
 let _storyPresenting = false;
 let _openDockPill = null;
+// Localisation : le contrôle MapLibre reste posé (point bleu, suivi), mais son
+// bouton est masqué — la pastille du dock le déclenche, sur mobile seulement.
+let _geoloc = null;
+let _suiviPosition = false;
 let _sunArcDragging = false;
 let _preStorySnapshot = null;
 let _preStoryOrder = null;
@@ -1769,11 +1778,25 @@ function initMap() {
     });
 
     try {
-        map.addControl(new maplibregl.GeolocateControl({
+        _geoloc = new maplibregl.GeolocateControl({
             positionOptions: { enableHighAccuracy: true },
             trackUserLocation: true,
             showAccuracyCircle: true,
-        }), 'bottom-right');
+        });
+        map.addControl(_geoloc, 'bottom-right');
+        suivreBandeAttribution();
+        // La pastille s'allume tant que la carte suit la position — l'état que
+        // le bouton d'origine signalait en bleu. Déplacer la carte à la main
+        // rompt le suivi : MapLibre émet alors `trackuserlocationend`.
+        const suivre = (actif) => { _suiviPosition = actif; refreshControlsDock(); };
+        _geoloc.on('trackuserlocationstart', () => suivre(true));
+        _geoloc.on('trackuserlocationend', () => suivre(false));
+        _geoloc.on('error', (err) => {
+            suivre(false);
+            showToast(err?.code === 1
+                ? 'Localisation refusée par le navigateur'
+                : 'Position introuvable pour le moment', 'warning');
+        });
     } catch (e) { console.warn('[Atlas] geolocate', e.message); }
 
     setupInteraction();
@@ -2998,11 +3021,15 @@ function applyStoryState(s) {
             map.triggerRepaint?.();
         };
         map.once('moveend', reapply);
+        // L'étape a été composée sur la carte entière ; la bulle en couvre le
+        // bas. La marge fait viser ce qui reste visible — nulle sans bulle, ce
+        // qui efface aussi celle d'une étape précédente.
         map.flyTo({
             center: s.camera.center,
             zoom: s.camera.zoom,
             pitch: s.camera.pitch,
             bearing: s.camera.bearing,
+            padding: { top: 0, left: 0, right: 0, bottom: mesurerEtageRecit() },
             duration: 1500,
         });
     };
@@ -3437,11 +3464,13 @@ function listDockPills() {
     // vivait. La pastille le remplace, avec la meme figure et le meme geste.
     // Elle vient EN TETE : c'est la seule qui lance quelque chose au lieu de
     // regler, et le lecteur doit la trouver sans chercher.
+    const mobile = document.body.classList.contains('mobile-layout');
     if (pastilleRecitRequise({
         barreAbsente: CONFIG.sansNavbar,
         lecture: CONFIG.viewMode,
         nbEtapes: STATE.story?.length || 0,
         enPresentation: _storyPresenting,
+        mobile,
     })) {
         pills.unshift({
             id: 'recit',
@@ -3469,6 +3498,22 @@ function listDockPills() {
             label: (c.label || c.field).trim() || c.field,
             layer,
             control: c,
+        });
+    }
+    // La localisation ferme la rangée, contre la boussole : les deux disent où
+    // l'on est et vers où l'on regarde. Les contrôles de la carte viennent
+    // ensuite, en s'éloignant de la boussole.
+    if (pastilleLocalisationRequise({
+        mobile,
+        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation,
+    })) {
+        pills.push({
+            id: 'localiser',
+            kind: 'action',
+            icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+            label: 'Me localiser',
+            active: _suiviPosition,
+            action: () => _geoloc?.trigger(),
         });
     }
     return pills;
@@ -3608,7 +3653,7 @@ function refreshControlsDock() {
     fabsHost.innerHTML = pills.map((p) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
-        const isOpen = _openDockPill === p.id && !dock.classList.contains('collapsed');
+        const isOpen = (_openDockPill === p.id && !dock.classList.contains('collapsed')) || !!p.active;
         const ic = p.id === 'sun'
             ? '<span class="sun-dot" aria-hidden="true"></span>'
             : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
@@ -4167,6 +4212,71 @@ function renderStoryPresentation() {
         <button class="btn btn-soft" onclick="A.storyStep(1)" ${_storyIdx === n - 1 ? 'disabled' : ''}>▶</button>
         <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter">✕</button>
     </div>${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${s.text}</div>` : ''}`;
+    mesurerEtageRecit();
+}
+
+/**
+ * Hauteur que la bulle occupe en bas de la carte, en pixels.
+ *
+ * Une seule mesure sert deux fois : la légende, quand elle doit s'empiler
+ * au-dessus de la bulle (`--etage-recit`), et la caméra, qui cadre l'étape dans
+ * ce qui reste visible. L'ancienne règle supposait 196 px ; une étape au texte
+ * long dépassait, une étape sans texte laissait un trou.
+ */
+function mesurerEtageRecit() {
+    const frame = $('map-frame');
+    const ov = document.getElementById('story-present');
+    if (!frame) return 0;
+    if (!ov) { frame.style.removeProperty('--etage-recit'); return 0; }
+    const rc = frame.getBoundingClientRect();
+    const rb = ov.getBoundingClientRect();
+    const marge = margeBasseRecit({ basCarte: rc.bottom, hautBulle: rb.top, hauteurCarte: rc.height });
+    frame.style.setProperty('--etage-recit', marge + 'px');
+    return marge;
+}
+
+/**
+ * Légende et bulle côte à côte, ou empilées : on mesure la carte, pas la
+ * fenêtre — en édition, rail et panneaux mangent la largeur.
+ */
+function majEtageCarte() {
+    const frame = $('map-frame');
+    if (!frame) return;
+    const cote = etageCoteACote({
+        largeurCarte: frame.clientWidth,
+        mobile: document.body.classList.contains('mobile-layout'),
+    });
+    document.body.classList.toggle('etage-cote-a-cote', cote);
+    if (_storyPresenting) mesurerEtageRecit();
+}
+
+/**
+ * L'étage du bas se pose sur l'attribution : sa hauteur change quand elle se
+ * replie en « i », se déplie, ou passe sur deux lignes (fond et relief qui
+ * ajoutent chacun leur source).
+ */
+function suivreBandeAttribution() {
+    const frame = $('map-frame');
+    const attrib = map?.getContainer()?.querySelector('.maplibregl-ctrl-attrib');
+    if (!frame || !attrib || typeof ResizeObserver === 'undefined') return;
+    new ResizeObserver(() => {
+        const h = Math.ceil(attrib.getBoundingClientRect().height);
+        if (h > 0) frame.style.setProperty('--bande-attrib', h + 'px');
+        if (_storyPresenting) mesurerEtageRecit();
+    }).observe(attrib);
+}
+
+/**
+ * Rend la caméra à la carte entière en sortie de récit, sans à-coup : la marge
+ * disparaît, mais ce qui était au centre de l'écran y reste.
+ */
+function libererMargeRecit() {
+    if (!map || typeof map.getPadding !== 'function') return;
+    const p = map.getPadding();
+    if (!(p.top || p.bottom || p.left || p.right)) return;
+    const c = map.getContainer();
+    const centre = map.unproject([c.clientWidth / 2, c.clientHeight / 2]);
+    map.jumpTo({ center: centre, padding: { top: 0, bottom: 0, left: 0, right: 0 } });
 }
 
 function enterStoryPresentation(i) {
@@ -4174,13 +4284,17 @@ function enterStoryPresentation(i) {
     capturePreStorySnapshot();
     _storyPresenting = true;
     document.body.classList.add('story-presenting');
+    // Sur téléphone, la légende se pose sur la bulle : repliée, elle n'y prend
+    // qu'une ligne ; le lecteur la rouvre d'un toucher.
+    if (document.body.classList.contains('mobile-layout')) $('legend')?.classList.add('collapsed');
     refreshControlsDock();
     _storyIdx = Math.max(0, Math.min(i || 0, STATE.story.length - 1));
     let ov = document.getElementById('story-present');
     if (!ov) {
         ov = document.createElement('div');
         ov.id = 'story-present';
-        ov.style.cssText = 'position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:1000;background:rgba(244,239,227,0.96);color:#1F1B14;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.25);max-width:520px;width:88%;padding:12px 16px;font-family:\'Hanken Grotesk\',sans-serif';
+        // Sa place dépend de l'étage du bas (voir `#story-present` dans la
+        // feuille) : elle ne se décide plus ici en style inline.
         (document.getElementById('map-frame') || document.body).appendChild(ov);
     }
     renderStoryPresentation();
@@ -7397,6 +7511,8 @@ const A = {
         document.body.classList.remove('story-presenting');
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
+        mesurerEtageRecit();
+        libererMargeRecit();
         // Rend la scène telle qu'elle était avant la présentation : visibilité,
         // filtres, symbolisation et ambiance. Sans cela on sort du récit sur
         // l'état de la dernière étape.
@@ -8209,7 +8325,21 @@ function wireEvents() {
         if ((STATE.story?.length || 0) > 0) A.storyPlay(0);
     });
     if (typeof window !== 'undefined' && window.matchMedia) {
-        window.matchMedia('(max-width: 720px)').addEventListener('change', () => updateMobileLayout());
+        window.matchMedia('(max-width: 720px)').addEventListener('change', () => {
+            updateMobileLayout();
+            // La localisation n'a de pastille que sur mobile, et l'étage du bas
+            // n'existe qu'au-dessus : les deux suivent le passage d'un mode à
+            // l'autre.
+            refreshControlsDock();
+            majEtageCarte();
+        });
+    }
+    // Les panneaux d'édition changent la largeur de la carte sans toucher à la
+    // fenêtre : c'est la carte qu'on observe.
+    if (typeof ResizeObserver !== 'undefined' && $('map-frame')) {
+        new ResizeObserver(() => majEtageCarte()).observe($('map-frame'));
+    } else {
+        majEtageCarte();
     }
     document.querySelectorAll('.rail-item[data-module]').forEach((b) => {
         b.addEventListener('click', () => {

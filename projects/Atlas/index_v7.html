@@ -881,21 +881,70 @@
            filtres sans que rien ne le signale. C'est désormais écrit. */
         body.story-presenting #map-controls-dock:not(.has-pills) { display: none !important; }
         body.story-presenting #map-controls-dock.has-pills { display: flex !important; }
-        /* Récit : la bulle occupe le bas de la carte, la légende le coin bas
-           gauche. Les deux tiennent côte à côte sur un large écran ; sous
-           ~1080 px la bulle recouvre la légende — mesuré à 824 px de large :
-           49 % de sa hauteur, c'est-à-dire les classes que l'étape est
-           justement en train de montrer. Cette largeur n'a rien d'un cas
-           limite : c'est celle d'un widget Grist dans une colonne.
+        /* Étage du bas de la carte, au-dessus de 720 px.
 
-           On remonte la légende plutôt que de la replier — elle nomme ce qu'on
-           regarde — et on borne sa hauteur pour qu'elle ne sorte pas par le
-           haut sur une fenêtre courte. Sous 720 px, le mode mobile a ses
-           propres ancrages : la règle s'arrête avant, pour ne pas les défaire. */
-        @media (min-width: 721px) and (max-width: 1080px) {
-            body.story-presenting .legend { bottom: 196px; }
-            body.story-presenting .legend-body { max-height: min(220px, 32vh); }
+           Quatre éléments se disputaient le bas, chacun ancré pour son compte.
+           Mesuré dans un widget Grist de 860 px : la bulle du récit, centrée,
+           mordait sur la colonne de la légende ; la légende, remontée de 196 px
+           pour lui céder la place, flottait à mi-carte sur les données ; la
+           bulle recouvrait l'attribution OpenStreetMap, que la licence impose
+           de laisser lisible.
+
+           Le bas devient un étage partagé. Tout en bas, l'attribution sur
+           toute la largeur ; au-dessus, la légende dans sa colonne à gauche et
+           la bulle à sa droite. La localisation rejoint les pastilles du haut.
+
+           Le côte à côte se décide sur la largeur de la CARTE (classe
+           `etage-cote-a-cote`, seuil calculé par `lib/habillage-carte.js`, dont
+           les mesures sont celles-ci). En deçà — rail et panneaux ouverts en
+           édition — la légende s'empile au-dessus de la bulle, à la hauteur
+           mesurée de celle-ci (`--etage-recit`). Sous 720 px, le mode mobile
+           garde ses propres ancrages : aucune règle ici ne s'y applique. */
+        .map-frame {
+            --etage-marge: 24px;
+            --etage-legende: 220px;
+            --etage-gouttiere: 16px;
+            --bande-attrib: 24px;
+            --etage-bas: calc(var(--bande-attrib) + 10px);
         }
+        #story-present {
+            position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+            z-index: 1000; width: 88%; max-width: 520px; padding: 12px 16px;
+            background: rgba(244,239,227,0.96); color: #1F1B14; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            font-family: 'Hanken Grotesk', sans-serif;
+        }
+        body:not(.mobile-layout) .legend {
+            bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
+        }
+        body:not(.mobile-layout) #story-present { bottom: var(--etage-bas); }
+        /* Côte à côte : la bulle se centre dans ce que la légende laisse libre.
+           Avec `left`, `right` et des marges automatiques, `max-width` la
+           ramène à 520 px et le reste se répartit de part et d'autre. */
+        body.etage-cote-a-cote #story-present {
+            left: calc(var(--etage-marge) + var(--etage-legende) + var(--etage-gouttiere));
+            right: var(--etage-marge);
+            width: auto; margin-inline: auto; transform: none;
+        }
+        /* Empilé : on remonte la légende plutôt que de la replier — elle nomme
+           ce qu'on regarde — et on borne sa hauteur pour qu'elle ne sorte pas
+           par le haut sur une fenêtre courte. */
+        body.story-presenting:not(.mobile-layout):not(.etage-cote-a-cote) .legend {
+            bottom: var(--etage-recit, 196px);
+        }
+        body.story-presenting:not(.mobile-layout):not(.etage-cote-a-cote) .legend-body {
+            max-height: min(220px, 32vh);
+        }
+        /* L'attribution : l'étage le plus bas, sous tout le reste. Elle garde
+           sa forme MapLibre — dépliée à l'ouverture, repliée en « i » au premier
+           déplacement — mais se pose au ras du bord, et l'étage au-dessus se
+           cale sur sa hauteur réelle (`--bande-attrib`, mesurée : une longue
+           liste de sources passe sur deux lignes). */
+        body:not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0; }
+        /* Le bouton de localisation de MapLibre : remplacé par la pastille du
+           dock, sur mobile. Le contrôle reste posé — il porte le point bleu et
+           le suivi de position. */
+        #map .maplibregl-ctrl-group:has(> .maplibregl-ctrl-geolocate) { display: none; }
         body.view-mode .selection-bar,
         body.view-mode .selection-bar.open { display: none !important; }
         /*
@@ -1128,18 +1177,33 @@
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
             body.view-mode.mobile-layout .legend { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             /* Récit sur petit écran : la bulle occupe le bas, la légende aussi, et
-               il n'y a pas la place pour les deux. Au-delà de 720 px on remonte la
-               légende au-dessus de la bulle ; ici la remonter la planterait au
-               milieu de la carte. On la replie donc — son en-tête reste tactile,
-               qui veut la liste des classes la rouvre d'un doigt. Sans cette
-               règle, elle était recouverte à plus des trois quarts : on voyait
-               « Légende » et le début de la première ligne. */
-            body.story-presenting.mobile-layout .legend-body { display: none; }
+               il n'y a pas la place pour les deux côte à côte. La légende part
+               repliée (`enterStoryPresentation`) et se pose sur le haut de la
+               bulle, alignée sur son bord gauche — à la hauteur mesurée de
+               celle-ci (`--etage-recit`). Son en-tête reste tactile : ouverte,
+               elle se déplie vers le haut, bornée pour ne pas couvrir la carte.
+
+               Elle était auparavant collée sous la barre, en haut à gauche, loin
+               de ce qu'elle décrit ; et une règle masquait son contenu quoi qu'il
+               arrive, si bien qu'un toucher sur « Légende » ne rouvrait rien. */
             body.story-presenting.mobile-layout .legend {
-                bottom: auto; top: calc(var(--topbar-h, 64px) + 12px); left: 12px;
+                top: auto; bottom: var(--etage-recit, 240px); left: 6%;
             }
+            body.story-presenting.mobile-layout .legend-body { max-height: min(220px, 30vh); }
             body.view-mode.mobile-layout .toasts { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             body.view-mode.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+            /* La bulle du récit se pose au-dessus de l'attribution, comme au
+               bureau : ancrée à 24 px, elle recouvrait la mention dépliée à
+               l'ouverture. Les deux hauteurs d'attribution sont celles des
+               deux règles précédentes (barre d'onglets en édition, rien en
+               lecture), plus la marge de 10 px que MapLibre laisse sous elle
+               — gardée ici, d'autres ancrages mobiles s'y alignent. */
+            body.mobile-layout #story-present {
+                bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px);
+            }
+            body.view-mode.mobile-layout #story-present {
+                bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px);
+            }
             body.view-mode.mobile-layout #viewer-controls {
                 left: 8px; right: 8px; top: auto;
                 bottom: calc(64px + env(safe-area-inset-bottom, 0px));

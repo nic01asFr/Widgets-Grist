@@ -275,10 +275,11 @@ export function parseNavbarParam(search = '') {
  * La pastille ne paraît que dans ce cas précis. Avec la barre, son bouton
  * existe déjà, et deux boutons pour le même geste en font un de trop ; en
  * édition, le module Récit du rail en tient lieu ; pendant la lecture, la bulle
- * porte déjà la navigation.
+ * porte déjà la navigation ; sur mobile, le bouton flottant « Récit » vit dans
+ * la carte et survit donc au retrait de la barre.
  *
- * @param {{barreAbsente?: boolean, lecture?: boolean, nbEtapes?: number, enPresentation?: boolean}} etat
+ * @param {{barreAbsente?: boolean, lecture?: boolean, nbEtapes?: number, enPresentation?: boolean, mobile?: boolean}} etat
  */
-export function pastilleRecitRequise({ barreAbsente, lecture, nbEtapes, enPresentation } = {}) {
-  return !!barreAbsente && !!lecture && Number(nbEtapes) > 0 && !enPresentation;
+export function pastilleRecitRequise({ barreAbsente, lecture, nbEtapes, enPresentation, mobile } = {}) {
+  return !!barreAbsente && !!lecture && Number(nbEtapes) > 0 && !enPresentation && !mobile;
 }

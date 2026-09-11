@@ -189,6 +189,11 @@ describe('pastilleRecitRequise — le récit garde une entrée sans barre', () =
     assert.equal(pastilleRecitRequise({ ...base, lecture: false }), false);
   });
 
+  it('ne double pas le bouton flottant, sur mobile', () => {
+    // `#viewer-story-fab` vit dans la carte : il reste quand la barre part.
+    assert.equal(pastilleRecitRequise({ ...base, mobile: true }), false);
+  });
+
   it('ne promet rien quand il n’y a rien à lire', () => {
     assert.equal(pastilleRecitRequise({ ...base, nbEtapes: 0 }), false);
     assert.equal(pastilleRecitRequise({ ...base, nbEtapes: undefined }), false);
