@@ -15,6 +15,10 @@
       "texte": "toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs."
     },
     {
+      "titre": "L’objet cliqué est la ligne",
+      "texte": "sa fiche s’ouvre avec les champs de la table ; ce qu’on y écrit est dans le document. La scène peut la proposer hors édition, pour relever sur place."
+    },
+    {
       "titre": "Symbolisation par la donnée",
       "texte": "couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène."
     },
@@ -40,6 +44,10 @@
     }
   },
   "journal": [
+    {
+      "version": "v1.7.0",
+      "texte": "La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre."
+    },
     {
       "version": "vitrine",
       "texte": "Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (`?scene=`). L’aperçu restera enrichi d’exemples chargeables."
@@ -85,7 +93,7 @@
       },
       {
         "titre": "J’édite",
-        "texte": "Attributs, géométries, volumes 3D. Ce que je modifie sur la carte est écrit dans la table : c’est la même donnée, pas une copie."
+        "texte": "Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. Ce que j’y saisis est écrit dans le document — sur ordinateur, ou sur le terrain hors édition si la scène le propose."
       },
       {
         "titre": "Je compose mon récit",
@@ -113,8 +121,8 @@
             "legende": "La scène vit dans le document : à côté des tables (couches, récit, manifeste), pas dans un export figé."
           },
           {
-            "image": "apercu.jpg",
-            "legende": "Les outils d’édition : lieu, couches, soleil, vues, contrôles, récit — et la carte en volume."
+            "image": "fiche-objet.jpg",
+            "legende": "L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute."
           }
         ]
       },
@@ -125,8 +133,8 @@
         "format": "large",
         "images": [
           {
-            "image": "apercu.jpg",
-            "legende": "Cible de diffusion : la carte (et le récit) plein cadre. Une capture « lecture seule » sans barre de tables remplacera bientôt cette illustration."
+            "image": "lecture-recit.jpg",
+            "legende": "En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien."
           }
         ]
       },
@@ -143,7 +151,7 @@
       }
     ],
     "apercu": {
-      "mention": "L’aperçu est Atlas seul (`vitrine=1`), sans document. La démo à venir sera un pack métier dédié (ou une scène publique hors Grist) — pas un export d’un document de travail existant."
+      "mention": "L’aperçu est Atlas seul (`vitrine=1`), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist."
     },
     "demonstration": {
       "titre": "La démonstration : une scène réelle",
@@ -168,7 +176,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.2.0 en ligne ; le runtime accepte déjà les scènes externes et les couches distantes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.7.0 en ligne ; le runtime accepte les scènes externes et les couches distantes, et la fiche d’un objet est son formulaire. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

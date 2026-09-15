@@ -31,6 +31,19 @@
     }
     </script>
 
+    <!-- Moteur de formulaire de grist_forms : la fiche d'entité, quand la table
+         est décrite par un FormDef. Voir docs/CADRAGE-FICHE-ENTITE.md.
+         `dsfr-like.css` n'est PAS chargé — `lib/formulaire-atlas.css` habille
+         les mêmes classes avec les jetons d'Atlas, et reste confiné au panneau.
+         Chemins relatifs au dépôt : valables sur le serveur de dev, PAS dans
+         published/atlas/, où ces fichiers devront être embarqués. -->
+    <script src="./vendor/grist_forms/shared/types.js"></script>
+    <script src="./vendor/grist_forms/shared/attachments.js"></script>
+    <script src="./vendor/grist_forms/shared/session-context.js"></script>
+    <script src="./vendor/grist_forms/shared/formulaires-table.js"></script>
+    <script src="./vendor/grist_forms/shared/formdef-from-table.js"></script>
+    <script src="./vendor/grist_forms/runtime/engine.js"></script>
+
     <style>
         /* ============================================
            ATLAS — TOKENS (papier, serif, terre cuite)
@@ -46,6 +59,26 @@
             --hairline: #E2DBC8;
             --hairline-strong: #C9C0A8;
             --accent: #C44536;
+            /*
+             * Atlas est une interface claire, et ne le disait a personne. Sans
+             * ce jeton, le navigateur peint TOUS les controles natifs — cases,
+             * boutons radio, selecteur de date, ascenseurs — dans la palette du
+             * theme ambiant : les cases du formulaire d'entite apparaissaient en
+             * disques noirs. Un champ texte masquait le probleme, puisqu'il est
+             * entierement repeint par la feuille.
+             *
+             * > **Et il faut `!important`.** `grist-plugin-api.js` pousse le
+             * > theme du document DANS le widget, en style EN LIGNE sur `<html>`
+             * > (`style="color-scheme: dark"`, avec `data-grist-theme` et
+             * > `data-grist-appearance`). Un style en ligne bat toute feuille :
+             * > la declaration simple ne servait a rien, et c'est mesure — la
+             * > valeur calculee valait `dark` dans Grist et `light` hors de lui.
+             *
+             * Atlas n'a qu'une palette, claire. Suivre le theme sombre de Grist
+             * demanderait de la doubler entierement ; tant que ce n'est pas fait,
+             * annoncer clair est la seule chose vraie.
+             */
+            color-scheme: light !important;
             --accent-soft: #F5E9DC;
             --accent2: #2E4E54;
             --sun: #E8A234;
@@ -89,6 +122,12 @@
             padding: 0 20px; gap: 20px;
             flex-shrink: 0; z-index: 30;
         }
+        /*
+         * `?navbar=false` — pour une integration en cadre, ou la page hote porte
+         * deja son titre et sa navigation. La classe est posee par `app_v7.js`
+         * avec les autres classes d'affichage ; ici on ne fait qu'appliquer.
+         */
+        body.sans-navbar .app-header { display: none; }
         .brand { display: flex; align-items: center; gap: 10px; }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
@@ -221,11 +260,32 @@
         .insp-eyebrow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .insp-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .insp-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
-        .insp-tabs { display: flex; border-bottom: 1px solid var(--hairline); padding: 0 20px; flex-shrink: 0; }
+        /*
+         * La barre defile, et il a fallu la mesurer pour le savoir.
+         *
+         * Elle portait deux onglets fixes — Attributs, Placement 3D — et rien
+         * n'imposait de largeur. Depuis qu'un onglet nait de chaque formulaire
+         * de la couche, il y en a autant que de tables qui la referencent : dans
+         * les 320 px utiles de l'inspecteur, trois libelles passent, le
+         * quatrieme se coupe en deux lignes. `nowrap` sur l'onglet, le
+         * defilement sur la barre.
+         */
+        /*
+         * `overflow-y: hidden` n'est pas decoratif. Declarer le seul `overflow-x`
+         * fait passer l'autre axe a `auto` — c'est la regle CSS —, et les onglets
+         * debordent de 1 px a cause de leur `margin-bottom: -1px`. Une barre de
+         * defilement VERTICALE apparaissait donc sur la barre d'onglets, volant
+         * 10 px de largeur (mesure dans le widget) pour un pixel de trop.
+         */
+        .insp-tabs {
+            display: flex; border-bottom: 1px solid var(--hairline); padding: 0 20px; flex-shrink: 0;
+            overflow-x: auto; overflow-y: hidden; scrollbar-width: thin;
+        }
         .insp-tab {
             background: transparent; border: none; cursor: pointer; padding: 12px 0; margin-right: 22px;
             font-size: 12.5px; font-weight: 500; color: var(--muted);
             border-bottom: 2px solid transparent; margin-bottom: -1px;
+            white-space: nowrap; flex: 0 0 auto;
         }
         .insp-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
         .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
@@ -256,6 +316,12 @@
             scrollbar-width: none;
         }
         .dock-fabs::-webkit-scrollbar { display: none; }
+        /* Sans pastille, pas de dock — en édition comme en lecture. Au premier
+           chargement il s'ouvrait sur son panneau, vide faute de pastille :
+           un rectangle portant le seul bouton « Replier », qui disparaissait au
+           clic. La règle de lecture plus bas (`!important`) disait déjà la même
+           chose pour le lecteur. */
+        #map-controls-dock:not(.has-pills) { display: none; }
         .map-controls-dock.collapsed .dock-fabs { display: flex; }
         .map-controls-dock:not(.collapsed) .dock-fabs { display: none; }
         .map-controls-dock.collapsed .dock-panel { display: none; }
@@ -648,6 +714,10 @@
         .layer-meta { font-size: 10px; color: var(--muted-light); font-family: var(--mono); display: flex; gap: 5px; align-items: center; }
         .badge3d { background: var(--accent2); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .badge-saved { background: var(--green); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
+        /* Une couche copiee est DANS Grist elle aussi : sa pastille ne pouvait
+           pas dire « Grist » sans laisser croire que l'autre n'y est pas. Elle
+           dit donc ce qu'on peut en faire, et se distingue a l'oeil. */
+        .badge-copie { background: var(--muted); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .layer-del { background: transparent; border: none; cursor: pointer; opacity: 0.3; font-size: 13px; padding: 2px; border-radius: 4px; }
         .layer-item:hover .layer-del { opacity: 0.7; }
         .layer-del:hover { opacity: 1; background: rgba(196,69,54,0.15); }
@@ -795,7 +865,8 @@
         body.view-mode .rail-item[data-module="vues"],
         body.view-mode .rail-item[data-module="controles"],
         body.view-mode .rail-item[data-module="reglages"],
-        body.view-mode .rail-item[data-module="couches"] { display: none !important; }
+        body.view-mode .rail-item[data-module="couches"],
+        body.view-mode .rail-item[data-module="formulaires"] { display: none !important; }
         body.view-mode .rail-item[data-module="recit"] { display: none !important; }
         /* Lecture : carte pleine largeur — récit via FAB uniquement */
         body.view-mode { --rail-w: 0px; }
@@ -816,23 +887,92 @@
            filtres sans que rien ne le signale. C'est désormais écrit. */
         body.story-presenting #map-controls-dock:not(.has-pills) { display: none !important; }
         body.story-presenting #map-controls-dock.has-pills { display: flex !important; }
-        /* Récit : la bulle occupe le bas de la carte, la légende le coin bas
-           gauche. Les deux tiennent côte à côte sur un large écran ; sous
-           ~1080 px la bulle recouvre la légende — mesuré à 824 px de large :
-           49 % de sa hauteur, c'est-à-dire les classes que l'étape est
-           justement en train de montrer. Cette largeur n'a rien d'un cas
-           limite : c'est celle d'un widget Grist dans une colonne.
+        /* Étage du bas de la carte, au-dessus de 720 px.
 
-           On remonte la légende plutôt que de la replier — elle nomme ce qu'on
-           regarde — et on borne sa hauteur pour qu'elle ne sorte pas par le
-           haut sur une fenêtre courte. Sous 720 px, le mode mobile a ses
-           propres ancrages : la règle s'arrête avant, pour ne pas les défaire. */
-        @media (min-width: 721px) and (max-width: 1080px) {
-            body.story-presenting .legend { bottom: 196px; }
-            body.story-presenting .legend-body { max-height: min(220px, 32vh); }
+           Quatre éléments se disputaient le bas, chacun ancré pour son compte.
+           Mesuré dans un widget Grist de 860 px : la bulle du récit, centrée,
+           mordait sur la colonne de la légende ; la légende, remontée de 196 px
+           pour lui céder la place, flottait à mi-carte sur les données ; la
+           bulle recouvrait l'attribution OpenStreetMap, que la licence impose
+           de laisser lisible.
+
+           Le bas devient un étage partagé. Tout en bas, l'attribution sur
+           toute la largeur ; au-dessus, la légende dans sa colonne à gauche et
+           la bulle à sa droite. La localisation rejoint les pastilles du haut.
+
+           Le côte à côte se décide sur la largeur de la CARTE (classe
+           `etage-cote-a-cote`, seuil calculé par `lib/habillage-carte.js`, dont
+           les mesures sont celles-ci). En deçà — rail et panneaux ouverts en
+           édition — la légende s'empile au-dessus de la bulle, à la hauteur
+           mesurée de celle-ci (`--etage-recit`). Sous 720 px, le mode mobile
+           garde ses propres ancrages : aucune règle ici ne s'y applique. */
+        .map-frame {
+            --etage-marge: 24px;
+            --etage-legende: 220px;
+            --etage-gouttiere: 16px;
+            --bande-attrib: 24px;
+            --etage-bas: calc(var(--bande-attrib) + 10px);
         }
+        #story-present {
+            position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+            z-index: 1000; width: 88%; max-width: 520px; padding: 12px 16px;
+            background: rgba(244,239,227,0.96); color: #1F1B14; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            font-family: 'Hanken Grotesk', sans-serif;
+        }
+        body:not(.mobile-layout) .legend {
+            bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
+        }
+        body:not(.mobile-layout) #story-present { bottom: var(--etage-bas); }
+        /* Côte à côte : la bulle se centre dans ce que la légende laisse libre.
+           Avec `left`, `right` et des marges automatiques, `max-width` la
+           ramène à 520 px et le reste se répartit de part et d'autre. */
+        body.etage-cote-a-cote #story-present {
+            left: calc(var(--etage-marge) + var(--etage-legende) + var(--etage-gouttiere));
+            right: var(--etage-marge);
+            width: auto; margin-inline: auto; transform: none;
+        }
+        /* Empilé : on remonte la légende plutôt que de la replier — elle nomme
+           ce qu'on regarde — et on borne sa hauteur pour qu'elle ne sorte pas
+           par le haut sur une fenêtre courte. */
+        body.story-presenting:not(.mobile-layout):not(.etage-cote-a-cote) .legend {
+            bottom: var(--etage-recit, 196px);
+        }
+        body.story-presenting:not(.mobile-layout):not(.etage-cote-a-cote) .legend-body {
+            max-height: min(220px, 32vh);
+        }
+        /* L'attribution : l'étage le plus bas, sous tout le reste. Elle garde
+           sa forme MapLibre — dépliée à l'ouverture, repliée en « i » au premier
+           déplacement — mais se pose au ras du bord, et l'étage au-dessus se
+           cale sur sa hauteur réelle (`--bande-attrib`, mesurée : une longue
+           liste de sources passe sur deux lignes). */
+        body:not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0; }
+        /* Le bandeau d'infos carte (édition) est de l'étage : aligné sur le bas
+           de la légende, dans la colonne de droite. Il cède à la légende quand
+           la carte rétrécit — `majBandeauInfos` le réduit à zoom · pitch, puis
+           le retire — et pendant le récit, où la bulle occupe cette place. */
+        body:not(.mobile-layout) .map-hud { bottom: var(--etage-bas); right: var(--etage-marge); }
+        .map-hud.hud-compact #hud-coords,
+        .map-hud.hud-compact #hud-coords + .dot { display: none; }
+        .map-hud.hud-masque,
+        body.story-presenting .map-hud { display: none; }
+        /* Le bouton de localisation de MapLibre : remplacé par la pastille du
+           dock, sur mobile. Le contrôle reste posé — il porte le point bleu et
+           le suivi de position. */
+        #map .maplibregl-ctrl-group:has(> .maplibregl-ctrl-geolocate) { display: none; }
         body.view-mode .selection-bar,
         body.view-mode .selection-bar.open { display: none !important; }
+        /*
+         * Le mode exploitation — lecture, mais saisie ouverte sur une couche
+         * dont la scene a publie le formulaire. La fiche et la barre de
+         * parcours reviennent, et elles seules : le rail, les modules et les
+         * outils d'auteur restent masques par les regles ci-dessus.
+         *
+         * La barre porte « ◀ 1/5 ▶ », « Tout » et « ✕ » : c'est exactement le
+         * geste d'une tournee, passer d'un objet au suivant et refermer.
+         */
+        body.view-mode.mode-saisie .inspector.open { display: flex !important; }
+        body.view-mode.mode-saisie .selection-bar.open { display: flex !important; }
         body.view-mode .inspector { display: none !important; }
         body.view-mode #mobile-nav { display: none !important; }
         .legend-row.legend-clickable { cursor: pointer; border-radius: 6px; margin: 0 -4px; padding: 3px 4px; }
@@ -1052,18 +1192,33 @@
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
             body.view-mode.mobile-layout .legend { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             /* Récit sur petit écran : la bulle occupe le bas, la légende aussi, et
-               il n'y a pas la place pour les deux. Au-delà de 720 px on remonte la
-               légende au-dessus de la bulle ; ici la remonter la planterait au
-               milieu de la carte. On la replie donc — son en-tête reste tactile,
-               qui veut la liste des classes la rouvre d'un doigt. Sans cette
-               règle, elle était recouverte à plus des trois quarts : on voyait
-               « Légende » et le début de la première ligne. */
-            body.story-presenting.mobile-layout .legend-body { display: none; }
+               il n'y a pas la place pour les deux côte à côte. La légende part
+               repliée (`enterStoryPresentation`) et se pose sur le haut de la
+               bulle, alignée sur son bord gauche — à la hauteur mesurée de
+               celle-ci (`--etage-recit`). Son en-tête reste tactile : ouverte,
+               elle se déplie vers le haut, bornée pour ne pas couvrir la carte.
+
+               Elle était auparavant collée sous la barre, en haut à gauche, loin
+               de ce qu'elle décrit ; et une règle masquait son contenu quoi qu'il
+               arrive, si bien qu'un toucher sur « Légende » ne rouvrait rien. */
             body.story-presenting.mobile-layout .legend {
-                bottom: auto; top: calc(var(--topbar-h, 64px) + 12px); left: 12px;
+                top: auto; bottom: var(--etage-recit, 240px); left: 6%;
             }
+            body.story-presenting.mobile-layout .legend-body { max-height: min(220px, 30vh); }
             body.view-mode.mobile-layout .toasts { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             body.view-mode.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+            /* La bulle du récit se pose au-dessus de l'attribution, comme au
+               bureau : ancrée à 24 px, elle recouvrait la mention dépliée à
+               l'ouverture. Les deux hauteurs d'attribution sont celles des
+               deux règles précédentes (barre d'onglets en édition, rien en
+               lecture), plus la marge de 10 px que MapLibre laisse sous elle
+               — gardée ici, d'autres ancrages mobiles s'y alignent. */
+            body.mobile-layout #story-present {
+                bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px);
+            }
+            body.view-mode.mobile-layout #story-present {
+                bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px);
+            }
             body.view-mode.mobile-layout #viewer-controls {
                 left: 8px; right: 8px; top: auto;
                 bottom: calc(64px + env(safe-area-inset-bottom, 0px));
@@ -1080,9 +1235,11 @@
             body.view-mode.mobile-layout .rail-item[data-module="vues"],
             body.view-mode.mobile-layout .rail-item[data-module="controles"],
             body.view-mode.mobile-layout .rail-item[data-module="reglages"],
-            body.view-mode.mobile-layout .rail-item[data-module="couches"] { display: none !important; }
+            body.view-mode.mobile-layout .rail-item[data-module="couches"],
+            body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.7.0" />
 </head>
 <body>
     <div class="app">
@@ -1153,6 +1310,10 @@
                 <button class="rail-item" data-module="recit">
                     <span class="rail-icon-box"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M9 7h7M9 11h5"/></svg></span>
                     <span>Récit</span>
+                </button>
+                <button class="rail-item" data-module="formulaires">
+                    <span class="rail-icon-box"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg></span>
+                    <span>Formulaires</span>
                 </button>
                 <div class="rail-spacer"></div>
                 <div class="rail-divider"></div>
@@ -1301,6 +1462,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.6.6"></script>
+    <script type="module" src="./app.js?v=1.7.0"></script>
 </body>
 </html>

@@ -1,8 +1,9 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.6.6';
+import { normalizePropertyValue } from './declarative-style.js?v=1.7.0';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
+import { chargerSchema, estTableSysteme } from './schema-grist.js';
 
 export const GEO_SKIP_TABLES = new Set([
   'Maquette_Layers',
@@ -96,34 +97,27 @@ export function tableToGeoJSON(columnar, geomCol) {
  * la choisit — c'est le seul instant où elle est réellement nécessaire.
  */
 export async function scanGeoTables(docApi, skipTables = GEO_SKIP_TABLES) {
+  if (!docApi) return [];
+  return geoTablesDepuisSchema(await chargerSchema(docApi), skipTables);
+}
+
+/**
+ * Les couches candidates d'un schéma déjà lu.
+ *
+ * Séparée de `scanGeoTables` pour une raison de coût : l'appelant qui a déjà le
+ * schéma — parce qu'il cherche aussi les tables qui référencent une couche —
+ * ne doit pas redemander les mêmes métadonnées. Deux lectures par ouverture,
+ * pas quatre.
+ */
+export function geoTablesDepuisSchema(schema, skipTables = GEO_SKIP_TABLES) {
   const out = [];
-  if (!docApi) return out;
-  let tables;
-  let cols;
-  try {
-    [tables, cols] = await Promise.all([
-      docApi.fetchTable('_grist_Tables'),
-      docApi.fetchTable('_grist_Tables_column'),
-    ]);
-  } catch (_) {
-    return out;
-  }
-
-  const nomParRef = {};
-  (tables?.id || []).forEach((rowId, i) => { nomParRef[rowId] = tables.tableId[i]; });
-
-  const colonnesParTable = {};
-  (cols?.id || []).forEach((_, i) => {
-    const table = nomParRef[cols.parentId[i]];
-    const col = cols.colId[i];
-    if (!table || !col) return;
-    (colonnesParTable[table] = colonnesParTable[table] || {})[col] = true;
-  });
-
-  for (const [table, colonnes] of Object.entries(colonnesParTable)) {
-    // Les tables système ne sont pas des couches candidates.
-    if (skipTables.has(table) || table.startsWith('_grist_') || table.startsWith('GristHidden_')) continue;
-    const gc = detectGeometryColumn(colonnes);
+  for (const [table, colonnes] of Object.entries(schema || {})) {
+    if (skipTables.has(table) || estTableSysteme(table)) continue;
+    // `detectGeometryColumn` raisonne sur des noms de colonnes : le schéma en
+    // porte davantage, on ne lui donne que ce qu'il lit.
+    const noms = {};
+    for (const c of colonnes) noms[c.colId] = true;
+    const gc = detectGeometryColumn(noms);
     if (!gc) continue;
     out.push({ table, geometryColumn: gc, geomType: null, count: null });
   }

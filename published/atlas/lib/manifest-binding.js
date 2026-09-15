@@ -5,13 +5,13 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.6.6';
+} from './declarative-style.js?v=1.7.0';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=1.6.6';
+} from './controls.js?v=1.7.0';
 import { parseGristBool } from './grist-bool.js';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
@@ -91,8 +91,55 @@ export function layerPrefsPayload(layer) {
     rank: Number.isFinite(layer._rank) ? layer._rank : null,
     symbolization: layer.style?.symbolization || null,
     controls: controlsPrefsPayload(layer),
+    // Quel formulaire sert cette couche, et si la scene l'offre hors edition.
+    // Le formulaire est defini UNE fois, dans la table `Formulaires`, pour une
+    // table cible ; mais l'exposer est un choix de scene — on peut vouloir
+    // publier le releve du mobilier ici et pas ailleurs, alors que la table est
+    // la meme. Le reglage voyage donc avec la couche, comme les controles.
+    formulaire: formulairePrefsPayload(layer),
     declarative: declarativeFromAtlasLayer(layer),
   };
+}
+
+/**
+ * `null` quand il n'y a rien a dire : une couche sans reglage n'ecrit rien.
+ *
+ * > **Deux formes cohabitent, et il faut les deux.** Le reglage valait
+ * > `{ id, expose }` — un formulaire, un booleen — du temps ou une couche n'en
+ * > portait qu'un. Il vaut maintenant `{ fiche, exposes }`, une liste
+ * > d'identifiants, parce que les tables qui referencent la couche en
+ * > fournissent autant qu'elles sont.
+ * >
+ * > L'ancien booleen est **recopie tel quel** tant que personne n'a touche a la
+ * > liste : le supprimer ici desexposerait en silence une scene qu'on n'a fait
+ * > qu'ouvrir. Il disparait le jour ou `exposes` prend le relais.
+ */
+function formulairePrefsPayload(layer) {
+  const f = layer?.formulaire || {};
+  const fiche = f.fiche || f.id || null;
+  const exposes = Array.isArray(f.exposes)
+    ? f.exposes.filter((x) => typeof x === 'string')
+    : null;
+  const herite = !exposes && f.expose === true;
+  // Ce que la scene retire de chaque formulaire. Une entree presente, meme
+  // vide, est une decision : `{ a: [] }` dit « tout est reaffiche dans a », et
+  // doit etre ecrit — sans lui, les colonnes d'Atlas se remasqueraient au
+  // rechargement (`masquesParDefaut`). Un objet sans entree n'est pas ecrit.
+  const masques = {};
+  if (f.masques && typeof f.masques === 'object' && !Array.isArray(f.masques)) {
+    for (const [id, cols] of Object.entries(f.masques)) {
+      if (typeof id !== 'string' || !Array.isArray(cols)) continue;
+      const propres = cols.filter((c) => typeof c === 'string' && c);
+      if (propres.length || !cols.length) masques[id] = propres;
+    }
+  }
+  const aDesMasques = Object.keys(masques).length > 0;
+  if (!fiche && !exposes && !herite && !aDesMasques) return null;
+  const out = { fiche };
+  if (exposes) out.exposes = exposes;
+  else if (herite) out.expose = true;
+  if (aDesMasques) out.masques = masques;
+  return out;
 }
 
 /**
@@ -124,6 +171,30 @@ export function applyLayerPrefsBinding(layer, prefs) {
 
     // Le tri effectif revient à l'appelant, qui voit toutes les couches.
     if (Number.isFinite(payload.rank)) layer._rank = payload.rank;
+
+    // Une valeur douteuse n'ouvre rien : `expose` doit valoir vrai, et une
+    // liste doit etre une liste de chaines. Sans quoi un enregistrement ancien
+    // ou abime offrirait un formulaire que personne n'a decide d'offrir.
+    if (payload.formulaire) {
+      const p = payload.formulaire;
+      const f = { fiche: p.fiche || p.id || null };
+      if (Array.isArray(p.exposes)) f.exposes = p.exposes.filter((x) => typeof x === 'string');
+      else if (p.expose === true) f.expose = true;
+      // Meme prudence pour les masques : une valeur douteuse ne retire rien.
+      // Un enregistrement abime doit oter des champs par accident encore moins
+      // qu'il ne doit en offrir.
+      if (p.masques && typeof p.masques === 'object' && !Array.isArray(p.masques)) {
+        const m = {};
+        for (const [id, cols] of Object.entries(p.masques)) {
+          if (typeof id !== 'string' || !Array.isArray(cols)) continue;
+          const propres = cols.filter((c) => typeof c === 'string' && c);
+          // Vide : une decision (« tout reaffiche »). Illisible : ecarte.
+          if (propres.length || !cols.length) m[id] = propres;
+        }
+        if (Object.keys(m).length) f.masques = m;
+      }
+      layer.formulaire = f;
+    }
 
     if (payload.controls?.length) {
       applyControlsFromPrefs(layer, payload.controls);

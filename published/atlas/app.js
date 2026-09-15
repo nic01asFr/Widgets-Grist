@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.6.6';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.7.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,30 +15,41 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.6.6';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.6.6';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.6.6';
-import { isModelLayer, objectInspectorTabs } from './lib/model-layer.js?v=1.6.6';
+} from './lib/scene-loader.js?v=1.7.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.7.0';
+import {
+  moteurDisponible, valeursPourMoteur, pontFormulaire,
+  lireFormulaires, reglagesFormulaire, libelleFormulaire,
+  saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
+  gesteDEnregistrement, idFormulaireLibre,
+  formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
+} from './lib/fiche-formulaire.js?v=1.7.0';
+import { chargerSchema } from './lib/schema-grist.js?v=1.7.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.7.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=1.7.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.6.6';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.6.6';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.6.6';
+} from './lib/layer-order.js?v=1.7.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.7.0';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.7.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.6.6';
+} from './lib/terrain-base.js?v=1.7.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
+  coucheAvecLignes,
   applyLayerPrefs,
   saveLayerPref,
   parseGristBool,
   saveFeaturesToSource,
   startScenePolling,
   refreshLayerFromTable,
-} from './lib/grist-sync.js?v=1.6.6';
+  ligneInventaireRequise,
+  ligneInventaire,
+} from './lib/grist-sync.js?v=1.7.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -50,13 +61,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.6.6';
+} from './lib/declarative-style.js?v=1.7.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.6.6';
+} from './lib/geo-tables.js?v=1.7.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -72,21 +83,21 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
-} from './lib/controls.js?v=1.6.6';
+} from './lib/controls.js?v=1.7.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.6.6';
+} from './lib/story.js?v=1.7.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.6.6';
+} from './lib/manifest-binding.js?v=1.7.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.6.6';
+} from './lib/viewport.js?v=1.7.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -95,17 +106,26 @@ import {
   canWrite,
   shouldEnableLight3d,
   parseNo3dParam,
+  parseNavbarParam,
+  pastilleRecitRequise,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.6.6';
+} from './lib/view-mode.js?v=1.7.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.7.0';
+import {
+  etageCoteACote,
+  margeBasseRecit,
+  pastilleLocalisationRequise,
+  formeBandeauInfos,
+} from './lib/habillage-carte.js?v=1.7.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.6.6';
+} from './lib/viewer-controls.js?v=1.7.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.6.6';
+} from './lib/scene-prefs.js?v=1.7.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -161,6 +181,16 @@ const CONFIG = {
     pollIntervalMs: 30000,
     /** Mode lecture (pas d'écriture Grist) — URL ?mode=view ou droits insuffisants */
     viewMode: false,
+    /**
+     * Cette personne peut-elle ecrire dans le document ?
+     *
+     * Orthogonal a `viewMode`, qui dit seulement si Atlas montre ses outils
+     * d'auteur. Un lien de terrain (`?mode=view`) ouvre en lecture quelqu'un
+     * qui a parfaitement le droit d'ecrire : c'est le cas que ce drapeau
+     * existe pour servir. Faux par defaut — on n'ouvre l'ecriture qu'apres
+     * l'avoir etabli.
+     */
+    peutSaisir: false,
     /** Réduit / coupe Models3D (mobile lent ou ?no3d=1) */
     light3d: false,
 };
@@ -210,6 +240,10 @@ let _linkChoices = [];
 let _storyIdx = 0;
 let _storyPresenting = false;
 let _openDockPill = null;
+// Localisation : le contrôle MapLibre reste posé (point bleu, suivi), mais son
+// bouton est masqué — la pastille du dock le déclenche, sur mobile seulement.
+let _geoloc = null;
+let _suiviPosition = false;
 let _sunArcDragging = false;
 let _preStorySnapshot = null;
 let _preStoryOrder = null;
@@ -1702,6 +1736,8 @@ function initMap() {
     map.on('load', onStyleReady);
 
     map.on('move', updateHUD);
+    map.on('moveend', majBandeauInfos);
+    map.on('moveend', majEmpriseOSM);
     map.on('pitchend', () => {
         if (_openDockPill === 'view3d') renderDockSlotHost();
     });
@@ -1748,11 +1784,25 @@ function initMap() {
     });
 
     try {
-        map.addControl(new maplibregl.GeolocateControl({
+        _geoloc = new maplibregl.GeolocateControl({
             positionOptions: { enableHighAccuracy: true },
             trackUserLocation: true,
             showAccuracyCircle: true,
-        }), 'bottom-right');
+        });
+        map.addControl(_geoloc, 'bottom-right');
+        suivreBandeAttribution();
+        // La pastille s'allume tant que la carte suit la position — l'état que
+        // le bouton d'origine signalait en bleu. Déplacer la carte à la main
+        // rompt le suivi : MapLibre émet alors `trackuserlocationend`.
+        const suivre = (actif) => { _suiviPosition = actif; refreshControlsDock(); };
+        _geoloc.on('trackuserlocationstart', () => suivre(true));
+        _geoloc.on('trackuserlocationend', () => suivre(false));
+        _geoloc.on('error', (err) => {
+            suivre(false);
+            showToast(err?.code === 1
+                ? 'Localisation refusée par le navigateur'
+                : 'Position introuvable pour le moment', 'warning');
+        });
     } catch (e) { console.warn('[Atlas] geolocate', e.message); }
 
     setupInteraction();
@@ -2977,11 +3027,15 @@ function applyStoryState(s) {
             map.triggerRepaint?.();
         };
         map.once('moveend', reapply);
+        // L'étape a été composée sur la carte entière ; la bulle en couvre le
+        // bas. La marge fait viser ce qui reste visible — nulle sans bulle, ce
+        // qui efface aussi celle d'une étape précédente.
         map.flyTo({
             center: s.camera.center,
             zoom: s.camera.zoom,
             pitch: s.camera.pitch,
             bearing: s.camera.bearing,
+            padding: { top: 0, left: 0, right: 0, bottom: mesurerEtageRecit() },
             duration: 1500,
         });
     };
@@ -3012,9 +3066,19 @@ function applyStoryState(s) {
 const MODULE_TITLES = {
     lieu: 'Lieu', couches: 'Couches', controles: 'Contrôles', recit: 'Récit',
     soleil: 'Soleil', vues: 'Vue & rendu', reglages: 'Catalogue 3D',
+    formulaires: 'Formulaires',
 };
 
-const VIEW_AUTHOR_MODULES = new Set(['lieu', 'soleil', 'vues', 'controles', 'reglages', 'couches']);
+/**
+ * Les modules qu'un lecteur ne peut pas ouvrir.
+ *
+ * `recit` n'y figure pas — non parce qu'il se configurerait en lecture, mais
+ * parce qu'un lecteur doit pouvoir **jouer** le recit. La distinction est entre
+ * *jouer* et *regler*, pas entre les modules : `formulaires` regle, donc il y
+ * entre, et un lecteur obtient le formulaire **sur un objet**, jamais le module
+ * qui le decide.
+ */
+const VIEW_AUTHOR_MODULES = new Set(['lieu', 'soleil', 'vues', 'controles', 'reglages', 'couches', 'formulaires']);
 
 function openModule(name) {
     if (CONFIG.viewMode && name === 'recit') {
@@ -3055,6 +3119,7 @@ function openModule(name) {
     else if (name === 'symbo') renderLayersPanel(name);
     else if (name === 'controles') renderControles();
     else if (name === 'recit') renderRecit();
+    else if (name === 'formulaires') renderFormulaires();
     else if (name === 'reglages') renderModelsPanel();
     else if (name === 'soleil') renderSoleil();
     else if (name === 'vues') renderVues();
@@ -3213,7 +3278,9 @@ function renderLayersPanel(mode) {
                     <span class="layer-swatch" style="background:${l.color}"></span>
                     <div class="layer-info">
                         <div class="layer-name">${l.name}</div>
-                        <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked ? '<span class="badge-saved">⛓ table</span>' : (l.gristId ? '<span class="badge-saved">Grist</span>' : '')}</div>
+                        <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked
+                            ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
+                            : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
                     </div>
                     ${linked ? `<button class="layer-act" onclick="A.refreshLayer('${l.id}', event)" title="Rafraîchir depuis la table">${icTrait(IC.rafraichir)}</button>` : ''}
                     <button class="layer-act" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche">${icTrait(IC.cible)}</button>
@@ -3291,6 +3358,7 @@ const IC = {
     loupe:     '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
     soleil:    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
     recit:     '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M9 7h7M9 11h5"/>',
+    formulaire: '<path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/>',
     controles: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
     reglages:  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     camera:    '<path d="M3 7h3l2-3h8l2 3h3v13H3z"/><circle cx="12" cy="13" r="3.2"/>',
@@ -3398,6 +3466,26 @@ function listDockPills() {
     if (getViewerControl(vcs, 'sun')?.exposed) {
         pills.push({ id: 'sun', kind: 'sun', icon: '☀', label: 'Soleil' });
     }
+    // Le recit n'a plus d'entree quand la barre est retiree : son bouton y
+    // vivait. La pastille le remplace, avec la meme figure et le meme geste.
+    // Elle vient EN TETE : c'est la seule qui lance quelque chose au lieu de
+    // regler, et le lecteur doit la trouver sans chercher.
+    const mobile = document.body.classList.contains('mobile-layout');
+    if (pastilleRecitRequise({
+        barreAbsente: CONFIG.sansNavbar,
+        lecture: CONFIG.viewMode,
+        nbEtapes: STATE.story?.length || 0,
+        enPresentation: _storyPresenting,
+        mobile,
+    })) {
+        pills.unshift({
+            id: 'recit',
+            kind: 'action',
+            icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>',
+            label: 'Lire le récit',
+            action: () => A.storyPlay(0),
+        });
+    }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
     // (U+FE0F). Un glyphe symbolique rare — ici `▦` U+25A6 — n'existe pas dans
     // les polices système courantes, et un emoji sans sélecteur bascule en
@@ -3416,6 +3504,22 @@ function listDockPills() {
             label: (c.label || c.field).trim() || c.field,
             layer,
             control: c,
+        });
+    }
+    // La localisation ferme la rangée, contre la boussole : les deux disent où
+    // l'on est et vers où l'on regarde. Les contrôles de la carte viennent
+    // ensuite, en s'éloignant de la boussole.
+    if (pastilleLocalisationRequise({
+        mobile,
+        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation,
+    })) {
+        pills.push({
+            id: 'localiser',
+            kind: 'action',
+            icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+            label: 'Me localiser',
+            active: _suiviPosition,
+            action: () => _geoloc?.trigger(),
         });
     }
     return pills;
@@ -3523,6 +3627,9 @@ function refreshControlsDock() {
     const hasPills = pills.length > 0;
     dock.classList.toggle('has-pills', hasPills);
     if (!hasPills) {
+        // Replié, pour qu'une première pastille apparaisse en pastille et non
+        // sur un panneau ouvert qu'aucune n'a demandé.
+        dock.classList.add('collapsed');
         fabsHost.innerHTML = '';
         if (slotHost) slotHost.innerHTML = '';
         _openDockPill = null;
@@ -3555,7 +3662,7 @@ function refreshControlsDock() {
     fabsHost.innerHTML = pills.map((p) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
-        const isOpen = _openDockPill === p.id && !dock.classList.contains('collapsed');
+        const isOpen = (_openDockPill === p.id && !dock.classList.contains('collapsed')) || !!p.active;
         const ic = p.id === 'sun'
             ? '<span class="sun-dot" aria-hidden="true"></span>'
             : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
@@ -3565,6 +3672,11 @@ function refreshControlsDock() {
     fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const id = btn.dataset.pill;
+            // Toutes les pastilles devoilaient un reglage : le composant n'avait
+            // que ce geste-la. Une pastille d'ACTION agit et s'arrete — sans
+            // cela « Recit » aurait ouvert un panneau vide.
+            const pastille = pills.find((p) => p.id === id);
+            if (pastille?.action) { pastille.action(); return; }
             if (_openDockPill === id && !dock.classList.contains('collapsed')) {
                 dock.classList.add('collapsed');
             } else {
@@ -3810,6 +3922,201 @@ function renderControles() {
     body.innerHTML = html;
 }
 
+/**
+ * Le module « Formulaires » — choisir ce que le document sait saisir.
+ *
+ * ## Pourquoi le rail, et pas un onglet de couche
+ *
+ * Le partage suit la geometrie de l'interface : **le panneau de droite gere UN
+ * formulaire, ce module gere L'ENSEMBLE.** Creer est un acte de document — ca
+ * materialise une table — donc ca vit ici ; remplir est un acte d'objet, donc
+ * ca vit a droite. L'inspecteur de couche n'a pas besoin d'onglet.
+ *
+ * Il rejoint la famille a laquelle il appartient : Controles et Recit sont les
+ * deux choses qu'un auteur configure *pour le lecteur*. Un formulaire
+ * disponible hors edition est de la meme nature.
+ *
+ * ## Ce qu'il ne fait pas
+ *
+ * **Il ne cree aucun formulaire.** Atlas n'en livre pas non plus. Un formulaire
+ * derive n'existe nulle part : il se deduit des colonnes a chaque ouverture, et
+ * rien n'est ecrit tant que personne ne l'ajuste. Definir appartient au
+ * generateur, materialiser une table a `ensure-schema`.
+ */
+function renderFormulaires() {
+    $('module-title').textContent = 'Formulaires';
+    const body = $('module-body');
+
+    if (!CONFIG.grist.ready) {
+        body.innerHTML = `<div class="empty"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
+            <div class="t">Hors Grist</div>
+            <div class="h">Les formulaires vivent dans le document.</div></div>`;
+        return;
+    }
+
+    const couches = STATE.layers.filter((l) => l.sourceTable);
+    let html = `<div class="hint">Un formulaire décrit comment se saisit une table. Cochez ceux qui seront proposés hors édition : chacun devient un onglet sur l'objet.</div>`;
+
+    if (!couches.length) {
+        body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
+            <div class="t">Aucune table à saisir</div>
+            <div class="h">Une couche liée à une table Grist, et sa ligne apparaîtra ici.</div></div>`;
+        return;
+    }
+
+    html += couches.map((couche) => blocCoucheFormulaires(couche)).join('');
+    body.innerHTML = html;
+}
+
+/**
+ * Une couche, et les formulaires qui la concernent, groupes par **verbe**.
+ *
+ * La liste les alignait a plat, chacun suivi de la meme phrase — « la table de
+ * la couche — corrige l'objet » — repetee autant de fois qu'il y avait de
+ * lignes. C'est un fait de groupe, pas de ligne : dit une fois, il tient dans
+ * un intertitre et rend chaque ligne lisible d'un coup d'oeil.
+ *
+ * Deux groupes, dans l'ordre des onglets :
+ *
+ * | | |
+ * |---|---|
+ * | **corriger l'objet** | la table de la couche — \`updateRow\` |
+ * | **ajouter une ligne** | une table qui la reference — \`addRow\` |
+ *
+ * Et un pied qui dit **ce que les cases produisent** : le nombre d'onglets hors
+ * edition. Sans lui, on coche sans voir le resultat, et au-dela de trois la
+ * barre d'onglets se met a defiler sans que rien ne l'ait annonce.
+ */
+function blocCoucheFormulaires(couche) {
+    const esc = (s) => String(s).replace(/'/g, "\\'");
+    const formulaires = formulairesDeLaCouche(couche);
+    const nb = (couche.geojson?.features?.length) || 0;
+    const entete = `<div class="section-title">${couche.name}</div>
+        <div class="hint" style="margin-bottom:10px">${couche.sourceTable}${nb ? ` · ${nb} objet${nb > 1 ? 's' : ''}` : ''}</div>`;
+
+    if (!formulaires.length) {
+        return `<div class="section">${entete}
+            <div class="hint" style="margin-bottom:0">Aucune colonne saisissable — rien à proposer.</div>
+        </div>`;
+    }
+
+    const groupe = (titre, liste, vide) => {
+        if (!liste.length) return vide ? `<div class="section-title" style="margin-top:12px">${titre}</div><div class="hint" style="margin-bottom:0">${vide}</div>` : '';
+        return `<div class="section-title" style="margin-top:12px">${titre}</div>`
+            + liste.map((f) => ligneFormulaire(couche, f, esc)).join('');
+    };
+
+    const surLaCouche = formulaires.filter((f) => f.surLaCouche);
+    const liees = formulaires.filter((f) => !f.surLaCouche);
+    // Ce qui sera vraiment proposé, pas ce qui est coché : un dérivé peut
+    // figurer dans la liste enregistrée — d'une version antérieure, ou d'un
+    // clic d'avant qu'il perde sa bascule — sans pouvoir être offert.
+    const exposes = formulairesOffertsEnLecture(formulaires).length;
+
+    return `<div class="section">${entete}
+        ${groupe('Corriger l’objet', surLaCouche)}
+        ${groupe('Ajouter une ligne', liees,
+            'Aucune table ne référence celle-ci. Un formulaire créé sur une nouvelle table, avec une colonne <code>Ref:</code> vers elle, apparaîtrait ici.')}
+        <div class="hint" style="margin:12px 0 0">${exposes
+            ? `<strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet hors édition.${exposes > 3 ? ' Au-delà de trois, la barre défile.' : ''}`
+            : 'Rien de proposé hors édition — la fiche restera en consultation.'}</div>
+    </div>`;
+}
+
+/**
+ * Une ligne de la liste : ce qu'est le formulaire, et s'il est proposé.
+ *
+ * Un formulaire **dérivé** n'a pas de bascule. Il n'existe pas en base, donc il
+ * ne peut pas être proposé : offrir un interrupteur qui ne peut rien allumer
+ * aurait été une promesse creuse. On dit ce qu'il faut faire à la place.
+ */
+function ligneFormulaire(couche, f, esc) {
+    const detail = f.surLaCouche
+        ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`)
+        : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${libelleStatut(f.statut)}`}`;
+
+    // Un derive n'a pas de bascule : il ne peut pas etre propose. Mais dire
+    // « a enregistrer » sans offrir le geste etait une promesse creuse — c'est
+    // un bouton, pas une pastille.
+    const geste = gesteDEnregistrement(f, STATE.formulaires);
+    const commande = geste
+        ? `<button class="btn btn-soft" style="padding:5px 10px;font-size:11.5px"
+            onclick="A.enregistrerFormulaire('${esc(couche.id)}','${esc(f.id)}')"
+            title="${geste.verbe === 'composer' ? 'Créer un formulaire à partir de ces colonnes' : 'L’enregistrer pour pouvoir le proposer'}">${geste.libelle}</button>`
+        : `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
+            aria-checked="${f.expose}"
+            aria-label="Proposer ${esc(f.titre)} hors édition"
+            title="Proposé hors édition"
+            onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
+
+    // Le nom et la commande sur une ligne, le detail en dessous : les mettre
+    // cote a cote faisait passer le detail a la ligne et laissait la pastille
+    // au milieu de la phrase.
+    return `<div style="margin-bottom:10px">
+        <div class="toggle-row" style="margin-bottom:2px">
+            <span class="tlabel"><strong>${libelleFormulaire(f)}</strong></span>
+            ${commande}
+        </div>
+        <div style="color:var(--muted);font-size:10.5px;line-height:1.4">${detail}</div>
+        ${cadreDesChamps(couche, f, esc)}
+    </div>`;
+}
+
+/**
+ * Le cadrage : quels champs de ce formulaire cette scene montre.
+ *
+ * Il vit dans le panneau de GAUCHE, replie, et pas sur le formulaire rendu a
+ * droite. Le panneau de gauche regle, celui de droite sert — et une bascule
+ * posee sur le champ rendu aurait fait de ce geste une composition, concurrente
+ * du builder pour un besoin qui n'en demande aucun.
+ *
+ * Replie par defaut : la plupart des formulaires se montrent entiers, et
+ * derouler la liste des colonnes sous chaque ligne noierait ce qui compte.
+ */
+function cadreDesChamps(couche, f, esc) {
+    const champs = champsDuFormulaire(f.def, f.masques);
+    // Un champ unique ne se cadre pas : le retirer viderait le formulaire, et
+    // la case n'aurait qu'un seul effet possible.
+    if (champs.length < 2) return '';
+    const montres = champs.filter((c) => !c.masque).length;
+    const lignes = champs.map((c) => {
+        const badges = [
+            c.requis ? '<span style="color:var(--accent)">obligatoire</span>' : '',
+            c.verrouille ? '<span title="Un autre champ en dépend — condition ou liste liée">verrouillé</span>' : '',
+        ].filter(Boolean).join(' · ');
+        const bascule = c.verrouille
+            ? `<div class="toggle on" role="switch" aria-checked="true" aria-disabled="true"
+                title="Un autre champ en dépend — condition ou liste liée"
+                style="opacity:.45;cursor:not-allowed"></div>`
+            : `<div class="toggle ${c.masque ? '' : 'on'}" role="switch" tabindex="0"
+                aria-checked="${!c.masque}"
+                aria-label="Montrer ${esc(c.label)} dans cette scène"
+                title="Montré dans cette scène"
+                onclick="A.masquerChamp('${esc(couche.id)}','${esc(f.id)}','${esc(c.colId)}')"></div>`;
+        return `<div class="toggle-row" style="margin:0 0 4px;padding-left:10px">
+            <span class="tlabel" style="font-size:11.5px${c.masque ? ';opacity:.5' : ''}">${c.label}${
+                badges ? `<span style="color:var(--muted);font-size:10px"> · ${badges}</span>` : ''}</span>
+            ${bascule}
+        </div>`;
+    }).join('');
+
+    return `<details style="margin-top:6px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:10.5px;padding-left:2px">Champs · ${montres} sur ${champs.length}</summary>
+        <div style="margin-top:6px">${lignes}</div>
+    </details>`;
+}
+
+/** Combien de champs un formulaire porte — ce que « dérivé » recouvre. */
+function nbChamps(f) {
+    return (f.def?.sections || []).reduce((n, s) => n + (s.fields?.length || 0), 0);
+}
+
+function libelleStatut(statut) {
+    if (statut === 'terrain') return 'terrain';
+    if (statut === 'publie') return 'publié';
+    return 'brouillon';
+}
+
 function renderRecit() {
     $('module-title').textContent = 'Récit';
     const body = $('module-body');
@@ -3914,6 +4221,96 @@ function renderStoryPresentation() {
         <button class="btn btn-soft" onclick="A.storyStep(1)" ${_storyIdx === n - 1 ? 'disabled' : ''}>▶</button>
         <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter">✕</button>
     </div>${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${s.text}</div>` : ''}`;
+    mesurerEtageRecit();
+}
+
+/**
+ * Hauteur que la bulle occupe en bas de la carte, en pixels.
+ *
+ * Une seule mesure sert deux fois : la légende, quand elle doit s'empiler
+ * au-dessus de la bulle (`--etage-recit`), et la caméra, qui cadre l'étape dans
+ * ce qui reste visible. L'ancienne règle supposait 196 px ; une étape au texte
+ * long dépassait, une étape sans texte laissait un trou.
+ */
+function mesurerEtageRecit() {
+    const frame = $('map-frame');
+    const ov = document.getElementById('story-present');
+    if (!frame) return 0;
+    if (!ov) { frame.style.removeProperty('--etage-recit'); return 0; }
+    const rc = frame.getBoundingClientRect();
+    const rb = ov.getBoundingClientRect();
+    const marge = margeBasseRecit({ basCarte: rc.bottom, hautBulle: rb.top, hauteurCarte: rc.height });
+    frame.style.setProperty('--etage-recit', marge + 'px');
+    return marge;
+}
+
+/**
+ * Légende et bulle côte à côte, ou empilées : on mesure la carte, pas la
+ * fenêtre — en édition, rail et panneaux mangent la largeur.
+ */
+function majEtageCarte() {
+    const frame = $('map-frame');
+    if (!frame) return;
+    const cote = etageCoteACote({
+        largeurCarte: frame.clientWidth,
+        mobile: document.body.classList.contains('mobile-layout'),
+    });
+    document.body.classList.toggle('etage-cote-a-cote', cote);
+    if (_storyPresenting) mesurerEtageRecit();
+    majBandeauInfos();
+}
+
+/**
+ * Le bandeau d'infos cède à la légende : il se mesure dans ses deux formes et
+ * prend la plus complète qui tient à droite de la colonne de la légende.
+ * Rappelé en fin de déplacement — son texte change avec le zoom.
+ */
+function majBandeauInfos() {
+    const frame = $('map-frame');
+    const hud = $('map-hud');
+    if (!frame || !hud) return;
+    hud.classList.remove('hud-compact', 'hud-masque');
+    const largeurComplete = hud.offsetWidth;
+    hud.classList.add('hud-compact');
+    const largeurCompacte = hud.offsetWidth;
+    hud.classList.remove('hud-compact');
+    const forme = formeBandeauInfos({
+        largeurCarte: frame.clientWidth,
+        largeurComplete,
+        largeurCompacte,
+        mobile: document.body.classList.contains('mobile-layout'),
+    });
+    if (forme === 'compact') hud.classList.add('hud-compact');
+    else if (forme === 'masque') hud.classList.add('hud-masque');
+}
+
+/**
+ * L'étage du bas se pose sur l'attribution : sa hauteur change quand elle se
+ * replie en « i », se déplie, ou passe sur deux lignes (fond et relief qui
+ * ajoutent chacun leur source).
+ */
+function suivreBandeAttribution() {
+    const frame = $('map-frame');
+    const attrib = map?.getContainer()?.querySelector('.maplibregl-ctrl-attrib');
+    if (!frame || !attrib || typeof ResizeObserver === 'undefined') return;
+    new ResizeObserver(() => {
+        const h = Math.ceil(attrib.getBoundingClientRect().height);
+        if (h > 0) frame.style.setProperty('--bande-attrib', h + 'px');
+        if (_storyPresenting) mesurerEtageRecit();
+    }).observe(attrib);
+}
+
+/**
+ * Rend la caméra à la carte entière en sortie de récit, sans à-coup : la marge
+ * disparaît, mais ce qui était au centre de l'écran y reste.
+ */
+function libererMargeRecit() {
+    if (!map || typeof map.getPadding !== 'function') return;
+    const p = map.getPadding();
+    if (!(p.top || p.bottom || p.left || p.right)) return;
+    const c = map.getContainer();
+    const centre = map.unproject([c.clientWidth / 2, c.clientHeight / 2]);
+    map.jumpTo({ center: centre, padding: { top: 0, bottom: 0, left: 0, right: 0 } });
 }
 
 function enterStoryPresentation(i) {
@@ -3921,13 +4318,17 @@ function enterStoryPresentation(i) {
     capturePreStorySnapshot();
     _storyPresenting = true;
     document.body.classList.add('story-presenting');
+    // Sur téléphone, la légende se pose sur la bulle : repliée, elle n'y prend
+    // qu'une ligne ; le lecteur la rouvre d'un toucher.
+    if (document.body.classList.contains('mobile-layout')) $('legend')?.classList.add('collapsed');
     refreshControlsDock();
     _storyIdx = Math.max(0, Math.min(i || 0, STATE.story.length - 1));
     let ov = document.getElementById('story-present');
     if (!ov) {
         ov = document.createElement('div');
         ov.id = 'story-present';
-        ov.style.cssText = 'position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:1000;background:rgba(244,239,227,0.96);color:#1F1B14;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.25);max-width:520px;width:88%;padding:12px 16px;font-family:\'Hanken Grotesk\',sans-serif';
+        // Sa place dépend de l'étage du bas (voir `#story-present` dans la
+        // feuille) : elle ne se décide plus ici en style inline.
         (document.getElementById('map-frame') || document.body).appendChild(ov);
     }
     renderStoryPresentation();
@@ -4249,6 +4650,42 @@ function renderInspector() {
     closeInspectorPanel();
 }
 
+/**
+ * L'entree en revue objet par objet, depuis l'inspecteur de couche.
+ *
+ * Elle etait reservee aux couches de points, alors que l'edition fonctionne
+ * pour tous les types — `enterSelectionMode` est appele au clic sans condition
+ * de geometrie. Une couche de lignes ou de surfaces n'avait donc aucune
+ * affordance : il fallait deviner qu'on pouvait cliquer la carte.
+ *
+ * Le libelle annonce ce qui s'ouvrira, parce que ce n'est pas la meme chose
+ * selon que la table est decrite par un formulaire ou non.
+ */
+function boutonRevueObjets(layer) {
+    if (!layer?.geojson?.features?.length) return '';
+    // Il nommait le formulaire — « Saisir sur les objets · Bâtiment — relevé ».
+    // C'etait vrai quand une couche n'en portait qu'un ; depuis qu'elle en a
+    // autant que de tables qui la referencent, nommer le premier laisserait
+    // croire qu'il est le seul.
+    const combien = formulairesDeLaCouche(layer).length;
+    const libelle = combien
+        ? `📝 Saisir sur les objets${combien > 1 ? ` · ${combien} formulaires` : ''}`
+        : '✏️ Éditer les objets un par un';
+    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
+        onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
+}
+
+/**
+ * Le panneau de symbologie d'une couche.
+ *
+ * > **Il a disparu une fois, et rien ne l'a dit.** Le commit a5ce269 reecrivait
+ * > `boutonRevueObjets`, juste au-dessus, et a emporte cette fonction et sa
+ * > variable d'onglet avec elle. Selectionner une couche levait des lors un
+ * > ReferenceError depuis un `onclick` : le panneau ne s'ouvrait plus, et
+ * > l'erreur restait invisible depuis la page Grist hote, l'iframe etant d'une
+ * > autre origine. `verifier-imports.mjs` ne voit que les imports, pas les
+ * > references internes -- d'ou `verifier-references.mjs`.
+ */
 let inspSymTab = 'Couleur';
 function renderSymbologyInspector(layer) {
     const sym = initSymbolization(layer);
@@ -4277,7 +4714,8 @@ function renderSymbologyInspector(layer) {
         <div class="insp-title">${layer.name}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
-        ${isPoint ? `<button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.editLayerObjects('${layer.id}')">✏️ Éditer les objets un par un</button>` : ''}`;
+        ${boutonEnTable(layer)}
+        ${boutonRevueObjets(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
     const body = $('insp-body');
@@ -4542,6 +4980,175 @@ function renderAttrFields(layer, props, opts = {}) {
     }).join('');
 }
 
+/**
+ * Monte le moteur de formulaire dans le corps de l'inspecteur d'objet.
+ *
+ * Le pont est passe explicitement : sans lui, le moteur retombe sur
+ * `window.grist.docApi` et court-circuite le garde d'ecriture d'Atlas.
+ */
+/**
+ * Vrai quand le moteur tient le corps du panneau.
+ *
+ * Le pied d'Atlas doit alors se taire : le moteur porte son propre bouton de
+ * soumission, et deux « Enregistrer » dans le meme panneau feraient deux choses
+ * differentes.
+ *
+ * Il vaut aussi quand l'onglet ne montre qu'un **message** — objet sans ligne
+ * Grist, tous les champs masques. Le pied offrait alors « Enregistrer · 1
+ * objet » sous une explication qui dit qu'il n'y a rien a enregistrer.
+ */
+let _formulaireMonte = false;
+
+/**
+ * L'en-tete d'une fiche qu'on ne peut pas editer, et la sortie quand il y en a une.
+ *
+ * Une couche importee (OSM, fichier) porte ses entites comme un blob dans
+ * `Maquette_Layers` : aucun objet n'a de ligne Grist, donc rien a mettre a jour.
+ * Le dire est necessaire ; s'arreter la ne l'est pas — `entableLayer` sait
+ * exactement lever ce blocage.
+ */
+function enteteSansTable(layer, view) {
+    const peut = !view && CONFIG.grist.ready && layer.kind !== 'table'
+        && (layer.geojson?.features?.length || 0) > 0;
+    const msg = '<div class="hint" style="margin-bottom:10px">Attributs en lecture seule — '
+        + 'les objets de cette couche ne sont pas des lignes Grist.</div>';
+    if (!peut) return msg;
+    const n = layer.geojson.features.length;
+    return msg + `<button class="btn btn-soft btn-full" style="margin-bottom:12px"
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+}
+
+/**
+ * Le passage en table, sur le panneau de la couche.
+ *
+ * Il n'existait que sur la fiche d'un objet : pour le trouver, il fallait
+ * ouvrir « Éditer les objets un par un » sur une couche dont on ne pouvait
+ * justement rien éditer. Constaté le 11/09/2026 dans un document vide : une
+ * couche OSM importée, le bouton « Enregistrer » du pied pressé — qui
+ * enregistre l'apparence, donc une copie dans `Maquette_Layers` —, et pas de
+ * fiche, puisque rien n'avait de ligne. Le geste se pose désormais là où on
+ * le cherche, tant que la couche n'est qu'une copie.
+ */
+function boutonEnTable(layer) {
+    const n = layer?.geojson?.features?.length || 0;
+    if (CONFIG.viewMode || !CONFIG.grist.ready || layer.kind === 'table' || layer._distant || !n) return '';
+    return `<div class="hint" style="margin:10px 0 0">Copie dans le document : ses objets n'ont pas de ligne Grist, donc pas de fiche à remplir.</div>
+        <button class="btn btn-soft btn-full" style="margin-top:8px"
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+}
+
+/**
+ * En revue, la selection porte toute la couche : sans ce rappel, on croirait
+ * modifier les N objets alors qu'on n'ecrit que sur celui du curseur.
+ *
+ * Il valait pour le formulaire et pas pour le repli, alors que le risque de
+ * malentendu est le meme des deux cotes — c'est la selection qui le cree, pas
+ * la maniere dont les champs sont rendus.
+ */
+function rappelRevue(totalRevue) {
+    if (!(totalRevue > 1)) return '';
+    return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
+}
+
+/**
+ * Monte un formulaire dans la fiche.
+ *
+ * Il prend l'entree entiere et non sa seule definition, parce que `principal`
+ * et `via` decident du mode : corriger la ligne cliquee, ou en ajouter une qui
+ * la reference. Le pont en tire tout le reste.
+ */
+function monterFormulaireEntite(layer, props, formulaire, totalRevue = 0, saisieTerrain = false) {
+    // Le cadrage se pose ICI, sur la definition remise au moteur, et nulle part
+    // ailleurs : c'est le seul point ou un formulaire atteint FormEngine, donc
+    // le seul ou un masque puisse etre a la fois complet et sans effet de bord.
+    // Le masquer dans le DOM aurait laisse `validateRequired` reclamer un champ
+    // invisible, et `collectSubmitData` l'ecrire quand meme.
+    const formDef = formDefCadre(formulaire.def, formulaire.masques);
+    const hote = $('insp-body');
+    hote.innerHTML = rappelRevue(totalRevue);
+    // > **Le drapeau se leve des que cet onglet tient le corps du panneau**, y
+    // > compris quand il n'y montre qu'un message. Sinon le pied d'Atlas offre
+    // > « Enregistrer · 1 objet » sous une explication qui dit justement qu'il
+    // > n'y a rien a enregistrer — et ce bouton-la ecrit par `applySelected`,
+    // > un chemin different de celui du formulaire. C'est le « deux Enregistrer
+    // > qui font deux choses » que ce drapeau existe pour empecher.
+    const rowId = props?._row_id;
+    if (rowId == null) {
+        hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
+        _formulaireMonte = true;
+        return;
+    }
+    // Tout masquer est un reglage possible, pas une erreur — mais le moteur
+    // dirait « Aucune section visible », ce qui envoie chercher une condition
+    // qui n'existe pas. On nomme la vraie cause.
+    if (!nbChampsDef(formDef)) {
+        hote.innerHTML = '<div class="hint">Tous les champs de ce formulaire sont masqués pour cette scène.</div>';
+        _formulaireMonte = true;
+        return;
+    }
+    // > **« Étape 1 sur 1 » ne renseigne rien**, et coûte 60 px mesurés sur les
+    // > 360 du panneau. Le moteur rend son fil d'étapes sans condition — c'est
+    // > juste, il ne sait pas où il est monté. Atlas, lui, sait combien de
+    // > sections il remet : il pose la classe, la peau se tait. La decision est
+    // > donc la ou l'information se trouve, et le style la ou il se decrit.
+    hote.classList.toggle('forme-mono-etape', (formDef.sections || []).length <= 1);
+    try {
+        const bloc = document.createElement('div');
+        hote.appendChild(bloc);
+        window.FormEngine.mount(bloc, formDef,
+            pontFormulaire({
+                couche: layer,
+                rowId,
+                docApi: grist.docApi,
+                formulaire,
+                // Les valeurs de la ligne entrent par le pont, donc avant le
+                // premier rendu. Les poser dans le DOM apres le montage ne
+                // couvrait que l'etape affichee : sur un formulaire en deux
+                // temps, le choix « Bon » restait decoche a l'etape 2 alors que
+                // la ligne le portait.
+                //
+                // Un formulaire LIE part vide : il cree une ligne qui n'existe
+                // pas encore, et la prealimenter avec les attributs du batiment
+                // ecrirait ceux-la dans la table des visites.
+                valeurs: formulaire.surLaCouche ? valeursPourMoteur(formDef, props) : {},
+                // `saisieTerrain` porte deja `peutSaisir` parmi ses conditions :
+                // le repeter ici ecrirait la meme regle a deux endroits.
+                peutEcrire: () => canWrite(CONFIG.viewMode) || saisieTerrain,
+                signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
+                // Relit la couche depuis sa table : la carte doit montrer ce
+                // qui vient d'etre ecrit, sinon on doute de l'enregistrement.
+                // Un formulaire lie n'a rien change a la couche — il a ecrit
+                // ailleurs — donc rien a relire.
+                apresEcriture: formulaire.surLaCouche ? () => { A.refreshLayer(layer.id); } : null,
+            }));
+        _formulaireMonte = true;
+    } catch (e) {
+        console.error('[Atlas formulaire] mount', e);
+        hote.innerHTML = `<div class="hint">Formulaire indisponible : ${e.message}</div>`;
+    }
+}
+
+/**
+ * Cette couche se saisit-elle hors edition ?
+ *
+ * Deux endroits ont besoin de la reponse — le clic sur la carte, qui choisit
+ * entre le popup et la fiche, et la fiche elle-meme, qui choisit entre montrer
+ * et laisser ecrire. La regle, elle, n'existe qu'une fois : `saisieHorsEdition`.
+ *
+ * @param {object} layer
+ * @param {{entree?: object|null}} [opts] l'entree deja resolue, si l'appelant l'a
+ */
+function coucheEnSaisie(layer, opts = {}) {
+    if (!layer) return false;
+    return saisieHorsEdition({
+        view: !!CONFIG.viewMode,
+        aDesLignes: coucheAvecLignes(layer),
+        peutEcrire: CONFIG.peutSaisir,
+        formulaires: opts.formulaires || formulairesDeLaCouche(layer),
+        moteur: moteurDisponible(),
+    });
+}
+
 function renderObjectInspector() {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
     if (!layer) return;
@@ -4552,18 +5159,42 @@ function renderObjectInspector() {
     const props = f?.properties || {};
     const label = props.name || props._label || props._osmId || `Objet #${idx + 1}`;
     const r = resolveFeatureProps(f, layer);
-    const isQgis = layer.source === 'qgis2grist';
+    // « Puis-je ecrire cet objet ? » se decide sur la capacite — une table et
+    // un `_row_id` —, jamais sur le producteur de la couche.
+    const isQgis = coucheAvecLignes(layer);
     const view = !!CONFIG.viewMode;
     const is3D = isModelLayer(layer);
-    const tabs = objectInspectorTabs({ layer, multi });
-    if (!_inspObjTab || !tabs.includes(_inspObjTab)) _inspObjTab = tabs[0] || null;
+    const revue = !!STATE.selection.revue;
+    // Tous les formulaires de la couche : le principal, puis ceux dont la table
+    // la reference. On ne remplit pas un formulaire sur douze objets a la fois,
+    // sauf en revue, ou un curseur designe l'objet courant.
+    const tousFormulaires = (multi && !revue) ? [] : formulairesDeLaCouche(layer);
+
+    // Le seul chemin d'ecriture ouvert hors edition : les attributs devines
+    // restent fermes, et rien d'autre ne bouge.
+    const saisieTerrain = coucheEnSaisie(layer, { formulaires: tousFormulaires });
+
+    // En terrain, seuls les formulaires que la scene a rendus disponibles ont un
+    // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
+    // celui qu'on n'a pas encore expose.
+    const formulaires = view ? formulairesOffertsEnLecture(tousFormulaires) : tousFormulaires;
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue });
+    if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
+    const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
+    const formActif = ongletActif?.formulaire || null;
+
+    // Hors de la branche : le pied de fiche en a besoin lui aussi, et le
+    // deduire une seconde fois la-bas ferait deux regles pour un seul fait.
+    const attrsReadOnly = (view && !saisieTerrain) || !isQgis;
 
     $('insp-head').innerHTML = `
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
-        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · Grist' : ''}${view ? ' · lecture' : ''}`}</div>`;
+        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
-        `<button class="insp-tab ${_inspObjTab === t ? 'active' : ''}" onclick="A.setInspObjTab('${t}')">${t}</button>`
+        `<button class="insp-tab ${_inspObjTab === t.cle ? 'active' : ''}"
+            onclick="A.setInspObjTab('${String(t.cle).replace(/'/g, "\'")}')"
+            title="${t.formulaire?.tableId || ''}">${t.libelle}</button>`
     ).join('');
 
     const slider = (id, lbl, val, min, max, step, unit, mixed) => `
@@ -4583,13 +5214,37 @@ function renderObjectInspector() {
     // Le corps suit l'onglet actif. Une cascade parallèle laisserait passer les
     // réglages 3D là où l'onglet a justement été retiré (objet non qgis2grist,
     // sélection multiple, mode lecture).
-    if (_inspObjTab === 'Attributs') {
-        const readOnly = view || !isQgis;
-        const entete = readOnly
-            ? (isQgis ? '' : '<div class="hint" style="margin-bottom:10px">Attributs de la couche — lecture seule (source hors table Grist).</div>')
-            : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
-        $('insp-body').innerHTML = entete + renderAttrFields(layer, props, { readOnly });
-    } else if (_inspObjTab === 'Placement 3D') {
+    // Remis a faux avant la cascade : sans cela, passer de la fiche a l'onglet
+    // « Placement 3D » laisserait le pied muet, donc sans bouton d'enregistrement.
+    _formulaireMonte = false;
+
+    if (formActif) {
+        // Un formulaire LIE ajoute une ligne dans sa propre table : il ne depend
+        // pas du droit de corriger l'objet. Le confondre avec le principal
+        // fermerait la saisie de terrain a qui peut relever sans pouvoir
+        // modifier le bati — la configuration saine, justement.
+        const readOnly = formActif.surLaCouche ? attrsReadOnly : (view && !saisieTerrain);
+        // Quand le document decrit cette table par un FormDef, c'est LUI la
+        // fiche : widgets typés, choix, obligatoires, coercition d'ecriture.
+        // `renderAttrFields` reste le repli — il devine les champs, et n'a que
+        // deux types.
+        if (formActif.def && !readOnly && moteurDisponible()) {
+            monterFormulaireEntite(layer, props, formActif, revue && multi ? count : 0, saisieTerrain);
+        } else if (!formActif.surLaCouche) {
+            $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
+                + `<div class="hint">Relevé « ${formActif.titre} » — indisponible ici : `
+                + (readOnly ? 'la saisie est fermée en lecture.' : 'le moteur de formulaire n’est pas chargé.')
+                + '</div>';
+        } else {
+            // Constater un blocage sans donner la sortie, c'est le laisser
+            // chercher. L'offre se pose donc LA ou le blocage se lit.
+            const entete = readOnly
+                ? (isQgis ? '' : enteteSansTable(layer, view))
+                : `<div class="hint" style="margin-bottom:10px">Modifications enregistrées dans <strong>${layer.sourceTable}</strong>.</div>`;
+            $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
+                + entete + renderAttrFields(layer, props, { readOnly });
+        }
+    } else if (_inspObjTab === ONGLET_3D) {
         if (view) {
             $('insp-body').innerHTML = multi
                 ? `<div class="hint">Mode lecture — sélection de ${count} objets (pas d’édition).</div>`
@@ -4615,10 +5270,18 @@ function renderObjectInspector() {
         $('insp-body').innerHTML = `<div class="hint">${count} objets sélectionnés — aucun réglage groupé pour ce type d’objet.</div>`;
     }
 
-    if (view) {
+    if (_formulaireMonte) {
+        $('insp-foot').innerHTML = '';
+    } else if (view) {
         $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Mode lecture — consultation seule</div>`;
     } else if (!tabs.length) {
         $('insp-foot').innerHTML = '';
+    } else if (formActif?.surLaCouche && attrsReadOnly) {
+        // « Enregistrer » promettait d'ecrire des champs que l'onglet venait
+        // d'afficher en lecture seule. La sortie est dans le corps de la fiche
+        // (« Enregistrer dans Grist »), la ou le blocage se lit ; le pied dit
+        // seulement pourquoi il n'y a rien a enregistrer ici.
+        $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Attributs non modifiables — cette couche n'a pas de lignes Grist.</div>`;
     } else {
         // « Reset » ne rétablit que les surcharges de placement 3D ; « Enregistrer »
         // persiste aussi les attributs, il reste donc dans tous les cas.
@@ -4660,8 +5323,17 @@ function setupInteraction() {
         if (!layer) return;
         const idx = f.properties?._idx ?? 0;
 
-        // Lecture : popup attributs (pas d’inspecteur édition)
+        // Lecture : popup attributs (pas d'inspecteur édition) — sauf quand la
+        // scene a publie un formulaire sur cette couche. Le popup dirait les
+        // valeurs ; il ne permettrait pas de les corriger, et c'est justement ce
+        // qu'on est venu faire sur le terrain. Sans cette porte, la bascule
+        // « disponible hors edition » n'aurait rien change a l'ecran.
         if (CONFIG.viewMode) {
+            if (coucheEnSaisie(layer)) {
+                closeViewPopup();
+                enterSelectionMode(layer.id, idx);
+                return;
+            }
             showViewFeaturePopup(layer, idx, e.lngLat, f);
             return;
         }
@@ -4925,15 +5597,23 @@ async function onLocationPick(e) {
     } catch (e2) {}
 }
 function enterSelectionMode(layerId, idx) {
-    if (CONFIG.viewMode) {
+    const enSaisie = coucheEnSaisie(STATE.layers.find((l) => l.id === layerId));
+    // En lecture, la selection est refusee — sauf sur une couche dont la scene
+    // a publie le formulaire : c'est tout l'objet du mode exploitation. Les
+    // autres gardent le popup, qui montre sans permettre de corriger.
+    if (CONFIG.viewMode && !enSaisie) {
         const layer = STATE.layers.find((l) => l.id === layerId);
         if (layer && idx != null) showViewFeaturePopup(layer, idx);
         return;
     }
+    document.body.classList.toggle('mode-saisie', enSaisie);
     STATE.selection.mode = true;
     STATE.selection.layerId = layerId;
     STATE.selection.features = idx != null ? [idx] : [];
     STATE.selection.multiIndex = 0;
+    // Une selection ordinaire n'est pas une revue : le drapeau ne se leve que
+    // dans `editLayerObjects`, apres cet appel.
+    STATE.selection.revue = false;
     $('map-frame').classList.add('select-mode');
     $('selection-bar').classList.add('open');
     const layer = STATE.layers.find((l) => l.id === layerId);
@@ -4942,8 +5622,13 @@ function enterSelectionMode(layerId, idx) {
     if (idx != null) flyToFeature(layer, idx);
 }
 function exitSelectionMode() {
+    document.body.classList.remove('mode-saisie');
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
-    if (layer) { saveLayerToGrist(layer, true); }
+    // Refermer un objet enregistrait les preferences de la couche. En mode
+    // exploitation, ou l'on referme apres chaque saisie, cela ferait apparaitre
+    // « Mode lecture — enregistrer les preferences indisponible » a chaque
+    // objet — pour un reglage que personne n'a touche.
+    if (layer && !CONFIG.viewMode) { saveLayerToGrist(layer, true); }
     STATE.selection = { mode: false, layerId: null, features: [], multiIndex: 0 };
     $('map-frame').classList.remove('select-mode');
     $('selection-bar').classList.remove('open');
@@ -5025,19 +5710,34 @@ function clearFeatureOverrides(layer, idx) {
 // ============================================================
 // IMPORT — OSM (Overpass) & fichier
 // ============================================================
-function openOSM() {
+async function openOSM() {
     $('module-title').textContent = 'Import OSM';
-    const b = map.getBounds();
     $('module-body').innerHTML = `
-        <div class="hint">Zone importée = emprise visible. Zoomez pour réduire.</div>
-        <div class="range-info" style="margin-bottom:12px">${b.getSouth().toFixed(4)}, ${b.getWest().toFixed(4)} → ${b.getNorth().toFixed(4)}, ${b.getEast().toFixed(4)}</div>
+        <div class="hint">Zone importée = emprise visible, vue à plat. Zoomez pour réduire.</div>
+        <div class="range-info" id="osm-emprise" style="margin-bottom:12px">…</div>
         <div class="section"><div class="section-title">Objets prédéfinis</div>
             <div class="model-grid">${Object.entries(OSM_PRESETS).map(([k, p]) => `<div class="model-card" onclick="A.runOSM('${k}')"><div class="mi">${p.icon}</div><div class="mn">${p.name}</div></div>`).join('')}</div>
         </div>
         <div class="section"><button class="btn btn-soft btn-full" onclick="A.openModule('couches')">← Retour</button></div>`;
+    majEmpriseOSM();
+    // Inclinée, la vue court jusqu'à l'horizon, et l'emprise importée avec
+    // elle : on importe ce qui est à l'écran, donc à plat (`lib/vue-import.js`).
+    if (await mettreAPlat(map)) majEmpriseOSM();
 }
+
+/** L'emprise affichée dans le panneau d'import suit la carte. */
+function majEmpriseOSM() {
+    const el = $('osm-emprise');
+    if (!el || !map) return;
+    const b = map.getBounds();
+    el.textContent = `${b.getSouth().toFixed(4)}, ${b.getWest().toFixed(4)} → ${b.getNorth().toFixed(4)}, ${b.getEast().toFixed(4)}`;
+}
+
 async function runOSM(key) {
     const preset = OSM_PRESETS[key]; if (!preset) return;
+    // Inclinée depuis l'ouverture du panneau ? On remet à plat avant de lire
+    // l'emprise.
+    await mettreAPlat(map);
     showLoading('Interrogation OpenStreetMap…');
     try {
         const b = map.getBounds();
@@ -5088,6 +5788,106 @@ function makeLayer(name, geomType, geojson, category, modelId) {
     initSymbolization(layer);
     return layer;
 }
+
+// ============================================================
+// ENREGISTRER UNE COUCHE DANS GRIST (« entabler »)
+// ============================================================
+/**
+ * Porte depuis `app.js` (pre-v7), ou cette fonctionnalite existait et a ete
+ * perdue au passage a la v7 — sans decision, comme l'export QGIS et le modele
+ * 3D en piece jointe. Le CLAUDE.md signalait ces deux-la ; celle-ci est une
+ * TROISIEME perte, non documentee.
+ *
+ * ## Ce que ca change, et pourquoi c'est le prealable a tout le reste
+ *
+ * Un import OSM ou fichier depose aujourd'hui **une seule ligne** dans
+ * `Maquette_Layers`, contenant tout le GeoJSON. Vingt-quatre arbres y font une
+ * ligne. Aucun objet n'a donc de `_row_id`, et la fiche d'entite est en lecture
+ * seule — non par choix, mais parce qu'il n'y a rien a mettre a jour.
+ *
+ * `entableLayer` cree une vraie table de donnees : une ligne par objet, la
+ * geometrie en `geometry_json`, les attributs en colonnes typees. La couche est
+ * ensuite reliee a cette table. Alors chaque objet a son `_row_id`, la fiche
+ * devient editable, et le formulaire s'y applique.
+ *
+ * ## L'ecriture se fait par lots
+ *
+ * `BATCH = 200`. Un import OSM se compte en milliers d'entites ; une seule
+ * `applyUserActions` avec tout dedans est un pari sur la taille de la charge
+ * utile. Les lots donnent aussi un progres visible plutot qu'un long gel.
+ */
+function inferGristType(vals) {
+    let seen = false, allBool = true, allInt = true, allNum = true;
+    for (const v of vals) {
+        if (v == null || v === '') continue; seen = true;
+        if (typeof v !== 'boolean') allBool = false;
+        const n = Number(v);
+        const isNum = (typeof v === 'number') || (typeof v === 'string' && v.trim() !== '' && isFinite(n));
+        if (!isNum) { allNum = false; allInt = false; }
+        else if (!Number.isInteger(n)) allInt = false;
+    }
+    if (!seen) return 'Text';
+    if (allBool) return 'Bool';
+    if (allInt) return 'Int';
+    if (allNum) return 'Numeric';
+    return 'Text';
+}
+
+function sanitizeId(s) {
+    // Les accents sont translittérés, pas supprimés : « Éclairage » donnait
+    // `Atlas_clairage` (constaté le 11/09/2026), et un nom de table amputé ne
+    // se retrouve plus dans la liste du document.
+    const v = String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return (/^[a-zA-Z]/.test(v) ? v : '_' + v) || 'Col';
+}
+
+async function entableLayer(layer) {
+    const feats = layer.geojson?.features || [];
+    if (!feats.length) throw new Error('couche vide');
+    const propNames = new Set();
+    feats.forEach((f) => Object.keys(f.properties || {}).forEach((k) => { if (!k.startsWith('_') && k !== 'geometry_json') propNames.add(k); }));
+    const attrCols = [...propNames];
+    const colId = {}; attrCols.forEach((n) => colId[n] = sanitizeId(n));
+    const OV = { _scale: 'scale', _rotationX: 'rotation_x', _rotationY: 'rotation_y', _rotationZ: 'rotation_z', _offsetX: 'offset_x', _offsetY: 'offset_y', _offsetZ: 'offset_z' };
+    const ovMap = { scale: 'scale', rotation_x: 'rotationX', rotation_y: 'rotationY', rotation_z: 'rotationZ', offset_x: 'offsetX', offset_y: 'offsetY', offset_z: 'offsetZ' };
+    const ovUsed = {};
+    feats.forEach((f) => { const p = f.properties || {}; for (const k in OV) if (p[k] != null && p[k] !== '') ovUsed[OV[k]] = 1; });
+    const is3D = layer.style?.mode === 'library' || layer.style?.mode === 'custom';
+    const isPt = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const colDefs = [
+        { id: 'geometry_json', fields: { label: 'Géométrie (GeoJSON)', type: 'Text' } },
+        ...attrCols.map((n) => ({ id: colId[n], fields: { label: n, type: inferGristType(feats.map((f) => f.properties?.[n])) } })),
+        ...Object.keys(ovUsed).map((cn) => ({ id: cn, fields: { label: cn, type: 'Numeric' } })),
+    ];
+    if (is3D) colDefs.push({ id: 'model_id', fields: { label: 'model_id', type: 'Text' } });
+    const tableName = sanitizeId('Atlas_' + layer.name);
+    const addRes = await grist.docApi.applyUserActions([['AddTable', tableName, colDefs]]);
+    const actualTable = addRes?.retValues?.[0]?.table_id || tableName;
+    if (isPt) { try { await grist.docApi.applyUserActions([['AddColumn', actualTable, 'model_glb', { type: 'Attachments', label: 'Modèle 3D (PJ)' }]]); } catch (e) {} }
+    const BATCH = 200;
+    for (let i = 0; i < feats.length; i += BATCH) {
+        const batch = feats.slice(i, i + BATCH);
+        const colData = { geometry_json: batch.map((f) => JSON.stringify(f.geometry)) };
+        attrCols.forEach((n) => { colData[colId[n]] = batch.map((f) => { const v = f.properties?.[n]; return v == null ? null : (typeof v === 'object' ? JSON.stringify(v) : v); }); });
+        for (const cn in ovUsed) colData[cn] = batch.map((f) => resolveFeatureProps(f, layer)[ovMap[cn]] ?? null);
+        if (is3D) colData.model_id = batch.map((f) => resolveFeatureProps(f, layer).modelId || null);
+        await grist.docApi.applyUserActions([['BulkAddRecord', actualTable, Array(batch.length).fill(null), colData]]);
+    }
+    const cols = await grist.docApi.fetchTable(actualTable);
+    layer.geojson = tableToGeoJSON(cols, 'geometry_json');
+    layer.kind = 'table'; layer.sourceTable = actualTable; layer.geometryColumn = 'geometry_json'; layer.source = 'grist-table';
+    layer._perObjectColor = layer.geojson.features.some((f) => f.properties && f.properties.fill_color);
+    indexFeatures(layer); removeLayerGfx(layer); addLayerToMap(layer); Models3D.scheduleBuild();
+    // La couche est maintenant portee par une table : son apparence va dans
+    // `Atlas_LayerPrefs` (cf. `clePrefsCouche`). La ligne de `Maquette_Layers`
+    // reste, mais VIDEE de ses entites : elle devient l'inventaire qui dit que
+    // la scene contient cette table (`ligneInventaire`). La supprimer, comme on
+    // le faisait, faisait disparaitre la couche au rechargement.
+    saveLayerToGrist(layer, true); markDirty();
+    return layer.geojson.features.length;
+}
+
 function finalizeNewLayer(layer) {
     // Empiler au sommet mettrait un bâti importé après un réseau par-dessus lui.
     // On insère sous les géométries plus fines : surfaces, puis lignes, puis points.
@@ -5202,6 +6002,48 @@ const TABLE_SCHEMAS = {
         { id: 'GeoJSON', fields: { label: 'GeoJSON', type: 'Text' } },
     ],
 };
+/**
+ * Les FormDef du document, s'il y en a.
+ *
+ * Table creee a la demande par qgis2grist : absente sur la plupart des
+ * documents, et c'est le cas normal. On garde une liste vide plutot que `null`
+ * pour que l'appelant n'ait pas a distinguer « pas de table » de « pas de
+ * formulaire pour cette couche » — les deux donnent le meme repli.
+ */
+async function chargerFormulaires() {
+    STATE.formulaires = [];
+    STATE.formulairesTable = false;
+    // Le schema porte les types des colonnes, donc les `Ref:` qui disent quelles
+    // tables referencent une couche, et de quoi deduire un formulaire de celles
+    // qui n'en ont pas. Sans lui il ne reste que l'enregistre.
+    STATE.schema = CONFIG.grist.ready ? await chargerSchema(grist.docApi) : {};
+    if (!CONFIG.grist.ready) return;
+    try {
+        const tables = await grist.docApi.listTables();
+        if (!tables.includes('Formulaires')) return;
+        STATE.formulairesTable = true;
+        STATE.formulaires = lireFormulaires(await grist.docApi.fetchTable('Formulaires'));
+    } catch (e) {
+        console.warn('[Atlas formulaire] chargement', e.message);
+    }
+}
+
+/**
+ * Les formulaires d'une couche — le principal, puis les lies.
+ *
+ * Une seule porte, parce que trois endroits en ont besoin : les onglets de la
+ * fiche, le clic sur la carte qui choisit entre le popup et la fiche, et le
+ * module qui les liste. Les recalculer chacun de son cote aurait fait trois
+ * verites pour une seule question.
+ */
+function formulairesDeLaCouche(layer) {
+    return formulairesPourCouche({
+        couche: layer,
+        entrees: STATE.formulaires,
+        schema: STATE.schema,
+    });
+}
+
 async function syncStoryFromGrist() {
     if (!CONFIG.grist.ready) return;
     // Une seule lecture rend le recit et le nombre de lignes qui le portent.
@@ -5227,6 +6069,9 @@ function assertCanWrite(actionLabel) {
 function enterViewModeOnWriteFail(err) {
     if (CONFIG.viewMode) return;
     CONFIG.viewMode = true;
+    // Un refus franc vaut pour toute la session : continuer d'offrir la saisie
+    // ferait remplir un formulaire pour rien.
+    CONFIG.peutSaisir = false;
     applyViewModeChrome();
     const msg = err?.message || String(err || '');
     showToast('Écriture refusée — passage en lecture' + (msg ? ` (${msg})` : ''), 'warning');
@@ -5243,7 +6088,12 @@ function updateUserBadge() {
     const el = $('user-badge');
     if (!el) return;
     const lecture = !!CONFIG.viewMode;
-    const droit = lecture ? 'Lecture seule — édition indisponible' : 'Édition autorisée';
+    // Trois etats, pas deux : « je ne peux rien ecrire » et « je peux remplir
+    // les formulaires publies » sont deux situations differentes, et c'est ici
+    // qu'un utilisateur vient chercher ce qu'il a le droit de faire.
+    const droit = lecture
+        ? (CONFIG.peutSaisir ? 'Lecture — saisie des formulaires publiés' : 'Lecture seule — édition indisponible')
+        : 'Édition autorisée';
     const u = CONFIG.grist.user;
     el.classList.toggle('ro', lecture);
     if (u?.initiales) {
@@ -5285,6 +6135,23 @@ function refreshStoryButton() {
     const b = $('btn-story');
     if (b) b.classList.toggle('has-story', !!(STATE.story?.length));
 }
+
+/**
+ * `?navbar=false` retire la barre du haut.
+ *
+ * Pour une integration en cadre — une page qui porte deja son titre et sa
+ * navigation —, la barre d'Atlas fait doublon et prend une hauteur qu'on ne
+ * recupere pas.
+ *
+ * > **Posee une fois, au chargement.** Elle ne depend que de l'URL, qui ne
+ * > change pas : la mettre dans `updateMobileLayout` la faisait relire a chaque
+ * > redimensionnement, et surtout n'arrivait qu'apres la porte d'accueil — la
+ * > barre restait visible tant qu'on ne s'etait pas connecte. Une decision qui
+ * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
+ * > dont le nom promet autre chose.
+ */
+CONFIG.sansNavbar = !parseNavbarParam(typeof location !== 'undefined' ? location.search : '');
+document.body.classList.toggle('sans-navbar', CONFIG.sansNavbar);
 
 function applyViewModeChrome() {
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
@@ -5344,7 +6211,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.6.6');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.7.0');
     return Feuille;
 }
 
@@ -5461,10 +6328,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.6.6'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.7.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.6.6');
+        const dc = await import('./lib/data-client.js?v=1.7.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -5582,16 +6449,42 @@ async function initGrist() {
         grist.ready({ requiredAccess: acc.requiredAccess });
         CONFIG.grist.ready = true;
         CONFIG.viewMode = acc.viewMode;
+        // `viewMode` dit « Atlas ne montre pas ses outils d'auteur ».
+        // `peutSaisir` dit « cette personne peut ecrire dans le document ».
+        // Les deux se confondaient, et c'est pourquoi un formulaire expose hors
+        // edition n'aurait servi a personne : le garde d'ecriture le refusait
+        // avant meme de regarder les droits.
+        CONFIG.peutSaisir = !acc.viewMode;
         // Sonde uniquement quand Grist n'a rien transmis (ouverture hors Grist,
         // version ancienne) : sinon on croit ce que le document annonce.
         if (acc.needsProbe) {
             const writable = await probeCanWriteDoc(grist.docApi);
+            CONFIG.peutSaisir = writable;
             if (!writable) {
                 CONFIG.viewMode = true;
                 console.info('[Atlas] Accès sans écriture — mode lecture');
             }
         } else if (CONFIG.viewMode) {
             console.info('[Atlas] Mode lecture —', acc.reason);
+            // Une lecture demandee par l'URL n'est PAS une privation de droits :
+            // c'est le cas du lien de terrain, ou l'on veut precisement que la
+            // personne remplisse un formulaire sans voir les outils d'auteur.
+            //
+            // > **On ne predit pas ce que Grist repondra.** Une sonde ici serait
+            // > une PREDICTION du verdict des regles d'acces — et elle sondait
+            // > une table choisie par `resolveProbeTableId`, pas celle de la
+            // > couche : sous une ACL par table, elle aurait declare en lecture
+            // > seule exactement les personnes pour qui le formulaire est
+            // > expose. Le cadrage identite le dit deja : « le widget n'a pas
+            // > besoin de connaitre l'email pour que les regles s'appliquent,
+            // > c'est Grist qui filtre ».
+            //
+            // Atteindre cette branche signifie deja que Grist n'a PAS annonce la
+            // lecture seule (sinon `resolveAccess` aurait rendu
+            // `grist-readonly`). C'est tout ce qu'on peut savoir de vrai avant
+            // d'ecrire, et c'est assez : un refus reel bascule la session par
+            // `enterViewModeOnWriteFail`, avec son motif.
+            CONFIG.peutSaisir = acc.reason === 'mode-view';
         }
         // Identité : le jeton livre l'userId — suffisant pour marquer l'auteur
         // d'une préférence ou d'un récit. Le nom, lui, n'est pas accessible par
@@ -5612,6 +6505,7 @@ async function initGrist() {
             await loadLayersFromGrist();
         }
         await syncStoryFromGrist();
+        await chargerFormulaires();
         await syncScenePrefsFromGrist();
         refreshControlsDock();
         if (CONFIG.viewMode) {
@@ -5619,11 +6513,45 @@ async function initGrist() {
         }
     } catch (e) {
         console.warn('Grist init:', e.message);
-        if (!intent.viewModeForced && intent.preferFull) {
+        // > **`intent` n'existait plus.** La variable a ete renommee `acc` dans
+        // > le `try` le 05/08/2026 ; ce `catch` a garde l'ancien nom. Il ne
+        // > s'atteint que si l'initialisation a deja echoue — donc le repli en
+        // > lecture, sa seule raison d'etre, levait un ReferenceError au lieu
+        // > de s'executer, et emportait avec lui tout ce qui suit. Un mois en
+        // > ligne sans que rien ne le dise : `node --check` valide la syntaxe,
+        // > et une lecture de propriete n'est pas un appel.
+        //
+        // La condition d'origine — « ni lecture demandee, ni acces restreint »
+        // — se dit d'un mot avec `acc` : `viewMode` est vrai exactement dans
+        // ces deux cas. Redemander `read table` a une session deja en lecture
+        // fermerait d'ailleurs l'ecriture au widget lui-meme, ce qui est
+        // precisement le defaut corrige dans `resolveAccess`.
+        //
+        // > **Et il faut un document pour se replier dessus.** `reason: 'probe'`
+        // > veut dire que Grist n'a RIEN transmis : pas d'hote, donc rien a lire.
+        // > Reparer ce catch l'a rendu atteignable, et il a aussitot bascule la
+        // > page autonome en lecture — rail masque, badge 👁 — alors que sa porte
+        // > d'accueil promet exactement l'inverse : « vous pourrez charger un
+        // > fichier, importer depuis OpenStreetMap et travailler localement ».
+        // > Regression constatee a l'ecran le 08/09/2026, le jour meme de la
+        // > correction : un repli mort depuis un mois ne se reveille pas sans
+        // > qu'on regarde ou il atterrit.
+        // > **Sans hote, `ready` doit retomber a faux.** Il est pose juste apres
+        // > `grist.ready()`, avant le premier appel reel — or hors Grist cet
+        // > appel echoue, et rien ne le remettait a faux. Les 28 chemins qui le
+        // > lisent croyaient donc tenir un document : le module Formulaires
+        // > affichait l'interface Grist au lieu de « Hors Grist », et la sonde
+        // > tentait un `applyUserActions` dans un document inexistant. Vu dans
+        // > la console de la page autonome, le 10/09/2026.
+        if (acc.reason === 'probe') CONFIG.grist.ready = false;
+        if (!acc.viewMode && acc.reason !== 'probe') {
             try {
                 grist.ready({ requiredAccess: 'read table' });
                 CONFIG.grist.ready = true;
                 CONFIG.viewMode = true;
+                // On est ici parce que l'acces complet a echoue : rien ne
+                // s'ecrira, formulaire ou pas.
+                CONFIG.peutSaisir = false;
                 applyViewModeChrome();
                 CONFIG.docMode = await detectDocMode(grist.docApi);
                 if (CONFIG.docMode === 'scene-manifest') {
@@ -5866,11 +6794,25 @@ function startSceneManifestPolling() {
         },
     });
 }
+/**
+ * Monte les couches que `Maquette_Layers` detient.
+ *
+ * > **Idempotente, et il a fallu l'apprendre.** L'initialisation Grist retente
+ * > en lecture quand elle echoue — mais l'echec peut survenir APRES ce
+ * > chargement (`syncStoryFromGrist`, les prefs, une regle d'acces qui refuse une
+ * > ecriture). La reprise rappelait alors cette fonction sans remettre
+ * > `STATE.layers` a zero : chaque couche apparaissait DEUX FOIS dans le
+ * > panneau, avec deux entrees de legende, pour une seule ligne en base. On
+ * > accusait le document d'avoir des doublons ; ils n'etaient que dans l'ecran.
+ */
 async function loadLayersFromGrist() {
     try {
         const rec = await grist.docApi.fetchTable('Maquette_Layers');
         const ids = rec.id || [];
+        const dejaMontees = new Set(STATE.layers.map((l) => l.gristId).filter((v) => v != null));
+        let prefsTables = null;
         for (let i = 0; i < ids.length; i++) {
+            if (dejaMontees.has(ids[i])) continue;
             let geojson, style;
             try { geojson = JSON.parse(rec.GeoJSON[i]); } catch (e) { continue; }
             try { style = JSON.parse(rec.StyleJSON[i]); } catch (e) { style = { mode: 'mapbox' }; }
@@ -5888,11 +6830,32 @@ async function loadLayersFromGrist() {
             if (binding?.kind === 'table') {
                 layer.kind = 'table';
                 layer.sourceTable = binding.sourceTable;
-                layer.geometryColumn = binding.geometryColumn;
+                layer.geometryColumn = binding.geometryColumn || 'geometry_json';
+                layer.source = 'grist-table';
+                // Les entités vivent dans la table ; la ligne n'en garde pas de
+                // copie (et une ancienne copie serait périmée). L'apparence et
+                // les réglages de formulaire sont dans les prefs, comme pour une
+                // couche du manifeste.
+                try {
+                    const cols = await grist.docApi.fetchTable(layer.sourceTable);
+                    layer.geojson = tableToGeoJSON(cols, layer.geometryColumn);
+                } catch (e) {
+                    console.warn('[Atlas] table introuvable :', layer.sourceTable, e.message);
+                    showToast(`Table ${layer.sourceTable} introuvable — couche « ${layer.name} » ignorée`, 'warning');
+                    continue;
+                }
+                if (!prefsTables) prefsTables = await loadLayerPrefs(grist.docApi);
+                applyLayerPrefs(layer, prefsTables);
             }
             initSymbolization(layer);
             if (layer.controls?.length) applyControls(layer);
             STATE.layers.push(layer);
+        }
+        // Rangs enregistrés dans les prefs : même règle qu'en mode manifeste.
+        if (prefsTables) {
+            STATE.layers = sortByRank(STATE.layers, Object.fromEntries(
+                STATE.layers.filter((l) => Number.isFinite(l._rank)).map((l) => [l.sourceTable || l.id, l._rank])
+            ));
         }
         mountLoadedLayers(computeLayersBounds());
     } catch (e) { console.warn('loadLayers:', e.message); }
@@ -5922,6 +6885,18 @@ async function ensureMaquetteLayersTable() {
     _maquetteTablePrete = true;
 }
 
+/** Pose ou met à jour la ligne d'inventaire d'une couche portée par une table. */
+async function ecrireLigneInventaire(layer) {
+    await ensureMaquetteLayersTable();
+    const data = ligneInventaire(layer);
+    if (layer.gristId) {
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Maquette_Layers', layer.gristId, data]]);
+    } else {
+        const r = await grist.docApi.applyUserActions([['AddRecord', 'Maquette_Layers', null, data]]);
+        layer.gristId = r.retValues[0];
+    }
+}
+
 async function saveLayerToGrist(layer, silent) {
     if (!CONFIG.grist.ready) return;
     if (!assertCanWrite('enregistrer les préférences')) return;
@@ -5931,6 +6906,9 @@ async function saveLayerToGrist(layer, silent) {
     if (clePrefsCouche(layer)) {
         try {
             await saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode });
+            // Sans manifeste, rien d'autre ne dit que cette table fait partie de
+            // la scène : sans sa ligne, elle disparaissait au rechargement.
+            if (ligneInventaireRequise(layer, CONFIG.docMode)) await ecrireLigneInventaire(layer);
             if (!silent) showToast(`Préférences Atlas · ${layer.name}`, 'success');
             dirty = false;
             $('app-header')?.classList.remove('dirty');
@@ -6071,6 +7049,7 @@ function buildCmdItems(q) {
         { label: 'Couches', kind: 'module', run: () => openModule('couches'), ic: icTrait(IC.dossier) },
         { label: 'Contrôles', kind: 'module', run: () => openModule('controles'), ic: icTrait(IC.controles) },
         { label: 'Récit', kind: 'module', run: () => openModule('recit'), ic: icTrait(IC.recit) },
+        { label: 'Formulaires', kind: 'module', run: () => openModule('formulaires'), ic: icTrait(IC.formulaire) },
         { label: 'Catalogue 3D / Réglages', kind: 'module', run: () => openModule('reglages'), ic: icTrait(IC.reglages) },
         { label: 'Soleil', kind: 'module', run: () => openModule('soleil'), ic: icTrait(IC.soleil) },
         { label: 'Vue & rendu', kind: 'module', run: () => openModule('vues'), ic: icTrait(IC.cube) },
@@ -6131,6 +7110,173 @@ function updateRailBadge() {
 // ============================================================
 const A = {
     openModule, exitSelectionMode,
+
+    // ---------- Formulaires ----------
+
+    /**
+     * Proposer — ou retirer — un formulaire hors edition.
+     *
+     * > **La case ne veut dire qu'une chose : visible en terrain.** En edition
+     * > tous les formulaires de la couche ont leur onglet, sinon on ne pourrait
+     * > pas composer celui qu'on n'a pas encore expose.
+     *
+     * Le reglage voyage avec la COUCHE et non avec le formulaire : une meme
+     * table peut etre proposee dans une scene et pas dans une autre, alors que
+     * sa definition est unique.
+     *
+     * Il remplace les deux actions d'avant — « publier le formulaire d'une
+     * table » et « choisir lequel sert de fiche ». La premiere ne connaissait
+     * qu'un formulaire par table ; la seconde n'a plus d'objet depuis que tous
+     * ont leur onglet.
+     */
+    /**
+     * Cadrer un formulaire : retirer un champ de ce que **cette scene** montre.
+     *
+     * Ce n'est pas une composition. Rien n'est ecrit dans `Formulaires` : le
+     * FormDef reste la propriete de qui l'a fait — le builder, ou QField par
+     * qgis2grist. Le masque vit avec la couche, a cote d'`exposes`, et dit
+     * « cette scene ne montre pas ce champ ».
+     *
+     * On enregistre ce qu'on RETIRE, jamais ce qu'on garde : un formulaire
+     * amont qui gagne un champ plus tard le montrera, et une colonne supprimee
+     * rend son masque inerte au lieu de faux.
+     */
+    async masquerChamp(layerId, formId, colId) {
+        if (!assertCanWrite('régler les champs')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        if (!couche || !formId || !colId) return;
+        const vise = formulairesDeLaCouche(couche).find((f) => f.id === formId);
+        if (!vise) return;
+        // Un champ dont un autre depend ne se retire pas : le dependant
+        // resterait coince, sans erreur et sans message.
+        if (champsDependants(vise.def).has(colId)) {
+            showToast('Un autre champ dépend de celui-ci', 'warning');
+            return;
+        }
+        const masques = { ...reglagesFormulaire(couche).masques };
+        // On part de ce qui est MASQUE A L'ECRAN — le defaut compris : partir de
+        // l'enregistre seul aurait reaffiche d'un coup toutes les colonnes
+        // d'Atlas au premier clic sur un autre champ.
+        const actuels = new Set(vise.masques || []);
+        const retire = !actuels.has(colId);
+        if (retire) actuels.add(colId); else actuels.delete(colId);
+        // L'entree est gardee meme vide : c'est une decision (« tout
+        // reaffiche »), et sans elle le defaut reviendrait au rechargement.
+        masques[formId] = [...actuels];
+        couche.formulaire = { ...(couche.formulaire || {}), masques };
+
+        renderFormulaires();
+        renderInspector();
+        await saveLayerToGrist(couche, true);
+    },
+    async exposerFormulaire(layerId, formId) {
+        if (!assertCanWrite('proposer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        if (!couche || !formId) return;
+        const actuels = formulairesDeLaCouche(couche);
+        const vise = actuels.find((f) => f.id === formId);
+        // La ligne de la table Formulaires, pour pouvoir la publier : la liste
+        // par couche ne porte pas le rowId, qui n'existe que pour un enregistre.
+        const ligne = STATE.formulaires.find((e) => e.formId === formId);
+        // Un dérivé n'existe pas en base : il ne peut pas être proposé, et
+        // l'accepter laisserait dans la liste un identifiant que rien ne
+        // pourra jamais honorer.
+        if (vise?.derive) {
+            showToast('Enregistrez ce formulaire avant de le proposer', 'warning');
+            return;
+        }
+        // On repart des seuls identifiants encore honorables : ceux d'un
+        // formulaire enregistré qui existe toujours. Les autres — dérivés,
+        // formulaires supprimés — disparaissent à la première décision.
+        const exposes = new Set(actuels.filter((f) => f.expose && !f.derive).map((f) => f.id));
+        const actif = !exposes.has(formId);
+        if (actif) exposes.add(formId); else exposes.delete(formId);
+        // `exposes` remplace l'ancien booleen : une liste, meme vide, dit que
+        // cette couche a decide — et `expose` n'a plus a etre relu.
+        //
+        // Les masques sont **reportes**, pas reecrits : ce sont deux reglages
+        // distincts, et cette ligne remplace l'objet entier. Sans le report,
+        // cocher un formulaire effacerait le cadrage de tous les autres.
+        const reglagesAvant = reglagesFormulaire(couche);
+        couche.formulaire = {
+            fiche: reglagesAvant.fiche,
+            exposes: [...exposes],
+            masques: reglagesAvant.masques,
+        };
+
+        // > **Proposer, c'est publier.** Un formulaire compose ici nait
+        // > brouillon — c'est juste, on vient de le deduire et personne ne l'a
+        // > relu. Mais un brouillon n'est jamais offert en lecture, et Atlas
+        // > n'a aucun autre endroit ou le publier : la bascule serait restee
+        // > sans effet, et la personne aurait cherche pourquoi.
+        //
+        // Le statut dit « ce formulaire est pret » et vit dans la table
+        // Formulaires ; `exposes` dit « cette scene le montre » et vit avec la
+        // couche. Deux faits distincts, et c'est le meme geste qui pose le
+        // premier.
+        if (actif && vise?.statut === 'brouillon' && ligne?.rowId) {
+            try {
+                await grist.docApi.applyUserActions([['UpdateRecord', 'Formulaires', ligne.rowId, { Statut: 'publie' }]]);
+                await chargerFormulaires();
+            } catch (e) {
+                showToast('Publication refusée : ' + e.message, 'error');
+                return;
+            }
+        }
+
+        renderFormulaires();
+
+        renderInspector();
+        await saveLayerToGrist(couche, true);
+        const nom = actuels.find((f) => f.id === formId)?.titre || formId;
+        showToast(actif ? `Proposé hors édition · ${nom}` : `Retiré · ${nom}`, 'success');
+    },
+
+    /**
+     * Enregistrer un formulaire deduit — le seul chemin par lequel Atlas ecrit
+     * dans `Formulaires`, et il part toujours d'un clic.
+     *
+     * Sur la couche le geste est **composer** : `Attributs` reste la vue
+     * complete de la table, et ce qu'on cree est un formulaire distinct, qu'on
+     * pourra restreindre. Sur une table liee c'est **enregistrer** : le derive
+     * est deja le formulaire de cette table, l'ecrire le rend proposable.
+     *
+     * La definition ecrite est celle qu'on voit — meme champs, meme ordre.
+     * Partir d'autre chose surprendrait.
+     */
+    async enregistrerFormulaire(layerId, formId) {
+        if (!assertCanWrite('enregistrer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
+        const geste = gesteDEnregistrement(f, STATE.formulaires);
+        if (!geste) return;
+
+        const T = window.FormulairesTable;
+        if (!T || !f.def) { showToast('Module formulaires indisponible', 'error'); return; }
+        try {
+            showLoading(`${geste.libelle}…`);
+            // La table est creee a la demande, avec le schema partage : Atlas ne
+            // decrit pas `Formulaires` de son cote, sinon deux definitions
+            // divergeraient au premier changement.
+            const tables = await grist.docApi.listTables();
+            if (!tables.includes('Formulaires')) {
+                await grist.docApi.applyUserActions(T.planCreateFormulairesTable());
+            }
+            const def = { ...f.def, id: idFormulaireLibre(f.tableId, STATE.formulaires), title: geste.titre };
+            const champs = T.rowFromFormDef(def, { statut: 'brouillon', version: 1 });
+            const colonnes = {};
+            for (const [k, v] of Object.entries(champs)) colonnes[k] = [v];
+            await grist.docApi.applyUserActions([['BulkAddRecord', 'Formulaires', [null], colonnes]]);
+            await chargerFormulaires();
+            hideLoading();
+            renderFormulaires();
+            renderInspector();
+            showToast(`« ${geste.titre} » enregistré — brouillon`, 'success');
+        } catch (e) {
+            hideLoading();
+            showToast('Grist : ' + e.message, 'error');
+        }
+    },
 
     // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },
@@ -6275,7 +7421,7 @@ const A = {
         if (!c) return;
         c.label = String(label || field).trim() || field;
         markDirty();
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
+        if (coucheAvecLignes(l) && CONFIG.grist.ready) {
             saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
         }
     },
@@ -6473,6 +7619,8 @@ const A = {
         document.body.classList.remove('story-presenting');
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
+        mesurerEtageRecit();
+        libererMargeRecit();
         // Rend la scène telle qu'elle était avant la présentation : visibilité,
         // filtres, symbolisation et ambiance. Sans cela on sort du récit sur
         // l'état de la dernière étape.
@@ -6613,13 +7761,55 @@ const A = {
         applyPointStyle(l); Models3D.forceBuild(); renderInspector(); markDirty();
     },
     openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Modèle 3D'; openModule('couches'); },
+    /**
+     * Cree la table de donnees d'une couche importee, et l'y relie.
+     *
+     * Repli assume : en cas d'echec, la couche reste ce qu'elle etait — un blob
+     * dans `Maquette_Layers`. On ne perd donc jamais les entites, meme si
+     * l'ecriture s'arrete en cours de lots.
+     */
+    async enregistrerDansGrist(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        if (!assertCanWrite('enregistrer la couche')) return;
+        const n = l.geojson?.features?.length || 0;
+        if (!n) { showToast('Couche vide', 'warning'); return; }
+        showLoading(`Enregistrement dans Grist… ${n} objets`);
+        try {
+            const ecrits = await entableLayer(l);
+            hideLoading();
+            showToast(`${ecrits} objets enregistrés · ${l.sourceTable}`, 'success');
+            await chargerFormulaires();
+            if (STATE.currentModule === 'couches') renderLayersPanel(STATE.currentModule);
+            // Le bouton est dans le panneau de droite ; le module Formulaires
+            // peut être ouvert à gauche au même moment. Il affichait encore
+            // « Aucune table à saisir » alors que la table et sa fiche
+            // « Attributs » venaient d'exister.
+            else if (STATE.currentModule === 'formulaires') renderFormulaires();
+            renderInspector();
+        } catch (e) {
+            hideLoading();
+            console.warn('[Atlas entable]', e);
+            showToast('Enregistrement impossible : ' + e.message + ' — la couche reste locale', 'error');
+        }
+    },
+
     editLayerObjects(id) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const n = l.geojson?.features?.length || 0;
+        if (!n) { showToast('Aucun objet dans cette couche', 'warning'); return; }
+        // Ce bouton n'ouvrait que le mode selection, VIDE, avec un toast disant
+        // d'aller cliquer la carte. Il ne dispensait donc pas du clic — le
+        // defaut meme qu'il est cense corriger. Il selectionne maintenant toute
+        // la couche et se pose sur le premier objet : la barre « ◀ 1 / N ▶ »
+        // devient une revue, et la fiche s'ouvre sans toucher la carte.
         enterSelectionMode(id);
-        // L'astuce du geste dépend du matériel : l'annoncer au doigt évite de
-        // chercher une touche Maj qui n'existe pas.
-        const zone = matchMedia?.('(pointer: coarse)')?.matches ? 'Appui long = zone' : 'Maj+glisser = zone';
-        showToast(`Cliquez un objet à éditer · ${zone} · ✓ Tout = toute la couche`, 'info');
+        STATE.selection.features = l.geojson.features.map((_, i) => i);
+        STATE.selection.multiIndex = 0;
+        STATE.selection.revue = true;
+        afterSelectionChange();
+        flyToFeature(l, 0);
+        showToast(`${n} objet${n > 1 ? 's' : ''} · ◀ ▶ pour parcourir`, 'info');
     },
     setModelSet(set) {
         MODEL_LIBRARY.set = set; STATE.settings.modelSet = set;
@@ -7248,7 +8438,21 @@ function wireEvents() {
         if ((STATE.story?.length || 0) > 0) A.storyPlay(0);
     });
     if (typeof window !== 'undefined' && window.matchMedia) {
-        window.matchMedia('(max-width: 720px)').addEventListener('change', () => updateMobileLayout());
+        window.matchMedia('(max-width: 720px)').addEventListener('change', () => {
+            updateMobileLayout();
+            // La localisation n'a de pastille que sur mobile, et l'étage du bas
+            // n'existe qu'au-dessus : les deux suivent le passage d'un mode à
+            // l'autre.
+            refreshControlsDock();
+            majEtageCarte();
+        });
+    }
+    // Les panneaux d'édition changent la largeur de la carte sans toucher à la
+    // fenêtre : c'est la carte qu'on observe.
+    if (typeof ResizeObserver !== 'undefined' && $('map-frame')) {
+        new ResizeObserver(() => majEtageCarte()).observe($('map-frame'));
+    } else {
+        majEtageCarte();
     }
     document.querySelectorAll('.rail-item[data-module]').forEach((b) => {
         b.addEventListener('click', () => {
@@ -7388,9 +8592,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.6.6');
+        const { capacites } = await import('./lib/data-client.js?v=1.7.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.6.6');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.7.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

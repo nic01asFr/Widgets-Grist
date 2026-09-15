@@ -157,7 +157,7 @@ section { margin: 0 0 3rem; }
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
+    <span>Mis à jour il y a 9 j</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -170,7 +170,7 @@ section { margin: 0 0 3rem; }
       <img src="apercu.jpg" alt="Aperçu du widget Atlas" loading="lazy">
       <button type="button" class="lancer">Lancer l’aperçu</button>
     </div>
-    <p class="mention">L’aperçu est Atlas seul (`vitrine=1`), sans document. La démo à venir sera un pack métier dédié (ou une scène publique hors Grist) — pas un export d’un document de travail existant.</p>
+    <p class="mention">L’aperçu est Atlas seul (`vitrine=1`), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist.</p>
   </section>
   <section class="chiffres reveler">
     <div><b>0</b><span>export à refaire quand la donnée change</span></div>
@@ -191,8 +191,8 @@ section { margin: 0 0 3rem; }
           <figcaption>La scène vit dans le document : à côté des tables (couches, récit, manifeste), pas dans un export figé.</figcaption>
         </figure>
         <figure class="large">
-          <img src="apercu.jpg" alt="Les outils d’édition : lieu, couches, soleil, vues, contrôles, récit — et la carte en volume." loading="lazy">
-          <figcaption>Les outils d’édition : lieu, couches, soleil, vues, contrôles, récit — et la carte en volume.</figcaption>
+          <img src="fiche-objet.jpg" alt="L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute." loading="lazy">
+          <figcaption>L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute.</figcaption>
         </figure>
       </div>
     </article>
@@ -204,8 +204,8 @@ section { margin: 0 0 3rem; }
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="apercu.jpg" alt="Cible de diffusion : la carte (et le récit) plein cadre. Une capture « lecture seule » sans barre de tables remplacera bientôt cette illustration." loading="lazy">
-          <figcaption>Cible de diffusion : la carte (et le récit) plein cadre. Une capture « lecture seule » sans barre de tables remplacera bientôt cette illustration.</figcaption>
+          <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien." loading="lazy">
+          <figcaption>En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien.</figcaption>
         </figure>
       </div>
     </article>
@@ -236,6 +236,7 @@ section { margin: 0 0 3rem; }
     <h2>Ce qu’il fait</h2>
     <ul class="points">
       <li><b>Vos tables deviennent des couches</b> — toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs.</li>
+      <li><b>L’objet cliqué est la ligne</b> — sa fiche s’ouvre avec les champs de la table ; ce qu’on y écrit est dans le document. La scène peut la proposer hors édition, pour relever sur place.</li>
       <li><b>Symbolisation par la donnée</b> — couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène.</li>
       <li><b>Relief et volumes</b> — modèles 3D posés sur le terrain réel, ombres portées à l’heure choisie, surfaces extrudées calées sur l’altitude.</li>
       <li><b>Un récit qui se rejoue</b> — chaque étape retient le cadrage, les couches visibles, les filtres et l’heure — et reste juste quand la donnée change.</li>
@@ -251,7 +252,7 @@ section { margin: 0 0 3rem; }
       </li>
       <li>
         <b>J’édite</b>
-        <p>Attributs, géométries, volumes 3D. Ce que je modifie sur la carte est écrit dans la table : c’est la même donnée, pas une copie.</p>
+        <p>Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. Ce que j’y saisis est écrit dans le document — sur ordinateur, ou sur le terrain hors édition si la scène le propose.</p>
       </li>
       <li>
         <b>Je compose mon récit</b>
@@ -277,6 +278,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.7.0</b><p>La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre.</p></div>
       <div><b>vitrine</b><p>Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (`?scene=`). L’aperçu restera enrichi d’exemples chargeables.</p></div>
       <div><b>v1.2.0</b><p>Atlas sait où il tourne : dans un document il ne change pas, ouvert seul il explique et propose l’application, sur un téléphone les panneaux deviennent des feuilles qu’on écarte d’un geste. Enregistrer, charger et exporter deviennent accessibles en mobile, où ils manquaient.</p></div>
       <div><b>v1.1.3</b><p>Placement 3D corrigé — le viewport de la scène ne suivait pas l&#39;ouverture d&#39;un panneau. Droits en lecture respectés à l&#39;édition. Récit enregistré de façon atomique.</p></div>

@@ -7,21 +7,21 @@ import {
   flattenCoords2D,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.6.6';
+} from './grist-rows.js?v=1.7.0';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.6.6';
+} from './manifest-binding.js?v=1.7.0';
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
-import { isModelLayer } from './model-layer.js?v=1.6.6';
+import { isModelLayer } from './model-layer.js?v=1.7.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.6.6';
+} from './declarative-style.js?v=1.7.0';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
@@ -125,6 +125,71 @@ export function applyLayerPrefs(layer, prefsMap) {
  */
 export function clePrefsCouche(layer) {
   return layer?.sourceTable || layer?.manifestLayerId || null;
+}
+
+/**
+ * Les objets de cette couche sont-ils des lignes qu'on peut mettre a jour ?
+ *
+ * `saveFeatureToSource` n'a besoin que de deux choses : une `sourceTable`, et un
+ * `_row_id` sur l'entite. Elle ne regarde jamais `layer.source`.
+ *
+ * > **Le test posait pourtant `source === 'qgis2grist'`.** Une couche entablee
+ * > par `entableLayer` porte `source: 'grist-table'` : elle a une table, chaque
+ * > objet a sa ligne, et la fiche restait quand meme en lecture seule. On venait
+ * > d'enregistrer les entites dans Grist, et Atlas repondait encore « les objets
+ * > de cette couche ne sont pas des lignes Grist ». Meme pont rompu que
+ * > `clePrefsCouche` : la condition nommait un producteur la ou il fallait
+ * > nommer une capacite.
+ */
+export function coucheAvecLignes(layer) {
+  return !!layer?.sourceTable;
+}
+
+/**
+ * Faut-il a cette couche une ligne d'inventaire dans `Maquette_Layers` ?
+ *
+ * `clePrefsCouche` range l'apparence de toute couche portee par une table dans
+ * `Atlas_LayerPrefs`, parce que « le manifeste tient la donnee ». Dans un
+ * document **sans manifeste**, rien ne la tient : `loadLayersFromGrist` ne lit
+ * que `Maquette_Layers`, et une couche enregistree en table disparaissait au
+ * rechargement — la table restait dans le document, la scene l'avait oubliee.
+ * Constate le 11/09/2026 dans un document vide.
+ *
+ * La ligne dit seulement que la scene contient cette table, et sous quel nom ;
+ * les entites restent dans la table, l'apparence dans les prefs.
+ *
+ * @param {object} layer
+ * @param {string} [docMode] `CONFIG.docMode`
+ */
+export function ligneInventaireRequise(layer, docMode) {
+  return docMode !== 'scene-manifest'
+    && layer?.kind === 'table'
+    && !!layer?.sourceTable
+    && !layer?.manifestLayerId;
+}
+
+/**
+ * La ligne d'inventaire : de quoi retrouver la couche, **jamais ses entites**.
+ *
+ * Une copie des entites a cote de la table serait perimee des la premiere
+ * saisie, et rien ne la relirait jamais.
+ */
+export function ligneInventaire(layer) {
+  const style = { ...(layer?.style || {}) };
+  if (layer?.controls?.length) style._controls = layer.controls;
+  style._binding = {
+    kind: 'table',
+    sourceTable: layer?.sourceTable,
+    geometryColumn: layer?.geometryColumn || 'geometry_json',
+  };
+  return {
+    Name: layer?.name || layer?.sourceTable,
+    Color: layer?.color,
+    Visible: layer?.visible !== false,
+    GeomType: layer?.geometryType,
+    StyleJSON: JSON.stringify(style),
+    GeoJSON: '{}',
+  };
 }
 
 export async function saveLayerPref(docApi, layer, opts = {}) {

@@ -56,8 +56,20 @@ export function resolveAccess({ search = '', mode } = {}) {
     return { viewMode: true, requiredAccess: 'read table', needsProbe: false, reason: 'grist-readonly' };
   }
   // L'utilisateur demande la lecture alors qu'il pourrait écrire : on respecte.
+  //
+  // > **Mais `?mode=` décrit ce qu'on MONTRE, pas ce qu'on PEUT.** Le widget
+  // > garde donc le niveau d'accès que le document lui a accordé. Demander
+  // > `read table` fermait l'écriture **au widget lui-même**, avant tout examen
+  // > des droits de la personne : la sonde échouait alors pour une raison qui
+  // > n'avait rien à voir avec elle, et un formulaire publié restait
+  // > insaisissable même par un éditeur. C'est le lien de terrain qui en
+  // > dépend — lecture à l'écran, saisie possible dans le formulaire.
+  //
+  // `viewMode` reste vrai : Atlas ne montre aucun outil d'auteur. Les deux
+  // réglages sont orthogonaux, et c'est le fond de l'affaire.
   if (wanted === 'view') {
-    return { viewMode: true, requiredAccess: 'read table', needsProbe: false, reason: 'mode-view' };
+    const accorde = grant.readonly === false && grant.access === 'full' ? 'full' : 'read table';
+    return { viewMode: true, requiredAccess: accorde, needsProbe: false, reason: 'mode-view' };
   }
   // Grist annonce l'ecriture — mais `access` decrit le niveau accorde AU WIDGET
   // (le reglage « Niveau d'acces » de la vue), pas les droits de la personne sur
@@ -225,4 +237,49 @@ export function parseNo3dParam(search = '') {
   const q = String(search || '').replace(/^\?/, '');
   const v = new URLSearchParams(q).get('no3d');
   return v === '1' || v === 'true' || v === 'yes';
+}
+
+/**
+ * `?navbar=false` retire la barre du haut.
+ *
+ * Pour une intégration en cadre — une page qui a déjà son propre titre et sa
+ * propre navigation —, la barre d'Atlas fait doublon : elle répète le nom du
+ * projet que la page hôte affiche, et ajoute une hauteur qu'on ne récupère pas.
+ *
+ * > **Le défaut est `true`, et le paramètre ne peut que RETIRER.** Une valeur
+ * > absente, vide ou incomprise laisse la barre : se tromper vers le bas
+ * > masquerait la recherche, le badge de droits et le bouton « Récit » — seul
+ * > point d'entrée d'un récit publié une fois le rail parti — sans que rien ne
+ * > dise pourquoi. On ne fait donc disparaître que sur une demande explicite.
+ *
+ * @param {string} [search] location.search
+ * @returns {boolean} vrai quand la barre doit être montrée
+ */
+export function parseNavbarParam(search = '') {
+  const q = String(search || '').replace(/^\?/, '');
+  const v = new URLSearchParams(q).get('navbar');
+  if (v == null) return true;
+  const n = v.trim().toLowerCase();
+  return !(n === 'false' || n === '0' || n === 'no' || n === 'non');
+}
+
+/**
+ * Faut-il une pastille « Récit » sur la carte ?
+ *
+ * En lecture, le seul point d'entrée d'un récit publié est le bouton de la
+ * barre du haut — le rail d'auteur est retiré. `?navbar=false` emporte donc ce
+ * bouton, et une fois le récit fermé il n'existait **plus aucun moyen de le
+ * rouvrir**. Constaté le 10/09/2026 dans la configuration exacte que la vitrine
+ * publique utilise : `?scene=` + `?navbar=false`.
+ *
+ * La pastille ne paraît que dans ce cas précis. Avec la barre, son bouton
+ * existe déjà, et deux boutons pour le même geste en font un de trop ; en
+ * édition, le module Récit du rail en tient lieu ; pendant la lecture, la bulle
+ * porte déjà la navigation ; sur mobile, le bouton flottant « Récit » vit dans
+ * la carte et survit donc au retrait de la barre.
+ *
+ * @param {{barreAbsente?: boolean, lecture?: boolean, nbEtapes?: number, enPresentation?: boolean, mobile?: boolean}} etat
+ */
+export function pastilleRecitRequise({ barreAbsente, lecture, nbEtapes, enPresentation, mobile } = {}) {
+  return !!barreAbsente && !!lecture && Number(nbEtapes) > 0 && !enPresentation && !mobile;
 }
