@@ -80,7 +80,9 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.1.3** (`published/atlas/`, GitHub Pages).
+**En ligne : v1.6.6** (`published/atlas/`, GitHub Pages) — la 1.7.0 (fiche
+d'entité, formulaires, étage du bas) est prête sur la branche
+`atlas-formulaire-entite`.
 
 - Chargement Scene Manifest / tables qgis2grist (cas Bee Farming validé).
 - Symbolisation (fixe / catégorisé / gradué), contrôles, récit, export JSON `2.2-atlas-binding`.
@@ -115,9 +117,10 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
   LIGNE** sur `<html>` : `color-scheme: light` exige `!important`, sans quoi les
   contrôles natifs sont peints en sombre.
 
-  Reste : la couche `-hit`, le **vendoring** de `grist_forms` dans
-  `published/atlas/` (**bloquant pour toute fusion vers `main`**), le mode
-  consultation du moteur, et l'ACL dérivée du FormDef.
+  Reste : la couche `-hit`, le mode consultation du moteur, et l'ACL dérivée
+  du FormDef. Le vendoring de `grist_forms` est réglé : `scripts/promote-atlas.js`
+  copie les six scripts (liste `VENDOR`) dans `published/atlas/vendor/` et
+  réécrit les `<script src>` de la page — plus rien ne bloque la fusion.
 
 - **Cadrage portable / partage iframe (26/08/2026)** :
   `docs/CADRAGE-PORTABLE-PARTAGE-IFRAME.md` — Grist = socle droits ; Atlas
@@ -136,9 +139,9 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
   Le critère est le volume seul — pas le nom de la couche. La matérialisation est
   portée par `setLayerVisibility`, donc valable quelle que soit l’origine de
   l’activation (pastille, récit, prefs).
-- **Zoom manifest non appliqué** : Atlas ignore `visibility.minZoom`/`maxZoom` —
-  seul `defaultVisible` agit. Le LOD zoom du manifest ne vaut que pour les
-  lecteurs qui l’implémentent (carte qgis2grist).
+- **Bornes de zoom du manifeste** : appliquées (voir « Les bornes de zoom du
+  manifeste sont appliquées », plus bas). Cette ligne a longtemps dit le
+  contraire.
 
 - **Zone de travail retirée du panneau Lieu.** `setRadius` stockait la valeur et
   redessinait le panneau ; `STATE.location.radius` n’était lu nulle part ailleurs.
@@ -781,7 +784,10 @@ npm run manifest
 ```
 
 URL widget : `https://nic01asfr.github.io/Widgets-Grist/atlas/`  
-Édition : `requiredAccess: 'full'` (défaut). Lecture : `?mode=view` → `read table`.
+Édition : `requiredAccess: 'full'` (défaut). Lecture : `?mode=view` **garde
+`full`** et passe l'interface en lecture — `resolveAccess` (`lib/view-mode.js`)
+en donne le motif (`mode-view`), et la saisie hors édition reste possible. Le
+repli `read table` n'existe plus : demandé, il rendait la fiche muette.
 
 ## Paramètres d'URL — qui pose quoi, et ce qui n'arrive jamais jusqu'à Atlas
 
@@ -830,6 +836,35 @@ Lus par `lib/view-mode.js`.
 > incomprise laisse la barre. Se tromper vers le bas masquerait la recherche, le
 > badge de droits et le bouton « Récit » — seul point d'entrée d'un récit publié
 > une fois le rail parti.
+>
+> Ce qu'il emporte avec la barre : en édition autonome, **Enregistrer** et
+> **Exporter** ; en lecture, le bouton « Récit ». Pour ce dernier, le dock de la
+> carte porte une pastille « Lire le récit » quand le récit est fermé
+> (`pastilleRecitRequise`) — pas sur mobile, où le bouton flottant vit déjà dans
+> la carte.
+
+### L'habillage de la carte — un étage partagé en bas (11/09/2026)
+
+Quatre éléments se disputaient le bas de la carte, chacun ancré pour son compte :
+mesuré dans un widget de 860 px, la bulle du récit mordait sur la légende, la
+légende remontait à mi-carte pour lui céder la place, et l'attribution
+OpenStreetMap — que la licence impose de laisser lisible — passait sous la bulle.
+
+`lib/habillage-carte.js` porte les règles, `index_v7.html` la mise en page
+(variables `--etage-*` de `.map-frame`) :
+
+| Élément | Où |
+|---|---|
+| attribution | tout en bas, forme MapLibre conservée ; l'étage se cale sur sa hauteur mesurée (`--bande-attrib`) |
+| légende | colonne de gauche |
+| bulle du récit | à droite de la légende, centrée dans ce qui reste (`etage-cote-a-cote`), ou **empilée** au-dessus quand la carte est trop étroite — décidé sur la largeur de la **carte**, pas de la fenêtre (rail et panneaux d'édition comptent) |
+| infos carte (édition) | colonne de droite ; cède à la légende : complet → `zoom · pitch` → masqué (`formeBandeauInfos`) |
+| localisation | pastille du dock, **mobile seulement**, contre la boussole ; le contrôle MapLibre reste posé mais caché |
+
+La caméra du récit vise ce que la bulle laisse voir : `flyTo` reçoit une marge
+basse égale à la hauteur mesurée de la bulle (`margeBasseRecit`), et la marge
+disparaît en sortie sans déplacer la vue. Sur mobile, la légende repliée se pose
+sur le haut de la bulle et s'ouvre vers le haut.
 
 ### `?scene=` — deux régimes de confiance, pas un réglage
 

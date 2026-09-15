@@ -116,3 +116,26 @@ doigt — les tests unitaires n'en voient rien.
 4. Clic couche = inspecteur ouvert ; ✕ = fermeture (pas de FAB carte)
 5. Mode lecture : clic → popup (pas inspecteur) ; pas d’écriture Grist ; badge visible
 6. Mobile ≤720px : bottom nav + carte consultable
+
+---
+
+## Parcours de référence (à rejouer avant chaque publication)
+
+Chaque parcours est joué dans Chrome ; ceux marqués **Grist** exigent un
+document réel (`nrRTKiyiz1suJ3NF1QcbqK` ou un document vide de l'espace
+*Widgets*). Un parcours qui échoue bloque la publication.
+
+| # | Configuration | Ce qu'on joue | Ce qu'on attend |
+|---|---|---|---|
+| A | page seule (`index_v7.html`) | « Continuer sans se connecter », charger un projet | édition, aucun dock vide, Formulaires dit « Hors Grist » |
+| B | `?navbar=false` seule | même chose | barre absente, Enregistrer/Exporter absents |
+| C | `?scene=` (Aygalades) | jouer les 8 étapes | 0 erreur console, sujet de chaque étape visible au-dessus de la bulle, légende à gauche, attribution lisible |
+| D | `?navbar=false&scene=` | fermer le récit | pastille « Lire le récit » dans le dock ; clic → étape 1 |
+| E | mobile 390 px, `?scene=` | ouvrir le récit, toucher « Légende » | légende repliée sur la bulle, s'ouvre vers le haut ; pastille localisation contre la boussole |
+| F | page publiée (`published/atlas/`) | ouvrir la démo | tout charge sans `../grist_forms/` |
+| G | **Grist**, édition, document vide | OSM → « Enregistrer en table Grist » → Formulaires → clic objet → saisir → recharger | table `Atlas_<nom>` sans accent perdu, fiche « Attributs » (colonnes d'Atlas masquées), saisie écrite en un clic, couche et fiche revenues |
+| H | **Grist**, `?mode=view` | clic sur un objet ; carte étroite | badge Lecture, aucun panneau d'édition, popup ou fiche si exposée, pas de rectangle de dock vide |
+| I | **Grist**, largeur 824 px, panneau ouvert | clic sur une couche | panneau de droite entier dans la fenêtre, bandeau d'infos réduit puis masqué |
+
+Cette liste a été établie le 15/09/2026, après qu'un parcours simple (G) a
+révélé quatre défauts que ni les tests ni les revues de code n'avaient vus.
