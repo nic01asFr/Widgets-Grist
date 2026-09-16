@@ -832,10 +832,6 @@
         body.view-mode .header-actions #btn-save,
         body.view-mode .header-actions #btn-export { display: none; }
 
-        /* Lecture : le recit prend la place laissee par les boutons d'edition.
-           Sans point d'entree visible, un recit publie restait inatteignable. */
-        #btn-story { display: none; }
-        body.view-mode .header-actions #btn-story.has-story { display: inline-flex; }
 
         /* Le badge dit les droits réels : il reste visible en lecture. */
         .avatar.ro { background: var(--surface-muted); color: var(--ink); }
@@ -1027,28 +1023,9 @@
             margin: 0 0 8px; font-size: 11px; font-weight: 700;
             letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
         }
-        #viewer-story-fab {
-            display: none;
-            position: absolute; right: 12px; bottom: 12px; z-index: 26;
-            align-items: center; gap: 6px;
-            padding: 10px 14px; border-radius: 999px;
-            border: 1px solid var(--hairline); background: var(--surface);
-            box-shadow: 0 8px 24px rgba(30,20,10,0.14);
-            font-family: inherit; font-size: 13px; font-weight: 600;
-            color: var(--ink); cursor: pointer;
-        }
-        body.view-mode.view-has-story.mobile-layout #viewer-story-fab { display: inline-flex; }
-        /* Sur petit écran, le bouton flottant REMPLACE celui de la barre, il ne
-           s'y ajoute pas : les deux règles étaient indépendantes et
-           s'appliquaient ensemble, si bien qu'on proposait deux fois la même
-           action — dont une à demi cachée sous la bulle. La barre mobile est
-           étroite (le titre y est déjà tronqué), c'est elle qu'on allège. */
-        body.view-mode.mobile-layout .header-actions #btn-story.has-story { display: none; }
-        /* Et pendant que le récit joue, aucun des deux : il a ses propres
-           commandes, et « Lancer le récit » pendant qu'il tourne ne veut rien
-           dire. */
-        body.story-presenting #viewer-story-fab,
-        body.story-presenting .header-actions #btn-story { display: none !important; }
+        /* Le récit se lance par la pastille du dock, et par elle seule : le
+           bouton de la barre et le bouton flottant mobile sont retirés
+           (`pastilleRecitRequise`, lib/view-mode.js). */
 
         /* Feuille des modules supplémentaires — mobile seulement. */
         #mobile-plus { position: fixed; inset: 0; z-index: 60; }
@@ -1185,12 +1162,16 @@
                 max-width: min(calc(100vw - 100px), 240px);
             }
             body.mobile-layout .map-frame { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
-            body.mobile-layout .legend { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); left: 12px; width: auto; max-width: calc(100% - 24px); }
+            /* La légende se pose au-dessus de l'attribution, comme la bulle du
+               récit : à 72 px (édition) ou 16 px (lecture), elle en recouvrait le
+               début — « …penMapTiles » —, que la licence impose de laisser lisible.
+               Le bouton flottant du récit occupait ce coin et le masquait. */
+            body.mobile-layout .legend { bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px); left: 12px; width: auto; max-width: calc(100% - 24px); }
             body.mobile-layout .toasts { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); right: 12px; left: 12px; }
             body.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
             /* Lecture : pas de bottom nav — carte plein écran */
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
-            body.view-mode.mobile-layout .legend { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+            body.view-mode.mobile-layout .legend { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px); }
             /* Récit sur petit écran : la bulle occupe le bas, la légende aussi, et
                il n'y a pas la place pour les deux côte à côte. La légende part
                repliée (`enterStoryPresentation`) et se pose sur le haut de la
@@ -1265,15 +1246,11 @@
             </div>
 
             <div class="header-actions">
-                <button class="btn-ghost" id="btn-load" title="Charger un projet">
+                <button class="btn-ghost" id="btn-load" title="Ouvrir un projet ou un GeoJSON" aria-label="Ouvrir un projet ou un GeoJSON">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/></svg>
                 </button>
-                <button class="btn-ghost" id="btn-save" title="Enregistrer le projet">
+                <button class="btn-ghost" id="btn-save" title="Télécharger le projet (.json)" aria-label="Télécharger le projet (.json)">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
-                </button>
-                <button class="btn-export" id="btn-story" title="Lire le récit">
-                    <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>
-                    <span>Récit</span>
                 </button>
                 <button class="btn-export" id="btn-export">
                     <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
@@ -1334,7 +1311,6 @@
             <div class="map-frame" id="map-frame">
                 <div id="map"></div>
                 <div id="viewer-controls" aria-label="Contrôles de lecture"></div>
-                <button type="button" id="viewer-story-fab" aria-label="Lancer le récit">▶ Récit</button>
                 <div id="night-tint"></div>
 
                 <div class="compass" id="compass" title="Réorienter au Nord">
@@ -1440,8 +1416,8 @@
                  la place de les montrer sur un telephone. Sans elles, on peut
                  tout modifier sans jamais rien enregistrer. -->
             <div class="mp-groupe">Projet</div>
-            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span>Enregistrer le projet</span></button>
-            <button type="button" data-action-plus="charger"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg><span>Charger un projet</span></button>
+            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span>Télécharger le projet</span></button>
+            <button type="button" data-action-plus="charger"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg><span>Ouvrir un projet</span></button>
             <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter en GeoJSON</span></button>
         </div>
     </div>
@@ -1451,7 +1427,7 @@
         <div class="cmd-box">
             <div class="cmd-input-wrap">
                 <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A6F5E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
-                <input class="cmd-input" id="cmd-input" placeholder="Aller à un module, une couche, une action…" />
+                <input class="cmd-input" id="cmd-input" placeholder="Un objet, une couche, un lieu, une action…" />
                 <span class="kbd" style="font-family:var(--mono);font-size:10.5px;color:var(--muted-light)">Esc</span>
             </div>
             <div class="cmd-list" id="cmd-list"></div>
@@ -1460,7 +1436,7 @@
 
     <div class="toasts" id="toasts"></div>
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
-    <input type="file" id="project-input" accept=".json" style="display:none" />
+    <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
     <script type="module" src="./app.js?v=1.7.0"></script>
 </body>

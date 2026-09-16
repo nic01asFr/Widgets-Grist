@@ -264,22 +264,20 @@ export function parseNavbarParam(search = '') {
 }
 
 /**
- * Faut-il une pastille « Récit » sur la carte ?
+ * Faut-il une pastille « Lire le récit » sur la carte ?
  *
- * En lecture, le seul point d'entrée d'un récit publié est le bouton de la
- * barre du haut — le rail d'auteur est retiré. `?navbar=false` emporte donc ce
- * bouton, et une fois le récit fermé il n'existait **plus aucun moyen de le
- * rouvrir**. Constaté le 10/09/2026 dans la configuration exacte que la vitrine
- * publique utilise : `?scene=` + `?navbar=false`.
+ * **Le récit ne se lance plus que par la pastille.** Il avait trois entrées —
+ * un bouton dans la barre du haut, un bouton flottant sur mobile, et la
+ * pastille quand la barre était retirée —, une par configuration, chacune avec
+ * sa règle d'exclusion. La pastille vit dans la carte : elle survit à
+ * `?navbar=false`, elle a la même place sur ordinateur et sur téléphone, et le
+ * lecteur la trouve là où sont les autres commandes de la scène.
  *
- * La pastille ne paraît que dans ce cas précis. Avec la barre, son bouton
- * existe déjà, et deux boutons pour le même geste en font un de trop ; en
- * édition, le module Récit du rail en tient lieu ; pendant la lecture, la bulle
- * porte déjà la navigation ; sur mobile, le bouton flottant « Récit » vit dans
- * la carte et survit donc au retrait de la barre.
+ * Elle ne paraît qu'en lecture — en édition, le module Récit du rail en tient
+ * lieu — et se retire pendant la présentation, où la bulle porte la navigation.
  *
- * @param {{barreAbsente?: boolean, lecture?: boolean, nbEtapes?: number, enPresentation?: boolean, mobile?: boolean}} etat
+ * @param {{lecture?: boolean, nbEtapes?: number, enPresentation?: boolean}} etat
  */
-export function pastilleRecitRequise({ barreAbsente, lecture, nbEtapes, enPresentation, mobile } = {}) {
-  return !!barreAbsente && !!lecture && Number(nbEtapes) > 0 && !enPresentation && !mobile;
+export function pastilleRecitRequise({ lecture, nbEtapes, enPresentation } = {}) {
+  return !!lecture && Number(nbEtapes) > 0 && !enPresentation;
 }
