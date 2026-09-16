@@ -321,3 +321,58 @@
  * on lisait « Modification de la ligne #3 » et « Hauteur » d'un seul tenant.
  */
 #insp-body .fr-form > p.fr-text--sm { margin-bottom: 12px; }
+
+/* ------------------------------------------------------------------------
+   Module Formulaires (panneau de gauche) — une carte par couche.
+   Tout est borné à #module-body : rien ne déborde sur la fiche de droite.
+   ------------------------------------------------------------------------ */
+#module-body .fm-intro { font-size: 12px; line-height: 1.45; color: var(--muted); margin: 2px 0 14px; }
+#module-body .fm-carte {
+  border: 1px solid var(--hairline); border-radius: 10px;
+  background: var(--surface); padding: 10px 12px 10px; margin-bottom: 12px;
+}
+#module-body .fm-entete {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
+}
+#module-body .fm-couche {
+  font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#module-body .fm-table { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+#module-body .fm-groupe { margin-top: 10px; }
+#module-body .fm-groupe-titre {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 2px;
+}
+#module-body .fm-vide { font-size: 11.5px; color: var(--muted); margin: 4px 0 0; }
+#module-body .fm-ligne { padding: 8px 0; }
+#module-body .fm-ligne + .fm-ligne { border-top: 1px dashed var(--hairline); }
+#module-body .fm-ligne-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+#module-body .fm-nom { font-weight: 600; font-size: 13px; color: var(--ink); min-width: 0; }
+#module-body .fm-commande { padding: 5px 10px; font-size: 11.5px; flex-shrink: 0; }
+#module-body .fm-detail { font-size: 10.5px; line-height: 1.4; color: var(--muted); margin-top: 2px; }
+#module-body .fm-champs { margin-top: 8px; }
+#module-body .fm-champs > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text); padding: 2px 0;
+}
+#module-body .fm-champs > summary::-webkit-details-marker { display: none; }
+#module-body .fm-champs > summary::before {
+  content: ''; border-left: 5px solid currentColor;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform 120ms ease;
+}
+#module-body .fm-champs[open] > summary::before { transform: rotate(90deg); }
+#module-body .fm-champs > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+#module-body .fm-champs-liste { margin-top: 6px; background: var(--bg); border-radius: 8px; padding: 2px 10px; }
+#module-body .fm-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 11.5px; color: var(--text); }
+#module-body .fm-champ + .fm-champ { border-top: 1px solid var(--hairline); }
+#module-body .fm-champ.masque .fm-champ-nom { opacity: .5; }
+#module-body .fm-badges { color: var(--muted); font-size: 10px; }
+#module-body .fm-requis { color: var(--accent); }
+#module-body .fm-pied { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 11px; color: var(--muted); }
+#module-body .fm-pied.on { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  #module-body .fm-champs > summary::before { transition: none; }
+}

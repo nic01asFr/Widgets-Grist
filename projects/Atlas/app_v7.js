@@ -49,7 +49,7 @@ import {
   refreshLayerFromTable,
   ligneInventaireRequise,
   ligneInventaire,
-} from './lib/grist-sync.js?v=20260911a';
+} from './lib/grist-sync.js?v=20260916a';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -109,8 +109,10 @@ import {
   parseNavbarParam,
   pastilleRecitRequise,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=20260911a';
+} from './lib/view-mode.js?v=20260916a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
+import { objetsPourPalette } from './lib/palette-objets.js?v=20260916a';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
   margeBasseRecit,
@@ -3466,17 +3468,15 @@ function listDockPills() {
     if (getViewerControl(vcs, 'sun')?.exposed) {
         pills.push({ id: 'sun', kind: 'sun', icon: '☀', label: 'Soleil' });
     }
-    // Le recit n'a plus d'entree quand la barre est retiree : son bouton y
-    // vivait. La pastille le remplace, avec la meme figure et le meme geste.
-    // Elle vient EN TETE : c'est la seule qui lance quelque chose au lieu de
+    // Le recit ne se lance que par cette pastille : le bouton de la barre et
+    // le bouton flottant mobile sont retires (`pastilleRecitRequise`). Elle
+    // vient EN TETE : c'est la seule qui lance quelque chose au lieu de
     // regler, et le lecteur doit la trouver sans chercher.
     const mobile = document.body.classList.contains('mobile-layout');
     if (pastilleRecitRequise({
-        barreAbsente: CONFIG.sansNavbar,
         lecture: CONFIG.viewMode,
         nbEtapes: STATE.story?.length || 0,
         enPresentation: _storyPresenting,
-        mobile,
     })) {
         pills.unshift({
             id: 'recit',
@@ -3955,7 +3955,7 @@ function renderFormulaires() {
     }
 
     const couches = STATE.layers.filter((l) => l.sourceTable);
-    let html = `<div class="hint">Un formulaire décrit comment se saisit une table. Cochez ceux qui seront proposés hors édition : chacun devient un onglet sur l'objet.</div>`;
+    let html = `<p class="fm-intro">Ce que la fiche d’un objet propose, couche par couche. Un formulaire activé s’ouvre aussi hors édition, en onglet sur l’objet.</p>`;
 
     if (!couches.length) {
         body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
@@ -3965,45 +3965,51 @@ function renderFormulaires() {
     }
 
     html += couches.map((couche) => blocCoucheFormulaires(couche)).join('');
+    // Chaque réglage redessine le module : sans cela, basculer un champ en bas
+    // de la liste renvoyait en haut du panneau.
+    const haut = body.scrollTop;
     body.innerHTML = html;
+    body.scrollTop = haut;
 }
 
 /**
  * Une couche, et les formulaires qui la concernent, groupes par **verbe**.
  *
- * La liste les alignait a plat, chacun suivi de la meme phrase — « la table de
- * la couche — corrige l'objet » — repetee autant de fois qu'il y avait de
- * lignes. C'est un fait de groupe, pas de ligne : dit une fois, il tient dans
- * un intertitre et rend chaque ligne lisible d'un coup d'oeil.
- *
- * Deux groupes, dans l'ordre des onglets :
- *
  * | | |
  * |---|---|
- * | **corriger l'objet** | la table de la couche — \`updateRow\` |
- * | **ajouter une ligne** | une table qui la reference — \`addRow\` |
+ * | **corriger l'objet** | la table de la couche — `updateRow` |
+ * | **ajouter une ligne** | une table qui la reference — `addRow` |
  *
- * Et un pied qui dit **ce que les cases produisent** : le nombre d'onglets hors
- * edition. Sans lui, on coche sans voir le resultat, et au-dela de trois la
- * barre d'onglets se met a defiler sans que rien ne l'ait annonce.
+ * Une carte par couche : l'en-tete la nomme avec sa table, les deux groupes
+ * suivent, et un pied dit **ce que les bascules produisent** hors edition —
+ * sans lui, on coche sans voir le resultat, et au-dela de trois onglets la
+ * barre defile sans que rien ne l'ait annonce.
+ *
+ * > La phrase qui expliquait un groupe vide (« Aucune table ne reference
+ * > celle-ci… ») etait repetee sous chaque couche et noyait les formulaires :
+ * > elle tient maintenant en trois mots, le detail dans l'infobulle.
  */
 function blocCoucheFormulaires(couche) {
     const esc = (s) => String(s).replace(/'/g, "\\'");
     const formulaires = formulairesDeLaCouche(couche);
     const nb = (couche.geojson?.features?.length) || 0;
-    const entete = `<div class="section-title">${couche.name}</div>
-        <div class="hint" style="margin-bottom:10px">${couche.sourceTable}${nb ? ` · ${nb} objet${nb > 1 ? 's' : ''}` : ''}</div>`;
+    const entete = `<div class="fm-entete">
+            <span class="fm-couche" title="${escapeHtml(couche.name)}">${escapeHtml(couche.name)}</span>
+            <span class="fm-table">${escapeHtml(couche.sourceTable)}${nb ? ` · ${nb} obj.` : ''}</span>
+        </div>`;
 
     if (!formulaires.length) {
-        return `<div class="section">${entete}
-            <div class="hint" style="margin-bottom:0">Aucune colonne saisissable — rien à proposer.</div>
-        </div>`;
+        return `<section class="fm-carte">${entete}
+            <p class="fm-vide">Aucune colonne saisissable.</p>
+        </section>`;
     }
 
     const groupe = (titre, liste, vide) => {
-        if (!liste.length) return vide ? `<div class="section-title" style="margin-top:12px">${titre}</div><div class="hint" style="margin-bottom:0">${vide}</div>` : '';
-        return `<div class="section-title" style="margin-top:12px">${titre}</div>`
-            + liste.map((f) => ligneFormulaire(couche, f, esc)).join('');
+        if (!liste.length && !vide) return '';
+        const contenu = liste.length
+            ? liste.map((f) => ligneFormulaire(couche, f, esc)).join('')
+            : `<p class="fm-vide" title="${escapeHtml(vide.detail)}">${vide.texte}</p>`;
+        return `<div class="fm-groupe"><div class="fm-groupe-titre">${titre}</div>${contenu}</div>`;
     };
 
     const surLaCouche = formulaires.filter((f) => f.surLaCouche);
@@ -4013,14 +4019,16 @@ function blocCoucheFormulaires(couche) {
     // clic d'avant qu'il perde sa bascule — sans pouvoir être offert.
     const exposes = formulairesOffertsEnLecture(formulaires).length;
 
-    return `<div class="section">${entete}
+    return `<section class="fm-carte">${entete}
         ${groupe('Corriger l’objet', surLaCouche)}
-        ${groupe('Ajouter une ligne', liees,
-            'Aucune table ne référence celle-ci. Un formulaire créé sur une nouvelle table, avec une colonne <code>Ref:</code> vers elle, apparaîtrait ici.')}
-        <div class="hint" style="margin:12px 0 0">${exposes
-            ? `<strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet hors édition.${exposes > 3 ? ' Au-delà de trois, la barre défile.' : ''}`
-            : 'Rien de proposé hors édition — la fiche restera en consultation.'}</div>
-    </div>`;
+        ${groupe('Ajouter une ligne', liees, {
+            texte: 'Aucune table liée.',
+            detail: `Une table avec une colonne Ref: vers ${couche.sourceTable} apparaîtrait ici.`,
+        })}
+        <div class="fm-pied${exposes ? ' on' : ''}">${exposes
+            ? `Hors édition : <strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet${exposes > 3 ? ' — la barre défilera' : ''}`
+            : 'Hors édition : rien de proposé, la fiche reste en consultation'}</div>
+    </section>`;
 }
 
 /**
@@ -4035,12 +4043,9 @@ function ligneFormulaire(couche, f, esc) {
         ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`)
         : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${libelleStatut(f.statut)}`}`;
 
-    // Un derive n'a pas de bascule : il ne peut pas etre propose. Mais dire
-    // « a enregistrer » sans offrir le geste etait une promesse creuse — c'est
-    // un bouton, pas une pastille.
     const geste = gesteDEnregistrement(f, STATE.formulaires);
     const commande = geste
-        ? `<button class="btn btn-soft" style="padding:5px 10px;font-size:11.5px"
+        ? `<button class="btn btn-soft fm-commande"
             onclick="A.enregistrerFormulaire('${esc(couche.id)}','${esc(f.id)}')"
             title="${geste.verbe === 'composer' ? 'Créer un formulaire à partir de ces colonnes' : 'L’enregistrer pour pouvoir le proposer'}">${geste.libelle}</button>`
         : `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
@@ -4049,29 +4054,30 @@ function ligneFormulaire(couche, f, esc) {
             title="Proposé hors édition"
             onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
 
-    // Le nom et la commande sur une ligne, le detail en dessous : les mettre
-    // cote a cote faisait passer le detail a la ligne et laissait la pastille
-    // au milieu de la phrase.
-    return `<div style="margin-bottom:10px">
-        <div class="toggle-row" style="margin-bottom:2px">
-            <span class="tlabel"><strong>${libelleFormulaire(f)}</strong></span>
+    return `<div class="fm-ligne">
+        <div class="fm-ligne-tete">
+            <span class="fm-nom">${libelleFormulaire(f)}</span>
             ${commande}
         </div>
-        <div style="color:var(--muted);font-size:10.5px;line-height:1.4">${detail}</div>
+        <div class="fm-detail">${detail}</div>
         ${cadreDesChamps(couche, f, esc)}
     </div>`;
 }
 
 /**
+ * Les listes de champs ouvertes, par couche et formulaire.
+ *
+ * Chaque bascule redessine le module, et un `<details>` redessiné repart
+ * fermé : la liste se refermait à chaque champ coché ou décoché, et après
+ * « Composer ». L'état vit donc ici, pas dans le DOM.
+ */
+const _champsOuverts = new Set();
+
+/**
  * Le cadrage : quels champs de ce formulaire cette scene montre.
  *
- * Il vit dans le panneau de GAUCHE, replie, et pas sur le formulaire rendu a
- * droite. Le panneau de gauche regle, celui de droite sert — et une bascule
- * posee sur le champ rendu aurait fait de ce geste une composition, concurrente
- * du builder pour un besoin qui n'en demande aucun.
- *
- * Replie par defaut : la plupart des formulaires se montrent entiers, et
- * derouler la liste des colonnes sous chaque ligne noierait ce qui compte.
+ * Il vit dans le panneau de GAUCHE, replie par defaut, et pas sur le formulaire
+ * rendu a droite. Le panneau de gauche regle, celui de droite sert.
  */
 function cadreDesChamps(couche, f, esc) {
     const champs = champsDuFormulaire(f.def, f.masques);
@@ -4079,9 +4085,10 @@ function cadreDesChamps(couche, f, esc) {
     // la case n'aurait qu'un seul effet possible.
     if (champs.length < 2) return '';
     const montres = champs.filter((c) => !c.masque).length;
+    const cle = `${couche.id}|${f.id}`;
     const lignes = champs.map((c) => {
         const badges = [
-            c.requis ? '<span style="color:var(--accent)">obligatoire</span>' : '',
+            c.requis ? '<span class="fm-requis">obligatoire</span>' : '',
             c.verrouille ? '<span title="Un autre champ en dépend — condition ou liste liée">verrouillé</span>' : '',
         ].filter(Boolean).join(' · ');
         const bascule = c.verrouille
@@ -4091,18 +4098,18 @@ function cadreDesChamps(couche, f, esc) {
             : `<div class="toggle ${c.masque ? '' : 'on'}" role="switch" tabindex="0"
                 aria-checked="${!c.masque}"
                 aria-label="Montrer ${esc(c.label)} dans cette scène"
-                title="Montré dans cette scène"
+                title="${c.masque ? 'Masqué dans cette scène' : 'Montré dans cette scène'}"
                 onclick="A.masquerChamp('${esc(couche.id)}','${esc(f.id)}','${esc(c.colId)}')"></div>`;
-        return `<div class="toggle-row" style="margin:0 0 4px;padding-left:10px">
-            <span class="tlabel" style="font-size:11.5px${c.masque ? ';opacity:.5' : ''}">${c.label}${
-                badges ? `<span style="color:var(--muted);font-size:10px"> · ${badges}</span>` : ''}</span>
+        return `<div class="fm-champ${c.masque ? ' masque' : ''}">
+            <span class="fm-champ-nom">${c.label}${badges ? ` <span class="fm-badges">· ${badges}</span>` : ''}</span>
             ${bascule}
         </div>`;
     }).join('');
 
-    return `<details style="margin-top:6px">
-        <summary style="cursor:pointer;color:var(--muted);font-size:10.5px;padding-left:2px">Champs · ${montres} sur ${champs.length}</summary>
-        <div style="margin-top:6px">${lignes}</div>
+    return `<details class="fm-champs"${_champsOuverts.has(cle) ? ' open' : ''}
+            ontoggle="A.suivreChamps('${esc(cle)}', this.open)">
+        <summary>Champs montrés · ${montres} sur ${champs.length}</summary>
+        <div class="fm-champs-liste">${lignes}</div>
     </details>`;
 }
 
@@ -4726,7 +4733,8 @@ function renderSymbologyInspector(layer) {
 
     $('insp-foot').innerHTML = `
         <button class="btn btn-soft" style="flex:1" onclick="A.resetSymbology('${layer.id}')">Réinitialiser</button>
-        <button class="btn btn-primary" style="flex:2" onclick="A.saveLayer('${layer.id}')">Enregistrer</button>`;
+        <button class="btn btn-primary" style="flex:2" onclick="A.saveLayer('${layer.id}')"
+            title="Couleurs, tailles, modèle 3D et étiquettes de la couche — pas ses objets">Enregistrer l’apparence</button>`;
 }
 
 function fieldSelect(layer, param, current, type) {
@@ -5933,18 +5941,30 @@ function wireDrop() {
     dz.ondragleave = () => dz.classList.remove('over');
     dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); };
 }
+/** Une couche depuis un GeoJSON déjà lu ; rend le nombre d'objets ajoutés. */
+function ajouterCoucheGeoJSON(nom, geojson) {
+    const features = geojson.type === 'FeatureCollection' ? (geojson.features || []) : [geojson];
+    if (!features.length) { showToast('GeoJSON vide : aucune couche ajoutée', 'warning'); return 0; }
+    const geomType = features[0]?.geometry?.type || 'Point';
+    const layer = makeLayer(nom, geomType, { type: 'FeatureCollection', features }, null, null);
+    finalizeNewLayer(layer);
+    return features.length;
+}
+
+/**
+ * « Fichier » ajoute une couche — et dit ce qu'il a reçu quand ce n'en est pas
+ * une. Un projet Atlas donné ici devenait une couche absurde, sans erreur.
+ */
 async function processFile(file) {
     showLoading('Lecture du fichier…');
     try {
-        const text = await file.text();
-        const geojson = JSON.parse(text);
-        const features = geojson.features || [geojson];
-        const geomType = features[0]?.geometry?.type || 'Point';
-        const layer = makeLayer(file.name.replace(/\.[^.]+$/, ''), geomType, { type: 'FeatureCollection', features }, null, null);
-        finalizeNewLayer(layer);
+        const obj = JSON.parse(await file.text());
+        const nature = natureJson(obj);
         hideLoading();
-        showToast(`${features.length} éléments importés`, 'success');
-    } catch (e) { hideLoading(); showToast('Erreur : ' + e.message, 'error'); }
+        if (nature !== 'geojson') { showToast(messageNature(nature), nature ? 'info' : 'error'); return; }
+        const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+        if (n) showToast(`${n} élément${n > 1 ? 's' : ''} importé${n > 1 ? 's' : ''}`, 'success');
+    } catch (e) { hideLoading(); showToast('Fichier illisible : ' + e.message, 'error'); }
 }
 
 async function reloadGenericTableLayer(layer, force) {
@@ -6124,19 +6144,6 @@ function setUserIdentity(u) {
 }
 
 /**
- * Point d'entree du recit en lecture.
- *
- * Les modules d'auteur etant retires, un recit publie n'avait plus aucun moyen
- * d'etre lance : le rail disparait et la barre du haut n'offrait que des
- * actions d'edition. Le bouton prend leur place, et seulement s'il y a
- * quelque chose a lire.
- */
-function refreshStoryButton() {
-    const b = $('btn-story');
-    if (b) b.classList.toggle('has-story', !!(STATE.story?.length));
-}
-
-/**
  * `?navbar=false` retire la barre du haut.
  *
  * Pour une integration en cadre — une page qui porte deja son titre et sa
@@ -6155,7 +6162,6 @@ document.body.classList.toggle('sans-navbar', CONFIG.sansNavbar);
 
 function applyViewModeChrome() {
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
-    refreshStoryButton();
     const badge = $('view-mode-badge');
     if (badge) badge.hidden = !CONFIG.viewMode;
     updateUserBadge();
@@ -6169,9 +6175,13 @@ function applyViewModeChrome() {
     }
 }
 
-/** Récit en lecture : FAB seulement (pas de rail / panneau latéral). */
+/**
+ * Récit en lecture : la pastille du dock, rien d'autre (pas de rail, pas de
+ * bouton de barre). Le dock se redessine ici parce que le récit arrive souvent
+ * après le premier rendu — sans cet appel, la pastille n'apparaissait qu'au
+ * prochain changement de contrôle.
+ */
 function refreshStoryNavChrome() {
-    refreshStoryButton();
     const hasStory = (STATE.story?.length || 0) > 0;
     document.body.classList.toggle('view-has-story', !!(CONFIG.viewMode && hasStory));
     const railRecit = document.querySelector('.rail-item[data-module="recit"]');
@@ -6179,9 +6189,8 @@ function refreshStoryNavChrome() {
         if (CONFIG.viewMode) railRecit.hidden = true;
         else railRecit.hidden = false;
     }
-    const fab = $('viewer-story-fab');
-    if (fab) fab.hidden = !(CONFIG.viewMode && hasStory);
     if (CONFIG.viewMode && STATE.currentModule === 'recit') closeModulePanel();
+    refreshControlsDock();
 }
 
 /** Contrôles canvas publiés (active) — interaction lecteur, pas config éditeur. */
@@ -6639,6 +6648,14 @@ async function loadFromSceneManifest() {
             }
         }
         STATE.layers.push(...layers);
+        // Les couches ajoutées à la main — copies, tables enregistrées ou liées
+        // depuis Atlas — ne sont pas dans le manifeste. Sans cette lecture,
+        // elles disparaissaient au rechargement d'un document qgis2grist.
+        await loadLayersFromGrist({
+            monter: false,
+            dejaLiees: new Set(layers.map((l) => l.sourceTable).filter(Boolean)),
+            dejaNommees: new Set(layers.map((l) => l.name).filter(Boolean)),
+        });
         // Rangs enregistrés : les prefs priment sur l'ordre du manifest, comme
         // pour le reste du style. Sans rang, l'ordre du manifest est conservé.
         STATE.layers = sortByRank(STATE.layers, Object.fromEntries(
@@ -6805,8 +6822,24 @@ function startSceneManifestPolling() {
  * > panneau, avec deux entrees de legende, pour une seule ligne en base. On
  * > accusait le document d'avoir des doublons ; ils n'etaient que dans l'ecran.
  */
-async function loadLayersFromGrist() {
+/**
+ * Monter les couches de `Maquette_Layers` : copies, et tables inventoriées.
+ *
+ * Appelée seule dans un document sans manifeste. Dans un document qgis2grist,
+ * `loadFromSceneManifest` l'appelle AUSSI, sans monter (`monter: false`) : les
+ * couches ajoutées à la main n'y sont pas décrites par le manifeste, et elles
+ * disparaissaient au rechargement. `dejaLiees` et `dejaNommees` écartent ce que
+ * le manifeste porte déjà — d'anciennes versions écrivaient ici une copie des
+ * couches du manifeste, qu'il ne faut pas doubler.
+ *
+ * @param {{monter?: boolean, dejaLiees?: Set<string>, dejaNommees?: Set<string>}} [options]
+ */
+async function loadLayersFromGrist({ monter = true, dejaLiees = null, dejaNommees = null } = {}) {
     try {
+        if (!monter) {
+            const tables = await grist.docApi.listTables();
+            if (!tables.includes('Maquette_Layers')) return;
+        }
         const rec = await grist.docApi.fetchTable('Maquette_Layers');
         const ids = rec.id || [];
         const dejaMontees = new Set(STATE.layers.map((l) => l.gristId).filter((v) => v != null));
@@ -6820,6 +6853,8 @@ async function loadLayersFromGrist() {
             if (style) delete style._controls;
             const binding = style?._binding;
             if (style) delete style._binding;
+            if (binding?.kind === 'table' && dejaLiees?.has(binding.sourceTable)) continue;
+            if (!binding && dejaNommees?.has(rec.Name?.[i])) continue;
             const layer = {
                 id: 'layer-grist-' + ids[i], gristId: ids[i],
                 name: rec.Name?.[i] || 'Sans nom', color: rec.Color?.[i] || '#C44536',
@@ -6857,7 +6892,7 @@ async function loadLayersFromGrist() {
                 STATE.layers.filter((l) => Number.isFinite(l._rank)).map((l) => [l.sourceTable || l.id, l._rank])
             ));
         }
-        mountLoadedLayers(computeLayersBounds());
+        if (monter) mountLoadedLayers(computeLayersBounds());
     } catch (e) { console.warn('loadLayers:', e.message); }
 }
 /** Vrai une fois `Maquette_Layers` connue presente, pour ne pas relister a chaque enregistrement. */
@@ -6908,8 +6943,8 @@ async function saveLayerToGrist(layer, silent) {
             await saveLayerPref(grist.docApi, layer, { viewMode: CONFIG.viewMode });
             // Sans manifeste, rien d'autre ne dit que cette table fait partie de
             // la scène : sans sa ligne, elle disparaissait au rechargement.
-            if (ligneInventaireRequise(layer, CONFIG.docMode)) await ecrireLigneInventaire(layer);
-            if (!silent) showToast(`Préférences Atlas · ${layer.name}`, 'success');
+            if (ligneInventaireRequise(layer)) await ecrireLigneInventaire(layer);
+            if (!silent) showToast(`Apparence enregistrée · ${layer.name}`, 'success');
             dirty = false;
             $('app-header')?.classList.remove('dirty');
         } catch (e) {
@@ -6932,7 +6967,7 @@ async function saveLayerToGrist(layer, silent) {
         };
         if (layer.gristId) await grist.docApi.applyUserActions([['UpdateRecord', 'Maquette_Layers', layer.gristId, data]]);
         else { const r = await grist.docApi.applyUserActions([['AddRecord', 'Maquette_Layers', null, data]]); layer.gristId = r.retValues[0]; }
-        if (!silent) showToast('Couche enregistrée dans Grist', 'success');
+        if (!silent) showToast(`Apparence et copie enregistrées · ${layer.name}`, 'success');
     } catch (e) { if (!silent) showToast('Grist : ' + e.message, 'error'); }
 }
 
@@ -6966,7 +7001,9 @@ function saveProject() {
     a.href = url; a.download = `atlas_${(STATE.projectName || STATE.location.name || 'projet').replace(/[^a-z0-9]/gi, '_')}.json`; a.click();
     URL.revokeObjectURL(url);
     try { localStorage.setItem('atlas_autosave', json); } catch (e) {}
-    showToast('Projet enregistré', 'success');
+    // « Téléchargé », pas « enregistré » : rien n'est écrit dans Grist, et le
+    // même mot désignait déjà trois autres gestes (apparence, table, fiche).
+    showToast('Projet téléchargé (.json)', 'success');
 }
 async function restoreProject(p) {
     STATE.layers.forEach((l) => removeLayerGfx(l));
@@ -6988,9 +7025,31 @@ async function restoreProject(p) {
     else updateLegend();
     showToast(`Projet chargé · ${p.layers?.length || 0} couches`, 'success');
 }
+/**
+ * « Ouvrir un projet » reconnaît ce qu'on lui donne (`lib/ouvrir-fichier.js`).
+ *
+ * Un projet se charge ; un GeoJSON s'ajoute comme couche ; une scène publiée
+ * est nommée comme telle, avec la façon de l'ouvrir. Avant, tout ce qui
+ * n'était pas un projet se chargeait « avec succès » comme un projet vide.
+ */
 function loadProject() {
     const inp = $('project-input');
-    inp.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; try { await restoreProject(JSON.parse(await file.text())); } catch (err) { showToast('Erreur : ' + err.message, 'error'); } inp.value = ''; };
+    inp.onchange = async (e) => {
+        const file = e.target.files[0];
+        inp.value = '';
+        if (!file) return;
+        try {
+            const obj = JSON.parse(await file.text());
+            const nature = natureJson(obj);
+            if (nature === 'projet') await restoreProject(obj);
+            else if (nature === 'geojson') {
+                const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+                if (n) showToast(`${n} élément${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''} comme couche`, 'success');
+            } else showToast(messageNature(nature), nature ? 'info' : 'error');
+        } catch (err) {
+            showToast('Fichier illisible : ' + err.message, 'error');
+        }
+    };
     inp.click();
 }
 function exportProject() {
@@ -7055,7 +7114,8 @@ function buildCmdItems(q) {
         { label: 'Vue & rendu', kind: 'module', run: () => openModule('vues'), ic: icTrait(IC.cube) },
         { label: 'Importer depuis OSM', kind: 'action', run: () => { openModule('couches'); openOSM(); }, ic: icTrait(IC.globe) },
         { label: 'Importer un fichier', kind: 'action', run: () => $('file-input').click(), ic: icTrait(IC.fichier) },
-        { label: 'Enregistrer le projet', kind: 'action', run: saveProject, ic: icTrait(IC.enregistrer) },
+        { label: 'Télécharger le projet (.json)', kind: 'action', run: saveProject, ic: icTrait(IC.enregistrer) },
+        { label: 'Ouvrir un projet ou un GeoJSON', kind: 'action', run: loadProject, ic: icTrait(IC.dossier) },
         { label: 'Exporter en GeoJSON', kind: 'action', run: exportProject, ic: icTrait(IC.exporter) },
         { label: 'Réinitialiser la vue', kind: 'action', run: () => A.resetView(), ic: icTrait(IC.rafraichir) },
     ];
@@ -7080,10 +7140,51 @@ function buildCmdItems(q) {
     }
     const ql = q.toLowerCase();
     cmdItems = base.filter((i) => i.label.toLowerCase().includes(ql));
+    // Ce que la barre promet : « un objet, une couche, un lieu ». Les objets
+    // par leur nom, dans les couches visibles ; le lieu par géocodage, en
+    // dernier recours, dès trois caractères.
+    for (const o of objetsPourPalette(STATE.layers, q, { max: 8 })) {
+        cmdItems.push({
+            label: `${o.nom} — ${o.couche}`, kind: 'objet',
+            run: () => allerAObjet(o.coucheId, o.idx), ic: icTrait(IC.epingle),
+        });
+    }
+    const lieu = q.trim();
+    if (lieu.length >= 3) {
+        cmdItems.push({ label: `Chercher le lieu « ${lieu} »`, kind: 'lieu', run: () => allerAuLieu(lieu), ic: icTrait(IC.globe) });
+    }
     cmdSel = 0; renderCmd();
 }
+
+/**
+ * Aller à un objet trouvé par la palette, et l'ouvrir comme un clic l'aurait
+ * fait : la fiche en édition, ou la fiche de saisie si la scène la propose,
+ * le popup sinon.
+ */
+function allerAObjet(coucheId, idx) {
+    const layer = STATE.layers.find((l) => l.id === coucheId);
+    const f = layer?.geojson?.features?.[idx];
+    if (!f) return;
+    fitToFeatures([f]);
+    if (!CONFIG.viewMode) { enterSelectionMode(layer.id, idx); return; }
+    if (coucheEnSaisie(layer)) { enterSelectionMode(layer.id, idx); return; }
+    const c = featureCentroidLngLat(f);
+    showViewFeaturePopup(layer, idx, c ? { lng: c[0], lat: c[1] } : null);
+}
+
+/** Géocodage du premier résultat (Nominatim), sans changer le lieu du projet. */
+async function allerAuLieu(q) {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
+        const [d] = await res.json();
+        if (!d) { showToast(`Lieu introuvable : ${q}`, 'warning'); return; }
+        map?.flyTo({ center: [+d.lon, +d.lat], zoom: 16, duration: 1200 });
+    } catch (e) {
+        showToast('Recherche de lieu indisponible', 'error');
+    }
+}
 function renderCmd() {
-    $('cmd-list').innerHTML = cmdItems.map((i, k) => `<div class="cmd-item ${k === cmdSel ? 'sel' : ''}" data-k="${k}"><span class="cmd-ic">${i.ic}</span><span>${i.label}</span><span class="cmd-kind">${i.kind}</span></div>`).join('') || '<div class="cmd-item">Aucun résultat</div>';
+    $('cmd-list').innerHTML = cmdItems.map((i, k) => `<div class="cmd-item ${k === cmdSel ? 'sel' : ''}" data-k="${k}"><span class="cmd-ic">${i.ic}</span><span>${escapeHtml(i.label)}</span><span class="cmd-kind">${i.kind}</span></div>`).join('') || '<div class="cmd-item">Aucun résultat</div>';
     $('cmd-list').querySelectorAll('.cmd-item[data-k]').forEach((el) => el.onclick = () => runCmd(+el.dataset.k));
 }
 function runCmd(k) { const it = cmdItems[k]; closeCmd(); if (it) it.run(); }
@@ -7141,6 +7242,10 @@ const A = {
      * amont qui gagne un champ plus tard le montrera, et une colonne supprimee
      * rend son masque inerte au lieu de faux.
      */
+    /** Retient qu'une liste de champs est ouverte (voir `_champsOuverts`). */
+    suivreChamps(cle, ouvert) {
+        if (ouvert) _champsOuverts.add(cle); else _champsOuverts.delete(cle);
+    },
     async masquerChamp(layerId, formId, colId) {
         if (!assertCanWrite('régler les champs')) return;
         const couche = STATE.layers.find((l) => l.id === layerId);
@@ -8434,9 +8539,6 @@ function wireEvents() {
         e.preventDefault();
         bascule.click();
     });
-    $('viewer-story-fab')?.addEventListener('click', () => {
-        if ((STATE.story?.length || 0) > 0) A.storyPlay(0);
-    });
     if (typeof window !== 'undefined' && window.matchMedia) {
         window.matchMedia('(max-width: 720px)').addEventListener('change', () => {
             updateMobileLayout();
@@ -8463,7 +8565,6 @@ function wireEvents() {
     $('btn-save').addEventListener('click', saveProject);
     $('btn-load').addEventListener('click', loadProject);
     $('btn-export').addEventListener('click', exportProject);
-    $('btn-story').addEventListener('click', () => A.storyPlay(0));
     cablerMenuPrincipal();
     $('cmdk-trigger').addEventListener('click', openCmd);
     $('compass').addEventListener('click', () => map.easeTo({ bearing: 0, duration: 600 }));

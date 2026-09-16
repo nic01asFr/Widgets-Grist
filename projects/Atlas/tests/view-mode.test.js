@@ -181,17 +181,18 @@ describe('pastilleRecitRequise — le récit garde une entrée sans barre', () =
     assert.equal(pastilleRecitRequise({ ...base, enPresentation: true }), false);
   });
 
-  it('ne double pas le bouton de la barre', () => {
-    assert.equal(pastilleRecitRequise({ ...base, barreAbsente: false }), false);
+  it('seule entrée du récit : avec ou sans barre, même pastille', () => {
+    // Le bouton « Récit » de la barre du haut est retiré : la pastille ne
+    // dépend plus de la présence de la barre.
+    assert.equal(pastilleRecitRequise({ ...base, barreAbsente: false }), true);
   });
 
   it('ne double pas le module Récit du rail, en édition', () => {
     assert.equal(pastilleRecitRequise({ ...base, lecture: false }), false);
   });
 
-  it('ne double pas le bouton flottant, sur mobile', () => {
-    // `#viewer-story-fab` vit dans la carte : il reste quand la barre part.
-    assert.equal(pastilleRecitRequise({ ...base, mobile: true }), false);
+  it('même pastille sur mobile — le bouton flottant est retiré', () => {
+    assert.equal(pastilleRecitRequise({ ...base, mobile: true }), true);
   });
 
   it('ne promet rien quand il n’y a rien à lire', () => {

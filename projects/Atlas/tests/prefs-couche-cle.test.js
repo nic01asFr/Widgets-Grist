@@ -109,21 +109,25 @@ const entablee = {
   geojson: { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: null, properties: { _row_id: 1 } }] },
 };
 
-test('document sans manifeste : une couche en table garde sa ligne d’inventaire', () => {
+test('une couche en table que rien ne decrit garde sa ligne d’inventaire', () => {
   // Sans elle, la couche disparaissait au rechargement : `loadLayersFromGrist`
   // ne lit que `Maquette_Layers`, et les prefs ne disent pas qu'elle existe.
-  assert.equal(ligneInventaireRequise(entablee, 'maquette'), true);
-  assert.equal(ligneInventaireRequise(entablee, undefined), true);
+  assert.equal(ligneInventaireRequise(entablee), true);
 });
 
-test('le manifeste tient deja l’inventaire : pas de doublon', () => {
-  assert.equal(ligneInventaireRequise(entablee, 'scene-manifest'), false);
-  assert.equal(ligneInventaireRequise({ ...entablee, manifestLayerId: 'eclairage' }, 'maquette'), false);
+test('dans un document qgis2grist aussi : le manifeste ne connait pas cette couche', () => {
+  // Le mode du document ne decide plus : c'est l'excluait qui faisait perdre
+  // les couches ajoutees a la main dans un document a manifeste.
+  assert.equal(ligneInventaireRequise(entablee, 'scene-manifest'), true);
+});
+
+test('une couche que le manifeste decrit n’a pas de ligne : pas de doublon', () => {
+  assert.equal(ligneInventaireRequise({ ...entablee, manifestLayerId: 'eclairage' }), false);
 });
 
 test('une couche sans table emporte ses entites par l’autre chemin', () => {
-  assert.equal(ligneInventaireRequise(maquette, 'maquette'), false);
-  assert.equal(ligneInventaireRequise(null, 'maquette'), false);
+  assert.equal(ligneInventaireRequise(maquette), false);
+  assert.equal(ligneInventaireRequise(null), false);
 });
 
 test('la ligne dit ou retrouver la couche, sans copier ses entites', () => {

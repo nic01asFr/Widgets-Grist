@@ -149,21 +149,23 @@ export function coucheAvecLignes(layer) {
  * Faut-il a cette couche une ligne d'inventaire dans `Maquette_Layers` ?
  *
  * `clePrefsCouche` range l'apparence de toute couche portee par une table dans
- * `Atlas_LayerPrefs`, parce que « le manifeste tient la donnee ». Dans un
- * document **sans manifeste**, rien ne la tient : `loadLayersFromGrist` ne lit
- * que `Maquette_Layers`, et une couche enregistree en table disparaissait au
- * rechargement — la table restait dans le document, la scene l'avait oubliee.
+ * `Atlas_LayerPrefs`, parce que « le manifeste tient la donnee ». Mais une
+ * table **que le manifeste ne decrit pas** — enregistree depuis Atlas, ou liee
+ * par « Table » — n'est tenue par rien : elle disparaissait au rechargement.
  * Constate le 11/09/2026 dans un document vide.
+ *
+ * Le critere est donc « le manifeste la decrit-il ? » (`manifestLayerId`), et
+ * pas le mode du document. Un document qgis2grist porte aussi des couches
+ * ajoutees a la main ; les exclure parce qu'il a un manifeste les faisait
+ * perdre au rechargement — l'incoherence la plus grave des deux persistances.
  *
  * La ligne dit seulement que la scene contient cette table, et sous quel nom ;
  * les entites restent dans la table, l'apparence dans les prefs.
  *
  * @param {object} layer
- * @param {string} [docMode] `CONFIG.docMode`
  */
-export function ligneInventaireRequise(layer, docMode) {
-  return docMode !== 'scene-manifest'
-    && layer?.kind === 'table'
+export function ligneInventaireRequise(layer) {
+  return layer?.kind === 'table'
     && !!layer?.sourceTable
     && !layer?.manifestLayerId;
 }

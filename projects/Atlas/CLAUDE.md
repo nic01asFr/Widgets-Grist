@@ -837,11 +837,21 @@ Lus par `lib/view-mode.js`.
 > badge de droits et le bouton « Récit » — seul point d'entrée d'un récit publié
 > une fois le rail parti.
 >
-> Ce qu'il emporte avec la barre : en édition autonome, **Enregistrer** et
-> **Exporter** ; en lecture, le bouton « Récit ». Pour ce dernier, le dock de la
-> carte porte une pastille « Lire le récit » quand le récit est fermé
-> (`pastilleRecitRequise`) — pas sur mobile, où le bouton flottant vit déjà dans
-> la carte.
+> Ce qu'il emporte avec la barre : en édition autonome, **Télécharger** et
+> **Exporter**. Le récit n'en dépend plus : depuis le 16/09/2026, il se lance
+> **uniquement** par la pastille « Lire le récit » du dock
+> (`pastilleRecitRequise`), en lecture, sur ordinateur comme sur mobile. Le
+> bouton de la barre et le bouton flottant mobile sont retirés — trois entrées
+> pour un geste, chacune avec sa règle d'exclusion, c'était deux de trop.
+
+### Cohérence des gestes (16/09/2026)
+
+| Avant | Maintenant |
+|---|---|
+| « Enregistrer » pour quatre gestes | **Télécharger le projet** (fichier .json), **Enregistrer l'apparence** (panneau de couche), **Enregistrer en table Grist** (les objets deviennent des lignes), **Enregistrer** (la fiche, une ligne) |
+| « Charger un projet » avalait tout fichier JSON comme un projet vide ; « Fichier » faisait une couche d'un projet | les deux portes reconnaissent le contenu (`lib/ouvrir-fichier.js`) : projet → chargé, GeoJSON → couche, scène → message qui dit de l'ouvrir par `?scene=` |
+| la barre promettait « un objet, une couche, un lieu », la palette ne cherchait ni objet ni lieu | objets par leur nom dans les couches visibles (`lib/palette-objets.js`), lieu par géocodage |
+| document qgis2grist : une couche ajoutée à la main disparaissait au rechargement | `Maquette_Layers` est aussi lue en mode manifeste, en écartant ce que le manifeste porte déjà ; l'inventaire dépend de `manifestLayerId`, plus du mode |
 
 ### L'habillage de la carte — un étage partagé en bas (11/09/2026)
 
