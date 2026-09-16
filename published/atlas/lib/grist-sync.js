@@ -146,6 +146,25 @@ export function coucheAvecLignes(layer) {
 }
 
 /**
+ * Peut-on proposer « Enregistrer en table Grist » sur cette couche ?
+ *
+ * Seulement pour une **copie** : des entités détenues par Atlas, sans table
+ * derrière. Le bouton testait `kind === 'table'`, que seules les couches
+ * enregistrées ou liées depuis Atlas portent — une table décrite par le
+ * manifeste ne l'a pas. Sur « Bâtiments (table du document) », le panneau
+ * disait donc à la fois « table », « Saisir sur les objets · 4 formulaires » et
+ * « Copie dans le document : ses objets n'ont pas de ligne Grist ». Constaté le
+ * 16/09/2026. Le critère est celui de la fiche : `coucheAvecLignes`.
+ *
+ * @param {object} layer
+ * @param {{lecture?: boolean, grist?: boolean}} [contexte]
+ */
+export function peutPasserEnTable(layer, { lecture = false, grist = true } = {}) {
+  const n = layer?.geojson?.features?.length || 0;
+  return !lecture && !!grist && !!layer && !coucheAvecLignes(layer) && !layer._distant && n > 0;
+}
+
+/**
  * Faut-il a cette couche une ligne d'inventaire dans `Maquette_Layers` ?
  *
  * `clePrefsCouche` range l'apparence de toute couche portee par une table dans
