@@ -331,15 +331,20 @@
   border: 1px solid var(--hairline); border-radius: 10px;
   background: var(--surface); padding: 10px 12px 10px; margin-bottom: 12px;
 }
+/* Nom au-dessus de la table : côte à côte, le nom de table (long, sans
+   espace) prenait la ligne et le nom de la couche se réduisait à « Ar… ». */
 #module-body .fm-entete {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  display: flex; flex-direction: column; gap: 2px;
   padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
 }
 #module-body .fm-couche {
   font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink);
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#module-body .fm-table { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+#module-body .fm-table {
+  font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 #module-body .fm-groupe { margin-top: 10px; }
 #module-body .fm-groupe-titre {
   font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;

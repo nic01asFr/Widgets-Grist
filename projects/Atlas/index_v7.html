@@ -1162,12 +1162,16 @@
                 max-width: min(calc(100vw - 100px), 240px);
             }
             body.mobile-layout .map-frame { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
-            body.mobile-layout .legend { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); left: 12px; width: auto; max-width: calc(100% - 24px); }
+            /* La légende se pose au-dessus de l'attribution, comme la bulle du
+               récit : à 72 px (édition) ou 16 px (lecture), elle en recouvrait le
+               début — « …penMapTiles » —, que la licence impose de laisser lisible.
+               Le bouton flottant du récit occupait ce coin et le masquait. */
+            body.mobile-layout .legend { bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px); left: 12px; width: auto; max-width: calc(100% - 24px); }
             body.mobile-layout .toasts { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); right: 12px; left: 12px; }
             body.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
             /* Lecture : pas de bottom nav — carte plein écran */
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
-            body.view-mode.mobile-layout .legend { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+            body.view-mode.mobile-layout .legend { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px); }
             /* Récit sur petit écran : la bulle occupe le bas, la légende aussi, et
                il n'y a pas la place pour les deux côte à côte. La légende part
                repliée (`enterStoryPresentation`) et se pose sur le haut de la
@@ -1216,7 +1220,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20260916a" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20260916b" />
 </head>
 <body>
     <div class="app">

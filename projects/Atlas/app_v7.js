@@ -7372,6 +7372,19 @@ const A = {
             const colonnes = {};
             for (const [k, v] of Object.entries(champs)) colonnes[k] = [v];
             await grist.docApi.applyUserActions([['BulkAddRecord', 'Formulaires', [null], colonnes]]);
+            // Le formulaire composé part du cadrage de celui dont il vient.
+            //
+            // Sans cela, il héritait de ce que les préférences gardaient sous
+            // son identifiant : `idFormulaireLibre` évite les lignes existantes,
+            // pas les réglages d'un formulaire supprimé. Constaté le 16/09/2026 —
+            // un « Saisie » tout neuf arrivait avec quatre champs masqués par
+            // un formulaire effacé qui portait le même nom.
+            const reglages = couche.formulaire || {};
+            couche.formulaire = {
+                ...reglages,
+                masques: { ...(reglages.masques || {}), [def.id]: [...(f.masques || [])] },
+            };
+            await saveLayerToGrist(couche, true);
             await chargerFormulaires();
             hideLoading();
             renderFormulaires();
