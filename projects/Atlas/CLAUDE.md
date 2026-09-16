@@ -117,6 +117,14 @@ d'entité, formulaires, étage du bas) est prête sur la branche
   LIGNE** sur `<html>` : `color-scheme: light` exige `!important`, sans quoi les
   contrôles natifs sont peints en sombre.
 
+  **Retirer un formulaire** (16/09/2026) : chaque formulaire d'une couche,
+  sauf `Attributs`, porte « Retirer ». C'est un réglage de la scène
+  (`formulaire.retires` dans les prefs), réversible : la ligne de
+  `Formulaires` reste, le cadrage des champs aussi, et « Remettre » le rend tel
+  qu'il était. Retirer le sort des formulaires proposés hors édition.
+  Auparavant un formulaire composé ne pouvait que s'ajouter — « Saisie »,
+  « Saisie 2 », « Saisie 3 » s'empilaient dans la fiche.
+
   Reste : la couche `-hit`, le mode consultation du moteur, et l'ACL dérivée
   du FormDef. Le vendoring de `grist_forms` est réglé : `scripts/promote-atlas.js`
   copie les six scripts (liste `VENDOR`) dans `published/atlas/vendor/` et
@@ -1029,6 +1037,40 @@ normale. `tests/controles-couche-distante.test.js` verrouille les deux sens.
 Vérifié à l'écran sur la scène de Sète : le curseur s'ouvre sur 10 → 20,2 m
 (les bornes déclarées, non mesurables ici), et le pousser à 18,98 ne laisse que
 les bâtiments les plus hauts.
+
+### Chaque champ a le contrôle que son type appelle (16/09/2026)
+
+Revue faite sur `Batiments_locaux` dans le document de non-régression. Le module
+Contrôles écartait `etat` (Choice) faute de le trouver dans un manifeste
+ancien, taisait `visite` (Date jamais renseignée), affichait « range » et
+« select », et n'enregistrait un réglage que pour `source === 'qgis2grist'` —
+jamais depuis un curseur.
+
+| Type Grist | Contrôle | Autres formes proposées |
+|---|---|---|
+| `Date`, `DateTime` (secondes) | Date — jusqu'à / entre | — |
+| `Int`, `Numeric` | Nombre — plage, min, max (pas entier pour `Int`) | Catégorie si ≤ 20 valeurs |
+| `Bool`, `Choice`, `Ref` | Catégorie — checklist, choix unique (Oui/Non pour un booléen) | Texte (sauf booléen) |
+| `ChoiceList`, `RefList` | Catégorie : un objet passe si **l'un** de ses choix est retenu | Texte |
+| `Text` | profil des valeurs : nombres « 3,5 », dates « jj/mm/aaaa », sinon catégorie (≤ 20) ou texte | |
+
+- **Le schéma du document fait foi** (`typeGristDuChamp`, `champsControlables`) :
+  une colonne vide partout n'est pas dans les entités, et le manifeste peut
+  dater d'avant elle. Une colonne sans valeur est **nommée** sous la liste.
+- **« (sans valeur) » est un choix**, écrit `''` dans `values`. Activer une
+  checklist coche tout, sans valeur compris : activer ne retranche rien.
+- Une liste Grist arrive `['L', a, b]` : `tableToGeoJSON` la garde sous
+  `_l_<champ>` (le champ lui-même devient « a, b » pour l'affichage), et
+  `featureToRowUpdate` la réécrit en liste — sinon une sauvegarde aplatissait
+  la cellule en texte.
+- `persisterControles` (débounce 700 ms) passe par `saveLayerToGrist`, qui sait
+  où ranger chaque couche. Rien ne s'écrit en lecture.
+- Limites d'une couche **distante** (filtre MapLibre) : une date écrite en
+  texte ne se filtre pas, « Contient » ne retire pas les accents, un `Ref`
+  s'y lit par son identifiant de ligne.
+- `tests/controles-types.test.js` : tous les types de colonne, et 16 réglages
+  comparés entité par entité entre `buildControlPredicate` et
+  `expressionFiltreControles`.
 
 ### Symboliser une couche qu'on ne détient pas
 

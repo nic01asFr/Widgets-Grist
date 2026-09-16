@@ -131,7 +131,7 @@ test('formulairesPourTable ne rend que ce qui vise cette table', () => {
 /* ---------- ce que la couche porte ---------- */
 
 test('les reglages d’une couche sont normalises, jamais devines', () => {
-  const vide = { fiche: null, exposes: null, exposeHerite: false, masques: {} };
+  const vide = { fiche: null, exposes: null, exposeHerite: false, masques: {}, retires: [] };
   assert.deepEqual(reglagesFormulaire({}), vide);
   assert.deepEqual(reglagesFormulaire(null), vide);
   // `expose` devait valoir VRAI, pas seulement etre present : une valeur
@@ -143,7 +143,7 @@ test('l’ancien booleen se relit sans rien perdre', () => {
   // `expose: true` voulait dire « la fiche de cette couche est exposee » — le
   // seul formulaire qui existait alors. On le reporte sur le principal.
   assert.deepEqual(reglagesFormulaire({ formulaire: { id: 'x', expose: true } }),
-    { fiche: 'x', exposes: null, exposeHerite: true, masques: {} });
+    { fiche: 'x', exposes: null, exposeHerite: true, masques: {}, retires: [] });
 });
 
 test('une liste vide n’est pas l’absence de liste', () => {
@@ -151,9 +151,9 @@ test('une liste vide n’est pas l’absence de liste', () => {
   // expose ». Les confondre reactiverait l'ancien booleen sur une couche qu'on
   // vient justement de vider.
   assert.deepEqual(reglagesFormulaire({ formulaire: { exposes: [], expose: true } }),
-    { fiche: null, exposes: [], exposeHerite: false, masques: {} });
+    { fiche: null, exposes: [], exposeHerite: false, masques: {}, retires: [] });
   assert.deepEqual(reglagesFormulaire({ formulaire: { fiche: 'a', exposes: ['a', 'b'] } }),
-    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false, masques: {} });
+    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false, masques: {}, retires: [] });
 });
 
 test('une liste d’exposes filtre ce qui n’est pas un identifiant', () => {
@@ -920,4 +920,26 @@ test('le defaut vaut tant que la scene n’a rien decide, et cede a sa decision'
   const autre = { ...couche, formulaire: { masques: { releve: ['ref'] } } };
   const [choix] = formulairesPourCouche({ couche: autre, entrees: [entree] });
   assert.deepEqual(choix.masques, ['ref'], 'la decision remplace le defaut');
+});
+/* ---------- retirer et remettre un formulaire ---------- */
+
+import { formulaireRetirable, formulairesEnPlace } from '../lib/fiche-formulaire.js';
+
+test('Attributs ne se retire pas ; un formulaire enregistré ou lié, si', () => {
+  assert.equal(formulaireRetirable({ id: 'attr', surLaCouche: true, derive: true }), false);
+  assert.equal(formulaireRetirable({ id: 'releve', surLaCouche: true, derive: false }), true);
+  assert.equal(formulaireRetirable({ id: 'visites', surLaCouche: false, derive: true }), true);
+  assert.equal(formulaireRetirable({ surLaCouche: false }), false);
+});
+
+test('un formulaire retiré n’est plus en place, et reste retrouvable', () => {
+  const liste = [{ id: 'a' }, { id: 'b', retire: true }];
+  assert.deepEqual(formulairesEnPlace(liste).map((f) => f.id), ['a']);
+  assert.deepEqual(formulairesEnPlace(null), []);
+});
+
+test('les retirés se lisent dans les réglages, les valeurs douteuses sont écartées', () => {
+  assert.deepEqual(reglagesFormulaire({ formulaire: { retires: ['a', 3, '', 'b'] } }).retires, ['a', 'b']);
+  assert.deepEqual(reglagesFormulaire({ formulaire: { retires: 'a' } }).retires, []);
+  assert.deepEqual(reglagesFormulaire({}).retires, []);
 });

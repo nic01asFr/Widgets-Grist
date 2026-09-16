@@ -9,29 +9,165 @@ import {
   resolveGristFieldName,
 } from './declarative-style.js?v=20260729m';
 
+/**
+ * Les champs d'une couche : ceux que le manifeste déclare, **puis** ceux que
+ * portent les entités.
+ *
+ * Seule la liste déclarée était lue quand elle existait. Une colonne ajoutée
+ * dans Grist après l'import — `etat`, sur `Batiments_locaux` — n'y figurait
+ * pas, et devenait invisible pour les contrôles alors que chaque objet la
+ * portait. Constaté le 16/09/2026.
+ */
 export function layerFieldNames(layer) {
-  if (layer._fields?.length) {
-    return layer._fields.map((f) => f.name).filter(Boolean);
-  }
-  const p = layer.geojson?.features?.[0]?.properties || {};
-  return Object.keys(p).filter((k) => !k.startsWith('_') && k !== 'geometry_json');
+  const out = [];
+  const vus = new Set();
+  const ajouter = (nom) => {
+    if (!nom || nom.startsWith('_') || nom === 'geometry_json' || vus.has(nom)) return;
+    vus.add(nom);
+    out.push(nom);
+  };
+  (layer?._fields || []).forEach((f) => ajouter(f?.name));
+  const entites = Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [];
+  for (const f of entites.slice(0, 200)) Object.keys(f?.properties || {}).forEach(ajouter);
+  return out;
 }
 
-export function controlFieldType(layer, field) {
-  const propKey = resolveFeaturePropertyKey(layer, field);
-  const vals = [];
-  for (const f of (layer.geojson?.features || [])) {
-    const v = f.properties?.[propKey];
-    if (v == null || v === '') continue;
-    vals.push(normalizePropertyValue(v));
-    if (vals.length >= 50) break;
+/* ------------------------------------------------------------------------
+   Lire une cellule : nombres, dates, listes
+   ------------------------------------------------------------------------ */
+
+/** Au-delà, une catégorie devient un texte à chercher (hors type déclaré). */
+export const SEUIL_CATEGORIES = 20;
+/** Au-delà, même un choix déclaré (Choice, Ref) ne tient plus dans une liste. */
+export const MAX_VALEURS_LISTE = 40;
+
+/**
+ * Un nombre, ou NaN. Accepte « 3,5 » ; refuse « 12 m ».
+ *
+ * La stricte est voulue : c'est aussi ce que fait `to-number` côté carte, et
+ * les deux filtres doivent classer pareil. `parseFloat("3,5")` rendait 3.
+ */
+export function nombreDe(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
+  if (v == null || typeof v === 'boolean') return NaN;
+  const t = normalizePropertyValue(v).trim().replace(/\s+/g, '');
+  if (!/^[-+]?\d+(?:[.,]\d+)?(?:e[-+]?\d+)?$/i.test(t)) return NaN;
+  return Number(t.replace(',', '.'));
+}
+
+/**
+ * Un instant en millisecondes, ou NaN.
+ *
+ * - `unite: 's'` : une colonne Date ou DateTime de Grist, stockée en secondes.
+ *   Lue comme un nombre, elle donnait un curseur de 1,7 milliard à 1,8 milliard.
+ * - « 12/03/2024 » se lit jour/mois : `Date.parse` le lisait 3 décembre.
+ * - ISO `2024-03-12` (avec ou sans heure).
+ */
+export function valeurTemporelle(v, unite) {
+  if (v == null || v === '' || typeof v === 'boolean') return NaN;
+  if (typeof v === 'number') return Number.isFinite(v) ? (unite === 's' ? v * 1000 : v) : NaN;
+  const t = normalizePropertyValue(v).trim();
+  if (!t) return NaN;
+  if (/^-?\d+(?:\.\d+)?$/.test(t)) {
+    const n = Number(t);
+    return unite === 's' ? n * 1000 : n;
   }
-  if (!vals.length) return null;
-  const dateRe = /^\d{4}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/;
-  if (vals.every((v) => dateRe.test(String(v).trim()) && !Number.isNaN(Date.parse(v)))) return 'time';
-  if (vals.every((v) => v !== '' && !Number.isNaN(Number(v)))) return 'range';
-  if (new Set(vals.map(String)).size <= 20) return 'select';
+  const fr = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/.exec(t);
+  if (fr) {
+    const [, j, m, a] = fr.map(Number);
+    if (m < 1 || m > 12 || j < 1 || j > 31) return NaN;
+    return Date.UTC(a, m - 1, j);
+  }
+  if (RE_DATE_ISO.test(t)) return Date.parse(t);
+  return NaN;
+}
+
+const RE_DATE_ISO = /^\d{4}-\d{1,2}-\d{1,2}(?:[T ]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+const RE_DATE_FR = /^\d{1,2}[/.]\d{1,2}[/.]\d{4}$/;
+
+/**
+ * Les valeurs d'une cellule, en texte — plusieurs pour une liste Grist.
+ * Une cellule vide n'en a aucune.
+ */
+export function valeursDeCellule(properties, propKey) {
+  const liste = properties?.[`_l_${propKey}`];
+  if (Array.isArray(liste)) {
+    return liste.map((x) => normalizePropertyValue(x)).filter((x) => x !== '');
+  }
+  const v = normalizePropertyValue(properties?.[propKey]);
+  return v === '' ? [] : [v];
+}
+
+/** Minuscules, sans accents : pour chercher dans un texte. */
+export function normaliserTexte(t) {
+  return String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+/* ------------------------------------------------------------------------
+   Quel contrôle pour quel champ
+   ------------------------------------------------------------------------ */
+
+/** Le contrôle qu'un type de colonne Grist appelle, ou null s'il faut lire les valeurs. */
+export function typeControleGrist(typeGrist) {
+  const t = String(typeGrist || '').split(':')[0];
+  if (t === 'Date' || t === 'DateTime') return 'time';
+  if (t === 'Int' || t === 'Numeric') return 'range';
+  if (t === 'Bool' || t === 'Choice' || t === 'ChoiceList' || t === 'Ref' || t === 'RefList') return 'select';
   return null;
+}
+
+/**
+ * Ce qu'on sait d'un champ pour le contrôler.
+ *
+ * Le type déclaré par Grist prime : une date y est un nombre de secondes, une
+ * référence un numéro de ligne, et les valeurs seules les feraient passer pour
+ * des nombres quelconques. Sans type déclaré, on lit les valeurs.
+ *
+ * `typesPossibles` dit les autres formes raisonnables : un nombre à peu de
+ * valeurs (un niveau 1 à 5) se filtre aussi par catégories, une catégorie se
+ * cherche aussi par texte.
+ *
+ * @returns {{type: string|null, typesPossibles: string[], vide: boolean,
+ *   distinct: number, entier: boolean, booleen: boolean, unite?: 's'}}
+ */
+export function profilChamp(layer, field, typeGrist) {
+  const decl = typeControleGrist(typeGrist);
+  const tg = String(typeGrist || '').split(':')[0];
+  const unite = decl === 'time' ? 's' : undefined;
+  const propKey = resolveFeaturePropertyKey(layer, field);
+  const valeurs = [];
+  const distinct = new Set();
+  const entites = Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [];
+  for (const f of entites) {
+    for (const v of valeursDeCellule(f.properties, propKey)) {
+      valeurs.push(v);
+      distinct.add(v.toLowerCase());
+    }
+    if (valeurs.length >= 5000) break;
+  }
+  const base = { distinct: distinct.size, entier: false, booleen: false, ...(unite ? { unite } : {}) };
+  if (!valeurs.length) return { ...base, type: null, typesPossibles: [], vide: true };
+
+  const booleen = tg === 'Bool' || valeurs.every((v) => v === 'true' || v === 'false');
+  const nombres = valeurs.every((v) => !Number.isNaN(nombreDe(v)));
+  const entier = nombres && valeurs.every((v) => Number.isInteger(nombreDe(v)));
+  const dates = !decl && valeurs.every((v) => RE_DATE_ISO.test(v.trim()) || RE_DATE_FR.test(v.trim()));
+
+  let type;
+  if (decl === 'time' || dates) type = 'time';
+  else if (booleen) type = 'select';
+  else if (decl === 'range' || (!decl && nombres)) type = 'range';
+  else if (distinct.size <= (decl === 'select' ? MAX_VALEURS_LISTE : SEUIL_CATEGORIES)) type = 'select';
+  else type = 'text';
+
+  const typesPossibles = [type];
+  if (type === 'range' && distinct.size <= SEUIL_CATEGORIES) typesPossibles.push('select');
+  if (type === 'select' && !booleen) typesPossibles.push('text');
+  return { ...base, type, typesPossibles, vide: false, entier, booleen };
+}
+
+export function controlFieldType(layer, field, typeGrist) {
+  return profilChamp(layer, field, typeGrist).type;
 }
 
 /**
@@ -49,13 +185,13 @@ export function optionsDeclarees(layer, field) {
   return Array.isArray(v) && v.length ? v : null;
 }
 
-export function controlUniqueValues(layer, field, max = 40) {
+export function controlUniqueValues(layer, field, max = MAX_VALEURS_LISTE) {
   const propKey = resolveFeaturePropertyKey(layer, field);
   const counts = new Map();
-  for (const f of (layer.geojson?.features || [])) {
-    const key = normalizePropertyValue(f.properties?.[propKey]);
-    if (!key) continue;
-    counts.set(key, (counts.get(key) || 0) + 1);
+  for (const f of (Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [])) {
+    for (const key of valeursDeCellule(f.properties, propKey)) {
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
   }
   if (counts.size) {
     return Array.from(counts.entries())
@@ -72,6 +208,32 @@ export function controlUniqueValues(layer, field, max = 40) {
   // `count: null` et non zéro : on ne sait pas combien d'entités portent cette
   // valeur, et zéro laisserait croire qu'il n'y en a aucune.
   return declarees.slice(0, max).map((value) => ({ value, count: null }));
+}
+
+/**
+ * Combien d'objets n'ont aucune valeur pour ce champ.
+ *
+ * Une checklist ne proposait que les valeurs présentes : l'activer écartait
+ * d'emblée tous les objets sans valeur — 4 bâtiments sur 5 pour `etat` sur
+ * `Batiments_locaux`. Le choix « (sans valeur) » s'écrit `''` dans la sélection.
+ */
+export function nombreSansValeur(layer, field) {
+  const propKey = resolveFeaturePropertyKey(layer, field);
+  let n = 0;
+  for (const f of (Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [])) {
+    if (!valeursDeCellule(f.properties, propKey).length) n += 1;
+  }
+  return n;
+}
+
+/** Combien de valeurs distinctes un champ porte (au-delà de la liste affichée). */
+export function nombreValeursDistinctes(layer, field) {
+  const propKey = resolveFeaturePropertyKey(layer, field);
+  const vues = new Set();
+  for (const f of (Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [])) {
+    for (const key of valeursDeCellule(f.properties, propKey)) vues.add(key);
+  }
+  return vues.size || (optionsDeclarees(layer, field)?.length ?? 0);
 }
 
 /**
@@ -107,9 +269,9 @@ export function filteredUniqueValues(layer, field, max = 40) {
   const propKey = resolveFeaturePropertyKey(layer, field);
   const counts = new Map();
   for (const f of (gj?.features || [])) {
-    const key = normalizePropertyValue(f.properties?.[propKey]);
-    if (!key) continue;
-    counts.set(key, (counts.get(key) || 0) + 1);
+    for (const key of valeursDeCellule(f.properties, propKey)) {
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
   }
   if (!counts.size && !Array.isArray(layer?.geojson?.features)) {
     const declarees = classesDeclarees(layer, field);
@@ -123,19 +285,26 @@ export function filteredUniqueValues(layer, field, max = 40) {
     .slice(0, max);
 }
 
-export function controlBounds(layer, type, field) {
+export function controlBounds(layer, type, field, opts = {}) {
   if (type === 'select') {
-    return { values: controlUniqueValues(layer, field, 40).map((v) => v.value) };
+    // Tout coché, « sans valeur » compris : activer ne retranche rien.
+    const values = controlUniqueValues(layer, field, MAX_VALEURS_LISTE).map((v) => v.value);
+    if (nombreSansValeur(layer, field) > 0) values.push('');
+    return { values };
   }
+  if (type === 'text') return { texte: '' };
   const propKey = resolveFeaturePropertyKey(layer, field);
   let lo = Infinity;
   let hi = -Infinity;
-  for (const f of (layer.geojson?.features || [])) {
+  let entier = true;
+  for (const f of (Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [])) {
     const raw = f.properties?.[propKey];
     if (raw == null || raw === '') continue;
-    const s = normalizePropertyValue(raw);
-    const n = type === 'time' ? Date.parse(s) : Number(s);
-    if (!Number.isNaN(n)) { lo = Math.min(lo, n); hi = Math.max(hi, n); }
+    const n = type === 'time' ? valeurTemporelle(raw, opts.unite) : nombreDe(raw);
+    if (Number.isNaN(n)) continue;
+    lo = Math.min(lo, n);
+    hi = Math.max(hi, n);
+    if (!Number.isInteger(n)) entier = false;
   }
   if (lo === Infinity) {
     // Rien à mesurer ici. Le manifeste, lui, sait peut-être : `dataMin`/`dataMax`
@@ -153,7 +322,7 @@ export function controlBounds(layer, type, field) {
     // drapeau permet à l'interface de le dire plutôt que de le montrer.
     return { dataMin: 0, dataMax: 1, min: 0, max: 1, _bornesInconnues: true };
   }
-  return { dataMin: lo, dataMax: hi, min: lo, max: hi };
+  return { dataMin: lo, dataMax: hi, min: lo, max: hi, ...(type === 'range' && entier ? { entier: true } : {}) };
 }
 
 /** Ensemble des valeurs cochées (minuscules) pour un select. */
@@ -176,9 +345,11 @@ export function isSelectValueChecked(c, value) {
 export function captureSelectControlValues(layer, c) {
   if (!Array.isArray(c.values) || !c.values.length) return [];
   const allowed = selectValuesLowerSet(c);
-  return controlUniqueValues(layer, c.field, 40)
+  const out = controlUniqueValues(layer, c.field, 40)
     .filter((v) => allowed.has(String(v.value).toLowerCase()))
     .map((v) => v.value);
+  if (allowed.has('')) out.push('');
+  return out;
 }
 
 /**
@@ -186,10 +357,12 @@ export function captureSelectControlValues(layer, c) {
  */
 export function normalizeSelectValuesForLayer(layer, field, savedValues) {
   if (!Array.isArray(savedValues) || !savedValues.length) return [];
-  const allowed = new Set(savedValues.map((v) => String(v).toLowerCase()));
-  return controlUniqueValues(layer, field, 40)
+  const allowed = new Set(savedValues.map((v) => String(v ?? '').toLowerCase()));
+  const out = controlUniqueValues(layer, field, 40)
     .filter((v) => allowed.has(String(v.value).toLowerCase()))
     .map((v) => v.value);
+  if (allowed.has('')) out.push('');
+  return out;
 }
 
 /** Répare select pollué par import manifest (options confondues avec sélection). */
@@ -211,43 +384,41 @@ export function buildControlPredicate(layer) {
     const p = f.properties || {};
     for (const c of ctrls) {
       const propKey = resolveFeaturePropertyKey(layer, c.field);
-      const raw = p[propKey];
       if (c.type === 'select') {
-        const key = normalizePropertyValue(raw);
-        const variant = c.variant || 'select_multi';
-        if (!c.active) continue;
-        if (!c._selectionTouched && !Array.isArray(c.values)) continue;
-        if (Array.isArray(c.values) && !c.values.length) return false;
+        // Actif sans sélection posée : pas de restriction. Sélection vide
+        // posée : rien ne passe — c'est ce qu'on a demandé.
         if (!Array.isArray(c.values)) continue;
-        if (variant === 'select_single' && c.values.length > 1) {
-          c.values = [c.values[0]];
-        }
-        if (!selectValuesLowerSet(c).has(String(key).toLowerCase())) return false;
-      } else {
-        // `requireValue` : une entité dépourvue de la donnée filtrée est écartée
-        // au lieu d'être laissée passer. Indispensable quand l'attribut n'est
-        // renseigné que sur une partie des objets — sinon les entités muettes
-        // dominent la carte thématique. Absent par défaut : les filtres
-        // existants gardent leur tolérance.
-        if (raw == null || raw === '') {
-          if (c.requireValue) return false;
-          continue;
-        }
-        const s = normalizePropertyValue(raw);
-        const n = c.type === 'time' ? Date.parse(s) : parsePropertyNumber(s);
-        if (Number.isNaN(n)) {
-          if (c.requireValue) return false;
-          continue;
-        }
-        const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
-        if (variant === 'time_lte' || variant === 'range_max') {
-          if (n > c.max) return false;
-        } else if (variant === 'range_min') {
-          if (n < c.min) return false;
-        } else if (n < c.min || n > c.max) {
-          return false;
-        }
+        if (!c.values.length) return false;
+        const choix = c.variant === 'select_single' ? c.values.slice(0, 1) : c.values;
+        const retenus = new Set(choix.map((v) => String(v ?? '').toLowerCase()));
+        // Une liste Grist passe si l'un de ses choix est retenu ; un objet sans
+        // valeur passe si « (sans valeur) » — `''` — l'est.
+        const vals = valeursDeCellule(p, propKey);
+        if (!(vals.length ? vals : ['']).some((v) => retenus.has(v.toLowerCase()))) return false;
+        continue;
       }
+      if (c.type === 'text') {
+        const q = normaliserTexte(c.texte).trim();
+        if (!q) continue;
+        if (!normaliserTexte(valeursDeCellule(p, propKey).join(' ')).includes(q)) return false;
+        continue;
+      }
+      const raw = p[propKey];
+      // `requireValue` : une entité dépourvue de la donnée filtrée est écartée
+      // au lieu d'être laissée passer. Indispensable quand l'attribut n'est
+      // renseigné que sur une partie des objets — sinon les entités muettes
+      // dominent la carte thématique. Absent par défaut : les filtres
+      // existants gardent leur tolérance.
+      const n = c.type === 'time' ? valeurTemporelle(raw, c.unite) : nombreDe(raw);
+      if (Number.isNaN(n)) {
+        if (c.requireValue) return false;
+        continue;
+      }
+      const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
+      const avecMin = variant !== 'time_lte' && variant !== 'range_max';
+      const avecMax = variant !== 'range_min';
+      if (avecMax && Number.isFinite(c.max) && n > c.max) return false;
+      if (avecMin && Number.isFinite(c.min) && n < c.min) return false;
     }
     return true;
   };
@@ -284,31 +455,51 @@ export function expressionFiltreControles(layer) {
   const ctrls = (layer?.controls || []).filter((c) => c.active);
   if (!ctrls.length) return null;
   const clauses = [];
+  const texteDuChamp = (champ) => ['downcase', ['to-string', ['coalesce', champ, '']]];
 
   for (const c of ctrls) {
     const champ = ['get', c.field];
 
     if (c.type === 'select') {
-      const sel = Array.isArray(c.values) ? c.values.filter((v) => v != null && v !== '') : [];
-      // Pas de sélection = pas de restriction, comme côté prédicat : un select
-      // qu'on vient d'activer sans rien cocher ne doit pas vider la carte.
-      if (!sel.length) continue;
-      // La comparaison est insensible à la casse des deux côtés, comme le fait
-      // `normalizePropertyValue` : un « Résidentiel » déclaré doit retrouver un
-      // « résidentiel » stocké.
-      clauses.push(['in',
-        ['downcase', ['to-string', ['coalesce', champ, '']]],
-        ['literal', sel.map((v) => String(v).toLowerCase())]]);
+      // Mêmes règles que le prédicat : pas de sélection posée, pas de
+      // restriction ; sélection vide posée, rien ne passe. L'expression
+      // laissait tout passer dans le second cas — une carte pleine là où la
+      // même scène, détenue localement, était vide.
+      if (!Array.isArray(c.values)) continue;
+      // `''` reste : c'est le choix « (sans valeur) », et `coalesce` rend ''
+      // pour un attribut absent — les deux côtés le lisent pareil.
+      const choix = (c.variant === 'select_single' ? c.values.slice(0, 1) : c.values)
+        .filter((v) => v != null);
+      if (!choix.length) { clauses.push(['==', 1, 0]); continue; }
+      // Insensible à la casse des deux côtés, comme `normalizePropertyValue`.
+      clauses.push(['in', texteDuChamp(champ), ['literal', choix.map((v) => String(v).toLowerCase())]]);
       continue;
     }
+
+    if (c.type === 'text') {
+      const q = String(c.texte ?? '').trim().toLowerCase();
+      if (!q) continue;
+      // MapLibre ne retire pas les accents : « cafe » ne trouve pas « café »
+      // sur une couche distante, alors qu'il le trouve sur une couche locale.
+      clauses.push(['in', q, texteDuChamp(champ)]);
+      continue;
+    }
+
+    // Une date **textuelle** ne se lit pas côté carte : MapLibre n'a pas de
+    // conversion de date. Seules les dates en secondes (colonnes Grist) se
+    // comparent. Le filtre temporel d'une couche distante à dates ISO est donc
+    // inopérant — limite connue, que `filtrableSurLaCarte` permet de dire.
+    if (c.type === 'time' && c.unite !== 's') continue;
+    const facteur = c.type === 'time' ? 1000 : 1;
 
     // range et time : bornes numériques. `to-number` échoue sur une valeur non
     // numérique, d'où le repli sur un repère hors domaine — le même choix, et
     // pour la même raison, que dans la symbologie graduée.
     const HORS = -1e38;
     const val = ['to-number', ['coalesce', champ, '—'], HORS];
-    const min = Number.isFinite(c.min) ? c.min : null;
-    const max = Number.isFinite(c.max) ? c.max : null;
+    const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
+    const min = variant !== 'time_lte' && variant !== 'range_max' && Number.isFinite(c.min) ? c.min / facteur : null;
+    const max = variant !== 'range_min' && Number.isFinite(c.max) ? c.max / facteur : null;
     if (min == null && max == null) continue;
 
     if (c.requireValue) {
@@ -325,8 +516,16 @@ export function expressionFiltreControles(layer) {
   return clauses.length === 1 ? clauses[0] : ['all', ...clauses];
 }
 
+/** Le filtre de ce contrôle peut-il s'appliquer à une couche que la carte lit seule ? */
+export function filtrableSurLaCarte(c) {
+  return !(c?.type === 'time' && c.unite !== 's');
+}
+
 export function fmtControlValue(c, n) {
-  return c.type === 'time' ? new Date(n).toLocaleDateString('fr-FR') : (Math.round(n * 100) / 100);
+  if (c.type === 'time') {
+    return Number.isFinite(n) ? new Date(n).toLocaleDateString('fr-FR', { timeZone: 'UTC' }) : '—';
+  }
+  return c.entier ? Math.round(n) : (Math.round(n * 100) / 100);
 }
 
 /** ControlDeclarative[] ← état Atlas layer.controls. */
@@ -429,11 +628,16 @@ export function applyStoryControlsToLayer(layer, stepControls) {
   for (const sc of (stepControls || [])) {
     let c = layer.controls.find((x) => x.field === sc.field);
     if (!c) {
-      c = { field: sc.field, type: sc.type, active: false };
-      if (sc.type !== 'select') Object.assign(c, controlBounds(layer, sc.type, sc.field));
+      c = { field: sc.field, type: sc.type, active: false, ...(sc.unite ? { unite: sc.unite } : {}) };
+      if (sc.type !== 'select') Object.assign(c, controlBounds(layer, sc.type, sc.field, { unite: sc.unite }));
       layer.controls.push(c);
     }
     c.active = true;
+    // L'étape rejoue la forme du contrôle, pas seulement ses bornes.
+    if (sc.type) c.type = sc.type;
+    if (sc.variant) c.variant = sc.variant;
+    if (sc.unite) c.unite = sc.unite;
+    if (sc.type === 'text') c.texte = String(sc.texte ?? '');
     // Exigence de valeur portée par l'étape : sans elle, une vue thématique
     // laisse passer les entités dépourvues de l'attribut filtré.
     if (sc.requireValue != null) c.requireValue = !!sc.requireValue;
@@ -482,6 +686,11 @@ export function applyControlsFromPrefs(layer, declarations) {
     if (decl.min != null) c.min = decl.min;
     if (decl.max != null) c.max = decl.max;
     if (decl.mode) c.mode = decl.mode;
+    if (decl.variant) c.variant = decl.variant;
+    if (decl.unite) c.unite = decl.unite;
+    if (decl.entier) c.entier = true;
+    if (decl.requireValue) c.requireValue = true;
+    if (type === 'text') c.texte = String(decl.texte ?? '');
     if (decl.active != null) c.active = !!decl.active;
 
     if (type === 'select') {
@@ -524,6 +733,14 @@ export function controlsPrefsPayload(layer) {
     dataMax: c.dataMax,
     mode: c.mode,
     options: c.options,
+    // La variante, l'unité et le texte faisaient défaut : après rechargement,
+    // un « maximum » redevenait une plage et une date Grist se relisait en
+    // millisecondes.
+    variant: c.variant,
+    unite: c.unite,
+    entier: c.entier || undefined,
+    requireValue: c.requireValue || undefined,
+    texte: c.type === 'text' ? (c.texte || '') : undefined,
     selection: c.type === 'select' && Array.isArray(c.values) ? [...c.values] : undefined,
     _selectionTouched: !!c._selectionTouched,
   }));

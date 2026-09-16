@@ -11,7 +11,7 @@ import {
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=20260729m';
+} from './controls.js?v=20260916a';
 import { parseGristBool } from './grist-bool.js';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
@@ -134,11 +134,15 @@ function formulairePrefsPayload(layer) {
     }
   }
   const aDesMasques = Object.keys(masques).length > 0;
-  if (!fiche && !exposes && !herite && !aDesMasques) return null;
+  // Les formulaires que la scene a retires de la couche : reversible, rien
+  // n'est efface de `Formulaires`.
+  const retires = Array.isArray(f.retires) ? f.retires.filter((x) => typeof x === 'string' && x) : [];
+  if (!fiche && !exposes && !herite && !aDesMasques && !retires.length) return null;
   const out = { fiche };
   if (exposes) out.exposes = exposes;
   else if (herite) out.expose = true;
   if (aDesMasques) out.masques = masques;
+  if (retires.length) out.retires = retires;
   return out;
 }
 
@@ -192,6 +196,10 @@ export function applyLayerPrefsBinding(layer, prefs) {
           if (propres.length || !cols.length) m[id] = propres;
         }
         if (Object.keys(m).length) f.masques = m;
+      }
+      if (Array.isArray(p.retires)) {
+        const r = p.retires.filter((x) => typeof x === 'string' && x);
+        if (r.length) f.retires = r;
       }
       layer.formulaire = f;
     }

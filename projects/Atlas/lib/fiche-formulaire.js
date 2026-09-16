@@ -159,7 +159,31 @@ export function reglagesFormulaire(couche) {
     exposes: Array.isArray(r.exposes) ? r.exposes.filter((x) => typeof x === 'string') : null,
     exposeHerite: !Array.isArray(r.exposes) && r.expose === true,
     masques: masquesValides(r.masques),
+    retires: Array.isArray(r.retires) ? r.retires.filter((x) => typeof x === 'string' && x) : [],
   };
+}
+
+/**
+ * Peut-on retirer ce formulaire de la couche ?
+ *
+ * Tous, sauf `Attributs` — le dérivé de la couche. C'est la vue complète de la
+ * table, celle d'où l'on compose les autres : la retirer laisserait la fiche
+ * sans rien pour corriger l'objet, et sans point de départ pour recomposer.
+ */
+export function formulaireRetirable(f) {
+  return !!f && !!f.id && !(f.surLaCouche && f.derive);
+}
+
+/**
+ * Les formulaires que la scène garde — ce que la fiche montre et compte.
+ *
+ * **Retirer n'efface rien.** La ligne de `Formulaires` reste : d'autres scènes
+ * peuvent la proposer, et « Remettre » la rend telle qu'elle était, cadrage
+ * compris. Un formulaire ne pouvait jusqu'ici que s'ajouter — une fois composé,
+ * il restait dans la fiche pour toujours.
+ */
+export function formulairesEnPlace(formulaires) {
+  return (formulaires || []).filter((f) => f && !f.retire);
 }
 
 /**
@@ -350,9 +374,11 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   const premierDeLaCouche = out.find((f) => f.surLaCouche && !f.derive)?.id
     || out.find((f) => f.surLaCouche)?.id || null;
   for (const f of out) {
-    f.expose = reglages.exposes
+    f.retire = formulaireRetirable(f) && reglages.retires.includes(f.id);
+    // Un formulaire retiré n'est proposé nulle part, quoi que dise la liste.
+    f.expose = !f.retire && (reglages.exposes
       ? reglages.exposes.includes(f.id)
-      : (reglages.exposeHerite && f.id === premierDeLaCouche);
+      : (reglages.exposeHerite && f.id === premierDeLaCouche));
     // Ce que la scène retire de ce formulaire-là. Comme `expose`, c'est un
     // réglage de couche : le même formulaire peut être complet dans une scène
     // et resserré dans une autre.
@@ -737,7 +763,11 @@ export function valeursPourMoteur(formDef, props) {
   const out = {};
   for (const section of (formDef?.sections || [])) {
     for (const champ of (section.fields || [])) {
-      const cible = valeurPourFormulaire(champ, props?.[champ.colId]);
+      // Une liste Grist est gardée entière sous `_l_<champ>` (voir
+      // `tableToGeoJSON`) : c'est elle que la fiche coche.
+      const liste = props?.[`_l_${champ.colId}`];
+      const brut = Array.isArray(liste) ? ['L', ...liste] : props?.[champ.colId];
+      const cible = valeurPourFormulaire(champ, brut);
       if (cible) out[champ.colId] = cible.valeur;
     }
   }

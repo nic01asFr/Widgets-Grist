@@ -365,3 +365,16 @@ describe('reglages de formulaire — un choix de scene, pas de table', () => {
     assert.deepEqual(partiel.formulaire, { fiche: null, masques: { a: ['nom'] } });
   });
 });
+describe('formulaires retires — un reglage de scene reversible', () => {
+  it('les retires font l’aller-retour, seuls ou avec le reste', () => {
+    const payload = layerPrefsPayload({ formulaire: { retires: ['releve', 7, ''] } });
+    assert.deepEqual(payload.formulaire, { fiche: null, retires: ['releve'] });
+    const relu = { name: 'Bâti' };
+    applyLayerPrefsBinding(relu, { style: payload });
+    assert.deepEqual(relu.formulaire, { fiche: null, retires: ['releve'] });
+  });
+
+  it('tout remis : rien a ecrire', () => {
+    assert.equal(layerPrefsPayload({ formulaire: { retires: [] } }).formulaire, null);
+  });
+});
