@@ -144,3 +144,32 @@ test('la colonne de geometrie par defaut est celle qu’ecrit l’enregistrement
   const ligne = ligneInventaire({ ...entablee, geometryColumn: undefined });
   assert.equal(JSON.parse(ligne.StyleJSON)._binding.geometryColumn, 'geometry_json');
 });
+
+/* ---------- « Enregistrer en table » : seulement pour une copie ---------- */
+
+import { peutPasserEnTable } from '../lib/grist-sync.js';
+
+const copieOsm = {
+  name: 'Arbres', gristId: 2,
+  geojson: { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: null, properties: {} }] },
+};
+
+test('une copie peut passer en table', () => {
+  assert.equal(peutPasserEnTable(copieOsm), true);
+});
+
+test('une table du manifeste n’est pas une copie, même sans `kind`', () => {
+  // Le cas constaté : « Bâtiments (table du document) » proposait « Enregistrer
+  // en table » sous son badge « table ».
+  const duManifeste = { ...copieOsm, sourceTable: 'Batiments_locaux', manifestLayerId: 'Batiments_locaux', source: 'qgis2grist' };
+  assert.equal(peutPasserEnTable(duManifeste), false);
+  assert.equal(peutPasserEnTable({ ...copieOsm, kind: 'table', sourceTable: 'Atlas_Arbres' }), false);
+});
+
+test('ni en lecture, ni hors Grist, ni pour une couche distante ou vide', () => {
+  assert.equal(peutPasserEnTable(copieOsm, { lecture: true }), false);
+  assert.equal(peutPasserEnTable(copieOsm, { grist: false }), false);
+  assert.equal(peutPasserEnTable({ ...copieOsm, _distant: true }), false);
+  assert.equal(peutPasserEnTable({ ...copieOsm, geojson: { features: [] } }), false);
+  assert.equal(peutPasserEnTable(null), false);
+});

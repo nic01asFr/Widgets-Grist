@@ -49,7 +49,8 @@ import {
   refreshLayerFromTable,
   ligneInventaireRequise,
   ligneInventaire,
-} from './lib/grist-sync.js?v=20260916a';
+  peutPasserEnTable,
+} from './lib/grist-sync.js?v=20260916b';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -3277,9 +3278,9 @@ function renderLayersPanel(mode) {
                 return `<div class="layer-item ${sel ? 'active' : ''}" data-layer="${l.id}" onclick="A.selectLayer('${l.id}')">
                     ${poignee}
                     <span class="layer-vis ${visible ? 'on' : ''}" onclick="A.toggleLayer('${l.id}', event)">${icTrait(visible ? IC.oeil : IC.oeilBarre)}</span>
-                    <span class="layer-swatch" style="background:${l.color}"></span>
+                    <span class="layer-swatch" style="background:${fondPastilleCouche(l)}"></span>
                     <div class="layer-info">
-                        <div class="layer-name">${l.name}</div>
+                        <div class="layer-name" title="${escapeHtml(l.name)}">${l.name}</div>
                         <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked
                             ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
                             : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
@@ -3310,9 +3311,9 @@ function renderLayersPanelLecture() {
         <div class="layer-list">${visible.map((l) => {
             const is3D = l.style?.mode === 'library' || l.style?.mode === 'custom';
             return `<div class="layer-item">
-                <span class="layer-swatch" style="background:${l.color}"></span>
+                <span class="layer-swatch" style="background:${fondPastilleCouche(l)}"></span>
                 <div class="layer-info">
-                    <div class="layer-name">${l.name}</div>
+                    <div class="layer-name" title="${escapeHtml(l.name)}">${l.name}</div>
                     <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}</div>
                 </div>
                 <button class="layer-act" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer">${icTrait(IC.cible)}</button>
@@ -4484,6 +4485,37 @@ function isLegendFocused(layerId, field, value) {
     return _legendFocus.field === field && String(_legendFocus.value) === String(value);
 }
 
+/** Les couleurs d'une couche graduée, dans l'ordre : le style déclaratif prime. */
+function rampeGraduee(layer, sym) {
+    const stopsDecl = (layer._declarative?.kind === 'graduated' ? layer._declarative.stops : null) || [];
+    return stopsDecl.length
+        ? stopsDecl.map((st) => st.color).filter(Boolean)
+        : (COLOR_PALETTES[sym.colorRamp || sym.palette || 'Viridis'] || COLOR_PALETTES.Viridis);
+}
+
+/**
+ * Le fond de la pastille d'une couche, là où la couche est nommée.
+ *
+ * La légende peignait la symbolisation (dégradé, catégories) ; la liste des
+ * couches, l'inspecteur et la fiche peignaient `layer.color`, sa couleur de
+ * base — quasi blanche pour « Bâtiments (table du document) », rose pâle pour
+ * une couche graduée orangée. Deux pastilles pour une couche, et aucune ne
+ * concordait. Une seule source, désormais.
+ */
+function fondPastilleCouche(layer) {
+    const sym = initSymbolization(layer).color;
+    if (sym.mode === 'graduated' && sym.field) {
+        return `linear-gradient(90deg, ${rampeGraduee(layer, sym).join(', ')})`;
+    }
+    if (sym.mode === 'categorized' && sym.field) {
+        const cats = (sym.categories || []).map((c) => c.color).filter(Boolean).slice(0, 4);
+        if (cats.length > 1) return `linear-gradient(90deg, ${cats.join(', ')})`;
+        if (cats.length === 1) return cats[0];
+    }
+    if (sym.mode === 'single' && sym.value) return sym.value;
+    return layer.color;
+}
+
 function buildLayerLegendHtml(layer) {
     const sym = initSymbolization(layer).color;
     const total = formatLayerCount(layer);
@@ -4519,11 +4551,7 @@ function buildLayerLegendHtml(layer) {
         // déjà la règle pour peindre la carte (cf. applyLayerStyle). La légende
         // s'en écartait : elle annonçait un dégradé Viridis sous une carte
         // verte. Une légende qui ne décrit pas la carte est pire qu'aucune.
-        const stopsDecl = (layer._declarative?.kind === 'graduated' ? layer._declarative.stops : null) || [];
-        const ramp = stopsDecl.length
-            ? stopsDecl.map((st) => st.color).filter(Boolean)
-            : (COLOR_PALETTES[sym.colorRamp || sym.palette || 'Viridis'] || COLOR_PALETTES.Viridis);
-        const grad = `linear-gradient(90deg, ${ramp.join(', ')})`;
+        const grad = `linear-gradient(90deg, ${rampeGraduee(layer, sym).join(', ')})`;
         const focused = isLegendFocused(layer.id, null, null) ? ' legend-focused' : '';
         return `<div class="legend-group"><div class="legend-row${clickable}${focused}" data-legend="layer" data-layer-id="${lid}"><span class="swatch legend-grad" style="background:${grad}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
     }
@@ -4717,7 +4745,7 @@ function renderSymbologyInspector(layer) {
         </div>`;
     }
     $('insp-head').innerHTML = `
-        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>Symboliser${is3D ? ' · <span style="color:var(--accent2)">3D</span>' : ''}</div>
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>Symboliser${is3D ? ' · <span style="color:var(--accent2)">3D</span>' : ''}</div>
         <div class="insp-title">${layer.name}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
@@ -5016,8 +5044,7 @@ let _formulaireMonte = false;
  * exactement lever ce blocage.
  */
 function enteteSansTable(layer, view) {
-    const peut = !view && CONFIG.grist.ready && layer.kind !== 'table'
-        && (layer.geojson?.features?.length || 0) > 0;
+    const peut = peutPasserEnTable(layer, { lecture: !!view, grist: CONFIG.grist.ready });
     const msg = '<div class="hint" style="margin-bottom:10px">Attributs en lecture seule — '
         + 'les objets de cette couche ne sont pas des lignes Grist.</div>';
     if (!peut) return msg;
@@ -5038,8 +5065,8 @@ function enteteSansTable(layer, view) {
  * le cherche, tant que la couche n'est qu'une copie.
  */
 function boutonEnTable(layer) {
-    const n = layer?.geojson?.features?.length || 0;
-    if (CONFIG.viewMode || !CONFIG.grist.ready || layer.kind === 'table' || layer._distant || !n) return '';
+    if (!peutPasserEnTable(layer, { lecture: CONFIG.viewMode, grist: CONFIG.grist.ready })) return '';
+    const n = layer.geojson.features.length;
     return `<div class="hint" style="margin:10px 0 0">Copie dans le document : ses objets n'ont pas de ligne Grist, donc pas de fiche à remplir.</div>
         <button class="btn btn-soft btn-full" style="margin-top:8px"
         onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
@@ -5196,7 +5223,7 @@ function renderObjectInspector() {
     const attrsReadOnly = (view && !saisieTerrain) || !isQgis;
 
     $('insp-head').innerHTML = `
-        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${layer.color}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
         <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
@@ -6675,13 +6702,17 @@ async function loadFromSceneManifest() {
         mountLoadedLayers(bounds);
         const visCount = layers.filter((l) => l.visible !== false).length;
         const hiddenBasemap = layers.filter((l) => l.visible === false);
+        // Les couches ajoutées à la main comptent aussi : le toast annonçait
+        // « 2 couche(s) » sur une scène qui en montrait 4.
+        const ajoutees = STATE.layers.length - layers.length;
+        const enPlus = ajoutees > 0 ? ` + ${ajoutees} ajoutée${ajoutees > 1 ? 's' : ''} dans Atlas` : '';
         if (hiddenBasemap.length) {
             showToast(
-                `${visCount} couche(s) · ${hiddenBasemap.length} contexte masquée(s) (buildings…) — « Tout » pour tout voir`,
+                `${visCount} couche(s)${enPlus} · ${hiddenBasemap.length} contexte masquée(s) (buildings…) — « Tout » pour tout voir`,
                 'warning'
             );
         } else {
-            showToast(`qgis2grist · ${layers.length} couche(s) · ${visCount} visible(s)`, 'success');
+            showToast(`qgis2grist · ${layers.length} couche(s) du manifeste${enPlus}`, 'success');
         }
         console.log('[Atlas v7] Scene Manifest', manifest.version, layers.length, 'couches');
     } catch (e) {
