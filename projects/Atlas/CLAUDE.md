@@ -1112,6 +1112,32 @@ et MapLibre garde la tuile parente — un relief plus grossier, mais juste.
 > La règle est la même que pour `layerVisibleCount` : **ne pas rendre un nombre
 > plausible quand on ne sait pas**. Zéro mètre est une altitude plausible.
 
+### Une exception MapLibre aux étapes qui passent le bâti en volume
+
+En enchaînant les huit étapes de la démo des Aygalades, la console reçoit
+`Uncaught TypeError: Cannot read properties of undefined (reading 'key')`, levé
+dans `_updateRetainedTiles` (cache de tuiles de MapLibre 5.6.1). **Le rendu
+reprend** : les étapes s'affichent correctement, y compris la dernière.
+
+Ce qui a été mesuré, pour ne pas repartir sur une fausse piste :
+
+| Épreuve | Résultat |
+|---|---|
+| chargement seul, récit joué une fois | aucune erreur |
+| vols de caméra seuls, même fond, même relief | aucune erreur |
+| les huit étapes enchaînées | erreurs aux **étapes 4 et 7** — celles qui passent le bâti `extruded` |
+| démo Vieux-Port (bâti extrudé, fond vecteur) | aucune erreur |
+| borne `maxzoom` du fond IGN retirée | erreurs **quand même** — ce n'est pas la borne |
+
+Donc : fond **raster** + couche extrudée remontée pendant un vol. Deux
+atténuations écrites et sans effet mesurable — `map.stop()` avant `setStyle`, et
+une étape qui attend `mapStyleUsable()` — sont **conservées** : elles décrivent
+la bonne discipline, même si le défaut vient d'ailleurs.
+
+**Le repli du MNT avait sa propre erreur silencieuse** : la tuile plate qu'il
+rendait faisait 256 px quand la source en déclare 512, et MapLibre la refusait
+sur `dem dimension mismatch`. Le repli lui-même échouait — corrigé.
+
 ### Une étape de récit emporte son relief entier
 
 `terrainSource` et `terrainExaggeration` sont capturés avec `terrain3D`, et
@@ -1121,11 +1147,21 @@ demander le MNT LiDAR HD : elle héritait du dernier réglage, c'est-à-dire du
 relief mondial au pas de 30 m. Une scène externe les déclare aussi dans ses
 `settings`.
 
-**Un récit embarqué pose lui-même le fond de sa première étape.** Poser en plus
-celui du manifeste lançait deux `setStyle` à quelques centaines de millisecondes :
-le second tombait pendant le vol de caméra de l'étape 1, qui ne s'appliquait pas.
-La scène s'ouvrait à plat, sur la caméra de la session précédente — un défaut
-qu'on prend pour un choix de cadrage.
+**Le fond d'une scène externe se pose au montage, pas au premier `idle`.** Il
+attendait `idle` : le `setStyle` tombait alors pendant le vol de caméra de la
+première étape du récit, qui ne s'appliquait pas — la scène s'ouvrait à plat, sur
+la caméra de la session précédente, ce qu'on prend pour un choix de cadrage. Et
+le récit démarre désormais sur l'`idle` qui suit, plus sur un délai fixe.
+
+Cela sert surtout la **sortie** du récit, qui rend la scène à l'état d'avant : cet
+état était le fond par défaut, jamais celui que la scène déclare. Un lecteur qui
+fermait le récit d'une scène en orthophotographie se retrouvait sur un plan.
+
+**La source du relief s'enregistre comme le reste.** `A.setTerrainSource` était la
+seule action du panneau Vue à ne pas appeler `persistScenePrefs` : on choisissait
+le MNT LiDAR HD, on rechargeait, le relief mondial revenait sans un mot.
+`terrainSource` figurait pourtant déjà dans les clés retenues par
+`lib/scene-prefs.js` — le contrat était écrit, l'appel manquait.
 
 ### Le nom d'une scène se lit sous `title`, et sous lui seul
 

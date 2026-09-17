@@ -1,7 +1,7 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.7.0';
+import { normalizePropertyValue } from './declarative-style.js?v=1.7.1';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
 import { chargerSchema, estTableSysteme } from './schema-grist.js';
 

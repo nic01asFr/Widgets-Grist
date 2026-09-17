@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.7.0';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.7.1';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,8 +15,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.7.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.7.0';
+} from './lib/scene-loader.js?v=1.7.1';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.7.1';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -24,20 +24,20 @@ import {
   formulaireRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
-} from './lib/fiche-formulaire.js?v=1.7.0';
-import { chargerSchema } from './lib/schema-grist.js?v=1.7.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.7.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=1.7.0';
+} from './lib/fiche-formulaire.js?v=1.7.1';
+import { chargerSchema } from './lib/schema-grist.js?v=1.7.1';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.7.1';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=1.7.1';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=1.7.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.7.0';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=1.7.0';
+} from './lib/layer-order.js?v=1.7.1';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.7.1';
+import { basemapLayerIds } from './lib/basemap-layers.js?v=1.7.1';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=1.7.0';
+} from './lib/terrain-base.js?v=1.7.1';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -51,7 +51,7 @@ import {
   ligneInventaireRequise,
   ligneInventaire,
   peutPasserEnTable,
-} from './lib/grist-sync.js?v=1.7.0';
+} from './lib/grist-sync.js?v=1.7.1';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -63,13 +63,13 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.7.0';
+} from './lib/declarative-style.js?v=1.7.1';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
-} from './lib/geo-tables.js?v=1.7.0';
+} from './lib/geo-tables.js?v=1.7.1';
 import {
   layerFieldNames,
   controlFieldType,
@@ -90,21 +90,21 @@ import {
   nombreSansValeur,
   filtrableSurLaCarte,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.7.0';
+} from './lib/controls.js?v=1.7.1';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=1.7.0';
+} from './lib/story.js?v=1.7.1';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.7.0';
+} from './lib/manifest-binding.js?v=1.7.1';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=1.7.0';
+} from './lib/viewport.js?v=1.7.1';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -116,25 +116,25 @@ import {
   parseNavbarParam,
   pastilleRecitRequise,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=1.7.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.7.0';
-import { objetsPourPalette } from './lib/palette-objets.js?v=1.7.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.7.0';
+} from './lib/view-mode.js?v=1.7.1';
+import { mettreAPlat } from './lib/vue-import.js?v=1.7.1';
+import { objetsPourPalette } from './lib/palette-objets.js?v=1.7.1';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.7.1';
 import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.7.0';
+} from './lib/habillage-carte.js?v=1.7.1';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
-} from './lib/viewer-controls.js?v=1.7.0';
+} from './lib/viewer-controls.js?v=1.7.1';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.7.0';
+} from './lib/scene-prefs.js?v=1.7.1';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -812,6 +812,8 @@ function computeAmbient(altDeg, moon) {
 // première utilisation (évite le coût si le relief IGN n'est pas activé).
 // ============================================================
 let _ignDemPool = null;
+/** Dernière altitude moyenne décodée — repli d'une tuile MNT en échec. */
+let _altitudeRepli = null;
 function ignDemPool() {
     if (_ignDemPool) return _ignDemPool;
     const src = `
@@ -825,9 +827,11 @@ function ignDemPool() {
                 const w = image.getWidth(), h = image.getHeight(), elev = rasters[0];
                 const rgba = new Uint8ClampedArray(w*h*4);
                 for (let i=0;i<elev.length;i++){ let v=elev[i]; if(!isFinite(v)||v<-500||v>9000)v=0; const enc=Math.round((v+10000)/0.1); rgba[i*4]=(enc>>16)&255; rgba[i*4+1]=(enc>>8)&255; rgba[i*4+2]=enc&255; rgba[i*4+3]=255; }
+                let somme = 0, n = 0;
+                for (let i=0;i<elev.length;i+=37){ const v=elev[i]; if(isFinite(v)&&v>-500&&v<9000){ somme+=v; n++; } }
                 const c = new OffscreenCanvas(w,h); c.getContext('2d').putImageData(new ImageData(rgba,w,h),0,0);
                 const b = await c.convertToBlob({type:'image/png'}); const out = new Uint8Array(await b.arrayBuffer());
-                self.postMessage({ id, ok:true, data: out }, [out.buffer]);
+                self.postMessage({ id, ok:true, data: out, moyenne: n ? somme/n : null }, [out.buffer]);
             } catch(err) { self.postMessage({ id, ok:false, error: String(err && err.message || err) }); }
         };`;
     const url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
@@ -835,12 +839,57 @@ function ignDemPool() {
     const workers = []; const pending = new Map(); let seq = 0, rr = 0;
     for (let i = 0; i < N; i++) {
         const w = new Worker(url);
-        w.onmessage = (e) => { const p = pending.get(e.data.id); if (!p) return; pending.delete(e.data.id); e.data.ok ? p.resolve(e.data.data) : p.reject(new Error(e.data.error)); };
+        w.onmessage = (e) => {
+            const p = pending.get(e.data.id);
+            if (!p) return;
+            pending.delete(e.data.id);
+            // L'altitude moyenne de la dernière tuile lue sert de repli quand
+            // une autre échoue : un palier au bon étage, au lieu d'une dalle au
+            // niveau de la mer.
+            if (e.data.ok && Number.isFinite(e.data.moyenne)) _altitudeRepli = e.data.moyenne;
+            e.data.ok ? p.resolve(e.data.data) : p.reject(new Error(e.data.error));
+        };
         workers.push(w);
     }
     _ignDemPool = { decode(buf) { return new Promise((res, rej) => { const id = ++seq; pending.set(id, { resolve: res, reject: rej }); workers[rr++ % N].postMessage({ id, buffer: buf }, [buf]); }); } };
     return _ignDemPool;
 }
+/**
+ * Une tuile MNT plate, à l'altitude donnée.
+ *
+ * Repli quand la Géoplateforme refuse une tuile après nos reprises. **Elle vaut
+ * la dernière altitude lue, pas zéro** : une dalle au niveau de la mer donnait
+ * une falaise au bord du vide, et l'on croyait la donnée fausse. Un palier au
+ * bon étage se remarque à peine, et se corrige à la tuile suivante.
+ *
+ * Pourquoi ne pas simplement échouer : MapLibre garde alors un état incohérent
+ * dans son cache de tuiles (`_updateRetainedTiles` lève sur `tile.key`), et le
+ * rendu s'arrête. Mesuré : 36 exceptions en jouant les huit étapes.
+ */
+let _paliers = new Map();
+async function tuilePlate(alt) {
+    const clef = Math.round(alt);
+    if (_paliers.has(clef)) return _paliers.get(clef);
+    // **512, la taille que la source déclare** (`TERRAIN_SOURCES.ign`). Le repli
+    // d'origine en rendait 256 : MapLibre refusait la tuile sur « dem dimension
+    // mismatch », donc le repli lui-même échouait — silencieusement.
+    const size = TERRAIN_SOURCES.ign.tileSize;
+    const rgba = new Uint8ClampedArray(size * size * 4);
+    const enc = Math.round((clef + 10000) / 0.1);
+    for (let i = 0; i < size * size; i++) {
+        rgba[i * 4] = (enc >> 16) & 255;
+        rgba[i * 4 + 1] = (enc >> 8) & 255;
+        rgba[i * 4 + 2] = enc & 255;
+        rgba[i * 4 + 3] = 255;
+    }
+    const c = new OffscreenCanvas(size, size);
+    c.getContext('2d').putImageData(new ImageData(rgba, size, size), 0, 0);
+    const png = new Uint8Array(await (await c.convertToBlob({ type: 'image/png' })).arrayBuffer());
+    if (_paliers.size > 40) _paliers = new Map();
+    _paliers.set(clef, png);
+    return png;
+}
+
 (function registerIGNTerrain() {
     if (typeof maplibregl === 'undefined' || typeof OffscreenCanvas === 'undefined') return;
     maplibregl.addProtocol('ignmnt', async (params, abort) => {
@@ -863,19 +912,18 @@ function ignDemPool() {
             } catch (e) {
                 if (abort.signal.aborted) throw e;
                 if (essai === 2) {
-                    // **Ne jamais rendre un sol plat à 0 m.** C'était le repli
-                    // d'origine : la tuile manquante devenait une dalle au
-                    // niveau de la mer, et le relief voisin se terminait en
-                    // falaise sur du vide — un défaut qu'on attribue à la
-                    // donnée, jamais au réseau. Échouer laisse MapLibre garder
-                    // la tuile parente, donc un relief plus grossier mais juste.
+                    // **Jamais zéro.** Le repli d'origine posait la tuile
+                    // manquante au niveau de la mer : le relief voisin se
+                    // terminait en falaise sur du vide, et l'on accusait la
+                    // donnée. On rend un palier à la dernière altitude lue, et
+                    // on le dit dans la console.
                     console.warn('[Atlas relief] tuile MNT IGN indisponible :', e.message);
-                    throw e;
+                    return { data: await tuilePlate(_altitudeRepli ?? 0) };
                 }
                 await new Promise((r) => setTimeout(r, 250 * (essai + 1)));
             }
         }
-        throw new Error('MNT IGN indisponible');
+        return { data: await tuilePlate(_altitudeRepli ?? 0) };
     });
 })();
 
@@ -2701,6 +2749,12 @@ function scheduleMapLayersSync(afterSync) {
 
 function applyMapLayerVisibility(layer, visible) {
     if (!map) return;
+    // Pendant un changement de fond, le style se reconstruit : `setLayoutProperty`
+    // y laisse MapLibre avec un cache de tuiles incohérent, et son rendu s'arrête
+    // sur `Cannot read properties of undefined (reading 'key')`. Mesuré en
+    // enchaînant les étapes d'un récit qui change de fond : 54 exceptions.
+    // La couche sera montée dans son état par la synchronisation d'après.
+    if (!mapStyleUsable()) return;
     const vis = visible ? 'visible' : 'none';
     // Tous les habillages de la couche, sinon ils survivent au masquage : `-pts`
     // laisserait le repli en points à l'écran, `-hit` garderait la zone de clic
@@ -2867,6 +2921,10 @@ function applyStoryEnvironment(s, opts = {}) {
     STATE.settings.basemap = want;
     _styleUsable = false;
     const b = BASEMAPS[want];
+    // Le vol en cours est arrêté d'abord : remplacer le style pendant qu'il
+    // dure laisse MapLibre avec un cache de tuiles incohérent, et son rendu
+    // s'arrête sur « Cannot read properties of undefined (reading 'key') ».
+    map.stop();
     map.setStyle(b.style ? b.style() : b.url);
     map.once('idle', () => {
         onStyleReady();
@@ -3018,6 +3076,20 @@ function reapplyStoryFilters(state) {
 function applyStoryState(s) {
     if (!s || !map) return;
     _storyPresenting = true;
+
+    // Une étape ne s'applique pas pendant qu'un fond se remplace.
+    //
+    // Enchaîner les étapes plus vite que le style ne se charge faisait tomber
+    // `setLayoutProperty` au milieu de la reconstruction : MapLibre gardait un
+    // cache de tuiles incohérent et son rendu s'arrêtait sur « Cannot read
+    // properties of undefined (reading 'key') ». Mesuré sur un fond raster,
+    // avec ou sans borne de zoom — ce n'est pas la borne qui le cause.
+    // On attend la stabilisation, puis on rejoue l'étape entière.
+    if (!mapStyleUsable()) {
+        const attendu = cloneStoryState(s);
+        map.once('idle', () => { if (_storyPresenting) applyStoryState(attendu); });
+        return;
+    }
 
     // L'ordre de superposition fait partie de l'étape : il est déjà enregistré
     // dans la position des couches (captureStoryState les liste dans l'ordre de
@@ -6490,7 +6562,7 @@ let Feuille = null;              // charge a la demande : le bureau n'en a pas b
 let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.7.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.7.1');
     return Feuille;
 }
 
@@ -6607,10 +6679,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.7.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.7.1'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.7.0');
+        const dc = await import('./lib/data-client.js?v=1.7.1');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -7019,20 +7091,21 @@ async function monterSceneExterne(manifest) {
         mountLoadedLayers(boundsFromVisibleLayers(layers) || rawBounds);
         applyLabelsVisibility();
         updateLighting();
-        // Un récit embarqué pose lui-même le fond de sa première étape. Poser
-        // aussi celui du manifeste lançait deux `setStyle` à quelques
-        // centaines de millisecondes : le second tombait pendant le vol de
-        // caméra de l'étape 1, qui ne s'appliquait pas — la scène s'ouvrait à
-        // plat, sur la caméra de la session précédente.
-        const recitEmbarque = Array.isArray(manifest.story?.steps) && manifest.story.steps.length > 0;
-        if (wantBasemap && map && !recitEmbarque) {
-            map.once('idle', () => {
-                try {
-                    A.setBasemap?.(wantBasemap);
-                    // Après setStyle, re-couper les labels si demandé.
-                    map.once('idle', () => applyLabelsVisibility());
-                } catch (_) { /* ignore */ }
-            });
+        // Le fond du manifeste se pose **tout de suite**, pas au premier
+        // `idle`.
+        //
+        // Attendre `idle` le faisait tomber pendant le vol de caméra de la
+        // première étape du récit : le `setStyle` coupait le vol, et la scène
+        // s'ouvrait à plat, sur la caméra de la session précédente. Le poser
+        // ici, avant que le récit ne démarre, sert les deux cas — et il sert
+        // surtout la **sortie** du récit, qui rend la scène à l'état d'avant :
+        // sans lui, cet état était le fond par défaut, jamais celui que la
+        // scène déclare.
+        if (wantBasemap && map) {
+            try {
+                A.setBasemap?.(wantBasemap);
+                map.once('idle', () => applyLabelsVisibility());
+            } catch (_) { /* ignore */ }
         }
 
         if (!layers.length) {
@@ -7050,10 +7123,13 @@ async function monterSceneExterne(manifest) {
                 state: s.state || {},
             }));
             refreshStoryNavChrome();
-            // Lancer après le premier idle carte (caméra + couches montées).
-            setTimeout(() => {
+            // Lancer quand la carte s'est stabilisée — style du manifeste
+            // compris. Un délai fixe partait au milieu du changement de fond.
+            const lancer = () => {
                 try { A.storyPlay?.(0); } catch (e) { console.warn('[Atlas] récit externe', e); }
-            }, 800);
+            };
+            if (map) map.once('idle', () => setTimeout(lancer, 150));
+            else setTimeout(lancer, 800);
         }
 
         // Pas de validation contre le schéma ici, et c'est délibéré : elle
@@ -8329,6 +8405,7 @@ const A = {
         STATE.settings.basemap = k; renderVues();
         const b = BASEMAPS[k];
         _styleUsable = false; // le style est remplacé : plus rien à monter d'ici là
+        map.stop();
         map.setStyle(b.style ? b.style() : b.url);
         map.once('idle', onStyleReady);
         refreshControlsDock();
@@ -8341,7 +8418,16 @@ const A = {
         if (!map) return;
         map.easeTo({ pitch: on ? 55 : 0, duration: 600 });
     },
-    setTerrainSource(src) { setTerrainSource(src); renderVues(); },
+    /**
+     * La source du relief est un réglage comme un autre : elle s'enregistre.
+     *
+     * Elle ne le faisait pas — seule action de ce panneau à ne pas appeler
+     * `persistScenePrefs`. On choisissait le MNT LiDAR HD, on rechargeait, et
+     * le relief mondial revenait sans un mot. `terrainSource` était pourtant
+     * déjà dans les clés retenues par `lib/scene-prefs.js` : le contrat était
+     * écrit, l'appel manquait.
+     */
+    setTerrainSource(src) { setTerrainSource(src); renderVues(); persistScenePrefsDifferee(200); },
     setProjection(p) { STATE.settings.projection = p; applyProjection(); renderVues(); },
     resetView() { map.easeTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, bearing: -18, duration: 1000 }); },
     debugShowExtrusionCasters(on = true) {
@@ -9018,9 +9104,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.7.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.7.1');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.7.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.7.1');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
