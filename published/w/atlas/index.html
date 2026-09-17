@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
 <meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-16"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-17"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -204,8 +204,8 @@ section { margin: 0 0 3rem; }
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien." loading="lazy">
-          <figcaption>En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien.</figcaption>
+          <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit." loading="lazy">
+          <figcaption>En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit.</figcaption>
         </figure>
       </div>
     </article>
@@ -225,12 +225,12 @@ section { margin: 0 0 3rem; }
   </section>
   <section class="demo">
     <h2>La démonstration : une scène réelle</h2>
-    <p>Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches OpenStreetMap, huit étapes de récit, deux sortes de 3D : les modèles du catalogue posés sur du mobilier relevé, et un relevé photogrammétrique de la cascade elle-même.</p>
+    <p>Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches, huit étapes de récit, sur l’orthophotographie de l’IGN posée sur le relief LiDAR HD : le mobilier relevé dans OpenStreetMap porte les modèles du catalogue, et 640 arbres viennent du LiDAR lui-même — hauteur mesurée, forme générique.</p>
     <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fcascade-aygalades-marseille%2Fscene.json">
-      <img src="demo.jpg" alt="Relevé 3D de la cascade des Aygalades posé sur le tracé du ruisseau, avec son ombre portée" loading="lazy">
+      <img src="demo.jpg" alt="Le ravin boisé du ruisseau des Aygalades vu du ciel, arbres en 3D relevés dans le LiDAR, entrepôts et autoroute autour" loading="lazy">
       <button type="button" class="lancer">Ouvrir la démonstration</button>
     </div>
-    <p class="mention">Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; relevé 3D de M.Dailly (CC BY 4.0).</p>
+    <p class="mention">Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; orthophotographie et LiDAR HD : IGN.</p>
   </section>
   <section>
     <h2>Ce qu’il fait</h2>
@@ -238,7 +238,8 @@ section { margin: 0 0 3rem; }
       <li><b>Vos tables deviennent des couches</b> — toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs.</li>
       <li><b>L’objet cliqué est la ligne</b> — sa fiche s’ouvre avec les champs de la table ; ce qu’on y écrit est dans le document. La scène peut la proposer hors édition, pour relever sur place.</li>
       <li><b>Symbolisation par la donnée</b> — couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène.</li>
-      <li><b>Relief et volumes</b> — modèles 3D posés sur le terrain réel, ombres portées à l’heure choisie, surfaces extrudées calées sur l’altitude.</li>
+      <li><b>Relief et volumes</b> — photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie.</li>
+      <li><b>Des filtres que le lecteur manipule</b> — chaque colonne prend la forme que son type appelle — dates, nombres, catégories, listes, recherche texte — et l’auteur publie ceux qu’il veut en pastilles sur la carte.</li>
       <li><b>Un récit qui se rejoue</b> — chaque étape retient le cadrage, les couches visibles, les filtres et l’heure — et reste juste quand la donnée change.</li>
       <li><b>Les droits du document font foi</b> — aucune liste d’accès propre à Atlas : en lecture seule l’édition disparaît, le récit reste consultable. ACL et link keys Grist s’appliquent tels quels.</li>
     </ul>

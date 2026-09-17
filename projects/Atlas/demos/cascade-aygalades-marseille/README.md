@@ -34,7 +34,7 @@ exactement ce qu'une symbologie catégorisée sait montrer.
 Fond : **orthophotographie IGN sur le relief LiDAR HD**, à l'échelle vraie sauf à
 l'étape 7, qui l'accentue et le dit.
 
-Poids total : ~1,4 Mo, dont 1,0 pour le bâti.
+Poids total servi : ~1,8 Mo — le bâti (1,0 Mo), et le manifeste qui embarque mobilier et arbres (inline).
 
 ### Pourquoi le mobilier est *inline* et pas servi par URL
 

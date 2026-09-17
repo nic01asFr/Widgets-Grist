@@ -300,7 +300,7 @@ const etapes = [
     title: 'Bienvenue — ceci est un récit',
     description:
       'Ce guide est lui-même une scène Atlas : trente carrés, deux repères, et '
-      + 'dix étapes décrites dans un fichier. Rien de ce que vous allez voir n’est '
+      + '{NOMBRE_ETAPES} étapes décrites dans un fichier. Rien de ce que vous allez voir n’est '
       + 'codé en dur — tout est déclaré. ▶ pour avancer, ◀ pour revenir. '
       + '👉 Essayez déjà : faites glisser la carte, elle reste à vous pendant le récit.',
     state: {
@@ -752,6 +752,21 @@ const scene = {
   story: { version: '0.2.1', steps: etapes },
   camera: etapes[0].state.camera,
 };
+
+/**
+ * Le nombre d'étapes s'écrit depuis le tableau, pas à la main.
+ *
+ * Le premier texte annonçait « dix étapes » quand le guide en comptait
+ * dix-huit : il avait été écrit avant que le récit ne grandisse, et rien ne le
+ * relisait. Même règle que les comptes de couches de la démo des Aygalades.
+ */
+const EN_LETTRES = {
+  8: 'huit', 9: 'neuf', 10: 'dix', 11: 'onze', 12: 'douze', 13: 'treize', 14: 'quatorze',
+  15: 'quinze', 16: 'seize', 17: 'dix-sept', 18: 'dix-huit', 19: 'dix-neuf', 20: 'vingt',
+};
+for (const e of etapes) {
+  e.description = e.description.replace('{NOMBRE_ETAPES}', EN_LETTRES[etapes.length] || String(etapes.length));
+}
 
 fs.writeFileSync(path.join(__dirname, 'scene.json'), JSON.stringify(scene, null, 2));
 

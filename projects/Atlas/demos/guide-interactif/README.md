@@ -12,8 +12,8 @@ index_v7.html?scene=<url>/scene.json
 | | Aygalades | Guide |
 |---|---|---|
 | Sujet | un lieu, et l'outil en chemin | l'outil, le lieu est un prétexte |
-| Données | OpenStreetMap, réelles | fabriquées pour la démonstration |
-| Poids | 7,5 Mo | **93 Ko** |
+| Données | OpenStreetMap et IGN (orthophotographie, LiDAR HD), réelles | fabriquées pour la démonstration |
+| Poids | 1,8 Mo | **93 Ko** |
 | Dépendances | Overpass à l'extraction | aucune |
 | Ton | descriptif | s'adresse au lecteur, l'invite à essayer |
 

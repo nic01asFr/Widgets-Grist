@@ -1870,7 +1870,7 @@
       {
         "id": "g1",
         "title": "Bienvenue — ceci est un récit",
-        "description": "Ce guide est lui-même une scène Atlas : trente carrés, deux repères, et dix étapes décrites dans un fichier. Rien de ce que vous allez voir n’est codé en dur — tout est déclaré. ▶ pour avancer, ◀ pour revenir. 👉 Essayez déjà : faites glisser la carte, elle reste à vous pendant le récit.",
+        "description": "Ce guide est lui-même une scène Atlas : trente carrés, deux repères, et dix-huit étapes décrites dans un fichier. Rien de ce que vous allez voir n’est codé en dur — tout est déclaré. ▶ pour avancer, ◀ pour revenir. 👉 Essayez déjà : faites glisser la carte, elle reste à vous pendant le récit.",
         "state": {
           "camera": {
             "center": [
@@ -3003,7 +3003,7 @@
       {
         "id": "g10-relief",
         "title": "Le terrain a du relief",
-        "description": "Relief activé : la carte cesse d’être une feuille. Les îlots sont posés à plat — MapLibre les drape sur le terrain, entité par entité, et ils épousent la pente. En volume ce serait pareil : MapLibre drape aussi l’extrusion, sommet par sommet, et un bâtiment sur un versant y montre sa paroi la plus haute en aval. 👉 Inclinez la vue avec un clic droit glissé pour voir la butte du Panier.",
+        "description": "Relief activé : la carte cesse d’être une feuille. Les îlots sont posés à plat — MapLibre les drape sur le terrain, entité par entité, et ils épousent la pente. En volume il faudrait une altitude par îlot, ce qui suppose qu’Atlas détienne les entités. 👉 Inclinez la vue avec un clic droit glissé pour voir la butte du Panier.",
         "state": {
           "camera": {
             "center": [

@@ -80,12 +80,19 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.6.6** (`published/atlas/`, GitHub Pages) — la 1.7.0 (fiche
-d'entité, formulaires, étage du bas) est prête sur la branche
-`atlas-formulaire-entite`.
+**En ligne : v1.7.1** (`published/atlas/`, GitHub Pages, déployée le 17/09/2026
+depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
 
 - Chargement Scene Manifest / tables qgis2grist (cas Bee Farming validé).
-- Symbolisation (fixe / catégorisé / gradué), contrôles, récit, export JSON `2.2-atlas-binding`.
+- Symbolisation (fixe / catégorisé / gradué), récit, export JSON `2.2-atlas-binding`.
+- **Contrôles par type de colonne Grist** : dates, nombres, catégories, listes,
+  recherche texte ; « (sans valeur) » est un choix ; publiés en pastilles.
+- **Fiche d'objet = formulaire** (`grist_forms`), saisie hors édition ; module
+  Formulaires avec composition, cadrage des champs, **retrait et remise** par couche.
+- **Fonds IGN** : orthophotographie bornée au zoom 19, relief LiDAR HD ; une étape
+  de récit capture la source du relief et son exagération.
+- **Scène externe** (`?scene=`) : manifeste publié, sans document ; démos
+  `cascade-aygalades-marseille` et `osm-marseille-vieux-port` publiées.
 - Dock soleil haut-droite (repli style boussole) ; inspecteur fermable.
 - Couches fond (buildings/landscape/lines) masquées par défaut à l’import.
 - **Mode lecture** : `?mode=view` ou accès Grist `read table` ; badge Lecture ; pas d’écriture prefs/story/features.
@@ -96,7 +103,7 @@ d'entité, formulaires, étage du bas) est prête sur la branche
 - **Fiche d'entité = formulaire (06/09/2026)** :
   `docs/CADRAGE-FICHE-ENTITE.md` — la fiche d'objet est le moteur de
   `grist_forms`, alimenté par le FormDef que qgis2grist extrait de QField.
-  Éprouvé en Grist réel ; branche `atlas-formulaire-entite`, **non poussée**.
+  Éprouvé en Grist réel ; en ligne depuis la 1.7.0.
 
   Trois surfaces : la fiche d'objet, le **module « Formulaires »** du rail (après
   Récit — liste par table, choix, bascule « disponible hors édition »), et le
@@ -1219,8 +1226,9 @@ pas la nôtre. Une couche distante extrudée se comporte donc exactement comme u
 couche détenue.
 
 > La règle « `terrain3D` et une couche distante extrudée ne vont pas ensemble »
-> **est levée**. L'étape « relief » de la démo des Aygalades pose ses emprises à
-> plat pour cette raison ; ce n'est plus nécessaire, seulement inoffensif.
+> **est levée**. Depuis la 1.7.1, la démo des Aygalades en fait la preuve : ses
+> étapes posent le bâti en volume sur le relief LiDAR, et l'étape 7 l'accentue
+> deux fois sans qu'aucun bâtiment ne flotte ni ne s'enfonce.
 
 MapLibre n'expose toujours pas `fill-extrusion-base-alignment` (propriété Mapbox
 GL v3, refusée en 5.6.1) — mais on n'en a pas besoin : l'alignement sur le

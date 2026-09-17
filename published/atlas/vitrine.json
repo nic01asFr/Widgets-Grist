@@ -24,7 +24,11 @@
     },
     {
       "titre": "Relief et volumes",
-      "texte": "modèles 3D posés sur le terrain réel, ombres portées à l’heure choisie, surfaces extrudées calées sur l’altitude."
+      "texte": "photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie."
+    },
+    {
+      "titre": "Des filtres que le lecteur manipule",
+      "texte": "chaque colonne prend la forme que son type appelle — dates, nombres, catégories, listes, recherche texte — et l’auteur publie ceux qu’il veut en pastilles sur la carte."
     },
     {
       "titre": "Un récit qui se rejoue",
@@ -138,7 +142,7 @@
         "images": [
           {
             "image": "lecture-recit.jpg",
-            "legende": "En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. C’est ce que voit la personne à qui l’on envoie le lien."
+            "legende": "En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit."
           }
         ]
       },
@@ -159,12 +163,12 @@
     },
     "demonstration": {
       "titre": "La démonstration : une scène réelle",
-      "texte": "Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches OpenStreetMap, huit étapes de récit, deux sortes de 3D : les modèles du catalogue posés sur du mobilier relevé, et un relevé photogrammétrique de la cascade elle-même.",
+      "texte": "Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches, huit étapes de récit, sur l’orthophotographie de l’IGN posée sur le relief LiDAR HD : le mobilier relevé dans OpenStreetMap porte les modèles du catalogue, et 640 arbres viennent du LiDAR lui-même — hauteur mesurée, forme générique.",
       "url": "https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fcascade-aygalades-marseille%2Fscene.json",
       "image": "demo.jpg",
-      "alt": "Relevé 3D de la cascade des Aygalades posé sur le tracé du ruisseau, avec son ombre portée",
+      "alt": "Le ravin boisé du ruisseau des Aygalades vu du ciel, arbres en 3D relevés dans le LiDAR, entrepôts et autoroute autour",
       "libelle": "Ouvrir la démonstration",
-      "mention": "Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; relevé 3D de M.Dailly (CC BY 4.0)."
+      "mention": "Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; orthophotographie et LiDAR HD : IGN."
     }
   },
   "forum": {
