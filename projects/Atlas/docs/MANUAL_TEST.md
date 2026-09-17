@@ -35,6 +35,26 @@ Interop **qgis2grist → Scene Manifest → Atlas** (style + contrôles + récit
 - [ ] Activer filtre → objets filtrés sur carte
 - [ ] **Enregistrer** → prefs `Atlas_LayerPrefs` (`controls` + `declarative`)
 
+Depuis la 1.7.1, chaque champ prend la forme que son type de colonne appelle :
+
+- [ ] une colonne **vide partout** est nommée sous la liste (« Sans valeur, donc
+      sans filtre possible ») au lieu de disparaître
+- [ ] une **catégorie** propose « (sans valeur) », coché : activer ne retranche rien
+- [ ] un **booléen** s'affiche Oui / Non
+- [ ] un **nombre** à peu de valeurs peut devenir une checklist ; une catégorie
+      peut devenir une recherche « Contient » (sans majuscules ni accents)
+- [ ] **Tout / Aucun** sur une checklist
+- [ ] un réglage tient au **rechargement**, y compris depuis un curseur
+
+## 3 bis. Formulaires — retirer et remettre
+
+- [ ] Sur une couche liée à une table : chaque formulaire porte « Retirer »,
+      sauf `Attributs`
+- [ ] Retiré → section « Retirés de la couche », plus d'onglet sur la fiche,
+      plus proposé hors édition
+- [ ] « Remettre » le rend tel qu'il était, cadrage des champs compris
+- [ ] Le retrait tient au rechargement, et la ligne de `Formulaires` est intacte
+
 ## 4. Soleil / overlays carte
 
 - [ ] Dock soleil à gauche de la boussole (gap 12px), hauteur 54px, sans scroll
@@ -139,3 +159,15 @@ document réel (`nrRTKiyiz1suJ3NF1QcbqK` ou un document vide de l'espace
 
 Cette liste a été établie le 15/09/2026, après qu'un parcours simple (G) a
 révélé quatre défauts que ni les tests ni les revues de code n'avaient vus.
+
+### Campagne du 17/09/2026 (avant la 1.7.1)
+
+A, B, C, D, E, F, H, I rejoués — tous conformes. **G non rejoué** : il l'avait
+été le 11/09, et les modifications de la 1.7.1 ne touchent pas ce chemin.
+
+Trois défauts trouvés par ces parcours, et corrigés : la source du relief qui ne
+s'enregistrait pas, le fond d'une scène externe posé trop tard (sortie de récit
+sur le fond par défaut), et la tuile de repli du MNT au mauvais format. Une
+limite subsiste, documentée dans le `CLAUDE.md` du projet : une exception
+MapLibre, sans effet visible, en enchaînant les étapes qui passent le bâti en
+volume sur un fond raster.
