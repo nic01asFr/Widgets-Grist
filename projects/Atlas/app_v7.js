@@ -416,10 +416,14 @@ async function probeLocalModels() {
     if (MODEL_BASE_EXPLICIT) return;
     const cands = [];
     try {
-        // Depuis `projects/Atlas/`, avec la racine du repo servie : c'est le seul
-        // chemin qui permet d'essayer les modeles 3D en developpement local.
+        // **Le cas publie d'abord** : les modeles sont a cote du widget. L'ordre
+        // etait inverse, et le premier candidat — un chemin de developpement —
+        // laissait un 404 dans la console de qui ouvre la scene EN LIGNE. Une
+        // erreur reelle a cote d'une erreur normale ne se remarque plus.
+        cands.push(new URL('./models/', location.href).href);
+        // Depuis `projects/Atlas/`, avec la racine du repo servie : le seul
+        // chemin qui permette d'essayer les modeles 3D en developpement local.
         cands.push(new URL('../../published/atlas/models/', location.href).href);
-        cands.push(new URL('./models/', location.href).href);   // modeles a cote du widget (cas publie)
         cands.push(new URL('../models/', location.href).href);
         cands.push(new URL('../../published/models/', location.href).href); // ancien emplacement
     } catch (e) { return; }
