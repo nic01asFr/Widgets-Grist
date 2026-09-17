@@ -430,12 +430,18 @@ async function probeLocalModels() {
     for (const base of cands) {
         try {
             const r = await fetch(base + 'catalog.json', { cache: 'no-store' });
-            if (r.ok && base !== MODEL_LIBRARY.baseRoot) {
+            // **On s'arrête au premier qui répond, même si c'est déjà la base
+            // par défaut.** Sinon la sonde continuait : en ligne, `./models/`
+            // EST la base par défaut, la condition ne retenait pas, et le
+            // candidat suivant — un chemin de développement — laissait un 404
+            // dans la console de qui ouvre la scène publiée.
+            if (!r.ok) continue;
+            if (base !== MODEL_LIBRARY.baseRoot) {
                 MODEL_LIBRARY.baseRoot = base;
                 Models3D.gltfCache.clear(); Models3D.protoCache.clear(); Models3D.scheduleBuild();
                 console.log('🧩 Atlas — modèles 3D servis localement :', base);
-                return;
             }
+            return;
         } catch (e) {}
     }
     console.log('🧩 Atlas — base modèles (défaut) :', MODEL_LIBRARY.baseUrl, '— aucun chemin local trouvé. Sers la racine du repo, ou règle la source dans le module Modèles.');
