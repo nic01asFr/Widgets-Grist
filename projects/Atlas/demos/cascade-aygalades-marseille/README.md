@@ -29,9 +29,12 @@ exactement ce qu'une symbologie catégorisée sait montrer.
 | Emprises | 19 | Activité · Ferroviaire · Espace vert |
 | Ruisseau et canal | 15 | catégorisée : à ciel ouvert · **busé** |
 | Mobilier urbain | 374 | **inline** — 239 lampadaires, 120 arbres, 6 bancs, 9 abribus, chacun avec son modèle du catalogue |
-| Cascade (relevé 3D) | 1 | GLB photogrammétrique posé à ses coordonnées |
+| Arbres (LiDAR HD) | 640 | **inline** — sommets de canopée relevés dans le MNH de l'IGN, hauteur mesurée, modèle mis à l'échelle par entité |
 
-Poids total : ~7,5 Mo, dont 6,0 pour le modèle 3D et 1,0 pour le bâti.
+Fond : **orthophotographie IGN sur le relief LiDAR HD**, à l'échelle vraie sauf à
+l'étape 7, qui l'accentue et le dit.
+
+Poids total : ~1,4 Mo, dont 1,0 pour le bâti.
 
 ### Pourquoi le mobilier est *inline* et pas servi par URL
 
@@ -49,6 +52,31 @@ Effet de bord visible et voulu : la légende affiche « Lampadaire 239 » en com
 **exact**, sans le « ≈ » des couches distantes — parce qu'ici Atlas compte
 vraiment.
 
+## Les arbres viennent du LiDAR, pas d'un décor
+
+`build-arbres-lidar.mjs` lit deux grilles de l'IGN au pas de 0,5 m — le modèle de
+surface (MNS) et le modèle de terrain (MNT) — sur 360 m de côté autour de la
+cascade. Leur différence est la hauteur de ce qui pousse. Un arbre est un
+**sommet local** de cette hauteur, cherché dans un rayon proportionnel à sa
+taille.
+
+Le script écarte ce qui n'est pas de la végétation : le bâti OSM (un toit est un
+sommet), les abords de l'autoroute et des voies ferrées (un viaduc aussi), et le
+volume du relevé photogrammétrique.
+
+Chaque point porte `hauteur_m`, `_modelId`, `_scale` (hauteur mesurée ÷ 5,9 m,
+hauteur du modèle du catalogue) et `_rotationZ` dérivé de sa position — stable
+d'une extraction à l'autre, contrairement à un tirage au hasard.
+
+> **Ce n'est pas un inventaire.** L'essence est inconnue, deux houppiers
+> jointifs peuvent ne donner qu'un sommet, et un arbre sous un plus grand
+> manque. La couche le dit dans sa fiche : « sommet local du MNH ».
+
+Aucune dépendance npm : le WMS-R sert du `image/x-bil;bits=32` (float32
+petit-boutiste, lignes du nord au sud — vérifié contre le GeoTIFF), et la
+conversion Lambert-93 → WGS84 est l'algorithme publié par l'IGN. Contrôle :
+les points retombent au centre des mailles de 0,5 m.
+
 ## Le récit — huit étapes
 
 | # | Titre | Ce qui est démontré |
@@ -57,9 +85,9 @@ vraiment.
 | 2 | Le ruisseau, et là où il disparaît | catégorisation sur un attribut qui *dit* quelque chose |
 | 3 | Ce qui est passé par-dessus | superposition, ordre des couches, vue oblique |
 | 4 | Le bâti en volume | extrusion + graduation par bornes + **ombres** |
-| 5 | La cascade | modèle 3D **réaliste** (photogrammétrie) éclairé, ombre portée |
+| 5 | La cascade | le site réel : ravin, canopée LiDAR, chute mesurée dans le MNT |
 | 6 | Le catalogue, posé sur de vraies données | modèles 3D **représentatifs** du catalogue, un par entité |
-| 7 | Le vallon a une forme | **relief 3D**, volumes posés sur le sol échantillonné |
+| 7 | Le vallon a une forme | **relief accentué 2×**, volumes drapés par MapLibre |
 | 8 | Ce qui reste ouvert | retour au plan, lecture d'ensemble |
 
 ### Contrôles exposés
@@ -87,6 +115,7 @@ son état d'ombres.
 
 ```bash
 node build-from-overpass.mjs   # interroge Overpass -> les 7 GeoJSON + _bbox.json
+node build-arbres-lidar.mjs    # lit MNS/MNT IGN -> arbres-lidar.geojson
 node build-scene.mjs           # relit les GeoJSON -> scene.json (comptes inclus)
 ```
 
@@ -106,49 +135,56 @@ node ../../../../scripts/valider-schema.js \
      ../../../../published/schemas/scene-manifest-0.2.2.schema.json scene.json
 ```
 
-## Le modèle 3D
+## Le relevé photogrammétrique, retiré du récit (17/09/2026)
 
-`cascade.glb` — **La Cascade** par **M.Dailly**, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+`_cascade-sketchfab.glb` — **La Cascade** par **M.Dailly**,
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 [page source](https://sketchfab.com/3d-models/la-cascade-820f7441157546949d07e3ce52b2287a).
-Attribution complète : [CREDITS.md](../../../../CREDITS.md) à la racine du dépôt.
 
-Converti par `_convertir-glb.mjs` : le fichier d'origine porte
-`KHR_materials_unlit`, un matériau qui **ignore toute lumière**. three.js le
-charge alors en `MeshBasicMaterial`, qui ne reçoit ni ne projette d'ombre — le
-relevé aurait eu le même aspect à midi et à minuit, ce qui vide l'étape 5 de son
-propos. La conversion en PBR lui rend l'éclairage ; la géométrie et la texture
-sont intactes.
+Il n'est plus dans la scène, et son nom commence par `_` : la promotion ne copie
+donc pas ses 6 Mo vers `published/`.
 
-```bash
-node _convertir-glb.mjs entree.glb cascade.glb
-```
+Pourquoi : posé sur le sol LiDAR, il s'est révélé être un **fragment de paroi**
+sans échelle absolue. Son origine est au milieu de sa boîte englobante, donc la
+moitié basse passait sous le terrain ; remonté, il flottait. À côté d'une
+orthophotographie à 20 cm drapée sur un MNT à 50 cm, il ne tenait pas la
+comparaison — il ajoutait du faux à du vrai.
 
-## Points de calage
+Tant que la scène posait tout sur un fond clair **sans relief**, rien de cela ne
+se voyait : le modèle planait sur une feuille blanche, et c'est ce que la
+première version montrait à l'étape 5.
 
-| Paramètre | Valeur | Pourquoi |
-|---|---|---|
-| Ancre | `5.3632144, 43.3531876` | nœud OSM `789366740`, `waterway=waterfall` |
-| `scale` | `1.8` | le relevé Metashape n'a pas d'échelle absolue ; 1 unité ≠ 1 m. Donne 9,6 × 8,8 × 12,5 m, mesuré dans la scène |
-| `rotationZ` | `0` | non calé — l'orientation du scan n'est pas géoréférencée |
+Un relevé propre viendra du chantier LiDAR (nuage de points COPC de l'IGN).
 
-Un bâtiment OSM (`way/97710100`, 13 × 12 m) se trouve **à 10 m au nord** de la
-cascade. Il ne recouvre pas le modèle — mesuré : rayon du modèle 6,5 m — mais il
-le masque aux azimuts est, d'où le cadrage de l'étape 5 par l'ouest
-(`bearing: 250`).
+## Le site de la cascade, mesuré
+
+Profil radial dans le MNT LiDAR HD à 0,5 m, autour du nœud OSM `789366740`
+(`waterway=waterfall`, `5.3632144, 43.3531876`) :
+
+| Mesure | Valeur |
+|---|---|
+| amont | 58,5 m |
+| pied | 46,7 m |
+| chute | **11,8 m sur 6 m** |
+| azimut de l'aval | 160° (sud-sud-est) |
+| sursol autour (MNS − MNT) | 7 à 26 m — la cascade est sous canopée |
+
+D'où le cadrage de l'étape 5 : depuis l'aval, en regardant l'amont
+(`bearing: 345`).
 
 ## Limites connues
 
-- Le tracé du ruisseau est drapé **par-dessus** le relevé : c'est une couche
-  2D, MapLibre la pose sur le sol. Cohérent ici (la cascade *est* sur le
-  ruisseau), mais à savoir avant de réutiliser le procédé ailleurs.
 - Les bastides repérées par OSM (`historic=manor`) sont classées dans le bâti,
   pas dans la couche « mémoire » : ce sont des polygones `building`, captés
   comme tels. La couche `memoire.geojson` ne retient donc que 4 points
   (monuments aux morts, fontaine) et n'est pas exposée dans le récit.
-- Le relief n'est activé qu'à l'**étape 7**, et le calage d'altitude d'une
-  couche distante n'a qu'une valeur par emprise : sur un vallon, l'approximation
-  se voit aux bords. Les autres étapes restent en plan, où la question ne se
-  pose pas.
+- L'orthophotographie de la Géoplateforme s'arrête au **zoom 19** : au-delà,
+  MapLibre agrandit la dernière tuile servie (image floue). Sans la borne
+  `maxzoom`, elle demandait des tuiles 20 et 21, recevait des 404, et laissait
+  un **trou** dans la carte — corrigé dans Atlas le 16/09/2026.
+- Le MNT IGN rend des **502 par intermittence** quand les tuiles partent en
+  rafale. Atlas réessaie deux fois ; en cas d'échec, il n'invente plus un sol
+  plat à 0 m — ce repli donnait une falaise au bord du vide.
 - L'extraction dépend d'Overpass, dont les instances publiques répondent 504
   sous charge. `postOverpass` bascule sur trois miroirs et nomme tous les refus ;
   le mobilier, lui, est non bloquant — son absence ne doit pas emporter le bâti

@@ -343,3 +343,16 @@ describe('story', () => {
     assert.equal(rows[1].title, 'B2');
   });
 });
+import { captureStoryState as captureEtape } from '../lib/story.js';
+
+describe('une étape garde son relief entier', () => {
+  it('source et exagération sont capturées avec l’activation', () => {
+    const etape = captureEtape(null, {
+      settings: { terrain3D: true, terrainSource: 'ign', terrainExaggeration: 1 },
+      layers: [],
+    });
+    assert.equal(etape.terrain3D, true);
+    assert.equal(etape.terrainSource, 'ign');
+    assert.equal(etape.terrainExaggeration, 1);
+  });
+});

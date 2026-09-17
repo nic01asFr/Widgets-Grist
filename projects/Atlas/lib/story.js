@@ -40,6 +40,11 @@ export function captureStoryState(map, state) {
     timeOfDay: state.settings.timeOfDay,
     date: state.settings.date instanceof Date ? state.settings.date.toISOString() : state.settings.date,
     terrain3D: state.settings.terrain3D,
+    // Le relief d'une étape, c'est aussi sa source et son exagération : une
+    // vue rapprochée demande le MNT LiDAR HD à 1×, un survol peut vouloir le
+    // relief mondial accentué. Sans elles, l'étape héritait du dernier réglage.
+    terrainSource: state.settings.terrainSource,
+    terrainExaggeration: state.settings.terrainExaggeration,
     labels: state.settings.labels,
     shadows: state.settings.shadows,
     sky: state.settings.sky,

@@ -96,7 +96,7 @@ import {
   saveStoryToGrist,
   chargerRecitGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=20260916a';
+} from './lib/story.js?v=20260916b';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
@@ -150,9 +150,26 @@ const IGN = {
     // MNT LIDAR HD (GeoTIFF Float32) — décodé en TerrainRGB via le protocole ignmnt://
     mnt:   'ignmnt://data.geopf.fr/wms-r?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93&STYLES=&FORMAT=image/geotiff&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=512&HEIGHT=512',
 };
+/** Dernier niveau servi par la Géoplateforme en PM — vérifié : 404 au-delà. */
+const IGN_ZOOM_MAX = 19;
+/**
+ * Un fond raster IGN, borné en zoom.
+ *
+ * **`maxzoom` n'est pas facultatif.** Sans lui, MapLibre demande des tuiles a
+ * tous les niveaux : la Geoplateforme repond 404 au-dela de 19, et la carte
+ * montre un TROU — un pan de vide couleur fond, au milieu de la photographie,
+ * exactement la ou on vient de zoomer. Mesure le 16/09/2026 sur la cascade des
+ * Aygalades : 404 sur tous les z20 et z21 demandes. Avec la borne, MapLibre
+ * agrandit la derniere tuile servie ; l'image devient floue, ce qui est la
+ * bonne facon de dire « il n'y a pas plus fin ».
+ *
+ * Meme famille que le `maxzoom` pose d'office sur les couches `xyz` d'une
+ * scene (cf. CLAUDE.md) : un service qui ne sert pas un niveau ne le dit pas,
+ * il refuse.
+ */
 function ignRasterStyle(tiles) {
     return { version: 8, glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, attribution: '© IGN / Géoplateforme' } },
+        sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: IGN_ZOOM_MAX, attribution: '© IGN / Géoplateforme' } },
         layers: [{ id: 'ign-base', type: 'raster', source: 'ign' }] };
 }
 const BASEMAPS = {
@@ -824,28 +841,41 @@ function ignDemPool() {
     _ignDemPool = { decode(buf) { return new Promise((res, rej) => { const id = ++seq; pending.set(id, { resolve: res, reject: rej }); workers[rr++ % N].postMessage({ id, buffer: buf }, [buf]); }); } };
     return _ignDemPool;
 }
-let _flatDem = null;
-async function flatDemTile() {
-    if (_flatDem) return _flatDem;
-    const size = 256, rgba = new Uint8ClampedArray(size * size * 4), e0 = Math.round(10000 / 0.1);
-    for (let i = 0; i < size * size; i++) { rgba[i * 4] = (e0 >> 16) & 255; rgba[i * 4 + 1] = (e0 >> 8) & 255; rgba[i * 4 + 2] = e0 & 255; rgba[i * 4 + 3] = 255; }
-    const c = new OffscreenCanvas(size, size); c.getContext('2d').putImageData(new ImageData(rgba, size, size), 0, 0);
-    _flatDem = new Uint8Array(await (await c.convertToBlob({ type: 'image/png' })).arrayBuffer());
-    return _flatDem;
-}
 (function registerIGNTerrain() {
     if (typeof maplibregl === 'undefined' || typeof OffscreenCanvas === 'undefined') return;
     maplibregl.addProtocol('ignmnt', async (params, abort) => {
         const url = 'https://' + params.url.replace('ignmnt://', '');
-        try {
+        const lire = async () => {
             const r = await fetch(url, { signal: abort.signal, headers: { 'Accept': 'image/tiff, image/geotiff' } });
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const buf = await r.arrayBuffer();
             const hd = new Uint8Array(buf, 0, 4);
             const isTiff = (hd[0] === 0x49 && hd[1] === 0x49) || (hd[0] === 0x4D && hd[1] === 0x4D);
-            if (!isTiff || buf.byteLength < 100) throw new Error('not tiff');
+            if (!isTiff || buf.byteLength < 100) throw new Error('réponse non TIFF');
             return { data: await ignDemPool().decode(buf) };
-        } catch (e) { if (abort.signal.aborted) throw e; return { data: await flatDemTile() }; }
+        };
+        // Le service rend des 502 par intermittence quand les tuiles partent en
+        // rafale — mesuré sur le vallon des Aygalades, 11 tuiles sur 35 au
+        // premier essai. Deux reprises espacées suffisent.
+        for (let essai = 0; essai < 3; essai++) {
+            try {
+                return await lire();
+            } catch (e) {
+                if (abort.signal.aborted) throw e;
+                if (essai === 2) {
+                    // **Ne jamais rendre un sol plat à 0 m.** C'était le repli
+                    // d'origine : la tuile manquante devenait une dalle au
+                    // niveau de la mer, et le relief voisin se terminait en
+                    // falaise sur du vide — un défaut qu'on attribue à la
+                    // donnée, jamais au réseau. Échouer laisse MapLibre garder
+                    // la tuile parente, donc un relief plus grossier mais juste.
+                    console.warn('[Atlas relief] tuile MNT IGN indisponible :', e.message);
+                    throw e;
+                }
+                await new Promise((r) => setTimeout(r, 250 * (essai + 1)));
+            }
+        }
+        throw new Error('MNT IGN indisponible');
     });
 })();
 
@@ -2740,6 +2770,8 @@ function capturePreStorySnapshot() {
         basemap: STATE.settings.basemap,
         buildings3D: STATE.settings.buildings3D,
         terrain3D: STATE.settings.terrain3D,
+        terrainSource: STATE.settings.terrainSource,
+        terrainExaggeration: STATE.settings.terrainExaggeration,
         projection: STATE.settings.projection,
     };
 }
@@ -2795,6 +2827,16 @@ function applyStoryEnvironment(s, opts = {}) {
     if (s.projection && s.projection !== STATE.settings.projection) {
         STATE.settings.projection = s.projection;
         applyProjection();
+    }
+    // Source et exagération avant l'activation : `applyTerrain` doit poser le
+    // bon MNT au bon facteur, pas le précédent le temps d'un rendu.
+    if (s.terrainSource && TERRAIN_SOURCES[s.terrainSource] && s.terrainSource !== STATE.settings.terrainSource) {
+        setTerrainSource(s.terrainSource);
+    }
+    const exag = Number(s.terrainExaggeration);
+    if (Number.isFinite(exag) && exag > 0 && exag !== STATE.settings.terrainExaggeration) {
+        STATE.settings.terrainExaggeration = exag;
+        if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); }
     }
     if (s.terrain3D != null && s.terrain3D !== STATE.settings.terrain3D) {
         STATE.settings.terrain3D = !!s.terrain3D;
@@ -6966,12 +7008,24 @@ async function monterSceneExterne(manifest) {
             if (typeof ms.sky === 'boolean') STATE.settings.sky = ms.sky;
             if (Number.isFinite(ms.timeOfDay)) STATE.settings.timeOfDay = ms.timeOfDay;
             if (typeof ms.terrain3D === 'boolean') STATE.settings.terrain3D = ms.terrain3D;
+            // Le relief se déclare entier : sa source et son facteur. Posés avant
+            // le montage, ils sont lus par `addTerrainSource` au premier style.
+            if (ms.terrainSource && TERRAIN_SOURCES[ms.terrainSource]) STATE.settings.terrainSource = ms.terrainSource;
+            if (Number.isFinite(ms.terrainExaggeration) && ms.terrainExaggeration > 0) {
+                STATE.settings.terrainExaggeration = ms.terrainExaggeration;
+            }
         }
 
         mountLoadedLayers(boundsFromVisibleLayers(layers) || rawBounds);
         applyLabelsVisibility();
         updateLighting();
-        if (wantBasemap && map) {
+        // Un récit embarqué pose lui-même le fond de sa première étape. Poser
+        // aussi celui du manifeste lançait deux `setStyle` à quelques
+        // centaines de millisecondes : le second tombait pendant le vol de
+        // caméra de l'étape 1, qui ne s'appliquait pas — la scène s'ouvrait à
+        // plat, sur la caméra de la session précédente.
+        const recitEmbarque = Array.isArray(manifest.story?.steps) && manifest.story.steps.length > 0;
+        if (wantBasemap && map && !recitEmbarque) {
             map.once('idle', () => {
                 try {
                     A.setBasemap?.(wantBasemap);

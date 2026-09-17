@@ -26,11 +26,21 @@ const COUCHES = {
   voirie: 'aygalades-voirie',
   rail: 'aygalades-rail',
   emprises: 'aygalades-emprises',
-  cascade: 'aygalades-cascade-3d',
   mobilier: 'aygalades-mobilier',
+  arbres: 'aygalades-arbres-lidar',
 };
 
 const compte = (n) => lire(n).features.length;
+
+/** Emprise d'une FeatureCollection de points. */
+const bboxDe = (fc) => {
+  const xs = fc.features.map((f) => f.geometry.coordinates[0]);
+  const ys = fc.features.map((f) => f.geometry.coordinates[1]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+};
+
+/** Orientation du relevé de la cascade, en degrés (`CASCADE_ROT` pour l'essayer sans rééditer). */
+const ROTATION_CASCADE = Number(process.env.CASCADE_ROT ?? 0);
 const N = {
   bati: compte('bati.geojson'),
   eau: compte('eau.geojson'),
@@ -38,7 +48,14 @@ const N = {
   rail: compte('rail.geojson'),
   emprises: compte('emprises.geojson'),
   mobilier: compte('mobilier.geojson'),
+  arbres: compte('arbres-lidar.geojson'),
 };
+
+/** Hauteurs mesurées des arbres LiDAR (`build-arbres-lidar.mjs`), relues et non recopiées. */
+const ARBRES = (() => {
+  const h = lire('arbres-lidar.geojson').features.map((f) => f.properties.hauteur_m);
+  return { min: Math.round(Math.min(...h)), max: Math.round(Math.max(...h)) };
+})();
 
 const batiOsm = lire('bati.geojson').features
   .filter((f) => f.properties.height_source === 'osm').length;
@@ -62,8 +79,40 @@ const eauBusee = lire('eau.geojson').features
  */
 const heure = (h) => Math.round(h * 60);
 
-/** Ambiance commune : ce qu'une etape ne declare pas, elle herite de la precedente. */
-const AMBIANCE = { labels: true, sky: true, basemap: 'positron', buildings3D: false };
+/**
+ * Ambiance commune : la photographie aérienne de l'IGN sur le relief LiDAR HD, à
+ * l'échelle vraie.
+ *
+ * La première version posait tout sur `positron`, un fond clair et plat, relief
+ * coupé sept étapes sur huit : le relevé de la cascade flottait sur une feuille
+ * blanche, sans sol à sa mesure. Le réalisme ne vient pas du modèle, il vient de
+ * ce qui l'entoure — un sol à 0,5 m et l'image de ce sol.
+ *
+ * `terrainSource` et `terrainExaggeration` sont déclarés à chaque étape : une
+ * étape les capture désormais, et celle qui accentue le relief (7) ne doit pas
+ * le laisser accentué pour la suivante.
+ */
+const AMBIANCE = {
+  labels: false, sky: true, basemap: 'ortho-ign', buildings3D: false,
+  terrain3D: true, terrainSource: 'ign', terrainExaggeration: 1,
+};
+
+/**
+ * Le site de la cascade, mesuré dans le MNT LiDAR HD à 0,5 m.
+ *
+ * Profil radial autour du nœud OSM : 58,5 m en amont, 46,7 m au pied, la plus
+ * forte pente orientée à 160° — vers le sud-sud-est. La caméra regarde donc
+ * l'amont depuis l'aval.
+ *
+ * > **Le relevé photogrammétrique a été retiré du récit** (17/09/2026). Posé
+ * > sur le sol LiDAR, il s'est révélé être un fragment de paroi sans échelle
+ * > absolue : la moitié basse passait sous le terrain, et il ne soutenait pas
+ * > la comparaison avec l'orthophotographie autour. Le fichier reste au dépôt
+ * > (`_cascade-sketchfab.glb`, hors publication) ; un relevé propre viendra du
+ * > chantier LiDAR.
+ */
+const CALAGE = { chute_m: '11,8', longueur_m: 6, aval_deg: 160 };
+const CAMERA_CASCADE = { center: [5.36345, 43.35295], zoom: 18.1, pitch: 56, bearing: 345 };
 
 const etat = (id, name, visible, extra = {}) => {
   // `symbolization: null` et `declarative: null` sont REFUSES par le schema
@@ -79,9 +128,11 @@ const etat = (id, name, visible, extra = {}) => {
 const EAU_COUVERT = {
   kind: 'categorized',
   field: 'couvert',
+  // Couleurs lisibles SUR la photographie : le bleu profond et le brun de la
+  // version sur fond clair se perdaient dans la végétation et les toits.
   stops: [
-    { value: 'à ciel ouvert', color: '#2e8fc4', opacity: 1 },
-    { value: 'busé', color: '#8a6a4f', opacity: 0.75 },
+    { value: 'à ciel ouvert', color: '#35c4f0', opacity: 1 },
+    { value: 'busé', color: '#ff9f43', opacity: 0.95 },
   ],
   fallback: '#6b7b8c',
 };
@@ -114,12 +165,18 @@ const VOIRIE = {
   field: 'rang',
   stops: [
     { value: 'Autoroute', color: '#c4453a', opacity: 0.95 },
-    { value: 'Voie principale', color: '#7a8290', opacity: 0.85 },
-    { value: 'Desserte', color: '#9aa2ad', opacity: 0.6 },
+    { value: 'Voie principale', color: '#f4efe6', opacity: 0.75 },
+    { value: 'Desserte', color: '#8c8579', opacity: 0.6 },
   ],
-  fallback: '#9aa2ad',
+  fallback: '#f4efe6',
 };
-const RAIL = { kind: 'single', color: '#4a4038', opacity: 0.9 };
+/**
+ * Voirie et rail sur la photographie : l'autoroute seule en couleur franche, les
+ * dessertes dans une teinte proche de l'image (l'opacité par classe ne
+ * s'applique pas aux lignes). Le gris plein de la version sur fond clair
+ * couvrait l'image d'un filet, et le brun du rail s'y perdait.
+ */
+const RAIL = { kind: 'single', color: '#f2d16b', opacity: 0.95 };
 const MOBILIER = {
   kind: 'categorized',
   field: 'type',
@@ -149,18 +206,17 @@ const story = {
       id: 'aygalades-1',
       title: 'Un vallon au nord de Marseille',
       description:
-        `Le quartier des Aygalades, 15ᵉ arrondissement. ${N.bati.toLocaleString('fr-FR')} bâtiments `
-        + `extraits d'OpenStreetMap, entre l'autoroute et le faisceau ferroviaire. `
-        + `Rien ici ne signale encore qu'un ruisseau traverse tout cela.`,
+        `Le quartier des Aygalades, 15ᵉ arrondissement, vu tel qu'il est : l'orthophotographie `
+        + `de l'IGN posée sur le relief LiDAR HD, à l'échelle vraie. `
+        + `Entre l'autoroute et le faisceau ferroviaire, rien ne signale encore qu'un `
+        + `ruisseau traverse tout cela.`,
       state: {
-        camera: { center: [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], zoom: 13.6, pitch: 0, bearing: 0 },
+        camera: { center: [5.3668, 43.3530], zoom: 14.3, pitch: 52, bearing: -28 },
         projection: 'mercator',
         timeOfDay: heure(14),
-        terrain3D: false,
         shadows: false,
         ...AMBIANCE,
         layers: [
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: BATI_UNI }),
           etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
           etat(COUCHES.rail, 'Voies ferrées', true, { declarative: RAIL }),
         ],
@@ -171,18 +227,16 @@ const story = {
       title: 'Le ruisseau, et là où il disparaît',
       description:
         `Le ruisseau des Aygalades et la sous-dérivation du canal de Marseille. `
-        + `Sur ${N.eau} tronçons cartographiés, ${eauBusee} sont busés — en brun. `
-        + `Un cours d'eau busé n'est pas absent : il est invisible, et c'est la donnée `
-        + `qui le dit, pas la carte qui le devine.`,
+        + `Sur ${N.eau} tronçons cartographiés, ${eauBusee} sont busés — en orange. `
+        + `Sur la photographie, le ruisseau à ciel ouvert se devine sous les arbres ; `
+        + `le busé ne se voit pas du tout. C'est la donnée qui le dit, pas l'image.`,
       state: {
-        camera: { center: [5.3648, 43.3540], zoom: 14.4, pitch: 0, bearing: 0 },
+        camera: { center: [5.3648, 43.3538], zoom: 14.9, pitch: 38, bearing: -10 },
         projection: 'mercator',
         timeOfDay: heure(11),
-        terrain3D: false,
         shadows: false,
         ...AMBIANCE,
         layers: [
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: { kind: 'single', color: '#ded7cb', opacity: 0.4 } }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
         ],
       },
@@ -195,15 +249,13 @@ const story = {
         + `et Artizanord occupent le fond de vallon ; deux lignes ferroviaires et une `
         + `autoroute le franchissent. Le ruisseau reste affiché : il passe dessous.`,
       state: {
-        camera: { center: [5.3648, 43.3545], zoom: 14.2, pitch: 42, bearing: -18 },
+        camera: { center: [5.3648, 43.3545], zoom: 14.6, pitch: 50, bearing: -18 },
         projection: 'mercator',
         timeOfDay: heure(15),
-        terrain3D: false,
         shadows: false,
         ...AMBIANCE,
         layers: [
           etat(COUCHES.emprises, 'Emprises', true, { polygonMode: 'flat', declarative: EMPRISES }),
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: { kind: 'single', color: '#ded7cb', opacity: 0.45 } }),
           etat(COUCHES.rail, 'Voies ferrées', true, { declarative: RAIL }),
           etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
@@ -212,22 +264,20 @@ const story = {
     },
     {
       id: 'aygalades-4',
-      title: 'Le bâti en volume — et ce qu\'on en sait vraiment',
+      title: 'Le bâti en volume — et ce qu’on en sait vraiment',
       description:
-        `Bâti extrudé, gradué par hauteur. Attention à ce que montre cette carte : `
-        + `${batiOsm} bâtiments sur ${N.bati.toLocaleString('fr-FR')} portent une hauteur dans OSM, soit `
-        + `${Math.round((batiOsm / N.bati) * 100)} %. Les autres sont dessinés à 9 m par défaut. `
-        + `La classe la plus claire est donc surtout une classe d'ignorance.`,
+        `Bâti extrudé sur le relief, gradué par hauteur. Attention à ce que montre cette `
+        + `carte : ${batiOsm} bâtiments sur ${N.bati.toLocaleString('fr-FR')} portent une hauteur dans `
+        + `OSM, soit ${Math.round((batiOsm / N.bati) * 100)} %. Les autres sont dessinés à 9 m par `
+        + `défaut. La classe la plus claire est donc surtout une classe d'ignorance.`,
       state: {
-        camera: { center: [5.3639, 43.3536], zoom: 15.6, pitch: 58, bearing: -24 },
+        camera: { center: [5.3639, 43.3536], zoom: 15.8, pitch: 60, bearing: -24 },
         projection: 'mercator',
         timeOfDay: heure(16),
-        terrain3D: false,
         shadows: true,
         ...AMBIANCE,
         layers: [
           etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_HAUTEUR }),
-          etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
         ],
       },
@@ -236,22 +286,20 @@ const story = {
       id: 'aygalades-5',
       title: 'La cascade',
       description:
-        `Relevé photogrammétrique de la cascade, posé à ses coordonnées réelles `
-        + `(nœud OSM 789366740). Soleil de fin d'après-midi : le modèle reçoit `
-        + `l'éclairage et projette son ombre, comme le bâti autour de lui.`,
+        `Le ruisseau refait surface ici, dans un ravin boisé cerné d'entrepôts. `
+        + `Le MNT LiDAR y mesure une chute de ${CALAGE.chute_m} m sur ${CALAGE.longueur_m} m, `
+        + `vers le sud-sud-est. Les ${N.arbres} arbres sont relevés dans le même LiDAR : `
+        + `hauteur mesurée (${ARBRES.min} à ${ARBRES.max} m), forme générique. La cascade `
+        + `elle-même n'est pas modélisée — voir la note du dépôt.`,
       state: {
-        // Cadrage regle a l'ecran : a z18.4 le releve tient dans une poignee de
-        // pixels, et le bati voisin (10 m au nord) le masque aux azimuts est.
-        camera: { center: cascade, zoom: 19.3, pitch: 56, bearing: 250 },
+        camera: CAMERA_CASCADE,
         projection: 'mercator',
         timeOfDay: heure(17.5),
-        terrain3D: false,
         shadows: true,
         ...AMBIANCE,
         layers: [
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_UNI }),
+          etat(COUCHES.arbres, 'Arbres (LiDAR HD)', true),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
-          etat(COUCHES.cascade, 'Cascade (relevé 3D)', true),
         ],
       },
     },
@@ -265,10 +313,11 @@ const story = {
         + `Chacun choisit son modèle dans le catalogue embarqué d'Atlas : une seule `
         + `couche, quatre modèles, décidés par la donnée et non par la couche.`,
       state: {
-        camera: { center: [5.3639, 43.3534], zoom: 18.3, pitch: 62, bearing: -30 },
+        // Cadré sur l'alignement d'arbres et de lampadaires le plus dense de
+        // l'extraction — ailleurs, 374 objets répartis sur 2 km ne se voient pas.
+        camera: { center: [5.35886, 43.35555], zoom: 18.6, pitch: 62, bearing: -30 },
         projection: 'mercator',
         timeOfDay: heure(17),
-        terrain3D: false,
         shadows: true,
         ...AMBIANCE,
         layers: [
@@ -283,29 +332,19 @@ const story = {
       id: 'aygalades-7',
       title: 'Le vallon a une forme',
       description:
-        `Relief activé : les Aygalades sont un vallon, et c'est ce qui explique le `
-        + `tracé du ruisseau comme celui de l'autoroute. Le bâti est ici posé à plat : `
-        + `MapLibre le drape sur le terrain, entité par entité. En volume il aurait `
-        + `fallu une altitude par bâtiment — Atlas ne détient pas ces entités, il `
-        + `n'en connaît qu'une pour toute la couche, et le relief varie de 220 m sur `
-        + `cette emprise.`,
+        `Relief exagéré deux fois : les Aygalades sont un vallon, et c'est ce qui explique `
+        + `le tracé du ruisseau comme celui de l'autoroute. Le bâti reste en volume — `
+        + `MapLibre pose chaque bâtiment sur son sol, sommet par sommet. Les étapes `
+        + `précédentes montraient le relief à l'échelle vraie ; celle-ci l'accentue, et le dit.`,
       state: {
-        camera: { center: [5.3652, 43.3524], zoom: 15, pitch: 68, bearing: 42 },
+        camera: { center: [5.3652, 43.3524], zoom: 14.9, pitch: 70, bearing: 42 },
         projection: 'mercator',
         timeOfDay: heure(9),
-        terrain3D: true,
         shadows: false,
         ...AMBIANCE,
+        terrainExaggeration: 2,
         layers: [
-          // A PLAT, et c'est le sujet de l'etape : une surface drapee suit le sol
-          // par construction. En volume, `fill-extrusion-base` se compte depuis le
-          // niveau de la mer, et Atlas ne peut poser qu'UNE altitude pour toute une
-          // couche dont il ne detient pas les entites (`solConstantDeCouche`).
-          // Mesure sur ce vallon : sol reel de 53 a 273 m, altitude posee 136,9 m —
-          // le bati flotte de 57 m a la cascade et s'enfonce de 148 m sur le coteau
-          // est. Une nappe plate suspendue au-dessus d'un terrain qui, lui, ondule.
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: BATI_HAUTEUR }),
-          etat(COUCHES.emprises, 'Emprises', true, { polygonMode: 'flat', declarative: EMPRISES }),
+          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'extruded', declarative: BATI_HAUTEUR }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
           etat(COUCHES.voirie, 'Voirie', true, { declarative: VOIRIE }),
         ],
@@ -319,15 +358,13 @@ const story = {
         + `de vallon industriel, emprise du futur parc des Aygalades. La carte ne dit `
         + `pas ce qui va advenir ; elle dit ce qu'il y a, et où il y a de la place.`,
       state: {
-        camera: { center: [5.3655, 43.3548], zoom: 14, pitch: 30, bearing: 0 },
+        camera: { center: [5.3655, 43.3548], zoom: 14.5, pitch: 45, bearing: 0 },
         projection: 'mercator',
         timeOfDay: heure(18.5),
-        terrain3D: false,
         shadows: false,
         ...AMBIANCE,
         layers: [
           etat(COUCHES.emprises, 'Emprises', true, { polygonMode: 'flat', declarative: EMPRISES }),
-          etat(COUCHES.bati, 'Bâti', true, { polygonMode: 'flat', declarative: { kind: 'single', color: '#ded7cb', opacity: 0.5 } }),
           etat(COUCHES.eau, 'Ruisseau et canal', true, { declarative: EAU_COUVERT }),
         ],
       },
@@ -372,7 +409,7 @@ const scene = {
   project_name: 'Cascade des Aygalades — Marseille 15ᵉ',
   provenance: {
     producer: 'atlas-demo/overpass',
-    attribution: '© OpenStreetMap contributors (ODbL) · modèle 3D : M.Dailly (CC BY 4.0)',
+    attribution: '© OpenStreetMap contributors (ODbL) · orthophotographie et LiDAR HD : IGN',
     extracted_at: new Date().toISOString(),
     bbox,
   },
@@ -483,49 +520,43 @@ const scene = {
       ],
     },
     {
-      id: COUCHES.cascade,
-      name: 'Cascade (relevé 3D)',
+      id: COUCHES.arbres,
+      name: 'Arbres (LiDAR HD)',
       order: 6,
       geometry_type: 'point',
-      visible: true,
-      visibility: { defaultVisible: true },
-      gltf_url: './cascade.glb',
+      visible: false,
+      // Masquée à l'ouverture comme le mobilier : ces modèles n'ont de sens
+      // qu'à l'échelle du vallon boisé.
+      visibility: { defaultVisible: false, minZoom: 16 },
       style: {
-        mode: 'custom',
-        custom: { url: './cascade.glb', filename: 'cascade.glb' },
-        // L'echelle du releve est arbitraire (photogrammetrie Metashape sans
-        // point de reference) : 1 unite glTF n'est pas 1 metre. Le facteur est
-        // regle a l'oeil sur la cascade reelle, ~10 m de haut.
-        common: { scale: 1.8, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
-        declarative: { kind: 'single', color: '#8fa8b5', opacity: 1 },
+        mode: 'library',
+        // Chaque entité porte `_modelId`, `_scale` (hauteur mesurée / 5,9 m) et
+        // `_rotationZ` ; ceci n'est que le repli.
+        library: { modelId: 'tree_deciduous' },
+        common: { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 },
+        declarative: { kind: 'single', color: '#5b8c4a', opacity: 1 },
       },
       source: { type: 'geojson', classe: 'externe' },
-      geojson: {
-        type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: {
-            name: 'Cascade des Aygalades',
-            osm_id: 'node/789366740',
-            releve: 'photogrammétrie (Agisoft Metashape)',
-            auteur: 'M.Dailly',
-            licence: 'CC BY 4.0',
-            source_modele: 'https://sketchfab.com/3d-models/la-cascade-820f7441157546949d07e3ce52b2287a',
-          },
-          geometry: { type: 'Point', coordinates: cascade },
-        }],
-      },
-      bbox: [cascade[0], cascade[1], cascade[0], cascade[1]],
-      featureCount: 1,
+      // INLINE, pour la même raison que le mobilier : les instances 3D exigent
+      // qu'Atlas détienne les entités.
+      geojson: lire('arbres-lidar.geojson'),
+      bbox: bboxDe(lire('arbres-lidar.geojson')),
+      featureCount: N.arbres,
       crs: 'EPSG:4326',
+      controls: [
+        { field: 'hauteur_m', type: 'range', label: 'Hauteur des arbres (m)', active: false,
+          min: ARBRES.min, max: ARBRES.max, dataMin: ARBRES.min, dataMax: ARBRES.max },
+      ],
+      popup_template: '<b>Arbre</b> — {hauteur_m} m<br><small>{source}</small>',
       fields: [
-        { name: 'name', gType: 'Text' },
-        { name: 'releve', gType: 'Text' },
-        { name: 'auteur', gType: 'Text' },
-        { name: 'licence', gType: 'Text' },
+        { name: 'hauteur_m', gType: 'Numeric' },
+        { name: 'source', gType: 'Text' },
       ],
     },
   ],
+  // L'ambiance d'ouverture, avant que le récit ne prenne la main : sans elle,
+  // la scène s'ouvre sur le fond par défaut et bascule à la première étape.
+  settings: { ...AMBIANCE, timeOfDay: heure(14), shadows: false },
   story,
   camera: story.steps[0].state.camera,
 };

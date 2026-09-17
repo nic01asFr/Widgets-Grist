@@ -14,7 +14,11 @@ informations, ou ne pas y entrer.
 
 ## Modèles 3D
 
-### `projects/Atlas/demos/cascade-aygalades-marseille/cascade.glb`
+### `projects/Atlas/demos/cascade-aygalades-marseille/_cascade-sketchfab.glb`
+
+> **Retiré de la scène le 17/09/2026**, et renommé avec un `_` pour rester hors
+> de la publication. Il est conservé au dépôt : l'attribution ci-dessous vaut
+> tant que le fichier y est.
 
 | | |
 |---|---|
