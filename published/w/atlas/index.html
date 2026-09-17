@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
 <meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-15"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief et récit vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-16"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -157,7 +157,7 @@ section { margin: 0 0 3rem; }
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour hier</span>
+    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -278,6 +278,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.7.1</b><p>Les contrôles suivent le type de chaque colonne Grist — dates, nombres, catégories, listes, recherche texte — et « sans valeur » devient un choix ; un formulaire se retire d’une couche et s’y remet. La démo des Aygalades passe sur la photographie aérienne et le relief LiDAR de l’IGN, avec sa canopée relevée dans le même LiDAR.</p></div>
       <div><b>v1.7.0</b><p>La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre.</p></div>
       <div><b>vitrine</b><p>Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (`?scene=`). L’aperçu restera enrichi d’exemples chargeables.</p></div>
       <div><b>v1.2.0</b><p>Atlas sait où il tourne : dans un document il ne change pas, ouvert seul il explique et propose l’application, sur un téléphone les panneaux deviennent des feuilles qu’on écarte d’un geste. Enregistrer, charger et exporter deviennent accessibles en mobile, où ils manquaient.</p></div>

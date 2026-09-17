@@ -40,6 +40,11 @@ export function captureStoryState(map, state) {
     timeOfDay: state.settings.timeOfDay,
     date: state.settings.date instanceof Date ? state.settings.date.toISOString() : state.settings.date,
     terrain3D: state.settings.terrain3D,
+    // Le relief d'une étape, c'est aussi sa source et son exagération : une
+    // vue rapprochée demande le MNT LiDAR HD à 1×, un survol peut vouloir le
+    // relief mondial accentué. Sans elles, l'étape héritait du dernier réglage.
+    terrainSource: state.settings.terrainSource,
+    terrainExaggeration: state.settings.terrainExaggeration,
     labels: state.settings.labels,
     shadows: state.settings.shadows,
     sky: state.settings.sky,
@@ -57,6 +62,12 @@ export function captureStoryState(map, state) {
         max: c.max,
         // Conservé pour qu'une re-capture ne perde pas l'exigence de valeur.
         ...(c.requireValue ? { requireValue: true } : {}),
+        // La forme du contrôle fait partie de l'étape : sans elle, une étape
+        // « maximum » se rejouait en plage, un « contient » perdait son texte,
+        // et une date Grist (en secondes) se relisait en millisecondes.
+        ...(c.variant ? { variant: c.variant } : {}),
+        ...(c.unite ? { unite: c.unite } : {}),
+        ...(c.type === 'text' ? { texte: c.texte || '' } : {}),
         values: c.type === 'select'
           ? captureSelectControlValues(l, c)
           : c.values,

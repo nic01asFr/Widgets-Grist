@@ -655,6 +655,10 @@
         /* Toggle */
         .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
         .toggle-row .tlabel { font-size: 13px; color: var(--text); }
+        /* En-tête d'un contrôle : icône, libellé éditable, type — une ligne. */
+        .toggle-row .ctl-tete { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; margin-right: 10px; }
+        .toggle-row .ctl-tete .input { flex: 1 1 0; min-width: 0; width: 0; padding: 2px 6px; font-size: 12px; font-weight: 600; }
+        .ctl-tete .ctl-type { flex-shrink: 0; font-size: 10.5px; color: var(--muted); }
         .toggle { width: 40px; height: 22px; background: var(--hairline-strong); border-radius: 11px; position: relative; cursor: pointer; transition: var(--t-fast); flex-shrink: 0; }
         .toggle.on { background: var(--accent); }
         .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: var(--t-fast); }
@@ -682,6 +686,15 @@
 
         /* Categories preview */
         .cats { background: var(--surface-muted); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px; max-height: 220px; overflow-y: auto; }
+        /* Contrôles : « Tout / Aucun » et le choix « (sans valeur) ». */
+        .ctl-outils { display: flex; gap: 6px; margin-top: 6px; }
+        .ctl-mini {
+            font: inherit; font-size: 11px; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+            border: 1px solid var(--hairline); background: var(--surface); color: var(--text);
+        }
+        .ctl-mini:hover { border-color: var(--hairline-strong); }
+        .ctl-mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .cat-row-vide .cat-value { font-style: italic; color: var(--muted); }
         .cat-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--hairline); font-size: 11.5px; }
         .cat-row:last-child { border-bottom: none; }
         .cat-swatch { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; cursor: pointer; }

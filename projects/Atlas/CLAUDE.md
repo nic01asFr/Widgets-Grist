@@ -1089,6 +1089,44 @@ ne se présentait comme une ignorance.
 > échantillonner. Sans lui, `detectFieldType` rendait « text » par défaut, ce qui
 > **retire le champ des choix d'une symbologie graduée**.
 
+### Les fonds IGN : borner le zoom, ne pas inventer le sol (16-17/09/2026)
+
+Deux échecs silencieux, trouvés en posant la démo des Aygalades sur la
+photographie aérienne et le relief LiDAR.
+
+**L'orthophotographie s'arrête au zoom 19.** La source raster ne déclarait pas
+de `maxzoom` : au-delà, MapLibre demandait des tuiles 20 et 21, la Géoplateforme
+répondait 404, et la carte montrait un **trou** — un pan de vide au milieu de
+l'image, là où l'on venait justement de zoomer. Avec `IGN_ZOOM_MAX = 19`,
+MapLibre agrandit la dernière tuile servie : l'image devient floue, ce qui est la
+bonne façon de dire « il n'y a pas plus fin ». Même famille que le `maxzoom`
+posé d'office sur les couches `xyz` d'une scène.
+
+**Le MNT IGN rend des 502 par intermittence** quand les tuiles partent en rafale
+— mesuré : 11 sur 35 au premier essai sur le vallon. Le protocole `ignmnt://`
+répondait alors par une tuile **plate à 0 m**. Conséquence à l'écran : le relief
+voisin se terminait en falaise au-dessus du vide, et l'on attribuait le défaut à
+la donnée. Deux reprises espacées suffisent ; après elles, l'échec **se nomme**
+et MapLibre garde la tuile parente — un relief plus grossier, mais juste.
+
+> La règle est la même que pour `layerVisibleCount` : **ne pas rendre un nombre
+> plausible quand on ne sait pas**. Zéro mètre est une altitude plausible.
+
+### Une étape de récit emporte son relief entier
+
+`terrainSource` et `terrainExaggeration` sont capturés avec `terrain3D`, et
+`applyStoryEnvironment` les applique **avant** l'activation — sinon `applyTerrain`
+poserait le MNT précédent le temps d'un rendu. Sans eux, aucune étape ne pouvait
+demander le MNT LiDAR HD : elle héritait du dernier réglage, c'est-à-dire du
+relief mondial au pas de 30 m. Une scène externe les déclare aussi dans ses
+`settings`.
+
+**Un récit embarqué pose lui-même le fond de sa première étape.** Poser en plus
+celui du manifeste lançait deux `setStyle` à quelques centaines de millisecondes :
+le second tombait pendant le vol de caméra de l'étape 1, qui ne s'appliquait pas.
+La scène s'ouvrait à plat, sur la caméra de la session précédente — un défaut
+qu'on prend pour un choix de cadrage.
+
 ### Le nom d'une scène se lit sous `title`, et sous lui seul
 
 `scene-loader.js` lit `manifest.title`, la clé **normative** du contrat 0.2.2 —

@@ -71,9 +71,21 @@ export function tableToGeoJSON(columnar, geomCol) {
     const properties = { _row_id: ids[i] };
     for (const k of propKeys) {
       const raw = columnar[k][i];
-      properties[k] = (raw != null && typeof raw === 'object')
-        ? normalizePropertyValue(raw)
-        : raw;
+      // Une liste Grist (ChoiceList, RefList) arrive codée `['L', a, b]`.
+      // `normalizePropertyValue` n'en gardait que le premier élément — le
+      // marqueur « L » —, si bien que chaque objet affichait « L », qu'un filtre
+      // n'y trouvait rien et que la fiche ne cochait aucun choix. La liste est
+      // gardée telle quelle sous `_l_<champ>` (lue par les filtres, la fiche et
+      // l'écriture), et lisible « a, b » sous le nom du champ.
+      if (Array.isArray(raw) && raw[0] === 'L') {
+        const liste = raw.slice(1);
+        properties[`_l_${k}`] = liste;
+        properties[k] = liste.map((x) => normalizePropertyValue(x)).filter((x) => x !== '').join(', ');
+      } else {
+        properties[k] = (raw != null && typeof raw === 'object')
+          ? normalizePropertyValue(raw)
+          : raw;
+      }
     }
     if (properties.fill_color) properties._fill_color = properties.fill_color;
     features.push({ type: 'Feature', id: ids[i], geometry, properties });

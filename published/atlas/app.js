@@ -21,6 +21,7 @@ import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
+  formulaireRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
 } from './lib/fiche-formulaire.js?v=1.7.0';
@@ -84,6 +85,11 @@ import {
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
   sanitizeBrokenSelectFilters,
+  profilChamp,
+  nombreValeursDistinctes,
+  nombreSansValeur,
+  filtrableSurLaCarte,
+  MAX_VALEURS_LISTE,
 } from './lib/controls.js?v=1.7.0';
 import {
   captureStoryState,
@@ -144,9 +150,26 @@ const IGN = {
     // MNT LIDAR HD (GeoTIFF Float32) — décodé en TerrainRGB via le protocole ignmnt://
     mnt:   'ignmnt://data.geopf.fr/wms-r?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93&STYLES=&FORMAT=image/geotiff&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=512&HEIGHT=512',
 };
+/** Dernier niveau servi par la Géoplateforme en PM — vérifié : 404 au-delà. */
+const IGN_ZOOM_MAX = 19;
+/**
+ * Un fond raster IGN, borné en zoom.
+ *
+ * **`maxzoom` n'est pas facultatif.** Sans lui, MapLibre demande des tuiles a
+ * tous les niveaux : la Geoplateforme repond 404 au-dela de 19, et la carte
+ * montre un TROU — un pan de vide couleur fond, au milieu de la photographie,
+ * exactement la ou on vient de zoomer. Mesure le 16/09/2026 sur la cascade des
+ * Aygalades : 404 sur tous les z20 et z21 demandes. Avec la borne, MapLibre
+ * agrandit la derniere tuile servie ; l'image devient floue, ce qui est la
+ * bonne facon de dire « il n'y a pas plus fin ».
+ *
+ * Meme famille que le `maxzoom` pose d'office sur les couches `xyz` d'une
+ * scene (cf. CLAUDE.md) : un service qui ne sert pas un niveau ne le dit pas,
+ * il refuse.
+ */
 function ignRasterStyle(tiles) {
     return { version: 8, glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, attribution: '© IGN / Géoplateforme' } },
+        sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: IGN_ZOOM_MAX, attribution: '© IGN / Géoplateforme' } },
         layers: [{ id: 'ign-base', type: 'raster', source: 'ign' }] };
 }
 const BASEMAPS = {
@@ -818,28 +841,41 @@ function ignDemPool() {
     _ignDemPool = { decode(buf) { return new Promise((res, rej) => { const id = ++seq; pending.set(id, { resolve: res, reject: rej }); workers[rr++ % N].postMessage({ id, buffer: buf }, [buf]); }); } };
     return _ignDemPool;
 }
-let _flatDem = null;
-async function flatDemTile() {
-    if (_flatDem) return _flatDem;
-    const size = 256, rgba = new Uint8ClampedArray(size * size * 4), e0 = Math.round(10000 / 0.1);
-    for (let i = 0; i < size * size; i++) { rgba[i * 4] = (e0 >> 16) & 255; rgba[i * 4 + 1] = (e0 >> 8) & 255; rgba[i * 4 + 2] = e0 & 255; rgba[i * 4 + 3] = 255; }
-    const c = new OffscreenCanvas(size, size); c.getContext('2d').putImageData(new ImageData(rgba, size, size), 0, 0);
-    _flatDem = new Uint8Array(await (await c.convertToBlob({ type: 'image/png' })).arrayBuffer());
-    return _flatDem;
-}
 (function registerIGNTerrain() {
     if (typeof maplibregl === 'undefined' || typeof OffscreenCanvas === 'undefined') return;
     maplibregl.addProtocol('ignmnt', async (params, abort) => {
         const url = 'https://' + params.url.replace('ignmnt://', '');
-        try {
+        const lire = async () => {
             const r = await fetch(url, { signal: abort.signal, headers: { 'Accept': 'image/tiff, image/geotiff' } });
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const buf = await r.arrayBuffer();
             const hd = new Uint8Array(buf, 0, 4);
             const isTiff = (hd[0] === 0x49 && hd[1] === 0x49) || (hd[0] === 0x4D && hd[1] === 0x4D);
-            if (!isTiff || buf.byteLength < 100) throw new Error('not tiff');
+            if (!isTiff || buf.byteLength < 100) throw new Error('réponse non TIFF');
             return { data: await ignDemPool().decode(buf) };
-        } catch (e) { if (abort.signal.aborted) throw e; return { data: await flatDemTile() }; }
+        };
+        // Le service rend des 502 par intermittence quand les tuiles partent en
+        // rafale — mesuré sur le vallon des Aygalades, 11 tuiles sur 35 au
+        // premier essai. Deux reprises espacées suffisent.
+        for (let essai = 0; essai < 3; essai++) {
+            try {
+                return await lire();
+            } catch (e) {
+                if (abort.signal.aborted) throw e;
+                if (essai === 2) {
+                    // **Ne jamais rendre un sol plat à 0 m.** C'était le repli
+                    // d'origine : la tuile manquante devenait une dalle au
+                    // niveau de la mer, et le relief voisin se terminait en
+                    // falaise sur du vide — un défaut qu'on attribue à la
+                    // donnée, jamais au réseau. Échouer laisse MapLibre garder
+                    // la tuile parente, donc un relief plus grossier mais juste.
+                    console.warn('[Atlas relief] tuile MNT IGN indisponible :', e.message);
+                    throw e;
+                }
+                await new Promise((r) => setTimeout(r, 250 * (essai + 1)));
+            }
+        }
+        throw new Error('MNT IGN indisponible');
     });
 })();
 
@@ -2734,6 +2770,8 @@ function capturePreStorySnapshot() {
         basemap: STATE.settings.basemap,
         buildings3D: STATE.settings.buildings3D,
         terrain3D: STATE.settings.terrain3D,
+        terrainSource: STATE.settings.terrainSource,
+        terrainExaggeration: STATE.settings.terrainExaggeration,
         projection: STATE.settings.projection,
     };
 }
@@ -2789,6 +2827,16 @@ function applyStoryEnvironment(s, opts = {}) {
     if (s.projection && s.projection !== STATE.settings.projection) {
         STATE.settings.projection = s.projection;
         applyProjection();
+    }
+    // Source et exagération avant l'activation : `applyTerrain` doit poser le
+    // bon MNT au bon facteur, pas le précédent le temps d'un rendu.
+    if (s.terrainSource && TERRAIN_SOURCES[s.terrainSource] && s.terrainSource !== STATE.settings.terrainSource) {
+        setTerrainSource(s.terrainSource);
+    }
+    const exag = Number(s.terrainExaggeration);
+    if (Number.isFinite(exag) && exag > 0 && exag !== STATE.settings.terrainExaggeration) {
+        STATE.settings.terrainExaggeration = exag;
+        if (STATE.settings.terrain3D) { applyTerrain(); recalerRelief(200); }
     }
     if (s.terrain3D != null && s.terrain3D !== STATE.settings.terrain3D) {
         STATE.settings.terrain3D = !!s.terrain3D;
@@ -3381,20 +3429,23 @@ function controlTypeIcon(type) {
     // pastilles. Le sujet est le choix de l'auteur de la scene, pas la charte.
     if (type === 'time') return '🕑';
     if (type === 'range') return '📊';
+    if (type === 'text') return '🔎';
     return '🏷️';
 }
 
+/** Le nom d'un type de contrôle, en français — l'interface disait « range », « select ». */
 function controlTypeLabel(type) {
-    if (type === 'time') return 'time';
-    if (type === 'range') return 'range';
-    return 'select';
+    if (type === 'time') return 'Date';
+    if (type === 'range') return 'Nombre';
+    if (type === 'text') return 'Texte';
+    return 'Catégorie';
 }
 
 function controlVariantOptions(type) {
     if (type === 'time') {
         return [
-            { value: 'time_lte', label: 'Date ≤', hint: 'Cumulatif : tout ce qui est antérieur ou égal à la date choisie. Idéal pour une chronologie « jusqu’à ».' },
-            { value: 'time_between', label: 'Date de/à', hint: 'Fenêtre temporelle stricte entre deux dates. Idéal pour comparer une période précise.' },
+            { value: 'time_lte', label: 'Jusqu’à une date', hint: 'Cumulatif : tout ce qui est antérieur ou égal à la date choisie. Idéal pour une chronologie « jusqu’à ».' },
+            { value: 'time_between', label: 'Entre deux dates', hint: 'Fenêtre temporelle stricte entre deux dates. Idéal pour comparer une période précise.' },
         ];
     }
     if (type === 'range') {
@@ -3404,15 +3455,27 @@ function controlVariantOptions(type) {
             { value: 'range_min', label: 'Minimum', hint: 'Seuil bas uniquement (≥ valeur). Utile pour « au-dessus de ».' },
         ];
     }
+    if (type === 'text') {
+        return [
+            { value: 'text_contains', label: 'Contient', hint: 'Garde les objets dont la valeur contient le texte saisi, sans tenir compte des majuscules ni des accents.' },
+        ];
+    }
     return [
         { value: 'select_multi', label: 'Checklist', hint: 'Plusieurs catégories en parallèle. Filtre cumulatif (OU logique).' },
         { value: 'select_single', label: 'Choix unique', hint: 'Une seule catégorie à la fois. Lecture plus simple sur mobile.' },
     ];
 }
 
+/** Le type qu'une variante désigne : `range_max` → `range`. */
+function typeDeVariante(variant) {
+    const t = String(variant || '').split('_')[0];
+    return ['time', 'range', 'select', 'text'].includes(t) ? t : null;
+}
+
 function defaultControlVariant(type) {
     if (type === 'time') return 'time_lte';
     if (type === 'range') return 'range_between';
+    if (type === 'text') return 'text_contains';
     return 'select_multi';
 }
 
@@ -3436,6 +3499,7 @@ function controlVariantDockLabel(c) {
         range_min: 'Min',
         select_multi: 'Filtres',
         select_single: 'Choix',
+        text_contains: 'Contient',
     };
     return map[v] || dockControlTypeTag(c.type);
 }
@@ -3443,6 +3507,7 @@ function controlVariantDockLabel(c) {
 function dockControlTypeTag(type) {
     if (type === 'time') return 'Temps';
     if (type === 'range') return 'Plage';
+    if (type === 'text') return 'Recherche';
     return 'Catégories';
 }
 
@@ -3780,74 +3845,201 @@ function renderEnvControlsSection() {
     }).join('');
 }
 
-function renderDataControlRow(layer, field, type, c) {
-    const esc = (s) => String(s).replace(/'/g, "\\'");
-    const icon = controlTypeIcon(type);
+function renderDataControlRow(layer, field, type, c, profil) {
+    const esc = (s) => escapeHtml(String(s).replace(/'/g, "\\'"));
+    const typeActuel = c.type || type;
+    const icon = controlTypeIcon(typeActuel);
     const sim = c.mode === 'simulation' ? ' <span class="hint" style="display:inline;padding:2px 6px;margin:0">simulation</span>' : '';
-    const labelVal = (c.label || field).replace(/"/g, '&quot;');
+    const labelVal = escapeHtml(c.label || field);
     const active = !!c.active;
-    ensureControlVariant(c, type);
-    const variants = controlVariantOptions(type);
-    const variantHint = controlVariantHint(type, c.variant);
+    ensureControlVariant(c, typeActuel);
+    // Les formes possibles pour ce champ : un nombre à peu de valeurs se filtre
+    // aussi par catégories, une catégorie se cherche aussi par texte.
+    const types = [...new Set([typeActuel, ...((profil && profil.typesPossibles) || [])])];
+    const option = (v) => `<option value="${v.value}" ${c.variant === v.value ? 'selected' : ''}>${v.label}</option>`;
+    const options = types.length > 1
+        ? types.map((t) => `<optgroup label="${controlTypeLabel(t)}">${controlVariantOptions(t).map(option).join('')}</optgroup>`).join('')
+        : controlVariantOptions(typeActuel).map(option).join('');
+    const variantHint = controlVariantHint(typeActuel, c.variant);
+    const idVar = `ctl-var-${layer.id}-${field}`.replace(/[^a-zA-Z0-9_-]/g, '_');
     return `<div class="section">
         <div class="toggle-row">
-            <span class="tlabel">${icon} <input class="input" style="display:inline;width:auto;min-width:120px;padding:2px 6px;font-size:12px;font-weight:600"
-                value="${labelVal}" onchange="A.setControlLabel('${layer.id}','${esc(field)}',this.value)" placeholder="${field}">
-                <span style="font-weight:400;color:var(--muted);font-size:10.5px"> · ${controlTypeLabel(type)}</span>${sim}</span>
-            <div class="toggle ${active ? 'on' : ''}" onclick="A.toggleControl('${layer.id}','${esc(field)}','${type}')" role="switch" tabindex="0" aria-checked="${active}" aria-label="Publier le contrôle ${esc(field)}" title="Afficher en lecture"></div>
+            <span class="tlabel ctl-tete"><span aria-hidden="true">${icon}</span><input class="input"
+                value="${labelVal}" onchange="A.setControlLabel('${esc(layer.id)}','${esc(field)}',this.value)" placeholder="${escapeHtml(field)}" aria-label="Libellé du contrôle ${escapeHtml(field)}">
+                <span class="ctl-type">${controlTypeLabel(typeActuel).toLowerCase()}</span>${sim}</span>
+            <div class="toggle ${active ? 'on' : ''}" onclick="A.toggleControl('${esc(layer.id)}','${esc(field)}','${typeActuel}')" role="switch" tabindex="0" aria-checked="${active}" aria-label="Publier le contrôle ${escapeHtml(field)}" title="Afficher en lecture"></div>
         </div>
         <div class="control-variant-row">
-            <label class="control-variant-label" for="ctl-var-${esc(layer.id)}-${esc(field)}">Type de contrôle</label>
-            <select id="ctl-var-${esc(layer.id)}-${esc(field)}" class="input control-variant-select" onchange="A.setControlVariant('${layer.id}','${esc(field)}',this.value)">
-                ${variants.map((v) => `<option value="${v.value}" ${c.variant === v.value ? 'selected' : ''}>${v.label}</option>`).join('')}
+            <label class="control-variant-label" for="${idVar}">Type de contrôle</label>
+            <select id="${idVar}" class="input control-variant-select" onchange="A.setControlVariant('${esc(layer.id)}','${esc(field)}',this.value)">
+                ${options}
             </select>
         </div>
-        <p class="control-variant-hint">${variantHint.replace(/</g, '&lt;')}</p>
+        <p class="control-variant-hint">${escapeHtml(variantHint)}</p>
         ${active ? renderControlBody(layer, c) : ''}
     </div>`;
 }
 
 function renderControlBody(layer, c) {
-    const esc = (s) => String(s).replace(/'/g, "\\'");
+    const esc = (s) => escapeHtml(String(s).replace(/'/g, "\\'"));
     ensureControlVariant(c, c.type);
+    const lid = esc(layer.id);
+    const fid = esc(c.field);
+    const nomLisible = escapeHtml(c.label || c.field);
+
     if (c.type === 'select') {
-        const vals = controlUniqueValues(layer, c.field, 30);
+        const vals = controlUniqueValues(layer, c.field, MAX_VALEURS_LISTE);
+        const sansValeur = nombreSansValeur(layer, c.field);
         // Un filtre sans choix ressemble à un filtre déjà appliqué : on croit
         // que tout est décoché, alors qu'on n'a rien à cocher. Le dire évite de
         // chercher pourquoi la carte ne réagit pas.
-        if (!vals.length) {
+        if (!vals.length && !sansValeur) {
             return `<div class="range-info" style="margin-top:6px;opacity:.75">`
                  + `Aucune valeur connue pour « ${escapeHtml(c.field)} »`
                  + (layer._distant ? ` — la couche est distante et le manifeste n’en déclare pas.` : `.`)
                  + `</div>`;
         }
+        const booleen = vals.length > 0 && vals.every((v) => v.value === 'true' || v.value === 'false');
+        const libelle = (v) => (booleen ? (v === 'true' ? 'Oui' : 'Non') : v);
         const inputType = c.variant === 'select_single' ? 'radio' : 'checkbox';
         const nameAttr = `ctl-${layer.id}-${c.field}`.replace(/[^a-zA-Z0-9_-]/g, '_');
-        return `<div class="cats" style="margin-top:6px">${vals.map((v) => `<label class="cat-row" style="cursor:pointer"><input type="${inputType}" name="${nameAttr}" ${isSelectValueChecked(c, v.value) ? 'checked' : ''} onchange="A.toggleControlValue('${layer.id}','${esc(c.field)}','${esc(v.value)}')"><span class="cat-value" title="${v.value}">${v.value}</span><span class="cat-count">${v.count == null ? '' : v.count}</span></label>`).join('')}</div>`;
+        const ligne = (value, texte, count, classe = '') => `<label class="cat-row${classe}" style="cursor:pointer"><input type="${inputType}" name="${nameAttr}" ${isSelectValueChecked(c, value) ? 'checked' : ''} onchange="A.toggleControlValue('${lid}','${fid}','${esc(value)}')"><span class="cat-value" title="${escapeHtml(texte)}">${escapeHtml(texte)}</span><span class="cat-count">${count == null ? '' : count}</span></label>`;
+        const lignes = vals.map((v) => ligne(v.value, libelle(v.value), v.count)).join('')
+            + (sansValeur ? ligne('', '(sans valeur)', sansValeur, ' cat-row-vide') : '');
+        const outils = c.variant === 'select_single' ? '' : `<div class="ctl-outils">
+            <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
+            <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>
+        </div>`;
+        const total = nombreValeursDistinctes(layer, c.field);
+        const reste = total > vals.length
+            ? `<div class="range-info" style="margin-top:6px;opacity:.8">+${total - vals.length} valeur${total - vals.length > 1 ? 's' : ''} non listée${total - vals.length > 1 ? 's' : ''} — le type « Contient » cherche parmi toutes.</div>`
+            : '';
+        return `${outils}<div class="cats" style="margin-top:6px">${lignes}</div>${reste}`;
     }
-    const step = c.type === 'time' ? Math.max(86400000, Math.round((c.dataMax - c.dataMin) / 200)) : ((c.dataMax - c.dataMin) / 200 || 1);
-    if (c.type === 'time') {
-        if (c.variant === 'time_between') {
-            return `<div class="range-info" style="margin-top:6px"><strong id="ctl-${c.field}-lo">${fmtControlValue(c, c.min)}</strong> → <strong id="ctl-${c.field}-hi">${fmtControlValue(c, c.max)}</strong></div>
-                <input type="range" class="rng" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.min}" oninput="A.setControlBound('${layer.id}','${esc(c.field)}','min', this.value)">
-                <input type="range" class="rng acc" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.max}" oninput="A.setControlBound('${layer.id}','${esc(c.field)}','max', this.value)">
-                <button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.playTime('${layer.id}','${esc(c.field)}')">▶ Animer dans le temps</button>`;
-        }
-        return `<div class="range-info" style="margin-top:6px">≤ <strong id="ctl-${c.field}-v">${fmtControlValue(c, c.max)}</strong></div>
-            <input type="range" class="rng acc" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.max}" oninput="A.setControlMax('${layer.id}','${esc(c.field)}', this.value)">
-            <button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.playTime('${layer.id}','${esc(c.field)}')">▶ Animer dans le temps</button>`;
+
+    if (c.type === 'text') {
+        return `<input class="input" type="search" style="margin-top:6px" placeholder="Contient…"
+            value="${escapeHtml(c.texte || '')}" aria-label="Rechercher dans ${nomLisible}"
+            oninput="A.setControlTexte('${lid}','${fid}', this.value)">`;
     }
-    if (c.variant === 'range_max') {
-        return `<div class="range-info" style="margin-top:6px">≤ <strong id="ctl-${c.field}-v">${fmtControlValue(c, c.max)}</strong></div>
-            <input type="range" class="rng acc" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.max}" oninput="A.setControlMax('${layer.id}','${esc(c.field)}', this.value)">`;
+
+    const cle = escapeHtml(`${layer.id}|${c.field}`);
+    const notes = [];
+    if (c._bornesInconnues) notes.push('Bornes inconnues : la couche est distante et le manifeste n’en déclare pas.');
+    if (layer._distant && !filtrableSurLaCarte(c)) notes.push('Sur cette couche distante, des dates écrites en texte ne se filtrent pas.');
+    const note = notes.length ? `<div class="range-info" style="margin-top:6px;opacity:.8">${notes.join(' ')}</div>` : '';
+    const span = (c.dataMax - c.dataMin) || 0;
+    // Un nombre entier avance par unités : sinon un nombre d'étages passait par
+    // 2,37.
+    const step = c.type === 'time'
+        ? Math.max(86400000, Math.round(span / 200))
+        : (c.entier ? Math.max(1, Math.round(span / 200)) : (span / 200 || 1));
+    const valeur = (part) => `<strong data-ctl="${cle}" data-part="${part}">${fmtControlValue(c, part === 'min' ? c.min : c.max)}</strong>`;
+    const curseur = (part, acc) => `<input type="range" class="rng${acc ? ' acc' : ''}" data-ctl="${cle}" data-input="${part}"
+        min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${part === 'min' ? c.min : c.max}"
+        aria-label="${part === 'min' ? 'Minimum' : 'Maximum'} — ${nomLisible}"
+        oninput="A.setControlBound('${lid}','${fid}','${part}', this.value)">`;
+    const animer = c.type === 'time'
+        ? `<button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.playTime('${lid}','${fid}')">▶ Animer dans le temps</button>`
+        : '';
+    if (c.variant === 'time_between' || c.variant === 'range_between') {
+        return `<div class="range-info" style="margin-top:6px">${valeur('min')} → ${valeur('max')}</div>${curseur('min')}${curseur('max', true)}${animer}${note}`;
     }
     if (c.variant === 'range_min') {
-        return `<div class="range-info" style="margin-top:6px">≥ <strong id="ctl-${c.field}-v">${fmtControlValue(c, c.min)}</strong></div>
-            <input type="range" class="rng" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.min}" oninput="A.setControlMin('${layer.id}','${esc(c.field)}', this.value)">`;
+        return `<div class="range-info" style="margin-top:6px">≥ ${valeur('min')}</div>${curseur('min')}${note}`;
     }
-    return `<div class="range-info" style="margin-top:6px"><strong id="ctl-${c.field}-lo">${fmtControlValue(c, c.min)}</strong> → <strong id="ctl-${c.field}-hi">${fmtControlValue(c, c.max)}</strong></div>
-        <input type="range" class="rng" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.min}" oninput="A.setControlBound('${layer.id}','${esc(c.field)}','min', this.value)">
-        <input type="range" class="rng acc" min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${c.max}" oninput="A.setControlBound('${layer.id}','${esc(c.field)}','max', this.value)">`;
+    return `<div class="range-info" style="margin-top:6px">≤ ${valeur('max')}</div>${curseur('max', true)}${animer}${note}`;
+}
+
+/**
+ * Les champs d'une couche qu'un contrôle peut viser.
+ *
+ * Les entités ne portent pas une colonne vide sur tous les objets, et le
+ * manifeste peut dater d'avant son ajout : `visite` (Date, jamais renseignée)
+ * n'apparaissait nulle part, pas même comme « sans valeur ». Le schéma du
+ * document fait foi pour une table ; on en retire ce qui n'est pas un attribut.
+ */
+function champsControlables(layer) {
+    const noms = layerFieldNames(layer);
+    const techniques = new Set([
+        'geometry_json', 'centroid_lat', 'centroid_lon', 'latitude', 'longitude', 'atlas_3d_json',
+        ...COLONNES_INTERNES_GRIST, ...COLONNES_ATLAS,
+        ...Object.values(layer?._manifestLayer?.source?.geometry_fields || {}),
+    ]);
+    for (const col of (STATE.schema?.[layer?.sourceTable] || [])) {
+        const id = col?.colId;
+        if (!id || id.startsWith('_') || id.startsWith('gristHelper_') || techniques.has(id) || noms.includes(id)) continue;
+        if (/^(Attachments|Any|Blob|PositionNumber|ManualSortPos)$/.test(String(col.type || ''))) continue;
+        noms.push(id);
+    }
+    return noms;
+}
+
+/**
+ * Le type de colonne que Grist déclare pour ce champ, s'il le déclare.
+ * Schéma du document d'abord, champs du manifeste ensuite.
+ */
+function typeGristDuChamp(layer, field) {
+    const col = (STATE.schema?.[layer?.sourceTable] || []).find((c) => c.colId === field);
+    if (col?.type) return col.type;
+    const f = (layer?._fields || []).find((x) => x?.name === field);
+    return f?.type || f?.gType || null;
+}
+
+/** Le contrôle d'un champ, créé s'il n'existe pas encore — inactif. */
+function controleDuChamp(layer, field, type) {
+    layer.controls = layer.controls || [];
+    let c = layer.controls.find((x) => x.field === field);
+    if (c) return c;
+    const profil = profilChamp(layer, field, typeGristDuChamp(layer, field));
+    c = { field, type, active: false, ...(profil.unite ? { unite: profil.unite } : {}) };
+    Object.assign(c, controlBounds(layer, type, field, { unite: profil.unite }));
+    c.variant = defaultControlVariant(type);
+    if (type === 'range' || type === 'time') { c.min = c.dataMin; c.max = c.dataMax; }
+    layer.controls.push(c);
+    return c;
+}
+
+/** Change la forme d'un contrôle : ses bornes et sa sélection repartent à zéro. */
+function convertirControle(layer, c, type) {
+    for (const k of ['values', '_selectionTouched', 'texte', 'min', 'max', 'dataMin', 'dataMax', '_bornesInconnues', 'entier']) delete c[k];
+    c.type = type;
+    Object.assign(c, controlBounds(layer, type, c.field, { unite: c.unite }));
+    if (type === 'range' || type === 'time') { c.min = c.dataMin; c.max = c.dataMax; }
+}
+
+/**
+ * Enregistre les contrôles d'une couche, une fois le geste terminé.
+ *
+ * L'enregistrement ne partait que pour `source === 'qgis2grist'` — ni pour une
+ * couche enregistrée en table depuis Atlas, ni pour une table liée, ni pour une
+ * copie —, et jamais depuis les curseurs. Un réglage de filtre se perdait au
+ * rechargement, sans message. `saveLayerToGrist` sait où ranger chaque couche.
+ * En lecture, rien ne s'écrit : ce que le lecteur filtre lui appartient.
+ */
+function persisterControles(layer) {
+    if (CONFIG.viewMode || !CONFIG.grist.ready || !layer) return;
+    clearTimeout(layer._persistCtlT);
+    layer._persistCtlT = setTimeout(() => { saveLayerToGrist(layer, true); }, 700);
+}
+
+/** Met à jour les valeurs affichées d'un contrôle, dans le module comme dans le dock. */
+function majAffichageControle(layer, c) {
+    const cle = `${layer.id}|${c.field}`;
+    const sel = `[data-ctl="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(cle) : cle}"]`;
+    document.querySelectorAll(sel).forEach((el) => {
+        if (el.dataset.part) {
+            el.textContent = fmtControlValue(c, el.dataset.part === 'min' ? c.min : c.max);
+        } else if (el.dataset.input && el !== document.activeElement) {
+            el.value = el.dataset.input === 'min' ? c.min : c.max;
+        }
+    });
+}
+
+/** Redessine ce qui montre un contrôle : le module et la pastille ouverte. */
+function rafraichirVuesControle() {
+    if (STATE.currentModule === 'controles' && !CONFIG.viewMode) renderControles();
+    if (_openDockPill) renderDockSlotHost();
 }
 
 function renderControlVariantMatrix() {
@@ -3865,6 +4057,9 @@ function renderControlVariantMatrix() {
             <div class="cvm-group"><span class="cvm-k">Catégorie</span>
                 <span><strong>Checklist</strong> — plusieurs valeurs</span>
                 <span><strong>Choix unique</strong> — une seule valeur</span>
+            </div>
+            <div class="cvm-group"><span class="cvm-k">Texte</span>
+                <span><strong>Contient</strong> — recherche sans majuscules ni accents</span>
             </div>
         </div>
     </details>`;
@@ -3890,37 +4085,61 @@ function renderControles() {
     }
 
     layer.controls = layer.controls || [];
-    const fields = layerFieldNames(layer).map((f) => ({ field: f, type: controlFieldType(layer, f) })).filter((x) => x.type);
+    // Chaque champ reçoit le contrôle que son type appelle — type Grist d'abord
+    // (`profilChamp`). Un champ sans valeur n'est pas écarté en silence : il
+    // est nommé, pour qu'on ne cherche pas où il est passé.
+    const fields = [];
+    const vides = [];
+    for (const field of champsControlables(layer)) {
+        const profil = profilChamp(layer, field, typeGristDuChamp(layer, field));
+        const existant = layer.controls.find((x) => x.field === field);
+        if (existant?.type) fields.push({ field, type: existant.type, profil });
+        else if (profil.type) fields.push({ field, type: profil.type, profil });
+        else if (profil.vide && !layer._distant) vides.push(field);
+    }
+    // Contrôles déclarés sur des champs que les entités ne portent pas ici
+    // (couche distante) : ils restent réglables.
+    for (const c of layer.controls) {
+        if (c?.type && !fields.some((x) => x.field === c.field)) {
+            fields.push({ field: c.field, type: c.type, profil: { typesPossibles: [c.type] } });
+        }
+    }
+    const noteVides = vides.length
+        ? `<div class="hint" style="margin-top:10px">Sans valeur, donc sans filtre possible : ${vides.map((v) => `<code>${escapeHtml(v)}</code>`).join(', ')}.</div>`
+        : '';
 
     html += `<div class="section"><div class="section-title">Données</div>`;
     html += renderControlVariantMatrix();
     html += STATE.layers.length > 1
-        ? `<select class="input" style="margin-bottom:8px" onchange="A.controlLayer(this.value)">${STATE.layers.map((l) => `<option value="${l.id}" ${l.id === layer.id ? 'selected' : ''}>${l.name}</option>`).join('')}</select>`
-        : `<div class="hint" style="margin-bottom:8px">Couche <strong>${layer.name}</strong></div>`;
+        ? `<select class="input" style="margin-bottom:8px" onchange="A.controlLayer(this.value)">${STATE.layers.map((l) => `<option value="${l.id}" ${l.id === layer.id ? 'selected' : ''}>${escapeHtml(l.name)}</option>`).join('')}</select>`
+        : `<div class="hint" style="margin-bottom:8px">Couche <strong>${escapeHtml(layer.name)}</strong></div>`;
 
     if (!fields.length) {
-        body.innerHTML = html + `<div class="hint">Aucun champ filtrable (date, nombre ou catégorie).</div></div>`;
+        body.innerHTML = html + `<div class="hint">Aucun champ filtrable.</div>${noteVides}</div>`;
         return;
     }
 
     const activeFields = [];
     const availFields = [];
-    for (const { field, type } of fields) {
+    for (const { field, type, profil } of fields) {
         const c = layer.controls.find((x) => x.field === field) || { field, type, active: false };
-        if (c.active) activeFields.push({ field, type, c });
-        else availFields.push({ field, type, c });
+        if (c.active) activeFields.push({ field, type, c, profil });
+        else availFields.push({ field, type, c, profil });
     }
 
     if (activeFields.length) {
         html += `<div class="section-title" style="margin-top:8px">Actifs</div>`;
-        html += activeFields.map(({ field, type, c }) => renderDataControlRow(layer, field, type, c)).join('');
+        html += activeFields.map(({ field, type, c, profil }) => renderDataControlRow(layer, field, type, c, profil)).join('');
     }
     if (availFields.length) {
         html += `<div class="section-title" style="margin-top:${activeFields.length ? '12px' : '8px'}">Disponibles</div>`;
-        html += availFields.map(({ field, type, c }) => renderDataControlRow(layer, field, type, c)).join('');
+        html += availFields.map(({ field, type, c, profil }) => renderDataControlRow(layer, field, type, c, profil)).join('');
     }
-    html += '</div>';
+    html += noteVides + '</div>';
+    // Chaque réglage redessine le module : sans cela, on remontait en haut.
+    const haut = body.scrollTop;
     body.innerHTML = html;
+    body.scrollTop = haut;
 }
 
 /**
@@ -3992,14 +4211,16 @@ function renderFormulaires() {
  */
 function blocCoucheFormulaires(couche) {
     const esc = (s) => String(s).replace(/'/g, "\\'");
-    const formulaires = formulairesDeLaCouche(couche);
+    const tous = formulairesDeLaCouche(couche, { avecRetires: true });
+    const formulaires = formulairesEnPlace(tous);
+    const retires = tous.filter((f) => f.retire);
     const nb = (couche.geojson?.features?.length) || 0;
     const entete = `<div class="fm-entete">
             <span class="fm-couche" title="${escapeHtml(couche.name)}">${escapeHtml(couche.name)}</span>
             <span class="fm-table">${escapeHtml(couche.sourceTable)}${nb ? ` · ${nb} obj.` : ''}</span>
         </div>`;
 
-    if (!formulaires.length) {
+    if (!tous.length) {
         return `<section class="fm-carte">${entete}
             <p class="fm-vide">Aucune colonne saisissable.</p>
         </section>`;
@@ -4026,6 +4247,7 @@ function blocCoucheFormulaires(couche) {
             texte: 'Aucune table liée.',
             detail: `Une table avec une colonne Ref: vers ${couche.sourceTable} apparaîtrait ici.`,
         })}
+        ${retires.length ? `<div class="fm-groupe fm-retires"><div class="fm-groupe-titre">Retirés de la couche</div>${retires.map((f) => ligneRetiree(couche, f, esc)).join('')}</div>` : ''}
         <div class="fm-pied${exposes ? ' on' : ''}">${exposes
             ? `Hors édition : <strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet${exposes > 3 ? ' — la barre défilera' : ''}`
             : 'Hors édition : rien de proposé, la fiche reste en consultation'}</div>
@@ -4055,13 +4277,32 @@ function ligneFormulaire(couche, f, esc) {
             title="Proposé hors édition"
             onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
 
+    const retirer = formulaireRetirable(f)
+        ? `<button type="button" class="fm-lien" onclick="A.retirerFormulaire('${esc(couche.id)}','${esc(f.id)}', true)"
+            title="Ne plus proposer ce formulaire sur cette couche — rien n’est effacé">Retirer</button>`
+        : '';
+
     return `<div class="fm-ligne">
         <div class="fm-ligne-tete">
             <span class="fm-nom">${libelleFormulaire(f)}</span>
             ${commande}
         </div>
-        <div class="fm-detail">${detail}</div>
+        <div class="fm-detail">${detail}${retirer ? ` · ${retirer}` : ''}</div>
         ${cadreDesChamps(couche, f, esc)}
+    </div>`;
+}
+
+/** Un formulaire retiré : son nom, et le geste qui le remet. */
+function ligneRetiree(couche, f, esc) {
+    const cible = f.surLaCouche ? 'corriger l’objet' : `ajouter à ${escapeHtml(f.tableId)}`;
+    return `<div class="fm-ligne fm-ligne-retiree">
+        <div class="fm-ligne-tete">
+            <span class="fm-nom">${libelleFormulaire(f)}</span>
+            <button type="button" class="btn btn-soft fm-commande"
+                onclick="A.retirerFormulaire('${esc(couche.id)}','${esc(f.id)}', false)"
+                title="Le proposer à nouveau sur cette couche, tel qu’il était">Remettre</button>
+        </div>
+        <div class="fm-detail">${cible}</div>
     </div>`;
 }
 
@@ -6083,12 +6324,14 @@ async function chargerFormulaires() {
  * module qui les liste. Les recalculer chacun de son cote aurait fait trois
  * verites pour une seule question.
  */
-function formulairesDeLaCouche(layer) {
-    return formulairesPourCouche({
+function formulairesDeLaCouche(layer, { avecRetires = false } = {}) {
+    const tous = formulairesPourCouche({
         couche: layer,
         entrees: STATE.formulaires,
         schema: STATE.schema,
     });
+    // Seul le module Formulaires voit les retirés : c'est là qu'on les remet.
+    return avecRetires ? tous : formulairesEnPlace(tous);
 }
 
 async function syncStoryFromGrist() {
@@ -6765,12 +7008,24 @@ async function monterSceneExterne(manifest) {
             if (typeof ms.sky === 'boolean') STATE.settings.sky = ms.sky;
             if (Number.isFinite(ms.timeOfDay)) STATE.settings.timeOfDay = ms.timeOfDay;
             if (typeof ms.terrain3D === 'boolean') STATE.settings.terrain3D = ms.terrain3D;
+            // Le relief se déclare entier : sa source et son facteur. Posés avant
+            // le montage, ils sont lus par `addTerrainSource` au premier style.
+            if (ms.terrainSource && TERRAIN_SOURCES[ms.terrainSource]) STATE.settings.terrainSource = ms.terrainSource;
+            if (Number.isFinite(ms.terrainExaggeration) && ms.terrainExaggeration > 0) {
+                STATE.settings.terrainExaggeration = ms.terrainExaggeration;
+            }
         }
 
         mountLoadedLayers(boundsFromVisibleLayers(layers) || rawBounds);
         applyLabelsVisibility();
         updateLighting();
-        if (wantBasemap && map) {
+        // Un récit embarqué pose lui-même le fond de sa première étape. Poser
+        // aussi celui du manifeste lançait deux `setStyle` à quelques
+        // centaines de millisecondes : le second tombait pendant le vol de
+        // caméra de l'étape 1, qui ne s'appliquait pas — la scène s'ouvrait à
+        // plat, sur la caméra de la session précédente.
+        const recitEmbarque = Array.isArray(manifest.story?.steps) && manifest.story.steps.length > 0;
+        if (wantBasemap && map && !recitEmbarque) {
             map.once('idle', () => {
                 try {
                     A.setBasemap?.(wantBasemap);
@@ -7338,6 +7593,7 @@ const A = {
             fiche: reglagesAvant.fiche,
             exposes: [...exposes],
             masques: reglagesAvant.masques,
+            retires: reglagesAvant.retires,
         };
 
         // > **Proposer, c'est publier.** Un formulaire compose ici nait
@@ -7366,6 +7622,43 @@ const A = {
         await saveLayerToGrist(couche, true);
         const nom = actuels.find((f) => f.id === formId)?.titre || formId;
         showToast(actif ? `Proposé hors édition · ${nom}` : `Retiré · ${nom}`, 'success');
+    },
+
+    /**
+     * Retirer un formulaire de la couche, ou l'y remettre.
+     *
+     * Reversible et local a la scene : la ligne de `Formulaires` n'est pas
+     * touchee, le cadrage des champs est garde. Retirer le sort aussi des
+     * formulaires proposes hors edition — sinon il reviendrait expose a la
+     * remise, sans qu'on l'ait redecide.
+     */
+    async retirerFormulaire(layerId, formId, retirer) {
+        if (!assertCanWrite('retirer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        const vise = couche && formulairesDeLaCouche(couche, { avecRetires: true }).find((f) => f.id === formId);
+        if (!vise || !formulaireRetirable(vise)) return;
+        const r = reglagesFormulaire(couche);
+        const retires = new Set(r.retires);
+        if (retirer) retires.add(formId); else retires.delete(formId);
+        const suite = { ...(couche.formulaire || {}), retires: [...retires] };
+        if (retirer) {
+            // La liste d'exposes est reecrite depuis ce qui est vraiment
+            // propose : un booleen herite designerait sinon le suivant.
+            const exposes = formulairesDeLaCouche(couche)
+                .filter((f) => f.expose && !f.derive && f.id !== formId)
+                .map((f) => f.id);
+            if (Array.isArray(r.exposes) || vise.expose) {
+                suite.exposes = exposes;
+                delete suite.expose;
+            }
+            if (r.fiche === formId) suite.fiche = null;
+        }
+        couche.formulaire = suite;
+        if (retirer && _inspObjTab === formId) _inspObjTab = null;
+        renderFormulaires();
+        renderInspector();
+        await saveLayerToGrist(couche, true);
+        showToast(retirer ? `Retiré de la couche · ${vise.titre}` : `Remis · ${vise.titre}`, 'success');
     },
 
     /**
@@ -7570,9 +7863,8 @@ const A = {
         if (!c) return;
         c.label = String(label || field).trim() || field;
         markDirty();
-        if (coucheAvecLignes(l) && CONFIG.grist.ready) {
-            saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
-        }
+        refreshControlsDock();
+        persisterControles(l);
     },
     toggleControl(id, field, type) {
         if (CONFIG.viewMode) {
@@ -7581,27 +7873,17 @@ const A = {
         }
         const l = STATE.layers.find((x) => x.id === id);
         if (!l) return;
-        l.controls = l.controls || [];
-        let c = l.controls.find((x) => x.field === field);
-        if (!c) {
-            c = { field, type };
-            Object.assign(c, controlBounds(l, type, field));
-            c.variant = defaultControlVariant(type);
-            if (type !== 'select') { c.min = c.dataMin; c.max = c.dataMax; }
-            l.controls.push(c);
-        }
-        ensureControlVariant(c, type);
+        const c = controleDuChamp(l, field, type);
+        ensureControlVariant(c, c.type);
         c.active = !c.active;
-        if (c.active && c.type === 'select' && !c._selectionTouched && !Array.isArray(c.values)) {
-            c.values = controlUniqueValues(l, c.field, 40).map((v) => v.value);
+        if (c.active && c.type === 'select' && !Array.isArray(c.values)) {
+            c.values = controlBounds(l, 'select', c.field).values;
         }
         applyControls(l);
         renderControles();
         refreshControlsDock();
         markDirty();
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
-            saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
-        }
+        persisterControles(l);
     },
     setControlBound(id, field, which, v) {
         const l = STATE.layers.find((x) => x.id === id);
@@ -7609,43 +7891,38 @@ const A = {
         const c = (l.controls || []).find((x) => x.field === field);
         if (!c) return;
         c[which] = +v;
-        if (c.min > c.max) { if (which === 'min') c.max = c.min; else c.min = c.max; }
-        const el = $(`ctl-${field}-${which === 'min' ? 'lo' : 'hi'}`);
-        if (el) el.textContent = fmtControlValue(c, c[which]);
+        // Les bornes ne se croisent que sur une plage : un maximum seul n'a pas
+        // à déplacer un minimum qu'il n'utilise pas.
+        const plage = c.variant === 'range_between' || c.variant === 'time_between';
+        if (plage && c.min > c.max) { if (which === 'min') c.max = c.min; else c.min = c.max; }
+        majAffichageControle(l, c);
         clearTimeout(this._ctlT);
         this._ctlT = setTimeout(() => applyControls(l), 80);
         markDirty();
+        persisterControles(l);
     },
-    setControlMin(id, field, v) {
+    setControlMin(id, field, v) { A.setControlBound(id, field, 'min', v); },
+    setControlMax(id, field, v) { A.setControlBound(id, field, 'max', v); },
+    setControlTexte(id, field, texte) {
         const l = STATE.layers.find((x) => x.id === id);
         if (!l) return;
         const c = (l.controls || []).find((x) => x.field === field);
         if (!c) return;
-        c.min = +v;
-        const el = $(`ctl-${field}-v`);
-        if (el) el.textContent = fmtControlValue(c, c.min);
+        c.texte = String(texte ?? '');
         clearTimeout(this._ctlT);
-        this._ctlT = setTimeout(() => applyControls(l), 80);
+        this._ctlT = setTimeout(() => applyControls(l), 150);
         markDirty();
-    },
-    setControlMax(id, field, v) {
-        const l = STATE.layers.find((x) => x.id === id);
-        if (!l) return;
-        const c = (l.controls || []).find((x) => x.field === field);
-        if (!c) return;
-        c.max = +v;
-        const el = $(`ctl-${field}-v`);
-        if (el) el.textContent = fmtControlValue(c, c.max);
-        clearTimeout(this._ctlT);
-        this._ctlT = setTimeout(() => applyControls(l), 80);
-        markDirty();
+        persisterControles(l);
     },
     setControlVariant(id, field, variant) {
         if (CONFIG.viewMode) return;
         const l = STATE.layers.find((x) => x.id === id);
         if (!l) return;
-        const c = (l.controls || []).find((x) => x.field === field);
-        if (!c) return;
+        const nouveauType = typeDeVariante(variant);
+        // Le réglage vaut aussi pour un contrôle pas encore activé : on prépare
+        // sa forme avant de le publier.
+        const c = controleDuChamp(l, field, nouveauType || 'select');
+        if (nouveauType && nouveauType !== c.type) convertirControle(l, c, nouveauType);
         c.variant = variant;
         ensureControlVariant(c, c.type);
         if (c.type === 'select' && c.variant === 'select_single' && Array.isArray(c.values) && c.values.length > 1) {
@@ -7655,33 +7932,42 @@ const A = {
         applyControls(l);
         renderControles();
         refreshControlsDock();
+        if (_openDockPill) renderDockSlotHost();
         markDirty();
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
-            saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
-        }
+        persisterControles(l);
     },
     toggleControlValue(id, field, value) {
         const l = STATE.layers.find((x) => x.id === id);
         if (!l) return;
         const c = (l.controls || []).find((x) => x.field === field);
         if (!c) return;
-        c.values = c.values || [];
+        c.values = Array.isArray(c.values) ? c.values : [];
         ensureControlVariant(c, c.type);
         const norm = String(value).toLowerCase();
-        const i = c.values.findIndex((v) => String(v).toLowerCase() === norm);
+        const i = c.values.findIndex((v) => String(v ?? '').toLowerCase() === norm);
         if (c.variant === 'select_single') {
-            if (i >= 0) c.values = [];
-            else c.values = [value];
+            c.values = i >= 0 ? [] : [value];
+        } else if (i >= 0) {
+            c.values.splice(i, 1);
         } else {
-            if (i >= 0) c.values.splice(i, 1);
-            else c.values.push(value);
+            c.values.push(value);
         }
         c._selectionTouched = true;
         applyControls(l);
         markDirty();
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
-            saveLayerPref(grist.docApi, l, { viewMode: CONFIG.viewMode }).catch(() => {});
-        }
+        persisterControles(l);
+    },
+    toutesValeursControle(id, field, tout) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        const c = (l.controls || []).find((x) => x.field === field);
+        if (!c || c.type !== 'select') return;
+        c.values = tout ? controlBounds(l, 'select', field).values : [];
+        c._selectionTouched = true;
+        applyControls(l);
+        rafraichirVuesControle();
+        markDirty();
+        persisterControles(l);
     },
     playTime(id, field) {
         const l = STATE.layers.find((x) => x.id === id);
@@ -7708,12 +7994,7 @@ const A = {
             }
             if (c.max >= c.dataMax) { c.max = c.dataMax; clearInterval(this._playT); this._playT = null; }
             applyControls(l);
-            const vEl = $(`ctl-${field}-v`);
-            if (vEl) vEl.textContent = fmtControlValue(c, c.max);
-            const loEl = $(`ctl-${field}-lo`);
-            const hiEl = $(`ctl-${field}-hi`);
-            if (loEl) loEl.textContent = fmtControlValue(c, c.min);
-            if (hiEl) hiEl.textContent = fmtControlValue(c, c.max);
+            majAffichageControle(l, c);
         }, 66);
     },
     storyCapture() {

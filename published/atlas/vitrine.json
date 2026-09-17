@@ -45,6 +45,10 @@
   },
   "journal": [
     {
+      "version": "v1.7.1",
+      "texte": "Les contrôles suivent le type de chaque colonne Grist — dates, nombres, catégories, listes, recherche texte — et « sans valeur » devient un choix ; un formulaire se retire d’une couche et s’y remet. La démo des Aygalades passe sur la photographie aérienne et le relief LiDAR de l’IGN, avec sa canopée relevée dans le même LiDAR."
+    },
+    {
       "version": "v1.7.0",
       "texte": "La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre."
     },
@@ -176,7 +180,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.7.0 en ligne ; le runtime accepte les scènes externes et les couches distantes, et la fiche d’un objet est son formulaire. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.7.1 en ligne ; le runtime accepte les scènes externes et les couches distantes, et la fiche d’un objet est son formulaire. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

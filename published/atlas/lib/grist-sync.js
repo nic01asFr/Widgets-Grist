@@ -244,7 +244,9 @@ export function mergeFeatureOverrides(oldGeojson, newGeojson) {
     const old = id != null ? byRow.get(id) : null;
     if (!old) continue;
     for (const k of Object.keys(old)) {
-      if (k.startsWith('_') && k !== '_row_id' && k !== '_fill_color') {
+      // `_l_<champ>` vient de la table, comme le champ lui-même : l'ancienne
+      // liste écraserait la nouvelle au rafraîchissement.
+      if (k.startsWith('_') && k !== '_row_id' && k !== '_fill_color' && !k.startsWith('_l_')) {
         f.properties[k] = old[k];
       }
     }
@@ -285,7 +287,11 @@ export function featureToRowUpdate(feature, layer) {
   for (const name of editable) {
     if (props[name] === undefined) continue;
     if (gristCols.length && !colSet.has(name)) continue;
-    update[name] = props[name];
+    // Une liste se réécrit dans son codage Grist. Le texte « a, b » qui la
+    // rend lisible sur la carte, écrit tel quel, remplacerait les choix par
+    // une seule valeur inconnue.
+    const liste = props[`_l_${name}`];
+    update[name] = Array.isArray(liste) ? ['L', ...liste] : props[name];
   }
 
   const geom = feature.geometry;
