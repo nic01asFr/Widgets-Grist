@@ -178,7 +178,7 @@ section { margin: 0 0 3rem; }
     <div><b>3</b><span>voies : document, iframe document, scène publiée</span></div>
   </section>
   <section class="contextes reveler">
-    <h2>Construire, diffuser, relever</h2>
+    <h2>Construire, relever, diffuser</h2>
     <article class="contexte">
       <div class="dit">
         <h3>Construire, dans votre document</h3>
@@ -198,6 +198,36 @@ section { margin: 0 0 3rem; }
     </article>
     <article class="contexte">
       <div class="dit">
+        <h3>Composer les formulaires de la scène</h3>
+        <p>Le module Formulaires liste, couche par couche, ce que la fiche d’un objet propose : « corriger l’objet », c’est-à-dire sa ligne, et « ajouter une ligne » dans chaque table qui y fait référence — une visite, une intervention. Un formulaire vient d’un projet QField importé par qgis2grist, avec ses étapes, ses listes et ses conditions, ou se compose ici à partir des colonnes. Pour chacun, on choisit les champs montrés, on le propose hors édition, on le retire ou on le remet.</p>
+        <p class="pourquoi">Le formulaire est une ligne du document, pas un réglage enfoui dans le widget : il se relit et se partage avec le reste. Le retirer d’une scène ne l’efface pas — une autre scène peut toujours le proposer.</p>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="formulaires-module.jpg" alt="Le module Formulaires : un relevé proposé hors édition, ses champs montrés un à un, les champs obligatoires signalés." loading="lazy">
+          <figcaption>Le module Formulaires : un relevé proposé hors édition, ses champs montrés un à un, les champs obligatoires signalés.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <h3>Relever sur le terrain</h3>
+        <p>Sur place, on ouvre la scène en lecture — dans le navigateur du téléphone, ou avec l’application Android. On touche un bâtiment : sa fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. L’onglet voisin ajoute une visite dans la table liée, rattachée à l’objet touché.</p>
+        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide — Atlas le vérifie à l’ouverture, et ne propose la saisie qu’à qui en a le droit.</p>
+      </div>
+      <div class="montre telephones">
+        <figure class="telephone">
+          <div class="ecran"><img src="releve-fiche.jpg" alt="Le bâtiment touché ouvre son relevé : deux étapes — identité, puis état constaté —, champs obligatoires signalés." loading="lazy"></div>
+          <figcaption>Le bâtiment touché ouvre son relevé : deux étapes — identité, puis état constaté —, champs obligatoires signalés.</figcaption>
+        </figure>
+        <figure class="telephone">
+          <div class="ecran"><img src="releve-visite.jpg" alt="L’onglet voisin ajoute une visite : une ligne dans la table liée, rattachée au bâtiment." loading="lazy"></div>
+          <figcaption>L’onglet voisin ajoute une visite : une ligne dans la table liée, rattachée au bâtiment.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
         <h3>Diffuser, proprement</h3>
         <p>Deux paramètres Grist, deux intentions. `?embed=true` : page minimale en lecture forcée. `?style=singlePage` : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.</p>
         <p class="pourquoi">Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via `?scene=`). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.</p>
@@ -206,19 +236,6 @@ section { margin: 0 0 3rem; }
         <figure class="large">
           <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit." loading="lazy">
           <figcaption>En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Relever sur le terrain</h3>
-        <p>Une application Android ouvre les scènes de votre compte sans passer par un document dans le navigateur. Ce n’est pas une interface différente pour le plaisir : c’est le seul moyen d’être authentifié hors du moteur web, celui-ci ne pouvant pas présenter de clé API à l’instance.</p>
-        
-      </div>
-      <div class="montre telephones">
-        <figure class="telephone">
-          <div class="ecran"><img src="mobile-carte.jpg" alt="Sur place, la carte occupe l’écran ; les panneaux se tirent au doigt." loading="lazy"></div>
-          <figcaption>Sur place, la carte occupe l’écran ; les panneaux se tirent au doigt.</figcaption>
         </figure>
       </div>
     </article>
@@ -236,7 +253,7 @@ section { margin: 0 0 3rem; }
     <h2>Ce qu’il fait</h2>
     <ul class="points">
       <li><b>Vos tables deviennent des couches</b> — toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs.</li>
-      <li><b>L’objet cliqué est la ligne</b> — sa fiche s’ouvre avec les champs de la table ; ce qu’on y écrit est dans le document. La scène peut la proposer hors édition, pour relever sur place.</li>
+      <li><b>L’objet cliqué est la ligne</b> — sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain.</li>
       <li><b>Symbolisation par la donnée</b> — couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène.</li>
       <li><b>Relief et volumes</b> — photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie.</li>
       <li><b>Des filtres que le lecteur manipule</b> — chaque colonne prend la forme que son type appelle — dates, nombres, catégories, listes, recherche texte — et l’auteur publie ceux qu’il veut en pastilles sur la carte.</li>

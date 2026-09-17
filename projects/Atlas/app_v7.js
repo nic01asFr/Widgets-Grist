@@ -118,7 +118,7 @@ import {
   probeCanWriteDoc,
 } from './lib/view-mode.js?v=20260916a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
-import { objetsPourPalette } from './lib/palette-objets.js?v=20260916a';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
@@ -5515,7 +5515,12 @@ function renderObjectInspector() {
     const idx = STATE.selection.features[multi ? STATE.selection.multiIndex : 0];
     const f = layer.geojson.features[idx];
     const props = f?.properties || {};
-    const label = props.name || props._label || props._osmId || `Objet #${idx + 1}`;
+    // Le nom lisible se cherche comme dans la palette (`nomObjet` : name, nom,
+    // libelle, titre…). La fiche ne lisait que `name` : une table française —
+    // colonne `nom` — s'ouvrait sur « Objet #3 », et le numéro était l'ordre
+    // de l'entité dans la couche, pas celui de sa ligne.
+    const label = nomObjet(props) || props._label || props._osmId
+        || (props._row_id ? `Ligne ${props._row_id}` : `Objet #${idx + 1}`);
     const r = resolveFeatureProps(f, layer);
     // « Puis-je ecrire cet objet ? » se decide sur la capacite — une table et
     // un `_row_id` —, jamais sur le producteur de la couche.
@@ -5838,7 +5843,7 @@ function buildViewPopupHtml(layer, feature, idx) {
     const props = feature?.properties || {};
     const ml = layer._manifestLayer || {};
     const template = ml.popup_template || ml.popup?.template || layer.popupTemplate || layer.popup_template;
-    const title = formatPopupValue(props.name || props._label || props.label)
+    const title = formatPopupValue(nomObjet(props) || props._label || props.label)
         || layer.name || `Objet #${(idx ?? 0) + 1}`;
 
     // Le gabarit est du HTML posé tel quel — c'est voulu, et sans danger quand

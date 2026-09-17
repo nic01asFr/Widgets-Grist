@@ -16,7 +16,7 @@
     },
     {
       "titre": "L’objet cliqué est la ligne",
-      "texte": "sa fiche s’ouvre avec les champs de la table ; ce qu’on y écrit est dans le document. La scène peut la proposer hors édition, pour relever sur place."
+      "texte": "sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain."
     },
     {
       "titre": "Symbolisation par la donnée",
@@ -116,7 +116,7 @@
         "texte": "Soit le lien d’une page du document (`embed` ou `singlePage`), soit une scène publiée ouverte avec Atlas seul (`?scene=`). Dans les deux cas, rien n’est recopié vers une autre plateforme carto."
       }
     ],
-    "titreContextes": "Construire, diffuser, relever",
+    "titreContextes": "Construire, relever, diffuser",
     "contextes": [
       {
         "titre": "Construire, dans votre document",
@@ -135,6 +135,34 @@
         ]
       },
       {
+        "titre": "Composer les formulaires de la scène",
+        "texte": "Le module Formulaires liste, couche par couche, ce que la fiche d’un objet propose : « corriger l’objet », c’est-à-dire sa ligne, et « ajouter une ligne » dans chaque table qui y fait référence — une visite, une intervention. Un formulaire vient d’un projet QField importé par qgis2grist, avec ses étapes, ses listes et ses conditions, ou se compose ici à partir des colonnes. Pour chacun, on choisit les champs montrés, on le propose hors édition, on le retire ou on le remet.",
+        "pourquoi": "Le formulaire est une ligne du document, pas un réglage enfoui dans le widget : il se relit et se partage avec le reste. Le retirer d’une scène ne l’efface pas — une autre scène peut toujours le proposer.",
+        "format": "large",
+        "images": [
+          {
+            "image": "formulaires-module.jpg",
+            "legende": "Le module Formulaires : un relevé proposé hors édition, ses champs montrés un à un, les champs obligatoires signalés."
+          }
+        ]
+      },
+      {
+        "titre": "Relever sur le terrain",
+        "texte": "Sur place, on ouvre la scène en lecture — dans le navigateur du téléphone, ou avec l’application Android. On touche un bâtiment : sa fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. L’onglet voisin ajoute une visite dans la table liée, rattachée à l’objet touché.",
+        "pourquoi": "Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide — Atlas le vérifie à l’ouverture, et ne propose la saisie qu’à qui en a le droit.",
+        "format": "mobile",
+        "images": [
+          {
+            "image": "releve-fiche.jpg",
+            "legende": "Le bâtiment touché ouvre son relevé : deux étapes — identité, puis état constaté —, champs obligatoires signalés."
+          },
+          {
+            "image": "releve-visite.jpg",
+            "legende": "L’onglet voisin ajoute une visite : une ligne dans la table liée, rattachée au bâtiment."
+          }
+        ]
+      },
+      {
         "titre": "Diffuser, proprement",
         "texte": "Deux paramètres Grist, deux intentions. `?embed=true` : page minimale en lecture forcée. `?style=singlePage` : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.",
         "pourquoi": "Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via `?scene=`). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.",
@@ -143,17 +171,6 @@
           {
             "image": "lecture-recit.jpg",
             "legende": "En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit."
-          }
-        ]
-      },
-      {
-        "titre": "Relever sur le terrain",
-        "texte": "Une application Android ouvre les scènes de votre compte sans passer par un document dans le navigateur. Ce n’est pas une interface différente pour le plaisir : c’est le seul moyen d’être authentifié hors du moteur web, celui-ci ne pouvant pas présenter de clé API à l’instance.",
-        "format": "mobile",
-        "images": [
-          {
-            "image": "mobile-carte.jpg",
-            "legende": "Sur place, la carte occupe l’écran ; les panneaux se tirent au doigt."
           }
         ]
       }
