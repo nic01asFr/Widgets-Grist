@@ -137,9 +137,24 @@ export async function listerScenesAtlas(baseUrl, jeton, { onProgres, onTrouve, o
   const marques = await enParallele(tous, PARALLELISME, async (d) => {
     const ok = await estSceneAtlas(d.id, baseUrl, jeton, fetchFn, delai);
     faits++;
-    if (ok && onTrouve) onTrouve(d);
-    if (onProgres) onProgres(faits, tous.length);
+    // Ces deux appels rendent la main a l'appelant, donc a du code d'affichage.
+    // `enParallele` avale les exceptions — c'est voulu pour le reseau, un
+    // document illisible ne doit pas arreter les autres —, et une exception
+    // venue d'ICI faisait donc disparaitre du resultat une scene pourtant
+    // reconnue. Constate sur le telephone : aucune scene a l'ecran pendant le
+    // balayage, toutes presentes a la reouverture — la liste memorisee, elle,
+    // etait tenue par l'appelant. Les rappels sont donc isoles.
+    if (ok) rappeler(onTrouve, d);
+    rappeler(onProgres, faits, tous.length);
     return ok ? d : null;
   });
   return marques.filter(Boolean);
+}
+
+/** Un rappel d'affichage qui echoue ne doit rien couter a la recherche. */
+function rappeler(fn, ...args) {
+  if (typeof fn !== 'function') return;
+  try { fn(...args); } catch (e) {
+    try { console.warn('[Atlas decouverte] rappel en echec :', e?.message || e); } catch (_) { /* rien */ }
+  }
 }

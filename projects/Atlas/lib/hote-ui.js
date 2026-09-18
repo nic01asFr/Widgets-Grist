@@ -316,8 +316,15 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   //    ouverture serait une punition pour qui a beaucoup de documents.
   const memoire = lireScenesMemorisees(stockage);
   const vues = new Set();
+  /** Les cartes a l'ecran, par identifiant de scene — pour les remplacer sans selecteur. */
+  const posees = new Map();
   if (memoire) {
-    for (const s of memoire.scenes) { vues.add(s.id); liste.appendChild(carte(s, true)); }
+    for (const s of memoire.scenes) {
+      vues.add(s.id);
+      const c = carte(s, true);
+      posees.set(s.id, c);
+      liste.appendChild(c);
+    }
     progres.textContent = memoire.perime
       ? `Liste mémorisée ${depuis(new Date(memoire.quand).toISOString())} — vérification…`
       : `${memoire.scenes.length} scène${memoire.scenes.length > 1 ? 's' : ''} — vérification…`;
@@ -348,9 +355,14 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
       },
       onTrouve: (scene) => {
         trouvees.push(scene);
-        const deja = liste.querySelector(`[data-scene="${CSS.escape(scene.id)}"]`);
-        if (deja) { deja.replaceWith(carte(scene, false)); return; }
-        liste.appendChild(carte(scene, false));
+        // On retrouve la carte déjà posée par son identifiant, tenu ici, et non
+        // par un sélecteur CSS : `CSS.escape` n'existe pas partout, et l'appel
+        // qui échoue emportait la scène avec lui.
+        const deja = posees.get(scene.id);
+        const neuve = carte(scene, false);
+        posees.set(scene.id, neuve);
+        if (deja) { deja.replaceWith(neuve); return; }
+        liste.appendChild(neuve);
       },
       // L'avancement se compte en documents sondes : sur un compte fourni, la
       // recherche dure, et une page muette laisserait croire a une panne.

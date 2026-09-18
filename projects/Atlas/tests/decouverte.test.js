@@ -174,3 +174,26 @@ test('chaque etape de l inventaire s annonce, avant meme le sondage', async () =
   assert.deepEqual(etapes[4], { phase: 'documents', total: 2 });
 });
 
+test('un rappel d affichage qui echoue ne fait pas disparaitre la scene trouvee', async () => {
+  // Defaut constate sur le telephone : aucune scene a l'ecran pendant tout le
+  // balayage, toutes presentes a la reouverture. `enParallele` avale les
+  // exceptions — voulu pour le reseau — et une exception venue du code
+  // d'affichage retirait donc du RESULTAT une scene pourtant reconnue.
+  const { fetchFn } = serveur({
+    orgs: [{ id: 1, name: 'A' }],
+    espaces: { 1: [{ name: 'E', docs: [
+      { id: 'd1', name: 'Un', updatedAt: '2026-01-02' },
+      { id: 'd2', name: 'Deux', updatedAt: '2026-01-01' },
+    ] }] },
+    tables: { d1: ['Atlas_Story'], d2: ['SceneManifest'] },
+  });
+  const vues = [];
+  const scenes = await listerScenesAtlas('https://g', 'cle', {
+    fetchFn,
+    onTrouve: (s) => { vues.push(s.id); throw new TypeError('CSS.escape is not a function'); },
+    onProgres: () => { throw new Error('affichage casse'); },
+  });
+  assert.deepEqual(vues, ['d1', 'd2'], 'les deux scenes ont bien ete signalees');
+  assert.deepEqual(scenes.map((s) => s.id), ['d1', 'd2'], 'et le resultat les porte toujours');
+});
+

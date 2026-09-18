@@ -6733,6 +6733,11 @@ function ouvrirFeuilleModules() {
     };
     f.querySelector('.mp-fond').onclick = fermer;
     f.querySelectorAll('[data-module-plus]').forEach((b) => {
+        // En lecture, `openModule` refuse ces modules avec un message. Les
+        // laisser visibles offrirait quatre boutons qui disent tous non —
+        // autant ne pas les proposer. C'est la meme regle que le rail, qui les
+        // masque en mode lecture.
+        b.hidden = CONFIG.viewMode && VIEW_AUTHOR_MODULES.has(b.dataset.modulePlus);
         b.onclick = () => { fermer(); openModule(b.dataset.modulePlus); };
     });
     // Enregistrer, charger, exporter : dans l'en-tete sur un ecran large, nulle
