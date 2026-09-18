@@ -52,6 +52,13 @@ Se connecter a une instance (adresse + cle API, retenues sur l'appareil),
 lister les documents portant une scene Atlas, en ouvrir une. Ensuite, c'est
 Atlas — le meme, avec ses couches, sa symbolisation, son relief et son recit.
 
+**Le releve, fiche et formulaires compris.** Le paquet embarque le moteur de
+`grist_forms` (vendorise comme les autres dependances), et c'est ici — et ici
+seulement — qu'une **photo** peut etre versee en piece jointe : l'envoi se
+presente avec la cle d'API, un en-tete qu'aucun navigateur ne laisse partir vers
+cette instance. Mesure du 18/09/2026 : depuis un widget, le meme envoi revient
+en `net::ERR_FAILED` et rien n'est cree cote document.
+
 ## Ce qu'elle ne sait pas encore faire
 
 - **Hors ligne** : la coquille est embarquee, les donnees ne le sont pas. Sans

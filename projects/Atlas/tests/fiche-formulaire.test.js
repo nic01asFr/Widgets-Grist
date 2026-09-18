@@ -943,3 +943,18 @@ test('les retirés se lisent dans les réglages, les valeurs douteuses sont éca
   assert.deepEqual(reglagesFormulaire({ formulaire: { retires: 'a' } }).retires, []);
   assert.deepEqual(reglagesFormulaire({}).retires, []);
 });
+
+test('le pont sait verser une photo, et le garde d ecriture s applique aussi a elle', async () => {
+  // Verser un fichier dans le document EST une ecriture, meme si la ligne ne
+  // suit pas : un lecteur ne doit pas pouvoir deposer de piece jointe.
+  const api = fauxDocApi();
+  const envoyes = [];
+  api.televerserPieceJointe = async (f) => { envoyes.push(f.name); return [21]; };
+  const p = pontFormulaire({ couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => true });
+  assert.deepEqual(await p.uploadFile({ name: 'facade.jpg' }), [21]);
+  assert.deepEqual(envoyes, ['facade.jpg']);
+
+  const lecteur = pontFormulaire({ couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => false });
+  await assert.rejects(() => lecteur.uploadFile({ name: 'facade.jpg' }), /lecture/);
+  assert.deepEqual(envoyes, ['facade.jpg'], 'rien de plus n a ete envoye');
+});

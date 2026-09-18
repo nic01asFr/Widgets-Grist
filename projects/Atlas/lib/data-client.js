@@ -97,6 +97,83 @@ export function capacites(portee = globalThis) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Pieces jointes — un seul POST, deux facons de s'y presenter         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Verse un fichier dans les pieces jointes d'un document. Rend les ids obtenus.
+ *
+ * La requete n'emporte AUCUN en-tete ajoute : ni `Content-Type` (le corps est
+ * un `FormData`, le navigateur pose lui-meme la frontiere de lot), ni
+ * `X-Requested-With`. C'est ce qui la garde « simple » au sens du navigateur,
+ * donc sans controle prealable — le seul chemin praticable depuis l'origine
+ * d'un widget, ou l'instance ne repond pas au preflight qu'un en-tete
+ * declencherait.
+ *
+ * @param {string} url      adresse complete du point `/attachments`
+ * @param {File|Blob} fichier
+ * @param {{entetes?: object, fetch?: Function}} [o]
+ */
+export async function posterPieceJointe(url, fichier, o = {}) {
+  const f = o.fetch || ((...a) => globalThis.fetch(...a));
+  const corps = new FormData();
+  corps.append('upload', fichier, fichier.name || 'fichier');
+  let r;
+  try {
+    r = await f(url, { method: 'POST', body: corps, headers: o.entetes || undefined });
+  } catch (e) {
+    // Une requete bloquee par la regle d'origine ne rend pas de reponse : le
+    // navigateur leve un `TypeError` sans rien dire de plus. « Failed to
+    // fetch », affiche tel quel sous le bouton, envoie chercher une panne de
+    // reseau alors que le reseau va bien. On nomme la cause, et ce qui marche.
+    if (e instanceof TypeError) {
+      throw new Error(o.natif
+        ? 'Envoi impossible : le document est injoignable (réseau ou adresse).'
+        : "Envoi refusé par la règle d'origine du navigateur. Depuis l'application "
+          + 'de terrain, qui émet hors du navigateur, la photo passe.');
+    }
+    throw e;
+  }
+  if (!r.ok) {
+    const texte = await r.text().catch(() => '');
+    throw new Error(`HTTP ${r.status}${texte ? ' — ' + texte.slice(0, 160) : ''}`);
+  }
+  const rendu = await r.json();
+  return Array.isArray(rendu) ? rendu : [rendu];
+}
+
+/**
+ * Verse un fichier, quel que soit l'endroit d'ou Atlas tourne.
+ *
+ * Deux presentations, parce qu'il n'y a pas d'identite commune : dans un
+ * widget, un jeton signe delivre par le document hote ; dans l'application, la
+ * cle d'API en en-tete — ce qu'aucun navigateur ne laisse passer, et que le
+ * client HTTP natif de Capacitor emet sans s'en soucier.
+ *
+ * @param {object} docApi  `grist.docApi`, reel ou adapte
+ * @param {File|Blob} fichier
+ * @returns {Promise<number[]>} les ids de pieces jointes
+ */
+export async function televerserPieceJointe(docApi, fichier) {
+  if (!fichier) throw new Error('Aucun fichier à envoyer');
+  // L'adaptateur de l'application sait se presenter : on le laisse faire.
+  if (typeof docApi?.televerserPieceJointe === 'function') {
+    return docApi.televerserPieceJointe(fichier);
+  }
+  if (typeof docApi?.getAccessToken !== 'function') {
+    throw new Error("Envoi de fichier indisponible : pas d'accès au document");
+  }
+  const jeton = await docApi.getAccessToken({ readOnly: false });
+  if (!jeton?.baseUrl || !jeton?.token) {
+    throw new Error('Envoi de fichier refusé : jeton de document indisponible');
+  }
+  return posterPieceJointe(
+    `${jeton.baseUrl}/attachments?auth=${encodeURIComponent(jeton.token)}`,
+    fichier,
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Mode widget — l'API plugin fait tout                                */
 /* ------------------------------------------------------------------ */
 
@@ -107,6 +184,7 @@ class ClientGrist {
   listTables() { return this._g.docApi.listTables(); }
   fetchTable(table) { return this._g.docApi.fetchTable(table); }
   applyUserActions(actions) { return this._g.docApi.applyUserActions(actions); }
+  televerserPieceJointe(fichier) { return televerserPieceJointe(this._g.docApi, fichier); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -167,6 +245,32 @@ class ClientRest {
   async applyUserActions(actions) {
     return this._json(this._url('/apply'), {
       method: 'POST', headers: this._entetes(), body: JSON.stringify(actions),
+    });
+  }
+
+  /**
+   * Verse un fichier dans les pieces jointes du document.
+   *
+   * Seule la cle porte l'identite ici — il n'y a pas de jeton signe hors
+   * widget. L'en-tete `Authorization` ne franchit pas un moteur web ; cette
+   * requete n'aboutit donc que dans l'application, ou elle part du client HTTP
+   * natif. Sans cle, l'instance refuse : on le dit avant d'essayer, plutot que
+   * de laisser l'echec ressembler a une panne de reseau.
+   *
+   * `Content-Type` est volontairement absent : le corps est un `FormData`.
+   */
+  async televerserPieceJointe(fichier) {
+    if (!fichier) throw new Error('Aucun fichier à envoyer');
+    if (!this.jeton) {
+      throw new Error("Envoi de fichier impossible sans clé d'accès au document");
+    }
+    return posterPieceJointe(this._url('/attachments'), fichier, {
+      entetes: { Authorization: 'Bearer ' + this.jeton },
+      fetch: this._fetch,
+      // Hors navigateur, un echec n'est pas une regle d'origine : c'est le
+      // reseau ou l'adresse. Le message doit le dire, sinon on cherche une
+      // cause qui n'existe pas ici.
+      natif: true,
     });
   }
 }

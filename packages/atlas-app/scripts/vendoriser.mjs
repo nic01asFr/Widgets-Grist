@@ -36,6 +36,27 @@ const VENDOR = [
 const ADDONS = ['loaders/GLTFLoader.js', 'utils/BufferGeometryUtils.js'];
 
 /**
+ * Le moteur de formulaire, embarque comme dans la version publiee.
+ *
+ * La page le charge depuis `../grist_forms/`, un chemin qui n'existe que sur le
+ * serveur de developpement : absent du paquet, il tombe en 404 et la fiche
+ * d'un objet retombe sur les champs devines, sans que rien ne le dise. C'est
+ * pourtant dans l'application que la saisie de terrain a le plus de sens —
+ * c'est la seule ou une photo peut etre versee, le client HTTP y etant natif.
+ *
+ * Meme liste NOMMEE que `scripts/promote-atlas.js`, et pour la meme raison : ce
+ * qui entre dans un paquet livre se lit, il ne se deduit pas d'un `readdir`.
+ */
+const FORMULAIRES = [
+  'shared/types.js',
+  'shared/attachments.js',
+  'shared/session-context.js',
+  'shared/formulaires-table.js',
+  'shared/formdef-from-table.js',
+  'runtime/engine.js',
+];
+
+/**
  * Quelle version est dans le paquet.
  *
  * Sans cela, rien a l'ecran ne distingue deux APK : on croit avoir mis a jour,
@@ -71,7 +92,18 @@ async function main() {
   const modeles = join(racine, 'published', 'atlas', 'models');
   if (existsSync(modeles)) await cp(modeles, join(out, 'models'), { recursive: true });
 
-  // 2. Les dependances
+  // 2. Le moteur de formulaire — sans lui, pas de fiche, donc pas de releve
+  for (const rel of FORMULAIRES) {
+    const depuis = join(racine, 'projects', 'grist_forms', rel);
+    if (!existsSync(depuis)) {
+      throw new Error(`${rel} introuvable dans projects/grist_forms`);
+    }
+    const vers = join(out, 'vendor', 'grist_forms', rel);
+    await mkdir(dirname(vers), { recursive: true });
+    await cp(depuis, vers);
+  }
+
+  // 3. Les dependances
   let total = 0;
   for (const [url, rel] of VENDOR) {
     total += await telecharger(url, join(out, rel));
@@ -84,9 +116,10 @@ async function main() {
     console.log('  vendor/three-addons/' + a);
   }
 
-  // 3. Le HTML, reecrit pour viser le local
+  // 4. Le HTML, reecrit pour viser le local
   let html = await readFile(join(src, 'index_v7.html'), 'utf8');
   html = html
+    .replace(/\.\.\/grist_forms\//g, './vendor/grist_forms/')
     .replace(/https:\/\/unpkg\.com\/maplibre-gl@[\d.]+\/dist\/maplibre-gl\.js/g, './vendor/maplibre-gl.js')
     .replace(/https:\/\/unpkg\.com\/maplibre-gl@[\d.]+\/dist\/maplibre-gl\.css/g, './vendor/maplibre-gl.css')
     .replace(/https:\/\/unpkg\.com\/suncalc@[\d.]+\/suncalc\.js/g, './vendor/suncalc.js')

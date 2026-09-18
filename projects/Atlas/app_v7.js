@@ -24,7 +24,7 @@ import {
   formulaireRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
-} from './lib/fiche-formulaire.js?v=20260916a';
+} from './lib/fiche-formulaire.js?v=20260918a';
 import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';

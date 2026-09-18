@@ -30,6 +30,7 @@
 
 import { tablesReferencant } from './schema-grist.js';
 import { detectGeometryColumn } from './geo-tables.js';
+import { televerserPieceJointe } from './data-client.js?v=20260918a';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
@@ -839,6 +840,25 @@ export function pontFormulaire({
     values: valeurs || {},
     loadTable: (t) => docApi.fetchTable(t),
     getAccessToken: (opts) => docApi.getAccessToken(opts),
+    /**
+     * Une photo choisie dans la fiche part par ici, avant l'écriture de la
+     * ligne — le moteur n'écrit ensuite que les identifiants obtenus.
+     *
+     * C'est Atlas qui envoie, pas le moteur : lui ne connaît qu'un jeton de
+     * document et une requête de navigateur, quand une photo prise sur le
+     * terrain part le plus souvent de l'application, où l'on se présente avec
+     * une clé et où aucune politique d'origine ne s'applique. Le garde
+     * d'écriture est consulté d'abord : verser un fichier dans le document est
+     * une écriture, même si la ligne ne suit pas.
+     */
+    // `async` n'est pas cosmétique : le moteur enveloppe cet appel dans sa
+    // chaîne de promesses. Un refus lancé de façon synchrone en sortirait, et
+    // le message n'arriverait jamais sous le bouton — la fiche resterait
+    // figée sur « Envoi… ».
+    uploadFile: async (fichier) => {
+      garde();
+      return televerserPieceJointe(docApi, fichier);
+    },
   };
 
   if (lie) {

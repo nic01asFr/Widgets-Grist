@@ -132,6 +132,39 @@ depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
   Auparavant un formulaire composé ne pouvait que s'ajouter — « Saisie »,
   « Saisie 2 », « Saisie 3 » s'empilaient dans la fiche.
 
+### Les photos d'une fiche : c'est Atlas qui verse, pas le moteur (18/09/2026)
+
+Une colonne `Attachments` donne un champ fichier dans la fiche. Le moteur ne
+l'envoie plus lui-même : le pont lui passe `uploadFile`, et
+`televerserPieceJointe` (`lib/data-client.js`) choisit la façon de se présenter
+selon l'endroit où Atlas tourne.
+
+| Où | Comment il se présente | Résultat |
+|---|---|---|
+| Widget dans un document | jeton signé, `POST …/attachments?auth=` sans aucun en-tête ajouté | **bloqué** par la règle d'origine — mesuré le 18/09/2026 |
+| Application de terrain | clé d'API en en-tête `Authorization` | passe : `CapacitorHttp` émet hors du moteur web |
+
+La requête ne porte **aucun en-tête**, pas même `Content-Type` : le corps est un
+`FormData`, et le navigateur pose lui-même la frontière de lot. C'est ce qui la
+garde « simple », donc sans contrôle préalable — et l'instance ne répond pas au
+préflight qu'un en-tête déclencherait.
+
+> **Ce que l'essai a montré, et qu'il fallait nommer.** La requête part, revient
+> en `net::ERR_FAILED`, et **rien n'est créé côté document**. Le moteur affichait
+> alors « Failed to fetch » sous le bouton — un message qui envoie chercher une
+> panne de réseau alors que le réseau va bien. Il dit maintenant la règle
+> d'origine, et que l'application, elle, y parvient.
+
+Le garde d'écriture est consulté avant l'envoi : verser un fichier dans le
+document **est** une écriture, même si la ligne ne suit pas. Et `uploadFile` est
+`async` — un refus lancé de façon synchrone sortirait de la chaîne de promesses
+du moteur, et la fiche resterait figée sur « Envoi… ».
+
+L'application embarque désormais le moteur de formulaire (`scripts/vendoriser.mjs`
+copie les six scripts de `grist_forms`, comme `promote-atlas.js`). Sans cela, la
+fiche retombait sur les champs devinés dans le paquet — et c'est justement là que
+la saisie de terrain a le plus de sens.
+
   Reste : la couche `-hit`, le mode consultation du moteur, et l'ACL dérivée
   du FormDef. Le vendoring de `grist_forms` est réglé : `scripts/promote-atlas.js`
   copie les six scripts (liste `VENDOR`) dans `published/atlas/vendor/` et

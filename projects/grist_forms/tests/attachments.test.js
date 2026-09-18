@@ -75,4 +75,53 @@ describe('FormAttachments', () => {
     });
     assert.deepEqual(values.Piece, [77]);
   });
+  it("l'hote peut envoyer lui-meme (uploadFile), sans jeton de document", async () => {
+    const envoyes = [];
+    const files = [new File(['a'], 'photo.jpg', { type: 'image/jpeg' })];
+    const ids = await Att.uploadFiles(files, {
+      uploadFile: async (fichier) => { envoyes.push(fichier.name); return [51]; },
+    });
+    assert.deepEqual(ids, [51]);
+    assert.deepEqual(envoyes, ['photo.jpg']);
+  });
+
+  it('uploadFile prime sur le jeton, et une reponse vide leve', async () => {
+    const files = [new File(['a'], 'p.jpg', { type: 'image/jpeg' })];
+    await assert.rejects(
+      Att.uploadFiles(files, {
+        uploadFile: async () => [],
+        getAccessToken: () => { throw new Error('ne doit pas etre appele'); },
+      }),
+      /Reponse upload inattendue|Réponse upload inattendue/,
+    );
+  });
+
+  it("resolveAttachmentFields passe par uploadFile quand l'hote en fournit un", async () => {
+    const values = { photo: [new File(['x'], 'x.jpg', { type: 'image/jpeg' })] };
+    await Att.resolveAttachmentFields({
+      sections: [{ fields: [{ colId: 'photo', label: 'Photo', type: 'Attachments', widget: 'file' }] }],
+    }, values, { uploadFile: async () => 64 });
+    assert.deepEqual(values.photo, [64]);
+  });
+
+  it('sans fichier choisi, une valeur illisible est laissee telle quelle', async () => {
+    // Cas reel : colonne restee en texte, portant le chemin d'une photo QField.
+    const values = { photo: 'DCIM/batiment_12.jpg' };
+    await Att.resolveAttachmentFields({
+      sections: [{ fields: [{ colId: 'photo', label: 'Photo', type: 'Attachments', widget: 'file' }] }],
+    }, values, {});
+    assert.equal(values.photo, 'DCIM/batiment_12.jpg');
+  });
+
+  it('sans fichier choisi, des ids existants sont conserves et un champ vide reste vide', async () => {
+    const values = { avec: ['L', 7, 8], sans: null };
+    await Att.resolveAttachmentFields({
+      sections: [{ fields: [
+        { colId: 'avec', label: 'Avec', type: 'Attachments', widget: 'file' },
+        { colId: 'sans', label: 'Sans', type: 'Attachments', widget: 'file' },
+      ] }],
+    }, values, {});
+    assert.deepEqual(values.avec, [7, 8]);
+    assert.equal(values.sans, null);
+  });
 });

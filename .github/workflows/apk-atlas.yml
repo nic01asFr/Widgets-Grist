@@ -1,0 +1,106 @@
+# Atlas — construction de l'application de terrain (Android)
+#
+# Fabrique l'APK sur un exécuteur GitHub, qui porte déjà le JDK et le SDK
+# Android. C'est la raison d'être de ce fichier : sans lui, il faut installer
+# les deux sur son poste pour livrer une version, et la dernière release date
+# du jour où quelqu'un l'a fait.
+#
+# L'APK produit est un APK de DÉBOGAGE, signé avec la clé de débogage d'Android.
+# Il s'installe sur un appareil (il faut y autoriser les sources inconnues), et
+# ne passe pas par le Play Store. Note sur la signature en fin de fichier.
+#
+# CE QUE CE WORKFLOW N'ÉPROUVE PAS : que l'application fonctionne. Il garantit
+# qu'elle se construit. Le relevé sur le terrain — ouvrir une scène, remplir une
+# fiche, verser une photo — s'éprouve sur un téléphone, à la main. L'envoi de
+# photo en particulier : il ne peut partir que d'ici, le navigateur le refusant,
+# et rien d'automatique ne le vérifie.
+
+name: APK Atlas
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - "atlas-v*"
+
+jobs:
+  construire-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/atlas-app
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer Java (requis par Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Installer Capacitor
+        run: npm install
+
+      # Rassemble Atlas et ses dépendances dans `www/` : le code du widget, le
+      # moteur de formulaire, MapLibre, three.js, le catalogue 3D. L'étape
+      # télécharge depuis les CDN — c'est voulu, l'application doit démarrer
+      # sans réseau, donc tout est embarqué une fois pour toutes ici.
+      - name: Rassembler l'application
+        run: npm run vendoriser
+
+      # Vérifie que le paquet est complet AVANT de lancer Gradle : une page qui
+      # vise un fichier absent ne se voit qu'au premier écran blanc, sur le
+      # téléphone de quelqu'un d'autre.
+      - name: Vérifier le paquet
+        run: |
+          test -f www/index.html
+          test -f www/app_v7.js
+          test -f www/vendor/maplibre-gl.js
+          test -f www/vendor/grist_forms/runtime/engine.js
+          test -f www/vendor/grist_forms/shared/attachments.js
+          ! grep -q "\.\./grist_forms/" www/index.html
+
+      - name: Ajouter la plateforme Android
+        run: npx cap add android
+
+      - name: Synchroniser dans le projet Android
+        run: npx cap sync android
+
+      # Les icônes sont redessinées ici, et non embarquées : `cap add` vient de
+      # recréer le projet Android avec l'icône générique de Capacitor.
+      - name: Dessiner les icônes
+        run: npm run icones
+
+      - name: Compiler l'APK de débogage
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-apk
+          path: packages/atlas-app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+# ---------------------------------------------------------------------------
+# Ce workflow NE PUBLIE PAS de release. L'APK sort en artefact du run, à
+# télécharger depuis l'onglet Actions. Déposer une release est un geste qu'on
+# pose soi-même — c'est elle que vise le bouton « Télécharger l'application »
+# de la vitrine, donc la déposer, c'est livrer.
+#
+# APK de PRODUCTION signé, si un jour la distribution s'élargit :
+#   1. Générer une clé une fois :
+#        keytool -genkey -v -keystore atlas.keystore -alias atlas \
+#          -keyalg RSA -keysize 2048 -validity 10000
+#   2. Déposer la clé (base64) et ses mots de passe en secrets du dépôt.
+#   3. Remplacer assembleDebug par assembleRelease, signer avec apksigner.
+# ---------------------------------------------------------------------------

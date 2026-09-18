@@ -78,3 +78,18 @@ test('un adaptateur deja pose peut etre remplace', () => {
 test('sans client, on leve tout de suite', () => {
   assert.throws(() => adapterEnGrist(null), /client requis/);
 });
+
+test('l adaptateur sait verser une piece jointe — c est le seul chemin dans l application', async () => {
+  // Le jeton signe n'existe pas hors widget : sans ce relais, une photo prise
+  // depuis un formulaire n'aurait aucune facon de partir.
+  const c = clientFactice();
+  c.televerserPieceJointe = async (f) => { c.appels.push('pj:' + f.name); return [4]; };
+  const g = adapterEnGrist(c);
+  assert.deepEqual(await g.docApi.televerserPieceJointe({ name: 'p.jpg' }), [4]);
+  assert.deepEqual(c.appels, ['pj:p.jpg']);
+});
+
+test('un client sans pieces jointes le dit, au lieu d echouer plus loin', () => {
+  const g = adapterEnGrist(clientFactice());
+  assert.throws(() => g.docApi.televerserPieceJointe({ name: 'p.jpg' }), /pièces jointes/);
+});

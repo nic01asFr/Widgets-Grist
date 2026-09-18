@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   estVitrine, detecterMode, peutSAuthentifier, capacites, recordsVersColonnes, creerClient, estEncadre,
+  posterPieceJointe, televerserPieceJointe,
 } from '../lib/data-client.js';
 
 /** Une fenetre de widget : encadree, avec l'API plugin. */
@@ -178,3 +179,94 @@ test('les capacites disent aussi si l’on est dans une vitrine', () => {
   assert.equal(capacites(enVitrine).vitrine, true);
   assert.equal(capacites(widget()).vitrine, false);
 });
+
+/* ---------------------------------------------------------------- */
+/* Pieces jointes — verser une photo prise sur le terrain            */
+/* ---------------------------------------------------------------- */
+
+/** Un vrai `File` : `FormData` n'accepte rien d'autre, ici comme au navigateur. */
+const fichierFactice = (nom = 'photo.jpg') => new File(['img'], nom, { type: 'image/jpeg' });
+
+test('la requete d envoi reste « simple » : aucun en-tete ajoute', async () => {
+  // Un seul en-tete — meme `Content-Type` — declencherait un controle prealable,
+  // auquel l'instance ne repond pas. C'est toute la difference entre un envoi
+  // qui passe depuis un widget et un echec reseau sans explication.
+  let vu = null;
+  const ids = await posterPieceJointe('https://g/doc/attachments?auth=t', fichierFactice(), {
+    fetch: async (url, o) => { vu = { url, o }; return { ok: true, json: async () => [7] }; },
+  });
+  assert.deepEqual(ids, [7]);
+  assert.equal(vu.o.method, 'POST');
+  assert.equal(vu.o.headers, undefined);
+  assert.ok(vu.o.body, 'le fichier part dans le corps');
+});
+
+test('un refus d envoi se nomme, avec le code et le motif', async () => {
+  await assert.rejects(
+    posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
+      fetch: async () => ({ ok: false, status: 403, text: async () => 'Blocked by access rules' }),
+    }),
+    /403 — Blocked by access rules/,
+  );
+});
+
+test('dans un widget, l envoi passe par le jeton du document', async () => {
+  let url = null;
+  const docApi = {
+    getAccessToken: async (o) => {
+      assert.equal(o.readOnly, false, 'un jeton en lecture seule ne peut rien verser');
+      return { baseUrl: 'https://g/o/docs/api/docs/abc', token: 'je+ton' };
+    },
+  };
+  globalThis.fetch = async (u) => { url = u; return { ok: true, json: async () => [12] }; };
+  const ids = await televerserPieceJointe(docApi, fichierFactice());
+  assert.deepEqual(ids, [12]);
+  assert.equal(url, 'https://g/o/docs/api/docs/abc/attachments?auth=je%2Bton');
+});
+
+test('sans jeton, on le dit — au lieu d envoyer dans le vide', async () => {
+  await assert.rejects(
+    televerserPieceJointe({ getAccessToken: async () => null }, fichierFactice()),
+    /jeton de document indisponible/,
+  );
+  await assert.rejects(televerserPieceJointe({}, fichierFactice()), /pas d.accès au document/);
+});
+
+test('dans l application, c est la cle qui se presente', async () => {
+  // L'en-tete `Authorization` ne franchit pas un moteur web : cette requete
+  // n'aboutit que depuis le client HTTP natif de l'application.
+  let vu = null;
+  const client = await creerClient({
+    mode: 'rest', baseUrl: 'https://g/', docId: 'doc1', jeton: 'cle',
+    fetch: async (u, o) => { vu = { u, o }; return { ok: true, json: async () => [9] }; },
+  });
+  const ids = await client.televerserPieceJointe(fichierFactice());
+  assert.deepEqual(ids, [9]);
+  assert.equal(vu.u, 'https://g/api/docs/doc1/attachments');
+  assert.equal(vu.o.headers.Authorization, 'Bearer cle');
+  assert.equal(vu.o.headers['Content-Type'], undefined, 'le corps est multipart, pas du JSON');
+});
+
+test('sans cle, l envoi est refuse avant de partir', async () => {
+  const client = await creerClient({ mode: 'rest', baseUrl: 'https://g', docId: 'd' });
+  await assert.rejects(client.televerserPieceJointe(fichierFactice()), /sans clé d.accès/);
+});
+
+test('une requete bloquee par la regle d origine se nomme, au lieu de « Failed to fetch »', async () => {
+  // C'est ce que le moteur affiche sous le bouton. « Failed to fetch » envoie
+  // chercher une panne de reseau alors que le reseau va bien.
+  await assert.rejects(
+    posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
+      fetch: async () => { throw new TypeError('Failed to fetch'); },
+    }),
+    /règle d.origine.*application de terrain/s,
+  );
+  // Hors navigateur, la meme panne n'a pas cette cause : le message change.
+  await assert.rejects(
+    posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
+      natif: true, fetch: async () => { throw new TypeError('fetch failed'); },
+    }),
+    /injoignable/,
+  );
+});
+

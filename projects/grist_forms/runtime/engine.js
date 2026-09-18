@@ -855,6 +855,9 @@
           errorFields = []; submitting = true; submitError = ''; render();
           var resolveAtt = Attachments.resolveAttachmentFields
             ? Attachments.resolveAttachmentFields(formDef, values, {
+                // Un hôte qui sait envoyer lui-même le fait : c'est le seul
+                // chemin possible hors du navigateur (application empaquetée).
+                uploadFile: bridge.uploadFile,
                 getAccessToken: bridge.getAccessToken ||
                   (typeof window !== 'undefined' && window.grist && window.grist.docApi
                     ? function (opts) { return window.grist.docApi.getAccessToken(opts); }

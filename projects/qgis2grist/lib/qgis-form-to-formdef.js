@@ -70,9 +70,24 @@
     return false;
   }
 
+  /**
+   * La colonne est-elle vraiment de type `Attachments` dans Grist ?
+   *
+   * Un champ « ressource externe » de QField ne l'implique pas : l'import
+   * laisse ces colonnes en texte, ou elles portent le chemin de la photo sur
+   * l'appareil (`DCIM/batiment_12.jpg`). Promettre un champ fichier sur une
+   * colonne texte ferait ecrire `"[1]"` — une liste d'identifiants rendue en
+   * chaine, qui ne designe rien — apres avoir efface le chemin. Le formulaire
+   * montre donc ce que la colonne porte reellement, tant que l'import ne sait
+   * pas creer la colonne en pieces jointes.
+   */
+  function estPieceJointe(field) {
+    return (field.gType || 'Text') === 'Attachments';
+  }
+
   function widgetForField(field) {
     const g = field.gType || 'Text';
-    if (field._externalResource || g === 'Attachments') return 'file';
+    if (estPieceJointe(field)) return 'file';
     if (g === 'Bool') return 'checkbox';
     if (g === 'Choice') return 'select';
     if (g.startsWith('RefList')) return 'multiselect';
@@ -84,7 +99,7 @@
   }
 
   function gTypeForForm(field) {
-    if (field._externalResource) return 'Attachments';
+    if (estPieceJointe(field)) return 'Attachments';
     const g = field.gType || 'Text';
     if (g.startsWith('RefList:')) return 'RefList';
     if (g.startsWith('Ref:')) return 'Ref';
@@ -104,7 +119,7 @@
       const vis = inferVisibleCol(field._refTargetTable, importedLayerData, tableNameRemap);
       if (vis) opts.visibleCol = vis;
     }
-    if (field._externalResource) {
+    if (field._externalResource && estPieceJointe(field)) {
       opts.maxFiles = opts.maxFiles || 5;
       opts.accept = opts.accept || 'image/*';
     }

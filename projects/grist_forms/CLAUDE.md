@@ -73,8 +73,26 @@ Widget catalogue : `grist_forms/builder.html` (accès **full**).
 ### Piste future (étude séparée)
 Binding BlockNote formulaires (offre de service) : **cadré** — voir `docs/superpowers/specs/2026-07-29-form-binding-blocknote-cerema-design.md` et `.wikichat/knowledge/grist-forms-blocknote-binding-axis.md`. Ce projet = référence technique (`FormDef`, `ensureSchema`, publish, survey-project.js) ; blocs BlockNote dans cerema-offre-de-service / qgis-sspcloud.
 
-### Note différée — Attachments / CORS
-`getAccessToken` OK ; `POST …/attachments` depuis vue custom hors origine → CORS. Alternative : formulaire natif Grist sur colonne `Attachments`.
+### Attachments / CORS — mesuré, et contourné par l'hôte (18/09/2026)
+
+`getAccessToken` répond ; `POST …/attachments?auth=<jeton>` depuis une vue custom
+hors origine **est bloqué**. Remesuré dans le document de non-régression avec un
+jeton `readOnly: false` valide : la requête part sans en-tête ajouté — donc sans
+contrôle préalable — et revient en `net::ERR_FAILED`, sans réponse lisible. Côté
+document, **rien n'a été créé** (`_grist_Attachments` reste vide). Ce n'est donc
+pas une réponse masquée : l'envoi n'aboutit pas.
+
+**Le moteur n'envoie plus forcément lui-même.** `deps.uploadFile(fichier)` —
+transmis par `bridge.uploadFile` — laisse l'hôte verser le fichier et rendre les
+ids. C'est le seul chemin praticable hors navigateur : l'application de terrain
+émet par le client HTTP natif de Capacitor, où aucune règle d'origine ne
+s'applique. Sans ce point d'entrée, il aurait fallu dupliquer le moteur.
+
+**Un champ fichier laissé vide ne vide plus la colonne.** `resolveAttachmentFields`
+écrasait par `null` toute valeur qu'il ne savait pas lire — dont le chemin d'une
+photo posé par QField sur une colonne texte. Enregistrer la fiche sans toucher à
+la photo effaçait donc la donnée. Une valeur illisible est maintenant laissée
+telle quelle.
 
 ## Audience — rappel UX
 

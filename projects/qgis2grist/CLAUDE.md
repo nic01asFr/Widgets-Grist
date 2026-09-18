@@ -79,7 +79,7 @@ _valueMap?, _refTargetTable?, _refTargetField?, _externalResource?}`.
 | `<editWidget type="CheckBox">` | `Bool` |
 | `<editWidget type="DateTime">` | `Date` ou `DateTime` selon `field_format` |
 | `<editWidget type="ValueRelation">` | `Ref:` ou `RefList:` (passe 3) |
-| `<editWidget type="ExternalResource">` | marqueur `_externalResource` (Attachments à venir) |
+| `<editWidget type="ExternalResource">` | marqueur `_externalResource` ; la colonne reste `Text` (chemin de la photo), le formulaire ne promet un champ fichier que sur une vraie colonne `Attachments` |
 | `<relations><relation>` | `Ref:<TargetTable>` sur le champ référençant |
 | GPKG `gpkg_data_columns.title/description` | `label`/`description` |
 | GPKG `gpkg_data_column_constraints type='enum'` | `Choice` |
@@ -156,9 +156,15 @@ Fait :
 - Carte Leaflet live-synchro (polling Grist 5 s) + bandeau restauration.
 
 À faire / limites connues :
-- **ExternalResource → Attachments** : marqueur posé (`_externalResource`) mais
-  upload des fichiers depuis paquet QField pas encore implémenté. Nécessite
-  `grist.docApi.uploadAttachment(blob)` + reconstruction du chemin relatif.
+- **ExternalResource → Attachments** : marqueur posé (`_externalResource`), mais
+  la colonne reste **du texte** — elle porte le chemin de la photo sur
+  l'appareil. Le FormDef déclare donc le type réel de la colonne (18/09/2026) :
+  un champ fichier n'est promis que sur une vraie colonne `Attachments`. Sans
+  cette garde, enregistrer la fiche écrivait `"[1]"` dans la colonne, après
+  avoir effacé le chemin.
+  **Reste à arbitrer** : que faire des photos d'un paquet QField — créer la
+  colonne en `Attachments` et verser les fichiers du paquet (le chemin est alors
+  perdu), ou garder deux colonnes, le chemin et les pièces jointes.
 - **QGIS 2.x** : `<edittypes>` legacy détectés mais leur format `widgetv2config`
   (avec `<value key= value=>`) n'est pas parsé — ValueMap dégradé en Text.
 - **Polling 5 s sans backoff** : sur grosse table c'est coûteux. Pas de pause
