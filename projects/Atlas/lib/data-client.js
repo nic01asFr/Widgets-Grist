@@ -103,12 +103,18 @@ export function capacites(portee = globalThis) {
 /**
  * Verse un fichier dans les pieces jointes d'un document. Rend les ids obtenus.
  *
- * La requete n'emporte AUCUN en-tete ajoute : ni `Content-Type` (le corps est
- * un `FormData`, le navigateur pose lui-meme la frontiere de lot), ni
- * `X-Requested-With`. C'est ce qui la garde « simple » au sens du navigateur,
- * donc sans controle prealable — le seul chemin praticable depuis l'origine
- * d'un widget, ou l'instance ne repond pas au preflight qu'un en-tete
- * declencherait.
+ * Elle n'ajoute d'elle-meme aucun en-tete — surtout pas `Content-Type` : le
+ * corps est un `FormData`, et le navigateur pose lui-meme la frontiere de lot.
+ * Ce qui identifie la requete vient de l'appelant (`o.entetes`), parce que ce
+ * n'est pas la meme chose dans un widget et dans l'application.
+ *
+ * > **Une erreur de diagnostic a ne pas refaire.** On a cru, et ecrit, que
+ * > l'instance refusait l'envoi depuis l'origine d'un widget. C'etait faux : il
+ * > manquait `X-Requested-With`, qu'exige la protection CSRF de Grist. Sans lui,
+ * > l'instance rend un 401 depourvu d'en-tetes CORS, que le navigateur masque en
+ * > `net::ERR_FAILED` — exactement la signature d'un refus d'origine. Avec lui,
+ * > la photo passe depuis le widget (verifie le 18/09/2026). La solution etait
+ * > deja ecrite dans SURFAC²E (`atlas_bati`, `materialiserPJObjet`).
  *
  * @param {string} url      adresse complete du point `/attachments`
  * @param {File|Blob} fichier
@@ -122,15 +128,16 @@ export async function posterPieceJointe(url, fichier, o = {}) {
   try {
     r = await f(url, { method: 'POST', body: corps, headers: o.entetes || undefined });
   } catch (e) {
-    // Une requete bloquee par la regle d'origine ne rend pas de reponse : le
-    // navigateur leve un `TypeError` sans rien dire de plus. « Failed to
-    // fetch », affiche tel quel sous le bouton, envoie chercher une panne de
-    // reseau alors que le reseau va bien. On nomme la cause, et ce qui marche.
+    // Une requete qui n'aboutit pas ne rend pas de reponse : le navigateur leve
+    // un `TypeError` sans rien dire de plus, et « Failed to fetch » affiche tel
+    // quel sous le bouton ne renseigne personne. On dit ce qu'on sait — la
+    // requete n'est pas revenue — sans pretendre en connaitre la cause : c'est
+    // en pretendant la connaitre qu'on s'etait trompe la premiere fois.
     if (e instanceof TypeError) {
       throw new Error(o.natif
         ? 'Envoi impossible : le document est injoignable (réseau ou adresse).'
-        : "Envoi refusé par la règle d'origine du navigateur. Depuis l'application "
-          + 'de terrain, qui émet hors du navigateur, la photo passe.');
+        : "L'envoi de la photo n'a pas abouti : pas de réponse de l'instance "
+          + '(réseau, ou requête refusée par le navigateur).');
     }
     throw e;
   }
@@ -170,6 +177,12 @@ export async function televerserPieceJointe(docApi, fichier) {
   return posterPieceJointe(
     `${jeton.baseUrl}/attachments?auth=${encodeURIComponent(jeton.token)}`,
     fichier,
+    // La protection CSRF de Grist exige cet en-tete (ou un corps JSON) sur
+    // toute requete qui ne porte pas de session : sans lui, l'instance rend un
+    // 401 — que le navigateur, faute d'en-tetes CORS sur l'erreur, masque en
+    // `net::ERR_FAILED`. Il declenche un controle prealable, auquel l'instance
+    // repond : `Access-Control-Allow-Headers: Content-Type, X-Requested-With`.
+    { entetes: { 'X-Requested-With': 'XMLHttpRequest' } },
   );
 }
 

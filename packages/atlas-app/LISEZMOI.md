@@ -53,11 +53,9 @@ lister les documents portant une scene Atlas, en ouvrir une. Ensuite, c'est
 Atlas — le meme, avec ses couches, sa symbolisation, son relief et son recit.
 
 **Le releve, fiche et formulaires compris.** Le paquet embarque le moteur de
-`grist_forms` (vendorise comme les autres dependances), et c'est ici — et ici
-seulement — qu'une **photo** peut etre versee en piece jointe : l'envoi se
-presente avec la cle d'API, un en-tete qu'aucun navigateur ne laisse partir vers
-cette instance. Mesure du 18/09/2026 : depuis un widget, le meme envoi revient
-en `net::ERR_FAILED` et rien n'est cree cote document.
+`grist_forms` (vendorise comme les autres dependances). Une **photo** choisie
+dans une fiche est versee en piece jointe : l'application se presente avec la
+cle d'API, le widget avec le jeton du document. Les deux chemins sont verifies.
 
 ## Ce qu'elle ne sait pas encore faire
 

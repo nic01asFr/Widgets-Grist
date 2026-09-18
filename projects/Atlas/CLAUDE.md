@@ -153,28 +153,32 @@ Corollaire : tout ce qui lit des métadonnées marche dans les deux mondes —
 Une colonne `Attachments` donne un champ fichier dans la fiche. Le moteur ne
 l'envoie plus lui-même : le pont lui passe `uploadFile`, et
 `televerserPieceJointe` (`lib/data-client.js`) choisit la façon de se présenter
-selon l'endroit où Atlas tourne.
+selon l'endroit où Atlas tourne. **Les deux passent**, vérifié dans le document
+de non-régression :
 
-| Où | Comment il se présente | Résultat |
-|---|---|---|
-| Widget dans un document | jeton signé, `POST …/attachments?auth=` sans aucun en-tête ajouté | **bloqué** par la règle d'origine — mesuré le 18/09/2026 |
-| Application de terrain | clé d'API en en-tête `Authorization` | passe : `CapacitorHttp` émet hors du moteur web |
+| Où | Comment il se présente |
+|---|---|
+| Widget dans un document | jeton signé (`?auth=`) **+ `X-Requested-With: XMLHttpRequest`** |
+| Application de terrain | clé d'API en en-tête `Authorization`, émise par `CapacitorHttp` |
 
-La requête ne porte **aucun en-tête**, pas même `Content-Type` : le corps est un
-`FormData`, et le navigateur pose lui-même la frontière de lot. C'est ce qui la
-garde « simple », donc sans contrôle préalable — et l'instance ne répond pas au
-préflight qu'un en-tête déclencherait.
+> **Une erreur de diagnostic à ne pas refaire.** On a cru, mesure à l'appui, que
+> l'instance refusait l'envoi depuis l'origine d'un widget : la requête revenait
+> en `net::ERR_FAILED` et rien n'était créé. Il manquait `X-Requested-With`,
+> qu'exige la protection CSRF de Grist sur toute requête sans session. L'instance
+> répondait donc 401 — une erreur **sans en-têtes CORS**, que le navigateur masque
+> exactement comme un refus d'origine. Même symptôme, cause opposée. L'en-tête
+> ajouté, la photo est arrivée (`photo_essai.jpg`, pièce jointe n° 1). La solution
+> était déjà écrite dans SURFAC²E (`atlas_bati`, `materialiserPJObjet`).
+>
+> Le raccourci trompeur : « pas d'en-tête = requête simple = pas de CORS ». C'est
+> vrai du navigateur, et sans objet ici — le refus venait du serveur.
 
-> **Ce que l'essai a montré, et qu'il fallait nommer.** La requête part, revient
-> en `net::ERR_FAILED`, et **rien n'est créé côté document**. Le moteur affichait
-> alors « Failed to fetch » sous le bouton — un message qui envoie chercher une
-> panne de réseau alors que le réseau va bien. Il dit maintenant la règle
-> d'origine, et que l'application, elle, y parvient.
-
-Le garde d'écriture est consulté avant l'envoi : verser un fichier dans le
-document **est** une écriture, même si la ligne ne suit pas. Et `uploadFile` est
-`async` — un refus lancé de façon synchrone sortirait de la chaîne de promesses
-du moteur, et la fiche resterait figée sur « Envoi… ».
+Le corps est un `FormData` : **jamais** de `Content-Type` à la main, le navigateur
+pose la frontière de lot. Le garde d'écriture est consulté avant l'envoi — verser
+un fichier **est** une écriture. Et `uploadFile` est `async` : un refus lancé de
+façon synchrone sortirait de la chaîne de promesses du moteur, et la fiche
+resterait figée sur « Envoi… ». Un échec sans réponse s'affiche en clair plutôt
+qu'en « Failed to fetch », sans prétendre en connaître la cause.
 
 L'application embarque désormais le moteur de formulaire (`scripts/vendoriser.mjs`
 copie les six scripts de `grist_forms`, comme `promote-atlas.js`). Sans cela, la

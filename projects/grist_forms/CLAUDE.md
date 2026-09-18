@@ -50,7 +50,7 @@ projects/grist_forms/
   - Accueil : case « Réserver des questions… » + table email/groupe (détection auto, selects par type)
   - **Reconnaître la personne connectée** : coche → `audience-setup.js` applique `ModifyColumn` (formule `user.Email`, trigger nouvelles lignes)
 - Cascade Ref→Ref ; filtre dynamique Choice/Text→Ref ; filtre Ref→même table (`parentResolve: refRow` + `parentValueColumn`)
-- Publish intra-doc ; Survey Manifest ; Attachments (upload CORS différé)
+- Publish intra-doc ; Survey Manifest ; Attachments (upload depuis une vue custom : vérifié le 18/09/2026)
 - UX : slides Accueil/Fin, branding, placeholders, libellés inline
 
 ### Validation live
@@ -67,20 +67,20 @@ Widget catalogue : `grist_forms/builder.html` (accès **full**).
 
 ### Hors scope / différé
 - Géo, **BlockNote**, collab ; goto explicite entre étapes
-- Upload PJ custom cross-origin (CORS)
 - Promote `published/` : sur demande
 
 ### Piste future (étude séparée)
 Binding BlockNote formulaires (offre de service) : **cadré** — voir `docs/superpowers/specs/2026-07-29-form-binding-blocknote-cerema-design.md` et `.wikichat/knowledge/grist-forms-blocknote-binding-axis.md`. Ce projet = référence technique (`FormDef`, `ensureSchema`, publish, survey-project.js) ; blocs BlockNote dans cerema-offre-de-service / qgis-sspcloud.
 
-### Attachments / CORS — mesuré, et contourné par l'hôte (18/09/2026)
+### Attachments depuis une vue custom — ça passe (18/09/2026)
 
-`getAccessToken` répond ; `POST …/attachments?auth=<jeton>` depuis une vue custom
-hors origine **est bloqué**. Remesuré dans le document de non-régression avec un
-jeton `readOnly: false` valide : la requête part sans en-tête ajouté — donc sans
-contrôle préalable — et revient en `net::ERR_FAILED`, sans réponse lisible. Côté
-document, **rien n'a été créé** (`_grist_Attachments` reste vide). Ce n'est donc
-pas une réponse masquée : l'envoi n'aboutit pas.
+La note différée disait : « `POST …/attachments` depuis vue custom hors origine →
+CORS ». **C'était faux.** Mesuré dans un widget servi depuis une autre origine,
+avec un jeton `readOnly: false` : sans `X-Requested-With`, la protection CSRF de
+Grist rend un 401 **sans en-têtes CORS**, que le navigateur masque en
+`net::ERR_FAILED` — exactement comme un refus d'origine. Avec l'en-tête, la pièce
+jointe est créée. C'est le comportement par défaut d'`uploadFiles` (voir
+`simpleUpload`), et c'est ce que fait SURFAC²E.
 
 **Le moteur n'envoie plus forcément lui-même.** `deps.uploadFile(fichier)` —
 transmis par `bridge.uploadFile` — laisse l'hôte verser le fichier et rendre les

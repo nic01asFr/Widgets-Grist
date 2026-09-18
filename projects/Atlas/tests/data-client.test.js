@@ -187,10 +187,10 @@ test('les capacites disent aussi si l’on est dans une vitrine', () => {
 /** Un vrai `File` : `FormData` n'accepte rien d'autre, ici comme au navigateur. */
 const fichierFactice = (nom = 'photo.jpg') => new File(['img'], nom, { type: 'image/jpeg' });
 
-test('la requete d envoi reste « simple » : aucun en-tete ajoute', async () => {
-  // Un seul en-tete — meme `Content-Type` — declencherait un controle prealable,
-  // auquel l'instance ne repond pas. C'est toute la difference entre un envoi
-  // qui passe depuis un widget et un echec reseau sans explication.
+test('posterPieceJointe n ajoute aucun en-tete de lui-meme — surtout pas Content-Type', async () => {
+  // Le corps est un FormData : le navigateur pose la frontiere de lot. Un
+  // `Content-Type` ecrit a la main la perdrait, et l'instance ne lirait rien.
+  // Ce qui identifie la requete vient de l'appelant.
   let vu = null;
   const ids = await posterPieceJointe('https://g/doc/attachments?auth=t', fichierFactice(), {
     fetch: async (url, o) => { vu = { url, o }; return { ok: true, json: async () => [7] }; },
@@ -218,10 +218,15 @@ test('dans un widget, l envoi passe par le jeton du document', async () => {
       return { baseUrl: 'https://g/o/docs/api/docs/abc', token: 'je+ton' };
     },
   };
-  globalThis.fetch = async (u) => { url = u; return { ok: true, json: async () => [12] }; };
+  let entetes = null;
+  globalThis.fetch = async (u, o) => { url = u; entetes = o.headers; return { ok: true, json: async () => [12] }; };
   const ids = await televerserPieceJointe(docApi, fichierFactice());
   assert.deepEqual(ids, [12]);
   assert.equal(url, 'https://g/o/docs/api/docs/abc/attachments?auth=je%2Bton');
+  // Sans cet en-tete, la protection CSRF de Grist rend un 401 que le navigateur
+  // masque en `net::ERR_FAILED` : on avait conclu, a tort, a un refus d'origine.
+  assert.equal(entetes['X-Requested-With'], 'XMLHttpRequest');
+  assert.equal(entetes['Content-Type'], undefined);
 });
 
 test('sans jeton, on le dit — au lieu d envoyer dans le vide', async () => {
@@ -252,14 +257,14 @@ test('sans cle, l envoi est refuse avant de partir', async () => {
   await assert.rejects(client.televerserPieceJointe(fichierFactice()), /sans clé d.accès/);
 });
 
-test('une requete bloquee par la regle d origine se nomme, au lieu de « Failed to fetch »', async () => {
+test('une requete sans reponse se dit, au lieu de « Failed to fetch »', async () => {
   // C'est ce que le moteur affiche sous le bouton. « Failed to fetch » envoie
   // chercher une panne de reseau alors que le reseau va bien.
   await assert.rejects(
     posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
       fetch: async () => { throw new TypeError('Failed to fetch'); },
     }),
-    /règle d.origine.*application de terrain/s,
+    /pas abouti.*pas de réponse/s,
   );
   // Hors navigateur, la meme panne n'a pas cette cause : le message change.
   await assert.rejects(
