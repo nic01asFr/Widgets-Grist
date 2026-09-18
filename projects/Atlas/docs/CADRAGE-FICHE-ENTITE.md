@@ -147,6 +147,13 @@ Il entre dans `VIEW_AUTHOR_MODULES` (`app_v7.js:3020`), qui liste les modules
 En lecture, le lecteur obtient donc le formulaire **sur un objet**, jamais le
 module qui le règle.
 
+> **Et une pastille le lui annonce (18/09/2026).** Le parallèle avec les
+> contrôles s'arrêtait à l'auteur : un contrôle publié devient une pastille, un
+> formulaire publié ne devenait rien de visible. La pastille « Relevé » — une
+> seule, quel que soit le nombre de formulaires — dit où l'on peut saisir, et
+> mène à l'objet le plus proche quand la localisation le permet. Elle ne règle
+> rien : le module reste réservé à l'auteur.
+
 ### L'état des droits n'est pas ici
 
 Les droits sont **du document**, pas d'un formulaire. Une ligne par formulaire

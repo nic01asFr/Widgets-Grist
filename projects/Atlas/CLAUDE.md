@@ -666,6 +666,33 @@ l’exception si le pointeur est déjà parti) plutôt que des écouteurs `windo
   doit fermer `boxing` **immédiatement**, car la capture livre le `pointerup` à
   `cc` d’où il remonte jusqu’à `window` — sinon la sélection est rejouée.
 
+## La pastille « Relevé » (18/09/2026)
+
+Un contrôle publié devient une pastille ; un formulaire publié ne devenait
+**rien de visible**. Le lecteur ne découvrait qu'un objet se saisit qu'en le
+touchant — sur le terrain, c'est ce qu'il faut savoir en arrivant. Prévu dès le
+9/09 (canevas « pastille Formulaires »), resté « à décider » ; tranché le
+18/09 : **une seule pastille**, qui regroupe, pour ne pas charger le dock.
+
+| | |
+|---|---|
+| Quand | au moins une couche visible où `saisieHorsEdition` ouvrirait la fiche. En lecture, `coucheEnSaisie` telle quelle ; en édition, la même règle posée du côté du lecteur (ce qu'il verra) |
+| Où | dans le dock, juste après « Lire le récit » — les deux pastilles qui agissent |
+| Panneau | une rangée par couche : ses formulaires offerts, « Le plus proche de moi », « Voir la couche » |
+| Le plus proche | parmi les objets **que les filtres laissent voir** ; distance dite au terrain (« à 40 m ») — `lib/releve.js`, testé |
+| Après le choix | le panneau se replie : il recouvrirait la barre de sélection |
+
+> **« Le plus proche » n'est proposé que si la localisation marche.** Dans un
+> widget Grist, l'iframe n'en a pas la permission et MapLibre désactive son
+> propre bouton : Atlas lit ce verdict (`localisationDisponible`) plutôt que
+> `navigator.geolocation`, présent mais inutilisable. C'est donc une fonction de
+> l'**application** et du navigateur, pas du widget. L'attente de position est
+> bornée à 15 s, et l'échec se dit.
+
+Le dock se redessine quand les formulaires arrivent (`chargerFormulaires`, après
+la carte) et quand l'auteur en propose ou en retire un : sans cela la pastille
+n'apparaissait qu'au geste suivant.
+
 ## Les feuilles sur téléphone — une à la fois (18/09/2026)
 
 Sur téléphone, le panneau des modules et la fiche d'un objet sont des

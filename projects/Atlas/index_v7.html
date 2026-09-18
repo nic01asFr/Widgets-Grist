@@ -396,6 +396,20 @@
             padding: 8px 10px;
         }
         .dock-slot-data .cats { max-height: 132px; overflow-y: auto; margin-top: 0 !important; }
+        /* La pastille Releve : une rangee par couche ou l'on peut saisir. */
+        /* Le panneau haut plafonne a 200 px : au-dela d'une couche, la liste
+           defile au lieu d'etre coupee. */
+        .dock-slot-releve .dock-slot-body { max-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+        .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
+        .dock-slot-data .releve-couche:first-of-type { border-top: none; padding-top: 2px; }
+        .dock-slot-data .releve-nom { display: flex; align-items: center; gap: 7px;
+            font-size: 12.5px; font-weight: 600; color: var(--ink); }
+        .dock-slot-data .releve-nom .sw { width: 14px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+        .dock-slot-data .releve-forms { font-size: 11px; color: var(--muted); margin: 2px 0 7px 17px; }
+        .dock-slot-data .releve-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 17px; }
+        .dock-slot-data .releve-actions .btn { padding: 6px 10px; font-size: 12px; min-height: 36px; }
+        .dock-slot-data .releve-actions small { opacity: .75; font-weight: 400; margin-left: 4px; }
         .dock-slot-data .rng { width: 100%; max-width: 260px; margin-top: 2px; }
         .dock-slot-data .range-info {
             font-size: 11px; color: #7B705F; margin: 0 0 5px 0 !important;

@@ -119,6 +119,7 @@ import {
 } from './lib/view-mode.js?v=20260916a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
+import { objetLePlusProche, direDistance, lignesReleve } from './lib/releve.js?v=20260918a';
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
@@ -269,6 +270,8 @@ let _openDockPill = null;
 // Localisation : le contrôle MapLibre reste posé (point bleu, suivi), mais son
 // bouton est masqué — la pastille du dock le déclenche, sur mobile seulement.
 let _geoloc = null;
+/** Derniere position `[lng, lat]` donnee par la geolocalisation — pour « le plus proche ». */
+let _dernierePosition = null;
 let _suiviPosition = false;
 let _sunArcDragging = false;
 let _preStorySnapshot = null;
@@ -1893,6 +1896,12 @@ function initMap() {
         // rompt le suivi : MapLibre émet alors `trackuserlocationend`.
         const suivre = (actif) => { _suiviPosition = actif; refreshControlsDock(); };
         _geoloc.on('trackuserlocationstart', () => suivre(true));
+        // Retenue pour la pastille « Relevé » : l'objet le plus proche se
+        // calcule depuis la ou l'on se tient, pas depuis le centre de la carte.
+        _geoloc.on('geolocate', (p) => {
+            _dernierePosition = [p.coords.longitude, p.coords.latitude];
+            if (_openDockPill === 'releve') renderDockSlotHost();
+        });
         _geoloc.on('trackuserlocationend', () => suivre(false));
         _geoloc.on('error', (err) => {
             suivre(false);
@@ -3608,6 +3617,85 @@ function dockPillId(layer, field) {
 }
 
 /** Pastilles dock : env (édition = toujours ; lecture = exposed) + données actives. */
+/**
+ * Les couches ou l'on peut saisir, telles que la fiche les ouvrira.
+ *
+ * La regle existe une fois — `saisieHorsEdition`, celle qui fait ouvrir la
+ * fiche au toucher. En lecture on la prend telle quelle (`coucheEnSaisie`). En
+ * edition, la pastille montre ce que le LECTEUR verra : on pose la meme
+ * question en se placant de son cote, l'auteur ayant de toute facon le droit
+ * d'ecrire.
+ */
+function couchesEnReleve() {
+    return STATE.layers.filter((l) => l.visible !== false && (CONFIG.viewMode
+        ? coucheEnSaisie(l)
+        : saisieHorsEdition({
+            view: true,
+            aDesLignes: coucheAvecLignes(l),
+            peutEcrire: true,
+            formulaires: formulairesDeLaCouche(l),
+            moteur: moteurDisponible(),
+        })));
+}
+
+/**
+ * La localisation est-elle utilisable ici ?
+ *
+ * `navigator.geolocation` ne suffit pas : dans un widget Grist, l'iframe n'a
+ * pas la permission, et MapLibre desactive alors son propre bouton (« Geolocation
+ * support is not available »). Proposer « le plus proche » la produirait un
+ * bouton qui ne fait rien. On lit donc le verdict de MapLibre, pose apres sa
+ * verification.
+ */
+function localisationDisponible() {
+    const b = _geoloc?._geolocateButton;
+    return !!b && !b.disabled && typeof navigator !== 'undefined' && !!navigator.geolocation;
+}
+
+function renderReleveDockSlotHtml() {
+    const lignes = lignesReleve(couchesEnReleve().map((couche) => ({
+        couche,
+        formulaires: formulairesOffertsEnLecture(formulairesDeLaCouche(couche)),
+    })));
+    const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const geo = localisationDisponible();
+    const rangees = lignes.map((l) => {
+        const proche = geo && _dernierePosition ? objetProcheDeCouche(l.couche) : null;
+        const nomProche = proche ? (nomObjet(proche.feature.properties || {}) || 'objet') : '';
+        return `<div class="releve-couche">
+            <div class="releve-nom"><span class="sw" style="background:${esc(fondPastilleCouche(l.couche) || '#888')}"></span>${esc(l.nom)}</div>
+            <div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>
+            <div class="releve-actions">
+                ${geo ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.releveProche('${esc(l.couche.id)}')">${proche
+                    ? `Le plus proche : ${esc(nomProche)} <small>${esc(direDistance(proche.distance))}</small>`
+                    : 'Le plus proche de moi'}</button>` : ''}
+                <button type="button" class="btn btn-soft btn-sm" onclick="A.releveCadrer('${esc(l.couche.id)}')">Voir la couche</button>
+            </div>
+        </div>`;
+    }).join('');
+    return `<div class="dock-slot-data dock-slot-releve">
+        <div class="dock-slot-head"><span class="dock-slot-title">Relevé</span></div>
+        <div class="dock-slot-body">
+            <p class="releve-aide">Touchez un objet sur la carte pour ouvrir sa fiche.</p>
+            ${rangees}
+        </div>
+    </div>`;
+}
+
+/**
+ * L'objet de la couche le plus proche de la derniere position connue — parmi
+ * ceux que les filtres laissent voir : proposer un objet masque enverrait
+ * saisir sur ce qu'on a choisi de ne pas regarder.
+ */
+function objetProcheDeCouche(layer) {
+    const feats = Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [];
+    if (!feats.length || !_dernierePosition) return null;
+    const garde = buildControlPredicate(layer);
+    const r = objetLePlusProche(feats, _dernierePosition,
+        (f) => (!garde || garde(f) ? featureCentroidLngLat(f) : null));
+    return r ? { ...r, feature: feats[r.idx] } : null;
+}
+
 function listDockPills() {
     const pills = [];
     const vcs = STATE.viewerControls || createDefaultViewerControls();
@@ -3643,6 +3731,20 @@ function listDockPills() {
             label: 'Lire le récit',
             action: () => A.storyPlay(0),
         });
+    }
+    // Le releve : UNE pastille, quel que soit le nombre de formulaires offerts
+    // — elle regroupe, pour ne pas charger le dock. Un formulaire publie ne
+    // devenait rien de visible : le lecteur ne decouvrait qu'un objet se saisit
+    // qu'en le touchant. Elle suit le recit, l'autre pastille qui agit.
+    if (couchesEnReleve().length) {
+        const pastilleReleve = {
+            id: 'releve',
+            kind: 'releve',
+            icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg>',
+            label: 'Relevé',
+        };
+        const iRecit = pills.findIndex((p) => p.id === 'recit');
+        pills.splice(iRecit + 1, 0, pastilleReleve);
     }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
     // (U+FE0F). Un glyphe symbolique rare — ici `▦` U+25A6 — n'existe pas dans
@@ -3753,7 +3855,9 @@ function renderDockSlotHost() {
         slotHost.innerHTML = '';
         return;
     }
-    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data');
+    // Le releve liste des couches et des boutons : il lui faut la hauteur d'un
+    // controle de donnees, pas celle d'un interrupteur d'environnement.
+    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve');
     if (pill.id === 'sun') {
         slotHost.innerHTML = renderSunDockSlotHtml();
         updateSunStrip();
@@ -3761,6 +3865,8 @@ function renderDockSlotHost() {
         slotHost.innerHTML = renderView3dDockSlotHtml();
     } else if (pill.id === 'basemap') {
         slotHost.innerHTML = renderBasemapDockSlotHtml();
+    } else if (pill.kind === 'releve') {
+        slotHost.innerHTML = renderReleveDockSlotHtml();
     } else if (pill.kind === 'data') {
         const t = controlVariantDockLabel(pill.control);
         const label = (pill.label || '').replace(/</g, '&lt;');
@@ -5991,6 +6097,9 @@ function enterSelectionMode(layerId, idx) {
         return;
     }
     document.body.classList.toggle('mode-saisie', enSaisie);
+    // La pastille « Releve » a fait son office des qu'un objet est choisi :
+    // ouverte, elle recouvrirait la barre de selection qui s'installe.
+    if (_openDockPill === 'releve') $('map-controls-dock')?.classList.add('collapsed');
     STATE.selection.mode = true;
     STATE.selection.layerId = layerId;
     STATE.selection.features = idx != null ? [idx] : [];
@@ -6409,6 +6518,13 @@ const TABLE_SCHEMAS = {
  * formulaire pour cette couche » — les deux donnent le meme repli.
  */
 async function chargerFormulaires() {
+    // La pastille « Releve » depend des formulaires, qui arrivent APRES la
+    // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
+    // geste qui redessine le dock — c'est-a-dire, pour un lecteur, jamais.
+    try { await lireFormulairesDuDocument(); } finally { refreshControlsDock(); }
+}
+
+async function lireFormulairesDuDocument() {
     STATE.formulaires = [];
     STATE.formulairesTable = false;
     // Le schema porte les types des colonnes, donc les `Ref:` qui disent quelles
@@ -7847,6 +7963,7 @@ const A = {
         }
 
         renderFormulaires();
+        refreshControlsDock();
 
         renderInspector();
         await saveLayerToGrist(couche, true);
@@ -7886,6 +8003,7 @@ const A = {
         couche.formulaire = suite;
         if (retirer && _inspObjTab === formId) _inspObjTab = null;
         renderFormulaires();
+        refreshControlsDock();
         renderInspector();
         await saveLayerToGrist(couche, true);
         showToast(retirer ? `Retiré de la couche · ${vise.titre}` : `Remis · ${vise.titre}`, 'success');
@@ -8927,6 +9045,39 @@ const A = {
 
     // Selection editing
     selPrev() { nav(-1); }, selNext() { nav(1); },
+    /**
+     * Ouvre la fiche de l'objet le plus proche. Sans position encore connue, on
+     * la demande, et l'on agit a son arrivee — un bouton qui ne fait rien au
+     * premier toucher donne l'impression d'etre casse.
+     */
+    releveProche(layerId) {
+        const layer = STATE.layers.find((l) => l.id === layerId);
+        if (!layer) return;
+        const ouvrir = () => {
+            const r = objetProcheDeCouche(layer);
+            if (!r) { showToast('Aucun objet visible dans cette couche', 'info'); return; }
+            $('map-controls-dock')?.classList.add('collapsed');
+            enterSelectionMode(layer.id, r.idx);
+        };
+        if (_dernierePosition) { ouvrir(); return; }
+        if (!localisationDisponible()) { showToast('Localisation indisponible ici', 'warning'); return; }
+        // L'attente est bornee : un GPS qui ne repond pas laisserait le bouton
+        // sans suite, et l'on croirait qu'il est casse.
+        let fait = false;
+        const delai = setTimeout(() => {
+            if (!fait) showToast('Position introuvable pour le moment — touchez un objet sur la carte', 'warning');
+        }, 15000);
+        _geoloc.once('geolocate', () => { fait = true; clearTimeout(delai); ouvrir(); });
+        showToast('Recherche de votre position…', 'info');
+        if (_geoloc.trigger() === false) {
+            clearTimeout(delai);
+            showToast('Localisation indisponible ici', 'warning');
+        }
+    },
+    releveCadrer(layerId) {
+        const layer = STATE.layers.find((l) => l.id === layerId);
+        if (layer) fitToLayer(layer);
+    },
     selAll() {
         const l = STATE.layers.find((x) => x.id === STATE.selection.layerId); if (!l) return;
         STATE.selection.features = l.geojson.features.map((_, i) => i); afterSelectionChange();
