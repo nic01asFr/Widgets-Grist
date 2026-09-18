@@ -149,7 +149,10 @@ const trait = (d) => `<svg class="hote-ic" width="20" height="20" viewBox="0 0 2
 
 const IC = {
   scenes: trait('<path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/>'),
-  cle: trait('<circle cx="8" cy="16" r="4.5"/><path d="M11.2 12.8 20 4m-2.5 2.5 2.5 2.5m-5-5 2.5 2.5"/>'),
+  // Une cle couchee : anneau a gauche, tige horizontale, deux dents dessous.
+  // La precedente montait en diagonale depuis un anneau qu'elle traversait, et
+  // ses deux traits en croix se lisaient comme un symbole de genre.
+  cle: trait('<circle cx="7" cy="12" r="4"/><path d="M11 12h10M15 12v2.5M18 12v3.5"/>'),
   retour: trait('<path d="M19 12H5m6-7-7 7 7 7"/>'),
 };
 
