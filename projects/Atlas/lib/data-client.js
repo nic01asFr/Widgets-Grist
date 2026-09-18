@@ -233,13 +233,44 @@ class ClientRest {
    * Rend les donnees au format colonnaire de l'API plugin — `{id: [], col: []}` —
    * et non la liste d'enregistrements que rend l'API REST. Sans cette
    * conversion, tout le code de lecture d'Atlas serait a doubler.
+   *
+   * > **Les tables de metadonnees ne passent pas par la meme porte.**
+   * > `_grist_Tables` et `_grist_Tables_column` decrivent le document ; l'API
+   * > plugin les sert comme n'importe quelle table, l'API REST **non** — son
+   * > point `/records` ne connait que les tables de l'utilisateur. Sans ce
+   * > detour, `chargerSchema` rend un schema VIDE dans l'application : plus de
+   * > formulaire deduit (« Attributs »), plus de formulaire lie, et la fiche
+   * > d'un objet parait n'en proposer aucun. Rien ne le signale — c'est une
+   * > lecture qui echoue, pas une fonction absente.
+   * >
+   * > Le point `/sql`, lui, les sert. Il ne sait que lire, ce qui suffit :
+   * > Atlas ne modifie jamais ces tables.
    */
   async fetchTable(table) {
+    if (String(table).startsWith('_grist_')) return this._fetchMeta(table);
     const d = await this._json(
       `${this.baseUrl}/api/docs/${this.docId}/tables/${encodeURIComponent(table)}/records`,
       { headers: this._entetes() },
     );
     return recordsVersColonnes(d.records || []);
+  }
+
+  /** Une table de metadonnees, lue en SQL puis rendue au format colonnaire. */
+  async _fetchMeta(table) {
+    // Le nom vient d'une constante du code, jamais d'une saisie ; la garde est
+    // la pour que cela reste vrai si un appelant change un jour.
+    if (!/^_grist_[A-Za-z0-9_]+$/.test(table)) throw new Error(`Table système inattendue : ${table}`);
+    const d = await this._json(
+      `${this.baseUrl}/api/docs/${this.docId}/sql?q=${encodeURIComponent(`select * from ${table}`)}`,
+      { headers: this._entetes() },
+    );
+    // `select *` rend `id` parmi les champs, alors que le format colonnaire le
+    // porte a part : le laisser la remplirait la colonne deux fois.
+    const lignes = (d.records || []).map((r) => {
+      const { id, ...champs } = r.fields || {};
+      return { id, fields: champs };
+    });
+    return recordsVersColonnes(lignes);
   }
 
   async applyUserActions(actions) {

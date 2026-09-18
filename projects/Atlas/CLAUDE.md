@@ -132,6 +132,22 @@ depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
   Auparavant un formulaire composé ne pouvait que s'ajouter — « Saisie »,
   « Saisie 2 », « Saisie 3 » s'empilaient dans la fiche.
 
+### Dans l'application, le schéma du document ne passe pas par la même porte
+
+`chargerSchema` lit `_grist_Tables` et `_grist_Tables_column`. L'API plugin les
+sert comme n'importe quelle table ; l'**API REST non** — son point `/records` ne
+connaît que les tables de l'utilisateur. Le client REST les lit donc par `/sql`,
+qui les sert (`ClientRest._fetchMeta`).
+
+> **Sans ce détour, le schéma est vide dans l'application.** Et un schéma vide,
+> c'est : plus de formulaire déduit (« Attributs »), plus de formulaire lié —
+> `tablesReferencant` n'a plus rien à parcourir —, donc une fiche d'objet qui
+> paraît n'offrir aucun formulaire. Rien ne le signale : c'est une lecture qui
+> échoue, pas une fonction absente. Constaté sur le téléphone le 18/09/2026.
+
+Corollaire : tout ce qui lit des métadonnées marche dans les deux mondes —
+`scanGeoTables` compris.
+
 ### Les photos d'une fiche : c'est Atlas qui verse, pas le moteur (18/09/2026)
 
 Une colonne `Attachments` donne un champ fichier dans la fiche. Le moteur ne

@@ -270,3 +270,48 @@ test('une requete bloquee par la regle d origine se nomme, au lieu de « Failed 
   );
 });
 
+/* ---------------------------------------------------------------- */
+/* Le schema du document, dans l'application                         */
+/* ---------------------------------------------------------------- */
+
+test('les tables de metadonnees passent par /sql, pas par /records', async () => {
+  // L'API REST ne sert pas `_grist_Tables` sur son point `/records`. Sans ce
+  // detour, le schema est vide dans l'application : plus de formulaire deduit,
+  // plus de formulaire lie, et la fiche parait n'en proposer aucun.
+  const vues = [];
+  const client = await creerClient({
+    mode: 'rest', baseUrl: 'https://g', docId: 'doc1', jeton: 'cle',
+    fetch: async (u) => {
+      vues.push(u);
+      return { ok: true, json: async () => ({ records: [
+        { fields: { id: 1, tableId: 'Batiments' } },
+        { fields: { id: 2, tableId: 'Visites' } },
+      ] }) };
+    },
+  });
+  const t = await client.fetchTable('_grist_Tables');
+  assert.match(vues[0], /\/sql\?q=/);
+  assert.match(decodeURIComponent(vues[0]), /select \* from _grist_Tables/);
+  assert.deepEqual(t, { id: [1, 2], tableId: ['Batiments', 'Visites'] });
+});
+
+test('une table ordinaire garde la porte des enregistrements', async () => {
+  const vues = [];
+  const client = await creerClient({
+    mode: 'rest', baseUrl: 'https://g', docId: 'doc1', jeton: 'cle',
+    fetch: async (u) => {
+      vues.push(u);
+      return { ok: true, json: async () => ({ records: [{ id: 3, fields: { nom: 'Mairie' } }] }) };
+    },
+  });
+  const t = await client.fetchTable('Batiments');
+  assert.match(vues[0], /\/tables\/Batiments\/records$/);
+  assert.deepEqual(t, { id: [3], nom: ['Mairie'] });
+});
+
+test('un nom de table systeme fantaisiste est refuse', async () => {
+  const client = await creerClient({ mode: 'rest', baseUrl: 'https://g', docId: 'd', jeton: 'c',
+    fetch: async () => { throw new Error('ne doit pas partir'); } });
+  await assert.rejects(client.fetchTable('_grist_Tables; drop'), /Table système inattendue/);
+});
+
