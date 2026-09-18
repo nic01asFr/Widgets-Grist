@@ -1123,21 +1123,53 @@
                 margin-left: auto;
             }
             body.view-mode.mobile-layout .app-header .cmdk > span { display: none; }
-            /* Une feuille, pas un panneau : la carte reste dessous et c'est le
-               geste qui decide de ce qu'on en voit. `--feuille-frac` est la part
-               de hauteur visible ; on la traduit en translation pour que le
-               contenu ne se redispose pas a chaque pixel du glissement. */
-            body.mobile-layout .module-panel {
+            /* Deux feuilles, une seule mecanique : le panneau des modules (a
+               gauche sur un grand ecran) et la fiche d'un objet (a droite).
+               `--feuille-frac` est la part de hauteur visible.
+
+               > **Au repos, la feuille a la hauteur qu'on voit.** Elle faisait
+               > toujours 92 % de l'ecran, simplement translatee vers le bas :
+               > a mi-hauteur, son dernier tiers etait SOUS le bord de l'ecran,
+               > hors de portee du defilement — la fin d'une liste, le bouton
+               > « Enregistrer » d'une fiche. On ne pouvait pas l'atteindre sans
+               > deployer la feuille entiere, et rien ne le disait.
+
+               PENDANT le geste seulement, on revient a la translation
+               (`.feuille-glisse`) : le contenu ne se redispose pas a chaque pixel.
+               Le bord haut est au meme endroit dans les deux regimes, donc le
+               passage de l'un a l'autre ne se voit pas. */
+            body.mobile-layout .module-panel,
+            body.mobile-layout .inspector {
                 position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-                top: auto; height: 92dvh; max-height: none; width: 100%; z-index: 35;
-                border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+                top: auto; max-height: none; width: 100%;
+                border-radius: 16px 16px 0 0;
                 border: 1px solid var(--hairline); border-bottom: none;
-                transform: translateY(calc((0.92 - var(--feuille-frac, 0)) * 100dvh));
-                transition: transform .26s cubic-bezier(.22,.61,.36,1);
+                height: calc(var(--feuille-frac, 0) * 100vh);
+                height: calc(var(--feuille-frac, 0) * 100dvh);
+                transform: none;
+                transition: height .26s cubic-bezier(.22,.61,.36,1);
                 touch-action: none;
             }
-            body.mobile-layout .module-panel.feuille-glisse { transition: none; }
-            body.mobile-layout .module-panel #module-body { touch-action: pan-y; }
+            body.mobile-layout .module-panel { z-index: 35; box-shadow: 0 -8px 32px rgba(0,0,0,0.18); }
+            body.mobile-layout .inspector { z-index: 36; box-shadow: 0 -8px 32px rgba(0,0,0,0.2); }
+            body.mobile-layout .module-panel.feuille-glisse,
+            body.mobile-layout .inspector.feuille-glisse {
+                height: 92dvh;
+                transform: translateY(calc((0.92 - var(--feuille-frac, 0)) * 100dvh));
+                transition: none;
+            }
+            /* Changer de regime sans animation : c'est ce qui evite un saut a la fin
+               du geste (voir `finirGlissement`). */
+            body.mobile-layout .module-panel.feuille-fige,
+            body.mobile-layout .inspector.feuille-fige { transition: none; }
+            body.mobile-layout .module-panel.feuille-repliee,
+            body.mobile-layout .inspector.feuille-repliee { border-color: transparent; box-shadow: none; }
+            /* Le defilement du contenu, et lui seul, appartient au doigt dans la
+               feuille. `contain` : arrive en butee, il ne fait pas defiler la page. */
+            body.mobile-layout .module-panel #module-body,
+            body.mobile-layout .inspector #insp-body {
+                touch-action: pan-y; overscroll-behavior: contain;
+            }
             /* Les commandes de ligne — voir, zoomer, rafraichir, supprimer,
                re-capturer, monter, descendre — tenaient sur 40 px de large, a
                cote les unes des autres. Au doigt, on visait la corbeille en
@@ -1162,12 +1194,10 @@
                 content: ''; width: 38px; height: 4px; border-radius: 2px;
                 background: var(--hairline-strong, #C9C0A8);
             }
-            body.mobile-layout .inspector {
-                position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-                top: auto; width: 100%; max-height: 55vh; z-index: 36;
-                border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
-            }
             body.mobile-layout .inspector.open { display: flex; }
+            /* La fiche porte sa poignee au-dessus de son en-tete, comme la feuille
+               des modules : c'est elle qui dit qu'on peut la tirer. */
+            body.mobile-layout .inspector { flex-direction: column; }
             body.mobile-layout .map-controls-dock:not(.collapsed) .dock-panel {
                 max-width: min(100vw - 24px, 320px);
             }
@@ -1221,7 +1251,11 @@
             body.view-mode.view-has-story.mobile-layout #viewer-controls {
                 bottom: calc(72px + env(safe-area-inset-bottom, 0px));
             }
-            body.view-mode.mobile-layout .module-panel {
+            body.view-mode.mobile-layout .module-panel,
+            body.view-mode.mobile-layout .inspector {
+                /* En lecture la barre du bas n'existe pas. La fiche restait posee
+                   56 px au-dessus : une bande morte sous le formulaire, dans le cas
+                   meme du releve de terrain. */
                 bottom: env(safe-area-inset-bottom, 0px);
             }
             body.view-mode.mobile-layout .rail-item[data-module="lieu"],

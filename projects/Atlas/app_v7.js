@@ -3240,7 +3240,17 @@ function openModule(name) {
         });
         // A mi-hauteur : la carte reste visible sous le panneau, c'est elle le
         // sujet. Une feuille deja deployee garde la hauteur qu'on lui a donnee.
+        //
+        // Une fiche ouverte prime (une feuille a la fois) : le module attend,
+        // replie, et c'est a la fermeture de la fiche qu'il paraitra. La fiche
+        // peut s'ouvrir juste apres ce bloc — `renderInspector`, en fin de
+        // fonction —, d'ou la verification au moment ou la feuille est prete,
+        // et non ici.
         installerFeuilleMobile().then(() => {
+            if ($('inspector')?.classList.contains('open')) {
+                if (feuilleAvantFiche == null) feuilleAvantFiche = 'demi';
+                return;
+            }
             if (feuillePosition === 'fermee') poserFeuille('demi');
         });
     }
@@ -4962,6 +4972,13 @@ function wireLegendClicks() {
 // INSPECTOR — symbologie ou objet sélectionné
 // ============================================================
 let inspectorUserClosed = false;
+/**
+ * Sur telephone : la fiche a cede la place a un module choisi dans la barre du
+ * bas. Une selection active rouvre la fiche a chaque rendu (`renderInspector`) ;
+ * sans ce drapeau, toucher « Couches » pendant qu'on regarde un objet ne
+ * montrerait jamais les couches. Il retombe des qu'on touche un objet.
+ */
+let ficheCedee = false;
 
 function resizeMapSoon() {
     requestAnimationFrame(() => {
@@ -4973,14 +4990,18 @@ function resizeMapSoon() {
 function openInspectorPanel() {
     const insp = $('inspector');
     if (!insp || inspectorUserClosed) return;
+    if (ficheCedee && surTelephone()) return;
     insp.classList.add('open');
+    if (surTelephone()) ouvrirFicheMobile();
     resizeMapSoon();
 }
 
 function closeInspectorPanel() {
     const insp = $('inspector');
     if (!insp) return;
+    const etaitOuverte = insp.classList.contains('open');
     insp.classList.remove('open');
+    if (etaitOuverte && surTelephone()) fermerFicheMobile();
     resizeMapSoon();
 }
 
@@ -6003,6 +6024,8 @@ function toggleSelect(idx) {
     if (i === -1) STATE.selection.features.push(idx); else STATE.selection.features.splice(i, 1);
 }
 function afterSelectionChange() {
+    // On vient d'agir sur les objets : c'est leur fiche qu'on veut voir.
+    ficheCedee = false;
     const n = STATE.selection.features.length;
     $('sel-label').innerHTML = `<strong>${n} objet${n > 1 ? 's' : ''}</strong> sélectionné${n > 1 ? 's' : ''}`;
     if (STATE.selection.multiIndex >= n) STATE.selection.multiIndex = 0;
@@ -6574,29 +6597,108 @@ function refreshViewerControlsHud() {
 /* ------------------------------------------------------------------ */
 
 let Feuille = null;              // charge a la demande : le bureau n'en a pas besoin
-let feuillePosition = 'fermee';  // 'fermee' | 'demi' | 'pleine'
+let feuillePosition = 'fermee';  // module : 'fermee' | 'demi' | 'pleine'
+let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes positions
+/**
+ * Ou etait la feuille des modules quand la fiche l'a repliee — pour la lui
+ * rendre a la fermeture. `null` : rien a rendre.
+ */
+let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
     if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=20260821a');
     return Feuille;
 }
 
+const surTelephone = () => document.body.classList.contains('mobile-layout');
+
 /**
- * Pose la feuille a une position.
+ * Pose une feuille a une position.
  *
- * La fraction pilote une translation, pas une hauteur : le contenu ne se
- * redispose pas a chaque geste, et le glissement reste franc meme sur une
- * longue liste de couches.
+ * Au repos, la feuille a la hauteur qu'on voit (`--feuille-frac`) : tout son
+ * contenu est donc a portee de defilement, jusqu'au dernier bouton. La
+ * translation n'intervient que PENDANT le geste (voir `installerGlissement`).
  */
-function poserFeuille(nom, anime = true) {
+function poserPanneau(p, nom) {
+    if (!p || !Feuille) return;
+    p.style.setProperty('--feuille-frac', String(Feuille.ANCRAGES[nom] ?? 0));
+    // Repliee, une feuille garde sa bordure et son ombre : un trait d'un pixel
+    // au-dessus de la barre du bas, qu'on prend pour un defaut d'affichage.
+    p.classList.toggle('feuille-repliee', nom === 'fermee');
+}
+
+function poserFeuille(nom) {
     const p = $('module-panel');
     if (!p || !Feuille) return;
     feuillePosition = nom;
-    p.classList.toggle('feuille-glisse', !anime);
-    p.style.setProperty('--feuille-frac', String(Feuille.ANCRAGES[nom] ?? 0));
+    poserPanneau(p, nom);
     if (nom === 'fermee') {
         document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((b) => b.classList.remove('active'));
     }
+}
+
+/**
+ * Pose la fiche. La replier tout a fait, c'est la fermer : une fiche a hauteur
+ * nulle mais « ouverte » garderait la selection et tiendrait la feuille des
+ * modules repliee, sans rien montrer.
+ */
+function poserFiche(nom) {
+    const p = $('inspector');
+    if (!p || !Feuille) return;
+    if (nom === 'fermee') { closeInspectorByUser(); return; }
+    fichePosition = nom;
+    poserPanneau(p, nom);
+}
+
+/**
+ * Sur telephone, UNE feuille a la fois — et la fiche prime.
+ *
+ * La fiche d'un objet (z 36) se posait sur la feuille des modules (z 35), qui
+ * restait ouverte dessous : deux panneaux empiles, le second masquant presque
+ * tout le premier. Mesure sur un ecran de 844 px : fiche de 324 a 788, feuille
+ * des modules de 349 a 788. La fiche est le detail de ce qu'on regardait ; elle
+ * replie donc la feuille des modules, et la lui rend en se fermant, a la
+ * hauteur ou elle l'avait trouvee.
+ */
+async function ouvrirFicheMobile() {
+    await chargerFeuille();
+    const insp = $('inspector');
+    if (!insp || !insp.classList.contains('open') || !surTelephone()) return;
+    installerGlissement(insp, {
+        corps: () => $('insp-body'),
+        prise: '.feuille-poignee, .insp-head, .insp-tabs',
+        position: () => fichePosition,
+        poser: poserFiche,
+    });
+    if (feuillePosition !== 'fermee' && feuilleAvantFiche == null) {
+        feuilleAvantFiche = feuillePosition;
+        poserFeuille('fermee');
+    }
+    if (fichePosition === 'fermee') poserFiche('demi');
+}
+
+function fermerFicheMobile() {
+    const insp = $('inspector');
+    fichePosition = 'fermee';
+    if (insp && Feuille) poserPanneau(insp, 'fermee');
+    // La feuille des modules retrouve la hauteur qu'elle avait — si le module
+    // est toujours la. Il a pu etre ferme entre-temps.
+    const rendre = feuilleAvantFiche;
+    feuilleAvantFiche = null;
+    if (rendre && $('module-panel')?.classList.contains('open')) poserFeuille(rendre);
+}
+
+/** Le module et la fiche partagent la meme mecanique de glissement. */
+async function installerFeuilleMobile() {
+    const p = $('module-panel');
+    if (!p) return;
+    await chargerFeuille();
+    installerGlissement(p, {
+        corps: () => p.querySelector('#module-body'),
+        prise: '.feuille-poignee, .module-head',
+        position: () => feuillePosition,
+        poser: poserFeuille,
+    });
 }
 
 /**
@@ -6605,30 +6707,35 @@ function poserFeuille(nom, anime = true) {
  * On n'allait pas « a la carte » : elle est dessous, en permanence. On ecarte
  * ce qui la masque — et pendant l'edition d'un recit, c'etait le seul moyen de
  * cadrer la vue, sauf que le bouton se trouvait sous la feuille a ecarter.
+ *
+ * Il ne servait qu'a la feuille des modules. La fiche d'un objet n'avait rien :
+ * hauteur figee a 55 % de l'ecran, pas de poignee, pas de position. C'est la
+ * meme mecanique, appliquee aux deux.
+ *
+ * @param {HTMLElement} p
+ * @param {{corps: () => HTMLElement|null, prise: string,
+ *          position: () => string, poser: (nom: string) => void}} o
  */
-async function installerFeuilleMobile() {
-    const p = $('module-panel');
-    if (!p) return;
-    const F = await chargerFeuille();
-    if (p.dataset.feuille) return;
+function installerGlissement(p, { corps, prise, position, poser }) {
+    const F = Feuille;
+    if (!p || !F || p.dataset.feuille) return;
     p.dataset.feuille = '1';
 
-    if (!p.querySelector('.feuille-poignee')) {
+    if (!p.querySelector(':scope > .feuille-poignee')) {
         const poignee = document.createElement('div');
         poignee.className = 'feuille-poignee';
         poignee.setAttribute('aria-hidden', 'true');
         p.prepend(poignee);
     }
 
-    const corps = () => p.querySelector('#module-body');
     let geste = null;
 
     p.addEventListener('pointerdown', (e) => {
-        if (!document.body.classList.contains('mobile-layout')) return;
+        if (!surTelephone()) return;
         geste = {
             y0: e.clientY, t0: e.timeStamp, y: e.clientY, t: e.timeStamp,
-            depart: feuillePosition,
-            surPoignee: !!e.target.closest('.feuille-poignee, .module-head'),
+            depart: position(),
+            surPoignee: !!e.target.closest(prise),
             defilement: corps()?.scrollTop ?? 0,
             pris: false, id: e.pointerId,
         };
@@ -6643,6 +6750,8 @@ async function installerFeuilleMobile() {
                 surPoignee: geste.surPoignee, defilement: geste.defilement, versLeBas: dy > 0,
             })) { geste = null; return; }
             geste.pris = true;
+            // Le bord haut ne bouge pas en changeant de regime : la hauteur
+            // passe a 92 %, la translation compense exactement.
             p.classList.add('feuille-glisse');
         }
         geste.y = e.clientY;
@@ -6655,18 +6764,34 @@ async function installerFeuilleMobile() {
     const finir = (e) => {
         if (!geste || (e && e.pointerId !== geste.id)) return;
         const g = geste; geste = null;
-        p.classList.remove('feuille-glisse');
         if (!g.pris) return;
         const dt = Math.max(0.016, (g.t - g.t0) / 1000);
         const vitesse = -((g.y - g.y0) / window.innerHeight) / dt;   // positif = vers le haut
-        poserFeuille(F.ancrageApresGeste({
+        const arrivee = F.ancrageApresGeste({
             depart: g.depart,
             fraction: F.fractionPendantGeste(g.depart, g.y - g.y0, window.innerHeight),
             vitesse,
-        }));
+        });
+        finirGlissement(p, () => poser(arrivee));
     };
     p.addEventListener('pointerup', finir);
     p.addEventListener('pointercancel', finir);
+}
+
+/**
+ * Quitte le regime « glissement » sans saut, puis anime vers l'arrivee.
+ *
+ * Retirer `.feuille-glisse` fait passer la feuille de « 92 % translatee » a
+ * « hauteur = fraction courante » : meme bord haut, donc rien ne bouge — a
+ * condition qu'aucune transition ne s'en mele. On fige, on applique, on libere,
+ * et seulement alors on pose la position d'arrivee, qui s'anime.
+ */
+function finirGlissement(p, poser) {
+    p.classList.add('feuille-fige');
+    p.classList.remove('feuille-glisse');
+    void p.offsetHeight;                 // appliquer le changement de regime maintenant
+    p.classList.remove('feuille-fige');
+    poser();
 }
 
 function updateMobileLayout() {
@@ -6772,6 +6897,15 @@ function wireMobileNav() {
             document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((b) => {
                 b.classList.toggle('active', b === btn);
             });
+            // Choisir un module dans la barre, c'est vouloir le voir : la fiche
+            // ouverte lui cede la place (une feuille a la fois). Elle revient
+            // des qu'on touche un objet. La feuille « Plus » est un menu pose
+            // par-dessus, elle ne demande rien a la fiche.
+            if (tab !== 'plus' && $('inspector')?.classList.contains('open')) {
+                ficheCedee = true;
+                feuilleAvantFiche = null;
+                closeInspectorPanel();
+            }
             if (tab === 'couches') {
                 if (CONFIG.viewMode) return;
                 openModule('couches');
@@ -9021,6 +9155,17 @@ function wireEvents() {
 
     // fermeture inspecteur (pas de pastille carte)
     $('insp-close-btn')?.addEventListener('click', () => A.closeInspector());
+    // Sur telephone, le clavier prend la moitie basse de l'ecran — la ou se
+    // trouve la fiche. A mi-hauteur, le champ touche passait dessous : on
+    // saisissait a l'aveugle. La fiche se deploie, et le champ vient au centre
+    // une fois le clavier installe.
+    $('inspector')?.addEventListener('focusin', (e) => {
+        if (!surTelephone()) return;
+        const champ = e.target;
+        if (!champ?.matches?.('textarea, input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit])')) return;
+        if (fichePosition !== 'pleine') poserFiche('pleine');
+        setTimeout(() => champ.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 320);
+    });
 
     // command palette keyboard
     $('cmd-input').addEventListener('input', (e) => buildCmdItems(e.target.value));

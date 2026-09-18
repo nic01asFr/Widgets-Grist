@@ -666,6 +666,30 @@ l’exception si le pointeur est déjà parti) plutôt que des écouteurs `windo
   doit fermer `boxing` **immédiatement**, car la capture livre le `pointerup` à
   `cc` d’où il remonte jusqu’à `window` — sinon la sélection est rejouée.
 
+## Les feuilles sur téléphone — une à la fois (18/09/2026)
+
+Sur téléphone, le panneau des modules et la fiche d'un objet sont des
+**feuilles** : poignée, trois positions (repliée, mi-hauteur, pleine),
+glissement. Une seule mécanique pour les deux (`installerGlissement`, règles
+pures dans `lib/feuille-mobile.js`).
+
+Quatre défauts corrigés ensemble, mesurés sur un écran de 844 px :
+
+| Défaut | Mesure | Correction |
+|---|---|---|
+| Deux feuilles empilées | fiche de 324 à 788, modules de 349 à 788 | **une feuille à la fois, la fiche prime** : elle replie les modules et les leur rend, à la même hauteur, en se fermant |
+| La fiche n'était pas une feuille | hauteur figée à 55 %, ni poignée ni position | même mécanique que les modules |
+| Le bas des feuilles hors d'atteinte | à mi-hauteur, 282 px du panneau des modules sous le bord de l'écran | **au repos, la feuille a la hauteur qu'on voit** ; la translation ne sert que pendant le geste |
+| Bande morte en lecture | fiche posée 56 px au-dessus d'une barre du bas absente | en lecture, la fiche touche le bas de l'écran |
+
+- **Choisir un module dans la barre du bas** fait céder la fiche (`ficheCedee`) :
+  une sélection active la rouvrirait à chaque rendu. Toucher un objet la rend.
+- **Toucher un champ de saisie** déploie la fiche et centre le champ : le
+  clavier prend la moitié basse de l'écran, là où la fiche se trouve.
+- Le passage translation ↔ hauteur ne se voit pas : le bord haut est au même
+  endroit dans les deux régimes, et `finirGlissement` fige la transition le
+  temps du changement.
+
 ## Repli en points (`lib/point-fallback.js`)
 
 Une maille d’analyse de 200 m mesure moins d’un pixel en vue régionale : le
