@@ -73,6 +73,11 @@ jobs:
       - name: Synchroniser dans le projet Android
         run: npx cap sync android
 
+      # `cap add` ne declare que l'acces a Internet : Android refuserait d'office
+      # la position, la prise de vue et le micro que la page demande.
+      - name: Declarer les permissions du releve de terrain
+        run: npm run permissions
+
       # Les icônes sont redessinées ici, et non embarquées : `cap add` vient de
       # recréer le projet Android avec l'icône générique de Capacitor.
       - name: Dessiner les icônes
@@ -83,6 +88,16 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
+
+      # Le manifeste fusionne est celui qui part dans l'APK : c'est lui qu'on
+      # verifie, pas celui qu'on a ecrit.
+      - name: Verifier les permissions de l'APK
+        run: |
+          manifeste=$(find android/app/build/intermediates -name AndroidManifest.xml -path "*merged_manifest*" | head -1)
+          echo "Manifeste fusionne : $manifeste"
+          for p in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION CAMERA RECORD_AUDIO; do
+            grep -q "android.permission.$p" "$manifeste" || { echo "Permission absente de l'APK : $p"; exit 1; }
+          done
 
       - name: Publier l'APK
         uses: actions/upload-artifact@v4

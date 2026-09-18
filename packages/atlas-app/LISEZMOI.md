@@ -57,6 +57,22 @@ Atlas — le meme, avec ses couches, sa symbolisation, son relief et son recit.
 dans une fiche est versee en piece jointe : l'application se presente avec la
 cle d'API, le widget avec le jeton du document. Les deux chemins sont verifies.
 
+## Ce qu'elle demande a l'appareil
+
+| Permission | Pour | Demandee quand |
+|---|---|---|
+| Position | « Me localiser », l'objet le plus proche (pastille Releve) | au premier toucher de l'un des deux |
+| Appareil photo | « Prendre une photo » dans une fiche | a la premiere prise de vue |
+| Micro | notes vocales de releve — **a venir**, declare des maintenant | a la premiere utilisation |
+
+`cap add android` ne declare que l'acces a Internet, et Android refuse d'office
+une permission non declaree : `scripts/permissions.mjs` complete le manifeste a
+chaque construction, et le workflow echoue si l'APK sort sans elles. Android
+pose la question au premier usage, pas au lancement — c'est la regle de la
+plateforme, et une demande groupee au demarrage, sans contexte, se voit surtout
+refusee. Les materiels sont facultatifs : un appareil sans GPS ou sans appareil
+photo installe et utilise l'application sans eux.
+
 ## Ce qu'elle ne sait pas encore faire
 
 - **Hors ligne** : la coquille est embarquee, les donnees ne le sont pas. Sans

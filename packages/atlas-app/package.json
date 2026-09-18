@@ -6,9 +6,10 @@
   "scripts": {
     "vendoriser": "node scripts/vendoriser.mjs",
     "icones": "node scripts/icones.mjs",
-    "sync": "npm run vendoriser && npx cap sync android",
+    "sync": "npm run vendoriser && npx cap sync android && npm run permissions",
     "apk": "npm run sync && npm run icones && cd android && ./gradlew assembleDebug",
-    "test": "node --test scripts/*.test.mjs"
+    "test": "node --test scripts/*.test.mjs",
+    "permissions": "node scripts/permissions.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

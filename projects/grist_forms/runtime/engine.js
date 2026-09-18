@@ -430,6 +430,14 @@
       renderLegend(field) + '<div class="fr-fieldset__content fr-likert__scale">' + itemsHtml + '</div></fieldset>';
   }
 
+  /** Un appareil a doigt, donc probablement un appareil photo sous la main. */
+  function prefereAppareilPhoto() {
+    try {
+      return typeof window !== 'undefined' && !!window.matchMedia &&
+        window.matchMedia('(pointer: coarse)').matches;
+    } catch (e) { return false; }
+  }
+
   function renderFile(field, value) {
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
@@ -447,10 +455,23 @@
     var hint = names.length
       ? '<p class="fr-hint-text">' + escapeHtml(names.join(', ')) + '</p>'
       : '<p class="fr-hint-text">Jusqu\'à ' + maxFiles + ' fichier(s)</p>';
+    // Sur un appareil tactile, un champ qui accepte des images propose aussi la
+    // prise de vue. Sans l'attribut `capture`, le telephone n'ouvre qu'un
+    // selecteur de fichiers : on devait photographier ailleurs, puis retrouver
+    // la photo dans la galerie. Les deux champs portent le meme nom et se lisent
+    // ensemble (`readFieldValue`). Sur ordinateur, `capture` n'a pas d'effet :
+    // le second bouton n'y serait qu'un doublon, il n'est pas rendu.
+    var accepteImages = !accept || /image/i.test(accept);
+    var camera = accepteImages && prefereAppareilPhoto()
+      ? '<input class="fr-upload fr-upload--camera" type="file" id="' + id + '-camera" name="' +
+        escapeHtml(field.colId) + '" accept="image/*" capture="environment" />' +
+        '<label class="fr-btn fr-btn--secondary fr-btn--sm fr-upload-camera" for="' + id + '-camera">' +
+        'Prendre une photo</label>'
+      : '';
     return '<div class="fr-upload-group" data-colid="' + escapeHtml(field.colId) + '" data-widget="file">' +
       renderLabel(field, id) +
       '<input class="fr-upload" type="file" id="' + id + '" name="' + escapeHtml(field.colId) +
-      '" multiple' + acceptAttr + reqAttr + ' />' + hint + '</div>';
+      '" multiple' + acceptAttr + reqAttr + ' />' + camera + hint + '</div>';
   }
 
   var WIDGET_RENDERERS = {
@@ -518,10 +539,17 @@
       return arr;
     }
     if (field.widget === 'file') {
-      var fileInput = rootEl.querySelector('input[type="file"][name="' + field.colId + '"]');
-      if (fileInput && fileInput.files && fileInput.files.length) {
-        return Array.prototype.slice.call(fileInput.files);
-      }
+      // Deux champs peuvent porter ce nom : la selection de fichiers et la
+      // prise de vue. On lit les deux.
+      var selecteur = 'input[type="file"][name="' + field.colId + '"]';
+      var champs = typeof rootEl.querySelectorAll === 'function'
+        ? Array.prototype.slice.call(rootEl.querySelectorAll(selecteur))
+        : [rootEl.querySelector(selecteur)];
+      var choisis = [];
+      champs.forEach(function (c) {
+        if (c && c.files && c.files.length) choisis = choisis.concat(Array.prototype.slice.call(c.files));
+      });
+      if (choisis.length) return choisis;
       // Re-render recrée l'input vide : conserver la sélection précédente
       return previous != null ? previous : null;
     }
