@@ -103,10 +103,10 @@ export function capacites(portee = globalThis) {
 /**
  * Verse un fichier dans les pieces jointes d'un document. Rend les ids obtenus.
  *
- * Elle n'ajoute d'elle-meme aucun en-tete — surtout pas `Content-Type` : le
- * corps est un `FormData`, et le navigateur pose lui-meme la frontiere de lot.
  * Ce qui identifie la requete vient de l'appelant (`o.entetes`), parce que ce
- * n'est pas la meme chose dans un widget et dans l'application.
+ * n'est pas la meme chose dans un widget et dans l'application. Le corps, lui,
+ * est construit ICI (`corpsMultipart`), et non confie a un `FormData` : voir
+ * plus bas pourquoi l'application ne pouvait pas s'en servir.
  *
  * > **Une erreur de diagnostic a ne pas refaire.** On a cru, et ecrit, que
  * > l'instance refusait l'envoi depuis l'origine d'un widget. C'etait faux : il
@@ -122,11 +122,14 @@ export function capacites(portee = globalThis) {
  */
 export async function posterPieceJointe(url, fichier, o = {}) {
   const f = o.fetch || ((...a) => globalThis.fetch(...a));
-  const corps = new FormData();
-  corps.append('upload', fichier, fichier.name || 'fichier');
+  const { corps, typeContenu } = await corpsMultipart(fichier);
   let r;
   try {
-    r = await f(url, { method: 'POST', body: corps, headers: o.entetes || undefined });
+    r = await f(url, {
+      method: 'POST',
+      body: corps,
+      headers: { ...(o.entetes || {}), 'Content-Type': typeContenu },
+    });
   } catch (e) {
     // Une requete qui n'aboutit pas ne rend pas de reponse : le navigateur leve
     // un `TypeError` sans rien dire de plus, et « Failed to fetch » affiche tel
@@ -151,6 +154,49 @@ export async function posterPieceJointe(url, fichier, o = {}) {
   }
   const rendu = await r.json();
   return Array.isArray(rendu) ? rendu : [rendu];
+}
+
+/**
+ * Le corps multipart d'un envoi de piece jointe, construit a la main.
+ *
+ * > **Pourquoi pas `FormData`.** Dans l'application, `fetch` est le client
+ * > HTTP natif de Capacitor, qui reconstruit lui-meme un `FormData` en Java — et
+ * > ajoute `Content-Transfer-Encoding: binary` a chaque fichier
+ * > (`CapacitorHttpUrlConnection.writeFormDataRequestBody`, Capacitor 6.2). Le
+ * > lecteur de Grist PLANTE sur cet en-tete : « 500 Internal Server Error ».
+ * > Reproduit le 18/09/2026 sur grist.numerique.gouv.fr, meme corps, meme
+ * > fichier : avec l'en-tete, 500 ; sans lui, 200. La RFC 7578 deconseille
+ * > d'ailleurs cet en-tete dans un formulaire multipart.
+ *
+ * On ecrit donc les octets nous-memes, et on les confie a un `File` : c'est le
+ * seul corps binaire que Capacitor transmet tel quel (type `file`, decode en
+ * octets cote Android — un `Uint8Array` y serait decode en TEXTE et corrompu).
+ * Dans un navigateur, le meme `File` part tel quel : un seul chemin pour les
+ * deux mondes.
+ *
+ * Le nom du fichier est ecrit en UTF-8, comme le fait un navigateur, et ses
+ * guillemets et fins de ligne sont neutralises : ils casseraient l'en-tete.
+ *
+ * @param {File|Blob} fichier
+ * @returns {Promise<{corps: File, typeContenu: string}>}
+ */
+export async function corpsMultipart(fichier) {
+  const frontiere = '----AtlasPieceJointe' + Math.random().toString(36).slice(2, 14)
+    + Date.now().toString(36);
+  const nom = String(fichier?.name || 'fichier')
+    .replace(/[\r\n]+/g, ' ').replace(/"/g, '%22');
+  const type = fichier?.type || 'application/octet-stream';
+  const texte = new TextEncoder();
+  const tete = texte.encode(
+    `--${frontiere}\r\n`
+    + `Content-Disposition: form-data; name="upload"; filename="${nom}"\r\n`
+    + `Content-Type: ${type}\r\n\r\n`,
+  );
+  const pied = texte.encode(`\r\n--${frontiere}--\r\n`);
+  const octets = new Uint8Array(await fichier.arrayBuffer());
+  const typeContenu = `multipart/form-data; boundary=${frontiere}`;
+  const corps = new File([tete, octets, pied], 'corps-multipart', { type: typeContenu });
+  return { corps, typeContenu };
 }
 
 /**

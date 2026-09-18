@@ -187,18 +187,50 @@ test('les capacites disent aussi si l’on est dans une vitrine', () => {
 /** Un vrai `File` : `FormData` n'accepte rien d'autre, ici comme au navigateur. */
 const fichierFactice = (nom = 'photo.jpg') => new File(['img'], nom, { type: 'image/jpeg' });
 
-test('posterPieceJointe n ajoute aucun en-tete de lui-meme — surtout pas Content-Type', async () => {
-  // Le corps est un FormData : le navigateur pose la frontiere de lot. Un
-  // `Content-Type` ecrit a la main la perdrait, et l'instance ne lirait rien.
-  // Ce qui identifie la requete vient de l'appelant.
+/** Relit un envoi comme le ferait l'instance : le corps selon le Content-Type annonce. */
+async function relireEnvoi(o) {
+  const brut = Buffer.from(await o.body.arrayBuffer());
+  const fd = await new Response(brut, { headers: { 'content-type': o.headers['Content-Type'] } }).formData();
+  return { brut: brut.toString('latin1'), fichier: fd.get('upload') };
+}
+
+test('le corps multipart se relit, fichier et nom intacts', async () => {
   let vu = null;
-  const ids = await posterPieceJointe('https://g/doc/attachments?auth=t', fichierFactice(), {
+  const photo = new File([Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 255, 0])], 'Façade nord.jpg', { type: 'image/jpeg' });
+  const ids = await posterPieceJointe('https://g/doc/attachments?auth=t', photo, {
     fetch: async (url, o) => { vu = { url, o }; return { ok: true, json: async () => [7] }; },
   });
   assert.deepEqual(ids, [7]);
   assert.equal(vu.o.method, 'POST');
-  assert.equal(vu.o.headers, undefined);
-  assert.ok(vu.o.body, 'le fichier part dans le corps');
+  const { fichier } = await relireEnvoi(vu.o);
+  assert.equal(fichier.name, 'Façade nord.jpg', 'un nom accentue survit (UTF-8, comme un navigateur)');
+  assert.equal(fichier.type, 'image/jpeg');
+  assert.deepEqual([...new Uint8Array(await fichier.arrayBuffer())], [0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 255, 0]);
+});
+
+test('jamais de Content-Transfer-Encoding : le lecteur de Grist plante dessus (500)', async () => {
+  // Capacitor 6.2 l'ajoutait a chaque fichier en reconstruisant un FormData en
+  // Java. Reproduit le 18/09/2026 : meme corps, avec l'en-tete 500, sans 200.
+  let vu = null;
+  await posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
+    fetch: async (url, o) => { vu = o; return { ok: true, json: async () => [1] }; },
+  });
+  const { brut } = await relireEnvoi(vu);
+  assert.ok(!/content-transfer-encoding/i.test(brut));
+});
+
+test('le corps part comme un File : le seul corps binaire que Capacitor transmet tel quel', async () => {
+  // Un FormData est reconstruit en Java ; un Uint8Array y est decode en TEXTE.
+  let vu = null;
+  await posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
+    fetch: async (url, o) => { vu = o; return { ok: true, json: async () => [1] }; },
+  });
+  assert.ok(vu.body instanceof File);
+  assert.match(vu.headers['Content-Type'], /^multipart\/form-data; boundary=/);
+  const frontiere = vu.headers['Content-Type'].split('boundary=')[1];
+  const { brut } = await relireEnvoi(vu);
+  assert.ok(brut.startsWith(`--${frontiere}\r\n`) && brut.endsWith(`--${frontiere}--\r\n`),
+    'la frontiere annoncee est celle du corps');
 });
 
 test('un refus d envoi se nomme, avec le code et le motif', async () => {
@@ -226,7 +258,7 @@ test('dans un widget, l envoi passe par le jeton du document', async () => {
   // Sans cet en-tete, la protection CSRF de Grist rend un 401 que le navigateur
   // masque en `net::ERR_FAILED` : on avait conclu, a tort, a un refus d'origine.
   assert.equal(entetes['X-Requested-With'], 'XMLHttpRequest');
-  assert.equal(entetes['Content-Type'], undefined);
+  assert.match(entetes['Content-Type'], /^multipart\/form-data; boundary=/);
 });
 
 test('sans jeton, on le dit — au lieu d envoyer dans le vide', async () => {
@@ -249,7 +281,7 @@ test('dans l application, c est la cle qui se presente', async () => {
   assert.deepEqual(ids, [9]);
   assert.equal(vu.u, 'https://g/api/docs/doc1/attachments');
   assert.equal(vu.o.headers.Authorization, 'Bearer cle');
-  assert.equal(vu.o.headers['Content-Type'], undefined, 'le corps est multipart, pas du JSON');
+  assert.match(vu.o.headers['Content-Type'], /^multipart\/form-data; boundary=/, 'le corps est multipart, pas du JSON');
 });
 
 test('sans cle, l envoi est refuse avant de partir', async () => {

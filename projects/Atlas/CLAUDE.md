@@ -173,8 +173,14 @@ de non-régression :
 > Le raccourci trompeur : « pas d'en-tête = requête simple = pas de CORS ». C'est
 > vrai du navigateur, et sans objet ici — le refus venait du serveur.
 
-Le corps est un `FormData` : **jamais** de `Content-Type` à la main, le navigateur
-pose la frontière de lot. Le garde d'écriture est consulté avant l'envoi — verser
+**Le corps multipart est construit par Atlas** (`corpsMultipart`), pas confié à
+un `FormData`. Dans l'application, Capacitor 6.2 reconstruit un `FormData` en
+Java et ajoute `Content-Transfer-Encoding: binary` à chaque fichier ; le lecteur
+de Grist **plante** dessus. Reproduit le 18/09/2026, même corps, même fichier :
+avec l'en-tête **500 Internal Server Error**, sans lui 200. Atlas écrit donc les
+octets lui-même et les confie à un `File` — le seul corps binaire que Capacitor
+transmet tel quel (un `Uint8Array` y serait décodé en texte). Le nom du fichier
+part en UTF-8, comme depuis un navigateur. Le garde d'écriture est consulté avant l'envoi — verser
 un fichier **est** une écriture. Et `uploadFile` est `async` : un refus lancé de
 façon synchrone sortirait de la chaîne de promesses du moteur, et la fiche
 resterait figée sur « Envoi… ». Un échec sans réponse s'affiche en clair plutôt
