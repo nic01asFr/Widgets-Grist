@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  TABLES_SIGNATURE, PARALLELISME, estSceneAtlas, listerTousDocs, listerScenesAtlas,
+  TABLES_SIGNATURE, PARALLELISME, DELAI_MS, estSceneAtlas, listerTousDocs, listerScenesAtlas,
 } from '../lib/decouverte.js';
 
 /** Faux serveur : orgs → espaces → documents, et tables par document. */
@@ -135,3 +135,42 @@ test('compte vide : aucune scene, aucune erreur', async () => {
   const s = serveur({ orgs: [] });
   assert.deepEqual(await listerScenesAtlas('https://x.fr', 'K', { fetchFn: s.fetchFn }), []);
 });
+
+/* ---------- ne jamais rester suspendu sans rien dire ---------- */
+
+test('une requete qui ne revient jamais finit par rendre la main', async () => {
+  // C'est le defaut vu sur le telephone : l'ecran restait sur « Recherche… »,
+  // sans fin et sans cause. Une attente bornee transforme ce silence en message.
+  const jamais = () => new Promise(() => {});
+  const debut = Date.now();
+  await assert.rejects(
+    listerTousDocs('https://g', 'cle', jamais, undefined, 40),
+    /Pas de reponse en/,
+  );
+  assert.ok(Date.now() - debut < 2000, 'on ne doit pas attendre le delai par defaut');
+  assert.equal(DELAI_MS, 20000, 'le delai par defaut reste annonce');
+});
+
+test('chaque etape de l inventaire s annonce, avant meme le sondage', async () => {
+  // Sur un compte a plusieurs organisations, l'inventaire precede le sondage et
+  // peut durer. Sans ces etapes, l'ecran est muet pendant tout ce temps.
+  const { fetchFn } = serveur({
+    orgs: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }],
+    espaces: {
+      1: [{ name: 'E1', docs: [{ id: 'd1', name: 'Un', updatedAt: '2026-01-02' }] }],
+      2: [{ name: 'E2', docs: [{ id: 'd2', name: 'Deux', updatedAt: '2026-01-01' }] }],
+    },
+    tables: { d1: ['Atlas_Story'], d2: ['Autre'] },
+  });
+  const etapes = [];
+  const scenes = await listerScenesAtlas('https://g', 'cle', {
+    fetchFn, onEtape: (e) => etapes.push(e),
+  });
+  assert.deepEqual(scenes.map((s) => s.id), ['d1']);
+  assert.deepEqual(etapes[0], { phase: 'organisations' }, 'on dit qu on se connecte AVANT la reponse');
+  assert.deepEqual(etapes[1], { phase: 'organisations', total: 2 });
+  assert.deepEqual(etapes[2], { phase: 'espaces', fait: 1, total: 2, docs: 1 });
+  assert.deepEqual(etapes[3], { phase: 'espaces', fait: 2, total: 2, docs: 2 });
+  assert.deepEqual(etapes[4], { phase: 'documents', total: 2 });
+});
+

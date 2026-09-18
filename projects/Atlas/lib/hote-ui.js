@@ -330,6 +330,22 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   try {
     await listerScenesAtlas(config.baseUrl, config.jeton, {
       fetchFn: portee.fetch?.bind(portee),
+      // L'inventaire precede le sondage, et il peut durer : sur un compte a
+      // plusieurs organisations, l'ecran restait sur « Recherche… » sans que
+      // rien ne dise si l'instance repondait. Chaque etape s'annonce donc.
+      onEtape: (e) => {
+        if (e.phase === 'organisations') {
+          progres.textContent = e.total == null
+            ? 'Connexion au compte…'
+            : `${e.total} organisation${e.total > 1 ? 's' : ''} — inventaire des documents…`;
+        } else if (e.phase === 'espaces') {
+          progres.textContent = `Inventaire ${e.fait} / ${e.total} — ${e.docs} document${e.docs > 1 ? 's' : ''}`;
+        } else if (e.phase === 'documents') {
+          progres.textContent = e.total
+            ? `${e.total} documents à examiner…`
+            : 'Aucun document accessible avec cette clé.';
+        }
+      },
       onTrouve: (scene) => {
         trouvees.push(scene);
         const deja = liste.querySelector(`[data-scene="${CSS.escape(scene.id)}"]`);

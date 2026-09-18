@@ -31,10 +31,35 @@ function entetes(jeton) {
   return h;
 }
 
-async function jget(url, jeton, fetchFn) {
-  const r = await (fetchFn || fetch)(url, { headers: entetes(jeton) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+/** Au-dela, on considere que la reponse ne viendra pas. */
+export const DELAI_MS = 20000;
+
+/**
+ * Une requete qui ne revient jamais laissait l'ecran sur « Recherche… », sans
+ * fin et sans cause : rien ne distingue une instance muette d'un balayage long.
+ * L'attente est donc bornee, et son echeance se nomme.
+ *
+ * `AbortController` ne suffit pas ici : dans l'application, `fetch` est remplace
+ * par le client HTTP natif de Capacitor, qui ignore le signal. On court donc
+ * l'appel contre une horloge — la requete peut continuer sa vie, l'ecran, lui,
+ * reprend la main.
+ */
+async function jget(url, jeton, fetchFn, delai = DELAI_MS) {
+  const appel = (fetchFn || fetch)(url, { headers: entetes(jeton) });
+  let minuteur;
+  const horloge = new Promise((_, rejeter) => {
+    minuteur = setTimeout(
+      () => rejeter(new Error(`Pas de reponse en ${Math.round(delai / 1000)} s : ${url}`)),
+      delai,
+    );
+  });
+  try {
+    const r = await Promise.race([appel, horloge]);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally {
+    clearTimeout(minuteur);
+  }
 }
 
 /**
@@ -54,15 +79,25 @@ async function enParallele(items, limite, tache) {
   return out;
 }
 
-/** Tous les documents accessibles, a plat, avec leur organisation et leur espace. */
-export async function listerTousDocs(baseUrl, jeton, fetchFn) {
+/**
+ * Tous les documents accessibles, a plat, avec leur organisation et leur espace.
+ *
+ * `onEtape` dit ou l'on en est AVANT le sondage des documents. Sans lui, un
+ * compte a plusieurs organisations laisse l'ecran muet pendant tout
+ * l'inventaire — et un ecran muet se lit comme une panne.
+ */
+export async function listerTousDocs(baseUrl, jeton, fetchFn, onEtape, delai = DELAI_MS) {
   const base = String(baseUrl || '').replace(/\/+$/, '');
-  const orgs = await jget(`${base}/api/orgs`, jeton, fetchFn);
+  const dire = typeof onEtape === 'function' ? onEtape : () => {};
+  dire({ phase: 'organisations' });
+  const orgs = await jget(`${base}/api/orgs`, jeton, fetchFn, delai);
+  dire({ phase: 'organisations', total: orgs.length });
   const docs = [];
+  let faites = 0;
   for (const org of orgs) {
     let espaces = [];
-    try { espaces = await jget(`${base}/api/orgs/${org.id}/workspaces`, jeton, fetchFn); }
-    catch (_) { continue; }
+    try { espaces = await jget(`${base}/api/orgs/${org.id}/workspaces`, jeton, fetchFn, delai); }
+    catch (_) { faites++; dire({ phase: 'espaces', fait: faites, total: orgs.length, docs: docs.length }); continue; }
     for (const e of espaces) {
       for (const d of (e.docs || [])) {
         docs.push({
@@ -71,15 +106,17 @@ export async function listerTousDocs(baseUrl, jeton, fetchFn) {
         });
       }
     }
+    faites++;
+    dire({ phase: 'espaces', fait: faites, total: orgs.length, docs: docs.length });
   }
   return docs;
 }
 
 /** Ce document porte-t-il une scene Atlas ? */
-export async function estSceneAtlas(docId, baseUrl, jeton, fetchFn) {
+export async function estSceneAtlas(docId, baseUrl, jeton, fetchFn, delai = DELAI_MS) {
   const base = String(baseUrl || '').replace(/\/+$/, '');
   try {
-    const t = await jget(`${base}/api/docs/${docId}/tables`, jeton, fetchFn);
+    const t = await jget(`${base}/api/docs/${docId}/tables`, jeton, fetchFn, delai);
     const ids = new Set((t.tables || []).map((x) => x.id));
     return TABLES_SIGNATURE.some((nom) => ids.has(nom));
   } catch (_) { return false; }
@@ -92,12 +129,13 @@ export async function estSceneAtlas(docId, baseUrl, jeton, fetchFn) {
  * pendant l'exploration au lieu d'apparaitre d'un bloc a la fin. `onProgres`
  * suit l'avancement, qui se compte en documents sondes, pas en scenes trouvees.
  */
-export async function listerScenesAtlas(baseUrl, jeton, { onProgres, onTrouve, fetchFn } = {}) {
-  const tous = await listerTousDocs(baseUrl, jeton, fetchFn);
+export async function listerScenesAtlas(baseUrl, jeton, { onProgres, onTrouve, onEtape, fetchFn, delai = DELAI_MS } = {}) {
+  const tous = await listerTousDocs(baseUrl, jeton, fetchFn, onEtape, delai);
   tous.sort((a, b) => String(b.maj || '').localeCompare(String(a.maj || '')));
+  if (typeof onEtape === 'function') onEtape({ phase: 'documents', total: tous.length });
   let faits = 0;
   const marques = await enParallele(tous, PARALLELISME, async (d) => {
-    const ok = await estSceneAtlas(d.id, baseUrl, jeton, fetchFn);
+    const ok = await estSceneAtlas(d.id, baseUrl, jeton, fetchFn, delai);
     faits++;
     if (ok && onTrouve) onTrouve(d);
     if (onProgres) onProgres(faits, tous.length);
