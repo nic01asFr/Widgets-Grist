@@ -820,6 +820,22 @@ export function valeursPourMoteur(formDef, props) {
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
  * @param {() => void} [o.apresEcriture]
  */
+/**
+ * Ecrit la ligne, en nommant l'etape si elle echoue.
+ *
+ * Une fiche avec photo fait deux ecritures — le fichier, puis la ligne. Un
+ * « HTTP 500 » seul ne dit pas laquelle a echoue ; l'envoi du fichier se nomme
+ * deja (`posterPieceJointe`), la ligne se nomme ici.
+ */
+async function ecrireLigne(docApi, actions) {
+  try {
+    return await docApi.applyUserActions(actions);
+  } catch (e) {
+    const msg = String(e?.message || e || '');
+    throw new Error(/^Enregistrement/.test(msg) ? msg : `Enregistrement de la ligne refusé — ${msg}`);
+  }
+}
+
 export function pontFormulaire({
   couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs, formulaire,
 }) {
@@ -868,7 +884,7 @@ export function pontFormulaire({
       // fait foi. Sans `via`, on refuse plutôt que de créer un orphelin.
       if (!formulaire.via) throw new Error('Formulaire lié sans colonne de référence');
       const champs = { ...data, [formulaire.via]: rowId };
-      const r = await docApi.applyUserActions([['AddRecord', table, null, champs]]);
+      const r = await ecrireLigne(docApi, [['AddRecord', table, null, champs]]);
       dire('Relevé ajouté', true);
       if (typeof apresEcriture === 'function') apresEcriture();
       return r;
@@ -882,7 +898,7 @@ export function pontFormulaire({
     // Le garde est consulté ici, pas à la construction du pont : les droits
     // peuvent avoir changé entre l'ouverture de la fiche et la soumission.
     garde();
-    await docApi.applyUserActions([['UpdateRecord', table, id ?? rowId, data]]);
+    await ecrireLigne(docApi, [['UpdateRecord', table, id ?? rowId, data]]);
     dire('Enregistré', true);
     if (typeof apresEcriture === 'function') apresEcriture();
   };

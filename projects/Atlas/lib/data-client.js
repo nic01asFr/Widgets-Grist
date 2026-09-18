@@ -143,7 +143,11 @@ export async function posterPieceJointe(url, fichier, o = {}) {
   }
   if (!r.ok) {
     const texte = await r.text().catch(() => '');
-    throw new Error(`HTTP ${r.status}${texte ? ' — ' + texte.slice(0, 160) : ''}`);
+    // Le message nomme l'etape : une fiche avec photo fait DEUX ecritures —
+    // le fichier, puis la ligne —, et « HTTP 500 » seul ne dit pas laquelle a
+    // echoue. La reponse complete part dans la console, pour le diagnostic.
+    try { console.warn('[Atlas piece jointe] refus', r.status, texte); } catch (_) { /* rien */ }
+    throw new Error(`Envoi de la photo refusé (HTTP ${r.status})${texte ? ' — ' + texte.slice(0, 200) : ''}`);
   }
   const rendu = await r.json();
   return Array.isArray(rendu) ? rendu : [rendu];

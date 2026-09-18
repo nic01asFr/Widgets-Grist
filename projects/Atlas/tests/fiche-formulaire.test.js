@@ -958,3 +958,13 @@ test('le pont sait verser une photo, et le garde d ecriture s applique aussi a e
   await assert.rejects(() => lecteur.uploadFile({ name: 'facade.jpg' }), /lecture/);
   assert.deepEqual(envoyes, ['facade.jpg'], 'rien de plus n a ete envoye');
 });
+
+test('un refus a l ecriture de la ligne se nomme comme tel', async () => {
+  // Une fiche avec photo fait deux ecritures ; « HTTP 500 » seul ne disait pas
+  // laquelle avait echoue. L'envoi du fichier se nomme deja, la ligne aussi.
+  const api = fauxDocApi();
+  api.applyUserActions = async () => { throw new Error('HTTP 500 — Internal error'); };
+  const p = pontFormulaire({ couche: COUCHE_PONT, rowId: 3, docApi: api, peutEcrire: () => true });
+  await assert.rejects(() => p.updateRow('x', 3, { nom: 'Mairie' }), /Enregistrement de la ligne refusé — HTTP 500/);
+});
+

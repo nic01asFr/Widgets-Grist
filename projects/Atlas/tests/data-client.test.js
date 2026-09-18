@@ -206,7 +206,7 @@ test('un refus d envoi se nomme, avec le code et le motif', async () => {
     posterPieceJointe('https://g/doc/attachments', fichierFactice(), {
       fetch: async () => ({ ok: false, status: 403, text: async () => 'Blocked by access rules' }),
     }),
-    /403 — Blocked by access rules/,
+    /Envoi de la photo refusé \(HTTP 403\) — Blocked by access rules/,
   );
 });
 
