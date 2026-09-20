@@ -33,7 +33,21 @@ const VENDOR = [
  * d'import doit donc pointer le dossier local, sinon GLTFLoader repartirait
  * chercher le CDN au premier modele — et echouerait hors reseau.
  */
-const ADDONS = ['loaders/GLTFLoader.js', 'utils/BufferGeometryUtils.js'];
+const ADDONS = [
+  'loaders/GLTFLoader.js',
+  'utils/BufferGeometryUtils.js',
+  // Modeles compresses (vegetation generee) : geometrie meshopt, textures KTX2.
+  // KTX2Loader importe les trois suivants ; le transcodeur Basis, lui, est
+  // charge a l'execution par son chemin (`lib/gltf-chargeur.js`), donc absent de
+  // tout import — l'oublier ne se verrait qu'hors reseau, au premier arbre.
+  'loaders/KTX2Loader.js',
+  'utils/WorkerPool.js',
+  'libs/ktx-parse.module.js',
+  'libs/zstddec.module.js',
+  'libs/meshopt_decoder.module.js',
+  'libs/basis/basis_transcoder.js',
+  'libs/basis/basis_transcoder.wasm',
+];
 
 /**
  * Le moteur de formulaire, embarque comme dans la version publiee.

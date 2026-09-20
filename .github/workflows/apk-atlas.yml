@@ -65,6 +65,10 @@ jobs:
           test -f www/vendor/maplibre-gl.js
           test -f www/vendor/grist_forms/runtime/engine.js
           test -f www/vendor/grist_forms/shared/attachments.js
+          test -f www/lib/gltf-chargeur.js
+          test -f www/vendor/three-addons/loaders/KTX2Loader.js
+          test -f www/vendor/three-addons/libs/meshopt_decoder.module.js
+          test -s www/vendor/three-addons/libs/basis/basis_transcoder.wasm
           ! grep -q "\.\./grist_forms/" www/index.html
 
       - name: Ajouter la plateforme Android
