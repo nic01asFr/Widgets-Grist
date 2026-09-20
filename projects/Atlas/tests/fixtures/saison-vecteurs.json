@@ -1,0 +1,696 @@
+{
+  "schema": "atlas-objets/0.1#season",
+  "rules": "Uniforms de saison du contrat de shader atlas-vegetation-season/0.1.\n\nReference partagee entre le generateur (Python) et Atlas (JS) : memes formules, dans le\nmeme ordre d'operations, verifiees par `objseason_vectors.json`.\n\n    d        jour de l'annee de la date affichee (1er janvier = 1), fraction admise\n    bb, fl   debourrement, feuillage complet\n    cs, cf   debut et fin de la coloration\n    fs, fe   debut et fin de la chute\n    ramp(d, a, b) = 0 si d <= a ; 1 si d >= b ; sinon (d - a) / (b - a)\n                    (si a == b : 0 si d < a, sinon 1)\n\n    caduc            F = ramp(d, bb, fl) * (1 - ramp(d, fs, fe))\n                     A = 0 si d < bb, sinon ramp(d, cs, cf)\n    persistant       F = 1 ; A = 0\n    semi_persistant  F = max(0.5, F_caduc) ; A = min(0.5, A_caduc)\n    marcescent       F = 1 si d < bb, sinon ramp(d, bb, fl)\n                     A = 1 si d < bb, sinon ramp(d, cs, cf)\n\nHypotheses : bb <= fl, cs <= cf, fs <= fe, toutes dans la meme annee civile (hemisphere\nnord). Un marcescent garde ses feuilles seches (A = 1) jusqu'au debourrement suivant,\npuis les perd d'un coup. Un semi-persistant garde en hiver les bouquets _phen <= 0.5,\nqui ne virent jamais (A plafonne a 0.5) : pas de saut au passage d'annee.",
+  "phenologies": {
+    "platane": {
+      "budburst": 100,
+      "full_leaf": 135,
+      "colour_start": 285,
+      "colour_full": 325,
+      "fall_start": 300,
+      "fall_end": 345
+    },
+    "bornes_egales": {
+      "budburst": 120,
+      "full_leaf": 120,
+      "colour_start": 290,
+      "colour_full": 290,
+      "fall_start": 300,
+      "fall_end": 300
+    }
+  },
+  "cases": [
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 1,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 15,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 99.5,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 100,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 117.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 135,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 200,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 285,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.35
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 0.375
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 305,
+      "uFoliage": 0.8888888888888888,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 322.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.9375
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 325,
+      "uFoliage": 0.4444444444444444,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 345,
+      "uFoliage": 0.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 360,
+      "uFoliage": 0.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "caduc",
+      "d": 366,
+      "uFoliage": 0.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 1,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 15,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 99.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 100,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 117.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 135,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 200,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 285,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 305,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 322.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 325,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 345,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 360,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "persistant",
+      "d": 366,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 1,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 15,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 99.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 100,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 117.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 135,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 200,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 285,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.35
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 0.375
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 305,
+      "uFoliage": 0.8888888888888888,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 322.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 325,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 345,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 360,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "semi_persistant",
+      "d": 366,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 1,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 15,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 99.5,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 100,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 117.5,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 135,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 200,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 285,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.35
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 0.375
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 305,
+      "uFoliage": 1.0,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 322.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.9375
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 325,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 345,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 360,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "platane",
+      "leaf_type": "marcescent",
+      "d": 366,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 119,
+      "uFoliage": 0.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 120,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 121,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 289.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 290,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 300,
+      "uFoliage": 0.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "caduc",
+      "d": 301,
+      "uFoliage": 0.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 119,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 120,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 121,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 289.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 290,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "persistant",
+      "d": 301,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 119,
+      "uFoliage": 0.5,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 120,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 121,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 289.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 290,
+      "uFoliage": 1.0,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 300,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "semi_persistant",
+      "d": 301,
+      "uFoliage": 0.5,
+      "uAutumn": 0.5
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 119,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 120,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 121,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 289.5,
+      "uFoliage": 1.0,
+      "uAutumn": 0.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 290,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 299,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 300,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    },
+    {
+      "phen": "bornes_egales",
+      "leaf_type": "marcescent",
+      "d": 301,
+      "uFoliage": 1.0,
+      "uAutumn": 1.0
+    }
+  ]
+}

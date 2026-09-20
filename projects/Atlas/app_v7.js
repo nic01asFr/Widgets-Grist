@@ -7,7 +7,12 @@
 import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=20260827a';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
+import { lireCatalogue, resoudreObjet } from './lib/catalogue-objets.js?v=20260919a';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=20260918c';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -449,6 +454,135 @@ async function probeLocalModels() {
     }
     console.log('🧩 Atlas — base modèles (défaut) :', MODEL_LIBRARY.baseUrl, '— aucun chemin local trouvé. Sers la racine du repo, ou règle la source dans le module Modèles.');
 }
+// ============================================================
+// CATALOGUE D'OBJETS PARAMETRIQUES (atlas-objets/0.1)
+// ============================================================
+/**
+ * Un catalogue d'objets generes (vegetation d'abord), POINTE par son URL.
+ *
+ * Contrat : `pix2hdr/docs/SPEC-ATLAS-OBJETS-0.1.md`, lecture pure dans
+ * `lib/catalogue-objets.js`. Il ne remplace pas le catalogue low-poly : celui-ci
+ * reste le repli (hors ligne, echec de chargement, licence refusee). Une couche
+ * s'y soumet par l'affectation « Catalogue » de l'onglet Modele 3D ; toute autre
+ * affectation est un choix manuel, qui l'emporte (spec §3.1).
+ *
+ * Source : `?objets=<url>`, sinon le dernier catalogue pointe sur ce poste.
+ */
+const CATALOGUE_OBJETS = { url: null, cat: null, etat: 'aucun', erreur: null };
+
+function urlCatalogueObjetsInitiale() {
+    try {
+        const qp = new URLSearchParams(location.search).get('objets');
+        if (qp) return qp;
+        return localStorage.getItem('atlas_catalogue_objets') || null;
+    } catch (_) { return null; }
+}
+/** L'URL du fichier : un dossier designe son `catalog.json`. */
+function urlFichierCatalogue(url) {
+    const u = String(url || '').trim();
+    return !u || /\.json(\?|#|$)/i.test(u) ? u : u.replace(/\/*$/, '/') + 'catalog.json';
+}
+async function chargerCatalogueObjets(url) {
+    const fichier = urlFichierCatalogue(url);
+    Object.assign(CATALOGUE_OBJETS, { url: fichier || null, cat: null, erreur: null, etat: fichier ? 'chargement' : 'aucun' });
+    if (fichier) {
+        try {
+            const r = await fetch(fichier, { cache: 'no-store' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const cat = lireCatalogue(await r.json(), r.url || fichier);
+            if (!cat.schema) throw new Error('aucun bloc « parametric » atlas-objets/0.x');
+            Object.assign(CATALOGUE_OBJETS, { cat, etat: 'pret' });
+        } catch (e) {
+            // Pas de repli silencieux : l'etat s'affiche dans le module Modeles.
+            Object.assign(CATALOGUE_OBJETS, { etat: 'erreur', erreur: e.message });
+            console.warn('Catalogue d\'objets illisible :', fichier, e.message);
+        }
+    }
+    // Toujours apres un `await` au premier appel : `Models3D` est alors defini.
+    Models3D.scheduleBuild();
+}
+/**
+ * Contexte public (spec §3.8) : page hors Grist et hors application connectee.
+ * Un fichier `usage: internal` y est refuse au profit du repli low-poly.
+ */
+function contextePublic() {
+    try { return capacites().mode !== 'grist' && !peutSAuthentifier(); } catch (_) { return true; }
+}
+/**
+ * D'ou vient une couche (spec §3.2) : la source est une propriete de la
+ * COUCHE, l'objet ne le dit pas.
+ */
+function sourceDeCouche(layer) {
+    if (layer.sourceTable) return { source: 'grist', nom: layer.sourceTable };
+    const tn = typeof layer.geojson === 'string' && /[?&]typeNames?=BDTOPO_V3:([^&]+)/i.exec(layer.geojson);
+    if (tn) return { source: 'bdtopo', nom: decodeURIComponent(tn[1]) };
+    if ((layer.geojson?.features || []).some((f) => f.properties?._osmId)) return { source: 'osm', nom: layer.name };
+    return { source: 'fichier', nom: layer.name };
+}
+/** La couche confie-t-elle le choix de ses modeles au catalogue ? */
+function coucheAuCatalogue(layer) {
+    return layer?.style?.mode === 'library' && layer.style.symbolization?.model?.mode === 'catalogue';
+}
+/**
+ * Le modele d'un objet d'une couche « Catalogue », ou `null` si le catalogue
+ * n'en dit rien. `resolveFeatureProps` fournit les reglages manuels que la spec
+ * compose avec le tirage (§5) : echelle multipliee, azimut ajoute. Dans Atlas,
+ * l'azimut est `rotationZ` (curseur « Rotation Z (azimut) ») ; `placement()` le
+ * pose sur l'axe vertical de three.js.
+ */
+function resolutionCatalogue(layer, feature, distanceM) {
+    if (!CATALOGUE_OBJETS.cat || !coucheAuCatalogue(layer)) return null;
+    if (feature?.properties?._modelId) return null;   // modele pose a la main sur l'objet
+    const p = resolveFeatureProps(feature, layer);
+    return resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
+        set: MODEL_LIBRARY.set,
+        distanceM,
+        public: contextePublic(),
+        echelleCouche: p.scale || 1,
+        rotationCoucheDeg: p.rotationZ || 0,
+    });
+}
+/**
+ * Une texture KTX2 n'est chargee, transcodee et televersee au GPU QU'UNE FOIS,
+ * meme si vingt modeles la citent.
+ *
+ * Les catalogues d'objets PARTAGENT leurs textures : les GLB ne les embarquent
+ * plus, ils les designent par une adresse relative (`../textures/…`). Sans ce
+ * cache, le gain se perd a l'arrivee — mesure le 20/09/2026 sur le catalogue de
+ * vegetation v2 : 42 requetes pour 12 fichiers, soit chaque texture chargee et
+ * televersee quatre fois. GLTFLoader appelle le chargeur une fois par modele et
+ * ne sait rien des autres ; c'est donc ici qu'on se souvient.
+ *
+ * On rend le MEME objet `Texture` a tout le monde : ce qu'en fait ensuite
+ * GLTFLoader (nom, `flipY`, espace colorimetrique) ne depend que du fichier,
+ * donc chaque modele y ecrit la meme chose.
+ */
+function partagerTextures(chargeur) {
+    const cache = new Map();
+    const charger = chargeur.load.bind(chargeur);
+    chargeur.load = (url, onLoad, onProgress, onError) => {
+        let p = cache.get(url);
+        if (!p) {
+            p = new Promise((ok, ko) => charger(url, ok, undefined, ko));
+            cache.set(url, p);
+        }
+        p.then((t) => onLoad?.(t), (e) => { cache.delete(url); onError?.(e); });
+        return null;   // GLTFLoader n'utilise pas la valeur de retour
+    };
+}
+
+/**
+ * Distance camera → objet, en metres, pour le niveau de detail (spec §7).
+ * Le relief est ignore : a ces seuils (40 m, 200 m), l'ecart ne change pas le
+ * niveau retenu hors cas limites.
+ */
+function distanceCamera(cam, lng, lat) {
+    if (!cam) return 0;
+    const mc = maplibregl.MercatorCoordinate.fromLngLat([lng, lat], 0);
+    return Math.hypot(cam.x - mc.x, cam.y - mc.y, (cam.z || 0) - mc.z) / mc.meterInMercatorCoordinateUnits();
+}
+if (urlCatalogueObjetsInitiale()) chargerCatalogueObjets(urlCatalogueObjetsInitiale());
+
 function allModels() {
     const out = [];
     for (const [catId, cat] of Object.entries(MODEL_LIBRARY.categories))
@@ -772,7 +906,7 @@ function initSymbolization(layer) {
     // Même règle pour la catégorisation de modèles : reprise du manifeste une
     // seule fois, tant que la couche n'a pas la sienne. Ensuite c'est le réglage
     // de l'utilisateur qui fait foi.
-    if (sym.model && sym.model.mode !== 'categorized' && layer.style.model?.field) {
+    if (sym.model && sym.model.mode !== 'categorized' && sym.model.mode !== 'catalogue' && layer.style.model?.field) {
         sym.model = { ...sym.model, ...layer.style.model };
     }
     if (sym.label.size == null) sym.label.size = 12;
@@ -1184,13 +1318,44 @@ const Models3D = {
                 }
                 self.renderer.render(self.scene, self.camera);
             },
-            onRemove() { self.disposeInstances(); self.renderer?.dispose?.(); self.renderer = null; self.scene = null; },
+            onRemove() {
+                self.disposeInstances(); self.renderer?.dispose?.(); self.renderer = null; self.scene = null;
+                // Le KTX2 est lie au renderer qui s'en va (et tient des workers).
+                self._ktx2?.dispose?.(); self._ktx2 = null; self._chargeurGltf = null;
+            },
         };
     },
 
+    /**
+     * Un chargeur glTF qui lit aussi les fichiers compresses.
+     *
+     * La vegetation generee (pix2hdr) arrive en `EXT_meshopt_compression` et
+     * `KHR_texture_basisu` : c'est ce qui ramene un platane de 18,8 Mo a 1,9 Mo.
+     * Sans decodeurs, GLTFLoader rejette le fichier et l'arbre manque, un simple
+     * avertissement en console pour toute trace (mesure le 19/09/2026).
+     *
+     * KTX2Loader doit connaitre le renderer pour choisir le format de texture
+     * que le GPU accepte (`detectSupport`). Le renderer naissant dans `onAdd`, un
+     * chargeur cree avant lui n'est pas garde : le suivant aura le KTX2.
+     */
+    chargeurGltf() {
+        if (this._chargeurGltf) return this._chargeurGltf;
+        const loader = new GLTFLoader();
+        loader.setMeshoptDecoder(MeshoptDecoder);
+        if (!this.renderer) return loader;
+        try {
+            this._ktx2 = new KTX2Loader()
+                .setTranscoderPath(cheminTranscodeur(import.meta.resolve?.bind(import.meta)))
+                .detectSupport(this.renderer);
+            partagerTextures(this._ktx2);
+            loader.setKTX2Loader(this._ktx2);
+        } catch (e) { console.warn('KTX2 indisponible :', e.message); }
+        this._chargeurGltf = loader;
+        return loader;
+    },
     async ensureGLTF(url) {
         if (!this.gltfCache.has(url)) {
-            const loader = new GLTFLoader();
+            const loader = this.chargeurGltf();
             this.gltfCache.set(url, loader.loadAsync(url).then((g) => g.scene).catch((e) => { console.warn('GLTF load failed', url, e.message); return null; }));
         }
         return this.gltfCache.get(url);
@@ -1204,7 +1369,10 @@ const Models3D = {
         c.opacity = 1;
         c.depthWrite = true;
         c.depthTest = true;
-        c.alphaTest = 0;
+        // Mais un feuillage `alphaMode: MASK` garde sa découpe (lib/gltf-chargeur.js).
+        // L'ombre la suit d'elle-même : three reprend map et alphaTest dans son
+        // matériau de profondeur.
+        c.alphaTest = seuilDecoupe(m);
         if (c.map) { c.map.colorSpace = THREE.SRGBColorSpace; c.map.needsUpdate = true; }
         c.needsUpdate = true;
         return c;
@@ -1283,8 +1451,13 @@ const Models3D = {
         const eOff = ecartAuSol(this.elevRaw(lng, lat), this.originElev);
         const o = this._obj;
         o.position.set(lm.x + (p.offsetX || 0), eOff + (p.offsetZ || 0), -lm.y - (p.offsetY || 0));
-        const sc = p.scale || 1; o.scale.set(sc, sc, sc);
-        o.rotation.set(deg2rad(p.rotationX || 0), deg2rad(p.rotationZ || 0), deg2rad(p.rotationY || 0), 'YXZ');
+        // Couche « Catalogue » : echelle et azimut composent le reglage manuel
+        // avec la mesure ou la graine de l'objet (spec §5, `resolutionCatalogue`).
+        // Ils ne dependent pas de la distance : le niveau de detail est ignore ici.
+        const cat = resolutionCatalogue(layer, feature, 0);
+        const sc = cat ? cat.echelle : (p.scale || 1); o.scale.set(sc, sc, sc);
+        const azimut = cat ? cat.rotationDeg : (p.rotationZ || 0);
+        o.rotation.set(deg2rad(p.rotationX || 0), deg2rad(azimut), deg2rad(p.rotationY || 0), 'YXZ');
         o.updateMatrix();
         return o.matrix;
     },
@@ -1301,7 +1474,10 @@ const Models3D = {
             const defUrl = getLayerModelUrl(layer);
             const sym = layer.style.symbolization || {};
             const categorized = sym.model?.mode === 'categorized' && sym.model.field;
-            if (!defUrl && !categorized) continue;
+            const parCatalogue = coucheAuCatalogue(layer) && CATALOGUE_OBJETS.cat;
+            if (!defUrl && !categorized && !parCatalogue) continue;
+            // Position de la camera, pour le niveau de detail de chaque objet.
+            const cam = parCatalogue ? map.getFreeCameraOptions?.().position : null;
             const feats = (filteredGeoJSON(layer)?.features || []);
             for (let idx = 0; idx < feats.length; idx++) {
                 const f = feats[idx];
@@ -1311,7 +1487,13 @@ const Models3D = {
                 const [lng, lat] = f.geometry.coordinates;
                 if (lng < b.getWest() - buf || lng > b.getEast() + buf || lat < b.getSouth() - buf || lat > b.getNorth() + buf) continue;
                 let url = defUrl;
-                if (categorized || f.properties?._modelId) { const mm = findModel(resolveFeatureProps(f, layer).modelId); if (mm) url = mm.url; }
+                if (parCatalogue && !f.properties?._modelId) {
+                    const feature = layer.geojson?.features?.[srcIdx] || f;
+                    const r = resolutionCatalogue(layer, feature, distanceCamera(cam, lng, lat));
+                    // Pas de fichier (absent, licence refusee) : le repli low-poly
+                    // du type ; aucun type : le modele de la couche (spec §3.4).
+                    if (r) url = r.url || findModel(r.fallback)?.url || defUrl;
+                } else if (categorized || f.properties?._modelId) { const mm = findModel(resolveFeatureProps(f, layer).modelId); if (mm) url = mm.url; }
                 if (!url) continue;
                 out.push({ layerId: layer.id, idx: srcIdx, lng, lat, url });
                 if (out.length >= MAX_3D_INSTANCES) return out;
@@ -4811,6 +4993,20 @@ function renderModelsPanel() {
             <div class="hint" style="margin-top:6px">Doit contenir <code>colored/</code>, <code>mono/</code> et <code>catalog.json</code>. En local : sers la racine du repo et ouvre <code>/projects/Atlas/index.html</code>.</div>
         </div>
         <div class="section">
+            <div class="section-title">Catalogue d'objets</div>
+            <div class="range-info" style="word-break:break-all">${
+                CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
+                : CATALOGUE_OBJETS.etat === 'erreur' ? `❌ ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
+                : CATALOGUE_OBJETS.etat === 'chargement' ? '… chargement'
+                : 'Aucun'}</div>
+            <input class="input" id="catalogue-objets-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${escapeHtml(CATALOGUE_OBJETS.url || '')}" placeholder="https://…/vegetation/catalog.json">
+            <div style="display:flex;gap:6px;margin-top:6px">
+                <button class="btn btn-soft" style="flex:1" onclick="A.setCatalogueObjets('')">Retirer</button>
+                <button class="btn btn-primary" style="flex:1" onclick="A.setCatalogueObjets(document.getElementById('catalogue-objets-input').value)">Pointer</button>
+            </div>
+            <div class="hint" style="margin-top:6px">Modèles générés d'après les champs des objets (<code>atlas-objets/0.1</code>). Une couche de points s'y soumet par l'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.</div>
+        </div>
+        <div class="section">
             <div class="section-title">Catalogue · ${nModels} modèles</div>
             ${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `
                 <div style="margin:10px 0 4px;font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${c.icon} ${c.name} <span style="color:var(--muted-light)">· ${c.models.length}</span></div>
@@ -5223,7 +5419,7 @@ function fieldSelect(layer, param, current, type) {
     </select>`;
 }
 function modeSeg(layer, param, mode, modes) {
-    const lbl = { single: 'Fixe', categorized: 'Catégorisé', graduated: 'Gradué' };
+    const lbl = { single: 'Fixe', categorized: 'Catégorisé', graduated: 'Gradué', catalogue: 'Catalogue' };
     return `<div class="seg">${modes.map((m) => `<button class="${mode === m ? 'active' : ''}" onclick="A.setSymMode('${layer.id}','${param}','${m}')">${lbl[m]}</button>`).join('')}</div>`;
 }
 function methodChips(layer, param, method) {
@@ -5396,7 +5592,9 @@ function symModelPanel(layer, sym) {
     const selId = layer.style?.library?.modelId;
     const models = allModels();
     let inner;
-    if (m.mode === 'single') {
+    if (m.mode === 'catalogue') {
+        inner = panneauCatalogueCouche(layer, selId);
+    } else if (m.mode === 'single') {
         inner = `<div class="section"><div class="section-title">Catégorie</div>
             <select class="input" onchange="A.setModelCat('${layer.id}', this.value)">${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `<option value="${k}" ${cat === k ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
             <div class="section"><div class="section-title">Modèle de la couche</div>
@@ -5411,9 +5609,47 @@ function symModelPanel(layer, sym) {
             }).join('')}</div></div>
             <div class="section"><div class="section-title">Modèle par défaut</div><select class="input" onchange="A.setDefaultModel('${layer.id}', this.value)"><option value="">— Aucun —</option>${models.map((mm) => `<option value="${mm.id}" ${m.defaultModelId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>` : ''}`;
     }
+    // « Catalogue » n'est offert que si un catalogue d'objets est pointe — ou si
+    // la couche l'utilise deja, pour qu'elle puisse en sortir.
+    const modes = CATALOGUE_OBJETS.url || m.mode === 'catalogue' ? ['single', 'categorized', 'catalogue'] : ['single', 'categorized'];
     return repr
-        + `<div class="section"><div class="section-title">Affectation</div>${modeSeg(layer, 'model', m.mode, ['single', 'categorized'])}</div>`
+        + `<div class="section"><div class="section-title">Affectation</div>${modeSeg(layer, 'model', m.mode, modes)}</div>`
         + inner + commonTransform(layer);
+}
+/**
+ * Affectation « Catalogue » : ce que le catalogue pointe fera de la couche.
+ * Le modele de la couche reste choisi : c'est le repli des objets qu'aucun
+ * type ne reconnait (spec §3.4).
+ */
+function panneauCatalogueCouche(layer, selId) {
+    const c = CATALOGUE_OBJETS;
+    const etat = c.etat === 'pret'
+        ? `${c.cat.types.length} type(s), ${c.cat.assets.length} fichier(s) — <code>${escapeHtml(c.cat.id || c.url)}</code>`
+        : c.etat === 'chargement' ? 'Chargement du catalogue…'
+        : c.etat === 'erreur' ? `Catalogue illisible : ${escapeHtml(c.erreur)}`
+        : 'Aucun catalogue pointé : module Modèles → Catalogue d\'objets.';
+    let reconnus = 0, refuses = 0;
+    if (c.cat) {
+        const src = sourceDeCouche(layer);
+        const pub = contextePublic();
+        for (const f of layer.geojson?.features || []) {
+            if (f.geometry?.type !== 'Point') continue;
+            const r = resoudreObjet(c.cat, src, f, { lod: 1 });
+            if (!r) continue;
+            reconnus++;
+            if (pub && r.asset?.licence?.usage === 'internal') refuses++;
+        }
+    }
+    const n = (layer.geojson?.features || []).length;
+    // Un refus de licence ressemble a une panne : il se dit.
+    const refus = refuses ? `<div class="hint" style="margin-top:6px;color:var(--accent)">${refuses} d'entre eux restent en modèle de repli : leurs fichiers sont réservés à un usage interne, et cette page est publique (hors Grist). Ouverte depuis un document Grist ou l'application, elle les affiche.</div>` : '';
+    return `<div class="section"><div class="section-title">Catalogue d'objets</div>
+        <div class="range-info" style="word-break:break-all">${etat}</div>
+        ${c.cat ? `<div class="hint" style="margin-top:6px">${reconnus} objet(s) sur ${n} reconnu(s) par un type du catalogue. Les autres gardent le modèle de repli ci-dessous.</div>` : ''}
+        ${refus}
+        <div class="hint" style="margin-top:6px">Le modèle de chaque objet est choisi d'après ses champs ; variante, orientation et taille sont tirées de sa position. L'échelle et l'azimut de la couche s'y appliquent en plus.</div></div>
+        <div class="section"><div class="section-title">Repli (objets non reconnus)</div>
+        <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>`;
 }
 function commonTransform(layer) {
     const c = layer.style.common = layer.style.common || { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 };
@@ -6245,6 +6481,12 @@ async function runOSM(key) {
         if (!geojson.features.length) { hideLoading(); showToast('Aucun résultat', 'warning'); return; }
         const geomType = preset.geomType || geojson.features[0].geometry.type;
         const layer = makeLayer(preset.name, geomType, geojson, preset.category, preset.model);
+        // Un catalogue d'objets pointe qui reconnait ces objets les prend en
+        // charge d'emblee ; le modele du preset devient leur repli.
+        if (CATALOGUE_OBJETS.cat && layer.style.mode === 'library'
+            && geojson.features.some((f) => resoudreObjet(CATALOGUE_OBJETS.cat, { source: 'osm', nom: layer.name }, f, { lod: 1 }))) {
+            initSymbolization(layer).model.mode = 'catalogue';
+        }
         finalizeNewLayer(layer);
         hideLoading();
         showToast(`${geojson.features.length} objets importés`, 'success');
@@ -8601,6 +8843,17 @@ const A = {
         Models3D.gltfCache.clear(); Models3D.protoCache.clear(); Models3D.forceBuild();
         renderModelsPanel(); showToast('Source modèles définie', 'success');
     },
+    async setCatalogueObjets(url) {
+        const u = String(url || '').trim();
+        try { if (u) localStorage.setItem('atlas_catalogue_objets', u); else localStorage.removeItem('atlas_catalogue_objets'); } catch (e) {}
+        await chargerCatalogueObjets(u);
+        // Le module Modeles n'est redessine que s'il est ouvert : il ecrit dans
+        // le corps de module commun, qu'un autre module occupe peut-etre.
+        if (document.getElementById('catalogue-objets-input')) renderModelsPanel();
+        renderInspector();
+        if (CATALOGUE_OBJETS.etat === 'pret') showToast('Catalogue d\'objets pointé', 'success');
+        else if (CATALOGUE_OBJETS.etat === 'erreur') showToast('Catalogue illisible : ' + CATALOGUE_OBJETS.erreur, 'error');
+    },
     async testModelBase() {
         const base = ((document.getElementById('model-src-input')?.value || MODEL_LIBRARY.baseRoot).trim().replace(/\/+$/, '')) + '/';
         const el = document.getElementById('model-src-info');
@@ -8611,9 +8864,15 @@ const A = {
             else if (el) { el.textContent = `❌ HTTP ${r.status} · ${base}`; el.style.color = 'var(--accent)'; }
         } catch (e) { if (el) { el.textContent = `❌ ${e.message} · ${base}`; el.style.color = 'var(--accent)'; } }
     },
-    pickModel(id, modelId) {
+    pickModel(id, modelId, repliCatalogue = false) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         l.style.mode = 'library'; l.style.library = { modelId };
+        // Sous l'affectation « Catalogue », on ne change que le repli : le reste
+        // (affectation, reglages de couche) est garde.
+        if (repliCatalogue) {
+            Models3D.forceBuild(); renderInspector(); markDirty();
+            return;
+        }
         // remplace réellement : repasse en modèle unique et purge le mode catégorisé
         // + les overrides _modelId par objet (sinon d'anciens modèles « restent »)
         const sym = initSymbolization(l);
@@ -8898,6 +9157,7 @@ const A = {
         if (mode === 'graduated' && sym[param].field) { const r = getNumericRange(l, sym[param].field); if (r.count) sym[param].inputRange = [r.min, r.max]; }
         if (mode === 'categorized' && sym[param].field) regenCategories(l, param);
         syncLayerDeclarative(l); applyLayerStyle(l); renderInspector();
+        if (param === 'model') { Models3D.forceBuild(); markDirty(); }
     },
     setSymField(id, param, field) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;

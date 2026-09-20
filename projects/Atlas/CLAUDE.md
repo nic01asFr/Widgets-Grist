@@ -410,6 +410,79 @@ sur une surface, une ligne ou un point rendu en cercle 2D.
   vitrine. Vérifié sur une scène d'essai : un polygone portant un `gltf_url` est
   bien rendu en surface, jamais en cercles.
 
+## Modèles glTF compressés et feuillages découpés (19/09/2026)
+
+Préalable à la végétation générée par pix2hdr (cadrage
+`pix2hdr/docs/CADRAGE-GENERATEUR-VEGETATION.md`). Deux règles, dans
+`lib/gltf-chargeur.js` (testées) :
+
+- **`fixGltfMaterial` garde le seuil de découpe d'un matériau `alphaMode: MASK`**
+  (`seuilDecoupe`). Le reste est inchangé : `BLEND` reste forcé en opaque contre
+  le « fantôme » des modèles photogrammétriques. Aucun modèle du catalogue livré
+  ne déclare de transparence. Symptôme de l'ancien comportement, mesuré sur le
+  platane d'essai : **pas de rectangles** — la couleur sous la partie
+  transparente est verte (débord de texture), les cartes se fondent en houppier
+  plein, sans trou de ciel, avec une ombre trop dense. À l'œil, rien ne signale
+  le défaut : le vérifier par la mesure.
+- **Le chargeur lit `EXT_meshopt_compression` et `KHR_texture_basisu`**
+  (`Models3D.chargeurGltf`). KTX2Loader exige `detectSupport(renderer)` : le
+  chargeur n'est gardé qu'une fois le renderer créé (`onAdd`), et libéré avec
+  lui (`onRemove`). Le transcodeur Basis se charge par un chemin, pas par un
+  import : `cheminTranscodeur` le demande à la carte d'import
+  (`import.meta.resolve`), donc CDN dans le widget, `./vendor/three-addons/`
+  dans l'application. Écrit en dur, il aurait échoué hors réseau sans message.
+  `packages/atlas-app/scripts/vendoriser.mjs` embarque KTX2Loader, WorkerPool,
+  ktx-parse, zstddec, meshopt et le transcodeur (`.js` + `.wasm`).
+
+Éprouvé le 19/09/2026 : 885 arbres OSM de Longchamp en platane compressé
+(1,9 Mo, contre 18,8 Mo non compressé), feuilles découpées, dans le widget
+**et** dans le paquet de l'application, décodeurs lus en local. Un échec de
+chargement ne laisse encore qu'un avertissement en console (`GLTF load failed`).
+
+**Essai sans toucher au catalogue** : la liste des modèles est codée en dur
+(`MODEL_LIBRARY.categories`) ; `catalog.json` n'est lu que pour vérifier la
+source. On essaie donc un modèle par **substitution** : un dossier
+`<base>/catalog.json` + `<base>/colored/TreeDeciduous.glb`, désigné par
+`?models=<base>` (ou le champ Source du module Modèles). Dans l'application,
+`window.__ATLAS_MODELES__` passe avant `?models=`.
+
+## Catalogue d'objets paramétriques — `atlas-objets/0.1` (19/09/2026)
+
+Contrat figé avec le générateur pix2hdr : `pix2hdr/docs/SPEC-ATLAS-OBJETS-0.1.md`.
+Atlas **pointe** un catalogue et choisit, pour chaque objet, le modèle que ses champs
+désignent ; il ne génère rien. Le catalogue low-poly reste le repli.
+
+- **Lecture pure et testée** : `lib/catalogue-objets.js` (type par `matches`, départage
+  priorité → spécificité → ordre du catalogue, mesures `osm_length`, seuils, fichier avec
+  dégradation variante → variante 0 → niveau de détail le plus proche, saison) et
+  `lib/graine.js` (FNV-1a sur la clé `ll:<microdegrés>`). Les deux passent **au bit près**
+  les vecteurs du générateur, copiés tels quels dans `tests/fixtures/`
+  (`graine-vecteurs.json`, `saison-vecteurs.json`) : ne pas les régénérer ici, c'est
+  l'implémentation Python qui fait foi.
+- **Pointer** : `?objets=<url>` ou module Modèles → « Catalogue d'objets » (mémorisé
+  sur le poste, `atlas_catalogue_objets`). Un dossier désigne son `catalog.json`.
+- **Une couche s'y soumet** par une 3ᵉ affectation de l'onglet Modèle 3D, « Catalogue »
+  (`symbolization.model.mode === 'catalogue'`). Ce n'est **pas** un nouveau
+  `style.mode` : de nombreux endroits reconnaissent un modèle 3D à `style.mode ===
+  'library'`. Un import OSM la prend d'office si le catalogue reconnaît au moins un
+  objet. Le modèle de la couche est le repli des objets non reconnus.
+- **Composition (§5)** : échelle = échelle de couche × (hauteur mesurée / `height_m`,
+  sinon tirage) ; azimut = azimut de couche + tirage. **L'azimut d'Atlas est
+  `rotationZ`** (posé sur l'axe vertical de three.js par `placement()`), pas
+  `rotationY` comme l'écrivait la spec.
+- **Contexte public (§3.8)** : hors Grist et hors application connectée
+  (`contextePublic()`), un fichier `usage: internal` est refusé → repli. Le panneau de
+  la couche le **dit** : sans cela, on croit à une panne (vécu à l'essai).
+- **Niveau de détail** : distance caméra → objet à la construction (`distanceCamera`),
+  seuils du type ; pas d'hystérésis encore.
+
+Éprouvé à Notre-Dame-du-Mont (Marseille, 1 332 arbres OSM) : platanes en 4 variantes,
+orientés et dimensionnés par la graine. **Constat bloquant pour l'usage réel** : OSM
+écrit `species` de sept façons (`Platanus x hispanica`, `× hispanica 'Vallis Clausa'`,
+`×acerifolia`…), la comparaison exacte n'en reconnaît que 14 sur ~210 ; un opérateur de
+correspondance est demandé pour la 0.2. Pas encore faits : shader de saison, semis de
+surfaces (projection L93), échelle non uniforme.
+
 ## Scène 3D — trois causes distinctes de décalage
 
 Les modèles « bougeaient avec la carte ». Trois défauts indépendants s’y

@@ -1,0 +1,2364 @@
+{
+  "generatedAt": "2026-09-19T01:19:42+00:00",
+  "sets": [
+    "colored",
+    "mono"
+  ],
+  "categories": {
+    "vegetation": {
+      "icon": "🌳",
+      "name": "Végétation"
+    }
+  },
+  "models": [
+    {
+      "id": "tree_deciduous",
+      "name": "Arbre feuillu",
+      "icon": "🌳",
+      "category": "vegetation",
+      "file": "TreeDeciduous.glb",
+      "heightMeters": 5.9
+    }
+  ],
+  "parametric": {
+    "schema": "atlas-objets/0.1",
+    "catalog_id": "cerema.vegetation.essai",
+    "version": "0.1.0",
+    "generated_at": "2026-09-19T01:19:42+00:00",
+    "shaders": {
+      "atlas-vegetation-season/0.1": {
+        "description": "Saison par modèle : feuillage présent, coloration d'automne. Variation individuelle par _phen et _tint (par bouquet).",
+        "attributes": [
+          "_part",
+          "_phen",
+          "_tint",
+          "_pivot"
+        ],
+        "uniforms": {
+          "uFoliage": {
+            "type": "float",
+            "range": [
+              0,
+              1
+            ],
+            "default": 1,
+            "description": "Part des bouquets présents : un bouquet de feuilles est replié sur _pivot si _phen > uFoliage."
+          },
+          "uAutumn": {
+            "type": "float",
+            "range": [
+              0,
+              1
+            ],
+            "default": 0,
+            "description": "Part des bouquets colorés : un bouquet vire si _phen > 1 - uAutumn."
+          },
+          "uAutumnColor": {
+            "type": "vec3",
+            "default": [
+              0.62,
+              0.38,
+              0.12
+            ],
+            "description": "Teinte d'automne, espace linéaire."
+          }
+        }
+      }
+    },
+    "types": [
+      {
+        "id": "platanus_orientalis",
+        "family": "vegetation",
+        "name": "Platane (d'Orient et commun)",
+        "icon": "🌳",
+        "category": "vegetation",
+        "fallback": "tree_deciduous",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "osm",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "natural": "tree",
+              "genus": [
+                "Platanus"
+              ]
+            }
+          },
+          {
+            "source": "osm",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "natural": "tree",
+              "species": [
+                "Platanus orientalis",
+                "Platanus × hispanica",
+                "Platanus x acerifolia"
+              ]
+            }
+          }
+        ],
+        "measure": [
+          {
+            "param": "height",
+            "from": [
+              "height",
+              "est_height"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              4,
+              45
+            ],
+            "mode": "scale",
+            "axis": "uniform"
+          },
+          {
+            "param": "age_class",
+            "from": [
+              "circumference"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              0.1,
+              8
+            ],
+            "mode": "select",
+            "key": "age_class",
+            "thresholds": [
+              [
+                0.6,
+                "young"
+              ],
+              [
+                1.8,
+                "adult"
+              ],
+              [
+                null,
+                "old"
+              ]
+            ]
+          }
+        ],
+        "defaults": {
+          "age_class": "adult"
+        },
+        "variants": 4,
+        "lod_distances_m": [
+          40,
+          200
+        ],
+        "shader": "atlas-vegetation-season/0.1",
+        "vegetation": {
+          "species": "platanus_orientalis",
+          "name_sci": "Platanus orientalis L.",
+          "name_fr": "Platane d'Orient",
+          "sesame_id": 176,
+          "leaf_type": "caduc",
+          "crown_ratio": 0.6,
+          "phenology": {
+            "budburst": 100,
+            "full_leaf": 135,
+            "colour_start": 285,
+            "colour_full": 325,
+            "fall_start": 300,
+            "fall_end": 345
+          }
+        },
+        "note": "Platanus × hispanica (platane commun, hybride d'orientalis et d'occidentalis) est rattaché au type orientalis en 0.1 : port et phénologie proches, profil SESAME 176. Un type distinct viendra si l'écart visuel le justifie."
+      }
+    ],
+    "assets": [
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 0,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v0_lod1.glb",
+          "mono": "platanus_orientalis/young_v0_lod1.glb"
+        },
+        "md5": "4e30da42823cc2184ad0062c8dd55fdd",
+        "bytes": 1204788,
+        "triangles": 1932,
+        "height_m": 9.7,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 0,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v0_lod2.glb",
+          "mono": "platanus_orientalis/young_v0_lod2.glb"
+        },
+        "md5": "7c79a8690380130df25b8cddc31afb91",
+        "bytes": 1175556,
+        "triangles": 788,
+        "height_m": 10.0,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 1,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v1_lod1.glb",
+          "mono": "platanus_orientalis/young_v1_lod1.glb"
+        },
+        "md5": "0522a18c39e2c72f447dc970ebd938ac",
+        "bytes": 1205468,
+        "triangles": 1932,
+        "height_m": 9.9,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 1,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v1_lod2.glb",
+          "mono": "platanus_orientalis/young_v1_lod2.glb"
+        },
+        "md5": "b66f77f8519637fa601ad678e29592ce",
+        "bytes": 1175744,
+        "triangles": 788,
+        "height_m": 10.4,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 2,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v2_lod1.glb",
+          "mono": "platanus_orientalis/young_v2_lod1.glb"
+        },
+        "md5": "6d7778ba8620896d6bed9d83b6cc3f15",
+        "bytes": 1205188,
+        "triangles": 1932,
+        "height_m": 9.91,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 2,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v2_lod2.glb",
+          "mono": "platanus_orientalis/young_v2_lod2.glb"
+        },
+        "md5": "b73656cf78fd45ea4d4fada579804488",
+        "bytes": 1175692,
+        "triangles": 788,
+        "height_m": 10.66,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 3,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v3_lod1.glb",
+          "mono": "platanus_orientalis/young_v3_lod1.glb"
+        },
+        "md5": "2563552672694cf41807bc0e4121d03b",
+        "bytes": 1205032,
+        "triangles": 1932,
+        "height_m": 9.87,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "young",
+          "variant": 3,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/young_v3_lod2.glb",
+          "mono": "platanus_orientalis/young_v3_lod2.glb"
+        },
+        "md5": "4dec437923f6425e2de57fd4dd44c259",
+        "bytes": 1175680,
+        "triangles": 788,
+        "height_m": 10.54,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 10.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 0,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v0_lod1.glb",
+          "mono": "platanus_orientalis/adult_v0_lod1.glb"
+        },
+        "md5": "89d2219f8251af8569bbfa3f7bb2c843",
+        "bytes": 1354840,
+        "triangles": 7194,
+        "height_m": 20.56,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 0,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v0_lod2.glb",
+          "mono": "platanus_orientalis/adult_v0_lod2.glb"
+        },
+        "md5": "d51dd6b6d03cc2b0f283df68aabc2d25",
+        "bytes": 1219380,
+        "triangles": 2272,
+        "height_m": 20.37,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 1,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v1_lod1.glb",
+          "mono": "platanus_orientalis/adult_v1_lod1.glb"
+        },
+        "md5": "af1bc6445eaf9813d7683414a76b9750",
+        "bytes": 1356692,
+        "triangles": 7194,
+        "height_m": 20.37,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 1,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v1_lod2.glb",
+          "mono": "platanus_orientalis/adult_v1_lod2.glb"
+        },
+        "md5": "37e9703f307e768b4c1f58d42d743caf",
+        "bytes": 1220220,
+        "triangles": 2272,
+        "height_m": 21.41,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 2,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v2_lod1.glb",
+          "mono": "platanus_orientalis/adult_v2_lod1.glb"
+        },
+        "md5": "8670a63fbd33411dba2503d761caaa6f",
+        "bytes": 1355696,
+        "triangles": 7194,
+        "height_m": 20.68,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 2,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v2_lod2.glb",
+          "mono": "platanus_orientalis/adult_v2_lod2.glb"
+        },
+        "md5": "a57578ef246862bea2995d69a806cea0",
+        "bytes": 1219832,
+        "triangles": 2272,
+        "height_m": 21.42,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 3,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v3_lod1.glb",
+          "mono": "platanus_orientalis/adult_v3_lod1.glb"
+        },
+        "md5": "a19dcfa786199f11b1dee45118761c8d",
+        "bytes": 1356316,
+        "triangles": 7194,
+        "height_m": 20.79,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "adult",
+          "variant": 3,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v3_lod2.glb",
+          "mono": "platanus_orientalis/adult_v3_lod2.glb"
+        },
+        "md5": "e5cef54ca071a5d901b1d58e14304a17",
+        "bytes": 1219880,
+        "triangles": 2272,
+        "height_m": 20.81,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 25.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 0,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v0_lod1.glb",
+          "mono": "platanus_orientalis/old_v0_lod1.glb"
+        },
+        "md5": "7d702d955255b9c0af3f089764ac7297",
+        "bytes": 1776420,
+        "triangles": 21276,
+        "height_m": 33.69,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 0,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v0_lod2.glb",
+          "mono": "platanus_orientalis/old_v0_lod2.glb"
+        },
+        "md5": "e37d7fb4b834cc84d4998c857b29b54a",
+        "bytes": 1454792,
+        "triangles": 9766,
+        "height_m": 33.86,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 1,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v1_lod1.glb",
+          "mono": "platanus_orientalis/old_v1_lod1.glb"
+        },
+        "md5": "98fee0a765add2b371b4305d6d9e7fd3",
+        "bytes": 1780440,
+        "triangles": 21276,
+        "height_m": 34.01,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 1,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v1_lod2.glb",
+          "mono": "platanus_orientalis/old_v1_lod2.glb"
+        },
+        "md5": "7ed4ebf8c8ebaf91b86dd176a654648c",
+        "bytes": 1457280,
+        "triangles": 9766,
+        "height_m": 34.94,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 2,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 2,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v2_lod1.glb",
+          "mono": "platanus_orientalis/old_v2_lod1.glb"
+        },
+        "md5": "0dc7f3b2653749c7463c99e8d5d5d7fb",
+        "bytes": 1778104,
+        "triangles": 21276,
+        "height_m": 34.56,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 2,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v2_lod2.glb",
+          "mono": "platanus_orientalis/old_v2_lod2.glb"
+        },
+        "md5": "660ed5bf2163dc58c41aad8dcdb1e619",
+        "bytes": 1456548,
+        "triangles": 9766,
+        "height_m": 34.92,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 3,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 3,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v3_lod1.glb",
+          "mono": "platanus_orientalis/old_v3_lod1.glb"
+        },
+        "md5": "6a76155a129352342d84c7fa7fece90a",
+        "bytes": 1777560,
+        "triangles": 21276,
+        "height_m": 33.47,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      },
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 3,
+          "lod": 2
+        },
+        "files": {
+          "colored": "platanus_orientalis/old_v3_lod2.glb",
+          "mono": "platanus_orientalis/old_v3_lod2.glb"
+        },
+        "md5": "9bf41b8e0ea7f71e902304a77f2fc100",
+        "bytes": 1456184,
+        "triangles": 9766,
+        "height_m": 34.41,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v9",
+          "seed": 4,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 80.0,
+            "doy": 200,
+            "lod": 2
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "176",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ]
+      }
+    ]
+  }
+}
