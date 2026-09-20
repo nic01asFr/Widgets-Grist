@@ -11,14 +11,14 @@
  * retire et `init()` prend le relais.
  */
 
-import { capacites, creerClient } from './data-client.js?v=1.7.1';
-import { installerAdaptateur } from './grist-adapter.js?v=1.7.1';
-import { listerScenesAtlas } from './decouverte.js?v=1.7.1';
+import { capacites, creerClient } from './data-client.js?v=1.8.0';
+import { installerAdaptateur } from './grist-adapter.js?v=1.8.0';
+import { listerScenesAtlas } from './decouverte.js?v=1.8.0';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication,
-} from './hote.js?v=1.7.1';
+} from './hote.js?v=1.8.0';
 
 export const VERSION = '1.0.0';
 
@@ -149,7 +149,10 @@ const trait = (d) => `<svg class="hote-ic" width="20" height="20" viewBox="0 0 2
 
 const IC = {
   scenes: trait('<path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/>'),
-  cle: trait('<circle cx="8" cy="16" r="4.5"/><path d="M11.2 12.8 20 4m-2.5 2.5 2.5 2.5m-5-5 2.5 2.5"/>'),
+  // Une cle couchee : anneau a gauche, tige horizontale, deux dents dessous.
+  // La precedente montait en diagonale depuis un anneau qu'elle traversait, et
+  // ses deux traits en croix se lisaient comme un symbole de genre.
+  cle: trait('<circle cx="7" cy="12" r="4"/><path d="M11 12h10M15 12v2.5M18 12v3.5"/>'),
   retour: trait('<path d="M19 12H5m6-7-7 7 7 7"/>'),
 };
 
@@ -316,8 +319,15 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   //    ouverture serait une punition pour qui a beaucoup de documents.
   const memoire = lireScenesMemorisees(stockage);
   const vues = new Set();
+  /** Les cartes a l'ecran, par identifiant de scene — pour les remplacer sans selecteur. */
+  const posees = new Map();
   if (memoire) {
-    for (const s of memoire.scenes) { vues.add(s.id); liste.appendChild(carte(s, true)); }
+    for (const s of memoire.scenes) {
+      vues.add(s.id);
+      const c = carte(s, true);
+      posees.set(s.id, c);
+      liste.appendChild(c);
+    }
     progres.textContent = memoire.perime
       ? `Liste mémorisée ${depuis(new Date(memoire.quand).toISOString())} — vérification…`
       : `${memoire.scenes.length} scène${memoire.scenes.length > 1 ? 's' : ''} — vérification…`;
@@ -330,11 +340,32 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   try {
     await listerScenesAtlas(config.baseUrl, config.jeton, {
       fetchFn: portee.fetch?.bind(portee),
+      // L'inventaire precede le sondage, et il peut durer : sur un compte a
+      // plusieurs organisations, l'ecran restait sur « Recherche… » sans que
+      // rien ne dise si l'instance repondait. Chaque etape s'annonce donc.
+      onEtape: (e) => {
+        if (e.phase === 'organisations') {
+          progres.textContent = e.total == null
+            ? 'Connexion au compte…'
+            : `${e.total} organisation${e.total > 1 ? 's' : ''} — inventaire des documents…`;
+        } else if (e.phase === 'espaces') {
+          progres.textContent = `Inventaire ${e.fait} / ${e.total} — ${e.docs} document${e.docs > 1 ? 's' : ''}`;
+        } else if (e.phase === 'documents') {
+          progres.textContent = e.total
+            ? `${e.total} documents à examiner…`
+            : 'Aucun document accessible avec cette clé.';
+        }
+      },
       onTrouve: (scene) => {
         trouvees.push(scene);
-        const deja = liste.querySelector(`[data-scene="${CSS.escape(scene.id)}"]`);
-        if (deja) { deja.replaceWith(carte(scene, false)); return; }
-        liste.appendChild(carte(scene, false));
+        // On retrouve la carte déjà posée par son identifiant, tenu ici, et non
+        // par un sélecteur CSS : `CSS.escape` n'existe pas partout, et l'appel
+        // qui échoue emportait la scène avec lui.
+        const deja = posees.get(scene.id);
+        const neuve = carte(scene, false);
+        posees.set(scene.id, neuve);
+        if (deja) { deja.replaceWith(neuve); return; }
+        liste.appendChild(neuve);
       },
       // L'avancement se compte en documents sondes : sur un compte fourni, la
       // recherche dure, et une page muette laisserait croire a une panne.

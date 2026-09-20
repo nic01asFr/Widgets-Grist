@@ -288,6 +288,19 @@
   border-radius: 8px;
 }
 
+/* La prise de vue : le champ reste dans la page (le libelle l'ouvre, et il se
+   lit avec l'autre), mais on ne montre que le bouton. `display: none` le
+   retirerait de certains navigateurs mobiles, qui refusent alors d'ouvrir
+   l'appareil photo depuis le libelle. */
+#insp-body .fr-upload--camera {
+  position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0;
+  overflow: hidden; clip: rect(0 0 0 0); pointer-events: none;
+}
+#insp-body .fr-upload-camera {
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 8px; width: 100%; min-height: 44px;
+}
+
 /* ---------- ce que la fiche n'a pas besoin de redire ---------- */
 
 /*

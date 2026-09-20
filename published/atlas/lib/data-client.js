@@ -97,6 +97,146 @@ export function capacites(portee = globalThis) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Pieces jointes — un seul POST, deux facons de s'y presenter         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Verse un fichier dans les pieces jointes d'un document. Rend les ids obtenus.
+ *
+ * Ce qui identifie la requete vient de l'appelant (`o.entetes`), parce que ce
+ * n'est pas la meme chose dans un widget et dans l'application. Le corps, lui,
+ * est construit ICI (`corpsMultipart`), et non confie a un `FormData` : voir
+ * plus bas pourquoi l'application ne pouvait pas s'en servir.
+ *
+ * > **Une erreur de diagnostic a ne pas refaire.** On a cru, et ecrit, que
+ * > l'instance refusait l'envoi depuis l'origine d'un widget. C'etait faux : il
+ * > manquait `X-Requested-With`, qu'exige la protection CSRF de Grist. Sans lui,
+ * > l'instance rend un 401 depourvu d'en-tetes CORS, que le navigateur masque en
+ * > `net::ERR_FAILED` — exactement la signature d'un refus d'origine. Avec lui,
+ * > la photo passe depuis le widget (verifie le 18/09/2026). La solution etait
+ * > deja ecrite dans SURFAC²E (`atlas_bati`, `materialiserPJObjet`).
+ *
+ * @param {string} url      adresse complete du point `/attachments`
+ * @param {File|Blob} fichier
+ * @param {{entetes?: object, fetch?: Function}} [o]
+ */
+export async function posterPieceJointe(url, fichier, o = {}) {
+  const f = o.fetch || ((...a) => globalThis.fetch(...a));
+  const { corps, typeContenu } = await corpsMultipart(fichier);
+  let r;
+  try {
+    r = await f(url, {
+      method: 'POST',
+      body: corps,
+      headers: { ...(o.entetes || {}), 'Content-Type': typeContenu },
+    });
+  } catch (e) {
+    // Une requete qui n'aboutit pas ne rend pas de reponse : le navigateur leve
+    // un `TypeError` sans rien dire de plus, et « Failed to fetch » affiche tel
+    // quel sous le bouton ne renseigne personne. On dit ce qu'on sait — la
+    // requete n'est pas revenue — sans pretendre en connaitre la cause : c'est
+    // en pretendant la connaitre qu'on s'etait trompe la premiere fois.
+    if (e instanceof TypeError) {
+      throw new Error(o.natif
+        ? 'Envoi impossible : le document est injoignable (réseau ou adresse).'
+        : "L'envoi de la photo n'a pas abouti : pas de réponse de l'instance "
+          + '(réseau, ou requête refusée par le navigateur).');
+    }
+    throw e;
+  }
+  if (!r.ok) {
+    const texte = await r.text().catch(() => '');
+    // Le message nomme l'etape : une fiche avec photo fait DEUX ecritures —
+    // le fichier, puis la ligne —, et « HTTP 500 » seul ne dit pas laquelle a
+    // echoue. La reponse complete part dans la console, pour le diagnostic.
+    try { console.warn('[Atlas piece jointe] refus', r.status, texte); } catch (_) { /* rien */ }
+    throw new Error(`Envoi de la photo refusé (HTTP ${r.status})${texte ? ' — ' + texte.slice(0, 200) : ''}`);
+  }
+  const rendu = await r.json();
+  return Array.isArray(rendu) ? rendu : [rendu];
+}
+
+/**
+ * Le corps multipart d'un envoi de piece jointe, construit a la main.
+ *
+ * > **Pourquoi pas `FormData`.** Dans l'application, `fetch` est le client
+ * > HTTP natif de Capacitor, qui reconstruit lui-meme un `FormData` en Java — et
+ * > ajoute `Content-Transfer-Encoding: binary` a chaque fichier
+ * > (`CapacitorHttpUrlConnection.writeFormDataRequestBody`, Capacitor 6.2). Le
+ * > lecteur de Grist PLANTE sur cet en-tete : « 500 Internal Server Error ».
+ * > Reproduit le 18/09/2026 sur grist.numerique.gouv.fr, meme corps, meme
+ * > fichier : avec l'en-tete, 500 ; sans lui, 200. La RFC 7578 deconseille
+ * > d'ailleurs cet en-tete dans un formulaire multipart.
+ *
+ * On ecrit donc les octets nous-memes, et on les confie a un `File` : c'est le
+ * seul corps binaire que Capacitor transmet tel quel (type `file`, decode en
+ * octets cote Android — un `Uint8Array` y serait decode en TEXTE et corrompu).
+ * Dans un navigateur, le meme `File` part tel quel : un seul chemin pour les
+ * deux mondes.
+ *
+ * Le nom du fichier est ecrit en UTF-8, comme le fait un navigateur, et ses
+ * guillemets et fins de ligne sont neutralises : ils casseraient l'en-tete.
+ *
+ * @param {File|Blob} fichier
+ * @returns {Promise<{corps: File, typeContenu: string}>}
+ */
+export async function corpsMultipart(fichier) {
+  const frontiere = '----AtlasPieceJointe' + Math.random().toString(36).slice(2, 14)
+    + Date.now().toString(36);
+  const nom = String(fichier?.name || 'fichier')
+    .replace(/[\r\n]+/g, ' ').replace(/"/g, '%22');
+  const type = fichier?.type || 'application/octet-stream';
+  const texte = new TextEncoder();
+  const tete = texte.encode(
+    `--${frontiere}\r\n`
+    + `Content-Disposition: form-data; name="upload"; filename="${nom}"\r\n`
+    + `Content-Type: ${type}\r\n\r\n`,
+  );
+  const pied = texte.encode(`\r\n--${frontiere}--\r\n`);
+  const octets = new Uint8Array(await fichier.arrayBuffer());
+  const typeContenu = `multipart/form-data; boundary=${frontiere}`;
+  const corps = new File([tete, octets, pied], 'corps-multipart', { type: typeContenu });
+  return { corps, typeContenu };
+}
+
+/**
+ * Verse un fichier, quel que soit l'endroit d'ou Atlas tourne.
+ *
+ * Deux presentations, parce qu'il n'y a pas d'identite commune : dans un
+ * widget, un jeton signe delivre par le document hote ; dans l'application, la
+ * cle d'API en en-tete — ce qu'aucun navigateur ne laisse passer, et que le
+ * client HTTP natif de Capacitor emet sans s'en soucier.
+ *
+ * @param {object} docApi  `grist.docApi`, reel ou adapte
+ * @param {File|Blob} fichier
+ * @returns {Promise<number[]>} les ids de pieces jointes
+ */
+export async function televerserPieceJointe(docApi, fichier) {
+  if (!fichier) throw new Error('Aucun fichier à envoyer');
+  // L'adaptateur de l'application sait se presenter : on le laisse faire.
+  if (typeof docApi?.televerserPieceJointe === 'function') {
+    return docApi.televerserPieceJointe(fichier);
+  }
+  if (typeof docApi?.getAccessToken !== 'function') {
+    throw new Error("Envoi de fichier indisponible : pas d'accès au document");
+  }
+  const jeton = await docApi.getAccessToken({ readOnly: false });
+  if (!jeton?.baseUrl || !jeton?.token) {
+    throw new Error('Envoi de fichier refusé : jeton de document indisponible');
+  }
+  return posterPieceJointe(
+    `${jeton.baseUrl}/attachments?auth=${encodeURIComponent(jeton.token)}`,
+    fichier,
+    // La protection CSRF de Grist exige cet en-tete (ou un corps JSON) sur
+    // toute requete qui ne porte pas de session : sans lui, l'instance rend un
+    // 401 — que le navigateur, faute d'en-tetes CORS sur l'erreur, masque en
+    // `net::ERR_FAILED`. Il declenche un controle prealable, auquel l'instance
+    // repond : `Access-Control-Allow-Headers: Content-Type, X-Requested-With`.
+    { entetes: { 'X-Requested-With': 'XMLHttpRequest' } },
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Mode widget — l'API plugin fait tout                                */
 /* ------------------------------------------------------------------ */
 
@@ -107,6 +247,7 @@ class ClientGrist {
   listTables() { return this._g.docApi.listTables(); }
   fetchTable(table) { return this._g.docApi.fetchTable(table); }
   applyUserActions(actions) { return this._g.docApi.applyUserActions(actions); }
+  televerserPieceJointe(fichier) { return televerserPieceJointe(this._g.docApi, fichier); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -155,8 +296,21 @@ class ClientRest {
    * Rend les donnees au format colonnaire de l'API plugin — `{id: [], col: []}` —
    * et non la liste d'enregistrements que rend l'API REST. Sans cette
    * conversion, tout le code de lecture d'Atlas serait a doubler.
+   *
+   * > **Les tables de metadonnees ne passent pas par la meme porte.**
+   * > `_grist_Tables` et `_grist_Tables_column` decrivent le document ; l'API
+   * > plugin les sert comme n'importe quelle table, l'API REST **non** — son
+   * > point `/records` ne connait que les tables de l'utilisateur. Sans ce
+   * > detour, `chargerSchema` rend un schema VIDE dans l'application : plus de
+   * > formulaire deduit (« Attributs »), plus de formulaire lie, et la fiche
+   * > d'un objet parait n'en proposer aucun. Rien ne le signale — c'est une
+   * > lecture qui echoue, pas une fonction absente.
+   * >
+   * > Le point `/sql`, lui, les sert. Il ne sait que lire, ce qui suffit :
+   * > Atlas ne modifie jamais ces tables.
    */
   async fetchTable(table) {
+    if (String(table).startsWith('_grist_')) return this._fetchMeta(table);
     const d = await this._json(
       `${this.baseUrl}/api/docs/${this.docId}/tables/${encodeURIComponent(table)}/records`,
       { headers: this._entetes() },
@@ -164,9 +318,53 @@ class ClientRest {
     return recordsVersColonnes(d.records || []);
   }
 
+  /** Une table de metadonnees, lue en SQL puis rendue au format colonnaire. */
+  async _fetchMeta(table) {
+    // Le nom vient d'une constante du code, jamais d'une saisie ; la garde est
+    // la pour que cela reste vrai si un appelant change un jour.
+    if (!/^_grist_[A-Za-z0-9_]+$/.test(table)) throw new Error(`Table système inattendue : ${table}`);
+    const d = await this._json(
+      `${this.baseUrl}/api/docs/${this.docId}/sql?q=${encodeURIComponent(`select * from ${table}`)}`,
+      { headers: this._entetes() },
+    );
+    // `select *` rend `id` parmi les champs, alors que le format colonnaire le
+    // porte a part : le laisser la remplirait la colonne deux fois.
+    const lignes = (d.records || []).map((r) => {
+      const { id, ...champs } = r.fields || {};
+      return { id, fields: champs };
+    });
+    return recordsVersColonnes(lignes);
+  }
+
   async applyUserActions(actions) {
     return this._json(this._url('/apply'), {
       method: 'POST', headers: this._entetes(), body: JSON.stringify(actions),
+    });
+  }
+
+  /**
+   * Verse un fichier dans les pieces jointes du document.
+   *
+   * Seule la cle porte l'identite ici — il n'y a pas de jeton signe hors
+   * widget. L'en-tete `Authorization` ne franchit pas un moteur web ; cette
+   * requete n'aboutit donc que dans l'application, ou elle part du client HTTP
+   * natif. Sans cle, l'instance refuse : on le dit avant d'essayer, plutot que
+   * de laisser l'echec ressembler a une panne de reseau.
+   *
+   * `Content-Type` est volontairement absent : le corps est un `FormData`.
+   */
+  async televerserPieceJointe(fichier) {
+    if (!fichier) throw new Error('Aucun fichier à envoyer');
+    if (!this.jeton) {
+      throw new Error("Envoi de fichier impossible sans clé d'accès au document");
+    }
+    return posterPieceJointe(this._url('/attachments'), fichier, {
+      entetes: { Authorization: 'Bearer ' + this.jeton },
+      fetch: this._fetch,
+      // Hors navigateur, un echec n'est pas une regle d'origine : c'est le
+      // reseau ou l'adresse. Le message doit le dire, sinon on cherche une
+      // cause qui n'existe pas ici.
+      natif: true,
     });
   }
 }

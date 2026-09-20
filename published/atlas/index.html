@@ -396,6 +396,20 @@
             padding: 8px 10px;
         }
         .dock-slot-data .cats { max-height: 132px; overflow-y: auto; margin-top: 0 !important; }
+        /* La pastille Releve : une rangee par couche ou l'on peut saisir. */
+        /* Le panneau haut plafonne a 200 px : au-dela d'une couche, la liste
+           defile au lieu d'etre coupee. */
+        .dock-slot-releve .dock-slot-body { max-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+        .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
+        .dock-slot-data .releve-couche:first-of-type { border-top: none; padding-top: 2px; }
+        .dock-slot-data .releve-nom { display: flex; align-items: center; gap: 7px;
+            font-size: 12.5px; font-weight: 600; color: var(--ink); }
+        .dock-slot-data .releve-nom .sw { width: 14px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+        .dock-slot-data .releve-forms { font-size: 11px; color: var(--muted); margin: 2px 0 7px 17px; }
+        .dock-slot-data .releve-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 17px; }
+        .dock-slot-data .releve-actions .btn { padding: 6px 10px; font-size: 12px; min-height: 36px; }
+        .dock-slot-data .releve-actions small { opacity: .75; font-weight: 400; margin-left: 4px; }
         .dock-slot-data .rng { width: 100%; max-width: 260px; margin-top: 2px; }
         .dock-slot-data .range-info {
             font-size: 11px; color: #7B705F; margin: 0 0 5px 0 !important;
@@ -1123,21 +1137,53 @@
                 margin-left: auto;
             }
             body.view-mode.mobile-layout .app-header .cmdk > span { display: none; }
-            /* Une feuille, pas un panneau : la carte reste dessous et c'est le
-               geste qui decide de ce qu'on en voit. `--feuille-frac` est la part
-               de hauteur visible ; on la traduit en translation pour que le
-               contenu ne se redispose pas a chaque pixel du glissement. */
-            body.mobile-layout .module-panel {
+            /* Deux feuilles, une seule mecanique : le panneau des modules (a
+               gauche sur un grand ecran) et la fiche d'un objet (a droite).
+               `--feuille-frac` est la part de hauteur visible.
+
+               > **Au repos, la feuille a la hauteur qu'on voit.** Elle faisait
+               > toujours 92 % de l'ecran, simplement translatee vers le bas :
+               > a mi-hauteur, son dernier tiers etait SOUS le bord de l'ecran,
+               > hors de portee du defilement — la fin d'une liste, le bouton
+               > « Enregistrer » d'une fiche. On ne pouvait pas l'atteindre sans
+               > deployer la feuille entiere, et rien ne le disait.
+
+               PENDANT le geste seulement, on revient a la translation
+               (`.feuille-glisse`) : le contenu ne se redispose pas a chaque pixel.
+               Le bord haut est au meme endroit dans les deux regimes, donc le
+               passage de l'un a l'autre ne se voit pas. */
+            body.mobile-layout .module-panel,
+            body.mobile-layout .inspector {
                 position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-                top: auto; height: 92dvh; max-height: none; width: 100%; z-index: 35;
-                border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+                top: auto; max-height: none; width: 100%;
+                border-radius: 16px 16px 0 0;
                 border: 1px solid var(--hairline); border-bottom: none;
-                transform: translateY(calc((0.92 - var(--feuille-frac, 0)) * 100dvh));
-                transition: transform .26s cubic-bezier(.22,.61,.36,1);
+                height: calc(var(--feuille-frac, 0) * 100vh);
+                height: calc(var(--feuille-frac, 0) * 100dvh);
+                transform: none;
+                transition: height .26s cubic-bezier(.22,.61,.36,1);
                 touch-action: none;
             }
-            body.mobile-layout .module-panel.feuille-glisse { transition: none; }
-            body.mobile-layout .module-panel #module-body { touch-action: pan-y; }
+            body.mobile-layout .module-panel { z-index: 35; box-shadow: 0 -8px 32px rgba(0,0,0,0.18); }
+            body.mobile-layout .inspector { z-index: 36; box-shadow: 0 -8px 32px rgba(0,0,0,0.2); }
+            body.mobile-layout .module-panel.feuille-glisse,
+            body.mobile-layout .inspector.feuille-glisse {
+                height: 92dvh;
+                transform: translateY(calc((0.92 - var(--feuille-frac, 0)) * 100dvh));
+                transition: none;
+            }
+            /* Changer de regime sans animation : c'est ce qui evite un saut a la fin
+               du geste (voir `finirGlissement`). */
+            body.mobile-layout .module-panel.feuille-fige,
+            body.mobile-layout .inspector.feuille-fige { transition: none; }
+            body.mobile-layout .module-panel.feuille-repliee,
+            body.mobile-layout .inspector.feuille-repliee { border-color: transparent; box-shadow: none; }
+            /* Le defilement du contenu, et lui seul, appartient au doigt dans la
+               feuille. `contain` : arrive en butee, il ne fait pas defiler la page. */
+            body.mobile-layout .module-panel #module-body,
+            body.mobile-layout .inspector #insp-body {
+                touch-action: pan-y; overscroll-behavior: contain;
+            }
             /* Les commandes de ligne — voir, zoomer, rafraichir, supprimer,
                re-capturer, monter, descendre — tenaient sur 40 px de large, a
                cote les unes des autres. Au doigt, on visait la corbeille en
@@ -1162,12 +1208,10 @@
                 content: ''; width: 38px; height: 4px; border-radius: 2px;
                 background: var(--hairline-strong, #C9C0A8);
             }
-            body.mobile-layout .inspector {
-                position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-                top: auto; width: 100%; max-height: 55vh; z-index: 36;
-                border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
-            }
             body.mobile-layout .inspector.open { display: flex; }
+            /* La fiche porte sa poignee au-dessus de son en-tete, comme la feuille
+               des modules : c'est elle qui dit qu'on peut la tirer. */
+            body.mobile-layout .inspector { flex-direction: column; }
             body.mobile-layout .map-controls-dock:not(.collapsed) .dock-panel {
                 max-width: min(100vw - 24px, 320px);
             }
@@ -1221,7 +1265,11 @@
             body.view-mode.view-has-story.mobile-layout #viewer-controls {
                 bottom: calc(72px + env(safe-area-inset-bottom, 0px));
             }
-            body.view-mode.mobile-layout .module-panel {
+            body.view-mode.mobile-layout .module-panel,
+            body.view-mode.mobile-layout .inspector {
+                /* En lecture la barre du bas n'existe pas. La fiche restait posee
+                   56 px au-dessus : une bande morte sous le formulaire, dans le cas
+                   meme du releve de terrain. */
                 bottom: env(safe-area-inset-bottom, 0px);
             }
             body.view-mode.mobile-layout .rail-item[data-module="lieu"],
@@ -1233,7 +1281,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.7.1" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.8.0" />
 </head>
 <body>
     <div class="app">
@@ -1424,6 +1472,7 @@
             <button type="button" data-module-plus="lieu"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg><span>Lieu</span></button>
             <button type="button" data-module-plus="soleil"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg><span>Soleil</span></button>
             <button type="button" data-module-plus="vues"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg><span>Vue &amp; rendu</span></button>
+            <button type="button" data-module-plus="formulaires"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg><span>Formulaires</span></button>
             <button type="button" data-module-plus="reglages"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Catalogue 3D</span></button>
                         <!-- Le projet : ces trois actions vivent dans l'en-tete, qui n'a pas
                  la place de les montrer sur un telephone. Sans elles, on peut
@@ -1451,6 +1500,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.7.1"></script>
+    <script type="module" src="./app.js?v=1.8.0"></script>
 </body>
 </html>

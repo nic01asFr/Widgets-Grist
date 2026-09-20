@@ -10,6 +10,12 @@
  *     grist.docApi.getAccessToken(options)
  *     grist.user / grist.userId
  *
+ * Il en fournit un septieme, qui n'existe pas dans l'API plugin :
+ * `docApi.televerserPieceJointe(fichier)`. Verser une photo depuis un
+ * formulaire demande de se presenter, et la facon de le faire n'est pas la
+ * meme des deux cotes — le point d'entree est donc ici, ou l'on sait ou l'on
+ * tourne, et non dans le moteur de formulaire.
+ *
  * Plutot que de reecrire 5 400 lignes pour les faire passer par un client, on
  * pose un objet `grist` de meme forme, adosse au client REST. Atlas demarre
  * alors sans savoir qu'il tourne hors d'un document — et le widget, lui, n'est
@@ -47,6 +53,18 @@ export function adapterEnGrist(client, identite = {}) {
       // pas. On rend `null` plutot que de lever — l'appelant sait deja le traiter,
       // puisqu'un widget en lecture seule peut se le voir refuser.
       getAccessToken: async () => null,
+      /**
+       * Verser une piece jointe, en revanche, reste possible : le client sait
+       * se presenter avec la cle. Sans ce relais, un formulaire portant une
+       * photo echouerait dans l'application — la seule ou l'envoi passe, le
+       * navigateur refusant l'en-tete d'authentification au controle prealable.
+       */
+      televerserPieceJointe: (fichier) => {
+        if (typeof client.televerserPieceJointe !== 'function') {
+          throw new Error('Envoi de fichier indisponible : client sans pièces jointes');
+        }
+        return client.televerserPieceJointe(fichier);
+      },
     },
 
     userId: identite.userId ?? null,

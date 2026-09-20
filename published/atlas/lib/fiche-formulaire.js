@@ -30,6 +30,7 @@
 
 import { tablesReferencant } from './schema-grist.js';
 import { detectGeometryColumn } from './geo-tables.js';
+import { televerserPieceJointe } from './data-client.js?v=1.8.0';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
@@ -819,6 +820,22 @@ export function valeursPourMoteur(formDef, props) {
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
  * @param {() => void} [o.apresEcriture]
  */
+/**
+ * Ecrit la ligne, en nommant l'etape si elle echoue.
+ *
+ * Une fiche avec photo fait deux ecritures — le fichier, puis la ligne. Un
+ * « HTTP 500 » seul ne dit pas laquelle a echoue ; l'envoi du fichier se nomme
+ * deja (`posterPieceJointe`), la ligne se nomme ici.
+ */
+async function ecrireLigne(docApi, actions) {
+  try {
+    return await docApi.applyUserActions(actions);
+  } catch (e) {
+    const msg = String(e?.message || e || '');
+    throw new Error(/^Enregistrement/.test(msg) ? msg : `Enregistrement de la ligne refusé — ${msg}`);
+  }
+}
+
 export function pontFormulaire({
   couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs, formulaire,
 }) {
@@ -839,6 +856,25 @@ export function pontFormulaire({
     values: valeurs || {},
     loadTable: (t) => docApi.fetchTable(t),
     getAccessToken: (opts) => docApi.getAccessToken(opts),
+    /**
+     * Une photo choisie dans la fiche part par ici, avant l'écriture de la
+     * ligne — le moteur n'écrit ensuite que les identifiants obtenus.
+     *
+     * C'est Atlas qui envoie, pas le moteur : lui ne connaît qu'un jeton de
+     * document et une requête de navigateur, quand une photo prise sur le
+     * terrain part le plus souvent de l'application, où l'on se présente avec
+     * une clé et où aucune politique d'origine ne s'applique. Le garde
+     * d'écriture est consulté d'abord : verser un fichier dans le document est
+     * une écriture, même si la ligne ne suit pas.
+     */
+    // `async` n'est pas cosmétique : le moteur enveloppe cet appel dans sa
+    // chaîne de promesses. Un refus lancé de façon synchrone en sortirait, et
+    // le message n'arriverait jamais sous le bouton — la fiche resterait
+    // figée sur « Envoi… ».
+    uploadFile: async (fichier) => {
+      garde();
+      return televerserPieceJointe(docApi, fichier);
+    },
   };
 
   if (lie) {
@@ -848,7 +884,7 @@ export function pontFormulaire({
       // fait foi. Sans `via`, on refuse plutôt que de créer un orphelin.
       if (!formulaire.via) throw new Error('Formulaire lié sans colonne de référence');
       const champs = { ...data, [formulaire.via]: rowId };
-      const r = await docApi.applyUserActions([['AddRecord', table, null, champs]]);
+      const r = await ecrireLigne(docApi, [['AddRecord', table, null, champs]]);
       dire('Relevé ajouté', true);
       if (typeof apresEcriture === 'function') apresEcriture();
       return r;
@@ -862,7 +898,7 @@ export function pontFormulaire({
     // Le garde est consulté ici, pas à la construction du pont : les droits
     // peuvent avoir changé entre l'ouverture de la fiche et la soumission.
     garde();
-    await docApi.applyUserActions([['UpdateRecord', table, id ?? rowId, data]]);
+    await ecrireLigne(docApi, [['UpdateRecord', table, id ?? rowId, data]]);
     dire('Enregistré', true);
     if (typeof apresEcriture === 'function') apresEcriture();
   };
