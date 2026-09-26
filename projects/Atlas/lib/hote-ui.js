@@ -154,6 +154,7 @@ const IC = {
   // ses deux traits en croix se lisaient comme un symbole de genre.
   cle: trait('<circle cx="7" cy="12" r="4"/><path d="M11 12h10M15 12v2.5M18 12v3.5"/>'),
   retour: trait('<path d="M19 12H5m6-7-7 7 7 7"/>'),
+  crayon: trait('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>'),
 };
 
 const MARQUE = `<div class="hote-marque">
@@ -439,9 +440,14 @@ async function ouvrirScene(config, portee, boite) {
  * chaud soit sur : il resterait des traces de l'ancienne scene dans la nouvelle.
  * Le rechargement ne peut pas se tromper, et la configuration etant deja sur
  * l'appareil, l'accueil rouvre directement sur la liste.
+ *
+ * `edition` : en lecture, quand la personne peut écrire, le moyen d'y revenir
+ * (`{ libelle, action }`). La barre du haut, qui portait cette bascule, est
+ * retirée en lecture dans l'application : sans cette entrée, on ne sortirait
+ * plus de la lecture qu'en rouvrant la scène.
  */
 export function ouvrirMenuPrincipal({
-  portee = globalThis, document: doc = document, scene = null, modifie = false,
+  portee = globalThis, document: doc = document, scene = null, modifie = false, edition = null,
 } = {}) {
   const caps = capacites(portee);
   const stockage = (() => { try { return portee.localStorage; } catch (_) { return null; } })();
@@ -467,6 +473,7 @@ export function ouvrirMenuPrincipal({
       ${situation ? `<span>${echapper(situation)}</span>` : ''}
     </div>` : ''}
     <div class="hote-menu">
+      ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>Les outils d’auteur reviennent sur la carte</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}
@@ -477,6 +484,9 @@ export function ouvrirMenuPrincipal({
     ${version ? `<p class="hote-version">Version ${echapper(version)}</p>` : ''}`;
 
   boite.querySelector('#m-fermer').onclick = fermer;
+
+  const ed = boite.querySelector('#m-edition');
+  if (ed) ed.onclick = () => { fermer(); edition.action(); };
 
   const scenes = boite.querySelector('#m-scenes');
   if (scenes) scenes.onclick = () => {

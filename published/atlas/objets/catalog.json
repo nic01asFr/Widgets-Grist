@@ -1,0 +1,1131 @@
+{
+  "generatedAt": "2026-09-24T18:29:07+00:00",
+  "sets": [
+    "colored"
+  ],
+  "parametric": {
+    "schema": "atlas-objets/0.1",
+    "catalog_id": "atlas.objets",
+    "version": "0.1.0",
+    "generated_at": "2026-09-24T18:29:07+00:00",
+    "types": [
+      {
+        "id": "mat_crosse",
+        "family": "lighting",
+        "name": "Mât avec crosse et lanterne",
+        "category": "lighting",
+        "fallback": "streetlamp",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": [
+                "LANT",
+                "VASQ",
+                "XX"
+              ],
+              "support": [
+                "MAT",
+                "POT"
+              ]
+            }
+          },
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "support": [
+                "MAT",
+                "POT"
+              ]
+            }
+          }
+        ],
+        "measure": [
+          {
+            "param": "height_class",
+            "from": [
+              "hauteurFeu",
+              "height"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              3,
+              14
+            ],
+            "mode": "select",
+            "key": "height_class",
+            "thresholds": [
+              [
+                4.5,
+                "h4"
+              ],
+              [
+                5.5,
+                "h5"
+              ],
+              [
+                7,
+                "h6"
+              ],
+              [
+                9,
+                "h8"
+              ],
+              [
+                11,
+                "h10"
+              ],
+              [
+                null,
+                "h12"
+              ]
+            ]
+          }
+        ],
+        "defaults": {
+          "height_class": "h6"
+        },
+        "variants": 1,
+        "scale_draw": false,
+        "lighting": {
+          "emetteurs": [
+            {
+              "noeud": "emetteur_0",
+              "emetteur": 0,
+              "type": "spot",
+              "demi_angle_deg": 70.0,
+              "inner_sur_outer": 0.65,
+              "inclinaison_depuis_nadir_deg": 0.0,
+              "ulr": 0.005,
+              "classe_photometrique": "desserte",
+              "statut": "regle (photometrie.py, classe desserte : routiere asymetrique, 70 deg)"
+            }
+          ],
+          "ancrage": "pied",
+          "ancrage_note": "origine au pied, au niveau du sol",
+          "intensite_fichier": "1.0, neutre : non lue (decision 7), les candelas sont calculees par chaque lecteur",
+          "vitre": "eclairage_vitre"
+        },
+        "note": "Une variante par classe de hauteur, construite a sa hauteur nominale (decision 6) : aucune mise a l'echelle. La classe fixe l'apparence ; tout calcul chiffre emploie la hauteur de feu de la fiche. Un poteau (POT) recoit ici un mat : le poteau de reseau n'est pas encore modelise."
+      },
+      {
+        "id": "applique_facade",
+        "family": "lighting",
+        "name": "Applique de façade",
+        "category": "lighting",
+        "fallback": "wall_light",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": "APP"
+            }
+          },
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": [
+                "APP",
+                "LANT",
+                "XX"
+              ],
+              "support": "MUR"
+            }
+          }
+        ],
+        "variants": 1,
+        "scale_draw": false,
+        "lighting": {
+          "emetteurs": [
+            {
+              "noeud": "emetteur_0",
+              "emetteur": 0,
+              "type": "spot",
+              "demi_angle_deg": 65.0,
+              "inner_sur_outer": 0.65,
+              "inclinaison_depuis_nadir_deg": 0.0,
+              "ulr": 0.005,
+              "classe_photometrique": "locale",
+              "statut": "regle (photometrie.py, classe locale : routiere asymetrique, 65 deg)"
+            }
+          ],
+          "ancrage": "feu",
+          "ancrage_note": "origine sur le support (plan du mur, ou axe du luminaire suspendu) a la cote de la face emettrice : le lecteur eleve l'origine de la hauteur de feu de la fiche",
+          "intensite_fichier": "1.0, neutre : non lue (decision 7), les candelas sont calculees par chaque lecteur",
+          "vitre": "eclairage_vitre",
+          "hauteur_de_feu_par_defaut_m": 5.5
+        },
+        "note": "Origine sur le plan du mur, a la cote de la vitre ; la console sort selon +Z glTF. L'orientation doit venir de la facade, pas du tirage de rotation."
+      },
+      {
+        "id": "axial_suspendu",
+        "family": "lighting",
+        "name": "Luminaire axial suspendu",
+        "category": "lighting",
+        "fallback": "lantern",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "support": "CAT"
+            }
+          }
+        ],
+        "variants": 1,
+        "scale_draw": false,
+        "lighting": {
+          "emetteurs": [
+            {
+              "noeud": "emetteur_0",
+              "emetteur": 0,
+              "type": "spot",
+              "demi_angle_deg": 70.0,
+              "inner_sur_outer": 0.65,
+              "inclinaison_depuis_nadir_deg": 0.0,
+              "ulr": 0.005,
+              "classe_photometrique": "desserte",
+              "statut": "regle (photometrie.py, classe desserte, symetrie de revolution ; 70 deg)"
+            }
+          ],
+          "ancrage": "feu",
+          "ancrage_note": "origine sur le support (plan du mur, ou axe du luminaire suspendu) a la cote de la face emettrice : le lecteur eleve l'origine de la hauteur de feu de la fiche",
+          "intensite_fichier": "1.0, neutre : non lue (decision 7), les candelas sont calculees par chaque lecteur",
+          "vitre": "eclairage_vitre",
+          "hauteur_de_feu_par_defaut_m": 7.25
+        },
+        "note": "support CAT au sens d'EclExt (luminaire porte par un cable). Le jeu marseillais code l'axial AU, et pix2hdr range en CAT des lanternes de poteaux de catenaire du tram : a trancher."
+      },
+      {
+        "id": "projecteur_facade",
+        "family": "lighting",
+        "name": "Projecteur de mise en lumière",
+        "category": "lighting",
+        "fallback": "projector",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": "PROJ"
+            }
+          },
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": "PROJ",
+              "support": [
+                "MUR",
+                "OUV",
+                "ENS",
+                "MAT",
+                "POT",
+                "PAN"
+              ]
+            }
+          }
+        ],
+        "variants": 1,
+        "scale_draw": false,
+        "lighting": {
+          "emetteurs": [
+            {
+              "noeud": "emetteur_0",
+              "emetteur": 0,
+              "type": "spot",
+              "demi_angle_deg": 25.0,
+              "inner_sur_outer": 0.65,
+              "inclinaison_depuis_nadir_deg": 145.0,
+              "ulr": 0.005,
+              "classe_photometrique": "mise_en_lumiere",
+              "statut": "regle (photometrie.py, classe mise_en_lumiere : faisceau moyen, 25 deg)"
+            }
+          ],
+          "ancrage": "feu",
+          "ancrage_note": "origine sur le support (plan du mur, ou axe du luminaire suspendu) a la cote de la face emettrice : le lecteur eleve l'origine de la hauteur de feu de la fiche",
+          "intensite_fichier": "1.0, neutre : non lue (decision 7), les candelas sont calculees par chaque lecteur",
+          "vitre": "eclairage_vitre",
+          "hauteur_de_feu_par_defaut_m": 4.0
+        },
+        "note": "Faisceau incline de 55 deg au-dessus de l'horizontale, vers +Z glTF, en s'ecartant du support."
+      },
+      {
+        "id": "encastre_sol",
+        "family": "lighting",
+        "name": "Encastré de sol",
+        "category": "lighting",
+        "fallback": "projector",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": "EN"
+            }
+          },
+          {
+            "source": "any",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "structure": [
+                "PROJ",
+                "EN"
+              ],
+              "support": "SOL"
+            }
+          }
+        ],
+        "variants": 1,
+        "scale_draw": false,
+        "lighting": {
+          "emetteurs": [
+            {
+              "noeud": "emetteur_0",
+              "emetteur": 0,
+              "type": "spot",
+              "demi_angle_deg": 25.0,
+              "inner_sur_outer": 0.65,
+              "inclinaison_depuis_nadir_deg": 180.0,
+              "ulr": 0.005,
+              "classe_photometrique": "mise_en_lumiere",
+              "statut": "regle (photometrie.py, classe mise_en_lumiere : faisceau moyen, 25 deg)"
+            }
+          ],
+          "ancrage": "pied",
+          "ancrage_note": "origine au pied, au niveau du sol",
+          "intensite_fichier": "1.0, neutre : non lue (decision 7), les candelas sont calculees par chaque lecteur",
+          "vitre": "eclairage_vitre",
+          "hauteur_de_feu_par_defaut_m": 0.0
+        },
+        "note": "Disque affleurant, faisceau vertical vers le haut ; corps enterre de 0,25 m."
+      }
+    ],
+    "assets": [
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h4",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h4_v0_lod0.glb"
+        },
+        "md5": "435bd0811653e59d54f5b2cd388c6932",
+        "bytes": 24236,
+        "triangles": 332,
+        "height_m": 4.2787,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 4,
+              "statut": "regle (hauteur nominale de la classe h4)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.111,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.0688,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.0379,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 0.8,
+              "statut": "mesure (mediane de 18 crosses courbes LiDAR HD, mats_params.json)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.36,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 3.78,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.2109,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h5",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h5_v0_lod0.glb"
+        },
+        "md5": "9073a250ab3be8399ab15e5b0922e4d4",
+        "bytes": 24380,
+        "triangles": 332,
+        "height_m": 5.2801,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 5,
+              "statut": "regle (hauteur nominale de la classe h5)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.12,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.0744,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.0409,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 0.8,
+              "statut": "mesure (mediane de 18 crosses courbes LiDAR HD, mats_params.json)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.36,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 4.78,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.228,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h6",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h6_v0_lod0.glb"
+        },
+        "md5": "aa0251ffaa1a20b3ff204276990a843b",
+        "bytes": 24932,
+        "triangles": 352,
+        "height_m": 6.2816,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 6,
+              "statut": "regle (hauteur nominale de la classe h6)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.129,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.08,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.044,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 0.8,
+              "statut": "mesure (mediane de 18 crosses courbes LiDAR HD, mats_params.json)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.36,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 5.78,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.2451,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h8",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h8_v0_lod0.glb"
+        },
+        "md5": "9d0f668f70166815c88b0d1212da60b3",
+        "bytes": 25372,
+        "triangles": 372,
+        "height_m": 8.3147,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 8,
+              "statut": "regle (hauteur nominale de la classe h8)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.147,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.0911,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.0501,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 1.0,
+              "statut": "regle (0,125 x h au-dessus de la plage mesuree ; ce lot)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.45,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 7.69,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.2793,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h10",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h10_v0_lod0.glb"
+        },
+        "md5": "26dea7379b02a53f2d46960384b3efb5",
+        "bytes": 27032,
+        "triangles": 412,
+        "height_m": 10.3553,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 10,
+              "statut": "regle (hauteur nominale de la classe h10)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.165,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.1023,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.0563,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 1.25,
+              "statut": "regle (0,125 x h au-dessus de la plage mesuree ; ce lot)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.5625,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 9.5775,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.3135,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "mat_crosse",
+        "keys": {
+          "height_class": "h12",
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/mat_crosse_h12_v0_lod0.glb"
+        },
+        "md5": "b0ba090255e9181dd344bd1cfeb7c070",
+        "bytes": 27200,
+        "triangles": 432,
+        "height_m": 12.3959,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "hauteur_de_feu_m": {
+              "valeur": 12,
+              "statut": "regle (hauteur nominale de la classe h12)"
+            },
+            "diametre_fut_pied_m": {
+              "valeur": 0.183,
+              "statut": "regle (maillage.py : 0,075 + 0,009 x h, bande des normes)"
+            },
+            "diametre_fut_tete_m": {
+              "valeur": 0.1135,
+              "statut": "regle (maillage.py : conicite 0,62)"
+            },
+            "diametre_crosse_m": {
+              "valeur": 0.0624,
+              "statut": "regle (maillage.py : 0,55 x tete)"
+            },
+            "deport_crosse_m": {
+              "valeur": 1.5,
+              "statut": "regle (0,125 x h au-dessus de la plage mesuree ; ce lot)"
+            },
+            "montee_crosse_m": {
+              "valeur": 0.675,
+              "statut": "regle (maillage.py : 0,45 x deport, inclinaison non mesurable)"
+            },
+            "sommet_fut_m": {
+              "valeur": 11.465,
+              "statut": "deduit"
+            },
+            "embase": {
+              "hauteur_m": 0.35,
+              "diametre_m": 0.3477,
+              "enfouissement_m": 0.4,
+              "statut": "regle (maillage.py)"
+            },
+            "luminaire_m": [
+              0.62,
+              0.26,
+              0.14
+            ],
+            "inclinaison_luminaire_deg": {
+              "valeur": 0.0,
+              "statut": "regle (maillage.py pose le boitier horizontal)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "applique_facade",
+        "keys": {
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/applique_facade_v0_lod0.glb"
+        },
+        "md5": "a003c2942742abef85790ceb22b354f2",
+        "bytes": 7272,
+        "triangles": 64,
+        "height_m": 0.26,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "saillie_m": {
+              "valeur": 0.85,
+              "statut": "regle (maillage.py : milieu de la bande de surplomb des appliques)"
+            },
+            "platine_m": [
+              0.06,
+              0.24,
+              0.24
+            ],
+            "diametre_console_m": 0.06,
+            "luminaire_m": [
+              0.434,
+              0.26,
+              0.14
+            ],
+            "hauteur_de_feu_par_defaut_m": {
+              "valeur": 5.5,
+              "statut": "regle (mediane de la bande applique_facade des normes, [3 ; 8] m)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "axial_suspendu",
+        "keys": {
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/axial_suspendu_v0_lod0.glb"
+        },
+        "md5": "085c8dd2e877d46c70e8b50d89375987",
+        "bytes": 8272,
+        "triangles": 120,
+        "height_m": 0.49,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "tige_m": {
+              "valeur": 0.35,
+              "statut": "regle (maillage.py)"
+            },
+            "diametre_luminaire_m": {
+              "valeur": 0.42,
+              "statut": "regle (maillage.py : luminaire de tete)"
+            },
+            "forme": "cylindre a 10 cotes (maillage.py : boite carree) : symetrie de revolution rendue lisible",
+            "hauteur_de_feu_par_defaut_m": {
+              "valeur": 7.25,
+              "statut": "regle (mediane de la bande axial_suspendu des normes, [5,5 ; 9] m)"
+            },
+            "cable": "non modelise : il appartient a la brique experiments/cables"
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "projecteur_facade",
+        "keys": {
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/projecteur_facade_v0_lod0.glb"
+        },
+        "md5": "a673770e79dab2736eb97b85f6c4478e",
+        "bytes": 7300,
+        "triangles": 64,
+        "height_m": 0.3928,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "inclinaison_au_dessus_horizontale_deg": {
+              "valeur": 55.0,
+              "statut": "regle (maillage.py)"
+            },
+            "boitier_m": [
+              0.3,
+              0.22,
+              0.22
+            ],
+            "rotule_m": 0.06,
+            "hauteur_de_feu_par_defaut_m": {
+              "valeur": 4.0,
+              "statut": "regle (mats_de_regle, mise en lumiere : 4,0 m)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      },
+      {
+        "type": "encastre_sol",
+        "keys": {
+          "variant": 0,
+          "lod": 0
+        },
+        "files": {
+          "colored": "glb/encastre_sol_v0_lod0.glb"
+        },
+        "md5": "e30469f62564a6d984123bbde0d39f45",
+        "bytes": 5828,
+        "triangles": 70,
+        "height_m": 0.255,
+        "extensions_required": [],
+        "generator": {
+          "name": "pix2hdr/experiments/eclairage/modeles_atlas",
+          "version": "0.1.0",
+          "params": {
+            "diametre_m": {
+              "valeur": 0.26,
+              "statut": "regle (maillage.py)"
+            },
+            "profondeur_m": 0.25,
+            "cabochon_hors_sol_m": {
+              "valeur": 0.005,
+              "statut": "regle (ce lot : evite le z-fighting avec le sol)"
+            }
+          }
+        },
+        "licence": {
+          "usage": "public",
+          "spdx": "etalab-2.0",
+          "notice": "Licence Ouverte / Open Licence 2.0 (Etalab). Producteur : nic01asFr. Mention de la source : « Atlas — catalogue d'objets atlas.objets, nic01asFr », avec la date de mise à jour."
+        },
+        "sources": [
+          {
+            "corpus": "pix2hdr experiments/eclairage/generation (maillage.py : regles de construction)",
+            "ref_id": "maillage.py",
+            "authority": "pix2hdr",
+            "licence": "interne au depot",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "LiDAR HD (mesures de crosse, generation/out/mats_params.json)",
+            "authority": "IGN",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "geostandard CNIG EclExt 1.1 et StaR-Elec 1.01 (bandes, normes/eclairage.json)",
+            "millesime": "2022",
+            "authority": "CNIG",
+            "licence": "Licence Ouverte Etalab 2.0",
+            "statut": "a_verifier"
+          }
+        ]
+      }
+    ]
+  }
+}

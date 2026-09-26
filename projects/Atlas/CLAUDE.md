@@ -469,6 +469,13 @@ désignent ; il ne génère rien. Le catalogue low-poly reste le repli.
   l'implémentation Python qui fait foi.
 - **Pointer** : `?objets=<url>` ou module Modèles → « Catalogue d'objets » (mémorisé
   sur le poste, `atlas_catalogue_objets`). Un dossier désigne son `catalog.json`.
+- **Sinon, le catalogue d'Atlas** (26/09/2026) : `objets/` (`CATALOGUE_INTEGRE`,
+  `choisirCatalogue`), les dix luminaires EclExt du générateur (voir
+  `objets/README.md`). Copié par `promote-atlas.js` (fichiers déclarés seulement,
+  chacun vérifié) et embarqué par `vendoriser.mjs`. `tests/catalogue-integre.test.js`
+  garde octets, md5, usage public et reconnaissance des fiches. « Catalogue
+  d'Atlas » dans le module Modèles y ramène. **Licence des modèles à fixer avant
+  publication.**
 - **Une couche s'y soumet** par une 3ᵉ affectation de l'onglet Modèle 3D, « Catalogue »
   (`symbolization.model.mode === 'catalogue'`). Ce n'est **pas** un nouveau
   `style.mode` : de nombreux endroits reconnaissent un modèle 3D à `style.mode ===
@@ -2120,6 +2127,27 @@ défauts D1 à D5, corrigés et remesurés (bureau 1440, tablette 820, télépho
 Restent de l'audit : les défauts moyens (✕ de la fiche et sélection, barre de
 sélection compacte, palette sur téléphone, Échap dans le récit et les
 pastilles, focus après la palette).
+
+## Application : la barre part en lecture, OSM se présente (26/09/2026)
+
+- **Barre du haut** : `barreRetiree` (`lib/view-mode.js`, testée) la retire sur
+  `?navbar=false` **ou** dans l'application en lecture ; `appliquerBarre` la
+  rejoue à chaque changement de mode. Ce qu'elle portait passe sur la carte
+  (`#commandes-hote`, en haut à gauche) : la marque ouvre le menu principal, la
+  loupe la recherche, le crayon ramène l'édition quand la personne peut écrire
+  (`peutProposerBasculeLectureEdition`) ; le menu principal offre aussi
+  « Revenir à l'édition ». Les commandes s'effacent quand le dock ou la barre
+  de sélection s'ouvrent. Le widget garde sa barre en lecture.
+- **Overpass répond 406** à toute requête sans Referer ni User-Agent qui nomme
+  l'application (mesuré : curl, okhttp, Dalvik, Chrome sans Referer) ;
+  Nominatim répond 403. Un navigateur passe grâce à son Referer ; l'application
+  (client natif de Capacitor) n'en envoie pas. `enTetesOsm`
+  (`lib/osm-requete.js`, testé) ajoute `User-Agent: Atlas/<commit> (+page)`
+  **dans l'application seulement**, et `messageRefusOsm` dit la cause d'un refus.
+- Essai sans téléphone : un faux `Capacitor`, une configuration dans
+  `localStorage` (`atlas_connexion`), un `fetch` qui sert l'API REST, et
+  `window.grist` verrouillé pour ne garder que l'adaptateur — dans la page de
+  développement, le script du plugin Grist le remplacerait (l'APK le retire).
 
 ## Onglets du téléphone (26/09/2026)
 

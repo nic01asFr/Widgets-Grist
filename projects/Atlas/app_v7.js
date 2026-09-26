@@ -11,7 +11,7 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
-import { lireCatalogue, resoudreObjet } from './lib/catalogue-objets.js?v=20260924a';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20260926a';
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
@@ -183,11 +183,13 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
+  barreRetiree,
   pastilleRecitRequise,
   probeCanWriteDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=20260923a';
+} from './lib/view-mode.js?v=20260926a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=20260926a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
@@ -563,16 +565,19 @@ async function probeLocalModels() {
  * s'y soumet par l'affectation « Catalogue » de l'onglet Modele 3D ; toute autre
  * affectation est un choix manuel, qui l'emporte (spec §3.1).
  *
- * Source : `?objets=<url>`, sinon le dernier catalogue pointe sur ce poste.
+ * Source : `?objets=<url>`, sinon le dernier catalogue pointe sur ce poste,
+ * sinon le catalogue livre avec Atlas (`objets/`, les luminaires EclExt
+ * d'abord) — `choisirCatalogue`.
  */
-const CATALOGUE_OBJETS = { url: null, cat: null, etat: 'aucun', erreur: null };
+const CATALOGUE_OBJETS = { url: null, cat: null, etat: 'aucun', erreur: null, origine: null };
 
 function urlCatalogueObjetsInitiale() {
-    try {
-        const qp = new URLSearchParams(location.search).get('objets');
-        if (qp) return qp;
-        return localStorage.getItem('atlas_catalogue_objets') || null;
-    } catch (_) { return null; }
+    let parametre = null, memorise = null;
+    try { parametre = new URLSearchParams(location.search).get('objets'); } catch (_) {}
+    try { memorise = localStorage.getItem('atlas_catalogue_objets'); } catch (_) {}
+    const choix = choisirCatalogue({ parametre, memorise });
+    CATALOGUE_OBJETS.origine = choix.origine;
+    return choix.url;
 }
 /** L'URL du fichier : un dossier designe son `catalog.json`. */
 function urlFichierCatalogue(url) {
@@ -691,7 +696,7 @@ function cameraMetres() {
         zoom: map.getZoom(), pitchDeg: map.getPitch(), latCentre: map.getCenter().lat,
     });
 }
-if (urlCatalogueObjetsInitiale()) chargerCatalogueObjets(urlCatalogueObjetsInitiale());
+chargerCatalogueObjets(urlCatalogueObjetsInitiale());
 
 function allModels() {
     const out = [];
@@ -6309,13 +6314,13 @@ function renderModelsPanel() {
         <div class="section">
             <div class="section-title">Catalogue d'objets</div>
             <div class="range-info" style="word-break:break-all">${
-                CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
+                CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas (intégré) — ' : ''}${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
                 : CATALOGUE_OBJETS.etat === 'erreur' ? `❌ ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
                 : CATALOGUE_OBJETS.etat === 'chargement' ? '… chargement'
                 : 'Aucun'}</div>
-            <input class="input" id="catalogue-objets-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${escapeHtml(CATALOGUE_OBJETS.url || '')}" placeholder="https://…/vegetation/catalog.json">
+            <input class="input" id="catalogue-objets-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${escapeHtml(CATALOGUE_OBJETS.origine === 'integre' ? '' : (CATALOGUE_OBJETS.url || ''))}" placeholder="Catalogue d’Atlas — ou https://…/catalog.json">
             <div style="display:flex;gap:6px;margin-top:6px">
-                <button class="btn btn-soft" style="flex:1" onclick="A.setCatalogueObjets('')">Retirer</button>
+                <button class="btn btn-soft" style="flex:1" onclick="A.setCatalogueObjets('')" title="Revenir au catalogue livré avec Atlas">Catalogue d’Atlas</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setCatalogueObjets(document.getElementById('catalogue-objets-input').value)">Pointer</button>
             </div>
             <div class="hint" style="margin-top:6px">Modèles générés d'après les champs des objets (<code>atlas-objets/0.1</code>). Une couche de points s'y soumet par l'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.</div>
@@ -8225,7 +8230,7 @@ async function onLocationPick(e) {
     markDirty();
     showToast('Lieu défini', 'success');
     try {
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${lat}&lon=${lng}&accept-language=fr`, { headers: { Accept: 'application/json' } });
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${lat}&lon=${lng}&accept-language=fr`, { headers: enTetesOSM({ Accept: 'application/json' }) });
         const d = await r.json();
         if (d?.display_name) { STATE.location.name = d.display_name.split(',').slice(0, 2).join(',').trim(); if (STATE.currentModule === 'lieu') renderLieu(); }
     } catch (e2) {}
@@ -8402,6 +8407,16 @@ function majEmpriseOSM() {
     el.textContent = `${b.getSouth().toFixed(4)}, ${b.getWest().toFixed(4)} → ${b.getNorth().toFixed(4)}, ${b.getEast().toFixed(4)}`;
 }
 
+/**
+ * Les en-têtes d'une requête OpenStreetMap (Overpass, Nominatim) : dans
+ * l'application, Atlas se présente, sans quoi Overpass répond 406
+ * (`lib/osm-requete.js`).
+ */
+function enTetesOSM(base) {
+    const version = document.querySelector('meta[name="atlas-version"]')?.content || '';
+    return enTetesOsm({ application: peutSAuthentifier(), version, base });
+}
+
 async function runOSM(key) {
     const preset = OSM_PRESETS[key]; if (!preset) return;
     // Inclinée depuis l'ouverture du panneau ? On remet à plat avant de lire
@@ -8412,8 +8427,8 @@ async function runOSM(key) {
         const b = map.getBounds();
         const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
         const q = `[out:json][timeout:30];(${preset.query}(${bbox}););out body geom;`;
-        const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q) });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: enTetesOSM({ 'Content-Type': 'application/x-www-form-urlencoded' }), body: 'data=' + encodeURIComponent(q) });
+        if (!res.ok) throw new Error(messageRefusOsm(res.status));
         const data = await res.json();
         const geojson = osmToGeoJSON(data.elements || []);
         if (!geojson.features.length) { hideLoading(); showToast('Aucun résultat', 'warning'); return; }
@@ -8970,6 +8985,10 @@ function updateUserBadge() {
     const u = CONFIG.grist.user;
     el.classList.toggle('ro', lecture);
     el.classList.toggle('bascule-session', bascule);
+    // Barre retirée (application en lecture) : le retour à l'édition reste
+    // un bouton de la carte, pour qui peut écrire.
+    const retourEdition = $('hote-edition');
+    if (retourEdition) retourEdition.hidden = !(bascule && lecture);
     const badgeLecture = $('view-mode-badge');
     if (badgeLecture) {
         badgeLecture.classList.toggle('bascule-session', bascule && lecture);
@@ -9051,6 +9070,8 @@ function wireBasculeLectureEdition() {
         lecture.addEventListener('click', activer);
         lecture.addEventListener('keydown', activer);
     }
+    // Un vrai bouton : le clavier et le clic passent par `click`.
+    $('hote-edition')?.addEventListener('click', () => basculerLectureEditionSession());
 }
 
 /**
@@ -9083,11 +9104,36 @@ function setUserIdentity(u) {
  * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
  * > dont le nom promet autre chose.
  */
-CONFIG.sansNavbar = !parseNavbarParam(typeof location !== 'undefined' ? location.search : '');
-document.body.classList.toggle('sans-navbar', CONFIG.sansNavbar);
+const NAVBAR_DEMANDEE = parseNavbarParam(typeof location !== 'undefined' ? location.search : '');
+
+/**
+ * Retire la barre du haut quand `barreRetiree` le dit : sur demande de la page,
+ * ou dans l'application en lecture. Rejouée à chaque changement de mode — la
+ * lecture s'allume et s'éteint en cours de session.
+ *
+ * Dans l'application, ce que portait la barre passe sur la carte
+ * (`#commandes-hote`) : le menu principal, la recherche, et le retour à
+ * l'édition par le menu. Sans elles, une scène ouverte en lecture n'aurait
+ * plus de sortie — ni changer de scène, ni repasser en édition.
+ */
+function appliquerBarre() {
+    let application = false;
+    try { application = peutSAuthentifier(); } catch (_) { /* hors application */ }
+    const retiree = barreRetiree({ navbarParam: NAVBAR_DEMANDEE, application, lecture: !!CONFIG.viewMode });
+    const avant = !!CONFIG.sansNavbar;
+    CONFIG.sansNavbar = retiree;
+    document.body.classList.toggle('sans-navbar', retiree);
+    // Les commandes de remplacement ne servent que là où un hôte existe : une
+    // page qui a demandé `?navbar=false` porte déjà sa propre navigation.
+    document.body.classList.toggle('commandes-hote-visibles', retiree && application);
+    // La carte gagne ou perd la hauteur de la barre.
+    if (avant !== retiree && map) resizeMapSoon();
+}
+appliquerBarre();
 
 function applyViewModeChrome() {
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
+    appliquerBarre();
     const badge = $('view-mode-badge');
     if (badge) badge.hidden = !CONFIG.viewMode;
     updateUserBadge();
@@ -9373,7 +9419,7 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=20260821a'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=20260926a'); } catch (_) { return; }
     let caps;
     try {
         const dc = await import('./lib/data-client.js?v=20260821b');
@@ -9388,14 +9434,28 @@ async function cablerMenuPrincipal() {
     marque.setAttribute('role', 'button');
     marque.setAttribute('tabindex', '0');
     marque.setAttribute('aria-label', 'Menu principal');
-    const ouvrir = () => hote.ouvrirMenuPrincipal({
-        scene: { nom: STATE.projectName || 'Scène en cours' },
-        modifie: dirty,
-    });
+    const ouvrir = () => {
+        // En lecture, la barre est retirée et sa bascule avec elle : le menu
+        // offre le retour à l'édition, quand la personne peut écrire.
+        const bascule = CONFIG.viewMode && peutProposerBasculeLectureEdition({
+            peutSaisir: CONFIG.peutSaisir,
+            gristReady: CONFIG.grist.ready,
+            sceneExterne: CONFIG.sceneExterne,
+        });
+        hote.ouvrirMenuPrincipal({
+            scene: { nom: STATE.projectName || 'Scène en cours' },
+            modifie: dirty,
+            edition: bascule
+                ? { libelle: titreBasculeLectureEdition({ viewMode: true }), action: basculerLectureEditionSession }
+                : null,
+        });
+    };
     marque.addEventListener('click', ouvrir);
     marque.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); }
     });
+    // Le même menu, depuis la carte quand la barre est retirée (lecture).
+    $('hote-menu')?.addEventListener('click', ouvrir);
 }
 
 /**
@@ -10189,7 +10249,7 @@ function searchLocation(q) {
     if (q.length < 3) { box.classList.remove('open'); return; }
     searchTimer = setTimeout(async () => {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: { 'Accept': 'application/json' } });
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
             const data = await res.json();
             box.innerHTML = data.map((d) => `<div class="sr-item" onclick="A.pickSearch('${d.display_name.replace(/'/g, "\\'")}', ${d.lat}, ${d.lon})"><div class="sr-title">${(d.display_name || '').split(',')[0]}</div><div class="sr-sub">${d.display_name}</div></div>`).join('');
             box.classList.toggle('open', data.length > 0);
@@ -10280,7 +10340,7 @@ function allerAObjet(coucheId, idx) {
 /** Géocodage du premier résultat (Nominatim), sans changer le lieu du projet. */
 async function allerAuLieu(q) {
     try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
         const [d] = await res.json();
         if (!d) { showToast(`Lieu introuvable : ${q}`, 'warning'); return; }
         map?.flyTo({ center: [+d.lon, +d.lat], zoom: 16, duration: 1200 });
@@ -11516,12 +11576,15 @@ const A = {
     async setCatalogueObjets(url) {
         const u = String(url || '').trim();
         try { if (u) localStorage.setItem('atlas_catalogue_objets', u); else localStorage.removeItem('atlas_catalogue_objets'); } catch (e) {}
-        await chargerCatalogueObjets(u);
+        // Une adresse vide ramène au catalogue livré avec Atlas.
+        const choix = choisirCatalogue({ memorise: u });
+        CATALOGUE_OBJETS.origine = choix.origine;
+        await chargerCatalogueObjets(choix.url);
         // Le module Modeles n'est redessine que s'il est ouvert : il ecrit dans
         // le corps de module commun, qu'un autre module occupe peut-etre.
         if (document.getElementById('catalogue-objets-input')) renderModelsPanel();
         renderInspector();
-        if (CATALOGUE_OBJETS.etat === 'pret') showToast('Catalogue d\'objets pointé', 'success');
+        if (CATALOGUE_OBJETS.etat === 'pret') showToast(CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas rétabli' : 'Catalogue d\'objets pointé', 'success');
         else if (CATALOGUE_OBJETS.etat === 'erreur') showToast('Catalogue illisible : ' + CATALOGUE_OBJETS.erreur, 'error');
     },
     async testModelBase() {
@@ -12254,6 +12317,7 @@ function wireEvents() {
     $('btn-export').addEventListener('click', exportProject);
     cablerMenuPrincipal();
     $('cmdk-trigger').addEventListener('click', openCmd);
+    $('hote-recherche')?.addEventListener('click', openCmd);
     $('compass').addEventListener('click', () => map.easeTo({ bearing: 0, duration: 600 }));
 
     $('file-input').addEventListener('change', (e) => { if (e.target.files[0]) processFile(e.target.files[0]); e.target.value = ''; });
@@ -12395,7 +12459,7 @@ async function demarrer() {
     try {
         const { capacites } = await import('./lib/data-client.js?v=20260821b');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=20260821a');
+        const { accueillir } = await import('./lib/hote-ui.js?v=20260926a');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

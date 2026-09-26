@@ -14,6 +14,7 @@ import {
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
+  barreRetiree,
   resolveAccess,
   pastilleRecitRequise,
   isWriteAclError,
@@ -185,6 +186,26 @@ describe('shouldEnableLight3d / parseNo3dParam', () => {
       isNarrow: false,
       hardwareConcurrency: 8,
     }), false);
+  });
+});
+
+describe('barreRetiree — qui retire la barre du haut', () => {
+  it('l’application la retire en lecture, et la rend en édition', () => {
+    assert.equal(barreRetiree({ application: true, lecture: true }), true);
+    assert.equal(barreRetiree({ application: true, lecture: false }), false);
+  });
+
+  it('le widget la garde en lecture : rien au-dessus de lui ne la remplace', () => {
+    assert.equal(barreRetiree({ application: false, lecture: true }), false);
+    assert.equal(barreRetiree({}), false);
+  });
+
+  it('?navbar=false la retire partout, lecture ou non', () => {
+    for (const application of [true, false]) {
+      for (const lecture of [true, false]) {
+        assert.equal(barreRetiree({ navbarParam: false, application, lecture }), true);
+      }
+    }
   });
 });
 

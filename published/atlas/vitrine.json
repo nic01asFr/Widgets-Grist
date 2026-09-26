@@ -55,6 +55,10 @@
   },
   "journal": [
     {
+      "version": "v1.9.1",
+      "texte": "Un catalogue d’objets réaliste livré avec Atlas, en commençant par l’éclairage public : dix luminaires reconnus d’après les fiches EclExt (mât avec crosse en six hauteurs de feu, applique, suspendu, projecteur, encastré), sous Licence Ouverte 2.0. Dans l’application, la barre du haut laisse la carte en lecture — menu, recherche et retour à l’édition passent sur la carte — et l’import OpenStreetMap comme la recherche de lieu refonctionnent : Atlas se présente désormais aux services."
+    },
+    {
       "version": "v1.9.0",
       "texte": "Dessiner dans la carte : créer une couche vide, puis des points, des lignes et des surfaces — une seule ligne écrite par objet, fiche comprise, et des créations en série. Modifier la forme d’un objet sommet par sommet, avec détection de conflit et retour à l’identique. Le récit peut s’ancrer sur un trajet que la lecture longe. La pastille Soleil couvre les vingt-quatre heures, et la nuit s’éclaire. Sur téléphone et sur tablette, la caméra vise ce que les feuilles laissent voir, et l’objet courant ressort des autres."
     },
@@ -265,7 +269,7 @@
           },
           {
             "titre": "Le décor",
-            "texte": "Photographie aérienne et relief LiDAR HD de l’IGN, bâti OpenFreeMap, et un catalogue d’objets 3D (`?objets=`) qui donne à chaque arbre ou lampadaire le modèle que ses champs désignent."
+            "texte": "Photographie aérienne et relief LiDAR HD de l’IGN, bâti OpenFreeMap, et le catalogue d’objets d’Atlas, qui donne à chaque objet le modèle que ses champs désignent — les luminaires EclExt d’abord ; un autre catalogue se pointe par `?objets=`."
           }
         ]
       },
@@ -310,7 +314,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.9.0 en ligne : dessin et modification des géométries, récit avec trajet optionnel, formulaires hors édition, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.9.1 en ligne : dessin et modification des géométries, catalogue d’objets réaliste (luminaires EclExt), récit avec trajet optionnel, formulaires hors édition, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

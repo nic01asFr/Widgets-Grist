@@ -45,6 +45,33 @@ export function lireCatalogue(json, base) {
   };
 }
 
+/**
+ * Le catalogue livré avec Atlas, relatif à la page (`objets/`) : dans le
+ * widget publié, dans la page de développement et dans l'application, il est
+ * posé à côté de `index.html`. Il commence par les luminaires EclExt.
+ */
+export const CATALOGUE_INTEGRE = './objets/';
+
+/**
+ * Quel catalogue charger : l'adresse demandée (`?objets=`), puis celle retenue
+ * sur ce poste, puis le catalogue intégré.
+ *
+ * Avant le 26/09/2026, sans l'un des deux premiers, il n'y en avait **aucun** :
+ * une scène d'éclairage public s'affichait avec le luminaire de test construit
+ * en three.js, alors que des modèles existaient — dans un dossier d'essai que
+ * personne d'autre ne pouvait pointer.
+ *
+ * @param {{parametre?: string|null, memorise?: string|null}} o
+ * @returns {{url: string, origine: 'parametre'|'poste'|'integre'}}
+ */
+export function choisirCatalogue({ parametre = null, memorise = null } = {}) {
+  const p = String(parametre || '').trim();
+  if (p) return { url: p, origine: 'parametre' };
+  const m = String(memorise || '').trim();
+  if (m) return { url: m, origine: 'poste' };
+  return { url: CATALOGUE_INTEGRE, origine: 'integre' };
+}
+
 // ------------------------------------------------------------------
 // Correspondance : quel type pour cet objet (§3.2 et §3.3)
 // ------------------------------------------------------------------

@@ -111,6 +111,9 @@ async function main() {
   await cp(join(src, 'app_v7.js'), join(out, 'app_v7.js'));
   const modeles = join(racine, 'published', 'atlas', 'models');
   if (existsSync(modeles)) await cp(modeles, join(out, 'models'), { recursive: true });
+  // Le catalogue d'objets d'Atlas (luminaires EclExt d'abord) : relatif a la
+  // page, il doit etre dans le paquet pour s'afficher sans reseau.
+  await cp(join(src, 'objets'), join(out, 'objets'), { recursive: true });
 
   // 2. Le moteur de formulaire — sans lui, pas de fiche, donc pas de releve
   for (const rel of FORMULAIRES) {

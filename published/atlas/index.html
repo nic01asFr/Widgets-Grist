@@ -130,6 +130,29 @@
          * avec les autres classes d'affichage ; ici on ne fait qu'appliquer.
          */
         body.sans-navbar .app-header { display: none; }
+        /*
+         * Dans l'application, en lecture, la barre est retiree et ses commandes
+         * passent sur la carte : le menu principal (qui offre aussi le retour a
+         * l'edition) et la recherche. Elles s'effacent quand le dock de
+         * pastilles ou la barre de selection s'ouvrent : sur un telephone, ceux-ci
+         * occupent toute la largeur du haut.
+         */
+        .commandes-hote {
+            display: none; position: absolute; z-index: 9;
+            top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px;
+            flex-direction: column; gap: 8px;
+        }
+        body.commandes-hote-visibles .commandes-hote { display: flex; }
+        body:has(.map-controls-dock:not(.collapsed)) .commandes-hote,
+        body:has(.selection-bar.open) .commandes-hote { display: none; }
+        .commande-hote {
+            width: 44px; height: 44px; padding: 0; border-radius: 50%;
+            background: var(--surface); color: var(--ink);
+            border: 1px solid var(--hairline); box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            display: grid; place-items: center; cursor: pointer;
+        }
+        .commande-hote:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .commande-hote[hidden] { display: none; }
         .brand { display: flex; align-items: center; gap: 10px; }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
@@ -1329,7 +1352,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.9.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.9.1" />
 </head>
 <body>
     <div class="app">
@@ -1420,6 +1443,23 @@
             <div class="map-frame" id="map-frame">
                 <div id="map"></div>
                 <div id="viewer-controls" aria-label="Contrôles de lecture"></div>
+
+                <!-- Dans l'application, en lecture, la barre du haut est retiree :
+                     ce qu'elle portait passe ici (voir `appliquerBarre`). -->
+                <div class="commandes-hote" id="commandes-hote">
+                    <button type="button" class="commande-hote" id="hote-menu" title="Menu principal" aria-label="Menu principal">
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <path d="M4 24 16 6l12 18-12 4z" fill="#C44536" />
+                            <path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2" />
+                        </svg>
+                    </button>
+                    <button type="button" class="commande-hote" id="hote-recherche" title="Rechercher un objet, une couche, un lieu" aria-label="Rechercher un objet, une couche, un lieu">
+                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
+                    </button>
+                    <button type="button" class="commande-hote" id="hote-edition" title="Revenir à l'édition" aria-label="Revenir à l'édition" hidden>
+                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+                    </button>
+                </div>
 
                 <div class="compass" id="compass" title="Réorienter au Nord">
                     <svg width="54" height="54" viewBox="0 0 54 54" id="compass-svg">
@@ -1547,6 +1587,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.9.0"></script>
+    <script type="module" src="./app.js?v=1.9.1"></script>
 </body>
 </html>

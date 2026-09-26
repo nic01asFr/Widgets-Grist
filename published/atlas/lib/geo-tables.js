@@ -1,10 +1,10 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.9.0';
+import { normalizePropertyValue } from './declarative-style.js?v=1.9.1';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
 import { chargerSchema, estTableSysteme } from './schema-grist.js';
-import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=1.9.0';
+import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=1.9.1';
 
 export const GEO_SKIP_TABLES = new Set([
   'Maquette_Layers',

@@ -147,6 +147,32 @@ for (const d of DEMOS) {
 }
 
 /**
+ * Le catalogue d'objets livre avec Atlas (`objets/`) : Atlas le charge quand
+ * aucun autre n'est pointe (`choisirCatalogue`). Seuls `catalog.json` et les
+ * fichiers qu'il declare sont copies — et chacun doit exister : un luminaire
+ * declare mais absent retombe sur le modele de test sans rien dire.
+ */
+const objSrc = path.join(src, 'objets');
+const objPub = path.join(pub, 'objets');
+const catObjets = JSON.parse(fs.readFileSync(path.join(objSrc, 'catalog.json'), 'utf8'));
+fs.rmSync(objPub, { recursive: true, force: true });
+fs.mkdirSync(objPub, { recursive: true });
+fs.copyFileSync(path.join(objSrc, 'catalog.json'), path.join(objPub, 'catalog.json'));
+let fichiersObjets = 0;
+for (const a of catObjets.parametric?.assets || []) {
+  for (const f of Object.values(a.files || {})) {
+    const from = path.join(objSrc, f);
+    if (!fs.existsSync(from)) {
+      console.error(`Echec : le catalogue d'objets declare ${f}, absent de projects/Atlas/objets`);
+      process.exit(1);
+    }
+    fs.mkdirSync(path.dirname(path.join(objPub, f)), { recursive: true });
+    fs.copyFileSync(from, path.join(objPub, f));
+    fichiersObjets++;
+  }
+}
+
+/**
  * Controle : tout ce que la page reclame en relatif doit exister dans la copie.
  *
  * Le controle des modules `lib/` existait deja ; il ne voyait ni les `<script
@@ -175,4 +201,5 @@ if (absents.length) {
 
 console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
-  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes)`);
+  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes), `
+  + `${fichiersObjets} modeles au catalogue d'objets`);

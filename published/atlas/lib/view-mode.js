@@ -306,6 +306,27 @@ export function parseNavbarParam(search = '') {
 }
 
 /**
+ * La barre du haut est-elle retirée ?
+ *
+ * Deux raisons, et deux seulement :
+ * - la page l'a demandé (`?navbar=false`, intégration en cadre) ;
+ * - l'application Android, en lecture : sur un téléphone, la barre répète le
+ *   nom de la scène et prend une hauteur dont la carte a besoin sur le
+ *   terrain. Ce qu'elle portait — le menu principal, la recherche, le retour
+ *   à l'édition — passe dans des commandes posées sur la carte.
+ *
+ * Le widget garde sa barre en lecture : c'est elle qui dit « Lecture » et qui
+ * porte la bascule, et rien au-dessus de lui ne la remplace.
+ *
+ * @param {{navbarParam?: boolean, application?: boolean, lecture?: boolean}} etat
+ *   `navbarParam` : le verdict de `parseNavbarParam` (vrai = barre demandée)
+ */
+export function barreRetiree({ navbarParam = true, application = false, lecture = false } = {}) {
+  if (!navbarParam) return true;
+  return !!application && !!lecture;
+}
+
+/**
  * Faut-il une pastille « Lire le récit » sur la carte ?
  *
  * **Le récit ne se lance plus que par la pastille.** Il avait trois entrées —

@@ -30,7 +30,7 @@
 
 import { tablesReferencant } from './schema-grist.js';
 import { detectGeometryColumn } from './geo-tables.js';
-import { televerserPieceJointe } from './data-client.js?v=1.9.0';
+import { televerserPieceJointe } from './data-client.js?v=1.9.1';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
