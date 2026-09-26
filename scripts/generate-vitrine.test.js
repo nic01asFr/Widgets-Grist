@@ -291,6 +291,36 @@ test('les blocs produit sont facultatifs, et n’existent que remplis', () => {
   assert.match(plein, /Une phrase de plus/);
 });
 
+test('les facons de faire se rendent par groupe, sans numero, et un groupe vide disparait', () => {
+  const W1 = [W('x', 'https://s.io/r/x/')];
+  const nu = V.rendreProjet({ id: 'x', widgets: W1,
+    presentation: { produit: { facons: [{ titre: 'Vide', items: [] }] } } }, Date.now(), 'https://s.io/r/');
+  assert.ok(!nu.includes('class="facons'), 'un groupe sans porte ne fait pas de section');
+
+  const html = V.rendreProjet({ id: 'x', widgets: W1, presentation: { produit: {
+    titreFacons: 'Entrer, sortir',
+    facons: [
+      { titre: 'Charger', items: [{ titre: 'Une table', texte: 'reconnue', etiquette: 'Dans le document' }] },
+      { titre: 'Diffuser', items: [{ titre: 'Une scène', texte: 'ouverte par `?scene=`' }] },
+      { titre: 'Rien', items: [] },
+    ],
+  } } }, Date.now(), 'https://s.io/r/');
+  assert.match(html, /<section class="facons reveler">/);
+  assert.match(html, /<h2>Entrer, sortir<\/h2>/);
+  assert.equal((html.match(/class="groupe"/g) || []).length, 2);
+  assert.match(html, /<span class="ou">Dans le document<\/span>/);
+  assert.ok(!/<ol>[^]*Une table/.test(html), 'des alternatives ne se numerotent pas');
+});
+
+test('un parametre entre accents graves devient du code, sans rien injecter', () => {
+  const html = V.rendreProjet({ id: 'x', widgets: [W('x', 'https://s.io/r/x/')], presentation: { produit: {
+    sequence: [{ titre: 'Partager', texte: 'avec `?embed=true` ou `<img onerror=x>`' }],
+  } } }, Date.now(), 'https://s.io/r/');
+  assert.match(html, /<code>\?embed=true<\/code>/);
+  assert.match(html, /<code>&lt;img onerror=x&gt;<\/code>/);
+  assert.ok(!html.includes('`?embed'), 'plus d’accent grave affiche tel quel');
+});
+
 test('l’animation ne conditionne pas la lecture', () => {
   // Une page dont le contenu depend d'une animation est une page vide pour qui
   // ne l'execute pas — et pour qui a demande moins de mouvement.

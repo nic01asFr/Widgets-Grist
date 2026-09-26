@@ -4,6 +4,7 @@
   "couleur": "#C44536",
   "tags": [
     "Cartographie",
+    "Édition",
     "3D",
     "Terrain",
     "Récit",
@@ -98,19 +99,19 @@
         "libelle": "système de droits en plus de celui de Grist"
       },
       {
-        "valeur": "3",
-        "libelle": "voies : document, iframe document, scène publiée"
+        "valeur": "4",
+        "libelle": "façons de montrer la scène : document, page intégrée, scène publiée, application"
       }
     ],
     "titreSequence": "Le parcours",
     "sequence": [
       {
         "titre": "Je charge mes données",
-        "texte": "Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist — ou une couche publiée par URL dans un Scene Manifest."
+        "texte": "Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist, une couche publiée par URL dans un Scene Manifest — ou une couche vide que je crée pour la dessiner."
       },
       {
         "titre": "J’édite",
-        "texte": "Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. Ce que j’y saisis est écrit dans le document — sur ordinateur, ou sur le terrain hors édition si la scène le propose."
+        "texte": "Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. J’en crée d’autres en les dessinant — point, ligne, surface —, ou je reprends une forme sommet par sommet. Ce que j’écris est dans le document, y compris sur le terrain si la scène le propose."
       },
       {
         "titre": "Je compose mon récit — et mon trajet",
@@ -144,6 +145,26 @@
         ]
       },
       {
+        "titre": "Dessiner dans la carte",
+        "texte": "Une couche se crée depuis Atlas : un nom, un type — point, ligne ou surface — et la table Grist qui la portera, montrée avant d’être écrite. On y dessine ensuite : chaque sommet s’accroche aux objets voisins, l’en-tête donne longueur ou aire en direct, et la fiche de l’objet se remplit avant que rien ne parte. Un envoi écrit une ligne, et la création suivante est déjà prête.",
+        "pourquoi": "Pas de détour par QGIS pour tracer un périmètre ou relever dix arbres. Et chaque geste se reprend : « Annuler cet ajout », « Annuler le geste », « Annuler la modification » — une forme modifiée ailleurs entre-temps n’est pas écrasée.",
+        "format": "large",
+        "images": [
+          {
+            "image": "dessin-trace.jpg",
+            "legende": "Une surface en cours de tracé dans « Parcelles essai » : quatre sommets posés, l’aire et le périmètre suivent le curseur."
+          },
+          {
+            "image": "dessin-fiche.jpg",
+            "legende": "La forme fermée, la fiche s’ouvre : on nomme l’objet, et l’envoi écrit une seule ligne — géométrie et champs ensemble."
+          },
+          {
+            "image": "dessin-modifier.jpg",
+            "legende": "Modifier une forme existante : sommets à glisser, points milieux pour en insérer ; seule la géométrie sera réécrite."
+          }
+        ]
+      },
+      {
         "titre": "Composer les formulaires de la scène",
         "texte": "Le module Formulaires liste, couche par couche, ce que la fiche d’un objet propose : « corriger l’objet », c’est-à-dire sa ligne, et « ajouter une ligne » dans chaque table qui y fait référence — une visite, une intervention. Un formulaire vient d’un projet QField importé par qgis2grist, avec ses étapes, ses listes et ses conditions, ou se compose ici à partir des colonnes. Pour chacun, on choisit les champs montrés, on le propose hors édition, on le retire ou on le remet.",
         "pourquoi": "Le formulaire est une ligne du document, pas un réglage enfoui dans le widget : il se relit et se partage avec le reste. Le retirer d’une scène ne l’efface pas — une autre scène peut toujours le proposer.",
@@ -172,6 +193,18 @@
         ]
       },
       {
+        "titre": "Un récit qui suit un trajet — ici, de nuit",
+        "texte": "Une ligne posée comme trajet devient le fil du récit : chaque étape s’y place, et en lecture la caméra longe la rue d’une étape à l’autre. Chaque étape retient aussi l’heure : à 22 h 30, les luminaires s’allument selon leur profil d’éclairage, chacun avec son flux, sa hauteur de feu et sa température de couleur.",
+        "pourquoi": "Le parcours de terrain et sa présentation sont la même chose : on prépare la tournée, on la montre, puis on la fait avec les formulaires exposés. La nuit n’est pas un voile sombre posé sur la carte : c’est la lumière des objets eux-mêmes, décrits au format EclExt.",
+        "format": "large",
+        "images": [
+          {
+            "image": "trajet-nuit.jpg",
+            "legende": "Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap."
+          }
+        ]
+      },
+      {
         "titre": "Diffuser, proprement",
         "texte": "Deux paramètres Grist, deux intentions. `?embed=true` : page minimale en lecture forcée. `?style=singlePage` : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.",
         "pourquoi": "Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via `?scene=`). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.",
@@ -195,7 +228,74 @@
       "alt": "Le ravin boisé du ruisseau des Aygalades vu du ciel, arbres en 3D relevés dans le LiDAR, entrepôts et autoroute autour",
       "libelle": "Ouvrir la démonstration",
       "mention": "Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; orthophotographie et LiDAR HD : IGN."
-    }
+    },
+    "titreFacons": "Faire entrer la donnée, montrer la carte",
+    "facons": [
+      {
+        "titre": "Charger et montrer la donnée",
+        "texte": "Plusieurs portes, une règle : ce qui vient d’une table du document s’y écrit ; le reste peut l’y rejoindre.",
+        "items": [
+          {
+            "titre": "Les tables du document",
+            "etiquette": "Dans le document",
+            "texte": "Toute table qui porte une géométrie — latitude et longitude, ou une colonne GeoJSON — est proposée dans le panneau Couches ; un clic la pose sur la carte avec ses attributs, et la carte suit la table."
+          },
+          {
+            "titre": "Une couche neuve, dessinée",
+            "etiquette": "Dans le document",
+            "texte": "« Nouvelle » crée la table vide — point, ligne ou surface —, puis on y dessine ses objets, fiche comprise."
+          },
+          {
+            "titre": "Un projet QGIS",
+            "etiquette": "Dans le document",
+            "texte": "qgis2grist verse les couches, leur style et les formulaires QField dans le document ; Atlas lit le manifeste de scène qu’il y dépose."
+          },
+          {
+            "titre": "OpenStreetMap",
+            "texte": "Bâtiments, voirie, arbres, mobilier, importés autour de la vue, puis enregistrés en table Grist pour être édités comme le reste."
+          },
+          {
+            "titre": "Un fichier GeoJSON",
+            "texte": "Ouvert depuis le poste, il devient une couche, qu’on peut à son tour enregistrer en table."
+          },
+          {
+            "titre": "Des couches publiées",
+            "etiquette": "Sans document",
+            "texte": "Une scène cite des couches par adresse — GeoJSON en ligne, tuiles XYZ — ou les porte en elle. Elles s’affichent, se filtrent et se symbolisent sans passer par un document."
+          },
+          {
+            "titre": "Le décor",
+            "texte": "Photographie aérienne et relief LiDAR HD de l’IGN, bâti OpenFreeMap, et un catalogue d’objets 3D (`?objets=`) qui donne à chaque arbre ou lampadaire le modèle que ses champs désignent."
+          }
+        ]
+      },
+      {
+        "titre": "Diffuser Atlas",
+        "texte": "Quatre façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.",
+        "items": [
+          {
+            "titre": "Le document lui-même",
+            "etiquette": "Dans le document",
+            "texte": "On partage le document Grist : Atlas s’y ouvre avec les droits de chacun — qui écrit édite, qui lit consulte la scène et son récit. Règles d’accès et clés de lien s’appliquent telles quelles."
+          },
+          {
+            "titre": "Une page intégrée",
+            "etiquette": "Dans le document",
+            "texte": "La page du document dans une iframe : `?embed=true` la montre en lecture, `?style=singlePage` garde les droits de la personne connectée. Sur l’adresse du widget, `?navbar=false` retire la barre quand la page hôte porte déjà son titre."
+          },
+          {
+            "titre": "Une scène publiée",
+            "etiquette": "Sans document",
+            "texte": "Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par `?scene=<adresse>`. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut."
+          },
+          {
+            "titre": "L’application Android",
+            "etiquette": "Terrain",
+            "texte": "Elle retrouve les scènes du compte Grist et les emporte sur le terrain, formulaires et photos compris. Version de test, non signée."
+          }
+        ]
+      }
+    ]
   },
   "forum": {
     "url": "https://forum.grist.libre.sh/t/atlas-un-widget-carte-pour-grist-lignes-polygones-3d-edition-et-partage-en-lecture/4205",

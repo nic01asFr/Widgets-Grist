@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
 <meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-20"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-09-26"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -137,6 +137,19 @@ section { margin: 0 0 3rem; }
   font-size: .85rem; font-weight: 600; color: #fff; background: var(--accent); }
 .sequence li b { display: block; margin-bottom: .3rem; }
 .sequence li p { font-size: .93rem; margin: 0; }
+.facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
+.facons ul { list-style: none; padding: 0; margin: 0; }
+.facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
+.facons li p { font-size: .9rem; margin: .25rem 0 0; }
+.facons .porte { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+/* Ou la porte tourne : c'est ce qui decide laquelle choisir. */
+.facons .ou { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: .05rem .5rem; }
+.contexte code, .sequence code, .facons code, .journal code, .mention code { font-size: .88em; padding: .05em .3em;
+  border-radius: 4px; background: var(--filet); overflow-wrap: anywhere; }
 /* La revelation accompagne le defilement ; elle ne le commande pas. */
 .reveler { opacity: 0; transform: translateY(14px);
   transition: opacity .5s ease, transform .5s ease; }
@@ -153,11 +166,11 @@ section { margin: 0 0 3rem; }
   <h1>Atlas</h1>
   <p class="chapeau">La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.</p>
   <p class="accroche">Dans Grist, on partage le document : la carte suit, avec les droits du document. On peut aussi publier une scène seule (manifeste) pour l’ouvrir hors document — même moteur, autre hôte.</p>
-  <div class="tags"><span class="tag">Cartographie</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span></div>
+  <div class="tags"><span class="tag">Cartographie</span><span class="tag">Édition</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span></div>
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour il y a 5 j</span>
+    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -170,12 +183,12 @@ section { margin: 0 0 3rem; }
       <img src="apercu.jpg" alt="Aperçu du widget Atlas" loading="lazy">
       <button type="button" class="lancer">Lancer l’aperçu</button>
     </div>
-    <p class="mention">L’aperçu est Atlas seul (`vitrine=1`), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist.</p>
+    <p class="mention">L’aperçu est Atlas seul (<code>vitrine=1</code>), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist.</p>
   </section>
   <section class="chiffres reveler">
     <div><b>0</b><span>export à refaire quand la donnée change</span></div>
     <div><b>0</b><span>système de droits en plus de celui de Grist</span></div>
-    <div><b>3</b><span>voies : document, iframe document, scène publiée</span></div>
+    <div><b>4</b><span>façons de montrer la scène : document, page intégrée, scène publiée, application</span></div>
   </section>
   <section class="contextes reveler">
     <h2>Construire, relever, diffuser</h2>
@@ -193,6 +206,27 @@ section { margin: 0 0 3rem; }
         <figure class="large">
           <img src="fiche-objet.jpg" alt="L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute." loading="lazy">
           <figcaption>L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <h3>Dessiner dans la carte</h3>
+        <p>Une couche se crée depuis Atlas : un nom, un type — point, ligne ou surface — et la table Grist qui la portera, montrée avant d’être écrite. On y dessine ensuite : chaque sommet s’accroche aux objets voisins, l’en-tête donne longueur ou aire en direct, et la fiche de l’objet se remplit avant que rien ne parte. Un envoi écrit une ligne, et la création suivante est déjà prête.</p>
+        <p class="pourquoi">Pas de détour par QGIS pour tracer un périmètre ou relever dix arbres. Et chaque geste se reprend : « Annuler cet ajout », « Annuler le geste », « Annuler la modification » — une forme modifiée ailleurs entre-temps n’est pas écrasée.</p>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="dessin-trace.jpg" alt="Une surface en cours de tracé dans « Parcelles essai » : quatre sommets posés, l’aire et le périmètre suivent le curseur." loading="lazy">
+          <figcaption>Une surface en cours de tracé dans « Parcelles essai » : quatre sommets posés, l’aire et le périmètre suivent le curseur.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="dessin-fiche.jpg" alt="La forme fermée, la fiche s’ouvre : on nomme l’objet, et l’envoi écrit une seule ligne — géométrie et champs ensemble." loading="lazy">
+          <figcaption>La forme fermée, la fiche s’ouvre : on nomme l’objet, et l’envoi écrit une seule ligne — géométrie et champs ensemble.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="dessin-modifier.jpg" alt="Modifier une forme existante : sommets à glisser, points milieux pour en insérer ; seule la géométrie sera réécrite." loading="lazy">
+          <figcaption>Modifier une forme existante : sommets à glisser, points milieux pour en insérer ; seule la géométrie sera réécrite.</figcaption>
         </figure>
       </div>
     </article>
@@ -228,14 +262,27 @@ section { margin: 0 0 3rem; }
     </article>
     <article class="contexte">
       <div class="dit">
+        <h3>Un récit qui suit un trajet — ici, de nuit</h3>
+        <p>Une ligne posée comme trajet devient le fil du récit : chaque étape s’y place, et en lecture la caméra longe la rue d’une étape à l’autre. Chaque étape retient aussi l’heure : à 22 h 30, les luminaires s’allument selon leur profil d’éclairage, chacun avec son flux, sa hauteur de feu et sa température de couleur.</p>
+        <p class="pourquoi">Le parcours de terrain et sa présentation sont la même chose : on prépare la tournée, on la montre, puis on la fait avec les formulaires exposés. La nuit n’est pas un voile sombre posé sur la carte : c’est la lumière des objets eux-mêmes, décrits au format EclExt.</p>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="trajet-nuit.jpg" alt="Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap." loading="lazy">
+          <figcaption>Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
         <h3>Diffuser, proprement</h3>
-        <p>Deux paramètres Grist, deux intentions. `?embed=true` : page minimale en lecture forcée. `?style=singlePage` : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.</p>
-        <p class="pourquoi">Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via `?scene=`). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.</p>
+        <p>Deux paramètres Grist, deux intentions. <code>?embed=true</code> : page minimale en lecture forcée. <code>?style=singlePage</code> : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.</p>
+        <p class="pourquoi">Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via <code>?scene=</code>). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.</p>
       </div>
       <div class="montre">
         <figure class="large">
           <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit." loading="lazy">
-          <figcaption>En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit.</figcaption>
+          <figcaption>En lecture, sans barre (<code>?navbar=false</code>) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit.</figcaption>
         </figure>
       </div>
     </article>
@@ -267,11 +314,11 @@ section { margin: 0 0 3rem; }
     <ol>
       <li>
         <b>Je charge mes données</b>
-        <p>Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist — ou une couche publiée par URL dans un Scene Manifest.</p>
+        <p>Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist, une couche publiée par URL dans un Scene Manifest — ou une couche vide que je crée pour la dessiner.</p>
       </li>
       <li>
         <b>J’édite</b>
-        <p>Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. Ce que j’y saisis est écrit dans le document — sur ordinateur, ou sur le terrain hors édition si la scène le propose.</p>
+        <p>Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. J’en crée d’autres en les dessinant — point, ligne, surface —, ou je reprends une forme sommet par sommet. Ce que j’écris est dans le document, y compris sur le terrain si la scène le propose.</p>
       </li>
       <li>
         <b>Je compose mon récit — et mon trajet</b>
@@ -283,9 +330,70 @@ section { margin: 0 0 3rem; }
       </li>
       <li>
         <b>Je partage</b>
-        <p>Soit le lien d’une page du document (`embed` ou `singlePage`), soit une scène publiée ouverte avec Atlas seul (`?scene=`). Dans les deux cas, rien n’est recopié vers une autre plateforme carto.</p>
+        <p>Soit le lien d’une page du document (<code>embed</code> ou <code>singlePage</code>), soit une scène publiée ouverte avec Atlas seul (<code>?scene=</code>). Dans les deux cas, rien n’est recopié vers une autre plateforme carto.</p>
       </li>
     </ol>
+  </section>
+  <section class="facons reveler">
+    <h2>Faire entrer la donnée, montrer la carte</h2>
+    <div class="groupes">
+    <div class="groupe">
+      <h3>Charger et montrer la donnée</h3>
+      <p class="intro">Plusieurs portes, une règle : ce qui vient d’une table du document s’y écrit ; le reste peut l’y rejoindre.</p>
+      <ul>
+        <li>
+          <div class="porte"><b>Les tables du document</b><span class="ou">Dans le document</span></div>
+          <p>Toute table qui porte une géométrie — latitude et longitude, ou une colonne GeoJSON — est proposée dans le panneau Couches ; un clic la pose sur la carte avec ses attributs, et la carte suit la table.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Une couche neuve, dessinée</b><span class="ou">Dans le document</span></div>
+          <p>« Nouvelle » crée la table vide — point, ligne ou surface —, puis on y dessine ses objets, fiche comprise.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Un projet QGIS</b><span class="ou">Dans le document</span></div>
+          <p>qgis2grist verse les couches, leur style et les formulaires QField dans le document ; Atlas lit le manifeste de scène qu’il y dépose.</p>
+        </li>
+        <li>
+          <div class="porte"><b>OpenStreetMap</b></div>
+          <p>Bâtiments, voirie, arbres, mobilier, importés autour de la vue, puis enregistrés en table Grist pour être édités comme le reste.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Un fichier GeoJSON</b></div>
+          <p>Ouvert depuis le poste, il devient une couche, qu’on peut à son tour enregistrer en table.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Des couches publiées</b><span class="ou">Sans document</span></div>
+          <p>Une scène cite des couches par adresse — GeoJSON en ligne, tuiles XYZ — ou les porte en elle. Elles s’affichent, se filtrent et se symbolisent sans passer par un document.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Le décor</b></div>
+          <p>Photographie aérienne et relief LiDAR HD de l’IGN, bâti OpenFreeMap, et un catalogue d’objets 3D (<code>?objets=</code>) qui donne à chaque arbre ou lampadaire le modèle que ses champs désignent.</p>
+        </li>
+      </ul>
+    </div>
+    <div class="groupe">
+      <h3>Diffuser Atlas</h3>
+      <p class="intro">Quatre façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.</p>
+      <ul>
+        <li>
+          <div class="porte"><b>Le document lui-même</b><span class="ou">Dans le document</span></div>
+          <p>On partage le document Grist : Atlas s’y ouvre avec les droits de chacun — qui écrit édite, qui lit consulte la scène et son récit. Règles d’accès et clés de lien s’appliquent telles quelles.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Une page intégrée</b><span class="ou">Dans le document</span></div>
+          <p>La page du document dans une iframe : <code>?embed=true</code> la montre en lecture, <code>?style=singlePage</code> garde les droits de la personne connectée. Sur l’adresse du widget, <code>?navbar=false</code> retire la barre quand la page hôte porte déjà son titre.</p>
+        </li>
+        <li>
+          <div class="porte"><b>Une scène publiée</b><span class="ou">Sans document</span></div>
+          <p>Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par <code>?scene=&lt;adresse&gt;</code>. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut.</p>
+        </li>
+        <li>
+          <div class="porte"><b>L’application Android</b><span class="ou">Terrain</span></div>
+          <p>Elle retrouve les scènes du compte Grist et les emporte sur le terrain, formulaires et photos compris. Version de test, non signée.</p>
+        </li>
+      </ul>
+    </div>
+    </div>
   </section>
   <section>
     <div class="encart">
@@ -299,8 +407,8 @@ section { margin: 0 0 3rem; }
     <div class="journal">
       <div><b>v1.9.0</b><p>Dessiner dans la carte : créer une couche vide, puis des points, des lignes et des surfaces — une seule ligne écrite par objet, fiche comprise, et des créations en série. Modifier la forme d’un objet sommet par sommet, avec détection de conflit et retour à l’identique. Le récit peut s’ancrer sur un trajet que la lecture longe. La pastille Soleil couvre les vingt-quatre heures, et la nuit s’éclaire. Sur téléphone et sur tablette, la caméra vise ce que les feuilles laissent voir, et l’objet courant ressort des autres.</p></div>
       <div><b>v1.7.1</b><p>Les contrôles suivent le type de chaque colonne Grist — dates, nombres, catégories, listes, recherche texte — et « sans valeur » devient un choix ; un formulaire se retire d’une couche et s’y remet. La démo des Aygalades passe sur la photographie aérienne et le relief LiDAR de l’IGN, avec sa canopée relevée dans le même LiDAR.</p></div>
-      <div><b>v1.7.0</b><p>La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre.</p></div>
-      <div><b>vitrine</b><p>Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (`?scene=`). L’aperçu restera enrichi d’exemples chargeables.</p></div>
+      <div><b>v1.7.0</b><p>La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et <code>?navbar=false</code> retire la barre pour l’intégration en cadre.</p></div>
+      <div><b>vitrine</b><p>Fiche alignée sur le runtime actuel : partage document (embed / singlePage), ACL Grist, et ouverture d’une scène publiée sans document (<code>?scene=</code>). L’aperçu restera enrichi d’exemples chargeables.</p></div>
       <div><b>v1.2.0</b><p>Atlas sait où il tourne : dans un document il ne change pas, ouvert seul il explique et propose l’application, sur un téléphone les panneaux deviennent des feuilles qu’on écarte d’un geste. Enregistrer, charger et exporter deviennent accessibles en mobile, où ils manquaient.</p></div>
       <div><b>v1.1.3</b><p>Placement 3D corrigé — le viewport de la scène ne suivait pas l&#39;ouverture d&#39;un panneau. Droits en lecture respectés à l&#39;édition. Récit enregistré de façon atomique.</p></div>
       <div><b>v1.1.2</b><p>Sept correctifs, dont le calage des volumes sur le relief : les surfaces extrudées se comptaient depuis le niveau de la mer, pas depuis le sol.</p></div>

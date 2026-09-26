@@ -78,6 +78,15 @@ const echapper = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /**
+ * Un texte de fiche, avec ses `parametres` en code.
+ *
+ * Les fiches citent des adresses et des parametres entre accents graves ; sans
+ * ce rendu, la page les montrait tels quels, accents compris. On echappe
+ * d'abord : le code ne peut donc rien injecter de plus que le texte.
+ */
+const enLigne = (s) => echapper(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+/**
  * Fraicheur relative plutot que date ISO : devant une liste, « il y a 3 j »
  * situe mieux qu'un horodatage, et dit d'un coup d'oeil ce qui vit.
  */
@@ -607,17 +616,17 @@ function blocContextes(produit) {
   const figure = (i, mobile) => (mobile
     ? `        <figure class="telephone">
           <div class="ecran"><img src="${echapper(i.image)}" alt="${echapper(i.legende)}" loading="lazy"></div>
-          <figcaption>${echapper(i.legende)}</figcaption>
+          <figcaption>${enLigne(i.legende)}</figcaption>
         </figure>`
     : `        <figure class="large">
           <img src="${echapper(i.image)}" alt="${echapper(i.legende)}" loading="lazy">
-          <figcaption>${echapper(i.legende)}</figcaption>
+          <figcaption>${enLigne(i.legende)}</figcaption>
         </figure>`);
   const article = (c) => `    <article class="contexte">
       <div class="dit">
         <h3>${echapper(c.titre)}</h3>
-        <p>${echapper(c.texte)}</p>
-        ${c.pourquoi ? `<p class="pourquoi">${echapper(c.pourquoi)}</p>` : ''}
+        <p>${enLigne(c.texte)}</p>
+        ${c.pourquoi ? `<p class="pourquoi">${enLigne(c.pourquoi)}</p>` : ''}
       </div>
       <div class="montre${c.format === 'mobile' ? ' telephones' : ''}">
 ${(c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
@@ -643,9 +652,40 @@ function blocSequence(produit) {
     <ol>
 ${l.map((e) => `      <li>
         <b>${echapper(e.titre)}</b>
-        <p>${echapper(e.texte)}</p>
+        <p>${enLigne(e.texte)}</p>
       </li>`).join('\n')}
     </ol>
+  </section>`;
+}
+
+/**
+ * Les facons de faire : plusieurs portes pour un meme geste.
+ *
+ * Pas numerote, a la difference de la sequence : ce sont des alternatives, pas
+ * des etapes — on choisit la sienne. Chaque groupe (faire entrer la donnee,
+ * diffuser la carte...) liste ses portes ; l'etiquette dit ou chacune tourne
+ * (« dans le document », « sans document »), parce que c'est ce qui decide
+ * laquelle convient.
+ */
+function blocFacons(produit) {
+  const groupes = (produit.facons || []).filter((g) => (g.items || []).length);
+  if (!groupes.length) return '';
+  const item = (i) => `        <li>
+          <div class="porte"><b>${echapper(i.titre)}</b>${i.etiquette ? `<span class="ou">${echapper(i.etiquette)}</span>` : ''}</div>
+          <p>${enLigne(i.texte)}</p>
+        </li>`;
+  const groupe = (g) => `    <div class="groupe">
+      <h3>${echapper(g.titre)}</h3>
+      ${g.texte ? `<p class="intro">${enLigne(g.texte)}</p>` : ''}
+      <ul>
+${g.items.map(item).join('\n')}
+      </ul>
+    </div>`;
+  return `  <section class="facons reveler">
+    <h2>${echapper(produit.titreFacons || 'Les façons de faire')}</h2>
+    <div class="groupes">
+${groupes.map(groupe).join('\n')}
+    </div>
   </section>`;
 }
 
@@ -686,6 +726,19 @@ const CSS_PRODUIT = `
   font-size: .85rem; font-weight: 600; color: #fff; background: var(--accent); }
 .sequence li b { display: block; margin-bottom: .3rem; }
 .sequence li p { font-size: .93rem; margin: 0; }
+.facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
+.facons ul { list-style: none; padding: 0; margin: 0; }
+.facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
+.facons li p { font-size: .9rem; margin: .25rem 0 0; }
+.facons .porte { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+/* Ou la porte tourne : c'est ce qui decide laquelle choisir. */
+.facons .ou { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: .05rem .5rem; }
+.contexte code, .sequence code, .facons code, .journal code, .mention code { font-size: .88em; padding: .05em .3em;
+  border-radius: 4px; background: var(--filet); overflow-wrap: anywhere; }
 /* La revelation accompagne le defilement ; elle ne le commande pas. */
 .reveler { opacity: 0; transform: translateY(14px);
   transition: opacity .5s ease, transform .5s ease; }
@@ -856,7 +909,7 @@ function sectionApercu(p, image) {
     || 'L’aperçu s’exécute dans votre navigateur, sans document Grist : les données y sont fictives.';
   return `  <section class="apercu">
 ${cadre({ url, image, alt: `Aperçu du widget ${p.presentation.nom || p.id}` })}
-    <p class="mention">${echapper(mention)}</p>
+    <p class="mention">${enLigne(mention)}</p>
   </section>`;
 }
 
@@ -900,7 +953,7 @@ ${d.texte ? `    <p>${echapper(d.texte)}</p>
     url: d.url, image: d.image, alt: d.alt || `Démonstration de ${p.presentation.nom || p.id}`,
     libelle: d.libelle || 'Ouvrir la démonstration',
   })}
-${d.mention ? `    <p class="mention">${echapper(d.mention)}</p>` : ''}
+${d.mention ? `    <p class="mention">${enLigne(d.mention)}</p>` : ''}
   </section>`;
 }
 
@@ -971,6 +1024,8 @@ ${p.widgets.map((w) => ligneWidget(w, estArchive(p, w))).join('\n')}
 
   const seq = blocSequence(produit);
   if (seq) sections.push(seq);
+  const fc = blocFacons(produit);
+  if (fc) sections.push(fc);
 
   if (v.encart) {
     sections.push(`  <section>
@@ -986,7 +1041,7 @@ ${p.widgets.map((w) => ligneWidget(w, estArchive(p, w))).join('\n')}
     sections.push(`  <section>
     <h2>Journal</h2>
     <div class="journal">
-${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${echapper(e.texte)}</p></div>`).join('\n')}
+${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.texte)}</p></div>`).join('\n')}
     </div>
   </section>`);
   }
