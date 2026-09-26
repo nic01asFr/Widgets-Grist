@@ -73,6 +73,31 @@ export function moveSequence(layers, exists) {
   return orderedGfxIds(layers).filter((id) => present(id));
 }
 
+/**
+ * La couche qui coiffe le groupe d'une couche dans la pile — son voisin du
+ * dessus, habillages de la couche exclus.
+ *
+ * Un changement de style retire puis rajoute les habillages : MapLibre les
+ * reposait au sommet, par-dessus toutes les autres couches, le trajet et les
+ * modèles 3D. Relevée **avant** le retrait, cette ancre permet de les rendre à
+ * leur place exacte, sans rejouer l'ordre de toute la pile à chaque curseur.
+ *
+ * @param {string[]} pile identifiants de la pile MapLibre, du bas vers le haut
+ * @param {{id: string}} layer
+ * @returns {string|null} `null` si la couche n'est pas montée ou déjà au sommet
+ */
+export function ancreAuDessus(pile, layer) {
+  const groupe = new Set(layerGfxIds(layer));
+  if (!groupe.size) return null;
+  let dernier = -1;
+  (pile || []).forEach((id, i) => { if (groupe.has(id)) dernier = i; });
+  if (dernier < 0) return null;
+  for (let i = dernier + 1; i < pile.length; i++) {
+    if (!groupe.has(pile[i])) return pile[i];
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------------ *
  * Réordonnancement — le vocabulaire est celui de l'utilisateur.
  *

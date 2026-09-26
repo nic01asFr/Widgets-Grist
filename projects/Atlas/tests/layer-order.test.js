@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   layerGfxIds, orderedGfxIds, moveSequence, SYSTEM_TOP_IDS,
   displayOrder, moveLayerInStack, insertionIndex, sortByRank, dropIndex, reorderByDrop,
+  ancreAuDessus,
 } from '../lib/layer-order.js';
 
 /** Carte factice : enregistre les deplacements et simule la pile MapLibre. */
@@ -275,5 +276,37 @@ describe('glisser-deposer — reordonnancement', () => {
   it('la semantique interne est preservee : le dernier reste peint au-dessus', () => {
     const apres = reorderByDrop(scene(), 0, 3);
     assert.equal(apres[apres.length - 1].id, vue(apres)[0]);
+  });
+});
+
+describe('ancreAuDessus — une couche restylée reprend sa place', () => {
+  const pile = ['fond', 'a', 'a-outline', 'b', 'b-label', 'atlas-trajet-line', 'sel-hl-fill'];
+
+  it('le voisin du dessus, habillages de la couche exclus', () => {
+    assert.equal(ancreAuDessus(pile, couche('a')), 'b');
+    assert.equal(ancreAuDessus(pile, couche('b')), 'atlas-trajet-line');
+  });
+
+  it('rien au-dessus, ou couche absente : pas d ancre', () => {
+    assert.equal(ancreAuDessus(['x', 'a', 'a-label'], couche('a')), null);
+    assert.equal(ancreAuDessus(pile, couche('z')), null);
+    assert.equal(ancreAuDessus([], couche('a')), null);
+    assert.equal(ancreAuDessus(pile, {}), null);
+  });
+
+  it('le repli en points et l etiquette comptent dans le groupe', () => {
+    assert.equal(ancreAuDessus(['a', 'a-pts', 'a-label', 'b'], couche('a')), 'b');
+  });
+
+  it('retirer puis reposer sous l ancre rend la pile d origine', () => {
+    const avant = ['fond', 'a', 'a-outline', 'b', 'b-label'];
+    const ancre = ancreAuDessus(avant, couche('a'));
+    const pileCarte = avant.filter((id) => !id.startsWith('a'));
+    pileCarte.push('a', 'a-outline');                      // recréées au sommet
+    for (const id of ['a', 'a-outline']) {                 // moveLayer(id, ancre)
+      pileCarte.splice(pileCarte.indexOf(id), 1);
+      pileCarte.splice(pileCarte.indexOf(ancre), 0, id);
+    }
+    assert.deepEqual(pileCarte, avant);
   });
 });

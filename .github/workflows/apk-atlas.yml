@@ -69,6 +69,8 @@ jobs:
           test -f www/vendor/three-addons/loaders/KTX2Loader.js
           test -f www/vendor/three-addons/libs/meshopt_decoder.module.js
           test -s www/vendor/three-addons/libs/basis/basis_transcoder.wasm
+          test -s www/vendor/terra-draw.module.js
+          test -s www/vendor/terra-draw-maplibre-gl-adapter.module.js
           ! grep -q "\.\./grist_forms/" www/index.html
 
       - name: Ajouter la plateforme Android

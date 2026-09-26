@@ -240,9 +240,15 @@ export function resoudreObjet(cat, couche, feature, o = {}) {
   const set = o.set || 'colored';
   const fichier = asset ? (asset.files[set] || Object.values(asset.files)[0]) : null;
   const echelleCouche = Number.isFinite(o.echelleCouche) ? o.echelleCouche : 1;
+  // Decision 6 du contrat commun (24/09/2026) : un luminaire n'est jamais
+  // tire en echelle — une lanterne de 8 m n'est pas une lanterne de 4 m
+  // agrandie, c'est la classe de hauteur qui choisit le fichier. Le type le
+  // dit par `scale_draw: false` (ajout prevu a la 0.2, A6) ; la famille
+  // `lighting` le vaut d'office, pour un catalogue qui ne le dirait pas.
+  const sansTirage = type.scale_draw === false || type.family === 'lighting';
   const propre = asset && hauteur != null && asset.height_m > 0
     ? hauteur / asset.height_m
-    : echelleTiree(cle);
+    : (sansTirage ? 1 : echelleTiree(cle));
   return {
     type,
     asset,

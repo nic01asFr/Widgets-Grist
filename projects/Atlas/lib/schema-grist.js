@@ -114,3 +114,43 @@ export function tablesReferencant(schema, table) {
   }
   return out;
 }
+
+/**
+ * Le type Grist d'une colonne créée à partir de valeurs, pour `AddTable`.
+ *
+ * Seules des valeurs **déjà** numériques ou booléennes donnent une colonne
+ * typée : une chaîne reste du texte, même si elle a l'air d'un nombre. Dans une
+ * colonne `Int`, Grist range « 01004 » en 1004 — un code INSEE, un code postal
+ * ou un numéro de parcelle y perdraient leur zéro de tête (mesuré le
+ * 26/09/2026). Tant qu'Atlas passait ses colonnes sous une forme que Grist
+ * ignorait, tout finissait en texte et la perte ne se voyait pas.
+ *
+ * Rappel : `AddTable` attend des colonnes **plates**,
+ * `{ id, type, label }`. La forme `{ id, fields: { type, label } }` est ignorée
+ * sans erreur : colonnes en `Text`, libellé égal à l'identifiant.
+ *
+ * @param {Iterable<unknown>} valeurs
+ * @returns {'Text' | 'Bool' | 'Int' | 'Numeric'}
+ */
+export function typeColonneDepuisValeurs(valeurs) {
+  let vu = false;
+  let booleens = true;
+  let entiers = true;
+  let nombres = true;
+  for (const v of valeurs) {
+    if (v == null || v === '') continue;
+    vu = true;
+    if (typeof v !== 'boolean') booleens = false;
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+      nombres = false;
+      entiers = false;
+    } else if (!Number.isInteger(v)) {
+      entiers = false;
+    }
+  }
+  if (!vu) return 'Text';
+  if (booleens) return 'Bool';
+  if (entiers) return 'Int';
+  if (nombres) return 'Numeric';
+  return 'Text';
+}

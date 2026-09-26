@@ -9,9 +9,9 @@ import {
 
 export const ATLAS_SCENE_PREFS_TABLE = 'Atlas_ScenePrefs';
 
-const SCENE_PREFS_SCHEMA = [
-  { id: 'ViewerJSON', fields: { label: 'Contrôles environnement (JSON)', type: 'Text' } },
-  { id: 'SettingsJSON', fields: { label: 'Réglages de scène (JSON)', type: 'Text' } },
+export const SCENE_PREFS_SCHEMA = [
+  { id: 'ViewerJSON', label: 'Contrôles environnement (JSON)', type: 'Text' },
+  { id: 'SettingsJSON', label: 'Réglages de scène (JSON)', type: 'Text' },
 ];
 
 /**
@@ -25,11 +25,18 @@ const SCENE_PREFS_SCHEMA = [
  * `date` est volontairement absente : elle se recalcule depuis `timeOfDay`, et
  * une scène rouverte l'an prochain doit montrer la lumière de l'heure choisie,
  * pas celle d'un jour de l'an dernier.
+ *
+ * C'est le défaut, pas une interdiction : une date **épinglée**
+ * (`dateEpinglee`, 'AAAA-MM-JJ', horloge de scène, décision 3 du contrat
+ * commun) est retenue, parce que quelqu'un a dit vouloir ce jour-là — une
+ * nuit d'hiver pour un relevé de décembre. Non épinglée, elle vaut `null` et
+ * ne s'écrit pas. Le fuseau de la scène (`fuseau`, IANA) voyage aussi.
  */
 export const REGLAGES_MEMORISES = [
   'basemap', 'projection', 'modelSet',
   'buildings3D', 'terrain3D', 'terrainSource', 'terrainExaggeration',
   'labels', 'sky', 'timeOfDay', 'shadows',
+  'fuseau', 'dateEpinglee',
 ];
 
 let _prefRowId = null;

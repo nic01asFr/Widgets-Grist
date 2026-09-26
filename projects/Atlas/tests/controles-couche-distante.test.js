@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   controlUniqueValues, controlBounds, optionsDeclarees,
   filteredGeoJSON, expressionFiltreControles, buildControlPredicate,
-  filteredUniqueValues,
+  filteredUniqueValues, choixSansValeur, basculerValeurSelection,
 } from '../lib/controls.js';
 import { evaluer } from './aide-expressions.js';
 import { applyManifestControlsToLayer } from '../lib/manifest-binding.js';
@@ -358,4 +358,91 @@ test('sans style catégorisé, le repli reste celui des options déclarées', ()
   };
   assert.deepEqual(filteredUniqueValues(couche, 'usage').map((v) => v.value),
     ['Activité', 'Espace vert']);
+});
+
+/* ---------- défauts relevés en navigateur le 24/09/2026 (RAPPORT-PASTILLES.md) ---------- */
+
+test('« Aucun » donne une expression que MapLibre accepte, et qui ne garde rien (D2)', () => {
+  // `['==', 1, 0]` était lu par MapLibre comme un filtre historique et refusé :
+  // le filtre précédent restait, et les 15 tronçons avec lui. L'évaluateur de
+  // test lève désormais sur cette forme.
+  for (const variant of [undefined, 'select_single']) {
+    const l = distante([{ field: 'nature', type: 'select', active: true, values: [], variant, options: ['A', 'B'] }]);
+    const expr = expressionFiltreControles(l);
+    assert.ok(expr, 'une sélection vide posée restreint');
+    for (const p of [{ nature: 'A' }, { nature: '' }, {}]) {
+      assert.equal(!!evaluer(expr, p), false, `${variant || 'checklist'} : ${JSON.stringify(p)}`);
+    }
+  }
+  const deux = distante([
+    { field: 'nature', type: 'select', active: true, values: [], options: ['A', 'B'] },
+    { field: 'h', type: 'range', active: true, min: 0, max: 10 },
+  ]);
+  assert.equal(!!evaluer(expressionFiltreControles(deux), { nature: 'A', h: 5 }), false);
+});
+
+test('une valeur vide et la virgule décimale classent pareil des deux côtés (D4)', () => {
+  // Côté carte, `''` était lu 0 (écarté d'une plage 4 → 12, gardé en local) et
+  // « 3,5 » ne se convertissait pas (gardé par tolérance, écarté en local).
+  const valeurs = [3.5, '3,5', '', '   ', '8', ' 8 ', '12,0', '12,5', '-3,5', '4', '12 m', 'NULL',
+    null, true, false, 0, '0', '0,0', '1e1', '3,5,1', undefined];
+  const entites = valeurs.map((v) => ({ properties: v === undefined ? {} : { num: v } }));
+  for (const c of [
+    { field: 'num', type: 'range', active: true, min: 4, max: 12 },
+    { field: 'num', type: 'range', active: true, min: -5, max: 1 },
+    { field: 'num', type: 'range', active: true, min: 4, max: 12, requireValue: true },
+    { field: 'num', type: 'range', active: true, variant: 'range_min', min: 0 },
+    { field: 'num', type: 'time', unite: 's', active: true, variant: 'time_lte', max: 5000 },
+  ]) {
+    // `valeurTemporelle` ne lit pas l'exposant : écart connu, côté dates seulement.
+    const objets = c.type === 'time' ? entites.filter((f) => f.properties.num !== '1e1') : entites;
+    const layer = locale(objets, [c]);
+    const pred = buildControlPredicate(layer);
+    const expr = expressionFiltreControles(layer);
+    objets.forEach((f) => {
+      assert.equal(!!evaluer(expr, f.properties), !!pred(f),
+        `${JSON.stringify(c)} — divergence sur ${JSON.stringify(f.properties)}`);
+    });
+  }
+});
+
+test('« Tout » garde les objets sans valeur d’une couche distante, et « (sans valeur) » est un choix (D5)', () => {
+  // Sans entités, `nombreSansValeur` valait 0 : `''` n'était jamais ajouté, et
+  // « Tout » écartait pour de bon les objets sans valeur.
+  const l = distante([{ field: 'nature', type: 'select', options: ['A', 'B'] }]);
+  assert.deepEqual(choixSansValeur(l, 'nature'), { offert: true, count: null },
+    'proposé, avec un compte inconnu et non zéro');
+  const { values } = controlBounds(l, 'select', 'nature');
+  assert.deepEqual(values, ['A', 'B', '']);
+  const c = l.controls[0];
+  c.active = true;
+  c.values = values;
+  const objets = [{ nature: 'A' }, { nature: 'b' }, { nature: '' }, { nature: null }, {}];
+  const tout = expressionFiltreControles(l);
+  for (const p of objets) assert.equal(!!evaluer(tout, p), true, `Tout : ${JSON.stringify(p)}`);
+  // Décocher « (sans valeur) » les retire, et le recocher les rend.
+  c.values = basculerValeurSelection(l, c, '');
+  const sans = expressionFiltreControles(l);
+  assert.deepEqual(objets.map((p) => !!evaluer(sans, p)), [true, true, false, false, false]);
+  c.values = basculerValeurSelection(l, c, '');
+  const rendu = expressionFiltreControles(l);
+  for (const p of objets) assert.equal(!!evaluer(rendu, p), true);
+  // Même classement qu'une couche détenue qui porte ces objets.
+  const detenue = locale(objets.map((p) => ({ properties: p })), [{ ...c, values: ['A', 'B', ''] }]);
+  const pred = buildControlPredicate(detenue);
+  assert.deepEqual(detenue.geojson.features.map((f) => !!pred(f)), objets.map(() => true));
+});
+
+test('« (sans valeur) » n’apparaît qu’une fois, même quand le manifeste le déclare (D5)', () => {
+  const l = distante([{ field: 'urgent', type: 'select', options: ['true', 'false', ''] }]);
+  assert.deepEqual(controlUniqueValues(l, 'urgent', 40).map((v) => v.value), ['true', 'false'],
+    'pas de ligne au libellé vide');
+  assert.deepEqual(controlBounds(l, 'select', 'urgent').values, ['true', 'false', '']);
+});
+
+test('une couche distante sans choix déclaré ne propose pas « (sans valeur) » seul', () => {
+  // Activer ne garderait alors que les objets sans valeur.
+  const l = distante([{ field: 'nature', type: 'select' }]);
+  assert.equal(choixSansValeur(l, 'nature').offert, false);
+  assert.deepEqual(controlBounds(l, 'select', 'nature').values, []);
 });

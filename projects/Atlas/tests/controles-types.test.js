@@ -26,6 +26,10 @@ import {
   applyControlsFromPrefs,
   applyStoryControlsToLayer,
   fmtControlValue,
+  isSelectValueChecked,
+  basculerValeurSelection,
+  pasDuCurseur,
+  valeurDuCurseur,
   SEUIL_CATEGORIES,
 } from '../lib/controls.js';
 import { evaluer } from './aide-expressions.js';
@@ -161,6 +165,32 @@ test('une date Grist est en secondes : le contrôle le sait', () => {
   assert.equal(fmtControlValue({ type: 'time' }, b.dataMin), '14/03/2026');
 });
 
+test('un curseur de date suit l’étendue des données, à la minute près (D3)', () => {
+  // Les 9 relevés d'essais-crisi tiennent en 1 h 17 : un pas d'au moins un jour
+  // ne laissait au curseur qu'une seule position, le minimum — donc 1 relevé.
+  const debut = Date.UTC(2026, 8, 22, 19, 13, 36, 192);
+  const fin = debut + 77 * 60000 + 10376;
+  const c = { type: 'time', variant: 'time_lte', dataMin: debut, dataMax: fin, min: debut, max: fin };
+  assert.equal(pasDuCurseur(c), 60000, 'une minute');
+  // Poussé tout à droite, le curseur s'arrête sur la dernière minute de la
+  // grille, avant le dernier relevé : c'est bien la borne haute qu'on veut.
+  const droite = c.dataMin + Math.floor((c.dataMax - c.dataMin) / 60000) * 60000;
+  assert.equal(valeurDuCurseur(c, droite), c.dataMax);
+  assert.equal(valeurDuCurseur(c, droite - 60000), droite - 60000, 'ailleurs, la valeur du curseur');
+  // L'heure est affichée quand elle compte.
+  assert.match(String(fmtControlValue(c, c.dataMax)), /^\d{2}\/\d{2}\/2026 \d{2}:\d{2}$/);
+  // Des dates seules gardent un pas d'un jour et un affichage sans heure.
+  const jours = { type: 'time', dataMin: Date.UTC(2026, 2, 14), dataMax: Date.UTC(2026, 5, 12) };
+  assert.equal(pasDuCurseur(jours) % 86400000, 0);
+  assert.equal(fmtControlValue(jours, Date.UTC(2026, 2, 14)), '14/03/2026');
+  // Des horodatages sur trois ans : le jour suffit.
+  const long = { type: 'time', dataMin: debut, dataMax: debut + 3 * 365 * 86400000 };
+  assert.equal(pasDuCurseur(long) % 86400000, 0);
+  assert.doesNotMatch(String(fmtControlValue(long, debut)), /:/);
+  // Une journée d'horodatages : un pas sous l'heure.
+  assert.ok(pasDuCurseur({ type: 'time', dataMin: debut, dataMax: debut + 86400000 }) < 3600000);
+});
+
 test('un booléen se filtre en catégories, et seulement ainsi', () => {
   const p = profilChamp(coucheTable(), 'verifie', 'Bool');
   assert.equal(p.type, 'select');
@@ -235,6 +265,34 @@ test('activer une checklist ne retranche rien, pas même les objets sans valeur'
 test('choix unique : la première valeur seulement, sans modifier le contrôle', () => {
   const c = { field: 'etat', type: 'select', variant: 'select_single', values: ['Mauvais', 'Bon'] };
   assert.deepEqual(garder(coucheTable(), [c]), ['Silo']);
+});
+
+test('le premier clic sur une case retire cette valeur, et elle seule (D1)', () => {
+  // Sélection non posée (contrôle venu du manifeste) : toutes les cases
+  // s'affichent cochées. Le premier clic partait d'une sélection vide et ne
+  // gardait que la valeur décochée — l'inverse de ce que l'écran montrait.
+  const couche = coucheTable();
+  const c = { field: 'etat', type: 'select', active: true, variant: 'select_checklist' };
+  couche.controls = [c];
+  assert.ok(isSelectValueChecked(c, 'Bon'), 'l’écran montre « Bon » coché');
+  c.values = basculerValeurSelection(couche, c, 'Bon');
+  assert.ok(!isSelectValueChecked(c, 'Bon'), 'décochée à l’écran…');
+  assert.deepEqual(garder(couche, [c]), ['Théâtre', 'Silo', 'Hangar'], '… et retirée de la carte, les autres restent');
+  // Le second clic part de la sélection posée.
+  c.values = basculerValeurSelection(couche, c, 'Mauvais');
+  assert.deepEqual(garder(couche, [c]), ['Théâtre', 'Hangar']);
+  c.values = basculerValeurSelection(couche, c, 'Bon');
+  assert.deepEqual(garder(couche, [c]), ['Halle', 'Théâtre', 'Mairie', 'Hangar', 'Café du port']);
+});
+
+test('choix unique sans sélection posée : aucun bouton ne s’affiche choisi (D1)', () => {
+  // Tous « cochés », des boutons radio montraient le dernier seul, alors
+  // qu'aucun filtre n'était appliqué.
+  const c = { field: 'etat', type: 'select', variant: 'select_single' };
+  assert.equal(isSelectValueChecked(c, 'Bon'), false);
+  const couche = coucheTable();
+  c.values = basculerValeurSelection(couche, c, 'Mauvais');
+  assert.deepEqual(c.values, ['Mauvais']);
 });
 
 test('texte : sans majuscules ni accents', () => {

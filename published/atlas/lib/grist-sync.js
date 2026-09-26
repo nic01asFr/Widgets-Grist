@@ -4,32 +4,32 @@
 import {
   fetchTableToRows,
   rowsToGeoJSON,
-  flattenCoords2D,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.8.0';
+} from './grist-rows.js?v=1.9.0';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.8.0';
+} from './manifest-binding.js?v=1.9.0';
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
-import { isModelLayer } from './model-layer.js?v=1.8.0';
+import { isModelLayer } from './model-layer.js?v=1.9.0';
+import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.9.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.8.0';
+} from './declarative-style.js?v=1.9.0';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
-const ATLAS_PREFS_SCHEMA = [
-  { id: 'source_table', fields: { label: 'Table source', type: 'Text' } },
-  { id: 'StyleJSON', fields: { label: 'Style Atlas (JSON)', type: 'Text' } },
-  { id: 'Visible', fields: { label: 'Visible', type: 'Bool' } },
-  { id: 'UpdatedAt', fields: { label: 'Mis à jour', type: 'DateTime' } },
+export const ATLAS_PREFS_SCHEMA = [
+  { id: 'source_table', label: 'Table source', type: 'Text' },
+  { id: 'StyleJSON', label: 'Style Atlas (JSON)', type: 'Text' },
+  { id: 'Visible', label: 'Visible', type: 'Bool' },
+  { id: 'UpdatedAt', label: 'Mis à jour', type: 'DateTime' },
 ];
 
 const SKIP_PROPS = new Set([
@@ -213,17 +213,22 @@ export function ligneInventaire(layer) {
   };
 }
 
+/** La ligne d'`Atlas_LayerPrefs` d'une couche : apparence, visibilité, date. */
+export function lignePrefs(layer, maintenant = Date.now()) {
+  return {
+    source_table: clePrefsCouche(layer),
+    StyleJSON: JSON.stringify(layerPrefsPayload(layer)),
+    Visible: layer.visible !== false,
+    UpdatedAt: Math.floor(maintenant / 1000),
+  };
+}
+
 export async function saveLayerPref(docApi, layer, opts = {}) {
   if (opts.viewMode) return;
   const cle = clePrefsCouche(layer);
   if (!cle) return;
   await ensureAtlasPrefsTable(docApi, opts);
-  const data = {
-    source_table: cle,
-    StyleJSON: JSON.stringify(layerPrefsPayload(layer)),
-    Visible: layer.visible !== false,
-    UpdatedAt: Math.floor(Date.now() / 1000),
-  };
+  const data = lignePrefs(layer);
   if (layer._prefRowId) {
     await docApi.applyUserActions([['UpdateRecord', ATLAS_PREFS_TABLE, layer._prefRowId, data]]);
   } else {
@@ -270,6 +275,28 @@ function declaredLayerGeometryKind(layer) {
   return geometryKindFromType(layer.geometryType) || 'Polygon';
 }
 
+/**
+ * Les colonnes qu'une écriture peut viser, pour une table.
+ *
+ * Le schéma du document fait foi : il connaît les colonnes vides partout, et
+ * il dit lesquelles sont des formules — y écrire serait refusé par Grist. Sans
+ * schéma (lecture qui a échoué), les colonnes qu'on a lues, qui existent au
+ * moins. Les colonnes de Grist lui-même n'en sont jamais.
+ *
+ * @param {Array<{colId: string, isFormula?: boolean}>} [colonnesSchema]
+ * @param {string[]} [repli] noms connus par la lecture
+ * @returns {string[]}
+ */
+export function colonnesEcrivables(colonnesSchema, repli = []) {
+  const internes = new Set(COLONNES_INTERNES_GRIST);
+  if (Array.isArray(colonnesSchema) && colonnesSchema.length) {
+    return colonnesSchema
+      .filter((c) => c?.colId && !c.isFormula && !internes.has(c.colId))
+      .map((c) => c.colId);
+  }
+  return [...new Set(repli || [])].filter((k) => k && !internes.has(k));
+}
+
 export function featureToRowUpdate(feature, layer) {
   const props = feature?.properties || {};
   const rowId = props._row_id;
@@ -279,10 +306,14 @@ export function featureToRowUpdate(feature, layer) {
   const gristCols = layer._gristColumns || [];
   const colSet = new Set(gristCols);
 
+  // Les colonnes où vit la géométrie de CETTE couche : manifeste, colonne
+  // retenue à la lecture, ou convention. Elles ne sont jamais des attributs.
+  const colonnes = colonnesGeometrie(layer);
+  const horsAttributs = new Set(['geometry_json', 'latitude', 'longitude', ...nomsColonnesGeometrie(colonnes)]);
   const fieldNames = (layer._fields || []).map((f) => f.name).filter(Boolean);
   const editable = fieldNames.length
-    ? fieldNames.filter((n) => !SKIP_PROPS.has(n) && !['geometry_json', 'latitude', 'longitude'].includes(n))
-    : Object.keys(props).filter((k) => !k.startsWith('_') && !SKIP_PROPS.has(k));
+    ? fieldNames.filter((n) => !SKIP_PROPS.has(n) && !horsAttributs.has(n))
+    : Object.keys(props).filter((k) => !k.startsWith('_') && !SKIP_PROPS.has(k) && !horsAttributs.has(k));
 
   for (const name of editable) {
     if (props[name] === undefined) continue;
@@ -302,12 +333,14 @@ export function featureToRowUpdate(feature, layer) {
   // avec un Point issu d'une mauvaise lecture (cfg QgisWidgets Point + lat/lon).
   if (featKind && layerKind !== 'Point' && featKind === 'Point') {
     /* attributs seulement */
-  } else if (featKind === 'Point') {
-    if (!gristCols.length || colSet.has('longitude')) update.longitude = geom.coordinates[0];
-    if (!gristCols.length || colSet.has('latitude')) update.latitude = geom.coordinates[1];
-  } else if (geom && layerKind !== 'Point') {
-    if (!gristCols.length || colSet.has('geometry_json')) {
-      update.geometry_json = JSON.stringify(flattenCoords2D(geom));
+  } else if (featKind && featKind === layerKind) {
+    // Dans les colonnes réelles de la couche : un point rangé en
+    // `geometry_json` y retourne, une source suffixée (`latitude2`) garde les
+    // siennes. Écrit en dur, `latitude`/`longitude` visait des colonnes
+    // absentes — ou pire, des attributs homonymes de la source.
+    const cellules = cellulesGeometrie(geom, colonnes) || {};
+    for (const [col, v] of Object.entries(cellules)) {
+      if (!gristCols.length || colSet.has(col)) update[col] = v;
     }
   }
 
@@ -425,6 +458,10 @@ export function startScenePolling(opts) {
     getWidgetConfig,
     getManifest,
     onLayerUpdated,
+    // Appelé avant que la couche ne soit remplacée : ce qu'il rend est passé à
+    // `onLayerUpdated`. Sert à relever ce qui ne se retrouve qu'avant — les
+    // lignes sélectionnées, que la relecture renumérote.
+    avantMiseAJour = () => undefined,
     intervalMs = 30000,
     isPaused = () => false,
   } = opts;
@@ -440,8 +477,9 @@ export function startScenePolling(opts) {
     for (const layer of layers) {
       try {
         const ml = manifestByTable.get(layer.sourceTable);
+        const avant = avantMiseAJour(layer);
         await refreshLayerFromTable(docApi, layer, widgetConfig, ml);
-        onLayerUpdated(layer);
+        onLayerUpdated(layer, avant);
       } catch (e) {
         console.warn('[Atlas sync] refresh', layer.sourceTable, e.message);
       }

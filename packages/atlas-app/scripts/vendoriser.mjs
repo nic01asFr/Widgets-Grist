@@ -26,6 +26,12 @@ const VENDOR = [
   ['https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css', 'vendor/maplibre-gl.css'],
   ['https://unpkg.com/suncalc@1.8.0/suncalc.js',               'vendor/suncalc.js'],
   ['https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js', 'vendor/three.module.js'],
+  // Le tracé des lignes et surfaces (édition géométrique, lot 3), chargé à la
+  // demande par la carte d'import. Oublié, il n'échouerait qu'hors réseau, au
+  // premier « Nouvel objet » sur une couche de lignes ou de surfaces.
+  ['https://cdn.jsdelivr.net/npm/terra-draw@1.35.0/dist/terra-draw.module.js', 'vendor/terra-draw.module.js'],
+  ['https://cdn.jsdelivr.net/npm/terra-draw-maplibre-gl-adapter@1.4.1/dist/terra-draw-maplibre-gl-adapter.module.js',
+    'vendor/terra-draw-maplibre-gl-adapter.module.js'],
 ];
 
 /**
@@ -138,7 +144,15 @@ async function main() {
     .replace(/https:\/\/unpkg\.com\/maplibre-gl@[\d.]+\/dist\/maplibre-gl\.css/g, './vendor/maplibre-gl.css')
     .replace(/https:\/\/unpkg\.com\/suncalc@[\d.]+\/suncalc\.js/g, './vendor/suncalc.js')
     .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/three@[\d.]+\/build\/three\.module\.js/g, './vendor/three.module.js')
-    .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/three@[\d.]+\/examples\/jsm\//g, './vendor/three-addons/');
+    .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/three@[\d.]+\/examples\/jsm\//g, './vendor/three-addons/')
+    .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/terra-draw@[\d.]+\/dist\/terra-draw\.module\.js/g, './vendor/terra-draw.module.js')
+    .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/terra-draw-maplibre-gl-adapter@[\d.]+\/dist\/terra-draw-maplibre-gl-adapter\.module\.js/g,
+      './vendor/terra-draw-maplibre-gl-adapter.module.js');
+
+  // Plus rien ne doit partir chercher un CDN : une dépendance ajoutée à la page
+  // sans l'être ici échouerait hors réseau, sans rien dire.
+  const reste = html.match(/https:\/\/(?:unpkg\.com|cdn\.jsdelivr\.net)\/[^"'\s)]+/g);
+  if (reste) throw new Error('dépendances encore en ligne dans la page : ' + [...new Set(reste)].join(', '));
 
   // Le script du plugin Grist n'a aucun sens dans l'application, et sa presence
   // brouillait justement la detection de mode : on le retire du paquet.

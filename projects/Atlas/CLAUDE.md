@@ -124,13 +124,21 @@ depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
   LIGNE** sur `<html>` : `color-scheme: light` exige `!important`, sans quoi les
   contrôles natifs sont peints en sombre.
 
-  **Retirer un formulaire** (16/09/2026) : chaque formulaire d'une couche,
-  sauf `Attributs`, porte « Retirer ». C'est un réglage de la scène
-  (`formulaire.retires` dans les prefs), réversible : la ligne de
-  `Formulaires` reste, le cadrage des champs aussi, et « Remettre » le rend tel
-  qu'il était. Retirer le sort des formulaires proposés hors édition.
+  **Retirer un formulaire** (16/09/2026, étendu le 24/09/2026) : chaque
+  formulaire d'une couche, `Attributs` compris, porte « Retirer ». C'est un
+  réglage de la scène (`formulaire.retires` dans les prefs), réversible : la
+  ligne de `Formulaires` reste, le cadrage des champs aussi, et « Remettre » le
+  rend tel qu'il était. Retirer le sort des formulaires proposés hors édition.
   Auparavant un formulaire composé ne pouvait que s'ajouter — « Saisie »,
   « Saisie 2 », « Saisie 3 » s'empilaient dans la fiche.
+  **Une seule garde : le dernier formulaire en place ne se retire pas**
+  (`raisonNonRetirable`, `lib/fiche-formulaire.js`) — sinon l'objet n'aurait
+  plus de fiche. Le module dit alors « dernier formulaire de la couche » au
+  lieu de « Retirer » (rien du tout sur une couche qui n'a jamais porté
+  qu'`Attributs`), et `formulairesPourCouche` tient la même garde à la
+  relecture : des réglages qui retireraient tout laissent le premier en place.
+  Une scène peut donc n'offrir qu'un formulaire personnalisé : `Attributs`
+  retiré, la fiche s'ouvre sur le premier restant et son onglet disparaît.
 
 ### Dans l'application, le schéma du document ne passe pas par la même porte
 
@@ -483,6 +491,238 @@ orientés et dimensionnés par la graine. **Constat bloquant pour l'usage réel*
 correspondance est demandé pour la 0.2. Pas encore faits : shader de saison, semis de
 surfaces (projection L93), échelle non uniforme.
 
+## Éclairage EclExt et soleil de référence — modules posés (24/09/2026)
+
+Contrat commun avec pix2hdr : `docs/PROPOSITION-CONTRAT-COMMUN-OBJETS.md`,
+réponse et décisions actées (GO du 24/09/2026) :
+`docs/etudes-pix2hdr/REPONSE-PIX2HDR-CONTRAT-COMMUN.md` §7. Cadrage :
+`docs/CADRAGE-ECLAIRAGE-OBJETS-LUMINEUX.md`. Deux modules purs, branchés
+depuis le 24/09/2026 (voir ci-dessous) :
+
+- `lib/soleil.js` — traduction fidèle de `pix2hdr/src/pairs/sun.py` (NOAA) :
+  `positionSoleil`, `coucherLever` (−0,833°, à la seconde, `null` en nuit ou
+  jour polaire). C'est le soleil des **comportements** ; SunCalc reste celui de
+  l'ambiance (il s'écarte jusqu'à 0,21°). `%` et `//` de Python reproduits.
+  Écart mesuré à la référence : 1,6e-12° au plus, 20 cas sur 84 identiques au
+  bit près — d'où des vecteurs **à tolérance** (1e-9°), provisoires
+  (`tests/fixtures/soleil-noaa-vecteurs.json`, produits en exécutant la
+  référence) jusqu'à ce que pix2hdr publie les siens.
+- `lib/eclairage-profil.js` — heures EclExt (`HL`, `TU`, `MN`, `CS`, `LS`),
+  heure locale **du site** dans un fuseau IANA (changements d'heure compris),
+  état d'un point lumineux à un instant (allumé, facteurs de flux et de
+  puissance, température de couleur, plages, hypothèses dites). Le soleil et le
+  milieu de nuit y sont **injectés** : les comportements se vérifient au bit
+  près à soleil donné.
+
+### Luminaires allumés selon l'heure — premier affichage (24/09/2026)
+
+Branché dans l'interface. Logique pure et testée dans `lib/`
+(`tests/eclairage-scene.test.js`), rendu three.js dans `lib/luminaires-three.js`,
+colle dans `app_v7.js` (`NUIT`, `poserCoucheNuit`, `coucheEclairage`, `Eclairage`).
+
+- **Horloge de scène** (`lib/horloge-scene.js`, décision 3). `sunPosition()`
+  compose l'instant dans le **fuseau de la scène** (`STATE.settings.fuseau`,
+  défaut `Europe/Paris`) et non plus du navigateur (`setHours`). Date épinglable
+  (`dateEpinglee`, 'AAAA-MM-JJ', interrupteur dans le module Soleil) : retenue
+  dans les préférences **seulement si épinglée** (`null` ne s'écrit pas) ; la
+  règle de `scene-prefs.js` qui écarte `date` reste le défaut. Une scène
+  déclare `settings.horloge = { instant, fuseau, lieu: [lon, lat],
+  date_epinglee }` (ou `fuseau` / `dateEpinglee` à plat) ; `lieu` devient
+  `STATE.location`. L'**ambiance** reste SunCalc au centre de la vue ; les
+  **comportements** prennent `coucherLever` (NOAA) à l'**ancre**
+  (`STATE.location`), mémorisé (`soleilMemorise`). Préréglages Aube/Soir en heure
+  du site. Non fait : l'écriture du bloc `horloge` à l'export (`blocHorloge`
+  existe, testé, pas appelé) ; une étape de récit qui porte une `date` ne
+  l'emporte pas sur une date épinglée.
+- **La nuit dans le rendu** (lot E2, `lib/nuit-rendu.js`). Le voile CSS
+  `#night-tint` (multiply au-dessus des canvas) est **retiré** de
+  `index_v7.html`. À sa place, la couche MapLibre `atlas-nuit` : un quad plein
+  écran en `blendFunc(DST_COLOR, ZERO)`, facteur `Cb·(1 − a + a·Cs)` —
+  **exactement** l'opération du voile, même formule d'opacité
+  (`opaciteNuit`), même teinte. Posée **juste sous** `three-models-3d`
+  (`poserCoucheNuit`, rappelée par `onStyleReady` et `applyLayerOrder` ; le
+  trajet va **sous** elle dans `releverLigneTrajet`). Les modèles three.js
+  reçoivent le même facteur sur leurs lumières (`Models3D.setSun`, en sRGB) ; les
+  émissions (lampes, taches) y échappent. De jour le facteur vaut `[1, 1, 1]` :
+  la couche ne dessine rien et les couleurs des lumières sont multipliées par 1.
+  Mesuré (captures `essais-eclairage/captures/nuit-avant-*` = published, voile
+  CSS ; `nuit-apres-*` = nouveau, luminaires masqués ; 15 juin, même vue) :
+  12 h et 20 h **99,7 % et 99,4 % des pixels identiques** (le reste : modèles
+  de lampadaire différents), 23 h écart moyen **0,56/255**, 99ᵉ centile 2/255.
+  Différence connue : les marqueurs HTML ne sont plus assombris.
+- **Luminaires** (lot E3). Une couche de points est **d'éclairage** si ses
+  entités portent `structure`, `support` et `temperatureCouleur` ou `puissance`
+  (`estPointLumineux`) ; `Models3D.collect` l'ignore, `Eclairage` la rend.
+  Modèle : catalogue d'objets (`?objets=`), type de famille `lighting`, sinon
+  luminaire de test construit en three.js. **Pas de tirage d'échelle** pour un
+  luminaire (`scale_draw: false` ou famille `lighting`, `resoudreObjet`,
+  décision 6, testé). Pose (`poseLuminaire`) : `ancrage: 'pied'` au sol,
+  `ancrage: 'feu'` élevé de `hauteurFeu` ; azimut par champ `azimut` /
+  `orientation` (rotation π − A : la console sort selon +Z glTF), sinon tirage
+  — **provisoire** pour les appliques et projecteurs (la façade la plus proche
+  n'est pas calculée). Émetteurs : les `SpotLight` que GLTFLoader crée depuis
+  `emetteur_<k>` sont **lues** (position, axe −Z, `angle`, `penumbra`), jamais
+  rendues ; `intensity` du fichier ignorée (décision 7). Couleur :
+  `kelvinVersRvb` (Tanner Helland). Intensité : `cd = flux / 2π(1 − cos θ_ext)`
+  (**provisoire**, écrite dans `lib/eclairage-rendu.js`), flux =
+  `fluxLuminaire`, sinon `puissance × efficacité type` (LED 110 lm/W, autres
+  provisoires), × facteurs flux et puissance du profil, × `EXPOSITION_NUIT`
+  (0,12, réglage d'œil : three.js r160 éclaire en unités physiques). État :
+  `etatPointLumineux` à `instantScene`, recalculé par `updateLighting` (heure,
+  date). Vitre `eclairage_vitre` : émission **par instance** (couleur
+  d'instance détournée vers `totalEmissiveRadiance`).
+- **Budget** (`repartirSources`) : réservoir fixe de `SpotLight` attribué aux
+  sources allumées les plus proches de la caméra (4 ombrantes, 16 lumières ;
+  `?eclairage_ombres=N&eclairage_lumieres=M`) ; réattribué quand la caméra
+  bouge de plus de 2 m. Le nombre de lumières ne change qu'avec le nombre de
+  sources allumées : pas de recompilation en navigation. Les ombres ne vont
+  qu'aux sources qui **éclairent le sol** (`eclaireLeSol`) : un projecteur
+  tourné vers le ciel reste une lumière, sans ombre. Position caméra :
+  `positionCameraMetres` (`lib/viewport.js`), depuis
+  `transform.getCameraLngLat()` et `cameraToCenterDistance` —
+  `getFreeCameraOptions` n'existe pas dans MapLibre et `getCameraAltitude()`
+  rend `null` en globe (mesuré). Le niveau de détail du catalogue
+  (`distanceCamera`) la lit aussi : il restait figé à 0 jusqu'au 24/09/2026.
+- **Lumière au sol** : récepteur lambertien **aveugle** au soleil, au ciel et
+  à l'ambiance (chunk `lights_fragment_begin` patché), fusion additive, borné
+  à l'emprise des vraies lumières : tache et ombres des 16. Sources restantes :
+  **nappe calculée**, un quad instancié par source (E = I·spot·cos/d², même
+  cône et même atténuation que three.js), qui se raccorde à l'œil. Halo additif
+  par lampe allumée. **Relief désactivé seulement** : le sol est un plan.
+  *(Remplacé le 25/09/2026 : plus de récepteur, tout passe par la nappe, relief
+  compris — voir « Passe réalisme et performance ».)*
+- **Mesures** — *fausses pour les ombres* : aucune ombre de spot ne se
+  rendait alors (vérification du 24/09/2026 ci-dessous). (Intel UHD, 1 280 × 800 à 1,5, scène d'essai, 95 luminaires,
+  balayage de cap, images/s) : sans luminaires 59,8 · 0 lumière (lampes, halos,
+  nappe) 60 · 1 ombrée 51,7 · 4 ombrées 46,2 · 4 ombrées / 8 lumières 42,4 ·
+  8 ombrées 40,7 · 4 ombrées / 16 lumières (défaut) 41,7 · 16 ombrées 32,8.
+  **Impasse mesurée** : une nappe en un seul plan qui boucle sur toutes les
+  sources (texture flottante) ramenait la carte à 32 images/s avec 79
+  sources ; un quad par source ne coûte plus rien de mesurable.
+- **Scène d'essai** : `essais-eclairage/` (hors git) — `fabriquer.mjs` lit
+  le banc Ville de Marseille 2023 (93 points dans l'emprise du Jarret, dont 81
+  mâts et 12 poteaux), attributs **posés par règle** (`statutValeurs: regle`,
+  dit dans `note`) : LANT, MAT/POT, 6,75 m, 3 000 K, LED 36 W, profil voirie
+  (`+0CS` → `+0LS`, 50 % de 23:30HL à 05:30HL), et deux projecteurs FICTIFS B1
+  (extinction 01:00HL). Ouvrir :
+  `index_v7.html?scene=https://localhost:8443/projects/Atlas/essais-eclairage/scene.json&objets=https://localhost:8443/projects/Atlas/essais-eclairage/catalogue/`
+  (fenêtre large : en mode lecture et étroit, `light3d` coupe la 3D **pour la
+  session**). Le cadrage `camera` du manifeste n'est pas appliqué : se placer
+  à la main (corrigé le 24/09/2026 : `camera` est lu, voir plus bas). Captures janvier et juin, 14 h, 19 h, 22 h, 01 h 30, 02 h dans
+  `essais-eclairage/captures/`.
+
+Reste ouvert : cône
+translucide ; état dans la fiche et la légende (`Eclairage.libelle` existe, non
+affiché) ; mention « état simulé » (O5) ; façade la plus proche pour orienter
+appliques et projecteurs ; relief (récepteur calé sur le MNT, lot E5) ;
+comparaison aux mesures (E4) ; halo de taille fixe en mètres, sans occultation
+fine.
+
+### Vérification du 24/09/2026 — ce qui a été corrigé
+
+Rapport complet, mesures et arbitrages : `docs/etudes-eclairage/VERIFICATION-NUIT-LUMIERES.md`.
+
+- **Ombres des spots : jamais rendues avant ce jour.** `shadowMap.enabled`
+  se décidait avant `Eclairage.avantRendu()` ; three.js compilait alors les
+  matériaux sans ombre et ne les recompile pas quand `enabled` repasse à vrai
+  (il ne suit que le nombre de lumières ombrantes). Décision **après**
+  `avantRendu`, et `needsUpdate` sur les matériaux à chaque bascule. Coût réel
+  du défaut 4/16 à l'échelle de la rue : 39–51 images/s contre 51–59 sans.
+- **Heure de la scène** : `Intl.DateTimeFormat` mémorisé par fuseau —
+  un cran du curseur passe de 60 ms à 5,7 ms (95 luminaires).
+- **Cadrage `camera` d'une scène `?scene=`** : lu (`cameraDeclaree`) et posé
+  d'un `jumpTo`. Le `fitBounds` animé de repli était arrêté par le `map.stop()`
+  de `setBasemap`.
+- **Changement de fond** : `quandNouveauStyle` (`lib/basemap-layers.js`)
+  attend l'`idle` du **nouveau** style (feuille `map.style.stylesheet`
+  remplacée). Un `idle` émis pendant la requête du style faisait perdre
+  calque 3D, nuit et trajet, ou les laissait sous le nouveau fond (étape
+  « Nuit sur le Panier » de la Vieille Charité).
+- **Modèles non éclairés** (`KHR_materials_unlit`, photogrammétrie) : leur
+  couleur reçoit le facteur de nuit (`estNonEclaire`) — la chapelle restait
+  en plein jour la nuit.
+- **Globe sous z12** : les luminaires ne se dessinent plus
+  (`luminairesDessinables`), ils y étaient décalés de 312 à 798 px.
+- **Téléphone** : sous 480 px la date quitte la pastille Soleil, sinon l'arc
+  perdait 16 h 30 → 24 h.
+- **À savoir** : le récepteur plat s'ajoute au sol d'une maquette GLB
+  (+49/255, double apport) ; relief activé, les taches se peignent sur les
+  toits ; le bâti MapLibre (fond et couches extrudées) ne reçoit pas la lumière
+  des lampes (prototype de façades mesuré à −23 % d'images/s, non intégré) ;
+  les avertissements « READ-usage buffer » de la console viennent du globe de
+  MapLibre (`_renderErrorTexture`), pas d'Atlas.
+
+### Passe réalisme et performance (25/09/2026)
+
+Rapport chiffré : `docs/etudes-eclairage/VERIFICATION-NUIT-LUMIERES.md`, section
+du même nom ; captures `essais-eclairage/realisme/`.
+
+- **Plus de récepteur plan.** Toute la lumière au sol passe par la **nappe** :
+  un quadrilatère instancié par source qui n'évalue que sa source ; deux nappes
+  (`nappeReelle` pour les sources à vraie lumière, qui lit l'ombre de son
+  `SpotLight` — PCF doux de three.js recopié, index 0 à 3 dans `iS.w`, uniformes
+  posés dans `onBeforeRender` — et `nappeCalculee` pour les autres). Les vraies
+  lumières n'éclairent plus que les modèles three.js. GPU du calque à 4 / 16 :
+  5,3–6,9 ms → 1,4 ms. **Ne pas remettre un plan où chaque pixel évalue toutes
+  les lumières.**
+- **Shadow maps des lampes figées** : `shadowMap.autoUpdate = wantShadow` (le
+  soleil seul) ; `needsUpdate` quand `Eclairage.versionOmbres()` ou
+  `Models3D._versionScene` change (build, `recomputeAll`, `updateEdited`).
+  Toute nouvelle source de changement des porteurs d'ombre doit incrémenter
+  `_versionScene`.
+- **Qualité adaptative** (`lib/qualite-eclairage.js`) : paliers haut 4/16,
+  moyen 2/8, bas 0/4 (ratio de pixels de la carte ≤ 2), minimal 0/0 (≤ 1,5) ;
+  départ selon l'appareil, régulateur sur les images/s (objectif 55, 30 au
+  téléphone), images de chargement ignorées, descente sans gain de 10 %
+  annulée. Le ratio se plafonne par `map.setPixelRatio` : le calque three.js
+  partage le canvas, il n'a pas de ratio à lui. `Eclairage.qualite()` pour
+  lire l'état ; `?eclairage_palier=haut|moyen|bas|minimal` fige ;
+  `?eclairage_ombres=N&eclairage_lumieres=M` aussi (sans régulation). Le
+  bouton « Ombres » et le relief coupent les ombres des lampes.
+- **`light3d`** (téléphone en lecture, `?no3d=1`) ne coupe plus les
+  luminaires : `Models3D.build` saute les modèles mais construit `Eclairage`.
+- **Hystérésis** : `repartirSources(sources, cam, budget, precedente)` —
+  `MARGE_HYSTERESIS` (rang + 2, distance × 1,3 + 5 m).
+- **Pochoir** : `fixGltfMaterial` marque les matériaux (`marquerPochoirModele`,
+  valeur 1) ; la nappe des vraies lumières teste ≠ 1. Le calque efface le
+  pochoir avant `renderer.render` et remet `map.painter.currentStencilSource`
+  à `undefined` après (MapLibre croirait son masque de tuiles encore posé).
+- **Relief** : pied sondé par `queryTerrainElevation` (pas le cache
+  `elevRaw`, qui arrondit à 1e-4°), pente par `penteAuPied`, tache inclinée et
+  avancée de 2 m vers la caméra **en profondeur seulement** (`uAvance`,
+  `gl_FragDepth`) ; `recomputeAll` appelle `Eclairage.recaler()`. La position
+  locale de la caméra ajoute le sol du centre de la vue.
+- **Façades bornées** (`lib/facades-eclairees.js`) : écrites et mesurées
+  (−5,5 % sans ombres, −10 % avec), gain visuel quasi nul → derrière
+  `?eclairage_facades=1`. Le bâti OpenFreeMap arrive **fusionné par hauteur**
+  (un multipolygone de 32 000 arêtes) : filtrer par arête, jamais par entité.
+- **Nuit du bâti** : `LUMIERE_BATI_NUIT` / `AMBIANCE_NUIT` (`lib/nuit-rendu.js`)
+  remplacent le bleu presque noir sous −6° : bâti 38/40/45 → 45/47/63, sol et
+  taches inchangés, jour intact.
+- Halos : taille au ratio **de la carte** (`map.getPixelRatio()`), pas de l'écran.
+- Pastille Soleil sous 400 px : « Hauteur » masqué, la valeur reste (l'arc
+  tient à 375 px).
+- **Limites mesurées** : à 1 440 × 900 × 1,5 sur Intel UHD, la carte seule fait
+  43–53 images/s — l'objectif de 55 dépend du fond, plus de l'éclairage (8 à
+  12 % de l'image). Au téléphone, 30 images/s ne tiennent qu'avec le ratio
+  plafonné.
+
+## La pastille Soleil couvre les vingt-quatre heures (24/09/2026)
+
+L'arc de la pastille couvrait 6 h – 20 h (`360 + r × 840` minutes) : la nuit
+était hors d'atteinte du **lecteur**, le module Soleil étant réservé à
+l'auteur — or c'est la nuit que vit l'éclairage public. `lib/arc-solaire.js`
+(testé) : l'arc va de 0 h à 24 h, sa forme suit la **hauteur réelle du soleil**
+(NOAA, à l'ancre, au jour et dans le fuseau de la scène — le même soleil que
+les luminaires), sous une ligne d'horizon la nuit ; le point passe au bleu la
+nuit et reste entier dans la boîte (marges de 7 px). Au clavier : ←/→ cinq
+minutes, Maj une heure, minuit se franchit ; `role="slider"` et valeurs ARIA.
+
+**Une scène externe déclare ses contrôles de lecteur** : `viewer_controls`
+(même forme que les préférences, lue par `parseViewerControls`). Sans cela,
+une scène `?scene=` n'offrait jamais la pastille Soleil, et un lecteur ne
+pouvait pas passer à la nuit.
+
 ## Scène 3D — trois causes distinctes de décalage
 
 Les modèles « bougeaient avec la carte ». Trois défauts indépendants s’y
@@ -548,6 +788,15 @@ un relevé grossier puis le sol bouge sous eux — en vue oblique, encore un
 glissement latéral. Atlas écoute donc `data` sur `terrain-dem` et rejoue le
 calage, groupé sur 600 ms, en plus du recalage par palier de zoom
 (`paliersDemDifferents`).
+
+> **Ce recalage n'avait jamais eu lieu avant le 25/09/2026.** Le filtre
+> attendait `sourceDataType === 'content'`, que MapLibre 5.6.1 n'émet pas à
+> l'arrivée d'une tuile `raster-dem` (l'événement porte `tile`, sans
+> `sourceDataType`). `evenementMntArrive` (`lib/terrain-base.js`, testé) :
+> Aygalades étape 6, 65 modèles sur 232 à plus de 50 cm de leur sol (jusqu'à
+> 2,16 m, durablement) → 0 après 6 s. Le cache d'altitude se range désormais
+> au millionième de degré (`cleAltitude`) : par cases de 1e-4°, deux objets
+> voisins partageaient une altitude (1,45 m d'écart résiduel mesuré).
 
 - Le cache d’altitude n’est **plus vidé à chaque `moveend`** : un simple
   panoramique faisait re-sonder tous les objets, et ceux dont la tuile n’était
@@ -711,6 +960,18 @@ observé dépendait donc de l’historique des clics.
 - `applyLayerOrder()` rejoue `moveSequence` après tout (re)montage. Les
   habillages d’une couche (`-outline`, `-pts`, `-label`) se déplacent **d’un
   bloc** : séparés, un contour passerait sous son propre remplissage.
+- **Restyler n’est pas remonter** (24/09/2026). Chaque réglage d’apparence
+  passe par `applyLayerStyle`, qui retire puis recrée les habillages : MapLibre
+  les reposait au sommet, **visibles** et **sans filtre**. Une surface au fond
+  recouvrait les lignes, les points et le trajet dès qu’on changeait sa couleur.
+  `ancreAuDessus` relève le voisin du dessus **avant** le retrait,
+  `remettreEnPlace` y repose le groupe, puis rétablit l’œil fermé et le filtre
+  d’une couche distante. Pas d’`applyLayerOrder` ici : rejouer toute la pile à
+  chaque cran de curseur coûterait pour rien.
+- **Couleur d’une couche déclarative** : la carte peint d’abord le `_fill_color`
+  de chaque entité. Un réglage de couleur doit donc repeindre les entités
+  (`repeindreEntites`) avant `applyLayerStyle` — sinon la légende change et la
+  carte garde l’ancienne teinte. Seul qgis2grist le faisait.
 - **Persistance** : `rank` dans le StyleJSON des prefs, relu par `sortByRank`.
   Une couche sans rang se range **après** celles qui en ont un — d’où
   l’enregistrement de **tous** les rangs à chaque déplacement, pas seulement des
@@ -898,8 +1159,63 @@ n’avait plus aucun point d’entrée une fois le rail retiré.
   signale — la chaîne de sauvegardes, elle, reste saine, sinon plus rien ne
   partirait ensuite.
 
+## Créer et modifier des géométries — lot 0 posé (24/09/2026)
+
+Cadrage : `docs/CADRAGE-EDITION-GEOMETRIES.md` (décisions, lots, points à
+éprouver) ; preuves dans `docs/etudes-edition-geom/`. Le lot 0 pose les règles
+sur lesquelles tout le reste s'appuie, sans interface :
+
+- **Une seule règle de géométrie** : `lib/geometrie-saisie.js`.
+  `colonnesGeometrie(layer)` dit où vit la géométrie d'une couche —
+  `geometry_fields` du manifeste, puis `geometryColumn`, puis la convention
+  (point en `latitude`/`longitude`, le reste en `geometry_json`). Un couple
+  lat/lon ne vaut que pour un point. `featureToRowUpdate` écrit par
+  `cellulesGeometrie` : un point entablé retourne dans `geometry_json`, une
+  source suffixée (`latitude2`) garde ses colonnes, et les colonnes homonymes
+  de la source ne sont plus écrasées.
+- **L'écriture n'arrondit pas** : arrondir dans l'écrivain réécrirait toutes
+  les géométries existantes au premier attribut enregistré. L'arrondi à
+  7 décimales, la fusion des doublons, la fermeture et l'orientation des
+  anneaux sont dans `normaliserGeometrie`, pour ce qu'on vient de dessiner ;
+  `validerGeometrie` refuse avec un motif nommé (croisement testé avant l'aire :
+  un huit symétrique a une aire nette nulle).
+- **Une cellule vide est une absence** (`lireCoordonnee`) : `+null` et `+''`
+  valent 0, et une ligne vide d'une table liée en lat/lon devenait un point en
+  (0, 0). Corrigé dans `tableToGeoJSON`.
+- **`applySelected` écrit pour toute couche à lignes** (`coucheAvecLignes`),
+  plus seulement qgis2grist. Sur une couche liée ou entablée, les colonnes
+  visées sont bornées par `colonnesEcrivables` (le schéma fait foi, formules
+  exclues).
+- **La lecture forcée n'est due qu'à un refus de droits** :
+  `enterViewModeOnWriteFail` ne bascule plus que sur `isWriteAclError`. Une
+  colonne manquante retirait l'édition pour toute la session.
+- **Un objet est sa ligne, pas son rang** : `apresRelecture` recalcule `_idx`
+  et resuit la sélection par `_row_id` après toute relecture (bouton, fiche,
+  polling — celui-ci relève la sélection par `avantMiseAJour`). Une ligne
+  disparue ferme la sélection au lieu d'en montrer une autre.
+- **La pause de synchronisation se relâche à l'enregistrement**
+  (`marquerEnregistre`) : après un seul réglage d'apparence, Atlas cessait de
+  refléter les changements faits dans Grist jusqu'au rechargement.
+
+> **« Afficher » une table écrit dans le document** : une ligne d'inventaire
+> `Maquette_Layers` et une ligne `Atlas_LayerPrefs`, même si la table en a
+> déjà une (doublons constatés le 24/09/2026). Un essai en Grist réel doit donc
+> sauvegarder **et comparer ces deux tables**, pas seulement celles qu'on croit
+> toucher.
+
 ## Récit (`Atlas_Story`)
 
+- Un **trajet** n’est pas une table ni une couche. La ligne copiée (à plat, la
+  partie touchée s’il y en a plusieurs) voyage dans `state.trace` de chaque
+  étape, avec `abscisse` et `saisies`. `lib/trajet.js` porte la géométrie ;
+  `captureStoryState` l’ignore, la fusion se fait après la photo. Tant qu’aucune
+  étape n’est capturée, la ligne reste en mémoire (`STATE.trajet`).
+- **Place sur la ligne ≠ centre de la vue.** L’abscisse est le point de la ligne
+  le plus proche du centre de la caméra (`placeDepuisVue`). La lecture longe
+  la ligne jusqu’à ce point ; `camera` (centre, zoom, pitch, bearing) n’est pas
+  réécrite par le trajet. Retirer le trajet efface `trace`/`abscisse` et
+  rétablit la lecture sur la vue d’origine. Glisser une poignée ou les flèches
+  ne déplacent que l’abscisse.
 - Chaque étape emporte **sa propre copie** de la symbolisation : deux étapes
   peuvent montrer la même couche catégorisée ici, graduée là. `captureStoryState`
   clone (`cloneJson`), `applyStoryState` travaille sur un clone, `applyLayerStyle`
@@ -1224,6 +1540,36 @@ normale. `tests/controles-couche-distante.test.js` verrouille les deux sens.
 > donnée. `tests/controles-couche-distante.test.js` compare les deux entité par
 > entité, bornes exactes et valeurs illisibles comprises.
 
+**La règle du couple rompue sous des tests verts (corrigé le 24/09/2026).**
+L'évaluateur de test (`tests/aide-expressions.js`) n'imitait pas MapLibre sur
+deux points, et chacun cachait un défaut vu à l'écran :
+
+| | MapLibre | L'évaluateur, avant | Conséquence |
+|---|---|---|---|
+| `['==', 1, 0]` (sélection vide, « Aucun ») | forme **historique** `["==", clé, valeur]`, refusée : « string expected, number found », le filtre précédent reste | accepté | « Aucun » sans effet sur une couche distante |
+| `to-number('')` | **0** (`Number('')`) | refusé | `''` écarté côté carte, gardé en local |
+
+- L'évaluateur lève maintenant sur la forme historique (même règle que
+  `isExpressionFilter` de la spécification) et convertit comme MapLibre. Une
+  sélection vide s'écrit `['literal', false]`.
+- Un nombre se lit côté carte par `expressionNombre` (`lib/controls.js`) : un
+  nombre passe, un texte se convertit après remplacement de la première virgule
+  (« 3,5 », pour un `range` seulement, comme `nombreDe`), une chaîne qui vaut 0
+  sans contenir le chiffre 0 (vide ou espaces) est illisible, un booléen aussi.
+- Validé contre la vraie spécification de style de MapLibre 5.6
+  (`@maplibre/maplibre-gl-style-spec` 23.3, installée hors du dépôt) : toutes
+  les expressions produites se valident, et `featureFilter` classe comme le
+  prédicat. Écarts restants, faute d'opérateur : « 1 000 » (lu 1000 en local
+  seulement), « .5 » et « 5. » (lus côté carte seulement), l'exposant d'une date
+  en secondes écrite en texte.
+
+**« (sans valeur) » est aussi un choix sur une couche distante.**
+`choixSansValeur` le propose dès que la couche a d'autres choix, avec un compte
+`null` : sans entités, `nombreSansValeur` valait 0, `''` n'entrait jamais dans
+la sélection, et « Tout » écartait pour de bon les objets sans valeur. Un `''`
+déclaré dans `values[]` n'est plus listé comme une valeur (ligne au libellé
+vide, `''` en double dans la sélection).
+
 Vérifié à l'écran sur la scène de Sète : le curseur s'ouvre sur 10 → 20,2 m
 (les bornes déclarées, non mesurables ici), et le pousser à 18,98 ne laisse que
 les bâtiments les plus hauts.
@@ -1248,7 +1594,20 @@ jamais depuis un curseur.
   une colonne vide partout n'est pas dans les entités, et le manifeste peut
   dater d'avant elle. Une colonne sans valeur est **nommée** sous la liste.
 - **« (sans valeur) » est un choix**, écrit `''` dans `values`. Activer une
-  checklist coche tout, sans valeur compris : activer ne retranche rien.
+  checklist coche tout, sans valeur compris : activer ne retranche rien. Vaut
+  aussi pour une couche distante (`choixSansValeur`, compte inconnu).
+- **Un clic part de ce que l'écran montre** (`basculerValeurSelection`). Sans
+  sélection posée (contrôle venu du manifeste), toutes les cases s'affichent
+  cochées : décocher une valeur l'écarte seule. Le clic partait d'une sélection
+  vide, et décocher « Écoles » ne gardait que les Écoles (24/09/2026). Un choix
+  unique sans sélection n'affiche aucun bouton choisi.
+- **Le pas d'un curseur de date suit l'étendue des données** (`pasDuCurseur`) :
+  environ 200 positions, de la minute au jour ; des dates seules (minuit UTC)
+  gardent des jours entiers. Le pas valait au moins un jour : les 9 relevés
+  d'essais-crisi, en 1 h 17, n'avaient qu'une position. Poussé à fond, le
+  curseur vaut `dataMax` (`valeurDuCurseur`), sinon le dernier objet restait
+  hors de la grille. L'heure s'affiche, à l'heure locale, dès que le pas
+  descend sous le jour.
 - Une liste Grist arrive `['L', a, b]` : `tableToGeoJSON` la garde sous
   `_l_<champ>` (le champ lui-même devient « a, b » pour l'affichage), et
   `featureToRowUpdate` la réécrit en liste — sinon une sauvegarde aplatissait
@@ -1302,6 +1661,15 @@ et MapLibre garde la tuile parente — un relief plus grossier, mais juste.
 > La règle est la même que pour `layerVisibleCount` : **ne pas rendre un nombre
 > plausible quand on ne sait pas**. Zéro mètre est une altitude plausible.
 
+> **Le code ne fait pas ce que dit le paragraphe précédent** (vérifié le
+> 25/09/2026) : après trois essais, `ignmnt://` rend une tuile **plate à la
+> moyenne de la dernière tuile décodée**, n'importe laquelle — pas la parente.
+> Échecs simulés (une tuile sur quatre) : une tuile basse résolution en repli
+> dresse un **mur beige** sur tout l'horizon (`essais-relief/captures/11-*`).
+> La raison donnée pour ne pas échouer (« `_updateRetainedTiles` lève ») était
+> l'exception des sources GeoJSON, corrigée ailleurs. Choix du repli à arbitrer
+> (rapport relief, §À arbitrer).
+
 ### Une exception MapLibre aux étapes qui passent le bâti en volume
 
 En enchaînant les huit étapes de la démo des Aygalades, la console reçoit
@@ -1324,9 +1692,43 @@ atténuations écrites et sans effet mesurable — `map.stop()` avant `setStyle`
 une étape qui attend `mapStyleUsable()` — sont **conservées** : elles décrivent
 la bonne discipline, même si le défaut vient d'ailleurs.
 
+> **Cause trouvée et corrigée le 25/09/2026.** Ce n'est ni le fond raster ni
+> le vol : `SourceCache._updateRetainedTiles` (5.6.1) demande quatre enfants à
+> une tuile idéale sans données dès que le zoom de couverture est un cran sous
+> le `maxzoom` de la source, et une tuile **au** `maxzoom` n'en a qu'un
+> (`children[1].key`). Sur relief en vue inclinée, les tuiles proches de la
+> caméra montent d'un cran : sources GeoJSON à `maxzoom` 18 (défaut),
+> couverture 17, tuiles en 18 — bâti, voirie, eau et mobilier de l'étape 6. Les
+> sources GeoJSON d'Atlas se créent par `optionsSourceGeojson` (`maxzoom` 22) :
+> 24 exceptions sur trois tours des étapes 5 à 7 → 0 sur deux récits complets.
+> Réécrit dans les 5.x ultérieures. Toute nouvelle source GeoJSON passe par
+> `optionsSourceGeojson`.
+
 **Le repli du MNT avait sa propre erreur silencieuse** : la tuile plate qu'il
 rendait faisait 256 px quand la source en déclare 512, et MapLibre la refusait
 sur `dem dimension mismatch`. Le repli lui-même échouait — corrigé.
+
+### Le relief n'empêche plus `idle` (25/09/2026)
+
+Rapport complet : `docs/etudes-relief/VERIFICATION-RELIEF.md`.
+
+**MapLibre 5.6.1 laisse à jamais `reloading` une tuile MNT rechargée**
+(`RasterDEMTileSource.loadTile` ne repasse à `loaded` que sans `actor` ou
+expirée). `setProjection` quand la projection change — globe → mercator à la
+première étape d'un récit — et `setTerrain` quand le relief se rallume
+rechargent la source : à l'ouverture de la démo des Aygalades, 14 tuiles
+bloquées, 11 Mo retéléchargés pour rien, et **plus aucun `idle`** — or le
+changement de fond (`quandNouveauStyle`), le montage des couches et le récit
+l'attendent. `garderDemAuRechargement` (`lib/terrain-base.js`, testé), posé
+par `addTerrainSource` : une tuile `reloading` qui a déjà son MNT repasse à
+`loaded` sans requête.
+
+**Un changement de fond perdait les luminaires.** MapLibre n'appelle pas
+`onRemove` du calque three.js quand il remplace le style ; `onAdd` recrée la
+scène, et la racine des luminaires restait dans l'ancienne (95 allumés, 0 à
+l'écran après `setBasemap`, relief ou non). `Eclairage.construire` les
+reconstruit quand `luminairesHorsScene` (`lib/eclairage-rendu.js`, testé).
+Reste : l'ancien `WebGLRenderer` n'est pas libéré (même cause).
 
 ### Une étape de récit emporte son relief entier
 
@@ -1534,3 +1936,215 @@ n'a pas eu lieu, et dit à la place que le manifeste ne déclare pas de `bbox`.
 embarque **le widget seul**. Si l'on embarque un **document** Grist, Atlas y est
 réellement dans Grist — le poser lui ferait ignorer le document qu'il a sous la
 main.
+
+## `AddTable` veut des colonnes plates (26/09/2026)
+
+`['AddTable', T, [{ id, type, label }]]` — **forme plate**. La forme
+`{ id, fields: { type, label } }`, qu'Atlas employait partout, est ignorée par
+Grist **sans erreur** : colonnes en `Text`, libellé égal à l'identifiant,
+nombres rangés en texte (mesuré dans le document d'essai « Atlas — essai
+édition géométrique »). Toutes les définitions sont passées à la forme plate ;
+`tests/colonnes-addtable.test.js` le garde. Les tables déjà créées dans les
+documents gardent leurs colonnes texte : ne pas supposer un vrai `Bool` sur
+`Atlas_LayerPrefs.Visible`, lire avec `parseGristBool`.
+
+Corollaire : avec de vrais types, Grist range « 01004 » en 1004 dans une
+colonne `Int`. Une colonne ne se type en nombre que sur des valeurs **déjà**
+numériques (`typeColonneDepuisValeurs`, `lib/schema-grist.js`) ; une chaîne qui
+ressemble à un nombre reste du texte.
+
+`AddTable` crée aussi une **page** au nom de la table, et `POST /apply` rend
+bien `retValues`. Le propriétaire ne peut pas être privé de structure par une
+règle d'accès : un refus de structure ne s'observe qu'avec un compte éditeur.
+
+## Créer une couche vide — lot 1 de l'édition géométrique (26/09/2026)
+
+Bouton « Nouvelle » du module Couches (éditeur seulement) : un nom, un type
+(point, ligne, surface) et le nom de table Grist montré **avant** d'écrire,
+collision comprise (`Arbres_2`, casse ignorée). La logique est dans
+`lib/nouvelle-couche.js` (`planNouvelleCouche`, `colonnesNouvelleCouche`,
+`actionsNouvelleCouche`, `lireCreation`, `natureRefus`) ; `A.creerNouvelleCouche`
+ne fait qu'envoyer et monter.
+
+- **Une seule `applyUserActions`** : `Maquette_Layers` et `Atlas_LayerPrefs` si
+  absentes, la table, sa ligne d'inventaire (qui porte le type d'une table
+  vide et la fait remonter au rechargement), sa ligne d'apparence
+  (`lignePrefs`, la même que `saveLayerPref`). `gristId` et `_prefRowId` sont
+  lus dans `retValues` : un enregistrement ultérieur met à jour, il n'ajoute pas.
+- Table **sans préfixe `Atlas_`** ; jamais une table d'Atlas ou de ses
+  producteurs (`Couche_Maquette_Layers`). Point : `latitude`/`longitude`
+  `Numeric` ; ligne, surface : `geometry_json` `Text`. Plus `nom`. Rien d'autre.
+- Un refus ne bascule **pas** la carte en lecture : `messageRefus` le dit selon
+  sa nature (structure, droits, schéma).
+- Contrôlé en Grist réel dans le document d'essai « Atlas — essai édition
+  géométrique » (`uK3GLaDK5RfMXm69t7E9Ni`), page « Atlas » branchée sur
+  `https://localhost:8443/projects/Atlas/index_v7.html`.
+
+## Créer un point — lot 2 de l'édition géométrique (26/09/2026)
+
+« Nouvel objet » dans l'inspecteur d'une couche de points à table (et armé
+d'office après « Nouvelle couche » de points). `_saisieObjet` est un **état
+exclusif** : il passe en tête du clic, du survol, d'Échap et de
+`renderInspector`, et annule à l'entrée le choix d'un lieu, d'un trajet et la
+sélection. La logique pure est dans `lib/saisie-objet.js` (`creationPossible`,
+`pointDepuisClic`, `cellulesPourCouche`, `actionCreation`, `actionInverse`).
+
+- **La fiche avant l'écriture.** `pontFormulaire({ creation: { cellules } })`
+  n'a pas d'`editRowId` : le moteur soumet par `addRow`, qui écrit **un**
+  `AddRecord` portant les champs puis la géométrie (le clic fait foi).
+  Abandonner n'a rien à défaire. Repli sans moteur : le point et son `nom`.
+- **Déplacer sans perdre la saisie** : le pont lit `creation.cellules` à
+  l'envoi ; un second clic change les cellules et l'en-tête, pas la fiche.
+  `renderSaisieObjet` est idempotent (`insp-body.dataset.saisie`) : sans cela,
+  ouvrir un module remontait la fiche et effaçait ce qui était tapé.
+- Après écriture : `relireCouche` (le cœur de `A.refreshLayer`, factorisé),
+  puis sélection du nouvel objet par `_row_id` (`rangsDepuisRowIds`).
+- Après « Nouvelle couche », `chargerFormulaires()` : sans relecture du
+  schéma, la nouvelle table n'a pas de fiche.
+- Point provisoire : source et couche `atlas-saisie`, au sommet de la pile.
+
+## Tracer une ligne ou une surface — lot 3 (26/09/2026)
+
+« Nouvel objet » sur une couche de lignes ou de surfaces arme **terra-draw**
+(1.35.0, adaptateur MapLibre 1.4.1, dans l'importmap d'`index_v7.html`,
+chargés par `chargerTraceur()` au premier tracé : ~50 Ko compressés). C'est le
+moteur ; l'interface reste celle d'Atlas (panneau droit, « Sommet précédent »,
+« Terminer », « Retracer », mesures dans l'en-tête).
+
+- **Échap appartient à Atlas** (`keyEvents: { cancel: null }`) : il abandonne
+  la création entière. Entrée termine. Le double-clic zoom est coupé pendant
+  le tracé et rétabli à la sortie (`arreterTrace`).
+- **Accroche aux autres couches** : `accrocheAtlas` (option `toCustom`) prend
+  les formes de `layer.geojson` retrouvées par `_idx`, pas celles de
+  `queryRenderedFeatures` — découpées aux bords des tuiles, elles poseraient
+  des sommets qui n'existent pas. Alt maintenu la suspend. Logique pure :
+  `pointAccroche` (`lib/saisie-objet.js`).
+- **Le sommet provisoire** qui suit le curseur n'est pas compté
+  (`formeEnCours`) : l'en-tête disait « 4 sommets » pour trois clics.
+- Un sommet qui ferait se recouper une surface est refusé par
+  `ValidateNotSelfIntersecting` **et signalé** (`signalerRecoupe`) : sans
+  message, le clic semblait ignoré.
+- À la fin : `formeValidee` (normalisation + validation du lot 0), puis le mode
+  `static` garde la forme affichée. Le pont refuse un envoi sans forme
+  (`creation.cellules` nul pendant un « Retracer »).
+- **Annuler la création** : tant que l'objet créé reste sélectionné, la fiche
+  offre « Annuler la création » (`_derniereCreation`, `actionInverse` →
+  `RemoveRecord`). Oublié à la sortie de sélection.
+- Contrôle navigateur : l'outil de test ne clique qu'au centre d'un élément ;
+  poser des sommets = cliquer la carte, la déplacer aux flèches, recliquer.
+
+## Modifier la forme d'un objet — lot 4 (26/09/2026)
+
+« Modifier la forme » (fiche d'un objet d'une couche éditable) réutilise l'état
+de création `_saisieObjet`, avec `modification: { rowId, origine, depart }` :
+mêmes gardes (clic, Échap, `renderInspector`), panneau `renderModificationForme`
+(ni fiche ni attributs), une seule écriture `actionModification` → `UpdateRecord`
+des **seules** colonnes de géométrie.
+
+- **Les cellules d'origine sont relues dans Grist à l'ouverture**
+  (`fetchTable` → `ligneDepuisTable` → `cellulesDeLigne`), pas reconstruites
+  depuis la carte : c'est ce qu'« Annuler la modification » réécrit à l'octet
+  près, et ce contre quoi un changement venu d'ailleurs se détecte.
+- **Avant d'écrire, on relit la ligne** : `decisionModification` rend
+  `conflit` (la ligne a changé → refus, éditeur gardé), `inchange` (rien
+  écrit) ou `ecrire`.
+- L'objet édité est **retiré de sa couche** pendant l'édition (`sourceData`
+  consulte `objetEnModification`) : sinon deux formes, dont une immobile. À
+  l'abandon, il revient et sa fiche se rouvre.
+- Ligne, surface : mode sélection de terra-draw (`TerraDrawSelectMode`) —
+  sommets glissables, points milieux, clic droit pour retirer, objet
+  glissable ; `keyEvents.delete: null` (supprimer un objet est le lot 5) ;
+  annulation par geste (`TerraDrawSessionUndoRedo`). Point : un clic le
+  déplace.
+- Refusés, avec la raison : objet multi-parties, surface trouée, table
+  qgis2grist (centroïdes, lot 6). Une altitude par sommet est signalée perdue.
+- `fitToLayer` borne sa marge à la carte (`margeCadrage`) : avec module et
+  fiche ouverts, 80 px de chaque côté ne laissaient plus de place et MapLibre
+  refusait le cadrage en silence.
+
+## Créer en série (26/09/2026)
+
+Après l'envoi d'une fiche de création, `apresCreationObjet` ne sélectionne plus
+l'objet : il relit la couche et **réarme la création sur la même couche**
+(`A.nouvelObjet(id, { suite })`). On relève dix arbres, pas un : le clic
+suivant pose le suivant, la fiche s'ouvre vide, ses obligatoires sont tenus
+comme pour le premier.
+
+- `_saisieObjet.precedente` (dernier ajout) et `serie` (combien) :
+  `bandeauSerie` dit « 3 objets créés — dernier : ligne 12 » avec « Annuler
+  cet ajout » (`RemoveRecord` de la dernière ligne, la création en cours
+  continue) et « Voir sa fiche » (termine la série, ouvre l'objet).
+- Le bouton de sortie dit « Terminer la série » tant que rien n'est posé,
+  « Abandonner » dès qu'un point ou un sommet l'est (`libelleSortie`, mis à
+  jour pendant le tracé par `majMesuresTrace`). Échap et ✕ disent ce qui est
+  gardé (`messageAbandon`).
+- Le rappel « Objet créé à l'instant / Annuler la création » dans la fiche ne
+  sert plus qu'après « Voir sa fiche ».
+
+## La caméra vise la zone visible (26/09/2026)
+
+Suite de l'audit `docs/etudes-panneaux/AUDIT-PANNEAUX-CENTRE-CARTE.md`,
+défauts D1 à D5, corrigés et remesurés (bureau 1440, tablette 820, téléphone
+390×844 émulé).
+
+- **Visée retenue et relancée** (`viserCadre`, `viserVol`, `relancerVisee`) :
+  MapLibre fige au départ du vol le point d'écran visé ; un panneau qui
+  s'ouvre ou se ferme en route décalait l'arrivée (−130 px, +180 px). Sur
+  `resize` pendant le vol, la visée repart de la position courante avec le
+  temps restant (`dureeRestante`). `resizeMapSoon` redimensionne aussi
+  **tout de suite**. Mesuré après : 0 px. Tout nouveau cadrage passe par
+  `viserCadre`/`viserVol`, pas par `map.fitBounds`/`flyTo` directement.
+- **Ligne et surface** : `flyToFeature` → `garderVisible` — le plus petit
+  `panBy` qui ramène l'objet dans la zone visible (`deplacementPourVoir`,
+  pure, `lib/viewport.js`), rien s'il y est déjà, un cadrage s'il ne tient
+  pas. Couvre le clic près du bord (l'objet passait sous la fiche) et la revue
+  ◀ ▶ (l'objet courant sortait de l'écran).
+- **Téléphone** : la marge de caméra (`map.setPadding`/`easeTo({padding})`)
+  suit ce qui recouvre la carte — feuilles ouvertes et barre du bas
+  (`margesActuelles` → `margesCarte`, pure), posée par `appliquerMarges` à
+  chaque `poserPanneau`, au chargement et au changement de mise en page. La
+  bulle du récit passe par la même fonction (`margesActuelles({ bulle })`) :
+  plus de marge écrite à la main. `fitBounds` tient compte de cette marge
+  (MapLibre 5.6.1 l'ajoute à la sienne) ; `margeCadrage` se mesure sur la
+  zone visible.
+- **Carte étroite (tablette)** : quand la fiche d'un **objet** s'ouvre et que
+  la carte passerait sous 420 px (`moduleCedeALaFiche`), le module cède
+  (`.module-cede`) et revient à la fermeture de la fiche. La symbolisation
+  d'une couche ne fait pas céder le module ; un module rouvert exprès pendant
+  la fiche reste (`_moduleImpose`). Mesuré : carte de 397 px au lieu de 136.
+- **Objet courant** : en sélection multiple ou en revue, le halo porte
+  `_courant` ; l'objet courant est plus opaque, au trait plus épais, dessiné
+  par-dessus les autres (`HALO_SELECTION`, `EST_COURANT`). ◀ ▶ redessine le
+  halo.
+
+Restent de l'audit : les défauts moyens (✕ de la fiche et sélection, barre de
+sélection compacte, palette sur téléphone, Échap dans le récit et les
+pastilles, focus après la palette).
+
+## Onglets du téléphone (26/09/2026)
+
+Vérifiés en téléphone émulé (390×844) et corrigés :
+
+- **La marge de caméra se comparait à la marge courante**, encore l'ancienne
+  pendant sa transition : toucher un onglet fiche ouverte fermait la fiche
+  (marge 56 en route) puis ouvrait le module (495, jugée déjà là) — la carte
+  finissait à 56 sous une feuille de 439 px. `appliquerMarges` compare à la
+  dernière marge demandée (`_margesVisees`).
+- **Création en cours** : toucher un onglet cède la fiche au module sans
+  abandonner la création ; retoucher l'onglet referme le module et **rend la
+  fiche** (`closeModulePanel` remet `ficheCedee` à faux) ; toucher la carte
+  pendant la création ramène la fiche. Avant, la fiche restait cachée et le
+  point suivant se posait sans formulaire visible, et le second toucher
+  abandonnait la création.
+- **« Plus » s'allume** pour les modules qu'il porte (Lieu, Soleil, Vues,
+  Formulaires, Réglages) : `allumerOngletMobile`. Sans cela, aucun onglet
+  n'était actif et l'on ne savait plus d'où venait la feuille.
+- **Mécanique des feuilles préchargée** dès la mise en page téléphone : le
+  premier toucher attendait son chargement, et un second toucher rapide dans le
+  menu « Plus » tombait dans le vide.
+
+Parcours vérifié : Couches ↔ Contrôles ↔ Récit, retoucher pour fermer, objet
+touché (la fiche prime, le module se replie), onglet fiche ouverte (le module
+revient), « Plus » → module, menu fermé sans choix. Non éprouvé sur un vrai
+téléphone. Reste de l'audit : refermer par l'onglet laisse l'objet
+sélectionné (même défaut que le ✕ de la fiche).

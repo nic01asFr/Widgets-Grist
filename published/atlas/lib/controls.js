@@ -7,7 +7,7 @@ import {
   parsePropertyNumber,
   resolveFeaturePropertyKey,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.8.0';
+} from './declarative-style.js?v=1.9.0';
 
 /**
  * Les champs d'une couche : ceux que le manifeste déclare, **puis** ceux que
@@ -205,9 +205,12 @@ export function controlUniqueValues(layer, field, max = MAX_VALEURS_LISTE) {
   // cocher ressemble à un filtre déjà appliqué.
   const declarees = optionsDeclarees(layer, field);
   if (!declarees) return [];
+  // `''` déclaré n'est pas une valeur : c'est le choix « (sans valeur) », que
+  // `choixSansValeur` propose à part. Listé ici, il donnait une ligne au
+  // libellé vide en plus de « (sans valeur) », et deux `''` dans la sélection.
   // `count: null` et non zéro : on ne sait pas combien d'entités portent cette
   // valeur, et zéro laisserait croire qu'il n'y en a aucune.
-  return declarees.slice(0, max).map((value) => ({ value, count: null }));
+  return declarees.filter((v) => v != null && v !== '').slice(0, max).map((value) => ({ value, count: null }));
 }
 
 /**
@@ -233,7 +236,27 @@ export function nombreValeursDistinctes(layer, field) {
   for (const f of (Array.isArray(layer?.geojson?.features) ? layer.geojson.features : [])) {
     for (const key of valeursDeCellule(f.properties, propKey)) vues.add(key);
   }
-  return vues.size || (optionsDeclarees(layer, field)?.length ?? 0);
+  return vues.size || (optionsDeclarees(layer, field)?.filter((v) => v != null && v !== '').length ?? 0);
+}
+
+/**
+ * Le choix « (sans valeur) » : est-il proposé, et pour combien d'objets ?
+ *
+ * Une couche détenue le propose quand elle compte des objets sans valeur. Une
+ * couche distante n'a rien à compter : `nombreSansValeur` y valait 0, le choix
+ * n'était jamais offert, et « Tout » écartait pour de bon les objets sans
+ * valeur (D5 du 24/09/2026). Elle le propose donc dès qu'elle a d'autres choix,
+ * avec un compte inconnu — `null`, jamais zéro. Seul, il ne garderait à
+ * l'activation que les objets sans valeur.
+ *
+ * @returns {{offert: boolean, count: number|null}}
+ */
+export function choixSansValeur(layer, field) {
+  if (Array.isArray(layer?.geojson?.features)) {
+    const n = nombreSansValeur(layer, field);
+    return { offert: n > 0, count: n };
+  }
+  return { offert: controlUniqueValues(layer, field, 1).length > 0, count: null };
 }
 
 /**
@@ -287,9 +310,10 @@ export function filteredUniqueValues(layer, field, max = 40) {
 
 export function controlBounds(layer, type, field, opts = {}) {
   if (type === 'select') {
-    // Tout coché, « sans valeur » compris : activer ne retranche rien.
+    // Tout coché, « sans valeur » compris : activer ne retranche rien — sur une
+    // couche distante aussi, où l'on ne peut pas compter les objets sans valeur.
     const values = controlUniqueValues(layer, field, MAX_VALEURS_LISTE).map((v) => v.value);
-    if (nombreSansValeur(layer, field) > 0) values.push('');
+    if (choixSansValeur(layer, field).offert && !values.includes('')) values.push('');
     return { values };
   }
   if (type === 'text') return { texte: '' };
@@ -330,13 +354,43 @@ export function selectValuesLowerSet(c) {
   return new Set((c.values || []).map((v) => String(v).toLowerCase()));
 }
 
-/** Case cochée dans l'UI ? */
+/**
+ * Case cochée dans l'UI ?
+ *
+ * Sans sélection posée, rien n'est filtré : toutes les cases d'une checklist
+ * sont cochées, et aucun bouton d'un choix unique n'est choisi — tous « cochés »,
+ * des boutons radio montraient le dernier seul.
+ */
 export function isSelectValueChecked(c, value) {
   if (!Array.isArray(c.values)) {
-    return true;
+    return c.variant !== 'select_single';
   }
   if (!c.values.length) return false;
   return selectValuesLowerSet(c).has(String(value).toLowerCase());
+}
+
+/**
+ * La sélection après un clic sur la case `value`.
+ *
+ * Le clic part de ce que l'écran montre. Sans sélection posée (contrôle venu
+ * du manifeste), toutes les cases s'affichent cochées ; le clic partait
+ * pourtant d'une sélection **vide**, et décocher « Écoles » ne gardait que les
+ * Écoles (D1 du 24/09/2026). Il part désormais de la sélection pleine, celle
+ * qu'« activer » pose (`controlBounds`), « (sans valeur) » compris.
+ *
+ * @returns {string[]} une nouvelle sélection ; `c` n'est pas modifié.
+ */
+export function basculerValeurSelection(layer, c, value) {
+  const norm = String(value ?? '').toLowerCase();
+  if (c.variant === 'select_single') {
+    const actuelle = Array.isArray(c.values) ? c.values : [];
+    return actuelle.some((v) => String(v ?? '').toLowerCase() === norm) ? [] : [value];
+  }
+  const depart = Array.isArray(c.values) ? [...c.values] : controlBounds(layer, 'select', c.field).values;
+  const i = depart.findIndex((v) => String(v ?? '').toLowerCase() === norm);
+  if (i >= 0) depart.splice(i, 1);
+  else depart.push(value);
+  return depart;
 }
 
 /**
@@ -456,6 +510,7 @@ export function expressionFiltreControles(layer) {
   if (!ctrls.length) return null;
   const clauses = [];
   const texteDuChamp = (champ) => ['downcase', ['to-string', ['coalesce', champ, '']]];
+  const HORS = -1e38;
 
   for (const c of ctrls) {
     const champ = ['get', c.field];
@@ -470,7 +525,10 @@ export function expressionFiltreControles(layer) {
       // pour un attribut absent — les deux côtés le lisent pareil.
       const choix = (c.variant === 'select_single' ? c.values.slice(0, 1) : c.values)
         .filter((v) => v != null);
-      if (!choix.length) { clauses.push(['==', 1, 0]); continue; }
+      // `['==', 1, 0]` est la forme **historique** d'un filtre (`["==", clé,
+      // valeur]`) : MapLibre le refusait (« string expected, number found »)
+      // et gardait le filtre précédent — « Aucun » restait sans effet (D2).
+      if (!choix.length) { clauses.push(['literal', false]); continue; }
       // Insensible à la casse des deux côtés, comme `normalizePropertyValue`.
       clauses.push(['in', texteDuChamp(champ), ['literal', choix.map((v) => String(v).toLowerCase())]]);
       continue;
@@ -492,11 +550,11 @@ export function expressionFiltreControles(layer) {
     if (c.type === 'time' && c.unite !== 's') continue;
     const facteur = c.type === 'time' ? 1000 : 1;
 
-    // range et time : bornes numériques. `to-number` échoue sur une valeur non
-    // numérique, d'où le repli sur un repère hors domaine — le même choix, et
-    // pour la même raison, que dans la symbologie graduée.
-    const HORS = -1e38;
-    const val = ['to-number', ['coalesce', champ, '—'], HORS];
+    // range et time : bornes numériques, lues comme `nombreDe` et
+    // `valeurTemporelle` les lisent ; une valeur illisible vaut un repère hors
+    // domaine — le même choix, et pour la même raison, que dans la symbologie
+    // graduée.
+    const val = expressionNombre(champ, c.type === 'range', HORS);
     const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
     const min = variant !== 'time_lte' && variant !== 'range_max' && Number.isFinite(c.min) ? c.min / facteur : null;
     const max = variant !== 'range_min' && Number.isFinite(c.max) ? c.max / facteur : null;
@@ -516,14 +574,107 @@ export function expressionFiltreControles(layer) {
   return clauses.length === 1 ? clauses[0] : ['all', ...clauses];
 }
 
+/**
+ * Un champ lu comme un nombre côté carte, comme le prédicat le lit — ou `hors`.
+ *
+ * `to-number` sur l'attribut brut ne classait pas comme `nombreDe` (D4 du
+ * 24/09/2026) :
+ * - `''` vaut 0 pour MapLibre (`Number('')`), et une valeur vide passait pour
+ *   un zéro — écartée d'une plage 4 → 12 que la couche détenue lui laissait
+ *   passer. Une chaîne qui vaut 0 sans contenir le chiffre 0 n'est faite que
+ *   d'espaces : c'est le seul cas où `Number` invente un zéro ;
+ * - « 3,5 » ne se convertit pas : la première virgule devient un point
+ *   (`virgule`, pour un nombre ; `valeurTemporelle` ne la lit pas) ;
+ * - un booléen valait 1 ou 0 : seul un nombre ou un texte se lit.
+ *
+ * Écarts qui demeurent, faute d'opérateur MapLibre : « 1 000 » (espaces
+ * internes, lu 1000 en local), « .5 » et « 5. » (lus seulement côté carte).
+ */
+function expressionNombre(champ, virgule, hors) {
+  const s = ['var', 'atlas_s'];
+  const i = ['var', 'atlas_i'];
+  const texte = virgule
+    ? ['case', ['>=', i, 0], ['concat', ['slice', s, 0, i], '.', ['slice', s, ['+', i, 1]]], s]
+    : s;
+  const n = ['var', 'atlas_n'];
+  return ['let', 'atlas_v', champ,
+    ['case',
+      ['==', ['typeof', ['var', 'atlas_v']], 'number'], ['number', ['var', 'atlas_v']],
+      ['==', ['typeof', ['var', 'atlas_v']], 'string'],
+      ['let', 'atlas_s', ['string', ['var', 'atlas_v']], 'atlas_i', ['index-of', ',', ['string', ['var', 'atlas_v']]],
+        ['let', 'atlas_n', ['to-number', texte, hors],
+          ['case', ['all', ['==', n, 0], ['<', ['index-of', '0', s], 0]], hors, n]]],
+      hors]];
+}
+
 /** Le filtre de ce contrôle peut-il s'appliquer à une couche que la carte lit seule ? */
 export function filtrableSurLaCarte(c) {
   return !(c?.type === 'time' && c.unite !== 's');
 }
 
+const MINUTE = 60000;
+const HEURE = 60 * MINUTE;
+const JOUR = 24 * HEURE;
+const PAS_TEMPS = [MINUTE, 5 * MINUTE, 15 * MINUTE, 30 * MINUTE, HEURE, 3 * HEURE, 6 * HEURE, 12 * HEURE];
+
+/** Des dates seules : chaque borne tombe à minuit UTC (ISO sans heure, Grist Date). */
+function datesSeules(c) {
+  return [c.dataMin, c.dataMax].every((v) => Number.isFinite(v) && v % JOUR === 0);
+}
+
+/**
+ * Le pas d'un curseur : environ 200 positions sur l'étendue des données.
+ *
+ * Une date avançait d'au moins un jour. Les 9 relevés d'essais-crisi tiennent
+ * en 1 h 17 : le curseur n'avait qu'une position, le minimum, et le navigateur
+ * y ramenait toute valeur — il ne restait qu'un relevé (D3 du 24/09/2026). Le
+ * pas d'une date suit désormais l'étendue, de la minute au jour ; des dates
+ * seules gardent un pas en jours entiers.
+ */
+export function pasDuCurseur(c) {
+  const span = (c.dataMax - c.dataMin) || 0;
+  if (c.type === 'time') {
+    const brut = span / 200;
+    if (datesSeules(c) || brut >= 12 * HEURE) return Math.max(1, Math.round(brut / JOUR)) * JOUR;
+    return PAS_TEMPS.find((p) => p >= brut) || 12 * HEURE;
+  }
+  // Un nombre entier avance par unités : sinon un nombre d'étages passait par
+  // 2,37.
+  return c.entier ? Math.max(1, Math.round(span / 200)) : (span / 200 || 1);
+}
+
+/**
+ * La valeur que pose un curseur de date.
+ *
+ * Le curseur ne s'arrête que sur la grille `dataMin + k × pas` : la dernière
+ * position tombe avant `dataMax` dès que l'étendue n'est pas un multiple du
+ * pas, et le dernier relevé restait écarté curseur poussé à fond. La dernière
+ * position vaut donc `dataMax`.
+ */
+export function valeurDuCurseur(c, v) {
+  const n = Number(v);
+  if (c.type !== 'time' || !Number.isFinite(n) || !Number.isFinite(c.dataMax)) return n;
+  return n > c.dataMax - pasDuCurseur(c) ? c.dataMax : n;
+}
+
+/**
+ * L'heure compte-t-elle ? Oui quand le curseur avance par moins d'un jour ;
+ * sans étendue connue, quand l'instant ne tombe pas à minuit UTC.
+ */
+function heureSignificative(c, n) {
+  if (Number.isFinite(c.dataMin) && Number.isFinite(c.dataMax)) return pasDuCurseur(c) < JOUR;
+  return n % JOUR !== 0;
+}
+
 export function fmtControlValue(c, n) {
   if (c.type === 'time') {
-    return Number.isFinite(n) ? new Date(n).toLocaleDateString('fr-FR', { timeZone: 'UTC' }) : '—';
+    if (!Number.isFinite(n)) return '—';
+    // Une date seule se lit en UTC, sinon minuit deviendrait la veille à
+    // l'ouest ; un horodatage se lit à l'heure locale, celle du terrain.
+    if (!heureSignificative(c, n)) return new Date(n).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+    return new Date(n).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
   }
   return c.entier ? Math.round(n) : (Math.round(n * 100) / 100);
 }

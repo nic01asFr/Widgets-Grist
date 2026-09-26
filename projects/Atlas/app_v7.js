@@ -11,7 +11,16 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
-import { lireCatalogue, resoudreObjet } from './lib/catalogue-objets.js?v=20260919a';
+import { lireCatalogue, resoudreObjet } from './lib/catalogue-objets.js?v=20260924a';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20260925c';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20260925e';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=20260925b';
 import { capacites, peutSAuthentifier } from './lib/data-client.js?v=20260918c';
 import {
   detectDocMode,
@@ -26,23 +35,24 @@ import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
-  formulaireRetirable, formulairesEnPlace, COLONNES_ATLAS,
+  raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants,
-} from './lib/fiche-formulaire.js?v=20260918c';
-import { chargerSchema } from './lib/schema-grist.js?v=20260906a';
+} from './lib/fiche-formulaire.js?v=20260926b';
+import { chargerSchema, typeColonneDepuisValeurs } from './lib/schema-grist.js?v=20260926a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
-  dropIndex, reorderByDrop,
-} from './lib/layer-order.js?v=20260806a';
+  dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds,
+} from './lib/layer-order.js?v=20260924a';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
-import { basemapLayerIds } from './lib/basemap-layers.js?v=20260807a';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=20260924x';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
-} from './lib/terrain-base.js?v=20260818b';
+  garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
+} from './lib/terrain-base.js?v=20260925c';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -56,7 +66,27 @@ import {
   ligneInventaireRequise,
   ligneInventaire,
   peutPasserEnTable,
-} from './lib/grist-sync.js?v=20260916b';
+  colonnesEcrivables,
+  lignePrefs,
+  ATLAS_PREFS_SCHEMA,
+} from './lib/grist-sync.js?v=20260926a';
+import {
+  TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
+  actionsNouvelleCouche, lireCreation, messageRefus,
+} from './lib/nouvelle-couche.js?v=20260926a';
+import {
+  creationPossible, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
+  formeValidee, libelleMesures, pointAccroche, actionInverse,
+  modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
+} from './lib/saisie-objet.js?v=20260926c';
+import {
+  colonnesGeometrie,
+  nomsColonnesGeometrie,
+  rowIdsDepuisRangs,
+  rangsDepuisRowIds,
+  familleGeometrie,
+  mesurerGeometrie,
+} from './lib/geometrie-saisie.js?v=20260926a';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -92,16 +122,40 @@ import {
   sanitizeBrokenSelectFilters,
   profilChamp,
   nombreValeursDistinctes,
-  nombreSansValeur,
   filtrableSurLaCarte,
+  choixSansValeur,
+  basculerValeurSelection,
+  pasDuCurseur,
+  valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=20260916a';
+} from './lib/controls.js?v=20260924a';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   storyToManifestFragment,
-} from './lib/story.js?v=20260916b';
+} from './lib/story.js?v=20260926a';
+import {
+  copieLineaire,
+  estLineaire,
+  longueurMetres,
+  pointAAbscisse,
+  projeter,
+  placesInitiales,
+  placeDepuisVue,
+  ECART_VUE_TRAJET_M,
+  indicesEchange,
+  trierParAbscisse,
+  rayonAutour,
+  alertePastille,
+  suiviDoitChanger,
+  dureeLongeLigneMs,
+  capInterpole,
+  fusionnerApresPhoto,
+  etatApresRecapture,
+  retirerTrace,
+  objetsAutour,
+} from './lib/trajet.js?v=20260924a';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
@@ -109,22 +163,33 @@ import {
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
-} from './lib/viewport.js?v=20260729q';
+  positionCameraMetres,
+  distanceCameraObjet,
+  cameraDeclaree,
+  deplacementPourVoir,
+  margesCarte,
+  dureeRestante,
+  moduleCedeALaFiche,
+} from './lib/viewport.js?v=20260926a';
 import {
   parseAtlasMode,
   resolveAccess,
   decodeAccessToken,
   initialsFrom,
   canWrite,
+  peutProposerBasculeLectureEdition,
+  prochainEtatBasculeLectureEdition,
+  titreBasculeLectureEdition,
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
   pastilleRecitRequise,
   probeCanWriteDoc,
-} from './lib/view-mode.js?v=20260916a';
+  isWriteAclError,
+} from './lib/view-mode.js?v=20260923a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
-import { objetLePlusProche, direDistance, lignesReleve } from './lib/releve.js?v=20260918a';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
@@ -136,11 +201,12 @@ import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
+  parseViewerControls,
 } from './lib/viewer-controls.js?v=20260730m';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=20260730m';
+} from './lib/scene-prefs.js?v=20260926a';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -232,6 +298,8 @@ const STATE = {
     location: { name: 'Vieux-Port · Marseille', lat: 43.2951, lng: 5.3740 },
     layers: [],
     story: [],
+    /** Ligne en mémoire, avant qu'une étape ne l'emporte dans le document. */
+    trajet: null,
     viewerControls: createDefaultViewerControls(),
     selectedLayer: null,
     currentModule: null,
@@ -246,9 +314,14 @@ const STATE = {
         terrainExaggeration: 1.2,
         labels: true,
         sky: true,
-        timeOfDay: 870,          // minutes (14:30)
+        timeOfDay: 870,          // minutes (14:30), heure locale DU SITE (fuseau ci-dessous)
         date: new Date(2026, 5, 15, 14, 30, 0),
         shadows: true,
+        // Horloge de scène (décision 3 du contrat commun, lib/horloge-scene.js) :
+        // l'heure se compose dans ce fuseau, pas dans celui du navigateur.
+        fuseau: 'Europe/Paris',
+        // 'AAAA-MM-JJ' quand la date est épinglée (mémorisée), sinon null.
+        dateEpinglee: null,
     },
 };
 
@@ -269,8 +342,18 @@ let _sceneManifest = null;
 let _inspObjTab = null; // résolu à l'ouverture selon les onglets disponibles
 let _geoTables = [];
 let _linkChoices = [];
+/** Formulaire « Nouvelle couche » : ce qui a été saisi, les tables du document. */
+const _nouvelleCouche = { nom: '', type: 'Point', tables: [], enCours: false };
 let _storyIdx = 0;
 let _storyPresenting = false;
+let trajetPickMode = false;
+let _trajetRemplace = false;
+let _trajetSuivi = false;
+let _trajetPause = false;
+let _trajetAnim = 0;
+let _alerteReleve = false;
+let _alerteTexte = '';
+let _trajetPoignees = [];
 let _openDockPill = null;
 // Localisation : le contrôle MapLibre reste posé (point bleu, suivi), mais son
 // bouton est masqué — la pastille du dock le déclenche, sur mobile seulement.
@@ -308,6 +391,20 @@ function markDirty() {
     dirty = true;
     _syncPaused = true;
     $('app-header').classList.add('dirty');
+}
+
+/**
+ * Tout ce qui était en attente vient d'être écrit : la synchronisation reprend.
+ *
+ * `markDirty` suspend la relecture des tables pour ne pas écraser une saisie
+ * locale. L'enregistrement de l'apparence effaçait bien l'état « modifié » mais
+ * laissait la pause : après un seul réglage, Atlas cessait de refléter les
+ * changements faits dans Grist jusqu'au rechargement du widget.
+ */
+function marquerEnregistre() {
+    dirty = false;
+    _syncPaused = false;
+    $('app-header')?.classList.remove('dirty');
 }
 
 // ============================================================
@@ -577,9 +674,22 @@ function partagerTextures(chargeur) {
  * niveau retenu hors cas limites.
  */
 function distanceCamera(cam, lng, lat) {
-    if (!cam) return 0;
-    const mc = maplibregl.MercatorCoordinate.fromLngLat([lng, lat], 0);
-    return Math.hypot(cam.x - mc.x, cam.y - mc.y, (cam.z || 0) - mc.z) / mc.meterInMercatorCoordinateUnits();
+    return distanceCameraObjet(cam, lng, lat);
+}
+
+/**
+ * La camera en longitude, latitude et hauteur (m), ou `null`.
+ * MapLibre 5.6.1 n'a pas `getFreeCameraOptions` : l'appel rendait `undefined`
+ * et le niveau de detail du catalogue restait a 0 (mesure le 24/09/2026).
+ */
+function cameraMetres() {
+    const t = map?.transform;
+    const ll = t?.getCameraLngLat?.();
+    if (!ll) return null;
+    return positionCameraMetres({
+        lngCamera: ll.lng, latCamera: ll.lat, cameraToCenterDistance: t.cameraToCenterDistance,
+        zoom: map.getZoom(), pitchDeg: map.getPitch(), latCentre: map.getCenter().lat,
+    });
 }
 if (urlCatalogueObjetsInitiale()) chargerCatalogueObjets(urlCatalogueObjetsInitiale());
 
@@ -679,6 +789,27 @@ function sequentialPaletteForSym(sym, layer) {
     }
     const name = sym.colorRamp || sym.palette || 'Viridis';
     return COLOR_PALETTES[name] || COLOR_PALETTES.Viridis;
+}
+
+/**
+ * Repeint les entités après un réglage de couleur fait dans le panneau.
+ *
+ * Une couche déclarative se peint d'abord par le `_fill_color` de chaque
+ * entité (`layerPaintColor`). Le panneau changeait la symbologie — la légende
+ * suivait — mais seules les couches qgis2grist recevaient leurs nouvelles
+ * couleurs : les autres restaient de l'ancienne teinte jusqu'au rechargement.
+ * Les récits, eux, repeignaient déjà (`applyStoryLayerMeta`).
+ *
+ * La source n'est renvoyée à MapLibre que si une couleur a changé : une
+ * épaisseur ou une taille ne coûte pas un `setData` de toute la couche.
+ */
+function repeindreEntites(layer) {
+    const feats = layer?.geojson?.features;
+    if (!feats?.length) return;
+    if (layer.source !== 'qgis2grist' && !layer._declarative) return;
+    const avant = feats.map((f) => f.properties?._fill_color);
+    syncFeatureColorsFromSymbolization(layer, sequentialPaletteForSym(initSymbolization(layer).color, layer));
+    if (feats.some((f, i) => f.properties?._fill_color !== avant[i])) syncLayerSourceData(layer);
 }
 
 /** Sync GeoJSON + retourne expression paint couleur (qgis2grist lit _fill_color). */
@@ -937,12 +1068,12 @@ function computeMoon(date, lat, lng) {
 }
 // Renvoie les paramètres d'ambiance pour une altitude solaire donnée
 function computeAmbient(altDeg, moon) {
-    const DAY = [255, 255, 255], GOLD = [255, 210, 140], TWIL = [120, 110, 150], NIGHT = [16, 22, 52];
+    const DAY = [255, 255, 255], GOLD = [255, 210, 140], TWIL = [120, 110, 150];
     let sunColor, sunIntensity, ambientColor, ambientIntensity, mapColor, mapIntensity, sky, horizon;
     if (altDeg > 8) { sunColor = '#ffffff'; sunIntensity = 2.0; ambientColor = '#f3ecd9'; ambientIntensity = 1.0; mapColor = '#ffffff'; mapIntensity = 0.55; sky = '#aacbe8'; horizon = '#f3ecd9'; }
     else if (altDeg > 0) { const t = altDeg / 8; sunColor = _lerpHex(GOLD, DAY, t); sunIntensity = _lerp(1.2, 2.0, t); ambientColor = _lerpHex(GOLD, [243, 236, 217], t); ambientIntensity = _lerp(0.8, 1.0, t); mapColor = _lerpHex(GOLD, DAY, t); mapIntensity = _lerp(0.4, 0.55, t); sky = _lerpHex([230, 150, 90], [170, 203, 232], t); horizon = '#f0c89a'; }
-    else if (altDeg > -6) { const t = (altDeg + 6) / 6; sunColor = _lerpHex(TWIL, GOLD, t); sunIntensity = _lerp(0.4, 1.2, t); ambientColor = _lerpHex([60, 60, 95], GOLD, t); ambientIntensity = _lerp(0.45, 0.8, t); mapColor = _lerpHex([90, 90, 130], GOLD, t); mapIntensity = _lerp(0.3, 0.4, t); sky = _lerpHex([60, 55, 90], [230, 150, 90], t); horizon = _lerpHex([70, 60, 95], [240, 200, 154], t); }
-    else { const t = clamp((altDeg + 18) / 12, 0, 1); sunColor = '#1a2030'; sunIntensity = _lerp(0.06, 0.4, t); ambientColor = _lerpHex(NIGHT, [60, 60, 95], t); ambientIntensity = _lerp(0.22, 0.45, t); mapColor = _lerpHex([20, 28, 60], [90, 90, 130], t); mapIntensity = _lerp(0.16, 0.3, t); sky = _lerpHex([8, 11, 28], [60, 55, 90], t); horizon = _lerpHex([14, 18, 42], [70, 60, 95], t); }
+    else if (altDeg > -6) { const t = (altDeg + 6) / 6; sunColor = _lerpHex(TWIL, GOLD, t); sunIntensity = _lerp(0.4, 1.2, t); ambientColor = _lerpHex([60, 60, 95], GOLD, t); ambientIntensity = _lerp(0.45, 0.8, t); mapColor = _lerpHex(LUMIERE_BATI_NUIT, GOLD, t); mapIntensity = _lerp(0.3, 0.4, t); sky = _lerpHex([60, 55, 90], [230, 150, 90], t); horizon = _lerpHex([70, 60, 95], [240, 200, 154], t); }
+    else { const t = clamp((altDeg + 18) / 12, 0, 1); sunColor = '#1a2030'; sunIntensity = _lerp(0.06, 0.4, t); ambientColor = _lerpHex(AMBIANCE_NUIT, [60, 60, 95], t); ambientIntensity = _lerp(0.22, 0.45, t); mapColor = _lerpHex(LUMIERE_BATI_NUIT, LUMIERE_BATI_NUIT, t); mapIntensity = _lerp(0.16, 0.3, t); sky = _lerpHex([8, 11, 28], [60, 55, 90], t); horizon = _lerpHex([14, 18, 42], [70, 60, 95], t); }
     let hemiIntensity = clamp(0.2 + (altDeg + 6) / 40, 0.12, 0.55);
     // Apport lunaire la nuit
     if (moon && altDeg < -2 && moon.isUp && moon.moonIntensity > 0.05) {
@@ -1012,6 +1143,10 @@ function ignDemPool() {
  * Pourquoi ne pas simplement échouer : MapLibre garde alors un état incohérent
  * dans son cache de tuiles (`_updateRetainedTiles` lève sur `tile.key`), et le
  * rendu s'arrête. Mesuré : 36 exceptions en jouant les huit étapes.
+ * **Motif réexaminé le 25/09/2026** : ces exceptions venaient des sources
+ * GeoJSON (corrigé par `optionsSourceGeojson`), pas du MNT ; et ce repli
+ * dresse un mur plat quand une tuile basse résolution échoue. Choix à
+ * arbitrer (docs/etudes-relief/VERIFICATION-RELIEF.md).
  */
 let _paliers = new Map();
 async function tuilePlate(alt) {
@@ -1113,6 +1248,7 @@ const Models3D = {
     _m4Origin: new THREE.Matrix4(), _m4VP: new THREE.Matrix4(),
     _mRotX: new THREE.Matrix4().makeRotationX(Math.PI / 2),
     _vScale: new THREE.Vector3(), _obj: new THREE.Object3D(), _m4: new THREE.Matrix4(),
+    _cNuit: new THREE.Color(1, 1, 1),
 
     scheduleBuild() { clearTimeout(this._buildTimer); this._buildTimer = setTimeout(() => this.build(), 60); },
     forceBuild() { clearTimeout(this._buildTimer); this._buildTimer = null; this.build(); }, // rebuild immédiat (changement de modèle)
@@ -1268,7 +1404,6 @@ const Models3D = {
                 self._m4Origin.makeTranslation(mc.x, mc.y, mc.z).scale(self._vScale).multiply(self._mRotX);
                 // Ombres : seulement hors terrain, sous le plafond d'objets, et zoomé.
                 const wantShadow = STATE.settings.shadows && !STATE.settings.terrain3D && self._shadowFeasible && self.sunDir.y > 0.05 && map.getZoom() >= 14;
-                if (self.renderer.shadowMap.enabled !== wantShadow) self.renderer.shadowMap.enabled = wantShadow;
                 self.dirLight.castShadow = wantShadow;
                 if (self.groundShadow) self.groundShadow.visible = wantShadow;
                 if (wantShadow) {
@@ -1285,6 +1420,37 @@ const Models3D = {
                 }
                 self._m4VP.fromArray(arr).multiply(self._m4Origin);
                 self.camera.projectionMatrix.copy(self._m4VP);
+                Eclairage.avantRendu();
+                // Les luminaires proches portent ombre la nuit (budget, `Eclairage`) :
+                // les shadow maps restent actives pour eux, soleil couché.
+                //
+                // Décidé APRÈS `Eclairage.avantRendu()`, qui attribue les ombres
+                // (vérifié le 24/09/2026) : décidé avant, l'image où les spots
+                // prennent leur ombre était rendue shadow map coupée ; three.js y
+                // compilait les matériaux SANS ombre, et ne les recompile pas quand
+                // `shadowMap.enabled` repasse à vrai (il ne suit que le nombre de
+                // lumières ombrantes). Aucune ombre de luminaire ne s'affichait.
+                // D'où, aussi, la recompilation forcée à chaque bascule.
+                const ombresSpots = !STATE.settings.terrain3D && Eclairage.ombresActives();
+                if (self.renderer.shadowMap.enabled !== (wantShadow || ombresSpots)) {
+                    self.renderer.shadowMap.enabled = wantShadow || ombresSpots;
+                    self.scene.traverse((o) => {
+                        if (!o.material) return;
+                        for (const m of (Array.isArray(o.material) ? o.material : [o.material])) m.needsUpdate = true;
+                    });
+                }
+                // Shadow maps des lampes : figées tant que rien ne change. Le
+                // soleil, lui, a un cadre qui suit la vue (`syncShadowRig`) : ses
+                // ombres se refont à chaque image. Les lampes et leurs porteurs
+                // d'ombre ne bougent pas avec la caméra : on ne les refait qu'au
+                // changement de sources ombrées, de scène ou de réglage (≈ 1 ms de
+                // GPU par image épargnée à 4 ombres, mesuré le 24/09/2026).
+                const sm = self.renderer.shadowMap;
+                sm.autoUpdate = wantShadow;
+                if (!wantShadow && sm.enabled) {
+                    const cleOmbres = `${Eclairage.versionOmbres()}:${self._versionScene || 0}`;
+                    if (cleOmbres !== self._cleOmbres) { sm.needsUpdate = true; self._cleOmbres = cleOmbres; }
+                } else self._cleOmbres = null;
                 self.renderer.resetState();
                 // Ne PAS vider le depth buffer ici, et ne pas repasser la couche
                 // en `renderingMode: '2d'`.
@@ -1316,9 +1482,20 @@ const Models3D = {
                     self.renderer.setViewport(0, 0, cv.width, cv.height);
                     self._wCanvas = cv.width; self._hCanvas = cv.height;
                 }
+                // Pochoir : les modèles y écrivent `POCHOIR_MODELE`, la tache des
+                // vraies lumières l'évite (un sol de maquette reçoit déjà ces
+                // spots, lib/luminaires-three.js). Effacé d'abord : MapLibre y
+                // laisse ses identifiants de tuiles.
+                const pochoir = Eclairage.besoinPochoir();
+                if (pochoir) self.renderer.clearStencil();
                 self.renderer.render(self.scene, self.camera);
+                // MapLibre garde en mémoire le masque de tuiles qu'il a posé dans
+                // le pochoir : on vient de l'effacer, il doit le reposer.
+                if (pochoir && map.painter) map.painter.currentStencilSource = undefined;
+                Eclairage.apresRendu();
             },
             onRemove() {
+                Eclairage.oublier();
                 self.disposeInstances(); self.renderer?.dispose?.(); self.renderer = null; self.scene = null;
                 // Le KTX2 est lie au renderer qui s'en va (et tient des workers).
                 self._ktx2?.dispose?.(); self._ktx2 = null; self._chargeurGltf = null;
@@ -1373,9 +1550,27 @@ const Models3D = {
         // L'ombre la suit d'elle-même : three reprend map et alphaTest dans son
         // matériau de profondeur.
         c.alphaTest = seuilDecoupe(m);
+        // Pochoir : là où un modèle se dessine, la tache calculée des vraies
+        // lumières ne s'ajoute pas (lib/luminaires-three.js, point P2).
+        marquerPochoirModele(c);
         if (c.map) { c.map.colorSpace = THREE.SRGBColorSpace; c.map.needsUpdate = true; }
         c.needsUpdate = true;
+        // Non éclairé (KHR_materials_unlit) : la nuit passe par sa couleur,
+        // les lumières ne l'atteignant pas (`setSun`, lib/nuit-rendu.js).
+        if (estNonEclaire(c)) {
+            c.userData.couleurJour = c.color.clone();
+            this._nonEclaires.add(c);
+            this.teinterNonEclaire(c);
+        }
         return c;
+    },
+    /** Matériaux non éclairés, teintés par la nuit (bornés : un clone par URL de modèle). */
+    _nonEclaires: new Set(),
+    teinterNonEclaire(c) {
+        const b = c.userData.couleurJour;
+        if (!b) return;
+        const [r, g, bl] = couleurSousNuit([b.r, b.g, b.b], [this._cNuit.r, this._cNuit.g, this._cNuit.b]);
+        c.color.setRGB(r, g, bl);
     },
     // prototypes = liste de sous-mailles {geometry, material, mat(local)} pour l'instancing
     async ensureProto(url) {
@@ -1431,7 +1626,9 @@ const Models3D = {
      */
     elevRaw(lng, lat) {
         if (!STATE.settings.terrain3D || !map) return null;
-        const k = ((lng * 1e4) | 0) + ',' + ((lat * 1e4) | 0);
+        // Au millionième de degré : par cases de 1e-4° (≈ 8 × 11 m), deux
+        // objets voisins partageaient une altitude (cf. `cleAltitude`).
+        const k = cleAltitude(lng, lat);
         if (this.elevCache.has(k)) return this.elevCache.get(k);
         const v = map.queryTerrainElevation([lng, lat]);
         if (!Number.isFinite(v)) return null; // pas de cache : la tuile viendra
@@ -1471,13 +1668,16 @@ const Models3D = {
             if (layer.visible === false) continue;
             if (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint') continue;
             if (layer.style?.mode !== 'library' && layer.style?.mode !== 'custom') continue;
+            // Les points lumineux EclExt ont leur propre rendu (`Eclairage`) :
+            // instanciés ici, ils seraient dessinés deux fois, et sans lumière.
+            if (coucheEclairage(layer)) continue;
             const defUrl = getLayerModelUrl(layer);
             const sym = layer.style.symbolization || {};
             const categorized = sym.model?.mode === 'categorized' && sym.model.field;
             const parCatalogue = coucheAuCatalogue(layer) && CATALOGUE_OBJETS.cat;
             if (!defUrl && !categorized && !parCatalogue) continue;
             // Position de la camera, pour le niveau de detail de chaque objet.
-            const cam = parCatalogue ? map.getFreeCameraOptions?.().position : null;
+            const cam = parCatalogue ? cameraMetres() : null;
             const feats = (filteredGeoJSON(layer)?.features || []);
             for (let idx = 0; idx < feats.length; idx++) {
                 const f = feats[idx];
@@ -1591,7 +1791,19 @@ const Models3D = {
     },
 
     async build() {
-        if (this._disabled || CONFIG.light3d) { map?.triggerRepaint(); return; }
+        // 3D allégée (téléphone en lecture, `?no3d=1`) : pas de modèles, mais
+        // les luminaires restent — lampes, halos et taches ne coûtent presque
+        // rien, et sans eux une scène d'éclairage n'a plus d'objet (point P6).
+        if (this._disabled || CONFIG.light3d) {
+            if (this.scene && map) {
+                this.disposeInstances();
+                if (!this.origin) { const c = map.getCenter(); this.setOrigin(c.lng, c.lat); }
+                this.originElev = this.readOriginElev();
+                await Eclairage.construire();
+            }
+            map?.triggerRepaint();
+            return;
+        }
         if (!this.scene || !map) return;
         const token = (this._buildToken = (this._buildToken || 0) + 1);
         this.disposeInstances();
@@ -1688,6 +1900,8 @@ const Models3D = {
 
         if (token !== this._buildToken) return;
         if (extrusions.length) this.buildExtrusionShadowMeshes(extrusions);
+        this._versionScene = (this._versionScene || 0) + 1;
+        await Eclairage.construire();
         map.triggerRepaint();
     },
 
@@ -1716,6 +1930,10 @@ const Models3D = {
             });
             g.meshes.forEach(({ im }) => { im.instanceMatrix.needsUpdate = true; });
         }
+        this._versionScene = (this._versionScene || 0) + 1;
+        // Les luminaires se recalent avec le reste : même cache d'altitude,
+        // sinon leurs taches restaient sur l'ancien sol (point P3).
+        Eclairage.recaler();
         map.triggerRepaint();
     },
 
@@ -1739,7 +1957,7 @@ const Models3D = {
             g.meshes.forEach(({ im, protoMat }) => { this._m4.multiplyMatrices(place, protoMat); im.setMatrixAt(ref.slot, this._m4); im.instanceMatrix.needsUpdate = true; });
             touched = true;
         }
-        if (touched) map.triggerRepaint();
+        if (touched) { this._versionScene = (this._versionScene || 0) + 1; map.triggerRepaint(); }
         if (missing) this.scheduleBuild();
     },
 
@@ -1761,12 +1979,379 @@ const Models3D = {
         this.sunDir.set(Math.sin(az) * Math.cos(al), Math.sin(al), -Math.cos(az) * Math.cos(al)).normalize();
         if (!this.dirLight) return;
         const amb = computeAmbient(altitudeDeg, moon);
-        this.dirLight.color.set(amb.sunColor); this.dirLight.intensity = amb.sunIntensity * (STATE.settings.shadows ? 1.0 : 0.7);
-        this.ambLight.color.set(amb.ambientColor); this.ambLight.intensity = amb.ambientIntensity;
-        if (this.hemiLight) this.hemiLight.intensity = amb.hemiIntensity;
+        // La nuit des modèles : le facteur de la couche `atlas-nuit`, appliqué à
+        // leurs lumières. Pour un matériau diffus, c'est multiplier le pixel, ce
+        // que faisait le voile CSS ; les émissions (lampes) y échappent. Le
+        // facteur est donné en sRGB, comme le voile agissait sur le pixel : sa
+        // valeur linéaire (≈ f^2,2) donne, une fois encodée, le même f.
+        const [fr, fg, fb] = NUIT.facteurs;
+        this.dirLight.color.set(amb.sunColor).multiply(this._cNuit.setRGB(fr, fg, fb, THREE.SRGBColorSpace)); this.dirLight.intensity = amb.sunIntensity * (STATE.settings.shadows ? 1.0 : 0.7);
+        this.ambLight.color.set(amb.ambientColor).multiply(this._cNuit); this.ambLight.intensity = amb.ambientIntensity;
+        if (this.hemiLight) {
+            this.hemiLight.intensity = amb.hemiIntensity;
+            this.hemiLight.color.setHex(0xbcd4e8).multiply(this._cNuit);
+            this.hemiLight.groundColor.setHex(0x55492f).multiply(this._cNuit);
+        }
+        for (const c of this._nonEclaires) this.teinterNonEclaire(c);
         map && map.triggerRepaint();
     },
 };
+
+// ============================================================
+// NUIT ET ÉCLAIRAGE PUBLIC (lots E2 et E3 du cadrage éclairage)
+// ============================================================
+/**
+ * La nuit dans le rendu : facteur par canal de la couche `atlas-nuit`
+ * (lib/nuit-rendu.js), posée juste sous le calque three.js. Calculé par
+ * `updateLighting`, lu à chaque image par la couche et par `Models3D.setSun`.
+ */
+const NUIT = { id: 'atlas-nuit', facteurs: [1, 1, 1] };
+
+/**
+ * Pose (ou remet) la couche de nuit juste sous le calque three.js.
+ *
+ * Tout ce que MapLibre peint avant elle — fond, ciel, données, halos de
+ * sélection — s'assombrit comme sous l'ancien voile ; ce que three.js peint
+ * ensuite (modèles, lampes, taches de lumière) n'est pas multiplié. À rappeler
+ * après toute remontée du calque three.js (`onStyleReady`, `applyLayerOrder`).
+ */
+function poserCoucheNuit() {
+    if (!map || !map.getLayer(Models3D.layerId)) return;
+    try {
+        if (!map.getLayer(NUIT.id)) map.addLayer(creerCoucheNuit(NUIT.id, () => NUIT.facteurs), Models3D.layerId);
+        else map.moveLayer(NUIT.id, Models3D.layerId);
+    } catch (_) { /* style en cours de remplacement */ }
+}
+
+/**
+ * Une couche de points lumineux EclExt ? Reconnue à ses entités
+ * (`structure`, `support`, grandeur photométrique), sur les premières : une
+ * couche de points est homogène. Mémorisé sur la couche, par nombre d'entités.
+ */
+function coucheEclairage(layer) {
+    if (!layer || (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint')) return false;
+    const feats = Array.isArray(layer.geojson?.features) ? layer.geojson.features : null;
+    if (!feats?.length) return false;
+    if (layer._eclairage && layer._eclairage.n === feats.length) return layer._eclairage.oui;
+    const oui = feats.slice(0, 20).some((f) => estPointLumineux(f?.properties));
+    layer._eclairage = { n: feats.length, oui };
+    return oui;
+}
+
+/**
+ * Les luminaires d'Atlas : les points lumineux EclExt, rendus par le
+ * catalogue d'objets (famille `lighting`) ou par un luminaire de test,
+ * allumés selon leur profil nocturne à l'heure de la scène.
+ *
+ * - **Horloge** : l'instant de la scène (`instantScene`, fuseau de la scène),
+ *   le soleil NOAA de `lib/soleil.js` (décision 4), à l'**ancre** de la scène
+ *   (`STATE.location`, décision 3) — pas au centre de la vue.
+ * - **Rendu** : `lib/luminaires-three.js` (modèles, réservoir de vraies
+ *   lumières, nappe calculée au sol avec les ombres, halos).
+ * - **Qualité adaptative** (`lib/qualite-eclairage.js`) : le budget (ombres,
+ *   lumières, ratio de pixels) suit un palier choisi selon l'appareil, puis
+ *   ajusté aux images/s mesurées (`regulateur`). `?eclairage_palier=haut|moyen|
+ *   bas|minimal` le fige ; `?eclairage_ombres=N&eclairage_lumieres=M` aussi.
+ * - **Relief** : chaque luminaire est posé à l'altitude sondée de son pied,
+ *   sa tache inclinée selon la pente locale ; recalé avec les modèles.
+ */
+const Eclairage = {
+    lum: null,
+    signature: null,
+    etats: new Map(),
+    soleil: soleilMemorise(coucherLever),
+
+    couches() {
+        return STATE.layers.filter((l) => l.visible !== false && coucheEclairage(l));
+    },
+    oublier() {
+        this.lum = null;
+        this.signature = null;
+    },
+    ombresActives() { return !!this.lum?.racine.visible && !!this.lum?.ombresActives(); },
+    versionOmbres() { return this.lum ? this.lum.versionOmbres() : 0; },
+    besoinPochoir() { return !!this.lum?.racine.visible && !!this.lum?.besoinPochoir(); },
+
+    /* -------- Qualité adaptative -------- */
+    palier: null,          // indice dans PALIERS
+    regulateur: null,
+    budgetFige: null,      // { ombres, lumieres } venu de l'URL : pas de régulation
+    ratioApplique: null,
+
+    /** Appareil, palier de départ, régulateur ; une fois, à la création. */
+    initialiserQualite() {
+        let q = null;
+        try { q = new URLSearchParams(location.search); } catch (_) { /* hors navigateur */ }
+        const mobile = !!document.body?.classList.contains('mobile-layout')
+            || (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && Math.min(innerWidth, innerHeight) < 720);
+        const appareil = {
+            mobile,
+            allege: !!CONFIG.light3d,
+            memoireGo: typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined,
+            coeurs: typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined,
+            ratioPixels: window.devicePixelRatio || 1,
+        };
+        const force = q ? indicePalier(q.get('eclairage_palier') || '') : -1;
+        this.palier = force >= 0 ? force : palierInitial(appareil);
+        this.appareil = appareil;
+        if (q && (q.has('eclairage_ombres') || q.has('eclairage_lumieres'))) {
+            this.budgetFige = {
+                ombres: Number(q.get('eclairage_ombres')) || 0,
+                lumieres: q.has('eclairage_lumieres') ? (Number(q.get('eclairage_lumieres')) || 0) : 16,
+            };
+        }
+        // Figé par l'URL : pas de régulation (mesures reproductibles).
+        this.regulateur = force >= 0 || this.budgetFige ? null
+            : creerRegulateur({ palier: this.palier, objectif: objectifImages(appareil) });
+        this.appliquerPalier();
+    },
+
+    /** Budget et ratio de pixels du palier courant, avec les réglages (Ombres, relief). */
+    appliquerPalier() {
+        if (!this.lum) return;
+        const b = budgetDuPalier(this.palier, { ombres: STATE.settings.shadows, relief: STATE.settings.terrain3D });
+        if (this.budgetFige) {
+            b.ombres = STATE.settings.shadows && !STATE.settings.terrain3D ? this.budgetFige.ombres : 0;
+            b.lumieres = this.budgetFige.lumieres;
+            b.ratioMax = null;
+        }
+        this.lum.definirBudget(b);
+        this.poserRatio(b.ratioMax);
+    },
+
+    /** Plafonne le ratio de pixels de la carte (le calque three.js partage son canvas). */
+    poserRatio(ratioMax) {
+        if (!map || typeof map.setPixelRatio !== 'function') return;
+        const r = ratioApplique(window.devicePixelRatio || 1, ratioMax);
+        if (r === this.ratioApplique) return;
+        this.ratioApplique = r;
+        try { map.setPixelRatio(r); } catch (_) { /* carte en cours de remplacement */ }
+    },
+
+    /** Après chaque image : mesure pour le régulateur, s'il y a des lampes allumées à l'écran. */
+    apresRendu() {
+        const lum = this.lum;
+        if (!lum || !this.regulateur || !lum.racine.visible) return;
+        if (!(lum.nbAllumees?.() > 0)) return;
+        // Tuiles en chargement : la carte décode et téléverse, ses images/s ne
+        // disent rien des lampes (mesuré au téléphone émulé : deux chutes de
+        // palier pendant le seul chargement). On ne compte pas ces images.
+        if (!map.areTilesLoaded()) { this.regulateur.interrompre(); return; }
+        const nouveau = this.regulateur.image(performance.now());
+        if (nouveau != null && nouveau !== this.palier) {
+            this.palier = nouveau;
+            // Hors du rendu : changer le ratio de pixels redimensionne le canvas.
+            setTimeout(() => { this.appliquerPalier(); map?.triggerRepaint(); }, 0);
+        }
+    },
+
+    /** L'état de la qualité, pour la mesure et le débogage. */
+    qualite() {
+        return {
+            palier: PALIERS[this.palier]?.nom ?? null,
+            regulateur: this.regulateur?.etat() ?? null,
+            budget: this.lum ? { ...this.lum.budget } : null,
+            ratio: this.ratioApplique,
+            appareil: this.appareil ?? null,
+        };
+    },
+
+    /**
+     * Façades éclairées, bornées (lib/facades-eclairees.js, point P4) : murs
+     * du bâti du fond à moins de 3 × la hauteur de feu d'une source à vraie
+     * lumière, au zoom ≥ 17, à plat, aux paliers qui le permettent — et si
+     * `?eclairage_facades=1` (mesure du 24/09/2026 : voir CLAUDE.md, non
+     * retenu par défaut). Reconstruit quand la répartition change, pas plus
+     * d'une fois par demi-seconde.
+     */
+    facadesDemandees: (() => {
+        try { return new URLSearchParams(location.search).get('eclairage_facades') === '1'; } catch (_) { return false; }
+    })(),
+    majFacades(permis) {
+        const lum = this.lum;
+        const actif = this.facadesDemandees && permis && !STATE.settings.terrain3D && map.getZoom() >= 17;
+        if (!actif) {
+            if (this._cleFacades) { lum.definirFacades(null); this._cleFacades = null; }
+            return;
+        }
+        const cle = lum.cleEclairantes();
+        const t = performance.now();
+        if (cle === this._cleFacades || t - (this._tFacades || 0) < 500) return;
+        this._cleFacades = cle;
+        this._tFacades = t;
+        const sources = lum.sourcesEclairantes();
+        if (!sources.length) { lum.definirFacades(null); return; }
+        const hFeu = sources.map((s) => s.y - s.sol).sort((a, b) => a - b)[sources.length >> 1];
+        const rayon = Math.min(30, Math.max(10, 3 * hFeu));
+        // Le bâti du fond : les couches fill-extrusion d'une source vectorielle.
+        const feats = [];
+        for (const l of map.getStyle()?.layers || []) {
+            if (l.type !== 'fill-extrusion' || !l['source-layer']) continue;
+            if (map.getLayoutProperty(l.id, 'visibility') === 'none') continue;
+            try { feats.push(...map.querySourceFeatures(l.source, { sourceLayer: l['source-layer'] })); } catch (_) { /* source absente */ }
+        }
+        const versLocal = (lng, lat) => { const m = Models3D.localMeters(lng, lat); return { x: m.x, z: -m.y }; };
+        const bats = batimentsProches(feats, sources, rayon, versLocal);
+        const g = geometrieMurs(bats, undefined, undefined, { sources, rayon });
+        lum.definirFacades(g);
+        this._facades = { batiments: bats.length, triangles: g.triangles, rayon };
+    },
+
+    /** Relief recalé : reposer les luminaires sur le nouveau sol. */
+    recaler() {
+        if (!this.lum) return;
+        this.signature = null;
+        this.construire();
+    },
+
+    /** L'empreinte de ce qui est affiché : on ne reconstruit que si elle change. */
+    empreinte(couches) {
+        const o = Models3D.origin ? Models3D.origin.map((v) => v.toFixed(7)).join(',') : '-';
+        const c = couches.map((l) => {
+            const f = filteredGeoJSON(l)?.features || [];
+            return `${l.id}:${f.length}:${f[0]?.properties?._idx ?? ''}:${f[f.length - 1]?.properties?._idx ?? ''}`;
+        }).join('|');
+        return `${o}#${c}#${CATALOGUE_OBJETS.etat}:${CATALOGUE_OBJETS.url || ''}#${MODEL_LIBRARY.set}#${STATE.settings.terrain3D}`;
+    },
+
+    async construire() {
+        if (!Models3D.scene || !Models3D.origin) return;
+        // Un changement de fond recrée la scène sans `onRemove` : les
+        // luminaires resteraient dans l'ancienne, qui n'est plus rendue.
+        if (luminairesHorsScene(this.lum, Models3D.scene)) this.oublier();
+        const couches = this.couches();
+        if (!couches.length && !this.lum) return;
+        const sig = this.empreinte(couches);
+        if (sig === this.signature) return;
+        this.signature = sig;
+        if (!this.lum) {
+            this.lum = creerLuminaires3D({
+                scene: Models3D.scene,
+                chargerGltf: (url) => Models3D.ensureGLTF(url),
+                fixMateriau: (m) => Models3D.fixGltfMaterial(m),
+            });
+            // Palier de qualité (et `?eclairage_*` pour la mesure).
+            if (this.palier == null) this.initialiserQualite();
+            else this.appliquerPalier();
+        }
+        const items = [];
+        for (const layer of couches) {
+            const p = resolveFeatureProps({ properties: {} }, layer);
+            for (const f of filteredGeoJSON(layer)?.features || []) {
+                if (f.geometry?.type !== 'Point') continue;
+                const idx = f.properties?._idx;
+                const feature = layer.geojson?.features?.[idx] || f;
+                const props = feature.properties || {};
+                const [lng, lat] = feature.geometry.coordinates;
+                const lm = Models3D.localMeters(lng, lat);
+                // Altitude au pied sondée exactement : le cache de `elevRaw` range
+                // par cases de 1e-4° (≈ 8 × 11 m), soit jusqu'à 2 à 3 m d'écart
+                // sur les pentes du Jarret (mesuré, 20 à 35 %) — la tache flottait
+                // ou s'enfonçait. Le cache reste le repli (tuile pas encore là).
+                const exacte = STATE.settings.terrain3D ? map.queryTerrainElevation([lng, lat]) : null;
+                const sol = ecartAuSol(Number.isFinite(exacte) ? exacte : Models3D.elevRaw(lng, lat), Models3D.originElev);
+                // Pente au pied (relief seulement) : la tache s'incline avec le sol.
+                // Sondée directement : le cache d'altitude arrondit à 1e-4°
+                // (≈ 10 m), plus gros que l'écart de la différence centrée.
+                const pente = STATE.settings.terrain3D
+                    ? penteAuPied((x, y) => map.queryTerrainElevation([x, y]), lng, lat)
+                    : { x: 0, z: 0 };
+                // Le catalogue d'objets choisit le modèle (famille `lighting`) ;
+                // sinon, le luminaire de test (url nulle).
+                let r = null;
+                if (CATALOGUE_OBJETS.cat) {
+                    r = resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
+                        set: MODEL_LIBRARY.set, lod: 0, public: contextePublic(),
+                        echelleCouche: 1, rotationCoucheDeg: p.rotationZ || 0,
+                    });
+                    if (r && (r.type?.family !== 'lighting' || !r.url)) r = null;
+                }
+                const lighting = r?.type?.lighting || null;
+                const pose = poseLuminaire(lighting, props, r ? r.rotationDeg : (p.rotationZ || 0));
+                // Un azimut de champ se compte depuis le nord, et la console sort
+                // selon +Z glTF : dans le repère local (Z = sud), rotation π − A.
+                const rot = pose.origineAzimut === 'champ' ? Math.PI - deg2rad(pose.azimutDeg) : deg2rad(pose.azimutDeg);
+                items.push({
+                    id: `${layer.id}:${idx}`, props, x: lm.x, y: sol + pose.elevation, z: -lm.y, sol, pente,
+                    rotationRad: rot, url: r?.url || null, lighting, pose, type: r?.type?.id || null,
+                });
+            }
+        }
+        const lum = this.lum;
+        await lum.construire(items);
+        if (lum !== this.lum) return;
+        this.mettreAJourEtats();
+        map?.triggerRepaint();
+    },
+
+    /** L'état de chaque luminaire à l'heure de la scène ; appelé par `updateLighting`. */
+    mettreAJourEtats() {
+        if (!this.lum) return;
+        const t = instantScene(STATE.settings);
+        const ctx = {
+            lat: STATE.location.lat, lon: STATE.location.lng,
+            fuseau: fuseauScene(STATE.settings), soleil: this.soleil,
+        };
+        this.etats = new Map();
+        for (const it of this.lum.items()) {
+            const { profil, plages } = profilDuPoint(it.props);
+            this.etats.set(it.id, etatPointLumineux(it.props, profil, plages, t, ctx));
+        }
+        this.lum.appliquerEtats(this.etats);
+    },
+
+    /** Avant chaque image : budget des lumières selon la caméra, taille des halos. */
+    avantRendu() {
+        if (!this.lum || !map || !Models3D.originMC) return;
+        // Globe sous z12 : décalés de centaines de pixels, on ne les dessine pas
+        // (lib/eclairage-rendu.js). Plus de spot visible, plus d'ombre à calculer.
+        const dessinables = luminairesDessinables(STATE.settings.projection, map.getZoom(), GLOBE_MERCATOR_ZOOM);
+        this.lum.racine.visible = dessinables;
+        if (!dessinables) return;
+        // Le bouton « Ombres » et le relief s'appliquent aussi aux lampes
+        // (sans effet si rien n'a changé : `definirBudget` compare).
+        const b = budgetDuPalier(this.palier ?? 0, { ombres: STATE.settings.shadows, relief: STATE.settings.terrain3D });
+        this.lum.definirBudget(this.budgetFige
+            ? { ombres: b.ombres ? this.budgetFige.ombres : 0, lumieres: this.budgetFige.lumieres }
+            : b);
+        // Relief : les taches passent devant les bosses du MNT jusqu'à 2 m
+        // (lib/luminaires-three.js, `uAvance`). À plat, rien.
+        this.lum.definirAvanceRelief(STATE.settings.terrain3D ? 2 : 0);
+        // Position de la caméra (`cameraMetres`, lib/viewport.js) : MapLibre 5
+        // n'a pas `getFreeCameraOptions`, et `getCameraAltitude` rend NaN en
+        // projection globe (mesuré, 5.6.1).
+        const cm = cameraMetres();
+        if (!cm) return;
+        const c = map.getCenter();
+        const pxParMetre = 512 * Math.pow(2, map.getZoom()) / (40075016.686 * Math.cos(deg2rad(c.lat)));
+        const lmCam = Models3D.localMeters(cm.lng, cm.lat);
+        // `altitude` se compte au-dessus du sol du centre de la vue ; sous relief,
+        // ce sol n'est pas celui de l'origine de la scène (Jarret : 35 m d'écart).
+        let solCentre = 0;
+        if (STATE.settings.terrain3D) {
+            const e = map.queryTerrainElevation(c);
+            if (Number.isFinite(e) && Number.isFinite(Models3D.originElev)) solCentre = e - Models3D.originElev;
+        }
+        const camLocal = { x: lmCam.x, y: cm.altitude + solCentre, z: -lmCam.y };
+        // Taille des halos : pixels par mètre au centre de la vue, ramenés au
+        // `w` de clip du centre, pour que le shader divise par le `w` de chaque lampe.
+        const lm = Models3D.localMeters(c.lng, c.lat);
+        const v = this._v4 || (this._v4 = new THREE.Vector4());
+        v.set(lm.x, 0, -lm.y, 1).applyMatrix4(Models3D.camera.projectionMatrix);
+        // Ratio de la carte, pas de l'écran : il peut être plafonné (palier bas).
+        const ratio = map.getPixelRatio?.() || window.devicePixelRatio || 1;
+        const k = pxParMetre * Math.abs(v.w) * ratio;
+        this.lum.avantRendu(camLocal, k);
+        this.majFacades(b.facades);
+    },
+
+    /** L'état lisible d'une entité, pour la fiche : `null` hors couche d'éclairage. */
+    libelle(layer, idx) {
+        const e = this.etats.get(`${layer?.id}:${idx}`);
+        return e ? libelleEtat(e) : null;
+    },
+};
+try { window.__atlasEclairage = Eclairage; } catch (_) { /* hors navigateur */ }
 
 /**
  * Entités pour ombres d'extrusion : en mémoire si Atlas les détient, sinon
@@ -2016,6 +2601,12 @@ function initMap() {
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
 
     map.on('load', onStyleReady);
+    // Zone visible et visée : voir « Visée de caméra » plus bas.
+    map.on('resize', suivreTailleCarte);
+    // Sur téléphone, la barre du bas recouvre la carte dès l'ouverture.
+    map.once('load', () => appliquerMarges());
+    map.on('dragstart', () => { _visee = null; });
+    map.on('wheel', () => { _visee = null; });
 
     map.on('move', updateHUD);
     map.on('moveend', majBandeauInfos);
@@ -2041,7 +2632,8 @@ function initMap() {
     // change, pas seulement quand le zoom franchit un palier.
     map.on('data', (e) => {
         if (!STATE.settings.terrain3D) return;
-        if (e.sourceId !== 'terrain-dem' || e.sourceDataType !== 'content') return;
+        // Une tuile arrivée porte `tile`, pas `sourceDataType` (cf. `evenementMntArrive`).
+        if (!evenementMntArrive(e)) return;
         clearTimeout(_tuilesDemTimer);
         // Le cache d'altitude n'a pas à être purgé ici : `recalerRelief` appelle
         // `Models3D.recomputeAll()`, qui le vide en entrée. Vérifié — l'origine
@@ -2083,8 +2675,23 @@ function initMap() {
         _geoloc.on('geolocate', (p) => {
             _dernierePosition = [p.coords.longitude, p.coords.latitude];
             if (_openDockPill === 'releve') renderDockSlotHost();
+            if (_storyPresenting && _trajetSuivi && !_trajetPause && !$('inspector')?.classList.contains('open')) {
+                const trace = traceActuelle();
+                if (trace?.coordinates?.length >= 2) {
+                    const proj = projeter(trace.coordinates, _dernierePosition);
+                    const next = indexSuivi(proj.abscisse);
+                    if (next != null && next !== _storyIdx) allerEtape(next, { suivi: true });
+                }
+            }
+            if (_storyPresenting) majAlerteTrajet();
         });
-        _geoloc.on('trackuserlocationend', () => suivre(false));
+        _geoloc.on('trackuserlocationend', () => {
+            suivre(false);
+            if (_storyPresenting && _trajetSuivi) {
+                _trajetPause = true;
+                renderStoryPresentation();
+            }
+        });
         _geoloc.on('error', (err) => {
             suivre(false);
             showToast(err?.code === 1
@@ -2127,6 +2734,8 @@ function onStyleReady() {
             map.moveLayer(Models3D.layerId);
         }
     } catch (_) { /* style encore incomplet */ }
+    // La nuit, juste sous le calque three.js : un `setStyle` l'a retirée.
+    poserCoucheNuit();
 
     // Reapply all data layers après idle (style + tuiles prêts à peindre)
     scheduleMapLayersSync(() => {
@@ -2144,6 +2753,16 @@ function onStyleReady() {
 
     updateLighting();
     updateHUD();
+    rafraichirTrajet();
+    let _alerteTimer = 0;
+    if (!map._trajetMoveend) {
+        map._trajetMoveend = true;
+        map.on('moveend', () => {
+            if (!_storyPresenting || !traceActuelle()) return;
+            clearTimeout(_alerteTimer);
+            _alerteTimer = setTimeout(majAlerteTrajet, 200);
+        });
+    }
 }
 
 function saveMapCamera() {
@@ -2188,7 +2807,7 @@ function applyInitialViewport(bounds) {
     if (_initialViewportApplied || !map) return;
     const b = bounds || computeLayersBounds();
     if (b && shouldAutoFitBounds(b)) {
-        map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 800 });
+        map.fitBounds(b, { padding: margeCadrage(), maxZoom: 16, duration: 800 });
         _initialViewportApplied = true;
         console.log('[Atlas v7] fitBounds initial', b);
         return;
@@ -2197,7 +2816,7 @@ function applyInitialViewport(bounds) {
         _initialViewportApplied = true;
         console.log('[Atlas v7] caméra session restaurée');
     } else if (b) {
-        map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 800 });
+        map.fitBounds(b, { padding: margeCadrage(), maxZoom: 16, duration: 800 });
         _initialViewportApplied = true;
         console.log('[Atlas v7] fitBounds (caméra session stale ignorée)', b);
     }
@@ -2233,6 +2852,9 @@ function addTerrainSource() {
             map.addSource('terrain-dem', { type: 'raster-dem', tiles: cfg.tiles, encoding: cfg.encoding, tileSize: cfg.tileSize, maxzoom: cfg.maxzoom, attribution: cfg.attribution });
         } catch (e) { /* ignore */ }
     }
+    // MapLibre 5.6.1 laisse « reloading » à jamais une tuile MNT rechargée
+    // (changement de projection, relief rallumé) : plus aucun `idle` ensuite.
+    garderDemAuRechargement(map.getSource('terrain-dem'));
 }
 function applyTerrain() {
     if (!map.getSource('terrain-dem')) return;
@@ -2267,9 +2889,12 @@ function updateHUD() {
 // ÉCLAIRAGE SOLAIRE (SunCalc → MapLibre light + three.js)
 // ============================================================
 function sunPosition() {
-    const min = STATE.settings.timeOfDay;
-    const d = new Date(STATE.settings.date);
-    d.setHours(Math.floor(min / 60), min % 60, 0, 0);
+    // L'instant se compose dans le fuseau DE LA SCÈNE (lib/horloge-scène.js) :
+    // `setHours` le composait dans celui du navigateur, et la même scène ouverte
+    // à La Réunion montrait Marseille à 14 h 30 de La Réunion. L'ambiance reste
+    // prise au centre de la vue, avec SunCalc ; les comportements (luminaires)
+    // prennent le soleil NOAA à l'ancre de la scène (`Eclairage`).
+    const d = new Date(instantScene(STATE.settings));
     const c = map ? map.getCenter() : { lat: STATE.location.lat, lng: STATE.location.lng };
     let azimuth = 180, altitude = 45;
     if (typeof SunCalc !== 'undefined') {
@@ -2293,12 +2918,15 @@ function updateLighting() {
         // atmosphere-blend : halo atmosphérique du globe en vue large, estompé en zoom
         try { map.setSky({ 'sky-color': amb.sky, 'horizon-color': amb.horizon, 'fog-color': amb.horizon, 'fog-ground-blend': 0.4, 'horizon-fog-blend': 0.6, 'sky-horizon-blend': 0.7, 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 1, 9, 0] }); } catch (e) {}
     }
+    // Teinte nocturne de la scène (le fond vecteur ne s'assombrit pas seul) — atténuée par la lune.
+    // Elle n'est plus un voile CSS posé sur les canvas, qui aurait éteint toute
+    // lampe : la couche `atlas-nuit` multiplie le rendu MapLibre sous le calque
+    // three.js, et les lumières des modèles reçoivent le même facteur
+    // (lib/nuit-rendu.js). De jour, le facteur vaut exactement 1 : rien ne change.
+    NUIT.facteurs = facteursNuit(opaciteNuit(altitude, moon));
     Models3D.setSun(azimuth, altitude, moon);
-    // Teinte nocturne de la scène (le fond vecteur ne s'assombrit pas seul) — atténuée par la lune
-    // Seuil large (alt < 12°) pour que crépuscule / aube se lisent aussi en récit.
-    const tint = clamp((12 - altitude) / 28, 0, 0.68) * (moon && moon.isUp ? (1 - moon.moonIntensity * 0.35) : 1);
-    const nt = $('night-tint');
-    if (nt) nt.style.background = tint <= 0.02 ? 'transparent' : `rgba(16,24,58,${tint.toFixed(3)})`;
+    Eclairage.mettreAJourEtats();
+    map.triggerRepaint();
     updateSunStrip();
 }
 
@@ -2308,18 +2936,44 @@ function updateSunStrip() {
     const h = Math.floor(min / 60), m = min % 60;
     const tEl = $('sun-time'), dEl = $('sun-date'), aEl = $('sun-alt');
     if (tEl) tEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    if (dEl) dEl.textContent = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+    if (dEl) dEl.textContent = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: fuseauScene(STATE.settings) });
     if (aEl) aEl.textContent = `${altitude.toFixed(0)}°`;
-    // dot le long de l'arc 06h..20h (courbe basse, contenu dans 168×34)
-    const r = clamp((min - 360) / (1200 - 360), 0, 1);
     const dot = $('sun-dot');
     if (!dot) return;
-    const x0 = 8, xSpan = 152, yBase = 24, yAmp = 14, rDot = 6;
-    const cy = yBase - Math.sin(r * Math.PI) * yAmp;
-    dot.style.left = `${x0 + r * xSpan}px`;
-    dot.style.top = `${cy - rDot}px`;
-    const prog = $('sun-arc-prog');
-    if (prog) prog.setAttribute('stroke-dasharray', `${r * 210}, 1000`);
+    // L'arc couvre les vingt-quatre heures et suit la hauteur réelle du soleil
+    // (NOAA, à l'ancre et au jour de la scène : le même soleil que les
+    // luminaires). Il couvrait 6 h – 20 h : la nuit était hors d'atteinte.
+    const g = geometrieArcScene();
+    const chemin = $('sun-arc-path');
+    if (chemin && chemin.getAttribute('d') !== g.chemin) chemin.setAttribute('d', g.chemin);
+    const horizon = $('sun-arc-horizon');
+    if (horizon) { horizon.setAttribute('y1', g.horizonY.toFixed(1)); horizon.setAttribute('y2', g.horizonY.toFixed(1)); }
+    const p = g.point(min);
+    dot.style.left = `${p.x}px`;
+    dot.style.top = `${p.y - 6}px`;
+    dot.classList.toggle('nuit', p.y > g.horizonY);
+    const arc = $('sun-arc');
+    if (arc) {
+        arc.setAttribute('aria-valuenow', String(min));
+        arc.setAttribute('aria-valuetext', libelleHeure(min));
+    }
+}
+
+/** Géométrie de l'arc pour le jour, le fuseau et l'ancre de la scène — recalculée s'ils changent. */
+let _arcSolaire = { cle: '', g: null };
+function geometrieArcScene() {
+    const fuseau = fuseauScene(STATE.settings);
+    const jour = dateLocaleScene(STATE.settings);
+    const lat = Number(STATE.location?.lat);
+    const lng = Number(STATE.location?.lng);
+    const cle = `${jour}|${fuseau}|${lat}|${lng}`;
+    if (_arcSolaire.cle !== cle || !_arcSolaire.g) {
+        const hauteurA = (m) => positionSoleil(lat, lng, instantLocal(jour, m, fuseau)).hauteur;
+        // Marges de la demi-taille du point (12 px) : il reste entier dans l'arc,
+        // dont le débord est masqué.
+        _arcSolaire = { cle, g: geometrieArc(courbeHauteurs(hauteurA, 30), { margeHaut: 7, margeBas: 7 }) };
+    }
+    return _arcSolaire.g;
 }
 
 // ============================================================
@@ -2331,7 +2985,45 @@ function indexFeatures(layer) {
         f.properties._idx = i;
     });
 }
-function sourceData(layer) { return filteredGeoJSON(layer); }
+
+/** Les lignes sélectionnées sur cette couche — leur identité, pas leur rang. */
+function lignesSelectionnees(layer) {
+    if (!layer || STATE.selection.layerId !== layer.id || !STATE.selection.features.length) return null;
+    return rowIdsDepuisRangs(layer.geojson?.features, STATE.selection.features);
+}
+
+/**
+ * Après toute relecture d'une table : rangs recalculés, sélection suivie.
+ *
+ * Une relecture remplace les objets. `_idx` n'était recalculé que par certains
+ * chemins, et `mergeFeatureOverrides` recopiait l'ancien : une ligne ajoutée
+ * n'avait pas de rang — un clic la prenait pour l'objet 0, et elle n'avait pas
+ * de modèle 3D. La sélection, gardée par rang, glissait sur un autre objet dès
+ * qu'une ligne était ajoutée ou retirée avant elle. Elle suit maintenant la
+ * ligne ; une ligne disparue ferme la sélection plutôt que d'en montrer une
+ * autre. L'inspecteur n'est pas redessiné : une saisie en cours y survit.
+ */
+function apresRelecture(layer, lignes) {
+    indexFeatures(layer);
+    if (!lignes || STATE.selection.layerId !== layer.id) return;
+    const rangs = rangsDepuisRowIds(layer.geojson?.features, lignes);
+    if (!rangs.length) {
+        exitSelectionMode();
+        showToast('L’objet sélectionné n’existe plus dans la table', 'info');
+        return;
+    }
+    STATE.selection.features = rangs;
+    // Pendant un changement de fond, le halo sera reposé par la synchronisation.
+    if (map && mapStyleUsable()) updateHighlight();
+}
+function sourceData(layer) {
+    const d = filteredGeoJSON(layer);
+    // Pendant qu'on modifie sa forme, l'objet n'est dessiné que par l'éditeur :
+    // l'original resté dessous faisait deux formes, dont une qu'on ne bouge pas.
+    const enEdition = objetEnModification(layer);
+    if (enEdition == null || !Array.isArray(d?.features)) return d;
+    return { ...d, features: d.features.filter((f) => f.properties?._row_id !== enEdition) };
+}
 
 /** Id de la source/couche de repli en points (cf. lib/point-fallback.js). */
 function pointFallbackId(layer) { return layer.id + '-pts'; }
@@ -2405,7 +3097,9 @@ function addLayerToMap(layer) {
         }
         const data = sourceData(layer);
         const nFeats = data?.features?.length || 0;
-        map.addSource(layer.id, { type: 'geojson', data: data || { type: 'FeatureCollection', features: [] } });
+        // maxzoom 22 : sur relief incliné, MapLibre 5.6.1 levait au maxzoom 18
+        // par défaut (`_updateRetainedTiles`, cf. `optionsSourceGeojson`).
+        map.addSource(layer.id, optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }));
         // Surfaces menues : source de centres pour le rendu en petite échelle.
         const isFlatPolygon = (layer.geometryType === 'Polygon' || layer.geometryType === 'MultiPolygon')
             && layer.style?.polygonMode === 'flat';
@@ -2414,7 +3108,7 @@ function addLayerToMap(layer) {
         // vide au montage, il faudra refaire le calcul quand elle se peuplera.
         layer._pointFallbackAt = layer.geojson?.features?.length || 0;
         if (layer._pointFallbackZoom != null) {
-            map.addSource(pointFallbackId(layer), { type: 'geojson', data: centroidCollection(data) });
+            map.addSource(pointFallbackId(layer), optionsSourceGeojson(centroidCollection(data)));
         }
         initSymbolization(layer);
         applyLayerStyle(layer);
@@ -2451,11 +3145,34 @@ function applyLayerStyle(layer) {
         syncFeatureColorsFromSymbolization(layer, sequentialPaletteForSym(sym, layer));
         syncLayerSourceData(layer);
     }
+    // Les habillages vont être retirés puis recréés : MapLibre les recrée au
+    // sommet, visibles, sans filtre. On relève d'abord ce qu'il faudra rendre.
+    const ancre = ancreAuDessus(map.getStyle().layers.map((l) => l.id), layer);
     const g = layer.geometryType;
     if (g === 'Point' || g === 'MultiPoint') applyPointStyle(layer);
     else if (g === 'LineString' || g === 'MultiLineString') applyLineStyle(layer);
     else applyPolygonStyle(layer);
+    remettreEnPlace(layer, ancre);
     updateLegend();
+}
+
+/**
+ * Rend à une couche restylée ce que sa recréation lui a fait perdre.
+ *
+ * Changer une couleur ou une épaisseur passait par un retrait puis un ajout.
+ * La couche ressortait au sommet — des surfaces au fond recouvraient alors les
+ * lignes, les points et le trajet —, visible même œil fermé, et une couche
+ * distante perdait son filtre. L'ancre est relevée avant le retrait ; sans
+ * ancre, la couche n'était pas montée et `addLayerToMap` rétablit la pile.
+ */
+function remettreEnPlace(layer, ancre) {
+    if (ancre && map.getLayer(ancre)) {
+        for (const id of layerGfxIds(layer).filter((i) => map.getLayer(i))) {
+            try { map.moveLayer(id, ancre); } catch (_) { /* couche retirée entre-temps */ }
+        }
+    }
+    if (layer.visible === false) applyMapLayerVisibility(layer, false);
+    if (layer._distant) appliquerFiltreDistant(layer);
 }
 
 function colorExpression(layer, fallback) {
@@ -2561,7 +3278,9 @@ function recalerRelief(delai = 250) {
 }
 
 function applyPolygonStyle(layer) {
-    ['', '-outline'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    // Le repli en points aussi : laissé en place, son ajout plus bas échouait
+    // (« already exists ») et les points gardaient l'ancienne couleur.
+    ['', '-outline', '-pts'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const s = layer.style; const sym = initSymbolization(layer);
     const extrude = s.polygonMode !== 'flat';
     if (extrude) {
@@ -2885,6 +3604,8 @@ function applyLayerOrder() {
     try {
         if (map.getLayer(Models3D.layerId)) map.moveLayer(Models3D.layerId);
     } catch (_) { /* ignore */ }
+    poserCoucheNuit();
+    releverLigneTrajet();
 }
 
 function syncAllLayersToMap() {
@@ -3126,8 +3847,12 @@ function applyStoryEnvironment(s, opts = {}) {
     // dure laisse MapLibre avec un cache de tuiles incohérent, et son rendu
     // s'arrête sur « Cannot read properties of undefined (reading 'key') ».
     map.stop();
+    const feuilleAvant = map.style?.stylesheet;
     map.setStyle(b.style ? b.style() : b.url);
-    map.once('idle', () => {
+    // Au premier `idle` du NOUVEAU style (lib/basemap-layers.js) : un `idle`
+    // émis pendant la requête du style perdait calque 3D, nuit et trajet, ou
+    // les laissait sous les couches du nouveau fond.
+    quandNouveauStyle(map, feuilleAvant, () => {
         onStyleReady();
         applyLabelsVisibility();
         updateLighting();
@@ -3149,6 +3874,9 @@ async function persistStory(immediate = false) {
     clearTimeout(_persistStoryTimer);
     const save = async () => {
         try {
+            if ((STATE.story || []).some((s) => Number.isFinite(s?.state?.abscisse))) {
+                STATE.story = trierParAbscisse(STATE.story);
+            }
             await saveStoryToGrist(grist.docApi, STATE.story, { viewMode: CONFIG.viewMode });
         } catch (e) {
             console.warn('[Atlas story] save', e.message);
@@ -3166,6 +3894,476 @@ async function persistStory(immediate = false) {
             resolve();
         }, 400);
     });
+}
+
+/** La ligne du récit : celle des étapes, ou celle encore seulement en mémoire. */
+function traceActuelle() {
+    const portee = (STATE.story || []).find((s) => s?.state?.trace?.coordinates?.length >= 2);
+    return portee?.state?.trace || STATE.trajet || null;
+}
+
+function traceFigee(trace) {
+    return trace ? JSON.parse(JSON.stringify(trace)) : null;
+}
+
+function lineairesDisponibles() {
+    return STATE.layers.filter((layer) => layer.visible !== false
+        && (layer.geojson?.features || []).some((f) => estLineaire(f.geometry?.type)));
+}
+
+function saisiesCourantes() {
+    const out = [];
+    for (const couche of STATE.layers) {
+        if (couche.visible === false) continue;
+        for (const f of formulairesOffertsEnLecture(formulairesDeLaCouche(couche))) {
+            out.push({
+                formId: f.id,
+                coucheId: couche.id,
+                table: couche.sourceTable || f.tableId || null,
+                titre: f.titre || f.id,
+            });
+        }
+    }
+    return out;
+}
+
+function coucheDansSaisiesEtape(layer) {
+    if (!_storyPresenting || !layer) return false;
+    const saisies = STATE.story[_storyIdx]?.state?.saisies || [];
+    return saisies.some((s) => s.coucheId === layer.id || (s.table && s.table === layer.sourceTable));
+}
+
+function releverLigneTrajet() {
+    if (!map?.getLayer?.('atlas-trajet-line')) return;
+    try {
+        // Sous la couche de nuit quand elle existe : le trajet s'assombrit la
+        // nuit comme sous l'ancien voile, au lieu d'échapper à la nuit.
+        if (map.getLayer(NUIT.id)) map.moveLayer('atlas-trajet-line', NUIT.id);
+        else if (map.getLayer(Models3D.layerId)) map.moveLayer('atlas-trajet-line', Models3D.layerId);
+        else map.moveLayer('atlas-trajet-line');
+    } catch (_) { /* style en cours de remplacement */ }
+}
+
+function assurerCoucheTrajet() {
+    if (!map || !mapStyleUsable()) return false;
+    if (!map.getSource('atlas-trajet')) {
+        map.addSource('atlas-trajet', optionsSourceGeojson({ type: 'FeatureCollection', features: [] }));
+    }
+    if (!map.getLayer('atlas-trajet-line')) {
+        map.addLayer({
+            id: 'atlas-trajet-line',
+            type: 'line',
+            source: 'atlas-trajet',
+            paint: { 'line-color': '#C44536', 'line-width': 3, 'line-opacity': 0.92 },
+        });
+    }
+    releverLigneTrajet();
+    return true;
+}
+
+function retirerPoignees() {
+    _trajetPoignees.forEach((m) => m.remove());
+    _trajetPoignees = [];
+}
+
+/** La ligne se voit pendant la lecture du récit, et dans le panneau Récit. */
+function trajetVisible() {
+    return !!traceActuelle() && (_storyPresenting || STATE.currentModule === 'recit');
+}
+
+function rafraichirTrajet() {
+    retirerPoignees();
+    if (!assurerCoucheTrajet()) return;
+    const trace = traceActuelle();
+    const montrer = trajetVisible() && trace;
+    const src = map.getSource('atlas-trajet');
+    src?.setData(montrer ? {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: trace.coordinates },
+    } : { type: 'FeatureCollection', features: [] });
+    if (!montrer) return;
+    const edite = STATE.currentModule === 'recit' && !CONFIG.viewMode && !_storyPresenting && canWrite(CONFIG.viewMode);
+    if (!edite) return;
+
+    // Sens du trajet : petite flèche à la fin de la ligne.
+    const fin = trace.coordinates[trace.coordinates.length - 1];
+    const avant = trace.coordinates[trace.coordinates.length - 2] || fin;
+    if (fin && avant) {
+        const elSens = document.createElement('div');
+        elSens.className = 'trajet-sens';
+        elSens.title = 'Sens du trajet';
+        const bearing = Math.atan2(fin[0] - avant[0], fin[1] - avant[1]) * 180 / Math.PI;
+        elSens.style.transform = `rotate(${bearing}deg)`;
+        _trajetPoignees.push(
+            new maplibregl.Marker({ element: elSens, anchor: 'center' })
+                .setLngLat(fin)
+                .addTo(map),
+        );
+    }
+
+    // Ordre = rang sur la ligne (déjà trié par abscisse à l'enregistrement).
+    const surLigne = STATE.story
+        .map((step, i) => ({ step, i, a: step.state?.abscisse }))
+        .filter((x) => Number.isFinite(x.a))
+        .sort((x, y) => x.a - y.a);
+    surLigne.forEach((item, rang) => {
+        const { step } = item;
+        const p = pointAAbscisse(trace.coordinates, step.state.abscisse);
+        if (!p) return;
+        const n = rang + 1;
+        const el = document.createElement('div');
+        el.className = 'trajet-poignee';
+        el.textContent = String(n);
+        el.title = (step.title || ('Étape ' + n)) + ' · n°' + n + ' sur le trajet';
+        const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'center' })
+            .setLngLat(p)
+            .addTo(map);
+        let start = null;
+        marker.on('dragstart', () => { start = marker.getLngLat(); });
+        marker.on('drag', () => {
+            const ll = marker.getLngLat();
+            const proj = projeter(trace.coordinates, [ll.lng, ll.lat]);
+            if (proj.point) marker.setLngLat(proj.point);
+        });
+        marker.on('dragend', () => {
+            const ll = marker.getLngLat();
+            const a = start ? map.project([start.lng, start.lat]) : null;
+            const b = map.project(ll);
+            if (a && Math.hypot(b.x - a.x, b.y - a.y) < 4) {
+                if (start) marker.setLngLat([start.lng, start.lat]);
+                return;
+            }
+            const proj = projeter(trace.coordinates, [ll.lng, ll.lat]);
+            if (!step?.state || !proj.point) return;
+            step.state.abscisse = proj.abscisse;
+            // La poignée déplace la place sur le trajet, pas la vue cadrée :
+            // celle-ci revient intacte si on retire le trajet.
+            STATE.story = trierParAbscisse(STATE.story);
+            markDirty();
+            persistStory();
+            renderRecit();
+        });
+        _trajetPoignees.push(marker);
+    });
+}
+
+function annulerChoixTrajet() {
+    trajetPickMode = false;
+    _trajetRemplace = false;
+    if (map) map.getCanvas().style.cursor = '';
+}
+
+function poserTrajetDepuis(choix) {
+    const trace = {
+        type: 'LineString',
+        coordinates: choix.copie,
+        sourceTable: choix.layer.sourceTable || null,
+        sourceRowId: choix.feature?.properties?.id ?? choix.feature?.id ?? null,
+        nom: choix.layer.name || '',
+    };
+    const remplacer = _trajetRemplace;
+    annulerChoixTrajet();
+    if (!STATE.story.length) {
+        STATE.trajet = trace;
+        rafraichirTrajet();
+        renderRecit();
+        showToast('Trajet prêt — chaque capture se posera au plus près de la vue', 'info');
+        return;
+    }
+    const ontPlace = STATE.story.every((s) => Number.isFinite(s.state?.abscisse));
+    let ecartMax = 0;
+    STATE.story.forEach((s, i) => {
+        let abscisse;
+        if (remplacer && ontPlace) {
+            // Remplacer la ligne : mêmes proportions, vues inchangées.
+            abscisse = s.state.abscisse;
+        } else {
+            const centre = s.state?.camera?.center;
+            if (Array.isArray(centre) && centre.length >= 2) {
+                const place = placeDepuisVue(trace.coordinates, centre);
+                abscisse = place.abscisse;
+                if (Number.isFinite(place.distanceMetres)) {
+                    ecartMax = Math.max(ecartMax, place.distanceMetres);
+                }
+            } else {
+                abscisse = placesInitiales(STATE.story.length)[i] ?? 0.5;
+            }
+        }
+        s.state = fusionnerApresPhoto(s.state || {}, {
+            trace: traceFigee(trace),
+            abscisse,
+            saisies: Array.isArray(s.state?.saisies) ? s.state.saisies : saisiesCourantes(),
+        });
+    });
+    STATE.trajet = trace;
+    STATE.story = trierParAbscisse(STATE.story);
+    markDirty();
+    persistStory(true);
+    renderRecit();
+    if (remplacer) {
+        showToast('Trajet remplacé — les places gardent leurs proportions', 'success');
+    } else if (ecartMax >= ECART_VUE_TRAJET_M) {
+        showToast(`Étapes posées sur la ligne (vue jusqu’à ${Math.round(ecartMax)} m à l’écart)`, 'info');
+    } else {
+        showToast('Étapes posées sur le trajet, au plus près de chaque vue', 'success');
+    }
+}
+
+function onTrajetPick(e) {
+    const clic = [e.lngLat.lng, e.lngLat.lat];
+    let best = null;
+    for (const layer of STATE.layers) {
+        if (layer.visible === false) continue;
+        for (const feature of layer.geojson?.features || []) {
+            const copie = copieLineaire(feature.geometry, clic);
+            if (!copie) continue;
+            const proj = projeter(copie, clic);
+            if (!proj.point) continue;
+            const pt = map.project(proj.point);
+            const px = Math.hypot(pt.x - e.point.x, pt.y - e.point.y);
+            if (px > 18) continue;
+            if (!best || px < best.px) best = { layer, feature, copie, px };
+        }
+    }
+    if (!best) {
+        showToast('Touchez une ligne', 'info');
+        return;
+    }
+    poserTrajetDepuis(best);
+}
+
+function choisirTrajet(remplacer) {
+    if (!assertCanWrite(remplacer ? 'remplacer le trajet' : 'créer un trajet')) return;
+    if (trajetPickMode) {
+        annulerChoixTrajet();
+        showToast('Choix annulé', 'info');
+        if (STATE.currentModule === 'recit') renderRecit();
+        return;
+    }
+    if (!lineairesDisponibles().length) {
+        showToast('Aucune ligne visible à copier', 'info');
+        return;
+    }
+    _trajetRemplace = !!remplacer;
+    trajetPickMode = true;
+    if (map) map.getCanvas().style.cursor = 'crosshair';
+    showToast(remplacer ? 'Choisissez la nouvelle ligne' : 'Choisissez une ligne sur la carte', 'info');
+    if (STATE.currentModule === 'recit') renderRecit();
+}
+
+function retirerTrajet() {
+    if (!assertCanWrite('retirer le trajet')) return;
+    STATE.trajet = null;
+    STATE.story = retirerTrace(STATE.story);
+    annulerChoixTrajet();
+    markDirty();
+    if (STATE.story.length) persistStory(true);
+    rafraichirTrajet();
+    if (STATE.currentModule === 'recit') renderRecit();
+    showToast('Trajet retiré — les vues d’origine sont rétablies', 'info');
+}
+
+function annulerAnimTrajet() { _trajetAnim += 1; }
+
+function animerLeLong(trace, abscisse, camera, fini) {
+    const id = ++_trajetAnim;
+    const coords = trace.coordinates;
+    const depart = map.getCenter();
+    const a0 = projeter(coords, [depart.lng, depart.lat]).abscisse;
+    const dist = Math.abs(abscisse - a0) * longueurMetres(coords);
+    const duree = dureeLongeLigneMs(dist);
+    const t0 = performance.now();
+    const cap0 = map.getBearing();
+    const cap1 = Number.isFinite(camera?.bearing) ? camera.bearing : cap0;
+    const pad = mesurerEtageRecit();
+    const stop = () => { if (id === _trajetAnim) _trajetAnim += 1; };
+    map.once('dragstart', stop);
+    map.once('wheel', stop);
+    map.once('touchstart', stop);
+    const frame = (now) => {
+        if (id !== _trajetAnim || !_storyPresenting) return;
+        const u = Math.min(1, (now - t0) / duree);
+        const p = pointAAbscisse(coords, a0 + (abscisse - a0) * u);
+        if (p) {
+            map.jumpTo({
+                center: p,
+                bearing: capInterpole(cap0, cap1, u),
+                padding: margesActuelles({ bulle: pad }),
+            });
+        }
+        if (u < 1) {
+            requestAnimationFrame(frame);
+            return;
+        }
+        map.off('dragstart', stop);
+        map.off('wheel', stop);
+        map.off('touchstart', stop);
+        map.easeTo({
+            center: pointAAbscisse(coords, abscisse) || camera?.center,
+            zoom: camera?.zoom,
+            pitch: camera?.pitch,
+            bearing: camera?.bearing,
+            padding: margesActuelles({ bulle: pad }),
+            duration: 400,
+        });
+        fini?.();
+        remplirAutour();
+        majAlerteTrajet();
+    };
+    requestAnimationFrame(frame);
+}
+
+function pauserSuiviTrajet() {
+    if (!_trajetSuivi || _trajetPause) return;
+    _trajetPause = true;
+    if (_suiviPosition && _geoloc?.trigger) _geoloc.trigger();
+}
+
+function arreterSuiviTrajet() {
+    const suivait = _trajetSuivi && _suiviPosition;
+    _trajetSuivi = false;
+    _trajetPause = false;
+    if (suivait && _geoloc?.trigger) _geoloc.trigger();
+}
+
+function indexSuivi(abscisse) {
+    const trace = traceActuelle();
+    const cur = STATE.story[_storyIdx];
+    if (!trace || !Number.isFinite(cur?.state?.abscisse) || !Number.isFinite(abscisse)) return null;
+    const L = longueurMetres(trace.coordinates);
+    const a = cur.state.abscisse;
+    const prev = STATE.story[_storyIdx - 1];
+    const next = STATE.story[_storyIdx + 1];
+    const voisine = abscisse >= a ? next?.state?.abscisse : prev?.state?.abscisse;
+    if (!Number.isFinite(voisine)) return null;
+    if (!suiviDoitChanger({ abscisse, etape: a, voisine, longueurM: L })) return null;
+    return abscisse >= a ? _storyIdx + 1 : _storyIdx - 1;
+}
+
+function rayonDeLetape(step) {
+    const trace = traceActuelle();
+    if (!trace || !Number.isFinite(step?.state?.abscisse)) return rayonAutour(null);
+    const L = longueurMetres(trace.coordinates);
+    const absc = (STATE.story || []).map((s) => s.state?.abscisse).filter(Number.isFinite).sort((a, b) => a - b);
+    if (absc.length < 2) return rayonAutour(null);
+    const i = absc.indexOf(step.state.abscisse);
+    let ecart = Infinity;
+    if (i > 0) ecart = Math.min(ecart, (step.state.abscisse - absc[i - 1]) * L);
+    if (i >= 0 && i < absc.length - 1) ecart = Math.min(ecart, (absc[i + 1] - step.state.abscisse) * L);
+    return rayonAutour(Number.isFinite(ecart) ? ecart : null);
+}
+
+function pointDuneFeature(f) {
+    const c = featureCentroidLngLat(f);
+    if (c) return c;
+    const g = f?.geometry;
+    const coords = g?.type === 'LineString' ? g.coordinates : (g?.type === 'MultiLineString' ? g.coordinates?.[0] : null);
+    if (!coords?.length) return null;
+    const p = coords[Math.floor(coords.length / 2)];
+    return Array.isArray(p) ? [p[0], p[1]] : null;
+}
+
+function evaluerAlerte() {
+    const trace = traceActuelle();
+    if (!_storyPresenting || !trace) {
+        _alerteReleve = false;
+        return { allumee: false, texte: '' };
+    }
+    const pos = _dernierePosition || (map ? [map.getCenter().lng, map.getCenter().lat] : null);
+    if (!pos) return { allumee: _alerteReleve, texte: _alerteTexte };
+    let best = null;
+    for (const s of STATE.story) {
+        if (!Number.isFinite(s.state?.abscisse) || !(s.state?.saisies || []).length) continue;
+        const p = pointAAbscisse(trace.coordinates, s.state.abscisse);
+        if (!p) continue;
+        const d = distanceMetres(pos, p);
+        const rayon = rayonDeLetape(s);
+        if (!best || d < best.d) best = { d, rayon };
+    }
+    if (!best) {
+        _alerteReleve = false;
+        return { allumee: false, texte: '' };
+    }
+    const allumee = alertePastille({ distanceM: best.d, rayonM: best.rayon, allumee: _alerteReleve });
+    _alerteReleve = allumee;
+    return { allumee, texte: allumee ? direDistance(best.d) : '' };
+}
+
+function majAlerteTrajet() {
+    const avant = _alerteReleve;
+    const avantTexte = _alerteTexte;
+    const etat = evaluerAlerte();
+    _alerteTexte = etat.texte || '';
+    if (etat.allumee !== avant || _alerteTexte !== avantTexte) refreshControlsDock();
+}
+
+function objetsDeLetape() {
+    const step = STATE.story[_storyIdx];
+    const trace = traceActuelle();
+    const saisies = step?.state?.saisies || [];
+    if (!step || !trace || !saisies.length || !Number.isFinite(step.state?.abscisse)) {
+        return { objets: [], nonCharges: false, vide: true };
+    }
+    const centre = pointAAbscisse(trace.coordinates, step.state.abscisse);
+    const rayon = rayonDeLetape(step);
+    const couches = new Map();
+    for (const s of saisies) {
+        const couche = STATE.layers.find((l) => l.id === s.coucheId)
+            || STATE.layers.find((l) => s.table && l.sourceTable === s.table);
+        if (couche) couches.set(couche.id, couche);
+    }
+    let nonCharges = false;
+    const candidats = [];
+    for (const couche of couches.values()) {
+        const feats = couche.geojson?.features;
+        if (!Array.isArray(feats) || !feats.length) {
+            if (couche._deferredLoad || couche._distant) nonCharges = true;
+            continue;
+        }
+        const garde = buildControlPredicate(couche);
+        feats.forEach((f, idx) => {
+            if (garde && !garde(f)) return;
+            const point = pointDuneFeature(f);
+            if (!point) return;
+            candidats.push({
+                point,
+                idx,
+                coucheId: couche.id,
+                nom: nomObjet(f.properties || {}) || 'objet',
+            });
+        });
+    }
+    return {
+        objets: objetsAutour(candidats, centre, rayon, 5),
+        nonCharges,
+        vide: false,
+    };
+}
+
+function remplirAutour() {
+    const hote = document.getElementById('trajet-autour');
+    if (!hote) return;
+    const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const { objets, nonCharges, vide } = objetsDeLetape();
+    if (vide) { hote.innerHTML = ''; return; }
+    if (!objets.length) {
+        hote.innerHTML = `<div style="margin-top:8px;font-size:12px;color:#6b6256">${nonCharges ? 'Objets non chargés' : 'Aucun objet à proximité'}</div>`;
+        return;
+    }
+    hote.innerHTML = `<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">${objets.map((o) => {
+        const id = String(o.coucheId).replace(/'/g, "\\'");
+        return `<button type="button" class="btn btn-soft" style="text-align:left" onclick="A.ouvrirObjetEtape('${id}',${o.idx})">${esc(o.nom)} <small>${esc(direDistance(o.distance))}</small></button>`;
+    }).join('')}${nonCharges ? '<div style="font-size:11px;color:#6b6256">Objets non chargés</div>' : ''}</div>`;
+}
+
+function allerEtape(i, opts = {}) {
+    if (!STATE.story.length) return;
+    if (!opts.suivi) pauserSuiviTrajet();
+    _storyIdx = Math.max(0, Math.min(i, STATE.story.length - 1));
+    renderStoryPresentation();
+    applyStoryState(cloneStoryState(STATE.story[_storyIdx].state), { camera: !opts.suivi });
+    remplirAutour();
 }
 
 /**
@@ -3274,7 +4472,7 @@ function reapplyStoryFilters(state) {
     refreshControlsDock();
 }
 
-function applyStoryState(s) {
+function applyStoryState(s, opts = {}) {
     if (!s || !map) return;
     _storyPresenting = true;
 
@@ -3342,7 +4540,10 @@ function applyStoryState(s) {
     const basemapChanging = !!(wantBasemap && wantBasemap !== STATE.settings.basemap);
 
     const finishCamera = () => {
+        if (opts.camera === false) return;
+        const run = () => {
         if (!_storyPresenting || !s.camera || !map) return;
+        if (!mapStyleUsable()) { map.once('idle', run); return; }
         const snap = cloneStoryState(s);
         const reapply = () => {
             if (!_storyPresenting) return;
@@ -3350,18 +4551,28 @@ function applyStoryState(s) {
             reapplyStoryFilters(snap);
             map.triggerRepaint?.();
         };
-        map.once('moveend', reapply);
+        const trace = s.trace;
+        const longe = trace?.type === 'LineString'
+            && trace.coordinates?.length >= 2
+            && Number.isFinite(s.abscisse);
+        if (!longe) map.once('moveend', reapply);
         // L'étape a été composée sur la carte entière ; la bulle en couvre le
         // bas. La marge fait viser ce qui reste visible — nulle sans bulle, ce
         // qui efface aussi celle d'une étape précédente.
+        if (longe) {
+            animerLeLong(trace, s.abscisse, s.camera, reapply);
+            return;
+        }
         map.flyTo({
             center: s.camera.center,
             zoom: s.camera.zoom,
             pitch: s.camera.pitch,
             bearing: s.camera.bearing,
-            padding: { top: 0, left: 0, right: 0, bottom: mesurerEtageRecit() },
+            padding: margesActuelles({ bulle: mesurerEtageRecit() }),
             duration: 1500,
         });
+        };
+        run();
     };
 
     applyStoryEnvironment(s, {
@@ -3418,6 +4629,9 @@ function openModule(name) {
         return;
     }
     STATE.currentModule = name;
+    // Choisir un module est explicite : il revient, même s'il avait cédé la place à la fiche.
+    $('module-panel').classList.remove('module-cede');
+    _moduleImpose = $('inspector')?.classList.contains('open') && STATE.selection.mode;
     document.querySelectorAll('.rail-item').forEach((b) => b.classList.toggle('active', b.dataset.module === name));
     $('module-title').textContent = (MODULE_TITLES[name] || name).replace(/^[^ ]+ /, (m) => m);
     $('module-panel').classList.add('open');
@@ -3426,9 +4640,7 @@ function openModule(name) {
         // L'onglet suit le module, d'ou qu'il vienne — palette de commandes,
         // feuille « Plus », clic sur une couche. Sans cela, retoucher l'onglet
         // ne refermait pas : la barre ignorait ce qui etait ouvert.
-        document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((b) => {
-            b.classList.toggle('active', b.dataset.mobileTab === name);
-        });
+        allumerOngletMobile(name);
         // A mi-hauteur : la carte reste visible sous le panneau, c'est elle le
         // sujet. Une feuille deja deployee garde la hauteur qu'on lui a donnee.
         //
@@ -3479,10 +4691,15 @@ function annoncerOuverture(nom) {
 if (typeof window !== 'undefined') window.__atlasAnnoncerOuverture = annoncerOuverture;
 
 function closeModulePanel() {
+    // Une création cédée au module revient dès que le module part : sans elle,
+    // la carte resterait armée sans formulaire visible.
+    if (_saisieObjet) ficheCedee = false;
     if (Feuille) poserFeuille('fermee');
     $('module-panel').classList.remove('open');
     document.querySelectorAll('.rail-item').forEach((b) => b.classList.remove('active'));
     STATE.currentModule = null;
+    annulerChoixTrajet();
+    rafraichirTrajet();
     renderInspector();
 }
 
@@ -3562,6 +4779,7 @@ function availableTablesSection() {
                 <button class="btn btn-primary" style="flex:1" onclick="A.openOSM()">${icTrait(IC.globe)} OSM</button>
                 <button class="btn btn-soft" style="flex:1" onclick="document.getElementById('file-input').click()">${icTrait(IC.fichier)} Fichier</button>
                 ${CONFIG.grist.ready ? `<button class="btn btn-soft" style="flex:1" onclick="A.openLinkTable()">${icTrait(IC.lien)} Table</button>` : ''}
+                ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" style="flex:1" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
             </div>
         </div>`;
 
@@ -3701,6 +4919,7 @@ const IC = {
     enregistrer:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
     exporter:  '<path d="M12 3v13M7 8l5-5 5 5M5 21h14"/>',
     piste:     '<path d="M4 20V7a3 3 0 0 1 6 0v10a3 3 0 0 0 6 0V4"/><path d="M17 7h4M17 4h4"/>',
+    plus:      '<path d="M12 5v14M5 12h14"/>',
     pieton:    '<circle cx="12" cy="4" r="2"/><path d="M12 7v6m0 0-3 8m3-8 3 8M8 10l4-2 4 2"/>',
 };
 
@@ -3918,12 +5137,15 @@ function listDockPills() {
     // — elle regroupe, pour ne pas charger le dock. Un formulaire publie ne
     // devenait rien de visible : le lecteur ne decouvrait qu'un objet se saisit
     // qu'en le touchant. Elle suit le recit, l'autre pastille qui agit.
-    if (couchesEnReleve().length) {
+    const saisiesRecit = _storyPresenting && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
+    if (couchesEnReleve().length || saisiesRecit) {
+        const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
         const pastilleReleve = {
             id: 'releve',
             kind: 'releve',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg>',
-            label: 'Relevé',
+            label: alerte.allumee && alerte.texte ? `Relevé · ${alerte.texte}` : 'Relevé',
+            alerte: !!alerte.allumee,
         };
         const iRecit = pills.findIndex((p) => p.id === 'recit');
         pills.splice(iRecit + 1, 0, pastilleReleve);
@@ -3983,14 +5205,16 @@ function renderSunDockSlotHtml() {
             <span class="date" id="sun-date">—</span>
             <span class="time" id="sun-time">12:00</span>
         </div>
-        <div class="sun-arc" id="sun-arc">
+        <div class="sun-arc" id="sun-arc" tabindex="0" role="slider" aria-label="Heure de la scène"
+             aria-valuemin="0" aria-valuemax="1439" aria-valuenow="${STATE.settings.timeOfDay}" aria-valuetext="${libelleHeure(STATE.settings.timeOfDay)}">
             <svg width="168" height="34" viewBox="0 0 168 34" aria-hidden="true">
-                <path d="M8 24 Q 84 10, 160 24" stroke="#C9C0A8" stroke-width="1.2" fill="none" stroke-dasharray="2 3" />
-                <path id="sun-arc-prog" d="M8 24 Q 84 10, 160 24" stroke="#E8A234" stroke-width="1.8" fill="none" stroke-dasharray="0, 1000" />
+                <line id="sun-arc-horizon" x1="8" x2="160" y1="${geometrieArcScene().horizonY.toFixed(1)}" y2="${geometrieArcScene().horizonY.toFixed(1)}" stroke="#C9C0A8" stroke-width="0.8" />
+                <path id="sun-arc-path" d="${geometrieArcScene().chemin}" stroke="#E8A234" stroke-width="1.4" fill="none" stroke-dasharray="2 2" />
             </svg>
             <div class="sun-dot" id="sun-dot"></div>
-            <span class="hlbl" style="left:2px">06h</span>
-            <span class="hlbl" style="right:2px">20h</span>
+            <span class="hlbl" style="left:2px">00h</span>
+            <span class="hlbl" style="left:50%;transform:translateX(-50%)">12h</span>
+            <span class="hlbl" style="right:2px">24h</span>
         </div>
         <div class="seg-inline">
             <span class="alt-lbl">Hauteur</span>
@@ -4112,7 +5336,7 @@ function refreshControlsDock() {
         const ic = p.id === 'sun'
             ? '<span class="sun-dot" aria-hidden="true"></span>'
             : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
-        return `<button type="button" class="dock-fab ${isOpen ? 'active' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}</button>`;
+        return `<button type="button" class="dock-fab ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}</button>`;
     }).join('');
 
     fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
@@ -4141,6 +5365,22 @@ function refreshControlsDock() {
     }
 }
 
+/**
+ * Pose ce qu'une scène ou les préférences disent de l'horloge
+ * (`horlogeDepuisReglages`) : fuseau, date épinglée, heure, ancre. Une date
+ * épinglée devient aussi la date du sélecteur, pour que l'interface la montre.
+ */
+function appliquerHorlogeDeclaree(h) {
+    if (!h) return;
+    if (fuseauValide(h.fuseau)) STATE.settings.fuseau = h.fuseau;
+    if (dateValide(h.dateEpinglee)) {
+        STATE.settings.dateEpinglee = h.dateEpinglee;
+        STATE.settings.date = new Date(h.dateEpinglee + 'T12:00:00');
+    }
+    if (Number.isFinite(h.timeOfDay)) STATE.settings.timeOfDay = h.timeOfDay;
+    if (h.lieu) STATE.location = { ...STATE.location, lat: h.lieu.lat, lng: h.lieu.lng };
+}
+
 async function syncScenePrefsFromGrist() {
     if (!CONFIG.grist.ready) return;
     const prefs = await loadScenePrefs(grist.docApi);
@@ -4158,6 +5398,8 @@ async function syncScenePrefsFromGrist() {
     if (Number.isFinite(s.terrainExaggeration)) STATE.settings.terrainExaggeration = s.terrainExaggeration;
     if (s.terrainSource) STATE.settings.terrainSource = s.terrainSource;
     if (s.modelSet) { STATE.settings.modelSet = s.modelSet; MODEL_LIBRARY.set = s.modelSet; }
+    // Horloge : fuseau de la scène, date seulement si elle a été épinglée.
+    appliquerHorlogeDeclaree({ fuseau: s.fuseau, dateEpinglee: s.dateEpinglee });
 
     // Le reste passe par le chemin du récit, qui **applique** au lieu de se
     // contenter d'affecter : un `Object.assign` sur `STATE.settings` changerait
@@ -4269,11 +5511,14 @@ function renderControlBody(layer, c) {
 
     if (c.type === 'select') {
         const vals = controlUniqueValues(layer, c.field, MAX_VALEURS_LISTE);
-        const sansValeur = nombreSansValeur(layer, c.field);
+        // « (sans valeur) » est aussi un choix sur une couche distante, avec un
+        // compte inconnu (`null`) : sans lui, « Tout » écartait pour de bon les
+        // objets sans valeur.
+        const sansValeur = choixSansValeur(layer, c.field);
         // Un filtre sans choix ressemble à un filtre déjà appliqué : on croit
         // que tout est décoché, alors qu'on n'a rien à cocher. Le dire évite de
         // chercher pourquoi la carte ne réagit pas.
-        if (!vals.length && !sansValeur) {
+        if (!vals.length && !sansValeur.offert) {
             return `<div class="range-info" style="margin-top:6px;opacity:.75">`
                  + `Aucune valeur connue pour « ${escapeHtml(c.field)} »`
                  + (layer._distant ? ` — la couche est distante et le manifeste n’en déclare pas.` : `.`)
@@ -4285,7 +5530,7 @@ function renderControlBody(layer, c) {
         const nameAttr = `ctl-${layer.id}-${c.field}`.replace(/[^a-zA-Z0-9_-]/g, '_');
         const ligne = (value, texte, count, classe = '') => `<label class="cat-row${classe}" style="cursor:pointer"><input type="${inputType}" name="${nameAttr}" ${isSelectValueChecked(c, value) ? 'checked' : ''} onchange="A.toggleControlValue('${lid}','${fid}','${esc(value)}')"><span class="cat-value" title="${escapeHtml(texte)}">${escapeHtml(texte)}</span><span class="cat-count">${count == null ? '' : count}</span></label>`;
         const lignes = vals.map((v) => ligne(v.value, libelle(v.value), v.count)).join('')
-            + (sansValeur ? ligne('', '(sans valeur)', sansValeur, ' cat-row-vide') : '');
+            + (sansValeur.offert ? ligne('', '(sans valeur)', sansValeur.count, ' cat-row-vide') : '');
         const outils = c.variant === 'select_single' ? '' : `<div class="ctl-outils">
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>
@@ -4308,12 +5553,9 @@ function renderControlBody(layer, c) {
     if (c._bornesInconnues) notes.push('Bornes inconnues : la couche est distante et le manifeste n’en déclare pas.');
     if (layer._distant && !filtrableSurLaCarte(c)) notes.push('Sur cette couche distante, des dates écrites en texte ne se filtrent pas.');
     const note = notes.length ? `<div class="range-info" style="margin-top:6px;opacity:.8">${notes.join(' ')}</div>` : '';
-    const span = (c.dataMax - c.dataMin) || 0;
-    // Un nombre entier avance par unités : sinon un nombre d'étages passait par
-    // 2,37.
-    const step = c.type === 'time'
-        ? Math.max(86400000, Math.round(span / 200))
-        : (c.entier ? Math.max(1, Math.round(span / 200)) : (span / 200 || 1));
+    // Le pas suit l'étendue des données (minute pour quelques heures) : un pas
+    // d'au moins un jour figeait le curseur d'essais-crisi au minimum.
+    const step = pasDuCurseur(c);
     const valeur = (part) => `<strong data-ctl="${cle}" data-part="${part}">${fmtControlValue(c, part === 'min' ? c.min : c.max)}</strong>`;
     const curseur = (part, acc) => `<input type="range" class="rng${acc ? ' acc' : ''}" data-ctl="${cle}" data-input="${part}"
         min="${c.dataMin}" max="${c.dataMax}" step="${step}" value="${part === 'min' ? c.min : c.max}"
@@ -4609,7 +5851,7 @@ function blocCoucheFormulaires(couche) {
     const groupe = (titre, liste, vide) => {
         if (!liste.length && !vide) return '';
         const contenu = liste.length
-            ? liste.map((f) => ligneFormulaire(couche, f, esc)).join('')
+            ? liste.map((f) => ligneFormulaire(couche, f, esc, tous)).join('')
             : `<p class="fm-vide" title="${escapeHtml(vide.detail)}">${vide.texte}</p>`;
         return `<div class="fm-groupe"><div class="fm-groupe-titre">${titre}</div>${contenu}</div>`;
     };
@@ -4641,7 +5883,7 @@ function blocCoucheFormulaires(couche) {
  * ne peut pas être proposé : offrir un interrupteur qui ne peut rien allumer
  * aurait été une promesse creuse. On dit ce qu'il faut faire à la place.
  */
-function ligneFormulaire(couche, f, esc) {
+function ligneFormulaire(couche, f, esc, tous = []) {
     const detail = f.surLaCouche
         ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${libelleStatut(f.statut)}${f.version ? ` · v${f.version}` : ''}`)
         : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${libelleStatut(f.statut)}`}`;
@@ -4657,10 +5899,16 @@ function ligneFormulaire(couche, f, esc) {
             title="Proposé hors édition"
             onclick="A.exposerFormulaire('${esc(couche.id)}','${esc(f.id)}')"></div>`;
 
-    const retirer = formulaireRetirable(f)
+    // Le dernier formulaire en place ne se retire pas : l'objet n'aurait plus
+    // de fiche. La raison est dite des qu'il y a eu un choix — une couche qui
+    // n'a jamais porte que `Attributs` garde sa ligne telle qu'avant.
+    const garde = raisonNonRetirable(f, tous);
+    const retirer = !garde
         ? `<button type="button" class="fm-lien" onclick="A.retirerFormulaire('${esc(couche.id)}','${esc(f.id)}', true)"
             title="Ne plus proposer ce formulaire sur cette couche — rien n’est effacé">Retirer</button>`
-        : '';
+        : (tous.length > 1
+            ? `<span title="Retirer est impossible : l’objet n’aurait plus de fiche">${escapeHtml(garde)}</span>`
+            : '');
 
     return `<div class="fm-ligne">
         <div class="fm-ligne-tete">
@@ -4746,10 +5994,48 @@ function libelleStatut(statut) {
     return 'brouillon';
 }
 
+function barreTrajetHtml() {
+    if (CONFIG.viewMode) return '';
+    const trace = traceActuelle();
+    const lignes = lineairesDisponibles();
+    if (!trace && !lignes.length) return '';
+    if (trajetPickMode) {
+        return `<div class="section"><button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Annuler le choix</button></div>`;
+    }
+    if (!trace) {
+        return `<div class="section">
+            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet</button>
+            <div class="hint" style="margin-top:6px">Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.</div>
+        </div>`;
+    }
+    const metres = Math.round(longueurMetres(trace.coordinates));
+    return `<div class="section">
+        <div class="hint">Trajet · ${metres} m${trace.nom ? ' · ' + String(trace.nom).replace(/</g, '&lt;') : ''} — lecture le long de la ligne ; la vue cadrée reste pour le retrait.</div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-soft" style="flex:1" onclick="A.remplacerTrajet()">Remplacer</button>
+            <button class="btn btn-soft" style="flex:1" onclick="A.retirerTrajet()">Retirer</button>
+        </div>
+    </div>`;
+}
+
+function metaEtapeTrajet(s) {
+    const trace = traceActuelle();
+    if (!trace || !Number.isFinite(s?.state?.abscisse)) return '';
+    const m = Math.round(s.state.abscisse * longueurMetres(trace.coordinates));
+    const rang = STATE.story
+        .filter((e) => Number.isFinite(e.state?.abscisse))
+        .sort((a, b) => a.state.abscisse - b.state.abscisse)
+        .indexOf(s) + 1;
+    const noms = (s.state.saisies || []).map((x) => x.titre).filter(Boolean).join(' · ');
+    const ordre = rang > 0 ? `n°${rang} · ` : '';
+    return `<div class="layer-meta">${ordre}sur le trajet · ${m} m${noms ? ' · ' + noms.replace(/</g, '&lt;') : ''}</div>`;
+}
+
 function renderRecit() {
     $('module-title').textContent = 'Récit';
     const body = $('module-body');
     const steps = STATE.story || [];
+    rafraichirTrajet();
     if (CONFIG.viewMode) {
         if (!steps.length) {
             body.innerHTML = `<div class="empty"><div class="ic">${icTrait(IC.recit, 40)}</div><div class="t">Pas de récit</div><div class="h">L’éditeur n’a pas publié d’étapes</div></div>`;
@@ -4757,12 +6043,14 @@ function renderRecit() {
         }
         body.innerHTML = `
             <div class="hint">Parcours publié — lecture seule.</div>
+            ${barreTrajetHtml()}
             <div class="section"><button class="btn btn-dark btn-full" onclick="A.storyPlay(0)">▶ Lancer le récit</button></div>
             <div class="layer-list">${steps.map((s, i) => `
                 <div class="layer-item" onclick="A.storyPlay(${i})" style="cursor:pointer">
                     <span class="layer-vis on">▶</span>
                     <div class="layer-info">
                         <div class="layer-name">${(s.title || ('Étape ' + (i + 1))).replace(/</g, '&lt;')}</div>
+                        ${metaEtapeTrajet(s)}
                         <div class="layer-meta">${(s.text || '').slice(0, 80).replace(/</g, '&lt;')}${ (s.text || '').length > 80 ? '…' : ''}</div>
                     </div>
                 </div>`).join('')}</div>`;
@@ -4772,7 +6060,8 @@ function renderRecit() {
         <div class="section" style="display:flex;gap:8px">
             <button class="btn btn-primary" style="flex:2" onclick="A.storyCapture()">${icTrait(IC.camera)} Capturer l'étape</button>
             ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">▶ Lecture</button>` : ''}
-        </div>`;
+        </div>
+        ${barreTrajetHtml()}`;
     if (!steps.length) {
         body.innerHTML = html + `<div class="empty"><div class="ic">${icTrait(IC.recit, 40)}</div><div class="t">Aucune étape</div><div class="h">Cadre la vue puis « Capturer »</div></div>`;
         return;
@@ -4781,6 +6070,7 @@ function renderRecit() {
         <div class="layer-item">
             <span class="layer-vis on" onclick="A.storyPlay(${i})" title="Aller à l'étape">▶</span>
             <div class="layer-info" style="flex:1">
+                ${metaEtapeTrajet(s)}
                 <input class="input" style="font-weight:600;padding:4px 6px" value="${(s.title || '').replace(/"/g, '&quot;')}" onchange="A.storySet(${i},'title',this.value)" placeholder="Titre étape ${i + 1}">
                 <textarea class="input" style="margin-top:4px;min-height:38px;font-size:12px" onchange="A.storySet(${i},'text',this.value)" placeholder="Texte…">${s.text || ''}</textarea>
             </div>
@@ -4844,13 +6134,30 @@ function renderStoryPresentation() {
     const n = STATE.story.length;
     if (!s) return;
     const ambiance = storyAmbianceLabel(s.state);
+    const trace = traceActuelle();
+    const points = trace ? STATE.story.map((_, i) =>
+        `<button type="button" onclick="A.storyGo(${i})" aria-label="Étape ${i + 1}" style="width:8px;height:8px;border-radius:50%;border:0;padding:0;background:${i === _storyIdx ? '#C44536' : '#d9d3cb'}"></button>`).join('') : '';
+    const formulaires = (s.state?.saisies || []).map((x) => x.titre).filter(Boolean);
+    const suiviBtn = trace && localisationDisponible()
+        ? (_trajetSuivi && !_trajetPause
+            ? `<div style="margin-top:8px;font-size:12px;color:#6b6256">Suivi en cours</div>`
+            : `<div style="margin-top:8px">${_trajetPause
+                ? '<button class="btn btn-dark" onclick="A.revenirTrajet()">Revenir à ma position</button>'
+                : '<button class="btn btn-dark" onclick="A.suivreTrajet()">Suivre</button>'}</div>`)
+        : '';
     ov.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
         <button class="btn btn-soft" onclick="A.storyStep(-1)" ${_storyIdx === 0 ? 'disabled' : ''}>◀</button>
         <div style="flex:1;text-align:center"><div style="font-weight:600;font-size:15px">${s.title || ('Étape ' + (_storyIdx + 1))}</div><div style="font-size:10px;color:#6b6256;letter-spacing:.05em">${_storyIdx + 1} / ${n}${ambiance ? ' · ' + ambiance : ''}</div></div>
         <button class="btn btn-soft" onclick="A.storyStep(1)" ${_storyIdx === n - 1 ? 'disabled' : ''}>▶</button>
         <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter">✕</button>
-    </div>${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${s.text}</div>` : ''}`;
+    </div>
+    ${points ? `<div style="display:flex;gap:6px;justify-content:center;margin-top:8px">${points}</div>` : ''}
+    ${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${s.text}</div>` : ''}
+    ${formulaires.length ? `<div style="margin-top:6px;font-size:12px;color:#6b6256">${formulaires.map((t) => String(t).replace(/</g, '&lt;')).join(' · ')}</div>` : ''}
+    ${suiviBtn}
+    <div id="trajet-autour"></div>`;
     mesurerEtageRecit();
+    remplirAutour();
 }
 
 /**
@@ -4938,8 +6245,14 @@ function libererMargeRecit() {
     const p = map.getPadding();
     if (!(p.top || p.bottom || p.left || p.right)) return;
     const c = map.getContainer();
-    const centre = map.unproject([c.clientWidth / 2, c.clientHeight / 2]);
-    map.jumpTo({ center: centre, padding: { top: 0, bottom: 0, left: 0, right: 0 } });
+    // La marge de la bulle part ; celle des feuilles, sur téléphone, reste. Le
+    // centre est pris là où la nouvelle marge le placera : l'image ne bouge pas.
+    const m = margesActuelles({ bulle: 0 });
+    const centre = map.unproject([
+        c.clientWidth / 2 + (m.left - m.right) / 2,
+        c.clientHeight / 2 + (m.top - m.bottom) / 2,
+    ]);
+    map.jumpTo({ center: centre, padding: m });
 }
 
 function enterStoryPresentation(i) {
@@ -4947,6 +6260,7 @@ function enterStoryPresentation(i) {
     capturePreStorySnapshot();
     _storyPresenting = true;
     document.body.classList.add('story-presenting');
+    rafraichirTrajet();
     // Sur téléphone, la légende se pose sur la bulle : repliée, elle n'y prend
     // qu'une ligne ; le lecteur la rouvre d'un toucher.
     if (document.body.classList.contains('mobile-layout')) $('legend')?.classList.add('collapsed');
@@ -5040,6 +6354,8 @@ function renderSoleil() {
         <div class="section">
             <div class="section-title">Date</div>
             <input class="input" type="date" value="${dateStr}" onchange="A.setSunDate(this.value)">
+            <div class="toggle-row" style="margin-top:8px"><span class="tlabel">Épingler cette date</span><div class="toggle ${STATE.settings.dateEpinglee ? 'on' : ''}" onclick="A.toggleDateEpinglee()" role="switch" tabindex="0" aria-checked="${!!STATE.settings.dateEpinglee}" aria-label="Épingler cette date"></div></div>
+            <div class="hint" style="margin-top:6px">${STATE.settings.dateEpinglee ? 'La scène rouvrira sur ce jour.' : 'Non épinglée : la date n’est pas retenue d’une visite à l’autre.'} Heure du site, fuseau ${escapeHtml(fuseauScene(STATE.settings))} ; l’éclairage public suit le soleil à l’ancre de la scène (${STATE.location.lat.toFixed(4)}°N, ${STATE.location.lng.toFixed(4)}°E).</div>
         </div>
         <div class="section">
             <div class="range-info">Soleil : <strong>${azimuth.toFixed(0)}° ${cardinal}</strong> · Hauteur <strong>${altitude.toFixed(1)}°</strong></div>
@@ -5215,7 +6531,7 @@ function fitToFeatures(features) {
         coords.forEach((c) => { if (Array.isArray(c) && typeof c[0] === 'number') { bounds.extend(c); any = true; } });
     });
     if (!any) return false;
-    map.fitBounds(bounds, { padding: 80, maxZoom: 18, duration: 800 });
+    viserCadre(bounds, { padding: margeCadrage(), maxZoom: 18, duration: 800 });
     return true;
 }
 
@@ -5283,16 +6599,39 @@ let inspectorUserClosed = false;
 let ficheCedee = false;
 
 function resizeMapSoon() {
+    // Tout de suite d'abord : la mise en page est recalculée à la lecture des
+    // dimensions, et une caméra lancée juste après vise la bonne carte. Les
+    // appels différés rattrapent les transitions.
+    try { map?.resize(); } catch (e) {}
     requestAnimationFrame(() => {
         try { map?.resize(); } catch (e) {}
         setTimeout(() => { try { map?.resize(); } catch (e) {} }, 180);
     });
 }
 
+/** Un module rouvert exprès pendant la fiche d'un objet : il ne cède plus jusqu'à la fermeture de la fiche. */
+let _moduleImpose = false;
+
 function openInspectorPanel() {
     const insp = $('inspector');
     if (!insp || inspectorUserClosed) return;
     if (ficheCedee && surTelephone()) return;
+    // Tablette, fenêtre étroite : la fiche prime, le module attend replié et
+    // revient à la fermeture de la fiche (même règle que sur téléphone).
+    // Seule la fiche d'un objet (sélection, création) prime : la symbolisation
+    // d'une couche accompagne le module, elle ne le remplace pas.
+    const mp = $('module-panel');
+    const ficheObjet = (STATE.selection.mode && STATE.selection.features.length > 0) || !!_saisieObjet;
+    // Évaluée à chaque passage à la fiche d'un objet, panneau déjà ouvert ou
+    // non (la symbolisation l'était peut-être) ; un module rouvert exprès
+    // pendant la fiche (`_moduleImpose`) reste là.
+    const ouverte = insp.classList.contains('open');
+    const largeurFiche = (ouverte && insp.offsetWidth) || 360;
+    const largeurCarte = ($('map-frame')?.clientWidth || 0) + (ouverte ? largeurFiche : 0);
+    if (ficheObjet && !_moduleImpose && !surTelephone() && mp?.classList.contains('open')
+        && !mp.classList.contains('module-cede') && moduleCedeALaFiche({ largeurCarte, largeurFiche })) {
+        mp.classList.add('module-cede');
+    }
     insp.classList.add('open');
     if (surTelephone()) ouvrirFicheMobile();
     resizeMapSoon();
@@ -5303,18 +6642,33 @@ function closeInspectorPanel() {
     if (!insp) return;
     const etaitOuverte = insp.classList.contains('open');
     insp.classList.remove('open');
+    $('module-panel')?.classList.remove('module-cede');
+    _moduleImpose = false;
     if (etaitOuverte && surTelephone()) fermerFicheMobile();
     resizeMapSoon();
 }
 
 function closeInspectorByUser() {
+    // Fermer le panneau d'une création l'abandonne : sans panneau, plus
+    // d'« Enregistrer », et la carte resterait armée sans le dire.
+    if (_saisieObjet) { quitterSaisieObjet(messageAbandon()); }
     inspectorUserClosed = true;
     closeInspectorPanel();
+    // Fermer la fiche d'un objet, c'est le laisser : sans cela la sélection
+    // restait (halo, barre ◀ ▶), et la fiche revenait au prochain module ouvert
+    // (audit des panneaux, 26/09/2026). Vaut pour le ✕, l'onglet retouché et la
+    // feuille tirée vers le bas sur téléphone.
+    if (STATE.selection.mode) exitSelectionMode();
 }
 
 try { localStorage.removeItem('atlas_inspector_collapsed'); } catch (e) {}
 
 function renderInspector() {
+    if (_saisieObjet) {
+        renderSaisieObjet();
+        openInspectorPanel();
+        return;
+    }
     if (STATE.selection.mode && STATE.selection.features.length > 0) {
         inspectorUserClosed = false;
         renderObjectInspector();
@@ -5396,7 +6750,8 @@ function renderSymbologyInspector(layer) {
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
         ${boutonEnTable(layer)}
-        ${boutonRevueObjets(layer)}`;
+        ${boutonRevueObjets(layer)}
+        ${boutonNouvelObjet(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
     const body = $('insp-body');
@@ -5870,6 +7225,546 @@ function coucheEnSaisie(layer, opts = {}) {
     });
 }
 
+// ============================================================
+// CRÉER UN OBJET — lots 2 et 3 de l'édition géométrique
+// ============================================================
+// Poser la forme, remplir la fiche, écrire UNE ligne. La fiche passe avant
+// l'écriture : une ligne n'existe jamais avant que ses obligatoires soient
+// tenus, et « Abandonner » n'a rien à défaire. Tant qu'une création est en
+// cours, elle possède les clics sur la carte : c'est un état exclusif, qui
+// annule à l'entrée le choix d'un lieu, d'un trajet et la sélection.
+//
+// Un point se pose au clic. Une ligne ou une surface se trace avec terra-draw,
+// chargé au premier tracé seulement : c'est le moteur, l'interface reste celle
+// d'Atlas (panneau droit, boutons, mesures, accroche aux autres couches).
+
+/** La création en cours, ou `null`. */
+let _saisieObjet = null;
+/** Le dernier objet créé, tant qu'il reste sélectionné : on peut encore le défaire. */
+let _derniereCreation = null;
+/** La dernière forme modifiée, avec ses cellules d'origine, tant que l'objet reste sélectionné. */
+let _derniereModification = null;
+const SAISIE_SOURCE = 'atlas-saisie';
+const COULEUR_TRACE = '#C44536';
+
+function dessinerSaisie() {
+    if (!map) return;
+    const g = _saisieObjet?.geometrie;
+    const data = { type: 'FeatureCollection', features: g ? [{ type: 'Feature', geometry: g, properties: {} }] : [] };
+    const src = map.getSource(SAISIE_SOURCE);
+    if (src) src.setData(data);
+    else map.addSource(SAISIE_SOURCE, optionsSourceGeojson(data));
+    if (!map.getLayer(SAISIE_SOURCE)) {
+        map.addLayer({
+            id: SAISIE_SOURCE, type: 'circle', source: SAISIE_SOURCE,
+            paint: { 'circle-radius': 8, 'circle-color': COULEUR_TRACE, 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 },
+        });
+    } else {
+        map.moveLayer(SAISIE_SOURCE);
+    }
+}
+
+function effacerSaisie() {
+    if (!map) return;
+    if (map.getLayer(SAISIE_SOURCE)) map.removeLayer(SAISIE_SOURCE);
+    if (map.getSource(SAISIE_SOURCE)) map.removeSource(SAISIE_SOURCE);
+}
+
+/** terra-draw et son adaptateur, chargés une fois, au premier tracé. */
+let _traceur = null;
+function chargerTraceur() {
+    if (!_traceur) {
+        _traceur = Promise.all([import('terra-draw'), import('terra-draw-maplibre-gl-adapter')])
+            .then(([td, ad]) => ({ ...td, Adapter: ad.TerraDrawMapLibreGLAdapter }))
+            .catch((e) => { _traceur = null; throw e; });
+    }
+    return _traceur;
+}
+
+/**
+ * L'accroche aux objets des couches visibles (Alt maintenu la suspend).
+ *
+ * Les formes viennent de `layer.geojson`, retrouvées par `_idx` : les
+ * géométries rendues par MapLibre sont découpées aux bords des tuiles, et
+ * s'y accrocher poserait des sommets qui n'existent pas dans la donnée.
+ */
+function accrocheAtlas(ev) {
+    if (!map || ev?.heldKeys?.includes('Alt')) return undefined;
+    const tol = surTelephone() ? 18 : 10;
+    const ids = hitLayerIds();
+    if (!ids.length) return undefined;
+    const box = [[ev.containerX - tol, ev.containerY - tol], [ev.containerX + tol, ev.containerY + tol]];
+    const geoms = [];
+    const vues = new Set();
+    for (const f of map.queryRenderedFeatures(box, { layers: ids })) {
+        const layer = STATE.layers.find((l) => l.id === f.layer.id);
+        const idx = f.properties?._idx;
+        if (!layer || idx == null || vues.has(`${layer.id}:${idx}`)) continue;
+        vues.add(`${layer.id}:${idx}`);
+        const g = layer.geojson?.features?.[idx]?.geometry;
+        if (g) geoms.push(g);
+    }
+    const r = pointAccroche({ x: ev.containerX, y: ev.containerY }, geoms, (c) => map.project(c), tol);
+    return r ? r.coordonnee : undefined;
+}
+
+/** Arme terra-draw sur la carte pour une couche de lignes ou de surfaces. */
+async function demarrerTrace(s, layer) {
+    let lib;
+    try {
+        lib = await chargerTraceur();
+    } catch (e) {
+        quitterSaisieObjet();
+        showToast('L’outil de tracé n’a pas pu se charger : ' + e.message, 'error');
+        return;
+    }
+    if (_saisieObjet !== s) return;   // abandonné pendant le chargement
+    const famille = familleGeometrie(layer.geometryType);
+    const commun = {
+        snapping: { toCoordinate: true, toCustom: accrocheAtlas },
+        // Échap reste à Atlas : il abandonne la création entière, avec son message.
+        keyEvents: { cancel: null, finish: 'Enter' },
+        pointerDistance: surTelephone() ? 22 : 10,
+        showCoordinatePoints: true,
+    };
+    const poignees = {
+        closingPointColor: '#FFFFFF', closingPointOutlineColor: COULEUR_TRACE, closingPointWidth: 6, closingPointOutlineWidth: 2,
+        snappingPointColor: '#1F6FEB', snappingPointOutlineColor: '#FFFFFF', snappingPointWidth: 6, snappingPointOutlineWidth: 2,
+        coordinatePointColor: COULEUR_TRACE, coordinatePointOutlineColor: '#FFFFFF', coordinatePointWidth: 4, coordinatePointOutlineWidth: 1,
+    };
+    const mode = famille === 'Polygon'
+        ? new lib.TerraDrawPolygonMode({
+            ...commun,
+            // Un sommet qui ferait se recouper le contour n'est pas posé — et on
+            // le dit : sans message, le clic semblait simplement ignoré
+            // (constaté le 26/09/2026).
+            validation: (f, ctx) => {
+                if (ctx?.updateType !== 'commit' && ctx?.updateType !== 'finish') return { valid: true };
+                const r = lib.ValidateNotSelfIntersecting(f);
+                if (!r.valid) signalerRecoupe();
+                return r;
+            },
+            styles: { fillColor: COULEUR_TRACE, fillOpacity: 0.18, outlineColor: COULEUR_TRACE, outlineWidth: 3, ...poignees },
+        })
+        : new lib.TerraDrawLineStringMode({
+            ...commun,
+            styles: { lineStringColor: COULEUR_TRACE, lineStringWidth: 3, ...poignees },
+        });
+    // Modifier une forme passe par le mode sélection de terra-draw : sommets à
+    // glisser, points milieux pour en insérer, clic droit pour en retirer,
+    // l'objet entier à glisser. Suppr ne supprime rien ici : supprimer un objet
+    // est un autre geste, avec sa confirmation (lot 5).
+    const modes = [mode];
+    let selection = null;
+    if (s.modification) {
+        selection = new lib.TerraDrawSelectMode({
+            pointerDistance: commun.pointerDistance,
+            allowManualDeselection: false,
+            keyEvents: { deselect: null, delete: null, rotate: null, scale: null },
+            flags: {
+                [mode.mode]: {
+                    feature: {
+                        draggable: true,
+                        selfIntersectable: famille !== 'Polygon',
+                        coordinates: {
+                            draggable: true,
+                            midpoints: true,
+                            deletable: true,
+                            snappable: { toCustom: accrocheAtlas },
+                        },
+                    },
+                },
+            },
+            styles: {
+                selectedLineStringColor: COULEUR_TRACE, selectedLineStringWidth: 3,
+                selectedPolygonColor: COULEUR_TRACE, selectedPolygonFillOpacity: 0.18,
+                selectedPolygonOutlineColor: COULEUR_TRACE, selectedPolygonOutlineWidth: 3,
+                selectionPointColor: '#FFFFFF', selectionPointOutlineColor: COULEUR_TRACE,
+                selectionPointWidth: 6, selectionPointOutlineWidth: 2,
+                midPointColor: COULEUR_TRACE, midPointOutlineColor: '#FFFFFF', midPointWidth: 4, midPointOutlineWidth: 1,
+            },
+        });
+        modes.push(selection);
+    }
+    const draw = new lib.TerraDraw({
+        adapter: new lib.Adapter({ map, coordinatePrecision: 7, prefixId: 'atlas-dessin' }),
+        modes,
+        undoRedo: s.modification
+            ? { sessionLevel: new lib.TerraDrawSessionUndoRedo() }
+            : { modeLevel: new lib.TerraDrawModeUndoRedo() },
+    });
+    draw.on('change', () => majMesuresTrace());
+    if (!s.modification) draw.on('finish', (id) => finTrace(id));
+    draw.start();
+    // Un double-clic termine une ligne dans bien des outils ; ici il zoomerait.
+    s.trace = { draw, mode, famille, zoomDouble: map.doubleClickZoom.isEnabled() };
+    map.doubleClickZoom.disable();
+    if (s.modification) {
+        const depart = s.modification.depart;
+        const [r] = draw.addFeatures([{ type: 'Feature', geometry: depart, properties: { mode: mode.mode } }]);
+        if (!r?.valid || r.id == null) {
+            quitterSaisieObjet();
+            showToast('Cette forme ne peut pas s’ouvrir dans l’éditeur' + (r?.reason ? ` : ${r.reason}` : ''), 'error');
+            return;
+        }
+        s.trace.featureId = r.id;
+        draw.selectFeature(r.id, selection.mode);
+        draw.clearUndoRedoHistory();
+    } else {
+        draw.setMode(mode.mode);
+    }
+    renderSaisieObjet();
+}
+
+let _derniereRecoupe = 0;
+function signalerRecoupe() {
+    const t = Date.now();
+    if (t - _derniereRecoupe < 1500) return;
+    _derniereRecoupe = t;
+    showToast('Ce sommet ferait se recouper le contour : il n’est pas posé', 'warning');
+}
+
+function arreterTrace(s) {
+    if (!s?.trace) return;
+    try { s.trace.draw.stop(); } catch (e) { console.warn('[Atlas tracé] arrêt', e.message); }
+    if (s.trace.zoomDouble && map) map.doubleClickZoom.enable();
+    s.trace = null;
+}
+
+/**
+ * La forme en cours de tracé, sommets posés seulement.
+ *
+ * Pendant le tracé, terra-draw ajoute un sommet provisoire qui suit le
+ * curseur : l'en-tête comptait « 4 sommets » pour trois clics (constaté le
+ * 26/09/2026). On le retire, et les mesures disent ce qui est posé.
+ */
+function formeEnCours(s) {
+    if (!s?.trace) return null;
+    // En modification, l'objet édité est connu par son identifiant : les
+    // poignées de sommets et les points milieux sont aussi dans le lot.
+    if (s.trace.featureId != null) return s.trace.draw.getSnapshotFeature(s.trace.featureId)?.geometry || null;
+    const feats = s.trace.draw.getSnapshot() || [];
+    const g = feats.filter((f) => f.geometry?.type === s.trace.famille).pop()?.geometry || null;
+    if (!g || s.trace.mode.state !== 'drawing') return g;
+    if (g.type === 'LineString') return { type: 'LineString', coordinates: g.coordinates.slice(0, -1) };
+    const anneau = g.coordinates?.[0] || [];
+    // Anneau en cours : sommets posés, sommet provisoire, puis retour au premier.
+    if (anneau.length < 3) return g;
+    return { type: 'Polygon', coordinates: [[...anneau.slice(0, -2), anneau[0]]] };
+}
+
+function majMesuresTrace() {
+    const s = _saisieObjet;
+    if (!s?.trace || s.geometrie) return;
+    const sub = document.querySelector('#insp-head .insp-sub');
+    if (sub) sub.textContent = libelleMesures(mesurerGeometrie(formeEnCours(s)), s.trace.famille);
+    const sortie = $('saisie-sortie');
+    if (sortie) sortie.textContent = libelleSortie(s);
+}
+
+function finTrace(id) {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    if (!s?.trace || !layer) return;
+    const f = s.trace.draw.getSnapshotFeature(id);
+    const v = formeValidee(f?.geometry, layer.geometryType);
+    if (!v.ok) {
+        showToast(v.erreur, 'warning');
+        s.trace.draw.removeFeatures([id]);
+        return;
+    }
+    const cellules = cellulesPourCouche(layer, v.geometrie);
+    if (!cellules) { showToast('Cette forme ne peut pas s’écrire dans les colonnes de la couche.', 'error'); return; }
+    s.geometrie = v.geometrie;
+    s.creation.cellules = cellules;
+    // La forme reste affichée, et un nouveau clic ne commence pas un second tracé.
+    s.trace.draw.setMode('static');
+    renderSaisieObjet();
+    ficheCedee = false;
+    openInspectorPanel();
+}
+
+function boutonNouvelObjet(layer) {
+    if (!creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) return '';
+    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
+        onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>`;
+}
+
+function quitterSaisieObjet(message) {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    arreterTrace(s);
+    _saisieObjet = null;
+    effacerSaisie();
+    document.body.classList.remove('mode-creation');
+    if (map) map.getCanvas().style.cursor = '';
+    if (s?.modification && layer) {
+        // L'objet était retiré de la carte pendant l'édition : il revient tel
+        // qu'il était, et sa fiche se rouvre là où on l'avait laissée.
+        syncLayerSourceData(layer);
+        const [idx] = rangsDepuisRowIds(layer.geojson?.features, [s.modification.rowId]);
+        if (idx != null) enterSelectionMode(layer.id, idx);
+        else renderInspector();
+    } else {
+        renderInspector();
+    }
+    if (message) showToast(message, 'info');
+}
+
+/** Le message d'abandon, selon ce qu'on abandonnait. */
+function messageAbandon() {
+    const s = _saisieObjet;
+    if (s?.modification) return 'Modification abandonnée — la forme d’origine est gardée';
+    if (s?.serie > 0) {
+        const n = s.serie;
+        const deja = `${n} objet${n > 1 ? 's' : ''} créé${n > 1 ? 's' : ''}`;
+        return s.geometrie || formeEnCours(s) ? `Objet en cours abandonné — ${deja}, gardé${n > 1 ? 's' : ''}` : `Série terminée — ${deja}`;
+    }
+    return 'Création abandonnée — rien n’a été écrit';
+}
+
+/** « Abandonner » quand il y a quelque chose à perdre, « Terminer » quand la série est à jour. */
+function libelleSortie(s) {
+    return s?.serie > 0 && !s.geometrie && !formeEnCours(s) ? 'Terminer la série' : 'Abandonner';
+}
+
+/** L'objet en cours de modification ne s'affiche pas deux fois : il est dans l'éditeur. */
+function objetEnModification(layer) {
+    const s = _saisieObjet;
+    return s?.modification && s.layerId === layer?.id ? s.modification.rowId : null;
+}
+
+/** Clic sur la carte pendant une création de point. Un tracé, lui, écoute terra-draw. */
+function onSaisieClic(e) {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    if (!layer) { quitterSaisieObjet(); return; }
+    if (familleGeometrie(layer.geometryType) !== 'Point') return;
+    const p = pointDepuisClic(e.lngLat);
+    if (!p.ok) { showToast(p.erreur, 'warning'); return; }
+    const cellules = cellulesPourCouche(layer, p.geometrie);
+    if (!cellules) { showToast('Ce point ne peut pas s’écrire dans les colonnes de la couche.', 'error'); return; }
+    s.geometrie = p.geometrie;
+    // Le pont lit les cellules au moment de l'envoi : un second clic déplace
+    // le point sans remonter la fiche, donc sans perdre ce qui y est saisi.
+    s.creation.cellules = cellules;
+    dessinerSaisie();
+    renderSaisieObjet();
+    ficheCedee = false;
+    openInspectorPanel();
+}
+
+const CONSIGNES_SAISIE = {
+    Point: 'Cliquez sur la carte pour placer le point.',
+    LineString: 'Cliquez pour poser chaque sommet, puis « Terminer » ou Entrée. Les sommets s’accrochent aux objets proches — Alt maintenu pour l’éviter.',
+    Polygon: 'Cliquez pour poser chaque sommet ; cliquez le premier sommet, « Terminer » ou Entrée pour fermer la surface. Les sommets s’accrochent aux objets proches — Alt maintenu pour l’éviter.',
+};
+
+/**
+ * Le panneau de création. Idempotent : `renderInspector` le rappelle à chaque
+ * changement de module, et remonter la fiche effacerait la saisie.
+ */
+function renderSaisieObjet() {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    if (!layer) { quitterSaisieObjet(); return; }
+    const famille = familleGeometrie(layer.geometryType);
+    if (s.modification) { renderModificationForme(s, layer, famille); return; }
+    const g = s.geometrie;
+    let sous;
+    if (famille === 'Point') sous = g ? libellePoint(g) : `Point · table ${escapeHtml(layer.sourceTable)}`;
+    else sous = libelleMesures(mesurerGeometrie(g || formeEnCours(s)), famille);
+    $('insp-head').innerHTML = `
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${escapeHtml(layer.name)}</div>
+        <div class="insp-title">Nouvel objet</div>
+        <div class="insp-sub">${sous}</div>
+        ${bandeauSerie(s)}`;
+    $('insp-tabs').innerHTML = '';
+    const abandonner = `<button class="btn btn-soft" style="flex:1" id="saisie-sortie" onclick="A.abandonnerSaisieObjet()">${libelleSortie(s)}</button>`;
+    let outils = '';
+    if (famille !== 'Point') {
+        outils = g
+            ? `<button class="btn btn-soft" style="flex:1" onclick="A.retracerSaisieObjet()">Retracer</button>`
+            : `<button class="btn btn-soft" style="flex:1" onclick="A.sommetPrecedent()" title="Retirer le dernier sommet posé">Sommet précédent</button>`
+              + `<button class="btn btn-dark" style="flex:1" onclick="A.terminerTrace()">Terminer</button>`;
+    }
+    const hote = $('insp-body');
+    const ficheEnPlace = s.formulaireMonte && hote.dataset.saisie === s.jeton;
+    if (!g) {
+        // Retracer garde la fiche déjà remplie : seule la forme recommence.
+        if (ficheEnPlace) {
+            const r = $('saisie-rappel');
+            if (r) r.textContent = CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point;
+        } else {
+            hote.innerHTML = `<div class="hint">${CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
+                + (famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : '');
+        }
+        $('insp-foot').innerHTML = abandonner + outils;
+        return;
+    }
+    if (ficheEnPlace) {
+        const r = $('saisie-rappel');
+        if (r) r.textContent = famille === 'Point'
+            ? 'Cliquez ailleurs sur la carte pour déplacer le point.'
+            : 'Forme prête. « Retracer » la recommence sans vider la fiche.';
+        if (!s.repli) $('insp-foot').innerHTML = abandonner + outils;
+        else $('insp-foot').innerHTML = abandonner + outils + boutonEnregistrerRepli();
+        return;
+    }
+    const rappel = famille === 'Point'
+        ? `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Cliquez ailleurs sur la carte pour déplacer le point.</div>`
+        : `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Forme prête. « Retracer » la recommence sans vider la fiche.</div>`;
+    const formulaire = formulairesDeLaCouche(layer).find((f) => f.surLaCouche !== false && f.def) || null;
+    const formDef = formulaire ? formDefCadre(formulaire.def, formulaire.masques) : null;
+    if (formDef && nbChampsDef(formDef) && moteurDisponible()) {
+        hote.innerHTML = rappel;
+        hote.dataset.saisie = s.jeton;
+        hote.classList.toggle('forme-mono-etape', (formDef.sections || []).length <= 1);
+        try {
+            const bloc = document.createElement('div');
+            hote.appendChild(bloc);
+            window.FormEngine.mount(bloc, formDef, pontFormulaire({
+                couche: layer,
+                docApi: grist.docApi,
+                formulaire,
+                valeurs: {},
+                creation: s.creation,
+                peutEcrire: () => canWrite(CONFIG.viewMode),
+                signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
+                apresEcriture: (rowId) => { apresCreationObjet(layer, rowId); },
+            }));
+            s.formulaireMonte = true;
+            $('insp-foot').innerHTML = abandonner + outils;
+            return;
+        } catch (e) {
+            console.error('[Atlas création] mount', e);
+        }
+    }
+    // Repli sans moteur de formulaire : la forme et son nom, s'il a une colonne.
+    const aNom = (STATE.schema?.[layer.sourceTable] || []).some((c) => c.colId === 'nom');
+    hote.innerHTML = rappel
+        + (aNom ? `<label class="input-label" for="saisie-nom">Nom</label><input class="input" id="saisie-nom" maxlength="200">` : '')
+        + `<div class="hint" style="margin-top:10px">Les autres champs se saisiront dans la fiche de l'objet, une fois créé.</div>`;
+    hote.dataset.saisie = s.jeton;
+    s.formulaireMonte = true;
+    s.repli = true;
+    $('insp-foot').innerHTML = abandonner + outils + boutonEnregistrerRepli();
+}
+
+const CONSIGNES_MODIFICATION = {
+    Point: 'Cliquez sur la carte à la nouvelle position du point.',
+    LineString: 'Glissez un sommet pour le déplacer, un point milieu pour en insérer un ; clic droit sur un sommet pour le retirer ; glissez la ligne pour la déplacer entière. Les sommets s’accrochent aux objets proches.',
+    Polygon: 'Glissez un sommet pour le déplacer, un point milieu pour en insérer un ; clic droit sur un sommet pour le retirer ; glissez la surface pour la déplacer entière. Les sommets s’accrochent aux objets proches.',
+};
+
+/** Le panneau de modification de forme : ni fiche ni attributs, la forme seule. */
+function renderModificationForme(s, layer, famille) {
+    const g = famille === 'Point' ? s.geometrie : formeEnCours(s);
+    const sous = famille === 'Point' ? libellePoint(g) : libelleMesures(mesurerGeometrie(g), famille);
+    $('insp-head').innerHTML = `
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${escapeHtml(layer.name)}</div>
+        <div class="insp-title">Modifier la forme</div>
+        <div class="insp-sub">${sous}</div>`;
+    $('insp-tabs').innerHTML = '';
+    $('insp-body').innerHTML = `
+        <div class="hint">${CONSIGNES_MODIFICATION[famille] || CONSIGNES_MODIFICATION.Point}</div>
+        <div class="hint" style="margin-top:8px">Seule la forme sera écrite dans <strong>${escapeHtml(layer.sourceTable)}</strong> ; les attributs ne changent pas.</div>
+        ${famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : ''}`;
+    delete $('insp-body').dataset.saisie;
+    $('insp-foot').innerHTML = `<button class="btn btn-soft" style="flex:1" onclick="A.abandonnerSaisieObjet()">Abandonner</button>`
+        + (famille !== 'Point' ? `<button class="btn btn-soft" style="flex:1" onclick="A.gestePrecedent()" title="Défait le dernier déplacement, ajout ou retrait de sommet">Annuler le geste</button>` : '')
+        + `<button class="btn btn-dark" style="flex:2" id="forme-enregistrer" onclick="A.enregistrerForme()">Enregistrer la forme</button>`;
+}
+
+/**
+ * Fin d'une modification : relire la couche, rouvrir la fiche de l'objet, et
+ * garder de quoi défaire l'écriture tant qu'il reste sélectionné.
+ */
+async function terminerModification(layer, rowId, annulable) {
+    arreterTrace(_saisieObjet);
+    _saisieObjet = null;
+    effacerSaisie();
+    document.body.classList.remove('mode-creation');
+    if (map) map.getCanvas().style.cursor = '';
+    try {
+        await relireCouche(layer);
+    } catch (e) {
+        syncLayerSourceData(layer);
+        showToast('Forme enregistrée, mais la couche n’a pas pu être relue : ' + e.message, 'warning');
+    }
+    const [idx] = rangsDepuisRowIds(layer.geojson?.features, [rowId]);
+    if (idx != null) {
+        enterSelectionMode(layer.id, idx);
+        if (annulable) _derniereModification = { layerId: layer.id, rowId, ...annulable };
+        renderInspector();
+    } else {
+        renderInspector();
+    }
+}
+
+function boutonModifierForme(layer, feature) {
+    if (!modificationPossible(layer, feature, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) return '';
+    return `<button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.modifierForme()">Modifier la forme</button>`;
+}
+
+function boutonEnregistrerRepli() {
+    return `<button class="btn btn-dark" style="flex:2" id="saisie-enregistrer" onclick="A.enregistrerSaisieObjet()">Enregistrer l'objet</button>`;
+}
+
+/**
+ * Après l'écriture : relire la couche, puis ouvrir la fiche du nouvel objet,
+ * retrouvé par sa ligne — son rang dépend de l'ordre de la table.
+ */
+async function apresCreationObjet(layer, rowId) {
+    // Une création en appelle souvent une autre (on relève dix arbres, pas un) :
+    // la création se réarme sur la même couche, et le panneau garde de quoi
+    // défaire l'ajout précédent ou ouvrir sa fiche.
+    const serie = (_saisieObjet?.serie || 0) + 1;
+    arreterTrace(_saisieObjet);
+    _saisieObjet = null;
+    effacerSaisie();
+    document.body.classList.remove('mode-creation');
+    if (map) map.getCanvas().style.cursor = '';
+    try {
+        await relireCouche(layer);
+    } catch (e) {
+        showToast('Objet créé, mais la couche n’a pas pu être relue : ' + e.message, 'warning');
+    }
+    updateLegend();
+    if (STATE.currentModule === 'couches') renderLayersPanel('couches');
+    A.nouvelObjet(layer.id, { suite: { rowId, table: layer.sourceTable, serie } });
+}
+
+/** Le bandeau d'une série de créations : combien, et le dernier ajout, qu'on peut défaire ou ouvrir. */
+function bandeauSerie(s) {
+    if (!(s?.serie > 0) || s.modification) return '';
+    const n = s.serie;
+    const compte = `${n} objet${n > 1 ? 's' : ''} créé${n > 1 ? 's' : ''}`;
+    // Après « Annuler cet ajout », le compte reste, sans geste sur un ajout déjà défait.
+    if (!s.precedente) return `<div class="hint" style="margin-top:8px">${compte} dans cette série.</div>`;
+    return `<div class="hint" style="margin-top:8px">
+        <div>${compte} — dernier : ligne ${s.precedente.rowId}.</div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <button class="btn btn-soft" onclick="A.annulerDernierAjout()">Annuler cet ajout</button>
+            <button class="btn btn-soft" onclick="A.voirDernierObjet()">Voir sa fiche</button>
+        </div></div>`;
+}
+
+/** Le rappel « objet créé » ou « forme modifiée », avec le geste qui le défait. */
+function rappelCreation(layer, props) {
+    const m = _derniereModification;
+    if (m && m.layerId === layer?.id && props?._row_id === m.rowId) {
+        return `<div class="hint" style="margin-top:8px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <span>Forme modifiée à l’instant.</span>
+            <button class="btn btn-soft" onclick="A.annulerModification()">Annuler la modification</button></div>`;
+    }
+    const d = _derniereCreation;
+    if (!d || d.layerId !== layer?.id || props?._row_id !== d.rowId) return '';
+    return `<div class="hint" style="margin-top:8px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+        <span>Objet créé à l’instant.</span>
+        <button class="btn btn-soft" onclick="A.annulerCreation()">Annuler la création</button></div>`;
+}
+
 function renderObjectInspector() {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
     if (!layer) return;
@@ -5916,7 +7811,8 @@ function renderObjectInspector() {
     $('insp-head').innerHTML = `
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
-        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>`;
+        <div class="insp-sub">${count > 1 ? `${layer.name}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>
+        ${count === 1 && !view ? rappelCreation(layer, props) + boutonModifierForme(layer, f) : ''}`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
         `<button class="insp-tab ${_inspObjTab === t.cle ? 'active' : ''}"
             onclick="A.setInspObjTab('${String(t.cle).replace(/'/g, "\'")}')"
@@ -6029,6 +7925,9 @@ function setupInteraction() {
     let boxStart = null, boxEl = null, boxing = false, boxJustEnded = false;
 
     map.on('mousemove', (e) => {
+        // Pendant un tracé, terra-draw pose ses curseurs (fermeture, accroche).
+        if (_saisieObjet) { if (!_saisieObjet.trace) map.getCanvas().style.cursor = 'crosshair'; return; }
+        if (trajetPickMode) { map.getCanvas().style.cursor = 'crosshair'; return; }
         if (boxing || boxJustEnded || locationPickMode) return;
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
@@ -6037,7 +7936,10 @@ function setupInteraction() {
 
     map.on('click', (e) => {
         if (boxing || boxJustEnded) return;
+        // La création en cours possède les clics : en tête de la chaîne.
+        if (_saisieObjet) { onSaisieClic(e); return; }
         if (locationPickMode) { onLocationPick(e); return; }
+        if (trajetPickMode) { onTrajetPick(e); return; }
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
         if (!feats.length) {
@@ -6048,6 +7950,12 @@ function setupInteraction() {
         const layer = STATE.layers.find((l) => l.id === f.layer.id);
         if (!layer) return;
         const idx = f.properties?._idx ?? 0;
+
+        if (_storyPresenting && coucheDansSaisiesEtape(layer)) {
+            closeViewPopup();
+            enterSelectionMode(layer.id, idx);
+            return;
+        }
 
         // Lecture : popup attributs (pas d'inspecteur édition) — sauf quand la
         // scene a publie un formulaire sur cette couche. Le popup dirait les
@@ -6323,7 +8231,13 @@ async function onLocationPick(e) {
     } catch (e2) {}
 }
 function enterSelectionMode(layerId, idx) {
-    const enSaisie = coucheEnSaisie(STATE.layers.find((l) => l.id === layerId));
+    const coucheCliquee = STATE.layers.find((l) => l.id === layerId);
+    const enSaisie = coucheEnSaisie(coucheCliquee) || coucheDansSaisiesEtape(coucheCliquee);
+    if (_storyPresenting && _trajetSuivi) {
+        const deja = _trajetPause;
+        pauserSuiviTrajet();
+        if (!deja) renderStoryPresentation();
+    }
     // En lecture, la selection est refusee — sauf sur une couche dont la scene
     // a publie le formulaire : c'est tout l'objet du mode exploitation. Les
     // autres gardent le popup, qui montre sans permettre de corriger.
@@ -6348,7 +8262,7 @@ function enterSelectionMode(layerId, idx) {
     const layer = STATE.layers.find((l) => l.id === layerId);
     showToast(`Mode sélection : ${layer?.name || ''}`, 'info');
     afterSelectionChange();
-    if (idx != null) flyToFeature(layer, idx);
+    if (idx != null && !_storyPresenting) flyToFeature(layer, idx);
 }
 function exitSelectionMode() {
     document.body.classList.remove('mode-saisie');
@@ -6359,6 +8273,8 @@ function exitSelectionMode() {
     // objet — pour un reglage que personne n'a touche.
     if (layer && !CONFIG.viewMode) { saveLayerToGrist(layer, true); }
     STATE.selection = { mode: false, layerId: null, features: [], multiIndex: 0 };
+    _derniereCreation = null;
+    _derniereModification = null;
     $('map-frame').classList.remove('select-mode');
     $('selection-bar').classList.remove('open');
     clearHighlight();
@@ -6392,21 +8308,35 @@ function afterSelectionChange() {
  *
  * Chacune est donc filtree sur le type de geometrie qu'elle sait rendre.
  */
+// L'objet COURANT — celui dont la fiche est ouverte, en revue ◀ ▶ ou dans une
+// sélection multiple — ressort sur les autres sélectionnés : plus opaque, trait
+// plus épais, dessiné par-dessus. Tous au même halo, on ne savait pas lequel
+// on était en train de modifier.
+const EST_COURANT = ['==', ['get', '_courant'], true];
 const HALO_SELECTION = [
     { id: 'sel-hl-fill', type: 'fill', types: ['Polygon', 'MultiPolygon'],
-      paint: { 'fill-color': '#C44536', 'fill-opacity': 0.18 } },
+      paint: { 'fill-color': '#C44536', 'fill-opacity': ['case', EST_COURANT, 0.32, 0.08] } },
     { id: 'sel-hl-line', type: 'line', types: ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'],
-      paint: { 'line-color': '#C44536', 'line-width': 3 } },
+      paint: { 'line-color': '#C44536', 'line-width': ['case', EST_COURANT, 4, 1.5],
+               'line-opacity': ['case', EST_COURANT, 1, 0.55] } },
     { id: 'sel-hl-ring', type: 'circle', types: ['Point', 'MultiPoint'],
-      paint: { 'circle-radius': 16, 'circle-color': 'rgba(196,69,54,0.08)',
-               'circle-stroke-color': '#C44536', 'circle-stroke-width': 3 } },
+      paint: { 'circle-radius': ['case', EST_COURANT, 18, 11],
+               'circle-color': ['case', EST_COURANT, 'rgba(196,69,54,0.22)', 'rgba(196,69,54,0.06)'],
+               'circle-stroke-color': '#C44536', 'circle-stroke-width': ['case', EST_COURANT, 4, 1.5],
+               'circle-stroke-opacity': ['case', EST_COURANT, 1, 0.55] } },
 ];
 
 function updateHighlight() {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
     if (!layer) return;
-    const data = { type: 'FeatureCollection', features: STATE.selection.features.map((i) => layer.geojson.features[i]).filter(Boolean) };
-    if (!map.getSource('sel-hl')) map.addSource('sel-hl', { type: 'geojson', data });
+    const sel = STATE.selection.features;
+    const courant = sel.length > 1 ? sel[STATE.selection.multiIndex] : sel[0];
+    // Copies marquées, le courant en dernier : il se dessine par-dessus les autres.
+    const features = sel.filter((i) => i !== courant).concat(courant != null ? [courant] : [])
+        .map((i) => layer.geojson.features[i]).filter(Boolean)
+        .map((f, k, tout) => ({ ...f, properties: { ...(f.properties || {}), _courant: k === tout.length - 1 && courant != null } }));
+    const data = { type: 'FeatureCollection', features };
+    if (!map.getSource('sel-hl')) map.addSource('sel-hl', optionsSourceGeojson(data));
     else map.getSource('sel-hl').setData(data);
     for (const h of HALO_SELECTION) {
         if (map.getLayer(h.id)) continue;
@@ -6421,9 +8351,17 @@ function clearHighlight() {
     for (const h of HALO_SELECTION) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
     if (map.getSource('sel-hl')) map.removeSource('sel-hl');
 }
+/**
+ * Amène un objet à la vue : un point au centre de la zone visible, une ligne ou
+ * une surface dans la zone visible. Elle ne suivait que les points : en revue
+ * ◀ ▶ d'une couche de surfaces, l'objet courant sortait de l'écran sans que la
+ * caméra bouge (mesuré : 5/30 entièrement hors champ).
+ */
 function flyToFeature(layer, idx) {
-    const f = layer?.geojson?.features?.[idx];
-    if (f?.geometry?.type === 'Point') map.flyTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 17), duration: 600 });
+    const g = layer?.geojson?.features?.[idx]?.geometry;
+    if (!g || !map) return;
+    if (g.type === 'Point') viserVol({ center: g.coordinates, zoom: Math.max(map.getZoom(), 17), duration: 600 });
+    else garderVisible(g);
 }
 
 // Feature editing
@@ -6554,20 +8492,8 @@ function makeLayer(name, geomType, geojson, category, modelId) {
  * utile. Les lots donnent aussi un progres visible plutot qu'un long gel.
  */
 function inferGristType(vals) {
-    let seen = false, allBool = true, allInt = true, allNum = true;
-    for (const v of vals) {
-        if (v == null || v === '') continue; seen = true;
-        if (typeof v !== 'boolean') allBool = false;
-        const n = Number(v);
-        const isNum = (typeof v === 'number') || (typeof v === 'string' && v.trim() !== '' && isFinite(n));
-        if (!isNum) { allNum = false; allInt = false; }
-        else if (!Number.isInteger(n)) allInt = false;
-    }
-    if (!seen) return 'Text';
-    if (allBool) return 'Bool';
-    if (allInt) return 'Int';
-    if (allNum) return 'Numeric';
-    return 'Text';
+    // Une chaîne qui ressemble à un nombre reste du texte : voir lib/schema-grist.js.
+    return typeColonneDepuisValeurs(vals);
 }
 
 function sanitizeId(s) {
@@ -6593,11 +8519,11 @@ async function entableLayer(layer) {
     const is3D = layer.style?.mode === 'library' || layer.style?.mode === 'custom';
     const isPt = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
     const colDefs = [
-        { id: 'geometry_json', fields: { label: 'Géométrie (GeoJSON)', type: 'Text' } },
-        ...attrCols.map((n) => ({ id: colId[n], fields: { label: n, type: inferGristType(feats.map((f) => f.properties?.[n])) } })),
-        ...Object.keys(ovUsed).map((cn) => ({ id: cn, fields: { label: cn, type: 'Numeric' } })),
+        { id: 'geometry_json', label: 'Géométrie (GeoJSON)', type: 'Text' },
+        ...attrCols.map((n) => ({ id: colId[n], label: n, type: inferGristType(feats.map((f) => f.properties?.[n])) })),
+        ...Object.keys(ovUsed).map((cn) => ({ id: cn, label: cn, type: 'Numeric' })),
     ];
-    if (is3D) colDefs.push({ id: 'model_id', fields: { label: 'model_id', type: 'Text' } });
+    if (is3D) colDefs.push({ id: 'model_id', label: 'model_id', type: 'Text' });
     const tableName = sanitizeId('Atlas_' + layer.name);
     const addRes = await grist.docApi.applyUserActions([['AddTable', tableName, colDefs]]);
     const actualTable = addRes?.retValues?.[0]?.table_id || tableName;
@@ -6645,6 +8571,158 @@ function finalizeNewLayer(layer) {
  *
  * @returns {boolean} vrai si le cadrage a eu lieu.
  */
+/**
+ * La marge du cadrage, bornée à la carte réelle. Avec le module et la fiche
+ * ouverts, la carte ne fait qu'une centaine de pixels de large : 80 px de
+ * chaque côté ne laissaient plus de place, et MapLibre refusait le cadrage sans
+ * rien dire — « Zoomer sur la couche » annonçait un zoom qui n'avait pas lieu
+ * (constaté le 26/09/2026).
+ */
+function margeCadrage() {
+    const c = map?.getContainer?.();
+    // Mesurée sur ce qui reste visible : sur téléphone, la feuille recouvre le
+    // bas de la carte et entre dans la marge de la caméra (`margesActuelles`).
+    const p = (typeof map?.getPadding === 'function' && map.getPadding()) || {};
+    const largeur = (c?.clientWidth || 0) - (p.left || 0) - (p.right || 0);
+    const hauteur = (c?.clientHeight || 0) - (p.top || 0) - (p.bottom || 0);
+    const cote = Math.min(largeur, hauteur);
+    return Math.max(0, Math.min(80, Math.floor(cote / 5)));
+}
+
+// ------------------------------------------------------------
+// Visée de caméra et zone visible (audit des panneaux, 26/09/2026)
+// ------------------------------------------------------------
+// MapLibre fige au départ d'un vol le point d'écran où poser la cible. Un
+// panneau qui s'ouvre ou se ferme en route décalait donc l'arrivée de la
+// moitié de sa largeur (mesuré : +180 px à l'ouverture de la fiche, −130 px en
+// fermant le module pendant « Zoomer sur la couche »). La dernière visée est
+// retenue, et relancée depuis la position courante quand la carte change de
+// taille avant l'arrivée.
+
+let _visee = null;
+let _tailleCarte = null;
+
+function viserCadre(bounds, opts = {}) {
+    _visee = { methode: 'fitBounds', cible: bounds, opts, debut: performance.now(), duree: opts.duration ?? 800 };
+    map.fitBounds(bounds, opts);
+}
+
+function viserVol(opts = {}) {
+    _visee = { methode: 'flyTo', opts, debut: performance.now(), duree: opts.duration ?? 1200 };
+    map.flyTo(opts);
+}
+
+/** Relance la visée en cours, avec le temps qu'il lui restait. Rend vrai si elle l'a été. */
+function relancerVisee() {
+    const v = _visee;
+    if (!v || !map?.isMoving()) return false;
+    const reste = dureeRestante({ debut: v.debut, duree: v.duree, maintenant: performance.now() });
+    if (reste < 60) return false;
+    if (v.methode === 'fitBounds') viserCadre(v.cible, { ...v.opts, padding: margeCadrage(), duration: reste });
+    else viserVol({ ...v.opts, duration: reste });
+    return true;
+}
+
+/**
+ * Ce qui recouvre la carte, comme marge de caméra : sur téléphone, la feuille
+ * ouverte et la barre du bas ; en lecture de récit, la bulle. Au bureau les
+ * panneaux rétrécissent la carte au lieu de la recouvrir : marge nulle.
+ */
+function margesActuelles({ bulle = null } = {}) {
+    if (!map) return { top: 0, right: 0, bottom: 0, left: 0 };
+    const c = map.getContainer();
+    const tel = surTelephone();
+    const feuilles = [];
+    if (tel && Feuille) {
+        if ($('module-panel')?.classList.contains('open')) feuilles.push(Feuille.ANCRAGES[feuillePosition] ?? 0);
+        if ($('inspector')?.classList.contains('open')) feuilles.push(Feuille.ANCRAGES[fichePosition] ?? 0);
+    }
+    const barre = tel ? ($('mobile-nav')?.getBoundingClientRect().height || 0) : 0;
+    const b = bulle ?? (_storyPresenting ? mesurerEtageRecit() : 0);
+    return margesCarte({ hauteurCarte: c.clientHeight, hauteurEcran: window.innerHeight, feuilles, barreBas: barre, bulle: b });
+}
+
+/**
+ * Pose la marge de caméra quand ce qui recouvre la carte change. Pendant une
+ * visée, la marge est posée d'un coup et la visée relancée : l'objet arrive
+ * directement dans la zone visible, sans second mouvement.
+ */
+/**
+ * La marge demandée en dernier. On compare à elle, pas à la marge courante :
+ * pendant la transition de 250 ms, la marge courante est encore l'ancienne.
+ * Toucher un onglet fiche ouverte fermait la fiche (marge 56, en route) puis
+ * ouvrait le module (marge 495) — égale à la marge courante, jugée inutile, et
+ * la carte finissait à 56 sous une feuille de 439 px (mesuré le 26/09/2026).
+ */
+let _margesVisees = null;
+const memesMarges = (a, b) => !!a && !!b && ['top', 'right', 'bottom', 'left'].every((k) => Math.round(a[k] || 0) === Math.round(b[k] || 0));
+
+function appliquerMarges() {
+    if (!map || typeof map.getPadding !== 'function' || _storyPresenting) return;
+    const m = margesActuelles();
+    const reference = _margesVisees || map.getPadding();
+    if (memesMarges(reference, m) && memesMarges(map.getPadding(), m)) return;
+    if (memesMarges(_margesVisees, m) && map.isMoving()) return;
+    _margesVisees = m;
+    if (_visee && map.isMoving()) {
+        const v = _visee;
+        map.setPadding(m);
+        _visee = v;
+        relancerVisee();
+        return;
+    }
+    map.easeTo({ padding: m, duration: 250 });
+}
+
+function suivreTailleCarte() {
+    const c = map.getContainer();
+    const taille = `${c.clientWidth}x${c.clientHeight}`;
+    const change = _tailleCarte !== null && taille !== _tailleCarte;
+    _tailleCarte = taille;
+    if (!change) return;
+    if (!relancerVisee()) appliquerMarges();
+}
+
+/**
+ * Amène une ligne ou une surface dans la zone visible, du plus petit
+ * déplacement — ou la cadre si elle ne tient pas. Ne fait rien si elle est déjà
+ * visible : un clic ne doit pas faire bouger une carte qui montre déjà ce
+ * qu'on vise. Au bureau, la fiche qui s'ouvre retire 360 px à droite : un objet
+ * cliqué près du bord passait dessous.
+ */
+function garderVisible(geometrie) {
+    if (!map || !geometrie?.coordinates) return;
+    // Une visée en cours vise déjà l'objet (recherche, « Zoomer ») : ne pas la couper.
+    if (_visee && map.isMoving() && dureeRestante({ debut: _visee.debut, duree: _visee.duree, maintenant: performance.now() }) > 0) return;
+    const coords = [];
+    const collecter = (c) => {
+        if (!Array.isArray(c)) return;
+        if (typeof c[0] === 'number') { coords.push(c); return; }
+        c.forEach(collecter);
+    };
+    collecter(geometrie.coordinates);
+    if (!coords.length) return;
+    const pas = Math.max(1, Math.ceil(coords.length / 2000));
+    const emprise = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    const bounds = new maplibregl.LngLatBounds();
+    for (let i = 0; i < coords.length; i += pas) {
+        const [lng, lat] = coords[i];
+        bounds.extend([lng, lat]);
+        const p = map.project([lng, lat]);
+        emprise.minX = Math.min(emprise.minX, p.x); emprise.maxX = Math.max(emprise.maxX, p.x);
+        emprise.minY = Math.min(emprise.minY, p.y); emprise.maxY = Math.max(emprise.maxY, p.y);
+    }
+    const c = map.getContainer();
+    const r = deplacementPourVoir({
+        emprise,
+        carte: { largeur: c.clientWidth, hauteur: c.clientHeight },
+        marges: map.getPadding(),
+        marge: Math.min(24, margeCadrage()),
+    });
+    if (r.cadrer) viserCadre(bounds, { padding: margeCadrage(), maxZoom: map.getZoom(), duration: 600 });
+    else if (r.dx || r.dy) map.panBy([r.dx, r.dy], { duration: 400 });
+}
+
 function fitToLayer(layer) {
     const bounds = new maplibregl.LngLatBounds();
     let any = false;
@@ -6654,11 +8732,11 @@ function fitToLayer(layer) {
         coords.forEach((c) => { if (Array.isArray(c) && typeof c[0] === 'number') { bounds.extend(c); any = true; } });
     });
     if (any) {
-        map.fitBounds(bounds, { padding: 80, maxZoom: 18, duration: 800 });
+        viserCadre(bounds, { padding: margeCadrage(), maxZoom: 18, duration: 800 });
         return true;
     }
     if (layer._bboxDeclaree) {
-        map.fitBounds(layer._bboxDeclaree, { padding: 80, maxZoom: 18, duration: 800 });
+        viserCadre(layer._bboxDeclaree, { padding: margeCadrage(), maxZoom: 18, duration: 800 });
         return true;
     }
     return false;
@@ -6694,6 +8772,27 @@ async function processFile(file) {
         const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
         if (n) showToast(`${n} élément${n > 1 ? 's' : ''} importé${n > 1 ? 's' : ''}`, 'success');
     } catch (e) { hideLoading(); showToast('Fichier illisible : ' + e.message, 'error'); }
+}
+
+/**
+ * Relit une couche depuis sa table, quel que soit son producteur, et
+ * resélectionne par `_row_id` ce qui l'était (`lignes`, lues AVANT la relecture).
+ * @returns {Promise<number>} le nombre d'objets relus
+ */
+async function relireCouche(l, lignes = null) {
+    if (l.source === 'qgis2grist') {
+        const ml = (_sceneManifest?.layers || []).find((x) => (x.source?.table || x.id) === l.sourceTable);
+        await refreshLayerFromTable(grist.docApi, l, _widgetConfig, ml);
+        if (lignes) apresRelecture(l, lignes);
+        syncFeatureColorsFromSymbolization(l);
+        applyControls(l);
+        syncLayerSourceData(l);
+        Models3D.scheduleBuild();
+        return l.geojson?.features?.length || 0;
+    }
+    const n = await reloadGenericTableLayer(l, true);
+    if (lignes) apresRelecture(l, lignes);
+    return n;
 }
 
 async function reloadGenericTableLayer(layer, force) {
@@ -6743,12 +8842,12 @@ async function linkTableFromGrist(tableId, geomCol, data) {
 // ============================================================
 const TABLE_SCHEMAS = {
     Maquette_Layers: [
-        { id: 'Name', fields: { label: 'Nom', type: 'Text' } },
-        { id: 'Color', fields: { label: 'Couleur', type: 'Text' } },
-        { id: 'Visible', fields: { label: 'Visible', type: 'Bool' } },
-        { id: 'GeomType', fields: { label: 'Type', type: 'Text' } },
-        { id: 'StyleJSON', fields: { label: 'Style (JSON)', type: 'Text' } },
-        { id: 'GeoJSON', fields: { label: 'GeoJSON', type: 'Text' } },
+        { id: 'Name', label: 'Nom', type: 'Text' },
+        { id: 'Color', label: 'Couleur', type: 'Text' },
+        { id: 'Visible', label: 'Visible', type: 'Bool' },
+        { id: 'GeomType', label: 'Type', type: 'Text' },
+        { id: 'StyleJSON', label: 'Style (JSON)', type: 'Text' },
+        { id: 'GeoJSON', label: 'GeoJSON', type: 'Text' },
     ],
 };
 /**
@@ -6809,6 +8908,7 @@ async function syncStoryFromGrist() {
     // 'Atlas_Story'` a chaque chargement d'un document sans recit.
     const { recit, lignesBrutes } = await chargerRecitGrist(grist.docApi);
     STATE.story = recit;
+    rafraichirTrajet();
     refreshStoryNavChrome();
     if (CONFIG.viewMode) return;
     // Plus de lignes que d'etapes : `normalizeStoryRows` en a ecarte des
@@ -6825,7 +8925,13 @@ function assertCanWrite(actionLabel) {
 }
 
 function enterViewModeOnWriteFail(err) {
-    if (CONFIG.viewMode) return;
+    if (CONFIG.viewMode) return false;
+    // Seul un refus de droits dit « vous ne pouvez pas écrire ». Une colonne
+    // manquante, une table renommée, une coupure réseau ne le disent pas :
+    // basculer la session en lecture sur ces erreurs-là retirait l'édition à
+    // un éditeur, pour toute la session, à cause d'un défaut d'un seul geste.
+    // L'appelant affiche l'erreur ; la session reste en édition.
+    if (!isWriteAclError(err)) return false;
     CONFIG.viewMode = true;
     // Un refus franc vaut pour toute la session : continuer d'offrir la saisie
     // ferait remplir un formulaire pour rien.
@@ -6833,6 +8939,7 @@ function enterViewModeOnWriteFail(err) {
     applyViewModeChrome();
     const msg = err?.message || String(err || '');
     showToast('Écriture refusée — passage en lecture' + (msg ? ` (${msg})` : ''), 'warning');
+    return true;
 }
 
 /**
@@ -6841,11 +8948,19 @@ function enterViewModeOnWriteFail(err) {
  * Le jeton d'accès Grist ne livre qu'un `userId` : sans annuaire dans le
  * document, on ne peut afficher ni nom ni initiales. L'information utile et
  * disponible, c'est le droit dont on dispose sur ce document.
+ *
+ * Quand l'écriture est réellement autorisée, l'avatar devient la bascule
+ * session lecture ↔ édition (essayage : `viewMode` bascule, `peutSaisir` non).
  */
 function updateUserBadge() {
     const el = $('user-badge');
     if (!el) return;
     const lecture = !!CONFIG.viewMode;
+    const bascule = peutProposerBasculeLectureEdition({
+        peutSaisir: CONFIG.peutSaisir,
+        gristReady: CONFIG.grist.ready,
+        sceneExterne: CONFIG.sceneExterne,
+    });
     // Trois etats, pas deux : « je ne peux rien ecrire » et « je peux remplir
     // les formulaires publies » sont deux situations differentes, et c'est ici
     // qu'un utilisateur vient chercher ce qu'il a le droit de faire.
@@ -6854,6 +8969,36 @@ function updateUserBadge() {
         : 'Édition autorisée';
     const u = CONFIG.grist.user;
     el.classList.toggle('ro', lecture);
+    el.classList.toggle('bascule-session', bascule);
+    const badgeLecture = $('view-mode-badge');
+    if (badgeLecture) {
+        badgeLecture.classList.toggle('bascule-session', bascule && lecture);
+        if (bascule && lecture) {
+            badgeLecture.setAttribute('role', 'button');
+            badgeLecture.setAttribute('tabindex', '0');
+            badgeLecture.title = titreBasculeLectureEdition({ viewMode: true });
+            badgeLecture.setAttribute('aria-label', badgeLecture.title);
+        } else {
+            badgeLecture.removeAttribute('role');
+            badgeLecture.removeAttribute('tabindex');
+            badgeLecture.removeAttribute('aria-label');
+            badgeLecture.removeAttribute('title');
+        }
+    }
+    if (bascule) {
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+        const tip = titreBasculeLectureEdition({ viewMode: lecture });
+        el.title = tip;
+        el.setAttribute('aria-label', tip);
+        // En essayage : 👁 (ou initiales) — le droit réel reste « éditeur qui
+        // regarde en lecture », mais l'infobulle dit le geste de bascule.
+        el.textContent = u?.initiales || (lecture ? '👁' : '✎');
+        return;
+    }
+    el.removeAttribute('role');
+    el.removeAttribute('tabindex');
+    el.removeAttribute('aria-label');
     if (u?.initiales) {
         // Identité résolue : on la montre, le droit passe en infobulle.
         el.textContent = u.initiales;
@@ -6862,6 +9007,49 @@ function updateUserBadge() {
         // Rien de résolu : afficher le droit, jamais une identité inventée.
         el.textContent = lecture ? '👁' : '✎';
         el.title = droit + (CONFIG.grist.userId ? ` · utilisateur ${CONFIG.grist.userId}` : '');
+    }
+}
+
+/**
+ * Essayage session : chrome lecture ↔ édition, sans toucher à `peutSaisir`.
+ * Contrairement à `enterViewModeOnWriteFail`, ce n'est pas une privation.
+ */
+function basculerLectureEditionSession() {
+    if (!peutProposerBasculeLectureEdition({
+        peutSaisir: CONFIG.peutSaisir,
+        gristReady: CONFIG.grist.ready,
+        sceneExterne: CONFIG.sceneExterne,
+    })) return;
+    const next = prochainEtatBasculeLectureEdition({ viewMode: CONFIG.viewMode });
+    CONFIG.viewMode = next.viewMode;
+    applyViewModeChrome();
+    updateMobileLayout();
+}
+
+function wireBasculeLectureEdition() {
+    const activer = (e) => {
+        if (e.type === 'keydown') {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault();
+        }
+        // Ne réagir que si l'élément est réellement actionnable (évite un clic
+        // sur le badge Lecture quand la bascule n'est pas proposée).
+        const cible = e.currentTarget;
+        if (!cible?.classList?.contains('bascule-session')) return;
+        // Le badge Lecture vit dans `.brand` : sans ça, le clic ouvrirait le
+        // menu principal de l'application.
+        e.stopPropagation?.();
+        basculerLectureEditionSession();
+    };
+    const badge = $('user-badge');
+    if (badge) {
+        badge.addEventListener('click', activer);
+        badge.addEventListener('keydown', activer);
+    }
+    const lecture = $('view-mode-badge');
+    if (lecture) {
+        lecture.addEventListener('click', activer);
+        lecture.addEventListener('keydown', activer);
     }
 }
 
@@ -6983,6 +9171,8 @@ function poserPanneau(p, nom) {
     // Repliee, une feuille garde sa bordure et son ombre : un trait d'un pixel
     // au-dessus de la barre du bas, qu'on prend pour un defaut d'affichage.
     p.classList.toggle('feuille-repliee', nom === 'fermee');
+    // La caméra vise ce que la feuille laisse visible.
+    appliquerMarges();
 }
 
 function poserFeuille(nom) {
@@ -7155,6 +9345,10 @@ function finirGlissement(p, poser) {
 function updateMobileLayout() {
     const narrow = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
     document.body.classList.toggle('mobile-layout', narrow);
+    // Précharger la mécanique des feuilles : sans elle, le premier toucher d'un
+    // onglet attendait son chargement, et un second toucher rapide tombait dans
+    // le vide (menu « Plus » pas encore branché).
+    if (narrow) chargerFeuille().catch(() => {});
     CONFIG.light3d = shouldEnableLight3d({
         viewMode: CONFIG.viewMode,
         no3dParam: parseNo3dParam(typeof location !== 'undefined' ? location.search : ''),
@@ -7164,6 +9358,8 @@ function updateMobileLayout() {
     if (CONFIG.light3d && typeof Models3D !== 'undefined') {
         Models3D._disabled = true;
     }
+    // La barre du bas apparaît ou disparaît : la caméra vise ce qui reste.
+    if (map?.loaded?.()) appliquerMarges();
 }
 
 /**
@@ -7202,6 +9398,19 @@ async function cablerMenuPrincipal() {
     });
 }
 
+/**
+ * Allume l'onglet du module ouvert. Un module sans onglet (Lieu, Soleil, Vues,
+ * Formulaires, Réglages) vient de « Plus » : c'est lui qui s'allume. Sinon la
+ * barre n'affichait rien d'actif, et l'on ne savait plus d'où venait la
+ * feuille ouverte.
+ */
+function allumerOngletMobile(module) {
+    const onglets = [...document.querySelectorAll('#mobile-nav [data-mobile-tab]')];
+    const direct = onglets.some((b) => b.dataset.mobileTab === module);
+    const cible = !module ? null : (direct ? module : 'plus');
+    onglets.forEach((b) => b.classList.toggle('active', b.dataset.mobileTab === cible));
+}
+
 /** La feuille des modules que la barre du bas ne peut pas porter. */
 function ouvrirFeuilleModules() {
     const f = $('mobile-plus');
@@ -7210,9 +9419,7 @@ function ouvrirFeuilleModules() {
     const fermer = () => {
         f.hidden = true;
         // L'onglet « Plus » ne reste pas actif : il ouvre, il ne selectionne pas.
-        document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((b) => {
-            b.classList.toggle('active', b.dataset.mobileTab === STATE.currentModule);
-        });
+        allumerOngletMobile(STATE.currentModule);
     };
     f.querySelector('.mp-fond').onclick = fermer;
     f.querySelectorAll('[data-module-plus]').forEach((b) => {
@@ -7249,7 +9456,10 @@ function wireMobileNav() {
                 ongletActif: actif, onglet: tab, position: feuillePosition,
             }) === 'fermee') {
                 closeModulePanel();
-                A.closeInspector?.();
+                // Une création en cours n'est pas abandonnée par un onglet : sa
+                // fiche revient (`closeModulePanel` la rend). Seule une fiche
+                // d'objet se referme avec la feuille.
+                if (!_saisieObjet) A.closeInspector?.();
                 return;
             }
             document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((b) => {
@@ -7591,6 +9801,7 @@ async function monterSceneExterne(manifest) {
             if (typeof ms.shadows === 'boolean') STATE.settings.shadows = ms.shadows;
             if (typeof ms.sky === 'boolean') STATE.settings.sky = ms.sky;
             if (Number.isFinite(ms.timeOfDay)) STATE.settings.timeOfDay = ms.timeOfDay;
+            appliquerHorlogeDeclaree(horlogeDepuisReglages(ms));
             if (typeof ms.terrain3D === 'boolean') STATE.settings.terrain3D = ms.terrain3D;
             // Le relief se déclare entier : sa source et son facteur. Posés avant
             // le montage, ils sont lus par `addTerrainSource` au premier style.
@@ -7599,8 +9810,27 @@ async function monterSceneExterne(manifest) {
                 STATE.settings.terrainExaggeration = ms.terrainExaggeration;
             }
         }
+        // Les contrôles offerts au lecteur (soleil et date, vue, fonds). Un
+        // document les tient dans ses préférences ; une scène externe n'avait
+        // aucun moyen de les déclarer — un lecteur ne pouvait donc pas passer
+        // à la nuit, ce qui retire tout l'intérêt d'une scène d'éclairage.
+        const vcDecl = manifest.viewer_controls || manifest.viewerControls || ms?.viewer_controls;
+        if (Array.isArray(vcDecl)) STATE.viewerControls = parseViewerControls(vcDecl);
 
-        mountLoadedLayers(boundsFromVisibleLayers(layers) || rawBounds);
+        // Le cadrage `camera` que la scène déclare l'emporte sur l'emprise des
+        // données, et se pose d'un saut (`jumpTo`) : il n'était pas lu, et le
+        // `fitBounds` animé de repli était coupé par le `setStyle` du fond
+        // ci-dessous — la scène s'ouvrait au centre par défaut (vérifié le
+        // 24/09/2026, scène d'essai du Jarret ouverte sur le Vieux-Port).
+        // Une caméra de session proche des données (rechargement après
+        // navigation) garde la main, comme pour le cadrage sur l'emprise.
+        const emprise = boundsFromVisibleLayers(layers) || rawBounds;
+        const camDecl = cameraDeclaree(manifest);
+        if (camDecl && map && !_initialViewportApplied && (!emprise || shouldAutoFitBounds(emprise))) {
+            map.jumpTo(camDecl);
+            _initialViewportApplied = true;
+        }
+        mountLoadedLayers(emprise);
         applyLabelsVisibility();
         updateLighting();
         // Le fond du manifeste se pose **tout de suite**, pas au premier
@@ -7665,7 +9895,9 @@ function startSceneManifestPolling() {
         getManifest: () => _sceneManifest,
         intervalMs: CONFIG.pollIntervalMs,
         isPaused: () => _syncPaused || dirty || _storyPresenting,
-        onLayerUpdated(layer) {
+        avantMiseAJour: (layer) => lignesSelectionnees(layer),
+        onLayerUpdated(layer, lignes) {
+            apresRelecture(layer, lignes);
             if (!mapStyleUsable()) return;
             syncFeatureColorsFromSymbolization(layer, sequentialPaletteForSym(initSymbolization(layer).color, layer));
             if (_storyPresenting && STATE.story[_storyIdx]?.state) {
@@ -7819,8 +10051,7 @@ async function saveLayerToGrist(layer, silent) {
             // la scène : sans sa ligne, elle disparaissait au rechargement.
             if (ligneInventaireRequise(layer)) await ecrireLigneInventaire(layer);
             if (!silent) showToast(`Apparence enregistrée · ${layer.name}`, 'success');
-            dirty = false;
-            $('app-header')?.classList.remove('dirty');
+            marquerEnregistre();
         } catch (e) {
             enterViewModeOnWriteFail(e);
             if (!silent) showToast('Grist : ' + e.message, 'error');
@@ -8225,7 +10456,12 @@ const A = {
         if (!assertCanWrite('retirer un formulaire')) return;
         const couche = STATE.layers.find((l) => l.id === layerId);
         const vise = couche && formulairesDeLaCouche(couche, { avecRetires: true }).find((f) => f.id === formId);
-        if (!vise || !formulaireRetirable(vise)) return;
+        if (!vise) return;
+        // Remettre est toujours permis ; retirer, sauf le dernier en place.
+        const garde = retirer
+            ? raisonNonRetirable(vise, formulairesDeLaCouche(couche, { avecRetires: true }))
+            : null;
+        if (garde) { showToast(`Impossible de retirer « ${vise.titre} » : ${garde}`, 'error'); return; }
         const r = reglagesFormulaire(couche);
         const retires = new Set(r.retires);
         if (retirer) retires.add(formId); else retires.delete(formId);
@@ -8357,6 +10593,382 @@ const A = {
         if (STATE.currentModule !== 'couches') openModule('couches');
         else { renderLayersPanel('couches'); renderInspector(); }
     },
+    /** Arme la création d'un objet dans une couche : le prochain clic sur la carte pose le point. */
+    nouvelObjet(layerId, { suite = null } = {}) {
+        const layer = STATE.layers.find((l) => l.id === layerId);
+        const possible = creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) });
+        if (!possible.ok) { showToast(possible.raison, 'warning'); return; }
+        if (_storyPresenting) { showToast('Quittez la lecture du récit pour créer un objet', 'warning'); return; }
+        // État exclusif : on sort de tout ce qui écoute aussi les clics.
+        if (trajetPickMode) annulerChoixTrajet();
+        locationPickMode = false;
+        if (STATE.selection.mode) exitSelectionMode();
+        clearHighlight();
+        inspectorUserClosed = false;
+        _saisieObjet = {
+            layerId, geometrie: null, creation: { cellules: null },
+            formulaireMonte: false, enCours: false, jeton: String(Date.now()),
+            // Suite d'une série : le dernier ajout, et combien de créés.
+            precedente: suite ? { rowId: suite.rowId, table: suite.table } : null,
+            serie: suite ? suite.serie : 0,
+        };
+        _derniereCreation = null;
+        document.body.classList.add('mode-creation');
+        const famille = familleGeometrie(layer.geometryType);
+        if (map && famille === 'Point') map.getCanvas().style.cursor = 'crosshair';
+        if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
+        renderSaisieObjet();
+        openInspectorPanel();
+        const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
+            : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
+        // En série, « Objet créé » vient d'être dit : on n'ajoute que la suite.
+        showToast(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`, 'info');
+        if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
+    },
+    /** Retire la ligne du dernier objet de la série ; la création en cours continue. */
+    async annulerDernierAjout() {
+        const s = _saisieObjet;
+        const layer = STATE.layers.find((l) => l.id === s?.layerId);
+        const p = s?.precedente;
+        if (!p || !layer) return;
+        if (!assertCanWrite('annuler l’ajout')) return;
+        const action = actionInverse(['AddRecord', p.table, null, {}], p.rowId);
+        try {
+            await grist.docApi.applyUserActions([action]);
+        } catch (e) {
+            enterViewModeOnWriteFail(e);
+            showToast('Grist refuse de retirer la ligne : ' + e.message, 'error');
+            return;
+        }
+        if (_saisieObjet !== s) return;
+        s.precedente = null;
+        s.serie = Math.max(0, (s.serie || 1) - 1);
+        try { await relireCouche(layer); } catch (e) { /* la ligne est retirée ; la carte se relira au prochain rafraîchissement */ }
+        updateLegend();
+        renderSaisieObjet();
+        showToast(`Ajout annulé — ligne ${p.rowId} retirée de ${p.table}`, 'info');
+    },
+    /** Termine la série et ouvre la fiche du dernier objet créé. */
+    voirDernierObjet() {
+        const s = _saisieObjet;
+        const layer = STATE.layers.find((l) => l.id === s?.layerId);
+        const p = s?.precedente;
+        if (!p || !layer) return;
+        if (s.geometrie || formeEnCours(s)) {
+            showToast('Un objet est en cours : enregistrez-le ou abandonnez-le d’abord', 'warning');
+            return;
+        }
+        quitterSaisieObjet();
+        const [idx] = rangsDepuisRowIds(layer.geojson?.features, [p.rowId]);
+        if (idx == null) return;
+        enterSelectionMode(layer.id, idx);
+        _derniereCreation = { layerId: layer.id, rowId: p.rowId, table: p.table };
+        renderInspector();
+    },
+    /**
+     * Ouvre la forme de l'objet sélectionné dans l'éditeur.
+     *
+     * Les cellules de géométrie sont relues dans Grist à l'ouverture : c'est ce
+     * qu'« Annuler la modification » réécrira à l'identique, et ce contre quoi
+     * un changement venu d'ailleurs sera détecté avant d'écrire.
+     */
+    async modifierForme() {
+        const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId);
+        const idx = STATE.selection.features[STATE.selection.multiIndex || 0];
+        const f = layer?.geojson?.features?.[idx];
+        const possible = modificationPossible(layer, f, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) });
+        if (!possible.ok) { showToast(possible.raison, 'warning'); return; }
+        if (_storyPresenting) { showToast('Quittez la lecture du récit pour modifier une forme', 'warning'); return; }
+        const rowId = f.properties._row_id;
+        let ligne;
+        try {
+            ligne = ligneDepuisTable(await grist.docApi.fetchTable(layer.sourceTable), rowId);
+        } catch (e) {
+            showToast('Lecture de la ligne impossible : ' + e.message, 'error');
+            return;
+        }
+        if (!ligne) { showToast('Cette ligne n’existe plus dans Grist : rafraîchissez la couche', 'warning'); return; }
+        const famille = familleGeometrie(layer.geometryType);
+        const depart = formeValidee(f.geometry, layer.geometryType);
+        if (!depart.ok) { showToast('Forme actuelle invalide : ' + depart.erreur, 'warning'); return; }
+        if (aDesAltitudes(f.geometry)) showToast('Cet objet porte des altitudes : elles seront perdues à l’enregistrement', 'warning');
+        if (trajetPickMode) annulerChoixTrajet();
+        locationPickMode = false;
+        exitSelectionMode();
+        clearHighlight();
+        inspectorUserClosed = false;
+        _saisieObjet = {
+            layerId: layer.id, geometrie: null, creation: { cellules: null },
+            formulaireMonte: false, enCours: false, jeton: String(Date.now()),
+            modification: { rowId, origine: cellulesDeLigne(layer, ligne), depart: depart.geometrie },
+        };
+        document.body.classList.add('mode-creation');
+        syncLayerSourceData(layer);
+        if (famille === 'Point') {
+            _saisieObjet.geometrie = depart.geometrie;
+            dessinerSaisie();
+            if (map) map.getCanvas().style.cursor = 'crosshair';
+        }
+        renderSaisieObjet();
+        openInspectorPanel();
+        if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
+    },
+    /** Défait le dernier geste de la modification (déplacement, insertion, retrait de sommet). */
+    gestePrecedent() {
+        const t = _saisieObjet?.trace;
+        if (!t) return;
+        let fait = false;
+        try { fait = t.draw.canUndo() && t.draw.undo(); } catch (e) { console.warn('[Atlas tracé] undo', e.message); }
+        if (!fait) showToast('Aucun geste à défaire', 'info');
+        renderSaisieObjet();
+    },
+    /** Écrit la forme modifiée, et elle seule, après avoir vérifié que la ligne n'a pas changé entre-temps. */
+    async enregistrerForme() {
+        const s = _saisieObjet;
+        const layer = STATE.layers.find((l) => l.id === s?.layerId);
+        if (!s?.modification || !layer || s.enCours) return;
+        if (!assertCanWrite('modifier la forme')) return;
+        const famille = familleGeometrie(layer.geometryType);
+        const v = formeValidee(famille === 'Point' ? s.geometrie : formeEnCours(s), layer.geometryType);
+        if (!v.ok) { showToast(v.erreur, 'warning'); return; }
+        const nouvelles = cellulesPourCouche(layer, v.geometrie);
+        if (!nouvelles) { showToast('Cette forme ne peut pas s’écrire dans les colonnes de la couche.', 'error'); return; }
+        const { rowId, origine } = s.modification;
+        s.enCours = true;
+        const bouton = $('forme-enregistrer');
+        if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
+        const rendre = () => { s.enCours = false; if (bouton) { bouton.disabled = false; bouton.textContent = 'Enregistrer la forme'; } };
+        try {
+            const actuelles = cellulesDeLigne(layer, ligneDepuisTable(await grist.docApi.fetchTable(layer.sourceTable), rowId));
+            if (!actuelles) { rendre(); showToast('Cette ligne a été supprimée dans Grist entre-temps', 'error'); return; }
+            const decision = decisionModification({ origine, actuelles, nouvelles });
+            if (decision === 'conflit') {
+                rendre();
+                showToast('La forme a changé dans Grist depuis l’ouverture : abandonnez puis rouvrez la modification pour repartir de la version actuelle', 'error');
+                return;
+            }
+            if (decision === 'inchange') {
+                await terminerModification(layer, rowId, null);
+                showToast('Forme inchangée — rien n’a été écrit', 'info');
+                return;
+            }
+            await grist.docApi.applyUserActions([actionModification(layer.sourceTable, rowId, nouvelles)]);
+            await terminerModification(layer, rowId, { table: layer.sourceTable, origine });
+            showToast(`Forme enregistrée · ligne ${rowId}`, 'success');
+        } catch (e) {
+            // La forme reste dans l'éditeur : on peut réessayer sans la refaire.
+            rendre();
+            enterViewModeOnWriteFail(e);
+            showToast('Grist refuse la modification : ' + e.message, 'error');
+        }
+    },
+    /** Réécrit les cellules d'origine, telles que Grist les tenait à l'ouverture. */
+    async annulerModification() {
+        const m = _derniereModification;
+        const layer = STATE.layers.find((l) => l.id === m?.layerId);
+        if (!m || !layer) return;
+        if (!assertCanWrite('annuler la modification')) return;
+        try {
+            await grist.docApi.applyUserActions([actionModification(m.table, m.rowId, m.origine)]);
+        } catch (e) {
+            enterViewModeOnWriteFail(e);
+            showToast('Grist refuse de rétablir la forme : ' + e.message, 'error');
+            return;
+        }
+        _derniereModification = null;
+        try { await relireCouche(layer); } catch (e) { /* la ligne est rétablie ; la carte se relira au prochain rafraîchissement */ }
+        const [idx] = rangsDepuisRowIds(layer.geojson?.features, [m.rowId]);
+        if (idx != null) enterSelectionMode(layer.id, idx);
+        renderInspector();
+        showToast('Forme d’origine rétablie', 'info');
+    },
+    /** Retire le dernier sommet posé du tracé en cours. */
+    sommetPrecedent() {
+        const t = _saisieObjet?.trace;
+        if (!t || _saisieObjet.geometrie) return;
+        try { t.draw.undo(); } catch (e) { console.warn('[Atlas tracé] undo', e.message); }
+        majMesuresTrace();
+    },
+    /** Achève le tracé comme la touche Entrée : le focus du clavier n'est pas toujours dans l'iframe. */
+    terminerTrace() {
+        const t = _saisieObjet?.trace;
+        if (!t || _saisieObjet.geometrie) return;
+        t.mode.onKeyUp({ key: 'Enter', heldKeys: [], preventDefault() {} });
+        if (!_saisieObjet?.geometrie) {
+            showToast(t.famille === 'Polygon' ? 'Une surface demande au moins trois sommets' : 'Une ligne demande au moins deux sommets', 'warning');
+        }
+    },
+    /** Recommence la forme ; la fiche déjà remplie reste en place. */
+    retracerSaisieObjet() {
+        const s = _saisieObjet;
+        if (!s?.trace || !s.geometrie) return;
+        s.geometrie = null;
+        s.creation.cellules = null;
+        s.trace.draw.clear();
+        s.trace.draw.setMode(s.trace.mode.mode);
+        renderSaisieObjet();
+    },
+    /** Défait la dernière création tant que son objet est sélectionné : une seule ligne retirée. */
+    async annulerCreation() {
+        const d = _derniereCreation;
+        const layer = STATE.layers.find((l) => l.id === d?.layerId);
+        if (!d || !layer) return;
+        if (!assertCanWrite('annuler la création')) return;
+        const action = actionInverse(['AddRecord', d.table, null, {}], d.rowId);
+        if (!action) return;
+        try {
+            await grist.docApi.applyUserActions([action]);
+        } catch (e) {
+            enterViewModeOnWriteFail(e);
+            showToast('Grist refuse de retirer la ligne : ' + e.message, 'error');
+            return;
+        }
+        _derniereCreation = null;
+        exitSelectionMode();
+        try { await relireCouche(layer); } catch (e) { /* la ligne est retirée ; la carte se relira au prochain rafraîchissement */ }
+        updateLegend();
+        if (STATE.currentModule === 'couches') renderLayersPanel('couches');
+        showToast(`Création annulée — ligne ${d.rowId} retirée de ${d.table}`, 'info');
+    },
+    abandonnerSaisieObjet() {
+        quitterSaisieObjet(messageAbandon());
+    },
+    /** Repli sans moteur de formulaire : écrit le point et son nom, en une action. */
+    async enregistrerSaisieObjet() {
+        const s = _saisieObjet;
+        const layer = STATE.layers.find((l) => l.id === s?.layerId);
+        if (!layer || !s.geometrie || !s.creation.cellules || s.enCours) return;
+        if (!assertCanWrite('créer un objet')) return;
+        const champs = {};
+        const nom = $('saisie-nom')?.value?.trim();
+        if (nom) champs.nom = nom;
+        s.enCours = true;
+        const bouton = $('saisie-enregistrer');
+        if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
+        try {
+            const r = await grist.docApi.applyUserActions([actionCreation(layer.sourceTable, champs, s.creation.cellules)]);
+            showToast(`Objet créé · ${layer.sourceTable}`, 'success');
+            await apresCreationObjet(layer, rowIdCree(r));
+        } catch (e) {
+            // La forme reste en mémoire : on peut réessayer sans recliquer.
+            s.enCours = false;
+            if (bouton) { bouton.disabled = false; bouton.textContent = 'Enregistrer l’objet'; }
+            enterViewModeOnWriteFail(e);
+            showToast('Grist refuse la création : ' + e.message, 'error');
+        }
+    },
+    /**
+     * « Nouvelle couche » : un nom, un type, et la table Grist qu'on créera,
+     * montrée avant d'écrire. Formulaire dans le panneau du module, pas de modale.
+     */
+    async openNouvelleCouche() {
+        if (!CONFIG.grist.ready) { showToast('Disponible seulement dans Grist', 'warning'); return; }
+        if (!assertCanWrite('créer une couche')) return;
+        try { _nouvelleCouche.tables = await grist.docApi.listTables(); } catch (e) { _nouvelleCouche.tables = []; }
+        const body = $('module-body');
+        const types = TYPES_COUCHE.map((t) => `<button type="button" class="btn ${_nouvelleCouche.type === t ? 'btn-primary' : 'btn-soft'}" style="flex:1" aria-pressed="${_nouvelleCouche.type === t}" onclick="A.nouvelleCoucheType('${t}')">${LIBELLES_TYPE[t]}</button>`).join('');
+        body.innerHTML = `
+            <div class="section">
+                <div class="section-title">Nouvelle couche</div>
+                <label class="input-label" for="nc-nom">Nom</label>
+                <input class="input" id="nc-nom" maxlength="80" placeholder="Arbres remarquables" value="${escapeHtml(_nouvelleCouche.nom)}"
+                    oninput="A.nouvelleCoucheApercu(this.value)" onkeydown="if(event.key==='Enter')A.creerNouvelleCouche()">
+                <div class="input-label" style="margin-top:10px">Géométrie</div>
+                <div style="display:flex;gap:6px" role="group" aria-label="Géométrie">${types}</div>
+                <div class="layer-meta" id="nc-apercu" style="margin-top:10px" aria-live="polite"></div>
+                <div class="layer-meta" style="margin-top:6px">Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie. Les autres champs s'ajoutent ensuite, dans Grist ou par le module Formulaires.</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-soft" style="flex:1" onclick="A.openModule('couches')">Annuler</button>
+                    <button class="btn btn-primary" style="flex:1" id="nc-creer" onclick="A.creerNouvelleCouche()">Créer la couche</button>
+                </div>
+            </div>`;
+        A.nouvelleCoucheApercu(_nouvelleCouche.nom);
+        $('nc-nom')?.focus();
+    },
+    nouvelleCoucheType(t) {
+        if (!TYPES_COUCHE.includes(t)) return;
+        _nouvelleCouche.type = t;
+        _nouvelleCouche.nom = $('nc-nom')?.value ?? _nouvelleCouche.nom;
+        A.openNouvelleCouche();
+    },
+    nouvelleCoucheApercu(nom) {
+        _nouvelleCouche.nom = String(nom ?? '');
+        const p = planNouvelleCouche({ nom: _nouvelleCouche.nom, type: _nouvelleCouche.type, tables: _nouvelleCouche.tables });
+        const el = $('nc-apercu');
+        if (el) {
+            el.textContent = p.ok
+                ? `Table Grist : ${p.tableId}${p.renomme ? ' (ce nom est déjà pris dans le document)' : ''}`
+                : (_nouvelleCouche.nom.trim() ? p.erreur : '');
+        }
+        const b = $('nc-creer');
+        if (b) b.disabled = !p.ok;
+    },
+    /**
+     * Crée la table, sa ligne d'inventaire et sa ligne d'apparence en UNE
+     * transaction, puis monte la couche, vide. Un refus n'écrit rien et ne fait
+     * pas basculer la carte en lecture : on peut avoir le droit d'écrire des
+     * lignes sans celui de créer des tables.
+     */
+    async creerNouvelleCouche() {
+        if (_nouvelleCouche.enCours) return;
+        if (!CONFIG.grist.ready || !assertCanWrite('créer une couche')) return;
+        const nom = String($('nc-nom')?.value ?? _nouvelleCouche.nom).trim();
+        const type = _nouvelleCouche.type;
+        _nouvelleCouche.enCours = true;
+        showLoading('Création de la couche…');
+        try {
+            const tables = await grist.docApi.listTables();
+            const plan = planNouvelleCouche({ nom, type, tables });
+            if (!plan.ok) { hideLoading(); showToast(plan.erreur, 'warning'); return; }
+            const layer = makeLayer(nom, type, { type: 'FeatureCollection', features: [] }, null, null);
+            layer.kind = 'table';
+            layer.sourceTable = plan.tableId;
+            layer.geometryColumn = colonneGeometrieNouvelleCouche(type);
+            layer.source = 'grist-table';
+            layer.controls = [];
+            const { actions, indices } = actionsNouvelleCouche({
+                tableId: plan.tableId, type, tables,
+                inventaire: ligneInventaire(layer), prefs: lignePrefs(layer),
+                schemas: { maquette: TABLE_SCHEMAS.Maquette_Layers, prefs: ATLAS_PREFS_SCHEMA },
+            });
+            const r = await grist.docApi.applyUserActions(actions);
+            const cree = lireCreation(r?.retValues, indices, plan.tableId);
+            layer.gristId = cree.gristId;
+            layer._prefRowId = cree.prefRowId;
+            _maquetteTablePrete = true;
+            if (cree.renommee) {
+                // Grist a pris un autre nom (création concurrente) : l'inventaire et
+                // l'apparence doivent pointer la table réelle.
+                layer.sourceTable = cree.tableId;
+                const suite = [];
+                if (cree.gristId) suite.push(['UpdateRecord', 'Maquette_Layers', cree.gristId, ligneInventaire(layer)]);
+                if (cree.prefRowId) suite.push(['UpdateRecord', 'Atlas_LayerPrefs', cree.prefRowId, lignePrefs(layer)]);
+                if (suite.length) await grist.docApi.applyUserActions(suite);
+            }
+            STATE.layers.splice(insertionIndex(STATE.layers, layer.geometryType), 0, layer);
+            addLayerToMap(layer);
+            updateRailBadge();
+            _nouvelleCouche.nom = '';
+            // Le schéma ne connaît pas encore la table : sans relecture, la
+            // couche n'aurait pas de fiche, et le module Formulaires dirait
+            // « Aucune table à saisir ».
+            try { await chargerFormulaires(); } catch (e) { /* la fiche retombera sur le repli */ }
+            hideLoading();
+            showToast(`Couche « ${layer.name} » créée · table ${layer.sourceTable}`, 'success');
+            openModule('couches');
+            // Une couche vide n'a pas d'autre raison d'être que d'être remplie :
+            // on arme la création du premier objet quand l'outil existe.
+            if (creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) {
+                A.nouvelObjet(layer.id);
+            }
+        } catch (e) {
+            hideLoading();
+            console.warn('[Atlas] création de couche refusée :', e?.message);
+            showToast(messageRefus(e), 'error');
+        } finally {
+            _nouvelleCouche.enCours = false;
+        }
+    },
     openLinkTable: async function openLinkTable() {
         if (!CONFIG.grist.ready) { showToast('Disponible seulement dans Grist', 'warning'); return; }
         showLoading('Recherche des tables géo…');
@@ -8387,19 +10999,9 @@ const A = {
         const l = STATE.layers.find((x) => x.id === id);
         if (!l || !isLinkedTableLayer(l)) return;
         showLoading('Rafraîchissement…');
+        const lignes = lignesSelectionnees(l);
         try {
-            let n;
-            if (l.source === 'qgis2grist') {
-                const ml = (_sceneManifest?.layers || []).find((x) => (x.source?.table || x.id) === l.sourceTable);
-                await refreshLayerFromTable(grist.docApi, l, _widgetConfig, ml);
-                syncFeatureColorsFromSymbolization(l);
-                applyControls(l);
-                syncLayerSourceData(l);
-                Models3D.scheduleBuild();
-                n = l.geojson?.features?.length || 0;
-            } else {
-                n = await reloadGenericTableLayer(l, true);
-            }
+            const n = await relireCouche(l, lignes);
             hideLoading();
             showToast(`Rafraîchie · ${n} objets`, 'success');
             if (STATE.currentModule === 'couches') renderLayersPanel('couches');
@@ -8480,7 +11082,9 @@ const A = {
         if (!l) return;
         const c = (l.controls || []).find((x) => x.field === field);
         if (!c) return;
-        c[which] = +v;
+        // Curseur de date poussé à fond : la borne haute des données, pas la
+        // dernière position de la grille, qui tombe avant.
+        c[which] = valeurDuCurseur(c, +v);
         // Les bornes ne se croisent que sur une plage : un maximum seul n'a pas
         // à déplacer un minimum qu'il n'utilise pas.
         const plage = c.variant === 'range_between' || c.variant === 'time_between';
@@ -8531,17 +11135,10 @@ const A = {
         if (!l) return;
         const c = (l.controls || []).find((x) => x.field === field);
         if (!c) return;
-        c.values = Array.isArray(c.values) ? c.values : [];
         ensureControlVariant(c, c.type);
-        const norm = String(value).toLowerCase();
-        const i = c.values.findIndex((v) => String(v ?? '').toLowerCase() === norm);
-        if (c.variant === 'select_single') {
-            c.values = i >= 0 ? [] : [value];
-        } else if (i >= 0) {
-            c.values.splice(i, 1);
-        } else {
-            c.values.push(value);
-        }
+        // Le clic part de ce que l'écran montre : sans sélection posée, toutes
+        // les cases sont cochées, et décocher une valeur l'écarte seule.
+        c.values = basculerValeurSelection(l, c, value);
         c._selectionTouched = true;
         applyControls(l);
         markDirty();
@@ -8589,23 +11186,57 @@ const A = {
     },
     storyCapture() {
         if (!assertCanWrite('capturer le récit')) return;
-        STATE.story.push({
-            title: 'Étape ' + (STATE.story.length + 1),
-            text: '',
-            state: captureStoryState(map, STATE),
-        });
+        const trace = traceActuelle();
+        const photo = captureStoryState(map, STATE);
+        let state = fusionnerApresPhoto(photo, { saisies: saisiesCourantes() });
+        let ecart = 0;
+        if (trace) {
+            const centre = photo?.camera?.center;
+            const place = Array.isArray(centre)
+                ? placeDepuisVue(trace.coordinates, centre)
+                : { abscisse: 0.5, distanceMetres: 0 };
+            ecart = place.distanceMetres || 0;
+            state = fusionnerApresPhoto(photo, {
+                trace: traceFigee(trace),
+                abscisse: place.abscisse,
+                saisies: saisiesCourantes(),
+            });
+            STATE.story.forEach((s) => { if (s.state) s.state.trace = traceFigee(trace); });
+        }
+        const premiere = !!(trace && !STATE.story.length);
+        STATE.story.push({ title: 'Étape ' + (STATE.story.length + 1), text: '', state });
+        if (trace) STATE.story = trierParAbscisse(STATE.story);
         markDirty();
         persistStory(true);
         renderRecit();
-        showToast('Étape capturée', 'success');
+        if (!trace) {
+            showToast('Étape capturée', 'success');
+        } else if (premiere) {
+            showToast('Étape posée sur le trajet — la ligne est enregistrée', 'success');
+        } else if (ecart >= ECART_VUE_TRAJET_M) {
+            showToast(`Étape posée sur le trajet (${Math.round(ecart)} m de la vue)`, 'info');
+        } else {
+            showToast('Étape posée sur le trajet', 'success');
+        }
     },
     storyRecapture(i) {
         if (!assertCanWrite('re-capturer le récit')) return;
         if (STATE.story[i]) {
-            STATE.story[i].state = captureStoryState(map, STATE);
+            const precedent = STATE.story[i].state || {};
+            STATE.story[i].state = etatApresRecapture(
+                captureStoryState(map, STATE),
+                precedent,
+                saisiesCourantes(),
+            );
             markDirty();
             persistStory(true);
-            showToast('Vue mise à jour', 'success');
+            showToast(
+                Number.isFinite(precedent.abscisse)
+                    ? 'Vue mise à jour — place sur le trajet inchangée'
+                    : 'Vue mise à jour',
+                'success',
+            );
+            if (STATE.currentModule === 'recit') renderRecit();
         }
     },
     storySet(i, k, v) {
@@ -8614,9 +11245,21 @@ const A = {
     },
     storyMove(i, d) {
         if (!assertCanWrite('réordonner le récit')) return;
-        const j = i + d;
-        if (j < 0 || j >= STATE.story.length) return;
-        [STATE.story[i], STATE.story[j]] = [STATE.story[j], STATE.story[i]];
+        const trace = traceActuelle();
+        const places = STATE.story.map((s) => s.state?.abscisse);
+        const echange = trace && places.every(Number.isFinite) ? indicesEchange(places, i, d) : null;
+        if (echange) {
+            const [a, b] = echange;
+            const tmp = STATE.story[a].state.abscisse;
+            STATE.story[a].state.abscisse = STATE.story[b].state.abscisse;
+            STATE.story[b].state.abscisse = tmp;
+            // Les flèches échangent la place sur la ligne, pas le cadrage.
+            STATE.story = trierParAbscisse(STATE.story);
+        } else {
+            const j = i + d;
+            if (j < 0 || j >= STATE.story.length) return;
+            [STATE.story[i], STATE.story[j]] = [STATE.story[j], STATE.story[i]];
+        }
         markDirty();
         persistStory();
         renderRecit();
@@ -8624,17 +11267,43 @@ const A = {
     storyDelete(i) {
         if (!assertCanWrite('supprimer une étape')) return;
         STATE.story.splice(i, 1);
+        if (!STATE.story.some((s) => s.state?.trace)) STATE.trajet = null;
         markDirty();
         persistStory();
         renderRecit();
     },
     storyPlay(i) { enterStoryPresentation(i); },
-    storyStep(d) {
-        _storyIdx = Math.max(0, Math.min(_storyIdx + d, STATE.story.length - 1));
+    storyGo(i) { allerEtape(i); },
+    storyStep(d) { allerEtape(_storyIdx + d); },
+    choisirTrajet() { choisirTrajet(false); },
+    remplacerTrajet() { choisirTrajet(true); },
+    retirerTrajet() { retirerTrajet(); },
+    suivreTrajet() {
+        if (!localisationDisponible()) {
+            showToast('La localisation n’est pas disponible ici', 'warning');
+            return;
+        }
+        _trajetSuivi = true;
+        _trajetPause = false;
+        if (!_suiviPosition && _geoloc?.trigger) _geoloc.trigger();
         renderStoryPresentation();
-        applyStoryState(cloneStoryState(STATE.story[_storyIdx].state));
+    },
+    revenirTrajet() {
+        if (!localisationDisponible()) return;
+        _trajetSuivi = true;
+        _trajetPause = false;
+        if (!_suiviPosition && _geoloc?.trigger) _geoloc.trigger();
+        renderStoryPresentation();
+    },
+    ouvrirObjetEtape(coucheId, idx) {
+        if (!_storyPresenting) return;
+        enterSelectionMode(coucheId, idx);
     },
     storyExit() {
+        annulerAnimTrajet();
+        arreterSuiviTrajet();
+        _alerteReleve = false;
+        _alerteTexte = '';
         _storyPresenting = false;
         document.body.classList.remove('story-presenting');
         const ov = document.getElementById('story-present');
@@ -8653,6 +11322,7 @@ const A = {
         if (STATE.currentModule === 'couches' || STATE.currentModule === 'symbo') {
             renderLayersPanel(STATE.currentModule);
         }
+        rafraichirTrajet();
     },
     /**
      * Déplace une couche d'un cran dans la pile.
@@ -8890,8 +11560,9 @@ const A = {
         let min = 720;
         if (typeof SunCalc !== 'undefined') {
             try {
-                const t = SunCalc.getTimes(STATE.settings.date, c.lat, c.lng);
-                const mm = (d) => d && !isNaN(d.getTime()) ? d.getHours() * 60 + d.getMinutes() : 720;
+                const t = SunCalc.getTimes(new Date(instantScene({ ...STATE.settings, timeOfDay: 720 })), c.lat, c.lng);
+                // Heures du site (fuseau de la scène), pas du navigateur.
+                const mm = (d) => d && !isNaN(d.getTime()) ? heureLocale(d.getTime(), fuseauScene(STATE.settings)).minutes : 720;
                 if (p === 'dawn') min = mm(t.sunrise);
                 else if (p === 'day') min = mm(t.solarNoon);
                 else if (p === 'dusk') min = mm(t.sunset);
@@ -8901,7 +11572,17 @@ const A = {
         STATE.settings.timeOfDay = min; updateLighting(); renderSoleil();
     },
     setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; persistScenePrefsDifferee(); },
-    setSunDate(v) { STATE.settings.date = new Date(v + 'T12:00:00'); updateLighting(); renderSoleil(); },
+    setSunDate(v) {
+        STATE.settings.date = new Date(v + 'T12:00:00');
+        // Épinglée, la date suit le sélecteur : c'est ce jour-là qu'on veut retrouver.
+        if (STATE.settings.dateEpinglee && dateValide(v)) { STATE.settings.dateEpinglee = v; persistScenePrefsDifferee(); }
+        updateLighting(); renderSoleil();
+    },
+    toggleDateEpinglee() {
+        STATE.settings.dateEpinglee = STATE.settings.dateEpinglee ? null : dateLocaleScene(STATE.settings);
+        persistScenePrefsDifferee();
+        renderSoleil();
+    },
     toggleSetting(key) {
         STATE.settings[key] = !STATE.settings[key];
         if (key === 'buildings3D') applyBuildingVisibility();
@@ -8937,8 +11618,13 @@ const A = {
         const b = BASEMAPS[k];
         _styleUsable = false; // le style est remplacé : plus rien à monter d'ici là
         map.stop();
+        const feuilleAvant = map.style?.stylesheet;
         map.setStyle(b.style ? b.style() : b.url);
-        map.once('idle', onStyleReady);
+        // Au premier `idle` du NOUVEAU style (lib/basemap-layers.js) : un
+        // `idle` émis pendant la requête du style (une image rendue entre-temps)
+        // reposait les calques sur l'ancien, et le nouveau les effaçait ou
+        // empilait ses couches par-dessus.
+        quandNouveauStyle(map, feuilleAvant, onStyleReady);
         refreshControlsDock();
         // Le fond est le réglage qu'on remarque le plus en revenant sur un
         // document : le retrouver au défaut donne l'impression que rien n'a
@@ -9156,7 +11842,7 @@ const A = {
         if (param === 'color' && mode === 'single' && !sym.color.value) sym.color.value = l.color;
         if (mode === 'graduated' && sym[param].field) { const r = getNumericRange(l, sym[param].field); if (r.count) sym[param].inputRange = [r.min, r.max]; }
         if (mode === 'categorized' && sym[param].field) regenCategories(l, param);
-        syncLayerDeclarative(l); applyLayerStyle(l); renderInspector();
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
         if (param === 'model') { Models3D.forceBuild(); markDirty(); }
     },
     setSymField(id, param, field) {
@@ -9164,7 +11850,7 @@ const A = {
         const sym = initSymbolization(l); sym[param].field = field || null;
         if (field && param === 'color' && sym.color.mode === 'categorized') regenCategories(l, 'color');
         if (field && param === 'model' && sym.model.mode === 'categorized') sym.model.categories = [];
-        syncLayerDeclarative(l); applyLayerStyle(l); renderInspector();
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
     },
     setSymMethod(id, param, method) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -9186,7 +11872,7 @@ const A = {
                 };
             }
         }
-        syncLayerDeclarative(l); applyLayerStyle(l); renderInspector();
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
     },
     setSymPalette(id, param, palette) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -9203,7 +11889,7 @@ const A = {
                 stops: recolorStops(l._declarative.stops, COLOR_PALETTES[palette] || []),
             };
         }
-        syncLayerDeclarative(l); applyLayerStyle(l); renderInspector();
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
     },
     setSymColorValue(id, v) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -9211,7 +11897,10 @@ const A = {
         sym.color.value = v;
         sym.color.mode = 'single';
         l.color = v;
-        syncLayerDeclarative(l); applyLayerStyle(l); renderInspector(); updateLegend();
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector(); updateLegend();
+        // La pastille de la liste des couches porte cette couleur : sans ce
+        // rafraîchissement, elle gardait l'ancienne jusqu'au prochain rendu.
+        refreshLayersPanelIfOpen();
     },
     setSymSizeValue(id, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l).size.value = +v; const el = $('sz-val'); if (el) el.textContent = v + (l.geometryType === 'Polygon' ? ' m' : (l.style?.mode === 'library' ? ' ×' : ' px')); applyLayerStyle(l); },
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
@@ -9300,7 +11989,7 @@ const A = {
     toggleLabel(id) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; const lab = initSymbolization(l).label; lab.enabled = !lab.enabled; applyLayerStyle(l); renderInspector(); },
     resetSymbology(id) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
-        delete l.style.symbolization; initSymbolization(l); applyLayerStyle(l); renderInspector(); showToast('Symbologie réinitialisée', 'success');
+        delete l.style.symbolization; initSymbolization(l); repeindreEntites(l); applyLayerStyle(l); renderInspector(); showToast('Symbologie réinitialisée', 'success');
     },
 
     // Selection editing
@@ -9378,13 +12067,23 @@ const A = {
         const l = STATE.layers.find((x) => x.id === STATE.selection.layerId);
         multiBaseValues = null;
         if (!l) return;
-        if (l.source === 'qgis2grist' && CONFIG.grist.ready) {
+        // Toute couche adossée à une table écrit ses objets dans leurs lignes —
+        // la même règle que la fiche (`coucheAvecLignes`). Le critère était
+        // `source === 'qgis2grist'` : une couche entablée ou liée s'éditait à
+        // l'écran, affichait « enregistré », et n'écrivait que son apparence.
+        if (coucheAvecLignes(l) && CONFIG.grist.ready) {
             if (!assertCanWrite('enregistrer les objets')) return;
+            if (!l._gristColumns?.length) {
+                // Couche liée ou entablée : sans liste de colonnes, l'écriture
+                // viserait tout ce que l'objet porte, formules comprises.
+                const lues = Object.keys(l.geojson?.features?.[STATE.selection.features[0]]?.properties || {})
+                    .filter((k) => !k.startsWith('_'));
+                l._gristColumns = colonnesEcrivables(STATE.schema?.[l.sourceTable],
+                    [...lues, ...nomsColonnesGeometrie(colonnesGeometrie(l))]);
+            }
             saveFeaturesToSource(grist.docApi, l, STATE.selection.features)
                 .then((n) => {
-                    dirty = false;
-                    _syncPaused = false;
-                    $('app-header')?.classList.remove('dirty');
+                    marquerEnregistre();
                     showToast(`${n} enregistrement(s) · ${l.sourceTable}`, 'success');
                 })
                 .catch((e) => {
@@ -9433,6 +12132,7 @@ function nav(dir) {
         STATE.selection.multiIndex = (STATE.selection.multiIndex + dir + n) % n;
         flyToFeature(layer, STATE.selection.features[STATE.selection.multiIndex]);
         $('sel-pos').textContent = `${STATE.selection.multiIndex + 1} / ${n}`;
+        updateHighlight();
         renderObjectInspector();
     } else {
         const total = layer.geojson.features.length;
@@ -9471,8 +12171,7 @@ function wireMapControlsDock() {
         });
         const arcSet = (clientX, arc) => {
             const rect = arc.getBoundingClientRect();
-            const r = clamp((clientX - rect.left - 8) / 152, 0, 1);
-            STATE.settings.timeOfDay = Math.round(360 + r * 840);
+            STATE.settings.timeOfDay = minutesDepuisPosition((clientX - rect.left - 8) / 152);
             updateLighting();
             if (STATE.currentModule === 'soleil') renderSoleil();
             // Le débounce absorbe le geste : un glissement d'arc émet une
@@ -9498,12 +12197,24 @@ function wireMapControlsDock() {
         const finArc = () => { _sunArcDragging = false; };
         host.addEventListener('pointerup', finArc);
         host.addEventListener('pointercancel', finArc);
+        // Au clavier : ←/→ cinq minutes, Maj+←/→ une heure, minuit se franchit.
+        host.addEventListener('keydown', (e) => {
+            if (!e.target.closest?.('.sun-arc')) return;
+            const m = minutesApresTouche(STATE.settings.timeOfDay, e.key, e.shiftKey);
+            if (m == null) return;
+            e.preventDefault();
+            STATE.settings.timeOfDay = m;
+            updateLighting();
+            if (STATE.currentModule === 'soleil') renderSoleil();
+            persistScenePrefsDifferee();
+        });
     }
 }
 
 function wireEvents() {
     updateMobileLayout();
     wireMobileNav();
+    wireBasculeLectureEdition();
     wireLegendClicks();
     // Les bascules sont des `div` : `tabindex` les rend atteignables, mais
     // seul un vrai bouton réagit à Espace et Entrée. On le fait ici, une fois
@@ -9591,7 +12302,9 @@ function wireEvents() {
             return;
         }
         if (e.key === 'Escape') {
-            if (locationPickMode) { locationPickMode = false; if (map) map.getCanvas().style.cursor = ''; showToast('Annulé', 'info'); }
+            if (_saisieObjet) quitterSaisieObjet(messageAbandon());
+            else if (trajetPickMode) { annulerChoixTrajet(); showToast('Choix annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); }
+            else if (locationPickMode) { locationPickMode = false; if (map) map.getCanvas().style.cursor = ''; showToast('Annulé', 'info'); }
             else if (STATE.selection.mode) exitSelectionMode();
             else if (STATE.currentModule) closeModulePanel();
         }

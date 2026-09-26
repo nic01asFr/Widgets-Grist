@@ -145,6 +145,48 @@ export function canWrite(viewMode) {
 }
 
 /**
+ * Peut-on proposer la bascule session lecture ↔ édition ?
+ *
+ * C'est un essayage d'interface pour qui A le droit d'écrire — pas une
+ * privation de droit. La bascule n'existe donc que si l'écriture est
+ * réellement autorisée (`peutSaisir`) et qu'un document est ouvert
+ * (`gristReady`). Lecture forcée (Grist readonly, échec de sonde, scène
+ * externe sans docApi) : pas de retour.
+ *
+ * @param {{ peutSaisir?: boolean, gristReady?: boolean, sceneExterne?: boolean|object|null }} opts
+ * @returns {boolean}
+ */
+export function peutProposerBasculeLectureEdition({
+  peutSaisir = false,
+  gristReady = false,
+  sceneExterne = null,
+} = {}) {
+  if (sceneExterne) return false;
+  if (!gristReady) return false;
+  return !!peutSaisir;
+}
+
+/**
+ * État chrome suivant au clic sur la bascule session.
+ * Ne touche pas à `peutSaisir` — le droit réel reste intact.
+ *
+ * @param {{ viewMode?: boolean }} opts
+ * @returns {{ viewMode: boolean }}
+ */
+export function prochainEtatBasculeLectureEdition({ viewMode = false } = {}) {
+  return { viewMode: !viewMode };
+}
+
+/**
+ * Infobulle de la bascule (avatar / badge Lecture).
+ * @param {{ viewMode?: boolean }} opts
+ * @returns {string}
+ */
+export function titreBasculeLectureEdition({ viewMode = false } = {}) {
+  return viewMode ? 'Revenir à l\'édition' : 'Passer en lecture';
+}
+
+/**
  * Erreur ACL / viewer Grist (doc public view-only, droits lecture).
  * @param {unknown} err
  */

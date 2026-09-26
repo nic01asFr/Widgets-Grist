@@ -923,13 +923,93 @@ test('le defaut vaut tant que la scene n’a rien decide, et cede a sa decision'
 });
 /* ---------- retirer et remettre un formulaire ---------- */
 
-import { formulaireRetirable, formulairesEnPlace } from '../lib/fiche-formulaire.js';
+import {
+  formulaireRetirable, formulairesEnPlace, raisonNonRetirable, RAISON_DERNIER_FORMULAIRE,
+} from '../lib/fiche-formulaire.js';
+import { objectInspectorTabs } from '../lib/model-layer.js';
 
-test('Attributs ne se retire pas ; un formulaire enregistré ou lié, si', () => {
-  assert.equal(formulaireRetirable({ id: 'attr', surLaCouche: true, derive: true }), false);
+test('tout formulaire se retire, Attributs compris — seule l’identité est exigée hors liste', () => {
+  assert.equal(formulaireRetirable({ id: 'attr', surLaCouche: true, derive: true }), true);
   assert.equal(formulaireRetirable({ id: 'releve', surLaCouche: true, derive: false }), true);
   assert.equal(formulaireRetirable({ id: 'visites', surLaCouche: false, derive: true }), true);
   assert.equal(formulaireRetirable({ surLaCouche: false }), false);
+});
+
+test('le dernier formulaire en place ne se retire pas, et la raison est dite', () => {
+  const attr = { id: 'derive:T', surLaCouche: true, derive: true };
+  const releve = { id: 'releve', surLaCouche: true, derive: false };
+  assert.equal(raisonNonRetirable(attr, [attr, releve]), null);
+  assert.equal(raisonNonRetirable(releve, [attr, releve]), null);
+  // Attributs déjà retiré : le relevé est le dernier en place.
+  const liste = [{ ...attr, retire: true }, releve];
+  assert.equal(raisonNonRetirable(releve, liste), RAISON_DERNIER_FORMULAIRE);
+  assert.equal(RAISON_DERNIER_FORMULAIRE, 'dernier formulaire de la couche');
+  assert.equal(formulaireRetirable(releve, liste), false);
+  // Seul sur sa couche : Attributs garde sa place.
+  assert.equal(raisonNonRetirable(attr, [attr]), RAISON_DERNIER_FORMULAIRE);
+  assert.equal(raisonNonRetirable(null, [attr]), 'formulaire sans identifiant');
+});
+
+// Une table seule, sans table liée : la couche la plus simple.
+const SCHEMA_SEUL = schemaDepuisMeta(
+  { id: [1], tableId: ['Reperes'] },
+  {
+    id: [1, 2, 3], parentId: [1, 1, 1],
+    colId: ['geometry_json', 'nom', 'hauteur'],
+    type: ['Text', 'Text', 'Numeric'],
+    label: ['', '', ''], isFormula: [false, false, false], widgetOptions: ['', '', ''],
+  },
+);
+const COUCHE_SEULE = { id: 'r1', name: 'Repères', sourceTable: 'Reperes', geometryColumn: 'geometry_json' };
+const RELEVES = [
+  { formId: 'crue', titre: 'Relevé de crue', statut: 'publie', def: { id: 'crue', tableId: 'Reperes', sections: [] } },
+  { formId: 'photo', titre: 'Photo', statut: 'terrain', def: { id: 'photo', tableId: 'Reperes', sections: [] } },
+];
+
+test('sans formulaire personnalisé, Attributs reste et ne peut pas se retirer', () => {
+  const liste = formulairesPourCouche({ couche: COUCHE_SEULE, entrees: [], schema: SCHEMA_SEUL });
+  assert.deepEqual(liste.map((f) => f.id), ['derive:Reperes']);
+  assert.equal(raisonNonRetirable(liste[0], liste), RAISON_DERNIER_FORMULAIRE);
+  // Même si des réglages le disent retiré : une couche garde toujours une fiche.
+  const forcee = { ...COUCHE_SEULE, formulaire: { retires: ['derive:Reperes'] } };
+  const relue = formulairesPourCouche({ couche: forcee, entrees: [], schema: SCHEMA_SEUL });
+  assert.deepEqual(formulairesEnPlace(relue).map((f) => f.id), ['derive:Reperes']);
+});
+
+test('Attributs retiré : la fiche s’ouvre sur le premier formulaire restant', () => {
+  const couche = { ...COUCHE_SEULE, formulaire: { retires: ['derive:Reperes'], exposes: ['crue', 'photo'] } };
+  const tous = formulairesPourCouche({ couche, entrees: RELEVES, schema: SCHEMA_SEUL });
+  assert.deepEqual(tous.filter((f) => f.retire).map((f) => f.id), ['derive:Reperes']);
+  const enPlace = formulairesEnPlace(tous);
+  assert.deepEqual(enPlace.map((f) => f.id), ['crue', 'photo']);
+  // L'onglet Attributs a disparu, le premier onglet est le relevé.
+  const tabs = objectInspectorTabs({ layer: couche, formulaires: enPlace });
+  assert.deepEqual(tabs.map((t) => t.cle), ['crue', 'photo']);
+  // Hors édition, seuls les restants sont offerts.
+  assert.deepEqual(formulairesOffertsEnLecture(enPlace).map((f) => f.id), ['crue', 'photo']);
+  assert.equal(saisieHorsEdition({ view: true, aDesLignes: true, peutEcrire: true, moteur: true, formulaires: enPlace }), true);
+  // Le dernier restant se garde, l'autre se retire encore.
+  assert.equal(raisonNonRetirable(enPlace[0], tous), null);
+  const unSeul = formulairesPourCouche({
+    couche: { ...couche, formulaire: { retires: ['derive:Reperes', 'photo'], exposes: ['crue'] } },
+    entrees: RELEVES, schema: SCHEMA_SEUL,
+  });
+  const crue = unSeul.find((f) => f.id === 'crue');
+  assert.equal(crue.retire, false);
+  assert.equal(raisonNonRetirable(crue, unSeul), RAISON_DERNIER_FORMULAIRE);
+});
+
+test('des réglages qui retireraient tout laissent le premier en place', () => {
+  const couche = { ...COUCHE_SEULE, formulaire: { retires: ['derive:Reperes', 'crue', 'photo'] } };
+  const tous = formulairesPourCouche({ couche, entrees: RELEVES, schema: SCHEMA_SEUL });
+  assert.deepEqual(formulairesEnPlace(tous).map((f) => f.id), ['derive:Reperes']);
+});
+
+test('les réglages sans Attributs retiré se relisent comme avant', () => {
+  const couche = { ...COUCHE_SEULE, formulaire: { retires: ['photo'], exposes: ['crue'] } };
+  const tous = formulairesPourCouche({ couche, entrees: RELEVES, schema: SCHEMA_SEUL });
+  assert.deepEqual(formulairesEnPlace(tous).map((f) => f.id), ['derive:Reperes', 'crue']);
+  assert.deepEqual(tous.filter((f) => f.expose).map((f) => f.id), ['crue']);
 });
 
 test('un formulaire retiré n’est plus en place, et reste retrouvable', () => {

@@ -164,15 +164,41 @@ export function reglagesFormulaire(couche) {
   };
 }
 
+/** Pourquoi « Retirer » est refusé au seul formulaire qui reste en place. */
+export const RAISON_DERNIER_FORMULAIRE = 'dernier formulaire de la couche';
+
 /**
- * Peut-on retirer ce formulaire de la couche ?
+ * Pourquoi ce formulaire ne peut pas être retiré de la couche — `null` s'il le
+ * peut.
  *
- * Tous, sauf `Attributs` — le dérivé de la couche. C'est la vue complète de la
- * table, celle d'où l'on compose les autres : la retirer laisserait la fiche
- * sans rien pour corriger l'objet, et sans point de départ pour recomposer.
+ * Tous se retirent, `Attributs` compris : une scène de terrain peut ne vouloir
+ * qu'un formulaire personnalisé, et la vue complète de la table ne ferait alors
+ * que doubler le relevé. Une seule garde : **le dernier formulaire en place**
+ * reste — sans lui, l'objet n'aurait plus de fiche.
+ *
+ * > **Attributs ne se retirait pas** (16/09/2026) : on le tenait pour le point
+ * > de départ de toute composition. Il le reste, depuis le module, où un
+ * > formulaire retiré se remet d'un clic ; le garder de force imposait un
+ * > onglet que la scène ne voulait pas.
+ *
+ * @param {object} f
+ * @param {object[]} [formulaires] ceux de la couche, retirés compris ou non —
+ *   sans eux, seule l'identité est vérifiée
+ * @returns {string|null}
  */
-export function formulaireRetirable(f) {
-  return !!f && !!f.id && !(f.surLaCouche && f.derive);
+export function raisonNonRetirable(f, formulaires) {
+  if (!f || !f.id) return 'formulaire sans identifiant';
+  if (!Array.isArray(formulaires)) return null;
+  const restants = formulairesEnPlace(formulaires).filter((x) => x.id !== f.id);
+  return restants.length ? null : RAISON_DERNIER_FORMULAIRE;
+}
+
+/**
+ * Peut-on retirer ce formulaire de la couche ? La règle est
+ * `raisonNonRetirable` ; ceci n'en garde que la réponse.
+ */
+export function formulaireRetirable(f, formulaires) {
+  return !raisonNonRetirable(f, formulaires);
 }
 
 /**
@@ -288,7 +314,7 @@ export function colonnesHorsFormulaire(couche, colonnes) {
  * qui tranche — et la règle « un onglet par formulaire » n'était donc pas
  * tenue.
  *
- * ## Le dérivé de la couche ne disparaît jamais
+ * ## Le dérivé de la couche est toujours proposé
  *
  * La fiche d'Atlas a toujours montré **tous** les attributs de l'objet. Ce
  * n'est pas parce qu'un formulaire a été importé sur la table que cette vue
@@ -296,8 +322,10 @@ export function colonnesHorsFormulaire(couche, colonnes) {
  * pas ce que la table contient.
  *
  * Le dérivé de la table de la couche est donc **toujours** présent, en premier,
- * sous le nom `Attributs` — c'est ce qu'il est. Pour les tables liées, il n'est
- * qu'un **repli** : dès qu'un enregistré existe, il suffit.
+ * sous le nom `Attributs` — c'est ce qu'il est. La scène peut le retirer comme
+ * les autres (`formulaire.retires`), tant qu'il n'est pas le dernier en place.
+ * Pour les tables liées, il n'est qu'un **repli** : dès qu'un enregistré
+ * existe, il suffit.
  *
  * @param {object} o
  * @param {object} o.couche
@@ -376,6 +404,13 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     || out.find((f) => f.surLaCouche)?.id || null;
   for (const f of out) {
     f.retire = formulaireRetirable(f) && reglages.retires.includes(f.id);
+  }
+  // La garde du dernier formulaire vaut aussi à la relecture : des réglages
+  // qui retireraient tout (un formulaire effacé de `Formulaires` depuis, un
+  // réglage écrit à la main) laissent le premier en place — `Attributs` dès
+  // que le schéma est là. Une couche garde toujours une fiche.
+  if (out.length && out.every((f) => f.retire)) out[0].retire = false;
+  for (const f of out) {
     // Un formulaire retiré n'est proposé nulle part, quoi que dise la liste.
     f.expose = !f.retire && (reglages.exposes
       ? reglages.exposes.includes(f.id)
@@ -818,7 +853,9 @@ export function valeursPourMoteur(formDef, props) {
  * @param {object} [o.valeurs]     lues avant le premier rendu
  * @param {() => boolean} o.peutEcrire  le garde d'Atlas, consulté à CHAQUE soumission
  * @param {(msg:string, ok:boolean) => void} [o.signaler]
- * @param {() => void} [o.apresEcriture]
+ * @param {(rowId?: number|null) => void} [o.apresEcriture]  en création, reçoit l'identifiant de la ligne créée
+ * @param {{ cellules: object }} [o.creation]  création d'un objet sur la couche :
+ *                                 les cellules de géométrie à joindre aux champs
  */
 /**
  * Ecrit la ligne, en nommant l'etape si elle echoue.
@@ -837,7 +874,7 @@ async function ecrireLigne(docApi, actions) {
 }
 
 export function pontFormulaire({
-  couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs, formulaire,
+  couche, rowId, docApi, peutEcrire, signaler, apresEcriture, valeurs, formulaire, creation = null,
 }) {
   const dire = typeof signaler === 'function' ? signaler : () => {};
   // Pas de `formulaire` ⇒ l'appelant vise la table de la couche : c'est le
@@ -887,6 +924,27 @@ export function pontFormulaire({
       const r = await ecrireLigne(docApi, [['AddRecord', table, null, champs]]);
       dire('Relevé ajouté', true);
       if (typeof apresEcriture === 'function') apresEcriture();
+      return r;
+    };
+    return pont;
+  }
+
+  // Création d'un objet : pas d'`editRowId`, donc le moteur soumet par
+  // `addRow`. La ligne naît en une seule action, champs de la fiche et
+  // géométrie ensemble — jamais une ligne vide complétée ensuite, qui
+  // contournerait les obligatoires et laisserait un reste à l'abandon.
+  // La géométrie passe après les champs : c'est le clic qui fait foi, comme
+  // la référence d'un formulaire lié.
+  if (creation) {
+    pont.addRow = async (_tableId, data) => {
+      garde();
+      // Une fiche envoyée pendant qu'on retrace n'a pas de forme : refuser,
+      // plutôt que de créer un objet sans géométrie.
+      if (!creation.cellules) throw new Error('Tracez la forme avant d’enregistrer');
+      const r = await ecrireLigne(docApi, [['AddRecord', table, null, { ...data, ...creation.cellules }]]);
+      const id = Array.isArray(r?.retValues) ? r.retValues[0] : null;
+      dire('Objet créé', true);
+      if (typeof apresEcriture === 'function') apresEcriture(Number.isInteger(id) ? id : null);
       return r;
     };
     return pont;

@@ -1,9 +1,10 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.8.0';
+import { normalizePropertyValue } from './declarative-style.js?v=1.9.0';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
 import { chargerSchema, estTableSysteme } from './schema-grist.js';
+import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=1.9.0';
 
 export const GEO_SKIP_TABLES = new Set([
   'Maquette_Layers',
@@ -33,9 +34,11 @@ export function detectGeometryColumn(columnar) {
 
 export function parseGeometryValue(columnar, geomCol, i) {
   if (geomCol && geomCol.lat) {
-    const la = +columnar[geomCol.lat][i];
-    const lo = +columnar[geomCol.lng][i];
-    return (Number.isFinite(la) && Number.isFinite(lo))
+    // `+null` et `+''` valent 0 : une ligne sans coordonnées devenait un point
+    // en (0, 0). Même règle que les couches de manifeste : (0, 0) = absent.
+    const la = lireCoordonnee(columnar[geomCol.lat]?.[i]);
+    const lo = lireCoordonnee(columnar[geomCol.lng]?.[i]);
+    return coordonneesUtilisables(lo, la)
       ? { type: 'Point', coordinates: [lo, la] }
       : null;
   }

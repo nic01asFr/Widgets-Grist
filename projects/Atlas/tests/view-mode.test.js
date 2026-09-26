@@ -8,6 +8,9 @@ import {
   parseAtlasMode,
   accessIntentFromMode,
   canWrite,
+  peutProposerBasculeLectureEdition,
+  prochainEtatBasculeLectureEdition,
+  titreBasculeLectureEdition,
   shouldEnableLight3d,
   parseNo3dParam,
   parseNavbarParam,
@@ -55,6 +58,72 @@ describe('canWrite', () => {
   it('interdit en view', () => {
     assert.equal(canWrite(true), false);
     assert.equal(canWrite(false), true);
+  });
+});
+
+describe('bascule session lecture ↔ édition', () => {
+  it('proposée seulement si écriture réelle + document ouvert', () => {
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: true, gristReady: true,
+    }), true);
+    // Sonde OK en édition, ou ?mode=view avec full (peutSaisir reste vrai).
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: true, gristReady: true, sceneExterne: null,
+    }), true);
+  });
+
+  it('refusée en lecture forcée, hors document, ou scène externe', () => {
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: false, gristReady: true,
+    }), false, 'échec de sonde / grist-readonly');
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: true, gristReady: false,
+    }), false, 'pas de docApi');
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: true, gristReady: true, sceneExterne: { title: 'x' },
+    }), false, '?scene=');
+    assert.equal(peutProposerBasculeLectureEdition({}), false);
+  });
+
+  it('ne dépend pas du chrome actuel (viewMode)', () => {
+    // L'essayage pose viewMode sans retirer peutSaisir : la bascule reste.
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: true, gristReady: true,
+    }), true);
+  });
+
+  it('alterne le chrome sans toucher au droit', () => {
+    assert.deepEqual(prochainEtatBasculeLectureEdition({ viewMode: false }), { viewMode: true });
+    assert.deepEqual(prochainEtatBasculeLectureEdition({ viewMode: true }), { viewMode: false });
+    // assertCanWrite suit viewMode : lecture d'essayage refuse, retour accepte.
+    assert.equal(canWrite(prochainEtatBasculeLectureEdition({ viewMode: false }).viewMode), false);
+    assert.equal(canWrite(prochainEtatBasculeLectureEdition({ viewMode: true }).viewMode), true);
+  });
+
+  it('titres d’infobulle explicites', () => {
+    assert.equal(titreBasculeLectureEdition({ viewMode: false }), 'Passer en lecture');
+    assert.equal(titreBasculeLectureEdition({ viewMode: true }), 'Revenir à l\'édition');
+  });
+
+  it('mode-view + full : droit d’édition réel (signal peutSaisir)', () => {
+    // resolveAccess garde requiredAccess full quand Grist a accordé full.
+    const acc = resolveAccess({ search: '?mode=view&access=full&readonly=false' });
+    assert.equal(acc.reason, 'mode-view');
+    assert.equal(acc.requiredAccess, 'full');
+    assert.equal(acc.viewMode, true);
+    // initGrist pose alors peutSaisir = true → bascule disponible.
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: acc.reason === 'mode-view' && acc.requiredAccess === 'full',
+      gristReady: true,
+    }), true);
+  });
+
+  it('grist-readonly : pas de retour', () => {
+    const acc = resolveAccess({ search: '?access=read%20table&readonly=true' });
+    assert.equal(acc.reason, 'grist-readonly');
+    assert.equal(peutProposerBasculeLectureEdition({
+      peutSaisir: false, gristReady: true,
+    }), false);
   });
 });
 

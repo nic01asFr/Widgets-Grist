@@ -8,13 +8,13 @@ import {
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=20260916a';
+} from './controls.js?v=20260924a';
 
 export const STORY_SCHEMA = [
-  { id: 'Step', fields: { label: 'Étape', type: 'Int' } },
-  { id: 'Title', fields: { label: 'Titre', type: 'Text' } },
-  { id: 'Description', fields: { label: 'Texte', type: 'Text' } },
-  { id: 'StateJSON', fields: { label: 'État (JSON)', type: 'Text' } },
+  { id: 'Step', label: 'Étape', type: 'Int' },
+  { id: 'Title', label: 'Titre', type: 'Text' },
+  { id: 'Description', label: 'Texte', type: 'Text' },
+  { id: 'StateJSON', label: 'État (JSON)', type: 'Text' },
 ];
 
 export const ATLAS_STORY_TABLE = 'Atlas_Story';

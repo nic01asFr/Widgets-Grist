@@ -133,3 +133,114 @@ export function ecartAuSol(solEntite, altitudeOrigine) {
   if (!Number.isFinite(solEntite)) return 0;
   return solEntite - origine;
 }
+
+/**
+ * Une tuile MNT déjà décodée ne se retélécharge pas quand MapLibre la recharge.
+ *
+ * **Défaut de MapLibre 5.6.1** (`RasterDEMTileSource.loadTile`, corrigé dans
+ * les 5.x ultérieures) : `reload()` passe les tuiles chargées à `reloading`,
+ * puis `loadTile` retélécharge l'image mais ne décode — et ne repasse à
+ * `loaded` — que si la tuile n'a pas encore d'`actor` ou qu'elle a expiré.
+ * Une tuile rechargée reste donc `reloading` **pour toujours** : la source ne
+ * se dit jamais chargée, et la carte n'émet plus jamais `idle`.
+ *
+ * Deux appels d'Atlas déclenchent ce `reload()` : `setProjection` quand la
+ * projection change (globe → mercator à la première étape d'un récit), et
+ * `setTerrain` quand le relief se rallume. Mesuré le 24/09/2026 sur la démo
+ * des Aygalades : 14 tuiles bloquées dès l'ouverture, 11 tuiles de 1 Mo
+ * retéléchargées pour rien, et aucun `idle` ensuite — or le changement de
+ * fond (`quandNouveauStyle`), le montage des couches et le récit attendent
+ * `idle`.
+ *
+ * Le MNT d'une tuile ne dépend ni de la projection ni de l'état du relief :
+ * une tuile `reloading` qui a déjà son `dem` repasse directement à `loaded`
+ * (textures du terrain à préparer de nouveau). Une tuile expirée, ou jamais
+ * décodée, suit le chemin normal.
+ *
+ * @param {{ loadTile: Function } | null | undefined} source la source
+ *   `raster-dem` (`map.getSource('terrain-dem')`)
+ * @returns la source, corrigée une seule fois, ou `null`
+ */
+export function garderDemAuRechargement(source) {
+  if (!source || typeof source.loadTile !== 'function') return null;
+  if (source.__demGardeAuRechargement) return source;
+  const origine = source.loadTile;
+  source.loadTile = function loadTileGardantDem(tile) {
+    if (tile && tile.state === 'reloading' && tile.dem) {
+      tile.needsTerrainPrepare = true;
+      tile.needsHillshadePrepare = true;
+      tile.state = 'loaded';
+      return Promise.resolve();
+    }
+    return origine.apply(this, arguments);
+  };
+  source.__demGardeAuRechargement = true;
+  return source;
+}
+
+/**
+ * Niveau de zoom jusqu'où MapLibre découpe une source GeoJSON d'Atlas.
+ *
+ * **Défaut de MapLibre 5.6.1** (`SourceCache._updateRetainedTiles`, réécrit
+ * dans les 5.x ultérieures) : pour une tuile idéale sans données, il cherche
+ * les quatre enfants qui la couvriraient — `tileID.children(maxzoom)` — dès
+ * que le zoom de couverture est au moins un cran sous le `maxzoom` de la
+ * source. Mais une tuile déjà au `maxzoom` n'a qu'**un** enfant (surzoomé), et
+ * `children[1].key` lève « Cannot read properties of undefined (reading
+ * 'key') ». Ce cas n'arrive que sur **relief en vue inclinée** : les tuiles
+ * proches de la caméra y montent d'un cran au-dessus du zoom de couverture.
+ *
+ * C'est l'exception des étapes qui passent le bâti en volume (démo des
+ * Aygalades, étape 6 : 7 à 9 exceptions à chaque entrée, sur le bâti, la
+ * voirie, l'eau et le mobilier — maxzoom 18 par défaut, couverture 17, tuiles
+ * proches en 18). Avec 22, la fenêtre fautive remonte au-delà de z20.
+ * Mesuré : 0 exception sur trois tours des étapes 5 à 7, contre 24.
+ * Contrepartie : au-delà de z18 la géométrie est redécoupée au lieu d'être
+ * agrandie — plus fine, et un peu plus de travail au worker.
+ */
+export const SOURCE_GEOJSON_MAXZOOM = 22;
+
+/** Options d'une source GeoJSON d'Atlas. */
+export function optionsSourceGeojson(data) {
+  return { type: 'geojson', data, maxzoom: SOURCE_GEOJSON_MAXZOOM };
+}
+
+/**
+ * MapLibre 5.6.1 lèverait-il sur cette tuile idéale sans données ?
+ *
+ * Reproduit sa condition : il demande quatre enfants quand
+ * `zoomCouverture + 1 <= maxzoom`, et n'en obtient qu'un quand la tuile est
+ * au `maxzoom` ou au-delà.
+ */
+export function tuileSansQuatreEnfants(zoomCouverture, zoomTuile, maxzoomSource) {
+  return zoomCouverture + 1 <= maxzoomSource && zoomTuile >= maxzoomSource;
+}
+
+/**
+ * Cet événement `data` dit-il qu'une tuile du MNT vient d'arriver ?
+ *
+ * Atlas rejoue le calage des modèles quand le relief s'affine. Il filtrait sur
+ * `sourceDataType === 'content'`, que MapLibre 5.6.1 **n'émet jamais** à
+ * l'arrivée d'une tuile `raster-dem` : l'événement porte `dataType: 'source'`
+ * et `tile`, sans `sourceDataType` (mesuré le 24/09/2026 : 3 sur 3). Le
+ * recalage « à l'arrivée du MNT » n'a donc jamais eu lieu ; seuls restaient le
+ * changement de palier de zoom (350 ms après `moveend`, souvent avant la
+ * tuile) et la sonde de l'origine. Aygalades, étape 6 : 65 modèles sur 232 à
+ * plus de 50 cm de leur sol, jusqu'à 2,16 m, et cela restait.
+ */
+export function evenementMntArrive(e) {
+  if (!e || e.sourceId !== 'terrain-dem') return false;
+  return !!e.tile || e.sourceDataType === 'content';
+}
+
+/**
+ * Clé du cache d'altitude des modèles : un millionième de degré (≈ 8 cm).
+ *
+ * L'ancienne clé rangeait par dix-millièmes (≈ 8 × 11 m) : deux objets voisins
+ * partageaient l'altitude du premier sondé — jusqu'à 1,45 m d'écart sur le
+ * mobilier en pente des Aygalades. Le cache est vidé à chaque recalage : il ne
+ * sert qu'à ne pas sonder deux fois le même point dans un même calcul.
+ */
+export function cleAltitude(lng, lat) {
+  return Math.round(lng * 1e6) + ',' + Math.round(lat * 1e6);
+}

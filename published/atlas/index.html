@@ -26,7 +26,9 @@
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "terra-draw": "https://cdn.jsdelivr.net/npm/terra-draw@1.35.0/dist/terra-draw.module.js",
+        "terra-draw-maplibre-gl-adapter": "https://cdn.jsdelivr.net/npm/terra-draw-maplibre-gl-adapter@1.4.1/dist/terra-draw-maplibre-gl-adapter.module.js"
       }
     }
     </script>
@@ -167,6 +169,8 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 12px; font-weight: 600;
         }
+        .avatar.bascule-session,
+        .view-mode-badge.bascule-session { cursor: pointer; }
 
         /* ============================================
            MAIN LAYOUT
@@ -214,6 +218,8 @@
             display: none; flex-direction: column; flex-shrink: 0; overflow: hidden; z-index: 15;
         }
         .module-panel.open { display: flex; }
+        /* Carte étroite (tablette en portrait) : la fiche prime, le module attend replié. */
+        body:not(.mobile-layout) .module-panel.open.module-cede { display: none; }
         /* La poignee n'a de sens que sur la feuille mobile ; le panneau du
            bureau est ancre, rien n'y glisse. */
         .feuille-poignee { display: none; }
@@ -232,7 +238,6 @@
         /* Map frame */
         .map-frame { flex: 1; position: relative; background: var(--bg); overflow: hidden; min-width: 0; }
         #map { position: absolute; inset: 0; }
-        #night-tint { position: absolute; inset: 0; pointer-events: none; z-index: 5; mix-blend-mode: multiply; background: transparent; transition: background 400ms ease; }
         #map .maplibregl-ctrl-attrib { background: rgba(255,255,255,0.7); font-size: 10px; }
 
         /* Inspector (right) — ouvert / fermé (pas de pastille carte) */
@@ -340,6 +345,29 @@
             border-color: rgba(196,69,54,0.4);
             box-shadow: 0 3px 10px rgba(196,69,54,0.16);
             transform: translateY(-1px);
+        }
+        .map-controls-dock .dock-fab.alerte {
+            border-color: rgba(196,69,54,0.85);
+            box-shadow: 0 0 0 3px rgba(196,69,54,0.28);
+        }
+        .trajet-poignee {
+            min-width: 22px; height: 22px; padding: 0 5px;
+            border-radius: 11px;
+            background: #C44536; border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,.35);
+            cursor: grab; box-sizing: border-box;
+            color: #fff; font: 700 11px/18px system-ui, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none;
+        }
+        .trajet-poignee:active { cursor: grabbing; }
+        .trajet-sens {
+            width: 0; height: 0;
+            border-left: 7px solid #C44536;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            filter: drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.35));
+            pointer-events: none;
         }
         .map-controls-dock .dock-fab .sun-dot {
             position: static; transform: none; pointer-events: none;
@@ -490,11 +518,31 @@
             box-shadow: 0 0 0 3px rgba(232,162,52,0.15), 0 1px 4px rgba(232,162,52,0.35);
             transform: translate(-50%, 0); pointer-events: none;
         }
+        .sun-arc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+        .sun-dot.nuit {
+            background: #5B6B8C;
+            box-shadow: 0 0 0 3px rgba(91,107,140,0.18), 0 1px 4px rgba(91,107,140,0.35);
+        }
         .sun-arc .hlbl {
             position: absolute; bottom: 1px; font-size: 8px;
             color: var(--muted-light); font-family: var(--mono); line-height: 1;
         }
         .dock-slot-sun .vsep { width: 1px; height: 18px; background: var(--hairline); flex-shrink: 0; }
+        /* Téléphone : date, heure et arc (168 px) débordaient la pastille —
+           mesuré à 390 px de large (24/09/2026), l'hôte offre 230 px et
+           l'ensemble en demandait 282 : l'arc perdait 16 h 30 → 24 h, c'est-à-dire
+           toute la nuit, et le point du soleil disparaissait sous le chevron.
+           La date cède sa place (l'heure reste) : 215 px. */
+        @media (max-width: 480px) {
+            .dock-slot-sun { gap: 6px; }
+            .dock-slot-sun .date { display: none; }
+        }
+        /* Téléphone étroit (≤ 400 px, 375 mesuré) : même sans la date, l'arc
+           dépassait encore d'environ 15 px (point P8, 24/09/2026). Le mot
+           « Hauteur » cède sa place, la valeur reste (−23°) : ≈ 50 px rendus. */
+        @media (max-width: 400px) {
+            .dock-slot-sun .alt-lbl { display: none; }
+        }
         .shadow-toggle {
             background: transparent; border: none; cursor: pointer; color: var(--muted);
             font-size: 11px; display: flex; align-items: center; gap: 4px;
@@ -1281,7 +1329,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.8.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.9.0" />
 </head>
 <body>
     <div class="app">
@@ -1372,7 +1420,6 @@
             <div class="map-frame" id="map-frame">
                 <div id="map"></div>
                 <div id="viewer-controls" aria-label="Contrôles de lecture"></div>
-                <div id="night-tint"></div>
 
                 <div class="compass" id="compass" title="Réorienter au Nord">
                     <svg width="54" height="54" viewBox="0 0 54 54" id="compass-svg">
@@ -1500,6 +1547,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.8.0"></script>
+    <script type="module" src="./app.js?v=1.9.0"></script>
 </body>
 </html>

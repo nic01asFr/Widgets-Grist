@@ -147,6 +147,33 @@ test('composition avec les reglages manuels de la couche (§5)', () => {
   assert.equal(regle.rotationDeg, 30 + seul.rotationDeg);
 });
 
+test('luminaire : ni tirage d’echelle, classe de hauteur par la hauteur de feu (decision 6)', () => {
+  // Reduction du catalogue d'essai pix2hdr.eclairage.essai (24/09/2026).
+  const mat = {
+    id: 'mat_crosse', family: 'lighting', seed: 'll', variants: 1, scale_draw: false,
+    matches: [{ source: 'any', geometry: 'point', mode: 'instance', tags: { support: ['MAT', 'POT'] } }],
+    measure: [{ param: 'height_class', from: ['hauteurFeu', 'height'], unit: 'm', parse: 'osm_length', clamp: [3, 14],
+      mode: 'select', key: 'height_class', thresholds: [[4.5, 'h4'], [5.5, 'h5'], [7, 'h6'], [9, 'h8'], [11, 'h10'], [null, 'h12']] }],
+    defaults: { height_class: 'h6' },
+  };
+  const asset = (h) => ({ type: 'mat_crosse', keys: { height_class: h, variant: 0, lod: 0 }, files: { colored: `glb/mat_crosse_${h}_v0_lod0.glb` }, height_m: 6.1 });
+  const cat = lireCatalogue({ parametric: { schema: 'atlas-objets/0.1', types: [mat], assets: ['h4', 'h6', 'h8'].map(asset) } },
+    'https://exemple.test/eclairage/catalog.json');
+  const couche = { source: 'fichier', nom: 'Points lumineux' };
+  for (let i = 0; i < 20; i++) {
+    const r = resoudreObjet(cat, couche, arbre({ structure: 'LANT', support: 'MAT', hauteurFeu: 6.75 }, 5.44 + i * 1e-4, 43.33), { echelleCouche: 1 });
+    assert.equal(r.echelle, 1, 'aucun tirage 0,9–1,1 sur un luminaire');
+    assert.equal(r.asset.keys.height_class, 'h6');
+  }
+  assert.equal(resoudreObjet(cat, couche, arbre({ support: 'MAT', hauteurFeu: 8 }), {}).asset.keys.height_class, 'h8');
+  assert.equal(resoudreObjet(cat, couche, arbre({ support: 'MAT' }), {}).asset.keys.height_class, 'h6', 'defaut h6');
+  // La famille seule suffit, pour un catalogue qui ne porterait pas `scale_draw`.
+  const sansCle = lireCatalogue({ parametric: { schema: 'atlas-objets/0.1', types: [{ ...mat, scale_draw: undefined }], assets: [asset('h6')] } }, '');
+  assert.equal(resoudreObjet(sansCle, couche, arbre({ support: 'MAT', hauteurFeu: 6 }), {}).echelle, 1);
+  // L'echelle de la couche compose toujours (§5).
+  assert.equal(resoudreObjet(cat, couche, arbre({ support: 'MAT' }), { echelleCouche: 2 }).echelle, 2);
+});
+
 test('meme arbre, meme tirage ; arbre voisin, autre tirage', () => {
   const p = { natural: 'tree', genus: 'Platanus' };
   const a = resoudreObjet(CAT, OSM, arbre(p), {});

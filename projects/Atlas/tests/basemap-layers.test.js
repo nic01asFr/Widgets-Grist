@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { basemapLayerIds, isAtlasLayerId } from '../lib/basemap-layers.js';
+import { basemapLayerIds, isAtlasLayerId, quandNouveauStyle } from '../lib/basemap-layers.js';
 
 const styleCRESO = [
   // Fond OpenStreetMap / Liberty
@@ -51,3 +51,51 @@ test('entrées invalides', () => {
 test('aucune couche du type demandé', () => {
   assert.deepEqual(basemapLayerIds(styleCRESO, 'heatmap'), []);
 });
+
+{
+  const fausseCarte = (feuille) => {
+    const attente = [];
+    return {
+      style: { stylesheet: feuille },
+      once(ev, f) { if (ev === 'idle') attente.push(f); },
+      idle() { const f = attente.shift(); f?.(); },
+      enAttente: () => attente.length,
+    };
+  };
+
+  test('quandNouveauStyle — un idle émis sur l’ancien style (image rendue pendant la requête) ne déclenche rien', () => {
+    const ancienne = { nom: 'liberty' };
+    const map = fausseCarte(ancienne);
+    let appels = 0;
+    quandNouveauStyle(map, ancienne, () => { appels++; }, { maintenant: () => 0 });
+    map.idle();                                // triggerRepaint pendant la requête
+    assert.equal(appels, 0);
+    assert.equal(map.enAttente(), 1, 'réarmé');
+    map.style.stylesheet = { nom: 'positron' }; // différence appliquée : même Style, feuille neuve
+    map.idle();
+    assert.equal(appels, 1);
+  });
+
+  test('quandNouveauStyle — style recréé (objet Style neuf) : reconnu aussi', () => {
+    const ancienne = {};
+    const map = fausseCarte(ancienne);
+    let appels = 0;
+    quandNouveauStyle(map, ancienne, () => { appels++; }, { maintenant: () => 0 });
+    map.style = { stylesheet: {} };
+    map.idle();
+    assert.equal(appels, 1);
+  });
+
+  test('quandNouveauStyle — style identique (feuille inchangée) : rappel après le délai', () => {
+    const ancienne = {};
+    const map = fausseCarte(ancienne);
+    let t = 0;
+    let appels = 0;
+    quandNouveauStyle(map, ancienne, () => { appels++; }, { delaiMaxMs: 5000, maintenant: () => t });
+    map.idle();
+    assert.equal(appels, 0);
+    t = 6000;
+    map.idle();
+    assert.equal(appels, 1);
+  });
+}
