@@ -73,6 +73,10 @@
   },
   "journal": [
     {
+      "version": "v1.10.2",
+      "texte": "Les contrôles publiés se lisent en entier : un libellé de catégorie long passe à la ligne au lieu d'être coupé, la liste est plus haute, les curseurs d'une plage ne sont plus rognés, et les valeurs suivent l'ordre de la légende."
+    },
+    {
       "version": "v1.10.1",
       "texte": "Jouer un contexte ou une étape du récit ne retire plus les pastilles de contrôle que l'auteur a publiées : le filtre est levé, la pastille reste offerte."
     },
@@ -368,7 +372,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.10.1 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, dessin et modification des géométries, récit avec trajet optionnel, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.10.2 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, dessin et modification des géométries, récit avec trajet optionnel, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

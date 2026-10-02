@@ -14,7 +14,7 @@
  *
  * Tout ici est pur : il rend des actions Grist, il ne les exécute pas.
  */
-import { resoudreParametre } from './parametres-objet.js?v=1.10.1';
+import { resoudreParametre } from './parametres-objet.js?v=1.10.2';
 
 /** Ce qui est un réglage d'Atlas, et non une donnée du point lumineux : jamais écrit dans la table. */
 const NON_FIGEABLES = new Set(['comportement']);

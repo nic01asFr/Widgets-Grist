@@ -13,7 +13,7 @@
  *
  * Ce module ne touche ni au DOM, ni à Grist.
  */
-import { contexteDeCle } from './contextes.js?v=1.10.1';
+import { contexteDeCle } from './contextes.js?v=1.10.2';
 
 /** Par où la scène s'ouvre pour qui ne l'édite pas. */
 export const OUVERTURES = Object.freeze(['carte', 'recit', 'contexte']);

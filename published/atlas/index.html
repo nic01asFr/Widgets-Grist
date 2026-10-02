@@ -441,7 +441,7 @@
             box-sizing: border-box;
         }
         .map-controls-dock .dock-panel.dock-panel-tall {
-            height: auto; max-height: min(40vh, 200px);
+            height: auto; max-height: min(62vh, 460px);
             border-radius: 16px; align-items: flex-start;
             padding-top: 10px; padding-bottom: 10px;
         }
@@ -450,7 +450,7 @@
             flex: 1; min-width: 0; overflow: hidden;
         }
         .dock-slot-data {
-            width: 100%; min-width: 180px; max-width: 340px;
+            width: 100%; min-width: 180px; max-width: min(440px, 100%);
             display: flex; flex-direction: column; gap: 8px;
         }
         .dock-slot-head {
@@ -473,7 +473,14 @@
             border-radius: 10px;
             padding: 8px 10px;
         }
-        .dock-slot-data .cats { max-height: 132px; overflow-y: auto; margin-top: 0 !important; }
+        .dock-slot-data .cats { max-height: min(44vh, 300px); overflow-y: auto; margin-top: 0 !important; overscroll-behavior: contain; }
+        /* Un libelle de categorie long (« C_Etat mauvais, travaux a envisager a court terme »)
+           passe sur deux ou trois lignes au lieu d'etre coupe : choisir une valeur sans pouvoir
+           la lire en entier, c'est cocher a l'aveugle. */
+        .dock-slot-data .cat-value { white-space: normal; overflow: hidden; text-overflow: clip; overflow-wrap: anywhere;
+            line-height: 1.3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
+        .dock-slot-data .cat-row { align-items: flex-start; }
+        .dock-slot-data .cat-row .cat-count { margin-top: 1px; }
         /* La pastille Releve : une rangee par couche ou l'on peut saisir. */
         /* Le panneau haut plafonne a 200 px : au-dela d'une couche, la liste
            defile au lieu d'etre coupee. */
@@ -519,9 +526,12 @@
             border: 1px solid var(--accent); background: var(--accent); color: #fff;
             font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
         }
-        .dock-slot-data .rng { width: 100%; max-width: 260px; margin-top: 2px; }
+        /* Les deux curseurs d'une plage : la poignee deborde de sa piste de 7 px de chaque cote, et le panneau
+           coupe ce qui deborde. Une marge les garde entiers ; l'ecart entre les deux les rend saisissables. */
+        .dock-slot-data .rng { display: block; width: calc(100% - 16px); max-width: none; margin: 6px 8px 0; }
+        .dock-slot-data .rng + .rng { margin-top: 18px; }
         .dock-slot-data .range-info {
-            font-size: 11px; color: #7B705F; margin: 0 0 5px 0 !important;
+            font-size: 12.5px; color: var(--ink); margin: 0 0 5px 0 !important;
         }
         .dock-slot-data .cat-row { border-radius: 8px; padding: 4px 6px; }
         .dock-slot-data .cat-row:hover { background: rgba(0,0,0,0.03); }
@@ -655,7 +665,8 @@
         .legend.collapsed .legend-body { display: none; }
         .legend-row { display: flex; align-items: center; gap: 10px; }
         .legend-row .swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-        .legend-row .nm { font-size: 12px; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .legend-row .nm { font-size: 12px; color: var(--text); flex: 1; min-width: 0; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25;
+            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
         .legend-row .ct { font-family: var(--mono); font-size: 10.5px; color: var(--muted-light); }
         .legend-empty { font-size: 12px; color: var(--muted); padding: 4px 0; }
         .legend-group { display: flex; flex-direction: column; gap: 4px; }
@@ -1523,7 +1534,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.10.1" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.10.2" />
 </head>
 <body>
     <div class="app">
@@ -1758,6 +1769,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.10.1"></script>
+    <script type="module" src="./app.js?v=1.10.2"></script>
 </body>
 </html>
