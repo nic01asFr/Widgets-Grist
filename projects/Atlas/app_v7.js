@@ -5400,11 +5400,10 @@ function htmlMiniature() {
     const m = STATE.miniature;
     return `<div class="section">
         <div class="section-title">Miniature de la scène${infoBulle('L’image qui représente la scène dans la liste des projets de l’application. Cadrez la carte sur le sujet, puis « Utiliser la vue actuelle ».')}</div>
-        ${m ? `<img class="miniature-apercu" src="${escapeHtml(m)}" alt="Miniature actuelle de la scène">` : '<div class="range-info">Aucune miniature : la liste montre l’initiale de la scène.</div>'}
-        <div class="cadrage-boutons">
-            <button class="btn btn-soft" onclick="A.capturerMiniature()">Utiliser la vue actuelle</button>
-            <button class="btn btn-soft" ${m ? '' : 'disabled'} onclick="A.retirerMiniature()">Retirer</button>
-        </div></div>`;
+        ${m ? `<img class="miniature-apercu" src="${escapeHtml(m)}" alt="Miniature actuelle de la scène">` : '<div class="miniature-vide">Aucune miniature : la liste montre l’initiale de la scène.</div>'}
+        <button class="btn btn-soft btn-full" onclick="A.capturerMiniature()">${m ? 'Remplacer par la vue actuelle' : 'Utiliser la vue actuelle'}</button>
+        ${m ? '<button type="button" class="btn-lien miniature-retirer" onclick="A.retirerMiniature()">Retirer la miniature</button>' : ''}
+    </div>`;
 }
 
 function renderLieu() {
@@ -5417,13 +5416,16 @@ function renderLieu() {
         </div>
         ${htmlCadrage()}
         ${htmlMiniature()}
-        <div class="loc-badge">
-            <span class="ic">${icTrait(IC.epingle)}</span>
-            <div>
-                <div class="nm">${L.name || 'Non défini'}</div>
-                <div class="co">${(L.lat ?? 0).toFixed(5)}°N · ${(L.lng ?? 0).toFixed(5)}°E · ancre du soleil</div>
+        <div class="section">
+            <div class="section-title">Ancre du soleil${infoBulle('Le point sur lequel se règlent le soleil et le fuseau de la scène. Tant qu’aucun lieu n’est désigné, c’est le centre des données.')}</div>
+            <div class="loc-badge">
+                <span class="ic">${icTrait(IC.epingle)}</span>
+                <div class="loc-texte">
+                    <div class="nm">${L.name || 'Non défini'}</div>
+                    <div class="co">${(L.lat ?? 0).toFixed(4)}°N · ${(L.lng ?? 0).toFixed(4)}°E</div>
+                </div>
             </div>
-            <button class="loc-change" onclick="A.recenter()">Recentrer</button>
+            <button class="btn btn-soft btn-full" onclick="A.recenter()">${icTrait(IC.cible, 16)} Recentrer la carte</button>
         </div>`;
 }
 
