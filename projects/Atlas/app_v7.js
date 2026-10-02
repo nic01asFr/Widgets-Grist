@@ -187,6 +187,7 @@ import {
   etatApresRecapture,
   retirerTrace,
   objetsAutour,
+  objetsLeLong,
 } from './lib/trajet.js?v=20260924a';
 import {
   syncLayerDeclarative,
@@ -6551,6 +6552,28 @@ function libelleStatut(statut) {
     return 'brouillon';
 }
 
+/** Les couches de points dont on peut tirer des étapes le long du trajet. */
+function couchesDePointsPourEtapes() {
+    return STATE.layers.filter((l) => l.visible !== false && !l._distant && !l._raster
+        && (l.geometryType === 'Point') && (l.geojson?.features || []).length);
+}
+
+/** Une étape par objet qui borde le trajet : la tournée se compose depuis les objets, sans les capturer un à un. */
+function etapesLeLongHtml() {
+    const couches = couchesDePointsPourEtapes();
+    if (!couches.length) return '';
+    const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
+    return `<div class="section"><div class="section-title">Étapes depuis les objets</div>
+        <div class="hint">Une étape par objet situé près de la ligne, dans l’ordre du parcours : la tournée se compose d’un geste.</div>
+        <select id="etapes-couche" class="input" style="margin-top:8px">${options}</select>
+        <div class="dual" style="margin-top:8px">
+            <div><label class="input-label" for="etapes-rayon">À moins de (m)</label>
+            <input id="etapes-rayon" class="input" type="number" min="5" max="1000" step="5" value="50"></div>
+        </div>
+        <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.etapesLeLong()">Créer les étapes</button>
+    </div>`;
+}
+
 function barreTrajetHtml() {
     if (CONFIG.viewMode) return '';
     const trace = traceActuelle();
@@ -6572,7 +6595,7 @@ function barreTrajetHtml() {
             <button class="btn btn-soft" style="flex:1" onclick="A.remplacerTrajet()">Remplacer</button>
             <button class="btn btn-soft" style="flex:1" onclick="A.retirerTrajet()">Retirer</button>
         </div>
-    </div>`;
+    </div>${etapesLeLongHtml()}`;
 }
 
 function metaEtapeTrajet(s) {
@@ -13605,6 +13628,36 @@ const A = {
         } else {
             showToast('Étape posée sur le trajet', 'success');
         }
+    },
+    /** Une étape par objet qui borde le trajet, dans l'ordre du parcours. */
+    etapesLeLong() {
+        if (!assertCanWrite('composer le récit')) return;
+        const trace = traceActuelle();
+        const couche = STATE.layers.find((l) => l.id === $('etapes-couche')?.value);
+        const rayon = Math.min(1000, Math.max(5, Number($('etapes-rayon')?.value) || 50));
+        if (!trace || !couche) { showToast('Choisissez une couche de points', 'warning'); return; }
+        const objets = (couche.geojson?.features || []).map((f, i) => ({
+            idx: i, point: featureCentroidLngLat(f), nom: nomObjet(f.properties || {}) || '',
+        })).filter((o) => Array.isArray(o.point));
+        const liste = objetsLeLong(trace.coordinates, objets, rayon);
+        if (!liste.length) { showToast(`Aucun objet de « ${couche.name} » à moins de ${rayon} m du trajet`, 'info'); return; }
+        if (liste.length > 60 && !window.confirm(`${liste.length} objets : créer ${liste.length} étapes ?`)) return;
+        const photo = captureStoryState(map, STATE);
+        const dejaLa = STATE.story.length;
+        liste.forEach((o, k) => {
+            const state = fusionnerApresPhoto(
+                { ...photo, camera: { ...(photo.camera || {}), center: o.point, zoom: Math.max(17, photo.camera?.zoom || 0) } },
+                { trace: traceFigee(trace), abscisse: o.abscisse, saisies: saisiesCourantes() },
+            );
+            STATE.story.push({ title: o.nom || ('Étape ' + (dejaLa + k + 1)), text: '', state });
+        });
+        assurerCles(STATE.story);
+        STATE.story.forEach((s) => { if (s.state) s.state.trace = traceFigee(trace); });
+        STATE.story = trierParAbscisse(STATE.story);
+        markDirty();
+        persistStory(true);
+        renderRecit();
+        showToast(`${liste.length} étape${liste.length > 1 ? 's' : ''} créée${liste.length > 1 ? 's' : ''} le long du trajet`, 'success');
     },
     storyRecapture(i) {
         if (!assertCanWrite('re-capturer le récit')) return;

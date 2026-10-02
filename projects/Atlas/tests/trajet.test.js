@@ -175,3 +175,21 @@ test('les objets autour sont les plus proches, cinq au plus', () => {
   assert.equal(liste[0].nom, '0');
   assert.ok(liste[0].distance <= liste[4].distance);
 });
+
+test('objetsLeLong : les objets qui bordent la ligne, dans l\'ordre du parcours', async () => {
+  const { objetsLeLong } = await import('../lib/trajet.js');
+  const ligne = [[5.0, 43.0], [5.01, 43.0], [5.02, 43.0]];
+  const objets = [
+    { nom: 'C', point: [5.0198, 43.00005] },
+    { nom: 'A', point: [5.0002, 43.00003] },
+    { nom: 'loin', point: [5.01, 43.01] },
+    { nom: 'B', point: [5.0100, 42.99996] },
+    { nom: 'sans position' },
+  ];
+  const r = objetsLeLong(ligne, objets, 50);
+  assert.deepEqual(r.map((o) => o.nom), ['A', 'B', 'C']);
+  assert.ok(r[0].abscisse < r[1].abscisse && r[1].abscisse < r[2].abscisse);
+  assert.ok(r.every((o) => o.ecartM <= 50));
+  assert.deepEqual(objetsLeLong(ligne, objets, 1).map((o) => o.nom), []);
+  assert.deepEqual(objetsLeLong([[5, 43]], objets, 50), []);
+});

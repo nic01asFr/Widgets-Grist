@@ -2756,3 +2756,12 @@ Trois réglages de base de la symbolisation, demandés pour des couches denses (
   catégorie et de la couleur graduée (`paletteEn`). Sans effet sur des couleurs lues dans une table de référence.
 - **Surfaces à plat, contour seul** : `symbolization.remplissage = 'contour'` — le remplissage reste (il porte le clic) à
   opacité 0, le trait ne descend pas sous 2 px.
+
+## Étapes depuis les objets, le long d'un trajet (02/10/2026)
+
+Un trajet se définit depuis une polyligne d'une couche (« Créer un trajet » dans le module Récit : on touche la ligne ;
+pour une ligne multiple, la partie touchée). Nouveau : **« Étapes depuis les objets »** (même module, sous le trajet) crée
+**une étape par objet d'une couche de points situé à moins de N m de la ligne**, dans l'ordre du parcours
+(`objetsLeLong`, `lib/trajet.js`, testé). Chaque étape cadre l'objet (zoom 17 au moins), porte sa place sur la ligne et
+les formulaires proposés. Le titre est le nom de l'objet. Éprouvé dans l'application simulée (boucle de 1,3 km, 12
+objets). Pour une boucle de randonnée : composer la tournée des ouvrages qui la bordent, d'un geste.
