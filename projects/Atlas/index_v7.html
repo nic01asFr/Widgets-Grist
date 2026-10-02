@@ -904,6 +904,34 @@
         .preview-grad > span { flex: 1; }
         .preview-scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
+        /* Panneau Couches : l'en-tete de liste, la liste des tables, les boutons d'ajout. */
+        .layer-bulk { display: flex; align-items: center; gap: 12px; margin: 0 2px 8px; font-size: 12px; }
+        .layer-bulk-compte { margin-right: auto; color: var(--muted); font-family: var(--mono); font-size: 11px; }
+        .layer-bulk-compte, .btn-lien { white-space: nowrap; }
+        .actions-grille .btn { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+        .btn-lien { background: none; border: none; padding: 2px 0; font: inherit; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hairline-strong); }
+        .btn-lien:hover { color: var(--ink); }
+        .btn-lien[aria-pressed="true"] { color: var(--ink); font-weight: 600; text-decoration: none; }
+        .btn-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+        .layer-list + .section, .layer-list + .empty { margin-top: 20px; }
+        .table-liste { display: flex; flex-direction: column; }
+        .table-item {
+            display: flex; align-items: center; gap: 8px; width: 100%; min-height: 38px; padding: 6px 10px;
+            background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+            font: inherit; font-size: 12.5px; color: var(--text); text-align: left; transition: var(--t-fast);
+        }
+        .table-item:hover, .table-item:focus-visible { background: var(--surface-muted); outline: none; }
+        .table-item:focus-visible { border-color: var(--accent); }
+        .table-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .table-compte { font-family: var(--mono); font-size: 10px; color: var(--muted-light); }
+        .table-plus { display: inline-flex; color: var(--muted); }
+        .table-item:hover .table-plus { color: var(--accent); }
+        .actions-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .menu-couche-item .posture-nom { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .menu-couche-item.danger { color: var(--accent); }
+        .menu-couche-item { min-height: 40px; }
+        #menu-couche { width: min(250px, calc(100vw - 24px)); }
+        #menu-couche.posture-feuille { width: auto; }
         /* Layer list */
         .layer-list { display: flex; flex-direction: column; gap: 2px; }
         .layer-item {
@@ -947,7 +975,8 @@
             .layer-item { gap: 5px; padding: 8px 6px; }
             .layer-meta .badge-saved { font-size: 0; padding: 1px 3px; }
             .layer-meta .badge-saved::before { content: '⛓'; font-size: 9px; }
-            .layer-item:not(.active):not(:hover) .layer-act { display: none; }
+            /* Le menu « autres actions » reste visible : c'est lui qu'on cherche. Seul le zoom se retire. */
+            .layer-item:not(.active):not(:hover) .layer-act-zoom { display: none; }
         }
         @media (pointer: fine) {
             @container (max-width: 300px) { .layer-grip { width: 16px; } }

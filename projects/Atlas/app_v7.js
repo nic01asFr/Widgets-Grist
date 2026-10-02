@@ -5274,21 +5274,21 @@ function availableTablesSection() {
     const linked = new Set(STATE.layers.filter((l) => l.sourceTable).map((l) => l.sourceTable));
     const avail = _geoTables.filter((g) => !linked.has(g.table));
     if (!avail.length) return '';
-    return `<div class="section"><div class="section-title">Tables géo du document · à afficher</div><div class="layer-list">${avail.map((g) => `
-        <div class="layer-item" onclick="A.showGeoTable('${String(g.table).replace(/'/g, "\\'")}')">
-            <span class="layer-vis" title="Afficher comme couche">＋</span>
-            <div class="layer-info"><div class="layer-name">${g.table}</div><div class="layer-meta">${geoTableMeta(g)}</div></div>
-            <button class="layer-act" title="Afficher">${icTrait(IC.oeil)}</button>
-        </div>`).join('')}</div></div>`;
+    return `<div class="section"><div class="section-title">Tables du document${infoBulle('Les tables géographiques du document qui ne sont pas encore des couches. Touchez une table pour l’ajouter.')}</div><div class="table-liste">${avail.map((g) => `
+        <button type="button" class="table-item" onclick="A.showGeoTable('${String(g.table).replace(/'/g, "\\'")}')" title="Afficher « ${escapeHtml(g.table)} » comme couche">
+            <span class="table-nom">${escapeHtml(g.table)}</span>${Number.isFinite(g.count) ? `<span class="table-compte">${g.count} obj.</span>` : ''}
+            <span class="table-plus" aria-hidden="true">${icTrait(IC.plus, 16)}</span>
+        </button>`).join('')}</div></div>`;
 }
 
     const actions = () => `
         <div class="section layer-actions">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-primary" style="flex:1" onclick="A.openOSM()">${icTrait(IC.globe)} OSM</button>
-                <button class="btn btn-soft" style="flex:1" onclick="document.getElementById('file-input').click()">${icTrait(IC.fichier)} Fichier</button>
-                ${CONFIG.grist.ready ? `<button class="btn btn-soft" style="flex:1" onclick="A.openLinkTable()">${icTrait(IC.lien)} Table</button>` : ''}
-                ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" style="flex:1" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
+            <div class="section-title">Ajouter une couche</div>
+            <div class="actions-grille">
+                ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
+                <button class="btn btn-soft" onclick="document.getElementById('file-input').click()" title="Ouvrir un fichier GeoJSON">${icTrait(IC.fichier)} Fichier</button>
+                <button class="btn btn-soft" onclick="A.openOSM()" title="Importer depuis OpenStreetMap">${icTrait(IC.globe)} OSM</button>
+                ${CONFIG.grist.ready ? `<button class="btn btn-soft" onclick="A.openLinkTable()" title="Lier une autre table du document">${icTrait(IC.lien)} Autre table…</button>` : ''}
             </div>
         </div>`;
 
@@ -5310,11 +5310,10 @@ function renderLayersPanel(mode) {
     }
     const allVis = STATE.layers.every((l) => l.visible !== false);
     body.innerHTML = `
-        <div class="section" style="margin-top:0">
-            <div style="display:flex;gap:8px">
-                <button class="btn ${allVis ? 'btn-dark' : 'btn-soft'}" style="flex:1" onclick="A.toggleAllLayers(true)">${icTrait(IC.oeil)} Tout</button>
-                <button class="btn ${!STATE.layers.some((l) => l.visible !== false) ? 'btn-dark' : 'btn-soft'}" style="flex:1" onclick="A.toggleAllLayers(false)">Masquer</button>
-            </div>
+        <div class="layer-bulk">
+            <span class="layer-bulk-compte">${STATE.layers.length} couche${STATE.layers.length > 1 ? 's' : ''}</span>
+            <button type="button" class="btn-lien" ${allVis ? 'aria-pressed="true"' : ''} onclick="A.toggleAllLayers(true)">Tout afficher</button>
+            <button type="button" class="btn-lien" ${!STATE.layers.some((l) => l.visible !== false) ? 'aria-pressed="true"' : ''} onclick="A.toggleAllLayers(false)">Tout masquer</button>
         </div>
         <div class="layer-list">
             ${displayOrder(STATE.layers).map((l) => {
@@ -5343,9 +5342,8 @@ function renderLayersPanel(mode) {
                             ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
                             : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
                     </div>
-                    ${linked ? `<button class="layer-act" onclick="A.refreshLayer('${l.id}', event)" title="Rafraîchir depuis la table">${icTrait(IC.rafraichir)}</button>` : ''}
-                    <button class="layer-act" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche">${icTrait(IC.cible)}</button>
-                    <button class="layer-del" onclick="A.deleteLayer('${l.id}', event)" title="Supprimer">${icTrait(IC.corbeille)}</button>
+                    <button class="layer-act layer-act-zoom" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche" aria-label="Zoomer sur ${escapeHtml(l.name)}">${icTrait(IC.cible)}</button>
+                    <button class="layer-act" onclick="A.menuCouche('${l.id}', event)" title="Autres actions" aria-label="Autres actions pour ${escapeHtml(l.name)}" aria-haspopup="menu">${icTrait(IC.plusieurs)}</button>
                 </div>`;
             }).join('')}
         </div>
@@ -5355,6 +5353,48 @@ function renderLayersPanel(mode) {
 }
 
 /** Liste couches en lecture : légende + zoom, sans paramétrage. */
+function fermerMenuCouche() {
+    document.getElementById('menu-couche')?.remove();
+    document.removeEventListener('pointerdown', _fermetureMenuCouche, true);
+    document.removeEventListener('keydown', _toucheMenuCouche, true);
+}
+function _fermetureMenuCouche(e) { if (!e.target.closest?.('#menu-couche')) fermerMenuCouche(); }
+function _toucheMenuCouche(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerMenuCouche(); } }
+
+/** Le menu des actions rares d'une ligne de couche : le zoom reste sur la ligne, ce qui détruit ou recharge passe ici. */
+function ouvrirMenuCouche(layer, ancre) {
+    fermerMenuCouche();
+    const menu = document.createElement('div');
+    menu.id = 'menu-couche';
+    menu.className = 'posture-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', `Actions pour ${layer.name}`);
+    const items = [];
+    if (isLinkedTableLayer(layer)) items.push({ id: 'rafraichir', nom: 'Rafraîchir depuis la table', ic: IC.rafraichir });
+    items.push({ id: 'supprimer', nom: 'Supprimer la couche', ic: IC.corbeille, danger: true });
+    menu.innerHTML = items.map((i) => `<button type="button" role="menuitem" class="posture-choix menu-couche-item${i.danger ? ' danger' : ''}" data-act="${i.id}">
+        <span class="posture-nom">${icTrait(i.ic, 16)} ${echapper(i.nom)}</span></button>`).join('');
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (ev) => {
+        const b = ev.target.closest('[data-act]');
+        if (!b) return;
+        fermerMenuCouche();
+        const evenement = { stopPropagation() {} };
+        if (b.dataset.act === 'rafraichir') A.refreshLayer(layer.id, evenement);
+        else A.deleteLayer(layer.id, evenement);
+    });
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        menu.style.top = `${Math.min(r.bottom + 6, window.innerHeight - menu.offsetHeight - 12)}px`;
+        menu.style.left = `${Math.max(12, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 12))}px`;
+    } else {
+        menu.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermetureMenuCouche, true);
+    document.addEventListener('keydown', _toucheMenuCouche, true);
+    menu.querySelector('.menu-couche-item')?.focus();
+}
+
 function renderLayersPanelLecture() {
     titreModule('Légende', 'Affichage tel que configuré par l’éditeur.');
     const body = $('module-body');
@@ -5426,6 +5466,7 @@ const IC = {
     cube:      '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
     enregistrer:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
     exporter:  '<path d="M12 3v13M7 8l5-5 5 5M5 21h14"/>',
+    plusieurs: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
     crayon:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
     releve:    '<path d="M9 3h6v3H9z"/><path d="M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1"/><path d="m9 14 2 2 4-4"/>',
     image:     '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/>',
@@ -14292,6 +14333,14 @@ const A = {
             showToast(`« ${l.name} » : pas d'emprise connue — le manifeste ne déclare pas de bbox`,
                 'warning');
         }
+    },
+    /** Les actions rares d'une couche : rafraîchir depuis sa table, supprimer. */
+    menuCouche(id, e) {
+        e?.stopPropagation();
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        const ancre = e?.currentTarget;
+        ouvrirMenuCouche(l, ancre);
     },
     deleteLayer(id, e) {
         e.stopPropagation();
