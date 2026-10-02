@@ -2901,8 +2901,9 @@ tronçons — la construction du réseau y sera à mesurer.
 ## Le bouton de synchronisation quitte la carte (02/10/2026)
 
 L'état « hors réseau / en attente / à vérifier » n'est pas une information cartographique : la pastille du dock disparaît. Il y a
-désormais un bouton **dans la barre du haut** (`#btn-synchro`) et, quand la barre est retirée (application en lecture), **sur la
-carte avec les autres commandes** (`#hote-synchro`). Il n'apparaît que lorsqu'il y a quelque chose à dire ; un point de couleur
-dit la gravité (rouge à vérifier, ambre hors réseau, teal en attente) et l'infobulle la phrase. Il ouvre un panneau
+désormais une **pastille dans la barre du haut, à côté du nom du projet** (`#btn-synchro`, texte « Hors réseau », « 2 en attente »… ; rouge doux, pleine quand il faut vérifier) et, quand la barre est retirée (application en lecture), **sur la
+carte avec les autres commandes** (`#hote-synchro`). Il n'apparaît que lorsqu'il y a quelque chose à dire ; la pastille dit la phrase. Il ouvre un panneau
 (`ouvrirPanneauSynchro`) qui reprend le contenu de l'ancienne pastille — état, dernier envoi, entrées de la file, « Envoyer
 maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-même quand il n'y a plus rien à dire.
+
+**Icônes de la barre** : Ouvrir (dossier), Télécharger le projet (flèche vers le bas, l'inverse de Exporter — ce n'était plus une disquette), Exporter (flèche vers le haut).

@@ -5579,7 +5579,7 @@ const IC = {
     camera:    '<path d="M3 7h3l2-3h8l2 3h3v13H3z"/><circle cx="12" cy="13" r="3.2"/>',
     palette:   '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1-.8-1.5-.8-2.4 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-4-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.1" fill="currentColor"/><circle cx="15" cy="8.5" r="1.1" fill="currentColor"/>',
     cube:      '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
-    enregistrer:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+    enregistrer:'<path d="M12 3v13M7 11l5 5 5-5M5 21h14"/>',
     exporter:  '<path d="M12 3v13M7 8l5-5 5 5M5 21h14"/>',
     plusieurs: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
     crayon:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
@@ -5745,7 +5745,7 @@ function brancherSynchro() {
 /**
  * Le bouton de synchronisation — dans la barre du haut, et sur la carte quand la barre est retirée : ce n'est pas une
  * information cartographique. Il n'apparaît que lorsqu'il y a quelque chose à dire (hors réseau, en attente, à vérifier) ;
- * un point de couleur dit la gravité, l'infobulle la phrase.
+ * la pastille dit la phrase : calme (rouge doux) hors réseau ou en attente, pleine quand il faut vérifier.
  */
 function majBoutonsSynchro() {
     const hl = clientHorsLigne();
@@ -5759,6 +5759,8 @@ function majBoutonsSynchro() {
         b.setAttribute('aria-label', p.label);
         b.classList.remove('etat-alerte', 'etat-hors', 'etat-attente');
         b.classList.add(p.alerte ? 'etat-alerte' : (!hl.etat().enLigne ? 'etat-hors' : 'etat-attente'));
+        const lib = b.querySelector('.synchro-lib');
+        if (lib) lib.textContent = p.label;
     }
 }
 
@@ -5781,7 +5783,8 @@ function rafraichirPanneauSynchro() {
 }
 
 /** Ce qui est parti, ce qui attend, ce qui a été refusé : le même contenu que l'ancienne pastille, posé sous le bouton. */
-function ouvrirPanneauSynchro(ancre) {
+function ouvrirPanneauSynchro(ancre, ev) {
+    ev?.stopPropagation?.();
     if (document.getElementById('panneau-synchro')) { fermerPanneauSynchro(); return; }
     if (!clientHorsLigne()) return;
     const panneau = document.createElement('div');
@@ -11585,8 +11588,8 @@ function wireBasculeLectureEdition() {
     // Deux vrais boutons, un seul geste : le clavier et le clic passent par `click`.
     $('btn-posture')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('hote-edition')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
-    $('btn-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget));
-    $('hote-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget));
+    $('btn-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
+    $('hote-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
 }
 
 /**

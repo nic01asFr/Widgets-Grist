@@ -196,12 +196,19 @@
         .posture-ic .ic-trait { color: inherit; }
         .avatar[hidden] { display: none; }
         /* Le bouton de synchronisation : un point dit la gravite (rouge a verifier, ambre hors reseau, teal en attente). */
-        #btn-synchro, #hote-synchro { position: relative; }
-        #btn-synchro[hidden], #hote-synchro[hidden] { display: none; }
-        .synchro-point { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 0 2px var(--surface); }
-        #hote-synchro .synchro-point { top: 9px; right: 9px; }
-        .etat-hors > .synchro-point { background: #d9962b; }
-        .etat-alerte > .synchro-point { background: var(--accent); }
+        /* Une pastille a cote du nom du projet : calme (rouge doux) hors reseau ou en attente, pleine quand il faut verifier. */
+        .synchro-pastille {
+            display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; margin-left: 4px;
+            border-radius: 13px; border: 1px solid rgba(196, 69, 54, 0.28); background: var(--accent-soft); color: var(--accent);
+            font: 600 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+        }
+        .synchro-pastille[hidden], #hote-synchro[hidden] { display: none; }
+        .synchro-pastille:hover { border-color: var(--accent); }
+        .synchro-pastille:focus-visible, #hote-synchro:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .synchro-pastille.etat-alerte { background: var(--accent); border-color: var(--accent); color: #fff; }
+        /* Sur la carte (barre retiree) : meme signal, en rond. */
+        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: rgba(196, 69, 54, 0.35); }
+        #hote-synchro.etat-alerte { background: var(--accent); color: #fff; border-color: var(--accent); }
         .panneau-synchro { width: min(360px, calc(100vw - 24px)); padding: 10px 12px; }
         .panneau-synchro .dock-slot-data { padding: 0; }
         .export-portee { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
@@ -1488,6 +1495,8 @@
             body.mobile-layout .avatar { display: none; }
             body.mobile-layout .header-actions #btn-load,
             body.mobile-layout .header-actions #btn-save { display: none; }
+            body.mobile-layout .synchro-lib { display: none; }
+            body.mobile-layout .synchro-pastille { width: 28px; height: 28px; padding: 0; justify-content: center; border-radius: 50%; }
             body.mobile-layout .brand-project { max-width: 8rem; overflow: hidden;
                 text-overflow: ellipsis; white-space: nowrap; }
             /* L'attribution de gauche passait SOUS la legende : chacune son etage. */
@@ -1661,6 +1670,9 @@
                 <span class="brand-project" id="project-name">Nouveau projet</span>
                 <span class="dirty-dot"></span>
             </div>
+            <button type="button" class="synchro-pastille" id="btn-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
+                <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg><span class="synchro-lib"></span>
+            </button>
 
             <div class="cmdk" id="cmdk-trigger">
                 <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
@@ -1673,13 +1685,10 @@
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/></svg>
                 </button>
                 <button class="btn-ghost" id="btn-save" title="Télécharger le projet (.json)" aria-label="Télécharger le projet (.json)">
-                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5M5 21h14"/></svg>
                 </button>
                 <button class="btn-ghost" id="btn-export" title="Exporter (GeoJSON, CSV, KML, GPX, image)" aria-label="Exporter" aria-haspopup="menu">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
-                </button>
-                <button class="btn-ghost" id="btn-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
-                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg><span class="synchro-point" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="btn-posture" id="btn-posture" aria-haspopup="menu" title="Posture" aria-label="Posture">
                     <span class="posture-ic" aria-hidden="true"></span><span class="posture-lib"></span>
@@ -1753,7 +1762,7 @@
                         <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
                     </button>
                     <button type="button" class="commande-hote" id="hote-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
-                        <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg><span class="synchro-point" aria-hidden="true"></span>
+                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg>
                     </button>
                     <button type="button" class="commande-hote" id="hote-edition" title="Changer de posture" aria-label="Changer de posture" aria-haspopup="menu" hidden>
                         <span class="posture-ic" aria-hidden="true"></span>
@@ -1864,7 +1873,7 @@
                  la place de les montrer sur un telephone. Sans elles, on peut
                  tout modifier sans jamais rien enregistrer. -->
             <div class="mp-groupe">Projet</div>
-            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span>Télécharger le projet</span></button>
+            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 11l5 5 5-5M5 21h14"/></svg><span>Télécharger le projet</span></button>
             <button type="button" data-action-plus="charger"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg><span>Ouvrir un projet</span></button>
             <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter…</span></button>
         </div>
