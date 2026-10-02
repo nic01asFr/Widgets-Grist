@@ -49,6 +49,7 @@ import {
 } from './lib/fiche-formulaire.js?v=20261002c';
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=20261002a';
 import { configEcheance, compterEcheances, expressionCouronne, phraseEcheances, COULEURS_ECHEANCE, LIBELLES_ECHEANCE } from './lib/echeance.js?v=20261002a';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
@@ -4548,6 +4549,65 @@ function poserTrajetDepuis(choix) {
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* Itinéraire sur un réseau : départ, points de passage, arrivée       */
+/* ------------------------------------------------------------------ */
+
+/** `null` hors itinéraire ; sinon `{ layerId, reseau, points, marqueurs, calcul }`. */
+let _itineraire = null;
+const SOURCE_ITINERAIRE = 'atlas-itineraire';
+
+function effacerApercuItineraire() {
+    if (!map) return;
+    if (map.getLayer(SOURCE_ITINERAIRE)) map.removeLayer(SOURCE_ITINERAIRE);
+    if (map.getSource(SOURCE_ITINERAIRE)) map.removeSource(SOURCE_ITINERAIRE);
+}
+
+function terminerItineraire() {
+    if (!_itineraire) return;
+    _itineraire.marqueurs.forEach((m) => m.remove());
+    effacerApercuItineraire();
+    _itineraire = null;
+    if (map) map.getCanvas().style.cursor = '';
+}
+
+function dessinerApercuItineraire(coordonnees) {
+    effacerApercuItineraire();
+    if (!map || !coordonnees?.length) return;
+    map.addSource(SOURCE_ITINERAIRE, optionsSourceGeojson({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coordonnees } }));
+    map.addLayer({ id: SOURCE_ITINERAIRE, type: 'line', source: SOURCE_ITINERAIRE,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#0B6E99', 'line-width': 6, 'line-opacity': 0.9 } });
+}
+
+/** Un point de plus : on le numérote, et le chemin se retrace dès qu'il y a un départ et une arrivée. */
+function itineraireClic(e) {
+    const s = _itineraire;
+    if (!s) return;
+    const p = [e.lngLat.lng, e.lngLat.lat];
+    s.points.push(p);
+    const el = document.createElement('div');
+    el.className = 'trajet-poignee';
+    el.textContent = String(s.points.length);
+    s.marqueurs.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(p).addTo(map));
+    recalculerItineraire();
+    if (STATE.currentModule === 'recit') renderRecit();
+}
+
+function recalculerItineraire() {
+    const s = _itineraire;
+    if (!s) return;
+    s.calcul = s.points.length >= 2 ? calculerItineraire(s.reseau, s.points) : null;
+    dessinerApercuItineraire(s.calcul?.ok ? s.calcul.coordonnees : []);
+    if (s.calcul && !s.calcul.ok) showToast(s.calcul.raison, 'warning');
+}
+
+/** Les couches de lignes dont on peut tirer un réseau. */
+function couchesReseau() {
+    return STATE.layers.filter((l) => l.visible !== false && !l._distant && !l._raster
+        && (l.geojson?.features || []).some((f) => estLineaire(f.geometry?.type)));
+}
+
 function onTrajetPick(e) {
     const clic = [e.lngLat.lng, e.lngLat.lat];
     let best = null;
@@ -6597,6 +6657,34 @@ function etapesLeLongHtml() {
     </div>`;
 }
 
+/** « Itinéraire sur un réseau » : pour un export de tronçons (BD TOPO, routes OSM), on ne choisit pas les tronçons un à un. */
+function boutonItineraireHtml() {
+    const couches = couchesReseau();
+    if (!couches.length) return '';
+    const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
+    return `<div class="section-title" style="margin-top:12px">Itinéraire sur un réseau</div>
+        <div class="hint">Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.</div>
+        <select id="itineraire-couche" class="input" style="margin-top:8px">${options}</select>
+        <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.itineraireDemarrer()">Poser les points sur la carte</button>`;
+}
+
+function itineraireEnCoursHtml() {
+    const s = _itineraire;
+    const n = s.points.length;
+    const ok = s.calcul?.ok;
+    const etat = n === 0 ? 'Touchez le départ sur la carte.'
+        : n === 1 ? 'Touchez le point suivant (arrivée, ou point de passage).'
+        : ok ? `${Math.round(s.calcul.longueurM)} m · ${n} points — touchez pour ajouter un point de passage ou une arrivée.`
+            : 'Le chemin ne se trace pas : voir le message, ou retirez le dernier point.';
+    return `<div class="section"><div class="hint">Itinéraire · ${escapeHtml(etat)}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-soft" style="flex:1" ${n ? '' : 'disabled'} onclick="A.itineraireRetirerDernier()">Retirer le dernier</button>
+            <button class="btn btn-soft" style="flex:1" onclick="A.itineraireAnnuler()">Annuler</button>
+        </div>
+        <button class="btn btn-dark btn-full" style="margin-top:8px" ${ok ? '' : 'disabled'} onclick="A.itineraireTerminer()">Terminer — en faire le trajet</button>
+    </div>`;
+}
+
 function barreTrajetHtml() {
     if (CONFIG.viewMode) return '';
     const trace = traceActuelle();
@@ -6605,9 +6693,10 @@ function barreTrajetHtml() {
     if (trajetPickMode) {
         return `<div class="section"><button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Annuler le choix</button></div>`;
     }
+    if (_itineraire) return itineraireEnCoursHtml();
     if (!trace) {
         return `<div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet</button>
+            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet</button>${boutonItineraireHtml()}
             <div class="hint" style="margin-top:6px">Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.</div>
         </div>`;
     }
@@ -9458,7 +9547,7 @@ function setupInteraction() {
     map.on('mousemove', (e) => {
         // Pendant un tracé, terra-draw pose ses curseurs (fermeture, accroche).
         if (_saisieObjet) { if (!_saisieObjet.trace) map.getCanvas().style.cursor = 'crosshair'; return; }
-        if (trajetPickMode) { map.getCanvas().style.cursor = 'crosshair'; return; }
+        if (trajetPickMode || _itineraire) { map.getCanvas().style.cursor = 'crosshair'; return; }
         if (boxing || boxJustEnded || locationPickMode) return;
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
@@ -9471,6 +9560,7 @@ function setupInteraction() {
         if (_saisieObjet) { onSaisieClic(e); return; }
         if (locationPickMode) { onLocationPick(e); return; }
         if (trajetPickMode) { onTrajetPick(e); return; }
+        if (_itineraire) { itineraireClic(e); return; }
         const idsGrappes = STATE.layers.map((l) => l.id + '-grappe').filter((id) => map.getLayer(id));
         const grappe = idsGrappes.length ? map.queryRenderedFeatures(e.point, { layers: idsGrappes })[0] : null;
         if (grappe) { zoomerSurGrappe(grappe); return; }
@@ -13806,6 +13896,45 @@ const A = {
     storyGo(i) { allerEtape(i); },
     storyStep(d) { allerEtape(_storyIdx + d); },
     choisirTrajet() { choisirTrajet(false); },
+    /** Itinéraire sur un réseau de lignes : départ, points de passage, arrivée. */
+    itineraireDemarrer() {
+        if (!assertCanWrite('créer un trajet')) return;
+        const couche = STATE.layers.find((l) => l.id === $('itineraire-couche')?.value);
+        if (!couche) { showToast('Choisissez une couche de lignes', 'warning'); return; }
+        if (trajetPickMode) annulerChoixTrajet();
+        showLoading('Lecture du réseau…');
+        // Le réseau se construit hors de l'événement : plusieurs milliers de tronçons prennent un instant.
+        setTimeout(() => {
+            try {
+                const reseau = construireReseau(couche.geojson.features);
+                terminerItineraire();
+                _itineraire = { layerId: couche.id, reseau, points: [], marqueurs: [], calcul: null };
+                if (map) map.getCanvas().style.cursor = 'crosshair';
+                showToast('Touchez le départ sur la carte', 'info');
+            } catch (e) {
+                showToast('Réseau illisible : ' + e.message, 'error');
+            } finally {
+                hideLoading();
+                if (STATE.currentModule === 'recit') renderRecit();
+            }
+        }, 30);
+    },
+    itineraireRetirerDernier() {
+        const s = _itineraire; if (!s || !s.points.length) return;
+        s.points.pop();
+        s.marqueurs.pop()?.remove();
+        recalculerItineraire();
+        if (STATE.currentModule === 'recit') renderRecit();
+    },
+    itineraireAnnuler() { terminerItineraire(); if (STATE.currentModule === 'recit') renderRecit(); },
+    itineraireTerminer() {
+        const s = _itineraire;
+        if (!s?.calcul?.ok) return;
+        const couche = STATE.layers.find((l) => l.id === s.layerId);
+        const copie = s.calcul.coordonnees;
+        terminerItineraire();
+        if (couche) poserTrajetDepuis({ layer: couche, feature: null, copie });
+    },
     remplacerTrajet() { choisirTrajet(true); },
     retirerTrajet() { retirerTrajet(); },
     suivreTrajet() {
@@ -15182,6 +15311,7 @@ function wireEvents() {
         }
         if (e.key === 'Escape') {
             if (_saisieObjet) quitterSaisieObjet(messageAbandon());
+            else if (_itineraire) { terminerItineraire(); showToast('Itinéraire annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); }
             else if (trajetPickMode) { annulerChoixTrajet(); showToast('Choix annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); }
             else if (locationPickMode) { locationPickMode = false; if (map) map.getCanvas().style.cursor = ''; showToast('Annulé', 'info'); }
             else if (STATE.selection.mode) exitSelectionMode();

@@ -2805,3 +2805,17 @@ colonne de courriel ou sans cette personne, rien n'est prérempli — jamais la 
 proposée dans le module Formulaires que quand on sait qui est connecté (donc dans l'application, pas dans le widget).
 **Dans le widget**, la voie propre reste côté document : une colonne « Saisi par » à formule déclenchée `user.Email`, et pour
 l'inspecteur une formule `Agents.lookupOne(Email=user.Email)` — qu'Atlas pourrait créer (AddColumn avec formule), à décider.
+
+## Itinéraire sur un réseau de lignes (02/10/2026)
+
+Un export de tronçons (BD TOPO, routes OSM, sentiers) ne se prête pas à un trajet défini tronçon par tronçon. Récit → trajet →
+**« Itinéraire sur un réseau »** : on choisit la couche de lignes, on touche un **départ**, des **points de passage** et une
+**arrivée** ; le chemin se trace sur le réseau (aperçu bleu, numéros, « Retirer le dernier », « Terminer — en faire le
+trajet », Échap annule) et devient le trajet du récit (même objet que « Créer un trajet »).
+`lib/itineraire.js` (pur, 13 tests) : chaque sommet est un nœud, chaque segment une arête ; les **bouts de lignes à moins de
+3 m** sont raccordés (un export tombe rarement au même point) ; un point se **projette** sur le segment le plus proche (pas
+besoin de viser un carrefour, refusé au-delà de 250 m) ; plus court chemin par Dijkstra (tas binaire). **Sans service, donc
+sans réseau.** Ne connaît ni sens uniques, ni interdictions, ni vitesse : le plus court chemin, ce qu'on demande à pied ou sur
+des sentiers. Un réseau coupé donne un message (« un tronçon manque, ou deux lignes ne se touchent pas »). Éprouvé dans
+l'application simulée (grille de 17 tronçons, 4 points, 2,6 km) ; pas sur un export réel de plusieurs dizaines de milliers de
+tronçons — la construction du réseau y sera à mesurer.
