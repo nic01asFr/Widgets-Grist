@@ -7619,6 +7619,16 @@ function boutonRevueObjets(layer) {
  * > references internes -- d'ou `verifier-references.mjs`.
  */
 let inspSymTab = 'Couleur';
+/** Les blocs ouverts de l'onglet Forme (Taille d'abord) : retenus d'une couche à l'autre, comme l'onglet. */
+const blocsFormeOuverts = new Set(['Taille']);
+
+/** L'onglet Forme : ce qui dit comment un point (ou une ligne, une surface) se dessine — taille, icône, modèle 3D. */
+function symFormePanel(layer, sym, isPoint) {
+    if (!isPoint) return symSizePanel(layer, sym);
+    const bloc = (nom, corps) => `<details class="insp-bloc" ${blocsFormeOuverts.has(nom) ? 'open' : ''}
+        ontoggle="A.setBlocForme('${nom}', this.open)"><summary>${nom}</summary><div class="insp-bloc-corps">${corps}</div></details>`;
+    return bloc('Taille', symSizePanel(layer, sym)) + bloc('Icône', symIconePanel(layer, sym)) + bloc('Modèle 3D', symModelPanel(layer, sym));
+}
 
 /** Les actions sous le titre de la couche : une rangée, sans rien d'autre à faire défiler avant les réglages. */
 function actionsEntete(layer) {
@@ -7670,13 +7680,10 @@ function infoBulle(texte) {
 function renderSymbologyInspector(layer) {
     const sym = initSymbolization(layer);
     const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
-    const tabs = ['Couleur', 'Taille'];
-    if (isPoint) {
-        tabs.push('Icône', 'Modèle 3D');
-    }
-    if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
+    // Cinq onglets au plus : Couleur, Forme (taille, icône, modèle 3D), Étiquette, Bulle, Spécifications.
+    const tabs = ['Couleur', 'Forme', 'Étiquette'];
     if (layer.sourceTable && CONFIG.grist.ready) tabs.push('Bulle');
-    tabs.push('Étiquette');
+    if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
     if (!tabs.includes(inspSymTab)) inspSymTab = 'Couleur';
 
     // Chip du modèle 3D lié à la couche (toujours visible dans l'inspecteur)
@@ -7703,9 +7710,7 @@ function renderSymbologyInspector(layer) {
 
     const body = $('insp-body');
     if (inspSymTab === 'Couleur') body.innerHTML = symColorPanel(layer, sym);
-    else if (inspSymTab === 'Taille') body.innerHTML = symSizePanel(layer, sym);
-    else if (inspSymTab === 'Modèle 3D') body.innerHTML = symModelPanel(layer, sym);
-    else if (inspSymTab === 'Icône') body.innerHTML = symIconePanel(layer, sym);
+    else if (inspSymTab === 'Forme') body.innerHTML = symFormePanel(layer, sym, isPoint);
     else if (inspSymTab === 'Spécifications') body.innerHTML = symSpecsPanel(layer);
     else if (inspSymTab === 'Bulle') body.innerHTML = symBullePanel(layer, sym);
     else body.innerHTML = symLabelPanel(layer, sym);
@@ -14382,7 +14387,8 @@ const A = {
         }
         applyPointStyle(l); Models3D.forceBuild(); renderInspector(); markDirty();
     },
-    openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Modèle 3D'; openModule('couches'); },
+    openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Forme'; blocsFormeOuverts.add('Modèle 3D'); openModule('couches'); },
+    setBlocForme(nom, ouvert) { if (ouvert) blocsFormeOuverts.add(nom); else blocsFormeOuverts.delete(nom); },
     /**
      * Cree la table de donnees d'une couche importee, et l'y relie.
      *

@@ -2833,7 +2833,7 @@ tronçons — la construction du réseau y sera à mesurer.
   posée en `fixed` (survol, focus clavier, appui au toucher ; Échap la ferme). À employer pour ce qui **explique** (une règle
   de découpage, ce que fait un réglage) ; ce qui **avertit d'une conséquence** reste écrit en clair. Le style est dans
   `index_v7.html` (et dans la page d'essai `essais-controles/index-vitrine-bulle.html`).
-- **Onglet Icône** : toujours présent sur une couche de points, mais sa liste ne propose que les champs qui peuvent donner une image. Présélection sur le schéma
+- **Onglet Forme** (couches de points) : Taille, Icône et Modèle 3D en blocs repliables (`blocsFormeOuverts`) ; Couleur | Forme | Étiquette | Bulle | Spécifications, cinq onglets au plus. **Bloc Icône** : toujours présent, mais sa liste ne propose que les champs qui peuvent donner une image. Présélection sur le schéma
   (`champsAvecImages`, lib/table-reference.js : ni nombres, ni dates ; une table candidate porte une colonne d'image), puis
   confirmation par la lecture de la table de référence (`champsIcone`). La liste ne propose que les champs confirmés ; sans
   aucun, l'onglet reste (décision de l'utilisateur) et dit qu'aucun champ ne renvoie à une table d'images.
