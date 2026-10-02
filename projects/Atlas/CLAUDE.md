@@ -1870,6 +1870,65 @@ peut donc porter plusieurs modèles — lampadaires, arbres, bancs, abribus — 
 choix appartient à la donnée, pas à la couche. `style.library.modelId` n'est
 alors qu'un repli pour les entités qui n'en déclarent aucun.
 
+### L'identifiant de modèle : deux familles, un seul champ
+
+Un identifiant de modèle — `style.library.modelId`, `_modelId` d'une entité
+(colonne `atlas_3d_json`), `style.model.categories[].modelId`,
+`defaultModelId`, manifeste de scène — désigne **un modèle parmi deux familles**,
+et l'identifiant dit lui-même laquelle (`lib/modele-id.js`) :
+
+| Forme | Famille | Exemple |
+|---|---|---|
+| `<id>` | bibliothèque low-poly (`models/`) | `streetlamp` |
+| `objet:<type>` | **type** du catalogue d'objets réalistes (`objets/`) | `objet:applique_facade` |
+
+- **Le préfixe protège l'existant** : aucun identifiant low-poly ne porte de `:`, donc
+  tout ce qui est écrit depuis le début (tables Grist, manifestes, démos) reste lisible.
+- **`objet:<type>` désigne un type, jamais un fichier** : variante, classe de hauteur
+  (`hauteurFeu`, `height`) et niveau de détail restent choisis par le catalogue
+  (`atlas-objets/0.1` §3.7). La scène ne fige donc aucun nom de fichier.
+- **Type imposé ou déduit** : l'identifiant `objet:<type>` IMPOSE le type
+  (`resoudreObjet(..., { typeId })`) ; l'affectation « Catalogue » le DÉDUIT des champs
+  de l'objet. Un `_modelId` d'objet l'emporte sur la couche, comme pour le low-poly.
+- **Forme et existence sont deux questions** (`verifierIdModele`) : un `objet:` bien
+  formé mais absent du catalogue chargé est **conservé**, jamais effacé — le catalogue
+  peut arriver après. L'objet ne s'affiche pas tant qu'il manque, et l'éditeur le dit.
+- **Où il s'écrit** : manifeste (`style.library`, `style.model`), `Atlas_LayerPrefs`
+  (`StyleJSON.library = { modelId }`, restauré par `applyLayerPrefsBinding` — avant le
+  02/10/2026 le choix « Fixe » d'une couche liée à un manifeste se perdait à la
+  réouverture), colonne `atlas_3d_json` d'un objet. Tout identifiant mal formé est
+  refusé à la lecture et n'écrase jamais le modèle en place.
+- **Où il se choisit** : éditeur de couche → Modèle 3D → « Fixe » (groupe « Objets
+  réalistes »), « Catégorisé » (par valeur et par défaut, deux groupes), et module
+  Catalogue 3D (galerie avec l'identifiant à recopier).
+- Éprouvé le 02/10/2026 (application servie en local) : 8 instances résolues vers le
+  bon fichier (mâts h4/h8/h12 d'après `hauteurFeu`, quatre types par catégorie, repli
+  low-poly), 8 GLB en 200, choix à la main, refus d'un identifiant inconnu.
+  **Non éprouvé en Grist réel** : l'écriture de `StyleJSON.library` dans `Atlas_LayerPrefs`.
+
+**Un luminaire choisi se comporte comme un luminaire déduit** (éprouvé de nuit le
+02/10/2026, 20 h 50, avec des fiches portant les paramètres EclExt) :
+
+- **Allumage** : `Eclairage` honore l'identifiant (`typeImposeDe`) ; avant, il déduisait
+  toujours le type des champs, et le choix de l'éditeur n'y changeait rien. Une couche dont
+  **tous** les objets ont un type d'éclairage choisi devient une couche d'éclairage dès
+  qu'ils portent une grandeur photométrique (`puissance` ou `temperatureCouleur`) :
+  `structure` et `support`, qui distinguent un luminaire de tout autre point, sont alors
+  superflus (`estPointLumineux(props, { impose: true })`). « Tous » : une couche mêlant
+  luminaires et autres objets garde ses modèles. Sans grandeur, aucun flux ni couleur à
+  émettre : le modèle reste un objet 3D éteint.
+- **Paramètres qui pilotent l'état** (`etatPointLumineux`) : `statut` autre que
+  `functional` → éteint ; `valideDe`/`valideJusque` → éteint hors période ;
+  `allumageSoir`/`extinctionMatin`/`plages` ; `temperatureCouleur` lue par fiche.
+  Vérifiés : allumé, hors service, hors validité, 2200 K.
+- **Hauteur** : `hauteurFeu` choisit la classe du mât (h4…h12) ; les types **ancrés au feu**
+  (applique, axial, projecteur) sont élevés de `hauteurFeu`, à défaut de la hauteur par
+  défaut de leur bloc `lighting` (5,5 / 7,25 / 4 m). Hors `Eclairage`, `Models3D.placement`
+  appliquait seulement `offsetZ` : ces types étaient **enterrés au pied de leur support**.
+  Il pose maintenant comme `Eclairage` (`poseLuminaire`) ; `azimut` l'emporte sur le tirage.
+- Changer le type d'une couche d'éclairage reconstruit les luminaires (l'empreinte de
+  `Eclairage` porte la signature du modèle de la couche).
+
 ### Un contrôle inactif n'existe pas pour le lecteur
 
 Seuls les contrôles `active: true` deviennent des pastilles (`listDockPills`).

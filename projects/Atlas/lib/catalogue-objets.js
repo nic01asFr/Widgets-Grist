@@ -241,14 +241,19 @@ export function niveauPourDistance(distances, metres) {
  * @param {object} cat     `lireCatalogue(...)`
  * @param {object} couche  `{ source, nom }`
  * @param {object} feature GeoJSON Point
- * @param {object} o       `{ set, lod | distanceM, public, echelleCouche, rotationCoucheDeg }`
+ * @param {object} o       `{ set, lod | distanceM, public, echelleCouche, rotationCoucheDeg, typeId }`
+ *   `typeId` IMPOSE le type (identifiant `objet:<type>`, `lib/modele-id.js`) : la reconnaissance par
+ *   champs est court-circuitée, mais variante, classe de hauteur, niveau de détail, échelle et
+ *   azimut se résolvent exactement comme pour un type reconnu. Un type inconnu rend `null`.
  * @returns {null | {type, asset, url, fallback, echelle, rotationDeg, cle}}
  */
 export function resoudreObjet(cat, couche, feature, o = {}) {
   const g = feature?.geometry;
   if (!g || g.type !== 'Point' || !cat?.types?.length) return null;
   const props = feature.properties || {};
-  const type = choisirType(cat.types, couche, props, 'point');
+  const type = o.typeId != null
+    ? cat.types.find((t) => t.id === o.typeId) || null
+    : choisirType(cat.types, couche, props, 'point');
   if (!type) return null;
 
   const [lon, lat] = g.coordinates || [];

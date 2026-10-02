@@ -10,7 +10,7 @@ import {
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=20261002b';
+} from './manifest-binding.js?v=20261002g';
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
 import { isModelLayer } from './model-layer.js?v=20260906a';

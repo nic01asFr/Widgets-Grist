@@ -239,12 +239,17 @@ function choisirAvecMarge(candidats, n, avant, marge) {
  * Une entité est-elle un point lumineux EclExt ? Les attributs obligatoires
  * qui le distinguent de tout autre point : `structure` et `support`, plus
  * une grandeur photométrique (`temperatureCouleur` ou `puissance`).
+ * Avec `impose` (type d'éclairage choisi par l'auteur), la grandeur suffit.
  */
-export function estPointLumineux(props) {
+export function estPointLumineux(props, { impose = false } = {}) {
   if (!props || typeof props !== 'object') return false;
   const aTexte = (v) => v != null && String(v).trim() !== '';
-  return aTexte(props.structure) && aTexte(props.support)
-    && (aTexte(props.temperatureCouleur) || aTexte(props.puissance));
+  const grandeur = aTexte(props.temperatureCouleur) || aTexte(props.puissance);
+  // `structure` et `support` distinguent un luminaire de tout autre point. Quand l'auteur a
+  // CHOISI un type d'éclairage pour l'objet (identifiant `objet:<type>`, lib/modele-id.js), c'est
+  // lui qui le distingue : il suffit alors d'une grandeur photométrique, sans quoi la lampe
+  // n'aurait ni flux ni couleur à émettre.
+  return grandeur && (impose || (aTexte(props.structure) && aTexte(props.support)));
 }
 
 /**

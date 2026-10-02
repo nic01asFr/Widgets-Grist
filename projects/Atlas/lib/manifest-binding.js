@@ -13,6 +13,7 @@ import {
   controlsPrefsPayload,
 } from './controls.js?v=20261002a';
 import { parseGristBool } from './grist-bool.js';
+import { genreDeModele } from './modele-id.js?v=20261002g';
 import { departsValides } from './fiche-formulaire.js?v=20261002c';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
@@ -91,6 +92,10 @@ export function layerPrefsPayload(layer) {
     // rechargement — le réglage ne servirait qu'à la session en cours.
     rank: Number.isFinite(layer._rank) ? layer._rank : null,
     symbolization: layer.style?.symbolization || null,
+    // Le modele choisi pour la couche : un identifiant de bibliotheque low-poly OU `objet:<type>`
+    // (lib/modele-id.js). Sans lui, le choix « Fixe » se perdait a la reouverture d'une couche
+    // liee a un manifeste, qui reprenait le modele du manifeste.
+    library: modeleDeCouchePrefs(layer),
     controls: controlsPrefsPayload(layer),
     // Quel formulaire sert cette couche, et si la scene l'offre hors edition.
     // Le formulaire est defini UNE fois, dans la table `Formulaires`, pour une
@@ -100,6 +105,12 @@ export function layerPrefsPayload(layer) {
     formulaire: formulairePrefsPayload(layer),
     declarative: declarativeFromAtlasLayer(layer),
   };
+}
+
+/** `{ modelId }` quand la couche porte un identifiant de modele admissible, sinon `null` (rien n'est ecrit). */
+function modeleDeCouchePrefs(layer) {
+  const id = layer?.style?.library?.modelId;
+  return genreDeModele(id) ? { modelId: id } : null;
 }
 
 /**
@@ -177,6 +188,12 @@ export function applyLayerPrefsBinding(layer, prefs) {
 
     if (payload.polygonMode) {
       layer.style = { ...layer.style, polygonMode: payload.polygonMode };
+    }
+
+    // Un identifiant illisible n'ecrase pas le modele du manifeste : la forme est verifiee, pas
+    // l'existence (un `objet:<type>` peut arriver avant son catalogue — il est alors conserve).
+    if (genreDeModele(payload.library?.modelId)) {
+      layer.style = { ...layer.style, library: { ...(layer.style?.library || {}), modelId: payload.library.modelId } };
     }
 
     // Le tri effectif revient à l'appelant, qui voit toutes les couches.

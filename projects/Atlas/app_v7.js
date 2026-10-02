@@ -11,15 +11,16 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20260926a';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=20261002g';
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20260925c';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20260925e';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
 import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=20260925b';
 import { capacites, peutSAuthentifier } from './lib/data-client.js?v=20261001a';
 import {
@@ -178,7 +179,7 @@ import {
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=20261002b';
+} from './lib/manifest-binding.js?v=20261002g';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -647,6 +648,19 @@ function coucheAuCatalogue(layer) {
     return layer?.style?.mode === 'library' && layer.style.symbolization?.model?.mode === 'catalogue';
 }
 /**
+ * Un type du catalogue d'objets est-il en jeu sur cette couche : affectation « Catalogue », ou
+ * identifiant `objet:<type>` au niveau de la couche, d'une categorie ou du repli par champ ?
+ * (Un `_modelId` d'objet se lit objet par objet, dans `resolutionCatalogue`.)
+ */
+function coucheUtiliseObjets(layer) {
+    if (!CATALOGUE_OBJETS.cat || layer?.style?.mode !== 'library') return false;
+    if (coucheAuCatalogue(layer)) return true;
+    if (estIdObjet(layer.style.library?.modelId)) return true;
+    const m = layer.style.symbolization?.model;
+    return !!m && m.mode === 'categorized'
+        && (estIdObjet(m.defaultModelId) || (m.categories || []).some((c) => estIdObjet(c.modelId)));
+}
+/**
  * Le modele d'un objet d'une couche « Catalogue », ou `null` si le catalogue
  * n'en dit rien. `resolveFeatureProps` fournit les reglages manuels que la spec
  * compose avec le tirage (§5) : echelle multipliee, azimut ajoute. Dans Atlas,
@@ -654,10 +668,26 @@ function coucheAuCatalogue(layer) {
  * pose sur l'axe vertical de three.js.
  */
 function resolutionCatalogue(layer, feature, distanceM) {
-    if (!CATALOGUE_OBJETS.cat || !coucheAuCatalogue(layer)) return null;
-    if (feature?.properties?._modelId) return null;   // modele pose a la main sur l'objet
+    if (!CATALOGUE_OBJETS.cat) return null;
+    // Deux facons de designer un type du catalogue :
+    //  - l'identifiant `objet:<type>` (couche, categorie, ou `_modelId` d'un objet) IMPOSE le type ;
+    //  - l'affectation « Catalogue » le DEDUIT des champs de l'objet.
+    // Un modele pose a la main sur l'objet (`_modelId`) l'emporte sur l'affectation de la couche.
+    const propre = feature?.properties?._modelId;
+    let typeId = null;
+    if (propre) {
+        typeId = typeDeIdObjet(propre);
+        if (!typeId) return null;                      // un modele low-poly pose a la main
+    } else {
+        if (!coucheUtiliseObjets(layer)) return null;
+        if (!coucheAuCatalogue(layer)) {
+            typeId = typeDeIdObjet(modelIdDeEntite(feature, layer));
+            if (!typeId) return null;                  // categorie low-poly d'une couche mixte
+        }
+    }
     const p = resolveFeatureProps(feature, layer);
     return resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
+        ...(typeId ? { typeId } : {}),
         set: MODEL_LIBRARY.set,
         distanceM,
         public: contextePublic(),
@@ -725,7 +755,45 @@ function allModels() {
         for (const m of cat.models) out.push({ ...m, category: catId, url: MODEL_LIBRARY.baseUrl + m.file });
     return out;
 }
-function findModel(id) { return allModels().find((m) => m.id === id) || null; }
+/**
+ * Un modele de la bibliotheque low-poly, OU un type du catalogue d'objets realistes.
+ *
+ * L'identifiant dit la famille (`lib/modele-id.js`) : `streetlamp` est low-poly,
+ * `objet:applique_facade` est un type du catalogue. Les deux se presentent sous la meme forme
+ * pour que chipe de couche, listes et legende n'aient pas a distinguer ; seul un objet du
+ * catalogue porte `objet: true` et n'a pas d'`url` (le fichier se choisit par objet).
+ */
+function findModel(id) {
+    if (estIdObjet(id)) return modeleObjet(ficheDeId(CATALOGUE_OBJETS.cat, id));
+    return allModels().find((m) => m.id === id) || null;
+}
+function modeleObjet(fiche) {
+    if (!fiche) return null;
+    return {
+        id: fiche.id, name: fiche.nom, icon: MODEL_LIBRARY.categories[fiche.categorie]?.icon || '📦',
+        category: 'objets', objet: true, fiche, url: null, scale: 1,
+    };
+}
+/** Les types du catalogue d'objets pointe, prets a etre proposes (vide tant qu'il n'est pas charge). */
+function modelesObjets() { return fichesObjets(CATALOGUE_OBJETS.cat).map(modeleObjet); }
+/** Ce que l'interface montre pour un identifiant de modele, connu ou non. */
+function libelleModele(id) {
+    if (!id) return { icon: '📦', label: 'aucun modèle', connu: false };
+    const m = findModel(id);
+    if (m) return { icon: m.icon || '📦', label: m.name, connu: true, objet: !!m.objet };
+    if (estIdObjet(id)) {
+        const attente = CATALOGUE_OBJETS.etat === 'chargement' || CATALOGUE_OBJETS.etat === 'aucun';
+        return { icon: '📦', label: attente ? `objet « ${typeDeIdObjet(id)} » (catalogue en chargement)` : `objet « ${typeDeIdObjet(id)} » absent du catalogue`, connu: false, objet: true };
+    }
+    return { icon: '📦', label: id, connu: false };
+}
+/** Les <option> d'un choix de modele : la bibliotheque, puis les objets realistes. */
+function optionsModeles(selId, { objets = true } = {}) {
+    const ligne = (mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`;
+    const objs = objets ? modelesObjets() : [];
+    if (!objs.length) return allModels().map(ligne).join('');
+    return `<optgroup label="Bibliothèque">${allModels().map(ligne).join('')}</optgroup><optgroup label="Objets réalistes">${objs.map(ligne).join('')}</optgroup>`;
+}
 
 // ============================================================
 // OSM PRESETS
@@ -1678,13 +1746,18 @@ const Models3D = {
         // un relief a 200 m, la scene entiere disparaissait sous le sol.
         const eOff = ecartAuSol(this.elevRaw(lng, lat), this.originElev);
         const o = this._obj;
-        o.position.set(lm.x + (p.offsetX || 0), eOff + (p.offsetZ || 0), -lm.y - (p.offsetY || 0));
         // Couche « Catalogue » : echelle et azimut composent le reglage manuel
         // avec la mesure ou la graine de l'objet (spec §5, `resolutionCatalogue`).
         // Ils ne dependent pas de la distance : le niveau de detail est ignore ici.
         const cat = resolutionCatalogue(layer, feature, 0);
+        // Un luminaire du catalogue se pose comme dans `Eclairage` (bloc `lighting` du type) : un type
+        // ancre au FEU (applique, axial, projecteur) est eleve de `hauteurFeu`, sinon il serait
+        // enterre au pied de son support ; un champ `azimut` l'emporte sur le tirage.
+        const pose = cat?.type?.lighting ? poseLuminaire(cat.type.lighting, feature.properties, cat.rotationDeg) : null;
+        o.position.set(lm.x + (p.offsetX || 0), eOff + (p.offsetZ || 0) + (pose ? pose.elevation : 0), -lm.y - (p.offsetY || 0));
         const sc = cat ? cat.echelle : (p.scale || 1); o.scale.set(sc, sc, sc);
-        const azimut = cat ? cat.rotationDeg : (p.rotationZ || 0);
+        const azimut = pose ? (pose.origineAzimut === 'champ' ? 180 - pose.azimutDeg : pose.azimutDeg)
+            : (cat ? cat.rotationDeg : (p.rotationZ || 0));
         o.rotation.set(deg2rad(p.rotationX || 0), deg2rad(azimut), deg2rad(p.rotationY || 0), 'YXZ');
         o.updateMatrix();
         return o.matrix;
@@ -1705,10 +1778,11 @@ const Models3D = {
             const defUrl = getLayerModelUrl(layer);
             const sym = layer.style.symbolization || {};
             const categorized = sym.model?.mode === 'categorized' && sym.model.field;
-            const parCatalogue = coucheAuCatalogue(layer) && CATALOGUE_OBJETS.cat;
-            if (!defUrl && !categorized && !parCatalogue) continue;
-            // Position de la camera, pour le niveau de detail de chaque objet.
-            const cam = parCatalogue ? cameraMetres() : null;
+            const parObjets = coucheUtiliseObjets(layer);
+            if (!defUrl && !categorized && !parObjets) continue;
+            // Position de la camera, pour le niveau de detail de chaque objet (un `_modelId`
+            // `objet:<type>` peut aussi venir d'un objet d'une couche low-poly).
+            const cam = CATALOGUE_OBJETS.cat ? cameraMetres() : null;
             const feats = (filteredGeoJSON(layer)?.features || []);
             for (let idx = 0; idx < feats.length; idx++) {
                 const f = feats[idx];
@@ -1718,13 +1792,15 @@ const Models3D = {
                 const [lng, lat] = f.geometry.coordinates;
                 if (lng < b.getWest() - buf || lng > b.getEast() + buf || lat < b.getSouth() - buf || lat > b.getNorth() + buf) continue;
                 let url = defUrl;
-                if (parCatalogue && !f.properties?._modelId) {
+                const propre = f.properties?._modelId;
+                if (cam && ((parObjets && !propre) || estIdObjet(propre))) {
                     const feature = layer.geojson?.features?.[srcIdx] || f;
                     const r = resolutionCatalogue(layer, feature, distanceCamera(cam, lng, lat));
                     // Pas de fichier (absent, licence refusee) : le repli low-poly
                     // du type ; aucun type : le modele de la couche (spec §3.4).
                     if (r) url = r.url || findModel(r.fallback)?.url || defUrl;
-                } else if (categorized || f.properties?._modelId) { const mm = findModel(resolveFeatureProps(f, layer).modelId); if (mm) url = mm.url; }
+                    else if (categorized && !propre) { const mm = findModel(modelIdDeEntite(f, layer)); if (mm?.url) url = mm.url; }
+                } else if (categorized || propre) { const mm = findModel(modelIdDeEntite(f, layer)); if (mm?.url) url = mm.url; }
                 if (!url) continue;
                 out.push({ layerId: layer.id, idx: srcIdx, lng, lat, url });
                 if (out.length >= MAX_3D_INSTANCES) return out;
@@ -2063,10 +2139,42 @@ function coucheEclairage(layer) {
     if (!layer || (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint')) return false;
     const feats = Array.isArray(layer.geojson?.features) ? layer.geojson.features : null;
     if (!feats?.length) return false;
-    if (layer._eclairage && layer._eclairage.n === feats.length) return layer._eclairage.oui;
-    const oui = feats.slice(0, 20).some((f) => estPointLumineux(f?.properties));
-    layer._eclairage = { n: feats.length, oui };
+    // Le verdict dépend aussi du modèle choisi et du catalogue : la clé le dit, sinon un changement
+    // de modèle ou l'arrivée du catalogue resterait sans effet.
+    const cle = `${feats.length}|${CATALOGUE_OBJETS.etat}|${signatureModeleCouche(layer)}`;
+    if (layer._eclairage && layer._eclairage.cle === cle) return layer._eclairage.oui;
+    const echantillon = feats.slice(0, 20);
+    // Deux façons d'être une couche de luminaires : des fiches EclExt (le type se déduit), ou un type
+    // d'éclairage CHOISI pour tous ses objets (identifiant `objet:<type>`) et décrit par une grandeur
+    // photométrique. « Tous » : une couche mêlant luminaires et autres objets garde ses modèles.
+    const oui = echantillon.some((f) => estPointLumineux(f?.properties))
+        || echantillon.every((f) => pointLumineuxImpose(layer, f));
+    layer._eclairage = { cle, oui };
     return oui;
+}
+/** Ce qui, dans le modèle d'une couche, change son verdict de couche d'éclairage. */
+function signatureModeleCouche(layer) {
+    const m = layer?.style?.symbolization?.model;
+    return [layer?.style?.mode, layer?.style?.library?.modelId, m?.mode, m?.defaultModelId,
+        (m?.categories || []).map((c) => c.modelId).join(',')].join('/');
+}
+/**
+ * Le type du catalogue que l'identifiant `objet:<type>` IMPOSE à cette entité (objet, catégorie ou
+ * couche), ou `null` : modèle de la bibliothèque, ou type déduit des champs (affectation « Catalogue »).
+ */
+function typeImposeDe(layer, feature) {
+    if (layer?.style?.mode !== 'library') return null;
+    const propre = feature?.properties?._modelId;
+    if (propre) return typeDeIdObjet(propre);
+    if (coucheAuCatalogue(layer)) return null;
+    return typeDeIdObjet(modelIdDeEntite(feature, layer));
+}
+/** Une entité dont l'auteur a choisi un type d'éclairage, et qui porte de quoi l'allumer. */
+function pointLumineuxImpose(layer, feature) {
+    const typeId = typeImposeDe(layer, feature);
+    if (!typeId || !CATALOGUE_OBJETS.cat) return false;
+    const type = CATALOGUE_OBJETS.cat.types.find((t) => t.id === typeId);
+    return type?.family === 'lighting' && estPointLumineux(feature?.properties, { impose: true });
 }
 
 /**
@@ -2240,7 +2348,7 @@ const Eclairage = {
         const o = Models3D.origin ? Models3D.origin.map((v) => v.toFixed(7)).join(',') : '-';
         const c = couches.map((l) => {
             const f = filteredGeoJSON(l)?.features || [];
-            return `${l.id}:${f.length}:${f[0]?.properties?._idx ?? ''}:${f[f.length - 1]?.properties?._idx ?? ''}`;
+            return `${l.id}:${f.length}:${f[0]?.properties?._idx ?? ''}:${f[f.length - 1]?.properties?._idx ?? ''}:${signatureModeleCouche(l)}`;
         }).join('|');
         return `${o}#${c}#${CATALOGUE_OBJETS.etat}:${CATALOGUE_OBJETS.url || ''}#${MODEL_LIBRARY.set}#${STATE.settings.terrain3D}`;
     },
@@ -2291,9 +2399,11 @@ const Eclairage = {
                 // sinon, le luminaire de test (url nulle).
                 let r = null;
                 if (CATALOGUE_OBJETS.cat) {
+                    const typeId = typeImposeDe(layer, feature);
                     r = resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
                         set: MODEL_LIBRARY.set, lod: 0, public: contextePublic(),
                         echelleCouche: 1, rotationCoucheDeg: p.rotationZ || 0,
+                        ...(typeId ? { typeId } : {}),
                     });
                     if (r && (r.type?.family !== 'lighting' || !r.url)) r = null;
                 }
@@ -2582,6 +2692,22 @@ function getLayerModelUrl(layer) {
     if (s.mode === 'library' && s.library?.modelId) { const m = findModel(s.library.modelId); return m?.url || null; }
     return null;
 }
+/**
+ * L'identifiant du modele d'une entite — bibliotheque low-poly OU `objet:<type>` (lib/modele-id.js).
+ * Priorite : `_modelId` de l'entite, puis la categorie de son champ, puis le repli par champ, puis
+ * le modele de la couche. Une seule regle, lue partout (placement, rendu, export).
+ */
+function modelIdDeEntite(feature, layer) {
+    const p = feature?.properties || {};
+    const sym = layer?.style?.symbolization || {};
+    let modelId = p._modelId ?? null;
+    if (!modelId && sym.model?.mode === 'categorized' && sym.model.field) {
+        const cat = sym.model.categories?.find((c2) => String(c2.value) === String(p[sym.model.field]));
+        modelId = cat?.modelId ?? sym.model.defaultModelId ?? null;
+    }
+    if (!modelId) modelId = layer?.style?.library?.modelId ?? null;
+    return modelId;
+}
 function resolveFeatureProps(feature, layer) {
     const p = feature.properties || {};
     const c = layer.style?.common || {};
@@ -2594,12 +2720,7 @@ function resolveFeatureProps(feature, layer) {
         const r = getNumericRange(layer, sym.size.field);
         symScale = interpolateValue(p[sym.size.field], [r.min, r.max], sym.size.outputRange || [0.5, 3], sym.size.method);
     }
-    let modelId = p._modelId ?? null;
-    if (!modelId && sym.model?.mode === 'categorized' && sym.model.field) {
-        const cat = sym.model.categories?.find((c2) => String(c2.value) === String(p[sym.model.field]));
-        modelId = cat?.modelId ?? sym.model.defaultModelId ?? null;
-    }
-    if (!modelId) modelId = layer.style?.library?.modelId ?? null;
+    const modelId = modelIdDeEntite(feature, layer);
 
     return {
         scale: num([p._scale, symScale, c.scale, baseModel?.scale], 1),
@@ -6566,6 +6687,20 @@ function enterStoryPresentation(i) {
 
 // ---- Modèles 3D ----
 // Module Modèles = gestion du CATALOGUE pour l'app (jeu, source, galerie).
+/** Les types du catalogue d'objets pointé, avec l'identifiant à écrire dans un champ ou un manifeste. */
+function galerieObjetsRealistes() {
+    const objs = modelesObjets();
+    if (!objs.length) return '';
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+        ${objs.map((mm) => {
+            const f = mm.fiche;
+            const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : 'public'].filter(Boolean).join(' · ');
+            return `<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="font-size:18px">${mm.icon}</span>
+                <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${escapeHtml(mm.name)}</div>
+                <div style="font-size:11px;color:var(--muted)">${escapeHtml(infos)} · <code>${escapeHtml(mm.id)}</code></div></div></div>`;
+        }).join('')}
+        <div class="hint" style="margin-top:6px">L'identifiant <code>objet:…</code> se saisit dans le modèle d'une couche, dans une catégorie, ou dans <code>_modelId</code> d'un objet.</div></div>`;
+}
 function renderModelsPanel() {
     $('module-title').textContent = 'Catalogue 3D';
     const nModels = allModels().length;
@@ -6606,6 +6741,7 @@ function renderModelsPanel() {
             </div>
             <div class="hint" style="margin-top:6px">Modèles générés d'après les champs des objets (<code>atlas-objets/0.1</code>). Une couche de points s'y soumet par l'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.</div>
         </div>
+        ${galerieObjetsRealistes()}
         <div class="section">
             <div class="section-title">Catalogue · ${nModels} modèles</div>
             ${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `
@@ -7037,7 +7173,7 @@ function renderSymbologyInspector(layer) {
         let label, icon = '📦';
         if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${mm.field} »`; }
         else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = layer.style.custom.filename; }
-        else { const m = findModel(layer.style?.library?.modelId); icon = m?.icon || '📦'; label = m ? m.name : 'aucun modèle'; }
+        else { const l = libelleModele(layer.style?.library?.modelId); icon = l.icon; label = echapper(l.label); }
         modelChip = `<div style="margin-top:8px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid rgba(196,69,54,0.2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink)"><span style="font-size:15px">${icon}</span>${label}</span>
             <button onclick="A.openLayerModel('${layer.id}')" style="background:transparent;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">changer</button>
@@ -7484,7 +7620,6 @@ function symModelPanel(layer, sym) {
     if (cat !== catRaw) layer._modelCat = cat;
     const grid = MODEL_LIBRARY.categories[cat].models;
     const selId = layer.style?.library?.modelId;
-    const models = allModels();
     let inner;
     if (m.mode === 'catalogue') {
         inner = panneauCatalogueCouche(layer, selId);
@@ -7492,16 +7627,17 @@ function symModelPanel(layer, sym) {
         inner = `<div class="section"><div class="section-title">Catégorie</div>
             <select class="input" onchange="A.setModelCat('${layer.id}', this.value)">${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `<option value="${k}" ${cat === k ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
             <div class="section"><div class="section-title">Modèle de la couche</div>
-            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${mm.name}</div></div>`).join('')}</div></div>`;
+            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${mm.name}</div></div>`).join('')}</div></div>
+            ${sectionObjetsRealistes(layer, selId)}`;
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'model', m.field, 'text')}</div>
             ${m.field ? `<div class="section"><div class="section-title">Modèle par valeur</div><div class="cats">${getUniqueValues(layer, m.field, 20).map((v) => {
                 const c2 = m.categories.find((c) => String(c.value) === String(v.value));
                 return `<div class="cat-row"><span class="cat-icon">${findModel(c2?.modelId)?.icon || '❓'}</span><span class="cat-value" title="${v.value}">${v.value}</span>
-                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this.value)"><option value="">—</option>${models.map((mm) => `<option value="${mm.id}" ${c2?.modelId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select>
+                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this.value)"><option value="">—</option>${optionsModeles(c2?.modelId)}</select>
                     <span class="cat-count">${v.count}</span></div>`;
             }).join('')}</div></div>
-            <div class="section"><div class="section-title">Modèle par défaut</div><select class="input" onchange="A.setDefaultModel('${layer.id}', this.value)"><option value="">— Aucun —</option>${models.map((mm) => `<option value="${mm.id}" ${m.defaultModelId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>` : ''}`;
+            <div class="section"><div class="section-title">Modèle par défaut</div><select class="input" onchange="A.setDefaultModel('${layer.id}', this.value)"><option value="">— Aucun —</option>${optionsModeles(m.defaultModelId)}</select></div>` : ''}`;
     }
     // « Catalogue » n'est offert que si un catalogue d'objets est pointe — ou si
     // la couche l'utilise deja, pour qu'elle puisse en sortir.
@@ -7515,6 +7651,28 @@ function symModelPanel(layer, sym) {
  * Le modele de la couche reste choisi : c'est le repli des objets qu'aucun
  * type ne reconnait (spec §3.4).
  */
+/**
+ * « Objets réalistes » : les types du catalogue d'objets pointé, choisis à la main pour la couche.
+ * Le choix s'écrit `style.library.modelId = 'objet:<type>'` — le même champ que la bibliothèque
+ * low-poly, qui dit à lui seul la famille. Variante, classe de hauteur et niveau de détail restent
+ * ceux du catalogue.
+ */
+function sectionObjetsRealistes(layer, selId) {
+    const c = CATALOGUE_OBJETS;
+    if (c.etat === 'chargement') return '<div class="section"><div class="section-title">Objets réalistes</div><div class="hint">Chargement du catalogue…</div></div>';
+    if (c.etat === 'erreur') return `<div class="section"><div class="section-title">Objets réalistes</div><div class="hint">Catalogue illisible : ${escapeHtml(c.erreur)}</div></div>`;
+    const objs = modelesObjets();
+    if (!objs.length) return '';
+    const inconnu = estIdObjet(selId) && !findModel(selId)
+        ? `<div class="hint" style="margin-top:6px;color:var(--accent)">Le modèle choisi (<code>${escapeHtml(selId)}</code>) n'est pas dans ce catalogue : les objets de la couche ne s'affichent pas.</div>` : '';
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+        <div class="model-grid">${objs.map((mm) => {
+            const f = mm.fiche;
+            const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : null].filter(Boolean).join(' · ');
+            return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
+        }).join('')}</div>
+        <div class="hint" style="margin-top:6px">Un objet réaliste est choisi par type : sa classe de hauteur se lit sur <code>hauteurFeu</code> ou <code>height</code> quand l'objet les porte.</div>${inconnu}</div>`;
+}
 function panneauCatalogueCouche(layer, selId) {
     const c = CATALOGUE_OBJETS;
     const etat = c.etat === 'pret'
@@ -13177,6 +13335,7 @@ const A = {
     },
     pickModel(id, modelId, repliCatalogue = false) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        if (!findModel(modelId)) { showToast('Modèle inconnu : ' + modelId, 'error'); return; }
         l.style.mode = 'library'; l.style.library = { modelId };
         // Sous l'affectation « Catalogue », on ne change que le repli : le reste
         // (affectation, reglages de couche) est garde.
