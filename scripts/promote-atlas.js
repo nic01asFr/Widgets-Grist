@@ -63,7 +63,7 @@ for (const f of fs.readdirSync(libSrc)) {
 /**
  * Le moteur de formulaire, embarque.
  *
- * La page charge six scripts de `../grist_forms/` — un chemin qui n'existe que
+ * La page charge sept scripts de `../grist_forms/` — un chemin qui n'existe que
  * sur le serveur de developpement. Publies tels quels, ils tombent en 404 : la
  * fiche d'entite retombe silencieusement sur les champs devines, et personne ne
  * voit pourquoi.
@@ -77,6 +77,7 @@ const VENDOR = [
   'shared/session-context.js',
   'shared/formulaires-table.js',
   'shared/formdef-from-table.js',
+  'shared/formdef-from-grist-form.js',
   'runtime/engine.js',
 ];
 const formsSrc = path.join(root, 'projects', 'grist_forms');

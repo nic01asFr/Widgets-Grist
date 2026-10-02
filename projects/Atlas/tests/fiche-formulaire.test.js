@@ -131,7 +131,7 @@ test('formulairesPourTable ne rend que ce qui vise cette table', () => {
 /* ---------- ce que la couche porte ---------- */
 
 test('les reglages d’une couche sont normalises, jamais devines', () => {
-  const vide = { fiche: null, exposes: null, exposeHerite: false, masques: {}, retires: [] };
+  const vide = { fiche: null, exposes: null, exposeHerite: false, masques: {}, retires: [], departs: {} };
   assert.deepEqual(reglagesFormulaire({}), vide);
   assert.deepEqual(reglagesFormulaire(null), vide);
   // `expose` devait valoir VRAI, pas seulement etre present : une valeur
@@ -143,7 +143,7 @@ test('l’ancien booleen se relit sans rien perdre', () => {
   // `expose: true` voulait dire « la fiche de cette couche est exposee » — le
   // seul formulaire qui existait alors. On le reporte sur le principal.
   assert.deepEqual(reglagesFormulaire({ formulaire: { id: 'x', expose: true } }),
-    { fiche: 'x', exposes: null, exposeHerite: true, masques: {}, retires: [] });
+    { fiche: 'x', exposes: null, exposeHerite: true, masques: {}, retires: [], departs: {} });
 });
 
 test('une liste vide n’est pas l’absence de liste', () => {
@@ -151,9 +151,9 @@ test('une liste vide n’est pas l’absence de liste', () => {
   // expose ». Les confondre reactiverait l'ancien booleen sur une couche qu'on
   // vient justement de vider.
   assert.deepEqual(reglagesFormulaire({ formulaire: { exposes: [], expose: true } }),
-    { fiche: null, exposes: [], exposeHerite: false, masques: {}, retires: [] });
+    { fiche: null, exposes: [], exposeHerite: false, masques: {}, retires: [], departs: {} });
   assert.deepEqual(reglagesFormulaire({ formulaire: { fiche: 'a', exposes: ['a', 'b'] } }),
-    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false, masques: {}, retires: [] });
+    { fiche: 'a', exposes: ['a', 'b'], exposeHerite: false, masques: {}, retires: [], departs: {} });
 });
 
 test('une liste d’exposes filtre ce qui n’est pas un identifiant', () => {

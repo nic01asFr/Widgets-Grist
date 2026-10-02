@@ -5,14 +5,15 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=20260729b';
+} from './declarative-style.js?v=20261001a';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=20260924a';
+} from './controls.js?v=20261002a';
 import { parseGristBool } from './grist-bool.js';
+import { departsValides } from './fiche-formulaire.js?v=20261002c';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
 export function declarativeFromAtlasLayer(layer) {
@@ -137,12 +138,17 @@ function formulairePrefsPayload(layer) {
   // Les formulaires que la scene a retires de la couche : reversible, rien
   // n'est efface de `Formulaires`.
   const retires = Array.isArray(f.retires) ? f.retires.filter((x) => typeof x === 'string' && x) : [];
-  if (!fiche && !exposes && !herite && !aDesMasques && !retires.length) return null;
+  // D'où part chaque champ d'un ajout. Comme les masques, une entrée vide est
+  // une décision (« rien de prérempli »).
+  const departs = departsValides(f.departs);
+  const aDesDeparts = Object.keys(departs).length > 0;
+  if (!fiche && !exposes && !herite && !aDesMasques && !retires.length && !aDesDeparts) return null;
   const out = { fiche };
   if (exposes) out.exposes = exposes;
   else if (herite) out.expose = true;
   if (aDesMasques) out.masques = masques;
   if (retires.length) out.retires = retires;
+  if (aDesDeparts) out.departs = departs;
   return out;
 }
 
@@ -201,6 +207,8 @@ export function applyLayerPrefsBinding(layer, prefs) {
         const r = p.retires.filter((x) => typeof x === 'string' && x);
         if (r.length) f.retires = r;
       }
+      const departs = departsValides(p.departs);
+      if (Object.keys(departs).length) f.departs = departs;
       layer.formulaire = f;
     }
 

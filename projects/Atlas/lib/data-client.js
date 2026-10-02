@@ -353,6 +353,20 @@ class ClientRest {
    *
    * `Content-Type` est volontairement absent : le corps est un `FormData`.
    */
+  /**
+   * L'adresse affichable d'une pièce jointe (une photo dans la bulle d'un
+   * objet). Dans l'application, la requête porte la clé d'API en en-tête : une
+   * balise `<img>` ne sait pas le faire, on lit donc le fichier puis on en
+   * donne une adresse locale (`blob:`), libérée par la page à son départ.
+   */
+  async urlPieceJointe(id) {
+    const r = await this._fetch(this._url(`/attachments/${encodeURIComponent(id)}/download`), {
+      headers: this.jeton ? { Authorization: 'Bearer ' + this.jeton } : {},
+    });
+    if (!r.ok) throw new Error(`Pièce jointe ${id} — HTTP ${r.status}`);
+    return URL.createObjectURL(await r.blob());
+  }
+
   async televerserPieceJointe(fichier) {
     if (!fichier) throw new Error('Aucun fichier à envoyer');
     if (!this.jeton) {

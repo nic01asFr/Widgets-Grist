@@ -44,6 +44,7 @@
     <script src="../grist_forms/shared/session-context.js"></script>
     <script src="../grist_forms/shared/formulaires-table.js"></script>
     <script src="../grist_forms/shared/formdef-from-table.js"></script>
+    <script src="../grist_forms/shared/formdef-from-grist-form.js"></script>
     <script src="../grist_forms/runtime/engine.js"></script>
 
     <style>
@@ -461,6 +462,37 @@
         .dock-slot-data .releve-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 17px; }
         .dock-slot-data .releve-actions .btn { padding: 6px 10px; font-size: 12px; min-height: 36px; }
         .dock-slot-data .releve-actions small { opacity: .75; font-weight: 400; margin-left: 4px; }
+        /* La liste d'objets : choisir sans toucher la carte. Dans le panneau de
+           l'objet (une feuille à la fois sur téléphone), cibles de 36 px au moins. */
+        body.view-mode.mode-liste .inspector.open { display: flex !important; }
+        #insp-body .liste-outils { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        #insp-body .liste-tri { display: flex; flex-wrap: wrap; gap: 6px; }
+        #insp-body .liste-tri button {
+            min-height: 36px; padding: 6px 12px; border-radius: 999px;
+            border: 1px solid var(--hairline); background: transparent; color: var(--muted);
+            font: inherit; font-size: 12px; cursor: pointer;
+        }
+        #insp-body .liste-tri button.on { color: var(--ink); border-color: var(--accent); background: rgba(196,69,54,0.08); }
+        #insp-body .liste-lignes { display: flex; flex-direction: column; }
+        #insp-body .liste-ligne {
+            display: flex; align-items: center; gap: 10px; min-height: 52px;
+            padding: 8px 6px; border-top: 1px solid var(--hairline); border-radius: 8px; cursor: pointer;
+        }
+        #insp-body .liste-ligne:first-child { border-top: none; }
+        #insp-body #liste-pied:empty { display: none; }
+        #insp-body .liste-ligne:hover { background: rgba(0,0,0,0.03); }
+        #insp-body .liste-ligne:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+        #insp-body .liste-pastille { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.15); }
+        #insp-body .liste-texte { flex: 1; min-width: 0; }
+        #insp-body .liste-nom { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #insp-body .liste-sous, #insp-body .liste-trouve { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #insp-body .liste-trouve { color: var(--ink); }
+        #insp-body .liste-dist { flex: 0 0 auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        #insp-body .liste-visite {
+            flex: 0 0 auto; min-height: 36px; padding: 6px 12px; border-radius: 8px;
+            border: 1px solid var(--accent); background: var(--accent); color: #fff;
+            font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
         .dock-slot-data .rng { width: 100%; max-width: 260px; margin-top: 2px; }
         .dock-slot-data .range-info {
             font-size: 11px; color: #7B705F; margin: 0 0 5px 0 !important;
@@ -822,6 +854,28 @@
         .layer-act { background: transparent; border: none; cursor: pointer; opacity: 0.4; font-size: 13px; padding: 2px; border-radius: 4px; transition: var(--t-fast); flex-shrink: 0; }
         .layer-item:hover .layer-act { opacity: 0.85; }
         .layer-act:hover { opacity: 1; background: var(--surface-muted); }
+        /*
+         * Liste étroite (inspecteur ouvert à côté) : mesuré le 01/10/2026, une
+         * ligne de 227 px ne laissait que 32 px au nom (« Ouv… ») — poignée,
+         * trois boutons et marges en prenaient 195 — et le badge « ⛓ table »
+         * débordait sur le bouton voisin. Le compte ne se coupe plus, le badge
+         * se réduit à son pictogramme (le libellé reste en infobulle), et les
+         * actions de ligne ne s'affichent qu'au survol ou sur la ligne choisie.
+         * Au doigt, la poignée garde sa largeur : c'est elle qu'on attrape.
+         */
+        .layer-list { container-type: inline-size; }
+        .layer-meta { white-space: nowrap; overflow: hidden; }
+        .layer-meta > span { flex-shrink: 0; }
+        .layer-del { flex-shrink: 0; }
+        @container (max-width: 300px) {
+            .layer-item { gap: 5px; padding: 8px 6px; }
+            .layer-meta .badge-saved { font-size: 0; padding: 1px 3px; }
+            .layer-meta .badge-saved::before { content: '⛓'; font-size: 9px; }
+            .layer-item:not(.active):not(:hover) .layer-act { display: none; }
+        }
+        @media (pointer: fine) {
+            @container (max-width: 300px) { .layer-grip { width: 16px; } }
+        }
 
         /* Empty state */
         .empty { text-align: center; padding: 36px 16px; color: var(--muted); }
@@ -914,6 +968,43 @@
             margin-left: 8px;
         }
         .view-mode-badge[hidden] { display: none !important; }
+        /* Pastille Contexte : les étapes que la scène propose en exploitation. */
+        .contexte-liste { display: flex; flex-direction: column; gap: 4px; }
+        .contexte-choix {
+            display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left;
+            min-height: 40px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--hairline); background: var(--surface); color: var(--text); font: inherit;
+        }
+        .contexte-choix.on { border-color: var(--accent); background: var(--surface-muted); }
+        .contexte-choix:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .contexte-nom { font-weight: 600; font-size: 13px; }
+        .contexte-aide { font-size: 11.5px; color: var(--muted); }
+        .contexte-consigne { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 12.5px; line-height: 1.45; max-height: 110px; overflow-y: auto; overscroll-behavior: contain; }
+        .contexte-opt { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11.5px; color: var(--muted); cursor: pointer; }
+        /* Choix de posture : Préparer, Exploiter, Lecture. */
+        .posture-menu {
+            position: fixed; z-index: 9000; width: min(320px, calc(100vw - 24px));
+            background: var(--surface); color: var(--text);
+            border: 1px solid var(--hairline-strong); border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(45, 40, 32, 0.22); padding: 6px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .posture-menu.posture-feuille {
+            left: 12px; right: 12px; bottom: 12px; top: auto; width: auto;
+            padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+        }
+        .posture-titre { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; padding: 6px 8px 4px; }
+        .posture-choix {
+            display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+            text-align: left; width: 100%; min-height: 44px; padding: 8px 10px;
+            border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer;
+        }
+        .posture-choix:hover:not([disabled]), .posture-choix:focus-visible { background: var(--surface-muted); outline: 2px solid var(--accent); outline-offset: -2px; }
+        .posture-choix.on { background: var(--surface-muted); }
+        .posture-choix[disabled] { opacity: 0.55; cursor: not-allowed; }
+        .posture-nom { font-weight: 600; font-size: 14px; }
+        .posture-nom small { font-weight: 700; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-left: 6px; }
+        .posture-aide { font-size: 12px; opacity: 0.75; line-height: 1.35; }
         /* La marque « Atlas » ouvre le menu principal — dans l'application
            seulement. Dans le widget, il n'y a rien au-dessus de la scene :
            la classe n'y est jamais posee, et le bloc reste inerte. */
@@ -1095,6 +1186,56 @@
         .atlas-popup-row .k { color: var(--muted, #8a7a68); flex-shrink: 0; }
         .atlas-popup-row .v { text-align: right; word-break: break-word; color: var(--ink, #1e140a); }
         .atlas-popup-empty { font-size: 12px; color: var(--muted, #8a7a68); }
+        /* Bulle d'objet (onglet Bulle d'une couche) : l'essentiel d'un objet
+           et ses gestes. Les photos défilent au doigt, une par vue. */
+        .maplibregl-popup.atlas-bulle-popup { z-index: 9; }
+        .maplibregl-popup.atlas-bulle-popup .maplibregl-popup-content { padding: 0; overflow: hidden; }
+        .atlas-bulle { width: min(296px, 78vw); font-size: 12px; color: var(--ink, #1e140a); overflow-y: auto; overscroll-behavior: contain; }
+        .atlas-bulle > :not(.bulle-photos) { margin-left: 12px; margin-right: 12px; }
+        .atlas-bulle .bulle-photos {
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+            height: 150px; background: var(--surface-muted, #f1ece2);
+            scrollbar-width: none;
+        }
+        .atlas-bulle .bulle-photos::-webkit-scrollbar { display: none; }
+        .atlas-bulle .bulle-photos-compte {
+            display: block; width: fit-content; margin: -26px 8px 6px auto; position: relative;
+            background: rgba(0,0,0,0.55); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11px;
+        }
+        .atlas-bulle .bulle-photos img {
+            flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover;
+            scroll-snap-align: start; cursor: zoom-in;
+        }
+        .atlas-bulle .bulle-titre { font-size: 14px; font-weight: 700; margin-top: 10px; margin-bottom: 6px; padding-right: 18px; }
+        .atlas-bulle .bulle-pastilles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+        .atlas-bulle .bulle-pastille {
+            border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+            background: var(--surface-muted, #f1ece2); color: var(--ink, #1e140a);
+        }
+        .atlas-bulle .bulle-champs { margin: 0 12px 6px; }
+        .atlas-bulle .bulle-champs > div {
+            display: flex; justify-content: space-between; gap: 12px; padding: 3px 0;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .atlas-bulle .bulle-champs dt { color: var(--muted, #8a7a68); flex-shrink: 0; }
+        .atlas-bulle .bulle-champs dd { margin: 0; text-align: right; word-break: break-word; }
+        .atlas-bulle .bulle-derniere { color: var(--muted, #8a7a68); margin-bottom: 8px; }
+        .atlas-bulle .bulle-derniere span { font-weight: 600; color: var(--ink, #1e140a); }
+        .atlas-bulle .bulle-derniere em { font-style: normal; }
+        .atlas-bulle .bulle-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 12px; }
+        .atlas-bulle .bulle-actions button {
+            flex: 1 1 auto; min-height: 36px; padding: 6px 10px; border-radius: 8px;
+            border: 1px solid var(--hairline, #e5dccd); background: var(--surface, #fff);
+            font: inherit; font-weight: 600; cursor: pointer; color: var(--ink, #1e140a);
+        }
+        .atlas-bulle .bulle-actions button[data-action="visite"] { background: var(--accent, #C44536); border-color: transparent; color: #fff; }
+        .bulle-visionneuse {
+            position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.88);
+            display: flex; align-items: center; justify-content: center; cursor: zoom-out;
+        }
+        .bulle-visionneuse img { max-width: 96vw; max-height: 92vh; object-fit: contain; }
+        .bulle-choix { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 0; cursor: pointer; }
+        .bulle-choix-liste { max-height: 160px; overflow-y: auto; }
         #viewer-controls {
             display: none;
             position: absolute; left: 12px; top: 12px; z-index: 25;
@@ -1352,7 +1493,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20260916c" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20261002c" />
 </head>
 <body>
     <div class="app">
@@ -1587,6 +1728,6 @@
     <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20260926u"></script>
+    <script type="module" src="./app_v7.js?v=20261002f"></script>
 </body>
 </html>

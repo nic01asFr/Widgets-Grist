@@ -49,6 +49,9 @@ export function adapterEnGrist(client, identite = {}) {
       listTables: () => client.listTables(),
       fetchTable: (table) => client.fetchTable(table),
       applyUserActions: (actions) => client.applyUserActions(actions),
+      // Comme dans un widget : l'identifiant du document. Atlas y range ce
+      // qu'il retient par document sur l'appareil (dernières saisies).
+      getDocName: async () => client.docId || null,
       // Le jeton signe est un service du document hote : hors widget, il n'existe
       // pas. On rend `null` plutot que de lever — l'appelant sait deja le traiter,
       // puisqu'un widget en lecture seule peut se le voir refuser.
@@ -59,6 +62,13 @@ export function adapterEnGrist(client, identite = {}) {
        * photo echouerait dans l'application — la seule ou l'envoi passe, le
        * navigateur refusant l'en-tete d'authentification au controle prealable.
        */
+      /** Une photo affichable : l'application lit le fichier avec sa clé. */
+      urlPieceJointe: (id) => {
+        if (typeof client.urlPieceJointe !== 'function') {
+          return Promise.reject(new Error('Lecture de fichier indisponible : client sans pièces jointes'));
+        }
+        return client.urlPieceJointe(id);
+      },
       televerserPieceJointe: (fichier) => {
         if (typeof client.televerserPieceJointe !== 'function') {
           throw new Error('Envoi de fichier indisponible : client sans pièces jointes');

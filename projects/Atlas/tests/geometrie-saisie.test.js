@@ -45,20 +45,20 @@ test('les colonnes : manifeste, puis colonne retenue, puis convention', () => {
   assert.deepEqual(colonnesGeometrie({
     geometryType: 'Polygon',
     _manifestLayer: { source: { geometry_fields: { geojson: 'geometry_json2', lat: 'centroid_lat', lon: 'centroid_lon' } } },
-  }), { mode: 'geojson', geojson: 'geometry_json2', centroideLat: 'centroid_lat', centroideLon: 'centroid_lon' });
+  }), { mode: 'geojson', geojson: 'geometry_json2', format: 'geojson', centroideLat: 'centroid_lat', centroideLon: 'centroid_lon' });
   // Point entablé : rangé en geometry_json, et il doit y être réécrit.
   assert.deepEqual(colonnesGeometrie({ geometryType: 'Point', geometryColumn: 'geometry_json' }),
-    { mode: 'geojson', geojson: 'geometry_json' });
+    { mode: 'geojson', geojson: 'geometry_json', format: 'geojson' });
   // Table liée en {lat, lng}.
   assert.deepEqual(colonnesGeometrie({ geometryType: 'Point', geometryColumn: { lat: 'y', lng: 'x' } }),
     { mode: 'latlon', lat: 'y', lon: 'x' });
   // Un couple lat/lon ne vaut que pour un point.
   assert.deepEqual(colonnesGeometrie({ geometryType: 'Polygon', geometryColumn: { lat: 'y', lng: 'x' } }),
-    { mode: 'geojson', geojson: 'geometry_json' });
+    { mode: 'geojson', geojson: 'geometry_json', format: 'geojson' });
   // Convention.
   assert.deepEqual(colonnesGeometrie({ geometryType: 'Point' }), { mode: 'latlon', lat: 'latitude', lon: 'longitude' });
-  assert.deepEqual(colonnesGeometrie({ geometryType: 'LineString' }), { mode: 'geojson', geojson: 'geometry_json' });
-  assert.deepEqual(colonnesGeometrie({}), { mode: 'geojson', geojson: 'geometry_json' });
+  assert.deepEqual(colonnesGeometrie({ geometryType: 'LineString' }), { mode: 'geojson', geojson: 'geometry_json', format: 'geojson' });
+  assert.deepEqual(colonnesGeometrie({}), { mode: 'geojson', geojson: 'geometry_json', format: 'geojson' });
   assert.deepEqual(nomsColonnesGeometrie({ mode: 'latlon', lat: 'a', lon: 'b' }), ['a', 'b']);
 });
 
@@ -97,7 +97,9 @@ test('lire : ligne vide, origine, Feature dépliée, texte illisible', () => {
   const gj = { mode: 'geojson', geojson: 'g' };
   assert.deepEqual(lireGeometrie({ g: '{"type":"Feature","geometry":{"type":"Point","coordinates":[5,43,7]}}' }, gj),
     { type: 'Point', coordinates: [5, 43] });
-  assert.equal(lireGeometrie({ g: 'POINT(5 43)' }, gj), null);
+  // Le WKT se lit depuis le 01/10/2026 (lib/wkt.js) ; il était ignoré.
+  assert.deepEqual(lireGeometrie({ g: 'POINT(5 43)' }, gj), { type: 'Point', coordinates: [5, 43] });
+  assert.equal(lireGeometrie({ g: 'pas du wkt' }, gj), null);
   assert.equal(lireGeometrie({ g: '{pas du json' }, gj), null);
   assert.equal(lireGeometrie({ g: '' }, gj), null);
 });

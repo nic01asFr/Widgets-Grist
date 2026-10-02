@@ -19,7 +19,8 @@ test('on ne crée que là où l’on peut écrire, et le refus dit pourquoi', ()
   assert.deepEqual(creationPossible({ sourceTable: 'Voirie', geometryType: 'LineString', geometryColumn: 'geometry_json' }), { ok: true });
   assert.deepEqual(creationPossible({ sourceTable: 'Parcs', geometryType: 'Polygon', geometryColumn: 'geometry_json' }), { ok: true });
   assert.match(creationPossible({ ...POINTS, geometryType: 'MultiPoint' }).raison, /QGIS/);
-  assert.match(creationPossible({ ...POINTS, geometryColumn: 'wkt' }).raison, /WKT/);
+  // Une table WKT accepte la création depuis le 01/10/2026.
+  assert.deepEqual(creationPossible({ sourceTable: 'Limites', geometryType: 'Polygon', geometryColumn: 'WKT', geometryFormat: 'wkt' }), { ok: true });
   assert.equal(creationPossible(null).ok, false);
 });
 
@@ -171,4 +172,15 @@ test('écrire, ne rien faire, ou refuser un conflit', () => {
   assert.equal(decisionModification({ origine, actuelles: { geometry_json: '{"a":9}' }, nouvelles: { geometry_json: '{"a":2}' } }), 'conflit');
   assert.equal(memesCellules({ latitude: 43.3 }, { latitude: '43.3' }), true, 'un nombre rangé en texte reste le même nombre');
   assert.deepEqual(actionModification('Voirie', 4, { geometry_json: 'x' }), ['UpdateRecord', 'Voirie', 4, { geometry_json: 'x' }]);
+});
+
+test('une forme dessinee prend le type multiple de sa couche, et s’ecrit dans son format', () => {
+  const ligne = { type: 'LineString', coordinates: [[5.6, 43.2], [5.7, 43.3]] };
+  const boucles = { sourceTable: 'Boucles', geometryType: 'MultiLineString', geometryColumn: 'WKT', geometryFormat: 'wkt' };
+  assert.deepEqual(cellulesPourCouche(boucles, ligne), { WKT: 'MULTILINESTRING ((5.6 43.2, 5.7 43.3))' });
+  const simple = { sourceTable: 'Voirie', geometryType: 'LineString', geometryColumn: 'WKT', geometryFormat: 'wkt' };
+  assert.deepEqual(cellulesPourCouche(simple, ligne), { WKT: 'LINESTRING (5.6 43.2, 5.7 43.3)' });
+  const surf = { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] };
+  const parcs = { sourceTable: 'Parcs', geometryType: 'MultiPolygon', geometryColumn: 'geometry_json' };
+  assert.equal(JSON.parse(cellulesPourCouche(parcs, surf).geometry_json).type, 'MultiPolygon');
 });

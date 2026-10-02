@@ -1,19 +1,15 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=20260729b';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
-import { chargerSchema, estTableSysteme } from './schema-grist.js';
-import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=20260924a';
+import { normalizePropertyValue } from './declarative-style.js?v=20261001a';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
+import { chargerSchema, estTableSysteme } from './schema-grist.js?v=20261002b';
+import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=20261001a';
+import { lireWkt, estWkt } from './wkt.js';
+import { TABLES_ATLAS, estTableAtlas } from './atlas-tables.js?v=20261002c';
 
-export const GEO_SKIP_TABLES = new Set([
-  'Maquette_Layers',
-  'SceneManifest',
-  'QgisWidgets',
-  'Atlas_LayerPrefs',
-  'Atlas_ScenePrefs',
-  'Atlas_Story',
-]);
+/** Les tables d'Atlas ne sont jamais des couches (liste : `lib/atlas-tables.js`). */
+export const GEO_SKIP_TABLES = new Set(TABLES_ATLAS);
 
 const GEOM_COL_ALIASES = ['geometry_json', 'geometry', 'geom', 'wkt'];
 const LATLNG_ALIASES = { lat: ['latitude', 'lat', 'y'], lng: ['longitude', 'lng', 'lon', 'x'] };
@@ -53,6 +49,27 @@ export function parseGeometryValue(columnar, geomCol, i) {
     } catch (_) {
       return null;
     }
+  }
+  // Une colonne WKT était repérée (alias `wkt`) puis ignorée cellule par
+  // cellule : la table apparaissait, sans un objet. Voir `lib/wkt.js`.
+  return lireWkt(s);
+}
+
+/**
+ * La forme dans laquelle une colonne porte ses géométries : `'wkt'`,
+ * `'geojson'`, ou `null` (couple lat/lon, ou colonne vide). Lue sur la
+ * première cellule renseignée : c'est elle qui dit comment réécrire, pour
+ * qu'une table WKT reste en WKT.
+ */
+export function formatGeometrie(columnar, geomCol) {
+  if (!geomCol || typeof geomCol !== 'string') return null;
+  for (const v of columnar?.[geomCol] || []) {
+    if (v == null || v === '') continue;
+    if (typeof v === 'object') return 'geojson';
+    const s = String(v).trim();
+    if (s[0] === '{') return 'geojson';
+    if (estWkt(s)) return 'wkt';
+    return null;
   }
   return null;
 }
@@ -127,16 +144,48 @@ export async function scanGeoTables(docApi, skipTables = GEO_SKIP_TABLES) {
 export function geoTablesDepuisSchema(schema, skipTables = GEO_SKIP_TABLES) {
   const out = [];
   for (const [table, colonnes] of Object.entries(schema || {})) {
-    if (skipTables.has(table) || estTableSysteme(table)) continue;
+    if (skipTables.has(table) || estTableAtlas(table) || estTableSysteme(table)) continue;
     // `detectGeometryColumn` raisonne sur des noms de colonnes : le schéma en
     // porte davantage, on ne lui donne que ce qu'il lit.
     const noms = {};
     for (const c of colonnes) noms[c.colId] = true;
-    const gc = detectGeometryColumn(noms);
+    let gc = detectGeometryColumn(noms);
+    // Un point : le couple qu'on peut écrire, si la table en a un.
+    if (!gc || typeof gc === 'object') gc = colonnesPointDepuisSchema(colonnes) || gc;
     if (!gc) continue;
     out.push({ table, geometryColumn: gc, geomType: null, count: null });
   }
   return out;
+}
+
+const LAT_EXACT = /^(lat|latitude|y)$/i;
+const LNG_EXACT = /^(lon|lng|long|longitude|x)$/i;
+const LAT_PROCHE = /(^|_)lat(itude)?(_|$)|latitude/i;
+const LNG_PROCHE = /(^|_)(lon|lng|long|longitude)(_|$)|longitude/i;
+
+/**
+ * Les colonnes d'un point, d'après le schéma : celles qu'Atlas pourra
+ * **écrire**.
+ *
+ * Constaté le 01/10/2026 : une table tient ses coordonnées dans
+ * `Latitude_WGS84`/`Longitude_WGS84` (des colonnes de données) et expose
+ * `latitude`/`longitude` en formules qui les recopient. La convention de noms
+ * choisissait les formules : on lisait bien, mais créer ou déplacer un objet
+ * écrivait dans une formule. On préfère donc un couple de colonnes de données,
+ * aux noms exacts d'abord, puis approchants (`Latitude_WGS84`, `lat_gps`) ; les
+ * formules ne servent qu'en dernier recours, pour lire.
+ *
+ * @param {Array<{colId: string, isFormula?: boolean}>} colonnes
+ * @returns {{lat: string, lng: string}|null}
+ */
+export function colonnesPointDepuisSchema(colonnes) {
+  const cs = (colonnes || []).filter((c) => c && c.colId);
+  const choisir = (liste) => {
+    const lat = liste.find((c) => LAT_EXACT.test(c.colId)) || liste.find((c) => LAT_PROCHE.test(c.colId));
+    const lng = liste.find((c) => LNG_EXACT.test(c.colId)) || liste.find((c) => LNG_PROCHE.test(c.colId));
+    return lat && lng && lat !== lng ? { lat: lat.colId, lng: lng.colId } : null;
+  };
+  return choisir(cs.filter((c) => !c.isFormula)) || choisir(cs);
 }
 
 export function isLinkedTableLayer(layer) {

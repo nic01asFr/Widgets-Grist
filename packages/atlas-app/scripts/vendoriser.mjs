@@ -73,6 +73,7 @@ const FORMULAIRES = [
   'shared/session-context.js',
   'shared/formulaires-table.js',
   'shared/formdef-from-table.js',
+  'shared/formdef-from-grist-form.js',
   'runtime/engine.js',
 ];
 

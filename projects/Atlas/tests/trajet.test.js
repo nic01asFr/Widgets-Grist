@@ -149,6 +149,12 @@ test('la fusion garde la ligne et l’abscisse, la re-capture renouvelle les sai
   assert.equal(apres.saisies[0].formId, 'g');
 });
 
+test('re-capturer la vue garde le choix de l’auteur : l’étape reste un contexte', () => {
+  const apres = etatApresRecapture({ camera: { zoom: 16 } }, { usage: { contexte: true }, camera: { zoom: 12 } }, []);
+  assert.deepEqual(apres.usage, { contexte: true });
+  assert.equal(etatApresRecapture({ camera: {} }, { camera: {} }, []).usage, undefined);
+});
+
 test('retirer la ligne oublie la trace et l’abscisse, pas les saisies', () => {
   const [etape] = retirerTrace([{
     title: 'a',

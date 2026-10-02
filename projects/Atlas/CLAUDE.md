@@ -2128,6 +2128,108 @@ Restent de l'audit : les défauts moyens (✕ de la fiche et sélection, barre d
 sélection compacte, palette sur téléphone, Échap dans le récit et les
 pastilles, focus après la palette).
 
+## WKT et colonnes de points écrivables (01/10/2026)
+
+Cadrage : `docs/CADRAGE-RELEVES-TERRAIN.md` (relevés configurés par une équipe,
+lots 1 à 7). Lots 1 et 2 faits.
+
+- **WKT** (`lib/wkt.js`, testé) : `lireWkt` / `ecrireWkt` / `estWkt` —
+  `POINT`, `LINESTRING`, `POLYGON` et leurs `MULTI`, `SRID=…;`, Z/M ignorés,
+  `EMPTY`, malformé → `null` sans lever. Lu par les trois chemins :
+  `parseGeometryValue` (tables liées), `lireGeometrie` (saisie), `rowToFeature`
+  (manifeste). **Une table WKT est réécrite en WKT**, à précision inchangée :
+  `formatGeometrie` relève la forme à la lecture (`layer.geometryFormat`),
+  `colonnesGeometrie` la rend (`format`), `cellulesGeometrie` l'applique. La
+  garde « Atlas ne sait pas écrire le WKT » de `creationPossible` est levée.
+  Avant : la colonne était repérée (alias `wkt`) puis ignorée cellule par
+  cellule — table listée, aucun objet — et une équipe avait dû créer des
+  copies converties de ses tables.
+- **Forme de la couche** : `selonTypeCouche` — une forme dessinée dans une
+  couche `Multi*` s'écrit en `Multi*` d'une partie, pour que la table reste
+  homogène pour les outils qui la lisent ailleurs.
+- **Points** : `colonnesPointDepuisSchema` (dans `geoTablesDepuisSchema`)
+  préfère un couple de colonnes de **données** (`Latitude_WGS84`) aux formules
+  qui les recopient (`latitude = $Latitude_WGS84`), noms exacts puis
+  approchants ; une formule ne sert qu'à lire, faute de mieux. Les couches déjà
+  liées gardent leurs colonnes.
+- Essai sans document : faux serveur REST de l'application (deux tables WKT),
+  affichage puis création d'un domaine — `AddRecord` avec `WKT: "POLYGON ((…))"`.
+
+### Lot 3 — l'apparence lue dans les tables de référence (01/10/2026)
+
+- `lib/table-reference.js` (pur, testé) : `candidatsReference` choisit les
+  tables à lire **sur le schéma seul** (un `Ref:<T>` désigne T ; un texte, les
+  tables dont une colonne parle couleur, rang ou image ; jamais les tables
+  d'Atlas) ; `analyserReference` trouve la clé (identifiant pour un `Ref`,
+  sinon la colonne qui couvre ≥ 80 % des valeurs), la couleur (≥ 80 % de
+  `#hex`), le rang (nom gravité/rang/ordre…, numérique), l'image (≥ 50 % d'URL
+  d'image). Au plus quatre petites tables lues, mises en cache (`lignesDeTable`).
+- **Couleur** (onglet Couleur, mode Catégorisé) : bloc « Table de référence »
+  → `A.appliquerReferenceCouleur` pose les catégories (couleur, libellé) et
+  `color.reference.rangs`. **Ordre de dessin** par gravité :
+  `cleDeTriReference` → `circle-` / `line-` / `fill-` / `symbol-sort-key`
+  (le plus grave par-dessus). « Relire » relit la table ; « Revenir à la
+  palette » retire. Catégories et légende se rangent par rang (`valeursOrdonnees`).
+- **Icônes** (onglet Icône des couches de points) : un champ, sa table
+  d'images → `symbolization.icon = { mode: 'reference', field, images }`,
+  couche `<id>-icon` au-dessus des cercles (le type en image, l'état en
+  couleur). Images réduites à 128 px (`chargerIcone`), préchargées à la pose —
+  `styleimagemissing` ne part pas toujours pour une image désignée par
+  expression — et rechargées par l'événement après un changement de fond. Un
+  lien rompu reçoit une image vide et se compte. L'icône se touche comme son
+  point (`hitLayerIds`, `coucheDuRendu`).
+- `SUFFIXES_HABILLAGE` (`lib/layer-order.js`) : la liste unique des habillages
+  (`-icon` compris), lue pour masquer, filtrer et retirer. Elle était recopiée
+  à trois endroits.
+- Non fait : relire les tables de référence à l'ouverture (les couleurs
+  enregistrées sont celles du dernier « Relire ») ; icônes depuis une colonne
+  `Attachments` ; icône dans la légende.
+
+### Lot 4 — la bulle d'objet (01/10/2026)
+
+- `lib/bulle-objet.js` (pur, testé) : `bulleParDefaut` (titre, photos, champs
+  sans technique ni coordonnées, pastilles, table liée, gestes),
+  `modeleBulle` (le contenu à mettre en page), `derniereLigneLiee` /
+  `nombreLignesLiees`, `lienItineraire` (`geo:` dans l'application, calculateur
+  OpenStreetMap ailleurs), `couleurTexte`, `idsPiecesJointes` (lit aussi la
+  liste qu'Atlas range en texte, « 1, 2 », et `_l_<champ>`).
+- Onglet **Bulle** des couches à table : « Activer la bulle » propose une
+  configuration tirée du schéma, puis titre, photos, pastilles, champs,
+  dernière visite (`tablesReferencant`), gestes. Rangée dans
+  `symbolization.bulle` : elle voyage avec les préférences et le récit.
+- **En lecture, la bulle passe devant la fiche** (`bulleActive` dans le clic
+  et dans `showViewFeaturePopup`) : squelette immédiat, puis couleurs des
+  pastilles (symbologie, ou table de référence du champ), libellés des `Ref`,
+  dernière visite (date, état constaté, nombre). `garderBulleVisible` déplace
+  la carte du strict nécessaire (la légende la recouvrait).
+- **Photos** : `urlPhoto` — jeton du document dans le widget
+  (`/attachments/<id>/download?auth=`), et dans l'application l'adaptateur
+  `docApi.urlPieceJointe` (`ClientRest.urlPieceJointe` lit le fichier avec la
+  clé et rend une adresse `blob:`). Bande défilante sans barre, compteur,
+  visionneuse au toucher.
+- **Gestes** : « Voir la fiche » entre en sélection **en consultation**
+  (`enterSelectionMode(…, { consultation: true })`, sinon la lecture rouvrait
+  la bulle) ; sans formulaire, la fiche montre les attributs
+  (`ficheConsultation`). « Nouvelle visite » ouvre l'onglet du formulaire de
+  la table liée s'il est proposé hors édition, sinon le dit. Corrigé au
+  passage : « 1 objets sélectionnés ».
+- Éprouvé en simulation de l'application (faux serveur REST, photos lues avec
+  la clé) ; pas encore dans un vrai document.
+
+### Couleurs et catégories — défauts corrigés au passage (01/10/2026)
+
+- **Les libellés de catégorie étaient perdus** à chaque relecture des entités :
+  `syncColorCategoriesFromFeatures` reconstruisait la liste sans `label`
+  (`tests/categories-libelles.test.js`).
+- **Un champ `Ref` se lisait en identifiants** (« 1 », « 2 ») dans les
+  catégories et la légende, et s'annonçait « 123 » : `etiqueterCategoriesRef`
+  va chercher le libellé affiché par Grist (première colonne de texte de la
+  table visée), gardé dans `color.libelles` ; le sélecteur dit « réf. ».
+- **Liste des couches étroite** (inspecteur ouvert) : le nom n'avait que
+  32 px et le badge « ⛓ table » débordait. Requête de conteneur : compte non
+  coupé, badge réduit au pictogramme, actions de ligne au survol ou sur la
+  ligne choisie, poignée plus étroite à la souris seulement.
+
 ## Application : la barre part en lecture, OSM se présente (26/09/2026)
 
 - **Barre du haut** : `barreRetiree` (`lib/view-mode.js`, testée) la retire sur
@@ -2176,3 +2278,217 @@ touché (la fiche prime, le module se replie), onglet fiche ouverte (le module
 revient), « Plus » → module, menu fermé sans choix. Non éprouvé sur un vrai
 téléphone. Reste de l'audit : refermer par l'onglet laisse l'objet
 sélectionné (même défaut que le ✕ de la fiche).
+
+## Formulaires natifs, valeurs de départ, HTML du document (02/10/2026)
+
+**Postures.** Les trois états d'usage existent déjà : `viewMode` faux = édition
+(*Préparer*), `viewMode` vrai et `peutSaisir` vrai = *Exploiter* (le badge dit
+« Lecture + saisie »), `viewMode` vrai et `peutSaisir` faux = *Lecture*.
+`?mode=` ne fait que restreindre ; les droits de Grist font autorité. Vocabulaire :
+« Lecture » est une posture, « consultation » est le mode d'une fiche qu'on ne
+peut pas modifier (`ficheConsultation`), « vitrine » est le site de présentation.
+Cadrage : `docs/CADRAGE-RELEVES-TERRAIN.md`, section « Vision d'ensemble ».
+
+**Formulaires natifs de Grist** (`../grist_forms/shared/formdef-from-grist-form.js`).
+Une section de vue de type `form` est relue en FormDef : ordre de la mise en page,
+libellé (première ligne de `question`), aide (suite de la question et description
+de la colonne), `formRequired`, boutons radio, zone de texte, tri des choix. Il
+est relu à chaque ouverture (rien n'est copié dans `Formulaires`) et passe par la
+même porte que les autres (`formulairesPourCouche`, identifiant `grist-form:<id>`,
+`source: 'grist'`). Il est « publié » qu'il soit partagé publiquement ou non : qui
+le propose, et où, se décide dans la scène. Les métadonnées viennent de
+`chargerMeta(docApi, { vues: true })` (`lib/schema-grist.js`), qui lit
+`_grist_Views*` en plus du schéma ; illisibles, il n'y a simplement pas de
+formulaire natif. Un formulaire lié ne montre pas sa colonne de référence à
+l'objet (`sansChamps`) : c'est le clic qui la porte (`pontFormulaire`).
+
+**Valeurs de départ** (`lib/fiche-formulaire.js`, `departs` dans les réglages de
+couche, écrits avec `Atlas_LayerPrefs`). Par champ d'un formulaire qui AJOUTE une
+ligne : `vide`, `aujourdhui` (dates, à l'heure locale de la personne),
+`precedente` (la dernière saisie sur cet appareil, rangée par document et par
+formulaire : `atlas_saisies|<doc>|<formId>`), `reprise` (la dernière ligne de
+l'objet). Sans décision, Atlas propose la date qui date la ligne et une
+référence à des personnes (`precedente`) ; une entrée vide est une décision.
+Les valeurs entrent par le pont, avant le premier rendu, jamais par le DOM. Le
+terrain lit « Prérempli : … ». Le formulaire de la table de la couche part de la
+ligne elle-même.
+
+**Écrire dans le document sans l'exécuter.** `lib/html.js` : `echapper` pour tout
+texte, `chaineJs` pour une valeur dans un `onclick`, `assainirTexte` (liste
+blanche de balises et d'attributs) pour la seule consigne d'une étape. Le texte
+d'une étape, le nom d'une couche et le résultat du géocodeur y passent ; c'était
+rendu tel quel, y compris pour un récit chargé par `?scene=` (écrit par quelqu'un
+sans droit sur le document), alors que le widget a l'accès complet et que
+l'application garde sa clé sur l'appareil. Tout nouveau texte venu du document
+suit la même règle.
+
+**Pendant un récit, rien ne s'écrit dans les préférences de couche**
+(`saveLayerToGrist` et `saveLayerPrefIfSynced` rendent la main si
+`_storyPresenting`) : ce que la couche montre est l'état de l'étape, pas sa
+configuration.
+
+**Tables d'Atlas** (`lib/atlas-tables.js`) : une seule liste (configuration,
+inventaire, amont, noms gardés d'avance) d'où `GEO_SKIP_TABLES` tire la sienne.
+Une couche enregistrée en table prend `nomDeTableLibre`, jamais le nom d'une
+table d'Atlas. Ajouter une table d'Atlas = l'ajouter ici.
+
+**Imports versionnés** (`tests/imports-versions.test.js`) : un module de `lib/`
+s'importe sous un seul jeton `?v=`, partout. Deux adresses = deux instances. Quand
+un module change, changer son jeton dans tous les fichiers qui l'importent.
+
+**Capture d'étape** : `polygonMode` est toujours écrit (`null` remet à plat) ;
+un filtre par cases garde toutes ses valeurs cochées (pas de plafond de 40) ;
+relancer la lecture en plein récit ne refait pas l'instantané d'avant récit ;
+la date épinglée de la scène est suspendue pendant le récit et rendue à la
+sortie. La caméra d'avant récit n'est pas rétablie : avec le suivi GPS elle
+ferait voler la carte loin de la position de l'agent.
+
+**Relecture indépendante du 02/10/2026** (corrigé) : une colonne `DateTime:Europe/Paris`
+est un `DateTime` pour le moteur de formulaires (`normalizeGristType`), sinon elle se
+saisissait en texte libre ; la colonne affichée (`visibleCol`) d'un formulaire natif est
+traduite de numéro de ligne en nom de colonne ; le libellé d'une liste liée sans colonne
+déclarée préfère `nom`, `libelle`, `titre`… et écarte courriels, adresses et codes
+numériques ; `tableDePersonnes` reconnaît des mots entiers (pas `Equipements`) ; les
+écritures de préférences de couche passent par une file (`saveLayerPref`), sinon des
+enregistrements simultanés créaient `Atlas_LayerPrefs2`, `3`… ; les valeurs de départ
+reprises d'avant sont écartées si elles n'existent plus ; les dernières saisies sont
+rangées par identifiant de document, non par nom ; toute valeur de gestionnaire
+`onclick` passe par `chaineJs`, tout libellé venu d'un formulaire par `echapper`.
+
+**Limites connues, à lever avec les droits par table** :
+- avec `?mode=view`, `peutSaisir` est posé sans sonde : un lecteur dont les règles
+  d'accès refusent l'écriture voit les formulaires proposés, et son premier refus
+  ne baisse pas `peutSaisir` — *Exploiter* est alors offert à tort ;
+- la sonde d'écriture vise `Atlas_LayerPrefs` d'abord : un agent qui n'écrit que les
+  relevés peut être classé *Lecture* ;
+- les lignes d'une table liée lues pour « Reprise » sont gardées en cache
+  (`_lignesReference`) : une visite ajoutée par un autre utilisateur n'y paraît
+  qu'après rechargement ;
+- supprimer une couche retire sa ligne de `Maquette_Layers` mais laisse celle de
+  `Atlas_LayerPrefs` ; une table réajoutée retrouve ses anciennes préférences ;
+- basculer la visibilité d'une couche en table, en édition, crée désormais
+  `Atlas_LayerPrefs` (et sa page) au premier basculement : c'est voulu, ce que
+  l'éditeur masque doit rester masqué pour l'agent, mais ce n'est plus une
+  « empreinte nulle » pour un document qu'on a seulement regardé en édition.
+
+## Choisir un objet : la liste, la recherche dans l'enregistrement (02/10/2026)
+
+**Une seule règle pour ouvrir un objet** (`lib/ouvrir-objet.js`, `decisionOuverture`,
+appliquée par `ouvrirObjet` dans `app_v7.js`) : en *Préparer* la fiche (le popup pour
+une couche distante) ; en *Exploiter* ou *Lecture* la bulle si la couche en a une,
+sinon la fiche de saisie si un formulaire est proposé, sinon le popup ; pendant un
+récit, la fiche si l'étape propose des saisies sur cette couche. Le toucher sur la
+carte, la recherche, « le plus proche », les objets d'une étape et la liste passent
+tous par elle : la recherche ouvrait la fiche quand le toucher ouvrait la bulle, et
+« le plus proche » allait toujours à la fiche. Un oubli de `lecture` se lit comme la
+lecture, jamais comme l'édition.
+
+**La liste d'objets** (`lib/objets-liste.js`, pur, testé ; l'interface dans
+`app_v7.js`, section « OUVRIR UN OBJET ET LISTE D'OBJETS »). Depuis la pastille
+Relevé (« Choisir un objet ») ou la palette (« Objets de « Couche » »), le panneau de
+l'objet montre les objets de la couche, filtrés comme la carte : couleur d'état,
+nom, état, dernière visite, distance. « Proches » mesure depuis la position de
+l'appareil, à défaut depuis le centre de la carte ; « A – Z » trie par nom. Une
+ligne ouvre l'objet par la règle ci-dessus ; « Visite » ouvre directement le
+formulaire de relevé de l'objet, et fermer la fiche rend la liste. Elle se ferme
+par Échap, par ✕, et quand on change de posture.
+
+**La recherche dans l'enregistrement** : nom ET valeurs de champ. Tous les mots
+doivent se retrouver (dans le nom ou dans un champ), un mot d'une lettre ne
+cherche que le début du nom, le nom prime sur un champ, une référence se cherche
+par son libellé (jamais par son numéro : `libellesDeChamp` résout `Ref` et
+`RefList`, par la colonne que Grist affiche), et le résultat dit où le mot a été
+trouvé (« Type : Pont maçonnerie »). La palette utilise le même index ; tant qu'il
+n'est pas prêt pour une couche, elle répond par le nom. L'index (`_indexListe`)
+est refait quand la couche est relue. Les colonnes de géométrie, d'Atlas, les
+booléens et les pièces jointes ne s'indexent pas.
+
+## Droits par table et postures (02/10/2026)
+
+**Droits par table** (`lib/droits-tables.js`, pur, testé). Atlas n'avait qu'un droit
+pour tout le document ; Grist règle l'écriture table par table. `DROITS` apprend de
+ce qui s'est passé, sans lire les règles d'accès : une écriture réussie dit
+`ecriture` pour ses tables ; un refus de droits dit `refus` **seulement si le lot ne
+touchait qu'une table** (sinon on ne sait pas laquelle) ; tout le reste n'apprend
+rien ; `inconnu` ne retire rien. Une écriture refusée sur un formulaire proposé
+retire ce formulaire. `categorieTable` sépare configuration (`Atlas_*`,
+`Maquette_*`, `Formulaires`) et relevé (tout le reste).
+
+**Postures** (`lib/posture.js`). Préparer = `viewMode` faux ; Exploiter = `viewMode`
+vrai + `peutSaisir` vrai ; Lecture = les deux faux. La posture est DÉRIVÉE des deux
+champs (`postureDepuis`), jamais stockée à côté ; `appliquerPosture` est la seule
+écriture de `viewMode`/`peutSaisir` après l'ouverture. Offertes (`posturesOffertes`) :
+Lecture toujours ; Exploiter si un formulaire de relevé est proposé hors édition et
+que sa table n'a pas refusé ; Préparer si la configuration peut s'écrire
+(`configurationEcrivable`, faux après un refus franc de la sonde de départ ou
+d'une écriture de configuration). Le badge, l'avatar, le bouton `#hote-edition` et
+le menu de l'application ouvrent le même menu `#posture-menu` ; une posture non
+offerte reste visible avec sa raison. Le choix est retenu par document, sur
+l'appareil (`localStorage` `atlas_posture|<doc>`), jamais dans `Atlas_ScenePrefs`.
+À l'ouverture (`choisirPostureAuDemarrage`, après `chargerFormulaires`) : choix
+retenu s'il est encore offert ; dans l'application, Exploiter si offerte ; sinon
+l'ouverture telle quelle. Un refus franc de la configuration
+(`enterViewModeOnWriteFail`) retire Préparer et replie sur Exploiter si offerte,
+sinon Lecture — un agent de relevé ne perd plus sa saisie à cause d'une table
+de configuration qu'il n'a jamais dû écrire.
+
+Éprouvé dans l'application simulée (faux REST + faux Capacitor) : menu à trois
+choix avec raison, Lecture retenue après rechargement, Exploiter offerte une fois
+le formulaire proposé, refus de configuration -> Lecture. Pas encore sur la copie.
+
+## Étapes à clé stable, récit écrit par clé (02/10/2026)
+
+`Atlas_Story` gagne une colonne `Cle` (`lib/recit-cles.js`, pur, testé ; branché dans
+`lib/story.js`). Chaque étape a une `cle` qui naît avec elle (`e-xxxxxxxx`) et ne
+change plus, ni au déplacement ni à la réécriture : c'est elle qu'un contexte, une
+progression ou une zone désigneront, jamais le rang ni l'identifiant de ligne. Une
+étape copiée reçoit une nouvelle clé (`assurerCles`). Une ligne ancienne (table
+écrite avant, ou par `bootstrap-*`/`app.js`) reçoit `h-<rang>` à la lecture :
+déterministe, donc deux lecteurs donnent la même clé à la même ligne ; la mise en
+ordre (`aReecrire`) pose les clés au premier chargement d'un éditeur et retire les
+reliquats en double. La colonne manquante est ajoutée dans le même lot que les clés.
+
+**Écriture par clé, en trois points** (`planifierEcritureRecit`). Plus d'effacement
+général : on compare ce qu'on avait lu (`_baseRecit`, remis à zéro à chaque lecture),
+ce qu'on a maintenant et ce que le document contient. On n'écrit que ce que NOUS avons
+changé, on ne retire que ce que NOUS avions, une étape lue nulle part n'est jamais
+touchée, une étape modifiée ailleurs et pas ici garde sa modification ; changée des deux
+côtés, la nôtre l'emporte. Sans lecture préalable, rien ne se retire. La lecture ne
+déduplique plus par rang (deux éditeurs qui ajoutaient « l'étape 4 » s'en effaçaient une)
+mais par clé. Tout part en UN `applyUserActions`. La base ne bouge qu'après un
+enregistrement réussi.
+
+Limites connues : le récit local ne reflète pas ce qu'un autre ajoute avant un
+rechargement (il n'y a pas de relecture périodique du récit) ; la trace d'un trajet est
+copiée dans l'état de chaque étape, donc la changer réécrit toutes les étapes.
+Éprouvé dans l'application simulée (capture, renommage, suppression : mises à jour
+ciblées, aucun effacement) ; pas encore sur la copie.
+
+## Contextes de travail : la pastille « Contexte » (02/10/2026)
+
+Un contexte est une **étape du récit qu'on joue sans la séquence** (`lib/contextes.js`,
+pur, testé). Il n'y a pas de table `Atlas_Contextes` : la scène est l'ensemble de ses
+configurations, et le contexte une de ses étapes. Ce qui l'en distingue est le bloc
+`state.usage` de l'étape (aujourd'hui `{ contexte: true }`, prévu pour porter aussi
+postures, zone GPS, ordre, règle de création) ; il vit avec l'étape (même ligne, même
+clé stable) et survit à « Re-capturer la vue » (`fusionnerApresPhoto`). L'auteur le
+pose par la case « Proposer comme contexte » du module Récit (`A.storyContexte`).
+
+**Restitution.** Même chemin que le lecteur de récit (`applyStoryState`, instantané
+d'avant, `restorePreStorySnapshot`), sans ses commandes. Deux drapeaux, deux sens :
+`_storyPresenting` = « l'état affiché est celui d'une étape » (rien ne s'écrit comme
+préférence : `saveLayerToGrist`, `saveLayerPrefIfSynced`, caméra, relecture) ;
+`_contexteCle` = « c'est un contexte, pas le lecteur ». `lecteurRecitActif()`
+(`_storyPresenting && !_contexteCle`) remplace `_storyPresenting` aux seuls endroits
+qui parlent du lecteur : la pastille « Lire le récit », créer un objet, modifier une
+forme (permis pendant un contexte : c'est le travail), voler vers un objet choisi.
+Le lecteur prend la main sur un contexte (l'instantané d'origine est gardé) ; toute
+sortie (`storyExit`) efface `_contexteCle` ; passer en Préparer quitte le contexte.
+
+**La pastille** (`kind: 'contexte'`, en lecture et en exploitation seulement, jamais
+dans le lecteur ni en édition) liste « Scène de base » puis les contextes proposés ;
+le panneau montre la consigne du contexte actif (texte de l'étape, HTML filtré par
+`assainirTexte`). Éprouvé dans l'application simulée : proposer, passer en Lecture,
+appliquer, consigne sans script, retour à la scène de base ; pas encore sur la copie.
+Reste : blocs de la carte de consigne (photo, compteur, formulaire intégré, « Suivant »),
+progression, zone qui propose un contexte par GPS.

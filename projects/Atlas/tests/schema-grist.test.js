@@ -49,6 +49,15 @@ test('le schema garde les types, que le scan geo jetait', () => {
   assert.equal(cols[1].type, 'Choice');
 });
 
+test('une reference porte le nom de la colonne que Grist affiche', () => {
+  // `_grist_Tables_column.visibleCol` est un numero de ligne de cette meme table.
+  const [t, c] = meta({ Domaines: [{ colId: 'Code' }, { colId: 'Libelle' }], Ouvrages: [{ colId: 'Domaine', type: 'Ref:Domaines' }, { colId: 'Nom' }] });
+  c.visibleCol = [0, 0, 2, 0];
+  const schema = schemaDepuisMeta(t, c);
+  assert.equal(colonnesDe(schema, 'Ouvrages')[0].visibleCol, 'Libelle');
+  assert.equal(colonnesDe(schema, 'Ouvrages')[1].visibleCol, '', 'pas une reference, pas de colonne affichee');
+});
+
 test('une colonne sans type vaut Text — jamais une erreur', () => {
   // Un document ancien, ou un faux docApi de test, peut ne rien porter.
   const [t, c] = meta({ T: [{ colId: 'a' }] });

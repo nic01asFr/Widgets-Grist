@@ -13,7 +13,7 @@
 import {
   familleGeometrie, colonnesGeometrie, cellulesGeometrie, normaliserGeometrie, validerGeometrie,
   nomsColonnesGeometrie,
-} from './geometrie-saisie.js';
+} from './geometrie-saisie.js?v=20261001a';
 
 /** Types qu'on sait créer aujourd'hui. */
 export const FAMILLES_CREABLES = ['Point', 'LineString', 'Polygon'];
@@ -38,8 +38,8 @@ export function creationPossible(layer, { viewMode = false, peutEcrire = true } 
     return { ok: false, raison: 'Type de géométrie non pris en charge par l’éditeur.' };
   }
   if (layer.geometryType === 'MultiPoint') return { ok: false, raison: 'Couche de points multiples : modifiable dans QGIS.' };
-  const gc = layer.geometryColumn;
-  if (typeof gc === 'string' && /^wkt$/i.test(gc)) return { ok: false, raison: 'Géométrie en WKT : Atlas ne sait pas l’écrire.' };
+  // Le WKT s'écrit depuis le 01/10/2026 (`lib/wkt.js`) : la garde qui le
+  // refusait ici est levée, la table reste en WKT.
   // Une table de qgis2grist porte aussi des centroïdes, que QGIS relit : écrire
   // la forme sans eux laisserait la table incohérente. Lot 6 du chantier.
   if (layer.source === 'qgis2grist' || colonnesGeometrie(layer).centroideLat) {
@@ -79,7 +79,19 @@ export function formeValidee(geom, typeCouche) {
  * @returns {object|null} `null` si la géométrie n'a pas où s'écrire
  */
 export function cellulesPourCouche(layer, geometrie) {
-  return cellulesGeometrie(geometrie, colonnesGeometrie(layer));
+  return cellulesGeometrie(selonTypeCouche(layer, geometrie), colonnesGeometrie(layer));
+}
+
+/**
+ * Une forme dessinée prend le type de sa couche : une ligne tracée dans une
+ * couche de `MultiLineString` s'écrit en `MultiLineString` d'une partie. Sans
+ * cela, la table mêlerait les deux types, et l'outil qui la lit ailleurs —
+ * celui de l'équipe, QGIS — n'attend qu'un seul type.
+ */
+export function selonTypeCouche(layer, geometrie) {
+  const t = layer?.geometryType;
+  if (!geometrie?.type || !/^Multi/.test(t || '') || /^Multi/.test(geometrie.type)) return geometrie;
+  return t === `Multi${geometrie.type}` ? { type: t, coordinates: [geometrie.coordinates] } : geometrie;
 }
 
 /**

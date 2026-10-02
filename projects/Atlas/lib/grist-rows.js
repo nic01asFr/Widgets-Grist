@@ -1,7 +1,8 @@
 /**
  * Reconstruction GeoJSON depuis tables Grist (contrat qgis2grist / Scene Manifest).
  */
-import { manifestGeometryType } from './declarative-style.js?v=20260729o';
+import { manifestGeometryType } from './declarative-style.js?v=20261001a';
+import { lireWkt } from './wkt.js';
 
 /** Colonne Grist → lignes objet. */
 export function fetchTableToRows(colData) {
@@ -88,12 +89,17 @@ export function rowToFeature(row, layerMeta, fillColor, visible) {
 
   // geometry_json prioritaire — polygones/lignes QGIS (même si cfg widget dit Point)
   if (row[geojsonKey]) {
-    try {
-      geometry = typeof row[geojsonKey] === 'string'
-        ? JSON.parse(row[geojsonKey])
-        : row[geojsonKey];
-    } catch (_) {
-      geometry = null;
+    const v = row[geojsonKey];
+    // Une colonne déclarée par le manifeste peut porter du WKT (`geometry_fields:
+    // { geojson: 'WKT' }`) : même lecture que le chemin des tables liées.
+    if (typeof v === 'string' && v.trim()[0] !== '{') {
+      geometry = lireWkt(v);
+    } else {
+      try {
+        geometry = typeof v === 'string' ? JSON.parse(v) : v;
+      } catch (_) {
+        geometry = null;
+      }
     }
   }
 

@@ -28,9 +28,10 @@
  * > n'a pas le droit d'écrire. Le dépôt a déjà payé une fois pour ce défaut.
  */
 
-import { tablesReferencant } from './schema-grist.js';
-import { detectGeometryColumn } from './geo-tables.js';
-import { televerserPieceJointe } from './data-client.js?v=20260918c';
+import { tablesReferencant } from './schema-grist.js?v=20261002b';
+import { colonneDate } from './bulle-objet.js?v=20261001a';
+import { detectGeometryColumn } from './geo-tables.js?v=20261002c';
+import { televerserPieceJointe } from './data-client.js?v=20261001a';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
@@ -161,6 +162,7 @@ export function reglagesFormulaire(couche) {
     exposeHerite: !Array.isArray(r.exposes) && r.expose === true,
     masques: masquesValides(r.masques),
     retires: Array.isArray(r.retires) ? r.retires.filter((x) => typeof x === 'string' && x) : [],
+    departs: departsValides(r.departs),
   };
 }
 
@@ -345,7 +347,16 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
       id: entree.formId || entree.def?.id || null,
       titre: entree.titre || entree.def?.title || entree.tableCible,
       tableId: entree.def?.tableId || entree.tableCible,
-      def: entree.def,
+      // Un formulaire lié ne montre pas la référence à l'objet : c'est le
+      // clic qui la porte (`pontFormulaire`). Un formulaire Grist natif la
+      // demande souvent, obligatoire — elle bloquerait l'envoi, vide.
+      // Sur la couche, la géométrie et les colonnes d'Atlas ne se saisissent pas,
+      // même si l'auteur d'un formulaire Grist les y a posées : un champ texte
+      // sur `geometry_json` ferait taper à la main ce que la carte règle.
+      def: surLaCouche
+        ? sansChamps(entree.def, colonnesHorsFormulaire(couche, schema?.[table]))
+        : sansChamps(entree.def, [via]),
+      source: entree.source || null,
       statut: entree.statut || null,
       derive: !!derive,
       // **Porte sur la table de la couche**, et non « le formulaire principal ».
@@ -422,8 +433,25 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
     f.masques = Object.prototype.hasOwnProperty.call(reglages.masques, f.id)
       ? reglages.masques[f.id]
       : masquesParDefaut(f.def);
+    // D'où part chaque champ. Comme les masques : une entrée, même vide, est
+    // une décision ; sans elle, Atlas propose — pour un ajout seulement.
+    f.departs = Object.prototype.hasOwnProperty.call(reglages.departs, f.id)
+      ? reglages.departs[f.id]
+      : (f.surLaCouche ? {} : departsProposes(f.def, { schema }));
   }
   return out;
+}
+
+/** Une définition sans ces champs — la même si aucun n'y est. */
+export function sansChamps(def, colIds) {
+  const ote = (colIds || []).filter(Boolean);
+  if (!def || !ote.length) return def;
+  const touche = (def.sections || []).some((s) => (s.fields || []).some((c) => ote.includes(c.colId)));
+  if (!touche) return def;
+  return {
+    ...def,
+    sections: (def.sections || []).map((s) => ({ ...s, fields: (s.fields || []).filter((c) => !ote.includes(c.colId)) })),
+  };
 }
 
 /**
@@ -757,7 +785,7 @@ function versDate(v, avecHeure) {
  */
 export function valeurPourFormulaire(champ, v) {
   if (v === undefined || v === null || v === '') return null;
-  const type = String(champ?.type || '').toLowerCase();
+  const type = String(champ?.type || '').replace(/:.*$/, '').toLowerCase();
   const widget = String(champ?.widget || '').toLowerCase();
 
   if (type === 'datetime' || widget === 'datetime') {
@@ -808,6 +836,183 @@ export function valeursPourMoteur(formDef, props) {
     }
   }
   return out;
+}
+
+// ============================================================
+// VALEURS DE DÉPART — ce qu'un relevé propose avant qu'on écrive
+// ============================================================
+//
+// Sur le terrain, on remplit la même fiche vingt fois par jour : la date est
+// celle du jour, l'inspecteur est le même qu'à la visite précédente. Les
+// retaper est une perte de temps et une source d'erreurs. Celui qui configure
+// choisit, champ par champ, d'où part chaque valeur ; Atlas propose un choix
+// raisonnable tant qu'il n'a rien décidé, et le terrain voit ce qui a été
+// prérempli.
+
+/**
+ * D'où part un champ.
+ *
+ * | | |
+ * |---|---|
+ * | `vide` | rien |
+ * | `aujourdhui` | la date du jour (dates seulement) |
+ * | `precedente` | ce qu'on a saisi la dernière fois sur cet appareil, dans ce formulaire |
+ * | `reprise` | la valeur de la dernière ligne de cet objet (formulaire lié seulement) |
+ */
+export const DEPARTS = Object.freeze(['vide', 'aujourdhui', 'precedente', 'reprise']);
+
+export const LIBELLES_DEPART = Object.freeze({
+  vide: 'Vide',
+  aujourdhui: 'Aujourd’hui',
+  precedente: 'Dernière saisie',
+  reprise: 'Reprise de la dernière ligne',
+});
+
+/** Les départs qui ont un sens pour ce champ. Une photo part toujours vide. */
+export function departsPossibles(champ, { lie = false } = {}) {
+  // `DateTime:Europe/Paris` est un DateTime : le fuseau ne change pas le type.
+  const type = String(champ?.type || '').replace(/:.*$/, '');
+  if (type === 'Attachments' || champ?.widget === 'file') return ['vide'];
+  const out = ['vide'];
+  if (/^Date(Time)?$/.test(type)) out.push('aujourdhui');
+  out.push('precedente');
+  if (lie) out.push('reprise');
+  return out;
+}
+
+/** Les départs enregistrés sur la couche, par formulaire ; un départ douteux est ignoré. */
+export function departsValides(brut) {
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return {};
+  const out = {};
+  for (const [formId, champs] of Object.entries(brut)) {
+    if (formId === '__proto__' || !champs || typeof champs !== 'object' || Array.isArray(champs)) continue;
+    const propres = {};
+    for (const [colId, d] of Object.entries(champs)) {
+      if (colId && colId !== '__proto__' && DEPARTS.includes(d)) propres[colId] = d;
+    }
+    out[formId] = propres;
+  }
+  return out;
+}
+
+/** Les mots qui disent « personnes » dans un nom de table — des mots entiers, pas des sous-chaînes. */
+const MOTS_DE_PERSONNES = new Set([
+  'agent', 'agents', 'inspecteur', 'inspecteurs', 'intervenant', 'intervenants',
+  'personne', 'personnes', 'operateur', 'operateurs', 'utilisateur', 'utilisateurs',
+  'technicien', 'techniciens', 'membre', 'membres', 'salarie', 'salaries',
+  'releveur', 'releveurs', 'observateur', 'observateurs', 'equipier', 'equipiers',
+]);
+
+/** Un nom de table en mots : `Agents_terrain`, `TableAgents`, `Équipiers` -> minuscules sans accents. */
+function motsDuNom(nom) {
+  return String(nom || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+/**
+ * Une table qui décrit des personnes : par un mot de son nom, ou parce qu'elle
+ * porte une adresse électronique. C'est la seule supposition d'Atlas sur les
+ * données, et elle ne fait que **proposer** — celui qui configure tranche.
+ *
+ * Des mots entiers : `Equipements`, `Inspections`, `Hauteurs` ou `Operations`
+ * ne sont pas des personnes, et préremplir l'équipement de la visite d'avant
+ * aurait fait écrire une valeur fausse sous un simple « Vérifiez ».
+ */
+export function tableDePersonnes(schema, table) {
+  if (!table) return false;
+  if (motsDuNom(table).some((m) => MOTS_DE_PERSONNES.has(m))) return true;
+  return (schema?.[table] || []).some((c) => /e-?mail|courriel/i.test(c.colId || ''));
+}
+
+/**
+ * Ce qu'Atlas propose tant que la scène n'a rien décidé — seulement pour un
+ * formulaire qui **ajoute** une ligne, jamais pour celui qui corrige l'objet
+ * (ses valeurs sont celles de la ligne) :
+ *
+ * - la date qui date la ligne — celle que la bulle lit comme « dernière
+ *   visite » — part d'aujourd'hui ;
+ * - une référence à des personnes part de la dernière saisie : l'inspecteur
+ *   d'aujourd'hui est, le plus souvent, celui d'hier.
+ *
+ * Rien d'autre : reprendre l'état de la dernière visite pousserait à le
+ * confirmer sans le regarder. C'est possible, mais c'est un choix à faire.
+ */
+export function departsProposes(def, { schema = null } = {}) {
+  const champs = (def?.sections || []).flatMap((s) => s.fields || []);
+  const out = {};
+  const date = colonneDate(champs.map((c) => ({ colId: c.colId, type: c.type })));
+  if (date) out[date] = 'aujourdhui';
+  for (const c of champs) {
+    const m = /^Ref(?:List)?:(.+)$/.exec(String(c.type || ''));
+    if (m && tableDePersonnes(schema, m[1])) out[c.colId] = 'precedente';
+  }
+  return out;
+}
+
+/** `AAAA-MM-JJ` (ou avec l'heure), à l'heure locale : « aujourd'hui » est celui de la personne. */
+function aujourdhuiLocal(maintenant, avecHeure) {
+  const d = maintenant instanceof Date ? maintenant : new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  const jour = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return avecHeure ? `${jour}T${p(d.getHours())}:${p(d.getMinutes())}` : jour;
+}
+
+/**
+ * Les valeurs de départ d'un formulaire, dans le vocabulaire du moteur, et ce
+ * qui a été prérempli — pour le dire au terrain.
+ *
+ * @param {object} def
+ * @param {Record<string,string>} departs  `colId → départ`
+ * @param {object} o
+ * @param {Date} [o.maintenant]
+ * @param {object} [o.precedentes] la dernière saisie sur l'appareil (valeurs Grist)
+ * @param {object} [o.derniere]    la dernière ligne liée de l'objet (valeurs Grist)
+ * @returns {{valeurs: object, preremplis: Array<{colId: string, label: string, depart: string}>}}
+ */
+export function valeursDeDepart(def, departs, { maintenant = null, precedentes = null, derniere = null } = {}) {
+  const valeurs = {};
+  const preremplis = [];
+  for (const champ of (def?.sections || []).flatMap((s) => s.fields || [])) {
+    const d = departs?.[champ.colId];
+    let v = null;
+    const typeNu = String(champ.type || '').replace(/:.*$/, '');
+    if (d === 'aujourdhui' && /^Date(Time)?$/.test(typeNu)) {
+      v = aujourdhuiLocal(maintenant, typeNu === 'DateTime');
+    } else if (d === 'precedente' || d === 'reprise') {
+      const source = d === 'precedente' ? precedentes : derniere;
+      const brut = source ? source[champ.colId] : undefined;
+      const cible = valeurPourFormulaire(champ, brut);
+      v = cible ? cible.valeur : null;
+    }
+    if (v == null || v === '' || (Array.isArray(v) && !v.length)) continue;
+    valeurs[champ.colId] = v;
+    preremplis.push({ colId: champ.colId, label: champ.label || champ.colId, depart: d });
+  }
+  return { valeurs, preremplis };
+}
+
+/**
+ * Ce qu'on retient d'une saisie pour la prochaine : les seuls champs réglés sur
+ * `precedente`, tels qu'ils ont été écrits.
+ */
+export function aRetenir(data, departs) {
+  const out = {};
+  for (const [colId, d] of Object.entries(departs || {})) {
+    if (d === 'precedente' && data && Object.prototype.hasOwnProperty.call(data, colId)) out[colId] = data[colId];
+  }
+  return out;
+}
+
+/** La phrase qui dit au terrain ce qui a été prérempli. */
+export function phrasePreremplis(preremplis) {
+  if (!preremplis?.length) return '';
+  const noms = preremplis.map((p) => p.label);
+  const liste = noms.length > 1 ? `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}` : noms[0];
+  return `Prérempli : ${liste}. Vérifiez avant d’envoyer.`;
 }
 
 /**
@@ -923,7 +1128,10 @@ export function pontFormulaire({
       const champs = { ...data, [formulaire.via]: rowId };
       const r = await ecrireLigne(docApi, [['AddRecord', table, null, champs]]);
       dire('Relevé ajouté', true);
-      if (typeof apresEcriture === 'function') apresEcriture();
+      // L'appelant reçoit la ligne créée et ce qui a été écrit : de quoi
+      // retenir une saisie pour la prochaine, et relire ce qui en dépend.
+      const id = Array.isArray(r?.retValues) ? r.retValues[0] : null;
+      if (typeof apresEcriture === 'function') apresEcriture(Number.isInteger(id) ? id : null, data);
       return r;
     };
     return pont;

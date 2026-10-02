@@ -58,6 +58,45 @@ export function urlSceneDepuisParam(search = '') {
 }
 
 /**
+ * Une scène peut être déjà là, sans adresse à aller chercher.
+ *
+ * C'est le cas d'un livrable autoportant : un seul fichier HTML qui embarque
+ * sa scène, ou un dossier où les données sont posées à côté de la page — la
+ * même logique qu'un projet QGIS dont les chemins sont relatifs. `?scene=`
+ * ne peut pas servir à cela : il exige https, donc il refuse aussi bien un
+ * `file://` qu'une `blob:` fabriquée sur place, et il a raison de le faire
+ * pour une adresse venue du dehors.
+ *
+ * La scène embarquée suit exactement le même contrôle de forme que la scène
+ * distante, et porte le même `externe: true` : être dans la page ne la rend
+ * pas de confiance. Les adresses relatives de ses couches se résolvent
+ * contre la page elle-même, ce qui permet le dossier « données à côté ».
+ *
+ * @param {object} [portee] pour les tests ; défaut `window`
+ * @returns {{ manifest: object|null, echec: string|null }}
+ */
+export function sceneEmbarquee(portee) {
+  const p = portee || (typeof window !== 'undefined' ? window : null);
+  const brut = p && p.__ATLAS_SCENE__;
+  if (!brut) return { manifest: null, echec: null };
+  let manifest;
+  try {
+    manifest = deballerScene(typeof brut === 'string' ? JSON.parse(brut) : brut);
+  } catch (e) {
+    return { manifest: null, echec: `scène embarquée illisible : ${e.message}` };
+  }
+  const ecarts = verifierFormeScene(manifest);
+  if (ecarts.length) {
+    return { manifest: null, echec: `scène embarquée invalide — ${ecarts.join(' · ')}` };
+  }
+  manifest.externe = true;
+  manifest._origine = 'embarquée';
+  resoudreAdressesCouches(
+    manifest, typeof location !== 'undefined' ? location.href : '');
+  return { manifest, echec: null };
+}
+
+/**
  * Une scène externe n'est jamais de confiance.
  *
  * Écrit comme une fonction plutôt qu'un booléen en dur pour que la règle ait un

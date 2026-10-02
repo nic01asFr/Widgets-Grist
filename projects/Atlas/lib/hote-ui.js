@@ -11,8 +11,8 @@
  * retire et `init()` prend le relais.
  */
 
-import { capacites, creerClient } from './data-client.js?v=20260821b';
-import { installerAdaptateur } from './grist-adapter.js?v=20260820a';
+import { capacites, creerClient } from './data-client.js?v=20261001a';
+import { installerAdaptateur } from './grist-adapter.js?v=20261002b';
 import { listerScenesAtlas } from './decouverte.js?v=20260820a';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
@@ -473,7 +473,7 @@ export function ouvrirMenuPrincipal({
       ${situation ? `<span>${echapper(situation)}</span>` : ''}
     </div>` : ''}
     <div class="hote-menu">
-      ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>Les outils d’auteur reviennent sur la carte</small></span></button>` : ''}
+      ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>${echapper(edition.aide || 'Les outils d’auteur reviennent sur la carte')}</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}

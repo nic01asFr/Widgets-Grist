@@ -36,11 +36,16 @@ export function estTableSysteme(table) {
  * peut ne pas porter `type`, `label` ou `isFormula`. Une colonne sans type vaut
  * `Text`, ce qui donne un champ libre — jamais une erreur.
  *
- * @returns {Object<string, Array<{colId: string, type: string, label: string, isFormula: boolean, widgetOptions: string}>>}
+ * @returns {Object<string, Array<{colId: string, type: string, label: string, isFormula: boolean, widgetOptions: string, visibleCol: string}>>}
  */
 export function schemaDepuisMeta(tables, cols) {
   const nomParRef = {};
   (tables?.id || []).forEach((rowId, i) => { nomParRef[rowId] = tables.tableId?.[i]; });
+
+  // `visibleCol` désigne la colonne affichée par son identifiant de ligne
+  // dans `_grist_Tables_column` ; on le traduit en nom de colonne.
+  const colIdParRef = {};
+  (cols?.id || []).forEach((rowId, i) => { colIdParRef[rowId] = cols.colId?.[i]; });
 
   const out = {};
   (cols?.id || []).forEach((_, i) => {
@@ -53,6 +58,7 @@ export function schemaDepuisMeta(tables, cols) {
       label: cols.label?.[i] || '',
       isFormula: !!cols.isFormula?.[i],
       widgetOptions: cols.widgetOptions?.[i] || '',
+      visibleCol: colIdParRef[cols.visibleCol?.[i]] || '',
     });
   });
   return out;
@@ -60,18 +66,45 @@ export function schemaDepuisMeta(tables, cols) {
 
 /** Les deux lectures de métadonnées, et rien d'autre. */
 export async function chargerSchema(docApi) {
-  if (!docApi) return {};
+  const meta = await chargerMeta(docApi);
+  return meta ? schemaDepuisMeta(meta.tables, meta.colonnes) : {};
+}
+
+/**
+ * Les métadonnées brutes du document — tables, colonnes, et, si `vues` est
+ * demandé, les vues et leurs sections, où Grist range ses formulaires.
+ *
+ * Une seule lecture de `_grist_Tables_column`, la plus lourde, pour le schéma
+ * et pour les formulaires. Les vues sont facultatives : illisibles, le
+ * document n'a simplement pas de formulaire natif à reprendre.
+ *
+ * @returns {Promise<{tables, colonnes, vues?, sections?, champs?}|null>}
+ */
+export async function chargerMeta(docApi, { vues = false } = {}) {
+  if (!docApi) return null;
+  let tables;
+  let colonnes;
   try {
-    const [tables, cols] = await Promise.all([
+    [tables, colonnes] = await Promise.all([
       docApi.fetchTable('_grist_Tables'),
       docApi.fetchTable('_grist_Tables_column'),
     ]);
-    return schemaDepuisMeta(tables, cols);
   } catch (_) {
     // Un document sans métadonnées accessibles n'est pas une erreur d'Atlas :
     // il n'aura simplement ni couche découverte ni formulaire dérivé.
-    return {};
+    return null;
   }
+  const meta = { tables, colonnes };
+  if (vues) {
+    try {
+      [meta.vues, meta.sections, meta.champs] = await Promise.all([
+        docApi.fetchTable('_grist_Views'),
+        docApi.fetchTable('_grist_Views_section'),
+        docApi.fetchTable('_grist_Views_section_field'),
+      ]);
+    } catch (_) { /* pas de formulaire natif */ }
+  }
+  return meta;
 }
 
 /** Les colonnes d'une table, ou une liste vide. */

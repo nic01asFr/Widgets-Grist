@@ -19,6 +19,7 @@ import {
   pastilleRecitRequise,
   isWriteAclError,
   probeCanWriteDoc,
+  sonderEcritureDoc,
   resolveProbeTableId,
 } from '../lib/view-mode.js';
 
@@ -289,5 +290,31 @@ describe('pastilleRecitRequise — le récit garde une entrée sans barre', () =
     assert.equal(pastilleRecitRequise({ ...base, nbEtapes: 0 }), false);
     assert.equal(pastilleRecitRequise({ ...base, nbEtapes: undefined }), false);
     assert.equal(pastilleRecitRequise(), false);
+  });
+});
+
+describe('sonderEcritureDoc — ce que la sonde prouve, et sur quelle table', () => {
+  const api = (erreur, tables = ['Atlas_LayerPrefs', 'Visites']) => ({
+    listTables: async () => tables,
+    applyUserActions: async () => { if (erreur) throw new Error(erreur); },
+  });
+
+  it('un refus de droits : non écrivable, certain, et la table sondée est nommée', async () => {
+    const r = await sonderEcritureDoc(api('Blocked by table update access rules'));
+    assert.deepEqual(r, { ecrivable: false, table: 'Atlas_LayerPrefs', certain: true });
+  });
+
+  it('une ligne absente : écrivable, certain', async () => {
+    assert.deepEqual(await sonderEcritureDoc(api('Row 999999999 not found')), { ecrivable: true, table: 'Atlas_LayerPrefs', certain: true });
+  });
+
+  it('un doute reste écrivable mais n’est pas une preuve', async () => {
+    const r = await sonderEcritureDoc(api('Failed to fetch'));
+    assert.equal(r.ecrivable, true);
+    assert.equal(r.certain, false);
+  });
+
+  it('sans document : non écrivable, sans table', async () => {
+    assert.deepEqual(await sonderEcritureDoc(null), { ecrivable: false, table: null, certain: true });
   });
 });

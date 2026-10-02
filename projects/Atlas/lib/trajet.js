@@ -6,8 +6,8 @@
  * dessine à part. `captureStoryState` ne connaît pas ce module — la photo est
  * prise d'abord, le trajet est fusionné ensuite.
  */
-import { distanceMetres } from './releve.js';
-import { flattenCoords2D } from './grist-rows.js';
+import { distanceMetres } from './releve.js?v=20260923b';
+import { flattenCoords2D } from './grist-rows.js?v=20261001a';
 
 export const VERSION = '1.0.0';
 
@@ -233,6 +233,9 @@ export function fusionnerApresPhoto(photo, conserve) {
   if (conserve?.trace) out.trace = conserve.trace;
   if (Number.isFinite(conserve?.abscisse)) out.abscisse = conserve.abscisse;
   if (Array.isArray(conserve?.saisies)) out.saisies = conserve.saisies;
+  // Ce que l'auteur a décidé de l'étape (la proposer comme contexte) n'est pas une
+  // photo de la carte : re-capturer la vue ne le défait pas.
+  if (conserve?.usage && typeof conserve.usage === 'object') out.usage = conserve.usage;
   return out;
 }
 
@@ -242,6 +245,7 @@ export function etatApresRecapture(photo, precedent, saisiesFraiches) {
     trace: precedent?.trace,
     abscisse: precedent?.abscisse,
     saisies: saisiesFraiches,
+    usage: precedent?.usage,
   });
 }
 

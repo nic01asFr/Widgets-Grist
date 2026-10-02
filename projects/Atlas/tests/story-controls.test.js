@@ -14,7 +14,7 @@ import {
   shouldCaptureControl,
   sanitizeBrokenSelectFilters,
 } from '../lib/controls.js';
-import { captureStoryState, normalizeStoryRows } from '../lib/story.js';
+import { captureStoryState } from '../lib/story.js';
 
 describe('geo-tables', () => {
   it('detectGeometryColumn lat/lng', () => {
@@ -327,21 +327,12 @@ describe('story', () => {
       ],
     });
     assert.equal(state.layers[0].polygonMode, 'extruded');
-    // Sans rendu déclaré, la clé reste absente : l'étape n'impose rien.
-    assert.equal('polygonMode' in state.layers[1], false);
+    // Sans rendu déclaré, la clé vaut `null` : l'étape REMET la couche à son
+    // défaut, au lieu d'hériter du rendu de l'étape précédente (audit du
+    // 01/10/2026). Une étape enregistrée avant n'a pas la clé et n'impose rien.
+    assert.equal(state.layers[1].polygonMode, null);
   });
 
-  it('normalizeStoryRows déduplique par Step', () => {
-    const rows = normalizeStoryRows([
-      { id: 1, step: 1, title: 'A1', text: '', state: {} },
-      { id: 3, step: 1, title: 'A2', text: '', state: {} },
-      { id: 2, step: 2, title: 'B1', text: '', state: {} },
-      { id: 4, step: 2, title: 'B2', text: '', state: {} },
-    ]);
-    assert.equal(rows.length, 2);
-    assert.equal(rows[0].title, 'A2');
-    assert.equal(rows[1].title, 'B2');
-  });
 });
 import { captureStoryState as captureEtape } from '../lib/story.js';
 

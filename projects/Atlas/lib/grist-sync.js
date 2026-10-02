@@ -6,22 +6,22 @@ import {
   rowsToGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=20260729o';
+} from './grist-rows.js?v=20261001a';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=20260916a';
+} from './manifest-binding.js?v=20261002b';
 import { parseGristBool } from './grist-bool.js';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
-import { isModelLayer } from './model-layer.js?v=20260803a';
-import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=20260924a';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
+import { isModelLayer } from './model-layer.js?v=20260906a';
+import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=20261001a';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=20260729b';
+} from './declarative-style.js?v=20261001a';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
@@ -223,7 +223,25 @@ export function lignePrefs(layer, maintenant = Date.now()) {
   };
 }
 
-export async function saveLayerPref(docApi, layer, opts = {}) {
+/**
+ * Les écritures de préférences se font UNE À LA FOIS.
+ *
+ * N appels rapprochés (`toggleAllLayers` en lance un par couche) lisaient tous
+ * « la table n'existe pas » avant que le premier l'ait créée : Grist créait
+ * `Atlas_LayerPrefs`, `Atlas_LayerPrefs2`, … Deux appels sur la même couche
+ * ajoutaient deux lignes avant que le premier ait rendu son identifiant. Relevé
+ * à la relecture du 02/10/2026. La file continue après un échec ; l'appelant,
+ * lui, reçoit l'erreur.
+ */
+let _fileEcrituresPrefs = Promise.resolve();
+
+export function saveLayerPref(docApi, layer, opts = {}) {
+  const tache = _fileEcrituresPrefs.then(() => ecrirePref(docApi, layer, opts));
+  _fileEcrituresPrefs = tache.catch(() => {});
+  return tache;
+}
+
+async function ecrirePref(docApi, layer, opts = {}) {
   if (opts.viewMode) return;
   const cle = clePrefsCouche(layer);
   if (!cle) return;

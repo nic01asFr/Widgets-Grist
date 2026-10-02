@@ -66,11 +66,12 @@ test('une couche sans symbolisation ne fabrique pas d etat fantome', () => {
   assert.equal(etape.layers[0].symbolization, null);
 });
 
-test('le rendu surfacique est capture a part, et seulement s il est defini', () => {
+test('le rendu surfacique est capture a part, et vaut null quand il n est pas defini', () => {
   // `polygonMode` vit hors symbolization : sans lui, une etape ne saurait pas
-  // montrer un bati en volume puis le remettre a plat.
+  // montrer un bati en volume puis le remettre a plat. Capte a plat, il doit
+  // etre ecrit (`null`) pour remettre a plat ce qu'une etape d'avant a extrude.
   const s = scene({ color: { mode: 'single' } });
-  assert.equal('polygonMode' in captureStoryState(carteFactice, s).layers[0], false);
+  assert.equal(captureStoryState(carteFactice, s).layers[0].polygonMode, null);
   s.layers[0].style.polygonMode = 'flat';
   assert.equal(captureStoryState(carteFactice, s).layers[0].polygonMode, 'flat');
 });
