@@ -1988,8 +1988,13 @@ générique (`lib/parametres-objet.js`) ; **une famille de plus est un schéma d
   **Création de la colonne, fiabilisée** (mesure en Grist réel) : Grist ne refuse pas un doublon, il crée
   `atlas_3d_json2` et le dit dans `retValues` — `saveFeatureToSource` retire alors la colonne parasite et écrit dans la
   vraie ; un document partagé en saisie seule refuse l'ajout (structure) — le reste de la ligne s'écrit, et le message
-  dit que le placement et les réglages ne l'ont pas été. La colonne n'est pas créée « en amont » : elle l'est au
-  premier besoin, pour ne pas modifier la structure de tables qu'on se contente d'afficher.
+  dit que le placement et les réglages ne l'ont pas été. La colonne n'est pas créée à l'ouverture, pour ne pas
+  modifier la structure de tables qu'on se contente d'afficher : elle l'est **au premier réglage d'un objet** (réglage
+  ou curseur de placement), pas à l'enregistrement — `assurerColonneAtlas3d`, mémorisé par couche
+  (`verifierPersistance3d`). Un éditeur sans droit sur la structure le **sait tout de suite** : message à l'instant du
+  réglage, et avertissement permanent en tête des onglets « Placement 3D » et « Spécifications » de l'objet. Éprouvé en
+  Grist réel : la colonne apparaît au premier réglage, avant tout enregistrement, lignes vides ; le refus de droits
+  est éprouvé par test seulement (le compte d'essai a tous les droits).
 - **Contrôles complémentaires du 02/10/2026** : rendu de **nuit** dans le vrai document (trois halos chauds au sol,
   légende « 3 allumés », rien enregistré) ; **lecture** : la bulle et le popup d'une lampe disent « Éclairage :
   éteint — statut out_of_service » (`pastilleEtat`) ; **mobile** (feuille du bas, sans débordement horizontal) ;

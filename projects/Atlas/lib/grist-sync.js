@@ -395,38 +395,57 @@ export function featureToRowUpdate(feature, layer) {
   return colonne3dManquante ? { rowId, update, colonne3dManquante } : { rowId, update };
 }
 
+/**
+ * S'assure que la table a la colonne technique d'Atlas (`atlas_3d_json`), ou dit qu'on ne peut pas.
+ *
+ * Elle porte le placement 3D et les réglages d'un objet. Atlas la crée **au premier besoin** — le premier
+ * réglage d'un objet, ou à défaut son enregistrement — et non à l'ouverture : tout le monde n'a pas le
+ * droit de modifier la structure, et une table qu'on se contente d'afficher n'a pas à changer.
+ *
+ * Deux choses que Grist fait, et qu'il faut tenir (mesuré le 02/10/2026) :
+ * - il ne REFUSE PAS un doublon : ajouter « atlas_3d_json » à une table qui l'a déjà crée
+ *   « atlas_3d_json2 » et le dit dans sa réponse. Si Atlas ne savait pas que la colonne existait (liste
+ *   périmée, ajoutée depuis par quelqu'un d'autre), la colonne parasite est retirée ;
+ * - ajouter une colonne est une modification de STRUCTURE : un document partagé en saisie seule la refuse.
+ *
+ * @param {{applyUserActions: Function}} docApi
+ * @param {{sourceTable: string, _gristColumns?: string[]}} layer
+ * @param {Iterable<string>} [connues] les colonnes que la table porte, d'après ce qu'Atlas en sait
+ * @returns {Promise<{ etat: 'presente' | 'creee' | 'refusee' | 'inconnue', message?: string }>}
+ *   `inconnue` : Atlas ne sait pas quelles colonnes la table porte — il n'y touche pas.
+ */
+export async function assurerColonneAtlas3d(docApi, layer, connues = layer?._gristColumns) {
+  const noms = new Set(connues || []);
+  if (!noms.size) return { etat: 'inconnue' };
+  if (noms.has(ATLAS_3D_COL)) return { etat: 'presente' };
+  let creee;
+  try {
+    const r = await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
+    const retours = Array.isArray(r) ? r : r?.retValues;
+    creee = retours?.[0]?.colId;
+  } catch (e) {
+    return { etat: 'refusee', message: String(e?.message || e) };
+  }
+  if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
+  if (creee && creee !== ATLAS_3D_COL) {
+    try { await docApi.applyUserActions([['RemoveColumn', layer.sourceTable, creee]]); } catch (_) { /* colonne parasite : au pire elle reste vide */ }
+    return { etat: 'presente' };
+  }
+  return { etat: 'creee' };
+}
+
 export async function saveFeatureToSource(docApi, layer, featureIndex) {
   const f = layer.geojson?.features?.[featureIndex];
   const payload = featureToRowUpdate(f, layer);
   if (!payload) return false;
   if (payload.colonne3dManquante) {
-    // La colonne technique d'Atlas (même nom et même type que dans les tables de qgis2grist).
-    //
-    // Deux choses que Grist fait, et qu'il faut tenir :
-    // - il ne REFUSE PAS un doublon : ajouter « atlas_3d_json » à une table qui l'a déjà crée
-    //   « atlas_3d_json2 » et le dit dans la réponse (mesuré le 02/10/2026). Si Atlas ne savait pas que la
-    //   colonne existait (liste périmée, ajoutée depuis par quelqu'un d'autre), on retire la colonne
-    //   parasite et on écrit dans la vraie ;
-    // - ajouter une colonne est une modification de STRUCTURE : un document partagé en saisie seule
-    //   la refuse. Le reste de la ligne s'écrit alors quand même, et on dit que le placement et les
-    //   réglages n'ont pas pu l'être — au lieu de faire échouer tout l'enregistrement.
-    let colonneUtilisable = false;
-    try {
-      const r = await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
-      const retours = Array.isArray(r) ? r : r?.retValues;
-      const creee = retours?.[0]?.colId;
-      if (creee && creee !== ATLAS_3D_COL) {
-        try { await docApi.applyUserActions([['RemoveColumn', layer.sourceTable, creee]]); } catch (_) { /* colonne parasite : au pire elle reste vide */ }
-      } else {
-        layer.colonne3dCreee = true;
-      }
-      colonneUtilisable = true;
-    } catch (e) {
-      layer.colonne3dRefusee = String(e?.message || e);
-    }
-    if (colonneUtilisable) {
-      if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
+    const r = await assurerColonneAtlas3d(docApi, layer);
+    if (r.etat === 'creee') layer.colonne3dCreee = true;
+    if (r.etat === 'creee' || r.etat === 'presente') {
       payload.update[ATLAS_3D_COL] = payload.colonne3dManquante;
+    } else if (r.etat === 'refusee') {
+      // Le reste de la ligne s'écrit quand même ; le placement et les réglages, non — et on le dit.
+      layer.colonne3dRefusee = r.message;
     }
   }
   if (!Object.keys(payload.update).length) return false;

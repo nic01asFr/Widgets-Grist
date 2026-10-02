@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { featureToRowUpdate, saveFeatureToSource, saveFeaturesToSource } from '../lib/grist-sync.js';
+import { featureToRowUpdate, saveFeatureToSource, saveFeaturesToSource, assurerColonneAtlas3d } from '../lib/grist-sync.js';
 
 const objet = (props) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [5.4, 43.3] }, properties: { _row_id: 4, ...props } });
 const couche = (colonnes, features) => ({
@@ -112,4 +112,52 @@ test('pas le droit, et rien d autre a ecrire : rien n est ecrit, sans erreur', a
   assert.equal(await saveFeatureToSource(docApi, l, 0), false);
   assert.equal(docApi.journal.flat().length, 1, 'seul l ajout de colonne a ete tente');
   assert.ok(l.colonne3dRefusee);
+});
+
+// ---------------------------------------------------------------------------
+// S'assurer de la colonne AU PREMIER REGLAGE, pas a l'enregistrement
+// ---------------------------------------------------------------------------
+
+test('la colonne est la : rien n est tente', async () => {
+  const docApi = fauxGrist();
+  const l = couche(['nom', 'atlas_3d_json'], []);
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, l), { etat: 'presente' });
+  assert.equal(docApi.journal.length, 0);
+});
+
+test('on ne sait pas quelles colonnes la table porte : on n y touche pas', async () => {
+  const docApi = fauxGrist();
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, couche([], [])), { etat: 'inconnue' });
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, couche(undefined, [])), { etat: 'inconnue' });
+  assert.equal(docApi.journal.length, 0);
+});
+
+test('la colonne manque : elle est creee, et la liste des colonnes la connait ensuite', async () => {
+  const docApi = fauxGrist();
+  const l = couche(['nom'], []);
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, l), { etat: 'creee' });
+  assert.ok(l._gristColumns.includes('atlas_3d_json'));
+  // un second appel ne retente rien
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, l), { etat: 'presente' });
+  assert.equal(docApi.journal.flat().length, 1);
+});
+
+test('liste perimee : la colonne parasite que Grist cree est retiree, la colonne existe', async () => {
+  const docApi = fauxGrist({ colId: 'atlas_3d_json2' });
+  const r = await assurerColonneAtlas3d(docApi, couche(['nom'], []));
+  assert.deepEqual(r, { etat: 'presente' });
+  assert.deepEqual(docApi.journal.flat().map((a) => a[0]), ['AddColumn', 'RemoveColumn']);
+});
+
+test('pas le droit de modifier la structure : verdict immediat, avec la raison', async () => {
+  const r = await assurerColonneAtlas3d(fauxGrist({ refus: 'Blocked by table update access rules' }), couche(['nom'], []));
+  assert.equal(r.etat, 'refusee');
+  assert.match(r.message, /Blocked by table/);
+});
+
+test('les colonnes connues peuvent venir d ailleurs que de la couche (schema du document)', async () => {
+  const docApi = fauxGrist();
+  const l = couche([], []);
+  assert.deepEqual(await assurerColonneAtlas3d(docApi, l, ['nom', 'atlas_3d_json']), { etat: 'presente' });
+  assert.equal(docApi.journal.length, 0);
 });

@@ -81,6 +81,7 @@ import {
   loadLayerPrefs,
   clePrefsCouche,
   coucheAvecLignes,
+  assurerColonneAtlas3d,
   applyLayerPrefs,
   saveLayerPref,
   parseGristBool,
@@ -7746,6 +7747,40 @@ function typesAvecSchema(layer) {
     if (m?.mode === 'categorized') { (m.categories || []).forEach((c) => ajouter(c.modelId)); ajouter(m.defaultModelId); }
     return [...ids].map(typeCatalogueDe).filter((t) => t && descripteursDuType(t).length);
 }
+/**
+ * Le placement et les réglages d'un objet sont conservés dans la colonne technique d'Atlas : on le
+ * sait AU PREMIER RÉGLAGE, pas à l'enregistrement. La colonne est créée si la table ne l'a pas ; si le
+ * document refuse la modification de structure, on le dit tout de suite — sinon quelqu'un règle un objet,
+ * le voit changer, et le perd sans l'avoir su.
+ *
+ * Mémorisé par couche : une seule tentative à la fois, et le verdict est gardé pour la session.
+ */
+function verifierPersistance3d(layer) {
+    if (!layer?.sourceTable || !CONFIG.grist.ready || CONFIG.viewMode) return Promise.resolve(null);
+    if (typeof grist === 'undefined' || typeof grist.docApi?.applyUserActions !== 'function') return Promise.resolve(null);
+    if (layer._col3dPromesse) return layer._col3dPromesse;
+    layer._col3dPromesse = (async () => {
+        const r = await assurerColonneAtlas3d(grist.docApi, layer, colonnesDeTable(layer));
+        if (r.etat === 'inconnue') { layer._col3dPromesse = null; return r; }
+        layer._col3dEtat = r;
+        if (r.etat === 'creee') {
+            const schema = (STATE.schema = STATE.schema || {});
+            (schema[layer.sourceTable] = schema[layer.sourceTable] || []).push({ colId: 'atlas_3d_json', type: 'Text' });
+            showToast(`Colonne atlas_3d_json ajoutée à ${layer.sourceTable} : le placement et les réglages des objets y sont conservés`, 'success');
+        } else if (r.etat === 'refusee') {
+            showToast('Ce réglage ne sera pas conservé : le document ne permet pas à Atlas d’ajouter sa colonne atlas_3d_json', 'warning');
+        }
+        if (STATE.selection?.features?.length) renderObjectInspector();
+        return r;
+    })();
+    return layer._col3dPromesse;
+}
+/** L'avertissement permanent d'un onglet de fiche quand ce qu'on y règle ne sera pas conservé. */
+function htmlAvertissementPersistance(layer) {
+    if (layer?._col3dEtat?.etat !== 'refusee') return '';
+    return `<div class="hint" style="color:var(--accent);margin-bottom:10px"><strong>Ces réglages ne seront pas conservés.</strong> La table « ${echapper(layer.sourceTable)} » n’a pas la colonne <code>atlas_3d_json</code>, et vous n’avez pas le droit d’en modifier la structure. Une personne qui le peut doit ajouter cette colonne (texte), ou enregistrer un objet une fois depuis Atlas.</div>`;
+}
+
 /** Cette entité a-t-elle des paramètres décrits ? (l'onglet « Spécifications » de sa fiche) */
 function specsOffertes(layer, feature) {
     const id = typeIdDeEntite(layer, feature);
@@ -7955,7 +7990,7 @@ function htmlSpecsObjet(layer, feature, lectureSeule) {
         const dans = descripteurs.filter((d) => d.groupe === g.id);
         return dans.length ? `<div class="section"><div class="section-title">${echapper(g.libelle)}</div>${dans.map(ligne).join('')}</div>` : '';
     }).join('');
-    const note = lectureSeule ? '' : `<div class="hint">Une valeur saisie ici ne vaut que pour cet objet. Laissée vide, elle est héritée du champ de l’objet, de la couche, du type ou de la règle.</div>`;
+    const note = lectureSeule ? '' : htmlAvertissementPersistance(layer) + `<div class="hint">Une valeur saisie ici ne vaut que pour cet objet. Laissée vide, elle est héritée du champ de l’objet, de la couche, du type ou de la règle.</div>`;
     return `<div class="section"><div class="range-info">${echapper(type.name || type.id)}</div></div>${note}${sections}`;
 }
 
@@ -9052,7 +9087,7 @@ function renderObjectInspector() {
                 ? `<div class="hint">Mode lecture — sélection de ${count} objets (pas d’édition).</div>`
                 : geoReadOnly();
         } else if (!multi) {
-            $('insp-body').innerHTML =
+            $('insp-body').innerHTML = htmlAvertissementPersistance(layer) +
                 slider('f-scale', '📏 Échelle', r.scale, 0.1, 5, 0.05, '×') +
                 slider('f-rotationZ', '🔄 Rotation Z (azimut)', r.rotationZ, 0, 360, 5, '°') +
                 slider('f-rotationX', '↕️ Rotation X', r.rotationX, -90, 90, 5, '°') +
@@ -13840,6 +13875,7 @@ const A = {
         const f = layer.geojson?.features?.[sel[sel.length > 1 ? (STATE.selection.multiIndex || 0) : 0]]; if (!f) return;
         const d = descripteursDuType(typeCatalogueDe(typeIdDeEntite(layer, f))).find((x) => x.id === paramId);
         if (!d) return;
+        verifierPersistance3d(layer);
         const propres = { ...(f.properties._params || {}) };
         if (valeur === '' || valeur == null) delete propres[paramId];
         else {
@@ -14469,6 +14505,7 @@ const A = {
     editFeature(sliderId, value) {
         if (!assertCanWrite('éditer les objets 3D')) return;
         const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId); if (!layer) return;
+        verifierPersistance3d(layer);
         const v = parseFloat(value); const el = $(sliderId + '-v');
         const param = sliderId.split('-')[1];
         const multi = sliderId.startsWith('m-');
