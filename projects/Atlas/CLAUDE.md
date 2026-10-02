@@ -2826,3 +2826,14 @@ sans réseau.** Ne connaît ni sens uniques, ni interdictions, ni vitesse : le p
 des sentiers. Un réseau coupé donne un message (« un tronçon manque, ou deux lignes ne se touchent pas »). Éprouvé dans
 l'application simulée (grille de 17 tronçons, 4 points, 2,6 km) ; pas sur un export réel de plusieurs dizaines de milliers de
 tronçons — la construction du réseau y sera à mesurer.
+
+## Explications au survol et onglet Icône (02/10/2026, audit d'usage)
+
+- **`infoBulle(texte)`** (app_v7.js) : un « i » discret (`.info-i`) dont le texte s'affiche dans une bulle unique `#info-bulle`
+  posée en `fixed` (survol, focus clavier, appui au toucher ; Échap la ferme). À employer pour ce qui **explique** (une règle
+  de découpage, ce que fait un réglage) ; ce qui **avertit d'une conséquence** reste écrit en clair. Le style est dans
+  `index_v7.html` (et dans la page d'essai `essais-controles/index-vitrine-bulle.html`).
+- **Onglet Icône** : n'existe que si un champ de la couche peut donner une image. Présélection sur le schéma
+  (`champsAvecImages`, lib/table-reference.js : ni nombres, ni dates ; une table candidate porte une colonne d'image), puis
+  confirmation par la lecture de la table de référence (`champsIcone`). La liste ne propose que les champs confirmés ; sans
+  aucun, l'onglet disparaît (sauf si une icône est déjà posée).

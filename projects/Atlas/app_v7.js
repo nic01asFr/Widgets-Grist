@@ -65,7 +65,7 @@ import {
 } from './lib/layer-order.js?v=20261001a';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
-  expressionRang, expressionIcone, idImage, tableReferencee,
+  expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
 } from './lib/table-reference.js?v=20261001a';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
@@ -7575,11 +7575,58 @@ function boutonRevueObjets(layer) {
  * > references internes -- d'ou `verifier-references.mjs`.
  */
 let inspSymTab = 'Couleur';
+
+/**
+ * Une explication au survol : un « i » discret, dont le texte s'affiche dans une bulle unique (`#info-bulle`) posée en
+ * `fixed` — une infobulle dans le panneau serait coupée par son défilement. Au clavier (focus) et au toucher (appui)
+ * comme à la souris. Ne mettre ici que ce qui explique ; ce qui avertit d'une conséquence reste écrit.
+ */
+function infoBulle(texte) {
+    const t = escapeHtml(texte);
+    return `<span class="info-i" tabindex="0" role="note" aria-label="${t}" data-info="${t}">i</span>`;
+}
+(function brancherInfoBulle() {
+    if (typeof document === 'undefined' || window.__infoBulleBranchee) return;
+    window.__infoBulleBranchee = true;
+    let bulle = null;
+    const cacher = () => { if (bulle) bulle.style.display = 'none'; };
+    const montrer = (el) => {
+        if (!bulle) {
+            bulle = document.createElement('div');
+            bulle.id = 'info-bulle';
+            bulle.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(bulle);
+        }
+        bulle.textContent = el.dataset.info || '';
+        bulle.style.display = 'block';
+        const r = el.getBoundingClientRect();
+        const w = Math.min(260, window.innerWidth - 16);
+        bulle.style.maxWidth = w + 'px';
+        const h = bulle.offsetHeight;
+        const x = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+        const dessous = r.bottom + 8 + h < window.innerHeight;
+        bulle.style.left = x + 'px';
+        bulle.style.top = (dessous ? r.bottom + 8 : Math.max(8, r.top - 8 - h)) + 'px';
+    };
+    const cible = (e) => e.target?.closest?.('.info-i');
+    document.addEventListener('mouseover', (e) => { const c = cible(e); if (c) montrer(c); });
+    document.addEventListener('mouseout', (e) => { if (cible(e)) cacher(); });
+    document.addEventListener('focusin', (e) => { const c = cible(e); if (c) montrer(c); });
+    document.addEventListener('focusout', (e) => { if (cible(e)) cacher(); });
+    document.addEventListener('click', (e) => { const c = cible(e); if (c) { e.preventDefault(); e.stopPropagation(); montrer(c); } else cacher(); }, true);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cacher(); });
+})();
+
 function renderSymbologyInspector(layer) {
     const sym = initSymbolization(layer);
     const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
     const tabs = ['Couleur', 'Taille'];
-    if (isPoint) tabs.push('Icône', 'Modèle 3D');
+    if (isPoint) {
+        // L'onglet Icône n'existe que si un champ peut vraiment donner une image (ou si une icône est déjà posée).
+        const ci = champsIcone(layer);
+        if (sym.icon?.field || ci.enCours || ci.valides.length) tabs.push('Icône');
+        tabs.push('Modèle 3D');
+    }
     if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
     if (layer.sourceTable && CONFIG.grist.ready) tabs.push('Bulle');
     tabs.push('Étiquette');
@@ -7699,8 +7746,7 @@ function editeurClasses(layer, cible) {
             : `<span style="font-size:12px">jusqu’à</span><input class="input" type="number" step="any" value="${esc(seuils[i])}" style="width:84px" onchange="A.setClasses('${layer.id}','${cible}',{seuil:[${i},this.value]})">`;
         return `<div style="display:flex;gap:8px;align-items:center;margin-top:6px">${coul}${borne}${sans}<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">${comptes[i] ?? 0}</span></div>`;
     }).join('');
-    return `<div class="section"><div class="section-title">Classes</div>${selecteur}${lignes}
-        <div class="hint" style="margin-top:8px">Une classe va jusqu’à son seuil, inclus. La dernière prend tout ce qui le dépasse.</div>
+    return `<div class="section"><div class="section-title">Classes${infoBulle('Une classe va jusqu’à son seuil, inclus. La dernière prend tout ce qui le dépasse.')}</div>${selecteur}${lignes}
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
             <button class="btn btn-soft btn-sm" onclick="A.setClasses('${layer.id}','${cible}',{ajouter:true})">＋ Seuil</button>
             <button class="btn btn-soft btn-sm" ${seuils.length ? '' : 'disabled'} onclick="A.setClasses('${layer.id}','${cible}',{retirer:true})">− Seuil</button>
@@ -7812,11 +7858,29 @@ function blocReferenceCouleur(layer, c) {
         <button class="btn btn-primary btn-full" style="margin-top:6px" onclick="A.appliquerReferenceCouleur('${layer.id}')">Utiliser l’apparence de « ${escapeHtml(ref.table)} »</button></div>`;
 }
 
+/**
+ * Les champs d'une couche de points qui peuvent donner une icône : une présélection sur le schéma, puis la confirmation
+ * (une table de référence lue, une seule fois) champ par champ. `enCours` tant qu'une confirmation est attendue.
+ */
+function champsIcone(layer) {
+    if (!layer.sourceTable || !CONFIG.grist.ready || !STATE.schema) return { valides: [], enCours: false };
+    const noms = (layer._fields?.length ? layer._fields.map((f) => f.name) : Object.keys(layer.geojson?.features?.[0]?.properties || {}))
+        .filter((n) => n && !n.startsWith('_'));
+    const candidats = champsAvecImages(STATE.schema, layer.sourceTable, noms);
+    let enCours = false;
+    const valides = candidats.filter((n) => {
+        const ref = detecterPuisRedessiner(layer, n, 'icone');
+        if (ref === undefined) enCours = true;
+        return !!ref;
+    });
+    return { valides, enCours };
+}
+
 /** L'onglet Icône d'une couche de points : une image par valeur d'un champ. */
 function symIconePanel(layer, sym) {
     const ic = sym.icon || {};
-    const champs = (layer._fields?.length ? layer._fields.map((f) => f.name) : Object.keys(layer.geojson?.features?.[0]?.properties || {}))
-        .filter((n) => n && !n.startsWith('_'));
+    const { valides, enCours } = champsIcone(layer);
+    const champs = ic.field && !valides.includes(ic.field) ? [ic.field, ...valides] : valides;
     const choisi = ic.field || '';
     let corps = '';
     if (ic.mode === 'reference' && ic.field) {
@@ -7836,13 +7900,16 @@ function symIconePanel(layer, sym) {
                 <button class="btn btn-primary btn-full" style="margin-top:6px" onclick="A.appliquerIcones('${layer.id}', '${escapeHtml(choisi)}')">Afficher ces icônes</button>`
             : '<div class="range-info">Aucune table du document ne donne d’image pour ce champ.</div>';
     }
-    return `<div class="section"><div class="section-title">Icône selon le champ</div>
+    if (!champs.length) {
+        return `<div class="section"><div class="section-title">Icône selon le champ</div>
+            <div class="range-info">${enCours ? 'Recherche d’images dans le document…' : 'Aucun champ de cette couche ne renvoie à une table d’images.'}</div></div>`;
+    }
+    return `<div class="section"><div class="section-title">Icône selon le champ${infoBulle('L’icône se pose au-dessus du point, qui garde sa couleur : le type d’un ouvrage en image, son état en couleur.')}</div>
         <select class="input" onchange="A.choisirChampIcone('${layer.id}', this.value)">
             <option value="">— Champ —</option>
             ${champs.map((n) => `<option value="${escapeHtml(n)}" ${n === choisi ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
         </select></div>
-        ${corps}
-        <div class="hint" style="margin-top:8px">L’icône se pose au-dessus du point, qui garde sa couleur : le type d’un ouvrage en image, son état en couleur.</div>`;
+        ${corps}`;
 }
 
 /**
@@ -9132,7 +9199,7 @@ function boutonNouvelObjet(layer) {
     const propose = creationProposeeEnExploitation(layer);
     const reglage = CONFIG.viewMode ? '' : `<label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:12px;cursor:pointer">
         <input type="checkbox" ${propose ? 'checked' : ''} onchange="A.setCreationExploiter('${layer.id}', this.checked)">
-        <span>Les agents peuvent aussi ajouter un objet, en <b>Exploiter</b><br><small style="color:var(--muted)">Le document décide toujours : sans droit d’écriture sur la table, le bouton n’apparaît pas.</small></span></label>`;
+        <span>Ajout possible aussi en <b>Exploiter</b>${infoBulle('Les agents peuvent ajouter un objet sur le terrain. Le document décide toujours : sans droit d’écriture sur la table, le bouton n’apparaît pas.')}</span></label>`;
     return `<button class="btn btn-soft btn-full" style="margin-top:8px"
         onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>${reglage}`;
 }

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   tableReferencee, candidatsReference, analyserReference, entreesReference,
-  categoriesDepuisReference, expressionRang, expressionIcone, idImage,
+  categoriesDepuisReference, expressionRang, expressionIcone, idImage, champsAvecImages,
 } from '../lib/table-reference.js';
 
 // Forme d'un document reel de suivi d'ouvrages (01/10/2026), valeurs reformulees.
@@ -39,6 +39,14 @@ test('un Ref designe sa table ; un texte, les tables qui parlent couleur, rang o
   assert.ok(parTexte.includes('Etats') && parTexte.includes('Types'));
   assert.ok(!parTexte.includes('Agents'), 'rien qui parle apparence');
   assert.ok(!parTexte.includes('Atlas_LayerPrefs'), 'jamais une table d’Atlas');
+});
+
+test('les champs proposes pour une icone : ceux dont une table porte une image, ni nombres ni dates', () => {
+  const champs = champsAvecImages(SCHEMA, 'Ouvrages', ['Nom', 'Type', 'Etat', 'Latitude_WGS84']);
+  assert.ok(champs.includes('Type') && champs.includes('Etat'));
+  assert.ok(!champs.includes('Latitude_WGS84'), 'un nombre n’est pas une cle d’image');
+  assert.deepEqual(champsAvecImages({ T: [{ colId: 'A', type: 'Text' }] }, 'T', ['A']), [], 'aucune table d’image : rien');
+  assert.deepEqual(champsAvecImages(null, 'T', ['A']), []);
 });
 
 test('par libelle : la colonne cle couvre les valeurs, et l’on trouve couleur, gravite, image', () => {
