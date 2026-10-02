@@ -80,7 +80,7 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.10.1** (`published/atlas/`, GitHub Pages, déployée le 02/10/2026, commit `becc1b9` sur `main`). La 1.10.1 corrige un défaut de la 1.10.0 : jouer un contexte ou une étape retirait les pastilles de contrôle publiées (`lib/controls.js` : `marquerControlesPublies`, `rendreSansRestriction`). L'APK 1.10.1 est **publié** en release `atlas-v1.10.1` (Latest, asset `atlas.apk`, 02/10/2026) ; le bouton de la vitrine le sert. Le fil du forum n'est pas mis à jour.
+**En ligne : v1.10.2** (`published/atlas/`, GitHub Pages, 02/10/2026, commit `cefce59` sur `main`). La 1.10.1 a corrigé les pastilles de contrôle retirées par un contexte ; la 1.10.2 fait lire les contrôles publiés en entier (voir « Les contrôles publiés se lisent en entier »). L'APK 1.10.2 est publié en release `atlas-v1.10.2` (Latest, asset `atlas.apk`) ; le bouton de la vitrine le sert. Le fil du forum n'est pas mis à jour.
 Contenu de la 1.10.0 : relevés de terrain (droits par table, postures, récit à clé, contextes, bulle d'objet, liste d'objets, tables de référence, WKT), identifiant de modèle `objet:<type>`, paramètres d'objet à trois niveaux et panneau « Spécifications », éclairage qui dit son état, colonne `atlas_3d_json` fiable. Bilan : `docs/BILAN-02-10-2026.md`.
 Tests : 1241 verts.
 
