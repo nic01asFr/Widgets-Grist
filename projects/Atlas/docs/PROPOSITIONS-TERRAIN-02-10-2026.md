@@ -21,18 +21,16 @@ file, photos différées, pastille de synchronisation, entrée « Synchronisatio
 - créer un projet sur téléphone et le lier à Grist (lots 6-7) ;
 - **un essai sur un vrai téléphone** : rien de ce premier étage n'y a été vu.
 
-## 2. Mode relevé « à faire / fait » (point 4) — fait, sous une forme simple
+## 2. Mode relevé « à faire / fait » (point 4) — des briques de style, pas un mode
 
-On avait déjà : couleur par état (table de référence), contrôles publiés, contextes, liste d'objets avec dernière visite.
-**Ajouté** (`lib/echeance.js`) : une couche de points désigne son champ de **délai** ; une **couronne** rouge (en retard) ou
-ambre (à faire) entoure chaque point, **sans toucher à la couleur**, qui garde son sens ; la légende et la pastille « Relevé »
-comptent (« 21 en retard · 14 à faire »). Sur la copie, le champ est `delai_prochaine_visite` (en mois, négatif = dépassé).
+Remarque de l'utilisateur, juste : une première version codait une « échéance » en dur dans Atlas ; elle est remplacée par du
+**style ordinaire**, appliqué au champ qui convient. Deux briques générales, réutilisables ailleurs (`lib/classes.js`) :
+**couleur graduée à seuils posés à la main** (avec légende comptée et inversion des couleurs) et **contour qui suit un champ**
+(avec des classes sans contour). Pour un suivi d'ouvrages : le remplissage dit l'état, le contour dit le délai — sur le champ
+`delai_prochaine_visite` de la copie, en deux seuils. Rien dans Atlas ne sait ce qu'est un délai.
 
-**Proposé** (à valider) :
-- une **règle sur une date** (dernière visite + période du type d'ouvrage) pour les documents qui n'ont pas de colonne de
-  délai : plus général, mais le calcul vit alors dans Atlas, pas dans Grist — contraire à notre principe ;
-- trier « Choisir un objet » par urgence, avec une pastille de couleur ;
-- compteurs « fait aujourd'hui » (visites écrites depuis ce matin) pour la progression d'une tournée.
+**Proposé** : un **modèle de style** enregistrable (« état au remplissage, délai au contour ») pour le reposer en un clic sur
+une autre couche ; trier « Choisir un objet » par un champ ; des compteurs « fait aujourd'hui » pour la progression d'une tournée.
 
 ## 3. Ajouter un objet sur le terrain (point 5) — fait, par couche
 

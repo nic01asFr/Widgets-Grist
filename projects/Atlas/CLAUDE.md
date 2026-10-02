@@ -2780,17 +2780,24 @@ le geste de *Préparer* (point placé au toucher, fiche, « Envoyer »), la fich
 couche compte parmi les tables que *Exploiter* écrit (`tablesDeReleve`) : proposer l'ajout suffit à offrir la posture.
 Éprouvé dans l'application simulée ; pas encore sur la copie réelle.
 
-## Échéance : ce qui est à faire, ce qui est en retard (02/10/2026)
+## Classes par seuils : couleur graduée à la main, contour selon un champ (02/10/2026)
 
-Pour un suivi à échéance (le délai avant la prochaine visite d'un ouvrage, calculé par Grist), `lib/echeance.js` (pur,
-testé) : une couche de points désigne le **champ de délai** (`symbolization.echeance = { field, bientot }`, onglet Taille).
-Négatif = en retard ; de 0 à `bientot` = à faire ; au-delà = à jour ; vide = sans délai (jamais « à faire »).
-- **Couronne** (`<id>-echeance`) : un anneau rouge (en retard) ou ambre (à faire) autour du point, **sous** le cercle — la
-  couleur garde son sens (l'état), la couronne dit l'urgence. Transparent pour le reste.
-- **Légende** : « Échéance — En retard n · À faire n », parmi les objets que les filtres laissent voir.
-- **Pastille « Relevé »** : « Échéance : 21 en retard · 14 à faire » sous le nom de la couche.
-Cercles natifs seulement (pas les modèles 3D). Un contexte « Visites en retard » (filtre sur le même champ) reste la façon de
-n'afficher que ces objets. Éprouvé dans l'application simulée (anneaux, légende) ; pas encore sur la copie réelle.
+Une première version codait un « mode échéance » (couronne rouge/ambre, comptes, pastille). C'était trop spécifique : le sens
+(négatif = en retard, en mois) était écrit dans Atlas. Il est remplacé par **deux réglages ordinaires de style**, applicables à
+n'importe quel champ numérique — un délai, une profondeur, un âge, une pente (`lib/classes.js`, pur, 11 tests) :
+
+- **Couleur graduée, « Seuils à la main »** (onglet Couleur, mode Gradué, bloc « Découpage ») : au lieu de répartir d'office
+  entre le minimum et le maximum, on pose les seuils et la couleur de chaque classe. Ce sont les **classes bornées du style
+  déclaratif** (`_declarative.stops` avec `lower`/`upper`) — la voie qu'Atlas empruntait déjà pour les graduations de
+  manifeste : rien de nouveau côté rendu, export ni récit. Règle de QGIS, **hautes inclusives** : une classe va jusqu'à son
+  seuil, inclus. Boutons : ＋/− Seuil, ⇄ Inverser les couleurs ; la légende compte les objets par classe.
+- **Contour « Selon un champ »** (onglet Taille) : le contour d'un point ou d'une surface suit son propre champ, avec ses
+  propres classes (`stroke.mode = 'regle'`, `stroke.regle = { field, stops }`). Une classe peut être **sans contour** (∅) :
+  le remplissage garde son sens (l'état), le contour dit autre chose (l'urgence). La légende ajoute « Contour · champ » avec
+  ses comptes. Le suivi d'ouvrages en fait une couronne rouge/ambre sur un délai en mois — sans que rien ne le sache.
+- **Corrigé au passage** : choisir le champ d'une couleur graduée après le mode laissait le découpage de 0 à 1 d'avant (toutes
+  les valeurs dans la première classe) ; il repart maintenant des données.
+Éprouvé dans l'application simulée (classes, légende, inversion) ; pas encore sur la copie réelle.
 
 ## « Moi » comme valeur de départ : qui est connecté (02/10/2026)
 

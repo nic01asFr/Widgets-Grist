@@ -50,7 +50,10 @@ import {
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=20261002a';
-import { configEcheance, compterEcheances, expressionCouronne, phraseEcheances, COULEURS_ECHEANCE, LIBELLES_ECHEANCE } from './lib/echeance.js?v=20261002a';
+import {
+  stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
+  stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
+} from './lib/classes.js?v=20261002a';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
@@ -978,8 +981,19 @@ function layerStrokePaint(layer) {
     const st = initSymbolization(layer).stroke || {};
     return {
         width: st.enabled === false ? 0 : (Number.isFinite(st.width) ? st.width : 1.5),
-        color: st.mode === 'fixed' ? (st.color || layer.color) : layerPaintColor(layer),
+        color: st.mode === 'fixed' ? (st.color || layer.color)
+            : st.mode === 'regle' ? couleurContourRegle(layer, st)
+                : layerPaintColor(layer),
     };
+}
+
+/** La couleur d'un contour qui suit un champ : les classes de la règle, transparentes quand elles n'ont pas de couleur. */
+function couleurContourRegle(layer, st) {
+    const regle = st.regle;
+    if (!regle?.field || !regle.stops?.length) return TRANSPARENT;
+    return expressionCouleurDeclarative(
+        { kind: 'graduated', field: regle.field, stops: stopsPourCarte(regle.stops) }, TRANSPARENT, layer._fields || null,
+    ) || TRANSPARENT;
 }
 
 /**
@@ -3533,7 +3547,7 @@ function ajouterCoucheIcones(layer) {
 
 function applyPointStyle(layer) {
     const s = layer.style;
-    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n', '-echeance'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const sym = initSymbolization(layer);
 
     if (s.mode === 'library' || s.mode === 'custom') {
@@ -3555,18 +3569,6 @@ function applyPointStyle(layer) {
         }
         const stroke = layerStrokePaint(layer);
         const tri = cleDeTriReference(layer);
-        // Échéance : une couronne autour du point — rouge en retard, ambre à faire — sous le cercle, qui garde l'état.
-        const ech = configEcheance(sym);
-        if (ech) {
-            map.addLayer({ id: layer.id + '-echeance', type: 'circle', source: layer.id,
-                ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
-                paint: {
-                    'circle-radius': typeof radius === 'number' ? radius + 6 : 14,
-                    'circle-color': 'rgba(0,0,0,0)', 'circle-opacity': 1,
-                    'circle-stroke-width': 3, 'circle-stroke-opacity': 0.95,
-                    'circle-stroke-color': expressionCouronne(ech, resolveFeaturePropertyKey(layer, ech.field)),
-                } });
-        }
         map.addLayer({ id: layer.id, type: 'circle', source: layer.id,
             ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
             ...(tri != null ? { layout: { 'circle-sort-key': tri } } : {}),
@@ -3574,7 +3576,7 @@ function applyPointStyle(layer) {
                 'circle-radius': radius,
                 'circle-color': layerPaintColor(layer),
                 'circle-stroke-width': stroke.width,
-                'circle-stroke-color': initSymbolization(layer).stroke?.mode === 'fixed'
+                'circle-stroke-color': ['fixed', 'regle'].includes(initSymbolization(layer).stroke?.mode)
                     ? stroke.color : '#ffffff',
                 'circle-opacity': layerPaintOpacity(layer),
             }});
@@ -5649,7 +5651,6 @@ function renderReleveDockSlotHtml() {
         return `<div class="releve-couche">
             <div class="releve-nom"><span class="sw" style="background:${esc(fondPastilleCouche(l.couche) || '#888')}"></span>${esc(l.nom)}</div>
             ${l.formulaires.length ? `<div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>` : ''}
-            ${(() => { const p = phraseEcheances(comptesEcheance(l.couche) || {}); return p ? `<div class="releve-forms" style="color:var(--accent);font-weight:600">Échéance : ${esc(p)}</div>` : ''; })()}
             <div class="releve-actions">
                 ${l.creation ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.nouvelObjet('${chaineJs(l.couche.id)}')">＋ Ajouter un objet</button>` : ''}
                 ${geo ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.releveProche('${chaineJs(l.couche.id)}')">${proche
@@ -7313,6 +7314,9 @@ function buildLayerLegendHtml(layer) {
         return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}${headFocus}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${catRows}</div>`;
     }
 
+    if (sym.mode === 'graduated' && sym.field && sym.manuel && layer._declarative?.stops?.length) {
+        return legendeClassesCouleur(layer, sym, lid, clickable, total);
+    }
     if (sym.mode === 'graduated' && sym.field) {
         // Les couleurs du style déclaratif priment sur la rampe nommée — c'est
         // déjà la règle pour peindre la carte (cf. applyLayerStyle). La légende
@@ -7328,20 +7332,27 @@ function buildLayerLegendHtml(layer) {
     return `<div class="legend-group"><div class="legend-row${clickable}${focused}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${swatch}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
 }
 
-/** Les comptes d'échéance d'une couche (parmi les objets que les filtres laissent voir). */
-function comptesEcheance(layer) {
-    const ech = configEcheance(layer?.style?.symbolization);
-    if (!ech || !Array.isArray(layer?.geojson?.features)) return null;
-    const cle = resolveFeaturePropertyKey(layer, ech.field);
-    return compterEcheances(filteredGeoJSON(layer).features, ech, cle);
+/** La légende d'un contour qui suit un champ : ce que disent les contours colorés, avec leur nombre. */
+function legendeContour(layer) {
+    const st = layer?.style?.symbolization?.stroke;
+    if (st?.mode !== 'regle' || st.enabled === false || !st.regle?.stops?.length) return '';
+    const cle = resolveFeaturePropertyKey(layer, st.regle.field);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, st.regle.stops);
+    const tries = [...st.regle.stops].sort((a, b) => Number(a.lower ?? -Infinity) - Number(b.lower ?? -Infinity));
+    const lignes = tries.map((s, i) => (s.color && comptes[i])
+        ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${escLegend(s.color)};border-radius:50%;box-sizing:border-box"></span><span class="nm">${escLegend(libelleClasse(st.regle.stops, i))}</span><span class="ct">${comptes[i]}</span></div>` : '').join('');
+    if (!lignes) return '';
+    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
 }
 
-/** La légende de la couronne : ce que disent les anneaux, avec leur nombre. */
-function legendeEcheance(layer) {
-    const c = comptesEcheance(layer);
-    if (!c || (!c.retard && !c.bientot)) return '';
-    const ligne = (classe) => c[classe] ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${COULEURS_ECHEANCE[classe]};border-radius:50%;box-sizing:border-box"></span><span class="nm">${LIBELLES_ECHEANCE[classe]}</span><span class="ct">${c[classe]}</span></div>` : '';
-    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Échéance</span></div>${ligne('retard')}${ligne('bientot')}`;
+/** La légende d'une couleur graduée en classes posées à la main : une ligne par classe, avec son nombre. */
+function legendeClassesCouleur(layer, sym, lid, clickable, total) {
+    const stops = layer._declarative?.stops || [];
+    const cle = resolveFeaturePropertyKey(layer, sym.field);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, stops);
+    const tries = [...stops].sort((a, b) => Number(a.lower ?? -Infinity) - Number(b.lower ?? -Infinity));
+    const lignes = tries.map((s, i) => `<div class="legend-row legend-sub"><span class="swatch" style="background:${escLegend(s.color || TRANSPARENT)}"></span><span class="nm">${escLegend(libelleClasse(stops, i))}</span><span class="ct">${comptes[i]}</span></div>`).join('');
+    return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${lignes}</div>`;
 }
 
 function updateLegend() {
@@ -7349,7 +7360,7 @@ function updateLegend() {
     // La légende énumère dans le même sens que les panneaux : dessus d'abord.
     const vis = displayOrder(STATE.layers).filter((l) => l.visible !== false);
     if (vis.length === 0) { body.innerHTML = '<div class="legend-empty">Aucune couche visible</div>'; return; }
-    const html = vis.map((l) => buildLayerLegendHtml(l) + legendeEcheance(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
+    const html = vis.map((l) => buildLayerLegendHtml(l) + legendeContour(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
     body.innerHTML = html || '<div class="legend-empty">Aucun objet visible</div>';
 }
 
@@ -7642,6 +7653,61 @@ function paletteList(layer, param, current, type) {
         </div>`).join('')}</div>`;
 }
 
+/** Le découpage d'une couleur graduée : réparti d'office, ou des seuils posés à la main. */
+function choixDecoupage(layer, c) {
+    return `<div class="section"><div class="section-title">Découpage</div><div class="seg">
+        <button class="${c.manuel ? '' : 'active'}" onclick="A.setDecoupage('${layer.id}','auto')">Automatique</button>
+        <button class="${c.manuel ? 'active' : ''}" onclick="A.setDecoupage('${layer.id}','manuel')">Seuils à la main</button>
+    </div></div>`;
+}
+
+/** Les classes d'une cible : la couleur graduée (style déclaratif) ou le contour (règle propre). */
+function classesDe(layer, cible) {
+    const sym = initSymbolization(layer);
+    if (cible === 'contour') return sym.stroke?.regle?.stops || [];
+    return layer._declarative?.kind === 'graduated' ? (layer._declarative.stops || []) : [];
+}
+function champDeClasses(layer, cible) {
+    const sym = initSymbolization(layer);
+    return cible === 'contour' ? sym.stroke?.regle?.field : sym.color.field;
+}
+
+/**
+ * L'éditeur de classes : une couleur par classe, les seuils entre elles, des comptes. Même éditeur pour la couleur
+ * et pour le contour — c'est la même règle (voir lib/classes.js).
+ */
+function editeurClasses(layer, cible) {
+    const stops = classesDe(layer, cible);
+    const champ = champDeClasses(layer, cible);
+    const esc = (x) => escapeHtml(String(x ?? ''));
+    const numeriques = getLayerFields(layer).filter((f) => f.type === 'numeric');
+    const selecteur = cible === 'contour'
+        ? `<select class="input" onchange="A.setClasses('${layer.id}','contour',{field:this.value})">${['<option value="">— champ —</option>'].concat(numeriques.map((f) => `<option value="${esc(f.id)}" ${champ === f.id ? 'selected' : ''}>${esc(f.label)}</option>`)).join('')}</select>`
+        : '';
+    if (!champ || !stops.length) return `<div class="section"><div class="section-title">Classes</div>${selecteur}</div>`;
+    const { seuils, couleurs } = seuilsDeStops(stops);
+    const cle = resolveFeaturePropertyKey(layer, champ);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, stops);
+    const lignes = couleurs.map((c, i) => {
+        const dernier = i === couleurs.length - 1;
+        const libre = cible === 'contour';
+        const coul = c ? `<input type="color" value="${esc(c)}" onchange="A.setClasses('${layer.id}','${cible}',{couleur:[${i},this.value]})" style="width:30px;height:26px;border:none;cursor:pointer">`
+            : `<span title="Pas de contour pour cette classe" style="display:inline-block;width:30px;text-align:center;color:var(--muted)">∅</span>`;
+        const sans = libre ? `<label title="Pas de contour pour cette classe" style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" ${c ? '' : 'checked'} onchange="A.setClasses('${layer.id}','${cible}',{vide:[${i},this.checked]})"> sans</label>` : '';
+        const borne = dernier
+            ? `<span style="flex:1;font-size:12px">au-delà de ${esc(seuils.length ? seuils[seuils.length - 1] : '')}</span>`
+            : `<span style="font-size:12px">jusqu’à</span><input class="input" type="number" step="any" value="${esc(seuils[i])}" style="width:84px" onchange="A.setClasses('${layer.id}','${cible}',{seuil:[${i},this.value]})">`;
+        return `<div style="display:flex;gap:8px;align-items:center;margin-top:6px">${coul}${borne}${sans}<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">${comptes[i] ?? 0}</span></div>`;
+    }).join('');
+    return `<div class="section"><div class="section-title">Classes</div>${selecteur}${lignes}
+        <div class="hint" style="margin-top:8px">Une classe va jusqu’à son seuil, inclus. La dernière prend tout ce qui le dépasse.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn btn-soft btn-sm" onclick="A.setClasses('${layer.id}','${cible}',{ajouter:true})">＋ Seuil</button>
+            <button class="btn btn-soft btn-sm" ${seuils.length ? '' : 'disabled'} onclick="A.setClasses('${layer.id}','${cible}',{retirer:true})">− Seuil</button>
+            <button class="btn btn-soft btn-sm" onclick="A.setClasses('${layer.id}','${cible}',{inverser:true})">⇄ Inverser les couleurs</button>
+        </div></div>`;
+}
+
 function caseInverser(layer, param, on) {
     return `<label class="toggle-row" style="margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px">
         <input type="checkbox" ${on ? 'checked' : ''} onchange="A.setSymInverse('${layer.id}','${param}',this.checked)"> Inverser la palette</label>`;
@@ -7665,7 +7731,9 @@ function symColorPanel(layer, sym) {
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, 'numeric')}
             ${c.field ? rangeInfo(layer, c.field) : ''}</div>
-            ${c.field ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${caseInverser(layer, 'color', c.inverse)}${methodChips(layer, 'color', c.method)}</div>` : ''}`;
+            ${c.field ? choixDecoupage(layer, c) + (c.manuel
+                ? editeurClasses(layer, 'couleur')
+                : `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${caseInverser(layer, 'color', c.inverse)}${methodChips(layer, 'color', c.method)}</div>`) : ''}`;
     }
     return `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'color', c.mode, ['single', 'categorized', 'graduated'])}</div>${inner}`;
 }
@@ -7959,13 +8027,15 @@ function symAppearancePanel(layer, sym) {
     if (is3D || (isPolygon && !flat)) return opacity;
 
     const st = sym.stroke || {};
-    const mode = st.enabled === false ? 'none' : (st.mode === 'fixed' ? 'fixed' : 'follow');
+    const mode = st.enabled === false ? 'none' : (st.mode === 'fixed' ? 'fixed' : st.mode === 'regle' ? 'regle' : 'follow');
     const stroke = `<div class="section"><div class="section-title">Contour</div>
         <div class="seg">
             <button class="${mode === 'none' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','none')">Aucun</button>
             <button class="${mode === 'follow' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','follow')">Suit le remplissage</button>
             <button class="${mode === 'fixed' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','fixed')">Couleur fixe</button>
+            <button class="${mode === 'regle' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','regle')">Selon un champ</button>
         </div>
+        ${mode === 'regle' ? editeurClasses(layer, 'contour') : ''}
         ${mode === 'none' ? '' : `
         <div class="slider-head" style="margin-top:8px"><span class="lbl">Épaisseur</span><span class="val">${st.width ?? 1.5} px</span></div>
         <input type="range" class="rng acc" min="0.5" max="8" step="0.5" value="${st.width ?? 1.5}" oninput="A.setStrokeWidth('${layer.id}', this.value)">
@@ -8019,23 +8089,9 @@ function symSizePanel(layer, sym) {
     }
     return volume
         + `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'size', s.mode, ['single', 'graduated'])}</div>`
-        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym))
-        + (isPoint && !is3D ? symEcheancePanel(layer, sym) : '');
+        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym));
 }
 
-/** Le réglage d'échéance d'une couche de points : le champ qui porte le délai, et le seuil du « à faire ». */
-function symEcheancePanel(layer, sym) {
-    const cfg = configEcheance(sym);
-    const champs = getLayerFields(layer).filter((f) => f.type === 'numeric');
-    if (!champs.length && !cfg) return '';
-    const options = ['<option value="">— aucune —</option>']
-        .concat(champs.map((f) => `<option value="${escapeHtml(f.id)}" ${cfg?.field === f.id ? 'selected' : ''}>${escapeHtml(f.label)}</option>`)).join('');
-    return `<div class="section"><div class="section-title">Échéance</div>
-        <div class="hint">Un champ qui donne le délai restant avant la prochaine intervention (négatif : dépassé). Une couronne rouge entoure les objets en retard, ambre ceux à faire bientôt.</div>
-        <select class="input" style="margin-top:8px" onchange="A.setEcheance('${layer.id}',{field:this.value})">${options}</select>
-        ${cfg ? `<div class="slider-head" style="margin-top:10px"><span class="lbl">« À faire » jusqu'à</span><span class="val">${cfg.bientot}</span></div>
-        <input type="range" class="rng acc" min="0" max="12" step="1" value="${cfg.bientot}" onchange="A.setEcheance('${layer.id}',{bientot:+this.value})">` : ''}</div>`;
-}
 
 /** Le réglage de regroupement d'une couche : un interrupteur, puis ce qu'il faut pour le régler. */
 function symGrappesPanel(layer, sym) {
@@ -14761,6 +14817,16 @@ const A = {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         const sym = initSymbolization(l); sym[param].field = field || null;
         if (field && param === 'color' && sym.color.mode === 'categorized') regenCategories(l, 'color');
+        if (field && param === 'color' && sym.color.mode === 'graduated') {
+            // Sans cela, le découpage restait celui de 0 à 1 d'avant le choix du champ : toutes les valeurs dans la première classe.
+            const r = getNumericRange(l, field);
+            if (r.count) {
+                sym.color.inputRange = [r.min, r.max];
+                sym.color.manuel = false;
+                l._declarative = { ...(l._declarative || {}), kind: 'graduated', field, method: sym.color.method || 'linear',
+                    stops: graduatedStops(r.min, r.max, paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse), sym.color.method || 'linear') };
+            }
+        }
         if (field && param === 'model' && sym.model.mode === 'categorized') sym.model.categories = [];
         syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
     },
@@ -14831,15 +14897,66 @@ const A = {
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
 
     /** Surfaces à plat ou extrudées. Remonter en volume réactive la hauteur. */
-    /** Désigner le champ d'échéance d'une couche (ou le retirer). */
-    setEcheance(id, patch) {
+    /** Couleur graduée : répartie d'office, ou en classes dont on pose les seuils. */
+    setDecoupage(id, mode) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         const sym = initSymbolization(l);
-        const base = sym.echeance || { field: '', bientot: 1 };
-        const suivant = { ...base, ...patch };
-        if (!suivant.field) delete sym.echeance; else sym.echeance = { field: suivant.field, bientot: Number.isFinite(+suivant.bientot) ? +suivant.bientot : 1 };
-        applyLayerStyle(l); updateLegend(); refreshControlsDock();
-        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+        const c = sym.color;
+        if (!c.field) return;
+        const r = getNumericRange(l, c.field);
+        if (mode === 'manuel') {
+            // Un premier passage en manuel repart des données (seuils ronds entre le minimum et le maximum), pas des
+            // classes d'avant ; ensuite, les seuils posés à la main sont respectés.
+            const deja = !!c.manuel;
+            c.manuel = true;
+            if (!deja) { A.setClasses(id, 'couleur', { init: true }); return; }
+        } else {
+            c.manuel = false;
+            if (r.count) {
+                l._declarative = { ...(l._declarative || {}), kind: 'graduated', field: c.field, method: c.method || 'linear',
+                    stops: graduatedStops(r.min, r.max, paletteEn(c.colorRamp || c.palette, c.inverse), c.method || 'linear') };
+            }
+        }
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); updateLegend(); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
+    /** Les classes d'une règle (couleur graduée ou contour) : seuils, couleurs, champ. */
+    setClasses(id, cible, patch = {}) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        const contour = cible === 'contour';
+        if (contour && !sym.stroke.regle) sym.stroke.regle = { field: '', stops: [] };
+        if (contour && patch.field !== undefined) { sym.stroke.regle.field = patch.field || ''; if (!patch.field) sym.stroke.regle.stops = []; else patch.init = true; }
+        const champ = contour ? sym.stroke.regle.field : sym.color.field;
+        let { seuils, couleurs } = seuilsDeStops(classesDe(l, cible));
+        if (patch.init || !couleurs.length) {
+            // Un découpage de départ : des seuils ronds entre le minimum et le maximum, du vert au rouge.
+            const r = champ ? getNumericRange(l, champ) : { count: 0 };
+            seuils = r.count ? seuilsAutomatiques(r.min, r.max, 3) : [];
+            couleurs = contour ? [COULEURS_PAR_DEFAUT[2], COULEURS_PAR_DEFAUT[1], ''] : [...COULEURS_PAR_DEFAUT];
+            couleurs = couleurs.slice(0, seuils.length + 1);
+            while (couleurs.length < seuils.length + 1) couleurs.push(couleurs[couleurs.length - 1] ?? COULEURS_PAR_DEFAUT[0]);
+        }
+        if (patch.seuil) { const v = Number(patch.seuil[1]); if (Number.isFinite(v)) seuils[patch.seuil[0]] = v; }
+        if (patch.couleur) couleurs[patch.couleur[0]] = patch.couleur[1];
+        if (patch.vide) { const [i, vide] = patch.vide; couleurs[i] = vide ? '' : (couleurs.find((x) => x) || COULEURS_PAR_DEFAUT[2]); }
+        if (patch.ajouter) {
+            const dernier = seuils.length ? seuils[seuils.length - 1] : 0;
+            const pas = seuils.length > 1 ? (seuils[seuils.length - 1] - seuils[seuils.length - 2]) : 1;
+            seuils.push(dernier + (pas || 1));
+            couleurs.push(couleurs[couleurs.length - 1] ?? '');
+        }
+        if (patch.retirer && seuils.length) { seuils.pop(); couleurs.pop(); }
+        if (patch.inverser) couleurs.reverse();
+        const stops = stopsDepuisSeuils(seuils, couleurs);
+        if (contour) {
+            sym.stroke.regle = { field: champ, stops };
+            sym.stroke.mode = 'regle'; sym.stroke.enabled = true;
+        } else {
+            sym.color.manuel = true;
+            l._declarative = { ...(l._declarative || {}), kind: 'graduated', field: champ, method: sym.color.method || 'linear', stops };
+            syncLayerDeclarative(l); repeindreEntites(l);
+        }
+        applyLayerStyle(l); updateLegend(); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
     },
     /** Proposer (ou non) aux agents d'ajouter un objet à la couche, en Exploiter. */
     setCreationExploiter(id, on) {
@@ -14890,6 +15007,8 @@ const A = {
         st.enabled = mode !== 'none';
         if (mode !== 'none') st.mode = mode;
         if (mode === 'fixed' && !st.color) st.color = l.color;
+        // Un contour qui porte une information se lit mieux un peu épais.
+        if (mode === 'regle') { st.width = Math.max(Number.isFinite(st.width) ? st.width : 1.5, 3); if (!st.regle) A.setClasses(id, 'contour', { init: true }); }
         applyLayerStyle(l); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
     },
     setStrokeWidth(id, v) {
