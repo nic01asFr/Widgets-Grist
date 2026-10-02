@@ -17,7 +17,7 @@ import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, h
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
 import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
@@ -770,7 +770,7 @@ function findModel(id) {
 function modeleObjet(fiche) {
     if (!fiche) return null;
     return {
-        id: fiche.id, name: fiche.nom, icon: MODEL_LIBRARY.categories[fiche.categorie]?.icon || '📦',
+        id: fiche.id, name: fiche.nom, icon: MODEL_LIBRARY.categories[fiche.categorie]?.icon || '',
         category: 'objets', objet: true, fiche, url: null, scale: 1,
     };
 }
@@ -778,14 +778,14 @@ function modeleObjet(fiche) {
 function modelesObjets() { return fichesObjets(CATALOGUE_OBJETS.cat).map(modeleObjet); }
 /** Ce que l'interface montre pour un identifiant de modele, connu ou non. */
 function libelleModele(id) {
-    if (!id) return { icon: '📦', label: 'aucun modèle', connu: false };
+    if (!id) return { icon: '', label: 'aucun modèle', connu: false };
     const m = findModel(id);
-    if (m) return { icon: m.icon || '📦', label: m.name, connu: true, objet: !!m.objet };
+    if (m) return { icon: m.icon || '', label: m.name, connu: true, objet: !!m.objet };
     if (estIdObjet(id)) {
         const attente = CATALOGUE_OBJETS.etat === 'chargement' || CATALOGUE_OBJETS.etat === 'aucun';
-        return { icon: '📦', label: attente ? `objet « ${typeDeIdObjet(id)} » (catalogue en chargement)` : `objet « ${typeDeIdObjet(id)} » absent du catalogue`, connu: false, objet: true };
+        return { icon: '', label: attente ? `objet « ${typeDeIdObjet(id)} » (catalogue en chargement)` : `objet « ${typeDeIdObjet(id)} » absent du catalogue`, connu: false, objet: true };
     }
-    return { icon: '📦', label: id, connu: false };
+    return { icon: '', label: id, connu: false };
 }
 /** Les <option> d'un choix de modele : la bibliotheque, puis les objets realistes. */
 function optionsModeles(selId, { objets = true } = {}) {
@@ -2439,6 +2439,7 @@ const Eclairage = {
             this.etats.set(it.id, etatPointLumineux(it.props, profil, plages, t, ctx));
         }
         this.lum.appliquerEtats(this.etats);
+        this.rafraichirAffichage();
     },
 
     /** Avant chaque image : budget des lumières selon la caméra, taille des halos. */
@@ -2490,6 +2491,50 @@ const Eclairage = {
     libelle(layer, idx) {
         const e = this.etats.get(`${layer?.id}:${idx}`);
         return e ? libelleEtat(e) : null;
+    },
+
+    /**
+     * Ce que la fiche dit d'un luminaire : allumé, abaissé ou éteint, **pourquoi**, et ce qu'on a
+     * supposé. Le calcul savait la raison depuis toujours ; elle n'était affichée nulle part.
+     */
+    htmlEtat(layer, idx) {
+        const d = detailEtat(this.etats.get(`${layer?.id}:${idx}`));
+        if (!d) return '<span class="etat-eclairage-attente">Éclairage — état en cours de calcul…</span>';
+        const classe = d.allume ? (d.abaisse ? 'abaisse' : 'allume') : 'eteint';
+        const t = STATE.settings.timeOfDay;
+        const heure = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+        const kelvin = d.allume && d.temperatureCouleur ? ` · ${d.temperatureCouleur} K` : '';
+        const raison = d.raison ? ` — ${echapper(d.raison)}` : '';
+        const hyp = d.hypotheses.length
+            ? `<div class="etat-eclairage-hyp">Supposé : ${d.hypotheses.map(echapper).join(' · ')}</div>` : '';
+        return `<span class="etat-eclairage-point ${classe}"></span><span class="etat-eclairage-texte"><strong>${echapper(d.libelle)}</strong> à ${heure}${kelvin}${raison}</span>${hyp}`;
+    },
+
+    /** Le bilan d'une couche pour la légende : « 8 allumés · 2 éteints », avec les raisons en infobulle. */
+    htmlLegende(layer) {
+        const b = resumerEtats(this.etats, layer.id);
+        if (!b.total) return '';
+        const parties = [];
+        if (b.allumes) parties.push(`${b.allumes} allumé${b.allumes > 1 ? 's' : ''}`);
+        if (b.abaisses) parties.push(`${b.abaisses} abaissé${b.abaisses > 1 ? 's' : ''}`);
+        if (b.eteints) parties.push(`${b.eteints} éteint${b.eteints > 1 ? 's' : ''}`);
+        const infobulle = b.raisons.length ? b.raisons.map((x) => `${x.raison} (${x.n})`).join(' ; ') : 'Éclairage à l’heure de la scène';
+        return `<div class="legend-etat" title="${echapper(infobulle)}"><span class="etat-eclairage-point ${b.allumes || b.abaisses ? 'allume' : 'eteint'}"></span>${parties.join(' · ')}</div>`;
+    },
+
+    /** Remet à jour ce qui montre un état : la fiche ouverte, et la légende quand un bilan change. */
+    rafraichirAffichage() {
+        const el = document.getElementById('insp-etat-eclairage');
+        if (el) {
+            const layer = STATE.layers.find((l) => l.id === STATE.selection?.layerId);
+            const idx = STATE.selection?.features?.[0];
+            if (layer && idx != null) el.innerHTML = this.htmlEtat(layer, idx);
+        }
+        const signature = STATE.layers.filter((l) => l.visible !== false && coucheEclairage(l)).map((l) => {
+            const b = resumerEtats(this.etats, l.id);
+            return `${l.id}:${b.allumes}/${b.abaisses}/${b.eteints}`;
+        }).join('|');
+        if (signature !== this._signatureLegende) { this._signatureLegende = signature; updateLegend(); }
     },
 };
 try { window.__atlasEclairage = Eclairage; } catch (_) { /* hors navigateur */ }
@@ -6941,7 +6986,7 @@ function updateLegend() {
     // La légende énumère dans le même sens que les panneaux : dessus d'abord.
     const vis = displayOrder(STATE.layers).filter((l) => l.visible !== false);
     if (vis.length === 0) { body.innerHTML = '<div class="legend-empty">Aucune couche visible</div>'; return; }
-    const html = vis.map(buildLayerLegendHtml).join('');
+    const html = vis.map((l) => buildLayerLegendHtml(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
     body.innerHTML = html || '<div class="legend-empty">Aucun objet visible</div>';
 }
 
@@ -8634,6 +8679,7 @@ function renderObjectInspector() {
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
         <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
         <div class="insp-sub">${count > 1 ? `${echapper(layer.name)}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>
+        ${count === 1 && coucheEclairage(layer) ? `<div id="insp-etat-eclairage" class="etat-eclairage">${Eclairage.htmlEtat(layer, idx)}</div>` : ''}
         ${count === 1 && !view ? rappelCreation(layer, props) + boutonModifierForme(layer, f) : ''}`;
     $('insp-tabs').innerHTML = tabs.map((t) =>
         `<button class="insp-tab ${_inspObjTab === t.cle ? 'active' : ''}"

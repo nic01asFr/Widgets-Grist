@@ -289,6 +289,14 @@
         .insp-eyebrow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .insp-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .insp-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+        /* Etat d'un luminaire a l'heure de la scene : un point, un mot, la raison. */
+        .etat-eclairage { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 8px; margin-top: 8px; font-size: 12.5px; color: var(--ink); }
+        .etat-eclairage-point { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; margin-top: 5px; background: var(--muted-light); }
+        .etat-eclairage-point.allume { background: var(--sun); }
+        .etat-eclairage-point.abaisse { background: var(--sun); opacity: .55; }
+        .etat-eclairage-texte { flex: 1 1 0; min-width: 0; }
+        .etat-eclairage-hyp, .etat-eclairage-attente { flex-basis: 100%; font-size: 11.5px; color: var(--muted); }
+        .legend-etat { display: flex; align-items: center; gap: 7px; padding: 2px 0 6px 18px; font-size: 11.5px; color: var(--muted); }
         /*
          * La barre defile, et il a fallu la mesurer pour le savoir.
          *

@@ -320,6 +320,58 @@ export function libelleEtat(etat) {
 }
 
 /**
+ * Un état, dit pour la fiche : ce qu'il est, **pourquoi**, et ce qu'on a dû supposer.
+ *
+ * Le calcul (`etatPointLumineux`) savait déjà la raison — statut, période de validité, extinction
+ * programmée, hors des heures d'allumage — et la gardait pour lui : on voyait une lampe éteinte sans
+ * jamais savoir pourquoi. Les hypothèses (« allumage au coucher du soleil, profil sans heure ») sont
+ * dites aussi : une valeur supposée ne doit pas passer pour une donnée.
+ *
+ * @param {object|null|undefined} etat résultat de `etatPointLumineux`
+ * @returns {null | { libelle: string, allume: boolean, abaisse: boolean, raison: string|null, hypotheses: string[], temperatureCouleur: number|null }}
+ */
+export function detailEtat(etat) {
+  if (!etat || typeof etat !== 'object') return null;
+  const f = (etat.facteurFlux ?? 1) * (etat.facteurPuissance ?? 1);
+  return {
+    libelle: libelleEtat(etat),
+    allume: !!etat.allume,
+    abaisse: !!etat.allume && f < 0.999,
+    // « allumé » seul ne dit rien : on ne garde la raison que quand elle apprend quelque chose.
+    raison: etat.raison && etat.raison !== 'allumé' ? String(etat.raison) : null,
+    hypotheses: Array.isArray(etat.hypotheses) ? etat.hypotheses.map(String) : [],
+    temperatureCouleur: Number.isFinite(etat.temperatureCouleur) ? etat.temperatureCouleur : null,
+  };
+}
+
+/**
+ * Le bilan d'une couche : combien de luminaires allumés, abaissés, éteints, et pour quelles raisons.
+ *
+ * @param {Map<string, object>|Iterable<[string, object]>} etats  clé `<idCouche>:<indice>`
+ * @param {string} idCouche
+ * @returns {{ total: number, allumes: number, abaisses: number, eteints: number, raisons: Array<{raison: string, n: number}> }}
+ */
+export function resumerEtats(etats, idCouche) {
+  const bilan = { total: 0, allumes: 0, abaisses: 0, eteints: 0, raisons: [] };
+  const prefixe = `${idCouche}:`;
+  const raisons = new Map();
+  for (const [cle, etat] of etats || []) {
+    if (!String(cle).startsWith(prefixe)) continue;
+    const d = detailEtat(etat);
+    if (!d) continue;
+    bilan.total++;
+    if (!d.allume) {
+      bilan.eteints++;
+      const r = d.raison || 'éteint';
+      raisons.set(r, (raisons.get(r) || 0) + 1);
+    } else if (d.abaisse) bilan.abaisses++;
+    else bilan.allumes++;
+  }
+  bilan.raisons = [...raisons.entries()].map(([raison, n]) => ({ raison, n })).sort((a, b) => b.n - a.n || a.raison.localeCompare(b.raison));
+  return bilan;
+}
+
+/**
  * Les luminaires se dessinent-ils à ce zoom ? En projection globe, sous le
  * zoom où MapLibre passe au plan (12), le calque three.js pose une
  * translation plane sur une sphère : tout y est décalé (CLAUDE.md, « trois
