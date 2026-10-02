@@ -73,6 +73,10 @@
   },
   "journal": [
     {
+      "version": "v1.10.1",
+      "texte": "Jouer un contexte ou une étape du récit ne retire plus les pastilles de contrôle que l'auteur a publiées : le filtre est levé, la pastille reste offerte."
+    },
+    {
       "version": "v1.10.0",
       "texte": "Des objets réalistes réglés comme une couche : un panneau « Spécifications » pour l’objet et pour la couche, des champs de la table qu’on lie aux réglages, la provenance de chaque valeur affichée, et « figer dans la table » sans jamais écraser une cellule remplie. L’éclairage s’allume selon le statut et le soleil, et la fiche, la légende et la bulle disent pourquoi un luminaire est éteint. Le placement et les réglages d’un objet ne se perdent plus quand la table n’a pas encore sa colonne : Atlas la crée au premier réglage, ou prévient qu’il n’en a pas le droit. Le relevé de terrain prend forme : formulaires natifs de Grist lus, une bulle d’objet composée par l’équipe, une liste pour choisir un objet et une recherche dans ses champs, l’apparence des catégories lue dans les tables de référence, la géométrie lue et écrite en WKT. Trois postures — Préparer, Exploiter, Lecture — sous un plafond fixé par le lien, droits appris table par table ; récit à clé stable, qui s’écrit sans effacer celui d’un autre ; contextes qu’on rejoue sans la séquence ; ouverture de la scène choisie par l’auteur. Les textes du document — étape, nom de couche, résultat de recherche de lieu — ne s’exécutent plus. Les grandes surfaces sont posées à plat sur le relief."
     },
@@ -364,7 +368,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.10.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, dessin et modification des géométries, récit avec trajet optionnel, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.10.1 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, dessin et modification des géométries, récit avec trajet optionnel, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

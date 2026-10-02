@@ -145,6 +145,7 @@ import {
   normalizeSelectValuesForLayer,
   repairSelectControlFromManifest,
   applyStoryControlsToLayer,
+  marquerControlesPublies,
   sanitizeBrokenSelectFilters,
   profilChamp,
   nombreValeursDistinctes,
@@ -4046,6 +4047,8 @@ function remountAllLayers() {
 }
 
 function capturePreStorySnapshot() {
+    // Ce que l'auteur a publié en pastille : une étape ou un contexte ne doit pas le retirer.
+    marquerControlesPublies(STATE.layers);
     _preStorySnapshot = STATE.layers.map((l) => ({
         id: l.id,
         visible: l.visible !== false,

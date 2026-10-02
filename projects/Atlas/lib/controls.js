@@ -810,7 +810,47 @@ export function applyStoryControlsToLayer(layer, stepControls) {
       else if (sc.values) c.values = sc.values;
     }
   }
-  layer.controls.forEach((c) => { if (!stepFields.has(c.field)) c.active = false; });
+  layer.controls.forEach((c) => {
+    if (stepFields.has(c.field)) return;
+    // Un contrôle que l'auteur a publié en pastille reste offert : l'étape ne le
+    // cite pas, elle n'y met donc aucune restriction — mais elle ne le retire pas.
+    // Sans cela, jouer un contexte faisait disparaître les pastilles de la scène.
+    if (c._publie) rendreSansRestriction(c);
+    else c.active = false;
+  });
+}
+
+/**
+ * Remet un contrôle à son état « rien n'est filtré », sans le désactiver : la
+ * pastille reste, le filtre est levé. Pour chaque forme de contrôle :
+ * liste → pas de sélection posée (donc pas de restriction), plage → bornes
+ * des données, texte → vide.
+ */
+export function rendreSansRestriction(c) {
+  c.active = true;
+  if (c.type === 'select') {
+    delete c.values;
+    delete c._selectionTouched;
+  } else if (c.type === 'text') {
+    c.texte = '';
+  } else {
+    if (Number.isFinite(c.dataMin)) c.min = c.dataMin;
+    if (Number.isFinite(c.dataMax)) c.max = c.dataMax;
+  }
+}
+
+/**
+ * Note quels contrôles sont publiés (actifs) dans la scène de l'auteur, avant
+ * qu'une étape ou un contexte ne s'en mêle. À appeler au moment de l'instantané
+ * d'avant récit : c'est le seul où l'on sait ce que l'auteur avait publié.
+ */
+export function marquerControlesPublies(layers) {
+  for (const l of layers || []) {
+    for (const c of l.controls || []) {
+      if (c.active) c._publie = true;
+      else delete c._publie;
+    }
+  }
 }
 
 /** Marque les sélections partielles avant capture récit (fiabilise l'enregistrement). */

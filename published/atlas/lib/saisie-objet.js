@@ -13,7 +13,7 @@
 import {
   familleGeometrie, colonnesGeometrie, cellulesGeometrie, normaliserGeometrie, validerGeometrie,
   nomsColonnesGeometrie,
-} from './geometrie-saisie.js?v=1.10.0';
+} from './geometrie-saisie.js?v=1.10.1';
 
 /** Types qu'on sait créer aujourd'hui. */
 export const FAMILLES_CREABLES = ['Point', 'LineString', 'Polygon'];
