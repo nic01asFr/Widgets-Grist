@@ -155,6 +155,7 @@ const IC = {
   // ses deux traits en croix se lisaient comme un symbole de genre.
   cle: trait('<circle cx="7" cy="12" r="4"/><path d="M11 12h10M15 12v2.5M18 12v3.5"/>'),
   retour: trait('<path d="M19 12H5m6-7-7 7 7 7"/>'),
+  synchro: trait('<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/>'),
   crayon: trait('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>'),
 };
 
@@ -452,6 +453,19 @@ async function ouvrirScene(config, portee, boite) {
  * retirée en lecture dans l'application : sans cette entrée, on ne sortirait
  * plus de la lecture qu'en rouvrant la scène.
  */
+/** L'état de la synchronisation, en une phrase : ce qu'on veut savoir avant de quitter le terrain. */
+export function phraseSynchro(e) {
+  if (!e) return '';
+  const parts = [];
+  parts.push(e.enLigne ? 'En ligne' : 'Hors réseau');
+  if (e.enAttente) parts.push(`${e.enAttente} en attente`);
+  const aVerifier = (e.refusees || 0) + (e.incertaines || 0);
+  if (aVerifier) parts.push(`${aVerifier} à vérifier`);
+  if (!e.enAttente && !aVerifier) parts.push('tout est parti');
+  if (e.derniereSynchro) parts.push('dernier envoi ' + new Date(e.derniereSynchro).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }));
+  return parts.join(' · ') + (e.enAttente && e.enLigne ? ' — toucher pour envoyer' : '');
+}
+
 export function ouvrirMenuPrincipal({
   portee = globalThis, document: doc = document, scene = null, modifie = false, edition = null,
 } = {}) {
@@ -470,6 +484,10 @@ export function ouvrirMenuPrincipal({
   const fermer = () => { voile.remove(); style.remove(); };
 
   const changeable = peutChangerDeScene(caps, config);
+  // La synchronisation : ce qui est parti, ce qui attend, ce qui a été refusé. Ni dans un widget (Grist la tient),
+  // ni sans client hors réseau.
+  const hl = portee.grist?._horsLigne || null;
+  const synchro = hl ? hl.etat() : null;
   const situation = scene ? [situer(scene), depuis(scene.maj)].filter(Boolean).join(' — ') : '';
   const version = versionInstallee(doc);
 
@@ -480,6 +498,7 @@ export function ouvrirMenuPrincipal({
     </div>` : ''}
     <div class="hote-menu">
       ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>${echapper(edition.aide || 'Les outils d’auteur reviennent sur la carte')}</small></span></button>` : ''}
+      ${synchro ? `<button id="m-synchro">${IC.synchro}<span>Synchronisation<small>${echapper(phraseSynchro(synchro))}</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}
@@ -490,6 +509,13 @@ export function ouvrirMenuPrincipal({
     ${version ? `<p class="hote-version">Version ${echapper(version)}</p>` : ''}`;
 
   boite.querySelector('#m-fermer').onclick = fermer;
+
+  const sy = boite.querySelector('#m-synchro');
+  if (sy) sy.onclick = async () => {
+    sy.querySelector('small').textContent = 'Envoi…';
+    try { await hl.envoyer(); } catch (_) { /* l'état dit le reste */ }
+    sy.querySelector('small').textContent = phraseSynchro(hl.etat());
+  };
 
   const ed = boite.querySelector('#m-edition');
   if (ed) ed.onclick = () => { fermer(); edition.action(); };

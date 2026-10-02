@@ -301,3 +301,11 @@ test('un client sans profil : null, sans lever', async () => {
   const { hl } = monter();
   assert.equal(await hl.profil(), null);
 });
+
+test('phraseSynchro : l\'état en une phrase', async () => {
+  const { phraseSynchro } = await import('../lib/hote-ui.js');
+  assert.equal(phraseSynchro(null), '');
+  assert.equal(phraseSynchro({ enLigne: true, enAttente: 0, refusees: 0, incertaines: 0 }), 'En ligne · tout est parti');
+  assert.equal(phraseSynchro({ enLigne: false, enAttente: 2, refusees: 0, incertaines: 0 }), 'Hors réseau · 2 en attente');
+  assert.match(phraseSynchro({ enLigne: true, enAttente: 1, refusees: 1, incertaines: 1 }), /1 en attente · 2 à vérifier — toucher pour envoyer/);
+});
