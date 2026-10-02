@@ -49,6 +49,6 @@ export function messageNature(nature) {
     case 'geojson':
       return 'Ce fichier est un GeoJSON : il s’ajoute comme couche.';
     default:
-      return 'Fichier non reconnu : ni projet Atlas, ni scène, ni GeoJSON.';
+      return 'Fichier non reconnu : ni projet Atlas, ni scène, ni GeoJSON, GPX, KML ou CSV.';
   }
 }

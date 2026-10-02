@@ -2887,3 +2887,13 @@ tronçons — la construction du réseau y sera à mesurer.
   formulaire. **Pas** les polices web (repli sur celles du système) ni le relief.
 - **Éprouvé** : tests (35 dans `hors-ligne.test.js`), menu et aplat dans l'application simulée. **Pas** sur un téléphone en
   mode avion, ni sur une vraie instance.
+
+## Import GPX, KML, CSV (02/10/2026)
+
+- `lib/import-formats.js` (pur, 10 tests, relit ce que `lib/export-formats.js` écrit) : un petit lecteur XML, `lireGpx` (points de
+  passage → une couche, traces et itinéraires → une autre), `lireKml` (un dossier = une couche, scindé par genre de géométrie),
+  `lireCsv` (colonne WKT, sinon `lat` / `lon` ; séparateur reconnu ; virgule décimale ; colonnes toutes numériques rendues en
+  nombres), `natureFichier` / `lireFichier`. Tout en WGS 84 : des coordonnées hors des degrés sont refusées (Lambert 93, UTM) plutôt
+  que posées dans l'océan. Un CSV sans géométrie ni coordonnées dit pourquoi.
+- « Fichier » et « Ouvrir un projet » reconnaissent ces formats (`importerFichierFormat`) ; ce qui est écarté (position
+  illisible) est compté dans le message. Pas de KMZ (un zip) : à ajouter avec JSZip si le besoin vient.

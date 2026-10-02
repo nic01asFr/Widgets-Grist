@@ -80,6 +80,7 @@ import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
 import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
 import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=20260924x';
 import {
@@ -5417,7 +5418,7 @@ function renderLayersPanel(mode) {
         body.innerHTML = `
             <div class="empty"><div class="ic">${icTrait(IC.dossier, 40)}</div><div class="t">Aucune couche affichée</div><div class="h">Affiche une table ci-dessous, ou importe</div></div>
             ${availableTablesSection()}
-            <div class="section"><div class="drop" id="drop" onclick="document.getElementById('file-input').click()"><div class="ic">${icTrait(IC.fichier, 40)}</div><div class="t">Glissez un GeoJSON</div><div class="h">.geojson / .json</div></div></div>
+            <div class="section"><div class="drop" id="drop" onclick="document.getElementById('file-input').click()"><div class="ic">${icTrait(IC.fichier, 40)}</div><div class="t">Glissez un fichier</div><div class="h">GeoJSON, GPX, KML, CSV</div></div></div>
             ${actions()}`;
         wireDrop();
         return;
@@ -11027,10 +11028,22 @@ function ajouterCoucheGeoJSON(nom, geojson) {
  * « Fichier » ajoute une couche — et dit ce qu'il a reçu quand ce n'en est pas
  * une. Un projet Atlas donné ici devenait une couche absurde, sans erreur.
  */
+/** Un GPX, un KML ou un CSV devient une ou plusieurs couches ; ce qui est écarté se dit. */
+function importerFichierFormat(nomFichier, contenu) {
+    const res = lireFichier(nomFichier, contenu);
+    let total = 0;
+    for (const c of res.couches) total += ajouterCoucheGeoJSON(c.nom, c.geojson);
+    if (!total) { showToast('Rien à importer dans ce fichier', 'warning'); return; }
+    const ecart = res.ignorees ? ` ; ${res.ignorees} écarté${res.ignorees > 1 ? 's' : ''} (position illisible ou absente)` : '';
+    showToast(`${total} élément${total > 1 ? 's' : ''} importé${total > 1 ? 's' : ''} · ${res.couches.length} couche${res.couches.length > 1 ? 's' : ''}${ecart}`, res.ignorees ? 'warning' : 'success');
+}
+
 async function processFile(file) {
     showLoading('Lecture du fichier…');
     try {
-        const obj = JSON.parse(await file.text());
+        const contenu = await file.text();
+        if (natureFichier(file.name, contenu)) { hideLoading(); importerFichierFormat(file.name, contenu); return; }
+        const obj = JSON.parse(contenu);
         const nature = natureJson(obj);
         hideLoading();
         if (nature !== 'geojson') { showToast(messageNature(nature), nature ? 'info' : 'error'); return; }
@@ -12677,7 +12690,10 @@ function loadProject() {
         inp.value = '';
         if (!file) return;
         try {
-            const obj = JSON.parse(await file.text());
+            const contenu = await file.text();
+            // « Ouvrir » reconnaît aussi un GPX, un KML ou un CSV : ils s'ajoutent comme couches.
+            if (natureFichier(file.name, contenu)) { importerFichierFormat(file.name, contenu); return; }
+            const obj = JSON.parse(contenu);
             const nature = natureJson(obj);
             if (nature === 'projet') await restoreProject(obj);
             else if (nature === 'geojson') {
