@@ -6619,15 +6619,13 @@ function renderEnvControlsSection() {
             sub = `<div class="option-cards grid2" style="margin-top:8px">${Object.entries(BASEMAPS).map(([k, b]) => `
                 <div class="option-card ${allowed.has(k) ? 'active' : ''}" onclick="A.toggleViewerBasemapAllowed('${chaineJs(k)}')">
                     <div class="oc-icon">${b.icon}</div><div class="oc-label">${b.label}</div>
-                </div>`).join('')}</div>
-                <div class="hint" style="margin-top:6px">2–3 fonds max pour le dock lecture.</div>`;
+                </div>`).join('')}</div>`;
         }
         return `<div class="section">
             <div class="toggle-row">
                 <span class="tlabel">${vc.label}</span>
                 <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${vc.id}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${vc.label || vc.id} en lecture" title="Visible en lecture"></div>
             </div>
-            <div style="font-size:10.5px;color:var(--muted);margin-top:-4px">Visible en lecture · pastille carte</div>
             ${sub}
         </div>`;
     }).join('');
@@ -6658,12 +6656,10 @@ function renderDataControlRow(layer, field, type, c, profil) {
             <div class="toggle ${active ? 'on' : ''}" onclick="A.toggleControl('${chaineJs(layer.id)}','${chaineJs(field)}','${typeActuel}')" role="switch" tabindex="0" aria-checked="${active}" aria-label="Publier le contrôle ${escapeHtml(field)}" title="Afficher en lecture"></div>
         </div>
         <div class="control-variant-row">
-            <label class="control-variant-label" for="${idVar}">Type de contrôle</label>
-            <select id="${idVar}" class="input control-variant-select" onchange="A.setControlVariant('${chaineJs(layer.id)}','${chaineJs(field)}',this.value)">
+            <select id="${idVar}" class="input control-variant-select" aria-label="Type de contrôle" onchange="A.setControlVariant('${chaineJs(layer.id)}','${chaineJs(field)}',this.value)">
                 ${options}
-            </select>
+            </select>${variantHint ? infoBulle(variantHint) : ''}
         </div>
-        <p class="control-variant-hint">${escapeHtml(variantHint)}</p>
         ${active ? renderControlBody(layer, c) : ''}
     </div>`;
 }
@@ -6834,28 +6830,13 @@ function rafraichirVuesControle() {
     if (_openDockPill) renderDockSlotHost();
 }
 
-function renderControlVariantMatrix() {
-    return `<details class="control-variant-matrix">
-        <summary>Guide des types de contrôle</summary>
-        <div class="control-variant-matrix-body">
-            <div class="cvm-group"><span class="cvm-k">Date</span>
-                <span><strong>Date ≤</strong> — cumul jusqu’à une date</span>
-                <span><strong>Date de/à</strong> — fenêtre stricte</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Nombre</span>
-                <span><strong>Plage</strong> — intervalle min/max</span>
-                <span><strong>Max / Min</strong> — seuil unique</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Catégorie</span>
-                <span><strong>Checklist</strong> — plusieurs valeurs</span>
-                <span><strong>Choix unique</strong> — une seule valeur</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Texte</span>
-                <span><strong>Contient</strong> — recherche sans majuscules ni accents</span>
-            </div>
-        </div>
-    </details>`;
-}
+/** Le guide des types de contrôle, en une bulle (il occupait un bloc déroulant au-dessus des champs). */
+const GUIDE_TYPES_CONTROLE = [
+    'Date : « ≤ » cumule jusqu’à une date, « de/à » est une fenêtre stricte.',
+    'Nombre : « Plage » est un intervalle min/max, « Max » et « Min » un seuil unique.',
+    'Catégorie : « Checklist » garde plusieurs valeurs, « Choix unique » une seule.',
+    'Texte : « Contient » cherche sans majuscules ni accents.',
+].join('\n');
 
 function renderControles() {
     if (CONFIG.viewMode) {
@@ -6869,7 +6850,7 @@ function renderControles() {
 
     let html = '';
 
-    html += `<div class="section"><div class="section-title">Environnement</div>${renderEnvControlsSection()}</div>`;
+    html += `<div class="section"><div class="section-title">Environnement${infoBulle('Chaque interrupteur publie le contrôle en pastille sur la carte, visible en lecture. Pour les fonds de plan, deux ou trois au plus tiennent dans le dock de lecture.')}</div><div class="env-liste">${renderEnvControlsSection()}</div></div>`;
 
     if (!layer) {
         body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.controles, 40)}</div><div class="t">Aucune couche</div><div class="h">Importez ou liez des données</div></div>`;
@@ -6897,11 +6878,10 @@ function renderControles() {
         }
     }
     const noteVides = vides.length
-        ? `<div class="hint" style="margin-top:10px">Sans valeur, donc sans filtre possible : ${vides.map((v) => `<code>${escapeHtml(v)}</code>`).join(', ')}.</div>`
+        ? `<div class="range-info" style="margin-top:10px">${vides.length} champ${vides.length > 1 ? 's' : ''} sans valeur${infoBulle('Sans valeur, donc sans filtre possible : ' + vides.join(', ') + '.')}</div>`
         : '';
 
-    html += `<div class="section"><div class="section-title">Données</div>`;
-    html += renderControlVariantMatrix();
+    html += `<div class="section"><div class="section-title">Données${infoBulle(GUIDE_TYPES_CONTROLE)}</div>`;
     html += STATE.layers.length > 1
         ? `<select class="input" style="margin-bottom:8px" onchange="A.controlLayer(this.value)">${STATE.layers.map((l) => `<option value="${l.id}" ${l.id === layer.id ? 'selected' : ''}>${escapeHtml(l.name)}</option>`).join('')}</select>`
         : `<div class="hint" style="margin-bottom:8px">Couche <strong>${escapeHtml(layer.name)}</strong></div>`;

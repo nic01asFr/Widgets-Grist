@@ -2971,3 +2971,11 @@ maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-m
   annuler ; et relire les préférences **superpose** à l'état de la couche (`applyLayerPrefsBinding`) au lieu de le restituer.
   Les saisies d'objets (données) restent annulables dans Grist même. Non éprouvé en Grist réel : le comportement exact de la pile
   d'annulation de Grist face aux écritures du widget.
+
+## Module Contrôles : les explications en « i » (03/10/2026)
+
+Plus de paragraphe répété sous chaque contrôle, plus de bloc « Guide des types » : le type de contrôle est un menu sur une ligne
+avec son explication dans un « i » (`controlVariantHint`) ; le guide des types est dans le titre « Données » (`GUIDE_TYPES_CONTROLE`,
+la bulle garde les retours à la ligne : `white-space: pre-line`) ; « Visible en lecture · pastille carte » et « 2–3 fonds max »
+sont dans le titre « Environnement » ; les champs sans valeur tiennent en une ligne (« 3 champs sans valeur ⓘ »). Une liste de
+valeurs se lit **en entier** : c'est le module qui défile, plus la liste (`#module-body .cats { max-height: none }`).

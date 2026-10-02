@@ -801,13 +801,16 @@
             position: fixed; z-index: 100000; display: none; pointer-events: none;
             background: var(--ink); color: var(--surface); border-radius: 8px; padding: 8px 10px;
             font: 400 12px/1.4 var(--sans, system-ui, sans-serif); text-transform: none; letter-spacing: 0;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25); white-space: pre-line;
         }
         .field-meta { margin-top: 6px; font-size: 10.5px; color: var(--muted); font-family: var(--mono); }
 
         .control-variant-row {
             display: flex; align-items: center; gap: 8px; margin-top: 8px;
         }
+        /* Une liste de valeurs se lit en entier : le module défile, pas la liste. */
+        #module-body .cats { max-height: none; overflow: visible; }
+        .env-liste .section + .section { margin-top: 4px; }
         .control-variant-label {
             font-size: 10.5px; font-weight: 600; color: var(--muted);
             text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
