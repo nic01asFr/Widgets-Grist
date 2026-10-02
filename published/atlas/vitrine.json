@@ -16,11 +16,19 @@
   "points": [
     {
       "titre": "Vos tables deviennent des couches",
-      "texte": "toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs."
+      "texte": "toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs — en latitude et longitude, en GeoJSON ou en texte WKT (point, ligne, surface, et leurs formes multiples). Une table écrite en WKT est réécrite en WKT."
     },
     {
       "titre": "L’objet cliqué est la ligne",
       "texte": "sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain."
+    },
+    {
+      "titre": "Une bulle sur l’objet touché",
+      "texte": "en consultation, toucher un objet ouvre une bulle que l’équipe compose : un titre, des photos, des pastilles d’état colorées, quelques champs, la dernière visite de la table liée, et des gestes — nouvelle visite, voir la fiche, itinéraire. Elle se propose depuis le schéma de la table, puis se retouche."
+    },
+    {
+      "titre": "Choisir un objet, sans le toucher",
+      "texte": "une liste montre les objets d’une couche, filtrés comme la carte : état, dernière visite, distance depuis votre position. La recherche porte sur le nom et sur les valeurs des champs — « Type : Pont maçonnerie » — et un objet s’ouvre de la même façon, quel que soit le chemin pris pour l’atteindre."
     },
     {
       "titre": "Dessiner dans la carte",
@@ -28,7 +36,7 @@
     },
     {
       "titre": "Symbolisation par la donnée",
-      "texte": "couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène."
+      "texte": "couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène. Quand l’équipe range l’apparence de ses catégories dans une table — couleur, rang de gravité, image —, Atlas la lit : la couleur vient de la table, le plus grave se dessine par-dessus, l’icône suit la valeur."
     },
     {
       "titre": "Relief et volumes",
@@ -66,7 +74,7 @@
   "journal": [
     {
       "version": "v1.10.0",
-      "texte": "Des objets réalistes réglés comme une couche : un panneau « Spécifications » pour l’objet et pour la couche, des champs de la table qu’on lie aux réglages, la provenance de chaque valeur affichée, et « figer dans la table » sans jamais écraser une cellule remplie. L’éclairage s’allume selon le statut et le soleil, et la fiche, la légende et la bulle disent pourquoi un luminaire est éteint. Le placement et les réglages d’un objet ne se perdent plus quand la table n’a pas encore sa colonne : Atlas la crée au premier réglage, ou prévient qu’il n’en a pas le droit. Les formulaires natifs de Grist se lisent ; trois postures — Préparer, Exploiter, Lecture — sous un plafond fixé par le lien ; droits lus table par table ; récit à clé stable et contextes ; ouverture de la scène choisie par l’auteur. Les grandes surfaces sont posées à plat sur le relief."
+      "texte": "Des objets réalistes réglés comme une couche : un panneau « Spécifications » pour l’objet et pour la couche, des champs de la table qu’on lie aux réglages, la provenance de chaque valeur affichée, et « figer dans la table » sans jamais écraser une cellule remplie. L’éclairage s’allume selon le statut et le soleil, et la fiche, la légende et la bulle disent pourquoi un luminaire est éteint. Le placement et les réglages d’un objet ne se perdent plus quand la table n’a pas encore sa colonne : Atlas la crée au premier réglage, ou prévient qu’il n’en a pas le droit. Le relevé de terrain prend forme : formulaires natifs de Grist lus, une bulle d’objet composée par l’équipe, une liste pour choisir un objet et une recherche dans ses champs, l’apparence des catégories lue dans les tables de référence, la géométrie lue et écrite en WKT. Trois postures — Préparer, Exploiter, Lecture — sous un plafond fixé par le lien, droits appris table par table ; récit à clé stable, qui s’écrit sans effacer celui d’un autre ; contextes qu’on rejoue sans la séquence ; ouverture de la scène choisie par l’auteur. Les textes du document — étape, nom de couche, résultat de recherche de lieu — ne s’exécutent plus. Les grandes surfaces sont posées à plat sur le relief."
     },
     {
       "version": "v1.9.1",
@@ -196,8 +204,8 @@
       },
       {
         "titre": "Relever sur le terrain",
-        "texte": "Sur place, on ouvre la scène en lecture — dans le navigateur du téléphone, ou avec l’application Android. On suit éventuellement le récit et son trajet ; on touche un objet ou on s’approche : sa fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. Le même lien peut s’ouvrir en Préparer, en Exploiter ou en Lecture : c’est le lien qui fixe la posture la plus haute, jamais l’inverse.",
-        "pourquoi": "Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide — Atlas le vérifie à l’ouverture, et ne propose la saisie qu’à qui en a le droit.",
+        "texte": "Sur place, on ouvre la scène en Exploiter — dans le navigateur du téléphone, ou avec l’application Android. Une pastille « Relevé » dit ce qui se saisit : on choisit un objet dans la liste (état, dernière visite, distance), on prend « le plus proche », ou on le touche : la bulle montre ses photos, son état et sa dernière visite, et la fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. Une pastille « Contexte » rejoue une étape du récit sans sa séquence — un secteur, une tournée — avec sa consigne ; on peut suivre le récit et son trajet si la scène en porte un. Le même lien peut s’ouvrir en Préparer, en Exploiter ou en Lecture : c’est le lien qui fixe la posture la plus haute, jamais l’inverse.",
+        "pourquoi": "Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide, table par table — un agent qui ne peut qu’ajouter des visites n’écrit pas le reste, et Atlas ne lui propose que cela.",
         "format": "mobile",
         "images": [
           {
