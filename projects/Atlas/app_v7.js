@@ -82,6 +82,7 @@ import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } fr
 import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
 import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
 import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=20261002g';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=20261002g';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
 import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=20260924x';
 import {
@@ -9256,7 +9257,9 @@ function boutonEnTable(layer) {
  */
 function rappelRevue(totalRevue) {
     if (!(totalRevue > 1)) return '';
-    return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
+    // Le rang compte les objets qu'on voit : un filtre de contexte en écarte, la revue les saute.
+    const { rang, total } = rangRevue(STATE.layers.find((l) => l.id === STATE.selection.layerId));
+    return `<div class="hint" style="margin-bottom:10px">Objet ${rang} sur ${total} — vous modifiez celui-ci.</div>`;
 }
 
 /**
@@ -10955,7 +10958,8 @@ function afterSelectionChange() {
     const n = STATE.selection.features.length;
     $('sel-label').innerHTML = `<strong>${n} objet${n > 1 ? 's' : ''}</strong> sélectionné${n > 1 ? 's' : ''}`;
     if (STATE.selection.multiIndex >= n) STATE.selection.multiIndex = 0;
-    $('sel-pos').textContent = n > 1 ? `${STATE.selection.multiIndex + 1} / ${n}` : `${n} / ${n}`;
+    const rev = n > 1 ? rangRevue(STATE.layers.find((l) => l.id === STATE.selection.layerId)) : null;
+    $('sel-pos').textContent = rev ? `${rev.rang} / ${rev.total}` : `${n} / ${n}`;
     multiBaseValues = null;
     updateHighlight();
     renderInspector();
@@ -16066,19 +16070,33 @@ function regenCategories(layer, param) {
         }
     }
 }
+/**
+ * Le rang de l'objet courant parmi ceux que les filtres de la couche (ceux d'un contexte compris) laissent voir, et leur nombre
+ * — voir `lib/revue-selection.js`.
+ */
+function rangRevue(layer) {
+    const garde = layer ? buildControlPredicate(layer) : null;
+    return rangParmiAffiches(layer?.geojson?.features, garde, STATE.selection.features, STATE.selection.multiIndex);
+}
+
 function nav(dir) {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId); if (!layer) return;
     const n = STATE.selection.features.length;
     if (n > 1) {
-        STATE.selection.multiIndex = (STATE.selection.multiIndex + dir + n) % n;
-        flyToFeature(layer, STATE.selection.features[STATE.selection.multiIndex]);
-        $('sel-pos').textContent = `${STATE.selection.multiIndex + 1} / ${n}`;
+        const i = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), STATE.selection.features, STATE.selection.multiIndex, dir);
+        if (i == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
+        STATE.selection.multiIndex = i;
+        flyToFeature(layer, STATE.selection.features[i]);
+        const { rang, total } = rangRevue(layer);
+        $('sel-pos').textContent = `${rang} / ${total}`;
         updateHighlight();
         renderObjectInspector();
     } else {
         const total = layer.geojson.features.length;
         const cur = STATE.selection.features[0] ?? 0;
-        const next = (cur + dir + total) % total;
+        const tous = Array.from({ length: total }, (_, k) => k);
+        const next = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), tous, cur, dir);
+        if (next == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
         STATE.selection.features = [next];
         flyToFeature(layer, next); afterSelectionChange();
     }

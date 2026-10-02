@@ -2997,3 +2997,12 @@ valeurs se lit **en entier** : c'est le module qui défile, plus la liste (`#mod
   lui, joue toujours toutes les étapes.
 - Vérifié à 1400 px dans l'application simulée ; la réduction des fonds à 390 px n'a pas été vue (la fenêtre de l'outil ne descend
   pas sous 500 px).
+
+### Revue d'une sélection : on saute ce que les filtres masquent
+En revue (objet par objet) ou en sélection multiple, « précédent / suivant » (`nav`) ne s'arrête plus sur un objet que les filtres de
+la couche écartent — ceux d'un **contexte** comme ceux des contrôles, tous passent par `buildControlPredicate`. La logique est pure
+(`lib/revue-selection.js` : `pasAffiche`, `rangParmiAffiches`, testée) ; le compteur « i / n » et le rappel « Objet i sur n » ne
+comptent que les objets affichés. Si les filtres écartent tout, un message le dit et la revue ne bouge pas. Le saut est
+bidirectionnel et boucle ; une couche masquée (œil fermé) ne change rien, c'est elle qu'on a choisi de parcourir.
+Non éprouvé dans la fenêtre : la fixture démarre en Lecture, la revue n'y est pas offerte ; essai à faire en Grist réel avec un
+contexte qui filtre.
