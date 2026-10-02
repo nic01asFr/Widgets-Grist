@@ -6647,9 +6647,8 @@ function etapesLeLongHtml() {
     const couches = couchesDePointsPourEtapes();
     if (!couches.length) return '';
     const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
-    return `<div class="section"><div class="section-title">Étapes depuis les objets</div>
-        <div class="hint">Une étape par objet situé près de la ligne, dans l’ordre du parcours : la tournée se compose d’un geste.</div>
-        <select id="etapes-couche" class="input" style="margin-top:8px">${options}</select>
+    return `<div class="section"><div class="section-title">Étapes depuis les objets${infoBulle('Une étape par objet situé près de la ligne, dans l’ordre du parcours : la tournée se compose d’un geste.')}</div>
+        <select id="etapes-couche" class="input">${options}</select>
         <div class="dual" style="margin-top:8px">
             <div><label class="input-label" for="etapes-rayon">À moins de (m)</label>
             <input id="etapes-rayon" class="input" type="number" min="5" max="1000" step="5" value="50"></div>
@@ -6663,9 +6662,8 @@ function boutonItineraireHtml() {
     const couches = couchesReseau();
     if (!couches.length) return '';
     const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
-    return `<div class="section-title" style="margin-top:12px">Itinéraire sur un réseau</div>
-        <div class="hint">Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.</div>
-        <select id="itineraire-couche" class="input" style="margin-top:8px">${options}</select>
+    return `<div class="section-title" style="margin-top:12px">Itinéraire sur un réseau${infoBulle('Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.')}</div>
+        <select id="itineraire-couche" class="input">${options}</select>
         <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.itineraireDemarrer()">Poser les points sur la carte</button>`;
 }
 
@@ -6697,8 +6695,7 @@ function barreTrajetHtml() {
     if (_itineraire) return itineraireEnCoursHtml();
     if (!trace) {
         return `<div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet</button>${boutonItineraireHtml()}
-            <div class="hint" style="margin-top:6px">Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.</div>
+            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet${infoBulle('Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.')}</button>${boutonItineraireHtml()}
         </div>`;
     }
     const metres = Math.round(longueurMetres(trace.coordinates));
@@ -7176,8 +7173,8 @@ function renderSoleil() {
             <div class="range-info">Soleil : <strong>${azimuth.toFixed(0)}° ${cardinal}</strong> · Hauteur <strong>${altitude.toFixed(1)}°</strong></div>
         </div>
         <div class="section">
-            <div class="toggle-row"><span class="tlabel">Ombres portées</span><div class="toggle ${STATE.settings.shadows ? 'on' : ''}" onclick="A.toggleSetting('shadows')" role="switch" tabindex="0" aria-checked="${!!STATE.settings.shadows}" aria-label="Ombres portées"></div></div>
-            <div class="hint" style="margin-top:8px">Vraies ombres des modèles 3D (direction = position solaire SunCalc), au zoom rue, ${STATE.settings.terrain3D ? '<strong>désactivées car le relief 3D est actif</strong>' : 'jusqu’à 1500 objets visibles'}. Le bâti n’a pas d’ombre (limite MapLibre).</div>
+            <div class="toggle-row"><span class="tlabel">Ombres portées${infoBulle('Vraies ombres des modèles 3D (direction = position solaire), au zoom rue, ' + (STATE.settings.terrain3D ? 'désactivées car le relief 3D est actif' : 'jusqu’à 1500 objets visibles') + '. Le bâti n’a pas d’ombre (limite MapLibre).')}</span><div class="toggle ${STATE.settings.shadows ? 'on' : ''}" onclick="A.toggleSetting('shadows')" role="switch" tabindex="0" aria-checked="${!!STATE.settings.shadows}" aria-label="Ombres portées"></div></div>
+            
         </div>`;
 }
 
@@ -7201,12 +7198,11 @@ function renderVues() {
             <input type="range" class="rng" min="-180" max="180" step="1" value="${Math.round(map?.getBearing() || 0)}" oninput="A.setBearing(this.value)">
         </div>
         <div class="section">
-            <div class="section-title">Projection</div>
+            <div class="section-title">Projection${infoBulle('Le globe (façon Google Earth) bascule automatiquement en plan une fois zoomé sur la zone.')}</div>
             <div class="seg">
                 <button class="${s.projection === 'globe' ? 'active' : ''}" onclick="A.setProjection('globe')">🌍 Globe</button>
                 <button class="${s.projection === 'mercator' ? 'active' : ''}" onclick="A.setProjection('mercator')">🗺️ Plan</button>
             </div>
-            <div class="hint" style="margin-top:8px">Le globe (façon Google Earth) bascule automatiquement en plan une fois zoomé sur la zone.</div>
         </div>
         <div class="section">
             <div class="section-title">Fond de carte</div>
@@ -7622,10 +7618,7 @@ function renderSymbologyInspector(layer) {
     const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
     const tabs = ['Couleur', 'Taille'];
     if (isPoint) {
-        // L'onglet Icône n'existe que si un champ peut vraiment donner une image (ou si une icône est déjà posée).
-        const ci = champsIcone(layer);
-        if (sym.icon?.field || ci.enCours || ci.valides.length) tabs.push('Icône');
-        tabs.push('Modèle 3D');
+        tabs.push('Icône', 'Modèle 3D');
     }
     if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
     if (layer.sourceTable && CONFIG.grist.ready) tabs.push('Bulle');
@@ -7939,9 +7932,8 @@ function symBullePanel(layer, sym) {
                 ${autres.map((c) => `<option value="${escapeHtml(c.colId)}" ${b.titre === c.colId ? 'selected' : ''}>${lib(c.colId)}</option>`).join('')}
             </select></div>
         ${photos.length ? `<div class="section"><div class="section-title">Photos</div>${photos.map((c) => coche('photos', c.colId, b.photos?.includes(c.colId))).join('')}</div>` : ''}
-        <div class="section"><div class="section-title">Pastilles d’état</div>
-            <div class="bulle-choix-liste">${autres.map((c) => coche('pastilles', c.colId, b.pastilles?.includes(c.colId))).join('')}</div>
-            <div class="hint" style="margin-top:4px">Leur couleur vient de la symbologie, ou de la table de référence du champ.</div></div>
+        <div class="section"><div class="section-title">Pastilles d’état${infoBulle('Leur couleur vient de la symbologie, ou de la table de référence du champ.')}</div>
+            <div class="bulle-choix-liste">${autres.map((c) => coche('pastilles', c.colId, b.pastilles?.includes(c.colId))).join('')}</div></div>
         <div class="section"><div class="section-title">Champs montrés</div>
             <div class="bulle-choix-liste">${autres.map((c) => coche('champs', c.colId, b.champs?.includes(c.colId))).join('')}</div></div>
         <div class="section"><div class="section-title">Dernière visite</div>
@@ -8081,10 +8073,10 @@ function symAppearancePanel(layer, sym) {
     const opVal = auto ? defaultLayerOpacity(layer) : sym.opacity;
 
     const opacity = `<div class="section">
-        <div class="slider-head"><span class="lbl">Opacité</span><span class="val" id="op-val">${Math.round(opVal * 100)} %${auto ? ' (auto)' : ''}</span></div>
+        <div class="slider-head"><span class="lbl">Opacité${auto ? infoBulle('Suit l’opacité du style ; bouge le curseur pour la fixer.') : ''}</span><span class="val" id="op-val">${Math.round(opVal * 100)} %${auto ? ' (auto)' : ''}</span></div>
         <input type="range" class="rng acc" min="0" max="1" step="0.05" value="${opVal}" oninput="A.setSymOpacity('${layer.id}', this.value)">
         ${auto
-            ? '<div class="hint">Suit l’opacité du style ; bouge le curseur pour la fixer.</div>'
+            ? ''
             : `<button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.setSymOpacity('${layer.id}','auto')">↺ Revenir à l’automatique</button>`}
     </div>`;
 
@@ -8179,10 +8171,9 @@ function symGrappesPanel(layer, sym) {
             <button class="${cfg.couleur !== 'pire' ? 'active' : ''}" onclick="A.setGrappes('${layer.id}',{couleur:'couche'})">Celle de la couche</button>
             <button class="${cfg.couleur === 'pire' ? 'active' : ''}" ${pireDisponible(sym) ? '' : 'disabled title="Demande une couleur lue dans une table de référence avec un rang de gravité"'} onclick="A.setGrappes('${layer.id}',{couleur:'pire'})">Le plus grave</button>
         </div>` : '';
-    return `<div class="section"><div class="section-title">${titre}</div>
+    return `<div class="section"><div class="section-title">${titre}${infoBulle(aide)}</div>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="A.setGrappes('${layer.id}',{enabled:this.checked})"> Regrouper</label>
-        <div class="hint" style="margin-top:6px">${aide}</div>${reglages}</div>`;
+            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="A.setGrappes('${layer.id}',{enabled:this.checked})"> Regrouper</label>${reglages}</div>`;
 }
 
 // ============================================================
