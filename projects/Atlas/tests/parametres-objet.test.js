@@ -474,3 +474,24 @@ test('la phrase nomme tous les champs lus, du plus frequent au moins frequent', 
   assert.deepEqual(b.champs, ['hauteurFeu', 'height']);
   assert.equal(phraseBilan(d, b).texte, 'lu dans « hauteurFeu », « height » (3 sur 3)');
 });
+
+test('une valeur de champ hors du vocabulaire est lue telle quelle et signalee, jamais ecartee', () => {
+  const statut = desc('mat_crosse', 'statut');
+  const r = resoudreParametre(statut, { props: { statut: 'out_of_service' }, typeId: 'mat_crosse' });
+  assert.deepEqual([r.valeur, r.origine, r.champ], ['out_of_service', 'champ', 'statut']);
+  assert.equal(r.ecartBande, 'valeur hors de la liste');
+  assert.equal(formaterValeur(statut, r.valeur), 'out_of_service');
+});
+
+test('une saisie reste strictement dans le vocabulaire', () => {
+  const statut = desc('mat_crosse', 'statut');
+  assert.equal(validerSaisie(statut, 'out_of_service').ok, false);
+  assert.equal(validerSaisie(statut, 'decommissioned').ok, true);
+  assert.equal(lireValeur(statut, 'out_of_service'), undefined);
+  assert.equal(lireValeur(statut, 'out_of_service', { souple: true }), 'out_of_service');
+});
+
+test('une valeur du vocabulaire n est pas signalee', () => {
+  const r = resoudreParametre(desc('mat_crosse', 'statut'), { props: { statut: 'decommissioned' }, typeId: 'mat_crosse' });
+  assert.equal(r.ecartBande, null);
+});

@@ -241,7 +241,7 @@ function specialiser(descripteur, type) {
 export function descripteursDuType(type) {
   if (!type) return [];
   const base = (SCHEMAS_INTEGRES[type.family] || []).map((d) => specialiser(d, type));
-  const declares = Array.isArray(type.parameters) ? type.parameters.filter((p) => p && p.id && p.kind) : [];
+  const declares = Array.isArray(type.parameters) ? type.parameters.map(normaliserParametreDuCatalogue).filter(Boolean) : [];
   if (!declares.length) return base;
   const parId = new Map(base.map((d) => [d.id, d]));
   for (const p of declares) {
@@ -249,6 +249,51 @@ export function descripteursDuType(type) {
     parId.set(p.id, { ...(parId.get(p.id) || {}), ...normal });
   }
   return [...parId.values()];
+}
+
+/**
+ * Un paramètre tel que le catalogue le déclare (`type.parameters[]`), ramené au descripteur d'Atlas.
+ *
+ * Le catalogue écrit comme sa spécification — des clés anglaises, en minuscules séparées par `_` :
+ * `label`, `group`, `kind`, `unit`, `min`, `max`, `step`, `usual` (la bande usuelle), `choices`
+ * (`[{ value, label }]`), `default` (`{ value, origin, explanation }`), `aliases`, `inject`, `help`.
+ * Les clés d'Atlas (`libelle`, `groupe`, `unite`…) sont acceptées aussi : un catalogue d'essai écrit
+ * à la main n'a pas à traduire. Un paramètre sans `id` ou sans `kind` est écarté, sans erreur.
+ *
+ * @returns {object|null}
+ */
+export function normaliserParametreDuCatalogue(p) {
+  if (!p || typeof p !== 'object' || !p.id || !p.kind) return null;
+  const choisis = (...cles) => cles.map((c) => p[c]).find((v) => v !== undefined);
+  const defaut = choisis('default', 'defaut');
+  const choix = choisis('choices', 'choix');
+  const sortie = {
+    id: String(p.id),
+    kind: p.kind,
+    libelle: choisis('label', 'libelle') ?? String(p.id),
+  };
+  const groupe = choisis('group', 'groupe'); if (groupe !== undefined) sortie.groupe = groupe;
+  const unite = choisis('unit', 'unite'); if (unite !== undefined) sortie.unite = unite;
+  const pas = choisis('step', 'pas'); if (pas !== undefined) sortie.pas = pas;
+  if (p.min !== undefined) sortie.min = p.min;
+  if (p.max !== undefined) sortie.max = p.max;
+  const bande = choisis('usual', 'bande'); if (Array.isArray(bande) && bande.length === 2) sortie.bande = bande;
+  if (Array.isArray(choix)) sortie.choix = choix.filter((c) => c && c.value !== undefined).map((c) => ({ value: c.value, label: c.label ?? String(c.value) }));
+  if (defaut && typeof defaut === 'object') {
+    const valeur = defaut.value !== undefined ? defaut.value : defaut.valeur;
+    if (valeur !== undefined) {
+      sortie.defaut = {
+        valeur,
+        origine: defaut.origin || defaut.origine || 'catalogue',
+        explication: defaut.explanation || defaut.explication || null,
+      };
+    }
+  }
+  const alias = choisis('aliases', 'alias'); if (Array.isArray(alias)) sortie.alias = alias.map(String);
+  const injecter = choisis('inject', 'injecter'); if (injecter !== undefined) sortie.injecter = !!injecter;
+  const aide = choisis('help', 'aide'); if (aide !== undefined) sortie.aide = String(aide);
+  if (p.parse !== undefined) sortie.parse = p.parse;
+  return sortie;
 }
 
 // ---------------------------------------------------------------------------
@@ -271,7 +316,7 @@ function dateEnTexte(v) {
  * Lit une valeur brute selon le type du paramètre ; \`undefined\` quand elle n'a pas de sens.
  * Une longueur à la façon d'OSM (« 8 m », « 7,5 ») est acceptée pour un paramètre de longueur.
  */
-export function lireValeur(descripteur, brut) {
+export function lireValeur(descripteur, brut, { souple = false } = {}) {
   if (vide(brut)) return undefined;
   switch (descripteur.kind) {
     case 'number': {
@@ -284,7 +329,9 @@ export function lireValeur(descripteur, brut) {
     }
     case 'choice': {
       const s = String(brut).trim();
-      return (descripteur.choix || []).some((c) => c.value === s) ? s : undefined;
+      // Une donnée de l'équipe peut porter une valeur hors du vocabulaire (« out_of_service ») : lue telle
+      // quelle quand `souple`, et signalée. Une saisie, elle, reste strictement dans la liste.
+      return souple || (descripteur.choix || []).some((c) => c.value === s) ? s : undefined;
     }
     case 'heure': {
       const s = String(brut).trim();
@@ -341,7 +388,7 @@ function champDeObjet(descripteur, props, liaison) {
       cle = nomsPropres.find((k) => k.toLowerCase() === bas) ?? null;
     }
     if (cle == null) continue;
-    const v = lireValeur(descripteur, props[cle]);
+    const v = lireValeur(descripteur, props[cle], { souple: true });
     if (v !== undefined) return { cle, valeur: v };
   }
   return null;
@@ -372,12 +419,17 @@ export function resoudreParametre(descripteur, { props = null, params = null, co
   const fin = (valeur, origine, champ = null, explication = null) => ({
     valeur, origine, champ, explication, ecartBande: ecartDeBande(descripteur, valeur),
   });
+  const horsListe = (v) => (descripteur.kind === 'choice' && !(descripteur.choix || []).some((c) => c.value === v)
+    ? 'valeur hors de la liste' : null);
 
   const surObjet = lireValeur(descripteur, params?.[descripteur.id]);
   if (surObjet !== undefined) return fin(surObjet, 'objet');
 
   const champ = champDeObjet(descripteur, props, couche?.liaisons?.[descripteur.id] || null);
-  if (champ) return fin(champ.valeur, 'champ', champ.cle);
+  if (champ) {
+    const r = fin(champ.valeur, 'champ', champ.cle);
+    return { ...r, ecartBande: r.ecartBande || horsListe(champ.valeur) };
+  }
 
   const surCouche = lireValeur(descripteur, reglageDeCouche(couche, typeId, descripteur.id));
   if (surCouche !== undefined) return fin(surCouche, 'couche');

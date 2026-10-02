@@ -1929,6 +1929,55 @@ et l'identifiant dit lui-même laquelle (`lib/modele-id.js`) :
 - Changer le type d'une couche d'éclairage reconstruit les luminaires (l'empreinte de
   `Eclairage` porte la signature du modèle de la couche).
 
+### Les paramètres d'un objet du catalogue : un schéma, trois niveaux, une provenance
+
+Un objet réaliste est piloté par des **paramètres** (éclairage : puissance, température de couleur,
+hauteur de feu, statut, allumage ; végétation, plus tard : hauteur, classe d'âge…). Le moteur est
+générique (`lib/parametres-objet.js`) ; **une famille de plus est un schéma de plus, pas un écran de plus**.
+
+- **Le schéma** vient du type du catalogue (`type.parameters[]`, proposition pour `atlas-objets` dans
+  `docs/PROPOSITION-ATLAS-OBJETS-PARAMETRES.md`). Tant que le catalogue ne le déclare pas, Atlas en
+  porte un **intégré** par famille — l'éclairage, d'après le vocabulaire EclExt, les bandes de
+  plausibilité et les règles de pix2hdr. Le schéma d'un type l'emporte sur l'intégré, paramètre par
+  paramètre.
+- **Trois niveaux, et la provenance de chaque valeur**, du plus précis au plus général : réglage posé
+  sur l'objet (`_params`, dans `atlas_3d_json.params`) ; champ de l'objet (le champ **lié**, sinon le nom
+  du paramètre, sinon un alias comme `height`) ; réglage de la couche **pour le type**
+  (`layer.parametres.valeurs`, dans `Atlas_LayerPrefs.StyleJSON.parametres`) ; défaut du type du
+  catalogue ; règle d'Atlas. Chaque valeur affichée dit d'où elle vient — une hypothèse ne passe jamais
+  pour une mesure.
+- **Les défauts sont virtuels** : jamais écrits dans la table de l'équipe. Le geste « Figer dans la
+  table » (`lib/parametres-figer.js`) les y écrit à la demande : colonnes créées au besoin, **cellules
+  déjà remplies jamais touchées**, valeur déjà lue dans un champ jamais dupliquée.
+- **Propriétés effectives** : les calculs (état, pose, intensité, choix de la classe de hauteur d'un mât)
+  lisent les propriétés de l'objet **plus** chaque paramètre résolu sous son nom canonique
+  (`proprietesEffectives`). Un réglage explicite atteint toujours les calculs ; un simple défaut n'y
+  entre que si le paramètre l'a demandé (`inject`), pour que l'hypothèse « allumage au coucher du
+  soleil » reste dite par l'état.
+- **Un import OSM s'allume sans rien saisir** : les valeurs par règle (puissance au milieu de la bande de
+  la classe photométrique, 3 000 K, plafond de l'arrêté de 2018) lui donnent la grandeur photométrique
+  qui lui manquait ; `height` donne la hauteur de feu, donc la classe d'un mât. Ces valeurs sont
+  étiquetées « règle d'Atlas, à vérifier ».
+- **Comportement jour/nuit** : paramètre `comportement` — « selon le soleil » (défaut), « toujours
+  allumé », « toujours éteint ». Forcer l'allumage n'allume jamais un point hors service ni hors
+  validité. « Voir de jour / de nuit » règle l'heure de la scène sans changer de panneau.
+- **L'interface est générée depuis le schéma** : onglet « Spécifications » de la **couche** (valeur de la
+  couche par paramètre, pour tous les types ou un seul ; champ de la table à lire ; la situation en une
+  phrase — « lu dans « height » (2 sur 3) · 1 sur 3 : 6 m — défaut du type » ; « Figer dans la table »)
+  et de la **fiche d'un objet** (valeur effective, origine, réglage de cet objet, effacé en un clic ;
+  lecture seule en mode lecture). Le moteur de formulaires (`FormEngine`) n'est pas utilisé ici : il
+  remplace le formulaire par un écran de succès après envoi, impose un fil d'étapes et n'a pas
+  d'héritage affiché (une liste vide dit « (aucun) ») — pour des réglages à trois niveaux, un formulaire
+  généré par Atlas depuis le même schéma est plus lisible.
+- **Une valeur de champ hors du vocabulaire** (`statut: out_of_service`) est lue telle quelle et
+  signalée « valeur hors de la liste » ; une **saisie** reste strictement dans la liste. Une valeur
+  hors de la bande usuelle est signalée, jamais refusée : la donnée est celle de l'équipe.
+- **Éprouvé le 02/10/2026** (application servie en local, faux `docApi` pour « figer ») : défauts par
+  règle, classe de hauteur lue dans `height`, champ lié, réglage de couche par type, comportement forcé,
+  statut posé sur un seul objet, légende et fiche, figer (colonnes et cellules). **Non éprouvé en Grist
+  réel** : l'écriture de `parametres` dans `Atlas_LayerPrefs`, de `params` dans `atlas_3d_json`, et le
+  geste « Figer dans la table ».
+
 ### Un contrôle inactif n'existe pas pour le lecteur
 
 Seuls les contrôles `active: true` deviennent des pastilles (`listDockPills`).
