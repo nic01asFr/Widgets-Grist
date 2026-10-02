@@ -58,3 +58,16 @@ nouvelles fonctions sur la copie de travail de l'équipe, création d'un documen
 
 Recherche, tri (récentes, nom, organisation), puces de rôle (propriétaire, éditeur, lecteur, hors ligne), miniature choisie par
 l'auteur (module Lieu), scènes récentes dans le menu, scènes locales en tête — voir `CLAUDE.md`. À éprouver sur un compte réel.
+
+## Éprouvé en Grist réel le 02/10/2026 (copie de travail ENS13, page Atlas)
+
+Build de dev servi par `localhost:3002` dans le widget (accès complet) ; il faut autoriser l'accès au réseau local dans Chrome pour
+grist.numerique.gouv.fr, sinon la requête reste en attente. URL d'origine remise ensuite.
+
+- Enregistrement automatique : changement de palette sur « Boucles » → la ligne `Atlas_LayerPrefs` est mise à jour dans la
+  minute, indicateur « Tout est enregistré » et fenêtre d'état (case « Enregistrer automatiquement »).
+- Annuler / rétablir d'Atlas : « Annulé · Boucles », palette restaurée, Rétablir activé ; la restauration est réécrite dans les
+  préférences. Ne passe pas par l'annulation native de Grist.
+- Menu Exporter (GeoJSON, CSV, KML, GPX, image, projet) : s'ouvre, libellés conformes. Contenu des fichiers non vérifié.
+- Module Lieu : « Sur mes données », choix des couches cadrées, miniature, ancre du soleil. Écriture du cadrage non vérifiée.
+- Dock des contrôles : pastilles à l'habillage commun s'affichent. Largeur téléphone non vérifiée.
