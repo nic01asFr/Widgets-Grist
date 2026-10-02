@@ -646,23 +646,27 @@
         /* Selection bar (top-center) — décale sous le dock ouvert */
         .selection-bar {
             position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-            background: var(--ink); color: var(--bg); border-radius: 24px;
-            padding: 8px 8px 8px 18px; display: none; align-items: center; gap: 10px;
-            font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); z-index: 10;
+            /* Clair, comme la légende, le dock et les cartes de la carte : la barre sombre
+               jurait avec le reste. Que des jetons, pour qu'un thème sombre se règle en un lieu. */
+            background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 24px;
+            padding: 7px 7px 7px 18px; display: none; align-items: center; gap: 10px;
+            font-size: 12.5px; box-shadow: 0 6px 20px rgba(45, 40, 32, 0.12); z-index: 10;
         }
         body:has(.map-controls-dock:not(.collapsed)) .selection-bar.open {
             top: 78px;
         }
         .selection-bar.open { display: flex; }
         .selection-bar .sel-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--accent); }
-        .selection-bar .vsep { width: 1px; height: 14px; background: rgba(255,255,255,0.2); }
+        .selection-bar .vsep { width: 1px; height: 14px; background: var(--hairline-strong); }
         .sel-btn {
-            background: rgba(255,255,255,0.08); border: none; cursor: pointer;
-            min-width: 26px; height: 26px; border-radius: 13px; color: var(--bg);
+            background: var(--surface-muted); border: 1px solid var(--hairline); cursor: pointer;
+            min-width: 26px; height: 26px; border-radius: 13px; color: var(--ink); font: inherit;
             display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 8px;
         }
-        .sel-btn:hover { background: rgba(255,255,255,0.18); }
-        .sel-btn.danger { background: rgba(196,69,54,0.3); }
+        .sel-btn:hover { background: var(--hairline); }
+        .sel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .sel-btn.danger { background: rgba(196,69,54,0.12); border-color: rgba(196,69,54,0.35); color: var(--accent); }
+        .sel-btn.danger:hover { background: rgba(196,69,54,0.22); }
         .sel-count { font-family: var(--mono); font-size: 11px; opacity: 0.85; }
 
         /* Selection box (shift-drag) */

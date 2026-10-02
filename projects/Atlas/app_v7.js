@@ -10340,8 +10340,13 @@ function appliquerBarre() {
 appliquerBarre();
 
 function applyViewModeChrome() {
-    // Changer de posture referme la liste : ce qu'elle ouvre n'est plus le même.
+    // Changer de posture referme la liste : ce qu'elle ouvre n'est plus le même. Il faut aussi
+    // fermer le panneau : `fermerListe({ rendre: false })` n'efface que l'état, et la liste restait
+    // affichée sous Préparer (relevé à l'essai du 02/10/2026), où la recherche d'un objet rendait
+    // ensuite une fiche dans un panneau resté en mode liste.
+    const listeOuverte = !!_liste;
     fermerListe({ rendre: false });
+    if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
     appliquerBarre();
     const badge = $('view-mode-badge');
