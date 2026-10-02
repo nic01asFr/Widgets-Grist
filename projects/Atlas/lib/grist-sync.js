@@ -13,7 +13,7 @@ import {
 } from './manifest-binding.js?v=20261002g';
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
-import { isModelLayer } from './model-layer.js?v=20260906a';
+import { isModelLayer } from './model-layer.js?v=20261003a';
 import { parametresDObjetValides } from './parametres-objet.js?v=20261002g';
 import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=20261001a';
 import {

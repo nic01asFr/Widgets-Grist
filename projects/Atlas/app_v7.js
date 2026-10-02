@@ -58,7 +58,7 @@ import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
 } from './lib/grappes.js?v=20261002a';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS } from './lib/model-layer.js?v=20260906a';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=20261003a';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
@@ -72,7 +72,7 @@ import {
   lienItineraire, modeleBulle, idsPiecesJointes,
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve } from './lib/contextes.js?v=20261002f';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve } from './lib/contextes.js?v=20261003a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261002e';
@@ -10125,7 +10125,7 @@ function renderObjectInspector() {
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
     const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
-    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f) });
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f), consultation: view && !!f });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
     const formActif = ongletActif?.formulaire || null;
@@ -10193,6 +10193,8 @@ function renderObjectInspector() {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + entete + renderAttrFields(layer, props, { readOnly });
         }
+    } else if (_inspObjTab === ONGLET_FICHE) {
+        $('insp-body').innerHTML = ficheConsultation(layer, f);
     } else if (_inspObjTab === ONGLET_SPECS) {
         $('insp-body').innerHTML = htmlSpecsObjet(layer, f, view);
     } else if (_inspObjTab === ONGLET_3D) {
@@ -10775,6 +10777,12 @@ function actionBulle(layer, idx, cfg, action, lien) {
     if (action === 'itineraire' && lien) { window.open(lien, '_blank', 'noopener'); return; }
     closeViewPopup();
     enterSelectionMode(layer.id, idx, { consultation: true });
+    // « Voir la fiche » ouvre les attributs, pas le formulaire de visite : sans onglet de fiche (couche sans formulaire publié), la
+    // fiche s'ouvre déjà sur eux.
+    if (action === 'fiche') {
+        _inspObjTab = ONGLET_FICHE;
+        renderObjectInspector();
+    }
     if (action === 'visite' && cfg.lien) {
         // L'onglet du formulaire de la table liée : on ajoute une visite, on ne
         // corrige pas l'objet. Faute de formulaire proposé, la fiche reste

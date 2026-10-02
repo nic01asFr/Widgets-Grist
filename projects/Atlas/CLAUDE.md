@@ -3025,3 +3025,11 @@ plus tard soit proposée. Règles pures : `lib/contextes.js` (`relevesDe`, `rele
 - Éprouvé en Grist réel (copie ENS13) : décocher Table_structure dans « Vue d'ensemble » retire la pastille « Relevé » à l'ouverture
   de ce contexte ; la règle est relue depuis `Atlas_Story` après rechargement. Pas encore éprouvé avec deux couches à relevé.
 - Un relevé = une couche ; un contexte ne choisit pas encore le **formulaire** d'une couche qui en aurait plusieurs.
+
+### « Voir la fiche » et « Nouvelle visite » : deux onglets, deux gestes
+Hors édition, seuls les formulaires publiés ont un onglet : « Voir la fiche » tombait sur le formulaire de visite, le même qu'ouvre
+« Nouvelle visite ». `objectInspectorTabs({ consultation: true })` ajoute un onglet **« Fiche »** (`ONGLET_FICHE`) **après** les
+formulaires, seulement s'il y en a (sans formulaire, le corps montre déjà les attributs). « Voir la fiche » l'ouvre ; « Nouvelle
+visite » et un toucher pour relever gardent le formulaire en premier. La fiche est en **consultation** (`ficheConsultation`,
+« Mode lecture — consultation seule ») : on la voit, on ne l'édite pas. Éprouvé en Grist réel en Exploiter.
+Modules changés ce jour, jetons passés à `20261003a` : `model-layer.js`, `contextes.js` (règle : un module qui change change de jeton).
