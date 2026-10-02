@@ -1,82 +1,98 @@
 # Une tournée par contexte — étude d'usage et d'affichage
 
-Étude écrite le 03/10/2026, avant tout code. Elle répond à : « un itinéraire par contexte » — que fait l'éditeur, que voit et
-manipule l'exploitant, et comment les deux restent clairs. Elle prolonge `usage.releves` (relevés proposés par contexte).
+Étude écrite le 03/10/2026, mise à jour le même jour avec les décisions de l'auteur. Aucun code. Elle répond à : que fait l'éditeur,
+que voit et manipule l'exploitant, et comment les deux restent clairs. Elle prolonge `usage.releves` (relevés proposés par contexte).
+
+**Priorité : l'exploitant.** L'éditeur pose peu de choses ; c'est l'usage sur le terrain qui décide de ce qu'on construit d'abord.
 
 ## 1. Le constat
 
 Aujourd'hui une scène a **un seul trajet** (une ligne), posé sur le **récit** : chaque étape reçoit une copie de la ligne et une
-position dessus (`abscisse`), puis le récit est retrié selon cette position. Les contextes sont des étapes : ils subissent la
-même ligne et le même tri. Aucun contexte ne peut avoir son parcours.
+position dessus (`abscisse`), puis le récit est retrié selon cette position. Les contextes sont des étapes : ils subissent la même
+ligne et le même tri. Aucun contexte ne peut avoir son parcours.
 
-Le trajet du récit sert une **visite guidée** : on lit des étapes le long d'une ligne, la caméra les suit, le GPS fait avancer
-l'étape, une alerte s'allume près d'une saisie. Un contexte sert un **travail** : on règle la carte, on choisit des ouvrages, on
-saisit. Ce n'est pas la même chose, et c'est pourquoi la ligne d'un contexte ne doit ni placer ni trier quoi que ce soit.
+Le trajet du récit sert une **visite guidée** (des étapes lues le long d'une ligne). Un contexte sert un **travail** : on règle la
+carte, on parcourt des ouvrages, on saisit. La ligne d'un contexte ne doit ni placer ni trier d'étapes.
 
-## 2. Principe
+## 2. Vocabulaire (décidé)
 
-Une **tournée** est la ligne de travail d'un contexte. Elle s'affiche quand le contexte est actif, disparaît avec lui, et donne
-un **ordre** aux ouvrages qu'elle longe. Elle ne touche pas au trajet du récit, qui reste réservé à la visite guidée.
+- **Trajet** : la visite guidée du récit. Inchangé.
+- **Tournée** : la ligne de travail d'un contexte.
+- **Itinéraire** : l'**action** de basculer vers le GPS (le bouton de la bulle, et « Itinéraire vers le prochain ouvrage » dans la
+  tournée). Le mot ne désigne plus rien d'autre : l'outil actuel « Itinéraire sur un réseau » devient **« Tracer sur un réseau »**.
 
-Vocabulaire (à trancher, voir §8) : *trajet* = la visite guidée du récit, *tournée* = la ligne d'un contexte. « Itinéraire » est
-déjà pris deux fois (outil « Itinéraire sur un réseau », bouton « Itinéraire » de la bulle qui ouvre un guidage externe).
+## 3. Définir une tournée (décidé)
 
-## 3. Ce que fait l'éditeur (Préparer)
+Comme on définit un trajet, par les mêmes deux gestes, visés vers un contexte :
+1. **Choisir une ligne** dans une couche existante — dans GP2OA, une **boucle** (couche Boucles) ; ailleurs, n'importe quelle couche
+   de lignes. Une trace GPX importée est une couche : elle se choisit de la même façon.
+2. **Tracer sur un réseau** : départ, points de passage, arrivée ; le chemin suit le réseau.
+
+La ligne est une **copie figée** (comme le trajet), avec `sourceTable` et `sourceRowId` conservés : « Remplacer » la reprend, et un
+« Actualiser depuis la couche » pourra venir sans changer le modèle.
+
+## 4. Pas de rayon (décidé)
+
+La tournée est **incluse dans son contexte** : les ouvrages qu'elle parcourt sont ceux que **le contexte laisse voir** (couches
+visibles, filtres actifs). La ligne apporte trois choses — un tracé, un **ordre** (la position de chaque ouvrage projetée sur la
+ligne) et une **distance** — pas un périmètre. Aucun réglage de rayon dans la tournée.
+
+Un rayon n'aurait de sens que pour dire « les ouvrages de cette boucle » quand aucune colonne ne relie un ouvrage à sa boucle, ce
+qui est le cas de GP2OA. Si le besoin se confirme, ce sera un **filtre « à proximité de la tournée »** parmi les filtres du contexte
+(optionnel, désactivé par défaut), jamais un réglage de la tournée. Un ouvrage très éloigné de la ligne passe en fin de liste, avec
+sa distance.
+
+## 5. Ce que voit et fait l'exploitant (Exploiter, Lecture)
+
+Il n'a **aucun réglage**. Il choisit un contexte dans la pastille « Contexte », comme aujourd'hui, et :
+
+1. **La ligne apparaît** (épaisse, liseré clair, flèche de sens) ; elle disparaît avec « Scène de base ».
+2. **Le panneau du contexte** gagne un bloc « Tournée · 3,2 km · 12 ouvrages » qu'on déplie en liste **dans l'ordre le long de la
+   ligne** : nom, pastille d'état, « dernière visite il y a 3 mois », distance depuis le départ. Toucher une ligne ouvre l'objet
+   (`ouvrirObjet` : bulle, fiche ou saisie selon la posture). Pas de nouvelle pastille.
+3. **Les ◀ ▶ de la barre de sélection suivent la tournée** : ordre de la ligne, compteur « 4 / 12 », ouvrages que le contexte laisse voir.
+4. **Lecture** : même affichage, aucun bouton d'écriture.
+
+### Suivre sa position, comme une application de guidage
+
+Trois états de la caméra, un seul bouton pour en changer :
+
+| État | La caméra | Comment on y entre / en sort |
+|---|---|---|
+| **Suivi** | reste sur ma position (nord en haut ; cap suivi en option) | bouton « Suivre ma position » ; ou « Revenir à ma position » |
+| **Libre** | ne bouge plus : j'ai déplacé la carte | un glissement ou un zoom met le suivi en pause, le bouton « Revenir à ma position » apparaît |
+| **Pointé** | va sur l'ouvrage que j'ai touché ou choisi dans la liste ; le suivi est en pause | « Revenir à ma position » reprend le suivi |
+
+Ce comportement existe déjà pour le trajet du récit (`suivreTrajet`, `pauserSuiviTrajet`, `revenirTrajet`, le contrôle de
+géolocalisation de MapLibre en mode suivi) : on le **réutilise**, il ne s'invente pas.
+
+Pendant le suivi, un bandeau compact en bas de la carte (jamais dans le dock, déjà chargé) dit : « **Prochain : Buse Carafa · 120 m** »,
+avec trois gestes — **Ouvrir** (bulle ou fiche), **Itinéraire** (bascule vers le GPS du téléphone, vers cet ouvrage) et **Passer**.
+Il dit aussi l'avancement : « 4 sur 12 · 1,3 km restants ». Si l'on s'éloigne de la ligne, une mention discrète « hors tournée, 80 m »
+(écart fixe, pas un réglage).
+
+Cas à ne pas oublier :
+- Pas de GPS : la liste et la revue marchent depuis le départ de la ligne ; « le plus proche » part du centre de la carte
+  (`positionDeReference`, déjà le cas) ; le bouton « Suivre ma position » dit pourquoi il est grisé.
+- Contexte sans ouvrage visible : « Aucun ouvrage affiché par ce contexte » (le filtre les masque tous), avec la ligne seule.
+- Téléphone : le bloc vit dans le panneau du contexte (feuille du bas), la liste défile dans le panneau, jamais dans la carte.
+
+## 6. Ce que fait l'éditeur (Préparer)
 
 Où : module **Récit**, sur la carte du contexte, sous « Relevés proposés ». Rien dans les autres modules.
 
 | État de la carte | Ce qui s'affiche | Gestes |
 |---|---|---|
-| Pas de tournée | « Tournée » + un bouton **Choisir une ligne** et un bouton **Tracer sur le réseau** | Les deux outils existants (`choisirTrajet`, itinéraire sur un réseau), visés vers ce contexte |
-| Tournée posée | « Tournée · 3,2 km · Boucle Pic Bertagne » ; « Ouvrages à moins de [ 50 ] m » (phase 2) | **Remplacer**, **Retirer**, régler le rayon |
-| Contexte non proposé | rien (comme « Relevés proposés ») | — |
+| Pas de tournée | « Tournée » + **Choisir une ligne** et **Tracer sur un réseau** | les deux outils existants, visés vers ce contexte |
+| Tournée posée | « Tournée · 3,2 km · Boucle Pic Bertagne » | **Remplacer**, **Retirer** |
+| Contexte non proposé | rien | — |
 
-Ce que l'éditeur **voit sur la carte** : la ligne de la carte qu'il touche (ou la dernière touchée), en tirets, avec le nom du
-contexte en étiquette. Pas toutes les lignes à la fois : ce serait illisible dès deux contextes.
+Sur la carte, l'éditeur voit la ligne du contexte qu'il touche (en tirets, avec le nom du contexte) ; pas toutes à la fois.
+La carte résume ce que le contexte règle : « Couches : 2 · Relevés : Table_structure · Tournée : 3,2 km ».
+Poser un trajet global **n'attrape plus** les contextes (ni `abscisse`, ni copie de ligne, ni tri) ; les scènes déjà faites gardent
+ce qu'elles ont. Le « i » de « Créer un trajet » dit : « Pour une visite guidée. Pour une ligne de travail, voir la tournée d'un contexte. »
 
-Ce qui doit être **clair d'un coup d'œil** :
-- La carte résume en une ligne ce que le contexte règle : « Couches : 2 · Relevés : Table_structure · Tournée : 3,2 km ».
-- « Créer un trajet » (récit) et « Tournée » (contexte) ne se confondent pas : le premier est en haut du module, sous « Capturer
-  l'étape », le second dans chaque contexte. Une phrase dans le « i » du premier : « Pour une visite guidée. Pour une ligne de
-  travail, voir la tournée d'un contexte. »
-- Poser un trajet global **n'attrape plus** les contextes (ils n'ont ni `abscisse` ni copie de ligne, et ne sont plus retriés).
-  Les scènes déjà faites gardent ce qu'elles ont.
-- La ligne est une **copie figée** (comme le trajet), avec `sourceTable` et `sourceRowId` conservés : « Remplacer » la reprend,
-  et on pourra un jour proposer « Actualiser depuis la couche » sans changer le modèle.
-
-## 4. Ce que voit et fait l'exploitant (Exploiter, Lecture)
-
-Il n'a **aucun réglage**. Il choisit un contexte dans la pastille « Contexte », comme aujourd'hui, et :
-
-1. **La ligne apparaît**, épaisse, avec un liseré clair, une flèche de sens à la fin. Elle disparaît avec « Scène de base ». La
-   caméra est celle que l'éditeur a captée ; si le contexte n'en a pas, on cadre la ligne.
-2. **La carte du contexte dans le panneau** (pas de nouvelle pastille : le dock est déjà chargé) gagne un bloc « Tournée · 3,2 km ·
-   12 ouvrages » qu'on déplie en liste **dans l'ordre le long de la ligne** : nom, pastille d'état (couleur de la symbologie),
-   « dernière visite il y a 3 mois », distance depuis le départ. Toucher une ligne ouvre l'objet comme partout
-   (`ouvrirObjet` : bulle, fiche ou saisie selon la posture).
-3. **◀ ▶ de la barre de sélection suivent la tournée** : l'ordre est celui de la ligne, et seuls comptent les ouvrages à moins
-   de N m. Le compteur dit « 4 / 12 ». C'est la revue d'aujourd'hui, avec un autre ordre et un autre périmètre.
-4. **« Le plus proche de moi »** (pastille Relevé) reste inchangé mais ne propose que des ouvrages de la tournée.
-5. **Lecture** : même affichage, aucun bouton d'écriture ; la liste et la ligne servent à se repérer.
-
-Hors de la ligne : **la carte montre toujours tous les objets** que le contexte laisse voir. Le rayon limite la **liste**, la
-**revue** et **« le plus proche »**, pas la carte. Masquer les objets hors tournée enlèverait à l'agent ce qui l'entoure, et le
-rayon deviendrait un filtre invisible à expliquer.
-
-Cas à ne pas oublier :
-- Pas de GPS : la liste et la revue marchent, partant du début de la ligne ; « le plus proche » part du centre de la carte
-  (`positionDeReference`, déjà le cas).
-- Aucun ouvrage dans le rayon : « Aucun ouvrage à moins de 50 m de la tournée » et le bouton pour voir tous les ouvrages.
-- Ligne sans couche d'ouvrages visible : le bloc s'affiche sans liste, avec la longueur seule.
-- Téléphone : le bloc vit dans le panneau du contexte (feuille du bas), la liste défile dans le panneau, jamais dans la carte.
-
-## 5. Phase 3 — suivre la tournée sur le terrain
-
-À regarder après les deux premières, pas avant : avec la position GPS, « à 120 m du prochain ouvrage » dans la pastille Relevé
-(l'alerte du trajet, `evaluerAlerte`, fait déjà cela pour les saisies d'un trajet) ; un « fait aujourd'hui » **dérivé** — si
-Table_visites contient une visite du jour pour l'ouvrage (le lien et la date existent dans la bulle) — sans rien stocker de plus.
-
-## 6. Modèle
+## 7. Modèle
 
 Dans le bloc `usage` de l'étape, à côté de `releves` :
 
@@ -84,33 +100,28 @@ Dans le bloc `usage` de l'étape, à côté de `releves` :
 usage: {
   contexte: true,
   releves: ['Table_structure'],        // existant
-  tournee: {
-    trace: { type: 'LineString', coordinates: [...], sourceTable, sourceRowId, nom },
-    rayonM: 50                          // null = pas de limite, la liste prend tout ce que la ligne longe
-  }
+  tournee: { trace: { type: 'LineString', coordinates: [...], sourceTable, sourceRowId, nom } }
 }
 ```
 
-Une seule ligne par contexte, un seul rayon par contexte. `usageDe` ne change pas ; `relevesDe` a un jumeau `tourneeDe`.
+Une seule ligne par contexte, aucun autre réglage. `usageDe` ne change pas ; `relevesDe` a un jumeau `tourneeDe`.
 
-## 7. Ce qu'on réutilise, ce qu'on écrit
+## 8. Réutilisé, à écrire
 
-Réutilisé : la source d'affichage `atlas-trajet`, `longueurMetres`, `projeter`, `pointAAbscisse`, `distanceMetres`,
-`placeDepuisVue`, les deux outils de pose, `ouvrirObjet` et `decisionOuverture`, la barre de sélection, `positionDeReference`.
+Réutilisé : la source d'affichage `atlas-trajet`, `longueurMetres`, `projeter`, `pointAAbscisse`, `distanceMetres`, les deux outils
+de pose, le suivi GPS du trajet, `ouvrirObjet`, la barre de sélection, `positionDeReference`, le bouton « Itinéraire » de la bulle.
 
-À écrire : le choix de la ligne visé vers un contexte (au lieu de la scène) ; l'affichage lié au contexte actif ; un module pur
-`lib/tournee.js` (ouvrages le long d'une ligne, ordre, distance depuis le départ, rayon) avec ses tests ; le bloc du panneau
-« Contexte » ; l'ordre de `nav` quand une tournée est active ; l'exclusion des contextes du placement du trajet global.
+À écrire : le choix de la ligne visé vers un contexte ; l'affichage lié au contexte actif ; `lib/tournee.js` (ordre et distance des
+ouvrages le long d'une ligne, ouvrages à venir, avancement) avec ses tests ; le bloc du panneau « Contexte » ; le bandeau de suivi ;
+l'ordre de `nav` ; l'exclusion des contextes du placement du trajet global.
 
-## 8. Phases et décisions
+## 9. Phases (l'exploitant d'abord)
 
-1. **La ligne appartient au contexte** : pose, affichage, exclusion du trajet global, résumé sur la carte de l'étape.
-2. **Les ouvrages le long de la tournée** : `lib/tournee.js`, liste dans le panneau, revue ◀ ▶ dans l'ordre, « le plus proche ».
-3. **Sur le terrain** : alerte d'approche, « fait aujourd'hui » dérivé.
+1. **La ligne et l'ordre** : la tournée se pose (édition minimale : deux gestes, remplacer, retirer), s'affiche avec son contexte, le
+   panneau liste les ouvrages dans l'ordre, ◀ ▶ suivent l'ordre. C'est déjà utilisable sans GPS.
+2. **Suivre sa position** : les trois états de la caméra, le bandeau « Prochain », l'avancement, « Itinéraire » vers l'ouvrage.
+3. **Après usage** : « fait aujourd'hui » déduit de Table_visites (le lien et la date existent dans la bulle), sans rien stocker ;
+   filtre « à proximité de la tournée » si le besoin se confirme ; « Actualiser depuis la couche ».
 
-À trancher avant la phase 1 :
-- **Le mot** : « tournée » (proposé) ou « itinéraire » ?
-- **Ligne figée ou liée à la couche** : figée (proposé, comme le trajet) ; liée demande de relire la couche à chaque ouverture.
-- **Le rayon masque-t-il la carte ?** Non (proposé) : il limite la liste, la revue et « le plus proche ».
-- **Un rayon par contexte** (proposé) ou par couche ?
-- **Cadrage** : la caméra captée par l'éditeur l'emporte (proposé) ; sinon la ligne est cadrée.
+Reste à trancher : le suivi tourne-t-il la carte avec le cap, ou garde-t-il le nord en haut ? Proposé : nord en haut par défaut, le
+cap en option (une carte qui tourne désoriente quand on lit des noms).
