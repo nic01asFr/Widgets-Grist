@@ -80,13 +80,8 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.9.1** (`published/atlas/`, GitHub Pages ; APK en release `atlas-v1.9.1`).
-**Prêt, non publié (02/10/2026)** : la branche `atlas-formulaire-entite` porte 21 commits
-au-delà de la 1.9.1 — relevés de terrain (droits par table, postures, récit à clé, contextes),
-identifiant de modèle `objet:<type>`, paramètres d'objet à trois niveaux et panneau
-« Spécifications », éclairage qui dit son état, colonne `atlas_3d_json` fiable. Le bilan, avec
-l'éprouvé en réel, le reste à faire et la checklist de publication : `docs/BILAN-02-10-2026.md`.
-La vitrine (`published/atlas/vitrine.json`) décrit déjà cette version : ne pas la pousser seule.
+**En ligne : v1.10.0** (`published/atlas/`, GitHub Pages, déployée le 02/10/2026, commit `24868ac` sur `main` ; CI verte, adresses vérifiées en 200). L'APK Android (release `atlas-v1.9.1`) embarque encore le noyau 1.9.1 : non republié. Le fil du forum n'est pas mis à jour.
+Contenu de la 1.10.0 : relevés de terrain (droits par table, postures, récit à clé, contextes, bulle d'objet, liste d'objets, tables de référence, WKT), identifiant de modèle `objet:<type>`, paramètres d'objet à trois niveaux et panneau « Spécifications », éclairage qui dit son état, colonne `atlas_3d_json` fiable. Bilan : `docs/BILAN-02-10-2026.md`.
 Tests : 1241 verts.
 
 - Chargement Scene Manifest / tables qgis2grist (cas Bee Farming validé).
