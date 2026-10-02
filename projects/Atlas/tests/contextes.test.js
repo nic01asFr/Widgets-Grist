@@ -44,3 +44,41 @@ test('retrouver un contexte par sa cle, meme si l etape a change de rang', () =>
   recit[0].state = {};
   assert.equal(contexteDeCle(recit, 'a'), null, 'une etape qui n est plus un contexte ne se retrouve plus');
 });
+
+test('relevesDe : null sans règle, la liste (même vide) avec une règle', async () => {
+  const { relevesDe } = await import('../lib/contextes.js');
+  assert.equal(relevesDe(undefined), null);
+  assert.equal(relevesDe({ usage: { contexte: true } }), null);
+  assert.deepEqual(relevesDe({ usage: { contexte: true, releves: ['A', 'B'] } }), ['A', 'B']);
+  assert.deepEqual(relevesDe({ usage: { contexte: true, releves: [] } }), []);
+  assert.deepEqual(relevesDe({ usage: { contexte: true, releves: ['A', 3, '', null] } }), ['A']);
+  assert.equal(relevesDe({ usage: { contexte: true, releves: 'A' } }), null);
+});
+
+test('releveProposeDans : sans règle, tout est proposé', async () => {
+  const { releveProposeDans } = await import('../lib/contextes.js');
+  assert.equal(releveProposeDans(null, 'A'), true);
+  assert.equal(releveProposeDans(['A'], 'A'), true);
+  assert.equal(releveProposeDans(['A'], 'B'), false);
+  assert.equal(releveProposeDans([], 'A'), false);
+});
+
+test('avecUsage garde les relevés tant que le contexte l est, et les emporte avec lui', async () => {
+  const etat = { camera: 1, usage: { contexte: true, releves: ['A'] } };
+  const autre = avecUsage(etat, { contexte: true });
+  assert.deepEqual(autre.usage, { contexte: true, releves: ['A'] });
+  assert.deepEqual(avecUsage(etat, { releves: ['B'] }).usage, { contexte: true, releves: ['B'] });
+  assert.deepEqual(avecUsage(etat, { releves: null }).usage, { contexte: true });
+  assert.equal(avecUsage(etat, { contexte: false }).usage, undefined);
+  assert.deepEqual(etat.usage, { contexte: true, releves: ['A'] });
+});
+
+test('basculerReleve : décocher écrit une liste, tout recocher rend null', async () => {
+  const { basculerReleve } = await import('../lib/contextes.js');
+  const toutes = ['A', 'B', 'C'];
+  assert.deepEqual(basculerReleve(null, toutes, 'B', false), ['A', 'C']);
+  assert.deepEqual(basculerReleve(['A', 'C'], toutes, 'B', true), null);
+  assert.deepEqual(basculerReleve(['A'], toutes, 'C', true), ['A', 'C']);
+  assert.deepEqual(basculerReleve(['A'], toutes, 'A', false), []);
+  assert.deepEqual(basculerReleve(null, toutes, 'A', true), null);
+});

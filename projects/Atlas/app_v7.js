@@ -72,7 +72,7 @@ import {
   lienItineraire, modeleBulle, idsPiecesJointes,
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage } from './lib/contextes.js?v=20261002f';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve } from './lib/contextes.js?v=20261002f';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261002e';
@@ -6008,7 +6008,13 @@ function dockPillId(layer, field) {
  * d'ecrire.
  */
 function couchesEnReleve() {
-    return STATE.layers.filter((l) => l.visible !== false && (CONFIG.viewMode
+    const propose = relevesDuContexte();
+    return couchesQuiOffrentUnReleve().filter((l) => l.visible !== false && releveProposeDans(propose, cleReleve(l)));
+}
+
+/** Les couches où un relevé est possible, visibles ou non : la règle seule, avant le contexte et la visibilité. */
+function couchesQuiOffrentUnReleve() {
+    return STATE.layers.filter((l) => (CONFIG.viewMode
         ? (coucheEnSaisie(l) || creationPossible(l, contexteCreation(l)).ok)
         : saisieHorsEdition({
             view: true,
@@ -6017,6 +6023,18 @@ function couchesEnReleve() {
             formulaires: formulairesDeLaCouche(l).filter(formulaireUtilisable),
             moteur: moteurDisponible(),
         })));
+}
+
+/** Comment une étape désigne une couche pour ses relevés : sa table, à défaut son identifiant (comme `findStoryLayer`). */
+function cleReleve(layer) { return layer.sourceTable || layer.id; }
+
+/**
+ * Les couches dont le contexte actif propose le relevé, ou `null` s'il ne dit rien (pas de contexte, ou un contexte sans règle :
+ * toutes les couches visibles gardent leur relevé).
+ */
+function relevesDuContexte() {
+    if (!_contexteCle) return null;
+    return relevesDe((STATE.story || []).find((s) => s.cle === _contexteCle)?.state);
 }
 
 /**
@@ -6284,7 +6302,10 @@ function listDockPills() {
     // — elle regroupe, pour ne pas charger le dock. Un formulaire publie ne
     // devenait rien de visible : le lecteur ne decouvrait qu'un objet se saisit
     // qu'en le touchant. Elle suit le recit, l'autre pastille qui agit.
-    const saisiesRecit = _storyPresenting && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
+    // Un contexte qui règle ses relevés décide seul : sa liste vide ne laisse pas la pastille ouverte sur du vide à cause des
+    // saisies d'un trajet, qui ne le concernent pas.
+    const saisiesRecit = _storyPresenting && relevesDuContexte() === null
+        && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
     if (couchesEnReleve().length || saisiesRecit) {
         const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
         const pastilleReleve = {
@@ -7356,6 +7377,7 @@ function renderRecit() {
                 <input class="input" style="font-weight:600;padding:4px 6px" value="${echapper(s.title || '')}" onchange="A.storySet(${i},'title',this.value)" placeholder="Titre étape ${i + 1}">
                 <textarea class="input" style="margin-top:4px;min-height:38px;font-size:12px" onchange="A.storySet(${i},'text',this.value)" placeholder="Texte…">${echapper(s.text || '')}</textarea>
                 <label class="contexte-opt" title="En exploitation, la pastille Contexte propose cette étape : elle règle la carte, et son texte sert de consigne"><input type="checkbox" ${usageDe(s.state).contexte ? 'checked' : ''} onchange="A.storyContexte(${i},this.checked)"> Proposer comme contexte</label>
+                ${htmlRelevesContexte(i, s)}
             </div>
             <div style="display:flex;flex-direction:column;gap:2px">
                 <button class="layer-act" onclick="A.storyMove(${i},-1)" title="Monter">▲</button>
@@ -7365,6 +7387,22 @@ function renderRecit() {
             <button class="layer-del" onclick="A.storyDelete(${i})" title="Supprimer">${icTrait(IC.corbeille)}</button>
         </div>`).join('')}</div>`;
     body.innerHTML = html;
+}
+
+/**
+ * Les relevés qu'un contexte propose : une case par couche où un relevé est possible. Rien n'est écrit tant que tout est coché —
+ * le contexte ne dit rien, et une couche ajoutée plus tard sera proposée. Hors contexte, rien à régler.
+ */
+function htmlRelevesContexte(i, s) {
+    if (!usageDe(s.state).contexte) return '';
+    const couches = couchesQuiOffrentUnReleve();
+    if (!couches.length) return '';
+    const propose = relevesDe(s.state);
+    const cases = couches.map((l) => `<label class="contexte-opt contexte-releve"><input type="checkbox" ${releveProposeDans(propose, cleReleve(l)) ? 'checked' : ''} onchange="A.storyReleve(${i},'${chaineJs(cleReleve(l))}',this.checked)"> ${echapper(l.name || l.sourceTable || l.id)}</label>`).join('');
+    return `<div class="contexte-releves">
+        <div class="contexte-releves-titre">Relevés proposés${infoBulle('Ce que la pastille « Relevé » liste quand ce contexte est actif. Tout coché : toutes les couches visibles, comme sans réglage. Une couche décochée n\u2019y est plus listée ; le relevé d\u2019un objet touché sur la carte, lui, reste ouvert.')}</div>
+        ${cases}
+    </div>`;
 }
 
 /**
@@ -14828,6 +14866,17 @@ const A = {
         etape.state = avecUsage(etape.state, { contexte: !!oui });
         markDirty();
         persistStory();
+    },
+    storyReleve(i, cle, oui) {
+        if (!assertCanWrite('régler les relevés d’un contexte')) return;
+        const etape = STATE.story[i];
+        if (!etape || !usageDe(etape.state).contexte) return;
+        const toutes = couchesQuiOffrentUnReleve().map(cleReleve);
+        etape.state = avecUsage(etape.state, { releves: basculerReleve(relevesDe(etape.state), toutes, cle, !!oui) });
+        markDirty();
+        persistStory();
+        // Le contexte joué en ce moment peut être celui qu'on règle : la pastille suit.
+        if (_contexteCle && etape.cle === _contexteCle) refreshControlsDock();
     },
     storyExit() {
         annulerAnimTrajet();

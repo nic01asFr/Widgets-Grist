@@ -33,9 +33,42 @@ export function usageDe(etat) {
 export function avecUsage(etat, patch = {}) {
   const sortie = { ...(etat && typeof etat === 'object' ? etat : {}) };
   const usage = { ...usageDe(etat), ...patch };
-  if (usage.contexte) sortie.usage = { contexte: true };
+  // Les relevés proposés suivent le contexte : sans contexte, pas de règle à garder.
+  const releves = 'releves' in patch ? patch.releves : relevesDe(etat);
+  if (usage.contexte) sortie.usage = { contexte: true, ...(Array.isArray(releves) ? { releves: [...releves] } : {}) };
   else delete sortie.usage;
   return sortie;
+}
+
+/**
+ * Les couches dont le relevé est proposé dans ce contexte, par clé de couche (`sourceTable`, à défaut l'identifiant).
+ * `null` = le contexte ne dit rien : toutes les couches visibles gardent leur relevé, comme avant. Une liste vide dit
+ * « aucun relevé ici » — c'est un choix, pas l'absence de choix.
+ *
+ * @returns {string[]|null}
+ */
+export function relevesDe(etat) {
+  const u = etat && typeof etat === 'object' ? etat.usage : null;
+  const r = u && typeof u === 'object' ? u.releves : null;
+  return Array.isArray(r) ? r.filter((x) => typeof x === 'string' && x) : null;
+}
+
+/** Le relevé de la couche de cette clé est-il proposé, selon la liste `releves` d'un contexte (`null` : oui, sans réserve) ? */
+export function releveProposeDans(releves, cle) {
+  return releves == null || releves.includes(cle);
+}
+
+/**
+ * La liste après avoir (dé)coché une couche. `toutes` : les clés de toutes les couches qui ont un relevé. Quand tout est
+ * coché, on rend `null` : « tout » s'écrit par l'absence de règle, pour qu'une couche ajoutée plus tard soit proposée.
+ *
+ * @returns {string[]|null}
+ */
+export function basculerReleve(releves, toutes, cle, propose) {
+  const base = new Set(releves == null ? toutes : releves);
+  if (propose) base.add(cle); else base.delete(cle);
+  const garde = toutes.filter((k) => base.has(k));
+  return garde.length === toutes.length ? null : garde;
 }
 
 /**

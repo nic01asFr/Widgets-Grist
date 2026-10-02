@@ -3010,3 +3010,16 @@ La barre de sélection (« 1 objet sélectionné », ◀ 1 / 1 ▶) est en haut 
 pastilles, elle recouvrait « Relevé », « Contexte » et le panneau d'un filtre ouvert dès que la fiche rétrécit la carte. Éprouvé en
 Grist réel (fiche ouverte, 1240 px de carte) : saut des objets masqués, message « Aucun objet affiché » si tout est écarté.
 Reste : pour un objet seul, le compteur dit « 1 / 1 » alors que ◀ ▶ parcourent la couche.
+
+### Relevés différents selon le contexte
+Un contexte (étape « Proposer comme contexte ») peut régler **quelles couches la pastille « Relevé » liste** : le bloc `usage` de
+l'étape porte `releves` (clés de couche — `sourceTable`, à défaut l'identifiant). Absent = aucune règle, toutes les couches visibles
+gardent leur relevé (comportement d'avant) ; une liste, même vide, est une règle. Réglage dans le module Récit, sous la case du
+contexte (« Relevés proposés », une case par couche où un relevé est possible) ; tout coché n'écrit rien, pour qu'une couche ajoutée
+plus tard soit proposée. Règles pures : `lib/contextes.js` (`relevesDe`, `releveProposeDans`, `basculerReleve`), testées.
+- Une couche décochée n'est plus **listée** par la pastille ; toucher un de ses objets sur la carte ouvre toujours sa fiche.
+- Un contexte qui règle ses relevés décide seul de la pastille : les « saisies » d'un trajet ne la gardent plus ouverte sur du vide.
+- La re-capture d'une étape garde le bloc `usage` entier (`etatApresRecapture`), donc les relevés.
+- Éprouvé en Grist réel (copie ENS13) : décocher Table_structure dans « Vue d'ensemble » retire la pastille « Relevé » à l'ouverture
+  de ce contexte ; la règle est relue depuis `Atlas_Story` après rechargement. Pas encore éprouvé avec deux couches à relevé.
+- Un relevé = une couche ; un contexte ne choisit pas encore le **formulaire** d'une couche qui en aurait plusieurs.
