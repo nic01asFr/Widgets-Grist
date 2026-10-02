@@ -14,6 +14,7 @@ import {
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
 import { isModelLayer } from './model-layer.js?v=20260906a';
+import { parametresDObjetValides } from './parametres-objet.js?v=20261002g';
 import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=20261001a';
 import {
   manifestGeometryType,
@@ -35,7 +36,7 @@ export const ATLAS_PREFS_SCHEMA = [
 const SKIP_PROPS = new Set([
   ...COLONNES_INTERNES_GRIST,
   '_row_id', '_fill_color', '_visible', '_fill_opacity', '_line_opacity', '_idx',
-  '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId',
+  '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId', '_params',
 ]);
 
 const ATLAS_3D_COL = 'atlas_3d_json';
@@ -376,6 +377,10 @@ export function featureToRowUpdate(feature, layer) {
       const v = props['_' + k];
       if (v != null && v !== '') atlas3d[k] = v;
     }
+    // Les réglages d'objet (puissance, hauteur de feu…) voyagent avec le placement : même colonne,
+    // même garde. Ils ne deviennent jamais des colonnes de la table de l'équipe.
+    const params = parametresDObjetValides(props._params);
+    if (params) atlas3d.params = params;
     if (Object.keys(atlas3d).length && (!gristCols.length || colSet.has(ATLAS_3D_COL))) {
       update[ATLAS_3D_COL] = JSON.stringify(atlas3d);
     }

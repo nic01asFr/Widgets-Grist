@@ -14,6 +14,7 @@ import {
 } from './controls.js?v=20261002a';
 import { parseGristBool } from './grist-bool.js';
 import { genreDeModele } from './modele-id.js?v=20261002g';
+import { parametresDeCoucheValides } from './parametres-objet.js?v=20261002g';
 import { departsValides } from './fiche-formulaire.js?v=20261002c';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
@@ -96,6 +97,9 @@ export function layerPrefsPayload(layer) {
     // (lib/modele-id.js). Sans lui, le choix « Fixe » se perdait a la reouverture d'une couche
     // liee a un manifeste, qui reprenait le modele du manifeste.
     library: modeleDeCouchePrefs(layer),
+    // Les réglages des objets du catalogue pour cette couche (puissance, hauteur de feu, liaisons de
+    // champs…), par type. Virtuels : ils ne sont jamais écrits dans la table de l'équipe.
+    parametres: parametresDeCoucheValides(layer.parametres),
     controls: controlsPrefsPayload(layer),
     // Quel formulaire sert cette couche, et si la scene l'offre hors edition.
     // Le formulaire est defini UNE fois, dans la table `Formulaires`, pour une
@@ -228,6 +232,10 @@ export function applyLayerPrefsBinding(layer, prefs) {
       if (Object.keys(departs).length) f.departs = departs;
       layer.formulaire = f;
     }
+
+    // Réglages des objets : seul ce qui a la bonne forme survit (un enregistrement abîmé ne règle rien).
+    const parametres = parametresDeCoucheValides(payload.parametres);
+    if (parametres) layer.parametres = parametres;
 
     if (payload.controls?.length) {
       applyControlsFromPrefs(layer, payload.controls);

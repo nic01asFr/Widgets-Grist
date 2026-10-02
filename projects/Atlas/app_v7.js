@@ -13,6 +13,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
 import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
 import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=20261002g';
+import { descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides } from './lib/parametres-objet.js?v=20261002g';
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
@@ -686,7 +687,7 @@ function resolutionCatalogue(layer, feature, distanceM) {
         }
     }
     const p = resolveFeatureProps(feature, layer);
-    return resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
+    const res = resoudreEntite(layer, feature, {
         ...(typeId ? { typeId } : {}),
         set: MODEL_LIBRARY.set,
         distanceM,
@@ -694,6 +695,8 @@ function resolutionCatalogue(layer, feature, distanceM) {
         echelleCouche: p.scale || 1,
         rotationCoucheDeg: p.rotationZ || 0,
     });
+    // `props` : les propriétés effectives, que la pose lit (hauteur de feu, azimut).
+    return res ? { ...res.r, props: res.props } : null;
 }
 /**
  * Une texture KTX2 n'est chargee, transcodee et televersee au GPU QU'UNE FOIS,
@@ -1753,7 +1756,7 @@ const Models3D = {
         // Un luminaire du catalogue se pose comme dans `Eclairage` (bloc `lighting` du type) : un type
         // ancre au FEU (applique, axial, projecteur) est eleve de `hauteurFeu`, sinon il serait
         // enterre au pied de son support ; un champ `azimut` l'emporte sur le tirage.
-        const pose = cat?.type?.lighting ? poseLuminaire(cat.type.lighting, feature.properties, cat.rotationDeg) : null;
+        const pose = cat?.type?.lighting ? poseLuminaire(cat.type.lighting, cat.props || feature.properties, cat.rotationDeg) : null;
         o.position.set(lm.x + (p.offsetX || 0), eOff + (p.offsetZ || 0) + (pose ? pose.elevation : 0), -lm.y - (p.offsetY || 0));
         const sc = cat ? cat.echelle : (p.scale || 1); o.scale.set(sc, sc, sc);
         const azimut = pose ? (pose.origineAzimut === 'champ' ? 180 - pose.azimutDeg : pose.azimutDeg)
@@ -2156,7 +2159,7 @@ function coucheEclairage(layer) {
 function signatureModeleCouche(layer) {
     const m = layer?.style?.symbolization?.model;
     return [layer?.style?.mode, layer?.style?.library?.modelId, m?.mode, m?.defaultModelId,
-        (m?.categories || []).map((c) => c.modelId).join(',')].join('/');
+        (m?.categories || []).map((c) => c.modelId).join(','), JSON.stringify(layer?.parametres || null)].join('/');
 }
 /**
  * Le type du catalogue que l'identifiant `objet:<type>` IMPOSE à cette entité (objet, catégorie ou
@@ -2169,12 +2172,56 @@ function typeImposeDe(layer, feature) {
     if (coucheAuCatalogue(layer)) return null;
     return typeDeIdObjet(modelIdDeEntite(feature, layer));
 }
+/** Un type du catalogue pointé, par son identifiant (`null` si le catalogue n'est pas là ou ne le connaît pas). */
+function typeCatalogueDe(typeId) {
+    return typeId ? (CATALOGUE_OBJETS.cat?.types.find((t) => t.id === typeId) || null) : null;
+}
+/**
+ * Les propriétés d'une entité telles que les calculs doivent les lire : les siennes, plus chaque
+ * paramètre du type résolu (champ lié, réglage de l'objet, de la couche, défaut du catalogue ou règle).
+ * Sans schéma pour ce type, les propriétés sont rendues telles quelles.
+ */
+function parametresDeEntite(layer, feature, typeId) {
+    const descripteurs = descripteursDuType(typeCatalogueDe(typeId));
+    const props = feature?.properties || {};
+    if (!descripteurs.length) return { props, provenance: {}, descripteurs };
+    const r = proprietesEffectives(props, descripteurs, { params: props._params, couche: layer?.parametres, typeId });
+    return { props: r.props, provenance: r.provenance, descripteurs };
+}
+/**
+ * Résout le modèle d'une entité du catalogue **avec ses paramètres** : le type se choisit (imposé par
+ * l'identifiant, ou déduit des champs), puis le fichier se choisit d'après les propriétés effectives —
+ * une hauteur de feu réglée pour la couche choisit ainsi la classe de hauteur d'un mât.
+ *
+ * @returns {null | { r: object, props: object, provenance: object, typeId: string }}
+ */
+function resoudreEntite(layer, feature, options) {
+    const cat = CATALOGUE_OBJETS.cat;
+    if (!cat) return null;
+    const couche = sourceDeCouche(layer);
+    let typeId = options.typeId || null;
+    let r0 = null;
+    if (!typeId) {
+        r0 = resoudreObjet(cat, couche, feature, options);
+        if (!r0) return null;
+        typeId = r0.type.id;
+    }
+    const eff = parametresDeEntite(layer, feature, typeId);
+    if (!eff.descripteurs.length) {
+        const r = r0 || resoudreObjet(cat, couche, feature, { ...options, typeId });
+        return r ? { r, props: eff.props, provenance: eff.provenance, typeId } : null;
+    }
+    const r = resoudreObjet(cat, couche, { ...feature, properties: eff.props }, { ...options, typeId });
+    return r ? { r, props: eff.props, provenance: eff.provenance, typeId } : null;
+}
 /** Une entité dont l'auteur a choisi un type d'éclairage, et qui porte de quoi l'allumer. */
 function pointLumineuxImpose(layer, feature) {
     const typeId = typeImposeDe(layer, feature);
-    if (!typeId || !CATALOGUE_OBJETS.cat) return false;
-    const type = CATALOGUE_OBJETS.cat.types.find((t) => t.id === typeId);
-    return type?.family === 'lighting' && estPointLumineux(feature?.properties, { impose: true });
+    const type = typeCatalogueDe(typeId);
+    if (!type || type.family !== 'lighting') return false;
+    // Les propriétés EFFECTIVES : la puissance et la couleur peuvent venir du réglage de la couche
+    // ou du défaut du type, pas seulement d'un champ de l'objet.
+    return estPointLumineux(parametresDeEntite(layer, feature, typeId).props, { impose: true });
 }
 
 /**
@@ -2397,23 +2444,27 @@ const Eclairage = {
                     : { x: 0, z: 0 };
                 // Le catalogue d'objets choisit le modèle (famille `lighting`) ;
                 // sinon, le luminaire de test (url nulle).
-                let r = null;
+                // `eff` : les propriétés EFFECTIVES — celles de l'objet, plus chaque paramètre résolu
+                // (champ lié, réglage de l'objet ou de la couche, défaut du type). L'état, la pose et
+                // l'intensité les lisent sans savoir d'où vient chaque valeur.
+                let r = null, eff = props;
                 if (CATALOGUE_OBJETS.cat) {
                     const typeId = typeImposeDe(layer, feature);
-                    r = resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, {
+                    const res = resoudreEntite(layer, feature, {
                         set: MODEL_LIBRARY.set, lod: 0, public: contextePublic(),
                         echelleCouche: 1, rotationCoucheDeg: p.rotationZ || 0,
                         ...(typeId ? { typeId } : {}),
                     });
+                    if (res) { r = res.r; eff = res.props; }
                     if (r && (r.type?.family !== 'lighting' || !r.url)) r = null;
                 }
                 const lighting = r?.type?.lighting || null;
-                const pose = poseLuminaire(lighting, props, r ? r.rotationDeg : (p.rotationZ || 0));
+                const pose = poseLuminaire(lighting, eff, r ? r.rotationDeg : (p.rotationZ || 0));
                 // Un azimut de champ se compte depuis le nord, et la console sort
                 // selon +Z glTF : dans le repère local (Z = sud), rotation π − A.
                 const rot = pose.origineAzimut === 'champ' ? Math.PI - deg2rad(pose.azimutDeg) : deg2rad(pose.azimutDeg);
                 items.push({
-                    id: `${layer.id}:${idx}`, props, x: lm.x, y: sol + pose.elevation, z: -lm.y, sol, pente,
+                    id: `${layer.id}:${idx}`, props: eff, x: lm.x, y: sol + pose.elevation, z: -lm.y, sol, pente,
                     rotationRad: rot, url: r?.url || null, lighting, pose, type: r?.type?.id || null,
                 });
             }
@@ -2436,7 +2487,10 @@ const Eclairage = {
         this.etats = new Map();
         for (const it of this.lum.items()) {
             const { profil, plages } = profilDuPoint(it.props);
-            this.etats.set(it.id, etatPointLumineux(it.props, profil, plages, t, ctx));
+            // Le comportement choisi (selon le soleil, toujours allumé, toujours éteint) s'applique à
+            // l'état que le profil a calculé ; `soleil`, le défaut, ne change rien.
+            this.etats.set(it.id, appliquerComportement(it.props.comportement,
+                etatPointLumineux(it.props, profil, plages, t, ctx), it.props));
         }
         this.lum.appliquerEtats(this.etats);
         this.rafraichirAffichage();
@@ -11619,6 +11673,7 @@ function buildProject() {
             style: l.style, _modelCat: l._modelCat, kind: l.kind,
             sourceTable: l.sourceTable, geometryColumn: l.geometryColumn,
             controls: l.controls,
+            parametres: parametresDeCoucheValides(l.parametres),
             declarative: declarativeFromAtlasLayer(l),
         })),
     };
@@ -11645,6 +11700,7 @@ async function restoreProject(p) {
     refreshStoryNavChrome();
     (p.layers || []).forEach((ld) => {
         const layer = { ...ld, visible: ld.visible !== false, controls: ld.controls || [] };
+        layer.parametres = parametresDeCoucheValides(ld.parametres) || undefined;
         initSymbolization(layer);
         STATE.layers.push(layer);
         addLayerToMap(layer);
