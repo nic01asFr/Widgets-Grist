@@ -49,6 +49,7 @@ import {
 } from './lib/fiche-formulaire.js?v=20261002c';
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
+import { configEcheance, compterEcheances, expressionCouronne, phraseEcheances, COULEURS_ECHEANCE, LIBELLES_ECHEANCE } from './lib/echeance.js?v=20261002a';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
@@ -3531,7 +3532,7 @@ function ajouterCoucheIcones(layer) {
 
 function applyPointStyle(layer) {
     const s = layer.style;
-    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n', '-echeance'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const sym = initSymbolization(layer);
 
     if (s.mode === 'library' || s.mode === 'custom') {
@@ -3553,6 +3554,18 @@ function applyPointStyle(layer) {
         }
         const stroke = layerStrokePaint(layer);
         const tri = cleDeTriReference(layer);
+        // Échéance : une couronne autour du point — rouge en retard, ambre à faire — sous le cercle, qui garde l'état.
+        const ech = configEcheance(sym);
+        if (ech) {
+            map.addLayer({ id: layer.id + '-echeance', type: 'circle', source: layer.id,
+                ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
+                paint: {
+                    'circle-radius': typeof radius === 'number' ? radius + 6 : 14,
+                    'circle-color': 'rgba(0,0,0,0)', 'circle-opacity': 1,
+                    'circle-stroke-width': 3, 'circle-stroke-opacity': 0.95,
+                    'circle-stroke-color': expressionCouronne(ech, resolveFeaturePropertyKey(layer, ech.field)),
+                } });
+        }
         map.addLayer({ id: layer.id, type: 'circle', source: layer.id,
             ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
             ...(tri != null ? { layout: { 'circle-sort-key': tri } } : {}),
@@ -5576,6 +5589,7 @@ function renderReleveDockSlotHtml() {
         return `<div class="releve-couche">
             <div class="releve-nom"><span class="sw" style="background:${esc(fondPastilleCouche(l.couche) || '#888')}"></span>${esc(l.nom)}</div>
             ${l.formulaires.length ? `<div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>` : ''}
+            ${(() => { const p = phraseEcheances(comptesEcheance(l.couche) || {}); return p ? `<div class="releve-forms" style="color:var(--accent);font-weight:600">Échéance : ${esc(p)}</div>` : ''; })()}
             <div class="releve-actions">
                 ${l.creation ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.nouvelObjet('${chaineJs(l.couche.id)}')">＋ Ajouter un objet</button>` : ''}
                 ${geo ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.releveProche('${chaineJs(l.couche.id)}')">${proche
@@ -7218,12 +7232,28 @@ function buildLayerLegendHtml(layer) {
     return `<div class="legend-group"><div class="legend-row${clickable}${focused}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${swatch}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
 }
 
+/** Les comptes d'échéance d'une couche (parmi les objets que les filtres laissent voir). */
+function comptesEcheance(layer) {
+    const ech = configEcheance(layer?.style?.symbolization);
+    if (!ech || !Array.isArray(layer?.geojson?.features)) return null;
+    const cle = resolveFeaturePropertyKey(layer, ech.field);
+    return compterEcheances(filteredGeoJSON(layer).features, ech, cle);
+}
+
+/** La légende de la couronne : ce que disent les anneaux, avec leur nombre. */
+function legendeEcheance(layer) {
+    const c = comptesEcheance(layer);
+    if (!c || (!c.retard && !c.bientot)) return '';
+    const ligne = (classe) => c[classe] ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${COULEURS_ECHEANCE[classe]};border-radius:50%;box-sizing:border-box"></span><span class="nm">${LIBELLES_ECHEANCE[classe]}</span><span class="ct">${c[classe]}</span></div>` : '';
+    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Échéance</span></div>${ligne('retard')}${ligne('bientot')}`;
+}
+
 function updateLegend() {
     const body = $('legend-body');
     // La légende énumère dans le même sens que les panneaux : dessus d'abord.
     const vis = displayOrder(STATE.layers).filter((l) => l.visible !== false);
     if (vis.length === 0) { body.innerHTML = '<div class="legend-empty">Aucune couche visible</div>'; return; }
-    const html = vis.map((l) => buildLayerLegendHtml(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
+    const html = vis.map((l) => buildLayerLegendHtml(l) + legendeEcheance(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
     body.innerHTML = html || '<div class="legend-empty">Aucun objet visible</div>';
 }
 
@@ -7893,7 +7923,22 @@ function symSizePanel(layer, sym) {
     }
     return volume
         + `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'size', s.mode, ['single', 'graduated'])}</div>`
-        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym));
+        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym))
+        + (isPoint && !is3D ? symEcheancePanel(layer, sym) : '');
+}
+
+/** Le réglage d'échéance d'une couche de points : le champ qui porte le délai, et le seuil du « à faire ». */
+function symEcheancePanel(layer, sym) {
+    const cfg = configEcheance(sym);
+    const champs = getLayerFields(layer).filter((f) => f.type === 'numeric');
+    if (!champs.length && !cfg) return '';
+    const options = ['<option value="">— aucune —</option>']
+        .concat(champs.map((f) => `<option value="${escapeHtml(f.id)}" ${cfg?.field === f.id ? 'selected' : ''}>${escapeHtml(f.label)}</option>`)).join('');
+    return `<div class="section"><div class="section-title">Échéance</div>
+        <div class="hint">Un champ qui donne le délai restant avant la prochaine intervention (négatif : dépassé). Une couronne rouge entoure les objets en retard, ambre ceux à faire bientôt.</div>
+        <select class="input" style="margin-top:8px" onchange="A.setEcheance('${layer.id}',{field:this.value})">${options}</select>
+        ${cfg ? `<div class="slider-head" style="margin-top:10px"><span class="lbl">« À faire » jusqu'à</span><span class="val">${cfg.bientot}</span></div>
+        <input type="range" class="rng acc" min="0" max="12" step="1" value="${cfg.bientot}" onchange="A.setEcheance('${layer.id}',{bientot:+this.value})">` : ''}</div>`;
 }
 
 /** Le réglage de regroupement d'une couche : un interrupteur, puis ce qu'il faut pour le régler. */
@@ -14634,6 +14679,16 @@ const A = {
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
 
     /** Surfaces à plat ou extrudées. Remonter en volume réactive la hauteur. */
+    /** Désigner le champ d'échéance d'une couche (ou le retirer). */
+    setEcheance(id, patch) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        const base = sym.echeance || { field: '', bientot: 1 };
+        const suivant = { ...base, ...patch };
+        if (!suivant.field) delete sym.echeance; else sym.echeance = { field: suivant.field, bientot: Number.isFinite(+suivant.bientot) ? +suivant.bientot : 1 };
+        applyLayerStyle(l); updateLegend(); refreshControlsDock();
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
     /** Proposer (ou non) aux agents d'ajouter un objet à la couche, en Exploiter. */
     setCreationExploiter(id, on) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;

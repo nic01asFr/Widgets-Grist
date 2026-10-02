@@ -2779,3 +2779,15 @@ Côté agent : la pastille « Relevé » liste la couche, avec « ＋ Ajouter un
 le geste de *Préparer* (point placé au toucher, fiche, « Envoyer »), la fiche étant montrée par `mode-saisie`. La table de la
 couche compte parmi les tables que *Exploiter* écrit (`tablesDeReleve`) : proposer l'ajout suffit à offrir la posture.
 Éprouvé dans l'application simulée ; pas encore sur la copie réelle.
+
+## Échéance : ce qui est à faire, ce qui est en retard (02/10/2026)
+
+Pour un suivi à échéance (le délai avant la prochaine visite d'un ouvrage, calculé par Grist), `lib/echeance.js` (pur,
+testé) : une couche de points désigne le **champ de délai** (`symbolization.echeance = { field, bientot }`, onglet Taille).
+Négatif = en retard ; de 0 à `bientot` = à faire ; au-delà = à jour ; vide = sans délai (jamais « à faire »).
+- **Couronne** (`<id>-echeance`) : un anneau rouge (en retard) ou ambre (à faire) autour du point, **sous** le cercle — la
+  couleur garde son sens (l'état), la couronne dit l'urgence. Transparent pour le reste.
+- **Légende** : « Échéance — En retard n · À faire n », parmi les objets que les filtres laissent voir.
+- **Pastille « Relevé »** : « Échéance : 21 en retard · 14 à faire » sous le nom de la couche.
+Cercles natifs seulement (pas les modèles 3D). Un contexte « Visites en retard » (filtre sur le même champ) reste la façon de
+n'afficher que ces objets. Éprouvé dans l'application simulée (anneaux, légende) ; pas encore sur la copie réelle.
