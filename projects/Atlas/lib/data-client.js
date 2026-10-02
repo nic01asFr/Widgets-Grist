@@ -336,6 +336,17 @@ class ClientRest {
     return recordsVersColonnes(lignes);
   }
 
+  /**
+   * Qui est connecté : le nom et le courriel du titulaire de la clé.
+   *
+   * Ni l'API plugin ni le jeton de document ne le disent (voir `docs/CADRAGE-IDENTITE-ACL.md`) ; dans l'application,
+   * où l'on se présente avec la clé, `GET /api/profile/user` répond. Mesuré le 02/10/2026 : `id`, `email`, `name`.
+   */
+  async profil() {
+    const d = await this._json(`${this.baseUrl}/api/profile/user`, { headers: this._entetes() });
+    return { id: d.id ?? null, email: d.email || '', name: d.name || '' };
+  }
+
   async applyUserActions(actions) {
     return this._json(this._url('/apply'), {
       method: 'POST', headers: this._entetes(), body: JSON.stringify(actions),

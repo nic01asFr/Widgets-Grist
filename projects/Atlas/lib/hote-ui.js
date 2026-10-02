@@ -419,7 +419,10 @@ async function ouvrirScene(config, portee, boite) {
     // Sans réseau, la scène s'ouvre depuis l'appareil ; les relevés sont gardés et partent au retour du réseau.
     const client = habillerHorsLigne(brut, { portee });
     await client.listTables();
-    installerAdaptateur(client, {}, portee);
+    // Qui est connecté : de quoi préremplir « moi » dans un formulaire. Sans réponse, on s'en passe.
+    let profil = null;
+    try { profil = await client.profil?.(); } catch (_) { profil = null; }
+    installerAdaptateur(client, { userId: profil?.id ?? null, user: profil && (profil.email || profil.name) ? profil : null }, portee);
     return true;
   } catch (e) {
     if (boite) poserAvis(boite, expliquer(e, capacites(portee)));

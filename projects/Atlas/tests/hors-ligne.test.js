@@ -288,3 +288,16 @@ test('les réglages d\'Atlas ne se mettent pas en file : ce ne sont pas des rele
   assert.equal(hl.etat().enAttente, 0);
   await assert.rejects(() => hl.applyUserActions([['AddRecord', 'Maquette_Layers', null, { Name: 'x' }]]), /Hors réseau/);
 });
+
+test('le profil de la personne connectée est gardé : sans réseau, elle reste la même', async () => {
+  const { client, hl } = monter();
+  client.profil = async () => { if (client.coupe) throw new TypeError('Failed to fetch'); return { id: 5, email: 'a@exemple.org', name: 'A' }; };
+  assert.deepEqual(await hl.profil(), { id: 5, email: 'a@exemple.org', name: 'A' });
+  client.coupe = true;
+  assert.deepEqual(await hl.profil(), { id: 5, email: 'a@exemple.org', name: 'A' });
+});
+
+test('un client sans profil : null, sans lever', async () => {
+  const { hl } = monter();
+  assert.equal(await hl.profil(), null);
+});

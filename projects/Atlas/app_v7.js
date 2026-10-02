@@ -45,7 +45,7 @@ import {
   raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
-  departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis,
+  departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
 } from './lib/fiche-formulaire.js?v=20261002c';
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
@@ -6499,6 +6499,13 @@ function ligneRetiree(couche, f, esc) {
  */
 const _champsOuverts = new Set();
 
+/** « Moi » a un sens pour un champ qui désigne des personnes, quand on sait qui est connecté (l'application). */
+function moiPossible(champ) {
+    if (!CONFIG.grist.user?.email) return false;
+    const m = /^Ref(?:List)?:(.+)$/.exec(String(champ?.type || ''));
+    return !!(m && tableDePersonnes(STATE.schema, m[1]));
+}
+
 /**
  * Le cadrage : quels champs de ce formulaire cette scene montre.
  *
@@ -6519,7 +6526,7 @@ function cadreDesChamps(couche, f, esc) {
     const departs = f.surLaCouche ? null : (f.departs || {});
     const choixDepart = (c) => {
         if (!departs || c.masque) return '';
-        const possibles = departsPossibles(typeDe.get(c.colId), { lie: true });
+        const possibles = departsPossibles(typeDe.get(c.colId), { lie: true, moi: moiPossible(typeDe.get(c.colId)) });
         if (possibles.length < 2) return '';
         const actuel = departs[c.colId] || 'vide';
         return `<select class="fm-depart${actuel !== 'vide' ? ' on' : ''}" aria-label="Valeur de départ de ${echapper(c.label)}"
@@ -8611,7 +8618,21 @@ async function departsDuReleve(formulaire, formDef, rowId) {
             }
         }
     }
-    return sansValeursPerimees(formDef, valeursDeDepart(formDef, departs, { precedentes, derniere }));
+    // « Moi » : la ligne de la personne connectée dans la table des personnes que le champ désigne.
+    let moi = null;
+    if (voulus.has('moi') && CONFIG.grist.user?.email) {
+        const champs = (formDef?.sections || []).flatMap((s) => s.fields || []);
+        const parChamp = {};
+        for (const [colId, d] of Object.entries(departs)) {
+            if (d !== 'moi') continue;
+            const m = /^Ref(List)?:(.+)$/.exec(String(champs.find((c) => c.colId === colId)?.type || ''));
+            if (!m) continue;
+            const id = moiDansTable(STATE.schema?.[m[2]] || [], await lignesDeTable(m[2]), CONFIG.grist.user.email);
+            if (id != null) parChamp[colId] = m[1] ? ['L', id] : id;
+        }
+        moi = (champ) => parChamp[champ.colId];
+    }
+    return sansValeursPerimees(formDef, valeursDeDepart(formDef, departs, { precedentes, derniere, moi }));
 }
 
 /**
@@ -11723,6 +11744,8 @@ async function initGrist() {
         } catch (e) {
             CONFIG.grist.userId = null;
         }
+        // Dans l'application, on se présente avec la clé : le profil dit qui est connecté (le widget, lui, ne le sait pas).
+        if (grist.user?.email || grist.user?.name) setUserIdentity(grist.user);
         applyViewModeChrome();
         CONFIG.docMode = await detectDocMode(grist.docApi);
         if (CONFIG.docMode === 'scene-manifest') {

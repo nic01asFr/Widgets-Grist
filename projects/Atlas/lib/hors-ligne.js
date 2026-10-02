@@ -321,6 +321,13 @@ export class ClientHorsLigne {
     }
   }
 
+  /** Qui est connecté — gardé sur l'appareil : sans réseau, la personne reste la même. */
+  async profil() {
+    if (typeof this._c.profil !== 'function') return null;
+    const r = await this._lu('profil', () => this._c.profil());
+    return r.donnees;
+  }
+
   async listTables() {
     const r = await this._lu('tables', () => this._c.listTables());
     this._memoriserAge('tables', r);

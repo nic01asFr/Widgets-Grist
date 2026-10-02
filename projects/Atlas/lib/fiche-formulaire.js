@@ -858,18 +858,20 @@ export function valeursPourMoteur(formDef, props) {
  * | `aujourdhui` | la date du jour (dates seulement) |
  * | `precedente` | ce qu'on a saisi la dernière fois sur cet appareil, dans ce formulaire |
  * | `reprise` | la valeur de la dernière ligne de cet objet (formulaire lié seulement) |
+ * | `moi` | la personne connectée, retrouvée par son courriel dans la table des personnes (application) |
  */
-export const DEPARTS = Object.freeze(['vide', 'aujourdhui', 'precedente', 'reprise']);
+export const DEPARTS = Object.freeze(['vide', 'aujourdhui', 'precedente', 'reprise', 'moi']);
 
 export const LIBELLES_DEPART = Object.freeze({
   vide: 'Vide',
   aujourdhui: 'Aujourd’hui',
   precedente: 'Dernière saisie',
   reprise: 'Reprise de la dernière ligne',
+  moi: 'Moi (la personne connectée)',
 });
 
 /** Les départs qui ont un sens pour ce champ. Une photo part toujours vide. */
-export function departsPossibles(champ, { lie = false } = {}) {
+export function departsPossibles(champ, { lie = false, moi = false } = {}) {
   // `DateTime:Europe/Paris` est un DateTime : le fuseau ne change pas le type.
   const type = String(champ?.type || '').replace(/:.*$/, '');
   if (type === 'Attachments' || champ?.widget === 'file') return ['vide'];
@@ -877,6 +879,7 @@ export function departsPossibles(champ, { lie = false } = {}) {
   if (/^Date(Time)?$/.test(type)) out.push('aujourdhui');
   out.push('precedente');
   if (lie) out.push('reprise');
+  if (moi) out.push('moi');
   return out;
 }
 
@@ -973,7 +976,7 @@ function aujourdhuiLocal(maintenant, avecHeure) {
  * @param {object} [o.derniere]    la dernière ligne liée de l'objet (valeurs Grist)
  * @returns {{valeurs: object, preremplis: Array<{colId: string, label: string, depart: string}>}}
  */
-export function valeursDeDepart(def, departs, { maintenant = null, precedentes = null, derniere = null } = {}) {
+export function valeursDeDepart(def, departs, { maintenant = null, precedentes = null, derniere = null, moi = null } = {}) {
   const valeurs = {};
   const preremplis = [];
   for (const champ of (def?.sections || []).flatMap((s) => s.fields || [])) {
@@ -987,12 +990,33 @@ export function valeursDeDepart(def, departs, { maintenant = null, precedentes =
       const brut = source ? source[champ.colId] : undefined;
       const cible = valeurPourFormulaire(champ, brut);
       v = cible ? cible.valeur : null;
+    } else if (d === 'moi') {
+      // La valeur de la personne connectée dans ce champ (identifiant de sa ligne), ou rien : jamais celle de quelqu'un d'autre.
+      const cible = valeurPourFormulaire(champ, typeof moi === 'function' ? moi(champ) : undefined);
+      v = cible ? cible.valeur : null;
     }
     if (v == null || v === '' || (Array.isArray(v) && !v.length)) continue;
     valeurs[champ.colId] = v;
     preremplis.push({ colId: champ.colId, label: champ.label || champ.colId, depart: d });
   }
   return { valeurs, preremplis };
+}
+
+/**
+ * La ligne de la personne connectée dans une table de personnes : celle dont la colonne de courriel porte le sien
+ * (sans tenir compte de la casse ni des espaces). `null` si la table n'a pas de colonne de courriel, ou pas cette personne.
+ *
+ * @param {Array<{colId: string}>} colonnes  les colonnes de la table
+ * @param {Array<object>} lignes  ses lignes (`{ id, <colId>: valeur }`)
+ * @param {string} courriel
+ */
+export function moiDansTable(colonnes, lignes, courriel) {
+  const cible = String(courriel || '').trim().toLowerCase();
+  if (!cible) return null;
+  const col = (colonnes || []).find((c) => /e-?mail|courriel/i.test(c.colId || ''));
+  if (!col) return null;
+  const l = (lignes || []).find((x) => String(x?.[col.colId] ?? '').trim().toLowerCase() === cible);
+  return l && l.id != null ? l.id : null;
 }
 
 /**

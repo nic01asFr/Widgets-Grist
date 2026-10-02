@@ -2791,3 +2791,17 @@ Négatif = en retard ; de 0 à `bientot` = à faire ; au-delà = à jour ; vide 
 - **Pastille « Relevé »** : « Échéance : 21 en retard · 14 à faire » sous le nom de la couche.
 Cercles natifs seulement (pas les modèles 3D). Un contexte « Visites en retard » (filtre sur le même champ) reste la façon de
 n'afficher que ces objets. Éprouvé dans l'application simulée (anneaux, légende) ; pas encore sur la copie réelle.
+
+## « Moi » comme valeur de départ : qui est connecté (02/10/2026)
+
+L'API plugin et le jeton de document ne disent pas qui est connecté ; ce que Grist propose pour un widget : une colonne à
+**formule déclenchée** (`user.Email`, `user.Name`, à la création de la ligne) — ou une table d'utilisateurs protégée ligne par
+ligne. **Dans l'application**, on se présente avec la clé : `GET /api/profile/user` répond (`id`, `email`, `name`, mesuré le
+02/10/2026). `ClientRest.profil()` le lit à l'ouverture de la scène (`hote-ui.js`), `ClientHorsLigne.profil()` le garde sur
+l'appareil, l'adaptateur le pose dans `grist.user`, et `setUserIdentity` en fait l'identité du badge.
+Nouveau départ **« Moi (la personne connectée) »** (`moi`) pour un champ `Ref` ou `RefList` vers une table de personnes :
+`moiDansTable` retrouve la ligne dont la colonne de courriel porte le sien (casse et espaces ignorés) ; sans identité, sans
+colonne de courriel ou sans cette personne, rien n'est prérempli — jamais la valeur de quelqu'un d'autre. L'option n'est
+proposée dans le module Formulaires que quand on sait qui est connecté (donc dans l'application, pas dans le widget).
+**Dans le widget**, la voie propre reste côté document : une colonne « Saisi par » à formule déclenchée `user.Email`, et pour
+l'inspecteur une formule `Agents.lookupOne(Email=user.Email)` — qu'Atlas pourrait créer (AddColumn avec formule), à décider.
