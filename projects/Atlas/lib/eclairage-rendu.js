@@ -345,6 +345,25 @@ export function detailEtat(etat) {
 }
 
 /**
+ * L'état d'un luminaire en pastille, pour la bulle d'un objet : « allumé », ou « éteint — statut x ».
+ * En lecture, c'est ce qu'on vient chercher : pourquoi cette lampe est éteinte. La couleur d'une lampe
+ * allumée est celle du jeton `--sun` d'Atlas.
+ *
+ * @returns {null | { champ: string, libelle: string, texte: string, couleur: string|null, encre: string|null }}
+ */
+export function pastilleEtat(etat) {
+  const d = detailEtat(etat);
+  if (!d) return null;
+  return {
+    champ: '_eclairage',
+    libelle: 'Éclairage',
+    texte: d.raison ? `${d.libelle} — ${d.raison}` : d.libelle,
+    couleur: d.allume ? '#E8A234' : null,
+    encre: d.allume ? '#1F1B14' : null,
+  };
+}
+
+/**
  * Le bilan d'une couche : combien de luminaires allumés, abaissés, éteints, et pour quelles raisons.
  *
  * @param {Map<string, object>|Iterable<[string, object]>} etats  clé `<idCouche>:<indice>`

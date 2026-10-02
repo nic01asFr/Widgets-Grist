@@ -23,7 +23,7 @@ import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, h
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
 import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
@@ -9457,6 +9457,11 @@ async function ouvrirBulle(layer, idx, feature, lngLat) {
         derniere,
         itineraire: lienItineraire(centre[0], centre[1], { application: peutSAuthentifier() }),
     });
+    // Une lampe dit si elle est allumée, et pourquoi : en lecture, c'est ce qu'on vient chercher.
+    if (coucheEclairage(layer)) {
+        const pe = pastilleEtat(Eclairage.etats.get(`${layer.id}:${idx}`));
+        if (pe) m.pastilles.unshift(pe);
+    }
     popup.setHTML(htmlBulle(m));
     const el = popup.getElement();
     garderBulleVisible(el);
@@ -9680,6 +9685,11 @@ function buildViewPopupHtml(layer, feature, idx) {
             rows.push([k, val]);
             if (rows.length >= 12) break;
         }
+    }
+    // Une lampe dit si elle est allumée, et pourquoi (comme la bulle configurée).
+    if (coucheEclairage(layer)) {
+        const pe = pastilleEtat(Eclairage.etats.get(`${layer.id}:${idx}`));
+        if (pe) rows.unshift([pe.libelle, pe.texte]);
     }
     if (!rows.length) {
         return `<div class="atlas-popup"><div class="atlas-popup-title">${escapeHtml(title)}</div><div class="atlas-popup-empty">Pas d’attributs</div></div>`;

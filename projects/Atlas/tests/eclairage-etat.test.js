@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { detailEtat, resumerEtats, libelleEtat } from '../lib/eclairage-rendu.js';
+import { detailEtat, resumerEtats, libelleEtat, pastilleEtat } from '../lib/eclairage-rendu.js';
 
 const allume = { allume: true, facteurFlux: 1, facteurPuissance: 1, temperatureCouleur: 3000, plages: [], hypotheses: [], raison: 'allumé' };
 const abaisse = { ...allume, facteurPuissance: 0.5, plages: ['Abaissement'], raison: 'allumé, Abaissement' };
@@ -63,4 +63,14 @@ test('le bilan ne confond pas deux couches dont les identifiants se prefixent', 
 test('un bilan sans etat est vide, sans erreur', () => {
   assert.deepEqual(resumerEtats(new Map(), 'x'), { total: 0, allumes: 0, abaisses: 0, eteints: 0, raisons: [] });
   assert.equal(resumerEtats(null, 'x').total, 0);
+});
+
+test('la pastille d une bulle dit l etat, et pourquoi quand il est eteint', () => {
+  const p = pastilleEtat(eteint('statut out_of_service'));
+  assert.deepEqual([p.champ, p.libelle, p.texte, p.couleur], ['_eclairage', 'Éclairage', 'éteint — statut out_of_service', null]);
+  const q = pastilleEtat(allume);
+  assert.equal(q.texte, 'allumé');
+  assert.equal(q.couleur, '#E8A234');
+  assert.equal(pastilleEtat(abaisse).texte, 'abaissé à 50 % — allumé, Abaissement');
+  assert.equal(pastilleEtat(null), null);
 });
