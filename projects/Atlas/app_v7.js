@@ -5355,7 +5355,7 @@ function renderLayersPanel(mode) {
 
 /** Liste couches en lecture : légende + zoom, sans paramétrage. */
 function renderLayersPanelLecture() {
-    $('module-title').textContent = 'Légende';
+    titreModule('Légende', 'Affichage tel que configuré par l’éditeur.');
     const body = $('module-body');
     // Même sens de lecture que le panneau d'édition : le dessus en premier.
     const visible = displayOrder(STATE.layers).filter((l) => l.visible !== false);
@@ -5364,7 +5364,6 @@ function renderLayersPanelLecture() {
         return;
     }
     body.innerHTML = `
-        <div class="hint">Affichage tel que configuré par l’éditeur.</div>
         <div class="layer-list">${visible.map((l) => {
             const is3D = l.style?.mode === 'library' || l.style?.mode === 'custom';
             return `<div class="layer-item">
@@ -6307,11 +6306,11 @@ function renderControles() {
         closeModulePanel();
         return;
     }
-    $('module-title').textContent = 'Contrôles';
+    titreModule('Contrôles', 'Outils de mise en scène — activez les contrôles pour les publier en pastille sur la carte (visible en lecture). Puis capturez une étape de récit.');
     const body = $('module-body');
     const layer = STATE.layers.find((l) => l.id === STATE.selectedLayer) || STATE.layers[0];
 
-    let html = `<div class="hint">Outils de mise en scène — activez les contrôles pour les publier en pastille sur la carte (visible en lecture). Puis capturez une étape de récit.</div>`;
+    let html = '';
 
     html += `<div class="section"><div class="section-title">Environnement</div>${renderEnvControlsSection()}</div>`;
 
@@ -6741,7 +6740,7 @@ function htmlOuverture(steps) {
 }
 
 function renderRecit() {
-    $('module-title').textContent = 'Récit';
+    titreModule('Récit', 'Capture des étapes (caméra + couches + filtres + heure) et rejoue-les en présentation.');
     const body = $('module-body');
     const steps = STATE.story || [];
     rafraichirTrajet();
@@ -6765,8 +6764,7 @@ function renderRecit() {
                 </div>`).join('')}</div>`;
         return;
     }
-    let html = `<div class="hint">Capture des <strong>étapes</strong> (caméra + couches + filtres + heure) et rejoue-les en présentation.</div>
-        <div class="section" style="display:flex;gap:8px">
+    let html = `<div class="section" style="display:flex;gap:8px">
             <button class="btn btn-primary" style="flex:2" onclick="A.storyCapture()">${icTrait(IC.camera)} Capturer l'étape</button>
             ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">▶ Lecture</button>` : ''}
         </div>
@@ -7075,21 +7073,27 @@ function enterStoryPresentation(i) {
     applyStoryState(cloneStoryState(STATE.story[_storyIdx].state));
 }
 
+/** Le titre d'un module, avec une explication au survol quand le module en demande une. */
+function titreModule(titre, aide) {
+    const h = $('module-title');
+    h.textContent = titre;
+    if (aide) h.insertAdjacentHTML('beforeend', infoBulle(aide));
+}
+
 // ---- Modèles 3D ----
 // Module Modèles = gestion du CATALOGUE pour l'app (jeu, source, galerie).
 /** Les types du catalogue d'objets pointé, avec l'identifiant à écrire dans un champ ou un manifeste. */
 function galerieObjetsRealistes() {
     const objs = modelesObjets();
     if (!objs.length) return '';
-    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}${infoBulle('L\'identifiant objet:… se saisit dans le modèle d\'une couche, dans une catégorie, ou dans _modelId d\'un objet.')}</div>
         ${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : 'public'].filter(Boolean).join(' · ');
             return `<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="font-size:18px">${mm.icon}</span>
                 <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${escapeHtml(mm.name)}</div>
                 <div style="font-size:11px;color:var(--muted)">${escapeHtml(infos)} · <code>${escapeHtml(mm.id)}</code></div></div></div>`;
-        }).join('')}
-        <div class="hint" style="margin-top:6px">L'identifiant <code>objet:…</code> se saisit dans le modèle d'une couche, dans une catégorie, ou dans <code>_modelId</code> d'un objet.</div></div>`;
+        }).join('')}</div>`;
 }
 function renderModelsPanel() {
     $('module-title').textContent = 'Catalogue 3D';
@@ -7108,17 +7112,16 @@ function renderModelsPanel() {
             </div>
         </div>
         <div class="section">
-            <div class="section-title">Source des modèles (GLB)</div>
+            <div class="section-title">Source des modèles (GLB)${infoBulle('Doit contenir les dossiers colored et mono, et le catalogue (catalog, au format JSON). En local : sers la racine du repo et ouvre /projects/Atlas/index.html.')}</div>
             <div class="range-info" id="model-src-info" style="word-break:break-all">${MODEL_LIBRARY.baseUrl}</div>
             <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${MODEL_LIBRARY.baseRoot}" placeholder="https://…/models/">
             <div style="display:flex;gap:6px;margin-top:6px">
                 <button class="btn btn-soft" style="flex:1" onclick="A.testModelBase()">Tester</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setModelBase(document.getElementById('model-src-input').value)">Appliquer</button>
             </div>
-            <div class="hint" style="margin-top:6px">Doit contenir <code>colored/</code>, <code>mono/</code> et <code>catalog.json</code>. En local : sers la racine du repo et ouvre <code>/projects/Atlas/index.html</code>.</div>
         </div>
         <div class="section">
-            <div class="section-title">Catalogue d'objets</div>
+            <div class="section-title">Catalogue d'objets${infoBulle('Modèles générés d\'après les champs des objets (atlas-objets/0.1). Une couche de points s\'y soumet par l\'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.')}</div>
             <div class="range-info" style="word-break:break-all">${
                 CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas (intégré) — ' : ''}${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
                 : CATALOGUE_OBJETS.etat === 'erreur' ? `❌ ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
@@ -7129,7 +7132,6 @@ function renderModelsPanel() {
                 <button class="btn btn-soft" style="flex:1" onclick="A.setCatalogueObjets('')" title="Revenir au catalogue livré avec Atlas">Catalogue d’Atlas</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setCatalogueObjets(document.getElementById('catalogue-objets-input').value)">Pointer</button>
             </div>
-            <div class="hint" style="margin-top:6px">Modèles générés d'après les champs des objets (<code>atlas-objets/0.1</code>). Une couche de points s'y soumet par l'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.</div>
         </div>
         ${galerieObjetsRealistes()}
         <div class="section">
@@ -7164,10 +7166,9 @@ function renderSoleil() {
             <input type="range" class="rng acc" min="0" max="1439" step="5" value="${min}" oninput="A.setTime(this.value)">
         </div>
         <div class="section">
-            <div class="section-title">Date</div>
+            <div class="section-title">Date${infoBulle((STATE.settings.dateEpinglee ? 'La scène rouvrira sur ce jour.' : 'Non épinglée : la date n’est pas retenue d’une visite à l’autre.') + ' Heure du site, fuseau ' + fuseauScene(STATE.settings) + ' ; l’éclairage public suit le soleil à l’ancre de la scène (' + STATE.location.lat.toFixed(4) + '°N, ' + STATE.location.lng.toFixed(4) + '°E).')}</div>
             <input class="input" type="date" value="${dateStr}" onchange="A.setSunDate(this.value)">
             <div class="toggle-row" style="margin-top:8px"><span class="tlabel">Épingler cette date</span><div class="toggle ${STATE.settings.dateEpinglee ? 'on' : ''}" onclick="A.toggleDateEpinglee()" role="switch" tabindex="0" aria-checked="${!!STATE.settings.dateEpinglee}" aria-label="Épingler cette date"></div></div>
-            <div class="hint" style="margin-top:6px">${STATE.settings.dateEpinglee ? 'La scène rouvrira sur ce jour.' : 'Non épinglée : la date n’est pas retenue d’une visite à l’autre.'} Heure du site, fuseau ${escapeHtml(fuseauScene(STATE.settings))} ; l’éclairage public suit le soleil à l’ancre de la scène (${STATE.location.lat.toFixed(4)}°N, ${STATE.location.lng.toFixed(4)}°E).</div>
         </div>
         <div class="section">
             <div class="range-info">Soleil : <strong>${azimuth.toFixed(0)}° ${cardinal}</strong> · Hauteur <strong>${altitude.toFixed(1)}°</strong></div>
@@ -8520,13 +8521,12 @@ function sectionObjetsRealistes(layer, selId) {
     if (!objs.length) return '';
     const inconnu = estIdObjet(selId) && !findModel(selId)
         ? `<div class="hint" style="margin-top:6px;color:var(--accent)">Le modèle choisi (<code>${escapeHtml(selId)}</code>) n'est pas dans ce catalogue : les objets de la couche ne s'affichent pas.</div>` : '';
-    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}${infoBulle('Un objet réaliste est choisi par type : sa classe de hauteur se lit sur hauteurFeu ou height quand l\'objet les porte.')}</div>
         <div class="model-grid">${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : null].filter(Boolean).join(' · ');
             return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
-        }).join('')}</div>
-        <div class="hint" style="margin-top:6px">Un objet réaliste est choisi par type : sa classe de hauteur se lit sur <code>hauteurFeu</code> ou <code>height</code> quand l'objet les porte.</div>${inconnu}</div>`;
+        }).join('')}</div>${inconnu}</div>`;
 }
 function panneauCatalogueCouche(layer, selId) {
     const c = CATALOGUE_OBJETS;
@@ -8550,11 +8550,10 @@ function panneauCatalogueCouche(layer, selId) {
     const n = (layer.geojson?.features || []).length;
     // Un refus de licence ressemble a une panne : il se dit.
     const refus = refuses ? `<div class="hint" style="margin-top:6px;color:var(--accent)">${refuses} d'entre eux restent en modèle de repli : leurs fichiers sont réservés à un usage interne, et cette page est publique (hors Grist). Ouverte depuis un document Grist ou l'application, elle les affiche.</div>` : '';
-    return `<div class="section"><div class="section-title">Catalogue d'objets</div>
+    return `<div class="section"><div class="section-title">Catalogue d'objets${infoBulle('Le modèle de chaque objet est choisi d\'après ses champs ; variante, orientation et taille sont tirées de sa position. L\'échelle et l\'azimut de la couche s\'y appliquent en plus.')}</div>
         <div class="range-info" style="word-break:break-all">${etat}</div>
         ${c.cat ? `<div class="hint" style="margin-top:6px">${reconnus} objet(s) sur ${n} reconnu(s) par un type du catalogue. Les autres gardent le modèle de repli ci-dessous.</div>` : ''}
-        ${refus}
-        <div class="hint" style="margin-top:6px">Le modèle de chaque objet est choisi d'après ses champs ; variante, orientation et taille sont tirées de sa position. L'échelle et l'azimut de la couche s'y appliquent en plus.</div></div>
+        ${refus}</div>
         <div class="section"><div class="section-title">Repli (objets non reconnus)</div>
         <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>`;
 }
@@ -10464,9 +10463,8 @@ function clearFeatureOverrides(layer, idx) {
 // IMPORT — OSM (Overpass) & fichier
 // ============================================================
 async function openOSM() {
-    $('module-title').textContent = 'Import OSM';
+    titreModule('Import OSM', 'Zone importée = emprise visible, vue à plat. Zoomez pour réduire.');
     $('module-body').innerHTML = `
-        <div class="hint">Zone importée = emprise visible, vue à plat. Zoomez pour réduire.</div>
         <div class="range-info" id="osm-emprise" style="margin-bottom:12px">…</div>
         <div class="section"><div class="section-title">Objets prédéfinis</div>
             <div class="model-grid">${Object.entries(OSM_PRESETS).map(([k, p]) => `<div class="model-card" onclick="A.runOSM('${k}')"><div class="mi">${p.icon}</div><div class="mn">${p.name}</div></div>`).join('')}</div>
