@@ -183,20 +183,28 @@
             display: flex; align-items: center; justify-content: center; transition: var(--t-fast);
         }
         .btn-ghost:hover { background: var(--surface-muted); color: var(--ink); }
-        .btn-export {
-            background: var(--ink); color: var(--bg); border: none; cursor: pointer;
-            padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
-            display: flex; align-items: center; gap: 6px;
+        /* Le choix de posture : la meme icone, le meme habillage ici et sur la carte (#hote-edition). */
+        .btn-posture {
+            display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 9px;
+            background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 16px;
+            font: 500 12.5px/1 var(--sans); cursor: pointer; transition: var(--t-fast);
         }
-        .btn-export:hover { background: #34302A; }
+        .btn-posture:hover:not([aria-disabled="true"]) { border-color: var(--hairline-strong); background: var(--surface-muted); }
+        .btn-posture:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .btn-posture[aria-disabled="true"] { cursor: default; }
+        .posture-ic { display: inline-flex; color: var(--accent); }
+        .posture-ic .ic-trait { color: inherit; }
+        .avatar[hidden] { display: none; }
+        .export-portee { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+        .export-portee .input { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+        .export-choix .posture-nom { display: flex; align-items: center; gap: 8px; }
         .avatar {
             width: 30px; height: 30px; border-radius: 15px; margin-left: 6px;
             background: var(--accent2); color: white;
             display: flex; align-items: center; justify-content: center;
             font-size: 12px; font-weight: 600;
         }
-        .avatar.bascule-session,
-        .view-mode-badge.bascule-session { cursor: pointer; }
+        .avatar.bascule-session { cursor: pointer; }
 
         /* ============================================
            MAIN LAYOUT
@@ -1398,8 +1406,9 @@
                bouton garde son icone, perd son libelle. Les deux actions de
                projet passent dans le panneau Couches, ou elles sont a leur
                place — on ne charge pas la barre d'un telephone. */
-            body.mobile-layout .header-actions #btn-export > span { display: none; }
-            body.mobile-layout .header-actions #btn-export { padding: 6px 10px; }
+            body.mobile-layout .header-actions .posture-lib { display: none; }
+            body.mobile-layout .btn-posture { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 50%; }
+            body.mobile-layout .avatar { display: none; }
             body.mobile-layout .header-actions #btn-load,
             body.mobile-layout .header-actions #btn-save { display: none; }
             body.mobile-layout .brand-project { max-width: 8rem; overflow: hidden;
@@ -1573,7 +1582,6 @@
                 <span class="brand-chevron" aria-hidden="true">▾</span>
                 <span class="brand-sep">/</span>
                 <span class="brand-project" id="project-name">Nouveau projet</span>
-                <span class="view-mode-badge" id="view-mode-badge" hidden>Lecture</span>
                 <span class="dirty-dot"></span>
             </div>
 
@@ -1590,11 +1598,13 @@
                 <button class="btn-ghost" id="btn-save" title="Télécharger le projet (.json)" aria-label="Télécharger le projet (.json)">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
                 </button>
-                <button class="btn-export" id="btn-export">
-                    <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
-                    <span>Exporter</span>
+                <button class="btn-ghost" id="btn-export" title="Exporter (GeoJSON, CSV, KML, GPX, image)" aria-label="Exporter" aria-haspopup="menu">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
                 </button>
-                <div class="avatar" id="user-badge" title="Droits sur ce document">–</div>
+                <button type="button" class="btn-posture" id="btn-posture" aria-haspopup="menu" title="Posture" aria-label="Posture">
+                    <span class="posture-ic" aria-hidden="true"></span><span class="posture-lib"></span>
+                </button>
+                <div class="avatar" id="user-badge" title="Droits sur ce document" hidden>–</div>
             </div>
         </header>
 
@@ -1662,8 +1672,8 @@
                     <button type="button" class="commande-hote" id="hote-recherche" title="Rechercher un objet, une couche, un lieu" aria-label="Rechercher un objet, une couche, un lieu">
                         <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
                     </button>
-                    <button type="button" class="commande-hote" id="hote-edition" title="Revenir à l'édition" aria-label="Revenir à l'édition" hidden>
-                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+                    <button type="button" class="commande-hote" id="hote-edition" title="Changer de posture" aria-label="Changer de posture" aria-haspopup="menu" hidden>
+                        <span class="posture-ic" aria-hidden="true"></span>
                     </button>
                 </div>
 
@@ -1773,7 +1783,7 @@
             <div class="mp-groupe">Projet</div>
             <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span>Télécharger le projet</span></button>
             <button type="button" data-action-plus="charger"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg><span>Ouvrir un projet</span></button>
-            <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter en GeoJSON</span></button>
+            <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter…</span></button>
         </div>
     </div>
 

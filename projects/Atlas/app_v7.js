@@ -79,6 +79,7 @@ import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from '.
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
 import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=20260924x';
 import {
@@ -5425,6 +5426,10 @@ const IC = {
     cube:      '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
     enregistrer:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
     exporter:  '<path d="M12 3v13M7 8l5-5 5 5M5 21h14"/>',
+    crayon:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
+    releve:    '<path d="M9 3h6v3H9z"/><path d="M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1"/><path d="m9 14 2 2 4-4"/>',
+    image:     '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/>',
+    tableur:   '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
     piste:     '<path d="M4 20V7a3 3 0 0 1 6 0v10a3 3 0 0 0 6 0V4"/><path d="M17 7h4M17 4h4"/>',
     plus:      '<path d="M12 5v14M5 12h14"/>',
     pieton:    '<circle cx="12" cy="4" r="2"/><path d="M12 7v6m0 0-3 8m3-8 3 8M8 10l4-2 4 2"/>',
@@ -11275,69 +11280,60 @@ function enterViewModeOnWriteFail(err) {
  * Quand l'écriture est réellement autorisée, l'avatar devient la bascule
  * session lecture ↔ édition (essayage : `viewMode` bascule, `peutSaisir` non).
  */
+/** L'icone de chaque posture : la meme dans la barre et sur la carte. */
+const ICONES_POSTURE = Object.freeze({
+    preparer: icTrait(IC.crayon, 18),
+    exploiter: icTrait(IC.releve, 18),
+    lecture: icTrait(IC.oeil, 18),
+});
+
+/**
+ * Ce que dit la barre de ses droits : le bouton de posture (la même icône, le même nom que le bouton de la carte)
+ * et, si l'on sait qui est connecté, l'avatar. L'avatar ne fait plus que dire qui : la bascule est le bouton de posture.
+ *
+ * Le bouton de posture est toujours là. Quand rien ne peut changer (un seul droit), il dit seulement la posture,
+ * sans ouvrir de menu : « je ne peux rien écrire » et « je peux remplir les formulaires » restent deux situations
+ * différentes, et c'est ici qu'on vient chercher ce qu'on a le droit de faire.
+ */
 function updateUserBadge() {
-    const el = $('user-badge');
-    if (!el) return;
     const lecture = !!CONFIG.viewMode;
+    const posture = postureDepuis(CONFIG);
     const bascule = peutChangerDePosture();
-    // Trois etats, pas deux : « je ne peux rien ecrire » et « je peux remplir
-    // les formulaires publies » sont deux situations differentes, et c'est ici
-    // qu'un utilisateur vient chercher ce qu'il a le droit de faire.
-    const droit = { preparer: 'Édition autorisée', exploiter: 'Exploitation — relevé des formulaires publiés', lecture: 'Lecture seule' }[postureDepuis(CONFIG)];
+    const droit = { preparer: 'Édition autorisée', exploiter: 'Exploitation — relevé des formulaires publiés', lecture: 'Lecture seule' }[posture];
     const u = CONFIG.grist.user;
-    el.classList.toggle('ro', lecture);
-    el.classList.toggle('bascule-session', bascule);
-    // Barre retirée (application en lecture) : le retour à l'édition reste
-    // un bouton de la carte, pour qui peut écrire.
-    const retourEdition = $('hote-edition');
-    if (retourEdition) {
-        retourEdition.hidden = !(bascule && lecture);
-        retourEdition.title = titrePosture();
-        retourEdition.setAttribute('aria-label', titrePosture());
-    }
-    const badgeLecture = $('view-mode-badge');
-    if (badgeLecture) {
-        badgeLecture.textContent = LIBELLES[postureDepuis(CONFIG)].badge;
-        badgeLecture.classList.toggle('bascule-session', bascule && lecture);
-        if (bascule && lecture) {
-            badgeLecture.setAttribute('role', 'button');
-            badgeLecture.setAttribute('tabindex', '0');
-            badgeLecture.title = titrePosture();
-            badgeLecture.setAttribute('aria-label', badgeLecture.title);
-        } else {
-            badgeLecture.removeAttribute('role');
-            badgeLecture.removeAttribute('tabindex');
-            badgeLecture.removeAttribute('aria-label');
-            badgeLecture.removeAttribute('title');
+
+    const avatar = $('user-badge');
+    if (avatar) {
+        avatar.hidden = !u?.initiales;
+        if (u?.initiales) {
+            avatar.textContent = u.initiales;
+            avatar.title = `${u.name || u.email} — ${droit}`;
         }
+        avatar.classList.toggle('ro', lecture);
     }
-    if (bascule) {
-        el.setAttribute('role', 'button');
-        el.setAttribute('tabindex', '0');
-        const tip = titrePosture();
-        el.title = tip;
-        el.setAttribute('aria-label', tip);
-        // En essayage : 👁 (ou initiales) — le droit réel reste « éditeur qui
-        // regarde en lecture », mais l'infobulle dit le geste de bascule.
-        el.textContent = u?.initiales || (lecture ? '👁' : '✎');
-        return;
+
+    const titre = bascule ? titrePosture() : `${LIBELLES[posture].nom} — ${droit}`;
+    const posee = (el) => {
+        el.querySelector('.posture-ic').innerHTML = ICONES_POSTURE[posture];
+        el.title = titre;
+        el.setAttribute('aria-label', titre);
+        el.setAttribute('aria-disabled', String(!bascule));
+    };
+    const barre = $('btn-posture');
+    if (barre) {
+        posee(barre);
+        barre.querySelector('.posture-lib').textContent = LIBELLES[posture].nom;
     }
-    el.removeAttribute('role');
-    el.removeAttribute('tabindex');
-    el.removeAttribute('aria-label');
-    if (u?.initiales) {
-        // Identité résolue : on la montre, le droit passe en infobulle.
-        el.textContent = u.initiales;
-        el.title = `${u.name || u.email} — ${droit}`;
-    } else {
-        // Rien de résolu : afficher le droit, jamais une identité inventée.
-        el.textContent = lecture ? '👁' : '✎';
-        el.title = droit + (CONFIG.grist.userId ? ` · utilisateur ${CONFIG.grist.userId}` : '');
+    // Barre retirée (application en lecture) : la bascule reste un bouton de la carte, pour qui peut écrire.
+    const carte = $('hote-edition');
+    if (carte) {
+        carte.hidden = !(bascule && lecture);
+        posee(carte);
     }
 }
 
 /**
- * Changer de posture : le badge, l'avatar, le bouton de la carte et le menu de
+ * Changer de posture : le bouton de la barre, celui de la carte et le menu de
  * l'application ouvrent le même choix. La bascule lecture ↔ édition à deux états
  * ne pouvait ni exploiter sans éditer, ni regarder en lecture un éditeur qui peut
  * écrire.
@@ -11348,31 +11344,8 @@ function basculerLectureEditionSession(ancre = null) {
 }
 
 function wireBasculeLectureEdition() {
-    const activer = (e) => {
-        if (e.type === 'keydown') {
-            if (e.key !== 'Enter' && e.key !== ' ') return;
-            e.preventDefault();
-        }
-        // Ne réagir que si l'élément est réellement actionnable (évite un clic
-        // sur le badge Lecture quand la bascule n'est pas proposée).
-        const cible = e.currentTarget;
-        if (!cible?.classList?.contains('bascule-session')) return;
-        // Le badge Lecture vit dans `.brand` : sans ça, le clic ouvrirait le
-        // menu principal de l'application.
-        e.stopPropagation?.();
-        basculerLectureEditionSession(cible);
-    };
-    const badge = $('user-badge');
-    if (badge) {
-        badge.addEventListener('click', activer);
-        badge.addEventListener('keydown', activer);
-    }
-    const lecture = $('view-mode-badge');
-    if (lecture) {
-        lecture.addEventListener('click', activer);
-        lecture.addEventListener('keydown', activer);
-    }
-    // Un vrai bouton : le clavier et le clic passent par `click`.
+    // Deux vrais boutons, un seul geste : le clavier et le clic passent par `click`.
+    $('btn-posture')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('hote-edition')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
 }
 
@@ -11443,8 +11416,6 @@ function applyViewModeChrome() {
     if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
     appliquerBarre();
-    const badge = $('view-mode-badge');
-    if (badge) badge.hidden = !CONFIG.viewMode;
     updateUserBadge();
     refreshViewerControlsHud();
     refreshStoryNavChrome();
@@ -12554,28 +12525,143 @@ function loadProject() {
     };
     inp.click();
 }
-function exportProject() {
-    if (!STATE.layers.length) { showToast('Aucune couche à exporter', 'warning'); return; }
-    // Une couche distante — ou de tuiles — n'a rien à exporter : ses entités
-    // sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on
-    // l'ouvre ; mieux vaut ne rien produire et dire pourquoi.
-    const exportables = STATE.layers.filter((l) => l.geojson?.features?.length);
-    const absentes = STATE.layers.filter((l) => !l.geojson?.features?.length);
-    if (!exportables.length) {
+/** Remet un fichier à la personne : un lien invisible, cliqué. */
+function telecharger(blob, nom) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nom; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/** Les couches dont on peut sortir des entités, et celles que l'on ne détient pas (distantes, tuiles). */
+function couchesExportables() {
+    return {
+        exportables: STATE.layers.filter((l) => l.geojson?.features?.length),
+        absentes: STATE.layers.filter((l) => !l.geojson?.features?.length),
+    };
+}
+
+/**
+ * Sort les couches choisies dans un format d'échange (`lib/export-formats.js`). Une couche distante, ou de tuiles,
+ * n'a rien à exporter : ses entités sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on l'ouvre ;
+ * mieux vaut ne rien produire et dire pourquoi.
+ */
+function exporterCouches(format, couches) {
+    const { absentes } = couchesExportables();
+    if (!couches.length) {
         showToast(absentes.some((l) => l._distant)
             ? 'Rien à exporter : Atlas ne détient pas ces couches, seulement leurs adresses'
             : 'Rien à exporter : aucune couche ne porte d’entités', 'warning');
         return;
     }
-    const combined = { type: 'FeatureCollection', features: exportables.flatMap((l) => l.geojson.features) };
-    const blob = new Blob([JSON.stringify(combined, null, 2)], { type: 'application/geo+json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'atlas_export.geojson'; a.click(); URL.revokeObjectURL(url);
+    const base = couches.length === 1 ? couches[0].name : (STATE.projectName || STATE.location?.name || 'atlas_export');
+    let blob, ext, libelle, note = '';
+    if (format === 'geojson') {
+        blob = new Blob([JSON.stringify(versGeoJSON(couches), null, 2)], { type: 'application/geo+json' });
+        ext = 'geojson'; libelle = 'GeoJSON';
+    } else if (format === 'csv') {
+        // Le BOM (U+FEFF) : sans lui, Excel lit les accents de travers.
+        blob = new Blob(['\uFEFF', versCsv(couches)], { type: 'text/csv;charset=utf-8' });
+        ext = 'csv'; libelle = 'CSV';
+    } else if (format === 'kml') {
+        blob = new Blob([versKml(couches, base)], { type: 'application/vnd.google-earth.kml+xml' });
+        ext = 'kml'; libelle = 'KML';
+    } else if (format === 'gpx') {
+        const g = versGpx(couches, base);
+        if (!g.retenues) { showToast('GPX : ces couches n’ont ni points ni lignes — un polygone n’a pas de sens pour un GPS', 'warning'); return; }
+        blob = new Blob([g.xml], { type: 'application/gpx+xml' });
+        ext = 'gpx'; libelle = 'GPX';
+        if (g.ignorees) note = ` ; ${g.ignorees} surface${g.ignorees > 1 ? 's' : ''} écartée${g.ignorees > 1 ? 's' : ''}`;
+    } else return;
+    telecharger(blob, nomDeFichier(base, ext));
     // Un export partiel qui se tait ressemble à un export complet.
-    showToast(absentes.length
-        ? `Export GeoJSON — ${exportables.length} couche(s) ; ${absentes.length} non détenue(s), absente(s) du fichier`
-        : 'Export GeoJSON', absentes.length ? 'warning' : 'success');
+    const manque = absentes.length ? ` ; ${absentes.length} couche${absentes.length > 1 ? 's' : ''} non détenue${absentes.length > 1 ? 's' : ''}, absente${absentes.length > 1 ? 's' : ''} du fichier` : '';
+    showToast(`Export ${libelle} — ${couches.length} couche${couches.length > 1 ? 's' : ''}${note}${manque}`, (manque || note) ? 'warning' : 'success');
 }
+
+/** L'image de la carte telle qu'elle s'affiche (sans les panneaux). */
+function exporterImageCarte() {
+    if (!map) return;
+    // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
+    map.once('render', () => {
+        map.getCanvas().toBlob((blob) => {
+            if (!blob) { showToast('Image impossible à produire sur cet appareil', 'error'); return; }
+            telecharger(blob, nomDeFichier(STATE.projectName || STATE.location?.name || 'atlas_carte', 'png'));
+            showToast('Image de la carte (PNG)', 'success');
+        }, 'image/png');
+    });
+    map.triggerRepaint();
+}
+
+function fermerMenuExport() {
+    document.getElementById('export-menu')?.remove();
+    document.removeEventListener('pointerdown', _fermetureMenuExport, true);
+    document.removeEventListener('keydown', _toucheMenuExport, true);
+}
+function _fermetureMenuExport(e) { if (!e.target.closest?.('#export-menu')) fermerMenuExport(); }
+function _toucheMenuExport(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerMenuExport(); } }
+
+/** Les formats offerts, dans l'ordre où l'on s'en sert : échanger des données, puis garder le travail. */
+const FORMATS_EXPORT = [
+    { id: 'geojson', nom: 'GeoJSON', aide: 'Entités et attributs — QGIS, Grist, la plupart des outils web', ic: 'fichier', donnees: true },
+    { id: 'csv', nom: 'CSV', aide: 'Tableur — attributs, géométrie en WKT dans une colonne', ic: 'tableur', donnees: true },
+    { id: 'kml', nom: 'KML', aide: 'Google Earth, QGIS, applications de carte', ic: 'globe', donnees: true },
+    { id: 'gpx', nom: 'GPX', aide: 'GPS et randonnée — points et traces (les surfaces sont écartées)', ic: 'piste', donnees: true },
+    { id: 'image', nom: 'Image de la carte', aide: 'La carte telle qu’elle s’affiche, en PNG', ic: 'image', donnees: false },
+    { id: 'projet', nom: 'Projet Atlas', aide: 'Couches et réglages (.json), pour le rouvrir dans Atlas', ic: 'enregistrer', donnees: false },
+];
+
+/**
+ * Le menu d'export de la barre (et de « Plus » sur téléphone). Sur quelles couches : la couche sélectionnée si l'on
+ * en a une, sinon toutes celles qui portent des entités ; un choix permet d'en décider autrement.
+ */
+function ouvrirMenuExport(ancre = null) {
+    fermerMenuExport();
+    const { exportables } = couchesExportables();
+    const choisie = exportables.find((l) => l.id === STATE.selectedLayer);
+    const menu = document.createElement('div');
+    menu.id = 'export-menu';
+    menu.className = 'posture-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', 'Exporter');
+    const portee = exportables.length > 1
+        ? `<label class="export-portee">Couches
+            <select id="export-portee" class="input">
+                <option value="*">Toutes (${exportables.length})</option>
+                ${exportables.map((l) => `<option value="${echapper(l.id)}" ${choisie?.id === l.id ? 'selected' : ''}>${echapper(l.name)}</option>`).join('')}
+            </select></label>`
+        : '';
+    menu.innerHTML = `<div class="posture-titre">Exporter</div>${portee}` + FORMATS_EXPORT.map((f) => {
+        const offert = !f.donnees || exportables.length > 0;
+        return `<button type="button" role="menuitem" class="posture-choix export-choix" data-export="${f.id}"${offert ? '' : ' disabled'}>
+            <span class="posture-nom">${icTrait(IC[f.ic], 16)} ${echapper(f.nom)}</span>
+            <span class="posture-aide">${echapper(offert ? f.aide : 'Aucune couche ne porte d’entités')}</span>
+        </button>`;
+    }).join('');
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-export]');
+        if (!b || b.disabled) return;
+        const choix = menu.querySelector('#export-portee')?.value;
+        fermerMenuExport();
+        const id = b.dataset.export;
+        if (id === 'projet') { saveProject(); return; }
+        if (id === 'image') { exporterImageCarte(); return; }
+        const couches = !choix || choix === '*' ? exportables : exportables.filter((l) => l.id === choix);
+        exporterCouches(id, couches);
+    });
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        menu.style.top = `${Math.min(r.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
+        menu.style.left = `${Math.max(12, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 12))}px`;
+    } else {
+        menu.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermetureMenuExport, true);
+    document.addEventListener('keydown', _toucheMenuExport, true);
+    menu.querySelector('.export-choix:not([disabled])')?.focus();
+}
+function exportProject(ancre) { ouvrirMenuExport(ancre instanceof Element ? ancre : null); }
 
 // ============================================================
 // GEOCODING (Nominatim — libre, sans clé)
@@ -12617,6 +12703,7 @@ function buildCmdItems(q) {
         { label: 'Importer depuis OSM', kind: 'action', run: () => { openModule('couches'); openOSM(); }, ic: icTrait(IC.globe) },
         { label: 'Importer un fichier', kind: 'action', run: () => $('file-input').click(), ic: icTrait(IC.fichier) },
         { label: 'Télécharger le projet (.json)', kind: 'action', run: saveProject, ic: icTrait(IC.enregistrer) },
+        { label: 'Exporter… (GeoJSON, CSV, KML, GPX, image)', kind: 'action', run: () => ouvrirMenuExport(), ic: icTrait(IC.exporter) },
         { label: 'Ouvrir un projet ou un GeoJSON', kind: 'action', run: loadProject, ic: icTrait(IC.dossier) },
         { label: 'Exporter en GeoJSON', kind: 'action', run: exportProject, ic: icTrait(IC.exporter) },
         { label: 'Réinitialiser la vue', kind: 'action', run: () => A.resetView(), ic: icTrait(IC.rafraichir) },
@@ -15433,7 +15520,7 @@ function wireEvents() {
     });
     $('btn-save').addEventListener('click', saveProject);
     $('btn-load').addEventListener('click', loadProject);
-    $('btn-export').addEventListener('click', exportProject);
+    $('btn-export').addEventListener('click', (e) => ouvrirMenuExport(e.currentTarget));
     cablerMenuPrincipal();
     $('cmdk-trigger').addEventListener('click', openCmd);
     $('hote-recherche')?.addEventListener('click', openCmd);

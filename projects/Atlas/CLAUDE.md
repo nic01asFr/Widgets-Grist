@@ -2837,3 +2837,16 @@ tronçons — la construction du réseau y sera à mesurer.
   (`champsAvecImages`, lib/table-reference.js : ni nombres, ni dates ; une table candidate porte une colonne d'image), puis
   confirmation par la lecture de la table de référence (`champsIcone`). La liste ne propose que les champs confirmés ; sans
   aucun, l'onglet reste (décision de l'utilisateur) et dit qu'aucun champ ne renvoie à une table d'images.
+
+## Barre du haut : export en menu, bouton de posture (02/10/2026)
+
+- **Exporter** est une icône, comme Ouvrir et Télécharger ; elle ouvre un menu (`ouvrirMenuExport`) : GeoJSON, CSV (géométrie en
+  WKT), KML, GPX (points et traces ; les surfaces sont écartées et comptées), image de la carte (PNG), projet Atlas. Les
+  conversions sont dans `lib/export-formats.js` (pur, 7 tests). Sur quelles couches : la couche sélectionnée, sinon toutes ;
+  un choix permet d'en décider. Une couche distante ou de tuiles est annoncée comme absente du fichier. Sur téléphone, le
+  même menu s'ouvre en feuille depuis « Plus » → « Exporter… » ; la palette de commandes l'offre aussi.
+- **Posture** : un bouton (`#btn-posture`) dit la posture en cours (icône + nom : crayon « Préparer », presse-papier coché
+  « Exploiter », œil « Lecture ») et ouvre le choix ; sur la carte, `#hote-edition` porte la **même icône**, le même titre,
+  la même couleur. L'avatar ne dit plus que *qui* (il n'apparaît que si l'identité est connue) ; le badge « Lecture » a disparu.
+  Quand rien ne peut changer, le bouton dit seulement la posture (`aria-disabled`).
+- Pas encore d'**import** GPX / KML / CSV (seuls GeoJSON, projet et scène s'ouvrent) : voir les propositions.
