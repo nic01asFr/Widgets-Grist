@@ -424,6 +424,8 @@ export async function assurerColonneAtlas3d(docApi, layer, connues = layer?._gri
     const retours = Array.isArray(r) ? r : r?.retValues;
     creee = retours?.[0]?.colId;
   } catch (e) {
+    // Sans réseau, ce n'est pas un refus de droits : on ne sait simplement pas, et on réessaiera.
+    if (e?.horsReseau) return { etat: 'inconnue' };
     return { etat: 'refusee', message: String(e?.message || e) };
   }
   if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);

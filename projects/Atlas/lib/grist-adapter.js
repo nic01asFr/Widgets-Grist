@@ -77,6 +77,9 @@ export function adapterEnGrist(client, identite = {}) {
       },
     },
 
+    // Le client hors réseau, quand il y en a un : l'interface y lit l'état de la file.
+    _horsLigne: typeof client.etat === 'function' ? client : null,
+
     userId: identite.userId ?? null,
     user: identite.user ?? null,
 

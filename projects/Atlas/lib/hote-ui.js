@@ -12,7 +12,8 @@
  */
 
 import { capacites, creerClient } from './data-client.js?v=20261001a';
-import { installerAdaptateur } from './grist-adapter.js?v=20261002b';
+import { installerAdaptateur } from './grist-adapter.js?v=20261002c';
+import { habillerHorsLigne } from './hors-ligne.js?v=20261002a';
 import { listerScenesAtlas } from './decouverte.js?v=20260820a';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
@@ -411,10 +412,12 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
  */
 async function ouvrirScene(config, portee, boite) {
   try {
-    const client = await creerClient({
+    const brut = await creerClient({
       mode: 'rest', baseUrl: config.baseUrl, docId: config.docId, jeton: config.jeton,
       fetch: portee.fetch?.bind(portee),
     });
+    // Sans réseau, la scène s'ouvre depuis l'appareil ; les relevés sont gardés et partent au retour du réseau.
+    const client = habillerHorsLigne(brut, { portee });
     await client.listTables();
     installerAdaptateur(client, {}, portee);
     return true;

@@ -5421,6 +5421,82 @@ function localisationDisponible() {
     return !!b && !b.disabled && typeof navigator !== 'undefined' && !!navigator.geolocation;
 }
 
+/* ------------------------------------------------------------------ */
+/* Hors réseau — l'état de la synchronisation (application seulement)  */
+/* ------------------------------------------------------------------ */
+
+/** Le client hors réseau, quand l'application en a posé un ; `null` dans un widget Grist. */
+function clientHorsLigne() {
+    return (typeof grist !== 'undefined' && grist && grist._horsLigne) || null;
+}
+
+let _synchroDesabonner = null;
+/** Le dock suit la file : une pastille qui annonce « 2 en attente » doit se corriger quand elles partent. */
+function brancherSynchro() {
+    const hl = clientHorsLigne();
+    if (!hl || _synchroDesabonner) return;
+    _synchroDesabonner = hl.abonner(() => {
+        refreshControlsDock();
+        if (_openDockPill === 'synchro') renderDockSlotHost();
+    });
+}
+
+/** La pastille de synchronisation : seulement quand il y a quelque chose à dire. */
+function pastilleSynchro() {
+    const hl = clientHorsLigne();
+    if (!hl) return null;
+    const e = hl.etat();
+    if (e.enLigne && !e.enAttente && !e.incertaines && !e.refusees) return null;
+    const aVerifier = e.refusees + e.incertaines;
+    let label;
+    if (aVerifier) label = `À vérifier · ${aVerifier}`;
+    else if (!e.enLigne) label = e.enAttente ? `Hors réseau · ${e.enAttente} en attente` : 'Hors réseau';
+    else label = `${e.enAttente} en attente`;
+    return {
+        id: 'synchro',
+        kind: 'synchro',
+        icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg>',
+        label,
+        alerte: aVerifier > 0,
+    };
+}
+
+function renderSynchroDockSlotHtml() {
+    const hl = clientHorsLigne();
+    if (!hl) return '';
+    const e = hl.etat();
+    const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const quand = (t) => (t ? new Date(t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '');
+    const ETIQUETTES = { en_attente: 'en attente', en_cours: 'envoi…', incertaine: 'à vérifier', refusee: 'refusée' };
+    const instantanes = hl.instantanes();
+    const plusAncien = instantanes.length ? Math.min(...instantanes.map((i) => i.date)) : null;
+    const phrases = [];
+    if (!e.enLigne) phrases.push('Pas de réseau : vos relevés sont gardés sur l’appareil et partiront au retour du réseau.');
+    if (!e.durable) phrases.push('Le stockage de l’appareil est indisponible : ces relevés seront perdus si l’application se ferme.');
+    if (plusAncien && !e.enLigne) phrases.push(`Données affichées : celles de l’appareil, du ${quand(plusAncien)}.`);
+    if (e.derniereSynchro) phrases.push(`Dernier envoi réussi : ${quand(e.derniereSynchro)}.`);
+    const lignes = hl.entrees().map((x) => {
+        const gestes = (x.etat === 'refusee' || x.etat === 'incertaine')
+            ? `<button type="button" class="btn btn-soft btn-sm" onclick="A.synchroReessayer('${chaineJs(x.id)}')">${x.etat === 'incertaine' ? 'Renvoyer quand même' : 'Réessayer'}</button>
+               <button type="button" class="btn btn-soft btn-sm" onclick="A.synchroAbandonner('${chaineJs(x.id)}')">Abandonner</button>`
+            : '';
+        return `<div class="synchro-ligne etat-${esc(x.etat)}">
+            <div><span class="synchro-etat">${esc(ETIQUETTES[x.etat] || x.etat)}</span> ${esc(x.resume)}${x.pieceJointe ? ' · photo' : ''} <small>${esc(quand(x.date))}</small></div>
+            ${x.raison ? `<div class="synchro-raison">${esc(x.raison)}</div>` : ''}
+            ${x.etat === 'incertaine' ? '<div class="synchro-raison">L’envoi a été interrompu : la visite est peut-être déjà dans le document. Vérifiez avant de renvoyer.</div>' : ''}
+            ${gestes ? `<div class="releve-actions">${gestes}</div>` : ''}
+        </div>`;
+    }).join('');
+    return `<div class="dock-slot-data dock-slot-synchro">
+        <div class="dock-slot-head"><span class="dock-slot-title">Synchronisation</span><span class="dock-slot-tag">${e.enLigne ? 'en ligne' : 'hors réseau'}</span></div>
+        <div class="dock-slot-body">
+            ${phrases.map((p) => `<p class="releve-aide">${esc(p)}</p>`).join('')}
+            ${lignes}
+            ${e.enAttente && e.enLigne ? '<div class="releve-actions"><button type="button" class="btn btn-dark btn-sm" onclick="A.synchroEnvoyer()">Envoyer maintenant</button></div>' : ''}
+        </div>
+    </div>`;
+}
+
 function renderReleveDockSlotHtml() {
     const lignes = lignesReleve(couchesEnReleve().map((couche) => ({
         couche,
@@ -5470,6 +5546,9 @@ function objetProcheDeCouche(layer) {
 function listDockPills() {
     const pills = [];
     const vcs = STATE.viewerControls || createDefaultViewerControls();
+    // La synchronisation vient en tête, en toute posture : ne pas savoir qu'un relevé n'est pas parti, c'est le perdre.
+    const synchro = pastilleSynchro();
+    if (synchro) pills.push(synchro);
 
     // L'interrupteur gouverne la pastille, en edition comme en lecture.
     //
@@ -5646,7 +5725,7 @@ function renderDockSlotHost() {
     }
     // Le releve liste des couches et des boutons : il lui faut la hauteur d'un
     // controle de donnees, pas celle d'un interrupteur d'environnement.
-    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte');
+    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro');
     if (pill.id === 'sun') {
         slotHost.innerHTML = renderSunDockSlotHtml();
         updateSunStrip();
@@ -5658,6 +5737,8 @@ function renderDockSlotHost() {
         slotHost.innerHTML = renderReleveDockSlotHtml();
     } else if (pill.kind === 'contexte') {
         slotHost.innerHTML = renderContexteDockSlotHtml();
+    } else if (pill.kind === 'synchro') {
+        slotHost.innerHTML = renderSynchroDockSlotHtml();
     } else if (pill.kind === 'data') {
         const t = controlVariantDockLabel(pill.control);
         const label = (pill.label || '').replace(/</g, '&lt;');
@@ -11225,7 +11306,7 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=20261002f'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=20261002g'); } catch (_) { return; }
     let caps;
     try {
         const dc = await import('./lib/data-client.js?v=20261001a');
@@ -11458,6 +11539,7 @@ async function initGrist() {
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
         await syncScenePrefsFromGrist();
+        brancherSynchro();
         refreshControlsDock();
         appliquerOuverture();
         if (postureDepuis(CONFIG) === 'lecture') {
@@ -13494,6 +13576,12 @@ const A = {
     contexteAppliquer(cle) { appliquerContexte(cle); },
     ouvertureRegler(mode, cle) { reglerOuverture(mode, cle || null); renderRecit(); },
     contexteQuitter() { quitterContexte(); },
+    synchroEnvoyer() { clientHorsLigne()?.envoyer(); },
+    async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
+    async synchroAbandonner(id) {
+        if (!window.confirm('Abandonner ce relevé ? Il ne sera pas envoyé et disparaîtra de la liste.')) return;
+        await clientHorsLigne()?.abandonner(id);
+    },
     /** L'auteur propose (ou non) cette étape comme contexte en exploitation. */
     storyContexte(i, oui) {
         if (!assertCanWrite('proposer un contexte')) return;
@@ -14884,7 +14972,7 @@ async function demarrer() {
     try {
         const { capacites } = await import('./lib/data-client.js?v=20261001a');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=20261002f');
+        const { accueillir } = await import('./lib/hote-ui.js?v=20261002g');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

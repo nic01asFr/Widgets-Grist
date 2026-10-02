@@ -2706,3 +2706,31 @@ Corrigé dans `index_v7.html` : le panneau peut atteindre 440 px et 62 % de la h
 deux ou trois lignes (la légende sur deux), les curseurs gardent une marge. Une liste de valeurs suit l'ordre de
 la légende quand le champ colore la couche (gravité d'une table de référence), au lieu de l'effectif.
 Vérifié à 1500 px et à 500 px de large. Non vérifié sur téléphone réel.
+
+## Hors réseau — premier étage : lire depuis l'appareil, écrire dans une file (02/10/2026)
+
+Pour l'application seulement (`ClientRest` ; dans un widget Grist, le document tient ses garanties).
+`lib/hors-ligne.js` enveloppe le client (`habillerHorsLigne`, posé dans `hote-ui.js` à l'ouverture d'une scène) :
+
+- **Lire** : chaque table lue est gardée dans IndexedDB (instantané daté). Sans réseau — annoncé par l'appareil, ou
+  constaté par un échec — l'instantané répond : la scène **s'ouvre à froid sans réseau**, une fois vue. Un échec récent
+  fait servir l'appareil sans attendre le suivant (la relecture périodique n'empile pas les délais).
+- **Écrire** : une écriture que le réseau n'a pas portée entre dans une **file** (`file`), dans l'ordre, avec des
+  identifiants **provisoires très négatifs** (`BASE_PROVISOIRE`, -10⁹ : un délai de -6 mois ne leur ressemble pas). Elle
+  se voit tout de suite dans les lectures (`appliquerFileSurTable`) et part seule au retour du réseau (événement,
+  relance toutes les 30 s, bouton « Envoyer maintenant »).
+- **Références provisoires** : une visite posée sur un objet créé hors réseau suit son vrai identifiant à l'envoi ; une
+  entrée qui en dépend est refusée avec la précédente si celle-ci l'est.
+- **Photos** : gardées avec leur fichier (`pj`), envoyées avant la ligne qui les cite, identifiant remplacé.
+- **Ce qui n'entre PAS en file** : les réglages d'Atlas (`Atlas_*`, `Maquette_*`, `Formulaires` : une copie périmée
+  n'a pas à les écrire) et les changements de structure (AddColumn…) — ils échouent comme avant, avec `horsReseau: true`
+  (`assurerColonneAtlas3d` y voit « inconnu », pas un refus de droits).
+- **Pas de déduplication par colonne** (décision 2 du cadrage en attente) : un journal local. Un envoi interrompu par la
+  fermeture de l'application devient « **incertain** » : montré, jamais renvoyé d'office (il pourrait doubler une visite).
+- **Interface** : pastille « Hors réseau · n en attente » / « À vérifier · n » (`pastilleSynchro`), en tête du dock en
+  toute posture ; son panneau liste les entrées, l'âge des données, et propose Réessayer / Abandonner.
+- **Pas de résolution de conflit** : une ligne modifiée ailleurs entre-temps est écrasée à l'envoi.
+
+Éprouvé : 25 tests, et l'application simulée (coupure, file, retour du réseau, ouverture à froid). **Non fait** : la
+carte hors réseau (fonds, tuiles, relief : lot 4 du cadrage), la création d'un projet sur téléphone, la reprise après
+refus de droits, les polices et `geotiff.js` non embarqués. **Non éprouvé** sur un téléphone.

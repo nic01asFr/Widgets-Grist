@@ -485,6 +485,13 @@
         /* Le panneau haut plafonne a 200 px : au-dela d'une couche, la liste
            defile au lieu d'etre coupee. */
         .dock-slot-releve .dock-slot-body { max-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
+        /* La synchronisation : l'etat de la file des releves partis ou en attente. */
+        .dock-slot-synchro .dock-slot-body { max-height: min(46vh, 300px); overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-synchro .synchro-ligne { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12px; line-height: 1.4; }
+        .dock-slot-synchro .synchro-ligne:first-of-type { border-top: none; }
+        .dock-slot-synchro .synchro-etat { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.06); margin-right: 4px; }
+        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: rgba(196,69,54,.12); color: var(--accent); }
+        .dock-slot-synchro .synchro-raison { font-size: 11px; color: var(--muted); margin-top: 3px; }
         .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
         .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
         .dock-slot-data .releve-couche:first-of-type { border-top: none; padding-top: 2px; }
