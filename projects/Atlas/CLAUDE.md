@@ -2734,3 +2734,25 @@ Pour l'application seulement (`ClientRest` ; dans un widget Grist, le document t
 Éprouvé : 25 tests, et l'application simulée (coupure, file, retour du réseau, ouverture à froid). **Non fait** : la
 carte hors réseau (fonds, tuiles, relief : lot 4 du cadrage), la création d'un projet sur téléphone, la reprise après
 refus de droits, les polices et `geotiff.js` non embarqués. **Non éprouvé** sur un téléphone.
+
+## Regroupement par couche, palette inversée, contour seul (02/10/2026)
+
+Trois réglages de base de la symbolisation, demandés pour des couches denses (une centaine d'ouvrages, 2 500 tronçons).
+
+- **Regroupement** (`lib/grappes.js`, pur, testé ; `symbolization.cluster = { enabled, rayon, zoomMax, couleur }`,
+  enregistré avec le reste de la symbolisation). Réglé dans l'onglet Taille de la couche.
+  - **Points** (cercles natifs ; pas les modèles 3D) : MapLibre regroupe dans la **source de la couche**
+    (`cluster: true`). Les couches d'objets (cercle, icône, étiquette) portent `FILTRE_ISOLE` pour écarter les
+    regroupements — `layer._sourceGroupee` le garde même si une étape de récit coupe le regroupement, sinon un rond de
+    regroupement s'afficherait comme un objet.
+  - **Lignes et surfaces** : on regroupe leurs **centres** (`centroidCollection`), dans une source `<id>-grappes` ; la
+    forme n'apparaît qu'au zoom suivant (`layer._grappeZoom`, via `minzoom`) — à la place du repli en points ordinaire.
+  - **Couleur du rond** : celle de la couche, ou **celle de l'objet le plus grave** quand la couleur vient d'une table de
+    référence avec un rang (agrégat `pire` = max du rang, `clusterProperties`).
+  - Toucher un rond approche la carte jusqu'au zoom où il se défait (`getClusterExpansionZoom`).
+  - **Limites** : changer le regroupement reconstruit la source (`addLayerToMap`) ; une **étape de récit** ne rejoue pas
+    le regroupement (elle ne reconstruit pas les sources) ; les couches distantes et les modèles 3D ne se regroupent pas.
+- **Palette inversée** : `symbolization.color.inverse`, case « Inverser la palette » sous les palettes de la couleur par
+  catégorie et de la couleur graduée (`paletteEn`). Sans effet sur des couleurs lues dans une table de référence.
+- **Surfaces à plat, contour seul** : `symbolization.remplissage = 'contour'` — le remplissage reste (il porte le clic) à
+  opacité 0, le trait ne descend pas sous 2 px.

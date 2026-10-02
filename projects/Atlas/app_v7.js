@@ -49,6 +49,10 @@ import {
 } from './lib/fiche-formulaire.js?v=20261002c';
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
+import {
+  GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
+  zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
+} from './lib/grappes.js?v=20261002a';
 import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS } from './lib/model-layer.js?v=20260906a';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
@@ -892,7 +896,7 @@ function sequentialPaletteForSym(sym, layer) {
         if (hex.length) return hex;
     }
     const name = sym.colorRamp || sym.palette || 'Viridis';
-    return COLOR_PALETTES[name] || COLOR_PALETTES.Viridis;
+    return paletteEn(name, sym.inverse);
 }
 
 /**
@@ -1006,6 +1010,8 @@ function syncLayerSourceData(layer) {
     // Les centres suivent le même filtrage que les surfaces.
     const pts = map.getSource(pointFallbackId(layer));
     if (pts) pts.setData(centroidCollection(data));
+    const grappes = map.getSource(layer.id + '-grappes');
+    if (grappes) grappes.setData(centroidCollection(data));
 }
 function getLayerFields(layer) {
     if (layer._fields?.length) {
@@ -1030,8 +1036,13 @@ function getLayerFields(layer) {
     }
     return Array.from(keys).sort().map((k) => ({ id: k, type: detectFieldType(layer, k) }));
 }
-function paletteColor(name, i, total) {
-    const p = COLOR_PALETTES[name] || COLOR_PALETTES.Tableau10;
+/** Une palette, éventuellement retournée : le plus foncé devient le plus clair, la première classe la dernière. */
+function paletteEn(name, inverse, repli = 'Viridis') {
+    const p = COLOR_PALETTES[name] || COLOR_PALETTES[repli];
+    return inverse ? [...p].reverse() : p;
+}
+function paletteColor(name, i, total, inverse = false) {
+    const p = paletteEn(name, inverse, 'Tableau10');
     if (PALETTE_INFO[name]?.type === 'qualitative') return p[i % p.length];
     // sequential/divergent: spread across palette
     const idx = total <= 1 ? 0 : Math.round((i / (total - 1)) * (p.length - 1));
@@ -1057,8 +1068,8 @@ function transformedBounds(range, method) {
     if (method === 'sqrt') return [Math.sqrt(range[0]), Math.sqrt(range[1])];
     return [range[0], range[1]];
 }
-function buildColorGraduated(field, range, palette, method) {
-    const p = COLOR_PALETTES[palette] || COLOR_PALETTES.Viridis;
+function buildColorGraduated(field, range, palette, method, inverse = false) {
+    const p = paletteEn(palette, inverse);
     const [inMin, inMax] = transformedBounds(range, method);
     const expr = ['interpolate', ['linear'], transformedValueExpr(field, method)];
     const step = (inMax - inMin) / (p.length - 1) || 1;
@@ -3322,6 +3333,7 @@ function removeLayerGfx(layer) {
     });
     if (map.getSource(layer.id)) map.removeSource(layer.id);
     if (map.getSource(pointFallbackId(layer))) map.removeSource(pointFallbackId(layer));
+    if (map.getSource(layer.id + '-grappes')) map.removeSource(layer.id + '-grappes');
 }
 
 /**
@@ -3369,11 +3381,25 @@ function addLayerToMap(layer) {
         const nFeats = data?.features?.length || 0;
         // maxzoom 22 : sur relief incliné, MapLibre 5.6.1 levait au maxzoom 18
         // par défaut (`_updateRetainedTiles`, cf. `optionsSourceGeojson`).
-        map.addSource(layer.id, optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }));
+        // Regroupement : les points se regroupent dans leur propre source ; pour une ligne ou une surface, ce sont
+        // leurs centres, dans une source à part, et la forme n'apparaît qu'au-delà du zoom de regroupement.
+        const symG = initSymbolization(layer);
+        const cfgG = configGrappes(symG);
+        const groupe = grappesActives(layer);
+        const estPointG = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+        layer._sourceGroupee = !!(groupe && estPointG);
+        layer._grappeZoom = groupe && !estPointG ? zoomFormes(cfgG) : null;
+        map.addSource(layer.id, {
+            ...optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }),
+            ...(layer._sourceGroupee ? optionsGrappes(cfgG, symG) : {}),
+        });
+        if (layer._grappeZoom != null) {
+            map.addSource(layer.id + '-grappes', { ...optionsSourceGeojson(centroidCollection(data)), ...optionsGrappes(cfgG, symG) });
+        }
         // Surfaces menues : source de centres pour le rendu en petite échelle.
         const isFlatPolygon = (layer.geometryType === 'Polygon' || layer.geometryType === 'MultiPolygon')
             && layer.style?.polygonMode === 'flat';
-        layer._pointFallbackZoom = isFlatPolygon ? pointFallbackZoom(layer.geojson) : null;
+        layer._pointFallbackZoom = isFlatPolygon && layer._grappeZoom == null ? pointFallbackZoom(layer.geojson) : null;
         // Nombre d'entités au moment de l'évaluation : une couche différée est
         // vide au montage, il faudra refaire le calcul quand elle se peuplera.
         layer._pointFallbackAt = layer.geojson?.features?.length || 0;
@@ -3450,13 +3476,13 @@ function colorExpression(layer, fallback) {
     if (sym.mode === 'categorized' && sym.field) {
         syncColorCategoriesFromFeatures(layer);
         const cats = sym.categories.length ? sym.categories
-            : getUniqueValues(layer, sym.field).map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, 99), count: v.count }));
+            : getUniqueValues(layer, sym.field).map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, 99, sym.inverse), count: v.count }));
         sym.categories = cats;
         return buildColorMatch(sym.field, cats, sym.defaultColor || sym.value || fallback || layer.color);
     }
     if (sym.mode === 'graduated' && sym.field) {
         const r = getNumericRange(layer, sym.field);
-        if (r.count) return buildColorGraduated(sym.field, [r.min, r.max], sym.colorRamp || sym.palette, sym.method);
+        if (r.count) return buildColorGraduated(sym.field, [r.min, r.max], sym.colorRamp || sym.palette, sym.method, sym.inverse);
     }
     return sym.value || fallback || layer.color;
 }
@@ -3485,6 +3511,7 @@ function ajouterCoucheIcones(layer) {
     const tri = cleDeTriReference(layer);
     map.addLayer({
         id: layer.id + '-icon', type: 'symbol', source: layer.id,
+        ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
         layout: {
             'icon-image': expressionIcone(ic.field, entrees),
             'icon-size': (ic.taille || 40) / 64,
@@ -3503,7 +3530,7 @@ function ajouterCoucheIcones(layer) {
 
 function applyPointStyle(layer) {
     const s = layer.style;
-    ['', '-hit', '-icon', '-label'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const sym = initSymbolization(layer);
 
     if (s.mode === 'library' || s.mode === 'custom') {
@@ -3526,6 +3553,7 @@ function applyPointStyle(layer) {
         const stroke = layerStrokePaint(layer);
         const tri = cleDeTriReference(layer);
         map.addLayer({ id: layer.id, type: 'circle', source: layer.id,
+            ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
             ...(tri != null ? { layout: { 'circle-sort-key': tri } } : {}),
             paint: {
                 'circle-radius': radius,
@@ -3537,7 +3565,35 @@ function applyPointStyle(layer) {
             }});
     }
     ajouterCoucheIcones(layer);
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
+}
+
+/**
+ * Les ronds de regroupement : un par groupe, avec le nombre d'objets, et une couleur qui dit l'essentiel.
+ * Pour une ligne ou une surface, ils se posent sur les centres et ne se voient que sous le zoom où la forme paraît.
+ */
+function ajouterCouchesGrappes(layer) {
+    ['-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    if (!grappesActives(layer)) return;
+    const estPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const source = estPoint ? layer.id : layer.id + '-grappes';
+    if (!map.getSource(source)) return;
+    const sym = initSymbolization(layer);
+    const cfg = configGrappes(sym);
+    const sous = (spec) => { if (!estPoint && Number.isFinite(layer._grappeZoom)) spec.maxzoom = layer._grappeZoom; return spec; };
+    map.addLayer(sous({ id: layer.id + '-grappe', type: 'circle', source, filter: FILTRE_GRAPPE, paint: {
+        'circle-color': couleurGrappe(cfg, sym), 'circle-radius': RAYON_GRAPPE, 'circle-opacity': 0.9,
+        'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } }));
+    map.addLayer(sous({ id: layer.id + '-grappe-n', type: 'symbol', source, filter: FILTRE_GRAPPE,
+        layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12, 'text-font': ['Noto Sans Regular'], 'text-allow-overlap': true },
+        paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(31,27,20,0.85)', 'text-halo-width': 1.5 } }));
+    // Un objet isolé (ni regroupé ni encore une forme) se montre en point, à la couleur de la couche.
+    if (!estPoint) {
+        if (map.getLayer(layer.id + '-pts')) map.removeLayer(layer.id + '-pts');
+        map.addLayer(sous({ id: layer.id + '-pts', type: 'circle', source, filter: FILTRE_ISOLE, paint: {
+            'circle-radius': 5, 'circle-color': layerPaintColor(layer), 'circle-stroke-width': 1.5, 'circle-stroke-color': '#ffffff' } }));
+    }
 }
 
 function applyLineStyle(layer) {
@@ -3549,9 +3605,12 @@ function applyLineStyle(layer) {
         if (r.count) width = buildNumGraduated(sym.size.field, [r.min, r.max], sym.size.outputRange, sym.size.method);
     }
     const tri = cleDeTriReference(layer);
-    map.addLayer({ id: layer.id, type: 'line', source: layer.id,
+    const ligne = { id: layer.id, type: 'line', source: layer.id,
         layout: { 'line-cap': 'round', 'line-join': 'round', ...(tri != null ? { 'line-sort-key': tri } : {}) },
-        paint: { 'line-color': layerPaintColor(layer), 'line-width': width, 'line-opacity': layerPaintOpacity(layer) } });
+        paint: { 'line-color': layerPaintColor(layer), 'line-width': width, 'line-opacity': layerPaintOpacity(layer) } };
+    if (Number.isFinite(layer._grappeZoom)) ligne.minzoom = layer._grappeZoom;
+    map.addLayer(ligne);
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
 }
 
@@ -3631,16 +3690,19 @@ function applyPolygonStyle(layer) {
     } else {
         const stroke = layerStrokePaint(layer);
         // Repli en points sous le seuil : les surfaces y seraient sous-pixel.
-        const zFallback = layer._pointFallbackZoom;
+        const zFallback = layer._grappeZoom ?? layer._pointFallbackZoom;
+        // Contour seul : le remplissage reste (il porte le clic et la sélection) mais ne se voit pas, et le trait
+        // ne descend pas sous 2 px — sans lui, la couche s'effacerait.
+        const contourSeul = sym.remplissage === 'contour';
         const fill = { id: layer.id, type: 'fill', source: layer.id, paint: {
-            'fill-color': layerPaintColor(layer), 'fill-opacity': layerPaintOpacity(layer) } };
+            'fill-color': layerPaintColor(layer), 'fill-opacity': contourSeul ? 0 : layerPaintOpacity(layer) } };
         const triFill = cleDeTriReference(layer);
         if (triFill != null) fill.layout = { 'fill-sort-key': triFill };
         poserBornesZoom(fill, layer, zFallback);
         map.addLayer(fill);
-        if (stroke.width > 0) {
+        if (stroke.width > 0 || contourSeul) {
             const outline = { id: layer.id + '-outline', type: 'line', source: layer.id, paint: {
-                'line-color': stroke.color, 'line-width': stroke.width } };
+                'line-color': stroke.color, 'line-width': contourSeul ? Math.max(2, stroke.width) : stroke.width } };
             poserBornesZoom(outline, layer, zFallback);
             map.addLayer(outline);
         }
@@ -3672,6 +3734,7 @@ function applyPolygonStyle(layer) {
                 } });
         }
     }
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
 }
 
@@ -3681,6 +3744,7 @@ function addLabelLayer(layer) {
     if (!sym?.enabled || !sym.field) return;
     const size = Number.isFinite(sym.size) ? sym.size : 12;
     map.addLayer({ id: layer.id + '-label', type: 'symbol', source: layer.id,
+        ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
         layout: { 'text-field': ['to-string', ['get', sym.field]], 'text-size': size, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-font': ['Noto Sans Regular'] },
         paint: { 'text-color': sym.color || '#2D2820', 'text-halo-color': '#ffffff', 'text-halo-width': 1.4 } });
 }
@@ -7039,7 +7103,7 @@ function escLegend(s) {
 
 function legendCategoryColor(sym, value, index, total) {
     const cat = sym.categories?.find((x) => String(x.value) === String(value));
-    return cat?.color || paletteColor(sym.palette || 'Tableau10', index, total);
+    return cat?.color || paletteColor(sym.palette || 'Tableau10', index, total, sym.inverse);
 }
 
 /** Focus légende (ciblage lecture) — session only. */
@@ -7056,7 +7120,7 @@ function rampeGraduee(layer, sym) {
     const stopsDecl = (layer._declarative?.kind === 'graduated' ? layer._declarative.stops : null) || [];
     return stopsDecl.length
         ? stopsDecl.map((st) => st.color).filter(Boolean)
-        : (COLOR_PALETTES[sym.colorRamp || sym.palette || 'Viridis'] || COLOR_PALETTES.Viridis);
+        : paletteEn(sym.colorRamp || sym.palette || 'Viridis', sym.inverse);
 }
 
 /**
@@ -7427,6 +7491,11 @@ function paletteList(layer, param, current, type) {
         </div>`).join('')}</div>`;
 }
 
+function caseInverser(layer, param, on) {
+    return `<label class="toggle-row" style="margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px">
+        <input type="checkbox" ${on ? 'checked' : ''} onchange="A.setSymInverse('${layer.id}','${param}',this.checked)"> Inverser la palette</label>`;
+}
+
 function symColorPanel(layer, sym) {
     const c = sym.color;
     let inner = '';
@@ -7439,13 +7508,13 @@ function symColorPanel(layer, sym) {
     } else if (c.mode === 'categorized') {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, null)}</div>
             ${blocReferenceCouleur(layer, c)}
-            ${c.field && !c.reference ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.palette, 'qualitative')}</div>` : ''}
+            ${c.field && !c.reference ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.palette, 'qualitative')}${caseInverser(layer, 'color', c.inverse)}</div>` : ''}
             ${c.field ? `
             <div class="section"><div class="section-title">Catégories</div>${categoriesPreview(layer, c)}</div>` : ''}`;
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, 'numeric')}
             ${c.field ? rangeInfo(layer, c.field) : ''}</div>
-            ${c.field ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${methodChips(layer, 'color', c.method)}</div>` : ''}`;
+            ${c.field ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${caseInverser(layer, 'color', c.inverse)}${methodChips(layer, 'color', c.method)}</div>` : ''}`;
     }
     return `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'color', c.mode, ['single', 'categorized', 'graduated'])}</div>${inner}`;
 }
@@ -7683,7 +7752,7 @@ function categoriesPreview(layer, c) {
     if (!c.categories.length) syncColorCategoriesFromFeatures(layer);
     return `<div class="cats">${valeursOrdonnees(c, vals).slice(0, 30).map((v, i) => {
         const cat = c.categories.find((x) => String(x.value) === String(v.value));
-        const col = cat?.color || paletteColor(c.palette, i, vals.length);
+        const col = cat?.color || paletteColor(c.palette, i, vals.length, c.inverse);
         const lib = escapeHtml(libelleCategorie(c, v.value));
         return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
     }).join('')}${vals.length > 30 ? `<div class="range-info" style="margin-top:6px">+ ${vals.length - 30} autres</div>` : ''}</div>`;
@@ -7771,9 +7840,12 @@ function symSizePanel(layer, sym) {
         <div class="seg">
             <button class="${flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','flat')">▭ À plat</button>
             <button class="${!flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','extruded')">◨ En volume</button>
-        </div>${vastes ? `<div class="hint" style="margin-top:8px">${vastes} surface${vastes > 1 ? 's' : ''} de plus de ${SEUIL_VOLUME_M} m ${vastes > 1 ? 'sont posées' : 'est posée'} à plat : sur le relief, un volume ne suit pas la pente à cette échelle.</div>` : ''}</div>` : '';
+        </div>${flat ? `<div class="section-title" style="margin-top:10px">Remplissage</div><div class="seg">
+            <button class="${sym.remplissage !== 'contour' ? 'active' : ''}" onclick="A.setRemplissage('${layer.id}','plein')">▣ Plein</button>
+            <button class="${sym.remplissage === 'contour' ? 'active' : ''}" onclick="A.setRemplissage('${layer.id}','contour')">▢ Contour seul</button>
+        </div>` : ''}${vastes ? `<div class="hint" style="margin-top:8px">${vastes} surface${vastes > 1 ? 's' : ''} de plus de ${SEUIL_VOLUME_M} m ${vastes > 1 ? 'sont posées' : 'est posée'} à plat : sur le relief, un volume ne suit pas la pente à cette échelle.</div>` : ''}</div>` : '';
     if (isPolygon && flat) {
-        return volume + symAppearancePanel(layer, sym);
+        return volume + symAppearancePanel(layer, sym) + symGrappesPanel(layer, sym);
     }
 
     const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
@@ -7796,7 +7868,32 @@ function symSizePanel(layer, sym) {
     }
     return volume
         + `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'size', s.mode, ['single', 'graduated'])}</div>`
-        + inner + basePanel + symAppearancePanel(layer, sym);
+        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym));
+}
+
+/** Le réglage de regroupement d'une couche : un interrupteur, puis ce qu'il faut pour le régler. */
+function symGrappesPanel(layer, sym) {
+    if (!grappable(layer)) return '';
+    const cfg = configGrappes(sym);
+    const estPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const titre = estPoint ? 'Regroupement' : 'Regroupement à petite échelle';
+    const aide = estPoint
+        ? 'Les objets proches se regroupent en un rond qui dit leur nombre, et se défont en zoomant.'
+        : 'Sous un certain zoom, les formes laissent place à des ronds qui regroupent leurs centres.';
+    const reglages = cfg.enabled ? `
+        ${estPoint ? `<div class="slider-head" style="margin-top:10px"><span class="lbl">Rayon de regroupement</span><span class="val">${cfg.rayon} px</span></div>
+        <input type="range" class="rng acc" min="20" max="150" step="5" value="${cfg.rayon}" onchange="A.setGrappes('${layer.id}',{rayon:+this.value})">` : ''}
+        <div class="slider-head" style="margin-top:10px"><span class="lbl">${estPoint ? 'Se défait à partir du zoom' : 'Les formes paraissent à partir du zoom'}</span><span class="val">${estPoint ? cfg.zoomMax : cfg.zoomMax + 1}</span></div>
+        <input type="range" class="rng acc" min="3" max="18" step="1" value="${cfg.zoomMax}" onchange="A.setGrappes('${layer.id}',{zoomMax:+this.value})">
+        <div class="section-title" style="margin-top:10px">Couleur du rond</div>
+        <div class="seg">
+            <button class="${cfg.couleur !== 'pire' ? 'active' : ''}" onclick="A.setGrappes('${layer.id}',{couleur:'couche'})">Celle de la couche</button>
+            <button class="${cfg.couleur === 'pire' ? 'active' : ''}" ${pireDisponible(sym) ? '' : 'disabled title="Demande une couleur lue dans une table de référence avec un rang de gravité"'} onclick="A.setGrappes('${layer.id}',{couleur:'pire'})">Le plus grave</button>
+        </div>` : '';
+    return `<div class="section"><div class="section-title">${titre}</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="A.setGrappes('${layer.id}',{enabled:this.checked})"> Regrouper</label>
+        <div class="hint" style="margin-top:6px">${aide}</div>${reglages}</div>`;
 }
 
 // ============================================================
@@ -9226,6 +9323,19 @@ function renderObjectInspector() {
 // ============================================================
 // INTERACTION (clic, hover, sélection, box-select)
 // ============================================================
+/** Toucher un regroupement : la carte s'approche jusqu'au zoom où il se défait. */
+function zoomerSurGrappe(f) {
+    const idCouche = String(f.layer.id).replace(/-grappe$/, '');
+    const couche = STATE.layers.find((l) => l.id === idCouche);
+    if (!couche) return;
+    const estPoint = couche.geometryType === 'Point' || couche.geometryType === 'MultiPoint';
+    const source = map.getSource(estPoint ? idCouche : idCouche + '-grappes');
+    const centre = f.geometry?.coordinates;
+    if (!source || !centre) return;
+    Promise.resolve(source.getClusterExpansionZoom(f.properties.cluster_id))
+        .then((z) => map.easeTo({ center: centre, zoom: Math.min((Number.isFinite(z) ? z : map.getZoom() + 2) + 0.4, 20), duration: 500 }))
+        .catch(() => map.easeTo({ center: centre, zoom: map.getZoom() + 2, duration: 500 }));
+}
 function hitLayerIds() {
     // L'icône d'une catégorie se touche comme son point : elle se dessine
     // au-dessus de lui, et c'est elle que le doigt vise.
@@ -9256,6 +9366,9 @@ function setupInteraction() {
         if (_saisieObjet) { onSaisieClic(e); return; }
         if (locationPickMode) { onLocationPick(e); return; }
         if (trajetPickMode) { onTrajetPick(e); return; }
+        const idsGrappes = STATE.layers.map((l) => l.id + '-grappe').filter((id) => map.getLayer(id));
+        const grappe = idsGrappes.length ? map.queryRenderedFeatures(e.point, { layers: idsGrappes })[0] : null;
+        if (grappe) { zoomerSurGrappe(grappe); return; }
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
         if (!feats.length) {
@@ -14388,7 +14501,7 @@ const A = {
         // meme carte que Lineaire.
         if (param === 'color' && sym.color.mode === 'graduated' && sym.color.field) {
             const r = getNumericRange(l, sym.color.field);
-            const pal = COLOR_PALETTES[sym.color.colorRamp || sym.color.palette] || [];
+            const pal = paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse);
             if (r.count && pal.length) {
                 l._declarative = {
                     ...(l._declarative || {}),
@@ -14413,10 +14526,23 @@ const A = {
         if (param === 'color' && l._declarative?.stops?.length) {
             l._declarative = {
                 ...l._declarative,
-                stops: recolorStops(l._declarative.stops, COLOR_PALETTES[palette] || []),
+                stops: recolorStops(l._declarative.stops, paletteEn(palette, sym.color.inverse)),
             };
         }
         syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
+    },
+    /** Inverser la palette : le plus foncé devient le plus clair. Vaut pour la couleur par catégorie et la couleur graduée. */
+    setSymInverse(id, param, on) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        if (!sym[param]) return;
+        sym[param].inverse = !!on;
+        if (sym[param].categories && !sym[param].reference) regenCategories(l, param);
+        if (param === 'color' && l._declarative?.stops?.length && l._declarative.kind === 'graduated') {
+            l._declarative = { ...l._declarative, stops: recolorStops(l._declarative.stops, paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse)) };
+        }
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector(); updateLegend();
+        markDirty(); saveLayerPrefIfSynced(l);
     },
     setSymColorValue(id, v) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -14433,6 +14559,22 @@ const A = {
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
 
     /** Surfaces à plat ou extrudées. Remonter en volume réactive la hauteur. */
+    /** Regrouper les objets proches : réglage par couche, source reconstruite. */
+    setGrappes(id, patch) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l || !grappable(l)) return;
+        const sym = initSymbolization(l);
+        sym.cluster = { ...GRAPPES_DEFAUT, ...(sym.cluster || {}), ...patch };
+        addLayerToMap(l);
+        updateLegend();
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
+    /** Surfaces à plat : pleines, ou seulement leur contour. */
+    setRemplissage(id, mode) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        initSymbolization(l).remplissage = mode === 'contour' ? 'contour' : 'plein';
+        applyLayerStyle(l);
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
     setPolygonMode(id, mode) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         l.style = l.style || { mode: 'mapbox' };
@@ -14693,7 +14835,7 @@ function regenCategories(layer, param) {
     const sym = layer.style.symbolization[param];
     const vals = getUniqueValues(layer, sym.field, 100);
     if (param === 'color') {
-        sym.categories = vals.map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, vals.length), count: v.count }));
+        sym.categories = vals.map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, vals.length, sym.inverse), count: v.count }));
         if (layer.source === 'qgis2grist') {
             applyCategoryColorsToFeatures(layer);
             syncLayerSourceData(layer);
