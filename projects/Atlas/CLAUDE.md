@@ -3006,9 +3006,10 @@ comptent que les objets affichés. Si les filtres écartent tout, un message le 
 bidirectionnel et boucle ; une couche masquée (œil fermé) ne change rien, c'est elle qu'on a choisi de parcourir.
 Non éprouvé dans la fenêtre : la fixture démarre en Lecture, la revue n'y est pas offerte ; essai à faire en Grist réel avec un
 contexte qui filtre.
-La barre de sélection (« 1 objet sélectionné », ◀ 1 / 1 ▶) est **centrée, sous la rangée du dock** ; elle passe **à gauche** quand le
-panneau d'un filtre est ouvert (centrée, elle en recouvrirait le haut). Sur la ligne des pastilles, elle recouvrait « Relevé »,
-« Contexte » et le panneau d'un filtre dès que la fiche rétrécit la carte. Éprouvé en
+La barre de sélection (« 1 objet sélectionné », ◀ 1 / 1 ▶) est **centrée, juste sous le dock** : sous sa rangée de pastilles, ou sous
+son panneau quand un filtre est ouvert. Le bas du dock est mesuré (`placerBarreSelection`, ResizeObserver sur le dock → `--sel-top`) :
+sa hauteur change avec le panneau. Sur la ligne des pastilles, elle recouvrait « Relevé », « Contexte » et le panneau d'un filtre dès
+que la fiche rétrécit la carte. Téléphone : règle d'avant (78 px sous le dock quand son panneau est ouvert), non revérifiée. Éprouvé en
 Grist réel (fiche ouverte, 1240 px de carte) : saut des objets masqués, message « Aucun objet affiché » si tout est écarté.
 Reste : pour un objet seul, le compteur dit « 1 / 1 » alors que ◀ ▶ parcourent la couche.
 

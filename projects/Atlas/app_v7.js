@@ -16157,9 +16157,28 @@ window.__Models3D = Models3D;
 // ============================================================
 // EVENT WIRING
 // ============================================================
+/**
+ * La barre de sélection se pose juste sous le dock — sa rangée de pastilles, ou son panneau quand un filtre est ouvert —
+ * et reste centrée. On mesure le dock plutôt que de deviner sa hauteur : elle change avec le panneau ouvert.
+ */
+function placerBarreSelection() {
+    const frame = $('map-frame');
+    const dock = $('map-controls-dock');
+    if (!frame) return;
+    let bas = 16;
+    if (dock && getComputedStyle(dock).display !== 'none') {
+        bas = dock.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+    }
+    frame.style.setProperty('--sel-top', `${Math.max(16, Math.round(bas + 12))}px`);
+}
+
 function wireMapControlsDock() {
     const dock = $('map-controls-dock');
     if (!dock) return;
+    if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(placerBarreSelection).observe(dock);
+        placerBarreSelection();
+    }
     const KEY = 'atlas_map_controls_collapsed';
     const apply = (collapsed) => {
         dock.classList.toggle('collapsed', !!collapsed);
