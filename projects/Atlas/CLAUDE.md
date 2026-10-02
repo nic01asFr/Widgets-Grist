@@ -3033,3 +3033,19 @@ formulaires, seulement s'il y en a (sans formulaire, le corps montre déjà les 
 visite » et un toucher pour relever gardent le formulaire en premier. La fiche est en **consultation** (`ficheConsultation`,
 « Mode lecture — consultation seule ») : on la voit, on ne l'édite pas. Éprouvé en Grist réel en Exploiter.
 Modules changés ce jour, jetons passés à `20261003a` : `model-layer.js`, `contextes.js` (règle : un module qui change change de jeton).
+
+### Tournée d'un contexte — phase 1 (03/10/2026)
+Étude : `docs/ETUDE-TOURNEE-PAR-CONTEXTE.md`. Vocabulaire : **trajet** = visite guidée du récit, **tournée** = ligne de travail d'un contexte,
+**itinéraire** = l'action de basculer vers le GPS (bouton de la bulle). L'outil « Itinéraire sur un réseau » devient **« Tracer sur un réseau »**.
+- **Modèle** : `usage.tournee` (une `LineString`, copie figée, avec `sourceTable`, `sourceRowId`, `nom`) dans le bloc `usage` de l'étape,
+  à côté de `releves` ; `tourneeDe` (`lib/contextes.js`). Pas de rayon : la tournée est incluse dans son contexte.
+- **Pose** : sur la carte du contexte (module Récit, « Tournée ») — « Choisir une ligne » (outil du trajet) ou « Tracer sur un réseau » ;
+  `_cibleTournee` dit où va la ligne (`poserTourneeDepuis`) ; Voir, Remplacer, Retirer. Poser un trajet du récit **n'attrape plus les contextes**.
+- **Affichage** : pendant un contexte, seule sa tournée se dessine (jamais le trajet du récit) ; en édition, celle du contexte qu'on règle
+  (`_tourneeVue`). `tourneeAffichee` / `rafraichirTrajet`.
+- **Exploitant** : le panneau « Contexte » gagne « Tournée · 3,2 km · 12 ouvrages » (déplié : les ouvrages dans l'ordre de la ligne, avec
+  leur distance depuis le départ) ; ◀ ▶ de la barre de sélection suivent cet ordre, compteur « 4 / 12 ». `ordreTournee`, `lib/tournee.js`.
+- **Éprouvé** : tests purs (`tests/tournee.test.js`), rendu du réglage et mode « Touchez une ligne » en Grist réel. **Pas éprouvé de bout
+  en bout** : la pose par un toucher sur une ligne, l'affichage de la ligne, la liste du panneau et l'ordre de ◀ ▶ (l'outil de pilotage
+  ne sait pas toucher la carte dans l'iframe de Grist ; la fixture locale ne charge pas de couche).
+- Phases suivantes : suivi de la position façon GPS (3 états de caméra, bandeau « Prochain »), puis « fait aujourd'hui » déduit des visites.

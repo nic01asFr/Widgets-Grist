@@ -72,7 +72,8 @@ import {
   lienItineraire, modeleBulle, idsPiecesJointes,
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve } from './lib/contextes.js?v=20261003a';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe } from './lib/contextes.js?v=20261003b';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=20261003a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261002e';
@@ -398,6 +399,8 @@ const _nouvelleCouche = { nom: '', type: 'Point', tables: [], enCours: false };
 let _storyIdx = 0;
 let _storyPresenting = false;
 let _contexteCle = null;   // clé de l'étape jouée comme contexte ; null = rien, ou le lecteur de récit
+let _cibleTournee = null;  // clé du contexte dont on pose la tournée (choix d'une ligne, tracé sur un réseau) ; null = on pose le trajet du récit
+let _tourneeVue = null;    // en édition : clé du contexte dont on montre la tournée sur la carte
 let trajetPickMode = false;
 let _trajetRemplace = false;
 let _trajetSuivi = false;
@@ -4767,6 +4770,19 @@ function retirerPoignees() {
 }
 
 /** La ligne se voit pendant la lecture du récit, et dans le panneau Récit. */
+/** La tournée du contexte joué, ou `null`. */
+function tourneeActive() {
+    if (!_contexteCle) return null;
+    return tourneeDe((STATE.story || []).find((s) => s.cle === _contexteCle)?.state);
+}
+
+/** La tournée à dessiner : celle du contexte joué ; en édition du Récit, celle du contexte qu'on règle. */
+function tourneeAffichee() {
+    const cle = _contexteCle || (!_storyPresenting && STATE.currentModule === 'recit' ? _tourneeVue : null);
+    if (!cle) return null;
+    return tourneeDe((STATE.story || []).find((s) => s.cle === cle)?.state);
+}
+
 function trajetVisible() {
     return !!traceActuelle() && (_storyPresenting || STATE.currentModule === 'recit');
 }
@@ -4774,8 +4790,10 @@ function trajetVisible() {
 function rafraichirTrajet() {
     retirerPoignees();
     if (!assurerCoucheTrajet()) return;
-    const trace = traceActuelle();
-    const montrer = trajetVisible() && trace;
+    // Pendant un contexte, seule sa tournée se montre : le trajet du récit ne le concerne pas.
+    const tournee = tourneeAffichee();
+    const trace = _contexteCle ? tournee : (tournee || traceActuelle());
+    const montrer = tournee || (!_contexteCle && trajetVisible() && trace);
     const src = map.getSource('atlas-trajet');
     src?.setData(montrer ? {
         type: 'Feature',
@@ -4783,6 +4801,8 @@ function rafraichirTrajet() {
         geometry: { type: 'LineString', coordinates: trace.coordinates },
     } : { type: 'FeatureCollection', features: [] });
     if (!montrer) return;
+    // Une tournée se règle depuis le Récit, pas à la carte : ni poignées ni flèche de sens.
+    if (tournee) return;
     const edite = STATE.currentModule === 'recit' && !CONFIG.viewMode && !_storyPresenting && canWrite(CONFIG.viewMode);
     if (!edite) return;
 
@@ -4851,7 +4871,22 @@ function rafraichirTrajet() {
 function annulerChoixTrajet() {
     trajetPickMode = false;
     _trajetRemplace = false;
+    _cibleTournee = null;
     if (map) map.getCanvas().style.cursor = '';
+}
+
+/** Pose (ou remplace) la tournée d'un contexte : une copie figée de la ligne, dans le bloc `usage` de son étape. */
+function poserTourneeDepuis(cle, trace) {
+    const etape = (STATE.story || []).find((s) => s.cle === cle);
+    if (!etape || !usageDe(etape.state).contexte) { showToast('Ce contexte n’existe plus', 'warning'); return; }
+    const remplace = !!tourneeDe(etape.state);
+    etape.state = avecUsage(etape.state, { tournee: traceFigee(trace) });
+    _tourneeVue = cle;
+    markDirty();
+    persistStory(true);
+    rafraichirTrajet();
+    renderRecit();
+    showToast(remplace ? 'Tournée remplacée' : `Tournée posée — ${direLongueur(longueurMetres(trace.coordinates))}`, 'success');
 }
 
 function poserTrajetDepuis(choix) {
@@ -4863,17 +4898,24 @@ function poserTrajetDepuis(choix) {
         nom: choix.layer.name || '',
     };
     const remplacer = _trajetRemplace;
+    const cibleTournee = _cibleTournee;
     annulerChoixTrajet();
-    if (!STATE.story.length) {
+    // Une tournée appartient à son contexte : elle ne place aucune étape du récit.
+    if (cibleTournee) { poserTourneeDepuis(cibleTournee, trace); return; }
+    // Le trajet du récit ne concerne que les étapes du récit : les contextes ont leur tournée.
+    const etapes = STATE.story.filter((s) => !usageDe(s.state).contexte);
+    if (!etapes.length) {
         STATE.trajet = trace;
         rafraichirTrajet();
         renderRecit();
         showToast('Trajet prêt — chaque capture se posera au plus près de la vue', 'info');
         return;
     }
-    const ontPlace = STATE.story.every((s) => Number.isFinite(s.state?.abscisse));
+    const ontPlace = etapes.every((s) => Number.isFinite(s.state?.abscisse));
     let ecartMax = 0;
-    STATE.story.forEach((s, i) => {
+    STATE.story.forEach((s) => {
+        if (usageDe(s.state).contexte) return;
+        const i = etapes.indexOf(s);
         let abscisse;
         if (remplacer && ontPlace) {
             // Remplacer la ligne : mêmes proportions, vues inchangées.
@@ -4887,7 +4929,7 @@ function poserTrajetDepuis(choix) {
                     ecartMax = Math.max(ecartMax, place.distanceMetres);
                 }
             } else {
-                abscisse = placesInitiales(STATE.story.length)[i] ?? 0.5;
+                abscisse = placesInitiales(etapes.length)[i] ?? 0.5;
             }
         }
         s.state = fusionnerApresPhoto(s.state || {}, {
@@ -4992,7 +5034,7 @@ function onTrajetPick(e) {
     poserTrajetDepuis(best);
 }
 
-function choisirTrajet(remplacer) {
+function choisirTrajet(remplacer, cibleTournee = null) {
     if (!assertCanWrite(remplacer ? 'remplacer le trajet' : 'créer un trajet')) return;
     if (trajetPickMode) {
         annulerChoixTrajet();
@@ -5005,6 +5047,7 @@ function choisirTrajet(remplacer) {
         return;
     }
     _trajetRemplace = !!remplacer;
+    _cibleTournee = cibleTournee;
     trajetPickMode = true;
     if (map) map.getCanvas().style.cursor = 'crosshair';
     showToast(remplacer ? 'Choisissez la nouvelle ligne' : 'Choisissez une ligne sur la carte', 'info');
@@ -7251,12 +7294,12 @@ function etapesLeLongHtml() {
     </div>`;
 }
 
-/** « Itinéraire sur un réseau » : pour un export de tronçons (BD TOPO, routes OSM), on ne choisit pas les tronçons un à un. */
+/** « Tracer sur un réseau » : pour un export de tronçons (BD TOPO, routes OSM), on ne choisit pas les tronçons un à un. */
 function boutonItineraireHtml() {
     const couches = couchesReseau();
     if (!couches.length) return '';
     const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
-    return `<div class="section-title" style="margin-top:12px">Itinéraire sur un réseau${infoBulle('Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.')}</div>
+    return `<div class="section-title" style="margin-top:12px">Tracer sur un réseau${infoBulle('Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.')}</div>
         <select id="itineraire-couche" class="input">${options}</select>
         <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.itineraireDemarrer()">Poser les points sur la carte</button>`;
 }
@@ -7269,12 +7312,12 @@ function itineraireEnCoursHtml() {
         : n === 1 ? 'Touchez le point suivant (arrivée, ou point de passage).'
         : ok ? `${Math.round(s.calcul.longueurM)} m · ${n} points — touchez pour ajouter un point de passage ou une arrivée.`
             : 'Le chemin ne se trace pas : voir le message, ou retirez le dernier point.';
-    return `<div class="section"><div class="hint">Itinéraire · ${escapeHtml(etat)}</div>
+    return `<div class="section"><div class="hint">Tracé · ${escapeHtml(etat)}</div>
         <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn btn-soft" style="flex:1" ${n ? '' : 'disabled'} onclick="A.itineraireRetirerDernier()">Retirer le dernier</button>
             <button class="btn btn-soft" style="flex:1" onclick="A.itineraireAnnuler()">Annuler</button>
         </div>
-        <button class="btn btn-dark btn-full" style="margin-top:8px" ${ok ? '' : 'disabled'} onclick="A.itineraireTerminer()">Terminer — en faire le trajet</button>
+        <button class="btn btn-dark btn-full" style="margin-top:8px" ${ok ? '' : 'disabled'} onclick="A.itineraireTerminer()">Terminer — en faire ${_cibleTournee ? 'la tournée' : 'le trajet'}</button>
     </div>`;
 }
 
@@ -7289,7 +7332,7 @@ function barreTrajetHtml() {
     if (_itineraire) return itineraireEnCoursHtml();
     if (!trace) {
         return `<div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet${infoBulle('Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.')}</button>${boutonItineraireHtml()}
+            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet${infoBulle('Pour une visite guidée : chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues. Pour une ligne de travail, voir la tournée d’un contexte.')}</button>${boutonItineraireHtml()}
         </div>`;
     }
     const metres = Math.round(longueurMetres(trace.coordinates));
@@ -7378,6 +7421,7 @@ function renderRecit() {
                 <textarea class="input" style="margin-top:4px;min-height:38px;font-size:12px" onchange="A.storySet(${i},'text',this.value)" placeholder="Texte…">${echapper(s.text || '')}</textarea>
                 <label class="contexte-opt" title="En exploitation, la pastille Contexte propose cette étape : elle règle la carte, et son texte sert de consigne"><input type="checkbox" ${usageDe(s.state).contexte ? 'checked' : ''} onchange="A.storyContexte(${i},this.checked)"> Proposer comme contexte</label>
                 ${htmlRelevesContexte(i, s)}
+                ${htmlTourneeContexte(i, s)}
             </div>
             <div style="display:flex;flex-direction:column;gap:2px">
                 <button class="layer-act" onclick="A.storyMove(${i},-1)" title="Monter">▲</button>
@@ -7403,6 +7447,41 @@ function htmlRelevesContexte(i, s) {
         <div class="contexte-releves-titre">Relevés proposés${infoBulle('Ce que la pastille « Relevé » liste quand ce contexte est actif. Tout coché : toutes les couches visibles, comme sans réglage. Une couche décochée n\u2019y est plus listée ; le relevé d\u2019un objet touché sur la carte, lui, reste ouvert.')}</div>
         ${cases}
     </div>`;
+}
+
+/**
+ * La tournée d'un contexte : sa ligne de travail. Posée comme un trajet — une ligne choisie sur la carte, ou tracée sur un réseau —
+ * mais elle reste à son contexte et ne place aucune étape. Hors contexte, rien à régler.
+ */
+function htmlTourneeContexte(i, s) {
+    if (!usageDe(s.state).contexte) return '';
+    const trace = tourneeDe(s.state);
+    const enCours = !!_cibleTournee && _cibleTournee === s.cle;
+    const titre = `<div class="contexte-releves-titre">Tournée${infoBulle('La ligne de travail de ce contexte : elle s’affiche quand il est actif, et donne leur ordre aux ouvrages qu’il montre. Le trajet du récit, lui, sert une visite guidée.')}</div>`;
+    let corps;
+    if (enCours) {
+        corps = trajetPickMode
+            ? `<div class="hint">Touchez une ligne sur la carte.</div><div class="contexte-tournee-actions"><button class="btn btn-soft btn-sm" onclick="A.choisirTrajet()">Annuler le choix</button></div>`
+            : '<div class="hint">Tracé en cours — suivez les indications en haut du module.</div>';
+    } else if (trace) {
+        corps = `<div class="hint">${direLongueur(longueurMetres(trace.coordinates))}${trace.nom ? ' · ' + echapper(trace.nom) : ''}</div>
+            <div class="contexte-tournee-actions">
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeVoir(${i})">Voir</button>
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeChoisir(${i})">Remplacer</button>
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeRetirer(${i})">Retirer</button>
+            </div>`;
+    } else {
+        const reseaux = couchesReseau();
+        const options = reseaux.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)}</option>`).join('');
+        corps = lineairesDisponibles().length
+            ? `<div class="contexte-tournee-actions"><button class="btn btn-soft btn-sm" onclick="A.tourneeChoisir(${i})">Choisir une ligne</button></div>`
+            : '<div class="hint">Aucune ligne visible à choisir.</div>';
+        if (reseaux.length) {
+            corps += `<div class="contexte-tournee-actions"><select id="tournee-couche-${i}" class="input" aria-label="Réseau de lignes">${options}</select>
+                <button class="btn btn-soft btn-sm" onclick="A.itineraireDemarrer('tournee-couche-${i}', '${chaineJs(s.cle)}')">Tracer sur un réseau</button></div>`;
+        }
+    }
+    return `<div class="contexte-releves contexte-tournee-edition">${titre}${corps}</div>`;
 }
 
 /**
@@ -7629,6 +7708,7 @@ function appliquerContexte(cle) {
     _storyIdx = ctx.index;
     applyStoryState(cloneStoryState(STATE.story[ctx.index].state));
     refreshControlsDock();
+    rafraichirTrajet();
 }
 
 /** Rend la scène de base. */
@@ -7638,6 +7718,49 @@ function quitterContexte() {
 }
 
 /** Le panneau de la pastille « Contexte » : les contextes proposés, et la consigne de celui qui est actif. */
+/**
+ * Les ouvrages que le contexte actif laisse voir, dans l'ordre de sa tournée ; `null` sans tournée. Seuls comptent les objets
+ * ponctuels des couches visibles, filtres du contexte appliqués : la ligne donne l'ordre, pas un périmètre. `coucheId` restreint à
+ * une couche (le pas de ◀ ▶ reste sur la couche de la sélection).
+ */
+function ordreTournee(coucheId = null) {
+    const trace = tourneeActive();
+    if (!trace) return null;
+    const objets = [];
+    for (const layer of STATE.layers) {
+        if (coucheId && layer.id !== coucheId) continue;
+        if (layer.visible === false || layer._distant || layer._raster) continue;
+        if (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint') continue;
+        const feats = layer.geojson?.features;
+        // Au-delà, le tri à chaque pas pèserait : on ne propose pas d'ordre sur une couche aussi dense.
+        if (!Array.isArray(feats) || feats.length > 5000) continue;
+        const garde = buildControlPredicate(layer);
+        feats.forEach((f, idx) => {
+            if (garde && !garde(f)) return;
+            const point = pointDuneFeature(f);
+            if (!point) return;
+            objets.push({ cle: `${layer.id}:${idx}`, coucheId: layer.id, idx, point, nom: nomObjet(f.properties || {}) || `Objet ${idx + 1}` });
+        });
+    }
+    return ordonnerLeLong(trace.coordinates, objets);
+}
+
+/** Le bloc « Tournée » du panneau « Contexte » : sa longueur, et les ouvrages dans l'ordre de la ligne. */
+function htmlTourneeContexteActif() {
+    const trace = tourneeActive();
+    if (!trace) return '';
+    const ordre = ordreTournee() || [];
+    const L = longueurMetres(trace.coordinates);
+    const n = ordre.length;
+    const resume = `Tournée · ${direLongueur(L)} · ${n ? `${n} ouvrage${n > 1 ? 's' : ''}` : 'aucun ouvrage'}`;
+    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage" onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
+        <span class="n">${i + 1}</span><span class="nm">${echapper(o.nom)}</span><span class="d">${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}</span></button>`).join('');
+    return `<details class="contexte-tournee"><summary>${echapper(resume)}${trace.nom ? ` <small>${echapper(trace.nom)}</small>` : ''}</summary>
+        ${n ? `<div class="contexte-ouvrages">${lignes}</div>${n > 150 ? `<div class="hint">Les 150 premiers sur ${n}.</div>` : ''}`
+            : '<div class="hint">Aucun ouvrage affiché par ce contexte : un filtre ou une couche masquée les écarte.</div>'}
+    </details>`;
+}
+
 function renderContexteDockSlotHtml() {
     const liste = contextesDisponibles();
     const actif = _contexteCle;
@@ -7654,6 +7777,7 @@ function renderContexteDockSlotHtml() {
                 ${liste.map((c) => choix(c.cle, c.titre, '', c.cle === actif)).join('')}
             </div>
             ${courant && courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
+            ${courant ? htmlTourneeContexteActif() : ''}
         </div>
     </div>`;
 }
@@ -11005,7 +11129,10 @@ function afterSelectionChange() {
     $('sel-label').innerHTML = `<strong>${n} objet${n > 1 ? 's' : ''}</strong> sélectionné${n > 1 ? 's' : ''}`;
     if (STATE.selection.multiIndex >= n) STATE.selection.multiIndex = 0;
     const rev = n > 1 ? rangRevue(STATE.layers.find((l) => l.id === STATE.selection.layerId)) : null;
-    $('sel-pos').textContent = rev ? `${rev.rang} / ${rev.total}` : `${n} / ${n}`;
+    // Un objet seul, avec une tournée : son rang sur la ligne (« 4 / 12 »), puisque ◀ ▶ la suivent.
+    const ordreSel = n === 1 ? ordreTournee(STATE.selection.layerId) : null;
+    const rangSel = ordreSel ? rangDansTournee(ordreSel, `${STATE.selection.layerId}:${STATE.selection.features[0]}`) : null;
+    $('sel-pos').textContent = rev ? `${rev.rang} / ${rev.total}` : (rangSel && rangSel.rang > 0 ? `${rangSel.rang} / ${rangSel.total}` : `${n} / ${n}`);
     multiBaseValues = null;
     updateHighlight();
     renderInspector();
@@ -14791,11 +14918,12 @@ const A = {
     storyStep(d) { allerEtape(_storyIdx + d); },
     choisirTrajet() { choisirTrajet(false); },
     /** Itinéraire sur un réseau de lignes : départ, points de passage, arrivée. */
-    itineraireDemarrer() {
-        if (!assertCanWrite('créer un trajet')) return;
-        const couche = STATE.layers.find((l) => l.id === $('itineraire-couche')?.value);
+    itineraireDemarrer(selectId = 'itineraire-couche', cibleTournee = null) {
+        if (!assertCanWrite(cibleTournee ? 'régler une tournée' : 'créer un trajet')) return;
+        const couche = STATE.layers.find((l) => l.id === $(selectId)?.value);
         if (!couche) { showToast('Choisissez une couche de lignes', 'warning'); return; }
         if (trajetPickMode) annulerChoixTrajet();
+        _cibleTournee = cibleTournee;
         showLoading('Lecture du réseau…');
         // Le réseau se construit hors de l'événement : plusieurs milliers de tronçons prennent un instant.
         setTimeout(() => {
@@ -14820,7 +14948,7 @@ const A = {
         recalculerItineraire();
         if (STATE.currentModule === 'recit') renderRecit();
     },
-    itineraireAnnuler() { terminerItineraire(); if (STATE.currentModule === 'recit') renderRecit(); },
+    itineraireAnnuler() { terminerItineraire(); _cibleTournee = null; if (STATE.currentModule === 'recit') renderRecit(); },
     itineraireTerminer() {
         const s = _itineraire;
         if (!s?.calcul?.ok) return;
@@ -14867,6 +14995,39 @@ const A = {
         await clientHorsLigne()?.abandonner(id);
     },
     /** L'auteur propose (ou non) cette étape comme contexte en exploitation. */
+    tourneeChoisir(i) {
+        if (!assertCanWrite('régler une tournée')) return;
+        const e = STATE.story[i];
+        if (!e || !usageDe(e.state).contexte) return;
+        _tourneeVue = e.cle;
+        if (trajetPickMode) annulerChoixTrajet();
+        choisirTrajet(false, e.cle);
+        rafraichirTrajet();
+    },
+    tourneeVoir(i) {
+        const e = STATE.story[i];
+        const trace = e && tourneeDe(e.state);
+        if (!trace) return;
+        _tourneeVue = e.cle;
+        rafraichirTrajet();
+        fitToFeatures([{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: trace.coordinates } }]);
+    },
+    tourneeRetirer(i) {
+        if (!assertCanWrite('retirer une tournée')) return;
+        const e = STATE.story[i];
+        if (!e || !tourneeDe(e.state)) return;
+        e.state = avecUsage(e.state, { tournee: null });
+        markDirty();
+        persistStory(true);
+        rafraichirTrajet();
+        renderRecit();
+        showToast('Tournée retirée', 'info');
+    },
+    /** Un ouvrage de la liste de la tournée : la carte s'y rend et sa fiche s'ouvre, comme depuis « Choisir un objet ». */
+    tourneeOuvrir(coucheId, idx) {
+        $('map-controls-dock')?.classList.add('collapsed');
+        allerAObjet(coucheId, idx);
+    },
     storyContexte(i, oui) {
         if (!assertCanWrite('proposer un contexte')) return;
         const etape = STATE.story[i];
@@ -14893,6 +15054,7 @@ const A = {
         _alerteTexte = '';
         _storyPresenting = false;
         _contexteCle = null;
+        rafraichirTrajet();
         document.body.classList.remove('story-presenting');
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
@@ -16151,8 +16313,16 @@ function nav(dir) {
     } else {
         const total = layer.geojson.features.length;
         const cur = STATE.selection.features[0] ?? 0;
-        const tous = Array.from({ length: total }, (_, k) => k);
-        const next = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), tous, cur, dir);
+        // Avec une tournée, ◀ ▶ suivent l'ordre de la ligne ; sinon l'ordre de la couche, en sautant ce que les filtres masquent.
+        const ordre = ordreTournee(layer.id);
+        let next;
+        if (ordre && ordre.length) {
+            const cle = voisinDansTournee(ordre, `${layer.id}:${cur}`, dir);
+            next = ordre.find((o) => o.cle === cle)?.idx ?? null;
+        } else {
+            const tous = Array.from({ length: total }, (_, k) => k);
+            next = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), tous, cur, dir);
+        }
         if (next == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
         STATE.selection.features = [next];
         flyToFeature(layer, next); afterSelectionChange();

@@ -35,7 +35,14 @@ export function avecUsage(etat, patch = {}) {
   const usage = { ...usageDe(etat), ...patch };
   // Les relevés proposés suivent le contexte : sans contexte, pas de règle à garder.
   const releves = 'releves' in patch ? patch.releves : relevesDe(etat);
-  if (usage.contexte) sortie.usage = { contexte: true, ...(Array.isArray(releves) ? { releves: [...releves] } : {}) };
+  const tournee = 'tournee' in patch ? patch.tournee : tourneeDe(etat);
+  if (usage.contexte) {
+    sortie.usage = {
+      contexte: true,
+      ...(Array.isArray(releves) ? { releves: [...releves] } : {}),
+      ...(tournee ? { tournee } : {}),
+    };
+  }
   else delete sortie.usage;
   return sortie;
 }
@@ -51,6 +58,23 @@ export function relevesDe(etat) {
   const u = etat && typeof etat === 'object' ? etat.usage : null;
   const r = u && typeof u === 'object' ? u.releves : null;
   return Array.isArray(r) ? r.filter((x) => typeof x === 'string' && x) : null;
+}
+
+/**
+ * La tournée du contexte : sa ligne de travail (voir `lib/tournee.js`), ou `null`. Une ligne d'au moins deux points distincts ;
+ * rien d'autre ne la décrit (pas de rayon : elle est incluse dans son contexte).
+ *
+ * @returns {{type: 'LineString', coordinates: number[][], sourceTable?: string|null, sourceRowId?: any, nom?: string}|null}
+ */
+export function tourneeDe(etat) {
+  const u = etat && typeof etat === 'object' ? etat.usage : null;
+  const t = u && typeof u === 'object' ? u.tournee : null;
+  const c = t && Array.isArray(t.coordinates) ? t.coordinates : null;
+  if (!c || c.length < 2) return null;
+  const bons = c.filter((p) => Array.isArray(p) && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1])));
+  if (bons.length < 2) return null;
+  if (!bons.some((p) => Number(p[0]) !== Number(bons[0][0]) || Number(p[1]) !== Number(bons[0][1]))) return null;
+  return t;
 }
 
 /** Le relevé de la couche de cette clé est-il proposé, selon la liste `releves` d'un contexte (`null` : oui, sans réserve) ? */
