@@ -2979,3 +2979,21 @@ avec son explication dans un « i » (`controlVariantHint`) ; le guide des types
 la bulle garde les retours à la ligne : `white-space: pre-line`) ; « Visible en lecture · pastille carte » et « 2–3 fonds max »
 sont dans le titre « Environnement » ; les champs sans valeur tiennent en une ligne (« 3 champs sans valeur ⓘ »). Une liste de
 valeurs se lit **en entier** : c'est le module qui défile, plus la liste (`#module-body .cats { max-height: none }`).
+
+## Les contrôles de la carte (dock) : un seul habillage (03/10/2026)
+
+- **Référence : le contrôle du soleil** — une capsule, une ligne, un libellé en petites capitales (`.dock-label`), des segments
+  arrondis (`.dock-seg`), pas de boîtes dans les boîtes. **2D/3D** (« Vue ») et **fonds** (« Fond ») suivent ; les fonds ont
+  des **pastilles de couleur** (`PASTILLES_FONDS`) à la place des emoji, et sur téléphone seul le fond choisi garde son nom.
+- **Contrôle de données** (`renderControlBody(layer, c, { dock: true })`) : une seule carte blanche, un en-tête (nom, étiquette),
+  une ligne « 5 valeurs · Tout · Aucun » (`htmlOutilsSelect`), la liste sans cadre ni défilement imbriqué, cases à l'accent
+  d'Atlas.
+- **Relevé** et **Contexte** : l'aide est dans un « i » sur le titre (plus de paragraphe), « Scène de base » sans sous-titre.
+- **Pastilles** : celles qui **agissent** (Récit, Relevé, Contexte) portent leur nom dès 900 px de large et sont séparées par un
+  trait (`.dock-sep`) de celles qui **règlent** (soleil, 2D/3D, fonds, filtres), qui restent des pastilles.
+- **Récit et contextes** : une étape marquée « contexte » sert les contextes, pas la visite guidée. La pastille « Récit » ne paraît
+  donc que si la scène a **au moins une étape qui n'est pas un contexte** ; « Contexte », que s'il y en a au moins un. Une scène
+  qui ne compte que des contextes n'offre plus « Lire le récit » à côté de « Contexte » (deux fois la même chose). Le récit,
+  lui, joue toujours toutes les étapes.
+- Vérifié à 1400 px dans l'application simulée ; la réduction des fonds à 390 px n'a pas été vue (la fenêtre de l'outil ne descend
+  pas sous 500 px).

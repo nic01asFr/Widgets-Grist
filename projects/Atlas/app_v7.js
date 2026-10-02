@@ -6215,9 +6215,8 @@ function renderReleveDockSlotHtml() {
         </div>`;
     }).join('');
     return `<div class="dock-slot-data dock-slot-releve">
-        <div class="dock-slot-head"><span class="dock-slot-title">Relevé</span></div>
+        <div class="dock-slot-head"><span class="dock-slot-title">Relevé${infoBulle('Touchez un objet sur la carte, ou choisissez-le dans la liste. « Cadrer » centre la carte sur la couche.')}</span></div>
         <div class="dock-slot-body">
-            <p class="releve-aide">Touchez un objet sur la carte, ou choisissez-le dans la liste.</p>
             ${rangees}
         </div>
     </div>`;
@@ -6262,9 +6261,13 @@ function listDockPills() {
     // vient EN TETE : c'est la seule qui lance quelque chose au lieu de
     // regler, et le lecteur doit la trouver sans chercher.
     const mobile = document.body.classList.contains('mobile-layout');
+    // Le récit est une visite guidée ; un contexte est un cadrage de travail (couches, filtres, heure) qu'on choisit sans
+    // séquence. Une étape marquée « contexte » sert donc le second, pas le premier : une scène dont toutes les étapes sont des
+    // contextes n'a pas de récit à lire, et lui offrir « Lire le récit » à côté de « Contexte » proposait deux fois la même chose.
+    const etapesDeRecit = (STATE.story || []).filter((s) => !usageDe(s.state).contexte).length;
     if (pastilleRecitRequise({
         lecture: CONFIG.viewMode,
-        nbEtapes: STATE.story?.length || 0,
+        nbEtapes: etapesDeRecit,
         enPresentation: lecteurRecitActif(),
     })) {
         pills.unshift({
@@ -6272,6 +6275,7 @@ function listDockPills() {
             kind: 'action',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>',
             label: 'Lire le récit',
+            court: 'Récit',
             action: () => A.storyPlay(0),
         });
     }
@@ -6287,6 +6291,7 @@ function listDockPills() {
             kind: 'releve',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg>',
             label: alerte.allumee && alerte.texte ? `Relevé · ${alerte.texte}` : 'Relevé',
+            court: 'Relevé',
             alerte: !!alerte.allumee,
         };
         const iRecit = pills.findIndex((p) => p.id === 'recit');
@@ -6303,6 +6308,7 @@ function listDockPills() {
             kind: 'contexte',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
             label: courant ? `Contexte · ${courant.titre}` : 'Contexte',
+            court: 'Contexte',
         });
     }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
@@ -6387,22 +6393,34 @@ function renderView3dDockSlotHtml() {
     const pitch = map?.getPitch() || 0;
     const is3d = pitch > 10;
     return `<div class="dock-slot-view3d">
-        <div class="dock-seg">
-            <button type="button" class="dock-seg-btn ${!is3d ? 'active' : ''}" onclick="A.setView3d(false)">2D</button>
-            <button type="button" class="dock-seg-btn ${is3d ? 'active' : ''}" onclick="A.setView3d(true)">3D</button>
+        <span class="dock-label">Vue</span>
+        <div class="dock-seg" role="group" aria-label="Vue 2D ou 3D">
+            <button type="button" class="dock-seg-btn ${!is3d ? 'active' : ''}" aria-pressed="${!is3d}" onclick="A.setView3d(false)">2D</button>
+            <button type="button" class="dock-seg-btn ${is3d ? 'active' : ''}" aria-pressed="${is3d}" onclick="A.setView3d(true)">3D</button>
         </div>
     </div>`;
 }
+
+/** Une pastille de couleur pour chaque fond : de quoi le reconnaître sans lire, à la place d'un emoji propre à chaque appareil. */
+const PASTILLES_FONDS = {
+    liberty: 'linear-gradient(135deg, #ece6d6 50%, #f2c14e 50%)',
+    bright: 'linear-gradient(135deg, #e3d3ac 50%, #9ec6e0 50%)',
+    positron: 'linear-gradient(135deg, #f1f1f1 50%, #d9d9d9 50%)',
+    'plan-ign': 'linear-gradient(135deg, #cfe3bf 50%, #f4f0e0 50%)',
+    'ortho-ign': 'linear-gradient(135deg, #51603f 50%, #8a7d5c 50%)',
+};
 
 function renderBasemapDockSlotHtml() {
     const keys = basemapChoicesForDock();
     const cur = STATE.settings.basemap;
     return `<div class="dock-slot-basemap">
-        <div class="dock-chips">${keys.map((k) => {
+        <span class="dock-label">Fond</span>
+        <div class="dock-seg" role="group" aria-label="Fond de carte">${keys.map((k) => {
             const b = BASEMAPS[k];
             const esc = String(k).replace(/'/g, "\\'");
             const lbl = String(b.label).replace(/"/g, '&quot;');
-            return `<button type="button" class="dock-chip ${cur === k ? 'active' : ''}" onclick="A.setBasemap('${esc}')" title="${lbl}">${b.icon}<span>${b.label}</span></button>`;
+            const sw = PASTILLES_FONDS[k] || '#ddd';
+            return `<button type="button" class="dock-seg-btn ${cur === k ? 'active' : ''}" aria-pressed="${cur === k}" onclick="A.setBasemap('${esc}')" title="${lbl}"><span class="dock-sw" style="background:${sw}" aria-hidden="true"></span><span>${b.label}</span></button>`;
         }).join('')}</div>
     </div>`;
 }
@@ -6435,12 +6453,15 @@ function renderDockSlotHost() {
     } else if (pill.kind === 'data') {
         const t = controlVariantDockLabel(pill.control);
         const label = (pill.label || '').replace(/</g, '&lt;');
+        const outils = htmlOutilsSelect(pill.layer, pill.control);
+        const n = pill.control.type === 'select' ? controlUniqueValues(pill.layer, pill.control.field, MAX_VALEURS_LISTE).length : 0;
         slotHost.innerHTML = `<div class="dock-slot-data">
             <div class="dock-slot-head">
                 <span class="dock-slot-title">${label}</span>
                 <span class="dock-slot-tag">${t}</span>
             </div>
-            <div class="dock-slot-body">${renderControlBody(pill.layer, pill.control)}</div>
+            ${outils ? `<div class="dock-ligne-outils"><span>${n} valeur${n > 1 ? 's' : ''}</span><span class="dock-outils">${outils}</span></div>` : ''}
+            <div class="dock-slot-body">${renderControlBody(pill.layer, pill.control, { dock: true })}</div>
         </div>`;
     }
 }
@@ -6488,14 +6509,19 @@ function refreshControlsDock() {
     // d'en arriver ici.
     if (!_openDockPill) dock.classList.add('collapsed');
 
-    fabsHost.innerHTML = pills.map((p) => {
+    // Deux familles : celles qui AGISSENT (lire le récit, relever, choisir un contexte) portent leur nom ; celles qui RÈGLENT
+    // (soleil, 2D/3D, fonds, filtres) restent des pastilles. Un séparateur les distingue.
+    const agit = (p) => !!p.court;
+    fabsHost.innerHTML = pills.map((p, i) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
         const isOpen = (_openDockPill === p.id && !dock.classList.contains('collapsed')) || !!p.active;
         const ic = p.id === 'sun'
             ? '<span class="sun-dot" aria-hidden="true"></span>'
             : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
-        return `<button type="button" class="dock-fab ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}</button>`;
+        const lib = agit(p) ? `<span class="dock-fab-lib">${String(p.court).replace(/</g, '&lt;')}</span>` : '';
+        const sep = agit(p) && pills[i + 1] && !agit(pills[i + 1]) ? '<span class="dock-sep" aria-hidden="true"></span>' : '';
+        return `<button type="button" class="dock-fab ${agit(p) ? 'avec-lib' : ''} ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}${lib}</button>${sep}`;
     }).join('');
 
     fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
@@ -6664,7 +6690,16 @@ function renderDataControlRow(layer, field, type, c, profil) {
     </div>`;
 }
 
-function renderControlBody(layer, c) {
+/** « Tout » et « Aucun » d'un contrôle à valeurs multiples ; vide pour un choix unique. */
+function htmlOutilsSelect(layer, c) {
+    if (c.type !== 'select' || c.variant === 'select_single') return '';
+    const lid = escapeHtml(String(layer.id).replace(/'/g, "\\'"));
+    const fid = escapeHtml(String(c.field).replace(/'/g, "\\'"));
+    return `<button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
+        <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>`;
+}
+
+function renderControlBody(layer, c, { dock = false } = {}) {
     const esc = (s) => escapeHtml(String(s).replace(/'/g, "\\'"));
     ensureControlVariant(c, c.type);
     const lid = esc(layer.id);
@@ -6697,7 +6732,8 @@ function renderControlBody(layer, c) {
         const ligne = (value, texte, count, classe = '') => `<label class="cat-row${classe}" style="cursor:pointer"><input type="${inputType}" name="${nameAttr}" ${isSelectValueChecked(c, value) ? 'checked' : ''} onchange="A.toggleControlValue('${lid}','${fid}','${chaineJs(value)}')"><span class="cat-value" title="${escapeHtml(texte)}">${escapeHtml(texte)}</span><span class="cat-count">${count == null ? '' : count}</span></label>`;
         const lignes = vals.map((v) => ligne(v.value, libelle(v.value), v.count)).join('')
             + (sansValeur.offert ? ligne('', '(sans valeur)', sansValeur.count, ' cat-row-vide') : '');
-        const outils = c.variant === 'select_single' ? '' : `<div class="ctl-outils">
+        // Dans le dock, « Tout / Aucun » est dans l'en-tête (`htmlOutilsSelect`) : une rangée de moins au-dessus de la liste.
+        const outils = dock || c.variant === 'select_single' ? '' : `<div class="ctl-outils">
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>
         </div>`;
@@ -7572,10 +7608,10 @@ function renderContexteDockSlotHtml() {
         <span class="contexte-nom">${echapper(titre)}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
     </button>`;
     return `<div class="dock-slot-data dock-slot-contexte">
-        <div class="dock-slot-head"><span class="dock-slot-title">Contexte</span></div>
+        <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
             <div class="contexte-liste">
-                ${choix(null, 'Scène de base', 'La scène telle que l’équipe l’a réglée', !actif)}
+                ${choix(null, 'Scène de base', '', !actif)}
                 ${liste.map((c) => choix(c.cle, c.titre, '', c.cle === actif)).join('')}
             </div>
             ${courant && courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}

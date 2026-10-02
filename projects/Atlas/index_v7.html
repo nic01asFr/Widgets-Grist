@@ -605,14 +605,7 @@
         .dock-slot-data .cat-row { border-radius: 8px; padding: 4px 6px; }
         .dock-slot-data .cat-row:hover { background: rgba(0,0,0,0.03); }
         .dock-slot-data .cat-count { opacity: 0.86; }
-        .dock-seg {
-            display: flex; border: 1px solid var(--hairline);
-            border-radius: 10px; overflow: hidden;
-        }
-        .dock-seg-btn {
-            padding: 6px 14px; border: none; background: transparent;
-            font-size: 12px; cursor: pointer; color: var(--muted);
-        }
+        .dock-seg-btn { border: none; background: transparent; cursor: pointer; color: var(--muted); }
         .dock-seg-btn.active { background: var(--ink); color: var(--bg); }
         .dock-slot-basemap .dock-chips {
             display: flex; gap: 6px; flex-wrap: nowrap;
@@ -703,6 +696,39 @@
         @media (max-width: 400px) {
             .dock-slot-sun .alt-lbl { display: none; }
         }
+        /* Dock : un meme habillage pour tous les controles, celui du soleil pour reference — une capsule, une ligne, un libelle
+           en petites capitales, des segments arrondis, pas de boites dans les boites. */
+        .dock-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); flex-shrink: 0; }
+        .dock-slot-basemap, .dock-slot-view3d { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .dock-seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--hairline); border-radius: 999px; background: var(--surface-muted); }
+        .dock-seg-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; flex-shrink: 0; transition: background-color 0.14s ease, color 0.14s ease; }
+        .dock-seg-btn:not(.active):hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+        .dock-seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .dock-sw { width: 13px; height: 13px; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.18); }
+        .dock-seg-btn.active .dock-sw { border-color: rgba(255,255,255,0.55); }
+        .dock-slot-basemap .dock-seg { overflow-x: auto; scrollbar-width: none; max-width: min(calc(100vw - 200px), 440px); }
+        .dock-slot-basemap .dock-seg::-webkit-scrollbar { display: none; }
+        /* Les pastilles qui agissent portent leur nom ; un trait les separe de celles qui reglent. */
+        .map-controls-dock .dock-fab.avec-lib { width: auto; padding: 0 14px; border-radius: 27px; gap: 8px; }
+        .dock-fab-lib { display: none; font: 600 12.5px/1 var(--sans); color: var(--ink); white-space: nowrap; }
+        @media (min-width: 900px) { .map-controls-dock .dock-fab.avec-lib .dock-fab-lib { display: inline; } }
+        .dock-sep { width: 1px; height: 26px; flex: 0 0 auto; margin: 0 2px; background: var(--hairline-strong); }
+        /* Contenu des panneaux : pas de carte beige dans la capsule blanche. */
+        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0; }
+        .dock-slot-data .cats { background: none; border: none; padding: 0; }
+        .dock-slot-data .cat-row { padding: 6px 4px; font-size: 12.5px; }
+        .dock-slot-data .cat-count { background: none; padding: 0; font-size: 10.5px; color: var(--muted); opacity: 1; }
+        .dock-ligne-outils { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 11px; color: var(--muted); }
+        .dock-outils { display: flex; gap: 2px; }
+        .dock-outils .ctl-mini { border: none; background: none; padding: 3px 7px; border-radius: 6px; color: var(--accent); font: 600 11.5px/1 var(--sans); cursor: pointer; }
+        .dock-outils .ctl-mini:hover { background: rgba(196,69,54,0.08); }
+        .dock-slot-title .info-i { margin-left: 6px; }
+        /* Téléphone : les fonds se reconnaissent à leur pastille ; seul le fond choisi garde son nom. */
+        @media (max-width: 480px) {
+            .dock-slot-basemap .dock-seg-btn { padding: 5px 8px; }
+            .dock-slot-basemap .dock-seg-btn:not(.active) > span:not(.dock-sw) { display: none; }
+        }
+        .dock-slot-data input[type="checkbox"], .dock-slot-data input[type="radio"] { accent-color: var(--accent); }
         .shadow-toggle {
             background: transparent; border: none; cursor: pointer; color: var(--muted);
             font-size: 11px; display: flex; align-items: center; gap: 4px;
