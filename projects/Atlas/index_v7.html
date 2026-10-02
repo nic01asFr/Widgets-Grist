@@ -194,6 +194,26 @@
         .posture-ic .ic-trait { color: inherit; }
         .avatar[hidden] { display: none; }
         /* Le bouton de synchronisation : un point dit la gravite (rouge a verifier, ambre hors reseau, teal en attente). */
+        /* Enregistrement : l'etat a cote du nom du projet, annuler / retablir dans les actions. */
+        .enreg-etat { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; margin-left: 2px; background: none; border: none; border-radius: 13px; color: var(--muted); font: 500 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
+        .enreg-etat[hidden] { display: none; }
+        .enreg-etat:hover { background: var(--surface-muted); color: var(--ink); }
+        .enreg-etat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .enreg-etat[data-etat="propre"] .enreg-lib { display: none; }
+        .enreg-etat[data-etat="propre"] { color: var(--muted-light); }
+        .enreg-etat[data-etat="modifie"] .ic, .enreg-etat[data-etat="envoi"] .ic { color: var(--accent); }
+        .enreg-etat[data-etat="envoi"] .ic { animation: enreg-pulse 1s ease-in-out infinite; }
+        .enreg-etat[data-etat="erreur"] { color: var(--accent); font-weight: 700; }
+        @keyframes enreg-pulse { 50% { opacity: 0.35; } }
+        @media (prefers-reduced-motion: reduce) { .enreg-etat[data-etat="envoi"] .ic { animation: none; } }
+        .btn-ghost:disabled { opacity: 0.35; cursor: default; }
+        .btn-ghost:disabled:hover { background: transparent; color: var(--muted); }
+        .btn-ghost[hidden] { display: none; }
+        .dirty-dot { display: none !important; }
+        .panneau-enreg { width: min(340px, calc(100vw - 24px)); padding: 10px 12px; gap: 10px; }
+        .enreg-reglage { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; cursor: pointer; }
+        .enreg-reglage input { margin-top: 3px; }
+        .enreg-reglage small { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
         /* Une pastille a cote du nom du projet : calme (rouge doux) hors reseau ou en attente, pleine quand il faut verifier. */
         .synchro-pastille {
             display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; margin-left: 4px;
@@ -1178,6 +1198,8 @@
            regle de l'avatar : ils heritaient d'un fond gris au lieu d'etre
            masques, et « Charger », « Enregistrer » et « Exporter » restaient
            donc offerts en lecture. */
+        body.view-mode .header-actions #btn-annuler,
+        body.view-mode .header-actions #btn-retablir,
         body.view-mode .header-actions #btn-load,
         body.view-mode .header-actions #btn-save,
         body.view-mode .header-actions #btn-export { display: none; }
@@ -1495,6 +1517,9 @@
                projet passent dans le panneau Couches, ou elles sont a leur
                place — on ne charge pas la barre d'un telephone. */
             body.mobile-layout .header-actions .posture-lib { display: none; }
+            body.mobile-layout .header-actions #btn-annuler,
+            body.mobile-layout .header-actions #btn-retablir { display: none; }
+            body.mobile-layout .enreg-lib { display: none; }
             body.mobile-layout .btn-posture { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 50%; }
             body.mobile-layout .avatar { display: none; }
             body.mobile-layout .header-actions #btn-load,
@@ -1674,6 +1699,9 @@
                 <span class="brand-project" id="project-name">Nouveau projet</span>
                 <span class="dirty-dot"></span>
             </div>
+            <button type="button" class="enreg-etat" id="btn-enreg" hidden aria-haspopup="dialog" data-etat="propre" title="Enregistrement" aria-label="Enregistrement">
+                <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span class="enreg-lib"></span>
+            </button>
             <button type="button" class="synchro-pastille" id="btn-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
                 <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg><span class="synchro-lib"></span>
             </button>
@@ -1685,6 +1713,12 @@
             </div>
 
             <div class="header-actions">
+                <button class="btn-ghost" id="btn-annuler" hidden disabled title="Annuler (Ctrl+Z)" aria-label="Annuler">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+                </button>
+                <button class="btn-ghost" id="btn-retablir" hidden disabled title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>
+                </button>
                 <button class="btn-ghost" id="btn-load" title="Ouvrir un projet ou un GeoJSON" aria-label="Ouvrir un projet ou un GeoJSON">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/></svg>
                 </button>

@@ -81,6 +81,7 @@ import { creerDroits, apprendre, categorieTable, configurationEcrivable, posture
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
 import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
 import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=20261002g';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
 import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=20260924x';
 import {
@@ -441,6 +442,7 @@ function markDirty() {
     dirty = true;
     _syncPaused = true;
     $('app-header').classList.add('dirty');
+    planifierEnregistrementAuto();
 }
 
 /**
@@ -455,7 +457,253 @@ function marquerEnregistre() {
     dirty = false;
     _syncPaused = false;
     $('app-header')?.classList.remove('dirty');
+    _enregEtat = 'propre';
+    majIndicateurEnregistrement();
 }
+
+// ============================================================
+// ENREGISTREMENT AUTOMATIQUE, ANNULER / RÉTABLIR
+// ============================================================
+/**
+ * L'apparence d'une couche s'enregistre seule, un instant après le dernier réglage. Ce qui s'enregistre est ce que
+ * « Enregistrer l'apparence » écrirait (les préférences de la couche) : les couches **copiées** (des entités détenues par
+ * Atlas, sans table) ne s'écrivent pas seules, parce que les écrire c'est réécrire leurs entités.
+ *
+ * Chaque enregistrement est un pas de l'historique (`lib/historique-apparence.js`) : « Annuler » remet l'instantané d'avant,
+ * « Rétablir » celui d'après. Des modifications **pas encore enregistrées** s'annulent d'abord, sans rien écrire : on
+ * revient au dernier état enregistré.
+ */
+const _historique = new Historique();
+let _enregEtat = 'propre';          // propre | modifie | envoi | erreur
+let _enregDernier = null;
+let _enregTimer = null;
+let _enregOccupe = false;
+let _enregRelancer = false;
+const AUTO_CLE = 'atlas_autosave';
+const DELAI_ENREG_AUTO_MS = 2500;
+
+function autoActif() { try { return localStorage.getItem(AUTO_CLE) !== '0'; } catch (_) { return true; } }
+function poserAuto(actif) {
+    try { localStorage.setItem(AUTO_CLE, actif ? '1' : '0'); } catch (_) { /* le choix ne sera pas retenu */ }
+    if (actif && _enregEtat === 'modifie') planifierEnregistrementAuto();
+    else majIndicateurEnregistrement();
+}
+const cleHistorique = (l) => clePrefsCouche(l) || l.id;
+/** Peut-on écrire l'apparence, ici et maintenant ? */
+function peutEnregistrerAuto() { return !!CONFIG.grist.ready && !CONFIG.viewMode && !_storyPresenting; }
+/** Les couches dont l'apparence s'écrit seule : celles qui ont une clé de préférences. */
+function couchesAuto() { return STATE.layers.filter((l) => clePrefsCouche(l)); }
+/** Ce qui est enregistré pour cette couche, tel qu'on vient de le lire ou de l'écrire. */
+function baselineApparence(layer) { if (clePrefsCouche(layer)) layer._apparence = capturerApparence(layer); }
+
+function majIndicateurEnregistrement() {
+    const b = $('btn-enreg');
+    if (!b) return;
+    const visible = !!CONFIG.grist.ready && !CONFIG.viewMode;
+    b.hidden = !visible;
+    if (!visible) return;
+    const auto = autoActif();
+    const textes = { propre: 'Enregistré', modifie: auto ? 'Modifié…' : 'Non enregistré', envoi: 'Enregistrement…', erreur: 'Échec · réessayer' };
+    b.dataset.etat = _enregEtat;
+    b.querySelector('.enreg-lib').textContent = textes[_enregEtat];
+    const quand = _enregDernier ? ' · ' + new Date(_enregDernier).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+    b.title = _enregEtat === 'propre' ? `Tout est enregistré${quand}` : textes[_enregEtat] + (auto ? '' : ' — enregistrement automatique désactivé');
+    b.setAttribute('aria-label', b.title);
+    majBoutonsAnnuler();
+}
+
+let _majBoutonsTimer = null;
+function majBoutonsAnnuler() {
+    clearTimeout(_majBoutonsTimer);
+    _majBoutonsTimer = setTimeout(() => {
+        const visible = !!CONFIG.grist.ready && !CONFIG.viewMode;
+        const un = $('btn-annuler'); const re = $('btn-retablir');
+        if (un) { un.hidden = !visible; un.disabled = !(_enregEtat !== 'propre' || _historique.peutAnnuler()); }
+        if (re) { re.hidden = !visible; re.disabled = !_historique.peutRetablir() || _enregEtat === 'modifie' || _enregEtat === 'erreur'; }
+    }, 60);
+}
+
+function planifierEnregistrementAuto() {
+    if (!peutEnregistrerAuto()) return;
+    _enregEtat = 'modifie';
+    majIndicateurEnregistrement();
+    if (!autoActif()) return;
+    clearTimeout(_enregTimer);
+    _enregTimer = setTimeout(() => { enregistrerAuto(); }, DELAI_ENREG_AUTO_MS);
+}
+
+/** Écrit l'apparence des couches qui ont changé depuis le dernier enregistrement. */
+async function enregistrerAuto() {
+    clearTimeout(_enregTimer);
+    if (!peutEnregistrerAuto()) return;
+    if (_enregOccupe) { _enregRelancer = true; return; }
+    _enregOccupe = true;
+    _enregEtat = 'envoi';
+    majIndicateurEnregistrement();
+    let echec = false;
+    try {
+        for (const layer of couchesAuto()) {
+            const snap = capturerApparence(layer);
+            const base = layer._apparence;
+            if (!base) { layer._apparence = snap; continue; }
+            if (memeApparence(base, snap)) continue;
+            try {
+                const ok = await saveLayerToGrist(layer, true, { lancer: true });
+                if (!ok) throw new Error('écriture non faite');
+                _historique.enregistrer(cleHistorique(layer), base, snap);
+                layer._apparence = snap;
+            } catch (e) { echec = true; console.warn('[Atlas] enregistrement automatique', e?.message || e); }
+        }
+    } finally { _enregOccupe = false; }
+    if (!echec) {
+        _enregDernier = Date.now();
+        marquerEnregistre();
+    } else {
+        _enregEtat = 'erreur';
+        majIndicateurEnregistrement();
+    }
+    if (_enregRelancer) { _enregRelancer = false; enregistrerAuto(); }
+}
+
+/** Repeint une couche dont on vient de remettre l'apparence. */
+function repeindreApparence(l) {
+    initSymbolization(l);
+    repeindreEntites(l);
+    applyLayerStyle(l);
+    if (l.controls?.length) applyControls(l);
+    syncLayerToMapState(l);
+    reconcilePanelVisibilityToMap();
+    applyLayerOrder();
+    Models3D.scheduleBuild();
+    updateLegend();
+    renderInspector();
+    refreshLayersPanelIfOpen();
+    refreshControlsDock();
+}
+
+/** Des modifications pas encore enregistrées : on revient au dernier état enregistré, sans rien écrire. */
+function annulerBrouillon() {
+    let n = 0;
+    for (const l of couchesAuto()) {
+        if (l._apparence && !memeApparence(l._apparence, capturerApparence(l))) {
+            restaurerApparence(l, l._apparence);
+            repeindreApparence(l);
+            n++;
+        }
+    }
+    return n;
+}
+
+async function appliquerPas(pas, cote) {
+    const layer = STATE.layers.find((l) => cleHistorique(l) === pas.cle);
+    if (!layer) { showToast('Cette couche n’existe plus', 'warning'); return false; }
+    restaurerApparence(layer, pas[cote]);
+    repeindreApparence(layer);
+    try {
+        const ok = await saveLayerToGrist(layer, true, { lancer: true });
+        if (!ok) throw new Error('écriture non faite');
+        layer._apparence = pas[cote];
+        _enregDernier = Date.now();
+        marquerEnregistre();
+    } catch (e) {
+        _enregEtat = 'erreur';
+        majIndicateurEnregistrement();
+        showToast('Non enregistré : ' + (e?.message || e), 'error');
+        return false;
+    }
+    return true;
+}
+
+async function annulerApparence() {
+    if (!peutEnregistrerAuto()) return;
+    clearTimeout(_enregTimer);
+    if (annulerBrouillon()) {
+        marquerEnregistre();
+        showToast('Modifications non enregistrées annulées', 'info');
+        return;
+    }
+    const pas = _historique.annuler();
+    if (!pas) { showToast('Rien à annuler', 'info'); majBoutonsAnnuler(); return; }
+    const nom = STATE.layers.find((l) => cleHistorique(l) === pas.cle)?.name || '';
+    if (await appliquerPas(pas, 'avant')) showToast(`Annulé${nom ? ' · ' + nom : ''}`, 'info');
+}
+
+async function retablirApparence() {
+    if (!peutEnregistrerAuto()) return;
+    // Des modifications non enregistrées passent avant : les rétablir par-dessus les écraserait.
+    if (_enregEtat === 'modifie' || _enregEtat === 'erreur') { showToast('Des modifications ne sont pas enregistrées : annulez-les ou enregistrez-les d’abord', 'warning'); return; }
+    const pas = _historique.retablir();
+    if (!pas) { showToast('Rien à rétablir', 'info'); majBoutonsAnnuler(); return; }
+    const nom = STATE.layers.find((l) => cleHistorique(l) === pas.cle)?.name || '';
+    if (await appliquerPas(pas, 'apres')) showToast(`Rétabli${nom ? ' · ' + nom : ''}`, 'info');
+}
+
+function fermerPanneauEnreg() {
+    document.getElementById('panneau-enreg')?.remove();
+    document.removeEventListener('pointerdown', _fermeturePanneauEnreg, true);
+    document.removeEventListener('keydown', _touchePanneauEnreg, true);
+}
+function _fermeturePanneauEnreg(e) { if (!e.target.closest?.('#panneau-enreg, #btn-enreg')) fermerPanneauEnreg(); }
+function _touchePanneauEnreg(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerPanneauEnreg(); } }
+
+/** Le réglage de l'enregistrement automatique, et l'enregistrement immédiat. */
+function ouvrirPanneauEnreg(ancre) {
+    if (document.getElementById('panneau-enreg')) { fermerPanneauEnreg(); return; }
+    const p = document.createElement('div');
+    p.id = 'panneau-enreg';
+    p.className = 'posture-menu panneau-enreg';
+    p.setAttribute('role', 'dialog');
+    p.setAttribute('aria-label', 'Enregistrement');
+    const auto = autoActif();
+    p.innerHTML = `<div class="posture-titre">Enregistrement</div>
+        <label class="enreg-reglage"><input type="checkbox" id="enreg-auto" ${auto ? 'checked' : ''}>
+            <span>Enregistrer automatiquement<small>L’apparence des couches s’écrit dans le document 2 s après le dernier réglage. Les couches copiées (sans table) s’enregistrent par « Enregistrer l’apparence ».</small></span></label>
+        <button type="button" class="btn btn-soft btn-full" id="enreg-maintenant">Enregistrer maintenant</button>`;
+    document.body.appendChild(p);
+    p.querySelector('#enreg-auto').onchange = (e) => poserAuto(e.target.checked);
+    p.querySelector('#enreg-maintenant').onclick = () => { fermerPanneauEnreg(); enregistrerAuto(); };
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        p.style.top = `${Math.min(r.bottom + 8, window.innerHeight - p.offsetHeight - 12)}px`;
+        p.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - p.offsetWidth - 12))}px`;
+    } else { p.classList.add('posture-feuille'); }
+    document.addEventListener('pointerdown', _fermeturePanneauEnreg, true);
+    document.addEventListener('keydown', _touchePanneauEnreg, true);
+}
+
+/**
+ * Les réglages d'apparence ne passent pas tous par `markDirty` : beaucoup ne font que repeindre. On regarde donc **après chaque
+ * geste dans les panneaux** (couleur, forme, contrôles, visibilité, ordre) si une couche enregistrée diffère de son dernier état
+ * enregistré — une comparaison de signatures, sans écrire. Une seule vérification par rafale de gestes.
+ */
+let _surveillanceTimer = null;
+function surveillerApparence() {
+    if (!peutEnregistrerAuto() || _enregOccupe) return;
+    for (const l of couchesAuto()) {
+        const base = l._apparence;
+        if (!base) { baselineApparence(l); continue; }
+        if (!memeApparence(base, capturerApparence(l))) { planifierEnregistrementAuto(); return; }
+    }
+}
+for (const type of ['input', 'change', 'click', 'pointerup']) {
+    document.addEventListener(type, (e) => {
+        if (!e.target.closest?.('#module-panel, #insp-main, #map-controls-dock')) return;
+        clearTimeout(_surveillanceTimer);
+        _surveillanceTimer = setTimeout(surveillerApparence, 400);
+    }, true);
+}
+
+// Ctrl/Cmd+Z annule, Ctrl/Cmd+Maj+Z ou Ctrl+Y rétablit — sauf dans un champ de saisie, qui garde le sien.
+document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const k = String(e.key).toLowerCase();
+    if (k !== 'z' && k !== 'y') return;
+    const c = e.target;
+    if (c && (c.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(c.tagName))) return;
+    if (!peutEnregistrerAuto()) return;
+    e.preventDefault();
+    if (k === 'y' || e.shiftKey) retablirApparence(); else annulerApparence();
+});
 
 // ============================================================
 // PALETTES
@@ -10972,6 +11220,7 @@ function finalizeNewLayer(layer) {
     updateRailBadge();
     fitToLayer(layer);
     markDirty();
+    baselineApparence(layer);
     if (STATE.currentModule === 'couches' || STATE.currentModule === 'symbo') renderLayersPanel(STATE.currentModule);
     else openModule('couches');
     saveLayerToGrist(layer, true);
@@ -11673,6 +11922,9 @@ function wireBasculeLectureEdition() {
     $('btn-posture')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('hote-edition')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('btn-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
+    $('btn-enreg')?.addEventListener('click', (e) => ouvrirPanneauEnreg(e.currentTarget));
+    $('btn-annuler')?.addEventListener('click', () => annulerApparence());
+    $('btn-retablir')?.addEventListener('click', () => retablirApparence());
     $('hote-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
 }
 
@@ -12261,6 +12513,8 @@ async function initGrist() {
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
         await syncScenePrefsFromGrist();
+        STATE.layers.forEach(baselineApparence);
+        majIndicateurEnregistrement();
         accueilSceneNeuve();
         brancherSynchro();
         refreshControlsDock();
@@ -12724,17 +12978,17 @@ async function ecrireLigneInventaire(layer) {
     }
 }
 
-async function saveLayerToGrist(layer, silent) {
-    if (!CONFIG.grist.ready) return;
+async function saveLayerToGrist(layer, silent, { lancer = false } = {}) {
+    if (!CONFIG.grist.ready) return false;
     // Pendant un récit, ce que la couche montre est l'état de l'étape, pas sa
     // configuration : l'écrire remplacerait les préférences par celles d'une
     // étape (fermer une sélection ou toucher un filtre suffisait). Relevé à
     // l'audit du 02/10/2026 ; les contextes réutilisent cette restitution.
     if (_storyPresenting) {
         if (!silent) showToast('Quittez le récit pour enregistrer l’apparence', 'warning');
-        return;
+        return false;
     }
-    if (!assertCanWrite('enregistrer les préférences')) return;
+    if (!assertCanWrite('enregistrer les préférences')) return false;
     // Une couche que le manifeste decrit n'a que son apparence a enregistrer :
     // la donnee est deja quelque part. C'est cet aiguillage qui protegeait mal
     // `Maquette_Layers` — voir `clePrefsCouche`.
@@ -12746,11 +13000,13 @@ async function saveLayerToGrist(layer, silent) {
             if (ligneInventaireRequise(layer)) await ecrireLigneInventaire(layer);
             if (!silent) showToast(`Apparence enregistrée · ${layer.name}`, 'success');
             marquerEnregistre();
+            return true;
         } catch (e) {
             enterViewModeOnWriteFail(e);
             if (!silent) showToast('Grist : ' + e.message, 'error');
+            if (lancer) throw e;
         }
-        return;
+        return false;
     }
     try {
         await ensureMaquetteLayersTable();
@@ -14688,12 +14944,25 @@ const A = {
             grist.docApi.applyUserActions([['RemoveRecord', 'Maquette_Layers', l.gristId]])
                 .catch((err) => showToast('Suppression non enregistrée dans Grist : ' + (err?.message || err), 'error'));
         }
+        _historique.oublier(cleHistorique(l));
         STATE.layers = STATE.layers.filter((x) => x.id !== id);
         if (STATE.selectedLayer === id) STATE.selectedLayer = null;
         updateRailBadge(); Models3D.rebuildScene(); renderLayersPanel(STATE.currentModule); renderInspector(); updateLegend();
         showToast('Couche supprimée', 'success');
     },
-    saveLayer(id) { const l = STATE.layers.find((x) => x.id === id); if (l) saveLayerToGrist(l); markDirty(); },
+    async saveLayer(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        clearTimeout(_enregTimer);
+        const base = l._apparence;
+        const ok = await saveLayerToGrist(l, false);
+        if (ok && clePrefsCouche(l)) {
+            const snap = capturerApparence(l);
+            if (base) _historique.enregistrer(cleHistorique(l), base, snap);
+            l._apparence = snap;
+        }
+        if (ok) { _enregDernier = Date.now(); marquerEnregistre(); }
+    },
 
     // Modèles
     setModelCat(id, cat) { const l = STATE.layers.find((x) => x.id === id); if (l) { l._modelCat = cat; renderInspector(); } },

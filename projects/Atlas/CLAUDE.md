@@ -2949,3 +2949,25 @@ maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-m
 - **Pas éprouvé en Grist réel — à vérifier avec un espace de test** : la réponse de `POST /api/workspaces/{id}/docs`, un
   `BulkAddRecord` avec identifiants imposés, le comptage SQL, la table par défaut d'un document neuf, le format du retour d'un
   envoi de pièce jointe, et les types de colonnes d'Atlas (`widgetOptions`) à la recréation.
+
+## Enregistrement automatique, annuler / rétablir (03/10/2026)
+
+- **Enregistrement automatique** : l'apparence d'une couche **portée par une clé de préférences** (`clePrefsCouche` : table, ou
+  identifiant du manifeste) s'écrit seule 2,5 s après le dernier geste. Pas de crochet dans chaque réglage — beaucoup ne font que
+  repeindre sans passer par `markDirty` — : après chaque geste dans les panneaux (couleur, forme, contrôles, visibilité…),
+  `surveillerApparence` compare la **signature** de chaque couche à son dernier état enregistré (`_apparence`, de
+  `lib/historique-apparence.js`) et ne planifie une écriture que si elles diffèrent. Les couches **copiées** (sans table) ne
+  s'écrivent pas seules : les écrire, c'est réécrire leurs entités ; elles gardent « Enregistrer l'apparence ».
+  Réglage par appareil (`atlas_autosave`, actif par défaut), jamais en lecture ni pendant un récit.
+- **Indicateur** à côté du nom du projet (`#btn-enreg`, remplace le point « modifié ») : ✓ enregistré, « Modifié… »,
+  « Enregistrement… », « Échec · réessayer ». Il ouvre le réglage et « Enregistrer maintenant ».
+- **Annuler / Rétablir** (`#btn-annuler`, `#btn-retablir`, Ctrl/Cmd+Z, Ctrl/Cmd+Maj+Z ou Ctrl+Y, sauf dans un champ de saisie) :
+  1. des modifications **pas encore enregistrées** s'annulent d'abord — retour au dernier état enregistré, sans rien écrire ;
+  2. sinon l'**historique** (50 pas, un par enregistrement) remet l'instantané d'avant et l'écrit ; « Rétablir » celui d'après.
+  Un nouveau pas vide le « rétablir » ; rétablir est refusé tant que des modifications ne sont pas enregistrées.
+- **Pourquoi pas l'annulation native de Grist** (`grist.commandApi.run('undo')`, offerte aux widgets en accès complet, constatée
+  dans le code de grist-core le 03/10/2026) : elle n'existe que dans le widget (ni l'application, ni une scène locale) ; elle défait
+  « la dernière action du document », qui peut être une cellule modifiée ailleurs ; elle ne dit pas s'il y a quelque chose à
+  annuler ; et relire les préférences **superpose** à l'état de la couche (`applyLayerPrefsBinding`) au lieu de le restituer.
+  Les saisies d'objets (données) restent annulables dans Grist même. Non éprouvé en Grist réel : le comportement exact de la pile
+  d'annulation de Grist face aux écritures du widget.
