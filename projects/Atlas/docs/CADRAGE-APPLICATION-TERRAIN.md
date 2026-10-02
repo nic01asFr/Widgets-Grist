@@ -301,7 +301,14 @@ reposent sur 1 et 2.
 - **Sécurité** : clé API au repos ; une file locale contient des données de terrain, à effacer à la
   déconnexion.
 
-## 11. Ce que SURFAC²E apprend (étude du 02/10/2026) et recommandations
+## 11. Consultation technique de SURFAC²E (02/10/2026) et recommandations
+
+**Statut de cette section (décision du 02/10/2026).** SURFAC²E tourne dans Onyxia : c'est un autre contexte
+d'hébergement et d'usage. Atlas **reste sur le modèle Atlas** (un module, N documents, application Capacitorisée,
+Grist comme source de vérité) et ne calque pas SURFAC²E. Cette section est une **consultation technique
+préalable** : elle sert à ne pas redécouvrir des pièges déjà payés (rejeu, coupure ou refus, doublons), pas à
+importer une architecture. Les « règles » ci-dessous sont des **vérifications à passer**, que chaque lot redémontre
+dans Atlas par ses propres tests.
 
 *Source : lecture seule de `GT SURFAC2E 2026/` (squelette local « v1.0.0 ») et de
 `projects/terrain/`. **Réserve importante** : la copie locale n'est pas la version de production du
@@ -310,7 +317,7 @@ de production (`docs/hors-ligne.md`, `pwa/app-terrain/host.js`) qui n'y sont pas
 (437 cotations dupliquées, une photo envoyée quatre fois, 123 saisies bloquées) ne sont connus que de
 seconde main. Le dépôt Terrain l'avoue lui-même (« on copie du code qu'on n'a pas vu tomber »).*
 
-### 11.1 Les sept règles, à reprendre telles quelles
+### 11.1 Les sept règles, comme points de vigilance
 
 1. Le document d'entrée (`index.html`) se sert **réseau d'abord** ; cache d'abord, il restait figé et aucune
    correction n'atteignait l'appareil. Précache par `Promise.allSettled`, jamais `addAll` (tout ou rien) ;
@@ -349,7 +356,15 @@ Le module `coter` et tout le métier (applicabilité, cotations, régimes) ; la 
 (expose la clé) ; le préchargement de **tables entières** sans filtre (à borner) ; l'asymétrie de structure
 (SURFAC²E : un document, N modules ; Atlas : un module, N documents, donc un cache **par document**).
 
-### 11.4 Un point d'architecture à trancher avant tout code (nouveau)
+### 11.4 Moteur hors ligne : Atlas porte le sien (révisé le 02/10/2026)
+
+*Première proposition, écartée pour l'instant : un moteur unique partagé avec Terrain. Atlas reste sur son modèle ;
+rien ne l'attache à un autre produit.* Ce qui demeure de l'idée : écrire le moteur (file ordonnée par dépendance,
+cache par document, deux files, verrou, indicateur à quatre états) comme **module indépendant dans `lib/`**,
+sans dépendance à l'interface d'Atlas, ce qui le rend testable seul et réutilisable si, plus tard, l'utilisateur
+décide de le mutualiser. Cette mutualisation n'est pas un objectif.
+
+Pour mémoire, la proposition écartée :
 
 `projects/terrain/` (cadrage, aucun code) prévoit déjà **la même mécanique** : hôte, file hors ligne éprouvée,
 formulaires, photo. Atlas y est « une sortie optionnelle » (carte). Bâtir la file, le cache et la
@@ -369,4 +384,4 @@ réel est Atlas (code existant : client REST, adaptateur, application Android) ;
 | 5 | Projet propre à l'appareil ? | **Oui** ; la circulation passe par Grist | ni SURFAC²E ni Terrain n'ont de « projet local » ; Grist reste la source de vérité |
 | 6 | Vocabulaire | **Consulter / Relever / Modifier**, indicateur permanent « à jour · n en attente · hors ligne · n refusées » | SURFAC²E note que « Coter » n'est pas compréhensible d'un nouveau ; verbes d'usage plutôt que noms de modes |
 | 7 | Ordre | **0 → (1 + 3) → 2 → 5 → 6 → 7 → 4 → 8**, la carte hors ligne passe **après** | l'ordre de Terrain place la carte en dernier ; le test d'acceptation (§ 11.2) clôt le lot 1 |
-| 8 | **Un seul moteur hors ligne** pour Atlas et Terrain ? | **Oui**, module indépendant (§ 11.4) | évite de bâtir deux fois la partie la plus coûteuse |
+| 8 | Un moteur hors ligne partagé avec Terrain ? | **Non, pas dans ce cadrage** : Atlas porte le sien, en module indépendant (§ 11.4) | décision du 02/10/2026 : Atlas reste sur le modèle Atlas |
