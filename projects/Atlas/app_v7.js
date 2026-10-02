@@ -14035,7 +14035,7 @@ const A = {
                 <div class="input-label" style="margin-top:10px">Géométrie</div>
                 <div style="display:flex;gap:6px" role="group" aria-label="Géométrie">${types}</div>
                 <div class="layer-meta" id="nc-apercu" style="margin-top:10px" aria-live="polite"></div>
-                <div class="layer-meta" style="margin-top:6px">Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie. Les autres champs s'ajoutent ensuite, dans Grist ou par le module Formulaires.</div>
+                <div class="layer-meta" style="margin-top:6px">${grist._horsLigne?.local ? 'La couche est créée avec les colonnes Nom et Géométrie, sur cet appareil ; elle ira dans Grist avec la scène.' : 'Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie.'} Les autres champs s'ajoutent ensuite, par le module Formulaires${grist._horsLigne?.local ? '' : ' ou dans Grist'}.</div>
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <button class="btn btn-soft" style="flex:1" onclick="A.openModule('couches')">Annuler</button>
                     <button class="btn btn-primary" style="flex:1" id="nc-creer" onclick="A.creerNouvelleCouche()">Créer la couche</button>
