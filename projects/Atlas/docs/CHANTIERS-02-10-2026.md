@@ -17,7 +17,7 @@ tenu ici.
 
 | # | Chantier | Ce que c'est | Décision attendue |
 |---|----------|--------------|-------------------|
-| 1 | **En-tête de l'inspecteur, sur téléphone** | « Saisir… », « Nouvel objet » et la case d'ajout laissent la place d'un seul champ ; les compacter ou les replier | aucune |
+| 1 | **En-tête de l'inspecteur, sur téléphone** — FAIT (commité) | « Saisir · 2 » et « Nouvel objet » côte à côte, la case dessous, l'explication en « i » : l'en-tête passe d'environ 330 px à 163 px à 390 px de large. Reste possible : ouvrir la feuille plus haut par défaut | aucune |
 | 2 | **Panneau Couches** | ligne de couche en deux lignes (nom entier, compteur et badge dessous), actions dans un menu « ⋯ » ou sur la couche active ; « Tout » / « Masquer » discrets et centrés ; liste des tables compacte (« + » à droite, type de géométrie) ; titre court ; bloc « Ajouter une couche » aux libellés clairs (« Table » → « Autre table… ») | aucune |
 | 3 | **Onglets regroupés en cinq** | Couleur \| Forme (Taille + Icône + Modèle 3D) \| Texte (Étiquette) \| Bulle \| Spécifications | à confirmer avant de déplacer des panneaux |
 | 4 | **Lieu : un lieu ou les données** | choix à deux entrées dans le module Lieu — « Sur mes données » (par défaut dès qu'il y a des couches : emprise de toutes les couches ou d'une seule, « utiliser la vue actuelle », ancre du soleil au centre de l'emprise) ou « Un lieu précis » (recherche, position, coordonnées) ; enregistré avec la scène | où l'enregistrer (préférences de scène) |

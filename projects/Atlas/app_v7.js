@@ -7558,10 +7558,11 @@ function boutonRevueObjets(layer) {
     // autant que de tables qui la referencent, nommer le premier laisserait
     // croire qu'il est le seul.
     const combien = formulairesDeLaCouche(layer).length;
-    const libelle = combien
-        ? `📝 Saisir sur les objets${combien > 1 ? ` · ${combien} formulaires` : ''}`
-        : '✏️ Éditer les objets un par un';
-    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
+    const libelle = combien ? `📝 Saisir${combien > 1 ? ` · ${combien}` : ''}` : '✏️ Éditer';
+    const titre = combien
+        ? `Saisir sur les objets${combien > 1 ? ` (${combien} formulaires)` : ''}`
+        : 'Éditer les objets un par un';
+    return `<button class="btn btn-soft insp-act" title="${titre}" aria-label="${titre}"
         onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
 }
 
@@ -7577,6 +7578,12 @@ function boutonRevueObjets(layer) {
  * > references internes -- d'ou `verifier-references.mjs`.
  */
 let inspSymTab = 'Couleur';
+
+/** Les actions sous le titre de la couche : une rangée, sans rien d'autre à faire défiler avant les réglages. */
+function actionsEntete(layer) {
+    const html = boutonEnTable(layer) + boutonRevueObjets(layer) + boutonNouvelObjet(layer);
+    return html ? `<div class="insp-actions">${html}</div>` : '';
+}
 
 /**
  * Une explication au survol : un « i » discret, dont le texte s'affiche dans une bulle unique (`#info-bulle`) posée en
@@ -7650,9 +7657,7 @@ function renderSymbologyInspector(layer) {
         <div class="insp-title">${echapper(layer.name)}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
-        ${boutonEnTable(layer)}
-        ${boutonRevueObjets(layer)}
-        ${boutonNouvelObjet(layer)}`;
+        ${actionsEntete(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
     const body = $('insp-body');
@@ -8664,9 +8669,8 @@ function enteteSansTable(layer, view) {
 function boutonEnTable(layer) {
     if (!peutPasserEnTable(layer, { lecture: CONFIG.viewMode, grist: CONFIG.grist.ready })) return '';
     const n = layer.geojson.features.length;
-    return `<div class="hint" style="margin:10px 0 0">Copie dans le document : ses objets n'ont pas de ligne Grist, donc pas de fiche à remplir.</div>
-        <button class="btn btn-soft btn-full" style="margin-top:8px"
-        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+    return `<button class="btn btn-soft insp-act insp-act-pleine"
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}${infoBulle('Copie dans le document : ses objets n’ont pas de ligne Grist, donc pas de fiche à remplir.')}</button>`;
 }
 
 /**
@@ -9192,11 +9196,10 @@ function contexteCreation(layer) {
 function boutonNouvelObjet(layer) {
     if (!creationPossible(layer, contexteCreation(layer)).ok) return '';
     const propose = creationProposeeEnExploitation(layer);
-    const reglage = CONFIG.viewMode ? '' : `<label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:12px;cursor:pointer">
+    const reglage = CONFIG.viewMode ? '' : `<label class="insp-act-reglage">
         <input type="checkbox" ${propose ? 'checked' : ''} onchange="A.setCreationExploiter('${layer.id}', this.checked)">
         <span>Ajout possible aussi en <b>Exploiter</b>${infoBulle('Les agents peuvent ajouter un objet sur le terrain. Le document décide toujours : sans droit d’écriture sur la table, le bouton n’apparaît pas.')}</span></label>`;
-    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
-        onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>${reglage}`;
+    return `<button class="btn btn-soft insp-act" onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus, 16)} Nouvel objet</button>${reglage}`;
 }
 
 function quitterSaisieObjet(message) {
