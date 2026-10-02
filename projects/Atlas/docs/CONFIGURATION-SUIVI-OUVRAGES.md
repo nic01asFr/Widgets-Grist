@@ -83,5 +83,5 @@ pastille des fonds, ouverture), `Atlas_Story` (les contextes, à clé stable). R
 
 1. La bulle avec de vraies photos, et « Nouvelle visite » qui ouvre le formulaire natif.
 2. Un agent qui ne peut qu'ajouter des visites : Atlas ne lui propose que cela (droits par table).
-3. Le même lien en  (plafond de posture), et sur téléphone.
+3. Le même lien avec le paramètre `?mode=view` (plafond de posture), et sur téléphone.
 4. Les contextes « Ouvrages à surveiller » et « Défense des forêts et haies ».
