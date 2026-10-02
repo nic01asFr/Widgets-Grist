@@ -8403,7 +8403,7 @@ function renderObjectInspector() {
     $('insp-tabs').innerHTML = tabs.map((t) =>
         `<button class="insp-tab ${_inspObjTab === t.cle ? 'active' : ''}"
             onclick="A.setInspObjTab('${chaineJs(t.cle)}')"
-            title="${echapper(t.formulaire?.tableId || '')}">${echapper(t.libelle)}</button>`
+            title="${echapper(t.libelle)}${t.formulaire?.tableId ? ' · ' + echapper(t.formulaire.tableId) : ''}">${echapper(t.libelle)}</button>`
     ).join('');
 
     const slider = (id, lbl, val, min, max, step, unit, mixed) => `

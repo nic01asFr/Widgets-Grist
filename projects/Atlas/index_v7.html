@@ -315,6 +315,9 @@
             font-size: 12.5px; font-weight: 500; color: var(--muted);
             border-bottom: 2px solid transparent; margin-bottom: -1px;
             white-space: nowrap; flex: 0 0 auto;
+            /* Un formulaire de l'equipe porte un titre long (« Formulaire d'ajout d'une visite ou
+               des travaux a la base de donnees ») : il se coupe, l'infobulle le dit en entier. */
+            max-width: 240px; overflow: hidden; text-overflow: ellipsis;
         }
         .insp-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
         .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }

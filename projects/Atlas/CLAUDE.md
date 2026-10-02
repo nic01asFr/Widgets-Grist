@@ -2492,3 +2492,20 @@ le panneau montre la consigne du contexte actif (texte de l'étape, HTML filtré
 appliquer, consigne sans script, retour à la scène de base ; pas encore sur la copie.
 Reste : blocs de la carte de consigne (photo, compteur, formulaire intégré, « Suivant »),
 progression, zone qui propose un contexte par GPS.
+
+## Éprouvé sur la copie réelle (02/10/2026)
+
+Contrôlé en Grist réel sur la copie de travail des ouvrages (jamais l'original) : menu de
+posture à trois choix et raison de « Exploiter » non offerte ; formulaire natif de visite
+proposé hors édition (écriture dans `Atlas_LayerPrefs` acceptée), puis réouverture
+directe en Exploitation ; liste « Choisir un objet » (108 objets, état, dernière visite
+réelle, distance) ; fiche d'objet avec le formulaire natif (inspecteurs depuis la table
+d'agents, date préremplie) ; création de `Atlas_Story` avec la colonne `Cle`, puis mise à
+jour de la même ligne par clé quand on renseigne le texte de l'étape. Le titre d'un
+formulaire d'équipe, long, débordait de l'onglet de la fiche : il est coupé par une
+ellipse (infobulle = titre entier).
+Pas encore éprouvé en réel : la pastille « Contexte » (vue en simulation seulement), le
+refus d'écriture par table (la copie accorde tout à ce compte) et l'identité de
+l'application. Rappel de méthode : `take_snapshot` voit l'iframe du widget ; les
+touches clavier vont à la page sélectionnée, pas à celle qu'on regarde — vérifier
+`list_pages` avant d'appuyer sur une touche.
