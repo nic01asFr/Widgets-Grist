@@ -3006,3 +3006,7 @@ comptent que les objets affichés. Si les filtres écartent tout, un message le 
 bidirectionnel et boucle ; une couche masquée (œil fermé) ne change rien, c'est elle qu'on a choisi de parcourir.
 Non éprouvé dans la fenêtre : la fixture démarre en Lecture, la revue n'y est pas offerte ; essai à faire en Grist réel avec un
 contexte qui filtre.
+La barre de sélection (« 1 objet sélectionné », ◀ 1 / 1 ▶) est en haut **à gauche, sous la rangée du dock** : centrée sur la ligne des
+pastilles, elle recouvrait « Relevé », « Contexte » et le panneau d'un filtre ouvert dès que la fiche rétrécit la carte. Éprouvé en
+Grist réel (fiche ouverte, 1240 px de carte) : saut des objets masqués, message « Aucun objet affiché » si tout est écarté.
+Reste : pour un objet seul, le compteur dit « 1 / 1 » alors que ◀ ▶ parcourent la couche.
