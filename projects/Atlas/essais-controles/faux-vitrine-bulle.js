@@ -55,6 +55,38 @@
 
   var journal = window.__journalRest = [];
   var vrai = window.fetch.bind(window);
+  var neufs = window.__docsNeufs = {};
+  var moteurNeuf = null;
+  function gererDocumentNeuf(m, u, opts) {
+    return (moteurNeuf || (moteurNeuf = import('../lib/scene-locale.js'))).then(function (E) {
+      if (m[1]) {
+        var id = 'docN' + (Object.keys(neufs).length + 1);
+        neufs[id] = { nom: JSON.parse(opts.body).name, scene: E.creerScene({ id: id }), photos: 0 };
+        return rep(id);
+      }
+      var d = neufs[m[2]]; var chemin = m[3] || '';
+      if (!d) return rep({ error: 'inconnu' }, 404);
+      if (chemin === '/tables') return rep({ tables: Object.keys(d.scene.tables).map(function (id) { return { id: id }; }) });
+      var rec = chemin.match(new RegExp("^[/]tables[/]([^/?]+)[/]records"));
+      if (rec) {
+        var tb = E.tableColonnaire(d.scene, decodeURIComponent(rec[1]));
+        return rep({ records: tb.id.map(function (rid, i) { var f = {}; Object.keys(tb).forEach(function (c) { if (c !== 'id') f[c] = tb[c][i]; }); return { id: rid, fields: f }; }) });
+      }
+      if (chemin.indexOf('/sql') === 0) {
+        var q = decodeURIComponent(chemin.split('q=')[1] || '');
+        var cnt = q.match(new RegExp("count[(][*][)] as n from \"([A-Za-z0-9_]+)\""));
+        if (cnt) return rep({ records: [{ fields: { n: d.scene.tables[cnt[1]] ? d.scene.tables[cnt[1]].ids.length : 0 } }] });
+        var meta = /_grist_Tables_column/.test(q) ? E.metaColonnes(d.scene) : /_grist_Tables/.test(q) ? E.metaTables(d.scene) : { id: [] };
+        return rep({ records: meta.id.map(function (rid, i) { var f = { id: rid }; Object.keys(meta).forEach(function (c) { if (c !== 'id') f[c] = meta[c][i]; }); return { fields: f }; }) });
+      }
+      if (chemin === '/apply') {
+        try { return rep({ retValues: E.appliquerActions(d.scene, JSON.parse(opts.body)).retValues }); }
+        catch (e) { return rep({ error: String(e.message) }, 400); }
+      }
+      if (chemin === '/attachments') { d.photos++; return rep([9000 + d.photos]); }
+      return rep({ error: 'inconnu' }, 404);
+    });
+  }
   function rep(corps, statut) { return Promise.resolve(new Response(JSON.stringify(corps), { status: statut || 200, headers: { 'Content-Type': 'application/json' } })); }
   window.fetch = function (url, opts) {
     var u = String(url && url.url ? url.url : url);
@@ -68,6 +100,9 @@
     if (u.indexOf('/api/orgs/2/workspaces') >= 0) return rep([{ id: 20, name: 'Public', access: 'viewers', docs: [
       { id: 'docC', name: 'Parc urbain', access: 'viewers', updatedAt: '2026-08-15T08:00:00Z' },
       { id: 'docD', name: 'Notes diverses', access: 'viewers', updatedAt: '2026-10-01T08:00:00Z' }] }]);
+    // Les documents crees pendant l'essai (« Nouvelle scene », « Envoyer vers Grist ») : un vrai moteur d'actions derriere.
+    var neuf = u.match(new RegExp("^https:[/][/]grist[.]essai[/]api[/](?:(workspaces[/]\\d+[/]docs)|docs[/](docN\\d+)([/].*)?)$"));
+    if (neuf) return gererDocumentNeuf(neuf, u, opts);
     var autre = u.match(/^https:[/][/]grist[.]essai[/]api[/]docs[/](docB|docC|docD)([/].*)$/);
     if (autre) {
       if (autre[2] === '/tables') return rep({ tables: (autre[1] === 'docD' ? ['Notes'] : autre[1] === 'docB' ? ['Atlas_ScenePrefs', 'Points'] : ['Atlas_Story']).map(function (id) { return { id: id }; }) });
@@ -78,7 +113,7 @@
       return rep({ records: [] });
     }
     var chemin = u.replace('https://grist.essai/api/docs/docEssai', '');
-    var pj = chemin.match(/^\/attachments\/(\d+)\/download/);
+    var pj = chemin.match(/^\/attachments\/(\\d+)\/download/);
     if (pj) { return vrai(photos[pj[1]]); }
     if (chemin === '/tables') return rep({ tables: Object.keys(tables).map(function (id) { return { id: id }; }) });
     var m = chemin.match(/^\/tables\/([^/]+)\/records/);

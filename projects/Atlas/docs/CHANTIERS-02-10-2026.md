@@ -23,8 +23,8 @@ tenu ici.
 | 4 | **Lieu : un lieu ou les données** — FAIT (commité ; non éprouvé en Grist réel) | choix à deux entrées dans le module Lieu — « Sur mes données » (par défaut dès qu'il y a des couches : emprise de toutes les couches ou d'une seule, « utiliser la vue actuelle », ancre du soleil au centre de l'emprise) ou « Un lieu précis » (recherche, position, coordonnées) ; enregistré avec la scène | où l'enregistrer (préférences de scène) |
 | 5 | **Scènes disponibles hors ligne** — étage 1 FAIT (commité ; reste l'essai en mode avion sur un téléphone ; tuiles = lot séparé) | geste « Rendre disponible hors ligne » sur la carte de scène (lire toutes les tables, âge et taille affichés, mise à jour, libération) ; photos gardées ; modèles 3D et polices embarqués ; fond uni d'abord, tuiles ensuite | conditions d'usage des tuiles à vérifier |
 | 6 | **Import GPX, KML, CSV** — FAIT (commité ; pas de KMZ) | les formats d'échange que l'export sait produire, relus à l'ouverture (« Fichier ») | aucune |
-| 7 | **Créer un document Atlas depuis l'application** | « Nouvelle scène » : nom, espace où l'on peut écrire, point de départ ; document créé par l'API, tables d'Atlas et première couche par les actions déjà écrites ; page avec le widget en option. **Écrit comme un plan d'étapes**, exécuté aussitôt | essai dans un espace de test désigné par l'utilisateur |
-| 8 | **Scène locale puis envoi vers Grist** | la même chose, hors ligne : un « document local » sur l'appareil (même interface que le client, rien de distant derrière), le plan d'étapes gardé et exécuté au retour du réseau, journal d'étapes rejouables, badge « non envoyé », export du projet comme sauvegarde | un projet local est propre à un appareil (par défaut oui) |
+| 7 | **Créer un document Atlas depuis l'application** — FAIT (commité ; essayé contre un faux Grist, pas en réel) | « Nouvelle scène » : nom, espace où l'on peut écrire, point de départ ; document créé par l'API, tables d'Atlas et première couche par les actions déjà écrites ; page avec le widget en option. **Écrit comme un plan d'étapes**, exécuté aussitôt | essai dans un espace de test désigné par l'utilisateur |
+| 8 | **Scène locale puis envoi vers Grist** — FAIT (commité ; idem) | la même chose, hors ligne : un « document local » sur l'appareil (même interface que le client, rien de distant derrière), le plan d'étapes gardé et exécuté au retour du réseau, journal d'étapes rejouables, badge « non envoyé », export du projet comme sauvegarde | un projet local est propre à un appareil (par défaut oui) |
 
 Dépendances : 8 s'appuie sur 7 (le plan d'étapes) et sur 5 (fond de carte et tables locales) ; 4 prépare 7 (la scène neuve s'ouvre
 sur ses données).
@@ -53,3 +53,8 @@ formule absentes d'une scène locale, perte de l'appareil, identité sans résea
 
 Bulle avec de vraies photos, « Nouvelle visite », droits par table, `?mode=view`, essai sur un téléphone, hors ligne sur appareil,
 nouvelles fonctions sur la copie de travail de l'équipe, création d'un document par l'API sur l'instance utilisée.
+
+## Liste des projets (ajout du 02/10/2026)
+
+Recherche, tri (récentes, nom, organisation), puces de rôle (propriétaire, éditeur, lecteur, hors ligne), miniature choisie par
+l'auteur (module Lieu), scènes récentes dans le menu, scènes locales en tête — voir `CLAUDE.md`. À éprouver sur un compte réel.

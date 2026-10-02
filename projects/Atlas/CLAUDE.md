@@ -2922,3 +2922,30 @@ maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-m
   si le document a changé. Sans miniature : l'initiale de la scène sur fond rosé.
 - **Menu principal** : « Scènes récentes » (les trois dernières vues, hors la courante) change de scène sans repasser par la liste.
 - Essayé dans l'application simulée (deux organisations, trois rôles) ; pas sur un compte réel.
+
+## Nouvelle scène, scène locale, envoi vers Grist (02/10/2026)
+
+- **Trois portes, un seul chemin** : « Nouvelle scène » (liste des scènes et menu principal) crée soit un **document Grist neuf**
+  (nom, espace où l'on est propriétaire ou éditeur), soit une **scène sur l'appareil**. « Envoyer vers Grist » (menu, ou panneau
+  de la pastille « Sur l'appareil · à envoyer ») verse une scène locale dans un document neuf. Une scène neuve dans Grist, c'est
+  une scène vide (`sceneNeuve`, avec `Atlas_ScenePrefs`) envoyée par le même plan.
+- **`lib/scene-locale.js`** : un document Grist en petit, sans document distant. Moteur pur (`appliquerActions` : `AddTable`,
+  `AddColumn`, `RemoveColumn`, `AddRecord`, `BulkAddRecord`, `UpdateRecord`, `BulkUpdateRecord`, `RemoveRecord`,
+  `BulkRemoveRecord` ; **tout autre refusé en le disant**, un lot atomique) ; il sert aussi `_grist_Tables` et
+  `_grist_Tables_column` à partir de ses tables (c'est ce qu'Atlas lit à l'ouverture). `ClientLocal` a la forme de `ClientRest`
+  (`mode: 'local'`, `docId: 'local:<id>'`), garde l'état dans IndexedDB (magasin `divers`, une entrée par scène) et ses photos
+  en blobs (identifiants entiers positifs). **Limites** : pas de colonne à formule, pas de vues Grist, pas de règles d'accès ;
+  chaque écriture réécrit la scène entière (très bien pour une scène neuve, à revoir pour de gros imports).
+- **`lib/creer-document.js`** : `listerEspacesEditables`, `creerDocument` (`POST /api/workspaces/{id}/docs`),
+  `planEnvoi` / `envoyerScene` : document → photos → tables → données, avec un **journal** (document créé, photos versées,
+  tables créées) gardé à chaque étape — un envoi interrompu se reprend où il s'est arrêté (le nombre de lignes déjà arrivées se
+  lit en SQL ; les lots de 500 lignes sont atomiques), sans second document. Les lignes partent **avec leurs identifiants** (les
+  références restent vraies), les colonnes `Ref` s'ajoutent après toutes les tables, les cellules `Attachments` sont traduites
+  vers les identifiants que Grist a donnés. Une scène sans table de signature reçoit `Atlas_ScenePrefs` pour être reconnue.
+- **Première ouverture** : une scène neuve ouvre le module Couches (drapeau `atlas_nouvelle_scene`, une seule fois).
+- **Éprouvé** : 40 tests (moteur, client, plan, reprise après coupure, photos, références) contre un faux Grist qui applique
+  vraiment les actions ; création d'une couche et de deux objets dans une scène locale, envoi, création dans Grist et ouverture,
+  dans l'application simulée (`essais-controles/faux-vitrine-bulle.js` fait de vrais documents neufs avec ce moteur).
+- **Pas éprouvé en Grist réel — à vérifier avec un espace de test** : la réponse de `POST /api/workspaces/{id}/docs`, un
+  `BulkAddRecord` avec identifiants imposés, le comptage SQL, la table par défaut d'un document neuf, le format du retour d'un
+  envoi de pièce jointe, et les types de colonnes d'Atlas (`widgetOptions`) à la recréation.

@@ -3166,6 +3166,21 @@ function lieuChoisi() {
     persistScenePrefsDifferee(200);
 }
 
+/**
+ * Une scène qu'on vient de créer s'ouvre vide : on propose tout de suite d'y poser la première couche, plutôt que de laisser
+ * une carte sans rien. Le drapeau est posé par l'écran « Nouvelle scène » et ne sert qu'une fois.
+ */
+async function accueilSceneNeuve() {
+    try {
+        const id = await grist.docApi.getDocName();
+        if (!id || localStorage.getItem('atlas_nouvelle_scene') !== String(id)) return;
+        localStorage.removeItem('atlas_nouvelle_scene');
+        if (CONFIG.viewMode) return;
+        openModule('couches');
+        showToast('Scène créée — ajoutez-y une première couche', 'info');
+    } catch (_) { /* sans importance : la scène s'ouvre comme n'importe quelle autre */ }
+}
+
 /** Les préférences de la scène viennent d'arriver : le cadrage de l'auteur s'applique, sauf si l'on a déjà bougé la carte. */
 function appliquerCadrageDeScene() {
     const c = STATE.exposition?.cadrage;
@@ -5856,6 +5871,13 @@ function pastilleSynchro() {
     const hl = clientHorsLigne();
     if (!hl) return null;
     const e = hl.etat();
+    // Une scène faite sur l'appareil : rien ne l'attend côté réseau, mais elle n'existe encore nulle part ailleurs.
+    if (e.local) {
+        return {
+            id: 'synchro', kind: 'synchro', alerte: false, label: 'Sur l’appareil · à envoyer',
+            icon: '',
+        };
+    }
     if (e.enLigne && !e.enAttente && !e.incertaines && !e.refusees) return null;
     const aVerifier = e.refusees + e.incertaines;
     let label;
@@ -5875,6 +5897,16 @@ function renderSynchroDockSlotHtml() {
     const hl = clientHorsLigne();
     if (!hl) return '';
     const e = hl.etat();
+    if (e.local) {
+        const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        return `<div class="dock-slot-data dock-slot-synchro">
+            <div class="dock-slot-head"><span class="dock-slot-title">Scène sur cet appareil</span><span class="dock-slot-tag">à envoyer</span></div>
+            <div class="dock-slot-body">
+                <p class="releve-aide">« ${esc(e.nomScene)} » n’existe que sur cet appareil. Envoyez-la dans un document Grist pour la retrouver ailleurs, la partager et la sauvegarder.</p>
+                <div class="releve-actions"><button type="button" class="btn btn-dark btn-sm" onclick="A.envoyerSceneLocale()">Envoyer vers Grist…</button></div>
+            </div>
+        </div>`;
+    }
     const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const quand = (t) => (t ? new Date(t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '');
     const ETIQUETTES = { en_attente: 'en attente', en_cours: 'envoi…', incertaine: 'à vérifier', refusee: 'refusée' };
@@ -12227,6 +12259,7 @@ async function initGrist() {
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
         await syncScenePrefsFromGrist();
+        accueilSceneNeuve();
         brancherSynchro();
         refreshControlsDock();
         appliquerOuverture();
@@ -14499,6 +14532,11 @@ const A = {
     ouvertureRegler(mode, cle) { reglerOuverture(mode, cle || null); renderRecit(); },
     contexteQuitter() { quitterContexte(); },
     synchroEnvoyer() { clientHorsLigne()?.envoyer(); },
+    /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
+    async envoyerSceneLocale() {
+        fermerPanneauSynchro();
+        try { (await import('./lib/hote-ui.js?v=20261002g')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+    },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
         if (!window.confirm('Abandonner ce relevé ? Il ne sera pas envoyé et disparaîtra de la liste.')) return;

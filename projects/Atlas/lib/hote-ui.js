@@ -16,6 +16,11 @@ import { installerAdaptateur } from './grist-adapter.js?v=20261002c';
 import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=20261002a';
 import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=20260820a';
 import {
+  ClientLocal, estIdLocal, idDepuisDocument, idDocumentLocal, lireSceneLocale, scenesLocales, creerSceneLocale,
+  supprimerSceneLocale, resumerScene, cleEnvoi,
+} from './scene-locale.js?v=20261002g';
+import { listerEspacesEditables, nomParDefaut, sceneNeuve, planEnvoi, journalVide, envoyerScene } from './creer-document.js?v=20261002g';
+import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication, phrasePreparation, phraseProgres,
@@ -78,6 +83,18 @@ const CSS = `
 .hote-outils input { flex: 1; min-width: 0; }
 .hote-outils select { flex: 0 0 auto; padding: .8rem .6rem; font: inherit; font-size: .9rem; color: var(--ink, #1F1B14);
   background: var(--surface, #fff); border: 1px solid var(--hairline-strong, #C9C0A8); border-radius: 8px; }
+.hote-champ { display: flex; flex-direction: column; gap: .35rem; }
+.hote-champ[hidden] { display: none; }
+.hote-champ select { width: 100%; padding: .8rem .9rem; font: inherit; font-size: 1rem; color: var(--ink, #1F1B14);
+  background: var(--surface, #fff); border: 1px solid var(--hairline-strong, #C9C0A8); border-radius: 8px; }
+.hote-etapes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; }
+.hote-etapes li { display: flex; gap: .55rem; align-items: baseline; color: var(--muted, #7A6F5E); }
+.hote-etapes li::before { content: '○'; }
+.hote-etapes li.fait { color: var(--ink, #1F1B14); }
+.hote-etapes li.fait::before { content: '●'; color: var(--accent2, #2E4E54); }
+.hote-etapes li.en-cours { color: var(--ink, #1F1B14); font-weight: 600; }
+.hote-etapes li.en-cours::before { content: '◐'; color: var(--accent, #C44536); }
+.hote-resume { font-size: .88rem; color: var(--muted, #7A6F5E); }
 .hote-puces { display: flex; flex-wrap: wrap; gap: .4rem; }
 .hote-puces button { font: inherit; font-size: .8rem; padding: .35rem .7rem; border-radius: 999px; cursor: pointer;
   color: var(--ink, #1F1B14); background: none; border: 1px solid var(--hairline-strong, #C9C0A8); }
@@ -237,19 +254,22 @@ export async function accueillir({ portee = globalThis, document: doc = document
       versScenes();
     });
 
+    const choisir = async (scene) => {
+      const conf = { ...config, docId: scene.id };
+      const pret = await ouvrirScene(conf, portee, boite);
+      if (!pret) return;
+      ecrireConfig(stockage, conf);
+      // Dire tout de suite quelle scene s'ouvre : le chargement dure, et une
+      // carte vide intitulee « Nouveau projet » se lit comme un echec.
+      try { portee.__atlasAnnoncerOuverture?.(scene.nom); } catch (_) { /* sans importance */ }
+      fermer();
+      resoudre(true);
+    };
+
     const versScenes = () => montrerScenes(boite, config, portee, {
       stockage,
-      onChoix: async (scene) => {
-        const conf = { ...config, docId: scene.id };
-        const pret = await ouvrirScene(conf, portee, boite);
-        if (!pret) return;
-        ecrireConfig(stockage, conf);
-        // Dire tout de suite quelle scene s'ouvre : le chargement dure, et une
-        // carte vide intitulee « Nouveau projet » se lit comme un echec.
-        try { portee.__atlasAnnoncerOuverture?.(scene.nom); } catch (_) { /* sans importance */ }
-        fermer();
-        resoudre(true);
-      },
+      onChoix: choisir,
+      onNouvelle: () => montrerNouvelleScene(boite, config, portee, { stockage, onRetour: versScenes, onOuvre: choisir }),
       // Rien n'est efface : l'ancienne connexion tient jusqu'a ce qu'une
       // nouvelle la remplace, et l'ecran s'ouvre pre-rempli.
       onChanger: () => versConnexion(),
@@ -318,11 +338,12 @@ function montrerConnexion(boite, config, message, onValider) {
   boite.querySelector('#h-cle').onkeydown = (e) => { if (e.key === 'Enter') valider(); };
 }
 
-async function montrerScenes(boite, config, portee, { onChoix, onChanger, stockage }) {
+async function montrerScenes(boite, config, portee, { onChoix, onChanger, onNouvelle, stockage }) {
   const prefs = lirePrefsListe(stockage);
   let texte = '';
   boite.innerHTML = `${MARQUE}
     <h2>Vos scènes</h2>
+    ${onNouvelle ? '<button class="hote-btn creux" id="h-nouvelle">＋ Nouvelle scène</button>' : ''}
     <div class="hote-outils">
       <input type="search" id="h-filtre" placeholder="Rechercher une scène…" aria-label="Rechercher une scène" autocomplete="off">
       <select id="h-tri" aria-label="Trier les scènes">${TRIS.map((x) => `<option value="${x.id}"${x.id === prefs.tri ? ' selected' : ''}>${echapper(x.libelle)}</option>`).join('')}</select>
@@ -336,15 +357,24 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   const progres = boite.querySelector('#h-progres');
   const puces = boite.querySelector('#h-puces');
   boite.querySelector('#h-changer').onclick = onChanger;
+  const nouvelle = boite.querySelector('#h-nouvelle');
+  if (nouvelle) nouvelle.onclick = onNouvelle;
 
   // Ce que l'appareil sait déjà : les scènes ouvrables sans réseau, et les miniatures vues la dernière fois.
   const idb = stockageParDefaut(portee).stockage;
   const prets = await scenesPreparees(idb, config.baseUrl);
+  // Les scènes faites sur l'appareil : toujours là, avec ou sans réseau, et ouvrables sans lui.
+  const locales = await scenesLocales(idb);
   const cleMini = (id) => `mini:${config.baseUrl}|${id}`;
   const minis = new Map();   // id → { data, maj }
 
   /** Les scènes à l'écran : la mémoire d'abord, puis ce que le compte confirme. */
   const scenes = new Map();
+  for (const s of locales) {
+    const id = idDocumentLocal(s.id);
+    scenes.set(id, { id, nom: s.nom, org: '', espace: 'Sur cet appareil', maj: new Date(s.modifieLe || s.creeLe).toISOString(), acces: '', locale: true });
+    prets.set(id, true);
+  }
 
   const carte = (scene) => {
     const b = document.createElement('button');
@@ -358,7 +388,7 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
     b.innerHTML = `<span class="hote-mini" aria-hidden="true">${mini ? '' : initiale}</span>
       <span class="hote-scene-texte"><b>${echapper(scene.nom || 'Sans titre')}</b>
         ${sous ? `<span class="hote-sous">${echapper(sous)}</span>` : ''}
-        <span class="hote-badges">${role ? `<i>${echapper(role)}</i>` : ''}${prets.has(scene.id) ? '<i class="pret">Disponible hors ligne</i>' : ''}</span></span>`;
+        <span class="hote-badges">${scene.locale ? '<i class="pret">Sur cet appareil</i><i>À envoyer</i>' : ''}${role ? `<i>${echapper(role)}</i>` : ''}${prets.has(scene.id) && !scene.locale ? '<i class="pret">Disponible hors ligne</i>' : ''}</span></span>`;
     if (mini) b.querySelector('.hote-mini').style.backgroundImage = `url("${mini.replace(/"/g, '%22')}")`;
     b.onclick = () => onChoix(scene);
     return b;
@@ -499,6 +529,190 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   }
 }
 
+/** Remplit un choix d'espaces ; dit pourquoi quand il n'y en a pas. Rend les espaces, ou `null` si le compte est injoignable. */
+async function chargerEspaces(select, info, config, portee) {
+  info.textContent = 'Recherche des espaces où l’on peut créer…';
+  try {
+    const espaces = await listerEspacesEditables(config.baseUrl, config.jeton, { fetchFn: portee.fetch?.bind(portee) });
+    select.innerHTML = espaces.map((e) => `<option value="${echapper(String(e.id))}">${echapper([e.org, e.nom].filter(Boolean).join(' — '))}</option>`).join('');
+    info.textContent = espaces.length ? '' : 'Aucun espace où vous puissiez créer un document avec cette clé : demandez un rôle d’éditeur, ou travaillez sur l’appareil.';
+    return espaces;
+  } catch (e) {
+    select.innerHTML = '';
+    info.textContent = `Pas de réseau pour chercher les espaces (${expliquer(e, capacites(portee))}).`;
+    return null;
+  }
+}
+
+/** Une ligne par étape, qui se coche à mesure ; `dire(e)` reçoit l'avancement de `envoyerScene`. */
+function suiviEtapes(conteneur, plan) {
+  conteneur.innerHTML = plan.map((e) => `<li data-etape="${echapper(e.id.split(':')[0])}${e.table ? ':' + echapper(e.table) : ''}">${echapper(e.libelle)}</li>`).join('');
+  const li = (id) => conteneur.querySelector(`[data-etape="${id.replace(/"/g, '')}"]`);
+  return (e) => {
+    const cle = e.phase === 'donnees' ? `donnees:${e.etape}` : e.phase;
+    const ordre = ['document', 'photos', 'tables', 'donnees'];
+    for (const n of conteneur.querySelectorAll('li')) {
+      const phase = n.dataset.etape.split(':')[0];
+      if (ordre.indexOf(phase) < ordre.indexOf(e.phase)) { n.className = 'fait'; }
+    }
+    const cible = li(cle);
+    if (cible) cible.className = e.fait >= e.total ? 'fait' : 'en-cours';
+  };
+}
+
+/**
+ * « Nouvelle scène » : un nom, et où elle vit — dans un document Grist neuf (il faut le réseau et un espace où l'on peut écrire)
+ * ou **sur l'appareil seulement** (elle se fait sans réseau, et s'envoie plus tard).
+ */
+function montrerNouvelleScene(boite, config, portee, { stockage, onRetour, onOuvre }) {
+  const { stockage: idb, durable } = stockageParDefaut(portee);
+  const enLigne = portee.navigator?.onLine !== false;
+  let cible = enLigne ? 'grist' : 'local';
+  boite.innerHTML = `${MARQUE}
+    <h2>Nouvelle scène</h2>
+    <div class="hote-champ"><label for="n-nom">Nom</label><input id="n-nom" value="${echapper(nomParDefaut())}" autocomplete="off"></div>
+    <div class="hote-puces" id="n-cible" role="group" aria-label="Où créer la scène">
+      <button type="button" data-cible="grist" aria-pressed="${cible === 'grist'}">Dans Grist</button>
+      <button type="button" data-cible="local" aria-pressed="${cible === 'local'}"${durable ? '' : ' disabled'}>Sur cet appareil</button>
+    </div>
+    <p id="n-aide"></p>
+    <div class="hote-champ" id="n-espace-champ"><label for="n-espace">Espace</label><select id="n-espace"></select></div>
+    <div class="hote-progres" id="n-info"></div>
+    <ul class="hote-etapes" id="n-etapes"></ul>
+    <button class="hote-btn" id="n-creer">Créer la scène</button>
+    <button class="hote-lien" id="n-retour">Retour</button>`;
+  const q = (s) => boite.querySelector(s);
+  const aide = q('#n-aide');
+  const info = q('#n-info');
+  const select = q('#n-espace');
+  const creer = q('#n-creer');
+  q('#n-retour').onclick = onRetour;
+  let espaces = null;
+
+  const majCible = () => {
+    for (const b of boite.querySelectorAll('[data-cible]')) b.setAttribute('aria-pressed', String(b.dataset.cible === cible));
+    q('#n-espace-champ').hidden = cible !== 'grist';
+    aide.textContent = cible === 'grist'
+      ? 'Un document Grist neuf, que vous retrouvez avec vos autres scènes et qui se partage comme eux.'
+      : durable
+        ? 'La scène reste sur cet appareil : on peut la composer sans réseau, puis l’envoyer dans un document Grist quand on en a un.'
+        : 'Le stockage de cet appareil est indisponible : une scène locale serait perdue à la fermeture.';
+    creer.disabled = cible === 'grist' && (!espaces || !espaces.length);
+  };
+  boite.querySelector('#n-cible').onclick = (e) => {
+    const b = e.target.closest('[data-cible]');
+    if (!b || b.disabled) return;
+    cible = b.dataset.cible;
+    majCible();
+  };
+  majCible();
+  if (enLigne) chargerEspaces(select, info, config, portee).then((e) => { espaces = e; majCible(); });
+  else { info.textContent = 'Pas de réseau : la scène sera créée sur l’appareil.'; }
+
+  creer.onclick = async () => {
+    const nom = (q('#n-nom').value || '').trim() || nomParDefaut();
+    creer.disabled = true;
+    try {
+      if (cible === 'local') {
+        const s = await creerSceneLocale(idb, { nom });
+        try { portee.localStorage?.setItem('atlas_nouvelle_scene', idDocumentLocal(s.id)); } catch (_) { /* sans importance */ }
+        await onOuvre({ id: idDocumentLocal(s.id), nom });
+        return;
+      }
+      const scene = sceneNeuve({ nom });
+      const plan = planEnvoi(scene);
+      const dire = suiviEtapes(q('#n-etapes'), plan);
+      info.textContent = 'Création du document…';
+      const cle = `nouvelle:${Date.now()}`;
+      const res = await envoyerScene({
+        scene, baseUrl: config.baseUrl, jeton: config.jeton, espaceId: select.value, nom,
+        fetchFn: portee.fetch?.bind(portee),
+        creerClient: (o) => creerClient({ mode: 'rest', ...o }),
+        ecrireJournal: (j) => idb.put('divers', cleEnvoi(cle), j).catch(() => {}),
+        onEtape: dire,
+      });
+      await idb.delete('divers', cleEnvoi(cle)).catch(() => {});
+      try { portee.localStorage?.setItem('atlas_nouvelle_scene', res.docId); } catch (_) { /* sans importance */ }
+      await onOuvre({ id: res.docId, nom });
+    } catch (e) {
+      info.textContent = `Échec : ${expliquer(e, capacites(portee))}`;
+      creer.disabled = false;
+    }
+  };
+}
+
+/**
+ * « Envoyer vers Grist » : verse la scène faite sur l'appareil dans un document neuf. Le journal se garde à chaque étape :
+ * un envoi interrompu se reprend où il s'est arrêté, sans document doublé. Une fois la scène envoyée, la locale est retirée et
+ * l'application s'ouvre sur le document Grist.
+ */
+function montrerEnvoi(boite, config, portee, { client, stockage, onRetour }) {
+  const { stockage: idb } = stockageParDefaut(portee);
+  const scene = client.scene;
+  const res = resumerScene(scene);
+  const plan = planEnvoi(scene);
+  boite.innerHTML = `${MARQUE}
+    <h2>Envoyer vers Grist</h2>
+    <p class="hote-resume">${res.tables.length} table${res.tables.length > 1 ? 's' : ''} · ${res.lignes} ligne${res.lignes > 1 ? 's' : ''}${res.photos ? ` · ${res.photos} photo${res.photos > 1 ? 's' : ''}` : ''}.
+      Un document Grist neuf est créé, la scène y est versée, puis l’application s’y ouvre. La scène de l’appareil n’est retirée qu’une fois tout arrivé.</p>
+    <div class="hote-champ"><label for="e-nom">Nom du document</label><input id="e-nom" value="${echapper(scene.nom)}" autocomplete="off"></div>
+    <div class="hote-champ"><label for="e-espace">Espace</label><select id="e-espace"></select></div>
+    <div class="hote-progres" id="e-info"></div>
+    <ul class="hote-etapes" id="e-etapes"></ul>
+    <button class="hote-btn" id="e-envoyer">Envoyer</button>
+    <button class="hote-lien" id="e-retour">Retour</button>`;
+  const q = (s) => boite.querySelector(s);
+  const info = q('#e-info');
+  const select = q('#e-espace');
+  const bouton = q('#e-envoyer');
+  q('#e-retour').onclick = onRetour;
+  let espaces = null;
+  chargerEspaces(select, info, config, portee).then((e) => { espaces = e; bouton.disabled = !e || !e.length; });
+  const dire = suiviEtapes(q('#e-etapes'), plan);
+  // Un envoi déjà commencé se reprend : on le dit, et le document créé n'est pas recréé.
+  idb.get('divers', cleEnvoi(scene.id)).then((j) => { if (j?.docId) info.textContent = 'Un envoi interrompu sera repris là où il s’est arrêté.'; }).catch(() => {});
+
+  bouton.onclick = async () => {
+    bouton.disabled = true;
+    try {
+      const journal = (await idb.get('divers', cleEnvoi(scene.id))) || journalVide();
+      const rendu = await envoyerScene({
+        scene, piecesJointes: () => client.piecesJointes(), baseUrl: config.baseUrl, jeton: config.jeton,
+        espaceId: select.value, nom: (q('#e-nom').value || '').trim() || scene.nom, fetchFn: portee.fetch?.bind(portee),
+        creerClient: (o) => creerClient({ mode: 'rest', ...o }), journal,
+        ecrireJournal: (j) => idb.put('divers', cleEnvoi(scene.id), j).catch(() => {}),
+        onEtape: dire,
+      });
+      info.textContent = 'Envoyée. Ouverture du document Grist…';
+      await supprimerSceneLocale(idb, scene.id);
+      if (!ecrireConfig(stockage, { ...config, docId: rendu.docId })) throw new Error('le stockage de l’appareil est indisponible');
+      portee.location.reload();
+    } catch (e) {
+      info.textContent = `Échec : ${expliquer(e, capacites(portee))} — l’envoi se reprendra où il s’est arrêté.`;
+      bouton.disabled = false;
+      bouton.textContent = 'Reprendre l’envoi';
+    }
+  };
+}
+
+/** Pour l'application : ouvre l'écran d'envoi de la scène locale en cours, sans passer par le menu. */
+export function ouvrirEnvoi({ portee = globalThis, document: doc = document } = {}) {
+  const client = portee.grist?._horsLigne;
+  if (!client?.local) return null;
+  const stockage = (() => { try { return portee.localStorage; } catch (_) { return null; } })();
+  const config = lireConfig(stockage);
+  const style = doc.createElement('style');
+  style.textContent = CSS;
+  doc.head.appendChild(style);
+  const voile = doc.createElement('div');
+  voile.className = 'hote';
+  voile.innerHTML = '<div class="hote-boite"></div>';
+  doc.body.appendChild(voile);
+  const fermer = () => { voile.remove(); style.remove(); };
+  montrerEnvoi(voile.querySelector('.hote-boite'), config, portee, { client, stockage, onRetour: fermer });
+  return fermer;
+}
+
 /**
  * Branche Atlas sur une scene : cree le client, verifie qu'elle repond, puis
  * installe l'adaptateur. La verification evite d'ouvrir sur un ecran vide quand
@@ -506,6 +720,14 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
  */
 async function ouvrirScene(config, portee, boite) {
   try {
+    // Une scène faite sur l'appareil : son « document » est local, rien à lire au réseau.
+    if (estIdLocal(config.docId)) {
+      const { stockage } = stockageParDefaut(portee);
+      const scene = await lireSceneLocale(stockage, idDepuisDocument(config.docId));
+      if (!scene) throw new Error('Cette scène locale n’est plus sur l’appareil.');
+      installerAdaptateur(new ClientLocal({ stockage, scene }), { userId: null, user: null }, portee);
+      return true;
+    }
     const brut = await creerClient({
       mode: 'rest', baseUrl: config.baseUrl, docId: config.docId, jeton: config.jeton,
       fetch: portee.fetch?.bind(portee),
@@ -580,7 +802,8 @@ export function ouvrirMenuPrincipal({
   // La synchronisation : ce qui est parti, ce qui attend, ce qui a été refusé. Ni dans un widget (Grist la tient),
   // ni sans client hors réseau.
   const hl = portee.grist?._horsLigne || null;
-  const synchro = hl ? hl.etat() : null;
+  const local = !!hl?.local;
+  const synchro = hl && !local ? hl.etat() : null;
   const situation = scene ? [situer(scene), depuis(scene.maj)].filter(Boolean).join(' — ') : '';
   const version = versionInstallee(doc);
   // Les scènes déjà vues, les plus récentes d'abord : passer de l'une à l'autre sans repasser par la liste entière.
@@ -597,9 +820,11 @@ export function ouvrirMenuPrincipal({
     <div class="hote-menu">
       ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>${echapper(edition.aide || 'Les outils d’auteur reviennent sur la carte')}</small></span></button>` : ''}
       ${synchro ? `<button id="m-synchro">${IC.synchro}<span>Synchronisation<small>${echapper(phraseSynchro(synchro))}</small></span></button>` : ''}
+      ${local ? `<button id="m-envoyer">${IC.hors}<span>Envoyer vers Grist<small>Scène sur cet appareil seulement : à envoyer dans un document</small></span></button>` : ''}
       ${hl && typeof hl.preparerHorsLigne === 'function' ? `<button id="m-hors">${IC.hors}<span>Disponible hors ligne<small id="m-hors-etat">…</small></span></button>
       <button id="m-hors-liberer" hidden>${IC.corbeille}<span>Libérer l’espace<small>La scène demandera de nouveau le réseau pour s’ouvrir</small></span></button>` : ''}
       ${recentes.length ? `<div class="hote-sous-titre">Scènes récentes</div>${recentes.map((s) => `<button data-recente="${echapper(s.id)}">${IC.scenes}<span>${echapper(s.nom || 'Sans titre')}<small>${echapper([libelleRole(s.acces), depuis(s.maj)].filter(Boolean).join(' — '))}</small></span></button>`).join('')}` : ''}
+      ${changeable ? `<button id="m-nouvelle">${IC.crayon}<span>Nouvelle scène<small>Dans Grist, ou sur cet appareil</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}
@@ -643,6 +868,26 @@ export function ouvrirMenuPrincipal({
       majHors();
     };
   }
+
+  const envoyer = boite.querySelector('#m-envoyer');
+  if (envoyer) envoyer.onclick = () => montrerEnvoi(boite, config, portee, { client: hl, stockage, onRetour: () => { fermer(); ouvrirMenuPrincipal({ portee, document: doc, scene, modifie, edition }); } });
+
+  const nouvelle = boite.querySelector('#m-nouvelle');
+  if (nouvelle) nouvelle.onclick = () => {
+    if (modifie && !portee.confirm('Des modifications ne sont pas enregistrées. Créer une autre scène malgré tout ?')) return;
+    montrerNouvelleScene(boite, config, portee, {
+      stockage,
+      onRetour: () => { fermer(); ouvrirMenuPrincipal({ portee, document: doc, scene, modifie, edition }); },
+      // La nouvelle scène devient celle de l'ouverture, et la page repart sur elle.
+      onOuvre: async (s) => {
+        if (!ecrireConfig(stockage, { ...(config || {}), docId: s.id })) {
+          poserAvis(boite, 'Impossible d’ouvrir la scène : le stockage de l’appareil est indisponible.');
+          return;
+        }
+        portee.location.reload();
+      },
+    });
+  };
 
   const ed = boite.querySelector('#m-edition');
   if (ed) ed.onclick = () => { fermer(); edition.action(); };

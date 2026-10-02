@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   espacesEditables, listerEspacesEditables, nomParDefaut, creerDocument, sceneNeuve, actionsTables, lotsDeLignes,
-  planEnvoi, journalVide, envoyerScene, LOT_LIGNES,
+  planEnvoi, journalVide, envoyerScene, LOT_LIGNES, assurerReconnaissable,
 } from '../lib/creer-document.js';
 import {
   creerScene, appliquerActions, tableColonnaire, ClientLocal, creerSceneLocale,
@@ -210,4 +210,17 @@ test('le journal sert aussi à envoyer une scène locale gardée dans le stockag
     fetchFn: g.fetch, creerClient: async (o) => g.client(o),
   });
   assert.deepEqual(tableColonnaire(g.docs[r.docId].scene, 'Points').Nom, ['P1', 'P2']);
+});
+
+test('une scène locale sans table de signature en reçoit une, pour être reconnue dans la liste ; la scène elle-même n’est pas touchée', async () => {
+  const s = creerScene({ id: 'x' });
+  appliquerActions(s, [['AddTable', 'Maquette_Layers', [{ id: 'Nom', type: 'Text' }]]]);
+  const r = assurerReconnaissable(s);
+  assert.deepEqual(Object.keys(r.tables), ['Maquette_Layers', 'Atlas_ScenePrefs']);
+  assert.deepEqual(Object.keys(s.tables), ['Maquette_Layers']);
+  assert.deepEqual(Object.keys(assurerReconnaissable(r).tables), ['Maquette_Layers', 'Atlas_ScenePrefs'], 'une seule fois');
+  const g = fauxGrist();
+  const rendu = await envoyerScene({ scene: s, baseUrl: 'https://grist.essai', jeton: 'k', espaceId: 10, nom: 'L', fetchFn: g.fetch, creerClient: async (o) => g.client(o) });
+  assert.ok(g.docs[rendu.docId].scene.tables.Atlas_ScenePrefs);
+  assert.deepEqual(planEnvoi(s).map((e) => e.id), ['document', 'tables']);
 });

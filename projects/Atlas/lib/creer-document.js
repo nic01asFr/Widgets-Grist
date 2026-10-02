@@ -20,8 +20,8 @@
  */
 import {
   creerScene, appliquerActions, colonnesReference,
-} from './scene-locale.js';
-import { SCENE_PREFS_SCHEMA, ATLAS_SCENE_PREFS_TABLE } from './scene-prefs.js';
+} from './scene-locale.js?v=20261002g';
+import { SCENE_PREFS_SCHEMA, ATLAS_SCENE_PREFS_TABLE } from './scene-prefs.js?v=20261002f';
 
 export const VERSION = '1.0.0';
 
@@ -111,6 +111,21 @@ export function sceneNeuve({ id = 'neuve', nom = 'Scène Atlas', maintenant } = 
   return scene;
 }
 
+/** Les tables dont une seule suffit à faire reconnaître une scène dans la liste (`decouverte.js`). */
+const SIGNATURE = ['Atlas_LayerPrefs', 'Atlas_Story', 'SceneManifest', 'Atlas_ScenePrefs'];
+
+/**
+ * Une scène que la liste reconnaîtra une fois envoyée : si aucune table de signature n'y est (une scène locale où l'on n'a
+ * encore rien réglé), la table de préférences de scène s'y ajoute. Rend une copie, jamais la scène elle-même.
+ */
+export function assurerReconnaissable(scene) {
+  const copie = JSON.parse(JSON.stringify(scene));
+  if (!SIGNATURE.some((n) => copie.tables[n])) {
+    appliquerActions(copie, [['AddTable', ATLAS_SCENE_PREFS_TABLE, SCENE_PREFS_SCHEMA.map((c) => ({ ...c }))]]);
+  }
+  return copie;
+}
+
 /* ------------------------------------------------------------------ */
 /* Le plan                                                             */
 /* ------------------------------------------------------------------ */
@@ -159,7 +174,8 @@ export function lotsDeLignes(scene, nom, { pjMap = {}, depart = 0, taille = LOT_
 }
 
 /** Le plan, en clair : de quoi dire ce qui va se passer avant de le faire, et suivre l'avancement. */
-export function planEnvoi(scene) {
+export function planEnvoi(sceneBrute) {
+  const scene = assurerReconnaissable(sceneBrute);
   const etapes = [{ id: 'document', libelle: 'Créer le document' }];
   const photos = Object.keys(scene.pj || {}).length;
   if (photos) etapes.push({ id: 'photos', libelle: `Verser ${photos} photo${photos > 1 ? 's' : ''}`, total: photos });
@@ -205,9 +221,10 @@ async function compterLignes({ baseUrl, jeton, docId, table, fetchFn, delai }) {
  * @returns {Promise<{ docId: string, journal: object }>}
  */
 export async function envoyerScene({
-  scene, piecesJointes = async () => [], baseUrl, jeton, espaceId, nom, fetchFn,
+  scene: sceneBrute, piecesJointes = async () => [], baseUrl, jeton, espaceId, nom, fetchFn,
   journal = journalVide(), ecrireJournal = () => {}, onEtape = () => {}, creerClient, delai, tailleLot = LOT_LIGNES,
 }) {
+  const scene = assurerReconnaissable(sceneBrute);
   const dire = (e) => { try { onEtape(e); } catch (_) { /* un affichage qui échoue n'arrête pas l'envoi */ } };
   const garder = async () => { await ecrireJournal(journal); };
 
