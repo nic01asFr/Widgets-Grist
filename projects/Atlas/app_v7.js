@@ -9947,6 +9947,15 @@ function offertsEnLecture(formulaires) {
 // le nommer. La posture est DÉRIVÉE de ces deux champs (`postureDepuis`), jamais
 // stockée à côté : deux vérités sur le même fait seraient une panne en attente.
 
+/**
+ * Ce que le lien d'ouverture autorise au plus. `?mode=view` plafonne à Exploiter : un
+ * éditeur qui suit un lien de terrain ne retombe pas en Préparer parce que la posture
+ * retenue sur son appareil, ou le repli, le proposerait. Lu une fois, à l'ouverture.
+ */
+const PLAFOND_LIEN = (() => {
+    try { return parseAtlasMode(typeof location !== 'undefined' ? location.search : '') === 'view' ? 'exploiter' : null; } catch (_) { return null; }
+})();
+
 /** Les tables où un formulaire proposé hors édition écrit. */
 function tablesDeReleve() {
     const tables = new Set();
@@ -9963,6 +9972,7 @@ function posturesDisponibles() {
         documentOuvert: !!CONFIG.grist.ready,
         sceneExterne: !!CONFIG.sceneExterne,
         tablesDeReleve: tablesDeReleve(),
+        plafond: PLAFOND_LIEN,
     });
 }
 
@@ -9973,7 +9983,7 @@ function peutChangerDePosture() { return posturesDisponibles().length > 1; }
 function raisonPostureNonOfferte(posture) {
     if (CONFIG.sceneExterne) return 'Scène ouverte par adresse : lecture seule';
     if (DROITS.lectureSeule) return 'Le document est en lecture seule pour vous';
-    if (posture === 'preparer') return 'Vos droits ne permettent pas de régler la configuration';
+    if (posture === 'preparer') return PLAFOND_LIEN ? 'Ce lien ouvre en exploitation : rouvrez le document sans « mode » pour régler' : 'Vos droits ne permettent pas de régler la configuration';
     return tablesDeReleve().length
         ? 'Le document refuse l’écriture dans les tables de relevé'
         : 'Aucun formulaire de relevé n’est proposé : à régler en Préparer';

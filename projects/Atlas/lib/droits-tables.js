@@ -154,12 +154,15 @@ export function configurationEcrivable(droits) {
  * @param {boolean} o.documentOuvert    un document Grist est ouvert
  * @param {boolean} [o.sceneExterne]    scène venue d'une adresse : lecture seule
  * @param {string[]} [o.tablesDeReleve]  les tables où un formulaire proposé écrit
+ * @param {'exploiter'|'lecture'|null} [o.plafond]  ce que le lien d'ouverture autorise au plus
+ *   (`?mode=view` donne `exploiter`). Comme tout ce qui n'est pas Grist, il ne fait que
+ *   RESTREINDRE : il retire des postures, il n'en ajoute jamais.
  * @returns {Array<'preparer'|'exploiter'|'lecture'>}
  */
-export function posturesOffertes({ droits, documentOuvert, sceneExterne = false, tablesDeReleve = [] } = {}) {
+export function posturesOffertes({ droits, documentOuvert, sceneExterne = false, tablesDeReleve = [], plafond = null } = {}) {
   const offertes = ['lecture'];
-  if (!documentOuvert || sceneExterne || droits.lectureSeule) return offertes;
+  if (!documentOuvert || sceneExterne || droits.lectureSeule || plafond === 'lecture') return offertes;
   if (tablesDeReleve.some((t) => droits.verdict(t) !== 'refus')) offertes.unshift('exploiter');
-  if (configurationEcrivable(droits)) offertes.unshift('preparer');
+  if (plafond !== 'exploiter' && configurationEcrivable(droits)) offertes.unshift('preparer');
   return offertes;
 }

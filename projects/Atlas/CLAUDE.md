@@ -2509,3 +2509,9 @@ refus d'écriture par table (la copie accorde tout à ce compte) et l'identité 
 l'application. Rappel de méthode : `take_snapshot` voit l'iframe du widget ; les
 touches clavier vont à la page sélectionnée, pas à celle qu'on regarde — vérifier
 `list_pages` avant d'appuyer sur une touche.
+
+**Plafond du lien (02/10/2026).** `posturesOffertes` reçoit un `plafond` : `?mode=view` plafonne à
+Exploiter, ce qui retire Préparer même si la posture retenue sur l'appareil ou le repli la
+proposerait (défaut relevé à l'inventaire des expositions : un lien de terrain rouvrait en
+édition). Chaque source (hébergement, droits, lien, publication) ne fait que retirer des
+postures ; la carte complète est dans `docs/CARTE-DES-EXPOSITIONS.md`.

@@ -55,3 +55,23 @@ test('une écriture réussie dans la configuration lève le refus de préparatio
   assert.equal(d.preparationRefusee, false);
   assert.equal(configurationEcrivable(d), true);
 });
+
+test('un lien ?mode=view plafonne les postures : il retire Préparer, il n’ajoute rien', () => {
+  const d = creerDroits();
+  const base = { droits: d, documentOuvert: true, tablesDeReleve: ['Visites'] };
+  assert.deepEqual(posturesOffertes({ ...base }), ['preparer', 'exploiter', 'lecture']);
+  assert.deepEqual(posturesOffertes({ ...base, plafond: 'exploiter' }), ['exploiter', 'lecture']);
+  assert.deepEqual(posturesOffertes({ ...base, plafond: 'lecture' }), ['lecture']);
+  // Sans rien à exploiter, le plafond ne rouvre pas Préparer : Lecture seule.
+  assert.deepEqual(posturesOffertes({ ...base, tablesDeReleve: [], plafond: 'exploiter' }), ['lecture']);
+  // Et il n'ajoute jamais : une personne sans droit de relevé n'obtient pas Exploiter.
+  const ferme = creerDroits({ lectureSeule: true });
+  assert.deepEqual(posturesOffertes({ ...base, droits: ferme, plafond: 'exploiter' }), ['lecture']);
+});
+
+test('l ouverture sous plafond ne retombe pas en Préparer, même avec un choix retenu', () => {
+  const offertes = ['exploiter', 'lecture'];
+  assert.equal(postureParDefaut({ offertes, memorisee: 'preparer', initiale: 'exploiter' }), 'exploiter');
+  // Rien d'exploitable : la lecture, jamais l'édition que le lien écartait.
+  assert.equal(postureParDefaut({ offertes: ['lecture'], memorisee: 'preparer', initiale: 'exploiter' }), 'lecture');
+});
