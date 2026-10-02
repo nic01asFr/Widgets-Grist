@@ -104,7 +104,7 @@ import {
   actionsNouvelleCouche, lireCreation, messageRefus,
 } from './lib/nouvelle-couche.js?v=20260926a';
 import {
-  creationPossible, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
+  creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
 } from './lib/saisie-objet.js?v=20261001a';
@@ -5462,7 +5462,7 @@ function dockPillId(layer, field) {
  */
 function couchesEnReleve() {
     return STATE.layers.filter((l) => l.visible !== false && (CONFIG.viewMode
-        ? coucheEnSaisie(l)
+        ? (coucheEnSaisie(l) || creationPossible(l, contexteCreation(l)).ok)
         : saisieHorsEdition({
             view: true,
             aDesLignes: coucheAvecLignes(l),
@@ -5566,6 +5566,7 @@ function renderReleveDockSlotHtml() {
     const lignes = lignesReleve(couchesEnReleve().map((couche) => ({
         couche,
         formulaires: offertsEnLecture(formulairesDeLaCouche(couche)),
+        creation: creationPossible(couche, contexteCreation(couche)).ok,
     })));
     const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const geo = localisationDisponible();
@@ -5574,8 +5575,9 @@ function renderReleveDockSlotHtml() {
         const nomProche = proche ? (nomObjet(proche.feature.properties || {}) || 'objet') : '';
         return `<div class="releve-couche">
             <div class="releve-nom"><span class="sw" style="background:${esc(fondPastilleCouche(l.couche) || '#888')}"></span>${esc(l.nom)}</div>
-            <div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>
+            ${l.formulaires.length ? `<div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>` : ''}
             <div class="releve-actions">
+                ${l.creation ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.nouvelObjet('${chaineJs(l.couche.id)}')">＋ Ajouter un objet</button>` : ''}
                 ${geo ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.releveProche('${chaineJs(l.couche.id)}')">${proche
                     ? `Le plus proche : ${esc(nomProche)} <small>${esc(direDistance(proche.distance))}</small>`
                     : 'Le plus proche de moi'}</button>` : ''}
@@ -8904,10 +8906,24 @@ function finTrace(id) {
     openInspectorPanel();
 }
 
+/** Ce que `creationPossible` doit savoir de la situation : posture, et ce que le document accepte pour cette table. */
+function contexteCreation(layer) {
+    return {
+        viewMode: !!CONFIG.viewMode,
+        peutEcrire: canWrite(CONFIG.viewMode),
+        exploitation: postureDepuis(CONFIG) === 'exploiter',
+        verdictTable: layer?.sourceTable ? DROITS.verdict(layer.sourceTable) : 'inconnu',
+    };
+}
+
 function boutonNouvelObjet(layer) {
-    if (!creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) return '';
+    if (!creationPossible(layer, contexteCreation(layer)).ok) return '';
+    const propose = creationProposeeEnExploitation(layer);
+    const reglage = CONFIG.viewMode ? '' : `<label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:12px;cursor:pointer">
+        <input type="checkbox" ${propose ? 'checked' : ''} onchange="A.setCreationExploiter('${layer.id}', this.checked)">
+        <span>Les agents peuvent aussi ajouter un objet, en <b>Exploiter</b><br><small style="color:var(--muted)">Le document décide toujours : sans droit d’écriture sur la table, le bouton n’apparaît pas.</small></span></label>`;
     return `<button class="btn btn-soft btn-full" style="margin-top:8px"
-        onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>`;
+        onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>${reglage}`;
 }
 
 function quitterSaisieObjet(message) {
@@ -10823,6 +10839,8 @@ function tablesDeReleve() {
     const tables = new Set();
     for (const layer of STATE.layers) {
         for (const f of formulairesOffertsEnLecture(formulairesDeLaCouche(layer))) tables.add(f.tableId);
+        // Ajouter un objet est aussi un relevé : la table de la couche entre dans ce que *Exploiter* écrit.
+        if (creationProposeeEnExploitation(layer) && layer.sourceTable) tables.add(layer.sourceTable);
     }
     return [...tables];
 }
@@ -13005,7 +13023,7 @@ const A = {
     /** Arme la création d'un objet dans une couche : le prochain clic sur la carte pose le point. */
     nouvelObjet(layerId, { suite = null } = {}) {
         const layer = STATE.layers.find((l) => l.id === layerId);
-        const possible = creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) });
+        const possible = creationPossible(layer, contexteCreation(layer));
         if (!possible.ok) { showToast(possible.raison, 'warning'); return; }
         if (lecteurRecitActif()) { showToast('Quittez la lecture du récit pour créer un objet', 'warning'); return; }
         // État exclusif : on sort de tout ce qui écoute aussi les clics.
@@ -13023,6 +13041,10 @@ const A = {
         };
         _derniereCreation = null;
         document.body.classList.add('mode-creation');
+        // En exploitation, la fiche de saisie ne s'affiche que sous `mode-saisie` : on l'allume le temps de la création.
+        if (CONFIG.viewMode) document.body.classList.add('mode-saisie');
+        // Le panneau du relevé a fait son office : ouvert, il recouvrirait la carte où l'on va poser le point.
+        if (_openDockPill === 'releve') $('map-controls-dock')?.classList.add('collapsed');
         const famille = familleGeometrie(layer.geometryType);
         if (map && famille === 'Point') map.getCanvas().style.cursor = 'crosshair';
         if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
@@ -13367,7 +13389,7 @@ const A = {
             openModule('couches');
             // Une couche vide n'a pas d'autre raison d'être que d'être remplie :
             // on arme la création du premier objet quand l'outil existe.
-            if (creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) {
+            if (creationPossible(layer, contexteCreation(layer)).ok) {
                 A.nouvelObjet(layer.id);
             }
         } catch (e) {
@@ -14612,6 +14634,14 @@ const A = {
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
 
     /** Surfaces à plat ou extrudées. Remonter en volume réactive la hauteur. */
+    /** Proposer (ou non) aux agents d'ajouter un objet à la couche, en Exploiter. */
+    setCreationExploiter(id, on) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        initSymbolization(l).creation = { exploiter: !!on };
+        markDirty(); saveLayerPrefIfSynced(l);
+        refreshControlsDock();
+        showToast(on ? 'Les agents pourront ajouter un objet à cette couche, en Exploiter' : 'Ajout d’objet réservé à la préparation', 'info');
+    },
     /** Regrouper les objets proches : réglage par couche, source reconstruite. */
     setGrappes(id, patch) {
         const l = STATE.layers.find((x) => x.id === id); if (!l || !grappable(l)) return;

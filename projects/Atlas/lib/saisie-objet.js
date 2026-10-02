@@ -15,6 +15,11 @@ import {
   nomsColonnesGeometrie,
 } from './geometrie-saisie.js?v=20261001a';
 
+/** L'auteur a-t-il proposé aux agents d'ajouter un objet à cette couche ? (réglage de la couche, enregistré avec sa symbolisation) */
+export function creationProposeeEnExploitation(layer) {
+  return layer?.style?.symbolization?.creation?.exploiter === true;
+}
+
 /** Types qu'on sait créer aujourd'hui. */
 export const FAMILLES_CREABLES = ['Point', 'LineString', 'Polygon'];
 
@@ -27,9 +32,16 @@ export const FAMILLES_CREABLES = ['Point', 'LineString', 'Polygon'];
  * @param {{ viewMode?: boolean, peutEcrire?: boolean }} ctx
  * @returns {{ ok: true } | { ok: false, raison: string }}
  */
-export function creationPossible(layer, { viewMode = false, peutEcrire = true } = {}) {
+export function creationPossible(layer, { viewMode = false, peutEcrire = true, exploitation = false, verdictTable = 'inconnu' } = {}) {
   if (!layer) return { ok: false, raison: 'Couche introuvable.' };
-  if (viewMode || !peutEcrire) return { ok: false, raison: 'Mode lecture : la création d’objets est réservée à l’édition.' };
+  if (viewMode || !peutEcrire) {
+    // Exploiter : l'agent peut ajouter un objet quand l'auteur l'a proposé pour cette couche — et seulement si le
+    // document ne refuse pas l'écriture dans sa table. Lecture : jamais.
+    if (!(exploitation && creationProposeeEnExploitation(layer))) {
+      return { ok: false, raison: 'Mode lecture : la création d’objets est réservée à l’édition.' };
+    }
+    if (verdictTable === 'refus') return { ok: false, raison: 'Le document ne permet pas d’ajouter d’objet à cette table.' };
+  }
   if (layer._distant) return { ok: false, raison: 'Couche distante : ses objets ne sont pas dans ce document.' };
   if (layer._raster) return { ok: false, raison: 'Couche image : elle n’a pas d’objets.' };
   if (!layer.sourceTable) return { ok: false, raison: 'Copie sans table Grist : enregistrez-la en table pour y ajouter des objets.' };

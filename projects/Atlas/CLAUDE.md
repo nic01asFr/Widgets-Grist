@@ -2765,3 +2765,17 @@ pour une ligne multiple, la partie touchée). Nouveau : **« Étapes depuis les 
 (`objetsLeLong`, `lib/trajet.js`, testé). Chaque étape cadre l'objet (zoom 17 au moins), porte sa place sur la ligne et
 les formulaires proposés. Le titre est le nom de l'objet. Éprouvé dans l'application simulée (boucle de 1,3 km, 12
 objets). Pour une boucle de randonnée : composer la tournée des ouvrages qui la bordent, d'un geste.
+
+## Ajouter un objet en Exploiter, quand l'auteur le propose (02/10/2026)
+
+La création d'un objet était réservée à *Préparer*. Elle s'ouvre à *Exploiter* **couche par couche**, par un réglage de
+l'auteur : sous « Nouvel objet », la case « Les agents peuvent aussi ajouter un objet, en Exploiter »
+(`symbolization.creation.exploiter`, enregistré avec la symbolisation). Trois garde-fous (`creationPossible`) :
+1. **proposé par l'auteur** pour cette couche — par défaut, rien ne change ;
+2. **posture Exploiter** — jamais en *Lecture* ;
+3. **le document ne refuse pas** — le verdict appris pour la table (`DROITS.verdict`) ; un refus retire le bouton.
+Les autres garde-fous (couche distante, copie sans table, géométrie non prise en charge) valent toujours.
+Côté agent : la pastille « Relevé » liste la couche, avec « ＋ Ajouter un objet » (même sans formulaire) ; la création suit
+le geste de *Préparer* (point placé au toucher, fiche, « Envoyer »), la fiche étant montrée par `mode-saisie`. La table de la
+couche compte parmi les tables que *Exploiter* écrit (`tablesDeReleve`) : proposer l'ajout suffit à offrir la posture.
+Éprouvé dans l'application simulée ; pas encore sur la copie réelle.
