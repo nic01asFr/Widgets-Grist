@@ -2515,3 +2515,21 @@ Exploiter, ce qui retire Préparer même si la posture retenue sur l'appareil ou
 proposerait (défaut relevé à l'inventaire des expositions : un lien de terrain rouvrait en
 édition). Chaque source (hébergement, droits, lien, publication) ne fait que retirer des
 postures ; la carte complète est dans `docs/CARTE-DES-EXPOSITIONS.md`.
+
+## Ouverture de la scène : par où l'on entre (02/10/2026)
+
+L'auteur dit par où la scène s'ouvre pour qui ne l'édite pas : **la carte** (défaut), **le
+récit** dès l'ouverture, ou **un contexte** précis. Bloc `exposition` (`lib/exposition.js`, pur,
+testé), stocké avec la scène dans `Atlas_ScenePrefs.ExpositionJSON` — un choix d'auteur,
+partagé, pas un réglage d'appareil. Le bloc est prévu pour porter ensuite d'autres choix
+d'exposition (un plafond de posture posé par l'auteur) ; seule l'ouverture existe.
+`ouvertureEffective` ne l'applique pas à qui prépare (l'auteur arrive sur la carte qu'il
+règle) et retombe sur la carte quand la scène ne peut plus tenir le réglage (récit sans étape,
+contexte supprimé ou plus proposé, désigné par sa clé). `appliquerOuverture` joue une fois,
+après le choix de posture, une fois le style prêt ; jamais en scène par adresse (qui lance
+déjà son récit). Réglage : sélecteur « À l'ouverture, pour qui ne l'édite pas » dans le module
+Récit. `Atlas_ScenePrefs` gagne la colonne `ExpositionJSON` (ajoutée aux tables anciennes, comme
+`SettingsJSON` avant) ; `saveScenePrefs` ne l'écrit que si on la lui donne.
+Éprouvé en simulation (Lecture + `?expo=recit|contexte` dans le faux document : récit lancé,
+contexte appliqué sans lecteur, aucune présentation pour qui prépare) et sur la copie réelle
+(table `Atlas_ScenePrefs` avec les trois colonnes, ouverture écrite).

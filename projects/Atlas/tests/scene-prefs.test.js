@@ -109,3 +109,51 @@ describe('réglages de scène — ce qui se retrouve en revenant sur le document
     assert.ok(Array.isArray(prefs.viewerControls));
   });
 });
+
+describe('exposition — par où la scène s’ouvre, choix de l’auteur', () => {
+  /** Faux document : une table Atlas_ScenePrefs en colonnes, et le journal des lots. */
+  const faux = ({ colonnes = ['id', 'ViewerJSON', 'SettingsJSON', 'ExpositionJSON'], lignes = [] } = {}) => {
+    const lots = [];
+    return {
+      lots,
+      listTables: async () => ['Atlas_ScenePrefs'],
+      fetchTable: async () => {
+        const rec = { id: lignes.map((l) => l.id) };
+        for (const c of colonnes.filter((x) => x !== 'id')) rec[c] = lignes.map((l) => l[c] ?? '');
+        return rec;
+      },
+      applyUserActions: async (a) => { lots.push(a); return { retValues: [1] }; },
+    };
+  };
+
+  it('une scène sans réglage s’ouvre sur la carte', async () => {
+    const prefs = await loadScenePrefs(faux());
+    assert.deepEqual(prefs.exposition, { ouverture: { mode: 'carte' } });
+  });
+
+  it('l’ouverture écrite se retrouve à la relecture', async () => {
+    const api = faux({ lignes: [{ id: 3, ExpositionJSON: JSON.stringify({ ouverture: { mode: 'contexte', cle: 'e-1' } }) }] });
+    const prefs = await loadScenePrefs(api);
+    assert.deepEqual(prefs.exposition, { ouverture: { mode: 'contexte', cle: 'e-1' } });
+  });
+
+  it('on n’écrit l’exposition que si on la donne : un appelant qui l’ignore ne l’efface pas', async () => {
+    const sans = faux({ lignes: [{ id: 3 }] });
+    await loadScenePrefs(sans);
+    await saveScenePrefs(sans, { viewerControls: createDefaultViewerControls(), settings: {} });
+    assert.equal('ExpositionJSON' in sans.lots.at(-1)[0][3], false);
+
+    const avec = faux({ lignes: [{ id: 3 }] });
+    await loadScenePrefs(avec);
+    await saveScenePrefs(avec, { viewerControls: createDefaultViewerControls(), settings: {}, exposition: { ouverture: { mode: 'recit' } } });
+    assert.equal(avec.lots.at(-1)[0][3].ExpositionJSON, JSON.stringify({ ouverture: { mode: 'recit' } }));
+  });
+
+  it('une table écrite avant reçoit les colonnes qui lui manquent', async () => {
+    const api = faux({ colonnes: ['id', 'ViewerJSON'], lignes: [{ id: 3 }] });
+    await loadScenePrefs(api);
+    await saveScenePrefs(api, { viewerControls: createDefaultViewerControls(), settings: {} });
+    const ajoutees = api.lots.flat().filter((a) => a[0] === 'AddColumn').map((a) => a[2]);
+    assert.deepEqual(ajoutees, ['SettingsJSON', 'ExpositionJSON']);
+  });
+});

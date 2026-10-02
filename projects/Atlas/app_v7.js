@@ -224,7 +224,8 @@ import {
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=20260926a';
+} from './lib/scene-prefs.js?v=20261002f';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -316,6 +317,8 @@ const STATE = {
     location: { name: 'Vieux-Port · Marseille', lat: 43.2951, lng: 5.3740 },
     layers: [],
     story: [],
+    /** Les choix de l'auteur sur l'exposition (lib/exposition.js) : par où la scène s'ouvre. */
+    exposition: { ouverture: { mode: 'carte' } },
     /** Ligne en mémoire, avant qu'une étape ne l'emporte dans le document. */
     trajet: null,
     viewerControls: createDefaultViewerControls(),
@@ -5516,6 +5519,7 @@ async function syncScenePrefsFromGrist() {
     if (!CONFIG.grist.ready) return;
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
+    STATE.exposition = prefs.exposition || expositionVide();
 
     // Les réglages retenus la fois d'avant priment sur les défauts du code :
     // qui a choisi un fond veut le retrouver, pas repartir de « liberty ». Ils
@@ -5561,6 +5565,7 @@ async function persistScenePrefs() {
         await saveScenePrefs(grist.docApi, {
             viewerControls: STATE.viewerControls,
             settings: STATE.settings,
+            exposition: STATE.exposition,
         }, { viewMode: false });
     } catch (e) {
         console.warn('[Atlas] saveScenePrefs', e.message);
@@ -6183,6 +6188,25 @@ function metaEtapeTrajet(s) {
     return `<div class="layer-meta">${ordre}sur le trajet · ${m} m${noms ? ' · ' + noms.replace(/</g, '&lt;') : ''}</div>`;
 }
 
+/** Le réglage « Ouverture » du module Récit : par où la scène s'ouvre pour qui ne l'édite pas. */
+function htmlOuverture(steps) {
+    const o = normaliserExposition(STATE.exposition).ouverture;
+    const contextes = contextesProposes(steps);
+    const choix = [
+        { mode: 'carte', cle: '', libelle: 'La carte' },
+        { mode: 'recit', cle: '', libelle: 'Le récit, dès l’ouverture' },
+        ...contextes.map((c) => ({ mode: 'contexte', cle: c.cle, libelle: 'Contexte : ' + c.titre })),
+    ];
+    const valeur = (c) => c.mode + '|' + c.cle;
+    const courante = o.mode === 'contexte' && !contextes.some((c) => c.cle === o.cle) ? 'carte|' : o.mode + '|' + (o.cle || '');
+    return `<div class="section ouverture-reglage">
+        <label class="lbl" for="ouverture-select">À l’ouverture, pour qui ne l’édite pas</label>
+        <select id="ouverture-select" class="input" onchange="const [m, c] = this.value.split('|'); A.ouvertureRegler(m, c)">
+            ${choix.map((c) => `<option value="${echapper(valeur(c))}"${valeur(c) === courante ? ' selected' : ''}>${echapper(c.libelle)}</option>`).join('')}
+        </select>
+    </div>`;
+}
+
 function renderRecit() {
     $('module-title').textContent = 'Récit';
     const body = $('module-body');
@@ -6214,6 +6238,7 @@ function renderRecit() {
             ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">▶ Lecture</button>` : ''}
         </div>
         ${barreTrajetHtml()}`;
+    if (steps.length) html += htmlOuverture(steps);
     if (!steps.length) {
         body.innerHTML = html + `<div class="empty"><div class="ic">${icTrait(IC.recit, 40)}</div><div class="t">Aucune étape</div><div class="h">Cadre la vue puis « Capturer »</div></div>`;
         return;
@@ -6406,6 +6431,35 @@ function libererMargeRecit() {
         c.clientHeight / 2 + (m.top - m.bottom) / 2,
     ]);
     map.jumpTo({ center: centre, padding: m });
+}
+
+// ---- Ouverture de la scène (lib/exposition.js) ----
+// L'auteur dit par où la scène s'ouvre pour qui ne l'édite pas : la carte, son récit, ou
+// l'un de ses contextes. Appliquée une fois, à l'ouverture ; ce que la scène ne peut plus
+// tenir retombe sur la carte.
+let _ouvertureAppliquee = false;
+function appliquerOuverture() {
+    if (_ouvertureAppliquee || CONFIG.sceneExterne) return;
+    _ouvertureAppliquee = true;
+    const o = ouvertureEffective({ exposition: STATE.exposition, story: STATE.story, posture: postureDepuis(CONFIG) });
+    if (o.mode === 'carte') return;
+    const lancer = () => {
+        try {
+            if (o.mode === 'recit') A.storyPlay(0);
+            else appliquerContexte(o.cle);
+        } catch (e) { console.warn('[Atlas] ouverture', e); }
+    };
+    // Le style doit être prêt : même attente que pour une scène par adresse.
+    if (map && !mapStyleUsable()) map.once('idle', () => setTimeout(lancer, 150));
+    else setTimeout(lancer, 150);
+}
+
+/** L'auteur règle par où la scène s'ouvre. */
+function reglerOuverture(mode, cle = null) {
+    if (!assertCanWrite('régler l’ouverture de la scène')) return;
+    STATE.exposition = normaliserExposition({ ouverture: { mode, cle } });
+    markDirty();
+    persistScenePrefsDifferee(200);
 }
 
 // ---- Contextes de travail (lib/contextes.js) ----
@@ -10809,6 +10863,7 @@ async function initGrist() {
         await choisirPostureAuDemarrage();
         await syncScenePrefsFromGrist();
         refreshControlsDock();
+        appliquerOuverture();
         if (postureDepuis(CONFIG) === 'lecture') {
             showToast('Mode lecture — consultation seule', 'warning');
         }
@@ -12839,6 +12894,7 @@ const A = {
         ouvrirObjet(STATE.layers.find((l) => l.id === coucheId), idx);
     },
     contexteAppliquer(cle) { appliquerContexte(cle); },
+    ouvertureRegler(mode, cle) { reglerOuverture(mode, cle || null); renderRecit(); },
     contexteQuitter() { quitterContexte(); },
     /** L'auteur propose (ou non) cette étape comme contexte en exploitation. */
     storyContexte(i, oui) {

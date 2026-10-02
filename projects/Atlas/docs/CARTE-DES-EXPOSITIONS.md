@@ -120,8 +120,10 @@ publiés. Un lien « ouvre-moi sur ce secteur, avec ce filtre » n'est donc pas 
 | ordre, visibilité, apparence des couches | `Atlas_LayerPrefs` (`rank`, `Visible`, `StyleJSON`) | toutes |
 | posture retenue | `localStorage` de l'appareil (`atlas_posture|<doc>`) | l'appareil seulement |
 
-Ce que l'auteur **ne** règle pas : la posture par défaut d'un visiteur, ni « cette scène ne se
-rouvre qu'en lecture ». Le cadrage prévoyait « la scène peut proposer une posture par défaut,
+| ouverture de la scène (carte, récit, contexte) | `Atlas_ScenePrefs` (`ExpositionJSON`) — *fait le 02/10/2026* | Lecture, Exploiter |
+
+Ce que l'auteur **ne** règle pas encore : un plafond de posture pour les visiteurs (« cette scène ne
+se rouvre qu'en lecture »). Le cadrage prévoyait « la scène peut proposer une posture par défaut,
 pour les visiteurs seulement » : c'est le chaînon qui manque pour que **l'exposition soit un
 choix de l'auteur** et non seulement une conséquence de l'hébergement.
 
