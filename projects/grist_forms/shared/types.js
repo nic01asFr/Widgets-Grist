@@ -11,6 +11,10 @@
     if (!t) return 'Text';
     if (t.startsWith('RefList:')) return 'RefList';
     if (t.startsWith('Ref:')) return 'Ref';
+    // Grist écrit `DateTime:Europe/Paris` : le fuseau ne change pas le type de
+    // saisie. Non reconnu, il tombait sur du texte libre, et la chaîne
+    // `AAAA-MM-JJTHH:mm` était écrite telle quelle dans la colonne.
+    if (t.startsWith('DateTime:')) return 'DateTime';
     return t;
   }
 

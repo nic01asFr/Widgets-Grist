@@ -39,3 +39,15 @@ describe('Types.coerceForWrite', () => {
     assert.equal(Types.defaultWidget('Attachments'), 'file');
   });
 });
+
+describe('Types — DateTime avec fuseau', () => {
+  it('`DateTime:Europe/Paris` est un DateTime : widget et écriture', () => {
+    // Grist type ainsi toute colonne DateTime ; non reconnu, le champ était du
+    // texte libre et `AAAA-MM-JJTHH:mm` s'écrivait tel quel dans la colonne.
+    assert.equal(Types.normalizeGristType('DateTime:Europe/Paris'), 'DateTime');
+    assert.equal(Types.defaultWidget('DateTime:Europe/Paris'), 'datetime');
+    const s = Types.coerceForWrite({ type: 'DateTime:Europe/Paris', widget: 'datetime' }, '2026-10-02T14:30');
+    assert.equal(typeof s, 'number');
+    assert.ok(s > 1.7e9 && s < 1.9e9);
+  });
+});

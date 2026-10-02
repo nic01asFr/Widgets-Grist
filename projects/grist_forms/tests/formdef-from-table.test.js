@@ -80,6 +80,16 @@ describe('formDefDepuisColonnes — un brouillon, pas un enregistrement', () => 
     assert.equal(def.sections[0].fields[0].options.refTable, 'Batiments_locaux');
   });
 
+  it('une référence porte la colonne que Grist affiche, quand on la connaît', () => {
+    const def = F.formDefDepuisColonnes({
+      tableId: 'Ouvrages',
+      colonnes: [col('Domaine', 'Ref:Domaines', { visibleCol: 'Nom_domaine' }), col('Type', 'Ref:Types')],
+    });
+    const [domaine, type] = def.sections[0].fields;
+    assert.equal(domaine.options.visibleCol, 'Nom_domaine');
+    assert.equal(type.options.visibleCol, undefined, 'inconnue : le moteur choisira');
+  });
+
   it('une table sans colonne saisissable ne donne pas de formulaire vide', () => {
     assert.equal(F.formDefDepuisColonnes({ tableId: 'T', colonnes: [col('id', 'Int')] }), null);
     assert.equal(F.formDefDepuisColonnes({ tableId: 'T', colonnes: [] }), null);

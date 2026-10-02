@@ -290,6 +290,60 @@ describe('Engine.mount — navigation, validation, submit', () => {
     assert.ok(root.innerHTML.includes('OK'));
   });
 
+  it('un Ref au type complet charge sa table et garde la valeur de la ligne', async () => {
+    // Le cas d'une fiche déduite d'une table : `Ref:Domaines`, sans colonne
+    // d'affichage déclarée. La liste n'offrait que « (aucun) » (01/10/2026).
+    const root = createRoot();
+    const charges = [];
+    const formDef = {
+      tableId: 'Ouvrages', successMessage: 'OK',
+      sections: [{ id: 's1', label: 'Attributs', gate: null, fields: [
+        { colId: 'Domaine', label: 'Domaine', type: 'Ref:Domaines', widget: 'select', required: false,
+          options: { refTable: 'Domaines' } },
+        { colId: 'Type', label: 'Type', type: 'Ref:Types', widget: 'select', required: false },
+      ] }],
+      choices: {},
+    };
+    Engine.mount(root, formDef, {
+      values: { Domaine: 2, Type: 1 },
+      skipProbe: true,
+      loadTable: (t) => {
+        charges.push(t);
+        return Promise.resolve(t === 'Domaines'
+          ? { id: [1, 2], Code: [11, 12], Libelle_domaine: ['ETANG-NORD', 'ETANG-SUD'] }
+          : { id: [1], Url_schema: ['https://exemple.org/a.png'], Type_possible: ['Passerelle bois'] });
+      },
+      submit: () => Promise.resolve({ ok: true }),
+    });
+    await flush();
+    assert.deepEqual(charges.sort(), ['Domaines', 'Types'], 'la table visée se lit aussi dans le type');
+    assert.match(root.innerHTML, /value="2" selected>ETANG-SUD/, 'la valeur de la ligne reste choisie');
+    assert.ok(root.innerHTML.includes('ETANG-SUD'), 'un libellé, pas un numéro');
+    assert.ok(root.innerHTML.includes('Passerelle bois'), 'ni une adresse d’image');
+  });
+
+  it('l’aide d’un champ se lit sous son libellé, et les choix suivent l’ordre demandé', async () => {
+    const root = createRoot();
+    Engine.mount(root, {
+      tableId: 'Visites', successMessage: 'OK',
+      sections: [{ id: 's1', label: 'Visite', gate: null, fields: [
+        { colId: 'Photo', label: 'Photo', type: 'Text', widget: 'text', required: false,
+          description: 'Photos légères <de préférence>\n1920x1080' },
+        { colId: 'Agents', label: 'Inspecteur(s)', type: 'RefList:Agents', widget: 'multiselect', required: true,
+          options: { refTable: 'Agents', visibleCol: 'Nom', sortOrder: 'ascending' } },
+      ] }],
+      choices: {},
+    }, {
+      skipProbe: true,
+      refRecords: { Agents: { id: [1, 2, 3], Nom: ['Zoé', 'élodie', 'Bruno'] } },
+      submit: () => Promise.resolve({ ok: true }),
+    });
+    await flush();
+    assert.ok(root.innerHTML.includes('<span class="fr-hint-text">Photos légères &lt;de préférence&gt;<br>1920x1080</span>'));
+    const ordre = ['Bruno', 'élodie', 'Zoé'].map((n) => root.innerHTML.indexOf(n));
+    assert.ok(ordre[0] < ordre[1] && ordre[1] < ordre[2], 'ordre alphabétique, accents compris');
+  });
+
   it('cascade Ref : filtre les options enfant selon le parent (ids string/number)', async () => {
     const root = createRoot();
     const formDef = {
@@ -446,5 +500,26 @@ describe('Engine.mount — le clic sur « Enregistrer » ne se perd pas', () => 
     assert.equal(root.querySelector('[data-action="submit"]'), bouton, 'pas pendant l’evenement');
     await flush();
     assert.notEqual(root.querySelector('[data-action="submit"]'), bouton, 'mais juste apres');
+  });
+});
+
+describe('Engine.mount — libellé d’une liste liée sans colonne déclarée', () => {
+  it('un nom qui dit libellé prime sur l’ordre des colonnes, et un code n’est pas un libellé', async () => {
+    const root = createRoot();
+    Engine.mount(root, {
+      tableId: 'Visites', successMessage: 'OK',
+      sections: [{ id: 's1', label: 'V', gate: null, fields: [
+        { colId: 'Domaine', label: 'Domaine', type: 'Ref:Domaines', widget: 'select', required: false, options: { refTable: 'Domaines' } },
+      ] }],
+      choices: {},
+    }, {
+      skipProbe: true,
+      refRecords: { Domaines: { id: [1, 2], Code: ['11', '12'], Courriel: ['a@x.org', 'b@x.org'], Libelle_domaine: ['ETANG-NORD', 'ETANG-SUD'] } },
+      submit: () => Promise.resolve({ ok: true }),
+    });
+    await flush();
+    assert.ok(root.innerHTML.includes('>ETANG-SUD<'));
+    assert.ok(!root.innerHTML.includes('>12<'));
+    assert.ok(!root.innerHTML.includes('b@x.org'));
   });
 });
