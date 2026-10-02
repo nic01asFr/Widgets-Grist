@@ -247,6 +247,7 @@ import {
   saveScenePrefs,
 } from './lib/scene-prefs.js?v=20261002f';
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -336,6 +337,8 @@ const CONFIG = {
 const STATE = {
     projectName: '',
     location: { name: 'Vieux-Port · Marseille', lat: 43.2951, lng: 5.3740 },
+    /** Vrai quand quelqu'un a désigné le lieu (recherche, position, pointé, projet, manifeste) : sinon l'ancre suit les données. */
+    locationChoisie: false,
     layers: [],
     story: [],
     /** Les choix de l'auteur sur l'exposition (lib/exposition.js) : par où la scène s'ouvre. */
@@ -3094,9 +3097,72 @@ function shouldAutoFitBounds(bounds) {
     return shouldAutoFitInitialBounds(bounds, cameraStorageKey());
 }
 
+/** La clé stable d'une couche pour le cadrage : sa table, sinon son nom (l'identifiant change d'une ouverture à l'autre). */
+const cleCadrage = (l) => l.sourceTable || l.name;
+function couchesCadrage() { return STATE.layers.map((l) => ({ id: cleCadrage(l), bornes: boundsFromGeoJSON(l.geojson) })); }
+function cameraCourante() {
+    const c = map.getCenter();
+    return { lng: c.lng, lat: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
+}
+
+/** Pose le cadrage demandé ; `anime` pour un geste de l'auteur, pas pour l'ouverture. */
+function poserCadrage(cible, anime) {
+    const duration = anime ? 900 : 0;
+    if (cible.type === 'bornes') map.fitBounds(cible.bornes, { padding: margeCadrage(), maxZoom: 16, duration });
+    else if (cible.type === 'camera') {
+        const o = { center: [cible.camera.lng, cible.camera.lat], zoom: cible.camera.zoom, pitch: cible.camera.pitch, bearing: cible.camera.bearing };
+        if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
+    } else {
+        const o = { center: cible.centre, zoom: cible.zoom };
+        if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
+    }
+}
+
+/**
+ * L'ancre de la scène (le soleil, le fuseau) suit les données tant que personne n'a désigné de lieu : une scène de Lyon ne
+ * se règle plus sur le Vieux-Port de Marseille parce qu'on n'a rien dit.
+ */
+function ancrerSurDonnees(bornes) {
+    if (STATE.locationChoisie) return;
+    const c = centreDesBornes(bornes);
+    if (!c) return;
+    STATE.location = { ...STATE.location, name: 'Emprise des données', lat: c.lat, lng: c.lng };
+    try { updateLighting(); } catch (_) { /* la scène n'est pas encore prête : l'éclairage se posera avec elle */ }
+}
+
+/** Quelqu'un vient de désigner un lieu : il devient l'ancre, et la scène s'ouvrira dessus. */
+function lieuChoisi() {
+    STATE.locationChoisie = true;
+    const l = STATE.location;
+    STATE.exposition = normaliserExposition({ ...STATE.exposition, cadrage: { mode: 'lieu', lieu: { lng: l.lng, lat: l.lat, nom: l.name } } });
+    persistScenePrefsDifferee(200);
+}
+
+/** Les préférences de la scène viennent d'arriver : le cadrage de l'auteur s'applique, sauf si l'on a déjà bougé la carte. */
+function appliquerCadrageDeScene() {
+    const c = STATE.exposition?.cadrage;
+    if (!c) return;
+    if (c.mode === 'lieu') {
+        STATE.location = { ...STATE.location, name: c.lieu.nom || STATE.location.name, lat: c.lieu.lat, lng: c.lieu.lng };
+        STATE.locationChoisie = true;
+    }
+    if (!map || CONFIG.sceneExterne) return;
+    try { if (sessionStorage.getItem(cameraStorageKey())) return; } catch (_) { /* stockage refusé : on applique */ }
+    const cible = cadrageEffectif({ cadrage: c, couches: couchesCadrage() });
+    if (cible && (cible.type !== 'bornes' || c.couche || STATE.layers.length)) { poserCadrage(cible, false); _initialViewportApplied = true; }
+}
+
 function applyInitialViewport(bounds) {
     if (_initialViewportApplied || !map) return;
-    const b = bounds || computeLayersBounds();
+    const cible = cadrageEffectif({ cadrage: STATE.exposition?.cadrage, couches: couchesCadrage() });
+    // Une vue figée ou un lieu : la caméra de session, si on en a une, prime comme pour toute reprise.
+    if (cible && cible.type !== 'bornes') {
+        if (!restoreMapCamera()) poserCadrage(cible, false);
+        _initialViewportApplied = true;
+        return;
+    }
+    const b = cible?.bornes || bounds || computeLayersBounds();
+    if (b) ancrerSurDonnees(computeLayersBounds() || b);
     if (b && shouldAutoFitBounds(b)) {
         map.fitBounds(b, { padding: margeCadrage(), maxZoom: 16, duration: 800 });
         _initialViewportApplied = true;
@@ -5215,6 +5281,47 @@ function closeModulePanel() {
 // ---- Lieu ----
 let searchTimer = null;
 let locationPickMode = false;
+/** Où la carte s'ouvre : trois façons, dont les données d'abord (lib/cadrage.js). */
+function htmlCadrage() {
+    const c = normaliserExposition(STATE.exposition).cadrage || null;
+    const avecEmprise = STATE.layers.filter((l) => boundsFromGeoJSON(l.geojson));
+    const mode = c?.mode || (avecEmprise.length ? 'donnees' : 'lieu');
+    const choix = (id, titre, aide, corps = '') => `<div class="cadrage-choix${mode === id ? ' on' : ''}">
+        <button type="button" role="radio" aria-checked="${mode === id}" class="cadrage-radio" onclick="A.setCadrage('${id}')"${id === 'donnees' && !avecEmprise.length ? ' disabled' : ''}>
+            <span class="cadrage-nom">${titre}</span><span class="cadrage-aide">${aide}</span></button>${mode === id ? corps : ''}</div>`;
+    const options = avecEmprise.map((l) => `<option value="${echapper(cleCadrage(l))}"${c?.couche === cleCadrage(l) ? ' selected' : ''}>${echapper(l.name)}</option>`).join('');
+    const surDonnees = choix('donnees', 'Sur mes données',
+        avecEmprise.length ? 'La carte s’ouvre sur l’emprise des couches.' : 'Aucune couche pour l’instant.',
+        avecEmprise.length > 1 ? `<select class="input" aria-label="Couches cadrées" onchange="A.setCadrage('donnees', this.value)">
+            <option value="">Toutes les couches</option>${options}</select>` : '');
+    const l = c?.mode === 'lieu' ? c.lieu : STATE.location;
+    const surLieu = choix('lieu', 'Sur un lieu précis', mode === 'lieu' ? echapper(l.nom || l.name || 'Lieu choisi') : 'Une adresse, une position, des coordonnées.', htmlOutilsLieu());
+    const v = c?.mode === 'vue' ? c.vue : null;
+    const surVue = choix('vue', 'Sur la vue actuelle', v ? `Figée à zoom ${v.zoom.toFixed(1)}, inclinaison ${Math.round(v.pitch)}°.` : 'Le cadrage que vous réglez sur la carte, tel quel.',
+        '<button type="button" class="btn btn-soft btn-full" onclick="A.setCadrage(\'vue\')">Utiliser la vue actuelle</button>');
+    return `<div class="section">
+        <div class="section-title">Ouverture de la carte${infoBulle('Où la carte s’ouvre pour tout le monde. Sur les données, elle suit les couches : une scène déplacée n’a pas à être recadrée. Le soleil et le fuseau se règlent sur le centre des données, tant qu’aucun lieu n’est désigné.')}</div>
+        <div class="cadrage-liste" role="radiogroup" aria-label="Ouverture de la carte">${surDonnees}${surLieu}${surVue}</div></div>`;
+}
+
+/** Les outils pour désigner un lieu : recherche, position, pointé, coordonnées. */
+function htmlOutilsLieu() {
+    const L = STATE.location;
+    return `<div class="cadrage-outils">
+        <input class="input" id="loc-search" placeholder="Adresse, ville, monument…" aria-label="Rechercher un lieu" oninput="A.searchLocation(this.value)">
+        <div class="search-results" id="loc-results"></div>
+        <div class="cadrage-boutons">
+            <button class="btn btn-soft" onclick="A.useGeolocation()">${icTrait(IC.epingle)} Ma position</button>
+            <button class="btn btn-soft" onclick="A.pickOnMap()">${icTrait(IC.carte)} Pointer</button>
+        </div>
+        <div class="dual">
+            <div><label class="input-label">Latitude</label><input class="input" id="loc-lat" type="number" step="0.0001" value="${(L.lat ?? '').toString()}"></div>
+            <div><label class="input-label">Longitude</label><input class="input" id="loc-lng" type="number" step="0.0001" value="${(L.lng ?? '').toString()}"></div>
+        </div>
+        <button class="btn btn-soft btn-full" onclick="A.applyManualCoords()">Aller</button>
+    </div>`;
+}
+
 function renderLieu() {
     $('module-title').textContent = 'Lieu';
     const L = STATE.location;
@@ -5223,32 +5330,15 @@ function renderLieu() {
             <div class="section-title">Nom du projet</div>
             <input class="input" id="proj-name" placeholder="Ma maquette…" value="${STATE.projectName}" onchange="A.setProjectName(this.value)">
         </div>
+        ${htmlCadrage()}
         <div class="loc-badge">
             <span class="ic">${icTrait(IC.epingle)}</span>
             <div>
                 <div class="nm">${L.name || 'Non défini'}</div>
-                <div class="co">${(L.lat ?? 0).toFixed(5)}°N · ${(L.lng ?? 0).toFixed(5)}°E</div>
+                <div class="co">${(L.lat ?? 0).toFixed(5)}°N · ${(L.lng ?? 0).toFixed(5)}°E · ancre du soleil</div>
             </div>
             <button class="loc-change" onclick="A.recenter()">Recentrer</button>
-        </div>
-        <div class="section">
-            <div class="section-title">Rechercher un lieu</div>
-            <input class="input" id="loc-search" placeholder="Adresse, ville, monument…" oninput="A.searchLocation(this.value)">
-            <div class="search-results" id="loc-results"></div>
-        </div>
-        <div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.useGeolocation()">${icTrait(IC.epingle)} Ma position actuelle</button>
-            <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.pickOnMap()">${icTrait(IC.carte)} Pointer sur la carte</button>
-        </div>
-        <div class="section">
-            <div class="section-title">Coordonnées manuelles</div>
-            <div class="dual">
-                <div><label class="input-label">Latitude</label><input class="input" id="loc-lat" type="number" step="0.0001" value="${(L.lat ?? '').toString()}"></div>
-                <div><label class="input-label">Longitude</label><input class="input" id="loc-lng" type="number" step="0.0001" value="${(L.lng ?? '').toString()}"></div>
-            </div>
-            <button class="btn btn-soft btn-full" style="margin-top:10px" onclick="A.applyManualCoords()">Aller</button>
-        </div>
-`;
+        </div>`;
 }
 
 // ---- Couches ----
@@ -6031,7 +6121,7 @@ function appliquerHorlogeDeclaree(h) {
         STATE.settings.date = new Date(h.dateEpinglee + 'T12:00:00');
     }
     if (Number.isFinite(h.timeOfDay)) STATE.settings.timeOfDay = h.timeOfDay;
-    if (h.lieu) STATE.location = { ...STATE.location, lat: h.lieu.lat, lng: h.lieu.lng };
+    if (h.lieu) { STATE.location = { ...STATE.location, lat: h.lieu.lat, lng: h.lieu.lng }; STATE.locationChoisie = true; }
 }
 
 async function syncScenePrefsFromGrist() {
@@ -6039,6 +6129,7 @@ async function syncScenePrefsFromGrist() {
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
     STATE.exposition = prefs.exposition || expositionVide();
+    appliquerCadrageDeScene();
 
     // Les réglages retenus la fois d'avant priment sur les défauts du code :
     // qui a choisi un fond veut le retrouver, pas repartir de « liberty ». Ils
@@ -7034,7 +7125,7 @@ function appliquerOuverture() {
 /** L'auteur règle par où la scène s'ouvre. */
 function reglerOuverture(mode, cle = null) {
     if (!assertCanWrite('régler l’ouverture de la scène')) return;
-    STATE.exposition = normaliserExposition({ ouverture: { mode, cle } });
+    STATE.exposition = normaliserExposition({ ouverture: { mode, cle }, cadrage: STATE.exposition?.cadrage });
     markDirty();
     persistScenePrefsDifferee(200);
 }
@@ -10356,6 +10447,7 @@ async function onLocationPick(e) {
     map.getCanvas().style.cursor = '';
     const { lng, lat } = e.lngLat;
     STATE.location = { ...STATE.location, lat, lng, name: `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` };
+    lieuChoisi();
     if (STATE.currentModule === 'lieu') renderLieu();
     markDirty();
     showToast('Lieu défini', 'success');
@@ -12530,7 +12622,7 @@ async function restoreProject(p) {
     STATE.layers.forEach((l) => removeLayerGfx(l));
     STATE.layers = [];
     if (p.projectName) { STATE.projectName = p.projectName; $('project-name').textContent = p.projectName; }
-    if (p.location?.lat) { STATE.location = p.location; map.jumpTo({ center: [p.location.lng, p.location.lat] }); }
+    if (p.location?.lat) { STATE.location = p.location; STATE.locationChoisie = true; map.jumpTo({ center: [p.location.lng, p.location.lat] }); }
     if (p.settings) { Object.assign(STATE.settings, p.settings); STATE.settings.date = new Date(p.settings.date || Date.now()); MODEL_LIBRARY.set = STATE.settings.modelSet || 'colored'; }
     STATE.story = assurerCles(p.story || []);
     refreshStoryNavChrome();
@@ -13124,6 +13216,8 @@ function showToast(msg, type = 'success') {
 function updateRailBadge() {
     const b = $('rail-couches-badge'); const n = STATE.layers.length;
     b.style.display = n ? 'block' : 'none'; b.textContent = n;
+    // Les couches changent : tant qu'aucun lieu n'est désigné, l'ancre du soleil suit leur emprise.
+    if (n && !STATE.locationChoisie) ancrerSurDonnees(computeLayersBounds());
 }
 
 // ============================================================
@@ -13382,8 +13476,37 @@ const A = {
     // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },
     searchLocation,
+    /**
+     * L'auteur dit où la carte s'ouvre : sur les données (toutes, ou une couche), sur un lieu, ou sur la vue actuelle.
+     * Le choix vit avec la scène et vaut pour tous ; l'auteur le voit aussitôt.
+     */
+    setCadrage(mode, valeur) {
+        if (!assertCanWrite('régler l’ouverture de la carte')) return;
+        let cadrage;
+        if (mode === 'donnees') cadrage = valeur ? { mode: 'donnees', couche: valeur } : { mode: 'donnees' };
+        else if (mode === 'vue') cadrage = { mode: 'vue', vue: cameraCourante() };
+        else {
+            // Le lieu part du lieu déjà désigné, sinon de ce que la carte montre : on ne saute pas ailleurs.
+            if (!STATE.locationChoisie) {
+                const c = map.getCenter();
+                STATE.location = { ...STATE.location, lat: c.lat, lng: c.lng, name: `${c.lat.toFixed(4)}°N, ${c.lng.toFixed(4)}°E` };
+                STATE.locationChoisie = true;
+            }
+            const l = STATE.location;
+            cadrage = { mode: 'lieu', lieu: { lng: l.lng, lat: l.lat, nom: l.name } };
+        }
+        STATE.exposition = normaliserExposition({ ...STATE.exposition, cadrage });
+        markDirty();
+        persistScenePrefsDifferee(200);
+        if (mode !== 'vue' && mode !== 'lieu') {
+            const cible = cadrageEffectif({ cadrage: STATE.exposition.cadrage, couches: couchesCadrage() });
+            if (cible) poserCadrage(cible, true);
+        }
+        renderLieu();
+    },
     pickSearch(name, lat, lng) {
         STATE.location = { ...STATE.location, name, lat: +lat, lng: +lng };
+        lieuChoisi();
         $('loc-results').classList.remove('open');
         $('project-name').textContent = STATE.projectName || name.split(',')[0];
         map.flyTo({ center: [+lng, +lat], zoom: 16, duration: 1200 });
@@ -13400,6 +13523,7 @@ const A = {
         navigator.geolocation.getCurrentPosition((pos) => {
             hideLoading();
             STATE.location = { ...STATE.location, name: 'Ma position', lat: pos.coords.latitude, lng: pos.coords.longitude };
+            lieuChoisi();
             map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16, duration: 1200 });
             renderLieu(); showToast('Position détectée', 'success');
         }, () => { hideLoading(); showToast('Géolocalisation refusée', 'warning'); }, { timeout: 10000 });
@@ -13408,6 +13532,7 @@ const A = {
         const lat = parseFloat($('loc-lat').value), lng = parseFloat($('loc-lng').value);
         if (isNaN(lat) || isNaN(lng)) { showToast('Coordonnées invalides', 'warning'); return; }
         STATE.location = { ...STATE.location, lat, lng, name: `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` };
+        lieuChoisi();
         map.flyTo({ center: [lng, lat], zoom: 16, duration: 1000 }); renderLieu();
     },
     setProjectName(v) { STATE.projectName = v; $('project-name').textContent = v || 'Nouveau projet'; markDirty(); },

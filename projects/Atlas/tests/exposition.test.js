@@ -49,3 +49,11 @@ test('un contexte se retrouve par sa cle, pas par son rang', () => {
   const inverse = [recit[1], recit[0]];
   assert.equal(ouvertureEffective({ exposition: ctx, story: inverse, posture: 'lecture' }).index, 0);
 });
+
+test('le cadrage de la carte voyage avec l exposition, et un cadrage abime s en va', () => {
+  const avec = normaliserExposition({ ouverture: { mode: 'recit' }, cadrage: { mode: 'donnees', couche: 'T' } });
+  assert.deepEqual(avec, { ouverture: { mode: 'recit' }, cadrage: { mode: 'donnees', couche: 'T' } });
+  assert.deepEqual(normaliserExposition({ cadrage: { mode: 'vue' } }), expositionVide());
+  assert.deepEqual(normaliserExposition({ cadrage: 'donnees' }), expositionVide());
+  assert.deepEqual(expositionDepuisJSON(JSON.stringify(avec)), avec);
+});

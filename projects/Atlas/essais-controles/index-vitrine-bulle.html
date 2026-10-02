@@ -947,6 +947,27 @@
         .menu-couche-item { min-height: 40px; }
         #menu-couche { width: min(250px, calc(100vw - 24px)); }
         #menu-couche.posture-feuille { width: auto; }
+        /* Lieu : ou la carte s'ouvre, trois choix qui se deplient. */
+        .cadrage-liste { display: flex; flex-direction: column; gap: 8px; }
+        .cadrage-choix { border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); }
+        .cadrage-choix.on { border-color: var(--accent); background: var(--surface-muted); }
+        .cadrage-radio {
+            display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 10px 12px 10px 38px;
+            position: relative; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+        }
+        .cadrage-radio::before {
+            content: ''; position: absolute; left: 12px; top: 13px; width: 14px; height: 14px; border-radius: 50%;
+            border: 1.5px solid var(--muted); box-sizing: border-box;
+        }
+        .cadrage-choix.on .cadrage-radio::before { border-color: var(--accent); background: radial-gradient(var(--accent) 45%, transparent 50%); }
+        .cadrage-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+        .cadrage-radio:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px; }
+        .cadrage-nom { font-size: 13px; font-weight: 600; }
+        .cadrage-aide { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+        .cadrage-choix > .input, .cadrage-choix > .btn, .cadrage-outils { margin: 0 12px 12px; width: calc(100% - 24px); }
+        .cadrage-outils { display: flex; flex-direction: column; gap: 10px; }
+        .cadrage-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cadrage-boutons .btn { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
         /* Layer list */
         .layer-list { display: flex; flex-direction: column; gap: 2px; }
         .layer-item {

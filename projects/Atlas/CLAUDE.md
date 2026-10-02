@@ -2850,3 +2850,17 @@ tronçons — la construction du réseau y sera à mesurer.
   la même couleur. L'avatar ne dit plus que *qui* (il n'apparaît que si l'identité est connue) ; le badge « Lecture » a disparu.
   Quand rien ne peut changer, le bouton dit seulement la posture (`aria-disabled`).
 - Pas encore d'**import** GPX / KML / CSV (seuls GeoJSON, projet et scène s'ouvrent) : voir les propositions.
+
+## Lieu : ouvrir sur les données, sur un lieu, ou sur une vue (02/10/2026)
+
+- **Où la carte s'ouvre** est un choix d'auteur, enregistré avec la scène (`Atlas_ScenePrefs.ExpositionJSON`, clé `cadrage`,
+  `lib/cadrage.js`, 13 tests) : `donnees` (toutes les couches, ou une, par sa table ou son nom), `lieu` (coordonnées et nom
+  gardés dans le cadrage lui-même) ou `vue` (la caméra figée). Sans choix : les données si la scène en a, sinon le lieu — ce
+  qu'Atlas faisait déjà. Une couche retirée ou un cadrage abîmé retombent sur les données, jamais sur du vide.
+- **L'ancre du soleil et du fuseau** (`STATE.location`) suit l'emprise des données tant que personne n'a désigné de lieu
+  (`STATE.locationChoisie`, posé par la recherche, la position, le pointé, les coordonnées, un projet chargé ou un manifeste) :
+  une scène de Lyon ne se règle plus sur le Vieux-Port.
+- Le module Lieu propose les trois choix ; « un lieu précis » déplie les outils de recherche, et désigner un lieu le choisit
+  comme ouverture. La caméra de session (rechargement d'une même visite) prime toujours sur le cadrage de l'auteur.
+- Pas encore éprouvé en Grist réel : l'écriture de `cadrage` dans `ExpositionJSON` passe par le même enregistrement que
+  l'ouverture du récit, essayé seulement dans l'application simulée.

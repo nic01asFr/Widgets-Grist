@@ -14,6 +14,7 @@
  * Ce module ne touche ni au DOM, ni à Grist.
  */
 import { contexteDeCle } from './contextes.js?v=20261002f';
+import { normaliserCadrage } from './cadrage.js?v=20261002f';
 
 /** Par où la scène s'ouvre pour qui ne l'édite pas. */
 export const OUVERTURES = Object.freeze(['carte', 'recit', 'contexte']);
@@ -35,6 +36,9 @@ export function normaliserExposition(brut) {
     // Un contexte sans clé ne désigne rien : on le tient pour la carte.
     if (o.mode === 'contexte' && !out.ouverture.cle) out.ouverture.mode = 'carte';
   }
+  // Où la carte s'ouvre (lib/cadrage.js) : présent seulement quand l'auteur a choisi.
+  const cadrage = brut && typeof brut === 'object' && !Array.isArray(brut) ? normaliserCadrage(brut.cadrage) : null;
+  if (cadrage) out.cadrage = cadrage;
   return out;
 }
 
