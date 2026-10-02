@@ -772,11 +772,11 @@
         .legend-row.legend-sub .nm { font-size: 11px; color: var(--muted); }
         .legend-row .swatch.legend-grad { width: 28px; border-radius: 2px; }
 
-        /* Barre de sélection : en haut à gauche, SOUS la rangée du dock. Centrée sur la ligne des pastilles, elle recouvrait « Relevé »,
-           « Contexte » et les filtres dès que la carte se rétrécit (fiche ouverte), et le panneau d'un filtre ouvert. Rien ne se
-           replie : chaque libellé tient sur une ligne. */
+        /* Barre de sélection : centrée, SOUS la rangée du dock. Sur la ligne des pastilles, elle recouvrait « Relevé », « Contexte »
+           et les filtres dès que la carte se rétrécit (fiche ouverte). Quand le panneau d'un filtre est ouvert, elle passe à gauche :
+           centrée, elle en recouvrirait le haut. Rien ne se replie : chaque libellé tient sur une ligne. */
         .selection-bar {
-            position: absolute; top: 16px; left: 16px;
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
             max-width: calc(100% - 32px);
             /* Clair, comme la légende, le dock et les cartes de la carte : la barre sombre
                jurait avec le reste. Que des jetons, pour qu'un thème sombre se règle en un lieu. */
@@ -785,6 +785,7 @@
             font-size: 12.5px; box-shadow: 0 6px 20px rgba(45, 40, 32, 0.12); z-index: 10;
         }
         body:has(.map-controls-dock.has-pills) .selection-bar.open { top: 82px; }
+        body:not(.mobile-layout):has(.map-controls-dock.has-pills:not(.collapsed)) .selection-bar.open { left: 16px; transform: none; }
         .selection-bar > * { white-space: nowrap; flex-shrink: 0; }
         .selection-bar.open { display: flex; }
         .selection-bar .sel-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--accent); }
