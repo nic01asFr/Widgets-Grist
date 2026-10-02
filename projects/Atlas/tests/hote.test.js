@@ -192,7 +192,7 @@ test('on ne garde que ce qui sert a afficher et a ouvrir', () => {
   const st = stockageFactice();
   memoriserScenes(st, [{ ...SCENES[0], geojson: { enorme: true }, jeton: 'secret' }]);
   const gardees = Object.keys(lireScenesMemorisees(st).scenes[0]).sort();
-  assert.deepEqual(gardees, ['espace', 'id', 'maj', 'nom', 'org']);
+  assert.deepEqual(gardees, ['acces', 'espace', 'id', 'maj', 'nom', 'org']);
 });
 
 test('une liste trop vieille est signalee comme telle', () => {
@@ -338,4 +338,51 @@ test('phraseProgres : l’avancement, borné', () => {
   assert.equal(phraseProgres({ phase: 'photos', fait: 4, total: 12 }), 'Photos 4 / 12…');
   assert.equal(phraseProgres({ phase: 'tables', fait: 12, total: 9 }), 'Tables 9 / 9…');
   assert.equal(phraseProgres(null), '');
+});
+
+import { libelleRole, trierScenes, filtrerScenes, lirePrefsListe, ecrirePrefsListe, CLE_LISTE, memoriserScenes as memo2, lireScenesMemorisees as lire2 } from '../lib/hote.js';
+
+const SCENES_LISTE = [
+  { id: 'a', nom: 'Écluse du Sud', org: 'Équipe', espace: 'Terrain', maj: '2026-09-30T10:00:00Z', acces: 'editors' },
+  { id: 'b', nom: 'bassin versant', org: 'Équipe', espace: 'Études', maj: '2026-10-02T08:00:00Z', acces: 'owners' },
+  { id: 'c', nom: 'Parc urbain', org: 'Ville', espace: 'Public', maj: '', acces: 'viewers' },
+  { id: 'd', nom: 'Ancienne carrière', org: 'Ville', espace: 'Archives', maj: '2025-01-01T00:00:00Z', acces: 'viewers' },
+];
+
+test('libelleRole : les rôles de Grist, en français', () => {
+  assert.equal(libelleRole('owners'), 'Propriétaire');
+  assert.equal(libelleRole('editors'), 'Éditeur');
+  assert.equal(libelleRole('viewers'), 'Lecteur');
+  assert.equal(libelleRole(''), '');
+  assert.equal(libelleRole('autre'), '');
+});
+
+test('trierScenes : récentes d’abord (date inconnue en dernier), nom sans souci d’accent ni de casse, organisation puis espace', () => {
+  assert.deepEqual(trierScenes(SCENES_LISTE, 'recent').map((s) => s.id), ['b', 'a', 'd', 'c']);
+  assert.deepEqual(trierScenes(SCENES_LISTE, 'nom').map((s) => s.id), ['d', 'b', 'a', 'c'], '« Ancienne », « bassin », « Écluse », « Parc »');
+  assert.deepEqual(trierScenes(SCENES_LISTE, 'organisation').map((s) => s.id), ['b', 'a', 'd', 'c'], 'Équipe/Études, Équipe/Terrain, Ville/Archives, Ville/Public');
+  assert.deepEqual(SCENES_LISTE.map((s) => s.id), ['a', 'b', 'c', 'd'], 'la liste d’origine n’est pas touchée');
+});
+
+test('filtrerScenes : par rôle, par texte (accents et casse ignorés), hors ligne', () => {
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { acces: 'viewers' }).map((s) => s.id), ['c', 'd']);
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { texte: 'ecluse' }).map((s) => s.id), ['a']);
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { texte: 'VILLE' }).map((s) => s.id), ['c', 'd'], 'cherche aussi l’organisation');
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { texte: 'etudes' }).map((s) => s.id), ['b'], 'et l’espace');
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { acces: 'hors-ligne', prets: new Set(['d', 'a']) }).map((s) => s.id), ['a', 'd']);
+  assert.deepEqual(filtrerScenes(SCENES_LISTE, { acces: 'editors', texte: 'sud' }).map((s) => s.id), ['a']);
+  assert.equal(filtrerScenes(SCENES_LISTE, {}).length, 4);
+  assert.deepEqual(filtrerScenes(null, {}), []);
+});
+
+test('le rôle survit à la mémoire ; le tri et le filtre se retiennent', () => {
+  const st = (() => { const m = new Map(); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) }; })();
+  memo2(st, SCENES_LISTE);
+  assert.deepEqual(lire2(st).scenes.map((s) => s.acces), ['editors', 'owners', 'viewers', 'viewers']);
+  assert.deepEqual(lirePrefsListe(st), { tri: 'recent', acces: 'tous' }, 'rien d’écrit : les défauts');
+  ecrirePrefsListe(st, { tri: 'nom', acces: 'viewers' });
+  assert.deepEqual(lirePrefsListe(st), { tri: 'nom', acces: 'viewers' });
+  st.setItem(CLE_LISTE, JSON.stringify({ tri: 'hologramme', acces: 'x' }));
+  assert.deepEqual(lirePrefsListe(st), { tri: 'recent', acces: 'tous' }, 'une valeur inconnue ne passe pas');
+  assert.deepEqual(lirePrefsListe(null), { tri: 'recent', acces: 'tous' });
 });

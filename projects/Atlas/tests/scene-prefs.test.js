@@ -154,6 +154,20 @@ describe('exposition — par où la scène s’ouvre, choix de l’auteur', () =
     await loadScenePrefs(api);
     await saveScenePrefs(api, { viewerControls: createDefaultViewerControls(), settings: {} });
     const ajoutees = api.lots.flat().filter((a) => a[0] === 'AddColumn').map((a) => a[2]);
-    assert.deepEqual(ajoutees, ['SettingsJSON', 'ExpositionJSON']);
+    assert.deepEqual(ajoutees, ['SettingsJSON', 'ExpositionJSON', 'Miniature']);
+  });
+
+  it('se relit, s’écrit seulement quand on la donne, et vide s’efface', async () => {
+    const api = faux({ colonnes: ['id', 'ViewerJSON', 'SettingsJSON', 'ExpositionJSON', 'Miniature'], lignes: [{ id: 3, Miniature: 'data:image/jpeg;base64,AAAA' }] });
+    const prefs = await loadScenePrefs(api);
+    assert.equal(prefs.miniature, 'data:image/jpeg;base64,AAAA');
+    await saveScenePrefs(api, { viewerControls: createDefaultViewerControls(), settings: {} });
+    const sans = api.lots.flat().find((a) => a[0] === 'UpdateRecord');
+    assert.ok(!('Miniature' in sans[3]), 'un appelant qui ne la connaît pas ne l’efface pas');
+    await saveScenePrefs(api, { viewerControls: createDefaultViewerControls(), settings: {}, miniature: 'data:image/jpeg;base64,BBBB' });
+    const avec = api.lots.flat().filter((a) => a[0] === 'UpdateRecord').pop();
+    assert.equal(avec[3].Miniature, 'data:image/jpeg;base64,BBBB');
+    await saveScenePrefs(api, { viewerControls: createDefaultViewerControls(), settings: {}, miniature: '' });
+    assert.equal(api.lots.flat().filter((a) => a[0] === 'UpdateRecord').pop()[3].Miniature, '');
   });
 });

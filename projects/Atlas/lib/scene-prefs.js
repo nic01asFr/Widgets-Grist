@@ -15,6 +15,8 @@ export const SCENE_PREFS_SCHEMA = [
   { id: 'SettingsJSON', label: 'Réglages de scène (JSON)', type: 'Text' },
   // Les choix de l'auteur sur l'exposition (par où la scène s'ouvre) : lib/exposition.js.
   { id: 'ExpositionJSON', label: 'Exposition (JSON)', type: 'Text' },
+  // La vignette de la scène dans la liste des projets : une URL de données (JPEG), choisie par l'auteur.
+  { id: 'Miniature', label: 'Miniature (image)', type: 'Text' },
 ];
 
 /**
@@ -108,7 +110,7 @@ export async function ensureScenePrefsTable(docApi, opts = {}) {
   }
 }
 
-const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide() });
+const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide(), miniature: '' });
 
 /** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=20260730m').ViewerControl[], settings: object }>} */
 export async function loadScenePrefs(docApi) {
@@ -130,6 +132,7 @@ export async function loadScenePrefs(docApi) {
       viewerControls: viewerControlsFromPrefsRow(rec, 0),
       settings: reglagesDepuisJSON(rec.SettingsJSON?.[0]),
       exposition: expositionDepuisJSON(rec.ExpositionJSON?.[0]),
+      miniature: typeof rec.Miniature?.[0] === 'string' ? rec.Miniature[0] : '',
     };
   } catch (e) {
     console.warn('[Atlas scene-prefs] load', e.message);
@@ -149,6 +152,8 @@ export async function saveScenePrefs(docApi, prefs, opts = {}) {
     SettingsJSON: JSON.stringify(reglagesAEnregistrer(prefs.settings || {})),
     // Écrite seulement quand on la donne : un appelant qui ne la connaît pas ne l'efface pas.
     ...(prefs.exposition ? { ExpositionJSON: JSON.stringify(expositionAEnregistrer(prefs.exposition)) } : {}),
+    // Idem : la miniature ne s'efface que si on la donne vide.
+    ...(typeof prefs.miniature === 'string' ? { Miniature: prefs.miniature } : {}),
   };
   if (_prefRowId != null) {
     await docApi.applyUserActions([['UpdateRecord', ATLAS_SCENE_PREFS_TABLE, _prefRowId, data]]);

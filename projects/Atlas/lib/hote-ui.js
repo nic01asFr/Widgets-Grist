@@ -14,11 +14,12 @@
 import { capacites, creerClient } from './data-client.js?v=20261001a';
 import { installerAdaptateur } from './grist-adapter.js?v=20261002c';
 import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=20261002a';
-import { listerScenesAtlas } from './decouverte.js?v=20260820a';
+import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=20260820a';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication, phrasePreparation, phraseProgres,
+  libelleRole, trierScenes, filtrerScenes, lirePrefsListe, ecrirePrefsListe, TRIS, FILTRES,
 } from './hote.js?v=20260821a';
 
 export const VERSION = '1.0.0';
@@ -61,8 +62,27 @@ const CSS = `
   border-radius: 10px; }
 .hote-scene:hover, .hote-scene:focus-visible { border-color: var(--accent, #C44536); }
 .hote-scene[data-memorisee] { opacity: .72; }
+.hote-scene { display: flex; align-items: center; gap: .8rem; }
 .hote-scene b { display: block; font-weight: 600; font-size: 1rem; margin-bottom: .15rem; }
-.hote-scene span { font-size: .8rem; color: var(--muted, #7A6F5E); }
+.hote-scene-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.hote-scene .hote-sous { font-size: .8rem; color: var(--muted, #7A6F5E); }
+.hote-mini { flex: 0 0 auto; width: 4.6rem; height: 3.1rem; border-radius: 6px; overflow: hidden;
+  background: var(--accent-soft, #F5E9DC) center / cover no-repeat; display: grid; place-items: center;
+  font-family: var(--serif, Georgia, serif); font-size: 1.3rem; color: var(--accent, #C44536);
+  border: 1px solid var(--hairline, #E2DBC8); }
+.hote-badges { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.hote-badges i { font-style: normal; font-size: .68rem; letter-spacing: .03em; padding: .08rem .45rem; border-radius: 999px;
+  background: var(--surface-muted, #FAF6EB); color: var(--muted, #7A6F5E); border: 1px solid var(--hairline, #E2DBC8); }
+.hote-badges i.pret { color: var(--accent2, #2E4E54); border-color: var(--accent2, #2E4E54); }
+.hote-outils { display: flex; gap: .5rem; }
+.hote-outils input { flex: 1; min-width: 0; }
+.hote-outils select { flex: 0 0 auto; padding: .8rem .6rem; font: inherit; font-size: .9rem; color: var(--ink, #1F1B14);
+  background: var(--surface, #fff); border: 1px solid var(--hairline-strong, #C9C0A8); border-radius: 8px; }
+.hote-puces { display: flex; flex-wrap: wrap; gap: .4rem; }
+.hote-puces button { font: inherit; font-size: .8rem; padding: .35rem .7rem; border-radius: 999px; cursor: pointer;
+  color: var(--ink, #1F1B14); background: none; border: 1px solid var(--hairline-strong, #C9C0A8); }
+.hote-puces button[aria-pressed="true"] { color: #fff; background: var(--ink, #1F1B14); border-color: var(--ink, #1F1B14); }
+.hote-puces button:focus-visible { outline: 2px solid var(--accent, #C44536); outline-offset: 2px; }
 .hote-progres { font-size: .85rem; color: var(--muted, #7A6F5E);
   font-family: var(--mono, monospace); }
 .hote-courante { padding: .9rem 1rem; border-radius: 10px;
@@ -75,7 +95,9 @@ const CSS = `
   color: var(--ink, #1F1B14); background: none; border: 0; border-radius: 10px;
   text-align: left; cursor: pointer; }
 .hote-menu button:active { background: var(--surface-muted, #FAF6EB); }
+.hote-menu button[hidden] { display: none; }
 .hote-menu button small { display: block; font-size: .78rem; color: var(--muted, #7A6F5E); }
+.hote-sous-titre { margin: .6rem .8rem 0; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #7A6F5E); }
 .hote-ic { flex: 0 0 auto; color: var(--muted, #7A6F5E); }
 .hote-version { font-family: var(--mono, monospace); font-size: .78rem;
   color: var(--muted, #7A6F5E); opacity: .8; }
@@ -297,44 +319,93 @@ function montrerConnexion(boite, config, message, onValider) {
 }
 
 async function montrerScenes(boite, config, portee, { onChoix, onChanger, stockage }) {
+  const prefs = lirePrefsListe(stockage);
+  let texte = '';
   boite.innerHTML = `${MARQUE}
     <h2>Vos scènes</h2>
+    <div class="hote-outils">
+      <input type="search" id="h-filtre" placeholder="Rechercher une scène…" aria-label="Rechercher une scène" autocomplete="off">
+      <select id="h-tri" aria-label="Trier les scènes">${TRIS.map((x) => `<option value="${x.id}"${x.id === prefs.tri ? ' selected' : ''}>${echapper(x.libelle)}</option>`).join('')}</select>
+    </div>
+    <div class="hote-puces" id="h-puces" role="group" aria-label="Filtrer par rôle"></div>
     <div class="hote-progres" id="h-progres"></div>
     <div class="hote-liste" id="h-liste"></div>
     <button class="hote-lien" id="h-changer">Changer d’instance ou de clé</button>`;
 
   const liste = boite.querySelector('#h-liste');
   const progres = boite.querySelector('#h-progres');
+  const puces = boite.querySelector('#h-puces');
   boite.querySelector('#h-changer').onclick = onChanger;
 
-  // Les scènes que l'appareil sait ouvrir sans réseau : une lecture locale, immédiate.
-  const prets = await scenesPreparees(stockageParDefaut(portee).stockage, config.baseUrl);
+  // Ce que l'appareil sait déjà : les scènes ouvrables sans réseau, et les miniatures vues la dernière fois.
+  const idb = stockageParDefaut(portee).stockage;
+  const prets = await scenesPreparees(idb, config.baseUrl);
+  const cleMini = (id) => `mini:${config.baseUrl}|${id}`;
+  const minis = new Map();   // id → { data, maj }
 
-  const carte = (scene, memorisee) => {
+  /** Les scènes à l'écran : la mémoire d'abord, puis ce que le compte confirme. */
+  const scenes = new Map();
+
+  const carte = (scene) => {
     const b = document.createElement('button');
     b.className = 'hote-scene';
     b.dataset.scene = scene.id;
-    const sous = [situer(scene), depuis(scene.maj), prets.has(scene.id) ? 'disponible hors ligne' : ''].filter(Boolean).join(' — ');
-    b.innerHTML = `<b>${echapper(scene.nom || 'Sans titre')}</b>
-      ${sous ? `<span>${echapper(sous)}</span>` : ''}`;
+    if (scene.memorisee) b.dataset.memorisee = '1';
+    const sous = [situer(scene), depuis(scene.maj)].filter(Boolean).join(' — ');
+    const role = libelleRole(scene.acces);
+    const mini = minis.get(scene.id)?.data;
+    const initiale = echapper((scene.nom || '?').trim().charAt(0).toUpperCase());
+    b.innerHTML = `<span class="hote-mini" aria-hidden="true">${mini ? '' : initiale}</span>
+      <span class="hote-scene-texte"><b>${echapper(scene.nom || 'Sans titre')}</b>
+        ${sous ? `<span class="hote-sous">${echapper(sous)}</span>` : ''}
+        <span class="hote-badges">${role ? `<i>${echapper(role)}</i>` : ''}${prets.has(scene.id) ? '<i class="pret">Disponible hors ligne</i>' : ''}</span></span>`;
+    if (mini) b.querySelector('.hote-mini').style.backgroundImage = `url("${mini.replace(/"/g, '%22')}")`;
     b.onclick = () => onChoix(scene);
-    if (memorisee) b.dataset.memorisee = '1';
     return b;
   };
 
-  // 1. Ce qu'on avait trouve la derniere fois — affiche TOUT DE SUITE.
-  //    Sonder un compte prend plusieurs secondes ; revoir une page vide a chaque
+  let rendu = false;
+  const rendre = () => {
+    rendu = false;
+    const tous = [...scenes.values()];
+    puces.innerHTML = FILTRES.map((f) => {
+      const n = filtrerScenes(tous, { acces: f.id, prets }).length;
+      return `<button type="button" data-filtre="${f.id}" aria-pressed="${f.id === prefs.acces}"${f.id !== 'tous' && !n ? ' disabled' : ''}>${echapper(f.libelle)}${f.id === 'tous' || n ? ` · ${n}` : ''}</button>`;
+    }).join('');
+    const vues = trierScenes(filtrerScenes(tous, { acces: prefs.acces, texte, prets }), prefs.tri);
+    liste.replaceChildren(...vues.map(carte));
+    if (!vues.length && tous.length) {
+      const v = document.createElement('div');
+      v.className = 'hote-avis';
+      v.textContent = 'Aucune scène ne correspond à cette recherche.';
+      liste.appendChild(v);
+    }
+  };
+  /** Un rendu par image : le balayage d'un compte fourni rappelle l'affichage à chaque scène trouvée. */
+  const planifier = () => {
+    if (rendu) return;
+    rendu = true;
+    (portee.requestAnimationFrame || ((f) => setTimeout(f, 16)))(rendre);
+  };
+
+  puces.onclick = (e) => {
+    const f = e.target.closest('[data-filtre]');
+    if (!f || f.disabled) return;
+    prefs.acces = f.dataset.filtre;
+    ecrirePrefsListe(stockage, prefs);
+    rendre();
+  };
+  boite.querySelector('#h-tri').onchange = (e) => { prefs.tri = e.target.value; ecrirePrefsListe(stockage, prefs); rendre(); };
+  boite.querySelector('#h-filtre').oninput = (e) => { texte = e.target.value; rendre(); };
+
+  // 1. Ce qu'on avait trouvé la dernière fois — affiché TOUT DE SUITE.
+  //    Sonder un compte prend plusieurs secondes ; revoir une page vide à chaque
   //    ouverture serait une punition pour qui a beaucoup de documents.
   const memoire = lireScenesMemorisees(stockage);
-  const vues = new Set();
-  /** Les cartes a l'ecran, par identifiant de scene — pour les remplacer sans selecteur. */
-  const posees = new Map();
   if (memoire) {
     for (const s of memoire.scenes) {
-      vues.add(s.id);
-      const c = carte(s, true);
-      posees.set(s.id, c);
-      liste.appendChild(c);
+      scenes.set(s.id, { ...s, memorisee: true });
+      try { const m = await idb.get('divers', cleMini(s.id)); if (m?.data) minis.set(s.id, m); } catch (_) { /* sans miniature */ }
     }
     progres.textContent = memoire.perime
       ? `Liste mémorisée ${depuis(new Date(memoire.quand).toISOString())} — vérification…`
@@ -342,15 +413,38 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   } else {
     progres.textContent = 'Recherche…';
   }
+  rendre();
 
-  // 2. Puis on verifie aupres du compte, sans faire disparaitre ce qui est la.
+  // Les miniatures se lisent par petits lots : une requête par scène, jamais toutes d'un coup.
+  const file = [];
+  let enCours = 0;
+  const lireSuivante = async () => {
+    if (enCours >= 3 || !file.length) return;
+    const scene = file.shift();
+    enCours++;
+    try {
+      const data = await lireMiniature(scene.id, config.baseUrl, config.jeton, portee.fetch?.bind(portee));
+      const m = { data, maj: scene.maj || '' };
+      minis.set(scene.id, m);
+      await idb.put('divers', cleMini(scene.id), m).catch(() => {});
+      planifier();
+    } finally { enCours--; lireSuivante(); }
+  };
+  const demanderMiniature = (scene) => {
+    const vue = minis.get(scene.id);
+    if (vue && vue.maj === (scene.maj || '')) return;   // à jour : rien à relire
+    file.push(scene);
+    lireSuivante();
+  };
+
+  // 2. Puis on vérifie auprès du compte, sans faire disparaître ce qui est là.
   const trouvees = [];
   try {
     await listerScenesAtlas(config.baseUrl, config.jeton, {
       fetchFn: portee.fetch?.bind(portee),
-      // L'inventaire precede le sondage, et il peut durer : sur un compte a
-      // plusieurs organisations, l'ecran restait sur « Recherche… » sans que
-      // rien ne dise si l'instance repondait. Chaque etape s'annonce donc.
+      // L'inventaire précède le sondage, et il peut durer : sur un compte à
+      // plusieurs organisations, l'écran restait sur « Recherche… » sans que
+      // rien ne dise si l'instance répondait. Chaque étape s'annonce donc.
       onEtape: (e) => {
         if (e.phase === 'organisations') {
           progres.textContent = e.total == null
@@ -366,17 +460,12 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
       },
       onTrouve: (scene) => {
         trouvees.push(scene);
-        // On retrouve la carte déjà posée par son identifiant, tenu ici, et non
-        // par un sélecteur CSS : `CSS.escape` n'existe pas partout, et l'appel
-        // qui échoue emportait la scène avec lui.
-        const deja = posees.get(scene.id);
-        const neuve = carte(scene, false);
-        posees.set(scene.id, neuve);
-        if (deja) { deja.replaceWith(neuve); return; }
-        liste.appendChild(neuve);
+        scenes.set(scene.id, scene);
+        demanderMiniature(scene);
+        planifier();
       },
-      // L'avancement se compte en documents sondes : sur un compte fourni, la
-      // recherche dure, et une page muette laisserait croire a une panne.
+      // L'avancement se compte en documents sondés : sur un compte fourni, la
+      // recherche dure, et une page muette laisserait croire à une panne.
       onProgres: (fait, total) => {
         progres.textContent = fait < total
           ? `${fait} / ${total} documents examinés — ${trouvees.length} scène${trouvees.length > 1 ? 's' : ''}`
@@ -384,28 +473,27 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
       },
     });
 
-    // 3. Ce que la memoire annoncait et qui n'existe plus : on le retire, sans
-    //    quoi la liste garderait indefiniment des projets supprimes ou perdus.
+    // 3. Ce que la mémoire annonçait et qui n'existe plus : on le retire, sans
+    //    quoi la liste garderait indéfiniment des projets supprimés ou perdus.
     const vivantes = new Set(trouvees.map((s) => s.id));
-    for (const b of [...liste.querySelectorAll('[data-memorisee]')]) {
-      if (!vivantes.has(b.dataset.scene)) b.remove();
-    }
+    for (const [id, s] of [...scenes]) if (s.memorisee && !vivantes.has(id)) scenes.delete(id);
 
     memoriserScenes(stockage, trouvees);
     progres.textContent = trouvees.length
       ? `${trouvees.length} scène${trouvees.length > 1 ? 's' : ''}`
       : '';
+    rendre();
     if (!trouvees.length) {
       liste.innerHTML = `<div class="hote-avis">Aucune scène Atlas trouvée sur ce compte.
         Une scène est un document contenant un import qgis2grist, des préférences
         de couches ou un récit.</div>`;
     }
   } catch (e) {
-    // Hors ligne ou instance injoignable : la liste memorisee reste a l'ecran,
-    // annoncee pour ce qu'elle est. La faire disparaitre priverait de tout.
+    // Hors ligne ou instance injoignable : la liste mémorisée reste à l'écran,
+    // annoncée pour ce qu'elle est. La faire disparaître priverait de tout.
     progres.textContent = '';
     const cause = expliquer(e, capacites(portee));
-    poserAvis(boite, vues.size
+    poserAvis(boite, scenes.size
       ? `${cause} Liste mémorisée ${depuis(new Date(memoire.quand).toISOString())}.`
       : cause);
   }
@@ -495,6 +583,11 @@ export function ouvrirMenuPrincipal({
   const synchro = hl ? hl.etat() : null;
   const situation = scene ? [situer(scene), depuis(scene.maj)].filter(Boolean).join(' — ') : '';
   const version = versionInstallee(doc);
+  // Les scènes déjà vues, les plus récentes d'abord : passer de l'une à l'autre sans repasser par la liste entière.
+  const memoire = changeable ? lireScenesMemorisees(stockage) : null;
+  const recentes = memoire
+    ? trierScenes(memoire.scenes.filter((s) => s.id !== config?.docId), 'recent').slice(0, 3)
+    : [];
 
   boite.innerHTML = `${MARQUE}
     ${scene ? `<div class="hote-courante">
@@ -506,6 +599,7 @@ export function ouvrirMenuPrincipal({
       ${synchro ? `<button id="m-synchro">${IC.synchro}<span>Synchronisation<small>${echapper(phraseSynchro(synchro))}</small></span></button>` : ''}
       ${hl && typeof hl.preparerHorsLigne === 'function' ? `<button id="m-hors">${IC.hors}<span>Disponible hors ligne<small id="m-hors-etat">…</small></span></button>
       <button id="m-hors-liberer" hidden>${IC.corbeille}<span>Libérer l’espace<small>La scène demandera de nouveau le réseau pour s’ouvrir</small></span></button>` : ''}
+      ${recentes.length ? `<div class="hote-sous-titre">Scènes récentes</div>${recentes.map((s) => `<button data-recente="${echapper(s.id)}">${IC.scenes}<span>${echapper(s.nom || 'Sans titre')}<small>${echapper([libelleRole(s.acces), depuis(s.maj)].filter(Boolean).join(' — '))}</small></span></button>`).join('')}` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}
@@ -567,6 +661,18 @@ export function ouvrirMenuPrincipal({
     }
     portee.location.reload();
   };
+
+  boite.querySelectorAll('[data-recente]').forEach((b) => {
+    b.onclick = () => {
+      if (modifie && !portee.confirm('Des modifications ne sont pas enregistrées. Changer de scène malgré tout ?')) return;
+      // Même geste que la liste : la scène choisie devient celle de l'ouverture, et la page repart sur elle.
+      if (!ecrireConfig(stockage, { ...(config || {}), docId: b.dataset.recente })) {
+        poserAvis(boite, 'Impossible de changer de scène : le stockage de l’appareil est indisponible.');
+        return;
+      }
+      portee.location.reload();
+    };
+  });
 
   const cx = boite.querySelector('#m-connexion');
   if (cx) cx.onclick = () => {

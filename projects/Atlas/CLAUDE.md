@@ -2907,3 +2907,18 @@ carte avec les autres commandes** (`#hote-synchro`). Il n'apparaît que lorsqu'i
 maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-même quand il n'y a plus rien à dire.
 
 **Icônes de la barre** : Ouvrir (dossier), Télécharger le projet (flèche vers le bas, l'inverse de Exporter — ce n'était plus une disquette), Exporter (flèche vers le haut).
+
+## La liste des scènes : rôle, tri, filtre, miniature (02/10/2026)
+
+- **Écran « Vos scènes »** (`lib/hote-ui.js`, `montrerScenes`) : recherche (nom, organisation, espace ; accents et casse ignorés), tri
+  (plus récentes / nom / organisation) et puces de **rôle** (Propriétaire, Éditeur, Lecteur — ceux que Grist donne dans `access`,
+  retenus par `decouverte.js` et mémorisés avec la liste) plus « Hors ligne ». Le tri et le filtre se retiennent
+  (`atlas_liste`). La mémoire s'affiche d'abord, puis le compte la confirme ; un rendu par image pendant le balayage. Pures et
+  testées : `trierScenes`, `filtrerScenes`, `libelleRole`, `lirePrefsListe` (`lib/hote.js`).
+- **« Exploitant »** n'est pas un rôle de Grist : la liste ne peut pas le dire (c'est un droit par table, appris à l'ouverture).
+- **Miniature** : `Atlas_ScenePrefs.Miniature` (URL de données JPEG, environ 25 Ko, plafond 120 000 caractères) que l'auteur pose
+  par « Utiliser la vue actuelle » dans le module **Lieu** (recadrée 8:5, 320×200). La liste la lit scène par scène (3 en
+  parallèle, une requête `records?limit=1` par scène reconnue), la garde dans le magasin `divers` d'IndexedDB et ne la relit que
+  si le document a changé. Sans miniature : l'initiale de la scène sur fond rosé.
+- **Menu principal** : « Scènes récentes » (les trois dernières vues, hors la courante) change de scène sans repasser par la liste.
+- Essayé dans l'application simulée (deux organisations, trois rôles) ; pas sur un compte réel.

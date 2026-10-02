@@ -344,6 +344,9 @@ const STATE = {
     story: [],
     /** Les choix de l'auteur sur l'exposition (lib/exposition.js) : par où la scène s'ouvre. */
     exposition: { ouverture: { mode: 'carte' } },
+    /** La vignette de la scène dans la liste des projets (URL de données JPEG), et si elle reste à écrire. */
+    miniature: '',
+    _miniatureAEcrire: false,
     /** Ligne en mémoire, avant qu'une étape ne l'emporte dans le document. */
     trajet: null,
     viewerControls: createDefaultViewerControls(),
@@ -5347,6 +5350,48 @@ function htmlOutilsLieu() {
     </div>`;
 }
 
+/**
+ * La vignette de la scène dans la liste des projets : la vue actuelle de la carte, recadrée en 8:5 et réduite (JPEG, environ
+ * vingt Ko), écrite dans `Atlas_ScenePrefs.Miniature`. L'auteur la choisit : une carte cadrée sur le sujet vaut mieux
+ * qu'une capture prise au hasard.
+ */
+function capturerMiniature() {
+    if (!map) return;
+    if (!assertCanWrite('choisir la miniature de la scène')) return;
+    // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
+    map.once('render', () => {
+        try {
+            const src = map.getCanvas();
+            const L = 320, H = 200;
+            const c = document.createElement('canvas');
+            c.width = L; c.height = H;
+            let sw = src.width;
+            let sh = sw * H / L;
+            if (sh > src.height) { sh = src.height; sw = sh * L / H; }
+            c.getContext('2d').drawImage(src, (src.width - sw) / 2, (src.height - sh) / 2, sw, sh, 0, 0, L, H);
+            STATE.miniature = c.toDataURL('image/jpeg', 0.72);
+            STATE._miniatureAEcrire = true;
+            markDirty();
+            persistScenePrefsDifferee(200);
+            if (STATE.currentModule === 'lieu') renderLieu();
+            showToast('Miniature de la scène enregistrée', 'success');
+        } catch (e) { showToast('Miniature impossible : ' + e.message, 'error'); }
+    });
+    map.triggerRepaint();
+}
+
+/** Le bloc « Miniature » du module Lieu. */
+function htmlMiniature() {
+    const m = STATE.miniature;
+    return `<div class="section">
+        <div class="section-title">Miniature de la scène${infoBulle('L’image qui représente la scène dans la liste des projets de l’application. Cadrez la carte sur le sujet, puis « Utiliser la vue actuelle ».')}</div>
+        ${m ? `<img class="miniature-apercu" src="${escapeHtml(m)}" alt="Miniature actuelle de la scène">` : '<div class="range-info">Aucune miniature : la liste montre l’initiale de la scène.</div>'}
+        <div class="cadrage-boutons">
+            <button class="btn btn-soft" onclick="A.capturerMiniature()">Utiliser la vue actuelle</button>
+            <button class="btn btn-soft" ${m ? '' : 'disabled'} onclick="A.retirerMiniature()">Retirer</button>
+        </div></div>`;
+}
+
 function renderLieu() {
     $('module-title').textContent = 'Lieu';
     const L = STATE.location;
@@ -5356,6 +5401,7 @@ function renderLieu() {
             <input class="input" id="proj-name" placeholder="Ma maquette…" value="${STATE.projectName}" onchange="A.setProjectName(this.value)">
         </div>
         ${htmlCadrage()}
+        ${htmlMiniature()}
         <div class="loc-badge">
             <span class="ic">${icTrait(IC.epingle)}</span>
             <div>
@@ -6217,6 +6263,7 @@ async function syncScenePrefsFromGrist() {
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
     STATE.exposition = prefs.exposition || expositionVide();
+    STATE.miniature = prefs.miniature || '';
     appliquerCadrageDeScene();
 
     // Les réglages retenus la fois d'avant priment sur les défauts du code :
@@ -6264,7 +6311,10 @@ async function persistScenePrefs() {
             viewerControls: STATE.viewerControls,
             settings: STATE.settings,
             exposition: STATE.exposition,
+            // Écrite seulement quand l'auteur vient de la changer : vingt Ko ne se réécrivent pas à chaque réglage.
+            ...(STATE._miniatureAEcrire ? { miniature: STATE.miniature } : {}),
         }, { viewMode: false });
+        STATE._miniatureAEcrire = false;
     } catch (e) {
         console.warn('[Atlas] saveScenePrefs', e.message);
     }
@@ -13607,6 +13657,15 @@ const A = {
             const cible = cadrageEffectif({ cadrage: STATE.exposition.cadrage, couches: couchesCadrage() });
             if (cible) poserCadrage(cible, true);
         }
+        renderLieu();
+    },
+    capturerMiniature() { capturerMiniature(); },
+    retirerMiniature() {
+        if (!assertCanWrite('retirer la miniature de la scène')) return;
+        STATE.miniature = '';
+        STATE._miniatureAEcrire = true;
+        markDirty();
+        persistScenePrefsDifferee(200);
         renderLieu();
     },
     pickSearch(name, lat, lng) {

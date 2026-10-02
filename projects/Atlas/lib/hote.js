@@ -146,6 +146,77 @@ export function depuis(iso, maintenant = Date.now()) {
   return `il y a ${an} an${an > 1 ? 's' : ''}`;
 }
 
+/* ------------------------------------------------------------------ */
+/* La liste des scènes : rôle, tri, filtre                              */
+/* ------------------------------------------------------------------ */
+
+/** Le rôle de la personne sur un document, tel que Grist le dit (`access`), et comme on le dit à l'écran. */
+export const ROLES = Object.freeze({ owners: 'Propriétaire', editors: 'Éditeur', viewers: 'Lecteur' });
+
+export function libelleRole(acces) { return ROLES[acces] || ''; }
+
+export const TRIS = Object.freeze([
+  { id: 'recent', libelle: 'Plus récentes' },
+  { id: 'nom', libelle: 'Nom' },
+  { id: 'organisation', libelle: 'Organisation' },
+]);
+
+/** Les filtres de rôle, dans l'ordre où on les cherche ; « hors-ligne » garde les scènes que l'appareil sait ouvrir seules. */
+export const FILTRES = Object.freeze([
+  { id: 'tous', libelle: 'Toutes' },
+  { id: 'owners', libelle: 'Propriétaire' },
+  { id: 'editors', libelle: 'Éditeur' },
+  { id: 'viewers', libelle: 'Lecteur' },
+  { id: 'hors-ligne', libelle: 'Hors ligne' },
+]);
+
+const sansAccent = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/** Une copie triée : les plus récentes d'abord, par nom, ou regroupées par organisation puis espace. */
+export function trierScenes(scenes, tri = 'recent') {
+  const nom = (s) => sansAccent(s.nom || '');
+  const copie = [...(scenes || [])];
+  if (tri === 'nom') return copie.sort((a, b) => nom(a).localeCompare(nom(b), 'fr'));
+  if (tri === 'organisation') {
+    const cle = (s) => sansAccent(`${s.org || ''}\u0000${s.espace || ''}`);
+    return copie.sort((a, b) => cle(a).localeCompare(cle(b), 'fr') || nom(a).localeCompare(nom(b), 'fr'));
+  }
+  // Récentes d'abord ; une date inconnue passe après toutes les autres.
+  return copie.sort((a, b) => String(b.maj || '').localeCompare(String(a.maj || '')) || nom(a).localeCompare(nom(b), 'fr'));
+}
+
+/**
+ * Les scènes qui restent : par rôle (ou « hors ligne »), puis par un texte cherché dans le nom, l'organisation et l'espace
+ * (accents et casse sans importance).
+ */
+export function filtrerScenes(scenes, { acces = 'tous', texte = '', prets = new Set() } = {}) {
+  const t = sansAccent(texte).trim();
+  return (scenes || []).filter((s) => {
+    if (acces === 'hors-ligne' && !prets.has(s.id)) return false;
+    if (['owners', 'editors', 'viewers'].includes(acces) && s.acces !== acces) return false;
+    if (!t) return true;
+    return sansAccent(`${s.nom || ''} ${s.org || ''} ${s.espace || ''}`).includes(t);
+  });
+}
+
+export const CLE_LISTE = 'atlas_liste';
+
+/** Le tri et le filtre retenus d'une ouverture à l'autre ; des valeurs par défaut quand rien n'est lisible. */
+export function lirePrefsListe(stockage) {
+  const defaut = { tri: 'recent', acces: 'tous' };
+  try {
+    const o = JSON.parse(stockage?.getItem?.(CLE_LISTE) || 'null');
+    return {
+      tri: TRIS.some((x) => x.id === o?.tri) ? o.tri : defaut.tri,
+      acces: FILTRES.some((x) => x.id === o?.acces) ? o.acces : defaut.acces,
+    };
+  } catch (_) { return defaut; }
+}
+
+export function ecrirePrefsListe(stockage, prefs) {
+  try { stockage?.setItem?.(CLE_LISTE, JSON.stringify({ tri: prefs.tri, acces: prefs.acces })); return true; } catch (_) { return false; }
+}
+
 /** Une taille lisible : « 840 o », « 12 Ko », « 3,2 Mo ». */
 export function libelleOctets(n) {
   if (!Number.isFinite(n) || n < 0) return '';
@@ -244,7 +315,7 @@ export function changerConnexion(stockage, ancienne, nouvelle) {
 export function memoriserScenes(stockage, scenes, quand = Date.now()) {
   if (!stockage || typeof stockage.setItem !== 'function') return false;
   const propres = (scenes || []).filter((s) => s && s.id).map((s) => ({
-    id: s.id, nom: s.nom || '', org: s.org || '', espace: s.espace || '', maj: s.maj || '',
+    id: s.id, nom: s.nom || '', org: s.org || '', espace: s.espace || '', maj: s.maj || '', acces: s.acces || '',
   }));
   try {
     stockage.setItem(CLE_SCENES, JSON.stringify({ quand, scenes: propres }));
