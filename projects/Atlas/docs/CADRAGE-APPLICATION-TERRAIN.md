@@ -300,3 +300,73 @@ reposent sur 1 et 2.
 - **Distribution de l'APK** : chaque reconstruction se pose à la main ; regrouper les changements natifs.
 - **Sécurité** : clé API au repos ; une file locale contient des données de terrain, à effacer à la
   déconnexion.
+
+## 11. Ce que SURFAC²E apprend (étude du 02/10/2026) et recommandations
+
+*Source : lecture seule de `GT SURFAC2E 2026/` (squelette local « v1.0.0 ») et de
+`projects/terrain/`. **Réserve importante** : la copie locale n'est pas la version de production du
+hors-ligne ; les « sept règles payées » de `terrain/ARCHITECTURE.md:474-502` renvoient à des fichiers du pod
+de production (`docs/hors-ligne.md`, `pwa/app-terrain/host.js`) qui n'y sont pas, et leurs chiffres
+(437 cotations dupliquées, une photo envoyée quatre fois, 123 saisies bloquées) ne sont connus que de
+seconde main. Le dépôt Terrain l'avoue lui-même (« on copie du code qu'on n'a pas vu tomber »).*
+
+### 11.1 Les sept règles, à reprendre telles quelles
+
+1. Le document d'entrée (`index.html`) se sert **réseau d'abord** ; cache d'abord, il restait figé et aucune
+   correction n'atteignait l'appareil. Précache par `Promise.allSettled`, jamais `addAll` (tout ou rien) ;
+   nettoyage des caches **par préfixe** (deux service workers s'effaçaient mutuellement).
+2. **Écriture rejouable** : la file livre « au moins une fois », donc on écrit par `AddOrUpdateRecord` sur une
+   **clé**, jamais par `AddRecord` ni par `UpdateRecord` conditionnel.
+3. **Ne jamais exiger un identifiant serveur** pour autoriser un geste.
+4. **Deux files ordonnées** : les actions d'abord, les pièces jointes ensuite ; la ligne cible est retrouvée par
+   une clé locale.
+5. **Distinguer coupure et refus** : une action refusée ne bloque pas les indépendantes ; les refusées sont
+   comptées et affichées (le code local s'arrête au premier échec : c'est ce qui a bloqué 123 saisies).
+6. **Un seul passage à la fois** (verrou, marque « en vol »), déclenché à quatre moments : démarrage, retour du
+   réseau, retour au premier plan, relance périodique (`online` est peu fiable sur mobile).
+7. **Affichage optimiste immédiat.**
+
+### 11.2 Ce que cela change à mon modèle (§ 3-4)
+
+- **La clé d'idempotence est un UUID client**, posé à la création, qui sert aussi de clé locale entre les deux
+  files. Mes identifiants provisoires négatifs « résolus à l'envoi » supposent un envoi strictement séquentiel :
+  l'UUID les remplace (une visite sur un objet créé hors ligne référence son UUID).
+- **La file est ordonnée par dépendance, pas globale** : une entrée refusée n'arrête que celles qui en dépendent.
+- **La synchronisation « à trois points » reste un ajout d'Atlas**, utile aux *corrections d'existant* ; pour les
+  *ajouts* (les visites), SURFAC²E dit que la file seule suffit. Je garde les deux, dans cet ordre.
+- **Les formules Grist ne tournent pas hors ligne** : tout style ou règle tiré d'une colonne formule se fige à la
+  dernière lecture (à signaler).
+- **Le cache de lecture masque les droits** (accès révoqué, données encore là) : l'effacer à la déconnexion.
+- **Photos** : compression **à la capture** avant la mise en file (SURFAC²E : 1600 px, JPEG 0,72 — « première cause
+  de perte de données en usage réel » sinon) ; `navigator.storage.persist()` demandé.
+- **Test d'acceptation** de SURFAC²E (`DEPLOIEMENT.md:108-122`), à reprendre comme définition de « livré » :
+  couper le réseau, relever, photographier, redémarrer l'appareil, attendre, rétablir — **une seule fois, sans
+  doublon**. Tant qu'il n'est pas passé, le hors-ligne n'est pas livré.
+
+### 11.3 Ce qui est propre à SURFAC²E et ne se copie pas
+
+Le module `coter` et tout le métier (applicabilité, cotations, régimes) ; la connexion par jeton **dans l'URL**
+(expose la clé) ; le préchargement de **tables entières** sans filtre (à borner) ; l'asymétrie de structure
+(SURFAC²E : un document, N modules ; Atlas : un module, N documents, donc un cache **par document**).
+
+### 11.4 Un point d'architecture à trancher avant tout code (nouveau)
+
+`projects/terrain/` (cadrage, aucun code) prévoit déjà **la même mécanique** : hôte, file hors ligne éprouvée,
+formulaires, photo. Atlas y est « une sortie optionnelle » (carte). Bâtir la file, le cache et la
+synchronisation **deux fois** (une pour Atlas, une pour Terrain) serait la pire issue. Proposition : **un seul
+moteur hors ligne**, écrit comme module indépendant (file ordonnée par dépendance, cache par document, deux files,
+verrou, indicateur à quatre états), que l'application Atlas **et** Terrain consomment. Le premier consommateur
+réel est Atlas (code existant : client REST, adaptateur, application Android) ; le moteur n'en dépend pas.
+
+### 11.5 Recommandations sur les sept décisions du § 8
+
+| # | Question | Recommandation | Motif |
+|---|---|---|---|
+| 1 | IndexedDB ? | **Oui**, brute, sans bibliothèque, magasins séparés (`sortie`, `fichiers`, `tables`, `projets`) ; `persist()` ; clé API hors `localStorage` | c'est ce que fait SURFAC²E (deux magasins) ; Dexie n'apporte rien ici |
+| 2 | Déduplication | **Colonne facultative `AtlasClientId`** sur les tables de relevé + `AddOrUpdateRecord`, ajoutée avec accord, table par table ; **sinon** journal local et statut « à vérifier » | un journal seul ne protège pas d'une réponse perdue ; c'est la cause des doublons de production |
+| 3 | Fonds hors ligne | **Plus tard** : d'abord vendoriser polices et `geotiff.js` ; puis cache à la volée ; « Télécharger la zone » seulement si un usage la réclame, IGN d'abord | SURFAC²E n'a rien de hors ligne côté carte ; licences non vérifiées |
+| 4 | Plugins | **Un petit lot maintenant** (`Network`, stockage sûr pour la clé) ; **reporter** `Geolocation`, `Camera`, `Filesystem` jusqu'à un besoin mesuré | SURFAC²E fonctionne avec les API web seules ; chaque plugin = un APK à reposer à la main |
+| 5 | Projet propre à l'appareil ? | **Oui** ; la circulation passe par Grist | ni SURFAC²E ni Terrain n'ont de « projet local » ; Grist reste la source de vérité |
+| 6 | Vocabulaire | **Consulter / Relever / Modifier**, indicateur permanent « à jour · n en attente · hors ligne · n refusées » | SURFAC²E note que « Coter » n'est pas compréhensible d'un nouveau ; verbes d'usage plutôt que noms de modes |
+| 7 | Ordre | **0 → (1 + 3) → 2 → 5 → 6 → 7 → 4 → 8**, la carte hors ligne passe **après** | l'ordre de Terrain place la carte en dernier ; le test d'acceptation (§ 11.2) clôt le lot 1 |
+| 8 | **Un seul moteur hors ligne** pour Atlas et Terrain ? | **Oui**, module indépendant (§ 11.4) | évite de bâtir deux fois la partie la plus coûteuse |
