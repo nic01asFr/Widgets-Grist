@@ -8976,7 +8976,7 @@ function renderObjectInspector() {
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
     const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
-    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: !multi && !!f && specsOffertes(layer, f) });
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f) });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
     const formActif = ongletActif?.formulaire || null;
@@ -13825,7 +13825,9 @@ const A = {
     },
     setObjetParam(paramId, valeur) {
         const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId); if (!layer) return;
-        const f = layer.geojson?.features?.[STATE.selection.features[0]]; if (!f) return;
+        // L'objet courant : le seul de la sélection, ou celui que désigne le curseur de la revue.
+        const sel = STATE.selection.features;
+        const f = layer.geojson?.features?.[sel[sel.length > 1 ? (STATE.selection.multiIndex || 0) : 0]]; if (!f) return;
         const d = descripteursDuType(typeCatalogueDe(typeIdDeEntite(layer, f))).find((x) => x.id === paramId);
         if (!d) return;
         const propres = { ...(f.properties._params || {}) };
@@ -14506,7 +14508,10 @@ const A = {
             saveFeaturesToSource(grist.docApi, l, STATE.selection.features)
                 .then((n) => {
                     marquerEnregistre();
-                    showToast(`${n} enregistrement(s) · ${l.sourceTable}`, 'success');
+                    // La colonne technique d'Atlas, créée à l'enregistrement : on le dit, c'est la table de l'équipe.
+                    const creee = l.colonne3dCreee ? ' · colonne atlas_3d_json créée' : '';
+                    l.colonne3dCreee = false;
+                    showToast(`${n} enregistrement(s) · ${l.sourceTable}${creee}`, 'success');
                 })
                 .catch((e) => {
                     enterViewModeOnWriteFail(e);

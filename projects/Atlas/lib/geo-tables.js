@@ -108,6 +108,16 @@ export function tableToGeoJSON(columnar, geomCol) {
       }
     }
     if (properties.fill_color) properties._fill_color = properties.fill_color;
+    // Le placement et les réglages de l'objet (colonne technique d'Atlas) : `{ scale, modelId, params… }`
+    // devient `_scale`, `_modelId`, `_params`. Seules les couches de manifeste les relisaient — pour une
+    // table détectée dans le document, ils étaient écrits puis jamais revus.
+    const atlas3d = columnar.atlas_3d_json && columnar.atlas_3d_json[i];
+    if (typeof atlas3d === 'string' && atlas3d.trim()) {
+      try {
+        const o = JSON.parse(atlas3d);
+        if (o && typeof o === 'object' && !Array.isArray(o)) for (const [k, v] of Object.entries(o)) properties['_' + k] = v;
+      } catch (_) { /* une cellule abîmée ne casse pas la couche */ }
+    }
     features.push({ type: 'Feature', id: ids[i], geometry, properties });
   }
   return { type: 'FeatureCollection', features };

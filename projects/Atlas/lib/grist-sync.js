@@ -371,6 +371,8 @@ export function featureToRowUpdate(feature, layer) {
   // garde, des surcharges héritées — ou une couche ayant changé de mode —
   // écriraient des transformations 3D sur des objets qui ne seront jamais rendus
   // ainsi, salissant la table de l'utilisateur.
+  // Le placement et les réglages d'objet dont la table n'a pas (encore) la colonne technique d'Atlas.
+  let colonne3dManquante = null;
   if (isModelLayer(layer)) {
     const atlas3d = {};
     for (const k of ['scale', 'rotationX', 'rotationY', 'rotationZ', 'offsetX', 'offsetY', 'offsetZ', 'modelId']) {
@@ -381,19 +383,34 @@ export function featureToRowUpdate(feature, layer) {
     // même garde. Ils ne deviennent jamais des colonnes de la table de l'équipe.
     const params = parametresDObjetValides(props._params);
     if (params) atlas3d.params = params;
-    if (Object.keys(atlas3d).length && (!gristCols.length || colSet.has(ATLAS_3D_COL))) {
-      update[ATLAS_3D_COL] = JSON.stringify(atlas3d);
+    if (Object.keys(atlas3d).length) {
+      if (!gristCols.length || colSet.has(ATLAS_3D_COL)) update[ATLAS_3D_COL] = JSON.stringify(atlas3d);
+      // Sans la colonne, le placement et les réglages étaient perdus en silence : « Enregistré » ne
+      // disait pas que rien n'avait été écrit. `saveFeatureToSource` la crée, et le dit.
+      else colonne3dManquante = JSON.stringify(atlas3d);
     }
   }
 
-  if (!Object.keys(update).length) return null;
-  return { rowId, update };
+  if (!Object.keys(update).length && !colonne3dManquante) return null;
+  return colonne3dManquante ? { rowId, update, colonne3dManquante } : { rowId, update };
 }
 
 export async function saveFeatureToSource(docApi, layer, featureIndex) {
   const f = layer.geojson?.features?.[featureIndex];
   const payload = featureToRowUpdate(f, layer);
   if (!payload) return false;
+  if (payload.colonne3dManquante) {
+    // La colonne technique d'Atlas (même nom et même type que dans les tables de qgis2grist). Une
+    // table qui l'a déjà, sans qu'Atlas le sache, refuse l'ajout : on écrit alors dedans telle quelle.
+    try {
+      await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
+      layer.colonne3dCreee = true;
+    } catch (e) {
+      if (!/exist|already|duplicate|invalid column/i.test(String(e?.message || e))) throw e;
+    }
+    if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
+    payload.update[ATLAS_3D_COL] = payload.colonne3dManquante;
+  }
   await docApi.applyUserActions([
     ['UpdateRecord', layer.sourceTable, payload.rowId, payload.update],
   ]);

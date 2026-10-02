@@ -1904,7 +1904,9 @@ et l'identifiant dit lui-même laquelle (`lib/modele-id.js`) :
 - Éprouvé le 02/10/2026 (application servie en local) : 8 instances résolues vers le
   bon fichier (mâts h4/h8/h12 d'après `hauteurFeu`, quatre types par catégorie, repli
   low-poly), 8 GLB en 200, choix à la main, refus d'un identifiant inconnu.
-  **Non éprouvé en Grist réel** : l'écriture de `StyleJSON.library` dans `Atlas_LayerPrefs`.
+  **Éprouvé en Grist réel le 02/10/2026** (document d'essai « Atlas — essai édition géométrique », remis en l'état
+  après l'essai) : le choix d'un objet réaliste pour une couche s'écrit dans `Atlas_LayerPrefs.StyleJSON`
+  (`mode: library`, `library.modelId: objet:mat_crosse`) et revient à la réouverture.
 
 **Un luminaire choisi se comporte comme un luminaire déduit** (éprouvé de nuit le
 02/10/2026, 20 h 50, avec des fiches portant les paramètres EclExt) :
@@ -1974,9 +1976,15 @@ générique (`lib/parametres-objet.js`) ; **une famille de plus est un schéma d
   hors de la bande usuelle est signalée, jamais refusée : la donnée est celle de l'équipe.
 - **Éprouvé le 02/10/2026** (application servie en local, faux `docApi` pour « figer ») : défauts par
   règle, classe de hauteur lue dans `height`, champ lié, réglage de couche par type, comportement forcé,
-  statut posé sur un seul objet, légende et fiche, figer (colonnes et cellules). **Non éprouvé en Grist
-  réel** : l'écriture de `parametres` dans `Atlas_LayerPrefs`, de `params` dans `atlas_3d_json`, et le
-  geste « Figer dans la table ».
+  statut posé sur un seul objet, légende et fiche, figer (colonnes et cellules).
+- **Éprouvé en Grist réel le 02/10/2026** (document d'essai, table `Arbres_remarquables`, remis en l'état après
+  l'essai) : la puissance de couche écrite dans `Atlas_LayerPrefs.StyleJSON.parametres` et relue ; « Figer dans la
+  table » (3 colonnes `Numeric` créées, 9 cellules écrites, le reste intact) ; le réglage d'un objet (20 W)
+  écrit dans `atlas_3d_json.params` et relu après rechargement. Trois défauts ont été **trouvés par cet essai** et
+  corrigés : (1) une table détectée dans le document ne relisait jamais `atlas_3d_json` (`tableToGeoJSON` —
+  placement 3D compris) ; (2) sans la colonne `atlas_3d_json`, l'enregistrement d'un objet perdait son placement
+  et ses réglages **en silence** : `saveFeatureToSource` la crée maintenant (`Text`, « Atlas 3D (JSON) ») et le
+  toast le dit ; (3) l'onglet « Spécifications » manquait en revue objet par objet.
 
 ### Un contrôle inactif n'existe pas pour le lecteur
 

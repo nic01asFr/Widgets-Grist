@@ -79,7 +79,8 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
     }
   }
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
-  // Les paramètres du type de l'objet : seulement s'il en a, et jamais sur une sélection multiple.
-  if (specs && !multi) tabs.push({ cle: ONGLET_SPECS, libelle: ONGLET_SPECS, formulaire: null });
+  // Les paramètres du type de l'objet : seulement s'il en a. Sur une sélection multiple, jamais — sauf en
+  // revue, où un curseur désigne un seul objet (comme pour l'onglet des attributs).
+  if (specs && (!multi || revue)) tabs.push({ cle: ONGLET_SPECS, libelle: ONGLET_SPECS, formulaire: null });
   return tabs;
 }

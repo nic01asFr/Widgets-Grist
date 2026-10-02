@@ -16,8 +16,9 @@ test('sans parametres decrits, pas d onglet', () => {
   assert.deepEqual(objectInspectorTabs({ layer: couche3D, specs: false }).map((t) => t.cle), [ONGLET_3D]);
 });
 
-test('jamais sur une selection multiple', () => {
+test('jamais sur une selection multiple, sauf en revue ou un curseur designe un objet', () => {
   assert.deepEqual(objectInspectorTabs({ layer: couche3D, specs: true, multi: true }).map((t) => t.cle), [ONGLET_3D]);
+  assert.deepEqual(objectInspectorTabs({ layer: couche3D, specs: true, multi: true, revue: true }).map((t) => t.cle), [ONGLET_3D, ONGLET_SPECS]);
 });
 
 test('l onglet suit l objet, pas la couche : il peut exister sans placement 3D', () => {
