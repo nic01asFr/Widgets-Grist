@@ -13,12 +13,12 @@
 
 import { capacites, creerClient } from './data-client.js?v=20261001a';
 import { installerAdaptateur } from './grist-adapter.js?v=20261002c';
-import { habillerHorsLigne } from './hors-ligne.js?v=20261002a';
+import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=20261002a';
 import { listerScenesAtlas } from './decouverte.js?v=20260820a';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
-  memoriserScenes, lireScenesMemorisees, offreApplication,
+  memoriserScenes, lireScenesMemorisees, offreApplication, phrasePreparation, phraseProgres,
 } from './hote.js?v=20260821a';
 
 export const VERSION = '1.0.0';
@@ -157,6 +157,8 @@ const IC = {
   retour: trait('<path d="M19 12H5m6-7-7 7 7 7"/>'),
   synchro: trait('<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/>'),
   crayon: trait('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>'),
+  hors: trait('<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6m0 0-2.5-2.5M12 14l2.5-2.5"/>'),
+  corbeille: trait('<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7"/><path d="M10 11v6m4-6v6"/>'),
 };
 
 const MARQUE = `<div class="hote-marque">
@@ -305,11 +307,14 @@ async function montrerScenes(boite, config, portee, { onChoix, onChanger, stocka
   const progres = boite.querySelector('#h-progres');
   boite.querySelector('#h-changer').onclick = onChanger;
 
+  // Les scènes que l'appareil sait ouvrir sans réseau : une lecture locale, immédiate.
+  const prets = await scenesPreparees(stockageParDefaut(portee).stockage, config.baseUrl);
+
   const carte = (scene, memorisee) => {
     const b = document.createElement('button');
     b.className = 'hote-scene';
     b.dataset.scene = scene.id;
-    const sous = [situer(scene), depuis(scene.maj)].filter(Boolean).join(' — ');
+    const sous = [situer(scene), depuis(scene.maj), prets.has(scene.id) ? 'disponible hors ligne' : ''].filter(Boolean).join(' — ');
     b.innerHTML = `<b>${echapper(scene.nom || 'Sans titre')}</b>
       ${sous ? `<span>${echapper(sous)}</span>` : ''}`;
     b.onclick = () => onChoix(scene);
@@ -499,6 +504,8 @@ export function ouvrirMenuPrincipal({
     <div class="hote-menu">
       ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>${echapper(edition.aide || 'Les outils d’auteur reviennent sur la carte')}</small></span></button>` : ''}
       ${synchro ? `<button id="m-synchro">${IC.synchro}<span>Synchronisation<small>${echapper(phraseSynchro(synchro))}</small></span></button>` : ''}
+      ${hl && typeof hl.preparerHorsLigne === 'function' ? `<button id="m-hors">${IC.hors}<span>Disponible hors ligne<small id="m-hors-etat">…</small></span></button>
+      <button id="m-hors-liberer" hidden>${IC.corbeille}<span>Libérer l’espace<small>La scène demandera de nouveau le réseau pour s’ouvrir</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}
@@ -516,6 +523,32 @@ export function ouvrirMenuPrincipal({
     try { await hl.envoyer(); } catch (_) { /* l'état dit le reste */ }
     sy.querySelector('small').textContent = phraseSynchro(hl.etat());
   };
+
+  // Préparer la scène pour le terrain : tables, métadonnées et photos gardées sur l'appareil, lues au réseau.
+  const hors = boite.querySelector('#m-hors');
+  if (hors) {
+    const etatHors = boite.querySelector('#m-hors-etat');
+    const liberer = boite.querySelector('#m-hors-liberer');
+    const majHors = async () => {
+      const e = await hl.etatHorsLigne().catch(() => null);
+      etatHors.textContent = phrasePreparation(e);
+      liberer.hidden = !e;
+    };
+    majHors();
+    hors.onclick = async () => {
+      hors.disabled = true;
+      let erreur = null;
+      try { await hl.preparerHorsLigne({ onProgres: (p) => { etatHors.textContent = phraseProgres(p); } }); }
+      catch (err) { erreur = err; etatHors.textContent = String(err?.message || err); }
+      hors.disabled = false;
+      if (!erreur) majHors();
+    };
+    liberer.onclick = async () => {
+      if (!portee.confirm('Libérer l’espace ? La scène demandera de nouveau le réseau pour s’ouvrir.')) return;
+      await hl.libererHorsLigne();
+      majHors();
+    };
+  }
 
   const ed = boite.querySelector('#m-edition');
   if (ed) ed.onclick = () => { fermer(); edition.action(); };

@@ -370,12 +370,17 @@ class ClientRest {
    * balise `<img>` ne sait pas le faire, on lit donc le fichier puis on en
    * donne une adresse locale (`blob:`), libérée par la page à son départ.
    */
-  async urlPieceJointe(id) {
+  /** Le fichier d'une pièce jointe, tel que le serveur le rend : de quoi le garder sur l'appareil. */
+  async pieceJointe(id) {
     const r = await this._fetch(this._url(`/attachments/${encodeURIComponent(id)}/download`), {
       headers: this.jeton ? { Authorization: 'Bearer ' + this.jeton } : {},
     });
     if (!r.ok) throw new Error(`Pièce jointe ${id} — HTTP ${r.status}`);
-    return URL.createObjectURL(await r.blob());
+    return r.blob();
+  }
+
+  async urlPieceJointe(id) {
+    return URL.createObjectURL(await this.pieceJointe(id));
   }
 
   async televerserPieceJointe(fichier) {

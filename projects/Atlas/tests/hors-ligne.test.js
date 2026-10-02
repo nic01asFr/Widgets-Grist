@@ -309,3 +309,129 @@ test('phraseSynchro : l\'état en une phrase', async () => {
   assert.equal(phraseSynchro({ enLigne: false, enAttente: 2, refusees: 0, incertaines: 0 }), 'Hors réseau · 2 en attente');
   assert.match(phraseSynchro({ enLigne: true, enAttente: 1, refusees: 1, incertaines: 1 }), /1 en attente · 2 à vérifier — toucher pour envoyer/);
 });
+
+/* ------------------------------------------------------------------ */
+/* Préparer une scène pour le terrain                                  */
+/* ------------------------------------------------------------------ */
+import { colonnesPiecesJointes, idsPiecesJointes, TABLES_META } from '../lib/hors-ligne.js';
+
+/** Un client factice qui porte des métadonnées (une colonne Attachments) et des photos. */
+function clientAvecPhotos() {
+  const c = fauxClient();
+  c.tables = {
+    Ouvrages: { id: [1, 2], Nom: ['Pont', 'Passerelle'], Photos: [['L', 7, 8], null] },
+    Visites: { id: [1], Constat: ['RAS'] },
+    _grist_Tables: { id: [1, 2], tableId: ['Ouvrages', 'Visites'] },
+    _grist_Tables_column: { id: [10, 11, 12], parentId: [1, 1, 2], colId: ['Nom', 'Photos', 'Constat'], type: ['Text', 'Attachments', 'Text'] },
+  };
+  c.photosLues = [];
+  c.pieceJointe = async (id) => {
+    if (c.coupe) throw new TypeError('Failed to fetch');
+    c.photosLues.push(id);
+    return new Blob([new Uint8Array(1000 + id)], { type: 'image/jpeg' });
+  };
+  // Le client factice de base ne connaît pas les tables inexistantes : les métadonnées absentes rendent une table vide.
+  const lire = c.fetchTable;
+  c.fetchTable = async (t) => {
+    if (c.coupe) throw new TypeError('Failed to fetch');
+    if (String(t).startsWith('_grist_') && !c.tables[t]) throw new Error('HTTP 404 — table absente');
+    return lire(t);
+  };
+  c.listTables = async () => { if (c.coupe) throw new TypeError('Failed to fetch'); return ['Ouvrages', 'Visites']; };
+  return c;
+}
+
+test('colonnes et identifiants de pièces jointes, lus dans les métadonnées', () => {
+  const c = clientAvecPhotos();
+  const cols = colonnesPiecesJointes(c.tables._grist_Tables, c.tables._grist_Tables_column);
+  assert.deepEqual(cols, { Ouvrages: ['Photos'] });
+  assert.deepEqual(idsPiecesJointes(c.tables.Ouvrages, cols.Ouvrages), [7, 8]);
+  assert.deepEqual(idsPiecesJointes({ X: [['L', 1], ['L', 1, 2], 3, null, ['L', 'a', -4, 0]] }, ['X']), [1, 2], 'doublons, valeurs étrangères et identifiants invalides écartés');
+  assert.deepEqual(colonnesPiecesJointes(null, null), {});
+  assert.ok(TABLES_META.includes('_grist_Tables_column'));
+});
+
+test('préparer : les tables, les métadonnées et les photos restent disponibles sans réseau', async () => {
+  const c = clientAvecPhotos();
+  const { hl } = monter(c);
+  const etapes = [];
+  const etat = await hl.preparerHorsLigne({ onProgres: (e) => etapes.push(e.phase) });
+  assert.deepEqual(etat.tables.filter((t) => !t.meta).map((t) => [t.nom, t.lignes]), [['Ouvrages', 2], ['Visites', 1]]);
+  assert.equal(etat.photos.n, 2);
+  assert.deepEqual(etat.photos.ids, [7, 8]);
+  assert.ok(etat.octets > 2000, 'la taille compte les photos');
+  assert.deepEqual(etat.echecs, []);
+  assert.ok(etapes.includes('tables') && etapes.includes('photos'));
+  assert.ok((await hl.etatHorsLigne()).date > 0);
+
+  c.coupe = true;
+  const t = await hl.fetchTable('Ouvrages');
+  assert.deepEqual(t.Nom, ['Pont', 'Passerelle']);
+  assert.ok((await hl.fetchTable('_grist_Tables_column')).colId.includes('Photos'), 'les métadonnées sont gardées aussi');
+  assert.deepEqual(await hl.listTables(), ['Ouvrages', 'Visites']);
+  const url = await hl.urlPieceJointe(7);
+  assert.match(url, /^blob:/, 'la photo vient de l’appareil');
+  assert.deepEqual(c.photosLues, [7, 8], 'rien n’a été relu au réseau');
+});
+
+test('préparer : sans réseau, un échec net et rien de déclaré prêt', async () => {
+  const c = clientAvecPhotos();
+  const { hl } = monter(c);
+  c.coupe = true;
+  await assert.rejects(() => hl.preparerHorsLigne(), /Pas de réseau/);
+  assert.equal(await hl.etatHorsLigne(), null);
+});
+
+test('préparer : une table illisible est comptée, les autres sont gardées', async () => {
+  const c = clientAvecPhotos();
+  const lire = c.fetchTable;
+  c.fetchTable = async (t) => { if (t === 'Visites') throw new Error('HTTP 403 — refusé'); return lire(t); };
+  const { hl } = monter(c);
+  const etat = await hl.preparerHorsLigne();
+  assert.deepEqual(etat.echecs.map((e) => e.nom), ['Visites']);
+  assert.ok(etat.tables.some((t) => t.nom === 'Ouvrages'));
+});
+
+test('préparer : le plafond de photos s’arrête et le dit', async () => {
+  const c = clientAvecPhotos();
+  const { hl } = monter(c);
+  const etat = await hl.preparerHorsLigne({ plafondPhotosOctets: 500 });
+  assert.equal(etat.photos.n, 1, 'la première dépasse déjà le plafond, la suivante est ignorée');
+  assert.equal(etat.photos.ignorees, 1);
+});
+
+test('préparer sans les photos : les tables seules', async () => {
+  const c = clientAvecPhotos();
+  const { hl } = monter(c);
+  const etat = await hl.preparerHorsLigne({ photos: false });
+  assert.equal(etat.photos.n, 0);
+  assert.deepEqual(c.photosLues, []);
+});
+
+test('libérer : tables et photos disparaissent, la file d’écriture reste', async () => {
+  const c = clientAvecPhotos();
+  const { hl } = monter(c);
+  await hl.preparerHorsLigne();
+  c.coupe = true;
+  await hl.applyUserActions(visite('hors réseau'));
+  assert.equal(hl.etat().enAttente, 1);
+  assert.equal(await hl.libererHorsLigne(), true);
+  assert.equal(await hl.etatHorsLigne(), null);
+  await assert.rejects(() => hl.fetchTable('Ouvrages'), /fetch/, 'plus rien sur l’appareil');
+  assert.equal(hl.etat().enAttente, 1, 'une écriture en attente n’est jamais perdue');
+  assert.equal(await hl.libererHorsLigne(), false, 'rien à libérer la seconde fois');
+});
+
+import { scenesPreparees } from '../lib/hors-ligne.js';
+test('scenesPreparees : les scènes que l’appareil sait ouvrir, par identifiant de document', async () => {
+  const stockage = new StockageMemoire();
+  const a = monter(clientAvecPhotos(), stockage);
+  await a.hl.preparerHorsLigne();
+  const autre = fauxClient(); autre.docId = 'doc2';
+  const b = monter(autre, stockage);
+  await b.hl.preparerHorsLigne();
+  const liste = await scenesPreparees(stockage, 'https://grist.essai');
+  assert.deepEqual([...liste.keys()].sort(), ['doc1', 'doc2']);
+  assert.equal((await scenesPreparees(stockage, 'https://ailleurs')).size, 0, 'une autre instance ne se mélange pas');
+  assert.equal((await scenesPreparees(null, 'x')).size, 0, 'sans stockage : rien, sans exception');
+});

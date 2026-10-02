@@ -2875,11 +2875,26 @@ function resolveFeatureProps(feature, layer) {
 // ============================================================
 // MAP (MapLibre)
 // ============================================================
+/**
+ * Le fond quand le réseau manque : un aplat. Sans lui, le style de base ne se lit jamais, la carte ne déclare jamais être
+ * chargée, et les couches — qui sont sur l'appareil — ne se montent pas : une scène préparée pour le terrain s'ouvrirait sur
+ * du blanc. Les glyphes restent ceux du réseau (les étiquettes manqueront, pas les données).
+ */
+const STYLE_HORS_RESEAU = {
+    version: 8, name: 'Hors réseau',
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    sources: {},
+    layers: [{ id: 'fond-hors-reseau', type: 'background', paint: { 'background-color': '#ece7da' } }],
+};
+let _fondDeRepli = false;
+
 function initMap() {
     const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.liberty;
+    // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
+    _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
     map = new maplibregl.Map({
         container: 'map',
-        style: _bm.style ? _bm.style() : _bm.url,
+        style: _fondDeRepli ? STYLE_HORS_RESEAU : (_bm.style ? _bm.style() : _bm.url),
         center: [STATE.location.lng, STATE.location.lat],
         zoom: CONFIG.defaultZoom,
         pitch: CONFIG.defaultPitch,
@@ -2891,6 +2906,15 @@ function initMap() {
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
 
     map.on('load', onStyleReady);
+    // Le style de base illisible (réseau coupé, instance injoignable) : un aplat, et les données s'affichent quand même.
+    map.on('error', (e) => {
+        if (_fondDeRepli || _styleUsable) return;
+        const msg = String(e?.error?.message || '');
+        if (!/fetch|network|load failed|failed to|timeout|offline|impossible/i.test(msg) && e?.error?.status !== 0) return;
+        _fondDeRepli = true;
+        try { map.setStyle(STYLE_HORS_RESEAU); } catch (_) { /* la carte reprendra au prochain essai */ }
+        showToast('Fond de carte indisponible sans réseau — vos données restent affichées', 'info');
+    });
     // Les icônes de catégorie se chargent quand la carte les réclame — y compris
     // après un changement de fond, qui vide les images du style.
     map.on('styleimagemissing', (e) => { if (e.id?.startsWith('atlas-ico-')) chargerIcone(e.id); });

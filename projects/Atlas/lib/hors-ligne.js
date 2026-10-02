@@ -113,6 +113,41 @@ export function estErreurReseau(e) {
   return /failed to fetch|network|réseau|reseau|timeout|timed out|unable to resolve|unknownhost|econn|enotfound|offline|connection|load failed|connect/i.test(msg);
 }
 
+/* ------------------------------------------------------------------ */
+/* Préparer une scène pour le terrain                                  */
+/* ------------------------------------------------------------------ */
+
+/** Les tables de métadonnées qu'Atlas lit à l'ouverture (schéma, formulaires natifs) : sans elles, la scène s'ouvre nue. */
+export const TABLES_META = Object.freeze(['_grist_Tables', '_grist_Tables_column', '_grist_Views', '_grist_Views_section', '_grist_Views_section_field']);
+
+/** Au-delà, on s'arrête de garder des photos : un téléphone n'est pas un entrepôt. */
+export const PLAFOND_PHOTOS_OCTETS = 150 * 1024 * 1024;
+
+/** Les colonnes de pièces jointes de chaque table, d'après les métadonnées lues (`Attachments`). */
+export function colonnesPiecesJointes(tables, colonnes) {
+  const nom = {};
+  (tables?.id || []).forEach((id, i) => { nom[id] = tables.tableId?.[i]; });
+  const out = {};
+  (colonnes?.id || []).forEach((_, i) => {
+    if (colonnes.type?.[i] !== 'Attachments') return;
+    const table = nom[colonnes.parentId?.[i]];
+    const col = colonnes.colId?.[i];
+    if (table && col) (out[table] = out[table] || []).push(col);
+  });
+  return out;
+}
+
+/** Les identifiants de pièces jointes d'une table colonnaire : une cellule `Attachments` est `['L', id, id…]`. */
+export function idsPiecesJointes(donnees, colIds) {
+  const ids = new Set();
+  for (const c of colIds || []) {
+    for (const v of donnees?.[c] || []) {
+      if (Array.isArray(v) && v[0] === 'L') for (const id of v.slice(1)) if (Number.isInteger(id) && id > 0) ids.add(id);
+    }
+  }
+  return [...ids];
+}
+
 /**
  * Les identifiants provisoires sont négatifs, et loin de zéro : aucun identifiant Grist ne l'est, et une
  * valeur négative ordinaire d'une colonne numérique (un délai de -6 mois) ne risque pas de leur ressembler.
@@ -358,6 +393,110 @@ export class ClientHorsLigne {
     if (!ok && !this._horsLigne) { this._horsLigne = true; this._reseau.poser?.(false); this._armer(); this._emettre(); }
   }
 
+  /* ----- préparer pour le terrain ----- */
+
+  /** Lit au réseau — jamais depuis l'appareil — et garde : on prépare pour plus tard, on ne reprend pas ce qu'on avait. */
+  async _lireEtGarder(cle, lecture) {
+    const donnees = await lecture();
+    this._constaterReseau(true);
+    await this._s.put('cache', `${this._cle()}|${cle}`, { donnees, date: this._maintenant() });
+    return donnees;
+  }
+
+  /**
+   * Rend la scène disponible sans réseau : toutes ses tables, les métadonnées qu'Atlas lit à l'ouverture, et les photos
+   * qu'elles référencent (dans la limite de `plafondPhotosOctets`).
+   *
+   * Lit tout au réseau, d'où un échec net quand il manque : on ne laisse pas croire qu'une scène est prête quand elle ne
+   * l'est pas. Un échec sur une table seule (illisible, refusée) n'arrête pas la préparation : elle est comptée, et dite.
+   *
+   * @param {object} [o]
+   * @param {(e: {phase: string, fait: number, total: number, nom?: string}) => void} [o.onProgres]
+   * @param {boolean} [o.photos=true]
+   * @returns {Promise<object>} l'état de préparation (voir `etatHorsLigne`)
+   */
+  async preparerHorsLigne({ onProgres = () => {}, photos = true, plafondPhotosOctets = PLAFOND_PHOTOS_OCTETS } = {}) {
+    await this._pret;
+    const dire = (e) => { try { onProgres(e); } catch (_) { /* un affichage qui échoue n'arrête pas la lecture */ } };
+    let liste;
+    try { liste = await this._lireEtGarder('tables', () => this._c.listTables()); }
+    catch (e) {
+      if (estErreurReseau(e)) { this._constaterReseau(false); throw new Error('Pas de réseau : la scène ne peut pas être préparée maintenant.'); }
+      throw e;
+    }
+    const utilisateur = liste.filter((t) => !String(t).startsWith('_grist_'));
+    const aLire = [...TABLES_META.map((n) => ({ nom: n, meta: true })), ...utilisateur.map((n) => ({ nom: n, meta: false }))];
+    const lues = {};
+    const tables = [];
+    const echecs = [];
+    let fait = 0;
+    for (const { nom, meta } of aLire) {
+      dire({ phase: 'tables', fait, total: aLire.length, nom });
+      try {
+        const d = await this._lireEtGarder('table:' + nom, () => this._c.fetchTable(nom));
+        lues[nom] = d;
+        tables.push({ nom, lignes: (d?.id || []).length, octets: JSON.stringify(d || {}).length, meta });
+      } catch (e) {
+        // Une table de métadonnées absente n'est pas une panne ; une table de l'utilisateur manquante, si.
+        if (!meta) echecs.push({ nom, raison: String(e?.message || e) });
+        if (estErreurReseau(e) && !meta) { this._constaterReseau(false); }
+      }
+      fait++;
+    }
+    dire({ phase: 'tables', fait, total: aLire.length });
+
+    const pj = { n: 0, octets: 0, ids: [], ignorees: 0 };
+    if (photos && typeof this._c.pieceJointe === 'function') {
+      const colonnes = colonnesPiecesJointes(lues._grist_Tables, lues._grist_Tables_column);
+      const ids = new Set();
+      for (const [table, cols] of Object.entries(colonnes)) for (const id of idsPiecesJointes(lues[table], cols)) ids.add(id);
+      const tous = [...ids];
+      let i = 0;
+      for (const id of tous) {
+        dire({ phase: 'photos', fait: i, total: tous.length });
+        i++;
+        if (pj.octets >= plafondPhotosOctets) { pj.ignorees++; continue; }
+        try {
+          const blob = await this._c.pieceJointe(id);
+          await this._s.put('divers', `pjreel:${this._cle()}|${id}`, { blob, taille: blob?.size || 0 });
+          pj.n++; pj.octets += blob?.size || 0; pj.ids.push(id);
+        } catch (e) {
+          pj.ignorees++;
+          if (estErreurReseau(e)) { this._constaterReseau(false); break; }
+        }
+      }
+      dire({ phase: 'photos', fait: tous.length, total: tous.length });
+    }
+
+    const etat = {
+      version: 1, doc: this._cle(), date: this._maintenant(), tables, photos: pj, echecs,
+      octets: tables.reduce((s, x) => s + x.octets, 0) + pj.octets,
+    };
+    await this._s.put('divers', 'pret:' + this._cle(), etat);
+    this._emettre();
+    return etat;
+  }
+
+  /** Ce qui est gardé pour cette scène, ou `null` : date, tables (lignes, taille), photos, échecs. */
+  async etatHorsLigne() {
+    await this._pret;
+    return (await this._s.get('divers', 'pret:' + this._cle())) || null;
+  }
+
+  /** Libère ce que `preparerHorsLigne` a gardé : tables et photos. La file d'écriture, elle, n'est jamais touchée. */
+  async libererHorsLigne() {
+    await this._pret;
+    const etat = await this.etatHorsLigne();
+    if (!etat) return false;
+    const k = this._cle();
+    for (const t of etat.tables || []) await this._s.delete('cache', `${k}|table:${t.nom}`);
+    await this._s.delete('cache', `${k}|tables`);
+    for (const id of etat.photos?.ids || []) await this._s.delete('divers', `pjreel:${k}|${id}`);
+    await this._s.delete('divers', 'pret:' + k);
+    this._emettre();
+    return true;
+  }
+
   /* ----- écriture ----- */
 
   async applyUserActions(actions) {
@@ -444,6 +583,9 @@ export class ClientHorsLigne {
       if (p?.reel != null) return this._c.urlPieceJointe(p.reel);
       throw new Error(`Pièce jointe provisoire ${id} introuvable`);
     }
+    // Une photo gardée pour le terrain se sert de l'appareil : sans réseau, elle s'affiche quand même.
+    const gardee = await this._s.get('divers', `pjreel:${this._cle()}|${id}`);
+    if (gardee?.blob) return URL.createObjectURL(gardee.blob);
     return this._c.urlPieceJointe(id);
   }
 
@@ -580,6 +722,23 @@ export function resumer(actions) {
     const [nom, table] = k.split('|');
     return n + ' ' + nom + (n > 1 ? 's' : '') + ' dans ' + table;
   }).join(', ');
+}
+
+/**
+ * Les scènes préparées pour le terrain sur cet appareil : `Map` de l'identifiant du document vers son état de préparation.
+ * Sert la liste des scènes, qui n'a pas de client par scène.
+ */
+export async function scenesPreparees(stockage, baseUrl) {
+  const out = new Map();
+  try {
+    const prefixe = `${baseUrl || ''}|`;
+    for (const v of await stockage.list('divers')) {
+      if (v && v.version && typeof v.doc === 'string' && v.doc.startsWith(prefixe) && Array.isArray(v.tables)) {
+        out.set(v.doc.slice(prefixe.length), v);
+      }
+    }
+  } catch (_) { /* un appareil sans stockage ne prépare rien : la liste reste sans mention */ }
+  return out;
 }
 
 /**

@@ -305,3 +305,37 @@ test('une page de presentation ne declenche pas l’accueil', () => {
   assert.equal(ecranInitial(caps({ vitrine: true, decouverte: true }), null), ECRANS.WIDGET,
     'meme dans l’application, une vitrine reste une vitrine');
 });
+
+import { libelleOctets, phrasePreparation, phraseProgres } from '../lib/hote.js';
+
+test('libelleOctets : des tailles qu’on lit', () => {
+  assert.equal(libelleOctets(840), '840 o');
+  assert.equal(libelleOctets(12 * 1024), '12 Ko');
+  assert.equal(libelleOctets(3.2 * 1024 * 1024), '3,2 Mo');
+  assert.equal(libelleOctets(-1), '');
+  assert.equal(libelleOctets(NaN), '');
+});
+
+test('phrasePreparation : prête ou non, de quand, de quelle taille, et ce qui manque', () => {
+  assert.match(phrasePreparation(null), /Pas encore/);
+  const e = {
+    date: Date.UTC(2026, 9, 2, 12, 5), octets: 3.2 * 1024 * 1024,
+    tables: [{ nom: '_grist_Tables', meta: true }, { nom: 'Ouvrages', meta: false }, { nom: 'Visites', meta: false }],
+    photos: { n: 12, ignorees: 2 }, echecs: [{ nom: 'Autre' }],
+  };
+  const p = phrasePreparation(e);
+  assert.match(p, /^Prête le /);
+  assert.match(p, /3,2 Mo/);
+  assert.match(p, /2 tables/, 'les métadonnées ne comptent pas comme des tables');
+  assert.match(p, /12 photos/);
+  assert.match(p, /2 photos non gardées/);
+  assert.match(p, /1 table illisible/);
+  assert.doesNotMatch(phrasePreparation({ date: 1, octets: 10, tables: [{ nom: 'A', meta: false }], photos: { n: 0, ignorees: 0 }, echecs: [] }), /photo|illisible/);
+});
+
+test('phraseProgres : l’avancement, borné', () => {
+  assert.equal(phraseProgres({ phase: 'tables', fait: 3, total: 9 }), 'Tables 3 / 9…');
+  assert.equal(phraseProgres({ phase: 'photos', fait: 4, total: 12 }), 'Photos 4 / 12…');
+  assert.equal(phraseProgres({ phase: 'tables', fait: 12, total: 9 }), 'Tables 9 / 9…');
+  assert.equal(phraseProgres(null), '');
+});

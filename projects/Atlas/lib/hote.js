@@ -146,6 +146,39 @@ export function depuis(iso, maintenant = Date.now()) {
   return `il y a ${an} an${an > 1 ? 's' : ''}`;
 }
 
+/** Une taille lisible : « 840 o », « 12 Ko », « 3,2 Mo ». */
+export function libelleOctets(n) {
+  if (!Number.isFinite(n) || n < 0) return '';
+  if (n < 1024) return `${Math.round(n)} o`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} Ko`;
+  return `${(n / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+}
+
+/**
+ * Ce que l'appareil garde d'une scène, en une phrase — ce qu'on veut savoir avant de partir sans réseau : est-elle prête, de
+ * quand, de quelle taille, et ce qui n'a pas pu l'être.
+ *
+ * @param {object|null} e  l'état de préparation (`ClientHorsLigne.etatHorsLigne`)
+ */
+export function phrasePreparation(e) {
+  if (!e) return 'Pas encore : la scène demande le réseau pour s’ouvrir';
+  const date = new Date(e.date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const tables = (e.tables || []).filter((t) => !t.meta).length;
+  const parts = [`Prête le ${date}`, libelleOctets(e.octets), `${tables} table${tables > 1 ? 's' : ''}`];
+  if (e.photos?.n) parts.push(`${e.photos.n} photo${e.photos.n > 1 ? 's' : ''}`);
+  if (e.photos?.ignorees) parts.push(`${e.photos.ignorees} photo${e.photos.ignorees > 1 ? 's' : ''} non gardée${e.photos.ignorees > 1 ? 's' : ''}`);
+  if (e.echecs?.length) parts.push(`${e.echecs.length} table${e.echecs.length > 1 ? 's' : ''} illisible${e.echecs.length > 1 ? 's' : ''}`);
+  return parts.filter(Boolean).join(' · ');
+}
+
+/** L'avancement d'une préparation, en une phrase. */
+export function phraseProgres(e) {
+  if (!e) return '';
+  if (e.phase === 'photos') return `Photos ${e.fait} / ${e.total}…`;
+  if (e.phase === 'tables') return e.total ? `Tables ${Math.min(e.fait, e.total)} / ${e.total}…` : 'Lecture…';
+  return '';
+}
+
 /** Ou vit la scene : « Organisation · Espace ». Les deux peuvent manquer. */
 export function situer(scene) {
   return [scene?.org, scene?.espace].filter(Boolean).join(' · ');

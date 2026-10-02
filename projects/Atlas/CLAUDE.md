@@ -2864,3 +2864,26 @@ tronçons — la construction du réseau y sera à mesurer.
   comme ouverture. La caméra de session (rechargement d'une même visite) prime toujours sur le cadrage de l'auteur.
 - Pas encore éprouvé en Grist réel : l'écriture de `cadrage` dans `ExpositionJSON` passe par le même enregistrement que
   l'ouverture du récit, essayé seulement dans l'application simulée.
+
+## Scènes disponibles hors ligne (02/10/2026, étage 1)
+
+- **Préparer** : `ClientHorsLigne.preparerHorsLigne()` lit **au réseau** (jamais depuis l'appareil) la liste des tables, les
+  métadonnées qu'Atlas lit à l'ouverture (`TABLES_META` : schéma, vues, formulaires natifs), toutes les tables de
+  l'utilisateur, puis les **photos** que ces tables référencent (colonnes `Attachments` repérées dans les métadonnées ;
+  plafond de 150 Mo, le reste est compté « non gardé »). Sans réseau : échec net, rien n'est déclaré prêt. Une table
+  illisible est comptée dans `echecs`, les autres sont gardées. Détails et tailles dans `etatHorsLigne()` ; `libererHorsLigne()`
+  retire tables et photos et **ne touche jamais** à la file d'écriture.
+- **Photos** : `ClientRest.pieceJointe(id)` rend le fichier ; une photo gardée se sert de l'appareil (`urlPieceJointe`,
+  clé `pjreel:<doc>|<id>` du magasin `divers`).
+- **Où** : menu principal (marque « Atlas ») → « Disponible hors ligne » (prépare ou met à jour, avec l'avancement) et
+  « Libérer l'espace » ; la liste des scènes dit « disponible hors ligne » (`scenesPreparees`). Phrases : `lib/hote.js`
+  (`phrasePreparation`, `phraseProgres`, `libelleOctets`). **Une scène préparée est figée jusqu'à la prochaine
+  préparation** : rien ne se met à jour tout seul, et la phrase dit la date.
+- **Fond de carte sans réseau** : un aplat (`STYLE_HORS_RESEAU`), choisi d'emblée si l'appareil se dit hors réseau, sinon
+  quand le style de base ne se lit pas. Sans lui, la carte ne se déclarait jamais chargée et les couches ne se montaient pas.
+  Les étiquettes (glyphes) et les tuiles manquent ; les données, non. Les **tuiles IGN** à précharger restent un lot
+  séparé (conditions d'usage à vérifier).
+- Déjà embarqués dans l'APK (`packages/atlas-app`) : MapLibre, three.js, SunCalc, terra-draw, les modèles 3D et le moteur de
+  formulaire. **Pas** les polices web (repli sur celles du système) ni le relief.
+- **Éprouvé** : tests (35 dans `hors-ligne.test.js`), menu et aplat dans l'application simulée. **Pas** sur un téléphone en
+  mode avion, ni sur une vraie instance.
