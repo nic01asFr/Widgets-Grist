@@ -44,6 +44,9 @@ export function isModelLayer(layer) {
 /** L'onglet de placement 3D, qui n'est pas un formulaire. */
 export const ONGLET_3D = 'Placement 3D';
 
+/** L'onglet des paramètres d'un objet du catalogue (puissance, hauteur de feu…) : généré depuis le schéma de son type. */
+export const ONGLET_SPECS = 'Spécifications';
+
 /**
  * Les onglets de la fiche d'un objet.
  *
@@ -67,7 +70,7 @@ export const ONGLET_3D = 'Placement 3D';
  * @param {{layer: object, formulaires?: object[], multi?: boolean, revue?: boolean}} o
  * @returns {Array<{cle: string, libelle: string, formulaire: object|null}>}
  */
-export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false } = {}) {
+export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false, specs = false } = {}) {
   const tabs = [];
   if (!multi || revue) {
     for (const f of formulaires) {
@@ -76,5 +79,7 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
     }
   }
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
+  // Les paramètres du type de l'objet : seulement s'il en a, et jamais sur une sélection multiple.
+  if (specs && !multi) tabs.push({ cle: ONGLET_SPECS, libelle: ONGLET_SPECS, formulaire: null });
   return tabs;
 }

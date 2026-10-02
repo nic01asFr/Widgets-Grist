@@ -13,7 +13,12 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
 import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
 import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=20261002g';
-import { descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides } from './lib/parametres-objet.js?v=20261002g';
+import {
+    descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
+    resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
+    formaterValeur, libelleOrigine, groupesDeFamille,
+} from './lib/parametres-objet.js?v=20261002g';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=20261002g';
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
@@ -44,7 +49,7 @@ import {
 } from './lib/fiche-formulaire.js?v=20261002c';
 import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D } from './lib/model-layer.js?v=20260906a';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS } from './lib/model-layer.js?v=20260906a';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
@@ -2591,7 +2596,7 @@ const Eclairage = {
         if (signature !== this._signatureLegende) { this._signatureLegende = signature; updateLegend(); }
     },
 };
-try { window.__atlasEclairage = Eclairage; } catch (_) { /* hors navigateur */ }
+try { window.__atlasEclairage = Eclairage; window.__atlasConfig = CONFIG; } catch (_) { /* hors navigateur */ }
 
 /**
  * Entités pour ombres d'extrusion : en mémoire si Atlas les détient, sinon
@@ -7260,6 +7265,7 @@ function renderSymbologyInspector(layer) {
     const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
     const tabs = ['Couleur', 'Taille'];
     if (isPoint) tabs.push('Icône', 'Modèle 3D');
+    if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
     if (layer.sourceTable && CONFIG.grist.ready) tabs.push('Bulle');
     tabs.push('Étiquette');
     if (!tabs.includes(inspSymTab)) inspSymTab = 'Couleur';
@@ -7293,6 +7299,7 @@ function renderSymbologyInspector(layer) {
     else if (inspSymTab === 'Taille') body.innerHTML = symSizePanel(layer, sym);
     else if (inspSymTab === 'Modèle 3D') body.innerHTML = symModelPanel(layer, sym);
     else if (inspSymTab === 'Icône') body.innerHTML = symIconePanel(layer, sym);
+    else if (inspSymTab === 'Spécifications') body.innerHTML = symSpecsPanel(layer);
     else if (inspSymTab === 'Bulle') body.innerHTML = symBullePanel(layer, sym);
     else body.innerHTML = symLabelPanel(layer, sym);
 
@@ -7701,6 +7708,255 @@ function symSizePanel(layer, sym) {
     return volume
         + `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'size', s.mode, ['single', 'graduated'])}</div>`
         + inner + basePanel + symAppearancePanel(layer, sym);
+}
+
+// ============================================================
+// SPECIFICATIONS DES OBJETS DU CATALOGUE (lib/parametres-objet.js)
+// ============================================================
+/*
+ * Un objet réaliste est piloté par des paramètres (éclairage : puissance, couleur, hauteur de feu,
+ * allumage…). Le schéma vient du type du catalogue. Pour chaque paramètre, la valeur d'un objet se
+ * cherche dans l'ordre : réglage posé sur l'objet, champ de l'objet, réglage de la couche, défaut du
+ * type, règle d'Atlas — et dit d'où elle vient. Les défauts sont virtuels : rien n'est écrit dans la
+ * table de l'équipe.
+ *
+ * Les panneaux ci-dessous sont des formulaires GÉNÉRÉS depuis le schéma : une famille d'objets de plus
+ * (la végétation, plus tard) est un schéma de plus, pas un écran de plus.
+ */
+
+/** Le type du catalogue d'une entité : imposé par l'identifiant, ou déduit de ses champs (affectation « Catalogue »). */
+function typeIdDeEntite(layer, feature) {
+    const impose = typeImposeDe(layer, feature);
+    if (impose) return impose;
+    if (!CATALOGUE_OBJETS.cat || !coucheAuCatalogue(layer) || feature?.properties?._modelId) return null;
+    return resoudreObjet(CATALOGUE_OBJETS.cat, sourceDeCouche(layer), feature, { lod: 1 })?.type?.id || null;
+}
+/** Les types du catalogue dont une couche affiche des objets, et dont les paramètres sont décrits. */
+function typesAvecSchema(layer) {
+    if (!CATALOGUE_OBJETS.cat || layer?.style?.mode !== 'library') return [];
+    const ids = new Set();
+    for (const f of (layer.geojson?.features || []).slice(0, 300)) {
+        const id = typeIdDeEntite(layer, f);
+        if (id) ids.add(id);
+    }
+    // Le type choisi pour la couche compte même sans objet qui le porte encore.
+    const m = layer.style.symbolization?.model;
+    const ajouter = (id) => { const t = typeDeIdObjet(id); if (t) ids.add(t); };
+    ajouter(layer.style.library?.modelId);
+    if (m?.mode === 'categorized') { (m.categories || []).forEach((c) => ajouter(c.modelId)); ajouter(m.defaultModelId); }
+    return [...ids].map(typeCatalogueDe).filter((t) => t && descripteursDuType(t).length);
+}
+/** Cette entité a-t-elle des paramètres décrits ? (l'onglet « Spécifications » de sa fiche) */
+function specsOffertes(layer, feature) {
+    const id = typeIdDeEntite(layer, feature);
+    return !!id && descripteursDuType(typeCatalogueDe(id)).length > 0;
+}
+
+/** À qui s'appliquent les réglages affichés : à tous les types de la couche (`*`) ou à l'un d'eux. */
+let _specsPortee = { layerId: null, scope: '*' };
+function porteeSpecs(layer, types) {
+    const memeFamille = new Set(types.map((t) => t.family)).size === 1;
+    let scope = _specsPortee.layerId === layer.id ? _specsPortee.scope : '*';
+    if (scope !== '*' && !types.some((t) => t.id === scope)) scope = '*';
+    // Des familles différentes n'ont pas de réglage commun : on vise un type.
+    if (scope === '*' && !memeFamille) scope = types[0].id;
+    return { scope, memeFamille };
+}
+
+/** Une ligne du panneau de couche : la valeur de la couche, le champ à lire, et la situation en une phrase. */
+function htmlLigneSpec(layer, scope, d, { bilan, champs, reglage, liaison }) {
+    const lid = chaineJs(layer.id), sc = chaineJs(scope), pid = chaineJs(d.id);
+    const phrase = phraseBilan(d, bilan);
+    const defaut = bilan.parDefaut ? formaterValeur(d, bilan.parDefaut.valeur) : '';
+    let saisie;
+    if (d.kind === 'choice') {
+        saisie = `<select class="input spec-saisie" onchange="A.setSpecValeur('${lid}','${sc}','${pid}', this.value)">
+            <option value="">${defaut ? `Par défaut : ${echapper(defaut)}` : 'Par défaut'}</option>
+            ${d.choix.map((c) => `<option value="${echapper(c.value)}" ${reglage === c.value ? 'selected' : ''}>${echapper(c.label)}</option>`).join('')}</select>`;
+    } else {
+        const type = d.kind === 'number' ? 'number' : d.kind === 'date' ? 'date' : 'text';
+        const bornes = d.kind === 'number' ? ` min="${d.min ?? ''}" max="${d.max ?? ''}" step="${d.pas ?? 'any'}"` : '';
+        saisie = `<input class="input spec-saisie" type="${type}"${bornes} value="${echapper(reglage ?? '')}" placeholder="${echapper(defaut)}" onchange="A.setSpecValeur('${lid}','${sc}','${pid}', this.value)">`;
+    }
+    const suggere = champPropose(d, champs);
+    const lecture = champs.length
+        ? `<select class="input spec-champ" title="Lire ce paramètre dans un champ de la table" onchange="A.setSpecLiaison('${lid}','${pid}', this.value)">
+            <option value="">${suggere ? `Lire dans le champ : « ${echapper(suggere)} » (reconnu)` : 'Lire dans le champ : automatique'}</option>
+            ${champs.map((c) => `<option value="${echapper(c)}" ${liaison === c ? 'selected' : ''}>${echapper(c)}</option>`).join('')}</select>`
+        : '';
+    return `<div class="spec-ligne">
+        <div class="spec-nom">${echapper(d.libelle)}${d.unite ? `<span class="spec-unite">${echapper(d.unite)}</span>` : ''}</div>
+        <div class="spec-saisies">${saisie}${lecture}</div>
+        ${phrase.texte ? `<div class="spec-situation${phrase.alerte ? ' alerte' : ''}">${echapper(phrase.texte)}</div>` : ''}
+        ${d.aide ? `<div class="spec-aide">${echapper(d.aide)}</div>` : ''}</div>`;
+}
+
+/** Le comportement jour / nuit : trois états, et de quoi le voir tout de suite. */
+function htmlComportementSpec(layer, scope, reglage) {
+    const lid = chaineJs(layer.id), sc = chaineJs(scope);
+    const actif = reglage || 'soleil';
+    const bouton = (v, libelle) => `<button class="${actif === v ? 'active' : ''}" onclick="A.setSpecValeur('${lid}','${sc}','comportement','${v === 'soleil' ? '' : v}')">${libelle}</button>`;
+    return `<div class="spec-ligne">
+        <div class="spec-nom">Comportement</div>
+        <div class="seg">${bouton('soleil', 'Selon le soleil')}${bouton('toujours', 'Toujours allumé')}${bouton('jamais', 'Toujours éteint')}</div>
+        <div class="spec-moments">
+            <button class="btn btn-soft btn-sm" onclick="A.voirMoment('day')">Voir de jour</button>
+            <button class="btn btn-soft btn-sm" onclick="A.voirMoment('night')">Voir de nuit</button>
+        </div>
+        <div class="spec-aide">Selon le soleil : allumé du coucher au lever, éteint le jour. Un point hors service reste éteint.</div></div>`;
+}
+
+/**
+ * « Figer dans la table » : un geste à part, explicite. Les valeurs supposées (règle, défaut du type,
+ * réglage de la couche) ne sont jamais écrites dans la table de l'équipe sans lui.
+ */
+let _figer = null;     // { layerId, choix: Set<string> } quand le panneau de confirmation est ouvert
+function figerPossible(layer) {
+    return !!layer?.sourceTable && CONFIG.grist.ready && !CONFIG.viewMode && typeof grist !== 'undefined'
+        && typeof grist.docApi?.applyUserActions === 'function';
+}
+/** Les colonnes que la table porte, d'après le schéma du document, les colonnes écrivables et les champs lus. */
+function colonnesDeTable(layer) {
+    const noms = new Set((STATE.schema?.[layer.sourceTable] || []).map((c) => c.colId));
+    (layer._gristColumns || []).forEach((c) => noms.add(typeof c === 'string' ? c : c?.name || c?.id));
+    for (const f of (layer.geojson?.features || []).slice(0, 50)) {
+        Object.keys(f.properties || {}).filter((k) => !k.startsWith('_')).forEach((k) => noms.add(k));
+    }
+    noms.delete(undefined);
+    return noms;
+}
+function planFigerDeCouche(layer, choisis) {
+    const entites = (layer.geojson?.features || []).map((f) => ({ rowId: f.properties?._row_id, properties: f.properties || {}, f }));
+    const parType = new Map();
+    const typeIdDe = (e) => typeIdDeEntite(layer, e.f);
+    const descripteursDe = (e) => {
+        const id = typeIdDe(e);
+        if (!parType.has(id)) parType.set(id, descripteursDuType(typeCatalogueDe(id)));
+        return parType.get(id);
+    };
+    return planFiger({
+        entites, couche: layer.parametres, descripteursDe, typeIdDe, colonnes: colonnesDeTable(layer),
+        choisis, table: layer.sourceTable,
+    });
+}
+function htmlFigerSpecs(layer) {
+    if (!figerPossible(layer)) return '';
+    const lid = chaineJs(layer.id);
+    if (!_figer || _figer.layerId !== layer.id) {
+        return `<div class="section"><button class="btn btn-soft btn-full" onclick="A.figerOuvrir('${lid}')">Figer dans la table…</button>
+            <div class="spec-aide">Écrit dans la table les valeurs que ces réglages ne tiennent que virtuellement (règle, défaut, réglage de la couche).</div></div>`;
+    }
+    const plan = planFigerDeCouche(layer, _figer.choix);
+    if (!plan.candidats.length) {
+        return `<div class="section"><div class="section-title">Figer dans la table</div>
+            <div class="hint">Rien à figer : toutes les valeurs sont déjà dans la table.</div>
+            <button class="btn btn-soft btn-full" onclick="A.figerAnnuler()">Fermer</button></div>`;
+    }
+    const lignes = plan.candidats.map((c) => `<label class="spec-figer-ligne">
+        <input type="checkbox" ${_figer.choix.has(c.id) ? 'checked' : ''} onchange="A.figerBasculer('${chaineJs(c.id)}')">
+        <span><strong>${echapper(c.libelle)}</strong> : ${c.n} cellule${c.n > 1 ? 's' : ''}, colonne « ${echapper(c.colId)} »${c.creer ? ' (à créer)' : ''}</span></label>`).join('');
+    return `<div class="section"><div class="section-title">Figer dans la table</div>
+        <div class="hint">Ces valeurs deviennent des données de <strong>${echapper(layer.sourceTable)}</strong>. Elles sont posées par règle ou par réglage, pas mesurées : à vérifier. Les cellules déjà remplies ne sont jamais modifiées.</div>
+        ${lignes}
+        <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-soft" style="flex:1" onclick="A.figerAnnuler()">Annuler</button>
+            <button class="btn btn-dark" style="flex:2" ${plan.cellules ? '' : 'disabled'} onclick="A.figerEcrire('${lid}')">Écrire ${plan.cellules} cellule${plan.cellules > 1 ? 's' : ''}</button>
+        </div></div>`;
+}
+
+/** L'onglet « Spécifications » d'une couche : les paramètres de ses objets, par groupe. */
+function symSpecsPanel(layer) {
+    const types = typesAvecSchema(layer);
+    if (!types.length) {
+        return `<div class="hint">Cette couche n’affiche aucun objet du catalogue décrit par des paramètres. Choisissez un objet réaliste dans l’onglet <strong>Modèle 3D</strong>.</div>`;
+    }
+    const { scope, memeFamille } = porteeSpecs(layer, types);
+    const typeRef = scope === '*' ? types[0] : types.find((t) => t.id === scope);
+    const descripteurs = descripteursDuType(typeRef);
+    const parType = new Map(types.map((t) => [t.id, descripteursDuType(t)]));
+    const typeIdDe = (f) => typeIdDeEntite(layer, f);
+    const entites = layer.geojson?.features || [];
+    const visees = (scope === '*' ? entites : entites.filter((f) => typeIdDe(f) === scope)).slice(0, 300);
+    const champs = champsControlables(layer);
+    const reglagesPortee = layer.parametres?.valeurs?.[scope] || {};
+    const liaisons = layer.parametres?.liaisons || {};
+
+    const portee = types.length > 1
+        ? `<div class="section"><div class="section-title">Réglages pour</div>
+            <select class="input" onchange="A.setSpecPortee('${chaineJs(layer.id)}', this.value)">
+                ${memeFamille ? `<option value="*" ${scope === '*' ? 'selected' : ''}>Tous les types de la couche</option>` : ''}
+                ${types.map((t) => `<option value="${echapper(t.id)}" ${scope === t.id ? 'selected' : ''}>${echapper(t.name || t.id)}</option>`).join('')}
+            </select></div>`
+        : `<div class="section"><div class="section-title">Objet</div><div class="range-info">${echapper(types[0].name || types[0].id)}</div></div>`;
+
+    const sections = groupesDeFamille(typeRef.family).map((g) => {
+        const dans = descripteurs.filter((d) => d.groupe === g.id && d.id !== 'comportement');
+        const compor = g.id === 'allumage' && descripteurs.some((d) => d.id === 'comportement')
+            ? htmlComportementSpec(layer, scope, reglagesPortee.comportement) : '';
+        if (!dans.length && !compor) return '';
+        const lignes = dans.map((d) => {
+            const bilan = bilanParametre(d, visees, {
+                couche: layer.parametres, typeIdDe,
+                descripteurDe: (f) => parType.get(typeIdDe(f))?.find((x) => x.id === d.id) || null,
+            });
+            return htmlLigneSpec(layer, scope, d, { bilan, champs, reglage: reglagesPortee[d.id], liaison: liaisons[d.id] || '' });
+        }).join('');
+        return `<div class="section"><div class="section-title">${echapper(g.libelle)}</div>${compor}${lignes}</div>`;
+    }).join('');
+
+    const lid = chaineJs(layer.id), sc = chaineJs(scope);
+    return `<div class="hint">Ces valeurs servent aux objets qui ne les portent pas dans leurs propres champs. Elles ne modifient pas votre table.</div>
+        ${portee}${sections}${htmlFigerSpecs(layer)}
+        <div class="section"><button class="btn btn-soft btn-full" onclick="A.resetSpecs('${lid}','${sc}')">Effacer les réglages ${scope === '*' ? 'de la couche' : 'de ce type'}</button></div>`;
+}
+
+/** L'onglet « Spécifications » de la fiche d'un objet : ses valeurs effectives, leur origine, et de quoi les régler. */
+function htmlSpecsObjet(layer, feature, lectureSeule) {
+    const typeId = typeIdDeEntite(layer, feature);
+    const descripteurs = descripteursDuType(typeCatalogueDe(typeId));
+    if (!descripteurs.length) return '<div class="hint">Cet objet n’a pas de paramètres décrits.</div>';
+    const props = feature.properties || {};
+    const params = props._params || {};
+    const ctx = { props, params, couche: layer.parametres, typeId };
+    const type = typeCatalogueDe(typeId);
+
+    const ligne = (d) => {
+        const effectif = resoudreParametre(d, ctx);
+        const herite = resoudreParametre(d, { ...ctx, params: null });
+        const surObjet = params[d.id];
+        const pid = chaineJs(d.id);
+        const phrase = effectif.valeur == null
+            ? 'Aucune valeur'
+            : `${formaterValeur(d, effectif.valeur)} — ${libelleOrigine(effectif.origine, effectif.champ)}${effectif.explication ? ' : ' + effectif.explication : ''}${effectif.ecartBande ? ' · ' + effectif.ecartBande : ''}`;
+        const defaut = herite.valeur != null ? formaterValeur(d, herite.valeur) : '';
+        if (lectureSeule) {
+            return `<div class="spec-ligne"><div class="spec-nom">${echapper(d.libelle)}</div>
+                <div class="spec-situation${effectif.ecartBande ? ' alerte' : ''}">${echapper(phrase)}</div></div>`;
+        }
+        let saisie;
+        if (d.kind === 'choice') {
+            saisie = `<select class="input spec-saisie" onchange="A.setObjetParam('${pid}', this.value)">
+                <option value="">${defaut ? `Hérité : ${echapper(defaut)}` : 'Hérité'}</option>
+                ${d.choix.map((c) => `<option value="${echapper(c.value)}" ${surObjet === c.value ? 'selected' : ''}>${echapper(c.label)}</option>`).join('')}</select>`;
+        } else {
+            const type2 = d.kind === 'number' ? 'number' : d.kind === 'date' ? 'date' : 'text';
+            const bornes = d.kind === 'number' ? ` min="${d.min ?? ''}" max="${d.max ?? ''}" step="${d.pas ?? 'any'}"` : '';
+            saisie = `<input class="input spec-saisie" type="${type2}"${bornes} value="${echapper(surObjet ?? '')}" placeholder="${echapper(defaut)}" onchange="A.setObjetParam('${pid}', this.value)">`;
+        }
+        const effacer = surObjet !== undefined
+            ? `<button class="spec-effacer" title="Revenir à la valeur héritée" onclick="A.resetObjetParam('${pid}')">×</button>` : '';
+        return `<div class="spec-ligne">
+            <div class="spec-nom">${echapper(d.libelle)}${d.unite ? `<span class="spec-unite">${echapper(d.unite)}</span>` : ''}</div>
+            <div class="spec-saisies${effacer ? ' avec-effacer' : ''}">${saisie}${effacer}</div>
+            <div class="spec-situation${effectif.ecartBande ? ' alerte' : ''}">${echapper(phrase)}</div></div>`;
+    };
+
+    const sections = groupesDeFamille(type.family).map((g) => {
+        const dans = descripteurs.filter((d) => d.groupe === g.id);
+        return dans.length ? `<div class="section"><div class="section-title">${echapper(g.libelle)}</div>${dans.map(ligne).join('')}</div>` : '';
+    }).join('');
+    const note = lectureSeule ? '' : `<div class="hint">Une valeur saisie ici ne vaut que pour cet objet. Laissée vide, elle est héritée du champ de l’objet, de la couche, du type ou de la règle.</div>`;
+    return `<div class="section"><div class="range-info">${echapper(type.name || type.id)}</div></div>${note}${sections}`;
 }
 
 function symModelPanel(layer, sym) {
@@ -8720,7 +8976,7 @@ function renderObjectInspector() {
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
     const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
-    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue });
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: !multi && !!f && specsOffertes(layer, f) });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
     const formActif = ongletActif?.formulaire || null;
@@ -8788,6 +9044,8 @@ function renderObjectInspector() {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + entete + renderAttrFields(layer, props, { readOnly });
         }
+    } else if (_inspObjTab === ONGLET_SPECS) {
+        $('insp-body').innerHTML = htmlSpecsObjet(layer, f, view);
     } else if (_inspObjTab === ONGLET_3D) {
         if (view) {
             $('insp-body').innerHTML = multi
@@ -8834,7 +9092,7 @@ function renderObjectInspector() {
     } else {
         // « Reset » ne rétablit que les surcharges de placement 3D ; « Enregistrer »
         // persiste aussi les attributs, il reste donc dans tous les cas.
-        const reset = is3D
+        const reset = is3D && _inspObjTab !== ONGLET_SPECS
             ? `<button class="btn btn-soft" style="flex:1" onclick="A.resetSelected()">🔄 Reset</button>`
             : '';
         $('insp-foot').innerHTML = reset
@@ -13457,7 +13715,8 @@ const A = {
     },
 
     // Soleil
-    timePreset(p) {
+    /** Fixe l'heure de la scène sur un moment (aube, jour, soir, nuit) sans changer de panneau. */
+    poserMoment(p) {
         const c = map.getCenter();
         let min = 720;
         if (typeof SunCalc !== 'undefined') {
@@ -13471,8 +13730,118 @@ const A = {
                 else min = (mm(t.sunset) + 90) % 1440;
             } catch (e) {}
         } else min = { dawn: 390, day: 750, dusk: 1110, night: 1380 }[p];
-        STATE.settings.timeOfDay = min; updateLighting(); renderSoleil();
+        STATE.settings.timeOfDay = min; updateLighting();
     },
+    timePreset(p) { A.poserMoment(p); renderSoleil(); },
+    voirMoment(p) { A.poserMoment(p); },
+
+    // ---- Spécifications des objets du catalogue (couche, puis objet)
+    /** Ce que change un réglage : les calculs, la lumière, les modèles, la légende. */
+    appliquerSpecs(layer) {
+        layer._eclairage = null;
+        Eclairage.signature = null;
+        Models3D.forceBuild();
+        updateLegend();
+        markDirty();
+    },
+    setSpecPortee(id, scope) { _specsPortee = { layerId: id, scope }; renderInspector(); },
+    setSpecValeur(id, scope, paramId, valeur) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const type = scope === '*' ? typesAvecSchema(l)[0] : typeCatalogueDe(scope);
+        const d = descripteursDuType(type).find((x) => x.id === paramId);
+        if (!d) return;
+        let v = valeur;
+        if (!(v === '' || v == null)) {
+            const r = validerSaisie(d, v);
+            if (!r.ok) { showToast(`${d.libelle} : ${r.erreur}`, 'error'); renderInspector(); return; }
+            v = r.valeur;
+            if (r.ecartBande) showToast(`${d.libelle} : ${r.ecartBande}`, 'warning');
+        }
+        l.parametres = avecReglageDeCouche(l.parametres, scope, paramId, v === '' ? null : v) || undefined;
+        A.appliquerSpecs(l);
+        renderInspector();
+    },
+    setSpecLiaison(id, paramId, champ) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        l.parametres = avecLiaison(l.parametres, paramId, champ) || undefined;
+        A.appliquerSpecs(l);
+        renderInspector();
+    },
+    resetSpecs(id, scope) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const base = parametresDeCoucheValides(l.parametres);
+        if (!base) return;
+        delete base.valeurs[scope];
+        l.parametres = parametresDeCoucheValides(base) || undefined;
+        A.appliquerSpecs(l);
+        renderInspector();
+        showToast('Réglages effacés', 'success');
+    },
+    figerOuvrir(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l || !figerPossible(l)) return;
+        const { candidats } = planFigerDeCouche(l, null);
+        _figer = { layerId: id, choix: new Set(candidats.filter((c) => FIGES_PAR_DEFAUT.includes(c.id)).map((c) => c.id)) };
+        renderInspector();
+    },
+    figerBasculer(paramId) {
+        if (!_figer) return;
+        if (_figer.choix.has(paramId)) _figer.choix.delete(paramId); else _figer.choix.add(paramId);
+        renderInspector();
+    },
+    figerAnnuler() { _figer = null; renderInspector(); },
+    async figerEcrire(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l || !_figer || !figerPossible(l)) return;
+        if (!assertCanWrite('figer les valeurs')) return;
+        const plan = planFigerDeCouche(l, _figer.choix);
+        if (!plan.actions.length) return;
+        try {
+            await grist.docApi.applyUserActions(plan.actions);
+        } catch (e) {
+            enterViewModeOnWriteFail(e);
+            showToast('Grist : ' + (e?.message || e), 'error');
+            return;
+        }
+        // La mémoire suit la table : les colonnes créées, puis les cellules écrites. Ces valeurs sont
+        // maintenant des champs de l'objet : leur origine devient « champ ».
+        const parLigne = new Map((l.geojson?.features || []).map((f) => [f.properties?._row_id, f]));
+        const schema = (STATE.schema = STATE.schema || {});
+        const colonnes = (schema[l.sourceTable] = schema[l.sourceTable] || []);
+        l._gristColumns = l._gristColumns || [];
+        for (const a of plan.actions) {
+            if (a[0] === 'AddColumn') {
+                colonnes.push({ colId: a[2], type: a[3].type });
+                if (!l._gristColumns.includes(a[2])) l._gristColumns.push(a[2]);
+            } else if (a[0] === 'BulkUpdateRecord') {
+                const col = Object.keys(a[3])[0];
+                a[2].forEach((rowId, i) => { const f = parLigne.get(rowId); if (f) f.properties[col] = a[3][col][i]; });
+            }
+        }
+        _figer = null;
+        A.appliquerSpecs(l);
+        renderInspector();
+        showToast(`${plan.cellules} cellule${plan.cellules > 1 ? 's' : ''} écrite${plan.cellules > 1 ? 's' : ''} dans ${l.sourceTable}`, 'success');
+    },
+    setObjetParam(paramId, valeur) {
+        const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId); if (!layer) return;
+        const f = layer.geojson?.features?.[STATE.selection.features[0]]; if (!f) return;
+        const d = descripteursDuType(typeCatalogueDe(typeIdDeEntite(layer, f))).find((x) => x.id === paramId);
+        if (!d) return;
+        const propres = { ...(f.properties._params || {}) };
+        if (valeur === '' || valeur == null) delete propres[paramId];
+        else {
+            const r = validerSaisie(d, valeur);
+            if (!r.ok) { showToast(`${d.libelle} : ${r.erreur}`, 'error'); renderObjectInspector(); return; }
+            propres[paramId] = r.valeur;
+            if (r.ecartBande) showToast(`${d.libelle} : ${r.ecartBande}`, 'warning');
+        }
+        const valides = parametresDObjetValides(propres);
+        if (valides) f.properties._params = valides; else delete f.properties._params;
+        A.appliquerSpecs(layer);
+        renderObjectInspector();
+    },
+    resetObjetParam(paramId) { A.setObjetParam(paramId, ''); },
     setTime(v) { STATE.settings.timeOfDay = +v; updateLighting(); const h = Math.floor(v / 60), m = v % 60; const el = document.querySelector('#module-body .val'); if (el && STATE.currentModule === 'soleil') el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; persistScenePrefsDifferee(); },
     setSunDate(v) {
         STATE.settings.date = new Date(v + 'T12:00:00');

@@ -318,6 +318,7 @@ test('toujours eteint force l extinction et le dit', () => {
   assert.equal(e.allume, false);
   assert.equal(e.facteurPuissance, 0);
   assert.equal(e.raison, 'réglé : toujours éteint');
+  assert.deepEqual(e.hypotheses, [], 'un etat force n est plus une hypothese');
 });
 
 // ---------------------------------------------------------------------------
@@ -370,4 +371,106 @@ test('on propose le champ qui porte le nom du parametre ou un alias, jamais au h
   assert.equal(champPropose(p, ['nom', 'ref']), null);
   assert.equal(champPropose(p, []), null);
   assert.equal(champPropose(p, null), null);
+});
+
+// ---------------------------------------------------------------------------
+// Le bilan sur une couche
+// ---------------------------------------------------------------------------
+import { bilanParametre } from '../lib/parametres-objet.js';
+
+const lampe = (props) => ({ properties: props });
+
+test('le bilan dit combien lisent un champ et combien retombent sur la regle', () => {
+  const entites = [lampe({ height: '8' }), lampe({ height: '6' }), lampe({}), lampe({ _params: { hauteurFeu: 9 } })];
+  const b = bilanParametre(desc('mat_crosse', 'hauteurFeu'), entites, { typeId: 'mat_crosse' });
+  assert.equal(b.total, 4);
+  assert.deepEqual({ champ: b.origines.champ, objet: b.origines.objet, catalogue: b.origines.catalogue }, { champ: 2, objet: 1, catalogue: 1 });
+  assert.equal(b.champ, 'height');
+});
+
+test('le bilan retient la valeur la plus frequente et son explication', () => {
+  const entites = [lampe({}), lampe({}), lampe({ puissance: 90 })];
+  const b = bilanParametre(desc('mat_crosse', 'puissance'), entites, { typeId: 'mat_crosse' });
+  assert.equal(b.dominante.valeur, 38);
+  assert.equal(b.dominante.origine, 'regle');
+  assert.equal(b.dominante.n, 2);
+  assert.match(b.dominante.explication, /milieu de la bande/);
+});
+
+test('le bilan compte les valeurs hors de l usuel', () => {
+  const entites = [lampe({ puissance: 150 }), lampe({ puissance: 40 }), lampe({ puissance: 200 })];
+  assert.equal(bilanParametre(desc('mat_crosse', 'puissance'), entites, { typeId: 'mat_crosse' }).horsBande, 2);
+});
+
+test('le bilan suit le type de chaque entite quand la couche en melange plusieurs', () => {
+  const entites = [lampe({ t: 'a' }), lampe({ t: 'p' })];
+  const couche = { valeurs: { mat_crosse: { hauteurFeu: 7 } } };
+  const b = bilanParametre(desc('mat_crosse', 'hauteurFeu'), entites, { couche, typeIdDe: (f) => (f.properties.t === 'a' ? 'applique_facade' : 'mat_crosse') });
+  // le reglage de la couche vise le mat : seule l entite « p » le recoit
+  assert.equal(b.origines.couche, 1);
+  assert.equal(b.origines.catalogue, 1);
+});
+
+test('un bilan sans entite est vide, sans erreur', () => {
+  const b = bilanParametre(desc('mat_crosse', 'puissance'), [], { typeId: 'mat_crosse' });
+  assert.deepEqual([b.total, b.champ, b.dominante], [0, null, null]);
+  assert.equal(bilanParametre(desc('mat_crosse', 'puissance'), null).total, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Dire la situation
+// ---------------------------------------------------------------------------
+import { formaterValeur, phraseBilan } from '../lib/parametres-objet.js';
+
+test('une valeur se dit comme on la lit : avec son unite, son libelle de choix', () => {
+  assert.equal(formaterValeur(desc('mat_crosse', 'puissance'), 38), '38 W');
+  assert.equal(formaterValeur(desc('mat_crosse', 'hauteurFeu'), 5.5), '5.5 m');
+  assert.equal(formaterValeur(desc('mat_crosse', 'statut'), 'functional'), 'En service');
+  assert.equal(formaterValeur(desc('mat_crosse', 'statut'), 'inconnu'), 'inconnu');
+  assert.equal(formaterValeur(desc('mat_crosse', 'allumageSoir'), '-15CS'), '-15CS');
+  assert.equal(formaterValeur(desc('mat_crosse', 'puissance'), null), '');
+});
+
+test('le bilan par entite utilise le descripteur de chaque type', () => {
+  const entites = [lampe({ t: 'a' }), lampe({ t: 'p' })];
+  const descripteurDe = (f) => desc(f.properties.t === 'a' ? 'applique_facade' : 'mat_crosse', 'hauteurFeu');
+  const b = bilanParametre(null, entites, { descripteurDe });
+  assert.equal(b.total, 2);
+  assert.equal(b.parDefaut.n, 1, 'deux defauts differents (5,5 et 6) : aucun ne domine');
+});
+
+test('la phrase dit, pour des objets sans champ, la valeur par defaut et son explication', () => {
+  const d = desc('mat_crosse', 'puissance');
+  const b = bilanParametre(d, [lampe({}), lampe({})], { typeId: 'mat_crosse' });
+  const p = phraseBilan(d, b);
+  assert.equal(p.texte, '2 sur 2 : 38 W — règle d’Atlas, à vérifier : milieu de la bande 15–60 W (rue de desserte)');
+  assert.equal(p.alerte, false);
+});
+
+test('la phrase dit combien lisent un champ et combien retombent sur le defaut', () => {
+  const d = desc('mat_crosse', 'hauteurFeu');
+  const b = bilanParametre(d, [lampe({ height: 8 }), lampe({ height: 6 }), lampe({})], { typeId: 'mat_crosse' });
+  assert.equal(phraseBilan(d, b).texte, 'lu dans « height » (2 sur 3) · 1 sur 3 : 6 m — défaut du type : hauteur par défaut du type');
+});
+
+test('la phrase signale les valeurs hors de l usuel et les parametres sans valeur', () => {
+  const d = desc('mat_crosse', 'puissance');
+  const b = bilanParametre(d, [lampe({ puissance: 300 }), lampe({ puissance: 20 })], { typeId: 'mat_crosse' });
+  const p = phraseBilan(d, b);
+  assert.match(p.texte, /1 hors de l’usuel/);
+  assert.equal(p.alerte, true);
+  const az = desc('mat_crosse', 'azimut');
+  assert.equal(phraseBilan(az, bilanParametre(az, [lampe({})], { typeId: 'mat_crosse' })).texte, '1 sans valeur');
+});
+
+test('pas d objet, pas de phrase', () => {
+  assert.deepEqual(phraseBilan(desc('mat_crosse', 'puissance'), bilanParametre(desc('mat_crosse', 'puissance'), [], {})), { texte: '', alerte: false });
+  assert.deepEqual(phraseBilan(desc('mat_crosse', 'puissance'), null), { texte: '', alerte: false });
+});
+
+test('la phrase nomme tous les champs lus, du plus frequent au moins frequent', () => {
+  const d = desc('mat_crosse', 'hauteurFeu');
+  const b = bilanParametre(d, [lampe({ hauteurFeu: 6 }), lampe({ hauteurFeu: 7 }), lampe({ height: 8 })], { typeId: 'mat_crosse' });
+  assert.deepEqual(b.champs, ['hauteurFeu', 'height']);
+  assert.equal(phraseBilan(d, b).texte, 'lu dans « hauteurFeu », « height » (3 sur 3)');
 });

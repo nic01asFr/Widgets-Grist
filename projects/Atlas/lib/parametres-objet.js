@@ -448,7 +448,8 @@ export function proprietesEffectives(props, descripteurs, contexte) {
  */
 export function appliquerComportement(comportement, etat, point = null) {
   if (comportement === 'jamais') {
-    return { ...etat, allume: false, facteurFlux: 0, facteurPuissance: 0, plages: [], raison: 'réglé : toujours éteint' };
+    // Un état forcé n'est plus une hypothèse : celles du profil n'ont plus lieu d'être dites.
+    return { ...etat, allume: false, facteurFlux: 0, facteurPuissance: 0, plages: [], hypotheses: [], raison: 'réglé : toujours éteint' };
   }
   if (comportement === 'toujours') {
     const horsService = !etat.allume && /^(statut |hors de la période)/.test(String(etat.raison || ''));
@@ -556,4 +557,97 @@ export function champPropose(descripteur, champs) {
   const candidats = [descripteur.id, ...(descripteur.alias || [])].map((n) => String(n).toLowerCase());
   for (const c of noms) if (candidats.includes(String(c.name).toLowerCase())) return c.name;
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Le bilan sur une couche
+// ---------------------------------------------------------------------------
+
+/**
+ * D'où viennent les valeurs d'un paramètre sur les objets d'une couche : combien lisent un champ,
+ * combien retombent sur la couche, le type ou la règle. C'est ce qui permet au panneau de dire la
+ * situation en une phrase (« lu dans le champ « height » sur 12 objets sur 14 ; les 2 autres : règle »).
+ *
+ * @param {object} descripteur
+ * @param {Array<{properties?: object}>} entites
+ * @param {{ couche?: object, typeId?: string, typeIdDe?: (entite: object) => string|null,
+ *   descripteurDe?: (entite: object) => object|null }} [o]
+ *   `typeIdDe` donne le type de chaque entité, `descripteurDe` son descripteur (couche mêlant plusieurs
+ *   types : chacun a ses défauts)
+ * @returns {{
+ *   total: number,
+ *   origines: Object<string, number>,
+ *   champ: string|null,
+ *   champs: string[],
+ *   dominante: { valeur: *, origine: string, explication: string|null, n: number } | null,
+ *   parDefaut: { valeur: *, origine: string, explication: string|null, n: number } | null,
+ *   horsBande: number
+ * }}
+ */
+export function bilanParametre(descripteur, entites, { couche = null, typeId = null, typeIdDe = null, descripteurDe = null } = {}) {
+  const origines = { objet: 0, champ: 0, couche: 0, catalogue: 0, regle: 0, aucune: 0 };
+  const champs = new Map();
+  const valeurs = new Map();
+  let total = 0;
+  let horsBande = 0;
+  for (const f of entites || []) {
+    const props = f?.properties || {};
+    const d = descripteurDe ? descripteurDe(f) : descripteur;
+    if (!d) continue;
+    const r = resoudreParametre(d, {
+      props, params: props._params, couche, typeId: typeIdDe ? typeIdDe(f) : typeId,
+    });
+    total++;
+    origines[r.origine] = (origines[r.origine] || 0) + 1;
+    if (r.champ) champs.set(r.champ, (champs.get(r.champ) || 0) + 1);
+    if (r.ecartBande) horsBande++;
+    if (r.valeur != null) {
+      const cle = `${r.origine}|${r.valeur}`;
+      const v = valeurs.get(cle) || { valeur: r.valeur, origine: r.origine, explication: r.explication, n: 0 };
+      v.n++;
+      valeurs.set(cle, v);
+    }
+  }
+  const champ = [...champs.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const tri = (liste) => liste.sort((a, b) => b.n - a.n)[0] ?? null;
+  const dominante = tri([...valeurs.values()]);
+  const parDefaut = tri([...valeurs.values()].filter((v) => v.origine === 'catalogue' || v.origine === 'regle'));
+  const noms = [...champs.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([nom]) => nom);
+  return { total, origines, champ, champs: noms, dominante, parDefaut, horsBande };
+}
+
+/** Une valeur, dite comme l'utilisateur la lit : « 38 W », « En service », « -15CS ». */
+export function formaterValeur(descripteur, valeur) {
+  if (valeur == null || valeur === '') return '';
+  if (descripteur.kind === 'choice') return (descripteur.choix || []).find((c) => c.value === valeur)?.label || String(valeur);
+  const u = descripteur.unite ? ` ${descripteur.unite}` : '';
+  return typeof valeur === 'number' ? `${Number(valeur.toFixed(2))}${u}` : String(valeur);
+}
+
+/**
+ * La situation d'un paramètre sur une couche, en une phrase pour le panneau.
+ *
+ * @returns {{ texte: string, alerte: boolean }}  `alerte` : des valeurs sortent de l'usuel
+ */
+export function phraseBilan(descripteur, bilan) {
+  if (!bilan || !bilan.total) return { texte: '', alerte: false };
+  const t = bilan.total;
+  const o = bilan.origines;
+  const pl = (n) => (n > 1 ? 's' : '');
+  const parties = [];
+  if (o.objet) parties.push(`${o.objet} réglé${pl(o.objet)} sur l’objet`);
+  if (o.champ) {
+    const noms = (bilan.champs && bilan.champs.length ? bilan.champs : [bilan.champ]).map((c) => `« ${c} »`).join(', ');
+    parties.push(`lu dans ${noms} (${o.champ} sur ${t})`);
+  }
+  if (o.couche) parties.push(`réglage de la couche (${o.couche} sur ${t})`);
+  const defauts = o.catalogue + o.regle;
+  if (defauts && bilan.parDefaut) {
+    const v = formaterValeur(descripteur, bilan.parDefaut.valeur);
+    const origine = libelleOrigine(bilan.parDefaut.origine);
+    parties.push(`${defauts} sur ${t} : ${v} — ${origine}${bilan.parDefaut.explication ? ' : ' + bilan.parDefaut.explication : ''}`);
+  }
+  if (o.aucune) parties.push(`${o.aucune} sans valeur`);
+  if (bilan.horsBande) parties.push(`${bilan.horsBande} hors de l’usuel`);
+  return { texte: parties.join(' · '), alerte: bilan.horsBande > 0 };
 }
