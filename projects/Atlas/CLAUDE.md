@@ -1985,6 +1985,12 @@ générique (`lib/parametres-objet.js`) ; **une famille de plus est un schéma d
   placement 3D compris) ; (2) sans la colonne `atlas_3d_json`, l'enregistrement d'un objet perdait son placement
   et ses réglages **en silence** : `saveFeatureToSource` la crée maintenant (`Text`, « Atlas 3D (JSON) ») et le
   toast le dit ; (3) l'onglet « Spécifications » manquait en revue objet par objet.
+- **Contrôles complémentaires du 02/10/2026** : rendu de **nuit** dans le vrai document (trois halos chauds au sol,
+  légende « 3 allumés », rien enregistré) ; **lecture** : la bulle et le popup d'une lampe disent « Éclairage :
+  éteint — statut out_of_service » (`pastilleEtat`) ; **mobile** (feuille du bas, sans débordement horizontal) ;
+  **performance** : résoudre les paramètres de 10 000 objets coûte 138 ms (une fois par reconstruction, contre 97 ms
+  pour le choix du fichier seul) ; **application Android** : `vendoriser` embarque les nouveaux modules
+  (`parametres-objet`, `parametres-figer`, `modele-id`) et le catalogue `objets/`.
 
 ### Un contrôle inactif n'existe pas pour le lecteur
 
