@@ -61,16 +61,55 @@ test('plusieurs objets : la colonne n est creee qu une fois', async () => {
   assert.equal(docApi.journal.flat().filter((a) => a[0] === 'AddColumn').length, 1);
 });
 
-test('une colonne que la table avait deja, sans qu Atlas le sache : on ecrit dedans', async () => {
+// Grist ne refuse pas un doublon : il cree « atlas_3d_json2 » et le dit dans sa reponse (mesure en reel).
+const fauxGrist = ({ colId = null, refus = null } = {}) => {
+  const journal = [];
+  return {
+    journal,
+    applyUserActions: async (a) => {
+      journal.push(a);
+      if (a[0][0] === 'AddColumn') {
+        if (refus) throw new Error(refus);
+        return { retValues: [{ colRef: 61, colId: colId || a[0][2] }] };
+      }
+      return { retValues: [null] };
+    },
+  };
+};
+
+test('une colonne que la table avait deja, sans qu Atlas le sache : la colonne parasite est retiree, on ecrit dans la vraie', async () => {
   const l = couche(['nom'], [objet({ _params: { puissance: 20 } })]);
-  const docApi = faux('Column "atlas_3d_json" already exists');
+  const docApi = fauxGrist({ colId: 'atlas_3d_json2' });
   assert.equal(await saveFeatureToSource(docApi, l, 0), true);
-  assert.equal(docApi.journal[1][0][0], 'UpdateRecord');
+  const actions = docApi.journal.flat();
+  assert.deepEqual(actions.map((a) => a[0]), ['AddColumn', 'RemoveColumn', 'UpdateRecord']);
+  assert.deepEqual(actions[1], ['RemoveColumn', 'Arbres_remarquables', 'atlas_3d_json2']);
+  assert.deepEqual(JSON.parse(actions[2][3].atlas_3d_json).params, { puissance: 20 });
+  assert.equal(l.colonne3dCreee, undefined, 'rien n a ete cree : la colonne existait');
 });
 
-test('un refus de droits n est pas avale', async () => {
+test('une colonne vraiment creee est signalee comme telle', async () => {
   const l = couche(['nom'], [objet({ _params: { puissance: 20 } })]);
-  const docApi = faux('Blocked by table update access rules');
-  await assert.rejects(() => saveFeatureToSource(docApi, l, 0), /Blocked by table/);
-  assert.equal(docApi.journal.length, 1, 'aucune ecriture de ligne apres le refus');
+  await saveFeatureToSource(fauxGrist(), l, 0);
+  assert.equal(l.colonne3dCreee, true);
+});
+
+test('pas le droit de modifier la structure : le reste de la ligne s ecrit, le placement et les reglages non, et on le dit', async () => {
+  const l = couche(['nom'], [objet({ nom: 'Platane', _params: { puissance: 20 } })]);
+  l._fields = [{ name: 'nom' }];
+  const docApi = fauxGrist({ refus: 'Blocked by table update access rules' });
+  assert.equal(await saveFeatureToSource(docApi, l, 0), true, 'la ligne est ecrite');
+  const actions = docApi.journal.flat();
+  assert.deepEqual(actions.map((a) => a[0]), ['AddColumn', 'UpdateRecord']);
+  assert.equal(actions[1][3].nom, 'Platane');
+  assert.equal(actions[1][3].atlas_3d_json, undefined);
+  assert.match(l.colonne3dRefusee, /Blocked by table/);
+});
+
+test('pas le droit, et rien d autre a ecrire : rien n est ecrit, sans erreur', async () => {
+  const l = couche(['nom'], [objet({ _params: { puissance: 20 } })]);
+  const docApi = fauxGrist({ refus: 'Blocked by table update access rules' });
+  assert.equal(await saveFeatureToSource(docApi, l, 0), false);
+  assert.equal(docApi.journal.flat().length, 1, 'seul l ajout de colonne a ete tente');
+  assert.ok(l.colonne3dRefusee);
 });

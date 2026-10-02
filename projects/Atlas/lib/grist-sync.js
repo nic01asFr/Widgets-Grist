@@ -400,17 +400,36 @@ export async function saveFeatureToSource(docApi, layer, featureIndex) {
   const payload = featureToRowUpdate(f, layer);
   if (!payload) return false;
   if (payload.colonne3dManquante) {
-    // La colonne technique d'Atlas (même nom et même type que dans les tables de qgis2grist). Une
-    // table qui l'a déjà, sans qu'Atlas le sache, refuse l'ajout : on écrit alors dedans telle quelle.
+    // La colonne technique d'Atlas (même nom et même type que dans les tables de qgis2grist).
+    //
+    // Deux choses que Grist fait, et qu'il faut tenir :
+    // - il ne REFUSE PAS un doublon : ajouter « atlas_3d_json » à une table qui l'a déjà crée
+    //   « atlas_3d_json2 » et le dit dans la réponse (mesuré le 02/10/2026). Si Atlas ne savait pas que la
+    //   colonne existait (liste périmée, ajoutée depuis par quelqu'un d'autre), on retire la colonne
+    //   parasite et on écrit dans la vraie ;
+    // - ajouter une colonne est une modification de STRUCTURE : un document partagé en saisie seule
+    //   la refuse. Le reste de la ligne s'écrit alors quand même, et on dit que le placement et les
+    //   réglages n'ont pas pu l'être — au lieu de faire échouer tout l'enregistrement.
+    let colonneUtilisable = false;
     try {
-      await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
-      layer.colonne3dCreee = true;
+      const r = await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
+      const retours = Array.isArray(r) ? r : r?.retValues;
+      const creee = retours?.[0]?.colId;
+      if (creee && creee !== ATLAS_3D_COL) {
+        try { await docApi.applyUserActions([['RemoveColumn', layer.sourceTable, creee]]); } catch (_) { /* colonne parasite : au pire elle reste vide */ }
+      } else {
+        layer.colonne3dCreee = true;
+      }
+      colonneUtilisable = true;
     } catch (e) {
-      if (!/exist|already|duplicate|invalid column/i.test(String(e?.message || e))) throw e;
+      layer.colonne3dRefusee = String(e?.message || e);
     }
-    if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
-    payload.update[ATLAS_3D_COL] = payload.colonne3dManquante;
+    if (colonneUtilisable) {
+      if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
+      payload.update[ATLAS_3D_COL] = payload.colonne3dManquante;
+    }
   }
+  if (!Object.keys(payload.update).length) return false;
   await docApi.applyUserActions([
     ['UpdateRecord', layer.sourceTable, payload.rowId, payload.update],
   ]);

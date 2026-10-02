@@ -14521,7 +14521,13 @@ const A = {
                     // La colonne technique d'Atlas, créée à l'enregistrement : on le dit, c'est la table de l'équipe.
                     const creee = l.colonne3dCreee ? ' · colonne atlas_3d_json créée' : '';
                     l.colonne3dCreee = false;
-                    showToast(`${n} enregistrement(s) · ${l.sourceTable}${creee}`, 'success');
+                    if (l.colonne3dRefusee) {
+                        // Pas le droit de modifier la structure : le reste est enregistré, pas le placement ni les réglages.
+                        l.colonne3dRefusee = null;
+                        showToast(`${n} enregistrement(s) · ${l.sourceTable} — placement et réglages NON enregistrés : Atlas ne peut pas ajouter la colonne atlas_3d_json (droits sur la structure)`, 'warning');
+                    } else {
+                        showToast(`${n} enregistrement(s) · ${l.sourceTable}${creee}`, 'success');
+                    }
                 })
                 .catch((e) => {
                     enterViewModeOnWriteFail(e);
