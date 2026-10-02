@@ -125,3 +125,39 @@ l'ordre de `nav` ; l'exclusion des contextes du placement du trajet global.
 
 Reste à trancher : le suivi tourne-t-il la carte avec le cap, ou garde-t-il le nord en haut ? Proposé : nord en haut par défaut, le
 cap en option (une carte qui tourne désoriente quand on lit des noms).
+
+## 10. Le récit propose les contextes, et dit ce que chacun offre (idée de l'auteur, 03/10/2026)
+
+**Constat.** Aujourd'hui la pastille « Récit » n'apparaît que si la scène a au moins une étape qui n'est pas un contexte (règle posée
+le 02/10 : « deux fois la même chose »). Dans GP2OA, les six étapes sont des contextes : **la Lecture n'offre donc aucun récit**. La
+carte d'étape du lecteur (`renderStoryPresentation`) est en style inline (couleurs en dur) : titre, texte, un compteur, et les
+formulaires d'un trajet — elle ne dit rien de ce que le contexte propose.
+
+**Idée.**
+1. **La Lecture propose le récit et les contextes, au choix.** « Récit » et « Contexte » sont deux entrées de même rang : le premier
+   *présente* (visite guidée, étape après étape), le second *met au travail*. La règle du 02/10 est levée : le récit se lit dès qu'il y a
+   des étapes, contextes compris.
+2. **Le récit joue les contextes.** Chaque contexte est une étape de la visite ; en le lisant, on découvre à quoi il sert.
+3. **Chaque étape dit ce qu'elle offre à l'exploitation**, de façon uniforme, au style d'Atlas (jetons, pas de couleurs en dur) : un
+   bloc de quelques lignes, **toujours les mêmes**, présentes ou non — pour qu'on apprenne ce qu'un contexte *peut* offrir en voyant ce
+   qu'il n'offre pas :
+
+   | Ligne | Contenu (exemple) | Absent |
+   |---|---|---|
+   | Couches | Table_structure, Boucles | — |
+   | Filtres | 2 actifs (état : B, C) | « aucun » |
+   | Relevés | Table_structure | « aucun » (ou « saisie en Exploiter » en Lecture) |
+   | Tournée | 3,2 km · 12 ouvrages | « aucune » |
+
+4. **Un geste fait passer de la lecture au travail** : « Travailler dans ce contexte » ferme le lecteur et applique le contexte
+   (`appliquerContexte`), sans repasser par la pastille.
+
+**Pour l'éditeur** : rien de plus à régler — le bloc se déduit de l'état de l'étape (couches visibles, contrôles, `usage.releves`,
+`usage.tournee`). La même ligne de résumé sert sur sa carte d'étape dans le module Récit (déjà prévue au §6).
+
+**Pour le guide GP2OA** : c'est le guide cherché. Six contextes, six étapes, chacune avec son texte et son bloc ; l'agent en Lecture
+parcourt « à quoi sert chaque contexte » puis choisit où travailler.
+
+**À faire** : lever la règle de la pastille ; remplacer le style inline de la carte d'étape par des classes d'Atlas ; écrire le
+résumé (module pur `lib/resume-contexte.js` : état d'étape → lignes, testé) ; le bouton « Travailler dans ce contexte ».
+**Dépend de** la phase 1 de la tournée (ligne « Tournée ») et de `usage.releves` (déjà fait).
