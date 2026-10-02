@@ -5,14 +5,17 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.9.1';
+} from './declarative-style.js?v=1.10.0';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=1.9.1';
+} from './controls.js?v=1.10.0';
 import { parseGristBool } from './grist-bool.js';
+import { genreDeModele } from './modele-id.js?v=1.10.0';
+import { parametresDeCoucheValides } from './parametres-objet.js?v=1.10.0';
+import { departsValides } from './fiche-formulaire.js?v=1.10.0';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
 export function declarativeFromAtlasLayer(layer) {
@@ -90,6 +93,13 @@ export function layerPrefsPayload(layer) {
     // rechargement — le réglage ne servirait qu'à la session en cours.
     rank: Number.isFinite(layer._rank) ? layer._rank : null,
     symbolization: layer.style?.symbolization || null,
+    // Le modele choisi pour la couche : un identifiant de bibliotheque low-poly OU `objet:<type>`
+    // (lib/modele-id.js). Sans lui, le choix « Fixe » se perdait a la reouverture d'une couche
+    // liee a un manifeste, qui reprenait le modele du manifeste.
+    library: modeleDeCouchePrefs(layer),
+    // Les réglages des objets du catalogue pour cette couche (puissance, hauteur de feu, liaisons de
+    // champs…), par type. Virtuels : ils ne sont jamais écrits dans la table de l'équipe.
+    parametres: parametresDeCoucheValides(layer.parametres),
     controls: controlsPrefsPayload(layer),
     // Quel formulaire sert cette couche, et si la scene l'offre hors edition.
     // Le formulaire est defini UNE fois, dans la table `Formulaires`, pour une
@@ -99,6 +109,12 @@ export function layerPrefsPayload(layer) {
     formulaire: formulairePrefsPayload(layer),
     declarative: declarativeFromAtlasLayer(layer),
   };
+}
+
+/** `{ modelId }` quand la couche porte un identifiant de modele admissible, sinon `null` (rien n'est ecrit). */
+function modeleDeCouchePrefs(layer) {
+  const id = layer?.style?.library?.modelId;
+  return genreDeModele(id) ? { modelId: id } : null;
 }
 
 /**
@@ -137,12 +153,17 @@ function formulairePrefsPayload(layer) {
   // Les formulaires que la scene a retires de la couche : reversible, rien
   // n'est efface de `Formulaires`.
   const retires = Array.isArray(f.retires) ? f.retires.filter((x) => typeof x === 'string' && x) : [];
-  if (!fiche && !exposes && !herite && !aDesMasques && !retires.length) return null;
+  // D'où part chaque champ d'un ajout. Comme les masques, une entrée vide est
+  // une décision (« rien de prérempli »).
+  const departs = departsValides(f.departs);
+  const aDesDeparts = Object.keys(departs).length > 0;
+  if (!fiche && !exposes && !herite && !aDesMasques && !retires.length && !aDesDeparts) return null;
   const out = { fiche };
   if (exposes) out.exposes = exposes;
   else if (herite) out.expose = true;
   if (aDesMasques) out.masques = masques;
   if (retires.length) out.retires = retires;
+  if (aDesDeparts) out.departs = departs;
   return out;
 }
 
@@ -173,6 +194,12 @@ export function applyLayerPrefsBinding(layer, prefs) {
       layer.style = { ...layer.style, polygonMode: payload.polygonMode };
     }
 
+    // Un identifiant illisible n'ecrase pas le modele du manifeste : la forme est verifiee, pas
+    // l'existence (un `objet:<type>` peut arriver avant son catalogue — il est alors conserve).
+    if (genreDeModele(payload.library?.modelId)) {
+      layer.style = { ...layer.style, library: { ...(layer.style?.library || {}), modelId: payload.library.modelId } };
+    }
+
     // Le tri effectif revient à l'appelant, qui voit toutes les couches.
     if (Number.isFinite(payload.rank)) layer._rank = payload.rank;
 
@@ -201,8 +228,14 @@ export function applyLayerPrefsBinding(layer, prefs) {
         const r = p.retires.filter((x) => typeof x === 'string' && x);
         if (r.length) f.retires = r;
       }
+      const departs = departsValides(p.departs);
+      if (Object.keys(departs).length) f.departs = departs;
       layer.formulaire = f;
     }
+
+    // Réglages des objets : seul ce qui a la bonne forme survit (un enregistrement abîmé ne règle rien).
+    const parametres = parametresDeCoucheValides(payload.parametres);
+    if (parametres) layer.parametres = parametres;
 
     if (payload.controls?.length) {
       applyControlsFromPrefs(layer, payload.controls);

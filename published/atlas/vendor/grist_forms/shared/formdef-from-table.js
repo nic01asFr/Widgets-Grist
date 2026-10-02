@@ -122,7 +122,12 @@
     if (choix) champ.options = { choices: choix };
 
     var visee = tableReferencee(col.type);
-    if (visee) champ.options = Object.assign({}, champ.options, { refTable: visee });
+    if (visee) {
+      champ.options = Object.assign({}, champ.options, { refTable: visee });
+      // La colonne que Grist affiche pour cette référence : sans elle, le
+      // moteur choisit lui-même une colonne de libellé.
+      if (col.visibleCol) champ.options.visibleCol = col.visibleCol;
+    }
 
     return champ;
   }

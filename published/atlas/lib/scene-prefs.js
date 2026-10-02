@@ -5,13 +5,16 @@ import {
   createDefaultViewerControls,
   parseViewerControls,
   serializeViewerControls,
-} from './viewer-controls.js';
+} from './viewer-controls.js?v=1.10.0';
+import { expositionDepuisJSON, expositionAEnregistrer, expositionVide } from './exposition.js?v=1.10.0';
 
 export const ATLAS_SCENE_PREFS_TABLE = 'Atlas_ScenePrefs';
 
 export const SCENE_PREFS_SCHEMA = [
   { id: 'ViewerJSON', label: 'Contrôles environnement (JSON)', type: 'Text' },
   { id: 'SettingsJSON', label: 'Réglages de scène (JSON)', type: 'Text' },
+  // Les choix de l'auteur sur l'exposition (par où la scène s'ouvre) : lib/exposition.js.
+  { id: 'ExpositionJSON', label: 'Exposition (JSON)', type: 'Text' },
 ];
 
 /**
@@ -65,7 +68,7 @@ export function reglagesDepuisJSON(brut) {
   return reglagesAEnregistrer(obj);
 }
 
-/** @param {import('./viewer-controls.js').ViewerControl[]} list */
+/** @param {import('./viewer-controls.js?v=1.10.0').ViewerControl[]} list */
 export function prefsPayloadFromViewerControls(list) {
   return { ViewerJSON: JSON.stringify(serializeViewerControls(list)) };
 }
@@ -94,18 +97,20 @@ export async function ensureScenePrefsTable(docApi, opts = {}) {
   // retenu, sans que rien ne le dise.
   try {
     const rec = await docApi.fetchTable(ATLAS_SCENE_PREFS_TABLE);
-    if (!('SettingsJSON' in rec)) {
-      await docApi.applyUserActions([['AddColumn', ATLAS_SCENE_PREFS_TABLE, 'SettingsJSON',
-        { label: 'Réglages de scène (JSON)', type: 'Text' }]]);
+    for (const col of SCENE_PREFS_SCHEMA.filter((c) => c.id !== 'ViewerJSON')) {
+      if (!(col.id in rec)) {
+        await docApi.applyUserActions([['AddColumn', ATLAS_SCENE_PREFS_TABLE, col.id,
+          { label: col.label, type: col.type }]]);
+      }
     }
   } catch (e) {
     console.warn('[Atlas scene-prefs] colonne SettingsJSON', e.message);
   }
 }
 
-const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {} });
+const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide() });
 
-/** @returns {Promise<{ viewerControls: import('./viewer-controls.js').ViewerControl[], settings: object }>} */
+/** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=1.10.0').ViewerControl[], settings: object }>} */
 export async function loadScenePrefs(docApi) {
   if (!docApi) return vide();
   try {
@@ -124,6 +129,7 @@ export async function loadScenePrefs(docApi) {
     return {
       viewerControls: viewerControlsFromPrefsRow(rec, 0),
       settings: reglagesDepuisJSON(rec.SettingsJSON?.[0]),
+      exposition: expositionDepuisJSON(rec.ExpositionJSON?.[0]),
     };
   } catch (e) {
     console.warn('[Atlas scene-prefs] load', e.message);
@@ -131,7 +137,7 @@ export async function loadScenePrefs(docApi) {
   }
 }
 
-/** @param {{ viewerControls: import('./viewer-controls.js').ViewerControl[], settings?: object }} prefs */
+/** @param {{ viewerControls: import('./viewer-controls.js?v=1.10.0').ViewerControl[], settings?: object }} prefs */
 export async function saveScenePrefs(docApi, prefs, opts = {}) {
   if (!docApi || opts.viewMode) return;
   await ensureScenePrefsTable(docApi, opts);
@@ -141,6 +147,8 @@ export async function saveScenePrefs(docApi, prefs, opts = {}) {
     // relit comme « aucune préférence », ce qui est exact — mais laisser la
     // clé absente ferait dépendre le résultat de l'ordre des enregistrements.
     SettingsJSON: JSON.stringify(reglagesAEnregistrer(prefs.settings || {})),
+    // Écrite seulement quand on la donne : un appelant qui ne la connaît pas ne l'efface pas.
+    ...(prefs.exposition ? { ExpositionJSON: JSON.stringify(expositionAEnregistrer(prefs.exposition)) } : {}),
   };
   if (_prefRowId != null) {
     await docApi.applyUserActions([['UpdateRecord', ATLAS_SCENE_PREFS_TABLE, _prefRowId, data]]);

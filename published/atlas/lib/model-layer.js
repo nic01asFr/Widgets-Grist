@@ -8,7 +8,7 @@
  * cercle 2D. Ce critère décide où ces réglages ont le droit d'apparaître, et où
  * ils ont le droit d'être écrits.
  */
-import { libelleFormulaire } from './fiche-formulaire.js';
+import { libelleFormulaire } from './fiche-formulaire.js?v=1.10.0';
 
 /** La couche est-elle rendue par des modèles 3D instanciés sur des points ? */
 export function isModelLayer(layer) {
@@ -44,6 +44,9 @@ export function isModelLayer(layer) {
 /** L'onglet de placement 3D, qui n'est pas un formulaire. */
 export const ONGLET_3D = 'Placement 3D';
 
+/** L'onglet des paramètres d'un objet du catalogue (puissance, hauteur de feu…) : généré depuis le schéma de son type. */
+export const ONGLET_SPECS = 'Spécifications';
+
 /**
  * Les onglets de la fiche d'un objet.
  *
@@ -67,7 +70,7 @@ export const ONGLET_3D = 'Placement 3D';
  * @param {{layer: object, formulaires?: object[], multi?: boolean, revue?: boolean}} o
  * @returns {Array<{cle: string, libelle: string, formulaire: object|null}>}
  */
-export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false } = {}) {
+export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false, specs = false } = {}) {
   const tabs = [];
   if (!multi || revue) {
     for (const f of formulaires) {
@@ -76,5 +79,8 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
     }
   }
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
+  // Les paramètres du type de l'objet : seulement s'il en a. Sur une sélection multiple, jamais — sauf en
+  // revue, où un curseur désigne un seul objet (comme pour l'onglet des attributs).
+  if (specs && (!multi || revue)) tabs.push({ cle: ONGLET_SPECS, libelle: ONGLET_SPECS, formulaire: null });
   return tabs;
 }

@@ -11,14 +11,14 @@
  * retire et `init()` prend le relais.
  */
 
-import { capacites, creerClient } from './data-client.js?v=1.9.1';
-import { installerAdaptateur } from './grist-adapter.js?v=1.9.1';
-import { listerScenesAtlas } from './decouverte.js?v=1.9.1';
+import { capacites, creerClient } from './data-client.js?v=1.10.0';
+import { installerAdaptateur } from './grist-adapter.js?v=1.10.0';
+import { listerScenesAtlas } from './decouverte.js?v=1.10.0';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication,
-} from './hote.js?v=1.9.1';
+} from './hote.js?v=1.10.0';
 
 export const VERSION = '1.0.0';
 
@@ -473,7 +473,7 @@ export function ouvrirMenuPrincipal({
       ${situation ? `<span>${echapper(situation)}</span>` : ''}
     </div>` : ''}
     <div class="hote-menu">
-      ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>Les outils d’auteur reviennent sur la carte</small></span></button>` : ''}
+      ${edition ? `<button id="m-edition">${IC.crayon}<span>${echapper(edition.libelle)}<small>${echapper(edition.aide || 'Les outils d’auteur reviennent sur la carte')}</small></span></button>` : ''}
       ${changeable ? `<button id="m-scenes">${IC.scenes}<span>Changer de scène<small>${
         modifie ? 'Des modifications ne sont pas enregistrées' : 'Revenir à la liste de vos projets'
       }</small></span></button>` : ''}

@@ -11,7 +11,8 @@
  * Rien ici ne touche la carte, Grist ni le DOM. Cadrage :
  * `docs/CADRAGE-EDITION-GEOMETRIES.md`, lot 0.
  */
-import { distanceMetres } from './releve.js';
+import { distanceMetres } from './releve.js?v=1.10.0';
+import { lireWkt, ecrireWkt } from './wkt.js';
 
 export const VERSION = '1.0.0';
 
@@ -70,10 +71,24 @@ export function coordonneesUtilisables(lon, lat) {
  * `{lat, lng}`) ; la convention du producteur — un point en
  * `latitude`/`longitude`, le reste en `geometry_json`.
  *
+ * Une colonne unique porte sa géométrie en GeoJSON ou en WKT : `format` le
+ * dit (`layer.geometryFormat`, relevé à la lecture ; à défaut, une colonne
+ * nommée `wkt`). Une table WKT est réécrite en WKT — y écrire du GeoJSON
+ * la rendrait illisible pour l'outil de l'équipe qui la tient.
+ *
  * @returns {{ mode: 'latlon', lat: string, lon: string }
- *   | { mode: 'geojson', geojson: string, centroideLat?: string, centroideLon?: string }}
+ *   | { mode: 'geojson', geojson: string, format: 'geojson'|'wkt', centroideLat?: string, centroideLon?: string }}
  */
 export function colonnesGeometrie(layer) {
+  const c = colonnesGeometrieBrutes(layer);
+  if (c.mode !== 'geojson') return c;
+  const format = layer?.geometryFormat === 'wkt' || layer?.geometryFormat === 'geojson'
+    ? layer.geometryFormat
+    : (/^wkt$/i.test(c.geojson) ? 'wkt' : 'geojson');
+  return { ...c, format };
+}
+
+function colonnesGeometrieBrutes(layer) {
   const famille = familleGeometrie(layer?.geometryType) || 'Polygon';
   const gf = layer?._manifestLayer?.source?.geometry_fields
     || layer?._manifestLayer?.source?.geometryFields || null;
@@ -130,7 +145,12 @@ export function cellulesGeometrie(geom, colonnes) {
     if (!coordonneesUtilisables(lon, lat)) return null;
     return { [colonnes.lat]: lat, [colonnes.lon]: lon };
   }
-  return { [colonnes.geojson]: JSON.stringify({ type: geom.type, coordinates: plat2D(geom.coordinates) }) };
+  const g = { type: geom.type, coordinates: plat2D(geom.coordinates) };
+  if (colonnes.format === 'wkt') {
+    const wkt = ecrireWkt(g);
+    return wkt ? { [colonnes.geojson]: wkt } : null;
+  }
+  return { [colonnes.geojson]: JSON.stringify(g) };
 }
 
 /**
@@ -149,7 +169,10 @@ export function lireGeometrie(ligne, colonnes) {
   if (v == null || v === '') return null;
   if (typeof v === 'string') {
     const s = v.trim();
-    if (s[0] !== '{') return null;
+    if (s[0] !== '{') {
+      const w = lireWkt(s);
+      return w ? { type: w.type, coordinates: plat2D(w.coordinates) } : null;
+    }
     try { v = JSON.parse(s); } catch (_) { return null; }
   }
   if (!v || typeof v !== 'object') return null;

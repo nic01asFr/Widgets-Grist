@@ -6,22 +6,23 @@ import {
   rowsToGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.9.1';
+} from './grist-rows.js?v=1.10.0';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.9.1';
+} from './manifest-binding.js?v=1.10.0';
 import { parseGristBool } from './grist-bool.js';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js';
-import { isModelLayer } from './model-layer.js?v=1.9.1';
-import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.9.1';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.10.0';
+import { isModelLayer } from './model-layer.js?v=1.10.0';
+import { parametresDObjetValides } from './parametres-objet.js?v=1.10.0';
+import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.10.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.9.1';
+} from './declarative-style.js?v=1.10.0';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 
@@ -35,7 +36,7 @@ export const ATLAS_PREFS_SCHEMA = [
 const SKIP_PROPS = new Set([
   ...COLONNES_INTERNES_GRIST,
   '_row_id', '_fill_color', '_visible', '_fill_opacity', '_line_opacity', '_idx',
-  '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId',
+  '_scale', '_rotationX', '_rotationY', '_rotationZ', '_offsetX', '_offsetY', '_offsetZ', '_modelId', '_params',
 ]);
 
 const ATLAS_3D_COL = 'atlas_3d_json';
@@ -223,7 +224,25 @@ export function lignePrefs(layer, maintenant = Date.now()) {
   };
 }
 
-export async function saveLayerPref(docApi, layer, opts = {}) {
+/**
+ * Les écritures de préférences se font UNE À LA FOIS.
+ *
+ * N appels rapprochés (`toggleAllLayers` en lance un par couche) lisaient tous
+ * « la table n'existe pas » avant que le premier l'ait créée : Grist créait
+ * `Atlas_LayerPrefs`, `Atlas_LayerPrefs2`, … Deux appels sur la même couche
+ * ajoutaient deux lignes avant que le premier ait rendu son identifiant. Relevé
+ * à la relecture du 02/10/2026. La file continue après un échec ; l'appelant,
+ * lui, reçoit l'erreur.
+ */
+let _fileEcrituresPrefs = Promise.resolve();
+
+export function saveLayerPref(docApi, layer, opts = {}) {
+  const tache = _fileEcrituresPrefs.then(() => ecrirePref(docApi, layer, opts));
+  _fileEcrituresPrefs = tache.catch(() => {});
+  return tache;
+}
+
+async function ecrirePref(docApi, layer, opts = {}) {
   if (opts.viewMode) return;
   const cle = clePrefsCouche(layer);
   if (!cle) return;
@@ -352,25 +371,84 @@ export function featureToRowUpdate(feature, layer) {
   // garde, des surcharges héritées — ou une couche ayant changé de mode —
   // écriraient des transformations 3D sur des objets qui ne seront jamais rendus
   // ainsi, salissant la table de l'utilisateur.
+  // Le placement et les réglages d'objet dont la table n'a pas (encore) la colonne technique d'Atlas.
+  let colonne3dManquante = null;
   if (isModelLayer(layer)) {
     const atlas3d = {};
     for (const k of ['scale', 'rotationX', 'rotationY', 'rotationZ', 'offsetX', 'offsetY', 'offsetZ', 'modelId']) {
       const v = props['_' + k];
       if (v != null && v !== '') atlas3d[k] = v;
     }
-    if (Object.keys(atlas3d).length && (!gristCols.length || colSet.has(ATLAS_3D_COL))) {
-      update[ATLAS_3D_COL] = JSON.stringify(atlas3d);
+    // Les réglages d'objet (puissance, hauteur de feu…) voyagent avec le placement : même colonne,
+    // même garde. Ils ne deviennent jamais des colonnes de la table de l'équipe.
+    const params = parametresDObjetValides(props._params);
+    if (params) atlas3d.params = params;
+    if (Object.keys(atlas3d).length) {
+      if (!gristCols.length || colSet.has(ATLAS_3D_COL)) update[ATLAS_3D_COL] = JSON.stringify(atlas3d);
+      // Sans la colonne, le placement et les réglages étaient perdus en silence : « Enregistré » ne
+      // disait pas que rien n'avait été écrit. `saveFeatureToSource` la crée, et le dit.
+      else colonne3dManquante = JSON.stringify(atlas3d);
     }
   }
 
-  if (!Object.keys(update).length) return null;
-  return { rowId, update };
+  if (!Object.keys(update).length && !colonne3dManquante) return null;
+  return colonne3dManquante ? { rowId, update, colonne3dManquante } : { rowId, update };
+}
+
+/**
+ * S'assure que la table a la colonne technique d'Atlas (`atlas_3d_json`), ou dit qu'on ne peut pas.
+ *
+ * Elle porte le placement 3D et les réglages d'un objet. Atlas la crée **au premier besoin** — le premier
+ * réglage d'un objet, ou à défaut son enregistrement — et non à l'ouverture : tout le monde n'a pas le
+ * droit de modifier la structure, et une table qu'on se contente d'afficher n'a pas à changer.
+ *
+ * Deux choses que Grist fait, et qu'il faut tenir (mesuré le 02/10/2026) :
+ * - il ne REFUSE PAS un doublon : ajouter « atlas_3d_json » à une table qui l'a déjà crée
+ *   « atlas_3d_json2 » et le dit dans sa réponse. Si Atlas ne savait pas que la colonne existait (liste
+ *   périmée, ajoutée depuis par quelqu'un d'autre), la colonne parasite est retirée ;
+ * - ajouter une colonne est une modification de STRUCTURE : un document partagé en saisie seule la refuse.
+ *
+ * @param {{applyUserActions: Function}} docApi
+ * @param {{sourceTable: string, _gristColumns?: string[]}} layer
+ * @param {Iterable<string>} [connues] les colonnes que la table porte, d'après ce qu'Atlas en sait
+ * @returns {Promise<{ etat: 'presente' | 'creee' | 'refusee' | 'inconnue', message?: string }>}
+ *   `inconnue` : Atlas ne sait pas quelles colonnes la table porte — il n'y touche pas.
+ */
+export async function assurerColonneAtlas3d(docApi, layer, connues = layer?._gristColumns) {
+  const noms = new Set(connues || []);
+  if (!noms.size) return { etat: 'inconnue' };
+  if (noms.has(ATLAS_3D_COL)) return { etat: 'presente' };
+  let creee;
+  try {
+    const r = await docApi.applyUserActions([['AddColumn', layer.sourceTable, ATLAS_3D_COL, { type: 'Text', label: 'Atlas 3D (JSON)' }]]);
+    const retours = Array.isArray(r) ? r : r?.retValues;
+    creee = retours?.[0]?.colId;
+  } catch (e) {
+    return { etat: 'refusee', message: String(e?.message || e) };
+  }
+  if (Array.isArray(layer._gristColumns) && !layer._gristColumns.includes(ATLAS_3D_COL)) layer._gristColumns.push(ATLAS_3D_COL);
+  if (creee && creee !== ATLAS_3D_COL) {
+    try { await docApi.applyUserActions([['RemoveColumn', layer.sourceTable, creee]]); } catch (_) { /* colonne parasite : au pire elle reste vide */ }
+    return { etat: 'presente' };
+  }
+  return { etat: 'creee' };
 }
 
 export async function saveFeatureToSource(docApi, layer, featureIndex) {
   const f = layer.geojson?.features?.[featureIndex];
   const payload = featureToRowUpdate(f, layer);
   if (!payload) return false;
+  if (payload.colonne3dManquante) {
+    const r = await assurerColonneAtlas3d(docApi, layer);
+    if (r.etat === 'creee') layer.colonne3dCreee = true;
+    if (r.etat === 'creee' || r.etat === 'presente') {
+      payload.update[ATLAS_3D_COL] = payload.colonne3dManquante;
+    } else if (r.etat === 'refusee') {
+      // Le reste de la ligne s'écrit quand même ; le placement et les réglages, non — et on le dit.
+      layer.colonne3dRefusee = r.message;
+    }
+  }
+  if (!Object.keys(payload.update).length) return false;
   await docApi.applyUserActions([
     ['UpdateRecord', layer.sourceTable, payload.rowId, payload.update],
   ]);

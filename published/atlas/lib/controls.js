@@ -7,7 +7,7 @@ import {
   parsePropertyNumber,
   resolveFeaturePropertyKey,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.9.1';
+} from './declarative-style.js?v=1.10.0';
 
 /**
  * Les champs d'une couche : ceux que le manifeste déclare, **puis** ceux que
@@ -40,6 +40,8 @@ export function layerFieldNames(layer) {
 export const SEUIL_CATEGORIES = 20;
 /** Au-delà, même un choix déclaré (Choice, Ref) ne tient plus dans une liste. */
 export const MAX_VALEURS_LISTE = 40;
+/** Pour capturer ou rejouer une sélection : toutes les valeurs, pas celles qu'une liste montre. */
+const TOUTES_LES_VALEURS = Number.POSITIVE_INFINITY;
 
 /**
  * Un nombre, ou NaN. Accepte « 3,5 » ; refuse « 12 m ».
@@ -399,7 +401,10 @@ export function basculerValeurSelection(layer, c, value) {
 export function captureSelectControlValues(layer, c) {
   if (!Array.isArray(c.values) || !c.values.length) return [];
   const allowed = selectValuesLowerSet(c);
-  const out = controlUniqueValues(layer, c.field, 40)
+  // Sans plafond : la liste des cases n'en montre que 40, mais une étape doit
+  // garder TOUTES les valeurs cochées. Plafonnée, une catégorie rare cochée
+  // disparaissait de l'étape (relevé à l'audit du 01/10/2026).
+  const out = controlUniqueValues(layer, c.field, TOUTES_LES_VALEURS)
     .filter((v) => allowed.has(String(v.value).toLowerCase()))
     .map((v) => v.value);
   if (allowed.has('')) out.push('');
@@ -412,7 +417,7 @@ export function captureSelectControlValues(layer, c) {
 export function normalizeSelectValuesForLayer(layer, field, savedValues) {
   if (!Array.isArray(savedValues) || !savedValues.length) return [];
   const allowed = new Set(savedValues.map((v) => String(v ?? '').toLowerCase()));
-  const out = controlUniqueValues(layer, field, 40)
+  const out = controlUniqueValues(layer, field, TOUTES_LES_VALEURS)
     .filter((v) => allowed.has(String(v.value).toLowerCase()))
     .map((v) => v.value);
   if (allowed.has('')) out.push('');
@@ -739,7 +744,7 @@ export function shouldCaptureControl(layer, c) {
   if (c.type === 'select') {
     if (c._selectionTouched) return true;
     if (!Array.isArray(c.values) || !c.values.length) return false;
-    const all = controlUniqueValues(layer, c.field, 40).map((v) => v.value);
+    const all = controlUniqueValues(layer, c.field, TOUTES_LES_VALEURS).map((v) => v.value);
     if (!all.length) return false;
     const sel = selectValuesLowerSet(c);
     const allSelected = all.every((v) => sel.has(String(v).toLowerCase()));
@@ -799,7 +804,10 @@ export function applyStoryControlsToLayer(layer, stepControls) {
     } else {
       if (sc.min != null) c.min = sc.min;
       if (sc.max != null) c.max = sc.max;
-      if (sc.values) c.values = sc.values;
+      // Une copie : le contrôle de la scène ne doit pas partager son tableau
+      // avec l'étape enregistrée, qu'un filtre modifierait sans le dire.
+      if (Array.isArray(sc.values)) c.values = [...sc.values];
+      else if (sc.values) c.values = sc.values;
     }
   }
   layer.controls.forEach((c) => { if (!stepFields.has(c.field)) c.active = false; });

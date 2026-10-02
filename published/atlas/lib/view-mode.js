@@ -239,24 +239,41 @@ export async function resolveProbeTableId(docApi) {
  * @returns {Promise<boolean>}
  */
 export async function probeCanWriteDoc(docApi) {
-  if (!docApi || typeof docApi.applyUserActions !== 'function') return false;
+  return (await sonderEcritureDoc(docApi)).ecrivable;
+}
+
+/**
+ * La même sonde, avec ce qu'il faut pour n'en tirer que ce qu'elle prouve.
+ *
+ * Elle écrit dans UNE table : son verdict vaut pour cette table, pas pour tout
+ * le document. Atlas en faisait pourtant un droit global, et un agent qui peut
+ * ajouter des visites mais pas écrire `Atlas_LayerPrefs` était classé en lecture
+ * (relevé à l'audit du 02/10/2026).
+ *
+ * @returns {Promise<{ ecrivable: boolean, table: string|null, certain: boolean }>}
+ *   `certain` : le refus est un refus de droits franc, ou la ligne sondée est
+ *   dite absente (donc l'écriture n'a pas été refusée). Un doute n'est pas
+ *   une preuve : `ecrivable` reste vrai, `certain` faux.
+ */
+export async function sonderEcritureDoc(docApi) {
+  if (!docApi || typeof docApi.applyUserActions !== 'function') return { ecrivable: false, table: null, certain: true };
   const tableId = await resolveProbeTableId(docApi);
   try {
     // UpdateRecord sur row inexistante :
     // - ACL viewer → erreur droits → lecture
     // - éditeur → « not found » / invalid row → writable
     await docApi.applyUserActions([['UpdateRecord', tableId, PROBE_ROW_ID, {}]]);
-    return true;
+    return { ecrivable: true, table: tableId, certain: true };
   } catch (e) {
-    if (isWriteAclError(e)) return false;
+    if (isWriteAclError(e)) return { ecrivable: false, table: tableId, certain: true };
     const msg = String(e?.message || e || '').toLowerCase();
     if (/not found|does not exist|no such|invalid|unknown row|row id|missing|no record/.test(msg)) {
-      return true;
+      return { ecrivable: true, table: tableId, certain: true };
     }
-    if (/metadata|cannot yet|internal table|_grist/.test(msg)) return true;
-    if (/unknown table|no such table|table .*not found/.test(msg)) return true;
+    if (/metadata|cannot yet|internal table|_grist/.test(msg)) return { ecrivable: true, table: tableId, certain: false };
+    if (/unknown table|no such table|table .*not found/.test(msg)) return { ecrivable: true, table: tableId, certain: false };
     // Doute après ready(full) : privilégier édition (admin) — ACL doit matcher isWriteAclError
-    return true;
+    return { ecrivable: true, table: tableId, certain: false };
   }
 }
 

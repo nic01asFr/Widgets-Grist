@@ -239,12 +239,17 @@ function choisirAvecMarge(candidats, n, avant, marge) {
  * Une entité est-elle un point lumineux EclExt ? Les attributs obligatoires
  * qui le distinguent de tout autre point : `structure` et `support`, plus
  * une grandeur photométrique (`temperatureCouleur` ou `puissance`).
+ * Avec `impose` (type d'éclairage choisi par l'auteur), la grandeur suffit.
  */
-export function estPointLumineux(props) {
+export function estPointLumineux(props, { impose = false } = {}) {
   if (!props || typeof props !== 'object') return false;
   const aTexte = (v) => v != null && String(v).trim() !== '';
-  return aTexte(props.structure) && aTexte(props.support)
-    && (aTexte(props.temperatureCouleur) || aTexte(props.puissance));
+  const grandeur = aTexte(props.temperatureCouleur) || aTexte(props.puissance);
+  // `structure` et `support` distinguent un luminaire de tout autre point. Quand l'auteur a
+  // CHOISI un type d'éclairage pour l'objet (identifiant `objet:<type>`, lib/modele-id.js), c'est
+  // lui qui le distingue : il suffit alors d'une grandeur photométrique, sans quoi la lampe
+  // n'aurait ni flux ni couleur à émettre.
+  return grandeur && (impose || (aTexte(props.structure) && aTexte(props.support)));
 }
 
 /**
@@ -312,6 +317,77 @@ export function libelleEtat(etat) {
   if (!etat?.allume) return 'éteint';
   const f = (etat.facteurFlux ?? 1) * (etat.facteurPuissance ?? 1);
   return f < 0.999 ? `abaissé à ${Math.round(f * 100)} %` : 'allumé';
+}
+
+/**
+ * Un état, dit pour la fiche : ce qu'il est, **pourquoi**, et ce qu'on a dû supposer.
+ *
+ * Le calcul (`etatPointLumineux`) savait déjà la raison — statut, période de validité, extinction
+ * programmée, hors des heures d'allumage — et la gardait pour lui : on voyait une lampe éteinte sans
+ * jamais savoir pourquoi. Les hypothèses (« allumage au coucher du soleil, profil sans heure ») sont
+ * dites aussi : une valeur supposée ne doit pas passer pour une donnée.
+ *
+ * @param {object|null|undefined} etat résultat de `etatPointLumineux`
+ * @returns {null | { libelle: string, allume: boolean, abaisse: boolean, raison: string|null, hypotheses: string[], temperatureCouleur: number|null }}
+ */
+export function detailEtat(etat) {
+  if (!etat || typeof etat !== 'object') return null;
+  const f = (etat.facteurFlux ?? 1) * (etat.facteurPuissance ?? 1);
+  return {
+    libelle: libelleEtat(etat),
+    allume: !!etat.allume,
+    abaisse: !!etat.allume && f < 0.999,
+    // « allumé » seul ne dit rien : on ne garde la raison que quand elle apprend quelque chose.
+    raison: etat.raison && etat.raison !== 'allumé' ? String(etat.raison) : null,
+    hypotheses: Array.isArray(etat.hypotheses) ? etat.hypotheses.map(String) : [],
+    temperatureCouleur: Number.isFinite(etat.temperatureCouleur) ? etat.temperatureCouleur : null,
+  };
+}
+
+/**
+ * L'état d'un luminaire en pastille, pour la bulle d'un objet : « allumé », ou « éteint — statut x ».
+ * En lecture, c'est ce qu'on vient chercher : pourquoi cette lampe est éteinte. La couleur d'une lampe
+ * allumée est celle du jeton `--sun` d'Atlas.
+ *
+ * @returns {null | { champ: string, libelle: string, texte: string, couleur: string|null, encre: string|null }}
+ */
+export function pastilleEtat(etat) {
+  const d = detailEtat(etat);
+  if (!d) return null;
+  return {
+    champ: '_eclairage',
+    libelle: 'Éclairage',
+    texte: d.raison ? `${d.libelle} — ${d.raison}` : d.libelle,
+    couleur: d.allume ? '#E8A234' : null,
+    encre: d.allume ? '#1F1B14' : null,
+  };
+}
+
+/**
+ * Le bilan d'une couche : combien de luminaires allumés, abaissés, éteints, et pour quelles raisons.
+ *
+ * @param {Map<string, object>|Iterable<[string, object]>} etats  clé `<idCouche>:<indice>`
+ * @param {string} idCouche
+ * @returns {{ total: number, allumes: number, abaisses: number, eteints: number, raisons: Array<{raison: string, n: number}> }}
+ */
+export function resumerEtats(etats, idCouche) {
+  const bilan = { total: 0, allumes: 0, abaisses: 0, eteints: 0, raisons: [] };
+  const prefixe = `${idCouche}:`;
+  const raisons = new Map();
+  for (const [cle, etat] of etats || []) {
+    if (!String(cle).startsWith(prefixe)) continue;
+    const d = detailEtat(etat);
+    if (!d) continue;
+    bilan.total++;
+    if (!d.allume) {
+      bilan.eteints++;
+      const r = d.raison || 'éteint';
+      raisons.set(r, (raisons.get(r) || 0) + 1);
+    } else if (d.abaisse) bilan.abaisses++;
+    else bilan.allumes++;
+  }
+  bilan.raisons = [...raisons.entries()].map(([raison, n]) => ({ raison, n })).sort((a, b) => b.n - a.n || a.raison.localeCompare(b.raison));
+  return bilan;
 }
 
 /**

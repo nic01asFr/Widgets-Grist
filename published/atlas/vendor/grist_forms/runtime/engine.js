@@ -294,13 +294,24 @@
     return field.required ? ' <span class="fr-hint-text">(obligatoire)</span>' : '';
   }
 
+  /**
+   * L'aide d'un champ, sous son libellé : une consigne que l'auteur du
+   * formulaire a écrite (« photos légères de préférence »). Dans le libellé,
+   * comme le veut le DSFR, pour être lue avec lui par un lecteur d'écran.
+   */
+  function descriptionHint(field) {
+    var d = field && typeof field.description === 'string' ? field.description.trim() : '';
+    return d ? '<span class="fr-hint-text">' + escapeHtml(d).replace(/\n/g, '<br>') + '</span>' : '';
+  }
+
   function renderLabel(field, forId) {
     return '<label class="fr-label" for="' + escapeHtml(forId) + '">' +
-      escapeHtml(field.label) + requiredHint(field) + '</label>';
+      escapeHtml(field.label) + requiredHint(field) + descriptionHint(field) + '</label>';
   }
 
   function renderLegend(field) {
-    return '<legend class="fr-fieldset__legend">' + escapeHtml(field.label) + requiredHint(field) + '</legend>';
+    return '<legend class="fr-fieldset__legend">' + escapeHtml(field.label) + requiredHint(field) +
+      descriptionHint(field) + '</legend>';
   }
 
   function safeImageUrl(url) {
@@ -605,11 +616,55 @@
     return Promise.reject(new Error('[Engine.mount] aucun mécanisme de soumission (bridge.submit / bridge.addRow / grist.docApi)'));
   }
 
+  /**
+   * `Ref` ou `RefList`, que le type soit nu ou complet (`Ref:Domaines`).
+   *
+   * Un formulaire déduit d'une table porte le type complet de Grist. Le moteur
+   * ne reconnaissait que le type nu : il ne chargeait pas la table visée, et la
+   * liste n'offrait que « (aucun) » — constaté le 01/10/2026 dans la fiche
+   * d'Atlas, en Grist réel, sur une colonne remplie. Enregistrer aurait vidé
+   * la référence.
+   */
+  function typeRef(type) {
+    var t = Types && Types.normalizeGristType ? Types.normalizeGristType(type) : type;
+    return (t === 'Ref' || t === 'RefList') ? t : '';
+  }
+
   function resolveRefTable(field) {
     if (!field) return '';
     if (field.refTable) return field.refTable;
     if (field.options && field.options.refTable) return field.options.refTable;
-    return '';
+    var m = /^Ref(?:List)?:(.+)$/.exec(String(field.type || ''));
+    return m ? m[1] : '';
+  }
+
+  /**
+   * La colonne qui nomme une ligne de la table visée, quand le formulaire ne la
+   * déclare pas : `Nom` si elle existe, sinon la première colonne dont les
+   * valeurs sont du texte non vide, sinon aucune (les choix montrent l'id).
+   */
+  function colonneLibelle(records) {
+    if (!records) return null;
+    var n = (records.id || []).length;
+    var cles = Object.keys(records).filter(function (k) {
+      return k !== 'id' && k !== 'manualSort' && k.indexOf('gristHelper_') !== 0 && Array.isArray(records[k]);
+    });
+    // Un nom qui dit « libellé » prime sur l'ordre des colonnes : avec `Code`
+    // avant `Libelle`, la liste affichait les codes.
+    var nommee = cles.filter(function (k) { return /^(nom|name|libell?e|titre|label)(_|$)/i.test(k); });
+    var candidates = nommee.concat(cles.filter(function (k) { return nommee.indexOf(k) === -1; }));
+    for (var i = 0; i < candidates.length; i++) {
+      var col = records[candidates[i]];
+      var textes = 0;
+      for (var j = 0; j < n; j++) {
+        var v = col[j];
+        // Du texte à lire : ni adresse web, ni courriel, ni suite de chiffres (un code).
+        if (typeof v === 'string' && v.trim() && v.indexOf('://') === -1 &&
+            !/^\S+@\S+$/.test(v.trim()) && !/^\d+$/.test(v.trim())) textes++;
+      }
+      if (n && textes / n >= 0.8) return candidates[i];
+    }
+    return null;
   }
 
   function rowsToColumnar(rows) {
@@ -624,7 +679,8 @@
 
   function choicesFromRefRecords(records, visibleCol) {
     if (!records || !records.id) return [];
-    var labels = visibleCol && records[visibleCol] ? records[visibleCol] : null;
+    var col = visibleCol && records[visibleCol] ? visibleCol : colonneLibelle(records);
+    var labels = col ? records[col] : null;
     var out = [];
     for (var i = 0; i < records.id.length; i++) {
       out.push({ value: records.id[i], label: labels ? labels[i] : String(records.id[i]) });
@@ -637,7 +693,7 @@
     var out = [];
     (formDef.sections || []).forEach(function (sec) {
       (sec.fields || []).forEach(function (f) {
-        if (f.type !== 'Ref' && f.type !== 'RefList') return;
+        if (!typeRef(f.type)) return;
         var t = resolveRefTable(f);
         if (t && !seen[t]) { seen[t] = true; out.push(t); }
       });
@@ -726,8 +782,8 @@
     function resolveOptionsForField(field) {
       var base = optionsForField(field, formDef);
       var refTable = resolveRefTable(field);
-      if ((field.type === 'Ref' || field.type === 'RefList') && refTable && refRecords[refTable]) {
-        var vis = (field.options && field.options.visibleCol) || 'Nom';
+      if (typeRef(field.type) && refTable && refRecords[refTable]) {
+        var vis = field.options && field.options.visibleCol;
         base = choicesFromRefRecords(refRecords[refTable], vis);
       }
       var normalized = Array.isArray(base) ? base.map(normalizeOption) : [];
@@ -741,6 +797,15 @@
         normalized = filterDynamicOptions(
           normalized, refRecords[refTable], field.dynamicFilter.filterColumn, resolvedParent
         );
+      }
+      // L'ordre des choix que l'auteur a demandé — alphabétique pour une liste
+      // de personnes, par exemple. Sans demande, l'ordre de la table.
+      var ordre = field.options && field.options.sortOrder;
+      if ((ordre === 'ascending' || ordre === 'descending') && normalized.length > 1) {
+        normalized = normalized.slice().sort(function (a, b) {
+          var c = String(a.label).localeCompare(String(b.label), 'fr', { sensitivity: 'base', numeric: true });
+          return ordre === 'descending' ? -c : c;
+        });
       }
       return normalized.length ? normalized : (optionsForField(field, formDef) || null);
     }
@@ -756,7 +821,7 @@
           var opts = resolveOptionsForField(field) || [];
           var ok = opts.some(function (o) { return sameRefValue(o.value, cur); });
           if (!ok) {
-            values[field.colId] = field.type === 'RefList' ? [] : null;
+            values[field.colId] = typeRef(field.type) === 'RefList' ? [] : null;
           }
         });
       });

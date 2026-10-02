@@ -177,15 +177,25 @@ export function syncColorCategoriesFromFeatures(layer) {
   for (const s of (layer._declarative?.stops || [])) {
     registerStopColors(colorByKey, s, s.color);
   }
+  // Le libellé d'une catégorie (celui d'une table de référence : un `Ref`
+  // arrive en identifiant) survit à la reconstruction. Il était perdu à chaque
+  // relecture des entités : la légende repassait aux identifiants.
+  const labelByKey = new Map();
   for (const c of (sym.categories || [])) {
     if (c.color != null) registerStopColors(colorByKey, { value: c.value, label: c.label }, c.color);
+    if (c.label != null && c.label !== '') labelByKey.set(String(c.value), c.label);
   }
 
-  sym.categories = vals.map(({ value, count }, i) => ({
-    value,
-    count,
-    color: resolveCategoryColor(colorByKey, value, sym.defaultColor, i),
-  }));
+  sym.categories = vals.map(({ value, count }, i) => {
+    const cat = {
+      value,
+      count,
+      color: resolveCategoryColor(colorByKey, value, sym.defaultColor, i),
+    };
+    const label = labelByKey.get(String(value));
+    if (label != null) cat.label = label;
+    return cat;
+  });
   return sym;
 }
 

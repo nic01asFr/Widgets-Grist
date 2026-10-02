@@ -38,9 +38,22 @@ export const SYSTEM_TOP_IDS = ['sel-hl-fill', 'sel-hl-line', 'sel-hl-ring'];
 export function layerGfxIds(layer) {
   const id = layer?.id;
   if (!id) return [];
-  // `-pts` (repli en points) se superpose au remplissage ; `-label` domine tout.
-  return [id, `${id}-outline`, `${id}-pts`, `${id}-label`];
+  // `-pts` (repli en points) se superpose au remplissage ; `-icon` (symbole par
+  // catégorie) au-dessus des cercles ; `-label` domine tout.
+  // `-vaste` : les entités trop vastes pour un volume, posées à plat sur le relief (lib/volume-relief.js) ;
+  // leur contour reste au-dessus d'elles, sous le contour ordinaire.
+  return [id, `${id}-vaste`, `${id}-vaste-contour`, `${id}-outline`, `${id}-pts`, `${id}-icon`, `${id}-label`];
 }
+
+/**
+ * Tous les suffixes d'habillage d'une couche, `-hit` compris (la zone de clic,
+ * qu'on ne réordonne pas mais qu'on masque, filtre et retire avec le reste).
+ *
+ * La liste était recopiée à trois endroits (masquer, filtrer, retirer) : un
+ * habillage ajouté à l'un et oublié ailleurs survivait au masquage — c'est
+ * arrivé à `-pts` et à `-hit`. Une seule liste.
+ */
+export const SUFFIXES_HABILLAGE = Object.freeze(['', '-vaste', '-vaste-contour', '-outline', '-pts', '-icon', '-label', '-hit']);
 
 /**
  * Séquence complète, du bas vers le haut, couches système comprises.
