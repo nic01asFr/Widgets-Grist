@@ -2696,3 +2696,13 @@ combien de surfaces sont posées à plat. Éprouvé sur la page d'essai (petit b
 grand domaine drapé sur les versants), pas encore sur la copie où le relief est éteint par défaut.
 Reste à décider : couper les grandes surfaces en cellules pour garder un volume qui suit le
 relief par paliers (demande une bibliothèque de découpe), ou s'en tenir au drapé.
+
+## Les contrôles publiés se lisent en entier (02/10/2026)
+
+Constaté sur une copie réelle : dans le panneau d'une pastille de contrôle, les libellés de catégorie
+(« C_Etat mauvais, travaux à envisager à court terme ») étaient coupés par une ellipse, la liste plafonnait à
+132 px et laissait des valeurs hors de vue, et les poignées d'une plage étaient rognées par le bord du panneau.
+Corrigé dans `index_v7.html` : le panneau peut atteindre 440 px et 62 % de la hauteur, un libellé passe sur
+deux ou trois lignes (la légende sur deux), les curseurs gardent une marge. Une liste de valeurs suit l'ordre de
+la légende quand le champ colore la couche (gravité d'une table de référence), au lieu de l'effectif.
+Vérifié à 1500 px et à 500 px de large. Non vérifié sur téléphone réel.

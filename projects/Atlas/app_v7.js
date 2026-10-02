@@ -5897,7 +5897,11 @@ function renderControlBody(layer, c) {
     const nomLisible = escapeHtml(c.label || c.field);
 
     if (c.type === 'select') {
-        const vals = controlUniqueValues(layer, c.field, MAX_VALEURS_LISTE);
+        // Dans l'ordre de la légende quand le champ colore la couche (gravité croissante d'une
+        // table de référence), et non par effectif : « N-A » ne s'intercale pas entre deux états.
+        const col = layer.style?.symbolization?.color;
+        const brutes = controlUniqueValues(layer, c.field, MAX_VALEURS_LISTE);
+        const vals = col?.mode === 'categorized' && col.field === c.field ? valeursOrdonnees(col, brutes) : brutes;
         // « (sans valeur) » est aussi un choix sur une couche distante, avec un
         // compte inconnu (`null`) : sans lui, « Tout » écartait pour de bon les
         // objets sans valeur.
