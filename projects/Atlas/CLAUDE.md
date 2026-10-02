@@ -14,24 +14,24 @@ Interop Cerema : lecture **Scene Manifest V0.2.2** produit par qgis2grist, prefs
 Atlas/
 ├── index_v7.html          # Entrée courante (v7) — source de publication
 ├── app_v7.js              # Logique v7 (ES module)
-├── lib/                   # Binding Scene Manifest / Grist / contrôles / récit
-│   ├── scene-loader.js
-│   ├── declarative-style.js
-│   ├── controls.js
-│   ├── manifest-binding.js
-│   ├── story.js
-│   ├── grist-sync.js
-│   ├── grist-rows.js
-│   ├── grist-bool.js
-│   ├── geo-tables.js
-│   └── viewport.js
-├── docs/
-│   ├── BINDING-ATLAS-v7.md
-│   ├── CADRAGE-BINDING-COMPLET.md
-│   └── MANUAL_TEST.md
-├── tests/                 # node --test
+├── lib/                   # 67 modules ES, sans dépendance à app_v7.js (voir familles ci-dessous)
+├── docs/                  # cadrages (CADRAGE-*.md), BINDING-*, CARTE-DES-EXPOSITIONS, BILAN-*, études-*
+├── tests/                 # node --test (88 fichiers, 1241 tests au 02/10/2026)
+├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs
 └── CLAUDE.md
 ```
+
+Familles de `lib/` (état du 02/10/2026) :
+
+| Famille | Modules |
+|---|---|
+| Scène et manifeste | `scene-loader`, `scene-externe`, `scene-prefs`, `manifest-binding`, `declarative-style`, `controls`, `viewer-controls`, `story`, `recit-cles`, `contextes`, `trajet` |
+| Grist (lecture, écriture, droits) | `grist-adapter`, `grist-sync`, `grist-rows`, `grist-bool`, `geo-tables`, `schema-grist`, `atlas-tables`, `table-reference`, `droits-tables`, `data-client`, `view-mode`, `posture`, `exposition` |
+| Fiche, formulaires, relevé | `fiche-formulaire`, `formulaire-atlas.css`, `saisie-objet`, `releve`, `ouvrir-objet`, `objets-liste`, `bulle-objet` |
+| Géométrie et dessin | `geometrie-saisie`, `nouvelle-couche`, `wkt`, `point-fallback`, `volume-relief`, `terrain-base`, `viewport` |
+| Objets 3D et catalogue | `model-layer`, `catalogue-objets`, `modele-id`, `palette-objets`, `gltf-chargeur`, `parametres-objet`, `parametres-figer` |
+| Éclairage et soleil | `eclairage-profil`, `eclairage-rendu`, `luminaires-three`, `facades-eclairees`, `nuit-rendu`, `qualite-eclairage`, `soleil`, `arc-solaire`, `horloge-scene` |
+| Hôte, interface, import | `hote`, `hote-ui`, `habillage-carte`, `feuille-mobile`, `edge-scroll`, `layer-order`, `ouvrir-fichier`, `osm-requete`, `vue-import`, `basemap-layers`, `decouverte`, `graine`, `html` |
 
 > **`projects/Atlas/app.js` sur `origin/main` — ne pas écraser.**
 > Cette entrée pré-v7 (3 110 lignes) porte des fonctionnalités **absentes de la
@@ -80,8 +80,14 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.7.1** (`published/atlas/`, GitHub Pages, déployée le 17/09/2026
-depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
+**En ligne : v1.9.1** (`published/atlas/`, GitHub Pages ; APK en release `atlas-v1.9.1`).
+**Prêt, non publié (02/10/2026)** : la branche `atlas-formulaire-entite` porte 21 commits
+au-delà de la 1.9.1 — relevés de terrain (droits par table, postures, récit à clé, contextes),
+identifiant de modèle `objet:<type>`, paramètres d'objet à trois niveaux et panneau
+« Spécifications », éclairage qui dit son état, colonne `atlas_3d_json` fiable. Le bilan, avec
+l'éprouvé en réel, le reste à faire et la checklist de publication : `docs/BILAN-02-10-2026.md`.
+La vitrine (`published/atlas/vitrine.json`) décrit déjà cette version : ne pas la pousser seule.
+Tests : 1241 verts.
 
 - Chargement Scene Manifest / tables qgis2grist (cas Bee Farming validé).
 - Symbolisation (fixe / catégorisé / gradué), récit, export JSON `2.2-atlas-binding`.
@@ -95,6 +101,10 @@ depuis la branche `atlas-formulaire-entite`, fusionnée dans `main`).
   `cascade-aygalades-marseille` et `osm-marseille-vieux-port` publiées.
 - Dock soleil haut-droite (repli style boussole) ; inspecteur fermable.
 - Couches fond (buildings/landscape/lines) masquées par défaut à l’import.
+- **Objets réalistes réglés comme une couche** (non publié) : panneau « Spécifications »,
+  trois niveaux (objet > champ > couche > catalogue > règle), provenance affichée, « figer dans
+  la table » ; éclairage allumé selon statut et soleil, état dit en fiche, légende et bulle.
+- **Postures** Préparer / Exploiter / Lecture sous un plafond fixé par le lien ; droits lus table par table.
 - **Mode lecture** : `?mode=view` ou accès Grist `read table` ; badge Lecture ; pas d’écriture prefs/story/features.
 - **Mobile ≤720px** : bottom nav Carte / Couches / Récit ; panneaux en sheet ; géolocalisation ; `?no3d=1` / light3d.
 

@@ -82,6 +82,8 @@ délai, booléen, recherche), formulaire lié qui **ajoute** une visite rattach�
    (filtres de l'équipe : type, état, délai), les **commandes de la carte**
    (pastille Relevé, « le plus proche », ajouter un objet).
 
+**Avancement au 02/10/2026.** Lots 1 à 5 faits. Ont été ajoutés en cours de route, hors de la liste : les droits lus table par table, les trois postures Préparer / Exploiter / Lecture sous un plafond fixé par le lien, le récit à clé stable, les contextes et l'ouverture de la scène choisie par l'auteur (voir CARTE-DES-EXPOSITIONS.md et BILAN-02-10-2026.md). Lots 6 et 7 : à faire.
+
 Chaque lot est éprouvé sur une **copie** du document de référence — jamais
 sur l'original, qui est en service.
 

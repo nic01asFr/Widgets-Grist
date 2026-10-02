@@ -236,6 +236,8 @@ Blender bâtit les modèles et exporte le nœud émetteur ; Atlas ne sculpte rie
 | **E6 — Tuiles pix2hdr** | le fond en tuiles 3D reçoit la lumière et les ombres | plus tard, quand le projet sera prêt |
 | **V1 — Âge de la végétation** | **largement fait** : le catalogue végétation v3 choisit déjà `age_class` par la circonférence, et Atlas le lit et le teste. Reste à étendre les sources (date de plantation, hauteur) | un platane jeune et un vieux, lus dans les champs, rendus différemment |
 
+**Avancement au 02/10/2026.** E1 : l'état de chaque point (allumé, éteint, et pourquoi) s'affiche dans la fiche, la légende, la bulle et le popup d'un objet ; le statut, le comportement jour/nuit et les réglages d'un luminaire se règlent dans le panneau « Spécifications » (objet, couche, type — voir PROPOSITION-ATLAS-OBJETS-PARAMETRES.md). Les luminaires du catalogue sont posés au point de feu, relevés de la hauteur de feu. E2 et E3 : en service dans la 1.9.x pour la nuit et les luminaires. E4 à E6 : non commencés. Bilan : BILAN-02-10-2026.md.
+
 ## Audit de pix2hdr (24/09/2026)
 
 `docs/etudes-pix2hdr/AUDIT-OBJETS-PARAMETRIQUES.md` a corrigé ce cadrage

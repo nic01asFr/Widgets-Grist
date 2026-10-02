@@ -166,11 +166,11 @@ section { margin: 0 0 3rem; }
   <h1>Atlas</h1>
   <p class="chapeau">La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.</p>
   <p class="accroche">Dans Grist, on partage le document : la carte suit, avec les droits du document. On peut aussi publier une scène seule (manifeste) pour l’ouvrir hors document — même moteur, autre hôte.</p>
-  <div class="tags"><span class="tag">Cartographie</span><span class="tag">Édition</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span></div>
+  <div class="tags"><span class="tag">Cartographie</span><span class="tag">Édition</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span><span class="tag">Éclairage</span><span class="tag">Relevés</span></div>
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
+    <span><span class="vif"></span>Mis à jour il y a 6 j</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -246,7 +246,7 @@ section { margin: 0 0 3rem; }
     <article class="contexte">
       <div class="dit">
         <h3>Relever sur le terrain</h3>
-        <p>Sur place, on ouvre la scène en lecture — dans le navigateur du téléphone, ou avec l’application Android. On suit éventuellement le récit et son trajet ; on touche un objet ou on s’approche : sa fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne.</p>
+        <p>Sur place, on ouvre la scène en lecture — dans le navigateur du téléphone, ou avec l’application Android. On suit éventuellement le récit et son trajet ; on touche un objet ou on s’approche : sa fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. Le même lien peut s’ouvrir en Préparer, en Exploiter ou en Lecture : c’est le lien qui fixe la posture la plus haute, jamais l’inverse.</p>
         <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide — Atlas le vérifie à l’ouverture, et ne propose la saisie qu’à qui en a le droit.</p>
       </div>
       <div class="montre telephones">
@@ -270,6 +270,23 @@ section { margin: 0 0 3rem; }
         <figure class="large">
           <img src="trajet-nuit.jpg" alt="Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap." loading="lazy">
           <figcaption>Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <h3>Des objets réalistes, réglés comme une couche</h3>
+        <p>Choisir un modèle du catalogue pour une couche, c’est lui donner ses réglages : l’onglet « Spécifications » liste ceux de la famille d’objets — pour un luminaire, le statut, la puissance, la température de couleur, la hauteur de feu, l’orientation, le comportement jour et nuit. Chaque réglage se pose sur l’objet, sur la couche ou sur le type, et chacun affiche d’où vient sa valeur. Un champ de la table peut le porter : on le désigne, et Atlas le lit.</p>
+        <p class="pourquoi">Ce que la table dit prime, ce qu’on règle sur la couche vient ensuite, puis le défaut du catalogue : on ne retape rien. Une valeur par défaut n’est écrite dans la table que si on le demande, et jamais par-dessus une cellule remplie.</p>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="objets-specifications.jpg" alt="La couche « Appliques de façade » de nuit : la température de couleur vient du réglage de la couche, la hauteur de feu du défaut du type — chacune le dit. Données d’exemple fictives." loading="lazy">
+          <figcaption>La couche « Appliques de façade » de nuit : la température de couleur vient du réglage de la couche, la hauteur de feu du défaut du type — chacune le dit. Données d’exemple fictives.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="eclairage-etat.jpg" alt="Un objet réglé « Hors service » : la fiche dit qu’il est éteint et pourquoi, et la légende compte « 4 allumés · 1 éteint ». Données d’exemple fictives." loading="lazy">
+          <figcaption>Un objet réglé « Hors service » : la fiche dit qu’il est éteint et pourquoi, et la légende compte « 4 allumés · 1 éteint ». Données d’exemple fictives.</figcaption>
         </figure>
       </div>
     </article>
@@ -303,10 +320,12 @@ section { margin: 0 0 3rem; }
       <li><b>L’objet cliqué est la ligne</b> — sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain.</li>
       <li><b>Dessiner dans la carte</b> — créer une couche vide, puis ses objets — un point, une ligne, une surface — sans passer par QGIS. La forme se trace avec accroche aux objets voisins, la fiche se remplit avant d’écrire, et les objets s’enchaînent. Une forme existante se modifie sommet par sommet ; chaque geste s’annule.</li>
       <li><b>Symbolisation par la donnée</b> — couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène.</li>
-      <li><b>Relief et volumes</b> — photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie.</li>
+      <li><b>Relief et volumes</b> — photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie. Les grandes surfaces — une zone, un périmètre — restent posées à plat plutôt que dressées en mur sur la pente.</li>
+      <li><b>Des objets réalistes, réglés comme une couche</b> — un modèle du catalogue se choisit pour une couche entière, et ses réglages — puissance, hauteur, orientation, statut — se posent à trois niveaux : l’objet, la couche, le type. Un champ de votre table peut porter un réglage ; sinon une valeur par défaut s’applique, et le panneau dit toujours d’où elle vient. Ces valeurs par défaut ne sont pas écrites dans votre table, sauf si vous demandez de les y figer.</li>
+      <li><b>L’éclairage public s’allume</b> — un luminaire s’allume ou reste éteint selon son statut et l’heure du soleil, et Atlas dit lequel et pourquoi — dans la fiche, la légende, la bulle de l’objet. Les points lumineux importés d’OpenStreetMap s’allument avec des règles d’Atlas, signalées comme telles.</li>
       <li><b>Des filtres que le lecteur manipule</b> — chaque colonne prend la forme que son type appelle — dates, nombres, catégories, listes, recherche texte — et l’auteur publie ceux qu’il veut en pastilles sur la carte.</li>
-      <li><b>Un récit, et un trajet si besoin</b> — chaque étape retient le cadrage, les couches, les filtres et l’heure. On peut y poser une ligne : les étapes se placent sur le parcours, se glissent à la main, et en lecture la caméra suit la ligne — utile sur le terrain avec les formulaires exposés.</li>
-      <li><b>Les droits du document font foi</b> — aucune liste d’accès propre à Atlas : en lecture seule l’édition disparaît, le récit reste consultable. ACL et link keys Grist s’appliquent tels quels.</li>
+      <li><b>Un récit, et un trajet si besoin</b> — chaque étape retient le cadrage, les couches, les filtres et l’heure. On peut y poser une ligne : les étapes se placent sur le parcours, se glissent à la main, et en lecture la caméra suit la ligne — utile sur le terrain avec les formulaires exposés. Le récit garde ses étapes par une clé stable, et l’auteur choisit ce que le lecteur voit à l’ouverture : la carte, le récit ou un contexte.</li>
+      <li><b>Les droits du document font foi</b> — aucune liste d’accès propre à Atlas : Grist décide, table par table. Trois postures — Préparer, Exploiter, Lecture — et le lien partagé fixe un plafond : un lien en lecture ne rouvre jamais en préparation. En lecture seule l’édition disparaît, le récit reste consultable. ACL et link keys Grist s’appliquent tels quels.</li>
     </ul>
   </section>
   <section class="sequence reveler">
@@ -405,6 +424,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.10.0</b><p>Des objets réalistes réglés comme une couche : un panneau « Spécifications » pour l’objet et pour la couche, des champs de la table qu’on lie aux réglages, la provenance de chaque valeur affichée, et « figer dans la table » sans jamais écraser une cellule remplie. L’éclairage s’allume selon le statut et le soleil, et la fiche, la légende et la bulle disent pourquoi un luminaire est éteint. Le placement et les réglages d’un objet ne se perdent plus quand la table n’a pas encore sa colonne : Atlas la crée au premier réglage, ou prévient qu’il n’en a pas le droit. Les formulaires natifs de Grist se lisent ; trois postures — Préparer, Exploiter, Lecture — sous un plafond fixé par le lien ; droits lus table par table ; récit à clé stable et contextes ; ouverture de la scène choisie par l’auteur. Les grandes surfaces sont posées à plat sur le relief.</p></div>
       <div><b>v1.9.1</b><p>Un catalogue d’objets réaliste livré avec Atlas, en commençant par l’éclairage public : dix luminaires reconnus d’après les fiches EclExt (mât avec crosse en six hauteurs de feu, applique, suspendu, projecteur, encastré), sous Licence Ouverte 2.0. Dans l’application, la barre du haut laisse la carte en lecture — menu, recherche et retour à l’édition passent sur la carte — et l’import OpenStreetMap comme la recherche de lieu refonctionnent : Atlas se présente désormais aux services.</p></div>
       <div><b>v1.9.0</b><p>Dessiner dans la carte : créer une couche vide, puis des points, des lignes et des surfaces — une seule ligne écrite par objet, fiche comprise, et des créations en série. Modifier la forme d’un objet sommet par sommet, avec détection de conflit et retour à l’identique. Le récit peut s’ancrer sur un trajet que la lecture longe. La pastille Soleil couvre les vingt-quatre heures, et la nuit s’éclaire. Sur téléphone et sur tablette, la caméra vise ce que les feuilles laissent voir, et l’objet courant ressort des autres.</p></div>
       <div><b>v1.7.1</b><p>Les contrôles suivent le type de chaque colonne Grist — dates, nombres, catégories, listes, recherche texte — et « sans valeur » devient un choix ; un formulaire se retire d’une couche et s’y remet. La démo des Aygalades passe sur la photographie aérienne et le relief LiDAR de l’IGN, avec sa canopée relevée dans le même LiDAR.</p></div>
