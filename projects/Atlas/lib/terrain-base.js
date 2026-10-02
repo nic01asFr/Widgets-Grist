@@ -1,4 +1,12 @@
 /**
+ * > **Correction du 02/10/2026.** Ce qui suit dit que MapLibre pose les extrusions « sommet par
+ * > sommet ». C'est faux : son vertex shader (5.6.1) ajoute à tous les sommets d'une entité
+ * > l'altitude du MNT au **centroïde** (`get_elevation(a_centroid)`) — un bloc rigide, par fragment
+ * > de tuile. Cela suffit pour un bâtiment ; pas pour une grande surface, qui flotte d'un côté,
+ * > s'enfonce de l'autre et bouge quand on déplace la carte. Voir `lib/volume-relief.js`, qui
+ * > pose à plat ce qui dépasse `SEUIL_VOLUME_M`. Le reste du texte garde son sens pour la double
+ * > comptabilité de l'altitude, qui reste fausse.
+ *
  * Le relief, et qui s'en charge.
  *
  * **MapLibre pose lui-même sur le terrain tout ce qu'il rend** : surfaces à

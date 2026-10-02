@@ -40,7 +40,9 @@ export function layerGfxIds(layer) {
   if (!id) return [];
   // `-pts` (repli en points) se superpose au remplissage ; `-icon` (symbole par
   // catégorie) au-dessus des cercles ; `-label` domine tout.
-  return [id, `${id}-outline`, `${id}-pts`, `${id}-icon`, `${id}-label`];
+  // `-vaste` : les entités trop vastes pour un volume, posées à plat sur le relief (lib/volume-relief.js) ;
+  // leur contour reste au-dessus d'elles, sous le contour ordinaire.
+  return [id, `${id}-vaste`, `${id}-vaste-contour`, `${id}-outline`, `${id}-pts`, `${id}-icon`, `${id}-label`];
 }
 
 /**
@@ -51,7 +53,7 @@ export function layerGfxIds(layer) {
  * habillage ajouté à l'un et oublié ailleurs survivait au masquage — c'est
  * arrivé à `-pts` et à `-hit`. Une seule liste.
  */
-export const SUFFIXES_HABILLAGE = Object.freeze(['', '-outline', '-pts', '-icon', '-label', '-hit']);
+export const SUFFIXES_HABILLAGE = Object.freeze(['', '-vaste', '-vaste-contour', '-outline', '-pts', '-icon', '-label', '-hit']);
 
 /**
  * Séquence complète, du bas vers le haut, couches système comprises.

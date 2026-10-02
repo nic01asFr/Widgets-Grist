@@ -57,6 +57,7 @@ import {
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
 import { contextesProposes, contexteDeCle, usageDe, avecUsage } from './lib/contextes.js?v=20261002f';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261002e';
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
@@ -2894,6 +2895,10 @@ function applyTerrain() {
     if (!map.getSource('terrain-dem')) return;
     if (STATE.settings.terrain3D) map.setTerrain({ source: 'terrain-dem', exaggeration: STATE.settings.terrainExaggeration });
     else map.setTerrain(null);
+    // Le relief change ce qu'un volume peut faire : les grandes surfaces passent à plat, ou en volume.
+    for (const l of STATE.layers) {
+        if ((l.geometryType === 'Polygon' || l.geometryType === 'MultiPolygon') && l.style?.polygonMode !== 'flat' && l._nVastes > 0) applyLayerStyle(l);
+    }
 }
 function setTerrainSource(src) {
     STATE.settings.terrainSource = src;
@@ -3018,6 +3023,10 @@ function indexFeatures(layer) {
         if (!f.properties) f.properties = {};
         f.properties._idx = i;
     });
+    // La taille de chaque surface, pour savoir lesquelles un volume ne posera pas bien sur le relief.
+    if (layer.geometryType === 'Polygon' || layer.geometryType === 'MultiPolygon') {
+        layer._nVastes = marquerTailles(layer.geojson?.features).vastes;
+    }
 }
 
 /** Les lignes sélectionnées sur cette couche — leur identité, pas leur rang. */
@@ -3359,7 +3368,7 @@ function recalerRelief(delai = 250) {
 function applyPolygonStyle(layer) {
     // Le repli en points aussi : laissé en place, son ajout plus bas échouait
     // (« already exists ») et les points gardaient l'ancienne couleur.
-    ['', '-outline', '-pts'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    ['', '-vaste', '-vaste-contour', '-outline', '-pts'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const s = layer.style; const sym = initSymbolization(layer);
     const extrude = s.polygonMode !== 'flat';
     if (extrude) {
@@ -3371,14 +3380,27 @@ function applyPolygonStyle(layer) {
         const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
         // Rien a poser : MapLibre drape lui-meme l'extrusion sur le relief.
         const ext = extrusionExpressions(base, height);
-        map.addLayer(poserBornesZoom({ id: layer.id, type: 'fill-extrusion', source: layer.id, paint: {
-            'fill-extrusion-color': layerPaintColor(layer),
-            'fill-extrusion-height': ext.height,
-            'fill-extrusion-base': ext.base,
-            // 1 par défaut, comme `defaultLayerOpacity` : sous 1, MapLibre perd
-            // l'écriture de profondeur et les volumes cessent de s'occulter.
-            'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 1,
-        } }, layer));
+        // Sur relief, MapLibre pose chaque extrusion comme un bloc rigide à l'altitude du MNT en son
+        // centroïde (lib/volume-relief.js) : une grande surface flotte d'un côté, s'enfonce de l'autre et
+        // bouge quand on déplace la carte. Les entités trop vastes sont donc posées à plat, drapées.
+        const nVastes = STATE.settings.terrain3D && !layer._distant ? (layer._nVastes || 0) : 0;
+        map.addLayer(poserBornesZoom({ id: layer.id, type: 'fill-extrusion', source: layer.id,
+            ...(nVastes ? { filter: filtreVolume() } : {}),
+            paint: {
+                'fill-extrusion-color': layerPaintColor(layer),
+                'fill-extrusion-height': ext.height,
+                'fill-extrusion-base': ext.base,
+                // 1 par défaut, comme `defaultLayerOpacity` : sous 1, MapLibre perd
+                // l'écriture de profondeur et les volumes cessent de s'occulter.
+                'fill-extrusion-opacity': Number.isFinite(sym.opacity) ? sym.opacity : 1,
+            } }, layer));
+        if (nVastes) {
+            const trait = layerStrokePaint(layer);
+            map.addLayer(poserBornesZoom({ id: layer.id + '-vaste', type: 'fill', source: layer.id, filter: filtreVaste(),
+                paint: { 'fill-color': layerPaintColor(layer), 'fill-opacity': 0.6 } }, layer));
+            map.addLayer(poserBornesZoom({ id: layer.id + '-vaste-contour', type: 'line', source: layer.id, filter: filtreVaste(),
+                paint: { 'line-color': trait.color, 'line-width': Math.max(1, trait.width) } }, layer));
+        }
     } else {
         const stroke = layerStrokePaint(layer);
         // Repli en points sous le seuil : les surfaces y seraient sous-pixel.
@@ -7413,11 +7435,12 @@ function symSizePanel(layer, sym) {
     // Surfaces : à plat ou en volume. À plat, la hauteur d'extrusion n'a aucun
     // effet — on masque le réglage plutôt que de l'afficher inopérant.
     const flat = layer.style?.polygonMode === 'flat';
+    const vastes = isPolygon && !flat && STATE.settings.terrain3D && !layer._distant ? (layer._nVastes || 0) : 0;
     const volume = isPolygon ? `<div class="section"><div class="section-title">Rendu des surfaces</div>
         <div class="seg">
             <button class="${flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','flat')">▭ À plat</button>
             <button class="${!flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','extruded')">◨ En volume</button>
-        </div></div>` : '';
+        </div>${vastes ? `<div class="hint" style="margin-top:8px">${vastes} surface${vastes > 1 ? 's' : ''} de plus de ${SEUIL_VOLUME_M} m ${vastes > 1 ? 'sont posées' : 'est posée'} à plat : sur le relief, un volume ne suit pas la pente à cette échelle.</div>` : ''}</div>` : '';
     if (isPolygon && flat) {
         return volume + symAppearancePanel(layer, sym);
     }
@@ -8568,11 +8591,11 @@ function hitLayerIds() {
     // L'icône d'une catégorie se touche comme son point : elle se dessine
     // au-dessus de lui, et c'est elle que le doigt vise.
     return STATE.layers.filter((l) => map.getLayer(l.id))
-        .flatMap((l) => (map.getLayer(l.id + '-icon') ? [l.id, l.id + '-icon'] : [l.id]));
+        .flatMap((l) => [l.id, ...['-icon', '-vaste'].map((s) => l.id + s).filter((id) => map.getLayer(id))]);
 }
 /** La couche Atlas d'un objet rendu, icône comprise. */
 function coucheDuRendu(idRendu) {
-    const id = String(idRendu || '').replace(/-icon$/, '');
+    const id = String(idRendu || '').replace(/-(icon|vaste)$/, '');
     return STATE.layers.find((l) => l.id === id);
 }
 function setupInteraction() {

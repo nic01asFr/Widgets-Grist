@@ -30,7 +30,7 @@ const couche = (id) => ({ id });
 describe('layerGfxIds', () => {
   it('habillages du bas vers le haut', () => {
     assert.deepEqual(layerGfxIds(couche('c1')),
-      ['c1', 'c1-outline', 'c1-pts', 'c1-icon', 'c1-label']);
+      ['c1', 'c1-vaste', 'c1-vaste-contour', 'c1-outline', 'c1-pts', 'c1-icon', 'c1-label']);
   });
 
   it('etiquette au-dessus du remplissage — jamais l\'inverse', () => {
@@ -60,7 +60,7 @@ describe('moveSequence — filtrage', () => {
   });
 
   it('sans predicat, tout passe', () => {
-    assert.equal(moveSequence([couche('a')]).length, 5 + SYSTEM_TOP_IDS.length, 'cinq habillages, icone comprise');
+    assert.equal(moveSequence([couche('a')]).length, 7 + SYSTEM_TOP_IDS.length, 'sept habillages, icone et surfaces posees a plat comprises');
   });
 });
 

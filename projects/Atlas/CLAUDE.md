@@ -2533,3 +2533,29 @@ Récit. `Atlas_ScenePrefs` gagne la colonne `ExpositionJSON` (ajoutée aux table
 Éprouvé en simulation (Lecture + `?expo=recit|contexte` dans le faux document : récit lancé,
 contexte appliqué sans lecteur, aucune présentation pour qui prépare) et sur la copie réelle
 (table `Atlas_ScenePrefs` avec les trois colonnes, ouverture écrite).
+
+## Volumes sur relief : un bloc rigide, donc à l'échelle du bâtiment (02/10/2026)
+
+**Diagnostic.** Les sections « Relief + couche distante extrudée » et `lib/terrain-base.js`
+affirmaient que MapLibre pose les extrusions « sommet par sommet ». Le vertex shader de
+MapLibre 5.6.1 dit l'inverse : tous les sommets d'une entité reçoivent la même altitude, celle
+du MNT au **centroïde** (`get_elevation(a_centroid)`), base enterrée de 10 m si elle vaut 0,
+et le centroïde est celui du **fragment de tuile**. Une entité est un bloc rigide. Pour un
+bâtiment c'est juste ; pour une grande surface (un domaine, une zone) elle flotte d'un côté,
+s'enfonce de l'autre, montre une paroi de 40 m au lieu de 12, et change quand le zoom ou la
+résolution du MNT change — ce que le terrain voyait comme « les volumes bougent quand je
+déplace la carte ».
+
+**Correction** (`lib/volume-relief.js`, pur, testé). Chaque entité surfacique porte `_taille_m`
+(diagonale de son emprise, mémorisée par géométrie). Relief actif, celles qui dépassent
+`SEUIL_VOLUME_M` (250 m) quittent la couche d'extrusion (filtre) et sont **posées à plat** :
+`<id>-vaste` (remplissage) et `<id>-vaste-contour`, que MapLibre drape pixel par pixel sur le MNT.
+Les suffixes sont déclarés dans `SUFFIXES_HABILLAGE` / `layerGfxIds` (ordre, visibilité,
+retrait, filtre) ; `hitLayerIds` et `coucheDuRendu` les connaissent (la grande surface reste
+cliquable). `applyTerrain` restyle les couches concernées quand le relief s'allume ou s'éteint.
+Sans relief, rien ne change (un bloc rigide y est exact). Une couche distante (adresse) n'a
+pas ses entités en mémoire : non marquée, donc inchangée. Le module Couches → Taille dit
+combien de surfaces sont posées à plat. Éprouvé sur la page d'essai (petit bâtiment en volume,
+grand domaine drapé sur les versants), pas encore sur la copie où le relief est éteint par défaut.
+Reste à décider : couper les grandes surfaces en cellules pour garder un volume qui suit le
+relief par paliers (demande une bibliothèque de découpe), ou s'en tenir au drapé.
