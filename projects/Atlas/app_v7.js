@@ -5736,9 +5736,70 @@ function brancherSynchro() {
     const hl = clientHorsLigne();
     if (!hl || _synchroDesabonner) return;
     _synchroDesabonner = hl.abonner(() => {
-        refreshControlsDock();
-        if (_openDockPill === 'synchro') renderDockSlotHost();
+        majBoutonsSynchro();
+        rafraichirPanneauSynchro();
     });
+    majBoutonsSynchro();
+}
+
+/**
+ * Le bouton de synchronisation — dans la barre du haut, et sur la carte quand la barre est retirée : ce n'est pas une
+ * information cartographique. Il n'apparaît que lorsqu'il y a quelque chose à dire (hors réseau, en attente, à vérifier) ;
+ * un point de couleur dit la gravité, l'infobulle la phrase.
+ */
+function majBoutonsSynchro() {
+    const hl = clientHorsLigne();
+    const p = hl ? pastilleSynchro() : null;
+    for (const id of ['btn-synchro', 'hote-synchro']) {
+        const b = $(id);
+        if (!b) continue;
+        b.hidden = !p;
+        if (!p) continue;
+        b.title = p.label;
+        b.setAttribute('aria-label', p.label);
+        b.classList.remove('etat-alerte', 'etat-hors', 'etat-attente');
+        b.classList.add(p.alerte ? 'etat-alerte' : (!hl.etat().enLigne ? 'etat-hors' : 'etat-attente'));
+    }
+}
+
+function fermerPanneauSynchro() {
+    document.getElementById('panneau-synchro')?.remove();
+    document.removeEventListener('pointerdown', _fermeturePanneauSynchro, true);
+    document.removeEventListener('keydown', _touchePanneauSynchro, true);
+}
+function _fermeturePanneauSynchro(e) {
+    if (!e.target.closest?.('#panneau-synchro, #btn-synchro, #hote-synchro')) fermerPanneauSynchro();
+}
+function _touchePanneauSynchro(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerPanneauSynchro(); } }
+
+/** Le contenu du panneau suit la file ; plus rien à dire, il se retire de lui-même. */
+function rafraichirPanneauSynchro() {
+    const panneau = document.getElementById('panneau-synchro');
+    if (!panneau) return;
+    if (!pastilleSynchro()) { fermerPanneauSynchro(); return; }
+    panneau.innerHTML = renderSynchroDockSlotHtml();
+}
+
+/** Ce qui est parti, ce qui attend, ce qui a été refusé : le même contenu que l'ancienne pastille, posé sous le bouton. */
+function ouvrirPanneauSynchro(ancre) {
+    if (document.getElementById('panneau-synchro')) { fermerPanneauSynchro(); return; }
+    if (!clientHorsLigne()) return;
+    const panneau = document.createElement('div');
+    panneau.id = 'panneau-synchro';
+    panneau.className = 'posture-menu panneau-synchro';
+    panneau.setAttribute('role', 'dialog');
+    panneau.setAttribute('aria-label', 'Synchronisation');
+    panneau.innerHTML = renderSynchroDockSlotHtml();
+    document.body.appendChild(panneau);
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        panneau.style.top = `${Math.min(r.bottom + 8, window.innerHeight - panneau.offsetHeight - 12)}px`;
+        panneau.style.left = `${Math.max(12, Math.min(r.right - panneau.offsetWidth, window.innerWidth - panneau.offsetWidth - 12))}px`;
+    } else {
+        panneau.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermeturePanneauSynchro, true);
+    document.addEventListener('keydown', _touchePanneauSynchro, true);
 }
 
 /** La pastille de synchronisation : seulement quand il y a quelque chose à dire. */
@@ -5848,9 +5909,8 @@ function objetProcheDeCouche(layer) {
 function listDockPills() {
     const pills = [];
     const vcs = STATE.viewerControls || createDefaultViewerControls();
-    // La synchronisation vient en tête, en toute posture : ne pas savoir qu'un relevé n'est pas parti, c'est le perdre.
-    const synchro = pastilleSynchro();
-    if (synchro) pills.push(synchro);
+    // La synchronisation n'est pas une information de carte : elle vit dans la barre du haut (ou, quand la barre est
+    // retirée, parmi les commandes de la carte) — voir `majBoutonsSynchro`.
 
     // L'interrupteur gouverne la pastille, en edition comme en lecture.
     //
@@ -11525,6 +11585,8 @@ function wireBasculeLectureEdition() {
     // Deux vrais boutons, un seul geste : le clavier et le clic passent par `click`.
     $('btn-posture')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('hote-edition')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
+    $('btn-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget));
+    $('hote-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget));
 }
 
 /**

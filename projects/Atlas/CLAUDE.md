@@ -2897,3 +2897,12 @@ tronçons — la construction du réseau y sera à mesurer.
   que posées dans l'océan. Un CSV sans géométrie ni coordonnées dit pourquoi.
 - « Fichier » et « Ouvrir un projet » reconnaissent ces formats (`importerFichierFormat`) ; ce qui est écarté (position
   illisible) est compté dans le message. Pas de KMZ (un zip) : à ajouter avec JSZip si le besoin vient.
+
+## Le bouton de synchronisation quitte la carte (02/10/2026)
+
+L'état « hors réseau / en attente / à vérifier » n'est pas une information cartographique : la pastille du dock disparaît. Il y a
+désormais un bouton **dans la barre du haut** (`#btn-synchro`) et, quand la barre est retirée (application en lecture), **sur la
+carte avec les autres commandes** (`#hote-synchro`). Il n'apparaît que lorsqu'il y a quelque chose à dire ; un point de couleur
+dit la gravité (rouge à vérifier, ambre hors réseau, teal en attente) et l'infobulle la phrase. Il ouvre un panneau
+(`ouvrirPanneauSynchro`) qui reprend le contenu de l'ancienne pastille — état, dernier envoi, entrées de la file, « Envoyer
+maintenant », « Réessayer », « Abandonner » — et qui se referme de lui-même quand il n'y a plus rien à dire.
