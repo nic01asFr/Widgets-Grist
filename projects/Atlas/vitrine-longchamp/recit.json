@@ -173,19 +173,19 @@
     "sun",
     "basemap"
    ],
-   "texte": "Tous les luminaires et tous les pièges du parc. Touchez un objet pour voir son état et, pour un piège, ses dernières nuits.",
+   "texte": "Tous les luminaires, allumés, et tous les pièges du parc. Touchez un objet pour voir son état et, pour un piège, ses dernières nuits.",
    "couches": [
     "Luminaires",
     "Pieges"
    ],
-   "heure": 840,
+   "heure": 1285,
    "camera": {
     "center": [
      5.3946,
      43.3047
     ],
     "zoom": 16.9,
-    "pitch": 0,
+    "pitch": 42,
     "bearing": 0
    },
    "releves": [
@@ -196,7 +196,7 @@
   {
    "contexte": true,
    "cle": "ctx-campagne-juin",
-   "tournee": true,
+   "tournee": "campagne",
    "titre": "Campagne de juin — ronde de nuit",
    "pastilles": [
     "Type",
@@ -216,13 +216,13 @@
      43.3048
     ],
     "zoom": 16.8,
-    "pitch": 0,
+    "pitch": 42,
     "bearing": 0
    },
    "releves": [
     "Pieges"
    ],
-   "fond": "ortho-ign"
+   "fond": "liberty"
   },
   {
    "contexte": true,
@@ -231,17 +231,18 @@
    "pastilles": [
     "Type"
    ],
-   "texte": "Les quatre pièges témoins, loin de toute lumière : c’est avec eux que l’on compare les autres.",
+   "texte": "Vue en plan, de nuit, sans la maquette : les halos des luminaires dessinent les zones éclairées, et ce qui reste sombre apparaît. Les quatre pièges témoins s’y trouvent ; c’est avec eux que l’on compare les autres.",
    "couches": [
+    "Luminaires",
     "Pieges"
    ],
    "heure": 1285,
    "camera": {
     "center": [
-     5.3951,
-     43.305
+     5.3963,
+     43.3052
     ],
-    "zoom": 16.9,
+    "zoom": 15.9,
     "pitch": 0,
     "bearing": 0
    },
@@ -255,7 +256,8 @@
      "Sous un luminaire"
     ]
    ],
-   "fond": "ortho-ign"
+   "fond": "liberty",
+   "en_plan": true
   },
   {
    "contexte": true,
@@ -281,7 +283,7 @@
     "pitch": 62,
     "bearing": 18
    },
-   "fond": "positron"
+   "fond": "liberty"
   },
   {
    "contexte": true,
@@ -293,19 +295,19 @@
     "temperatureCouleur",
     "sun"
    ],
-   "texte": "Les luminaires blanc froid et blanc neutre du parc : ceux dont on gagnerait le plus à changer la lumière.",
+   "texte": "Les luminaires blanc neutre des allées du parc, dans l’ordre d’une tournée de 1,8 km : ceux dont on gagnerait le plus à changer la lumière. Ouvrez « Tournée » pour les prendre un à un.",
    "couches": [
     "Luminaires"
    ],
    "heure": 1285,
    "camera": {
     "center": [
-     5.3951,
-     43.305
+     5.3962,
+     43.3052
     ],
-    "zoom": 17,
-    "pitch": 55,
-    "bearing": 10
+    "zoom": 16.2,
+    "pitch": 0,
+    "bearing": 0
    },
    "releves": [],
    "filtres": [
@@ -326,11 +328,17 @@
     ],
     [
      "Luminaires",
+     "Teinte",
+     "Blanc froid (≥ 5 000 K)"
+    ],
+    [
+     "Luminaires",
      "Zone",
      "Quartier"
     ]
    ],
-   "fond": "ortho-ign"
+   "fond": "liberty",
+   "tournee": "remplacement"
   }
  ]
 }

@@ -44,7 +44,9 @@ luminaires = lire(os.path.join(TABLES, 'luminaires.json'))
 pieges = lire(os.path.join(TABLES, 'pieges.json'))
 releves = lire(os.path.join(TABLES, 'releves.json'))
 grille = lire(os.path.join(TABLES, 'grille.json'))
-tournee = lire(os.path.join(TABLES, 'tournees.json'))[0]
+tournees = lire(os.path.join(TABLES, 'tournees.json'))
+tournee = tournees[0]
+TOURNEE_PAR_CLE = {'campagne': tournees[0], 'remplacement': tournees[1]}
 recit = lire(os.path.join(ICI, 'recit.json'))
 
 SANS = {'id': 'sans', 'Libelle': 'Sans éclairage', 'Couleur': '#5b5b66', 'Rang': 0}
@@ -87,7 +89,8 @@ def wkt_vers_geometrie(wkt):
 
 
 def champs(*specs):
-    return [{'name': n, 'gType': t} for n, t in specs]
+    # (nom, type) ou (nom, type, libellé) : le libellé est celui que montre la bulle d'un objet.
+    return [{'name': s[0], 'gType': s[1], **({'label': s[2]} if len(s) > 2 else {})} for s in specs]
 
 
 # ---------------------------------------------------------------- la maquette (régimes séparés)
@@ -131,8 +134,7 @@ couches.append({
                   {'value': 'pin_pignon', 'color': '#2f5d3a', 'opacity': 1}, {'value': 'cypres', 'color': '#2a4d3a', 'opacity': 1}], 'fallback': '#5b8c4a'}},
     'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': arbres},
     'bbox': bbox_de(arbres), 'featureCount': len(arbres), 'crs': 'EPSG:4326',
-    'fields': champs(('essence', 'Text'), ('hauteur_m', 'Numeric'), ('confiance', 'Numeric')),
-    'popup_template': '<b>{essence}</b> — {hauteur_m} m<br><small>Hauteur mesurée dans le LiDAR HD (IGN)</small>',
+    'fields': champs(('essence', 'Text', 'Essence'), ('hauteur_m', 'Numeric', 'Hauteur (m), mesurée au LiDAR HD'), ('confiance', 'Numeric', 'Confiance')),
     'licence': 'Licence Ouverte 2.0 (IGN, Panoramax)',
 })
 
@@ -143,7 +145,7 @@ for l in luminaires:
     feats.append(point(l['Longitude'], l['Latitude'], {
         'code': l['Code'], 'categorie': l['Categorie'], 'modele': m['Libelle'], 'teinte': LIBELLE_CLASSE[m['Classe']], 'zone': l['Zone'], 'etat': l['Etat'],
         'annee_pose': l['Annee_pose'], 'dist_eau_m': l['Dist_eau_m'], 'dist_bois_m': l['Dist_bois_m'],
-        'temperatureCouleur': m['Temperature_K'], 'puissance': PUISSANCE[l['Modele']], 'hauteurFeu': l['Hauteur_feu_m'],
+        'temperatureCouleur': m['Temperature_K'], 'puissance': PUISSANCE[l['Modele']], 'hauteurFeu': l['Hauteur_feu_m'], 'donnee': 'Position réelle (Ville de Marseille) ; caractéristiques fictives',
         'statut': 'decommissioned' if l['Etat'] == 'Défectueux' else 'functional',
     }))
 TEINTES = [LIBELLE_CLASSE[c['id']] for c in classes]
@@ -159,9 +161,9 @@ couches.append({
         {'field': 'temperatureCouleur', 'type': 'range', 'label': 'Température de couleur (K)', 'active': True, 'min': 2000, 'max': 5000, 'dataMin': 2000, 'dataMax': 5000, 'unite': 'K'},
         {'field': 'zone', 'type': 'select', 'label': 'Secteur', 'active': False, 'values': ['Parc et Palais', 'Quartier']},
     ],
-    'popup_template': '<b>{modele}</b><br>{teinte} — {temperatureCouleur} K, {puissance} W<br>Feu à {hauteurFeu} m · posé en {annee_pose}<br>À {dist_eau_m} m de l’eau<br><small>Position : Ville de Marseille (Licence Ouverte 2.0). Caractéristiques : exemple fictif.</small>',
-    'fields': champs(('code', 'Text'), ('categorie', 'Text'), ('modele', 'Text'), ('teinte', 'Text'), ('zone', 'Text'), ('etat', 'Text'), ('annee_pose', 'Int'), ('dist_eau_m', 'Int'), ('dist_bois_m', 'Int'),
-                     ('temperatureCouleur', 'Int'), ('puissance', 'Int'), ('hauteurFeu', 'Numeric'), ('statut', 'Text')),
+    'fields': champs(('modele', 'Text', 'Modèle'), ('teinte', 'Text', 'Teinte de la lumière'), ('temperatureCouleur', 'Int', 'Température de couleur (K)'), ('puissance', 'Int', 'Puissance (W)'),
+                     ('hauteurFeu', 'Numeric', 'Hauteur de feu (m)'), ('annee_pose', 'Int', 'Posé en'), ('dist_eau_m', 'Int', 'Distance à l’eau (m)'), ('zone', 'Text', 'Secteur'),
+                     ('etat', 'Text', 'État'), ('code', 'Text', 'Code (Ville de Marseille)'), ('donnee', 'Text', 'Donnée')),
     'licence': 'Licence Ouverte 2.0 (Ville de Marseille) ; caractéristiques fictives',
 })
 
@@ -176,35 +178,42 @@ for p in pieges:
     total = round(sum(moyenne[p['id']]) / len(moyenne[p['id']]))
     feats.append(point(p['Longitude'], p['Latitude'], {
         'nom': p['Nom'], 'type': p['Type'], 'teinte': teinte, 'total_moyen': total, 'nuits': len(moyenne[p['id']]), 'dist_eau_m': p['Dist_eau_m'],
-        '_scale': round(7.0 + total / 20.0, 2),
+        'donnee': 'Position et comptages fictifs', '_scale': round(7.0 + total / 20.0, 2),
     }))
-couches.append({
-    'id': 'pieges', 'name': 'Pièges', 'geometry_type': 'point', 'visible': True,
-    'style': {'mode': 'custom', 'custom': {'url': './piege-lumineux.glb', 'filename': 'piege-lumineux.glb'},
-              'common': {'scale': 1, 'rotationX': 0, 'rotationY': 0, 'rotationZ': 0, 'offsetX': 0, 'offsetY': 0, 'offsetZ': 0},
-              'label': {'enabled': True, 'field': 'nom', 'size': 12},
-              'declarative': {'kind': 'categorized', 'field': 'teinte', 'stops': [{'value': t, 'color': COULEUR[t], 'opacity': 1} for t in TEINTES + ['Sans éclairage']], 'fallback': '#5b5b66'}},
-    'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': feats},
-    'bbox': bbox_de(feats), 'featureCount': len(feats), 'crs': 'EPSG:4326',
-    'controls': [
-        {'field': 'type', 'type': 'select', 'label': 'Type de piège', 'active': True, 'values': ['Sous un luminaire', 'Témoin non éclairé']},
-        {'field': 'total_moyen', 'type': 'range', 'label': 'Insectes par nuit (moyenne)', 'active': True, 'min': min(f['properties']['total_moyen'] for f in feats), 'max': max(f['properties']['total_moyen'] for f in feats),
-         'dataMin': min(f['properties']['total_moyen'] for f in feats), 'dataMax': max(f['properties']['total_moyen'] for f in feats)},
-    ],
-    'popup_template': '<b>{nom}</b> — {type}<br>{total_moyen} insectes par nuit en moyenne sur {nuits} nuits<br><small>Comptages fictifs.</small>',
-    'fields': champs(('nom', 'Text'), ('type', 'Text'), ('teinte', 'Text'), ('total_moyen', 'Int'), ('nuits', 'Int'), ('dist_eau_m', 'Int')),
-    'licence': 'Positions et comptages fictifs ; modèle 3D créé pour le dépôt (Licence Ouverte 2.0)',
-})
+CHAMPS_PIEGE = champs(('type', 'Text', 'Type de piège'), ('teinte', 'Text', 'Lumière au-dessus'), ('total_moyen', 'Int', 'Insectes par nuit (moyenne)'), ('nuits', 'Int', 'Nuits relevées'),
+                      ('dist_eau_m', 'Int', 'Distance à l’eau (m)'), ('donnee', 'Text', 'Donnée'))
+MIN_T = min(f['properties']['total_moyen'] for f in feats)
+MAX_T = max(f['properties']['total_moyen'] for f in feats)
+CONTROLES_PIEGE = [
+    {'field': 'type', 'type': 'select', 'label': 'Type de piège', 'active': True, 'values': ['Sous un luminaire', 'Témoin non éclairé']},
+    {'field': 'total_moyen', 'type': 'range', 'label': 'Insectes par nuit (moyenne)', 'active': True, 'min': MIN_T, 'max': MAX_T, 'dataMin': MIN_T, 'dataMax': MAX_T},
+]
+DECL_PIEGE = {'kind': 'categorized', 'field': 'teinte', 'stops': [{'value': t_, 'color': COULEUR[t_], 'opacity': 1} for t_ in TEINTES + ['Sans éclairage']], 'fallback': '#5b5b66'}
+COMMUN = {'scale': 1, 'rotationX': 0, 'rotationY': 0, 'rotationZ': 0, 'offsetX': 0, 'offsetY': 0, 'offsetZ': 0}
+# Deux représentations du même jeu : des ronds, faciles à repérer et à toucher (ce qu'utilise l'exploitant), et le modèle 3D du piège,
+# qui se regarde de près (ce que montre le récit).
+for ident, nom, style_piege, visible in (
+    ('pieges', 'Pièges', {'mode': 'mapbox', 'common': COMMUN, 'label': {'enabled': True, 'field': 'nom', 'size': 13}, 'declarative': DECL_PIEGE}, True),
+    ('pieges-3d', 'Pièges (modèle 3D)', {'mode': 'custom', 'custom': {'url': './piege-lumineux.glb', 'filename': 'piege-lumineux.glb'}, 'common': COMMUN,
+                                         'label': {'enabled': True, 'field': 'nom', 'size': 12}, 'declarative': DECL_PIEGE}, False),
+):
+    couches.append({
+        'id': ident, 'name': nom, 'geometry_type': 'point', 'visible': visible,
+        'style': style_piege,
+        'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': copy.deepcopy(feats)},
+        'bbox': bbox_de(feats), 'featureCount': len(feats), 'crs': 'EPSG:4326',
+        'controls': copy.deepcopy(CONTROLES_PIEGE), 'fields': CHAMPS_PIEGE,
+        'licence': 'Positions et comptages fictifs ; modèle 3D créé pour le dépôt (Licence Ouverte 2.0)',
+    })
 
 # ---------------------------------------------------------------- la ronde de nuit
-ligne = [{'type': 'Feature', 'properties': {'nom': tournee['Nom'], 'longueur_m': tournee['Longueur_m'], 'arrets': tournee['Arrets'], 'ordre': tournee['Ordre']}, 'geometry': wkt_vers_geometrie(tournee['WKT'])}]
+ligne = [{'type': 'Feature', 'properties': {'nom': tournee['Nom'], 'longueur_m': tournee['Longueur_m'], 'arrets': tournee['Arrets'], 'ordre': tournee['Ordre'], 'donnee': 'Tracé réel (réseau BD TOPO, IGN) ; ordre de passage fictif'}, 'geometry': wkt_vers_geometrie(tournee['WKT'])}]
 couches.append({
     'id': 'tournee', 'name': 'Ronde de nuit', 'geometry_type': 'line', 'visible': True,
     'style': {'mode': 'mapbox', 'common': {'scale': 1, 'rotationX': 0, 'rotationY': 0, 'rotationZ': 0, 'offsetX': 0, 'offsetY': 0, 'offsetZ': 0}, 'declarative': {'kind': 'single', 'color': '#C44536', 'opacity': 0.95}},
     'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': ligne},
     'bbox': bbox_de(ligne), 'featureCount': 1, 'crs': 'EPSG:4326',
-    'popup_template': '<b>{nom}</b><br>{longueur_m} m, {arrets} pièges<br><small>Tracé : réseau BD TOPO (IGN, Licence Ouverte 2.0). Ordre de passage : exemple.</small>',
-    'fields': champs(('nom', 'Text'), ('longueur_m', 'Int'), ('arrets', 'Int'), ('ordre', 'Text')),
+    'fields': champs(('nom', 'Text', 'Ronde'), ('longueur_m', 'Int', 'Longueur (m)'), ('arrets', 'Int', 'Pièges visités'), ('ordre', 'Text', 'Ordre de passage (exemple)'), ('donnee', 'Text', 'Donnée')),
     'licence': 'Licence Ouverte 2.0 (IGN)',
 })
 
@@ -214,7 +223,7 @@ for r in releves:
     p = next(x for x in pieges if x['id'] == r['piege'])
     feats.append({'type': 'Feature', 'geometry': wkt_vers_geometrie(r['WKT']),
                   'properties': {'piege': p['Nom'], 'mois': r['Mois'], 'total': r['Total'], 'hauteur_m': round(r['Total'] / 8.0, 1), 'duree_h': r['duree_h'], 'temp_c': r['temp_c'],
-                                 'papillons': r['Lepidopteres'], 'mouches': r['Dipteres'], 'coleopteres': r['Coleopteres']}})
+                                 'papillons': r['Lepidopteres'], 'mouches': r['Dipteres'], 'coleopteres': r['Coleopteres'], 'donnee': 'Comptage fictif'}})
 COULEUR_MOIS = {'Juin': '#66c2a5', 'Juillet': '#fc8d62', 'Septembre': '#8da0cb'}
 couches.append({
     'id': 'releves', 'name': 'Relevés', 'geometry_type': 'polygon', 'visible': False, 'height_field': 'hauteur_m',
@@ -223,14 +232,14 @@ couches.append({
     'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': feats},
     'bbox': bbox_de(feats), 'featureCount': len(feats), 'crs': 'EPSG:4326',
     'controls': [{'field': 'mois', 'type': 'select', 'label': 'Nuit de relevé', 'active': False, 'values': list(COULEUR_MOIS)}],
-    'popup_template': '<b>{piege}</b> — {mois}<br>{total} insectes dont {papillons} papillons de nuit<br><small>Comptages fictifs.</small>',
-    'fields': champs(('piege', 'Text'), ('mois', 'Text'), ('total', 'Int'), ('hauteur_m', 'Numeric'), ('duree_h', 'Numeric'), ('temp_c', 'Int')),
+    'fields': champs(('piege', 'Text', 'Piège'), ('mois', 'Text', 'Nuit'), ('total', 'Int', 'Insectes comptés'), ('papillons', 'Int', 'Papillons de nuit'), ('mouches', 'Int', 'Mouches et moustiques'),
+                     ('coleopteres', 'Int', 'Coléoptères'), ('duree_h', 'Numeric', 'Durée (h)'), ('temp_c', 'Int', 'Température (°C)'), ('donnee', 'Text', 'Donnée')),
     'licence': 'Comptages fictifs',
 })
 
 # ---------------------------------------------------------------- la grille de pression lumineuse
 feats = [{'type': 'Feature', 'geometry': wkt_vers_geometrie(c['WKT']),
-          'properties': {'cle': c['Cle'], 'luminaires': c['N_lum'], 'flux_total_lm': c['Flux_total_lm'], 'k_moyen': c['K_moyen'], 'hauteur_m': round(c['Flux_total_lm'] / 3000.0, 1)}} for c in grille]
+          'properties': {'cle': c['Cle'], 'luminaires': c['N_lum'], 'flux_total_lm': c['Flux_total_lm'], 'k_moyen': c['K_moyen'], 'hauteur_m': round(c['Flux_total_lm'] / 3000.0, 1), 'donnee': 'Calculé sur des caractéristiques fictives'}} for c in grille]
 couches.append({
     'id': 'grille', 'name': 'Pression lumineuse (mailles de 50 m)', 'geometry_type': 'polygon', 'visible': False, 'height_field': 'hauteur_m',
     'style': {'mode': 'mapbox', 'polygonMode': 'extruded', 'common': {'scale': 1, 'rotationX': 0, 'rotationY': 0, 'rotationZ': 0, 'offsetX': 0, 'offsetY': 0, 'offsetZ': 0},
@@ -239,8 +248,7 @@ couches.append({
                   {'value': 4000, 'color': '#cfd9e6', 'opacity': 1}, {'value': 5000, 'color': '#8fb4e8', 'opacity': 1}], 'fallback': '#999999'}},
     'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': feats},
     'bbox': bbox_de(feats), 'featureCount': len(feats), 'crs': 'EPSG:4326',
-    'popup_template': '<b>{luminaires} luminaires</b><br>Flux total : {flux_total_lm} lm<br>Température moyenne : {k_moyen} K<br><small>Hauteur = flux total. Caractéristiques fictives.</small>',
-    'fields': champs(('cle', 'Text'), ('luminaires', 'Int'), ('flux_total_lm', 'Int'), ('k_moyen', 'Int'), ('hauteur_m', 'Numeric')),
+    'fields': champs(('luminaires', 'Int', 'Luminaires dans la maille'), ('flux_total_lm', 'Int', 'Flux total (lm) — hauteur'), ('k_moyen', 'Int', 'Température moyenne (K) — couleur'), ('donnee', 'Text', 'Donnée')),
     'licence': 'Calculé sur des positions de la Ville de Marseille (Licence Ouverte 2.0) et des caractéristiques fictives',
 })
 
@@ -256,15 +264,18 @@ CONTROLES = {
 ENV = {'sun': 'Soleil', 'basemap': 'Fonds', 'view3d': '2D / 3D'}
 NOM_COUCHE = {'Luminaires': 'luminaires', 'Pieges': 'pieges', 'Releves': 'releves', 'Grille': 'grille', 'Tournees': 'tournee'}
 VALEURS = {l['id']: {c['field']: c.get('values') for c in l.get('controls', [])} for l in couches}
-maquette_ids = [l['id'] for l in couches if l['id'] not in NOM_COUCHE.values()]
+maquette_ids = [l['id'] for l in couches if l['id'] not in list(NOM_COUCHE.values()) + ['pieges-3d']]
 etapes = []
 for i, e in enumerate(recit['etapes']):
     visibles = {NOM_COUCHE[n] for n in e['couches']}
     # la maquette et les arbres accompagnent tout ce qui n'est pas un résultat posé à plat
-    montrer_maquette = not ({'Releves', 'Grille'} & set(e['couches'])) and not e.get('sans_maquette')
+    # La maquette et ses arbres racontent ; ils gênent le travail. En contexte d'exploitation, on garde les objets et la carte.
+    montrer_maquette = not ({'Releves', 'Grille'} & set(e['couches'])) and not e.get('sans_maquette') and not e.get('contexte') and not e.get('en_plan')
     couches_etat = []
     for l in couches:
         v = l['id'] in visibles or (l['id'] in maquette_ids and montrer_maquette and l['id'] != 'eau-voirie-v2') or (l['id'] == 'arbres' and montrer_maquette)
+        if l['id'] in ('pieges', 'pieges-3d'):
+            v = 'pieges' in visibles and (l['id'] == 'pieges') == bool(e.get('contexte'))
         controles = []
         for champ, valeur in (e.get('filtres') and [(f[1], f[2]) for f in e['filtres'] if NOM_COUCHE[f[0]] == l['id']] or []):
             cle = {'Type': 'type', 'Teinte': 'teinte', 'Zone': 'zone'}[champ]
@@ -284,7 +295,8 @@ for i, e in enumerate(recit['etapes']):
     if e.get('contexte'):
         usage = {'contexte': True}
         if e.get('tournee'):
-            usage['tournee'] = {'type': 'LineString', 'coordinates': ligne[0]['geometry']['coordinates'], 'sourceTable': None, 'nom': tournee['Nom']}
+            tr = TOURNEE_PAR_CLE[e['tournee']]
+            usage['tournee'] = {'type': 'LineString', 'coordinates': wkt_vers_geometrie(tr['WKT'])['coordinates'], 'sourceTable': None, 'nom': tr['Nom']}
         etat['usage'] = usage
     etapes.append({'id': e.get('cle') or 'recit-%d' % (i + 1), 'title': e['titre'], 'description': e['texte'], 'state': etat})
 

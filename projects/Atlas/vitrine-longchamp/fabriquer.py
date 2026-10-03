@@ -305,6 +305,25 @@ longueur_tournee = sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(chem
 coords_tournee = [tuple(round(v, 7) for v in vers_wgs.transform(x, y)) for x, y in chemin]
 ecart_max = max(math.hypot(g['x'] - n[0], g['y'] - n[1]) for g, n in arrets)
 
+# ------------------------------------------------------------------ la tournée de remplacement : les luminaires du parc à changer
+# Les luminaires blanc neutre ou blanc froid du secteur « Parc et Palais » (mâts, axiaux, poteaux), pris dans l'ordre d'un parcours qui
+# suit le même réseau de chemins et de rues.
+A_REMPLACER = [p for p in pts if p['zone'] == 'Parc et Palais' and MOD[p['modele']][3] in ('neutre', 'froid') and famille(p['cat']) in ('MAT', 'AXIAL', 'POTEAU')]
+arrets_r = [(p, noeud_proche(p['x'], p['y'])) for p in A_REMPLACER]
+restants = sorted(arrets_r, key=lambda a: a[0]['x'] + a[0]['y'])
+courant = restants.pop(0)
+ordre_r = [courant]
+while restants:
+    prochain = min(restants, key=lambda a: nx.shortest_path_length(reseau, courant[1], a[1], weight='weight'))
+    restants.remove(prochain)
+    ordre_r.append(prochain)
+    courant = prochain
+chemin_r = [ordre_r[0][1]]
+for (_, a), (_, b) in zip(ordre_r, ordre_r[1:]):
+    chemin_r.extend(nx.shortest_path(reseau, a, b, weight='weight')[1:])
+longueur_r = sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(chemin_r, chemin_r[1:]))
+coords_r = [tuple(round(v, 7) for v in vers_wgs.transform(x, y)) for x, y in chemin_r]
+
 # ------------------------------------------------------------------ écriture
 os.makedirs(SORTIE, exist_ok=True)
 
@@ -336,7 +355,9 @@ ecrire('releves.json', [_releve(r) for r in releves])
 FLUX = {m[0]: m[5] for m in MODELES}
 TEMP = {m[0]: m[4] for m in MODELES}
 ecrire('tournees.json', [{'Nom': 'Campagne de juin — ronde de nuit', 'WKT': 'LINESTRING (' + ', '.join('%.7f %.7f' % c for c in coords_tournee) + ')',
-                          'Longueur_m': int(round(longueur_tournee)), 'Arrets': len(ordre), 'Ordre': ' > '.join(g['nom'] for g, _ in ordre), 'Donnee': 'tracé réel (réseau BD TOPO), ordre de passage fictif'}])
+                          'Longueur_m': int(round(longueur_tournee)), 'Arrets': len(ordre), 'Ordre': ' > '.join(g['nom'] for g, _ in ordre), 'Donnee': 'tracé réel (réseau BD TOPO), ordre de passage fictif'},
+                          {'Nom': 'Remplacement des luminaires blanc neutre et froid', 'WKT': 'LINESTRING (' + ', '.join('%.7f %.7f' % c for c in coords_r) + ')',
+                           'Longueur_m': int(round(longueur_r)), 'Arrets': len(ordre_r), 'Ordre': ' > '.join(p['code'] for p, _ in ordre_r), 'Donnee': 'tracé réel (réseau BD TOPO), luminaires et ordre de passage : exemple'}])
 ecrire('grille.json', [{'Cle': cle, 'WKT': wkt_cellule(cle), 'N_lum': len(v), 'Flux_total_lm': sum(FLUX[p['modele']] for p in v),
                         'K_moyen': int(round(sum(TEMP[p['modele']] for p in v) / len(v))), 'Donnee': 'calculée à partir de luminaires dont les caractéristiques sont fictives'}
                        for cle, v in cellules.items()])
@@ -349,6 +370,7 @@ for r in releves:
     pg = next(g for g in pieges if g['id'] == r['piege'])
     cle = pg['modele'] or 'témoin'
     tot[cle].append(sum(r[o[0]] for o in ORDRES))
+print('remplacement :', len(ordre_r), 'luminaires,', int(round(longueur_r)), 'm')
 print('tournée :', int(round(longueur_tournee)), 'm,', len(ordre), 'arrêts, écart maximal au chemin', int(round(ecart_max)), 'm')
 print(len(cellules), 'cellules de', int(TAILLE_CELLULE), 'm')
 print(len(pts), 'points lumineux réels ;', len(pieges), 'pièges ;', len(releves), 'relevés')
