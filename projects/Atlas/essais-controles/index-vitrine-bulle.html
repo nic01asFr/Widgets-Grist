@@ -1186,7 +1186,13 @@
         }
         .view-mode-badge[hidden] { display: none !important; }
         /* Pastille Contexte : les étapes que la scène propose en exploitation. */
-        .contexte-liste { display: flex; flex-direction: column; gap: 4px; }
+        /* Largeur fixe : sans elle, le panneau prenait celle de la consigne sur une seule ligne (jusqu'a toute la carte). Le contexte
+           actif — sa consigne, sa tournée — vient AVANT la liste : avec une dizaine de contextes, la liste cachait l'essentiel. */
+        .dock-slot-data.dock-slot-contexte { width: min(400px, calc(100vw - 160px)); max-width: 100%; }
+        .contexte-courant { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
+        /* La consigne du contexte actif se lit en entier : un défilement de plus dans le panneau, avec la liste dessous, perd le lecteur. */
+        .contexte-courant .contexte-consigne { margin-top: 0; padding-top: 0; border-top: 0; max-height: none; overflow: visible; }
+        .contexte-liste { display: flex; flex-direction: column; gap: 4px; max-height: min(34vh, 230px); overflow-y: auto; overscroll-behavior: contain; }
         .contexte-choix {
             display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left;
             min-height: 40px; padding: 7px 10px; border-radius: 8px; cursor: pointer;

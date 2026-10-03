@@ -7772,12 +7772,14 @@ function renderContexteDockSlotHtml() {
     return `<div class="dock-slot-data dock-slot-contexte">
         <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
+            ${courant ? `<div class="contexte-courant">
+                ${courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
+                ${htmlTourneeContexteActif()}
+            </div>` : ''}
             <div class="contexte-liste">
                 ${choix(null, 'Scène de base', '', !actif)}
                 ${liste.map((c) => choix(c.cle, c.titre, '', c.cle === actif)).join('')}
             </div>
-            ${courant && courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
-            ${courant ? htmlTourneeContexteActif() : ''}
         </div>
     </div>`;
 }

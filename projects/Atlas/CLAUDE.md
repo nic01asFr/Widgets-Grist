@@ -3049,3 +3049,14 @@ Modules changés ce jour, jetons passés à `20261003a` : `model-layer.js`, `con
   en bout** : la pose par un toucher sur une ligne, l'affichage de la ligne, la liste du panneau et l'ordre de ◀ ▶ (l'outil de pilotage
   ne sait pas toucher la carte dans l'iframe de Grist ; la fixture locale ne charge pas de couche).
 - Phases suivantes : suivi de la position façon GPS (3 états de caméra, bandeau « Prochain »), puis « fait aujourd'hui » déduit des visites.
+
+### GP2OA : les tournées des boucles, éprouvées en Grist réel (03/10/2026)
+`tools/gp2oa-contextes-boucles.js` (à coller dans la console d'une page du document) écrit un contexte par boucle dans `Atlas_Story`
+(clés `ctx-boucle-*`) : caméra cadrée, ouvrages seuls visibles, filtre d'unité, `usage.releves` et `usage.tournee` (ligne copiée de la couche
+Boucles). Posé sur la copie ENS13 : 4 contextes (Pic Bertagne 17,2 km ; Glacière 12,0 km ; Cabrelles 9,4 km ; Étang des Aulnes 6,3 km).
+**Éprouvé** (téléphone, Exploiter) : le contexte cadre la boucle et dessine la ligne ; le bloc « Tournée · 17,2 km · 66 ouvrages » liste
+les ouvrages dans l'ordre de la ligne avec leur distance depuis le départ ; ◀ ▶ suivent cet ordre (« 4 / 66 », puis « 5 / 66 ») ;
+les ouvrages que la ligne ne longe pas (plus de 250 m) passent en fin de liste, « hors ligne ». Le panneau « Contexte » : largeur fixe
+(sans elle, elle suivait la consigne sur une ligne), le contexte actif — consigne puis tournée — **avant** la liste, la liste plafonnée.
+Reste : le filtre d'unité garde tout l'ouvrage de l'unité (66 pour la boucle Pic Bertagne, dont 10 hors ligne) ; sur téléphone la barre
+de sélection recouvre la rangée de pastilles.
