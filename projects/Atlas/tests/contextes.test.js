@@ -82,3 +82,24 @@ test('basculerReleve : décocher écrit une liste, tout recocher rend null', asy
   assert.deepEqual(basculerReleve(['A'], toutes, 'A', false), []);
   assert.deepEqual(basculerReleve(null, toutes, 'A', true), null);
 });
+
+test('pastillesDe : null sans liste, la liste retenue à la capture sinon', async () => {
+  const { pastillesDe, pastilleOfferte } = await import('../lib/contextes.js');
+  assert.equal(pastillesDe(undefined), null);
+  assert.equal(pastillesDe({}), null);
+  assert.equal(pastillesDe({ pastilles: 'x' }), null);
+  assert.deepEqual(pastillesDe({ pastilles: [] }), []);
+  const p = pastillesDe({ pastilles: [{ id: 'basemap', label: 'Fonds' }, { id: 'data:T:Etat' }, { label: 'sans id' }, null] });
+  assert.deepEqual(p, [{ id: 'basemap', label: 'Fonds' }, { id: 'data:T:Etat', label: 'data:T:Etat' }]);
+  // Sans liste, tout est offert ; avec une liste, seulement ce qu'elle cite — une liste vide n'en offre aucune.
+  assert.equal(pastilleOfferte(null, 'sun'), true);
+  assert.equal(pastilleOfferte(p, 'basemap'), true);
+  assert.equal(pastilleOfferte(p, 'sun'), false);
+  assert.equal(pastilleOfferte([], 'basemap'), false);
+});
+
+test('avecUsage ne touche pas aux pastilles : elles vivent à la racine de l\'état, avec la capture', async () => {
+  const etat = { camera: 1, pastilles: [{ id: 'basemap', label: 'Fonds' }], usage: { contexte: true } };
+  assert.deepEqual(avecUsage(etat, { releves: ['A'] }).pastilles, etat.pastilles);
+  assert.deepEqual(avecUsage(etat, { contexte: false }).pastilles, etat.pastilles);
+});

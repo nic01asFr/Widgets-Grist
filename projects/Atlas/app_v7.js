@@ -72,7 +72,7 @@ import {
   lienItineraire, modeleBulle, idsPiecesJointes,
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe } from './lib/contextes.js?v=20261003b';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=20261003c';
 import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=20261003a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
@@ -6040,6 +6040,24 @@ function dockPillId(layer, field) {
     return `data:${layer.id}:${field}`;
 }
 
+/** La clé d'une pastille dans ce qu'une étape retient : l'environnement par son nom, un contrôle par sa table et son champ. */
+function clePastille(p) {
+    return p.kind === 'data' ? `data:${p.layer.sourceTable || p.layer.id}:${p.control.field}` : p.id;
+}
+
+/** Les pastilles de l'étape jouée (contexte compris), ou `null` : rien n'est dit, la scène décide. */
+function pastillesDeLetape() {
+    if (!_storyPresenting) return null;
+    return pastillesDe(STATE.story[_storyIdx]?.state);
+}
+
+/** Ce que l'auteur voit dans son dock à l'instant : l'environnement offert et les contrôles actifs, à retenir dans l'étape qu'il capture. */
+function pastillesACapturer() {
+    return listDockPills()
+        .filter((p) => p.kind === 'env' || p.kind === 'sun' || p.kind === 'data')
+        .map((p) => ({ id: clePastille(p), label: p.label }));
+}
+
 /** Pastilles dock : env (édition = toujours ; lecture = exposed) + données actives. */
 /**
  * Les couches ou l'on peut saisir, telles que la fiche les ouvrira.
@@ -6395,6 +6413,15 @@ function listDockPills() {
             layer,
             control: c,
         });
+    }
+    // Une étape jouée offre les pastilles de sa capture : ce que l'auteur voyait dans son dock. Elle ne touche ni au relevé, ni au
+    // contexte, ni au récit, qui suivent leurs règles. Une étape sans liste laisse les pastilles de la scène.
+    const offertes = pastillesDeLetape();
+    if (offertes) {
+        for (let i = pills.length - 1; i >= 0; i--) {
+            const p = pills[i];
+            if ((p.kind === 'env' || p.kind === 'sun' || p.kind === 'data') && !pastilleOfferte(offertes, clePastille(p))) pills.splice(i, 1);
+        }
     }
     // La localisation ferme la rangée, contre la boussole : les deux disent où
     // l'on est et vers où l'on regarde. Les contrôles de la carte viennent
@@ -7345,6 +7372,13 @@ function barreTrajetHtml() {
     </div>${etapesLeLongHtml()}`;
 }
 
+/** Les pastilles retenues à la capture de l'étape, dites sous son titre : « Pastilles : Fonds · État ». Rien si l'étape n'en retient pas. */
+function metaPastilles(s) {
+    const p = pastillesDe(s?.state);
+    if (!p) return '';
+    return `<div class="layer-meta">Pastilles : ${p.length ? p.map((x) => echapper(x.label)).join(' · ') : 'aucune'} <span style="opacity:.7">(à la capture)</span></div>`;
+}
+
 function metaEtapeTrajet(s) {
     const trace = traceActuelle();
     if (!trace || !Number.isFinite(s?.state?.abscisse)) return '';
@@ -7417,6 +7451,7 @@ function renderRecit() {
             <span class="layer-vis on" onclick="A.storyPlay(${i})" title="Aller à l'étape">▶</span>
             <div class="layer-info" style="flex:1">
                 ${metaEtapeTrajet(s)}
+                ${metaPastilles(s)}
                 <input class="input" style="font-weight:600;padding:4px 6px" value="${echapper(s.title || '')}" onchange="A.storySet(${i},'title',this.value)" placeholder="Titre étape ${i + 1}">
                 <textarea class="input" style="margin-top:4px;min-height:38px;font-size:12px" onchange="A.storySet(${i},'text',this.value)" placeholder="Texte…">${echapper(s.text || '')}</textarea>
                 <label class="contexte-opt" title="En exploitation, la pastille Contexte propose cette étape : elle règle la carte, et son texte sert de consigne"><input type="checkbox" ${usageDe(s.state).contexte ? 'checked' : ''} onchange="A.storyContexte(${i},this.checked)"> Proposer comme contexte</label>
@@ -14811,7 +14846,7 @@ const A = {
         if (!assertCanWrite('capturer le récit')) return;
         const trace = traceActuelle();
         const photo = captureStoryState(map, STATE);
-        let state = fusionnerApresPhoto(photo, { saisies: saisiesCourantes() });
+        let state = { ...fusionnerApresPhoto(photo, { saisies: saisiesCourantes() }), pastilles: pastillesACapturer() };
         let ecart = 0;
         if (trace) {
             const centre = photo?.camera?.center;
@@ -14819,11 +14854,14 @@ const A = {
                 ? placeDepuisVue(trace.coordinates, centre)
                 : { abscisse: 0.5, distanceMetres: 0 };
             ecart = place.distanceMetres || 0;
-            state = fusionnerApresPhoto(photo, {
-                trace: traceFigee(trace),
-                abscisse: place.abscisse,
-                saisies: saisiesCourantes(),
-            });
+            state = {
+                ...fusionnerApresPhoto(photo, {
+                    trace: traceFigee(trace),
+                    abscisse: place.abscisse,
+                    saisies: saisiesCourantes(),
+                }),
+                pastilles: pastillesACapturer(),
+            };
             STATE.story.forEach((s) => { if (s.state) s.state.trace = traceFigee(trace); });
         }
         const premiere = !!(trace && !STATE.story.length);
@@ -14877,11 +14915,14 @@ const A = {
         if (!assertCanWrite('re-capturer le récit')) return;
         if (STATE.story[i]) {
             const precedent = STATE.story[i].state || {};
-            STATE.story[i].state = etatApresRecapture(
-                captureStoryState(map, STATE),
-                precedent,
-                saisiesCourantes(),
-            );
+            STATE.story[i].state = {
+                ...etatApresRecapture(
+                    captureStoryState(map, STATE),
+                    precedent,
+                    saisiesCourantes(),
+                ),
+                pastilles: pastillesACapturer(),
+            };
             markDirty();
             persistStory(true);
             showToast(

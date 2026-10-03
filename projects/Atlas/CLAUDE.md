@@ -3066,3 +3066,12 @@ La liste respecte déjà les **filtres** du contexte (le même prédicat que la 
 active, elle s'ouvre **« Le long de la tournée »** (`listerObjets({ tri: 'tournee', rangs })`, `lib/objets-liste.js`) : l'ordre de la ligne, avec
 la distance depuis le départ (« 164 m ») au lieu de la distance à soi, et « hors ligne » au-delà de 250 m. « Proches de moi / du centre » et
 « A – Z » restent offerts ; hors contexte à tournée, le bouton n'apparaît pas et l'ordre par défaut est inchangé. Éprouvé en Grist réel.
+
+### Les pastilles suivent la capture (03/10/2026)
+Pas de réglage à part : **ce que l'auteur voit dans son dock quand il capture l'étape est ce que l'étape offre**. `storyCapture` et
+`storyRecapture` retiennent `state.pastilles = [{ id, label }]` (`pastillesACapturer`) : les pastilles d'environnement offertes (Soleil, 2D/3D,
+Fonds) et celles des contrôles actifs (clé `data:<table>:<champ>`). Jouée — contexte ou récit —, l'étape n'offre que celles-là
+(`pastillesDeLetape`, filtre dans `listDockPills`) ; « Relevé », « Contexte » et « Récit » suivent leurs règles. Une étape **sans** liste (capturée
+avant ce réglage) laisse les pastilles de la scène. Re-capturer redéfinit la liste. La carte d'étape dit « Pastilles : Fonds · État (à la
+capture) ». `pastillesDe` / `pastilleOfferte` : `lib/contextes.js`, testés. Le filtre d'unité d'un contexte n'a donc plus de pastille si l'auteur
+l'a retiré de son dock avant de capturer. **Pas encore éprouvé en Grist réel** (session du navigateur de test perdue au moment de l'essai).

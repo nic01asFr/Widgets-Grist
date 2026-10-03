@@ -13,7 +13,7 @@
  *
  * Ce module ne touche ni au DOM, ni à Grist.
  */
-import { contexteDeCle } from './contextes.js?v=20261003b';
+import { contexteDeCle } from './contextes.js?v=20261003c';
 import { normaliserCadrage } from './cadrage.js?v=20261002f';
 
 /** Par où la scène s'ouvre pour qui ne l'édite pas. */

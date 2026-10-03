@@ -77,6 +77,24 @@ export function tourneeDe(etat) {
   return t;
 }
 
+/**
+ * Les pastilles que l'étape offre : celles que l'auteur voyait dans son dock au moment de la capture (l'environnement et les
+ * contrôles ; « Relevé », « Contexte » et « Récit » suivent leurs propres règles). `null` = l'étape n'en dit rien, et les pastilles
+ * restent celles de la scène — comportement des étapes capturées avant ce réglage.
+ *
+ * @returns {Array<{id: string, label: string}>|null}
+ */
+export function pastillesDe(etat) {
+  const p = etat && typeof etat === 'object' ? etat.pastilles : null;
+  if (!Array.isArray(p)) return null;
+  return p.filter((x) => x && typeof x.id === 'string' && x.id).map((x) => ({ id: x.id, label: String(x.label || x.id) }));
+}
+
+/** La pastille de cette clé est-elle offerte, selon la liste d'une étape (`null` : oui) ? */
+export function pastilleOfferte(pastilles, cle) {
+  return pastilles == null || pastilles.some((p) => p.id === cle);
+}
+
 /** Le relevé de la couche de cette clé est-il proposé, selon la liste `releves` d'un contexte (`null` : oui, sans réserve) ? */
 export function releveProposeDans(releves, cle) {
   return releves == null || releves.includes(cle);
