@@ -51,6 +51,20 @@
   var tr = []; var gx = [5.390, 5.394, 5.398, 5.402], gy = [43.300, 43.304, 43.308]; var idr = 1; function seg(a, b) { tr.push({ id: idr++, fields: { Nom: 'Tronçon ' + idr, WKT: 'LINESTRING (' + a[0] + ' ' + a[1] + ', ' + ((a[0]+b[0])/2).toFixed(6) + ' ' + ((a[1]+b[1])/2).toFixed(6) + ', ' + b[0] + ' ' + b[1] + ')' } }); }
   gx.forEach(function (x, i) { gy.forEach(function (y, j) { if (i < gx.length - 1) seg([x, y], [gx[i+1], y]); if (j < gy.length - 1) seg([x, y], [x, gy[j+1]]); }); });
   tables.Routes_troncons = { cols: [['Nom','Text'],['WKT','Text']], rows: tr };
+  // ?tournee=1 : un contexte « Boucle de la vallée » qui porte sa tournée (une ligne figée passant près des cinq passerelles, dans cet ordre).
+  if (location.search.indexOf('tournee=1') >= 0) {
+    // La couleur d'une couche ajoutée est tirée au hasard : on la fixe (bleu), pour que les points se distinguent de la ligne rouge de la tournée.
+    var hasard = Math.random.bind(Math);
+    Math.random = function () { return /randomColor/.test(new Error().stack || '') ? 0.8 : hasard(); };
+    var ligne = [[5.3908, 43.3028], [5.3912, 43.3030], [5.3930, 43.3027], [5.3947, 43.3029], [5.3965, 43.3033], [5.3979, 43.3041], [5.3972, 43.3048], [5.3956, 43.3052], [5.3941, 43.3050], [5.3930, 43.3045]];
+    var etatCtx = { camera: { center: [5.3998, 43.3043], zoom: 15.1, pitch: 0, bearing: 0 }, layers: [], usage: { contexte: true, releves: ['Passerelles'], tournee: { type: 'LineString', coordinates: ligne, sourceTable: 'Sentiers', sourceRowId: 1, nom: 'Boucle de la vallée' } } };
+    tables.Atlas_Story = { cols: [['Cle', 'Text'], ['Step', 'Int'], ['Title', 'Text'], ['Description', 'Text'], ['StateJSON', 'Text']], rows: [
+      { id: 1, fields: { Cle: 'ctx-vallee', Step: 1, Title: 'Boucle de la vallée', Description: 'Boucle de la vallée · 1,1 km. Les passerelles, dans l’ordre du parcours : ouvrez « Tournée », ou touchez-en une sur la carte.', StateJSON: JSON.stringify(etatCtx) } },
+      { id: 2, fields: { Cle: 'ctx-tout', Step: 2, Title: 'Vue d’ensemble', Description: 'Toutes les passerelles du bassin.', StateJSON: JSON.stringify({ camera: { center: [5.3945, 43.3040], zoom: 14.8, pitch: 0, bearing: 0 }, layers: [], usage: { contexte: true } }) } },
+      { id: 3, fields: { Cle: 'ctx-degrade', Step: 3, Title: 'Ouvrages à surveiller', Description: 'Les passerelles dégradées ou à surveiller.', StateJSON: JSON.stringify({ camera: { center: [5.3945, 43.3040], zoom: 14.8, pitch: 0, bearing: 0 }, layers: [], usage: { contexte: true } }) } } ] };
+    tables.Atlas_ScenePrefs = { cols: [['ViewerJSON', 'Text'], ['SettingsJSON', 'Text'], ['ExpositionJSON', 'Text']], rows: [
+      { id: 1, fields: { ViewerJSON: '[]', SettingsJSON: '{}', ExpositionJSON: JSON.stringify({ ouverture: { mode: 'contexte', cle: 'ctx-vallee' } }) } } ] };
+  }
   var vis = { 'Passerelles.Etat': 'Etats.Libelle', 'Controles.Passerelle': 'Passerelles.Nom', 'Controles.Etat_constate': 'Etats.Libelle' };
 
   var journal = window.__journalRest = [];
