@@ -158,3 +158,26 @@ test('dernières lignes liées : sans colonne de date, la dernière créée', ()
   assert.equal(m.get(4).nombre, 3);
   assert.equal(m.get(4).date, null);
 });
+
+test('le long de la tournée : l\'ordre de la ligne, un objet non classé après, par nom', () => {
+  const entrees = ['Delta', 'Alpha', 'Charlie', 'Bravo'].map((nom, i) => entreeObjet({ idx: i, nom }));
+  const rangs = new Map([[1, { rang: 1, metres: 0, ecartM: 3 }], [3, { rang: 2, metres: 250, ecartM: 10 }], [2, { rang: 3, metres: 900, ecartM: 400 }]]);
+  const r = listerObjets(entrees, { tri: 'tournee', rangs });
+  assert.deepEqual(r.items.map((o) => o.nom), ['Alpha', 'Bravo', 'Charlie', 'Delta']);
+  assert.deepEqual(r.items.slice(0, 3).map((o) => o.metres), [0, 250, 900]);
+  assert.equal(r.items[2].ecartM, 400);
+  assert.equal(r.items[3].metres, undefined);
+});
+
+test('le long de la tournée : une recherche garde la pertinence d\'abord, puis l\'ordre de la ligne', () => {
+  const entrees = ['Pont Nord', 'Pont Sud', 'Buse'].map((nom, i) => entreeObjet({ idx: i, nom }));
+  const rangs = new Map([[1, { rang: 1, metres: 0, ecartM: 0 }], [0, { rang: 2, metres: 100, ecartM: 0 }], [2, { rang: 3, metres: 200, ecartM: 0 }]]);
+  const r = listerObjets(entrees, { tri: 'tournee', rangs, requete: 'pont' });
+  assert.deepEqual(r.items.map((o) => o.nom), ['Pont Sud', 'Pont Nord']);
+});
+
+test('tri tournée sans rangs : on retombe sur la distance', () => {
+  const entrees = [entreeObjet({ idx: 0, nom: 'B', point: [5.0, 43.0] }), entreeObjet({ idx: 1, nom: 'A', point: [5.01, 43.0] })];
+  const r = listerObjets(entrees, { tri: 'tournee', position: [5.0, 43.0] });
+  assert.deepEqual(r.items.map((o) => o.nom), ['B', 'A']);
+});

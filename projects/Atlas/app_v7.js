@@ -76,7 +76,7 @@ import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releve
 import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=20261003a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261002e';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261003a';
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
@@ -13686,7 +13686,8 @@ function positionDeReference() {
 
 function ouvrirListe(layer) {
     if (!layer) return;
-    _liste = { coucheId: layer.id, requete: '', tri: 'proche', visites: null };
+    // Avec une tournée, la liste suit la ligne : c'est l'ordre dans lequel on travaille.
+    _liste = { coucheId: layer.id, requete: '', tri: ordreTournee(layer.id)?.length ? 'tournee' : 'proche', visites: null };
     inspectorUserClosed = false;
     document.body.classList.add('mode-liste');
     $('map-controls-dock')?.classList.add('collapsed');
@@ -13716,6 +13717,7 @@ function renderListeObjets() {
                 placeholder="Nom, domaine, état…" aria-label="Chercher dans les objets"
                 value="${echapper(_liste.requete)}" oninput="A.listeRecherche(this.value)">
             <div class="liste-tri" role="group" aria-label="Ordre">
+                ${ordreTournee(layer.id)?.length ? '<button type="button" id="liste-tri-tournee" onclick="A.listeTri(\'tournee\')">Le long de la tournée</button>' : ''}
                 <button type="button" id="liste-tri-proche" onclick="A.listeTri('proche')"></button>
                 <button type="button" id="liste-tri-nom" onclick="A.listeTri('nom')">A – Z</button>
                 ${gps ? '<button type="button" id="liste-gps" onclick="A.listeAutourDeMoi()">Ma position</button>' : ''}
@@ -13748,10 +13750,15 @@ function renderListeLignes() {
     const feats = layer.geojson?.features || [];
     const garde = buildControlPredicate(layer);
     const ref = positionDeReference();
+    // La tournée du contexte actif : la place de chaque objet sur la ligne. Sortie du contexte, on retombe sur « proches ».
+    const ordreT = ordreTournee(layer.id);
+    const rangs = ordreT ? new Map(ordreT.map((o, i) => [o.idx, { rang: i + 1, metres: o.metres, ecartM: o.ecartM }])) : null;
+    if (_liste.tri === 'tournee' && !rangs) _liste.tri = 'proche';
     const r = listerObjets(cache?.entrees || [], {
         requete: _liste.requete,
         position: ref.point,
         tri: _liste.tri,
+        rangs,
         visible: (e) => !garde || garde(feats[e.idx]),
     });
     const peutVisiter = !!formulaireDeReleve(layer);
@@ -13766,6 +13773,7 @@ function renderListeLignes() {
         proche.classList.toggle('on', _liste.tri === 'proche');
     }
     $('liste-tri-nom')?.classList.toggle('on', _liste.tri === 'nom');
+    $('liste-tri-tournee')?.classList.toggle('on', _liste.tri === 'tournee');
 
     if (!r.items.length) {
         hote.innerHTML = `<div class="hint">${_liste.requete
@@ -13781,7 +13789,10 @@ function renderListeLignes() {
             : '';
         const sous = [o.etat, visite].filter(Boolean).map(echapper).join(' · ');
         const trouve = o.trouveDans ? `<div class="liste-trouve">${echapper(o.trouveDans.libelle)} : ${echapper(o.trouveDans.texte)}</div>` : '';
-        const dist = o.distance != null ? direDistance(o.distance).replace(/^à /, '') : '';
+        // Le long de la tournée, la distance dite est celle depuis le départ de la ligne, pas celle d'où l'on se trouve.
+        const dist = _liste.tri === 'tournee' && o.metres != null
+            ? `${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}`
+            : (o.distance != null ? direDistance(o.distance).replace(/^à /, '') : '');
         return `<div class="liste-ligne" role="listitem" tabindex="0"
                 onclick="A.listeOuvrir('${chaineJs(layer.id)}', ${o.idx})"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();A.listeOuvrir('${chaineJs(layer.id)}', ${o.idx});}">
@@ -16151,7 +16162,7 @@ const A = {
         clearTimeout(_liste._t);
         _liste._t = setTimeout(renderListeLignes, 120);
     },
-    listeTri(tri) { if (_liste) { _liste.tri = tri === 'nom' ? 'nom' : 'proche'; renderListeLignes(); } },
+    listeTri(tri) { if (_liste) { _liste.tri = tri === 'nom' ? 'nom' : (tri === 'tournee' ? 'tournee' : 'proche'); renderListeLignes(); } },
     listeAutourDeMoi() {
         if (!_liste) return;
         if (_dernierePosition) { _liste.tri = 'proche'; renderListeLignes(); return; }

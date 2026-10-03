@@ -3060,3 +3060,9 @@ les ouvrages que la ligne ne longe pas (plus de 250 m) passent en fin de liste, 
 (sans elle, elle suivait la consigne sur une ligne), le contexte actif — consigne puis tournée — **avant** la liste, la liste plafonnée.
 Reste : le filtre d'unité garde tout l'ouvrage de l'unité (66 pour la boucle Pic Bertagne, dont 10 hors ligne) ; sur téléphone la barre
 de sélection recouvre la rangée de pastilles.
+
+### « Choisir un objet » suit le contexte (03/10/2026)
+La liste respecte déjà les **filtres** du contexte (le même prédicat que la carte : « 66 sur 108 objets · filtres actifs »). Avec une tournée
+active, elle s'ouvre **« Le long de la tournée »** (`listerObjets({ tri: 'tournee', rangs })`, `lib/objets-liste.js`) : l'ordre de la ligne, avec
+la distance depuis le départ (« 164 m ») au lieu de la distance à soi, et « hors ligne » au-delà de 250 m. « Proches de moi / du centre » et
+« A – Z » restent offerts ; hors contexte à tournée, le bouton n'apparaît pas et l'ordre par défaut est inchangé. Éprouvé en Grist réel.
