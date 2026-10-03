@@ -622,11 +622,15 @@ function blocContextes(produit) {
           <img src="${echapper(i.image)}" alt="${echapper(i.legende)}" loading="lazy">
           <figcaption>${enLigne(i.legende)}</figcaption>
         </figure>`);
+  // Qui fait quoi : le rôle (l'auteur, l'agent de terrain, le lecteur) précède le titre, et les fonctions du produit qu'un chapitre
+  // met en jeu sont nommées en pastilles, pour qu'on retrouve « où l'on s'en sert » sans relire le texte.
   const article = (c) => `    <article class="contexte">
       <div class="dit">
+        ${c.role ? `<p class="role">${echapper(c.role)}</p>` : ''}
         <h3>${echapper(c.titre)}</h3>
         <p>${enLigne(c.texte)}</p>
         ${c.pourquoi ? `<p class="pourquoi">${enLigne(c.pourquoi)}</p>` : ''}
+        ${(c.utilise || []).length ? `<ul class="utilise">${c.utilise.map((u) => `<li>${echapper(u)}</li>`).join('')}</ul>` : ''}
       </div>
       <div class="montre${c.format === 'mobile' ? ' telephones' : ''}">
 ${(c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
@@ -689,6 +693,25 @@ ${groupes.map(groupe).join('\n')}
   </section>`;
 }
 
+/**
+ * Ce que le produit fait, en une phrase chacune.
+ *
+ * Une liste a plat de quatorze points ne dit pas pour qui ils sont : quand des points portent un `groupe`, ils se rangent sous
+ * un intertitre, dans l'ordre ou les groupes apparaissent. Sans groupe, la liste reste celle d'avant.
+ */
+function blocPoints(points) {
+  const li = (pt) => `      <li>${pt.titre ? `<b>${echapper(pt.titre)}</b> — ` : ''}${echapper(pt.texte || pt)}</li>`;
+  const liste = (l) => `    <ul class="points">
+${l.map(li).join('\n')}
+    </ul>`;
+  const noms = [...new Set(points.map((p) => p.groupe).filter(Boolean))];
+  const sans = points.filter((p) => !p.groupe);
+  return `  <section>
+    <h2>Ce qu’il fait</h2>
+${sans.length ? `${liste(sans)}\n` : ''}${noms.map((n) => `    <h3 class="groupe-points">${echapper(n)}</h3>\n${liste(points.filter((p) => p.groupe === n))}`).join('\n')}
+  </section>`;
+}
+
 /** Le style des blocs produit, et les revelations au defilement. */
 const CSS_PRODUIT = `
 .chiffres { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
@@ -701,6 +724,9 @@ const CSS_PRODUIT = `
 @media (min-width: 52rem) { .contexte { grid-template-columns: 17rem minmax(0, 1fr); gap: 2.2rem; } }
 .contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
 .contexte p { font-size: .94rem; margin: 0 0 .7rem; }
+.contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
+.contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
 /* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
    raison de montrer une capture de plus. */
 .contexte .pourquoi { font-size: .88rem; padding-left: .85rem;
@@ -729,6 +755,7 @@ const CSS_PRODUIT = `
 .facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.groupe-points { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--plume); font-weight: 600; }
 .facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
 .facons ul { list-style: none; padding: 0; margin: 0; }
 .facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
@@ -1004,14 +1031,7 @@ function rendreProjet(p, maintenant, base = '') {
   const dm = sectionDemo(p, PUBLIE);
   if (dm) sections.push(dm);
 
-  if ((v.points || []).length) {
-    sections.push(`  <section>
-    <h2>Ce qu’il fait</h2>
-    <ul class="points">
-${v.points.map((pt) => `      <li>${pt.titre ? `<b>${echapper(pt.titre)}</b> — ` : ''}${echapper(pt.texte || pt)}</li>`).join('\n')}
-    </ul>
-  </section>`);
-  }
+  if ((v.points || []).length) sections.push(blocPoints(v.points));
 
   if (p.widgets.length > 1) {
     sections.push(`  <section>

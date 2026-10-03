@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Atlas — widget Grist</title>
-<meta name="description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
+<meta name="description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Cette page suit un seul cas, de bout en bout : l’éclairage public du Palais Longchamp, et ce que sa lumière fait aux insectes de nuit.">
 <link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/atlas/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgets Grist">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/atlas/">
 <meta property="og:title" content="Atlas — widget Grist">
-<meta property="og:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
+<meta property="og:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Cette page suit un seul cas, de bout en bout : l’éclairage public du Palais Longchamp, et ce que sa lumière fait aux insectes de nuit.">
 <meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/atlas/apercu.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
-<meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-02"}</script>
+<meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Cette page suit un seul cas, de bout en bout : l’éclairage public du Palais Longchamp, et ce que sa lumière fait aux insectes de nuit.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Cette page suit un seul cas, de bout en bout : l’éclairage public du Palais Longchamp, et ce que sa lumière fait aux insectes de nuit.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-03"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -112,6 +112,9 @@ section { margin: 0 0 3rem; }
 @media (min-width: 52rem) { .contexte { grid-template-columns: 17rem minmax(0, 1fr); gap: 2.2rem; } }
 .contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
 .contexte p { font-size: .94rem; margin: 0 0 .7rem; }
+.contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
+.contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
 /* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
    raison de montrer une capture de plus. */
 .contexte .pourquoi { font-size: .88rem; padding-left: .85rem;
@@ -140,6 +143,7 @@ section { margin: 0 0 3rem; }
 .facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.groupe-points { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--plume); font-weight: 600; }
 .facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
 .facons ul { list-style: none; padding: 0; margin: 0; }
 .facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
@@ -164,7 +168,7 @@ section { margin: 0 0 3rem; }
   <a class="retour" href="../../">← Tous les widgets</a>
   <p class="eyebrow">Widget Grist</p>
   <h1>Atlas</h1>
-  <p class="chapeau">La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et trajet vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.</p>
+  <p class="chapeau">La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Cette page suit un seul cas, de bout en bout : l’éclairage public du Palais Longchamp, et ce que sa lumière fait aux insectes de nuit.</p>
   <p class="accroche">Dans Grist, on partage le document : la carte suit, avec les droits du document. On peut aussi publier une scène seule (manifeste) pour l’ouvrir hors document — même moteur, autre hôte.</p>
   <div class="tags"><span class="tag">Cartographie</span><span class="tag">Édition</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span><span class="tag">Éclairage</span><span class="tag">Relevés</span></div>
   <div class="faits">
@@ -191,172 +195,166 @@ section { margin: 0 0 3rem; }
     <div><b>4</b><span>façons de montrer la scène : document, page intégrée, scène publiée, application</span></div>
   </section>
   <section class="contextes reveler">
-    <h2>Construire, relever, diffuser</h2>
+    <h2>Un cas suivi de bout en bout : la lumière du Palais Longchamp</h2>
     <article class="contexte">
       <div class="dit">
-        <h3>Construire, dans votre document</h3>
-        <p>Atlas est un widget de votre document, à côté de vos tables. Ce que vous modifiez sur la carte est écrit dans la table, et l’inverse. Les règles d’accès du document s’appliquent telles quelles : qui peut écrire édite, qui ne peut que lire voit la scène et le récit, sans que l’édition lui soit proposée.</p>
-        <p class="pourquoi">Il n’y a pas de droits Atlas à configurer en plus de ceux de Grist. C’est le document qui décide, y compris au niveau d’une table ou d’une ligne — et c’est aussi là que la persistance se voit : tables système, couches, récit.</p>
+        <p class="role">Le gestionnaire · charger</p>
+        <h3>La ville telle qu’elle est</h3>
+        <p>Le service éclairage d’une commune veut savoir ce que la lumière de ses rues fait à la faune du parc voisin. Il part de ce qu’il a déjà : 643 points lumineux de la Ville de Marseille, rangés dans une table de son document, avec leur code et leur catégorie. Atlas reconnaît la table comme une couche géographique et la pose sur la carte, à côté de la maquette du Palais, de ses bassins et de ses arbres mesurés au LiDAR.</p>
+        <p class="pourquoi">Rien n’est exporté ni recopié : la carte lit les tables du document. Le jour où une ligne change, la carte a changé.</p>
+        <ul class="utilise"><li>Tables en couches</li><li>Maquette 3D publiée</li><li>Fond de plan</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="dans-grist.jpg" alt="La scène vit dans le document : à côté des tables (couches, récit, manifeste), pas dans un export figé." loading="lazy">
-          <figcaption>La scène vit dans le document : à côté des tables (couches, récit, manifeste), pas dans un export figé.</figcaption>
+          <img src="cas-couches.jpg" alt="Cinq couches, toutes liées à une table du document ; les luminaires portent déjà leur modèle 3D. Positions : Ville de Marseille (Licence Ouverte 2.0)." loading="lazy">
+          <figcaption>Cinq couches, toutes liées à une table du document ; les luminaires portent déjà leur modèle 3D. Positions : Ville de Marseille (Licence Ouverte 2.0).</figcaption>
         </figure>
         <figure class="large">
-          <img src="fiche-objet.jpg" alt="L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute." loading="lazy">
-          <figcaption>L’objet cliqué est la ligne : sa fiche s’ouvre à droite, avec les champs de la table et ce qu’un relevé de terrain y ajoute.</figcaption>
+          <img src="cas-jour.jpg" alt="Le Palais et son parc, de jour : relief, bâti, bassins et arbres de la maquette, sous licence ouverte (IGN, Panoramax)." loading="lazy">
+          <figcaption>Le Palais et son parc, de jour : relief, bâti, bassins et arbres de la maquette, sous licence ouverte (IGN, Panoramax).</figcaption>
         </figure>
       </div>
     </article>
     <article class="contexte">
       <div class="dit">
-        <h3>Dessiner dans la carte</h3>
-        <p>Une couche se crée depuis Atlas : un nom, un type — point, ligne ou surface — et la table Grist qui la portera, montrée avant d’être écrite. On y dessine ensuite : chaque sommet s’accroche aux objets voisins, l’en-tête donne longueur ou aire en direct, et la fiche de l’objet se remplit avant que rien ne parte. Un envoi écrit une ligne, et la création suivante est déjà prête.</p>
-        <p class="pourquoi">Pas de détour par QGIS pour tracer un périmètre ou relever dix arbres. Et chaque geste se reprend : « Annuler cet ajout », « Annuler le geste », « Annuler la modification » — une forme modifiée ailleurs entre-temps n’est pas écrasée.</p>
+        <p class="role">Le gestionnaire · régler</p>
+        <h3>Une couleur par type de lumière</h3>
+        <p>Chaque luminaire a un modèle, donc une température de couleur : ambre, sodium, blanc chaud, neutre ou froid. Ces teintes sont dans une table du document ; Atlas les reprend telles quelles pour colorer la couche, et choisit le modèle 3D du catalogue — mât, applique, boule, projecteur — d’après le modèle du luminaire. À la tombée de la nuit, ceux qui sont en service s’allument ; les défectueux restent éteints, et la légende compte les uns et les autres.</p>
+        <p class="pourquoi">On ne retape ni couleur ni modèle : la table de référence fait foi, et chaque réglage dit d’où il vient.</p>
+        <ul class="utilise"><li>Symbolisation par table de référence</li><li>Catalogue d’objets 3D</li><li>Soleil et date</li><li>Éclairage EclExt</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="dessin-trace.jpg" alt="Une surface en cours de tracé dans « Parcelles essai » : quatre sommets posés, l’aire et le périmètre suivent le curseur." loading="lazy">
-          <figcaption>Une surface en cours de tracé dans « Parcelles essai » : quatre sommets posés, l’aire et le périmètre suivent le curseur.</figcaption>
+          <img src="cas-symbolisation.jpg" alt="La couleur de la couche est lue dans la table des classes spectrales, rangées de l’ambre au blanc froid." loading="lazy">
+          <figcaption>La couleur de la couche est lue dans la table des classes spectrales, rangées de l’ambre au blanc froid.</figcaption>
         </figure>
         <figure class="large">
-          <img src="dessin-fiche.jpg" alt="La forme fermée, la fiche s’ouvre : on nomme l’objet, et l’envoi écrit une seule ligne — géométrie et champs ensemble." loading="lazy">
-          <figcaption>La forme fermée, la fiche s’ouvre : on nomme l’objet, et l’envoi écrit une seule ligne — géométrie et champs ensemble.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="dessin-modifier.jpg" alt="Modifier une forme existante : sommets à glisser, points milieux pour en insérer ; seule la géométrie sera réécrite." loading="lazy">
-          <figcaption>Modifier une forme existante : sommets à glisser, points milieux pour en insérer ; seule la géométrie sera réécrite.</figcaption>
+          <img src="cas-nuit.jpg" alt="À la tombée de la nuit : 619 luminaires allumés, 24 éteints. Les caractéristiques (modèle, état) sont fictives." loading="lazy">
+          <figcaption>À la tombée de la nuit : 619 luminaires allumés, 24 éteints. Les caractéristiques (modèle, état) sont fictives.</figcaption>
         </figure>
       </div>
     </article>
     <article class="contexte">
       <div class="dit">
-        <h3>Composer les formulaires de la scène</h3>
-        <p>Le module Formulaires liste, couche par couche, ce que la fiche d’un objet propose : « corriger l’objet », c’est-à-dire sa ligne, et « ajouter une ligne » dans chaque table qui y fait référence — une visite, une intervention. Un formulaire vient d’un projet QField importé par qgis2grist, avec ses étapes, ses listes et ses conditions, ou se compose ici à partir des colonnes. Pour chacun, on choisit les champs montrés, on le propose hors édition, on le retire ou on le remet.</p>
-        <p class="pourquoi">Le formulaire est une ligne du document, pas un réglage enfoui dans le widget : il se relit et se partage avec le reste. Le retirer d’une scène ne l’efface pas — une autre scène peut toujours le proposer.</p>
+        <p class="role">Le naturaliste · observer</p>
+        <h3>Dix-neuf pièges, quatre en zone sombre</h3>
+        <p>Quinze pièges lumineux sont posés à côté d’un luminaire, quatre en plein parc, loin de toute lumière, pour servir de témoins. Un piège a son propre modèle 3D — un seau, un entonnoir et un tube lumineux — et chaque objet de la carte ouvre une bulle lisible : son type, la lumière au-dessus de lui, le nombre moyen d’insectes par nuit. Vue en plan et de nuit, sans la maquette, les halos des luminaires laissent apparaître ce qui reste sombre.</p>
+        <p class="pourquoi">La même donnée se montre de trois façons — en objets 3D pour raconter, en ronds pour travailler, en plan pour lire les ombres — sans rien refaire.</p>
+        <ul class="utilise"><li>Objet 3D du dépôt</li><li>Bulle d’objet</li><li>Étiquettes</li><li>Contrôles du lecteur</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="formulaires-module.jpg" alt="Le module Formulaires : un relevé proposé hors édition, ses champs montrés un à un, les champs obligatoires signalés." loading="lazy">
-          <figcaption>Le module Formulaires : un relevé proposé hors édition, ses champs montrés un à un, les champs obligatoires signalés.</figcaption>
+          <img src="cas-pieges-3d.jpg" alt="Les pièges, avec leur modèle 3D : la taille suit le nombre moyen d’insectes par nuit." loading="lazy">
+          <figcaption>Les pièges, avec leur modèle 3D : la taille suit le nombre moyen d’insectes par nuit.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-zone-sombre.jpg" alt="Zone sombre de référence : de nuit, en plan, les quatre témoins sont au cœur de ce que la lumière n’atteint pas." loading="lazy">
+          <figcaption>Zone sombre de référence : de nuit, en plan, les quatre témoins sont au cœur de ce que la lumière n’atteint pas.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-bulle.jpg" alt="Toucher un piège ouvre sa bulle, aux libellés de l’étude. Comptages fictifs." loading="lazy">
+          <figcaption>Toucher un piège ouvre sa bulle, aux libellés de l’étude. Comptages fictifs.</figcaption>
         </figure>
       </div>
     </article>
     <article class="contexte">
       <div class="dit">
-        <h3>Une bulle pour l’objet touché</h3>
-        <p>En lecture, toucher un objet ouvre une bulle que l’équipe a composée pour sa couche : un titre, les photos de la ligne, l’état en couleur — celle de la table où l’équipe range ses états —, deux ou trois champs, la dernière visite de la table liée, et les gestes utiles : voir la fiche, itinéraire, nouvelle visite quand un formulaire est proposé. Atlas en propose une première version à partir du schéma de la table ; l’équipe la retouche champ par champ.</p>
-        <p class="pourquoi">On voit l’essentiel sans ouvrir douze champs en texte : ce qu’est l’objet, dans quel état, et quand quelqu’un l’a vu pour la dernière fois. La bulle lit la table, elle ne la copie pas.</p>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="bulle-objet.jpg" alt="Une passerelle d’exemple en lecture : photo, état « Dégradé » (couleur lue dans la table des états), type, adresse, dernière visite avec son état. Données et photo fictives." loading="lazy">
-          <figcaption>Une passerelle d’exemple en lecture : photo, état « Dégradé » (couleur lue dans la table des états), type, adresse, dernière visite avec son état. Données et photo fictives.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Relever sur le terrain</h3>
-        <p>Sur place, on ouvre la scène en Exploiter — dans le navigateur du téléphone, ou avec l’application Android. Une pastille « Relevé » dit ce qui se saisit : on choisit un objet dans la liste (état, dernière visite, distance), on prend « le plus proche », ou on le touche : la bulle montre ses photos, son état et sa dernière visite, et la fiche s’ouvre sur le formulaire que la scène propose. Étape par étape, on remplit, et l’enregistrement écrit la ligne. Une pastille « Contexte » rejoue une étape du récit sans sa séquence — un secteur, une tournée — avec sa consigne ; on peut suivre le récit et son trajet si la scène en porte un. Le même lien peut s’ouvrir en Préparer, en Exploiter ou en Lecture : c’est le lien qui fixe la posture la plus haute, jamais l’inverse.</p>
-        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit. Qui peut écrire, c’est Grist qui le décide, table par table — un agent qui ne peut qu’ajouter des visites n’écrit pas le reste, et Atlas ne lui propose que cela.</p>
+        <p class="role">L’agent de terrain · relever</p>
+        <h3>Sur place, un formulaire par nuit</h3>
+        <p>Sur le téléphone, en posture Exploiter, l’agent touche le piège qu’il relève : la fiche s’ouvre sur le formulaire de l’équipe. La date de la nuit est préremplie, les champs obligatoires sont signalés, les comptages se saisissent par ordre d’insectes. Un envoi écrit une ligne dans la table des relevés, rattachée au piège ; rien n’est ressaisi plus tard.</p>
+        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter : le relevé arrive dans la table que la carte lit.</p>
+        <ul class="utilise"><li>Formulaires du document</li><li>Posture Exploiter</li><li>Valeurs de départ</li><li>Droits de Grist</li></ul>
       </div>
       <div class="montre telephones">
         <figure class="telephone">
-          <div class="ecran"><img src="releve-fiche.jpg" alt="Le bâtiment touché ouvre son relevé : deux étapes — identité, puis état constaté —, champs obligatoires signalés." loading="lazy"></div>
-          <figcaption>Le bâtiment touché ouvre son relevé : deux étapes — identité, puis état constaté —, champs obligatoires signalés.</figcaption>
+          <div class="ecran"><img src="cas-releve-mobile.jpg" alt="Le formulaire « Relevé de nuit », ouvert sur le piège P14. La date est préremplie." loading="lazy"></div>
+          <figcaption>Le formulaire « Relevé de nuit », ouvert sur le piège P14. La date est préremplie.</figcaption>
         </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">L’agent de terrain · tourner</p>
+        <h3>Une tournée par travail</h3>
+        <p>Un contexte règle la carte pour un travail précis : ici, le remplacement des 24 luminaires blanc neutre des allées du parc. Il porte sa tournée, une ligne de 1,8 km calculée sur les chemins et les rues, et les luminaires se prennent un à un dans l’ordre du parcours, avec leur distance depuis le départ. Un autre contexte, la ronde de nuit, enchaîne les dix-neuf pièges. Ni couches à cocher ni filtres à refaire : l’agent choisit son travail.</p>
+        <p class="pourquoi">Le contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.</p>
+        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Choisir un objet</li><li>Pastilles par étape</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-tournee.jpg" alt="Le contexte « Luminaires à remplacer » : la ligne de la tournée, et la liste des 24 luminaires dans l’ordre du parcours." loading="lazy">
+          <figcaption>Le contexte « Luminaires à remplacer » : la ligne de la tournée, et la liste des 24 luminaires dans l’ordre du parcours.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Le lecteur · comprendre</p>
+        <h3>Ce que les pièges ont compté</h3>
+        <p>Trois nuits — juin, juillet, septembre — sont posées côte à côte au pied de chaque piège, une colonne par nuit, haute de ce que le piège a compté. D’un coup d’œil : les pièges sous un projecteur froid dépassent tous les autres, et les témoins restent bas. Une grille de mailles de 50 m, calculée dans Grist, montre à son tour où la lumière installée se concentre. Les valeurs sont fictives : elles montrent comment l’étude se lit, pas ce qu’elle dirait.</p>
+        <p class="pourquoi">Les agrégats se calculent dans le document, avec des formules Grist ; Atlas les montre en volume, sans autre outil.</p>
+        <ul class="utilise"><li>Surfaces en volume</li><li>Palette graduée</li><li>Récit</li><li>Fonds de plan par étape</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-releves.jpg" alt="Un plot par nuit et par piège, de la couleur de la nuit et de la hauteur des insectes comptés." loading="lazy">
+          <figcaption>Un plot par nuit et par piège, de la couleur de la nuit et de la hauteur des insectes comptés.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-grille.jpg" alt="Où la lumière se concentre : flux installé en hauteur, température moyenne en couleur, mailles de 50 m." loading="lazy">
+          <figcaption>Où la lumière se concentre : flux installé en hauteur, température moyenne en couleur, mailles de 50 m.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Tout le monde · partager</p>
+        <h3>Une scène qui se retrouve et qui se partage</h3>
+        <p>La scène est dans la liste des projets, avec sa miniature : l’image que l’auteur a choisie, prise en un clic dans la carte. Qui peut écrire dans le document édite ; qui peut seulement lire voit la carte, le récit et les contextes. Aucun droit à régler dans Atlas : c’est Grist qui décide, table par table. Hors document, la même scène s’ouvre seule par son adresse — c’est l’aperçu de cette page.</p>
+        <p class="pourquoi">Retirer l’accès au document ou la scène publiée suffit : rien n’a été recopié ailleurs.</p>
+        <ul class="utilise"><li>Liste des projets</li><li>Miniature</li><li>Postures et droits</li><li>Scène publiée</li><li>Application Android</li></ul>
+      </div>
+      <div class="montre telephones">
         <figure class="telephone">
-          <div class="ecran"><img src="releve-visite.jpg" alt="L’onglet voisin ajoute une visite : une ligne dans la table liée, rattachée au bâtiment." loading="lazy"></div>
-          <figcaption>L’onglet voisin ajoute une visite : une ligne dans la table liée, rattachée au bâtiment.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Un contexte par travail, avec sa tournée</h3>
-        <p>Pour l’exploitant, la pastille « Contexte » règle la carte d’un geste : les couches, les filtres, les relevés proposés et les pastilles utiles à ce travail-là, et rien d’autre. Un contexte peut porter sa tournée — la ligne d’une boucle, choisie dans une couche ou tracée sur un réseau. Elle se dessine avec le contexte, et les ouvrages qu’il montre se listent dans l’ordre du parcours, avec leur distance depuis le départ ; « Choisir un objet » suit la même ligne, et ◀ ▶ passent d’un ouvrage au suivant.</p>
-        <p class="pourquoi">Une équipe qui entretient plusieurs boucles n’a pas à refaire ses filtres à chaque sortie : elle choisit sa boucle, et la carte, la liste et les gestes sont déjà ceux de la journée. Le contexte se compose en capturant une étape du récit : ce que l’auteur voit alors dans son dock est ce que l’exploitant retrouve.</p>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="contexte-tournee.jpg" alt="Le contexte « Boucle de la vallée » : la ligne de la tournée sur la carte, et dans le panneau sa consigne, les cinq passerelles dans l’ordre du parcours avec leur distance depuis le départ. Données d’exemple fictives." loading="lazy">
-          <figcaption>Le contexte « Boucle de la vallée » : la ligne de la tournée sur la carte, et dans le panneau sa consigne, les cinq passerelles dans l’ordre du parcours avec leur distance depuis le départ. Données d’exemple fictives.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="choisir-objet-tournee.jpg" alt="« Choisir un objet » dans ce contexte : la liste suit la ligne, avec la date de la dernière visite de chaque ouvrage. Données d’exemple fictives." loading="lazy">
-          <figcaption>« Choisir un objet » dans ce contexte : la liste suit la ligne, avec la date de la dernière visite de chaque ouvrage. Données d’exemple fictives.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Un récit qui suit un trajet — ici, de nuit</h3>
-        <p>Une ligne posée comme trajet devient le fil du récit : chaque étape s’y place, et en lecture la caméra longe la rue d’une étape à l’autre. Chaque étape retient aussi l’heure : à 22 h 30, les luminaires s’allument selon leur profil d’éclairage, chacun avec son flux, sa hauteur de feu et sa température de couleur.</p>
-        <p class="pourquoi">Le parcours de terrain et sa présentation sont la même chose : on prépare la tournée, on la montre, puis on la fait avec les formulaires exposés. La nuit n’est pas un voile sombre posé sur la carte : c’est la lumière des objets eux-mêmes, décrits au format EclExt.</p>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="trajet-nuit.jpg" alt="Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap." loading="lazy">
-          <figcaption>Trajet de nuit, étape 2 sur 3 : 93 emplacements de points lumineux (Ville de Marseille, données ouvertes 2023 — attributs posés par règle pour la démonstration) et deux projecteurs fictifs, sur le relief LiDAR HD de l’IGN ; bâti © les contributeurs OpenStreetMap.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Des objets réalistes, réglés comme une couche</h3>
-        <p>Choisir un modèle du catalogue pour une couche, c’est lui donner ses réglages : l’onglet « Spécifications » liste ceux de la famille d’objets — pour un luminaire, le statut, la puissance, la température de couleur, la hauteur de feu, l’orientation, le comportement jour et nuit. Chaque réglage se pose sur l’objet, sur la couche ou sur le type, et chacun affiche d’où vient sa valeur. Un champ de la table peut le porter : on le désigne, et Atlas le lit.</p>
-        <p class="pourquoi">Ce que la table dit prime, ce qu’on règle sur la couche vient ensuite, puis le défaut du catalogue : on ne retape rien. Une valeur par défaut n’est écrite dans la table que si on le demande, et jamais par-dessus une cellule remplie.</p>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="objets-specifications.jpg" alt="La couche « Appliques de façade » de nuit : la température de couleur vient du réglage de la couche, la hauteur de feu du défaut du type — chacune le dit. Données d’exemple fictives." loading="lazy">
-          <figcaption>La couche « Appliques de façade » de nuit : la température de couleur vient du réglage de la couche, la hauteur de feu du défaut du type — chacune le dit. Données d’exemple fictives.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="eclairage-etat.jpg" alt="Un objet réglé « Hors service » : la fiche dit qu’il est éteint et pourquoi, et la légende compte « 4 allumés · 1 éteint ». Données d’exemple fictives." loading="lazy">
-          <figcaption>Un objet réglé « Hors service » : la fiche dit qu’il est éteint et pourquoi, et la légende compte « 4 allumés · 1 éteint ». Données d’exemple fictives.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <h3>Diffuser, proprement</h3>
-        <p>Deux paramètres Grist, deux intentions. <code>?embed=true</code> : page minimale en lecture forcée. <code>?style=singlePage</code> : même contour minimal, mais les droits de la personne connectée s’appliquent (un éditeur reste éditeur). Pour un public sans compte, activez Public Access (Viewer) et, si besoin, des Access Rules ou des link keys — sinon le lien demande une connexion.</p>
-        <p class="pourquoi">Ce n’est pas une publication Atlas à part : c’est le document (ou une scène publiée via <code>?scene=</code>). Retirer l’accès ou le manifeste suffit ; rien n’a été recopié ailleurs. L’iframe de diffusion doit montrer la carte, pas le chantier des tables.</p>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="lecture-recit.jpg" alt="En lecture, sans barre (`?navbar=false`) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit." loading="lazy">
-          <figcaption>En lecture, sans barre (<code>?navbar=false</code>) : la carte, la légende et le récit — rien d’autre. Ici l’étape qui accentue le relief deux fois, et le dit.</figcaption>
+          <div class="ecran"><img src="cas-liste-scenes.jpg" alt="La liste des projets : la scène du cas, avec sa miniature de nuit prise dans le document." loading="lazy"></div>
+          <figcaption>La liste des projets : la scène du cas, avec sa miniature de nuit prise dans le document.</figcaption>
         </figure>
       </div>
     </article>
   </section>
   <section class="demo">
-    <h2>La démonstration : une scène réelle</h2>
-    <p>Le ruisseau des Aygalades, au nord de Marseille, busé sur une grande partie de son cours et franchi par l’autoroute. Sept couches, huit étapes de récit, sur l’orthophotographie de l’IGN posée sur le relief LiDAR HD : le mobilier relevé dans OpenStreetMap porte les modèles du catalogue, et 640 arbres viennent du LiDAR lui-même — hauteur mesurée, forme générique.</p>
-    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fcascade-aygalades-marseille%2Fscene.json">
-      <img src="demo.jpg" alt="Le ravin boisé du ruisseau des Aygalades vu du ciel, arbres en 3D relevés dans le LiDAR, entrepôts et autoroute autour" loading="lazy">
+    <h2>La démonstration : le cas, en scène publiée</h2>
+    <p>La scène complète — maquette du Palais sous licence ouverte, 643 luminaires, dix-neuf pièges, la ronde de nuit, les relevés, la grille de pression lumineuse, douze étapes de récit dont cinq contextes. Elle s’ouvre sans document Grist.</p>
+    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fpalais-longchamp%2Fscene.json">
+      <img src="cas-nuit.jpg" alt="Le Palais Longchamp de nuit, sur l’orthophotographie de l’IGN : les luminaires allumés laissent des halos sur le parc et les rues" loading="lazy">
       <button type="button" class="lancer">Ouvrir la démonstration</button>
     </div>
-    <p class="mention">Aucun document Grist : la scène est un fichier publié, ouvert par son adresse. Données © les contributeurs OpenStreetMap (ODbL) ; orthophotographie et LiDAR HD : IGN.</p>
+    <p class="mention">Positions des points lumineux : Ville de Marseille, Éclairage 2023 (Licence Ouverte 2.0). Maquette : IGN et Panoramax (Licence Ouverte 2.0), fabriquée par pix2hdr (Cerema) ; la fontaine, adaptée d’une photographie de Wikimedia Commons, est livrée seule sous CC BY-SA 4.0. Les caractéristiques des luminaires, les pièges, les relevés et les comptages sont fictifs.</p>
   </section>
   <section>
     <h2>Ce qu’il fait</h2>
+    <h3 class="groupe-points">Charger et montrer</h3>
     <ul class="points">
       <li><b>Vos tables deviennent des couches</b> — toute table portant une géométrie est reconnue et posée sur la carte, avec ses attributs — en latitude et longitude, en GeoJSON ou en texte WKT (point, ligne, surface, et leurs formes multiples). Une table écrite en WKT est réécrite en WKT.</li>
-      <li><b>L’objet cliqué est la ligne</b> — sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain.</li>
-      <li><b>Une bulle sur l’objet touché</b> — en consultation, toucher un objet ouvre une bulle que l’équipe compose : un titre, des photos, des pastilles d’état colorées, quelques champs, la dernière visite de la table liée, et des gestes — nouvelle visite, voir la fiche, itinéraire. Elle se propose depuis le schéma de la table, puis se retouche.</li>
-      <li><b>Choisir un objet, sans le toucher</b> — une liste montre les objets d’une couche, filtrés comme la carte : état, dernière visite, distance depuis votre position. La recherche porte sur le nom et sur les valeurs des champs — « Type : Pont maçonnerie » — et un objet s’ouvre de la même façon, quel que soit le chemin pris pour l’atteindre. Dans un contexte à tournée, la liste suit la ligne.</li>
-      <li><b>Un contexte par travail, avec sa tournée</b> — un contexte règle la carte pour un travail précis — couches, filtres, relevés et pastilles proposés — et peut porter sa tournée : la ligne d’une boucle, dont les ouvrages se parcourent dans l’ordre, avec leur distance depuis le départ.</li>
-      <li><b>Annuler, rétablir, enregistrer tout seul</b> — l’apparence d’une couche s’enregistre d’elle-même dans le document, avec un indicateur d’état. Annuler et rétablir (Ctrl+Z, Ctrl+Maj+Z) remettent la couche comme elle était ; l’enregistrement automatique se coupe d’un clic.</li>
-      <li><b>Dessiner dans la carte</b> — créer une couche vide, puis ses objets — un point, une ligne, une surface — sans passer par QGIS. La forme se trace avec accroche aux objets voisins, la fiche se remplit avant d’écrire, et les objets s’enchaînent. Une forme existante se modifie sommet par sommet ; chaque geste s’annule.</li>
       <li><b>Symbolisation par la donnée</b> — couleur par catégorie ou graduée, étiquettes, extrusion. La règle est enregistrée dans le document et suit la scène. Quand l’équipe range l’apparence de ses catégories dans une table — couleur, rang de gravité, image —, Atlas la lit : la couleur vient de la table, le plus grave se dessine par-dessus, l’icône suit la valeur.</li>
       <li><b>Relief et volumes</b> — photographie aérienne de l’IGN posée sur le relief LiDAR HD, à l’échelle vraie ou accentuée ; modèles 3D et surfaces extrudées calés dessus, ombres portées à l’heure choisie. Les grandes surfaces — une zone, un périmètre — restent posées à plat plutôt que dressées en mur sur la pente.</li>
       <li><b>Des objets réalistes, réglés comme une couche</b> — un modèle du catalogue se choisit pour une couche entière, et ses réglages — puissance, hauteur, orientation, statut — se posent à trois niveaux : l’objet, la couche, le type. Un champ de votre table peut porter un réglage ; sinon une valeur par défaut s’applique, et le panneau dit toujours d’où elle vient. Ces valeurs par défaut ne sont pas écrites dans votre table, sauf si vous demandez de les y figer.</li>
       <li><b>L’éclairage public s’allume</b> — un luminaire s’allume ou reste éteint selon son statut et l’heure du soleil, et Atlas dit lequel et pourquoi — dans la fiche, la légende, la bulle de l’objet. Les points lumineux importés d’OpenStreetMap s’allument avec des règles d’Atlas, signalées comme telles.</li>
+    </ul>
+    <h3 class="groupe-points">Éditer</h3>
+    <ul class="points">
+      <li><b>L’objet cliqué est la ligne</b> — sa fiche est un formulaire — étapes, listes de choix, champs obligatoires —, composé dans Atlas ou importé d’un projet QField. Ce qu’on y écrit est dans le document, et la scène peut le proposer sur le terrain.</li>
+      <li><b>Dessiner dans la carte</b> — créer une couche vide, puis ses objets — un point, une ligne, une surface — sans passer par QGIS. La forme se trace avec accroche aux objets voisins, la fiche se remplit avant d’écrire, et les objets s’enchaînent. Une forme existante se modifie sommet par sommet ; chaque geste s’annule.</li>
+      <li><b>Annuler, rétablir, enregistrer tout seul</b> — l’apparence d’une couche s’enregistre d’elle-même dans le document, avec un indicateur d’état. Annuler et rétablir (Ctrl+Z, Ctrl+Maj+Z) remettent la couche comme elle était ; l’enregistrement automatique se coupe d’un clic.</li>
+    </ul>
+    <h3 class="groupe-points">Exploiter sur le terrain</h3>
+    <ul class="points">
+      <li><b>Une bulle sur l’objet touché</b> — en consultation, toucher un objet ouvre une bulle que l’équipe compose : un titre, des photos, des pastilles d’état colorées, quelques champs, la dernière visite de la table liée, et des gestes — nouvelle visite, voir la fiche, itinéraire. Elle se propose depuis le schéma de la table, puis se retouche.</li>
+      <li><b>Choisir un objet, sans le toucher</b> — une liste montre les objets d’une couche, filtrés comme la carte : état, dernière visite, distance depuis votre position. La recherche porte sur le nom et sur les valeurs des champs — « Type : Pont maçonnerie » — et un objet s’ouvre de la même façon, quel que soit le chemin pris pour l’atteindre. Dans un contexte à tournée, la liste suit la ligne.</li>
+      <li><b>Un contexte par travail, avec sa tournée</b> — un contexte règle la carte pour un travail précis — couches, filtres, relevés et pastilles proposés — et peut porter sa tournée : la ligne d’une boucle, dont les ouvrages se parcourent dans l’ordre, avec leur distance depuis le départ.</li>
+    </ul>
+    <h3 class="groupe-points">Raconter et partager</h3>
+    <ul class="points">
       <li><b>Des filtres que le lecteur manipule</b> — chaque colonne prend la forme que son type appelle — dates, nombres, catégories, listes, recherche texte — et l’auteur publie ceux qu’il veut en pastilles sur la carte.</li>
       <li><b>Un récit, et un trajet si besoin</b> — chaque étape retient le cadrage, les couches, les filtres et l’heure. On peut y poser une ligne : les étapes se placent sur le parcours, se glissent à la main, et en lecture la caméra suit la ligne — utile sur le terrain avec les formulaires exposés. Le récit garde ses étapes par une clé stable, et l’auteur choisit ce que le lecteur voit à l’ouverture : la carte, le récit ou un contexte.</li>
       <li><b>Les droits du document font foi</b> — aucune liste d’accès propre à Atlas : Grist décide, table par table. Trois postures — Préparer, Exploiter, Lecture — et le lien partagé fixe un plafond : un lien en lecture ne rouvre jamais en préparation. En lecture seule l’édition disparaît, le récit reste consultable. ACL et link keys Grist s’appliquent tels quels.</li>
@@ -458,6 +456,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>vitrine</b><p>La page suit désormais un seul cas, de bout en bout : l’éclairage public du Palais Longchamp et son effet sur les insectes de nuit, sur des positions réelles et des comptages fictifs déclarés. La démonstration des Aygalades laisse la place à la scène du cas.</p></div>
       <div><b>v1.10.2</b><p>Les contrôles publiés se lisent en entier : un libellé de catégorie long passe à la ligne au lieu d’être coupé, la liste est plus haute, les curseurs d’une plage ne sont plus rognés, et les valeurs suivent l’ordre de la légende.</p></div>
       <div><b>v1.10.1</b><p>Jouer un contexte ou une étape du récit ne retire plus les pastilles de contrôle que l’auteur a publiées : le filtre est levé, la pastille reste offerte.</p></div>
       <div><b>v1.10.0</b><p>Des objets réalistes réglés comme une couche : un panneau « Spécifications » pour l’objet et pour la couche, des champs de la table qu’on lie aux réglages, la provenance de chaque valeur affichée, et « figer dans la table » sans jamais écraser une cellule remplie. L’éclairage s’allume selon le statut et le soleil, et la fiche, la légende et la bulle disent pourquoi un luminaire est éteint. Le placement et les réglages d’un objet ne se perdent plus quand la table n’a pas encore sa colonne : Atlas la crée au premier réglage, ou prévient qu’il n’en a pas le droit. Le relevé de terrain prend forme : formulaires natifs de Grist lus, une bulle d’objet composée par l’équipe, une liste pour choisir un objet et une recherche dans ses champs, l’apparence des catégories lue dans les tables de référence, la géométrie lue et écrite en WKT. Trois postures — Préparer, Exploiter, Lecture — sous un plafond fixé par le lien, droits appris table par table ; récit à clé stable, qui s’écrit sans effacer celui d’un autre ; contextes qu’on rejoue sans la séquence ; ouverture de la scène choisie par l’auteur. Les textes du document — étape, nom de couche, résultat de recherche de lieu — ne s’exécutent plus. Les grandes surfaces sont posées à plat sur le relief.</p></div>

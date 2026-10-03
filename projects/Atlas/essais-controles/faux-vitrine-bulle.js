@@ -91,7 +91,7 @@
       var m = modeles[idMo[l.Modele] - 1];
       return { Code: l.Code, Categorie: l.Categorie, Modele: idMo[l.Modele], hauteur_feu: l.Hauteur_feu_m, Annee_pose: l.Annee_pose, Abaissement_nuit_pct: l.Abaissement_nuit_pct, Etat: l.Etat, Zone: l.Zone,
         Dist_eau_m: l.Dist_eau_m, Dist_bois_m: l.Dist_bois_m, Longitude: l.Longitude, Latitude: l.Latitude, Source: l.Source, Donnee: l.Donnee,
-        Classe: idCl[m.Classe], temperatureCouleur: m.Temperature_K, puissance: PUISS[m.id], statut: l.Etat === 'Défectueux' ? 'decommissioned' : 'functional', Nom_modele: m.Libelle, Cellule: l.Cellule, Teinte: classes[idCl[m.Classe] - 1].Libelle };
+        Classe: idCl[m.Classe], temperatureCouleur: m.Temperature_K, puissance: PUISS[m.id], statut: l.Etat === 'Défectueux' ? 'decommissioned' : 'functional', Nom_modele: m.Libelle, Cellule: l.Cellule, Teinte: classes[idCl[m.Classe] - 1].Libelle, Nom: m.Libelle + ' · ' + l.Code };
     });
     var rowsRe = lignes(releves, function (r) { return { Piege: r.piege, Nuit: unix(r.nuit), Duree_h: r.duree_h, Temp_c: r.temp_c, Vent_bft: r.vent_bft, Lepidopteres: r.Lepidopteres, Dipteres: r.Dipteres, Coleopteres: r.Coleopteres,
       Hymenopteres: r.Hymenopteres, Autres: r.Autres, Total: r.Total, Mois: r.Mois, WKT: r.WKT, Donnee: r.Donnee }; });
@@ -105,7 +105,7 @@
       Classes_spectrales: { cols: [['Libelle', 'Text'], ['Couleur', 'Text'], ['Rang', 'Int'], ['Attraction', 'Numeric'], ['Donnee', 'Text']], rows: rowsCl },
       Modeles: { cols: [['Libelle', 'Text'], ['Modele3D', 'Text'], ['Classe', 'Ref:Classes_spectrales'], ['Temperature_K', 'Int'], ['Flux_lm', 'Int'], ['ULOR_pct', 'Int'], ['Puissance_W', 'Int'], ['Remarque', 'Text'], ['Donnee', 'Text']], rows: rowsMo },
       Luminaires: { cols: [['Code', 'Text'], ['Categorie', 'Text'], ['Modele', 'Ref:Modeles'], ['hauteur_feu', 'Numeric'], ['Annee_pose', 'Int'], ['Abaissement_nuit_pct', 'Int'], ['Etat', 'Choice'], ['Zone', 'Choice'], ['Dist_eau_m', 'Int'], ['Dist_bois_m', 'Int'],
-        ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Source', 'Text'], ['Donnee', 'Text'], ['Classe', 'Ref:Classes_spectrales', true], ['temperatureCouleur', 'Int', true], ['puissance', 'Int', true], ['statut', 'Text', true], ['Nom_modele', 'Text', true], ['Cellule', 'Text', true], ['Teinte', 'Text', true]], rows: rowsLu },
+        ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Source', 'Text'], ['Donnee', 'Text'], ['Classe', 'Ref:Classes_spectrales', true], ['temperatureCouleur', 'Int', true], ['puissance', 'Int', true], ['statut', 'Text', true], ['Nom_modele', 'Text', true], ['Cellule', 'Text', true], ['Teinte', 'Text', true], ['Nom', 'Text', true]], rows: rowsLu },
       Pieges: { cols: [['Nom', 'Text'], ['Type', 'Choice'], ['Luminaire', 'Ref:Luminaires'], ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Dist_eau_m', 'Int'], ['Dist_luminaire_m', 'Int'], ['Donnee', 'Text'],
         ['Modele', 'Ref:Modeles', true], ['Classe', 'Ref:Classes_spectrales', true], ['Teinte', 'Text', true], ['Nuits', 'Int', true], ['Total_moyen', 'Int', true]], rows: rowsPi },
       Releves: { cols: [['Piege', 'Ref:Pieges'], ['Nuit', 'Date'], ['Duree_h', 'Numeric'], ['Temp_c', 'Int'], ['Vent_bft', 'Int'], ['Lepidopteres', 'Int'], ['Dipteres', 'Int'], ['Coleopteres', 'Int'], ['Hymenopteres', 'Int'], ['Autres', 'Int'], ['Total', 'Int', true], ['Mois', 'Text', true], ['WKT', 'Text', true], ['Donnee', 'Text']], rows: rowsRe },
@@ -117,6 +117,16 @@
       'Pieges.Modele': 'Modeles.Libelle', 'Pieges.Classe': 'Classes_spectrales.Libelle', 'Releves.Piege': 'Pieges.Nom' };
     // La configuration d'Atlas (couches, récit, scène) survit au rechargement de la page d'essai : on peut ainsi voir ce que fait
     // l'application en rouvrant un document réglé, comme dans Grist. `?neuf=1` repart d'un document vierge.
+    // ?config=1 : la configuration du vrai document de démonstration, exportée de Grist (vitrine-longchamp/configuration/).
+    if (location.search.indexOf('config=1') >= 0) {
+      try {
+        var xc = new XMLHttpRequest();
+        xc.open('GET', new URL('../vitrine-longchamp/configuration/atlas-longchamp.json', location.href).href, false);
+        xc.send();
+        var exportee = JSON.parse(xc.responseText);
+        Object.keys(exportee).forEach(function (k) { tables[k] = exportee[k]; });
+      } catch (e) {}
+    }
     try {
       if (location.search.indexOf('neuf=1') >= 0) localStorage.removeItem('faux_longchamp_atlas');
       var gardees = JSON.parse(localStorage.getItem('faux_longchamp_atlas') || 'null');

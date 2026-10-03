@@ -143,7 +143,7 @@ feats = []
 for l in luminaires:
     m = modeles[l['Modele']]
     feats.append(point(l['Longitude'], l['Latitude'], {
-        'code': l['Code'], 'categorie': l['Categorie'], 'modele': m['Libelle'], 'teinte': LIBELLE_CLASSE[m['Classe']], 'zone': l['Zone'], 'etat': l['Etat'],
+        'nom': m['Libelle'] + ' · ' + l['Code'], 'code': l['Code'], 'categorie': l['Categorie'], 'modele': m['Libelle'], 'teinte': LIBELLE_CLASSE[m['Classe']], 'zone': l['Zone'], 'etat': l['Etat'],
         'annee_pose': l['Annee_pose'], 'dist_eau_m': l['Dist_eau_m'], 'dist_bois_m': l['Dist_bois_m'],
         'temperatureCouleur': m['Temperature_K'], 'puissance': PUISSANCE[l['Modele']], 'hauteurFeu': l['Hauteur_feu_m'], 'donnee': 'Position réelle (Ville de Marseille) ; caractéristiques fictives',
         'statut': 'decommissioned' if l['Etat'] == 'Défectueux' else 'functional',
