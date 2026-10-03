@@ -93,7 +93,8 @@ Tests : 1241 verts.
 - **Fonds IGN** : orthophotographie bornée au zoom 19, relief LiDAR HD ; une étape
   de récit capture la source du relief et son exagération.
 - **Scène externe** (`?scene=`) : manifeste publié, sans document ; démos
-  `cascade-aygalades-marseille` et `osm-marseille-vieux-port` publiées.
+  `osm-marseille-vieux-port` publiée ; `palais-longchamp` (vitrine, 03/10/2026) est fabriquée sous `published/` ; celle des Aygalades n'est plus publiée
+  (sources dans `projects/Atlas/demos/`, les remarques qui la citent plus bas gardent leur valeur).
 - Dock soleil haut-droite (repli style boussole) ; inspecteur fermable.
 - Couches fond (buildings/landscape/lines) masquées par défaut à l’import.
 - **Objets réalistes réglés comme une couche** (non publié) : panneau « Spécifications »,
@@ -3075,3 +3076,12 @@ Fonds) et celles des contrôles actifs (clé `data:<table>:<champ>`). Jouée —
 avant ce réglage) laisse les pastilles de la scène. Re-capturer redéfinit la liste. La carte d'étape dit « Pastilles : Fonds · État (à la
 capture) ». `pastillesDe` / `pastilleOfferte` : `lib/contextes.js`, testés. Le filtre d'unité d'un contexte n'a donc plus de pastille si l'auteur
 l'a retiré de son dock avant de capturer. **Pas encore éprouvé en Grist réel** (session du navigateur de test perdue au moment de l'essai).
+
+## Le cas de la vitrine : éclairage du Palais Longchamp et faune nocturne (03/10/2026)
+
+Tout est dans `projects/Atlas/vitrine-longchamp/` : `fabriquer.py` (données : 643 points lumineux réels de la Ville de Marseille, le reste **fictif et déclaré** : modèles, pièges, relevés, comptages ;
+réseau BD TOPO pour deux tournées), `charger-*.js` (chargement dans le document Grist de démonstration), `regler-atlas.js` + `construire-recit.js` (réglage d'Atlas par `window.A`, comme le ferait
+l'auteur), `recit.json` (12 étapes dont 5 contextes), `fabriquer-scene.py` (scène publiée, régimes de licence séparés), `piege-lumineux.py` (modèle 3D), `ecrire-vitrine.py` (fiche de vitrine).
+Page d'essai : `essais-controles/index-vitrine-bulle.html?longchamp=1&liste=1[&config=1][&neuf=1]`. Leçons : une scène ouverte par adresse rend `popup_template` comme du **texte** (déclarer des `fields` aux libellés) ;
+deux objets au même point se masquent (décaler) ; en exploitation la maquette gêne (ronds 2D lisibles, 3D réservée au récit) ; le libellé d'une catégorie venant d'une table de référence se perdait à la réouverture
+(`declarativeFromAtlasLayer`, corrigé, testé). Les agrégats en volume passent par des formules Grist : l'agrégat natif d'Atlas est reporté (voir la mémoire du projet).

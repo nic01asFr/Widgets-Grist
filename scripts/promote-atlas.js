@@ -105,7 +105,10 @@ for (const rel of VENDOR) {
  * la copie : `existsSync` ne suffirait pas, elle est bien sur le disque. On
  * copie donc une liste NOMMEE, pas le contenu d'un dossier.
  */
-const DEMOS = ['cascade-aygalades-marseille', 'osm-marseille-vieux-port'];
+// La démonstration de la vitrine, `palais-longchamp`, n'est pas copiée d'ici : elle est fabriquée directement sous
+// `published/atlas/demos/` par `projects/Atlas/vitrine-longchamp/fabriquer-scene.py`. Celle des Aygalades n'est plus publiée
+// (ses sources restent dans `projects/Atlas/demos/`).
+const DEMOS = ['osm-marseille-vieux-port'];
 const SERVIS = /\.(json|geojson|glb)$/;
 const demSrc = path.join(src, 'demos');
 const demPub = path.join(pub, 'demos');

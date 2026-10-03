@@ -49,7 +49,8 @@ contributeurs, sous CC BY 4.0.
 > l'usage commercial, que la MIT accorde).
 >
 > Cette démo reste donc **hors du dépôt** tant que son origine n'est pas établie.
-> La démo des Aygalades la remplace : même ville, même propos, licence propre.
+> La démo des Aygalades la remplaçait ; elle n'est plus publiée non plus (vitrine du 03/10/2026), et c'est la scène du Palais Longchamp
+> (voir « Scène du Palais Longchamp » plus bas) qui la remplace.
 
 ---
 
@@ -65,3 +66,20 @@ GeoJSON du dépôt est retraçable jusqu'à sa requête.
 
 Fonds de carte : [OpenFreeMap](https://openfreemap.org/) et
 [OpenMapTiles](https://www.openmaptiles.org/), sur données OpenStreetMap.
+
+---
+
+## Scène du Palais Longchamp (vitrine d'Atlas)
+
+`published/atlas/demos/palais-longchamp/` — générée par `projects/Atlas/vitrine-longchamp/fabriquer-scene.py`. Chaque régime de licence reste dans son propre fichier.
+
+| Élément | Source | Licence |
+|---|---|---|
+| Position, code et catégorie des 643 points lumineux | Ville de Marseille, *Éclairage 2023* (données ouvertes) | Licence Ouverte 2.0 |
+| Terrain, sol, voirie, toitures, façades, ouvrages, escaliers, eau, clôtures, arbres (position, hauteur, essence), tracé de la ronde | IGN (RGE ALTI, LiDAR HD, BD TOPO, BD ORTHO) et Panoramax, via la maquette v9.3 de pix2hdr (Cerema) | Licence Ouverte 2.0 |
+| Fontaine monumentale (`fontaine-v4.glb`, couche seule) | Adaptation d'une photographie de Wikimedia Commons | CC BY-SA 4.0 |
+| Piège lumineux (`piege-lumineux.glb`) | Création de ce dépôt (`piege-lumineux.py`) | Licence Ouverte 2.0 |
+| Caractéristiques des luminaires, pièges, relevés, comptages | **Fictifs**, produits par règles (`fabriquer.py`) | — |
+
+Aucune géométrie dérivée d'OpenStreetMap (ODbL) n'est livrée ; le fond de carte est celui du service (© les contributeurs OpenStreetMap, OpenFreeMap, OpenMapTiles).
+Les profils de croissance d'arbres de SESAME (usage interne) ne sont pas livrés : les arbres prennent les modèles génériques d'Atlas.
