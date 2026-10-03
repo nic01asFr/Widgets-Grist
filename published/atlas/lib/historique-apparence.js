@@ -14,7 +14,7 @@
  *   couche (voir \`applyLayerPrefsBinding\`) — alors qu'un instantané se remet tel quel.
  * Les saisies d'objets restent annulables dans Grist même (Ctrl+Z hors du widget).
  */
-import { layerPrefsPayload } from './manifest-binding.js?v=1.12.1';
+import { layerPrefsPayload } from './manifest-binding.js?v=1.12.2';
 
 export const VERSION = '1.0.0';
 

@@ -18,7 +18,7 @@
  * Ce module est pur : il construit des options et des expressions MapLibre, il ne touche pas à la carte.
  */
 
-import { expressionRang } from './table-reference.js?v=1.12.1';
+import { expressionRang } from './table-reference.js?v=1.12.2';
 
 export const VERSION = '1.0.0';
 
