@@ -12,6 +12,7 @@
   "Dist_bois_m": 560,
   "Longitude": 5.3900132,
   "Latitude": 43.3090668,
+  "Cellule": "8732_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -28,6 +29,7 @@
   "Dist_bois_m": 553,
   "Longitude": 5.390295,
   "Latitude": 43.3092308,
+  "Cellule": "8733_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -44,6 +46,7 @@
   "Dist_bois_m": 563,
   "Longitude": 5.3897309,
   "Latitude": 43.3089066,
+  "Cellule": "8732_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -60,6 +63,7 @@
   "Dist_bois_m": 578,
   "Longitude": 5.3901837,
   "Latitude": 43.3094952,
+  "Cellule": "8733_95778",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -76,6 +80,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.394419,
   "Latitude": 43.3026666,
+  "Cellule": "8740_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -92,6 +97,7 @@
   "Dist_bois_m": 99,
   "Longitude": 5.3946538,
   "Latitude": 43.3027802,
+  "Cellule": "8740_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -108,6 +114,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3951643,
   "Latitude": 43.3030119,
+  "Cellule": "8741_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -124,6 +131,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3941934,
   "Latitude": 43.3025644,
+  "Cellule": "8739_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -140,6 +148,7 @@
   "Dist_bois_m": 97,
   "Longitude": 5.3948498,
   "Latitude": 43.3028679,
+  "Cellule": "8740_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -156,6 +165,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3949707,
   "Latitude": 43.3030773,
+  "Cellule": "8740_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -172,6 +182,7 @@
   "Dist_bois_m": 247,
   "Longitude": 5.393336,
   "Latitude": 43.307602,
+  "Cellule": "8738_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -188,6 +199,7 @@
   "Dist_bois_m": 368,
   "Longitude": 5.3920665,
   "Latitude": 43.3081935,
+  "Cellule": "8736_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -204,6 +216,7 @@
   "Dist_bois_m": 390,
   "Longitude": 5.3919612,
   "Latitude": 43.3084168,
+  "Cellule": "8736_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -220,6 +233,7 @@
   "Dist_bois_m": 285,
   "Longitude": 5.392562,
   "Latitude": 43.307424,
+  "Cellule": "8737_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -236,6 +250,7 @@
   "Dist_bois_m": 266,
   "Longitude": 5.392949,
   "Latitude": 43.307513,
+  "Cellule": "8737_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -252,6 +267,7 @@
   "Dist_bois_m": 141,
   "Longitude": 5.3933422,
   "Latitude": 43.3061675,
+  "Cellule": "8738_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -268,6 +284,7 @@
   "Dist_bois_m": 194,
   "Longitude": 5.3930009,
   "Latitude": 43.306579,
+  "Cellule": "8737_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -284,6 +301,7 @@
   "Dist_bois_m": 226,
   "Longitude": 5.3927902,
   "Latitude": 43.3068273,
+  "Cellule": "8737_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -300,6 +318,7 @@
   "Dist_bois_m": 250,
   "Longitude": 5.3926482,
   "Latitude": 43.3070256,
+  "Cellule": "8737_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -316,6 +335,7 @@
   "Dist_bois_m": 273,
   "Longitude": 5.392536,
   "Latitude": 43.3072455,
+  "Cellule": "8736_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -332,6 +352,7 @@
   "Dist_bois_m": 299,
   "Longitude": 5.3924252,
   "Latitude": 43.3074971,
+  "Cellule": "8736_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -348,6 +369,7 @@
   "Dist_bois_m": 324,
   "Longitude": 5.3922932,
   "Latitude": 43.3077386,
+  "Cellule": "8736_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -364,6 +386,7 @@
   "Dist_bois_m": 348,
   "Longitude": 5.3921673,
   "Latitude": 43.3079819,
+  "Cellule": "8736_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -380,6 +403,7 @@
   "Dist_bois_m": 538,
   "Longitude": 5.3906288,
   "Latitude": 43.309324,
+  "Cellule": "8733_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -396,6 +420,7 @@
   "Dist_bois_m": 534,
   "Longitude": 5.3906656,
   "Latitude": 43.3093019,
+  "Cellule": "8733_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -412,6 +437,7 @@
   "Dist_bois_m": 531,
   "Longitude": 5.390696,
   "Latitude": 43.3092861,
+  "Cellule": "8733_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -428,6 +454,7 @@
   "Dist_bois_m": 528,
   "Longitude": 5.3907217,
   "Latitude": 43.309273,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -444,6 +471,7 @@
   "Dist_bois_m": 526,
   "Longitude": 5.3907463,
   "Latitude": 43.3092636,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -460,6 +488,7 @@
   "Dist_bois_m": 525,
   "Longitude": 5.3907605,
   "Latitude": 43.3092541,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -476,6 +505,7 @@
   "Dist_bois_m": 523,
   "Longitude": 5.3907845,
   "Latitude": 43.3092449,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -492,6 +522,7 @@
   "Dist_bois_m": 521,
   "Longitude": 5.3908013,
   "Latitude": 43.3092389,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -508,6 +539,7 @@
   "Dist_bois_m": 520,
   "Longitude": 5.3908169,
   "Latitude": 43.3092305,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -524,6 +556,7 @@
   "Dist_bois_m": 518,
   "Longitude": 5.3908362,
   "Latitude": 43.3092206,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -540,6 +573,7 @@
   "Dist_bois_m": 516,
   "Longitude": 5.3908552,
   "Latitude": 43.3092125,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -556,6 +590,7 @@
   "Dist_bois_m": 514,
   "Longitude": 5.3908776,
   "Latitude": 43.3092022,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -572,6 +607,7 @@
   "Dist_bois_m": 511,
   "Longitude": 5.3909087,
   "Latitude": 43.3091891,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -588,6 +624,7 @@
   "Dist_bois_m": 508,
   "Longitude": 5.3909227,
   "Latitude": 43.3091672,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -604,6 +641,7 @@
   "Dist_bois_m": 509,
   "Longitude": 5.3909344,
   "Latitude": 43.3091791,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -620,6 +658,7 @@
   "Dist_bois_m": 509,
   "Longitude": 5.390947,
   "Latitude": 43.3091941,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -636,6 +675,7 @@
   "Dist_bois_m": 509,
   "Longitude": 5.3909578,
   "Latitude": 43.3092039,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -652,6 +692,7 @@
   "Dist_bois_m": 479,
   "Longitude": 5.3912303,
   "Latitude": 43.3090228,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -668,6 +709,7 @@
   "Dist_bois_m": 479,
   "Longitude": 5.391264,
   "Latitude": 43.3090569,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -684,6 +726,7 @@
   "Dist_bois_m": 479,
   "Longitude": 5.391254,
   "Latitude": 43.3090473,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -700,6 +743,7 @@
   "Dist_bois_m": 479,
   "Longitude": 5.3912403,
   "Latitude": 43.3090333,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -716,6 +760,7 @@
   "Dist_bois_m": 475,
   "Longitude": 5.3912801,
   "Latitude": 43.3090136,
+  "Cellule": "8734_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -732,6 +777,7 @@
   "Dist_bois_m": 473,
   "Longitude": 5.3912994,
   "Latitude": 43.3090041,
+  "Cellule": "8734_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -748,6 +794,7 @@
   "Dist_bois_m": 472,
   "Longitude": 5.3913201,
   "Latitude": 43.3089957,
+  "Cellule": "8734_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -764,6 +811,7 @@
   "Dist_bois_m": 469,
   "Longitude": 5.3913473,
   "Latitude": 43.3089844,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -780,6 +828,7 @@
   "Dist_bois_m": 467,
   "Longitude": 5.391368,
   "Latitude": 43.308975,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -796,6 +845,7 @@
   "Dist_bois_m": 466,
   "Longitude": 5.3913848,
   "Latitude": 43.3089675,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -812,6 +862,7 @@
   "Dist_bois_m": 459,
   "Longitude": 5.3914184,
   "Latitude": 43.3089053,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -828,6 +879,7 @@
   "Dist_bois_m": 455,
   "Longitude": 5.3914955,
   "Latitude": 43.3089105,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -844,6 +896,7 @@
   "Dist_bois_m": 452,
   "Longitude": 5.3915258,
   "Latitude": 43.3088988,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -860,6 +913,7 @@
   "Dist_bois_m": 450,
   "Longitude": 5.3915503,
   "Latitude": 43.3088865,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -876,6 +930,7 @@
   "Dist_bois_m": 447,
   "Longitude": 5.3915736,
   "Latitude": 43.3088762,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -892,6 +947,7 @@
   "Dist_bois_m": 445,
   "Longitude": 5.3915982,
   "Latitude": 43.3088611,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -908,6 +964,7 @@
   "Dist_bois_m": 442,
   "Longitude": 5.3916253,
   "Latitude": 43.3088442,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -924,6 +981,7 @@
   "Dist_bois_m": 439,
   "Longitude": 5.391646,
   "Latitude": 43.3088282,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -940,6 +998,7 @@
   "Dist_bois_m": 437,
   "Longitude": 5.3916641,
   "Latitude": 43.3088113,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -956,6 +1015,7 @@
   "Dist_bois_m": 435,
   "Longitude": 5.3916797,
   "Latitude": 43.3087943,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -972,6 +1032,7 @@
   "Dist_bois_m": 432,
   "Longitude": 5.3916991,
   "Latitude": 43.3087774,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -988,6 +1049,7 @@
   "Dist_bois_m": 430,
   "Longitude": 5.3917133,
   "Latitude": 43.3087586,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1004,6 +1066,7 @@
   "Dist_bois_m": 428,
   "Longitude": 5.3917275,
   "Latitude": 43.3087398,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1020,6 +1083,7 @@
   "Dist_bois_m": 427,
   "Longitude": 5.391734,
   "Latitude": 43.3087293,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1036,6 +1100,7 @@
   "Dist_bois_m": 426,
   "Longitude": 5.3917417,
   "Latitude": 43.3087191,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1052,6 +1117,7 @@
   "Dist_bois_m": 423,
   "Longitude": 5.3917534,
   "Latitude": 43.3086946,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1068,6 +1134,7 @@
   "Dist_bois_m": 421,
   "Longitude": 5.3917624,
   "Latitude": 43.3086711,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1084,6 +1151,7 @@
   "Dist_bois_m": 419,
   "Longitude": 5.3917728,
   "Latitude": 43.3086532,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1100,6 +1168,7 @@
   "Dist_bois_m": 416,
   "Longitude": 5.3917831,
   "Latitude": 43.3086287,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1116,6 +1185,7 @@
   "Dist_bois_m": 415,
   "Longitude": 5.3917935,
   "Latitude": 43.3086108,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1132,6 +1202,7 @@
   "Dist_bois_m": 412,
   "Longitude": 5.3918038,
   "Latitude": 43.3085901,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1148,6 +1219,7 @@
   "Dist_bois_m": 410,
   "Longitude": 5.3918154,
   "Latitude": 43.3085694,
+  "Cellule": "8735_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1164,6 +1236,7 @@
   "Dist_bois_m": 408,
   "Longitude": 5.3918258,
   "Latitude": 43.3085478,
+  "Cellule": "8735_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1180,6 +1253,7 @@
   "Dist_bois_m": 406,
   "Longitude": 5.3918374,
   "Latitude": 43.3085252,
+  "Cellule": "8735_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1196,6 +1270,7 @@
   "Dist_bois_m": 403,
   "Longitude": 5.3918465,
   "Latitude": 43.3085017,
+  "Cellule": "8735_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1212,6 +1287,7 @@
   "Dist_bois_m": 544,
   "Longitude": 5.3904875,
   "Latitude": 43.3092856,
+  "Cellule": "8733_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1228,6 +1304,7 @@
   "Dist_bois_m": 267,
   "Longitude": 5.3999481,
   "Latitude": 43.3029251,
+  "Cellule": "8748_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1244,6 +1321,7 @@
   "Dist_bois_m": 166,
   "Longitude": 5.3984261,
   "Latitude": 43.3028069,
+  "Cellule": "8746_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1260,6 +1338,7 @@
   "Dist_bois_m": 192,
   "Longitude": 5.3987279,
   "Latitude": 43.3027267,
+  "Cellule": "8746_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1276,6 +1355,7 @@
   "Dist_bois_m": 213,
   "Longitude": 5.399055,
   "Latitude": 43.3027496,
+  "Cellule": "8747_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1292,6 +1372,7 @@
   "Dist_bois_m": 235,
   "Longitude": 5.3993812,
   "Latitude": 43.3027725,
+  "Cellule": "8748_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1308,6 +1389,7 @@
   "Dist_bois_m": 256,
   "Longitude": 5.399694,
   "Latitude": 43.3027954,
+  "Cellule": "8748_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1324,6 +1406,7 @@
   "Dist_bois_m": 104,
   "Longitude": 5.3969071,
   "Latitude": 43.3027487,
+  "Cellule": "8744_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1340,6 +1423,7 @@
   "Dist_bois_m": 120,
   "Longitude": 5.3970571,
   "Latitude": 43.3026161,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1356,6 +1440,7 @@
   "Dist_bois_m": 125,
   "Longitude": 5.3973253,
   "Latitude": 43.3026264,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1372,6 +1457,7 @@
   "Dist_bois_m": 142,
   "Longitude": 5.3978039,
   "Latitude": 43.3026543,
+  "Cellule": "8745_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1388,6 +1474,7 @@
   "Dist_bois_m": 133,
   "Longitude": 5.3975675,
   "Latitude": 43.3026359,
+  "Cellule": "8745_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1404,6 +1491,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3959632,
   "Latitude": 43.3038254,
+  "Cellule": "8742_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1420,6 +1508,7 @@
   "Dist_bois_m": 49,
   "Longitude": 5.3956762,
   "Latitude": 43.3031762,
+  "Cellule": "8742_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1436,6 +1525,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3957753,
   "Latitude": 43.3033943,
+  "Cellule": "8742_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1452,6 +1542,7 @@
   "Dist_bois_m": 22,
   "Longitude": 5.395865,
   "Latitude": 43.3035927,
+  "Cellule": "8742_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1468,6 +1559,7 @@
   "Dist_bois_m": 165,
   "Longitude": 5.395978,
   "Latitude": 43.3076726,
+  "Cellule": "8742_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1484,6 +1576,7 @@
   "Dist_bois_m": 190,
   "Longitude": 5.3961301,
   "Latitude": 43.3078829,
+  "Cellule": "8742_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1500,6 +1593,7 @@
   "Dist_bois_m": 212,
   "Longitude": 5.3961509,
   "Latitude": 43.3080758,
+  "Cellule": "8742_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1516,6 +1610,7 @@
   "Dist_bois_m": 142,
   "Longitude": 5.3958238,
   "Latitude": 43.3074793,
+  "Cellule": "8742_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1532,6 +1627,7 @@
   "Dist_bois_m": 213,
   "Longitude": 5.3963251,
   "Latitude": 43.3080578,
+  "Cellule": "8743_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1548,6 +1644,7 @@
   "Dist_bois_m": 254,
   "Longitude": 5.3962617,
   "Latitude": 43.3084497,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1564,6 +1661,7 @@
   "Dist_bois_m": 124,
   "Longitude": 5.3936981,
   "Latitude": 43.3061552,
+  "Cellule": "8738_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1580,6 +1678,7 @@
   "Dist_bois_m": 118,
   "Longitude": 5.3939091,
   "Latitude": 43.3062743,
+  "Cellule": "8739_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1596,6 +1695,7 @@
   "Dist_bois_m": 115,
   "Longitude": 5.3940942,
   "Latitude": 43.3063773,
+  "Cellule": "8739_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1612,6 +1712,7 @@
   "Dist_bois_m": 116,
   "Longitude": 5.3943118,
   "Latitude": 43.3065096,
+  "Cellule": "8739_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1628,6 +1729,7 @@
   "Dist_bois_m": 107,
   "Longitude": 5.3945067,
   "Latitude": 43.306614,
+  "Cellule": "8740_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1644,6 +1746,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.394867,
   "Latitude": 43.3066969,
+  "Cellule": "8740_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1660,6 +1763,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.395059,
   "Latitude": 43.3068318,
+  "Cellule": "8741_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1676,6 +1780,7 @@
   "Dist_bois_m": 93,
   "Longitude": 5.395259,
   "Latitude": 43.30698,
+  "Cellule": "8741_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1692,6 +1797,7 @@
   "Dist_bois_m": 102,
   "Longitude": 5.3954537,
   "Latitude": 43.3071083,
+  "Cellule": "8741_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1708,6 +1814,7 @@
   "Dist_bois_m": 119,
   "Longitude": 5.3956537,
   "Latitude": 43.3072761,
+  "Cellule": "8742_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1724,6 +1831,7 @@
   "Dist_bois_m": 236,
   "Longitude": 5.3962631,
   "Latitude": 43.3082809,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1740,6 +1848,7 @@
   "Dist_bois_m": 230,
   "Longitude": 5.3965389,
   "Latitude": 43.3081727,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1756,6 +1865,7 @@
   "Dist_bois_m": 83,
   "Longitude": 5.3988609,
   "Latitude": 43.305378,
+  "Cellule": "8747_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1772,6 +1882,7 @@
   "Dist_bois_m": 60,
   "Longitude": 5.398592,
   "Latitude": 43.3054619,
+  "Cellule": "8746_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1788,6 +1899,7 @@
   "Dist_bois_m": 15,
   "Longitude": 5.3978262,
   "Latitude": 43.3056908,
+  "Cellule": "8745_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1804,6 +1916,7 @@
   "Dist_bois_m": 6,
   "Longitude": 5.3961492,
   "Latitude": 43.3060799,
+  "Cellule": "8742_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1820,6 +1933,7 @@
   "Dist_bois_m": 69,
   "Longitude": 5.3950191,
   "Latitude": 43.3065796,
+  "Cellule": "8740_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1836,6 +1950,7 @@
   "Dist_bois_m": 41,
   "Longitude": 5.3953519,
   "Latitude": 43.3064766,
+  "Cellule": "8741_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1852,6 +1967,7 @@
   "Dist_bois_m": 20,
   "Longitude": 5.3956718,
   "Latitude": 43.3063812,
+  "Cellule": "8742_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1868,6 +1984,7 @@
   "Dist_bois_m": 16,
   "Longitude": 5.3960152,
   "Latitude": 43.3062706,
+  "Cellule": "8742_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1884,6 +2001,7 @@
   "Dist_bois_m": 23,
   "Longitude": 5.3963408,
   "Latitude": 43.3061562,
+  "Cellule": "8743_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1900,6 +2018,7 @@
   "Dist_bois_m": 40,
   "Longitude": 5.3966899,
   "Latitude": 43.3060493,
+  "Cellule": "8743_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1916,6 +2035,7 @@
   "Dist_bois_m": 17,
   "Longitude": 5.3971,
   "Latitude": 43.3059196,
+  "Cellule": "8744_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1932,6 +2052,7 @@
   "Dist_bois_m": 15,
   "Longitude": 5.3975158,
   "Latitude": 43.3057861,
+  "Cellule": "8745_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1948,6 +2069,7 @@
   "Dist_bois_m": 84,
   "Longitude": 5.3970855,
   "Latitude": 43.3029621,
+  "Cellule": "8744_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1964,6 +2086,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.3972633,
   "Latitude": 43.3030994,
+  "Cellule": "8744_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1980,6 +2103,7 @@
   "Dist_bois_m": 74,
   "Longitude": 5.3973838,
   "Latitude": 43.3031977,
+  "Cellule": "8744_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -1996,6 +2120,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3975281,
   "Latitude": 43.3033435,
+  "Cellule": "8745_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2012,6 +2137,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.3977153,
   "Latitude": 43.3035417,
+  "Cellule": "8745_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2028,6 +2154,7 @@
   "Dist_bois_m": 77,
   "Longitude": 5.3978171,
   "Latitude": 43.303649,
+  "Cellule": "8745_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2044,6 +2171,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3979609,
   "Latitude": 43.3038213,
+  "Cellule": "8745_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2060,6 +2188,7 @@
   "Dist_bois_m": 82,
   "Longitude": 5.3981447,
   "Latitude": 43.3039964,
+  "Cellule": "8746_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2076,6 +2205,7 @@
   "Dist_bois_m": 84,
   "Longitude": 5.3982613,
   "Latitude": 43.3041225,
+  "Cellule": "8746_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2092,6 +2222,7 @@
   "Dist_bois_m": 89,
   "Longitude": 5.3984008,
   "Latitude": 43.3042726,
+  "Cellule": "8746_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2108,6 +2239,7 @@
   "Dist_bois_m": 95,
   "Longitude": 5.3985758,
   "Latitude": 43.3044617,
+  "Cellule": "8746_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2124,6 +2256,7 @@
   "Dist_bois_m": 99,
   "Longitude": 5.3986903,
   "Latitude": 43.3045958,
+  "Cellule": "8746_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2140,6 +2273,7 @@
   "Dist_bois_m": 103,
   "Longitude": 5.3988175,
   "Latitude": 43.3047437,
+  "Cellule": "8747_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2156,6 +2290,7 @@
   "Dist_bois_m": 106,
   "Longitude": 5.3989494,
   "Latitude": 43.3049236,
+  "Cellule": "8747_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2172,6 +2307,7 @@
   "Dist_bois_m": 107,
   "Longitude": 5.3990235,
   "Latitude": 43.3050437,
+  "Cellule": "8747_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2188,6 +2324,7 @@
   "Dist_bois_m": 109,
   "Longitude": 5.3991535,
   "Latitude": 43.3052821,
+  "Cellule": "8747_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2204,6 +2341,7 @@
   "Dist_bois_m": 112,
   "Longitude": 5.3992435,
   "Latitude": 43.3054561,
+  "Cellule": "8747_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2220,6 +2358,7 @@
   "Dist_bois_m": 117,
   "Longitude": 5.399299,
   "Latitude": 43.3055827,
+  "Cellule": "8747_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2236,6 +2375,7 @@
   "Dist_bois_m": 124,
   "Longitude": 5.3993606,
   "Latitude": 43.3057552,
+  "Cellule": "8748_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2252,6 +2392,7 @@
   "Dist_bois_m": 137,
   "Longitude": 5.3994354,
   "Latitude": 43.3059807,
+  "Cellule": "8748_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2268,6 +2409,7 @@
   "Dist_bois_m": 166,
   "Longitude": 5.3994909,
   "Latitude": 43.3064471,
+  "Cellule": "8748_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2284,6 +2426,7 @@
   "Dist_bois_m": 181,
   "Longitude": 5.3996117,
   "Latitude": 43.3065498,
+  "Cellule": "8748_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2300,6 +2443,7 @@
   "Dist_bois_m": 199,
   "Longitude": 5.3996652,
   "Latitude": 43.3067459,
+  "Cellule": "8748_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2316,6 +2460,7 @@
   "Dist_bois_m": 157,
   "Longitude": 5.3995911,
   "Latitude": 43.3061729,
+  "Cellule": "8748_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2332,6 +2477,7 @@
   "Dist_bois_m": 212,
   "Longitude": 5.3996389,
   "Latitude": 43.3069385,
+  "Cellule": "8748_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2348,6 +2494,7 @@
   "Dist_bois_m": 232,
   "Longitude": 5.3997053,
   "Latitude": 43.307133,
+  "Cellule": "8748_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2364,6 +2511,7 @@
   "Dist_bois_m": 258,
   "Longitude": 5.3998,
   "Latitude": 43.3073733,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2380,6 +2528,7 @@
   "Dist_bois_m": 256,
   "Longitude": 5.3999288,
   "Latitude": 43.3072733,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2396,6 +2545,7 @@
   "Dist_bois_m": 291,
   "Longitude": 5.4000529,
   "Latitude": 43.3076143,
+  "Cellule": "8749_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2412,6 +2562,7 @@
   "Dist_bois_m": 275,
   "Longitude": 5.399851,
   "Latitude": 43.3075412,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2428,6 +2579,7 @@
   "Dist_bois_m": 278,
   "Longitude": 5.399985,
   "Latitude": 43.3074945,
+  "Cellule": "8749_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2444,6 +2596,7 @@
   "Dist_bois_m": 261,
   "Longitude": 5.3999184,
   "Latitude": 43.3073429,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2460,6 +2613,7 @@
   "Dist_bois_m": 257,
   "Longitude": 5.3999114,
   "Latitude": 43.3072953,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2476,6 +2630,7 @@
   "Dist_bois_m": 251,
   "Longitude": 5.3997666,
   "Latitude": 43.3073141,
+  "Cellule": "8748_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2492,6 +2647,7 @@
   "Dist_bois_m": 219,
   "Longitude": 5.3962218,
   "Latitude": 43.3081317,
+  "Cellule": "8742_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2508,6 +2664,7 @@
   "Dist_bois_m": 349,
   "Longitude": 5.3964456,
   "Latitude": 43.3092899,
+  "Cellule": "8743_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2524,6 +2681,7 @@
   "Dist_bois_m": 254,
   "Longitude": 5.3964722,
   "Latitude": 43.3084135,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2540,6 +2698,7 @@
   "Dist_bois_m": 270,
   "Longitude": 5.3964781,
   "Latitude": 43.3085612,
+  "Cellule": "8743_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2556,6 +2715,7 @@
   "Dist_bois_m": 297,
   "Longitude": 5.3964652,
   "Latitude": 43.3088113,
+  "Cellule": "8743_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2572,6 +2732,7 @@
   "Dist_bois_m": 364,
   "Longitude": 5.396426,
   "Latitude": 43.3094364,
+  "Cellule": "8743_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2588,6 +2749,7 @@
   "Dist_bois_m": 334,
   "Longitude": 5.3982868,
   "Latitude": 43.3086395,
+  "Cellule": "8746_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2604,6 +2766,7 @@
   "Dist_bois_m": 320,
   "Longitude": 5.3989617,
   "Latitude": 43.3083124,
+  "Cellule": "8747_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2620,6 +2783,7 @@
   "Dist_bois_m": 329,
   "Longitude": 5.3999431,
   "Latitude": 43.3080761,
+  "Cellule": "8748_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2636,6 +2800,7 @@
   "Dist_bois_m": 320,
   "Longitude": 5.3984289,
   "Latitude": 43.3084679,
+  "Cellule": "8746_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2652,6 +2817,7 @@
   "Dist_bois_m": 319,
   "Longitude": 5.3986369,
   "Latitude": 43.3084043,
+  "Cellule": "8746_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2668,6 +2834,7 @@
   "Dist_bois_m": 323,
   "Longitude": 5.399364,
   "Latitude": 43.3082305,
+  "Cellule": "8748_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2684,6 +2851,7 @@
   "Dist_bois_m": 326,
   "Longitude": 5.3996653,
   "Latitude": 43.3081548,
+  "Cellule": "8748_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2700,6 +2868,7 @@
   "Dist_bois_m": 396,
   "Longitude": 5.3994269,
   "Latitude": 43.3089142,
+  "Cellule": "8748_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2716,6 +2885,7 @@
   "Dist_bois_m": 392,
   "Longitude": 5.3991342,
   "Latitude": 43.3089638,
+  "Cellule": "8747_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2732,6 +2902,7 @@
   "Dist_bois_m": 249,
   "Longitude": 5.3995681,
   "Latitude": 43.3027573,
+  "Cellule": "8748_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2748,6 +2919,7 @@
   "Dist_bois_m": 266,
   "Longitude": 5.3995848,
   "Latitude": 43.3024597,
+  "Cellule": "8748_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2764,6 +2936,7 @@
   "Dist_bois_m": 187,
   "Longitude": 5.3997485,
   "Latitude": 43.3043974,
+  "Cellule": "8748_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2780,6 +2953,7 @@
   "Dist_bois_m": 165,
   "Longitude": 5.3994769,
   "Latitude": 43.3044347,
+  "Cellule": "8748_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2796,6 +2970,7 @@
   "Dist_bois_m": 142,
   "Longitude": 5.3992015,
   "Latitude": 43.3044991,
+  "Cellule": "8747_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2812,6 +2987,7 @@
   "Dist_bois_m": 118,
   "Longitude": 5.3989496,
   "Latitude": 43.3046051,
+  "Cellule": "8747_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2828,6 +3004,7 @@
   "Dist_bois_m": 64,
   "Longitude": 5.3936491,
   "Latitude": 43.3053627,
+  "Cellule": "8738_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2844,6 +3021,7 @@
   "Dist_bois_m": 42,
   "Longitude": 5.3939371,
   "Latitude": 43.3053398,
+  "Cellule": "8739_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2860,6 +3038,7 @@
   "Dist_bois_m": 25,
   "Longitude": 5.394084,
   "Latitude": 43.3051682,
+  "Cellule": "8739_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2876,6 +3055,7 @@
   "Dist_bois_m": 37,
   "Longitude": 5.3939385,
   "Latitude": 43.3051636,
+  "Cellule": "8739_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2892,6 +3072,7 @@
   "Dist_bois_m": 58,
   "Longitude": 5.3936799,
   "Latitude": 43.3052051,
+  "Cellule": "8738_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2908,6 +3089,7 @@
   "Dist_bois_m": 135,
   "Longitude": 5.3959863,
   "Latitude": 43.3024341,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2924,6 +3106,7 @@
   "Dist_bois_m": 126,
   "Longitude": 5.3966104,
   "Latitude": 43.3025434,
+  "Cellule": "8743_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2940,6 +3123,7 @@
   "Dist_bois_m": 133,
   "Longitude": 5.39672,
   "Latitude": 43.3024816,
+  "Cellule": "8743_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2956,6 +3140,7 @@
   "Dist_bois_m": 23,
   "Longitude": 5.3929825,
   "Latitude": 43.3034198,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2972,6 +3157,7 @@
   "Dist_bois_m": 48,
   "Longitude": 5.392905,
   "Latitude": 43.3036409,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -2988,6 +3174,7 @@
   "Dist_bois_m": 57,
   "Longitude": 5.392795,
   "Latitude": 43.3036946,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3004,6 +3191,7 @@
   "Dist_bois_m": 28,
   "Longitude": 5.3930815,
   "Latitude": 43.3034849,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3020,6 +3208,7 @@
   "Dist_bois_m": 366,
   "Longitude": 5.3950329,
   "Latitude": 43.3094635,
+  "Cellule": "8741_95778",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3036,6 +3225,7 @@
   "Dist_bois_m": 367,
   "Longitude": 5.3954339,
   "Latitude": 43.3094978,
+  "Cellule": "8741_95778",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3052,6 +3242,7 @@
   "Dist_bois_m": 198,
   "Longitude": 5.3995972,
   "Latitude": 43.3037987,
+  "Cellule": "8748_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3068,6 +3259,7 @@
   "Dist_bois_m": 174,
   "Longitude": 5.3993402,
   "Latitude": 43.3039284,
+  "Cellule": "8747_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3084,6 +3276,7 @@
   "Dist_bois_m": 16,
   "Longitude": 5.3976798,
   "Latitude": 43.3047485,
+  "Cellule": "8745_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3100,6 +3293,7 @@
   "Dist_bois_m": 17,
   "Longitude": 5.397809,
   "Latitude": 43.3049698,
+  "Cellule": "8745_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3116,6 +3310,7 @@
   "Dist_bois_m": 18,
   "Longitude": 5.3979449,
   "Latitude": 43.3052177,
+  "Cellule": "8745_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3132,6 +3327,7 @@
   "Dist_bois_m": 148,
   "Longitude": 5.3993592,
   "Latitude": 43.3062935,
+  "Cellule": "8748_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3148,6 +3344,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.3969831,
   "Latitude": 43.3030167,
+  "Cellule": "8744_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3164,6 +3361,7 @@
   "Dist_bois_m": 107,
   "Longitude": 5.398582,
   "Latitude": 43.3063469,
+  "Cellule": "8746_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3180,6 +3378,7 @@
   "Dist_bois_m": 7,
   "Longitude": 5.3971962,
   "Latitude": 43.3041304,
+  "Cellule": "8744_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3196,6 +3395,7 @@
   "Dist_bois_m": 55,
   "Longitude": 5.3969512,
   "Latitude": 43.3032036,
+  "Cellule": "8744_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3212,6 +3412,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3969808,
   "Latitude": 43.3034134,
+  "Cellule": "8744_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3228,6 +3429,7 @@
   "Dist_bois_m": 25,
   "Longitude": 5.3970561,
   "Latitude": 43.3036118,
+  "Cellule": "8744_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3244,6 +3446,7 @@
   "Dist_bois_m": 22,
   "Longitude": 5.3971601,
   "Latitude": 43.3038063,
+  "Cellule": "8744_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3260,6 +3463,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3972611,
   "Latitude": 43.3039932,
+  "Cellule": "8744_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3276,6 +3480,7 @@
   "Dist_bois_m": 22,
   "Longitude": 5.3974273,
   "Latitude": 43.3041511,
+  "Cellule": "8744_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3292,6 +3497,7 @@
   "Dist_bois_m": 15,
   "Longitude": 5.3975592,
   "Latitude": 43.3045349,
+  "Cellule": "8745_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3308,6 +3514,7 @@
   "Dist_bois_m": 53,
   "Longitude": 5.3983159,
   "Latitude": 43.3058853,
+  "Cellule": "8746_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3324,6 +3531,7 @@
   "Dist_bois_m": 80,
   "Longitude": 5.3984432,
   "Latitude": 43.3061142,
+  "Cellule": "8746_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3340,6 +3548,7 @@
   "Dist_bois_m": 138,
   "Longitude": 5.3991041,
   "Latitude": 43.306385,
+  "Cellule": "8747_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3356,6 +3565,7 @@
   "Dist_bois_m": 89,
   "Longitude": 5.3966981,
   "Latitude": 43.3028759,
+  "Cellule": "8743_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3372,6 +3582,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3980422,
   "Latitude": 43.3053932,
+  "Cellule": "8745_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3388,6 +3599,7 @@
   "Dist_bois_m": 32,
   "Longitude": 5.3982019,
   "Latitude": 43.3056793,
+  "Cellule": "8746_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3404,6 +3616,7 @@
   "Dist_bois_m": 33,
   "Longitude": 5.3982682,
   "Latitude": 43.3055649,
+  "Cellule": "8746_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3420,6 +3633,7 @@
   "Dist_bois_m": 217,
   "Longitude": 5.39996,
   "Latitude": 43.3040466,
+  "Cellule": "8748_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3436,6 +3650,7 @@
   "Dist_bois_m": 384,
   "Longitude": 5.3977406,
   "Latitude": 43.3093395,
+  "Cellule": "8745_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3452,6 +3667,7 @@
   "Dist_bois_m": 259,
   "Longitude": 5.396904,
   "Latitude": 43.3083649,
+  "Cellule": "8744_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3468,6 +3684,7 @@
   "Dist_bois_m": 294,
   "Longitude": 5.3970304,
   "Latitude": 43.3086655,
+  "Cellule": "8744_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3484,6 +3701,7 @@
   "Dist_bois_m": 249,
   "Longitude": 5.3967562,
   "Latitude": 43.3083038,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3500,6 +3718,7 @@
   "Dist_bois_m": 316,
   "Longitude": 5.3973479,
   "Latitude": 43.3087883,
+  "Cellule": "8744_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3516,6 +3735,7 @@
   "Dist_bois_m": 250,
   "Longitude": 5.3973024,
   "Latitude": 43.3081663,
+  "Cellule": "8744_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3532,6 +3752,7 @@
   "Dist_bois_m": 257,
   "Longitude": 5.3970922,
   "Latitude": 43.308292,
+  "Cellule": "8744_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3548,6 +3769,7 @@
   "Dist_bois_m": 324,
   "Longitude": 5.3972298,
   "Latitude": 43.3088943,
+  "Cellule": "8744_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3564,6 +3786,7 @@
   "Dist_bois_m": 352,
   "Longitude": 5.3974704,
   "Latitude": 43.3091021,
+  "Cellule": "8744_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3580,6 +3803,7 @@
   "Dist_bois_m": 106,
   "Longitude": 5.3937131,
   "Latitude": 43.3059758,
+  "Cellule": "8738_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3596,6 +3820,7 @@
   "Dist_bois_m": 96,
   "Longitude": 5.3936129,
   "Latitude": 43.305809,
+  "Cellule": "8738_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3612,6 +3837,7 @@
   "Dist_bois_m": 168,
   "Longitude": 5.398798,
   "Latitude": 43.3032494,
+  "Cellule": "8747_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3628,6 +3854,7 @@
   "Dist_bois_m": 150,
   "Longitude": 5.3982491,
   "Latitude": 43.3028831,
+  "Cellule": "8746_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3644,6 +3871,7 @@
   "Dist_bois_m": 155,
   "Longitude": 5.3984318,
   "Latitude": 43.3030052,
+  "Cellule": "8746_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3660,6 +3888,7 @@
   "Dist_bois_m": 163,
   "Longitude": 5.3986492,
   "Latitude": 43.3031464,
+  "Cellule": "8746_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3676,6 +3905,7 @@
   "Dist_bois_m": 167,
   "Longitude": 5.3988461,
   "Latitude": 43.3033295,
+  "Cellule": "8747_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3692,6 +3922,7 @@
   "Dist_bois_m": 169,
   "Longitude": 5.399025,
   "Latitude": 43.3035393,
+  "Cellule": "8747_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3708,6 +3939,7 @@
   "Dist_bois_m": 166,
   "Longitude": 5.3991418,
   "Latitude": 43.3037453,
+  "Cellule": "8747_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3724,6 +3956,7 @@
   "Dist_bois_m": 166,
   "Longitude": 5.3992391,
   "Latitude": 43.3039398,
+  "Cellule": "8747_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3740,6 +3973,7 @@
   "Dist_bois_m": 146,
   "Longitude": 5.3980977,
   "Latitude": 43.3028033,
+  "Cellule": "8745_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3756,6 +3990,7 @@
   "Dist_bois_m": 148,
   "Longitude": 5.3981181,
   "Latitude": 43.3027861,
+  "Cellule": "8746_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3772,6 +4007,7 @@
   "Dist_bois_m": 316,
   "Longitude": 5.3977442,
   "Latitude": 43.3086739,
+  "Cellule": "8745_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3788,6 +4024,7 @@
   "Dist_bois_m": 304,
   "Longitude": 5.3974028,
   "Latitude": 43.3086586,
+  "Cellule": "8744_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3804,6 +4041,7 @@
   "Dist_bois_m": 119,
   "Longitude": 5.3964959,
   "Latitude": 43.3026249,
+  "Cellule": "8743_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3820,6 +4058,7 @@
   "Dist_bois_m": 291,
   "Longitude": 5.3972122,
   "Latitude": 43.3085863,
+  "Cellule": "8744_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3836,6 +4075,7 @@
   "Dist_bois_m": 457,
   "Longitude": 5.3995881,
   "Latitude": 43.3094559,
+  "Cellule": "8748_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3852,6 +4092,7 @@
   "Dist_bois_m": 432,
   "Longitude": 5.399508,
   "Latitude": 43.3092422,
+  "Cellule": "8748_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3868,6 +4109,7 @@
   "Dist_bois_m": 411,
   "Longitude": 5.3992128,
   "Latitude": 43.3091278,
+  "Cellule": "8747_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3884,6 +4126,7 @@
   "Dist_bois_m": 392,
   "Longitude": 5.3989158,
   "Latitude": 43.3090286,
+  "Cellule": "8747_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3900,6 +4143,7 @@
   "Dist_bois_m": 373,
   "Longitude": 5.3986158,
   "Latitude": 43.3089256,
+  "Cellule": "8746_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3916,6 +4160,7 @@
   "Dist_bois_m": 355,
   "Longitude": 5.3983459,
   "Latitude": 43.3088303,
+  "Cellule": "8746_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3932,6 +4177,7 @@
   "Dist_bois_m": 334,
   "Longitude": 5.3980608,
   "Latitude": 43.3087349,
+  "Cellule": "8745_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3948,6 +4194,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3976588,
   "Latitude": 43.3043404,
+  "Cellule": "8745_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3964,6 +4211,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.3987732,
   "Latitude": 43.3050766,
+  "Cellule": "8747_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3980,6 +4228,7 @@
   "Dist_bois_m": 97,
   "Longitude": 5.3990331,
   "Latitude": 43.3053703,
+  "Cellule": "8747_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -3996,6 +4245,7 @@
   "Dist_bois_m": 39,
   "Longitude": 5.3978601,
   "Latitude": 43.304512,
+  "Cellule": "8745_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4012,6 +4262,7 @@
   "Dist_bois_m": 51,
   "Longitude": 5.3980951,
   "Latitude": 43.3046608,
+  "Cellule": "8745_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4028,6 +4279,7 @@
   "Dist_bois_m": 63,
   "Longitude": 5.398313,
   "Latitude": 43.3047905,
+  "Cellule": "8746_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4044,6 +4296,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.398551,
   "Latitude": 43.3049393,
+  "Cellule": "8746_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4060,6 +4313,7 @@
   "Dist_bois_m": 176,
   "Longitude": 5.3938008,
   "Latitude": 43.306971,
+  "Cellule": "8739_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4076,6 +4330,7 @@
   "Dist_bois_m": 235,
   "Longitude": 5.393436,
   "Latitude": 43.307527,
+  "Cellule": "8738_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4092,6 +4347,7 @@
   "Dist_bois_m": 207,
   "Longitude": 5.393621,
   "Latitude": 43.307291,
+  "Cellule": "8738_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4108,6 +4364,7 @@
   "Dist_bois_m": 128,
   "Longitude": 5.3940701,
   "Latitude": 43.3065168,
+  "Cellule": "8739_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4124,6 +4381,7 @@
   "Dist_bois_m": 149,
   "Longitude": 5.3940315,
   "Latitude": 43.3067671,
+  "Cellule": "8739_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4140,6 +4398,7 @@
   "Dist_bois_m": 134,
   "Longitude": 5.3932186,
   "Latitude": 43.3060102,
+  "Cellule": "8738_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4156,6 +4415,7 @@
   "Dist_bois_m": 144,
   "Longitude": 5.3951268,
   "Latitude": 43.3023529,
+  "Cellule": "8741_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4172,6 +4432,7 @@
   "Dist_bois_m": 146,
   "Longitude": 5.3953209,
   "Latitude": 43.3023033,
+  "Cellule": "8741_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4188,6 +4449,7 @@
   "Dist_bois_m": 129,
   "Longitude": 5.3954458,
   "Latitude": 43.3024559,
+  "Cellule": "8741_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4204,6 +4466,7 @@
   "Dist_bois_m": 133,
   "Longitude": 5.395658,
   "Latitude": 43.3024139,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4220,6 +4483,7 @@
   "Dist_bois_m": 118,
   "Longitude": 5.3957801,
   "Latitude": 43.3025627,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4236,6 +4500,7 @@
   "Dist_bois_m": 127,
   "Longitude": 5.395925,
   "Latitude": 43.3025017,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4252,6 +4517,7 @@
   "Dist_bois_m": 114,
   "Longitude": 5.3960261,
   "Latitude": 43.3026466,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4268,6 +4534,7 @@
   "Dist_bois_m": 125,
   "Longitude": 5.3962102,
   "Latitude": 43.3025932,
+  "Cellule": "8742_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4284,6 +4551,7 @@
   "Dist_bois_m": 304,
   "Longitude": 5.4000001,
   "Latitude": 43.3023033,
+  "Cellule": "8749_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4300,6 +4568,7 @@
   "Dist_bois_m": 82,
   "Longitude": 5.3934689,
   "Latitude": 43.3045845,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4316,6 +4585,7 @@
   "Dist_bois_m": 68,
   "Longitude": 5.3935232,
   "Latitude": 43.3048755,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4332,6 +4602,7 @@
   "Dist_bois_m": 57,
   "Longitude": 5.3937359,
   "Latitude": 43.3047066,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4348,6 +4619,7 @@
   "Dist_bois_m": 31,
   "Longitude": 5.3940048,
   "Latitude": 43.3048401,
+  "Cellule": "8739_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4364,6 +4636,7 @@
   "Dist_bois_m": 7,
   "Longitude": 5.3942628,
   "Latitude": 43.304966,
+  "Cellule": "8739_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4380,6 +4653,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3958259,
   "Latitude": 43.3056793,
+  "Cellule": "8742_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4396,6 +4670,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3955431,
   "Latitude": 43.3055496,
+  "Cellule": "8741_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4412,6 +4687,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3952689,
   "Latitude": 43.3054199,
+  "Cellule": "8741_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4428,6 +4704,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3950009,
   "Latitude": 43.3053284,
+  "Cellule": "8740_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4444,6 +4721,7 @@
   "Dist_bois_m": 81,
   "Longitude": 5.3934557,
   "Latitude": 43.304632,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4460,6 +4738,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3934825,
   "Latitude": 43.3046748,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4476,6 +4755,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.3935007,
   "Latitude": 43.304717,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4492,6 +4772,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3935232,
   "Latitude": 43.3047524,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4508,6 +4789,7 @@
   "Dist_bois_m": 74,
   "Longitude": 5.3934891,
   "Latitude": 43.304754,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4524,6 +4806,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.3934629,
   "Latitude": 43.3047656,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4540,6 +4823,7 @@
   "Dist_bois_m": 74,
   "Longitude": 5.3934658,
   "Latitude": 43.3048132,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4556,6 +4840,7 @@
   "Dist_bois_m": 72,
   "Longitude": 5.3934746,
   "Latitude": 43.3048607,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4572,6 +4857,7 @@
   "Dist_bois_m": 69,
   "Longitude": 5.3935094,
   "Latitude": 43.304895,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4588,6 +4874,7 @@
   "Dist_bois_m": 54,
   "Longitude": 5.3938672,
   "Latitude": 43.3044362,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4604,6 +4891,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3944285,
   "Latitude": 43.3038128,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4620,6 +4908,7 @@
   "Dist_bois_m": 48,
   "Longitude": 5.394092,
   "Latitude": 43.3042456,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4636,6 +4925,7 @@
   "Dist_bois_m": 56,
   "Longitude": 5.3942702,
   "Latitude": 43.3040487,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4652,6 +4942,7 @@
   "Dist_bois_m": 27,
   "Longitude": 5.3944162,
   "Latitude": 43.3042838,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4668,6 +4959,7 @@
   "Dist_bois_m": 29,
   "Longitude": 5.3944132,
   "Latitude": 43.3042731,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4684,6 +4976,7 @@
   "Dist_bois_m": 31,
   "Longitude": 5.3944386,
   "Latitude": 43.3042444,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4700,6 +4993,7 @@
   "Dist_bois_m": 31,
   "Longitude": 5.3944537,
   "Latitude": 43.3042427,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4716,6 +5010,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3941301,
   "Latitude": 43.304184,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4732,6 +5027,7 @@
   "Dist_bois_m": 53,
   "Longitude": 5.3941988,
   "Latitude": 43.3041046,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4748,6 +5044,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3943598,
   "Latitude": 43.3042767,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4764,6 +5061,7 @@
   "Dist_bois_m": 33,
   "Longitude": 5.3943671,
   "Latitude": 43.3042491,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4780,6 +5078,7 @@
   "Dist_bois_m": 35,
   "Longitude": 5.3943921,
   "Latitude": 43.3042208,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4796,6 +5095,7 @@
   "Dist_bois_m": 35,
   "Longitude": 5.3944255,
   "Latitude": 43.304206,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4812,6 +5112,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3941051,
   "Latitude": 43.3044755,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4828,6 +5129,7 @@
   "Dist_bois_m": 35,
   "Longitude": 5.3940933,
   "Latitude": 43.3044698,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4844,6 +5146,7 @@
   "Dist_bois_m": 42,
   "Longitude": 5.3940216,
   "Latitude": 43.3044356,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4860,6 +5163,7 @@
   "Dist_bois_m": 43,
   "Longitude": 5.3940103,
   "Latitude": 43.3044297,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4876,6 +5180,7 @@
   "Dist_bois_m": 62,
   "Longitude": 5.3945619,
   "Latitude": 43.3039514,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4892,6 +5197,7 @@
   "Dist_bois_m": 61,
   "Longitude": 5.3945736,
   "Latitude": 43.3039575,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4908,6 +5214,7 @@
   "Dist_bois_m": 66,
   "Longitude": 5.394489,
   "Latitude": 43.303917,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4924,6 +5231,7 @@
   "Dist_bois_m": 67,
   "Longitude": 5.3944772,
   "Latitude": 43.3039111,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4940,6 +5248,7 @@
   "Dist_bois_m": 26,
   "Longitude": 5.3941807,
   "Latitude": 43.3045576,
+  "Cellule": "8739_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4956,6 +5265,7 @@
   "Dist_bois_m": 25,
   "Longitude": 5.3941935,
   "Latitude": 43.3045635,
+  "Cellule": "8739_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4972,6 +5282,7 @@
   "Dist_bois_m": 24,
   "Longitude": 5.3942053,
   "Latitude": 43.3045696,
+  "Cellule": "8739_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -4988,6 +5299,7 @@
   "Dist_bois_m": 56,
   "Longitude": 5.3947065,
   "Latitude": 43.303975,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5004,6 +5316,7 @@
   "Dist_bois_m": 56,
   "Longitude": 5.3947186,
   "Latitude": 43.3039808,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5020,6 +5333,7 @@
   "Dist_bois_m": 55,
   "Longitude": 5.3947305,
   "Latitude": 43.303987,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5036,6 +5350,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3941574,
   "Latitude": 43.3044541,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5052,6 +5367,7 @@
   "Dist_bois_m": 28,
   "Longitude": 5.3941874,
   "Latitude": 43.3044622,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5068,6 +5384,7 @@
   "Dist_bois_m": 25,
   "Longitude": 5.3942196,
   "Latitude": 43.3044654,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5084,6 +5401,7 @@
   "Dist_bois_m": 23,
   "Longitude": 5.394252,
   "Latitude": 43.3044627,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5100,6 +5418,7 @@
   "Dist_bois_m": 21,
   "Longitude": 5.3942844,
   "Latitude": 43.304455,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5116,6 +5435,7 @@
   "Dist_bois_m": 20,
   "Longitude": 5.3943168,
   "Latitude": 43.3044428,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5132,6 +5452,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3943464,
   "Latitude": 43.3044266,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5148,6 +5469,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3943657,
   "Latitude": 43.3044121,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5164,6 +5486,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3943838,
   "Latitude": 43.3043955,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5180,6 +5503,7 @@
   "Dist_bois_m": 56,
   "Longitude": 5.3945667,
   "Latitude": 43.3040007,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5196,6 +5520,7 @@
   "Dist_bois_m": 54,
   "Longitude": 5.3945908,
   "Latitude": 43.3040182,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5212,6 +5537,7 @@
   "Dist_bois_m": 52,
   "Longitude": 5.3946067,
   "Latitude": 43.3040386,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5228,6 +5554,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3946155,
   "Latitude": 43.3040619,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5244,6 +5571,7 @@
   "Dist_bois_m": 47,
   "Longitude": 5.3946179,
   "Latitude": 43.304086,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5260,6 +5588,7 @@
   "Dist_bois_m": 44,
   "Longitude": 5.3946142,
   "Latitude": 43.3041114,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5276,6 +5605,7 @@
   "Dist_bois_m": 41,
   "Longitude": 5.3946078,
   "Latitude": 43.3041356,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5292,6 +5622,7 @@
   "Dist_bois_m": 39,
   "Longitude": 5.394595,
   "Latitude": 43.304157,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5308,6 +5639,7 @@
   "Dist_bois_m": 37,
   "Longitude": 5.3945814,
   "Latitude": 43.3041766,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5324,6 +5656,7 @@
   "Dist_bois_m": 16,
   "Longitude": 5.3945085,
   "Latitude": 43.304364,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5340,6 +5673,7 @@
   "Dist_bois_m": 26,
   "Longitude": 5.3945909,
   "Latitude": 43.3042723,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5356,6 +5690,7 @@
   "Dist_bois_m": 23,
   "Longitude": 5.394429,
   "Latitude": 43.3043254,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5372,6 +5707,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3945125,
   "Latitude": 43.3042363,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5388,6 +5724,7 @@
   "Dist_bois_m": 17,
   "Longitude": 5.3945233,
   "Latitude": 43.3043522,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5404,6 +5741,7 @@
   "Dist_bois_m": 20,
   "Longitude": 5.3945423,
   "Latitude": 43.3043307,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5420,6 +5758,7 @@
   "Dist_bois_m": 22,
   "Longitude": 5.3945628,
   "Latitude": 43.3043084,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5436,6 +5775,7 @@
   "Dist_bois_m": 24,
   "Longitude": 5.3945824,
   "Latitude": 43.3042874,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5452,6 +5792,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3934463,
   "Latitude": 43.3038928,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5468,6 +5809,7 @@
   "Dist_bois_m": 77,
   "Longitude": 5.3934506,
   "Latitude": 43.3038811,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5484,6 +5826,7 @@
   "Dist_bois_m": 66,
   "Longitude": 5.3935706,
   "Latitude": 43.3037488,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5500,6 +5843,7 @@
   "Dist_bois_m": 65,
   "Longitude": 5.3935832,
   "Latitude": 43.3037418,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5516,6 +5860,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3940889,
   "Latitude": 43.304512,
+  "Cellule": "8739_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5532,6 +5877,7 @@
   "Dist_bois_m": 58,
   "Longitude": 5.3946376,
   "Latitude": 43.303913,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5548,6 +5894,7 @@
   "Dist_bois_m": 28,
   "Longitude": 5.3943763,
   "Latitude": 43.3042943,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5564,6 +5911,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3943762,
   "Latitude": 43.3042739,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5580,6 +5928,7 @@
   "Dist_bois_m": 31,
   "Longitude": 5.3943768,
   "Latitude": 43.3042629,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5596,6 +5945,7 @@
   "Dist_bois_m": 32,
   "Longitude": 5.3943862,
   "Latitude": 43.3042469,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5612,6 +5962,7 @@
   "Dist_bois_m": 33,
   "Longitude": 5.3943976,
   "Latitude": 43.3042342,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5628,6 +5979,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3944153,
   "Latitude": 43.304223,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5644,6 +5996,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3944275,
   "Latitude": 43.3042179,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5660,6 +6013,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3944496,
   "Latitude": 43.3042116,
+  "Cellule": "8740_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5676,6 +6030,7 @@
   "Dist_bois_m": 90,
   "Longitude": 5.3932903,
   "Latitude": 43.3040286,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5692,6 +6047,7 @@
   "Dist_bois_m": 51,
   "Longitude": 5.3936891,
   "Latitude": 43.3035842,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5708,6 +6064,7 @@
   "Dist_bois_m": 82,
   "Longitude": 5.3932824,
   "Latitude": 43.3039597,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5724,6 +6081,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3935863,
   "Latitude": 43.3036073,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5740,6 +6098,7 @@
   "Dist_bois_m": 58,
   "Longitude": 5.3929696,
   "Latitude": 43.303742,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5756,6 +6115,7 @@
   "Dist_bois_m": 57,
   "Longitude": 5.3929775,
   "Latitude": 43.3037334,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5772,6 +6132,7 @@
   "Dist_bois_m": 29,
   "Longitude": 5.3931982,
   "Latitude": 43.303488,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5788,6 +6149,7 @@
   "Dist_bois_m": 29,
   "Longitude": 5.3932056,
   "Latitude": 43.3034797,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5804,6 +6166,7 @@
   "Dist_bois_m": 89,
   "Longitude": 5.3932909,
   "Latitude": 43.3040182,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5820,6 +6183,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3936756,
   "Latitude": 43.303587,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5836,6 +6200,7 @@
   "Dist_bois_m": 81,
   "Longitude": 5.3935364,
   "Latitude": 43.3043956,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5852,6 +6217,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3936069,
   "Latitude": 43.3043183,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5868,6 +6234,7 @@
   "Dist_bois_m": 62,
   "Longitude": 5.393813,
   "Latitude": 43.3043107,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5884,6 +6251,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3942667,
   "Latitude": 43.3038344,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5900,6 +6268,7 @@
   "Dist_bois_m": 82,
   "Longitude": 5.3941925,
   "Latitude": 43.3036605,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5916,6 +6285,7 @@
   "Dist_bois_m": 81,
   "Longitude": 5.3942592,
   "Latitude": 43.3035849,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5932,6 +6302,7 @@
   "Dist_bois_m": 84,
   "Longitude": 5.3935192,
   "Latitude": 43.3043327,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5948,6 +6319,7 @@
   "Dist_bois_m": 72,
   "Longitude": 5.3938818,
   "Latitude": 43.3040961,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5964,6 +6336,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3938652,
   "Latitude": 43.3040894,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5980,6 +6353,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.3938471,
   "Latitude": 43.3040829,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -5996,6 +6370,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.393827,
   "Latitude": 43.3040759,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6012,6 +6387,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3938059,
   "Latitude": 43.304071,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6028,6 +6404,7 @@
   "Dist_bois_m": 80,
   "Longitude": 5.393786,
   "Latitude": 43.3040669,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6044,6 +6421,7 @@
   "Dist_bois_m": 81,
   "Longitude": 5.3937652,
   "Latitude": 43.304064,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6060,6 +6438,7 @@
   "Dist_bois_m": 83,
   "Longitude": 5.3937432,
   "Latitude": 43.304061,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6076,6 +6455,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.394012,
   "Latitude": 43.3039518,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6092,6 +6472,7 @@
   "Dist_bois_m": 78,
   "Longitude": 5.3939968,
   "Latitude": 43.3039435,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6108,6 +6489,7 @@
   "Dist_bois_m": 79,
   "Longitude": 5.3939816,
   "Latitude": 43.3039338,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6124,6 +6506,7 @@
   "Dist_bois_m": 81,
   "Longitude": 5.3939645,
   "Latitude": 43.3039231,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6140,6 +6523,7 @@
   "Dist_bois_m": 83,
   "Longitude": 5.39395,
   "Latitude": 43.3039108,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6156,6 +6540,7 @@
   "Dist_bois_m": 84,
   "Longitude": 5.3939372,
   "Latitude": 43.3038991,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6172,6 +6557,7 @@
   "Dist_bois_m": 86,
   "Longitude": 5.3939254,
   "Latitude": 43.3038863,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6188,6 +6574,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.3939127,
   "Latitude": 43.3038729,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6204,6 +6591,7 @@
   "Dist_bois_m": 67,
   "Longitude": 5.3938899,
   "Latitude": 43.3041591,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6220,6 +6608,7 @@
   "Dist_bois_m": 67,
   "Longitude": 5.3939111,
   "Latitude": 43.3041382,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6236,6 +6625,7 @@
   "Dist_bois_m": 67,
   "Longitude": 5.3939406,
   "Latitude": 43.3041059,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6252,6 +6642,7 @@
   "Dist_bois_m": 68,
   "Longitude": 5.3939593,
   "Latitude": 43.3040845,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6268,6 +6659,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.3940285,
   "Latitude": 43.304008,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6284,6 +6676,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3940473,
   "Latitude": 43.3039869,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6300,6 +6693,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3940729,
   "Latitude": 43.3039536,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6316,6 +6710,7 @@
   "Dist_bois_m": 74,
   "Longitude": 5.3940908,
   "Latitude": 43.3039343,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6332,6 +6727,7 @@
   "Dist_bois_m": 55,
   "Longitude": 5.3938553,
   "Latitude": 43.3044301,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6348,6 +6744,7 @@
   "Dist_bois_m": 56,
   "Longitude": 5.3938433,
   "Latitude": 43.3044243,
+  "Cellule": "8739_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6364,6 +6761,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3944166,
   "Latitude": 43.3038067,
+  "Cellule": "8740_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6380,6 +6778,7 @@
   "Dist_bois_m": 72,
   "Longitude": 5.3944045,
   "Latitude": 43.3038009,
+  "Cellule": "8739_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6396,6 +6795,7 @@
   "Dist_bois_m": 210,
   "Longitude": 5.3977378,
   "Latitude": 43.3075947,
+  "Cellule": "8745_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6412,6 +6812,7 @@
   "Dist_bois_m": 175,
   "Longitude": 5.397421,
   "Latitude": 43.307327,
+  "Cellule": "8744_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6428,6 +6829,7 @@
   "Dist_bois_m": 137,
   "Longitude": 5.3974605,
   "Latitude": 43.3069682,
+  "Cellule": "8744_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6444,6 +6846,7 @@
   "Dist_bois_m": 109,
   "Longitude": 5.3974154,
   "Latitude": 43.3067177,
+  "Cellule": "8744_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6460,6 +6863,7 @@
   "Dist_bois_m": 46,
   "Longitude": 5.3972321,
   "Latitude": 43.3061638,
+  "Cellule": "8744_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6476,6 +6880,7 @@
   "Dist_bois_m": 77,
   "Longitude": 5.3972666,
   "Latitude": 43.3064504,
+  "Cellule": "8744_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6492,6 +6897,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3971006,
   "Latitude": 43.3057239,
+  "Cellule": "8744_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6508,6 +6914,7 @@
   "Dist_bois_m": 29,
   "Longitude": 5.3972855,
   "Latitude": 43.3059811,
+  "Cellule": "8744_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6524,6 +6931,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3970034,
   "Latitude": 43.3055112,
+  "Cellule": "8744_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6540,6 +6948,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.396712,
   "Latitude": 43.305466,
+  "Cellule": "8743_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6556,6 +6965,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.396463,
   "Latitude": 43.30526,
+  "Cellule": "8743_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6572,6 +6982,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3966121,
   "Latitude": 43.3050197,
+  "Cellule": "8743_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6588,6 +6999,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3965562,
   "Latitude": 43.3047945,
+  "Cellule": "8743_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6604,6 +7016,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3963453,
   "Latitude": 43.3046614,
+  "Cellule": "8743_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6620,6 +7033,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3964543,
   "Latitude": 43.3043706,
+  "Cellule": "8743_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6636,6 +7050,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3963907,
   "Latitude": 43.3040726,
+  "Cellule": "8743_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6652,6 +7067,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3964928,
   "Latitude": 43.3038022,
+  "Cellule": "8743_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6668,6 +7084,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3968273,
   "Latitude": 43.3038169,
+  "Cellule": "8743_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6684,6 +7101,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3970709,
   "Latitude": 43.3045518,
+  "Cellule": "8744_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6700,6 +7118,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.39679,
   "Latitude": 43.3047941,
+  "Cellule": "8743_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6716,6 +7135,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.39676,
   "Latitude": 43.304528,
+  "Cellule": "8743_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6732,6 +7152,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3966256,
   "Latitude": 43.3039953,
+  "Cellule": "8743_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6748,6 +7169,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3973521,
   "Latitude": 43.3047632,
+  "Cellule": "8744_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6764,6 +7186,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3975166,
   "Latitude": 43.3050322,
+  "Cellule": "8745_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6780,6 +7203,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3976207,
   "Latitude": 43.3053306,
+  "Cellule": "8745_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6796,6 +7220,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3974845,
   "Latitude": 43.3055731,
+  "Cellule": "8744_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6812,6 +7237,7 @@
   "Dist_bois_m": 150,
   "Longitude": 5.398742,
   "Latitude": 43.3067257,
+  "Cellule": "8747_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6828,6 +7254,7 @@
   "Dist_bois_m": 169,
   "Longitude": 5.3987259,
   "Latitude": 43.3069239,
+  "Cellule": "8746_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6844,6 +7271,7 @@
   "Dist_bois_m": 193,
   "Longitude": 5.398705,
   "Latitude": 43.3071574,
+  "Cellule": "8746_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6860,6 +7288,7 @@
   "Dist_bois_m": 216,
   "Longitude": 5.3988081,
   "Latitude": 43.3073544,
+  "Cellule": "8747_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6876,6 +7305,7 @@
   "Dist_bois_m": 236,
   "Longitude": 5.3987936,
   "Latitude": 43.307555,
+  "Cellule": "8747_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6892,6 +7322,7 @@
   "Dist_bois_m": 131,
   "Longitude": 5.3987598,
   "Latitude": 43.3065169,
+  "Cellule": "8747_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6908,6 +7339,7 @@
   "Dist_bois_m": 11,
   "Longitude": 5.3962798,
   "Latitude": 43.3058357,
+  "Cellule": "8743_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6924,6 +7356,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3960938,
   "Latitude": 43.3058052,
+  "Cellule": "8742_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6940,6 +7373,7 @@
   "Dist_bois_m": 188,
   "Longitude": 5.398376,
   "Latitude": 43.3024597,
+  "Cellule": "8746_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6956,6 +7390,7 @@
   "Dist_bois_m": 164,
   "Longitude": 5.398159,
   "Latitude": 43.3026123,
+  "Cellule": "8746_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6972,6 +7407,7 @@
   "Dist_bois_m": 153,
   "Longitude": 5.3969701,
   "Latitude": 43.3023056,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -6988,6 +7424,7 @@
   "Dist_bois_m": 107,
   "Longitude": 5.39623,
   "Latitude": 43.3027835,
+  "Cellule": "8742_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7004,6 +7441,7 @@
   "Dist_bois_m": 20,
   "Longitude": 5.3950582,
   "Latitude": 43.3037567,
+  "Cellule": "8741_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7020,6 +7458,7 @@
   "Dist_bois_m": 13,
   "Longitude": 5.3957539,
   "Latitude": 43.3035889,
+  "Cellule": "8742_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7036,6 +7475,7 @@
   "Dist_bois_m": 0,
   "Longitude": 5.3954,
   "Latitude": 43.3036766,
+  "Cellule": "8741_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7052,6 +7492,7 @@
   "Dist_bois_m": 75,
   "Longitude": 5.3930612,
   "Latitude": 43.3039055,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7068,6 +7509,7 @@
   "Dist_bois_m": 117,
   "Longitude": 5.3931208,
   "Latitude": 43.3042831,
+  "Cellule": "8737_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7084,6 +7526,7 @@
   "Dist_bois_m": 105,
   "Longitude": 5.3931699,
   "Latitude": 43.3045807,
+  "Cellule": "8737_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7100,6 +7543,7 @@
   "Dist_bois_m": 92,
   "Longitude": 5.3932199,
   "Latitude": 43.3049011,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7116,6 +7560,7 @@
   "Dist_bois_m": 91,
   "Longitude": 5.3932772,
   "Latitude": 43.3052597,
+  "Cellule": "8738_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7132,6 +7577,7 @@
   "Dist_bois_m": 98,
   "Longitude": 5.3933272,
   "Latitude": 43.3055763,
+  "Cellule": "8738_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7148,6 +7594,7 @@
   "Dist_bois_m": 94,
   "Longitude": 5.393476,
   "Latitude": 43.3056831,
+  "Cellule": "8738_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7164,6 +7611,7 @@
   "Dist_bois_m": 82,
   "Longitude": 5.393436,
   "Latitude": 43.3054008,
+  "Cellule": "8738_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7180,6 +7628,7 @@
   "Dist_bois_m": 80,
   "Longitude": 5.3933811,
   "Latitude": 43.3050919,
+  "Cellule": "8738_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7196,6 +7645,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.3933249,
   "Latitude": 43.3047447,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7212,6 +7662,7 @@
   "Dist_bois_m": 101,
   "Longitude": 5.3932748,
   "Latitude": 43.3044243,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7228,6 +7679,7 @@
   "Dist_bois_m": 104,
   "Longitude": 5.3932371,
   "Latitude": 43.3041573,
+  "Cellule": "8738_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7244,6 +7696,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.393188,
   "Latitude": 43.3038597,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7260,6 +7713,7 @@
   "Dist_bois_m": 80,
   "Longitude": 5.3954922,
   "Latitude": 43.3069058,
+  "Cellule": "8741_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7276,6 +7730,7 @@
   "Dist_bois_m": 39,
   "Longitude": 5.395504,
   "Latitude": 43.3065301,
+  "Cellule": "8741_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7292,6 +7747,7 @@
   "Dist_bois_m": 47,
   "Longitude": 5.3959999,
   "Latitude": 43.3065681,
+  "Cellule": "8742_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7308,6 +7764,7 @@
   "Dist_bois_m": 49,
   "Longitude": 5.3962898,
   "Latitude": 43.3065147,
+  "Cellule": "8743_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7324,6 +7781,7 @@
   "Dist_bois_m": 38,
   "Longitude": 5.3957826,
   "Latitude": 43.3065344,
+  "Cellule": "8742_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7340,6 +7798,7 @@
   "Dist_bois_m": 60,
   "Longitude": 5.3954277,
   "Latitude": 43.3067115,
+  "Cellule": "8741_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7356,6 +7815,7 @@
   "Dist_bois_m": 471,
   "Longitude": 5.391655,
   "Latitude": 43.3092499,
+  "Cellule": "8735_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7372,6 +7832,7 @@
   "Dist_bois_m": 465,
   "Longitude": 5.3914962,
   "Latitude": 43.3090515,
+  "Cellule": "8735_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7388,6 +7849,7 @@
   "Dist_bois_m": 472,
   "Longitude": 5.3918648,
   "Latitude": 43.3094025,
+  "Cellule": "8735_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7404,6 +7866,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3938393,
   "Latitude": 43.3035139,
+  "Cellule": "8739_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7420,6 +7883,7 @@
   "Dist_bois_m": 62,
   "Longitude": 5.3940991,
   "Latitude": 43.3034517,
+  "Cellule": "8739_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7436,6 +7900,7 @@
   "Dist_bois_m": 48,
   "Longitude": 5.3934114,
   "Latitude": 43.3036136,
+  "Cellule": "8738_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7452,6 +7917,7 @@
   "Dist_bois_m": 47,
   "Longitude": 5.3937015,
   "Latitude": 43.3035454,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7468,6 +7934,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.3944429,
   "Latitude": 43.3033743,
+  "Cellule": "8740_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7484,6 +7951,7 @@
   "Dist_bois_m": 62,
   "Longitude": 5.39472,
   "Latitude": 43.3033036,
+  "Cellule": "8740_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7500,6 +7968,7 @@
   "Dist_bois_m": 33,
   "Longitude": 5.3937335,
   "Latitude": 43.3033757,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7516,6 +7985,7 @@
   "Dist_bois_m": 30,
   "Longitude": 5.3934866,
   "Latitude": 43.3034327,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7532,6 +8002,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.3947009,
   "Latitude": 43.3031471,
+  "Cellule": "8740_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7548,6 +8019,7 @@
   "Dist_bois_m": 79,
   "Longitude": 5.3944731,
   "Latitude": 43.3031995,
+  "Cellule": "8740_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7564,6 +8036,7 @@
   "Dist_bois_m": 60,
   "Longitude": 5.3942033,
   "Latitude": 43.3032649,
+  "Cellule": "8739_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7580,6 +8053,7 @@
   "Dist_bois_m": 86,
   "Longitude": 5.3958577,
   "Latitude": 43.3028684,
+  "Cellule": "8742_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7596,6 +8070,7 @@
   "Dist_bois_m": 76,
   "Longitude": 5.395616,
   "Latitude": 43.3029283,
+  "Cellule": "8741_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7612,6 +8087,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.3952696,
   "Latitude": 43.3030084,
+  "Cellule": "8741_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7628,6 +8104,7 @@
   "Dist_bois_m": 225,
   "Longitude": 5.4000929,
   "Latitude": 43.3067459,
+  "Cellule": "8749_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7644,6 +8121,7 @@
   "Dist_bois_m": 216,
   "Longitude": 5.3998376,
   "Latitude": 43.3068453,
+  "Cellule": "8748_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7660,6 +8138,7 @@
   "Dist_bois_m": 117,
   "Longitude": 5.3967862,
   "Latitude": 43.3070183,
+  "Cellule": "8743_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7676,6 +8155,7 @@
   "Dist_bois_m": 153,
   "Longitude": 5.3969188,
   "Latitude": 43.3073311,
+  "Cellule": "8744_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7692,6 +8172,7 @@
   "Dist_bois_m": 176,
   "Longitude": 5.3972281,
   "Latitude": 43.3074385,
+  "Cellule": "8744_95773",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7708,6 +8189,7 @@
   "Dist_bois_m": 22,
   "Longitude": 5.3963051,
   "Latitude": 43.3062057,
+  "Cellule": "8743_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7724,6 +8206,7 @@
   "Dist_bois_m": 47,
   "Longitude": 5.39644,
   "Latitude": 43.3064308,
+  "Cellule": "8743_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7740,6 +8223,7 @@
   "Dist_bois_m": 65,
   "Longitude": 5.396534,
   "Latitude": 43.3065834,
+  "Cellule": "8743_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7756,6 +8240,7 @@
   "Dist_bois_m": 85,
   "Longitude": 5.3966298,
   "Latitude": 43.3067474,
+  "Cellule": "8743_95772",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7772,6 +8257,7 @@
   "Dist_bois_m": 246,
   "Longitude": 5.3975812,
   "Latitude": 43.308021,
+  "Cellule": "8745_95774",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7788,6 +8274,7 @@
   "Dist_bois_m": 52,
   "Longitude": 5.3952772,
   "Latitude": 43.3031866,
+  "Cellule": "8741_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7804,6 +8291,7 @@
   "Dist_bois_m": 57,
   "Longitude": 5.3956466,
   "Latitude": 43.3031003,
+  "Cellule": "8742_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7820,6 +8308,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.3959031,
   "Latitude": 43.303038,
+  "Cellule": "8742_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7836,6 +8325,7 @@
   "Dist_bois_m": 88,
   "Longitude": 5.3962583,
   "Latitude": 43.302952,
+  "Cellule": "8742_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7852,6 +8342,7 @@
   "Dist_bois_m": 91,
   "Longitude": 5.3965701,
   "Latitude": 43.3028641,
+  "Cellule": "8743_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7868,6 +8359,7 @@
   "Dist_bois_m": 53,
   "Longitude": 5.3949883,
   "Latitude": 43.3032493,
+  "Cellule": "8740_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7884,6 +8376,7 @@
   "Dist_bois_m": 150,
   "Longitude": 5.3972675,
   "Latitude": 43.3023745,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7900,6 +8393,7 @@
   "Dist_bois_m": 133,
   "Longitude": 5.3970772,
   "Latitude": 43.3025008,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7916,6 +8410,7 @@
   "Dist_bois_m": 122,
   "Longitude": 5.3970241,
   "Latitude": 43.3025968,
+  "Cellule": "8744_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7932,6 +8427,7 @@
   "Dist_bois_m": 258,
   "Longitude": 5.3964012,
   "Latitude": 43.308462,
+  "Cellule": "8743_95775",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7948,6 +8444,7 @@
   "Dist_bois_m": 272,
   "Longitude": 5.3964038,
   "Latitude": 43.3085973,
+  "Cellule": "8743_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7964,6 +8461,7 @@
   "Dist_bois_m": 288,
   "Longitude": 5.3964039,
   "Latitude": 43.3087417,
+  "Cellule": "8743_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7980,6 +8478,7 @@
   "Dist_bois_m": 304,
   "Longitude": 5.3964057,
   "Latitude": 43.3088832,
+  "Cellule": "8743_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -7996,6 +8495,7 @@
   "Dist_bois_m": 318,
   "Longitude": 5.3964076,
   "Latitude": 43.3090117,
+  "Cellule": "8743_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8012,6 +8512,7 @@
   "Dist_bois_m": 335,
   "Longitude": 5.3964107,
   "Latitude": 43.3091669,
+  "Cellule": "8743_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8028,6 +8529,7 @@
   "Dist_bois_m": 351,
   "Longitude": 5.3964094,
   "Latitude": 43.3093132,
+  "Cellule": "8743_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8044,6 +8546,7 @@
   "Dist_bois_m": 397,
   "Longitude": 5.3997999,
   "Latitude": 43.3088149,
+  "Cellule": "8748_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8060,6 +8563,7 @@
   "Dist_bois_m": 397,
   "Longitude": 5.3996168,
   "Latitude": 43.3088724,
+  "Cellule": "8748_95776",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8076,6 +8580,7 @@
   "Dist_bois_m": 426,
   "Longitude": 5.3997041,
   "Latitude": 43.3091237,
+  "Cellule": "8748_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8092,6 +8597,7 @@
   "Dist_bois_m": 456,
   "Longitude": 5.3997957,
   "Latitude": 43.3093872,
+  "Cellule": "8748_95777",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8108,6 +8614,7 @@
   "Dist_bois_m": 233,
   "Longitude": 5.3994889,
   "Latitude": 43.302948,
+  "Cellule": "8748_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8124,6 +8631,7 @@
   "Dist_bois_m": 226,
   "Longitude": 5.3995452,
   "Latitude": 43.3031616,
+  "Cellule": "8748_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8140,6 +8648,7 @@
   "Dist_bois_m": 219,
   "Longitude": 5.39959,
   "Latitude": 43.3033524,
+  "Cellule": "8748_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8156,6 +8665,7 @@
   "Dist_bois_m": 211,
   "Longitude": 5.399663,
   "Latitude": 43.3036194,
+  "Cellule": "8748_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8172,6 +8682,7 @@
   "Dist_bois_m": 216,
   "Longitude": 5.3998389,
   "Latitude": 43.3038254,
+  "Cellule": "8748_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8188,6 +8699,7 @@
   "Dist_bois_m": 211,
   "Longitude": 5.3999081,
   "Latitude": 43.3040924,
+  "Cellule": "8748_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8204,6 +8716,7 @@
   "Dist_bois_m": 207,
   "Longitude": 5.3999639,
   "Latitude": 43.3043022,
+  "Cellule": "8748_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8220,6 +8733,7 @@
   "Dist_bois_m": 204,
   "Longitude": 5.4000158,
   "Latitude": 43.304493,
+  "Cellule": "8749_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8236,6 +8750,7 @@
   "Dist_bois_m": 200,
   "Longitude": 5.4000649,
   "Latitude": 43.3046837,
+  "Cellule": "8749_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8252,6 +8767,7 @@
   "Dist_bois_m": 1,
   "Longitude": 5.397287,
   "Latitude": 43.3043727,
+  "Cellule": "8744_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8268,6 +8784,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.3935877,
   "Latitude": 43.3023879,
+  "Cellule": "8738_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8284,6 +8801,7 @@
   "Dist_bois_m": 66,
   "Longitude": 5.3938895,
   "Latitude": 43.302527,
+  "Cellule": "8739_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8300,6 +8818,7 @@
   "Dist_bois_m": 311,
   "Longitude": 5.3896379,
   "Latitude": 43.304451,
+  "Cellule": "8732_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8316,6 +8835,7 @@
   "Dist_bois_m": 293,
   "Longitude": 5.3899689,
   "Latitude": 43.3045502,
+  "Cellule": "8732_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8332,6 +8852,7 @@
   "Dist_bois_m": 275,
   "Longitude": 5.3903589,
   "Latitude": 43.3046989,
+  "Cellule": "8733_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8348,6 +8869,7 @@
   "Dist_bois_m": 267,
   "Longitude": 5.3906579,
   "Latitude": 43.3048477,
+  "Cellule": "8733_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8364,6 +8886,7 @@
   "Dist_bois_m": 259,
   "Longitude": 5.3910306,
   "Latitude": 43.3050048,
+  "Cellule": "8734_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8380,6 +8903,7 @@
   "Dist_bois_m": 249,
   "Longitude": 5.3912919,
   "Latitude": 43.3051319,
+  "Cellule": "8734_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8396,6 +8920,7 @@
   "Dist_bois_m": 221,
   "Longitude": 5.3916731,
   "Latitude": 43.3053216,
+  "Cellule": "8735_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8412,6 +8937,7 @@
   "Dist_bois_m": 197,
   "Longitude": 5.3920121,
   "Latitude": 43.3054924,
+  "Cellule": "8736_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8428,6 +8954,7 @@
   "Dist_bois_m": 176,
   "Longitude": 5.392314,
   "Latitude": 43.3056221,
+  "Cellule": "8736_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8444,6 +8971,7 @@
   "Dist_bois_m": 155,
   "Longitude": 5.392637,
   "Latitude": 43.3057063,
+  "Cellule": "8737_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8460,6 +8988,7 @@
   "Dist_bois_m": 134,
   "Longitude": 5.3929786,
   "Latitude": 43.3057835,
+  "Cellule": "8737_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8476,6 +9005,7 @@
   "Dist_bois_m": 105,
   "Longitude": 5.3930626,
   "Latitude": 43.3049406,
+  "Cellule": "8737_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8492,6 +9022,7 @@
   "Dist_bois_m": 131,
   "Longitude": 5.392755,
   "Latitude": 43.3047981,
+  "Cellule": "8737_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8508,6 +9039,7 @@
   "Dist_bois_m": 159,
   "Longitude": 5.3924389,
   "Latitude": 43.304657,
+  "Cellule": "8736_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8524,6 +9056,7 @@
   "Dist_bois_m": 162,
   "Longitude": 5.3921242,
   "Latitude": 43.3045044,
+  "Cellule": "8736_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8540,6 +9073,7 @@
   "Dist_bois_m": 175,
   "Longitude": 5.3913096,
   "Latitude": 43.3041225,
+  "Cellule": "8734_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8556,6 +9090,7 @@
   "Dist_bois_m": 165,
   "Longitude": 5.3916612,
   "Latitude": 43.3042831,
+  "Cellule": "8735_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8572,6 +9107,7 @@
   "Dist_bois_m": 162,
   "Longitude": 5.391881,
   "Latitude": 43.3043823,
+  "Cellule": "8735_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8588,6 +9124,7 @@
   "Dist_bois_m": 188,
   "Longitude": 5.3910116,
   "Latitude": 43.3039822,
+  "Cellule": "8734_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8604,6 +9141,7 @@
   "Dist_bois_m": 272,
   "Longitude": 5.3896877,
   "Latitude": 43.3033668,
+  "Cellule": "8732_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8620,6 +9158,7 @@
   "Dist_bois_m": 254,
   "Longitude": 5.3899193,
   "Latitude": 43.3034782,
+  "Cellule": "8732_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8636,6 +9175,7 @@
   "Dist_bois_m": 234,
   "Longitude": 5.3902077,
   "Latitude": 43.303609,
+  "Cellule": "8733_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8652,6 +9192,7 @@
   "Dist_bois_m": 214,
   "Longitude": 5.3905184,
   "Latitude": 43.3037537,
+  "Cellule": "8733_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8668,6 +9209,7 @@
   "Dist_bois_m": 201,
   "Longitude": 5.3907517,
   "Latitude": 43.3038599,
+  "Cellule": "8734_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8684,6 +9226,7 @@
   "Dist_bois_m": 5,
   "Longitude": 5.3934808,
   "Latitude": 43.3029861,
+  "Cellule": "8738_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8700,6 +9243,7 @@
   "Dist_bois_m": 19,
   "Longitude": 5.3937339,
   "Latitude": 43.303104,
+  "Cellule": "8738_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8716,6 +9260,7 @@
   "Dist_bois_m": 45,
   "Longitude": 5.3940229,
   "Latitude": 43.3032417,
+  "Cellule": "8739_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8732,6 +9277,7 @@
   "Dist_bois_m": 112,
   "Longitude": 5.3921207,
   "Latitude": 43.3023514,
+  "Cellule": "8736_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8748,6 +9294,7 @@
   "Dist_bois_m": 85,
   "Longitude": 5.3924165,
   "Latitude": 43.3024891,
+  "Cellule": "8736_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8764,6 +9311,7 @@
   "Dist_bois_m": 65,
   "Longitude": 5.3926311,
   "Latitude": 43.3025894,
+  "Cellule": "8737_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8780,6 +9328,7 @@
   "Dist_bois_m": 43,
   "Longitude": 5.3928838,
   "Latitude": 43.3027077,
+  "Cellule": "8737_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8796,6 +9345,7 @@
   "Dist_bois_m": 21,
   "Longitude": 5.393198,
   "Latitude": 43.3028564,
+  "Cellule": "8738_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8812,6 +9362,7 @@
   "Dist_bois_m": 148,
   "Longitude": 5.392303,
   "Latitude": 43.3044243,
+  "Cellule": "8736_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8828,6 +9379,7 @@
   "Dist_bois_m": 121,
   "Longitude": 5.392478,
   "Latitude": 43.3042221,
+  "Cellule": "8736_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8844,6 +9396,7 @@
   "Dist_bois_m": 96,
   "Longitude": 5.3926558,
   "Latitude": 43.3040314,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8860,6 +9413,7 @@
   "Dist_bois_m": 67,
   "Longitude": 5.3928561,
   "Latitude": 43.3038101,
+  "Cellule": "8737_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8876,6 +9430,7 @@
   "Dist_bois_m": 219,
   "Longitude": 5.3916869,
   "Latitude": 43.3052635,
+  "Cellule": "8735_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8892,6 +9447,7 @@
   "Dist_bois_m": 203,
   "Longitude": 5.3918591,
   "Latitude": 43.3050728,
+  "Cellule": "8735_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8908,6 +9464,7 @@
   "Dist_bois_m": 189,
   "Longitude": 5.392025,
   "Latitude": 43.3048782,
+  "Cellule": "8736_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8924,6 +9481,7 @@
   "Dist_bois_m": 176,
   "Longitude": 5.3922127,
   "Latitude": 43.304687,
+  "Cellule": "8736_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8940,6 +9498,7 @@
   "Dist_bois_m": 61,
   "Longitude": 5.393919,
   "Latitude": 43.3026009,
+  "Cellule": "8739_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8956,6 +9515,7 @@
   "Dist_bois_m": 86,
   "Longitude": 5.3941823,
   "Latitude": 43.3024686,
+  "Cellule": "8739_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8972,6 +9532,7 @@
   "Dist_bois_m": 17,
   "Longitude": 5.3932519,
   "Latitude": 43.3033562,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -8988,6 +9549,7 @@
   "Dist_bois_m": 4,
   "Longitude": 5.3933969,
   "Latitude": 43.3031921,
+  "Cellule": "8738_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9004,6 +9566,7 @@
   "Dist_bois_m": 16,
   "Longitude": 5.3936161,
   "Latitude": 43.3029387,
+  "Cellule": "8738_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9020,6 +9583,7 @@
   "Dist_bois_m": 35,
   "Longitude": 5.3937485,
   "Latitude": 43.3027913,
+  "Cellule": "8738_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9036,6 +9600,7 @@
   "Dist_bois_m": 221,
   "Longitude": 5.3920131,
   "Latitude": 43.3061333,
+  "Cellule": "8736_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9052,6 +9617,7 @@
   "Dist_bois_m": 212,
   "Longitude": 5.3920541,
   "Latitude": 43.3059998,
+  "Cellule": "8736_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9068,6 +9634,7 @@
   "Dist_bois_m": 201,
   "Longitude": 5.3921041,
   "Latitude": 43.305851,
+  "Cellule": "8736_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9084,6 +9651,7 @@
   "Dist_bois_m": 191,
   "Longitude": 5.3921552,
   "Latitude": 43.3056984,
+  "Cellule": "8736_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9100,6 +9668,7 @@
   "Dist_bois_m": 171,
   "Longitude": 5.3928971,
   "Latitude": 43.3062363,
+  "Cellule": "8737_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9116,6 +9685,7 @@
   "Dist_bois_m": 185,
   "Longitude": 5.3925538,
   "Latitude": 43.3061485,
+  "Cellule": "8736_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9132,6 +9702,7 @@
   "Dist_bois_m": 202,
   "Longitude": 5.3922338,
   "Latitude": 43.3060646,
+  "Cellule": "8736_95770",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9148,6 +9719,7 @@
   "Dist_bois_m": 167,
   "Longitude": 5.3931727,
   "Latitude": 43.3063674,
+  "Cellule": "8737_95771",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9164,6 +9736,7 @@
   "Dist_bois_m": 256,
   "Longitude": 5.3898913,
   "Latitude": 43.3028249,
+  "Cellule": "8732_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9180,6 +9753,7 @@
   "Dist_bois_m": 246,
   "Longitude": 5.3900689,
   "Latitude": 43.3026255,
+  "Cellule": "8732_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9196,6 +9770,7 @@
   "Dist_bois_m": 239,
   "Longitude": 5.3902296,
   "Latitude": 43.302445,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9212,6 +9787,7 @@
   "Dist_bois_m": 268,
   "Longitude": 5.3897252,
   "Latitude": 43.3030052,
+  "Cellule": "8732_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9228,6 +9804,7 @@
   "Dist_bois_m": 134,
   "Longitude": 5.3915949,
   "Latitude": 43.3037453,
+  "Cellule": "8735_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9244,6 +9821,7 @@
   "Dist_bois_m": 123,
   "Longitude": 5.3918509,
   "Latitude": 43.3038673,
+  "Cellule": "8735_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9260,6 +9838,7 @@
   "Dist_bois_m": 116,
   "Longitude": 5.392148,
   "Latitude": 43.3040047,
+  "Cellule": "8736_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9276,6 +9855,7 @@
   "Dist_bois_m": 115,
   "Longitude": 5.3924408,
   "Latitude": 43.3041458,
+  "Cellule": "8736_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9292,6 +9872,7 @@
   "Dist_bois_m": 119,
   "Longitude": 5.392674,
   "Latitude": 43.3042526,
+  "Cellule": "8737_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9308,6 +9889,7 @@
   "Dist_bois_m": 124,
   "Longitude": 5.3929939,
   "Latitude": 43.3043976,
+  "Cellule": "8737_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9324,6 +9906,7 @@
   "Dist_bois_m": 160,
   "Longitude": 5.3910808,
   "Latitude": 43.3034113,
+  "Cellule": "8734_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9340,6 +9923,7 @@
   "Dist_bois_m": 141,
   "Longitude": 5.3913765,
   "Latitude": 43.3035469,
+  "Cellule": "8735_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9356,6 +9940,7 @@
   "Dist_bois_m": 266,
   "Longitude": 5.3897581,
   "Latitude": 43.3028984,
+  "Cellule": "8732_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9372,6 +9957,7 @@
   "Dist_bois_m": 250,
   "Longitude": 5.3899498,
   "Latitude": 43.3029861,
+  "Cellule": "8732_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9388,6 +9974,7 @@
   "Dist_bois_m": 233,
   "Longitude": 5.3901529,
   "Latitude": 43.3030815,
+  "Cellule": "8733_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9404,6 +9991,7 @@
   "Dist_bois_m": 206,
   "Longitude": 5.3904891,
   "Latitude": 43.3032341,
+  "Cellule": "8733_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9420,6 +10008,7 @@
   "Dist_bois_m": 185,
   "Longitude": 5.3907552,
   "Latitude": 43.30336,
+  "Cellule": "8734_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9436,6 +10025,7 @@
   "Dist_bois_m": 37,
   "Longitude": 5.3927061,
   "Latitude": 43.3034055,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9452,6 +10042,7 @@
   "Dist_bois_m": 42,
   "Longitude": 5.3926575,
   "Latitude": 43.3034431,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9468,6 +10059,7 @@
   "Dist_bois_m": 34,
   "Longitude": 5.3928314,
   "Latitude": 43.3034613,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9484,6 +10076,7 @@
   "Dist_bois_m": 120,
   "Longitude": 5.3915594,
   "Latitude": 43.3029433,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9500,6 +10093,7 @@
   "Dist_bois_m": 118,
   "Longitude": 5.3916007,
   "Latitude": 43.3029014,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9516,6 +10110,7 @@
   "Dist_bois_m": 106,
   "Longitude": 5.391723,
   "Latitude": 43.3030248,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9532,6 +10127,7 @@
   "Dist_bois_m": 103,
   "Longitude": 5.3917628,
   "Latitude": 43.3029765,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9548,6 +10144,7 @@
   "Dist_bois_m": 90,
   "Longitude": 5.3919087,
   "Latitude": 43.3031052,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9564,6 +10161,7 @@
   "Dist_bois_m": 87,
   "Longitude": 5.3919471,
   "Latitude": 43.3030591,
+  "Cellule": "8736_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9580,6 +10178,7 @@
   "Dist_bois_m": 69,
   "Longitude": 5.3921696,
   "Latitude": 43.3031664,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9596,6 +10195,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3921254,
   "Latitude": 43.303205,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9612,6 +10212,7 @@
   "Dist_bois_m": 54,
   "Longitude": 5.392373,
   "Latitude": 43.3032618,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9628,6 +10229,7 @@
   "Dist_bois_m": 59,
   "Longitude": 5.3923288,
   "Latitude": 43.3032951,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9644,6 +10246,7 @@
   "Dist_bois_m": 44,
   "Longitude": 5.3925469,
   "Latitude": 43.303338,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9660,6 +10263,7 @@
   "Dist_bois_m": 50,
   "Longitude": 5.3924968,
   "Latitude": 43.3033744,
+  "Cellule": "8736_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9676,6 +10280,7 @@
   "Dist_bois_m": 40,
   "Longitude": 5.3927842,
   "Latitude": 43.3035042,
+  "Cellule": "8737_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9692,6 +10297,7 @@
   "Dist_bois_m": 220,
   "Longitude": 5.3904838,
   "Latitude": 43.3024374,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9708,6 +10314,7 @@
   "Dist_bois_m": 220,
   "Longitude": 5.3905094,
   "Latitude": 43.3023944,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9724,6 +10331,7 @@
   "Dist_bois_m": 203,
   "Longitude": 5.3906595,
   "Latitude": 43.3025193,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9740,6 +10348,7 @@
   "Dist_bois_m": 202,
   "Longitude": 5.3906938,
   "Latitude": 43.3024792,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9756,6 +10365,7 @@
   "Dist_bois_m": 188,
   "Longitude": 5.3908287,
   "Latitude": 43.3025966,
+  "Cellule": "8734_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9772,6 +10382,7 @@
   "Dist_bois_m": 186,
   "Longitude": 5.3908654,
   "Latitude": 43.3025612,
+  "Cellule": "8734_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9788,6 +10399,7 @@
   "Dist_bois_m": 171,
   "Longitude": 5.3910043,
   "Latitude": 43.3026855,
+  "Cellule": "8734_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9804,6 +10416,7 @@
   "Dist_bois_m": 170,
   "Longitude": 5.3910363,
   "Latitude": 43.3026425,
+  "Cellule": "8734_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9820,6 +10433,7 @@
   "Dist_bois_m": 154,
   "Longitude": 5.3911927,
   "Latitude": 43.3027732,
+  "Cellule": "8734_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9836,6 +10450,7 @@
   "Dist_bois_m": 152,
   "Longitude": 5.3912342,
   "Latitude": 43.3027302,
+  "Cellule": "8734_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9852,6 +10467,7 @@
   "Dist_bois_m": 137,
   "Longitude": 5.3913752,
   "Latitude": 43.3028553,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9868,6 +10484,7 @@
   "Dist_bois_m": 135,
   "Longitude": 5.3914135,
   "Latitude": 43.3028135,
+  "Cellule": "8735_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9884,6 +10501,7 @@
   "Dist_bois_m": 239,
   "Longitude": 5.3902771,
   "Latitude": 43.3023439,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9900,6 +10518,7 @@
   "Dist_bois_m": 239,
   "Longitude": 5.3903106,
   "Latitude": 43.3023009,
+  "Cellule": "8733_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9916,6 +10535,7 @@
   "Dist_bois_m": 221,
   "Longitude": 5.3909282,
   "Latitude": 43.3044439,
+  "Cellule": "8734_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9932,6 +10552,7 @@
   "Dist_bois_m": 364,
   "Longitude": 5.3899426,
   "Latitude": 43.305565,
+  "Cellule": "8732_95769",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9948,6 +10569,7 @@
   "Dist_bois_m": 149,
   "Longitude": 5.3914561,
   "Latitude": 43.3038445,
+  "Cellule": "8735_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9964,6 +10586,7 @@
   "Dist_bois_m": 165,
   "Longitude": 5.3913331,
   "Latitude": 43.3039818,
+  "Cellule": "8735_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9980,6 +10603,7 @@
   "Dist_bois_m": 195,
   "Longitude": 5.3911161,
   "Latitude": 43.3042221,
+  "Cellule": "8734_95766",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -9996,6 +10620,7 @@
   "Dist_bois_m": 244,
   "Longitude": 5.3907061,
   "Latitude": 43.3045578,
+  "Cellule": "8734_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10012,6 +10637,7 @@
   "Dist_bois_m": 264,
   "Longitude": 5.390563,
   "Latitude": 43.304718,
+  "Cellule": "8733_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10028,6 +10654,7 @@
   "Dist_bois_m": 282,
   "Longitude": 5.390513,
   "Latitude": 43.3049271,
+  "Cellule": "8733_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10044,6 +10671,7 @@
   "Dist_bois_m": 313,
   "Longitude": 5.3903025,
   "Latitude": 43.305165,
+  "Cellule": "8733_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10060,6 +10688,7 @@
   "Dist_bois_m": 339,
   "Longitude": 5.3901178,
   "Latitude": 43.3053725,
+  "Cellule": "8733_95768",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10076,6 +10705,7 @@
   "Dist_bois_m": 85,
   "Longitude": 5.3928083,
   "Latitude": 43.3023287,
+  "Cellule": "8737_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10092,6 +10722,7 @@
   "Dist_bois_m": 130,
   "Longitude": 5.3915406,
   "Latitude": 43.3035955,
+  "Cellule": "8735_95765",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10108,6 +10739,7 @@
   "Dist_bois_m": 108,
   "Longitude": 5.3917311,
   "Latitude": 43.3033848,
+  "Cellule": "8735_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10124,6 +10756,7 @@
   "Dist_bois_m": 92,
   "Longitude": 5.3918871,
   "Latitude": 43.3032065,
+  "Cellule": "8735_95764",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10140,6 +10773,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.3921661,
   "Latitude": 43.3030319,
+  "Cellule": "8736_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10156,6 +10790,7 @@
   "Dist_bois_m": 64,
   "Longitude": 5.3923168,
   "Latitude": 43.3028717,
+  "Cellule": "8736_95763",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10172,6 +10807,7 @@
   "Dist_bois_m": 66,
   "Longitude": 5.3924861,
   "Latitude": 43.3026733,
+  "Cellule": "8736_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10188,6 +10824,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3926449,
   "Latitude": 43.3025017,
+  "Cellule": "8737_95762",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10204,6 +10841,7 @@
   "Dist_bois_m": 70,
   "Longitude": 5.3935094,
   "Latitude": 43.3048306,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10220,6 +10858,7 @@
   "Dist_bois_m": 72,
   "Longitude": 5.3935029,
   "Latitude": 43.3047889,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10236,6 +10875,7 @@
   "Dist_bois_m": 68,
   "Longitude": 5.3935486,
   "Latitude": 43.3047936,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10252,6 +10892,7 @@
   "Dist_bois_m": 68,
   "Longitude": 5.3935704,
   "Latitude": 43.3047577,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10268,6 +10909,7 @@
   "Dist_bois_m": 71,
   "Longitude": 5.39355,
   "Latitude": 43.3047228,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  },
@@ -10284,6 +10926,7 @@
   "Dist_bois_m": 73,
   "Longitude": 5.3935348,
   "Latitude": 43.3046832,
+  "Cellule": "8738_95767",
   "Source": "Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)",
   "Donnee": "modèle, hauteur, âge, abaissement, état : fictifs"
  }

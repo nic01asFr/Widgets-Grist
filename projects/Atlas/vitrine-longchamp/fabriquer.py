@@ -14,6 +14,7 @@ CE QUI EST FICTIF, ET DIT TEL DANS CHAQUE TABLE (colonne « Donnee »)
 
 Usage : python projects/Atlas/vitrine-longchamp/fabriquer.py
 """
+import collections
 import csv
 import json
 import math
@@ -224,6 +225,44 @@ for date, mois, sais, temp, vent in NUITS:
             tot += v
         releves.append(ligne)
 
+# ------------------------------------------------------------------ restitution : cellules, plots (mêmes formules que dans Grist)
+LAT0 = 43.3044
+COS0 = math.cos(math.radians(LAT0))
+M_LON = 111320.0 * COS0  # mètres par degré de longitude (latitude de référence)
+M_LAT = 110574.0
+TAILLE_CELLULE = 50.0
+MOIS = {6: 'Juin', 7: 'Juillet', 9: 'Septembre'}
+RANG_MOIS = {6: 0, 7: 1, 9: 2}
+
+
+def cle_cellule(lon, lat):
+    # même ordre d'opérations que la formule du document : une maille ne doit pas changer de côté pour un arrondi
+    return '%d_%d' % (math.floor(lon * 111320.0 * COS0 / TAILLE_CELLULE), math.floor(lat * 110574.0 / TAILLE_CELLULE))
+
+
+def wkt_cellule(cle):
+    i, j = [int(v) for v in cle.split('_')]
+    x0, y0 = i * TAILLE_CELLULE, j * TAILLE_CELLULE
+    pts = [(x0, y0), (x0 + TAILLE_CELLULE, y0), (x0 + TAILLE_CELLULE, y0 + TAILLE_CELLULE), (x0, y0 + TAILLE_CELLULE), (x0, y0)]
+    return 'POLYGON((' + ', '.join('%.7f %.7f' % (x / M_LON, y / M_LAT) for x, y in pts) + '))'
+
+
+def wkt_plot(lon, lat, rang):
+    """Un plot de 7 m de côté, décalé de 10 m vers l'est par nuit : trois colonnes côte à côte au pied de chaque piège."""
+    cos = math.cos(math.radians(lat))
+    cx = lon + (rang - 1) * 10.0 / (111320.0 * cos)
+    dx, dy = 3.5 / (111320.0 * cos), 3.5 / M_LAT
+    pts = [(cx - dx, lat - dy), (cx + dx, lat - dy), (cx + dx, lat + dy), (cx - dx, lat + dy), (cx - dx, lat - dy)]
+    return 'POLYGON((' + ', '.join('%.7f %.7f' % p for p in pts) + '))'
+
+
+for p in pts:
+    p['cellule'] = cle_cellule(p['lon'], p['lat'])
+
+cellules = collections.OrderedDict()
+for p in sorted(pts, key=lambda q: q['cellule']):
+    cellules.setdefault(p['cellule'], []).append(p)
+
 # ------------------------------------------------------------------ écriture
 os.makedirs(SORTIE, exist_ok=True)
 
@@ -239,12 +278,25 @@ ecrire('classes_spectrales.json', [{'id': c[0], 'Libelle': c[1], 'Couleur': c[2]
 ecrire('modeles.json', [{'id': m[0], 'Libelle': m[1], 'Modele3D': m[2], 'Classe': m[3], 'Temperature_K': m[4], 'Flux_lm': m[5], 'ULOR_pct': m[6], 'Remarque': m[7],
                          'Donnee': 'fictive (modèle d’exemple)'} for m in MODELES])
 ecrire('luminaires.json', [{'Code': p['code'], 'Categorie': p['cat'], 'Modele': p['modele'], 'Hauteur_feu_m': p['hauteur'], 'Annee_pose': p['annee'], 'Abaissement_nuit_pct': p['abaissement'],
-                            'Etat': p['etat'], 'Zone': p['zone'], 'Dist_eau_m': p['dEau'], 'Dist_bois_m': p['dBois'], 'Longitude': round(p['lon'], 7), 'Latitude': round(p['lat'], 7),
+                            'Etat': p['etat'], 'Zone': p['zone'], 'Dist_eau_m': p['dEau'], 'Dist_bois_m': p['dBois'], 'Longitude': round(p['lon'], 7), 'Latitude': round(p['lat'], 7), 'Cellule': p['cellule'],
                             'Source': 'Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0 (position, code, catégorie)',
                             'Donnee': 'modèle, hauteur, âge, abaissement, état : fictifs'} for p in pts])
 ecrire('pieges.json', [{'id': g['id'], 'Nom': g['nom'], 'Type': g['type'], 'Luminaire': g['luminaire'], 'Longitude': wgs(g['x'], g['y'])[0], 'Latitude': wgs(g['x'], g['y'])[1],
                         'Dist_eau_m': g['dEau'], 'Dist_luminaire_m': g['dLum'], 'Donnee': 'fictive'} for g in pieges])
-ecrire('releves.json', [{**r, 'Total': sum(r[o[0]] for o in ORDRES), 'Donnee': 'fictive'} for r in releves])
+def _releve(r):
+    pg = next(g for g in pieges if g['id'] == r['piege'])
+    lo, la = wgs(pg['x'], pg['y'])
+    mois = int(r['nuit'][5:7])
+    return {**r, 'Total': sum(r[o[0]] for o in ORDRES), 'Mois': MOIS[mois], 'WKT': wkt_plot(lo, la, RANG_MOIS[mois]), 'Donnee': 'fictive'}
+
+
+ecrire('releves.json', [_releve(r) for r in releves])
+FLUX = {m[0]: m[5] for m in MODELES}
+TEMP = {m[0]: m[4] for m in MODELES}
+ecrire('grille.json', [{'Cle': cle, 'WKT': wkt_cellule(cle), 'N_lum': len(v), 'Flux_total_lm': sum(FLUX[p['modele']] for p in v),
+                        'K_moyen': int(round(sum(TEMP[p['modele']] for p in v) / len(v))), 'Donnee': 'calculée à partir de luminaires dont les caractéristiques sont fictives'}
+                       for cle, v in cellules.items()])
+
 
 # ------------------------------------------------------------------ contrôle : l'effet attendu se voit-il ?
 import collections
@@ -253,6 +305,7 @@ for r in releves:
     pg = next(g for g in pieges if g['id'] == r['piege'])
     cle = pg['modele'] or 'témoin'
     tot[cle].append(sum(r[o[0]] for o in ORDRES))
+print(len(cellules), 'cellules de', int(TAILLE_CELLULE), 'm')
 print(len(pts), 'points lumineux réels ;', len(pieges), 'pièges ;', len(releves), 'relevés')
 print('programmes par îlot :', collections.Counter(programmes.values()))
 print('modèles :', collections.Counter(p['modele'] for p in pts))

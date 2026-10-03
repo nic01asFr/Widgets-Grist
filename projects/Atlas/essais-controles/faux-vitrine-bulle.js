@@ -67,6 +67,88 @@
   }
   var vis = { 'Passerelles.Etat': 'Etats.Libelle', 'Controles.Passerelle': 'Passerelles.Nom', 'Controles.Etat_constate': 'Etats.Libelle' };
 
+
+  // ?longchamp=1 : le document de démonstration (éclairage du Palais Longchamp et faune nocturne), alimenté par les tables que
+  // fabrique vitrine-longchamp/fabriquer.py. Les colonnes calculées de Grist sont refaites ici ; deux formulaires natifs sont simulés.
+  if (location.search.indexOf('longchamp=1') >= 0) {
+    var lire = function (nom) {
+      var x = new XMLHttpRequest();
+      x.open('GET', new URL('../vitrine-longchamp/tables/' + nom + '.json', location.href).href, false);
+      x.send();
+      return JSON.parse(x.responseText);
+    };
+    var classes = lire('classes_spectrales'), modeles = lire('modeles'), lum = lire('luminaires'), pieges = lire('pieges'), releves = lire('releves');
+    var PUISS = { M1: 38, M2: 34, M3: 30, M4: 70, M5: 14, M6: 6, M7: 40, M8: 90 };
+    var idCl = {}; classes.forEach(function (c, i) { idCl[c.id] = i + 1; });
+    var idMo = {}; modeles.forEach(function (m, i) { idMo[m.id] = i + 1; });
+    var idLu = {}; lum.forEach(function (l, i) { idLu[l.Code] = i + 1; });
+    var unix = function (d) { return Math.round(Date.parse(d + 'T00:00:00Z') / 1000); };
+    var lignes = function (arr, f) { return arr.map(function (o, i) { return { id: i + 1, fields: f(o, i) }; }); };
+    var rowsCl = lignes(classes, function (c) { return { Libelle: c.Libelle, Couleur: c.Couleur, Rang: c.Rang, Attraction: c.Attraction, Donnee: c.Donnee }; });
+    rowsCl.push({ id: classes.length + 1, fields: { Libelle: 'Sans éclairage', Couleur: '#5b5b66', Rang: 0, Attraction: 0.22, Donnee: 'fictive (règle de la démonstration)' } });
+    var rowsMo = lignes(modeles, function (m) { return { Libelle: m.Libelle, Modele3D: m.Modele3D, Classe: idCl[m.Classe], Temperature_K: m.Temperature_K, Flux_lm: m.Flux_lm, ULOR_pct: m.ULOR_pct, Puissance_W: PUISS[m.id], Remarque: m.Remarque, Donnee: m.Donnee }; });
+    var rowsLu = lignes(lum, function (l) {
+      var m = modeles[idMo[l.Modele] - 1];
+      return { Code: l.Code, Categorie: l.Categorie, Modele: idMo[l.Modele], hauteur_feu: l.Hauteur_feu_m, Annee_pose: l.Annee_pose, Abaissement_nuit_pct: l.Abaissement_nuit_pct, Etat: l.Etat, Zone: l.Zone,
+        Dist_eau_m: l.Dist_eau_m, Dist_bois_m: l.Dist_bois_m, Longitude: l.Longitude, Latitude: l.Latitude, Source: l.Source, Donnee: l.Donnee,
+        Classe: idCl[m.Classe], temperatureCouleur: m.Temperature_K, puissance: PUISS[m.id], statut: l.Etat === 'Défectueux' ? 'decommissioned' : 'functional', Nom_modele: m.Libelle, Cellule: l.Cellule };
+    });
+    var rowsRe = lignes(releves, function (r) { return { Piege: r.piege, Nuit: unix(r.nuit), Duree_h: r.duree_h, Temp_c: r.temp_c, Vent_bft: r.vent_bft, Lepidopteres: r.Lepidopteres, Dipteres: r.Dipteres, Coleopteres: r.Coleopteres,
+      Hymenopteres: r.Hymenopteres, Autres: r.Autres, Total: r.Total, Mois: r.Mois, WKT: r.WKT, Donnee: r.Donnee }; });
+    var rowsPi = lignes(pieges, function (p, i) {
+      var l = p.Luminaire ? rowsLu[idLu[p.Luminaire] - 1].fields : null;
+      var mine = rowsRe.filter(function (r) { return r.fields.Piege === i + 1; });
+      return { Nom: p.Nom, Type: p.Type, Luminaire: p.Luminaire ? idLu[p.Luminaire] : 0, Longitude: p.Longitude, Latitude: p.Latitude, Dist_eau_m: p.Dist_eau_m, Dist_luminaire_m: p.Dist_luminaire_m, Donnee: p.Donnee,
+        Modele: l ? l.Modele : 0, Classe: l ? l.Classe : classes.length + 1, Nuits: mine.length, Total_moyen: mine.length ? Math.round(mine.reduce(function (s, r) { return s + r.fields.Total; }, 0) / mine.length) : 0 };
+    });
+    tables = {
+      Classes_spectrales: { cols: [['Libelle', 'Text'], ['Couleur', 'Text'], ['Rang', 'Int'], ['Attraction', 'Numeric'], ['Donnee', 'Text']], rows: rowsCl },
+      Modeles: { cols: [['Libelle', 'Text'], ['Modele3D', 'Text'], ['Classe', 'Ref:Classes_spectrales'], ['Temperature_K', 'Int'], ['Flux_lm', 'Int'], ['ULOR_pct', 'Int'], ['Puissance_W', 'Int'], ['Remarque', 'Text'], ['Donnee', 'Text']], rows: rowsMo },
+      Luminaires: { cols: [['Code', 'Text'], ['Categorie', 'Text'], ['Modele', 'Ref:Modeles'], ['hauteur_feu', 'Numeric'], ['Annee_pose', 'Int'], ['Abaissement_nuit_pct', 'Int'], ['Etat', 'Choice'], ['Zone', 'Choice'], ['Dist_eau_m', 'Int'], ['Dist_bois_m', 'Int'],
+        ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Source', 'Text'], ['Donnee', 'Text'], ['Classe', 'Ref:Classes_spectrales', true], ['temperatureCouleur', 'Int', true], ['puissance', 'Int', true], ['statut', 'Text', true], ['Nom_modele', 'Text', true], ['Cellule', 'Text', true]], rows: rowsLu },
+      Pieges: { cols: [['Nom', 'Text'], ['Type', 'Choice'], ['Luminaire', 'Ref:Luminaires'], ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Dist_eau_m', 'Int'], ['Dist_luminaire_m', 'Int'], ['Donnee', 'Text'],
+        ['Modele', 'Ref:Modeles', true], ['Classe', 'Ref:Classes_spectrales', true], ['Nuits', 'Int', true], ['Total_moyen', 'Int', true]], rows: rowsPi },
+      Releves: { cols: [['Piege', 'Ref:Pieges'], ['Nuit', 'Date'], ['Duree_h', 'Numeric'], ['Temp_c', 'Int'], ['Vent_bft', 'Int'], ['Lepidopteres', 'Int'], ['Dipteres', 'Int'], ['Coleopteres', 'Int'], ['Hymenopteres', 'Int'], ['Autres', 'Int'], ['Total', 'Int', true], ['Mois', 'Text', true], ['WKT', 'Text', true], ['Donnee', 'Text']], rows: rowsRe },
+      Grille: { cols: [['Cle', 'Text'], ['WKT', 'Text'], ['N_lum', 'Int', true], ['Flux_total_lm', 'Int', true], ['K_moyen', 'Int', true], ['Donnee', 'Text']], rows: lignes(lire('grille'), function (c) { return { Cle: c.Cle, WKT: c.WKT, N_lum: c.N_lum, Flux_total_lm: c.Flux_total_lm, K_moyen: c.K_moyen, Donnee: c.Donnee }; }) }
+    };
+    tables.Atlas_ScenePrefs = { cols: [['ViewerJSON', 'Text'], ['SettingsJSON', 'Text'], ['ExpositionJSON', 'Text']], rows: [{ id: 1, fields: { ViewerJSON: '[]', SettingsJSON: '{}', ExpositionJSON: '{}' } }] };
+    vis = { 'Modeles.Classe': 'Classes_spectrales.Libelle', 'Luminaires.Modele': 'Modeles.Libelle', 'Luminaires.Classe': 'Classes_spectrales.Libelle', 'Pieges.Luminaire': 'Luminaires.Code',
+      'Pieges.Modele': 'Modeles.Libelle', 'Pieges.Classe': 'Classes_spectrales.Libelle', 'Releves.Piege': 'Pieges.Nom' };
+    window.__tables = tables;
+    // Deux formulaires natifs : « Relevé de nuit » (table Releves) et « Poser un piège » (table Pieges).
+    var Q = {
+      'Releves.Piege': { question: 'Piège relevé', formRequired: true }, 'Releves.Nuit': { question: 'Date de la nuit', formRequired: true },
+      'Releves.Duree_h': { question: 'Durée d’éclairement (heures)', formRequired: true }, 'Releves.Temp_c': { question: 'Température au coucher du soleil (°C)' },
+      'Releves.Vent_bft': { question: 'Vent (échelle de Beaufort, 0 à 12)' }, 'Releves.Lepidopteres': { question: 'Papillons de nuit (lépidoptères)' },
+      'Releves.Dipteres': { question: 'Mouches et moustiques (diptères)' }, 'Releves.Coleopteres': { question: 'Coléoptères' }, 'Releves.Hymenopteres': { question: 'Abeilles, guêpes et fourmis volantes (hyménoptères)' },
+      'Releves.Autres': { question: 'Autres insectes' },
+      'Pieges.Nom': { question: 'Nom du piège', formRequired: true }, 'Pieges.Type': { question: 'Type de piège', formRequired: true }, 'Pieges.Luminaire': { question: 'Luminaire à côté duquel il est posé' },
+      'Pieges.Longitude': { question: 'Longitude' }, 'Pieges.Latitude': { question: 'Latitude' }
+    };
+    var FORMS = [
+      { view: 10, section: 29, nom: 'Relevé de nuit', titre: '# **Relevé de nuit**', table: 'Releves', champs: ['Piege', 'Nuit', 'Duree_h', 'Temp_c', 'Vent_bft', 'Lepidopteres', 'Dipteres', 'Coleopteres', 'Hymenopteres', 'Autres'], base: 500 },
+      { view: 11, section: 30, nom: 'Poser un piège', titre: '# **Poser un piège**', table: 'Pieges', champs: ['Nom', 'Type', 'Luminaire', 'Longitude', 'Latitude'], base: 600 }
+    ];
+    window.__longchamp = {
+      sql: function (q, noms, ids) {
+        if (/_grist_Views_section_field/.test(q)) {
+          var recs = [];
+          FORMS.forEach(function (f) { f.champs.forEach(function (c, i) { recs.push({ id: f.base + i, fields: { id: f.base + i, parentId: f.section, colRef: ids[f.table + '.' + c], parentPos: i, widgetOptions: '' } }); }); });
+          return { records: recs };
+        }
+        if (/_grist_Views_section/.test(q)) {
+          return { records: FORMS.map(function (f) {
+            var mise = { type: 'Layout', children: [{ type: 'Paragraph', text: f.titre }, { type: 'Section', children: f.champs.map(function (c, i) { return { type: 'Field', leaf: f.base + i }; }) }, { type: 'Submit' }] };
+            return { id: f.section, fields: { id: f.section, parentId: f.view, parentKey: 'form', tableRef: noms.indexOf(f.table) + 1, title: '', layoutSpec: JSON.stringify(mise), shareOptions: '' } };
+          }) };
+        }
+        if (/_grist_Views/.test(q)) return { records: FORMS.map(function (f) { return { id: f.view, fields: { id: f.view, name: f.nom } }; }) };
+        return null;
+      },
+      options: function (k) { return JSON.stringify(Q[k] || {}); }
+    };
+  }
+
   var journal = window.__journalRest = [];
   var vrai = window.fetch.bind(window);
   var neufs = window.__docsNeufs = {};
@@ -136,9 +218,10 @@
       var q = decodeURIComponent(chemin.split('q=')[1] || ''); var noms = Object.keys(tables);
       var ids = {}, n0 = 1;
       noms.forEach(function (nom) { tables[nom].cols.forEach(function (c) { ids[nom + '.' + c[0]] = n0++; }); });
+      if (window.__longchamp) { var sq = window.__longchamp.sql(q, noms, ids); if (sq) return rep(sq); }
       if (/_grist_Tables_column/.test(q)) {
         var recs = [];
-        noms.forEach(function (nom, i) { tables[nom].cols.forEach(function (c) { var k = nom + '.' + c[0]; recs.push({ id: ids[k], fields: { id: ids[k], parentId: i + 1, colId: c[0], type: c[1], label: c[0], isFormula: !!c[2], widgetOptions: '{}', visibleCol: vis[k] ? ids[vis[k]] : 0 } }); }); });
+        noms.forEach(function (nom, i) { tables[nom].cols.forEach(function (c) { var k = nom + '.' + c[0]; recs.push({ id: ids[k], fields: { id: ids[k], parentId: i + 1, colId: c[0], type: c[1], label: c[0], isFormula: !!c[2], widgetOptions: window.__longchamp ? window.__longchamp.options(k) : '{}', visibleCol: vis[k] ? ids[vis[k]] : 0 } }); }); });
         return rep({ records: recs });
       }
       if (/_grist_Tables/.test(q)) return rep({ records: noms.map(function (nom, i) { return { id: i + 1, fields: { id: i + 1, tableId: nom } }; }) });

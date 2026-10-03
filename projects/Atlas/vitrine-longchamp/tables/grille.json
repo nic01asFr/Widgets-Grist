@@ -1,0 +1,1458 @@
+[
+ {
+  "Cle": "8732_95762",
+  "WKT": "POLYGON((5.3894714 43.3022229, 5.3900886 43.3022229, 5.3900886 43.3026751, 5.3894714 43.3026751, 5.3894714 43.3022229))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95763",
+  "WKT": "POLYGON((5.3894714 43.3026751, 5.3900886 43.3026751, 5.3900886 43.3031273, 5.3894714 43.3031273, 5.3894714 43.3026751))",
+  "N_lum": 4,
+  "Flux_total_lm": 6000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95764",
+  "WKT": "POLYGON((5.3894714 43.3031273, 5.3900886 43.3031273, 5.3900886 43.3035795, 5.3894714 43.3035795, 5.3894714 43.3031273))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95766",
+  "WKT": "POLYGON((5.3894714 43.3040317, 5.3900886 43.3040317, 5.3900886 43.3044839, 5.3894714 43.3044839, 5.3894714 43.3040317))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95767",
+  "WKT": "POLYGON((5.3894714 43.3044839, 5.3900886 43.3044839, 5.3900886 43.3049361, 5.3894714 43.3049361, 5.3894714 43.3044839))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95769",
+  "WKT": "POLYGON((5.3894714 43.3053882, 5.3900886 43.3053882, 5.3900886 43.3058404, 5.3894714 43.3058404, 5.3894714 43.3053882))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95776",
+  "WKT": "POLYGON((5.3894714 43.3085535, 5.3900886 43.3085535, 5.3900886 43.3090057, 5.3894714 43.3090057, 5.3894714 43.3085535))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8732_95777",
+  "WKT": "POLYGON((5.3894714 43.3090057, 5.3900886 43.3090057, 5.3900886 43.3094579, 5.3894714 43.3094579, 5.3894714 43.3090057))",
+  "N_lum": 1,
+  "Flux_total_lm": 6800,
+  "K_moyen": 2000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95762",
+  "WKT": "POLYGON((5.3900886 43.3022229, 5.3907058 43.3022229, 5.3907058 43.3026751, 5.3900886 43.3026751, 5.3900886 43.3022229))",
+  "N_lum": 7,
+  "Flux_total_lm": 26700,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95763",
+  "WKT": "POLYGON((5.3900886 43.3026751, 5.3907058 43.3026751, 5.3907058 43.3031273, 5.3900886 43.3031273, 5.3900886 43.3026751))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95764",
+  "WKT": "POLYGON((5.3900886 43.3031273, 5.3907058 43.3031273, 5.3907058 43.3035795, 5.3900886 43.3035795, 5.3900886 43.3031273))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95765",
+  "WKT": "POLYGON((5.3900886 43.3035795, 5.3907058 43.3035795, 5.3907058 43.3040317, 5.3900886 43.3040317, 5.3900886 43.3035795))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95767",
+  "WKT": "POLYGON((5.3900886 43.3044839, 5.3907058 43.3044839, 5.3907058 43.3049361, 5.3900886 43.3049361, 5.3900886 43.3044839))",
+  "N_lum": 4,
+  "Flux_total_lm": 14100,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95768",
+  "WKT": "POLYGON((5.3900886 43.3049361, 5.3907058 43.3049361, 5.3907058 43.3053882, 5.3900886 43.3053882, 5.3900886 43.3049361))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95777",
+  "WKT": "POLYGON((5.3900886 43.3090057, 5.3907058 43.3090057, 5.3907058 43.3094579, 5.3900886 43.3094579, 5.3900886 43.3090057))",
+  "N_lum": 5,
+  "Flux_total_lm": 14900,
+  "K_moyen": 3400,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8733_95778",
+  "WKT": "POLYGON((5.3900886 43.3094579, 5.3907058 43.3094579, 5.3907058 43.3099101, 5.3900886 43.3099101, 5.3900886 43.3094579))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95762",
+  "WKT": "POLYGON((5.3907058 43.3022229, 5.3913230 43.3022229, 5.3913230 43.3026751, 5.3907058 43.3026751, 5.3907058 43.3022229))",
+  "N_lum": 3,
+  "Flux_total_lm": 15200,
+  "K_moyen": 2667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95763",
+  "WKT": "POLYGON((5.3907058 43.3026751, 5.3913230 43.3026751, 5.3913230 43.3031273, 5.3907058 43.3031273, 5.3907058 43.3026751))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95764",
+  "WKT": "POLYGON((5.3907058 43.3031273, 5.3913230 43.3031273, 5.3913230 43.3035795, 5.3907058 43.3035795, 5.3907058 43.3031273))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95765",
+  "WKT": "POLYGON((5.3907058 43.3035795, 5.3913230 43.3035795, 5.3913230 43.3040317, 5.3907058 43.3040317, 5.3907058 43.3035795))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95766",
+  "WKT": "POLYGON((5.3907058 43.3040317, 5.3913230 43.3040317, 5.3913230 43.3044839, 5.3907058 43.3044839, 5.3907058 43.3040317))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95767",
+  "WKT": "POLYGON((5.3907058 43.3044839, 5.3913230 43.3044839, 5.3913230 43.3049361, 5.3907058 43.3049361, 5.3907058 43.3044839))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95768",
+  "WKT": "POLYGON((5.3907058 43.3049361, 5.3913230 43.3049361, 5.3913230 43.3053882, 5.3907058 43.3053882, 5.3907058 43.3049361))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95776",
+  "WKT": "POLYGON((5.3907058 43.3085535, 5.3913230 43.3085535, 5.3913230 43.3090057, 5.3907058 43.3090057, 5.3907058 43.3085535))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8734_95777",
+  "WKT": "POLYGON((5.3907058 43.3090057, 5.3913230 43.3090057, 5.3913230 43.3094579, 5.3907058 43.3094579, 5.3907058 43.3090057))",
+  "N_lum": 19,
+  "Flux_total_lm": 28500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95763",
+  "WKT": "POLYGON((5.3913230 43.3026751, 5.3919402 43.3026751, 5.3919402 43.3031273, 5.3913230 43.3031273, 5.3913230 43.3026751))",
+  "N_lum": 7,
+  "Flux_total_lm": 36400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95764",
+  "WKT": "POLYGON((5.3913230 43.3031273, 5.3919402 43.3031273, 5.3919402 43.3035795, 5.3913230 43.3035795, 5.3913230 43.3031273))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95765",
+  "WKT": "POLYGON((5.3913230 43.3035795, 5.3919402 43.3035795, 5.3919402 43.3040317, 5.3913230 43.3040317, 5.3913230 43.3035795))",
+  "N_lum": 5,
+  "Flux_total_lm": 7500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95766",
+  "WKT": "POLYGON((5.3913230 43.3040317, 5.3919402 43.3040317, 5.3919402 43.3044839, 5.3913230 43.3044839, 5.3913230 43.3040317))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95768",
+  "WKT": "POLYGON((5.3913230 43.3049361, 5.3919402 43.3049361, 5.3919402 43.3053882, 5.3913230 43.3053882, 5.3913230 43.3049361))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95775",
+  "WKT": "POLYGON((5.3913230 43.3081014, 5.3919402 43.3081014, 5.3919402 43.3085535, 5.3913230 43.3085535, 5.3913230 43.3081014))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95776",
+  "WKT": "POLYGON((5.3913230 43.3085535, 5.3919402 43.3085535, 5.3919402 43.3090057, 5.3913230 43.3090057, 5.3913230 43.3085535))",
+  "N_lum": 25,
+  "Flux_total_lm": 37500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8735_95777",
+  "WKT": "POLYGON((5.3913230 43.3090057, 5.3919402 43.3090057, 5.3919402 43.3094579, 5.3913230 43.3094579, 5.3913230 43.3090057))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95762",
+  "WKT": "POLYGON((5.3919402 43.3022229, 5.3925574 43.3022229, 5.3925574 43.3026751, 5.3919402 43.3026751, 5.3919402 43.3022229))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95763",
+  "WKT": "POLYGON((5.3919402 43.3026751, 5.3925574 43.3026751, 5.3925574 43.3031273, 5.3919402 43.3031273, 5.3919402 43.3026751))",
+  "N_lum": 3,
+  "Flux_total_lm": 8200,
+  "K_moyen": 3333,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95764",
+  "WKT": "POLYGON((5.3919402 43.3031273, 5.3925574 43.3031273, 5.3925574 43.3035795, 5.3919402 43.3035795, 5.3919402 43.3031273))",
+  "N_lum": 6,
+  "Flux_total_lm": 37600,
+  "K_moyen": 2667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95765",
+  "WKT": "POLYGON((5.3919402 43.3035795, 5.3925574 43.3035795, 5.3925574 43.3040317, 5.3919402 43.3040317, 5.3919402 43.3035795))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95766",
+  "WKT": "POLYGON((5.3919402 43.3040317, 5.3925574 43.3040317, 5.3925574 43.3044839, 5.3919402 43.3044839, 5.3919402 43.3040317))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95767",
+  "WKT": "POLYGON((5.3919402 43.3044839, 5.3925574 43.3044839, 5.3925574 43.3049361, 5.3919402 43.3049361, 5.3919402 43.3044839))",
+  "N_lum": 4,
+  "Flux_total_lm": 6000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95769",
+  "WKT": "POLYGON((5.3919402 43.3053882, 5.3925574 43.3053882, 5.3925574 43.3058404, 5.3919402 43.3058404, 5.3919402 43.3053882))",
+  "N_lum": 3,
+  "Flux_total_lm": 11700,
+  "K_moyen": 2733,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95770",
+  "WKT": "POLYGON((5.3919402 43.3058404, 5.3925574 43.3058404, 5.3925574 43.3062926, 5.3919402 43.3062926, 5.3919402 43.3058404))",
+  "N_lum": 5,
+  "Flux_total_lm": 15600,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95773",
+  "WKT": "POLYGON((5.3919402 43.3071970, 5.3925574 43.3071970, 5.3925574 43.3076492, 5.3919402 43.3076492, 5.3919402 43.3071970))",
+  "N_lum": 2,
+  "Flux_total_lm": 5700,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95774",
+  "WKT": "POLYGON((5.3919402 43.3076492, 5.3925574 43.3076492, 5.3925574 43.3081014, 5.3919402 43.3081014, 5.3919402 43.3076492))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8736_95775",
+  "WKT": "POLYGON((5.3919402 43.3081014, 5.3925574 43.3081014, 5.3925574 43.3085535, 5.3919402 43.3085535, 5.3919402 43.3081014))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95762",
+  "WKT": "POLYGON((5.3925574 43.3022229, 5.3931746 43.3022229, 5.3931746 43.3026751, 5.3925574 43.3026751, 5.3925574 43.3022229))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95763",
+  "WKT": "POLYGON((5.3925574 43.3026751, 5.3931746 43.3026751, 5.3931746 43.3031273, 5.3925574 43.3031273, 5.3925574 43.3026751))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95764",
+  "WKT": "POLYGON((5.3925574 43.3031273, 5.3931746 43.3031273, 5.3931746 43.3035795, 5.3925574 43.3035795, 5.3925574 43.3031273))",
+  "N_lum": 6,
+  "Flux_total_lm": 39200,
+  "K_moyen": 2333,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95765",
+  "WKT": "POLYGON((5.3925574 43.3035795, 5.3931746 43.3035795, 5.3931746 43.3040317, 5.3925574 43.3040317, 5.3925574 43.3035795))",
+  "N_lum": 7,
+  "Flux_total_lm": 23900,
+  "K_moyen": 2857,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95766",
+  "WKT": "POLYGON((5.3925574 43.3040317, 5.3931746 43.3040317, 5.3931746 43.3044839, 5.3925574 43.3044839, 5.3925574 43.3040317))",
+  "N_lum": 3,
+  "Flux_total_lm": 7200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95767",
+  "WKT": "POLYGON((5.3925574 43.3044839, 5.3931746 43.3044839, 5.3931746 43.3049361, 5.3925574 43.3049361, 5.3925574 43.3044839))",
+  "N_lum": 2,
+  "Flux_total_lm": 5700,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95768",
+  "WKT": "POLYGON((5.3925574 43.3049361, 5.3931746 43.3049361, 5.3931746 43.3053882, 5.3925574 43.3053882, 5.3925574 43.3049361))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95769",
+  "WKT": "POLYGON((5.3925574 43.3053882, 5.3931746 43.3053882, 5.3931746 43.3058404, 5.3925574 43.3058404, 5.3925574 43.3053882))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95770",
+  "WKT": "POLYGON((5.3925574 43.3058404, 5.3931746 43.3058404, 5.3931746 43.3062926, 5.3925574 43.3062926, 5.3925574 43.3058404))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95771",
+  "WKT": "POLYGON((5.3925574 43.3062926, 5.3931746 43.3062926, 5.3931746 43.3067448, 5.3925574 43.3067448, 5.3925574 43.3062926))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95772",
+  "WKT": "POLYGON((5.3925574 43.3067448, 5.3931746 43.3067448, 5.3931746 43.3071970, 5.3925574 43.3071970, 5.3925574 43.3067448))",
+  "N_lum": 2,
+  "Flux_total_lm": 5700,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8737_95773",
+  "WKT": "POLYGON((5.3925574 43.3071970, 5.3931746 43.3071970, 5.3931746 43.3076492, 5.3925574 43.3076492, 5.3925574 43.3071970))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95762",
+  "WKT": "POLYGON((5.3931746 43.3022229, 5.3937918 43.3022229, 5.3937918 43.3026751, 5.3931746 43.3026751, 5.3931746 43.3022229))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95763",
+  "WKT": "POLYGON((5.3931746 43.3026751, 5.3937918 43.3026751, 5.3937918 43.3031273, 5.3931746 43.3031273, 5.3931746 43.3026751))",
+  "N_lum": 5,
+  "Flux_total_lm": 7500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95764",
+  "WKT": "POLYGON((5.3931746 43.3031273, 5.3937918 43.3031273, 5.3937918 43.3035795, 5.3931746 43.3035795, 5.3931746 43.3031273))",
+  "N_lum": 7,
+  "Flux_total_lm": 20400,
+  "K_moyen": 3143,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95765",
+  "WKT": "POLYGON((5.3931746 43.3035795, 5.3937918 43.3035795, 5.3937918 43.3040317, 5.3931746 43.3040317, 5.3931746 43.3035795))",
+  "N_lum": 12,
+  "Flux_total_lm": 86000,
+  "K_moyen": 4250,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95766",
+  "WKT": "POLYGON((5.3931746 43.3040317, 5.3937918 43.3040317, 5.3937918 43.3044839, 5.3931746 43.3044839, 5.3931746 43.3040317))",
+  "N_lum": 8,
+  "Flux_total_lm": 22200,
+  "K_moyen": 3250,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95767",
+  "WKT": "POLYGON((5.3931746 43.3044839, 5.3937918 43.3044839, 5.3937918 43.3049361, 5.3931746 43.3049361, 5.3931746 43.3044839))",
+  "N_lum": 20,
+  "Flux_total_lm": 26400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95768",
+  "WKT": "POLYGON((5.3931746 43.3049361, 5.3937918 43.3049361, 5.3937918 43.3053882, 5.3931746 43.3053882, 5.3931746 43.3049361))",
+  "N_lum": 4,
+  "Flux_total_lm": 14100,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95769",
+  "WKT": "POLYGON((5.3931746 43.3053882, 5.3937918 43.3053882, 5.3937918 43.3058404, 5.3931746 43.3058404, 5.3931746 43.3053882))",
+  "N_lum": 4,
+  "Flux_total_lm": 16800,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95770",
+  "WKT": "POLYGON((5.3931746 43.3058404, 5.3937918 43.3058404, 5.3937918 43.3062926, 5.3931746 43.3062926, 5.3931746 43.3058404))",
+  "N_lum": 4,
+  "Flux_total_lm": 10500,
+  "K_moyen": 2800,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8738_95773",
+  "WKT": "POLYGON((5.3931746 43.3071970, 5.3937918 43.3071970, 5.3937918 43.3076492, 5.3931746 43.3076492, 5.3931746 43.3071970))",
+  "N_lum": 3,
+  "Flux_total_lm": 7200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95762",
+  "WKT": "POLYGON((5.3937918 43.3022229, 5.3944091 43.3022229, 5.3944091 43.3026751, 5.3937918 43.3026751, 5.3937918 43.3022229))",
+  "N_lum": 4,
+  "Flux_total_lm": 6000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95764",
+  "WKT": "POLYGON((5.3937918 43.3031273, 5.3944091 43.3031273, 5.3944091 43.3035795, 5.3937918 43.3035795, 5.3937918 43.3031273))",
+  "N_lum": 4,
+  "Flux_total_lm": 8800,
+  "K_moyen": 3250,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95765",
+  "WKT": "POLYGON((5.3937918 43.3035795, 5.3944091 43.3035795, 5.3944091 43.3040317, 5.3937918 43.3040317, 5.3937918 43.3035795))",
+  "N_lum": 16,
+  "Flux_total_lm": 20700,
+  "K_moyen": 3125,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95766",
+  "WKT": "POLYGON((5.3937918 43.3040317, 5.3944091 43.3040317, 5.3944091 43.3044839, 5.3937918 43.3044839, 5.3937918 43.3040317))",
+  "N_lum": 38,
+  "Flux_total_lm": 179400,
+  "K_moyen": 3947,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95767",
+  "WKT": "POLYGON((5.3937918 43.3044839, 5.3944091 43.3044839, 5.3944091 43.3049361, 5.3937918 43.3049361, 5.3937918 43.3044839))",
+  "N_lum": 5,
+  "Flux_total_lm": 17700,
+  "K_moyen": 3400,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95768",
+  "WKT": "POLYGON((5.3937918 43.3049361, 5.3944091 43.3049361, 5.3944091 43.3053882, 5.3937918 43.3053882, 5.3937918 43.3049361))",
+  "N_lum": 4,
+  "Flux_total_lm": 26400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95770",
+  "WKT": "POLYGON((5.3937918 43.3058404, 5.3944091 43.3058404, 5.3944091 43.3062926, 5.3937918 43.3062926, 5.3937918 43.3058404))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95771",
+  "WKT": "POLYGON((5.3937918 43.3062926, 5.3944091 43.3062926, 5.3944091 43.3067448, 5.3937918 43.3067448, 5.3937918 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8739_95772",
+  "WKT": "POLYGON((5.3937918 43.3067448, 5.3944091 43.3067448, 5.3944091 43.3071970, 5.3937918 43.3071970, 5.3937918 43.3067448))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95762",
+  "WKT": "POLYGON((5.3944091 43.3022229, 5.3950263 43.3022229, 5.3950263 43.3026751, 5.3944091 43.3026751, 5.3944091 43.3022229))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95763",
+  "WKT": "POLYGON((5.3944091 43.3026751, 5.3950263 43.3026751, 5.3950263 43.3031273, 5.3944091 43.3031273, 5.3944091 43.3026751))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95764",
+  "WKT": "POLYGON((5.3944091 43.3031273, 5.3950263 43.3031273, 5.3950263 43.3035795, 5.3944091 43.3035795, 5.3944091 43.3031273))",
+  "N_lum": 5,
+  "Flux_total_lm": 17600,
+  "K_moyen": 3400,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95765",
+  "WKT": "POLYGON((5.3944091 43.3035795, 5.3950263 43.3035795, 5.3950263 43.3040317, 5.3944091 43.3040317, 5.3944091 43.3035795))",
+  "N_lum": 12,
+  "Flux_total_lm": 78000,
+  "K_moyen": 4333,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95766",
+  "WKT": "POLYGON((5.3944091 43.3040317, 5.3950263 43.3040317, 5.3950263 43.3044839, 5.3944091 43.3044839, 5.3944091 43.3040317))",
+  "N_lum": 23,
+  "Flux_total_lm": 129300,
+  "K_moyen": 4130,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95768",
+  "WKT": "POLYGON((5.3944091 43.3049361, 5.3950263 43.3049361, 5.3950263 43.3053882, 5.3944091 43.3053882, 5.3944091 43.3049361))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8740_95771",
+  "WKT": "POLYGON((5.3944091 43.3062926, 5.3950263 43.3062926, 5.3950263 43.3067448, 5.3944091 43.3067448, 5.3944091 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95762",
+  "WKT": "POLYGON((5.3950263 43.3022229, 5.3956435 43.3022229, 5.3956435 43.3026751, 5.3950263 43.3026751, 5.3950263 43.3022229))",
+  "N_lum": 3,
+  "Flux_total_lm": 12600,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95763",
+  "WKT": "POLYGON((5.3950263 43.3026751, 5.3956435 43.3026751, 5.3956435 43.3031273, 5.3950263 43.3031273, 5.3950263 43.3026751))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95764",
+  "WKT": "POLYGON((5.3950263 43.3031273, 5.3956435 43.3031273, 5.3956435 43.3035795, 5.3950263 43.3035795, 5.3950263 43.3031273))",
+  "N_lum": 1,
+  "Flux_total_lm": 3300,
+  "K_moyen": 2200,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95765",
+  "WKT": "POLYGON((5.3950263 43.3035795, 5.3956435 43.3035795, 5.3956435 43.3040317, 5.3950263 43.3040317, 5.3950263 43.3035795))",
+  "N_lum": 2,
+  "Flux_total_lm": 13600,
+  "K_moyen": 2000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95769",
+  "WKT": "POLYGON((5.3950263 43.3053882, 5.3956435 43.3053882, 5.3956435 43.3058404, 5.3950263 43.3058404, 5.3950263 43.3053882))",
+  "N_lum": 2,
+  "Flux_total_lm": 10400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95771",
+  "WKT": "POLYGON((5.3950263 43.3062926, 5.3956435 43.3062926, 5.3956435 43.3067448, 5.3950263 43.3067448, 5.3950263 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95772",
+  "WKT": "POLYGON((5.3950263 43.3067448, 5.3956435 43.3067448, 5.3956435 43.3071970, 5.3950263 43.3071970, 5.3950263 43.3067448))",
+  "N_lum": 4,
+  "Flux_total_lm": 11400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8741_95778",
+  "WKT": "POLYGON((5.3950263 43.3094579, 5.3956435 43.3094579, 5.3956435 43.3099101, 5.3950263 43.3099101, 5.3950263 43.3094579))",
+  "N_lum": 2,
+  "Flux_total_lm": 9400,
+  "K_moyen": 3500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95762",
+  "WKT": "POLYGON((5.3956435 43.3022229, 5.3962607 43.3022229, 5.3962607 43.3026751, 5.3956435 43.3026751, 5.3956435 43.3022229))",
+  "N_lum": 6,
+  "Flux_total_lm": 21600,
+  "K_moyen": 2867,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95763",
+  "WKT": "POLYGON((5.3956435 43.3026751, 5.3962607 43.3026751, 5.3962607 43.3031273, 5.3956435 43.3031273, 5.3956435 43.3026751))",
+  "N_lum": 5,
+  "Flux_total_lm": 13800,
+  "K_moyen": 2680,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95764",
+  "WKT": "POLYGON((5.3956435 43.3031273, 5.3962607 43.3031273, 5.3962607 43.3035795, 5.3956435 43.3035795, 5.3956435 43.3031273))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95765",
+  "WKT": "POLYGON((5.3956435 43.3035795, 5.3962607 43.3035795, 5.3962607 43.3040317, 5.3956435 43.3040317, 5.3956435 43.3035795))",
+  "N_lum": 3,
+  "Flux_total_lm": 9000,
+  "K_moyen": 2800,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95769",
+  "WKT": "POLYGON((5.3956435 43.3053882, 5.3962607 43.3053882, 5.3962607 43.3058404, 5.3956435 43.3058404, 5.3956435 43.3053882))",
+  "N_lum": 2,
+  "Flux_total_lm": 13600,
+  "K_moyen": 2000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95770",
+  "WKT": "POLYGON((5.3956435 43.3058404, 5.3962607 43.3058404, 5.3962607 43.3062926, 5.3956435 43.3062926, 5.3956435 43.3058404))",
+  "N_lum": 2,
+  "Flux_total_lm": 8300,
+  "K_moyen": 2500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95771",
+  "WKT": "POLYGON((5.3956435 43.3062926, 5.3962607 43.3062926, 5.3962607 43.3067448, 5.3956435 43.3067448, 5.3956435 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 9800,
+  "K_moyen": 2667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95773",
+  "WKT": "POLYGON((5.3956435 43.3071970, 5.3962607 43.3071970, 5.3962607 43.3076492, 5.3956435 43.3076492, 5.3956435 43.3071970))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95774",
+  "WKT": "POLYGON((5.3956435 43.3076492, 5.3962607 43.3076492, 5.3962607 43.3081014, 5.3956435 43.3081014, 5.3956435 43.3076492))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8742_95775",
+  "WKT": "POLYGON((5.3956435 43.3081014, 5.3962607 43.3081014, 5.3962607 43.3085535, 5.3956435 43.3085535, 5.3956435 43.3081014))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95762",
+  "WKT": "POLYGON((5.3962607 43.3022229, 5.3968779 43.3022229, 5.3968779 43.3026751, 5.3962607 43.3026751, 5.3962607 43.3022229))",
+  "N_lum": 3,
+  "Flux_total_lm": 9900,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95763",
+  "WKT": "POLYGON((5.3962607 43.3026751, 5.3968779 43.3026751, 5.3968779 43.3031273, 5.3962607 43.3031273, 5.3962607 43.3026751))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95765",
+  "WKT": "POLYGON((5.3962607 43.3035795, 5.3968779 43.3035795, 5.3968779 43.3040317, 5.3962607 43.3040317, 5.3962607 43.3035795))",
+  "N_lum": 3,
+  "Flux_total_lm": 12600,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95766",
+  "WKT": "POLYGON((5.3962607 43.3040317, 5.3968779 43.3040317, 5.3968779 43.3044839, 5.3962607 43.3044839, 5.3962607 43.3040317))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95767",
+  "WKT": "POLYGON((5.3962607 43.3044839, 5.3968779 43.3044839, 5.3968779 43.3049361, 5.3962607 43.3049361, 5.3962607 43.3044839))",
+  "N_lum": 4,
+  "Flux_total_lm": 19800,
+  "K_moyen": 3750,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95768",
+  "WKT": "POLYGON((5.3962607 43.3049361, 5.3968779 43.3049361, 5.3968779 43.3053882, 5.3962607 43.3053882, 5.3962607 43.3049361))",
+  "N_lum": 2,
+  "Flux_total_lm": 10400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95769",
+  "WKT": "POLYGON((5.3962607 43.3053882, 5.3968779 43.3053882, 5.3968779 43.3058404, 5.3962607 43.3058404, 5.3962607 43.3053882))",
+  "N_lum": 2,
+  "Flux_total_lm": 12000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95770",
+  "WKT": "POLYGON((5.3962607 43.3058404, 5.3968779 43.3058404, 5.3968779 43.3062926, 5.3962607 43.3062926, 5.3962607 43.3058404))",
+  "N_lum": 3,
+  "Flux_total_lm": 17200,
+  "K_moyen": 3333,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95771",
+  "WKT": "POLYGON((5.3962607 43.3062926, 5.3968779 43.3062926, 5.3968779 43.3067448, 5.3962607 43.3067448, 5.3962607 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 9100,
+  "K_moyen": 3667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95772",
+  "WKT": "POLYGON((5.3962607 43.3067448, 5.3968779 43.3067448, 5.3968779 43.3071970, 5.3962607 43.3071970, 5.3962607 43.3067448))",
+  "N_lum": 2,
+  "Flux_total_lm": 10400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95774",
+  "WKT": "POLYGON((5.3962607 43.3076492, 5.3968779 43.3076492, 5.3968779 43.3081014, 5.3962607 43.3081014, 5.3962607 43.3076492))",
+  "N_lum": 1,
+  "Flux_total_lm": 5200,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95775",
+  "WKT": "POLYGON((5.3962607 43.3081014, 5.3968779 43.3081014, 5.3968779 43.3085535, 5.3962607 43.3085535, 5.3962607 43.3081014))",
+  "N_lum": 6,
+  "Flux_total_lm": 25600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95776",
+  "WKT": "POLYGON((5.3962607 43.3085535, 5.3968779 43.3085535, 5.3968779 43.3090057, 5.3962607 43.3090057, 5.3962607 43.3085535))",
+  "N_lum": 5,
+  "Flux_total_lm": 26000,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8743_95777",
+  "WKT": "POLYGON((5.3962607 43.3090057, 5.3968779 43.3090057, 5.3968779 43.3094579, 5.3962607 43.3094579, 5.3962607 43.3090057))",
+  "N_lum": 5,
+  "Flux_total_lm": 26000,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95762",
+  "WKT": "POLYGON((5.3968779 43.3022229, 5.3974951 43.3022229, 5.3974951 43.3026751, 5.3968779 43.3026751, 5.3968779 43.3022229))",
+  "N_lum": 6,
+  "Flux_total_lm": 9000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95763",
+  "WKT": "POLYGON((5.3968779 43.3026751, 5.3974951 43.3026751, 5.3974951 43.3031273, 5.3968779 43.3031273, 5.3968779 43.3026751))",
+  "N_lum": 4,
+  "Flux_total_lm": 14100,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95764",
+  "WKT": "POLYGON((5.3968779 43.3031273, 5.3974951 43.3031273, 5.3974951 43.3035795, 5.3968779 43.3035795, 5.3968779 43.3031273))",
+  "N_lum": 3,
+  "Flux_total_lm": 7200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95765",
+  "WKT": "POLYGON((5.3968779 43.3035795, 5.3974951 43.3035795, 5.3974951 43.3040317, 5.3968779 43.3040317, 5.3968779 43.3035795))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95766",
+  "WKT": "POLYGON((5.3968779 43.3040317, 5.3974951 43.3040317, 5.3974951 43.3044839, 5.3968779 43.3044839, 5.3968779 43.3040317))",
+  "N_lum": 3,
+  "Flux_total_lm": 9900,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95767",
+  "WKT": "POLYGON((5.3968779 43.3044839, 5.3974951 43.3044839, 5.3974951 43.3049361, 5.3968779 43.3049361, 5.3968779 43.3044839))",
+  "N_lum": 2,
+  "Flux_total_lm": 9400,
+  "K_moyen": 3500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95769",
+  "WKT": "POLYGON((5.3968779 43.3053882, 5.3974951 43.3053882, 5.3974951 43.3058404, 5.3968779 43.3058404, 5.3968779 43.3053882))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95770",
+  "WKT": "POLYGON((5.3968779 43.3058404, 5.3974951 43.3058404, 5.3974951 43.3062926, 5.3968779 43.3062926, 5.3968779 43.3058404))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95771",
+  "WKT": "POLYGON((5.3968779 43.3062926, 5.3974951 43.3062926, 5.3974951 43.3067448, 5.3968779 43.3067448, 5.3968779 43.3062926))",
+  "N_lum": 2,
+  "Flux_total_lm": 10400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95772",
+  "WKT": "POLYGON((5.3968779 43.3067448, 5.3974951 43.3067448, 5.3974951 43.3071970, 5.3968779 43.3071970, 5.3968779 43.3067448))",
+  "N_lum": 1,
+  "Flux_total_lm": 5200,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95773",
+  "WKT": "POLYGON((5.3968779 43.3071970, 5.3974951 43.3071970, 5.3974951 43.3076492, 5.3968779 43.3076492, 5.3968779 43.3071970))",
+  "N_lum": 3,
+  "Flux_total_lm": 15600,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95775",
+  "WKT": "POLYGON((5.3968779 43.3081014, 5.3974951 43.3081014, 5.3974951 43.3085535, 5.3968779 43.3085535, 5.3968779 43.3081014))",
+  "N_lum": 3,
+  "Flux_total_lm": 18800,
+  "K_moyen": 2667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95776",
+  "WKT": "POLYGON((5.3968779 43.3085535, 5.3974951 43.3085535, 5.3974951 43.3090057, 5.3968779 43.3090057, 5.3968779 43.3085535))",
+  "N_lum": 5,
+  "Flux_total_lm": 17400,
+  "K_moyen": 2840,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8744_95777",
+  "WKT": "POLYGON((5.3968779 43.3090057, 5.3974951 43.3090057, 5.3974951 43.3094579, 5.3968779 43.3094579, 5.3968779 43.3090057))",
+  "N_lum": 1,
+  "Flux_total_lm": 3300,
+  "K_moyen": 2200,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95762",
+  "WKT": "POLYGON((5.3974951 43.3022229, 5.3981123 43.3022229, 5.3981123 43.3026751, 5.3974951 43.3026751, 5.3974951 43.3022229))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95763",
+  "WKT": "POLYGON((5.3974951 43.3026751, 5.3981123 43.3026751, 5.3981123 43.3031273, 5.3974951 43.3031273, 5.3974951 43.3026751))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95764",
+  "WKT": "POLYGON((5.3974951 43.3031273, 5.3981123 43.3031273, 5.3981123 43.3035795, 5.3974951 43.3035795, 5.3974951 43.3031273))",
+  "N_lum": 2,
+  "Flux_total_lm": 9400,
+  "K_moyen": 3500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95765",
+  "WKT": "POLYGON((5.3974951 43.3035795, 5.3981123 43.3035795, 5.3981123 43.3040317, 5.3974951 43.3040317, 5.3974951 43.3035795))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95766",
+  "WKT": "POLYGON((5.3974951 43.3040317, 5.3981123 43.3040317, 5.3981123 43.3044839, 5.3974951 43.3044839, 5.3974951 43.3040317))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95767",
+  "WKT": "POLYGON((5.3974951 43.3044839, 5.3981123 43.3044839, 5.3981123 43.3049361, 5.3974951 43.3049361, 5.3974951 43.3044839))",
+  "N_lum": 4,
+  "Flux_total_lm": 6000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95768",
+  "WKT": "POLYGON((5.3974951 43.3049361, 5.3981123 43.3049361, 5.3981123 43.3053882, 5.3974951 43.3053882, 5.3974951 43.3049361))",
+  "N_lum": 4,
+  "Flux_total_lm": 13400,
+  "K_moyen": 3500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95769",
+  "WKT": "POLYGON((5.3974951 43.3053882, 5.3981123 43.3053882, 5.3981123 43.3058404, 5.3974951 43.3058404, 5.3974951 43.3053882))",
+  "N_lum": 3,
+  "Flux_total_lm": 10900,
+  "K_moyen": 3333,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95773",
+  "WKT": "POLYGON((5.3974951 43.3071970, 5.3981123 43.3071970, 5.3981123 43.3076492, 5.3974951 43.3076492, 5.3974951 43.3071970))",
+  "N_lum": 1,
+  "Flux_total_lm": 2400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95774",
+  "WKT": "POLYGON((5.3974951 43.3076492, 5.3981123 43.3076492, 5.3981123 43.3081014, 5.3974951 43.3081014, 5.3974951 43.3076492))",
+  "N_lum": 1,
+  "Flux_total_lm": 2400,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95776",
+  "WKT": "POLYGON((5.3974951 43.3085535, 5.3981123 43.3085535, 5.3981123 43.3090057, 5.3974951 43.3090057, 5.3974951 43.3085535))",
+  "N_lum": 2,
+  "Flux_total_lm": 7500,
+  "K_moyen": 2600,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8745_95777",
+  "WKT": "POLYGON((5.3974951 43.3090057, 5.3981123 43.3090057, 5.3981123 43.3094579, 5.3974951 43.3094579, 5.3974951 43.3090057))",
+  "N_lum": 1,
+  "Flux_total_lm": 3300,
+  "K_moyen": 2200,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95762",
+  "WKT": "POLYGON((5.3981123 43.3022229, 5.3987295 43.3022229, 5.3987295 43.3026751, 5.3981123 43.3026751, 5.3981123 43.3022229))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95763",
+  "WKT": "POLYGON((5.3981123 43.3026751, 5.3987295 43.3026751, 5.3987295 43.3031273, 5.3981123 43.3031273, 5.3981123 43.3026751))",
+  "N_lum": 5,
+  "Flux_total_lm": 14900,
+  "K_moyen": 3400,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95764",
+  "WKT": "POLYGON((5.3981123 43.3031273, 5.3987295 43.3031273, 5.3987295 43.3035795, 5.3981123 43.3035795, 5.3981123 43.3031273))",
+  "N_lum": 1,
+  "Flux_total_lm": 5200,
+  "K_moyen": 4000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95765",
+  "WKT": "POLYGON((5.3981123 43.3035795, 5.3987295 43.3035795, 5.3987295 43.3040317, 5.3981123 43.3040317, 5.3981123 43.3035795))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95766",
+  "WKT": "POLYGON((5.3981123 43.3040317, 5.3987295 43.3040317, 5.3987295 43.3044839, 5.3981123 43.3044839, 5.3981123 43.3040317))",
+  "N_lum": 3,
+  "Flux_total_lm": 12600,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95767",
+  "WKT": "POLYGON((5.3981123 43.3044839, 5.3987295 43.3044839, 5.3987295 43.3049361, 5.3981123 43.3049361, 5.3981123 43.3044839))",
+  "N_lum": 2,
+  "Flux_total_lm": 4800,
+  "K_moyen": 2600,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95768",
+  "WKT": "POLYGON((5.3981123 43.3049361, 5.3987295 43.3049361, 5.3987295 43.3053882, 5.3981123 43.3053882, 5.3981123 43.3049361))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95769",
+  "WKT": "POLYGON((5.3981123 43.3053882, 5.3987295 43.3053882, 5.3987295 43.3058404, 5.3981123 43.3058404, 5.3981123 43.3053882))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95770",
+  "WKT": "POLYGON((5.3981123 43.3058404, 5.3987295 43.3058404, 5.3987295 43.3062926, 5.3981123 43.3062926, 5.3981123 43.3058404))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95771",
+  "WKT": "POLYGON((5.3981123 43.3062926, 5.3987295 43.3062926, 5.3987295 43.3067448, 5.3981123 43.3067448, 5.3981123 43.3062926))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95772",
+  "WKT": "POLYGON((5.3981123 43.3067448, 5.3987295 43.3067448, 5.3987295 43.3071970, 5.3981123 43.3071970, 5.3981123 43.3067448))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95775",
+  "WKT": "POLYGON((5.3981123 43.3081014, 5.3987295 43.3081014, 5.3987295 43.3085535, 5.3981123 43.3085535, 5.3981123 43.3081014))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8746_95776",
+  "WKT": "POLYGON((5.3981123 43.3085535, 5.3987295 43.3085535, 5.3987295 43.3090057, 5.3981123 43.3090057, 5.3981123 43.3085535))",
+  "N_lum": 3,
+  "Flux_total_lm": 9900,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95763",
+  "WKT": "POLYGON((5.3987295 43.3026751, 5.3993467 43.3026751, 5.3993467 43.3031273, 5.3987295 43.3031273, 5.3987295 43.3026751))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95764",
+  "WKT": "POLYGON((5.3987295 43.3031273, 5.3993467 43.3031273, 5.3993467 43.3035795, 5.3987295 43.3035795, 5.3987295 43.3031273))",
+  "N_lum": 3,
+  "Flux_total_lm": 11900,
+  "K_moyen": 3667,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95765",
+  "WKT": "POLYGON((5.3987295 43.3035795, 5.3993467 43.3035795, 5.3993467 43.3040317, 5.3987295 43.3040317, 5.3987295 43.3035795))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95767",
+  "WKT": "POLYGON((5.3987295 43.3044839, 5.3993467 43.3044839, 5.3993467 43.3049361, 5.3987295 43.3049361, 5.3987295 43.3044839))",
+  "N_lum": 4,
+  "Flux_total_lm": 9600,
+  "K_moyen": 2600,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95768",
+  "WKT": "POLYGON((5.3987295 43.3049361, 5.3993467 43.3049361, 5.3993467 43.3053882, 5.3987295 43.3053882, 5.3987295 43.3049361))",
+  "N_lum": 5,
+  "Flux_total_lm": 13000,
+  "K_moyen": 3040,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95769",
+  "WKT": "POLYGON((5.3987295 43.3053882, 5.3993467 43.3053882, 5.3993467 43.3058404, 5.3987295 43.3058404, 5.3987295 43.3053882))",
+  "N_lum": 2,
+  "Flux_total_lm": 12000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95771",
+  "WKT": "POLYGON((5.3987295 43.3062926, 5.3993467 43.3062926, 5.3993467 43.3067448, 5.3987295 43.3067448, 5.3987295 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95773",
+  "WKT": "POLYGON((5.3987295 43.3071970, 5.3993467 43.3071970, 5.3993467 43.3076492, 5.3987295 43.3076492, 5.3987295 43.3071970))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95775",
+  "WKT": "POLYGON((5.3987295 43.3081014, 5.3993467 43.3081014, 5.3993467 43.3085535, 5.3987295 43.3085535, 5.3987295 43.3081014))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95776",
+  "WKT": "POLYGON((5.3987295 43.3085535, 5.3993467 43.3085535, 5.3993467 43.3090057, 5.3987295 43.3090057, 5.3987295 43.3085535))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8747_95777",
+  "WKT": "POLYGON((5.3987295 43.3090057, 5.3993467 43.3090057, 5.3993467 43.3094579, 5.3987295 43.3094579, 5.3987295 43.3090057))",
+  "N_lum": 2,
+  "Flux_total_lm": 8400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95762",
+  "WKT": "POLYGON((5.3993467 43.3022229, 5.3999639 43.3022229, 5.3999639 43.3026751, 5.3993467 43.3026751, 5.3993467 43.3022229))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95763",
+  "WKT": "POLYGON((5.3993467 43.3026751, 5.3999639 43.3026751, 5.3999639 43.3031273, 5.3993467 43.3031273, 5.3993467 43.3026751))",
+  "N_lum": 5,
+  "Flux_total_lm": 7500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95764",
+  "WKT": "POLYGON((5.3993467 43.3031273, 5.3999639 43.3031273, 5.3999639 43.3035795, 5.3993467 43.3035795, 5.3993467 43.3031273))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95765",
+  "WKT": "POLYGON((5.3993467 43.3035795, 5.3999639 43.3035795, 5.3999639 43.3040317, 5.3993467 43.3040317, 5.3993467 43.3035795))",
+  "N_lum": 3,
+  "Flux_total_lm": 4500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95766",
+  "WKT": "POLYGON((5.3993467 43.3040317, 5.3999639 43.3040317, 5.3999639 43.3044839, 5.3993467 43.3044839, 5.3993467 43.3040317))",
+  "N_lum": 5,
+  "Flux_total_lm": 7500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95769",
+  "WKT": "POLYGON((5.3993467 43.3053882, 5.3999639 43.3053882, 5.3999639 43.3058404, 5.3993467 43.3058404, 5.3993467 43.3053882))",
+  "N_lum": 1,
+  "Flux_total_lm": 6800,
+  "K_moyen": 2000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95770",
+  "WKT": "POLYGON((5.3993467 43.3058404, 5.3999639 43.3058404, 5.3999639 43.3062926, 5.3993467 43.3062926, 5.3993467 43.3058404))",
+  "N_lum": 2,
+  "Flux_total_lm": 8300,
+  "K_moyen": 2500,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95771",
+  "WKT": "POLYGON((5.3993467 43.3062926, 5.3999639 43.3062926, 5.3999639 43.3067448, 5.3993467 43.3067448, 5.3993467 43.3062926))",
+  "N_lum": 3,
+  "Flux_total_lm": 7200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95772",
+  "WKT": "POLYGON((5.3993467 43.3067448, 5.3999639 43.3067448, 5.3999639 43.3071970, 5.3993467 43.3071970, 5.3993467 43.3067448))",
+  "N_lum": 4,
+  "Flux_total_lm": 11400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95773",
+  "WKT": "POLYGON((5.3993467 43.3071970, 5.3999639 43.3071970, 5.3999639 43.3076492, 5.3993467 43.3076492, 5.3993467 43.3071970))",
+  "N_lum": 6,
+  "Flux_total_lm": 14400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95774",
+  "WKT": "POLYGON((5.3993467 43.3076492, 5.3999639 43.3076492, 5.3999639 43.3081014, 5.3993467 43.3081014, 5.3993467 43.3076492))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95775",
+  "WKT": "POLYGON((5.3993467 43.3081014, 5.3999639 43.3081014, 5.3999639 43.3085535, 5.3993467 43.3085535, 5.3993467 43.3081014))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95776",
+  "WKT": "POLYGON((5.3993467 43.3085535, 5.3999639 43.3085535, 5.3999639 43.3090057, 5.3993467 43.3090057, 5.3993467 43.3085535))",
+  "N_lum": 3,
+  "Flux_total_lm": 7200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8748_95777",
+  "WKT": "POLYGON((5.3993467 43.3090057, 5.3999639 43.3090057, 5.3999639 43.3094579, 5.3993467 43.3094579, 5.3993467 43.3090057))",
+  "N_lum": 4,
+  "Flux_total_lm": 11400,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8749_95762",
+  "WKT": "POLYGON((5.3999639 43.3022229, 5.4005811 43.3022229, 5.4005811 43.3026751, 5.3999639 43.3026751, 5.3999639 43.3022229))",
+  "N_lum": 1,
+  "Flux_total_lm": 1500,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8749_95767",
+  "WKT": "POLYGON((5.3999639 43.3044839, 5.4005811 43.3044839, 5.4005811 43.3049361, 5.3999639 43.3049361, 5.3999639 43.3044839))",
+  "N_lum": 2,
+  "Flux_total_lm": 3000,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8749_95772",
+  "WKT": "POLYGON((5.3999639 43.3067448, 5.4005811 43.3067448, 5.4005811 43.3071970, 5.3999639 43.3071970, 5.3999639 43.3067448))",
+  "N_lum": 1,
+  "Flux_total_lm": 4200,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ },
+ {
+  "Cle": "8749_95773",
+  "WKT": "POLYGON((5.3999639 43.3071970, 5.4005811 43.3071970, 5.4005811 43.3076492, 5.3999639 43.3076492, 5.3999639 43.3071970))",
+  "N_lum": 2,
+  "Flux_total_lm": 5700,
+  "K_moyen": 3000,
+  "Donnee": "calculée à partir de luminaires dont les caractéristiques sont fictives"
+ }
+]
