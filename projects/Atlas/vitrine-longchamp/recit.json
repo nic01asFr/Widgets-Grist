@@ -25,7 +25,8 @@
     "zoom": 17.0,
     "pitch": 52,
     "bearing": -18
-   }
+   },
+   "fond": "liberty"
   },
   {
    "titre": "À la tombée de la nuit, les luminaires s’allument",
@@ -47,7 +48,8 @@
     "zoom": 17.3,
     "pitch": 58,
     "bearing": -18
-   }
+   },
+   "fond": "ortho-ign"
   },
   {
    "titre": "Une teinte par type de lumière",
@@ -69,7 +71,8 @@
     "zoom": 17.2,
     "pitch": 60,
     "bearing": 20
-   }
+   },
+   "fond": "ortho-ign"
   },
   {
    "titre": "Où la lumière se concentre",
@@ -87,7 +90,8 @@
     "zoom": 16.6,
     "pitch": 58,
     "bearing": -12
-   }
+   },
+   "fond": "positron"
   },
   {
    "titre": "Dix-neuf pièges, sous les luminaires et à l’écart",
@@ -103,13 +107,15 @@
    "heure": 1285,
    "camera": {
     "center": [
-     5.3951,
-     43.305
+     5.3942,
+     43.3046
     ],
-    "zoom": 16.9,
-    "pitch": 55,
-    "bearing": 8
-   }
+    "zoom": 17.7,
+    "pitch": 58,
+    "bearing": 14
+   },
+   "sans_maquette": true,
+   "fond": "ortho-ign"
   },
   {
    "titre": "Une ronde de nuit de 3,2 km",
@@ -131,7 +137,8 @@
     "zoom": 16.3,
     "pitch": 40,
     "bearing": 0
-   }
+   },
+   "fond": "ortho-ign"
   },
   {
    "titre": "Ce que les pièges ont compté",
@@ -153,7 +160,8 @@
     "zoom": 17.4,
     "pitch": 62,
     "bearing": 18
-   }
+   },
+   "fond": "positron"
   },
   {
    "contexte": true,
@@ -182,7 +190,8 @@
    },
    "releves": [
     "Pieges"
-   ]
+   ],
+   "fond": "liberty"
   },
   {
    "contexte": true,
@@ -212,7 +221,8 @@
    },
    "releves": [
     "Pieges"
-   ]
+   ],
+   "fond": "ortho-ign"
   },
   {
    "contexte": true,
@@ -244,7 +254,8 @@
      "Type",
      "Sous un luminaire"
     ]
-   ]
+   ],
+   "fond": "ortho-ign"
   },
   {
    "contexte": true,
@@ -269,7 +280,8 @@
     "zoom": 17.3,
     "pitch": 62,
     "bearing": 18
-   }
+   },
+   "fond": "positron"
   },
   {
    "contexte": true,
@@ -317,7 +329,8 @@
      "Zone",
      "Quartier"
     ]
-   ]
+   ],
+   "fond": "ortho-ign"
   }
  ]
 }

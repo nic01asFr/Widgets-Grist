@@ -73,6 +73,7 @@ async function regler(etape, ids, A = window.A) {
     A.toggleControlValue(ids[nom], champ, valeur);
     await dormir(200);
   }
+  A.setBasemap(etape.fond || 'liberty');
   A.setSunDate(JOUR);
   A.setTime(etape.heure);
   window.__atlasMap.jumpTo({ ...etape.camera, bearing: etape.camera.bearing || 0 });

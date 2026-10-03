@@ -4,10 +4,10 @@
   "Nom": "P01",
   "Type": "Sous un luminaire",
   "Luminaire": "60218",
-  "Longitude": 5.3974845,
-  "Latitude": 43.3055731,
+  "Longitude": 5.3975108,
+  "Latitude": 43.3055527,
   "Dist_eau_m": 295,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -15,10 +15,10 @@
   "Nom": "P02",
   "Type": "Sous un luminaire",
   "Luminaire": "60199",
-  "Longitude": 5.396463,
-  "Latitude": 43.30526,
+  "Longitude": 5.3964893,
+  "Latitude": 43.3052396,
   "Dist_eau_m": 206,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -26,10 +26,10 @@
   "Nom": "P03",
   "Type": "Sous un luminaire",
   "Luminaire": "53912",
-  "Longitude": 5.3981447,
-  "Latitude": 43.3039964,
+  "Longitude": 5.3981709,
+  "Latitude": 43.303976,
   "Dist_eau_m": 303,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -37,10 +37,10 @@
   "Nom": "P04",
   "Type": "Sous un luminaire",
   "Luminaire": "9611",
-  "Longitude": 5.3954537,
-  "Latitude": 43.3071083,
+  "Longitude": 5.39548,
+  "Latitude": 43.3070879,
   "Dist_eau_m": 327,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -48,10 +48,10 @@
   "Nom": "P05",
   "Type": "Sous un luminaire",
   "Luminaire": "75501",
-  "Longitude": 5.3965701,
-  "Latitude": 43.3028641,
+  "Longitude": 5.3965964,
+  "Latitude": 43.3028437,
   "Dist_eau_m": 221,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -59,10 +59,10 @@
   "Nom": "P06",
   "Type": "Sous un luminaire",
   "Luminaire": "53918",
-  "Longitude": 5.3989494,
-  "Latitude": 43.3049236,
+  "Longitude": 5.3989756,
+  "Latitude": 43.3049032,
   "Dist_eau_m": 379,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -70,10 +70,10 @@
   "Nom": "P07",
   "Type": "Sous un luminaire",
   "Luminaire": "29624",
-  "Longitude": 5.3937131,
-  "Latitude": 43.3059758,
+  "Longitude": 5.3937394,
+  "Latitude": 43.3059554,
   "Dist_eau_m": 191,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -81,10 +81,10 @@
   "Nom": "P08",
   "Type": "Sous un luminaire",
   "Luminaire": "51031",
-  "Longitude": 5.392373,
-  "Latitude": 43.3032618,
+  "Longitude": 5.3923993,
+  "Latitude": 43.3032414,
   "Dist_eau_m": 108,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -92,10 +92,10 @@
   "Nom": "P09",
   "Type": "Sous un luminaire",
   "Luminaire": "2523",
-  "Longitude": 5.3959999,
-  "Latitude": 43.3065681,
+  "Longitude": 5.3960262,
+  "Latitude": 43.3065478,
   "Dist_eau_m": 289,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -103,10 +103,10 @@
   "Nom": "P10",
   "Type": "Sous un luminaire",
   "Luminaire": "31830",
-  "Longitude": 5.3941823,
-  "Latitude": 43.3024686,
+  "Longitude": 5.3942086,
+  "Latitude": 43.3024483,
   "Dist_eau_m": 141,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -114,10 +114,10 @@
   "Nom": "P11",
   "Type": "Sous un luminaire",
   "Luminaire": "9191",
-  "Longitude": 5.3969512,
-  "Latitude": 43.3032036,
+  "Longitude": 5.3969775,
+  "Latitude": 43.3031832,
   "Dist_eau_m": 228,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -125,10 +125,10 @@
   "Nom": "P12",
   "Type": "Sous un luminaire",
   "Luminaire": "31890",
-  "Longitude": 5.3959632,
-  "Latitude": 43.3038254,
+  "Longitude": 5.3959895,
+  "Latitude": 43.303805,
   "Dist_eau_m": 129,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -136,10 +136,10 @@
   "Nom": "P13",
   "Type": "Sous un luminaire",
   "Luminaire": "90686",
-  "Longitude": 5.3932056,
-  "Latitude": 43.3034797,
+  "Longitude": 5.3932319,
+  "Latitude": 43.3034593,
   "Dist_eau_m": 40,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -147,10 +147,10 @@
   "Nom": "P14",
   "Type": "Sous un luminaire",
   "Luminaire": "90658",
-  "Longitude": 5.3945909,
-  "Latitude": 43.3042723,
+  "Longitude": 5.3946172,
+  "Latitude": 43.3042519,
   "Dist_eau_m": 21,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {
@@ -158,10 +158,10 @@
   "Nom": "P15",
   "Type": "Sous un luminaire",
   "Luminaire": "90641",
-  "Longitude": 5.3942196,
-  "Latitude": 43.3044654,
+  "Longitude": 5.3942459,
+  "Latitude": 43.304445,
   "Dist_eau_m": 19,
-  "Dist_luminaire_m": 0,
+  "Dist_luminaire_m": 3,
   "Donnee": "fictive"
  },
  {

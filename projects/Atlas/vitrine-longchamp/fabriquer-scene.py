@@ -261,7 +261,7 @@ etapes = []
 for i, e in enumerate(recit['etapes']):
     visibles = {NOM_COUCHE[n] for n in e['couches']}
     # la maquette et les arbres accompagnent tout ce qui n'est pas un résultat posé à plat
-    montrer_maquette = not ({'Releves', 'Grille'} & set(e['couches']))
+    montrer_maquette = not ({'Releves', 'Grille'} & set(e['couches'])) and not e.get('sans_maquette')
     couches_etat = []
     for l in couches:
         v = l['id'] in visibles or (l['id'] in maquette_ids and montrer_maquette and l['id'] != 'eau-voirie-v2') or (l['id'] == 'arbres' and montrer_maquette)
@@ -279,7 +279,7 @@ for i, e in enumerate(recit['etapes']):
     pastilles += [{'id': p, 'label': ENV[p]} for p in e['pastilles'] if p in ENV]
     etat = {
         'camera': e['camera'], 'projection': 'mercator', 'timeOfDay': e['heure'], 'date': recit['jour'] + 'T12:00:00.000Z', 'shadows': True, 'labels': True, 'sky': True,
-        'basemap': 'liberty', 'buildings3D': False, 'terrain3D': False, 'layers': couches_etat, 'pastilles': pastilles,
+        'basemap': e.get('fond', 'liberty'), 'buildings3D': False, 'terrain3D': False, 'layers': couches_etat, 'pastilles': pastilles,
     }
     if e.get('contexte'):
         usage = {'contexte': True}

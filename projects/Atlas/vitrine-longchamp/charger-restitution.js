@@ -24,8 +24,9 @@
     'cos = math.cos(math.radians(lat))',
     'cx = p.Longitude + (rang - 1) * 10.0 / (111320.0 * cos)',
     'dx = 3.5 / (111320.0 * cos)',
+    'cy = lat + 9.0 / 110574.0',
     'dy = 3.5 / 110574.0',
-    'pts = [(cx - dx, lat - dy), (cx + dx, lat - dy), (cx + dx, lat + dy), (cx - dx, lat + dy), (cx - dx, lat - dy)]',
+    'pts = [(cx - dx, cy - dy), (cx + dx, cy - dy), (cx + dx, cy + dy), (cx - dx, cy + dy), (cx - dx, cy - dy)]',
     'return "POLYGON((" + ", ".join("%.7f %.7f" % q for q in pts) + "))"',
   ].join('\n');
   await dd.sendActions([

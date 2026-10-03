@@ -179,8 +179,9 @@ for m in ['M1', 'M2', 'M3', 'M4', 'M5', 'M7', 'M8']:
             pris += 1
 pieges = []
 for i, p in enumerate(choisis, 1):
-    pieges.append({'id': i, 'nom': f'P{i:02d}', 'type': 'Sous un luminaire', 'luminaire': p['code'], 'x': p['x'], 'y': p['y'],
-                   'dEau': p['dEau'], 'dBois': p['dBois'], 'dLum': 0, 'modele': p['modele']})
+    # Le piège se pose À CÔTÉ du pied du luminaire (3 m au sud-est), pas dessus : deux objets au même point se masquent.
+    pieges.append({'id': i, 'nom': f'P{i:02d}', 'type': 'Sous un luminaire', 'luminaire': p['code'], 'x': p['x'] + 2.2, 'y': p['y'] - 2.2,
+                   'dEau': p['dEau'], 'dBois': p['dBois'], 'dLum': 3, 'modele': p['modele']})
 
 # Pièges témoins : à l'intérieur du boisement, loin de tout luminaire (≥ 38 m), sinon rien n'est comparable.
 tem = 0
@@ -248,11 +249,12 @@ def wkt_cellule(cle):
 
 
 def wkt_plot(lon, lat, rang):
-    """Un plot de 7 m de côté, décalé de 10 m vers l'est par nuit : trois colonnes côte à côte au pied de chaque piège."""
+    """Un plot de 7 m de côté, décalé de 10 m vers l'est par nuit et posé 9 m au nord du piège : trois colonnes côte à côte, qui ne masquent ni le piège ni son luminaire."""
     cos = math.cos(math.radians(lat))
     cx = lon + (rang - 1) * 10.0 / (111320.0 * cos)
+    cy = lat + 9.0 / M_LAT
     dx, dy = 3.5 / (111320.0 * cos), 3.5 / M_LAT
-    pts = [(cx - dx, lat - dy), (cx + dx, lat - dy), (cx + dx, lat + dy), (cx - dx, lat + dy), (cx - dx, lat - dy)]
+    pts = [(cx - dx, cy - dy), (cx + dx, cy - dy), (cx + dx, cy + dy), (cx - dx, cy + dy), (cx - dx, cy - dy)]
     return 'POLYGON((' + ', '.join('%.7f %.7f' % p for p in pts) + '))'
 
 
