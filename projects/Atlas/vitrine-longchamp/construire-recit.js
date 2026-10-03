@@ -12,7 +12,6 @@
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 const sansEvenement = { stopPropagation() {} };
 
-const CENTRE = [5.3946, 43.3044];
 const JOUR = '2026-06-11';
 
 function idsParNom() {
@@ -26,83 +25,14 @@ function idsParNom() {
   return sortie;
 }
 
-/** Les étapes : ce qu'il faut régler avant de capturer, puis le titre, le texte et, pour un contexte, ses réglages. */
-export const ETAPES = [
-  {
-    titre: 'Le Palais Longchamp et son parc, de jour',
-    pastilles: ['Teinte', 'temperatureCouleur', 'sun'],
-    texte: 'Marseille, 4e arrondissement. Le parc, les bassins et les rues autour portent 643 points lumineux recensés par la Ville (positions, codes et catégories réels). Le modèle de chaque luminaire est ici un exemple fictif.',
-    couches: ['Luminaires'], heure: 14 * 60, camera: { center: [5.3946, 43.3047], zoom: 16.3, pitch: 52, bearing: -18 },
-  },
-  {
-    titre: 'À 22 h, les luminaires s’allument',
-    pastilles: ['Teinte', 'temperatureCouleur', 'sun'],
-    texte: 'Au coucher du soleil, chaque luminaire s’allume selon son profil. Les 24 points défectueux restent éteints, et la légende le dit.',
-    couches: ['Luminaires'], heure: 22 * 60, camera: { center: [5.3946, 43.3047], zoom: 16.6, pitch: 58, bearing: -18 },
-  },
-  {
-    titre: 'Une teinte par type de lumière',
-    pastilles: ['Teinte', 'temperatureCouleur', 'Zone'],
-    texte: 'Le blanc chaud domine, mais l’ancien parc au sodium et les projecteurs de monument en blanc froid ne se valent pas. La couleur est celle de la lumière, lue dans la table des classes.',
-    couches: ['Luminaires'], heure: 22 * 60, camera: { center: [5.3957, 43.3052], zoom: 17.2, pitch: 60, bearing: 20 },
-  },
-  {
-    titre: 'Dix-neuf pièges, sous les luminaires et à l’écart',
-    pastilles: ['Type', 'Total_moyen'],
-    texte: 'Quinze pièges sont posés sous un luminaire, quatre en zone sombre pour servir de témoins. La taille d’un rond suit le nombre moyen d’insectes par nuit.',
-    couches: ['Luminaires', 'Pieges'], heure: 22 * 60, camera: { center: [5.3951, 43.3050], zoom: 16.9, pitch: 55, bearing: 8 },
-  },
-  {
-    titre: 'Une ronde de nuit de 3,2 km',
-    pastilles: ['Type', 'Total_moyen'],
-    texte: 'La ronde suit les chemins et les rues du réseau BD TOPO et passe par les dix-neuf pièges. Le tracé est réel, l’ordre de passage est un exemple.',
-    couches: ['Pieges', 'Tournees'], heure: 22 * 60, camera: { center: [5.3949, 43.3048], zoom: 16.3, pitch: 40, bearing: 0 },
-  },
-  {
-    titre: 'Ce que les pièges ont compté',
-    pastilles: ['Mois', 'Total_moyen'],
-    texte: 'Trois nuits, juin, juillet et septembre, côte à côte au pied de chaque piège. Les comptages sont fictifs : ils montrent comment l’étude se lit, pas ce que serait son résultat.',
-    couches: ['Releves', 'Pieges'], heure: 21 * 60, camera: { center: [5.3951, 43.3050], zoom: 17.4, pitch: 62, bearing: 18 },
-  },
-  // ---- les contextes de l'exploitant
-  {
-    contexte: true, cle: 'ctx-ensemble',
-    titre: 'Vue d’ensemble',
-    pastilles: ['Teinte', 'Type', 'sun', 'basemap'],
-    texte: 'Tous les luminaires et tous les pièges du parc. Touchez un objet pour voir son état et, pour un piège, ses dernières nuits.',
-    couches: ['Luminaires', 'Pieges'], heure: 14 * 60, camera: { center: [5.3946, 43.3047], zoom: 16.2, pitch: 0, bearing: 0 }, releves: ['Pieges'],
-  },
-  {
-    contexte: true, cle: 'ctx-campagne-juin', tournee: true,
-    titre: 'Campagne de juin — ronde de nuit',
-    pastilles: ['Type', 'Total_moyen', 'sun'],
-    texte: 'Les dix-neuf pièges dans l’ordre de la ronde. Ouvrez « Tournée » pour les prendre un à un, ou choisissez-en un dans la liste.',
-    couches: ['Luminaires', 'Pieges', 'Tournees'], heure: 22 * 60, camera: { center: [5.3949, 43.3048], zoom: 16.4, pitch: 0, bearing: 0 }, releves: ['Pieges'],
-  },
-  {
-    contexte: true, cle: 'ctx-zone-sombre',
-    titre: 'Zone sombre de référence',
-    pastilles: ['Type'],
-    texte: 'Les quatre pièges témoins, loin de toute lumière : c’est avec eux que l’on compare les autres.',
-    couches: ['Pieges'], heure: 22 * 60, camera: { center: [5.3951, 43.3050], zoom: 16.9, pitch: 0, bearing: 0 }, releves: ['Pieges'],
-    filtres: [['Pieges', 'Type', 'Sous un luminaire']],
-  },
-  {
-    contexte: true, cle: 'ctx-resultats',
-    titre: 'Résultats de la campagne',
-    pastilles: ['Mois', 'Total_moyen', 'basemap'],
-    texte: 'Un plot par nuit et par piège : sa hauteur suit le nombre d’insectes comptés. Les valeurs sont fictives.',
-    couches: ['Releves', 'Pieges'], heure: 21 * 60, camera: { center: [5.3951, 43.3050], zoom: 17.3, pitch: 62, bearing: 18 },
-  },
-  {
-    contexte: true, cle: 'ctx-a-remplacer',
-    titre: 'Luminaires à remplacer',
-    pastilles: ['Teinte', 'Zone', 'temperatureCouleur', 'sun'],
-    texte: 'Les luminaires blanc froid et blanc neutre du parc : ceux dont on gagnerait le plus à changer la lumière.',
-    couches: ['Luminaires'], heure: 22 * 60, camera: { center: [5.3951, 43.3050], zoom: 17.0, pitch: 55, bearing: 10 }, releves: [],
-    filtres: [['Luminaires', 'Teinte', 'Ambre (≤ 2 200 K)'], ['Luminaires', 'Teinte', 'Sodium (≈ 2 000 K)'], ['Luminaires', 'Teinte', 'Blanc chaud (≈ 3 000 K)'], ['Luminaires', 'Zone', 'Quartier']],
-  },
-];
+/**
+ * Les étapes sont décrites dans recit.json (titre, texte, couches visibles, heure, cadrage, pastilles, filtres) : le même fichier
+ * sert à composer le récit du document et à fabriquer la scène publiée (fabriquer-scene.py).
+ */
+async function lireRecit() {
+  const r = await fetch('/projects/Atlas/vitrine-longchamp/recit.json?v=' + Date.now());
+  return r.json();
+}
 
 /** Ce que le lecteur peut manipuler dans le dock : un contrôle par champ, et trois réglages de la scène. */
 const CONTROLES = { Teinte: 'Luminaires', temperatureCouleur: 'Luminaires', Zone: 'Luminaires', Etat: 'Luminaires', Type: 'Pieges', Total_moyen: 'Pieges', Mois: 'Releves' };
@@ -189,6 +119,7 @@ export async function finitions(ids, A = window.A) {
 }
 
 export default async function construire(A = window.A) {
+  const { etapes: ETAPES } = await lireRecit();
   // Le panneau « Couches » est fermé pendant le récit : les identifiants viennent du réglage fait juste avant.
   const memo = window.__ids || {};
   const ids = { Luminaires: memo.luminaires, Pieges: memo.pieges, Releves: memo.releves, Grille: memo.grille, Tournees: memo.tournee, ...idsParNom() };
