@@ -630,6 +630,7 @@ function blocContextes(produit) {
         <h3>${echapper(c.titre)}</h3>
         <p>${enLigne(c.texte)}</p>
         ${c.pourquoi ? `<p class="pourquoi">${enLigne(c.pourquoi)}</p>` : ''}
+        ${c.exemple ? `<p class="exemple"><b>Dans l’exemple</b> ${enLigne(c.exemple)}</p>` : ''}
         ${(c.utilise || []).length ? `<ul class="utilise">${c.utilise.map((u) => `<li>${echapper(u)}</li>`).join('')}</ul>` : ''}
       </div>
       <div class="montre${c.format === 'mobile' ? ' telephones' : ''}">
@@ -725,6 +726,8 @@ const CSS_PRODUIT = `
 .contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
 .contexte p { font-size: .94rem; margin: 0 0 .7rem; }
 .contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .exemple { font-size: .86rem; color: var(--plume); margin: .9rem 0 0; padding: .6rem .8rem; background: var(--filet); border-radius: 8px; }
+.contexte .exemple b { color: var(--encre); font-weight: 600; margin-right: .3rem; }
 .contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
 .contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
 /* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
@@ -737,6 +740,8 @@ const CSS_PRODUIT = `
 .contexte figcaption { font-size: .85rem; color: var(--plume); margin-top: .6rem; }
 .telephones { display: grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 /* Un cadre : sans lui, une capture verticale se lit comme une image mal recadree. */
+/* Un téléphone n'est pas plus large qu'un téléphone : seul dans sa colonne, il ne s'étire pas. */
+.telephone { max-width: 17rem; }
 .telephone .ecran { border: 8px solid var(--encre); border-radius: 26px; overflow: hidden;
   background: var(--encre); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
 /* Le cadre suit l image, au lieu de lui imposer un rapport : une capture prise

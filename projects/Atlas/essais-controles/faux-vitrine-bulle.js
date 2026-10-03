@@ -170,7 +170,12 @@
         if (/_grist_Views/.test(q)) return { records: FORMS.map(function (f) { return { id: f.view, fields: { id: f.view, name: f.nom } }; }) };
         return null;
       },
-      options: function (k) { return JSON.stringify(Q[k] || {}); }
+      options: function (k) {
+        var o = Object.assign({}, Q[k] || {});
+        var CH = { 'Pieges.Type': ['Sous un luminaire', 'Témoin non éclairé'], 'Luminaires.Etat': ['Bon', 'À surveiller', 'Défectueux'], 'Luminaires.Zone': ['Parc et Palais', 'Quartier'] };
+        if (CH[k]) o.choices = CH[k];
+        return JSON.stringify(o);
+      }
     };
   }
 

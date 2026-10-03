@@ -296,10 +296,11 @@ test('un chapitre dit qui agit et ce qu’il met en jeu, et les points se rangen
   const html = V.rendreProjet({ id: 'x', widgets: W1, presentation: {
     points: [{ groupe: 'Éditer', titre: 'Dessiner', texte: 'un point' }, { groupe: 'Montrer', titre: 'Lire', texte: 'un récit' }, { groupe: 'Éditer', titre: 'Annuler', texte: 'un geste' }],
     produit: { contextes: [{ role: 'L’agent de terrain', titre: 'Relever', texte: 'sur place', format: 'mobile',
-      utilise: ['Formulaires', '<b>Contextes</b>'], images: [{ image: 'm.jpg', legende: 'x' }] }] },
+      exemple: 'un piège de nuit', utilise: ['Formulaires', '<b>Contextes</b>'], images: [{ image: 'm.jpg', legende: 'x' }] }] },
   } }, Date.now(), 'https://s.io/r/');
   assert.match(html, /<p class="role">L’agent de terrain<\/p>/);
   assert.match(html, /<ul class="utilise"><li>Formulaires<\/li>/);
+  assert.match(html, /<p class="exemple"><b>Dans l’exemple<\/b> un piège de nuit<\/p>/);
   assert.ok(!html.includes('<b>Contextes</b>'), 'une pastille est du texte, jamais du HTML');
   assert.equal((html.match(/class="groupe-points"/g) || []).length, 2);
   assert.ok(html.indexOf('Dessiner') < html.indexOf('Annuler') && html.indexOf('Annuler') < html.indexOf('>Montrer<'),
