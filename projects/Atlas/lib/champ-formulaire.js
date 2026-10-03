@@ -310,6 +310,27 @@ export function planReleveLie({ nom, coucheTable, coucheNom = '', champs = [], d
   };
 }
 
+/**
+ * Le champ par lequel colorer la couche d'un formulaire à géométrie : un champ à choix, le premier exigé de préférence (c'est
+ * celui dont la saisie est sûre), sinon le premier. Rien s'il n'y en a pas. Aucune supposition sur ce que le champ veut dire :
+ * l'ordre des choix n'est pas un degré, la palette ne le sous-entend pas.
+ *
+ * @param {Array<{id:string, type:string, label?:string, widgetOptions?:string}>} colonnes
+ * @param {string[]} [requis]
+ * @returns {{champ:string, valeurs:string[]}|null}
+ */
+export function champSymbolisable(colonnes, requis = []) {
+  const choix = (colonnes || []).filter((c) => c?.type === 'Choice').map((c) => {
+    let valeurs = [];
+    try { valeurs = JSON.parse(c.widgetOptions || '{}').choices || []; } catch (e) { /* options illisibles */ }
+    return { c, valeurs: valeurs.map(String) };
+  }).filter((x) => x.valeurs.length >= 2);
+  if (!choix.length) return null;
+  const exiges = new Set(requis || []);
+  const x = choix.find((y) => exiges.has(y.c.id)) || choix[0];
+  return { champ: x.c.id, valeurs: x.valeurs };
+}
+
 /** Le champ du formulaire pour une colonne que ce module vient de produire. */
 export function champDepuisPlan(colonne, derivation, { requis = false } = {}) {
   if (!derivation?.champDepuisColonne) return null;

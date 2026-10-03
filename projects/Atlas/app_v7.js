@@ -115,8 +115,8 @@ import {
 } from './lib/nouvelle-couche.js?v=20261003f';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
-  phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale,
-} from './lib/champ-formulaire.js?v=20261003m';
+  phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
+} from './lib/champ-formulaire.js?v=20261004a';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
@@ -6282,8 +6282,14 @@ function lignesDuReleve() {
     return lignesReleve(couchesEnReleve().map((couche) => ({
         couche,
         formulaires: offertsEnLecture(formulairesDeLaCouche(couche)),
-        creation: creationPossible(couche, contexteCreation(couche)).ok,
+        // Une couche de lignes liées à un objet ne s'ajoute pas seule : la ligne n'aurait pas d'ouvrage. Elle naît du formulaire de l'objet.
+        creation: creationPossible(couche, contexteCreation(couche)).ok && !estCoucheLiee(couche),
     })));
+}
+
+/** Une couche dont la table est celle d'un formulaire « ajoute une ligne » d'une autre couche. */
+function estCoucheLiee(layer) {
+    return STATE.layers.some((p) => p !== layer && formulairesDeLaCouche(p).some((f) => !f.surLaCouche && f.tableId === layer.sourceTable && !f.derive));
 }
 
 function renderReleveDockSlotHtml() {
@@ -7440,7 +7446,18 @@ async function creerCoucheLiee(plan, tables) {
     layer.geometryColumn = colonneGeometrieNouvelleCouche(plan.geometrie);
     layer.source = 'grist-table';
     layer.controls = [];
-    initSymbolization(layer).creation = { exploiter: true, sources: plan.sources };
+    const sym = initSymbolization(layer);
+    sym.creation = { exploiter: true, sources: plan.sources };
+    // La couche des lignes se colore par son champ à choix dès la première ligne : sans cela, tous les points naissent de la même
+    // couleur et il faut aller régler la symbologie pour y lire quoi que ce soit. Une palette sans ordre ; le dégradé se choisit ensuite.
+    const choix = champSymbolisable(plan.colonnes, plan.requis);
+    if (choix) {
+        const c = sym.color;
+        c.mode = 'categorized';
+        c.field = choix.champ;
+        c.palette = 'Tableau10';
+        c.categories = choix.valeurs.map((v, i) => ({ value: v, count: 0, color: paletteColor(c.palette, i, choix.valeurs.length) }));
+    }
     const { actions, indices } = actionsNouvelleCouche({
         tableId: plan.tableId, type: plan.geometrie, tables, colonnes: plan.colonnes,
         inventaire: ligneInventaire(layer), prefs: lignePrefs(layer),

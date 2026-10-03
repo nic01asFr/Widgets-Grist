@@ -5,8 +5,7 @@ import {
   TYPES_CHAMP, idColonneDepuisLibelle, lireChoix, planColonne, planAjoutChamp, planReleveLie,
   champDepuisPlan, defAvecChamp, defPourReleve, phraseAjoutChamp, phraseReleveLie, messageRefusChamp,
   COLONNE_OBJET, COLONNE_DATE, SOURCES_POINT, COLONNES_POINT, LIBELLES_SOURCE, sourcesRetenues,
-  GEOMETRIES, SOURCES_PAR_GEOMETRIE, COLONNES_FORME, colonnesDeGeometrie, libelleSource, fuseauLocal, estTypeDate, indexDatePrincipale,
-} from '../lib/champ-formulaire.js';
+  GEOMETRIES, SOURCES_PAR_GEOMETRIE, COLONNES_FORME, colonnesDeGeometrie, libelleSource, fuseauLocal, estTypeDate, indexDatePrincipale, champSymbolisable } from '../lib/champ-formulaire.js';
 import { creerScene, appliquerActions, metaColonnes, metaTables } from '../lib/scene-locale.js';
 import { formulairesPourCouche, departsProposes } from '../lib/fiche-formulaire.js';
 import { colonnesNouvelleCouche, actionsNouvelleCouche } from '../lib/nouvelle-couche.js';
@@ -565,4 +564,22 @@ test('un refus de structure est dit comme tel', () => {
   assert.match(messageRefusChamp(new Error('Blocked by table schema access rules')), /pas sa structure/);
   assert.match(messageRefusChamp(new Error('boum'), { releve: true }), /boum/);
   assert.equal(COLONNE_DATE, 'Date');
+});
+
+test('la couche d’un formulaire se colore par son champ a choix : l’exige d’abord, sinon le premier, sans rien deviner du nom', () => {
+  const cols = [
+    { id: 'Objet', type: 'Ref:Ouvrages' },
+    { id: 'Statut', type: 'Choice', label: 'Statut', widgetOptions: JSON.stringify({ choices: ['Ouvert', 'Traite'] }) },
+    { id: 'Gravite', type: 'Choice', label: 'Gravité', widgetOptions: JSON.stringify({ choices: ['Mineur', 'Modere', 'Majeur'] }) },
+    { id: 'Constat', type: 'Text' },
+  ];
+  assert.deepEqual(champSymbolisable(cols, ['Gravite']), { champ: 'Gravite', valeurs: ['Mineur', 'Modere', 'Majeur'] });
+  // Aucun champ exige : le premier a choix, quel que soit son nom.
+  assert.equal(champSymbolisable(cols, []).champ, 'Statut');
+  assert.equal(champSymbolisable(cols).champ, 'Statut');
+  // Un seul choix n'a rien a distinguer.
+  assert.equal(champSymbolisable([{ id: 'X', type: 'Choice', widgetOptions: JSON.stringify({ choices: ['A'] }) }]), null);
+  assert.equal(champSymbolisable([{ id: 'Constat', type: 'Text' }]), null);
+  assert.equal(champSymbolisable([{ id: 'X', type: 'Choice', widgetOptions: '{' }]), null);
+  assert.equal(champSymbolisable(null), null);
 });
