@@ -117,6 +117,9 @@ pr['contextes'] = [
      'images': [{'image': 'cas-liste-scenes.jpg', 'legende': 'La liste des projets, avec la miniature de la scène.'}]},
 ]
 
+# Réorganisation : géométries, formulaires d'exploitation, application, export, intégration (voir plan-chapitres.py).
+exec(compile(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'plan-chapitres.py'), encoding='utf8').read(), 'plan-chapitres.py', 'exec'))
+
 pr['demonstration'] = {
     'titre': 'Une scène publiée, pour essayer',
     'texte': 'La scène qui sert d’exemple à cette page s’ouvre seule, sans document Grist : la maquette du Palais Longchamp sous licence ouverte, 643 luminaires, dix-neuf pièges, '

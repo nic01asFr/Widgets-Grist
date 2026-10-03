@@ -204,10 +204,10 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Charger</p>
         <h3>Vos tables deviennent des couches</h3>
-        <p>Atlas lit le document Grist : toute table qui porte une géométrie — des coordonnées, du WKT, une colonne de géométrie — est reconnue et proposée comme couche. On peut aussi y verser un fichier (GeoJSON, GPX, KML, CSV), importer OpenStreetMap ou créer une couche vide pour la dessiner. Une couche n’est pas une copie : modifier la table modifie la carte, et l’inverse.</p>
+        <p>Atlas lit le document Grist : toute table qui porte une géométrie — des coordonnées, du WKT, une colonne de géométrie — est reconnue et proposée comme couche. On peut aussi y verser un fichier (GeoJSON, GPX, KML, CSV), importer OpenStreetMap ou créer une couche vide pour la dessiner. Une couche n’est pas une copie : modifier la table modifie la carte, et l’inverse. La palette de recherche (⌘K) retrouve un objet, une couche ou un lieu, ou ouvre la liste des objets d’une couche. Un projet QGIS s’y verse par qgis2grist.</p>
         <p class="pourquoi">Il n’y a rien à exporter, ni à refaire quand la donnée change.</p>
         <p class="exemple"><b>Dans l’exemple</b> les 643 points lumineux de la Ville de Marseille sont une table du document ; Atlas la pose sur la carte, à côté de la maquette 3D du Palais.</p>
-        <ul class="utilise"><li>Tables géographiques</li><li>Fichiers</li><li>OpenStreetMap</li><li>Couche vide</li></ul>
+        <ul class="utilise"><li>Tables géographiques</li><li>GeoJSON, GPX, KML, CSV</li><li>OpenStreetMap</li><li>QGIS</li><li>Couche vide</li><li>Recherche ⌘K</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -224,10 +224,10 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Représenter</p>
         <h3>Colorer, dimensionner, étiqueter par la donnée</h3>
-        <p>Une couche se colore d’une couleur fixe, par catégorie ou en classes graduées, se dimensionne et s’étiquette d’après un champ, et sa légende se construit seule. Quand le champ renvoie à une autre table, Atlas reprend les couleurs et l’ordre de gravité de cette table plutôt que d’inventer une palette.</p>
+        <p>Une couche se colore d’une couleur fixe, par catégorie ou en classes graduées, se dimensionne et s’étiquette d’après un champ, et sa légende se construit seule. Quand le champ renvoie à une autre table, Atlas reprend les couleurs et l’ordre de gravité de cette table plutôt que d’inventer une palette. Une couche dense se regroupe en ronds chiffrés qui se défont au zoom ; une couleur graduée se découpe en classes aux seuils choisis, et une image tirée d’une table peut tenir lieu d’icône.</p>
         <p class="pourquoi">Le réglage est enregistré avec le document : celui qui ouvre la scène retrouve la même carte.</p>
         <p class="exemple"><b>Dans l’exemple</b> les cinq teintes de lumière, de l’ambre au blanc froid, sont lues dans la table des classes ; le libellé de chaque classe vient de la même table.</p>
-        <ul class="utilise"><li>Couleur par catégorie</li><li>Couleur graduée</li><li>Table de référence</li><li>Étiquettes</li><li>Légende</li></ul>
+        <ul class="utilise"><li>Couleur par catégorie</li><li>Classes par seuils</li><li>Table de référence</li><li>Icônes</li><li>Étiquettes</li><li>Regroupement de points</li><li>Légende</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -243,7 +243,7 @@ section { margin: 0 0 3rem; }
         <p>Le fond est un plan, un fond clair, l’orthophotographie de l’IGN ou le fond 3D ; le relief vient du MNT LiDAR HD de l’IGN, le bâti se met en volume et porte des ombres. Le soleil se règle par la date et l’heure, et chaque étape d’un récit retient son fond, son heure et sa date.</p>
         
         <p class="exemple"><b>Dans l’exemple</b> le même point de vue, de jour sur le plan, puis de nuit sur l’orthophotographie.</p>
-        <ul class="utilise"><li>Fonds de plan</li><li>Relief IGN</li><li>Bâti en volume</li><li>Ombres portées</li><li>Soleil et date</li></ul>
+        <ul class="utilise"><li>Fonds de plan</li><li>Relief IGN</li><li>Bâti en volume</li><li>Ombres portées</li><li>Soleil et date</li><li>Globe ou plan</li><li>Points de vue</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -296,15 +296,35 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Éditer</p>
         <h3>L’objet cliqué est la ligne</h3>
-        <p>Cliquer un objet ouvre sa fiche : c’est la ligne de la table, avec ses champs typés, ses listes de choix et ses références. Ce qu’on y écrit va dans le document. On peut aussi dessiner un point, une ligne ou une surface, reprendre une forme sommet par sommet, annuler et rétablir ; l’apparence d’une couche s’enregistre toute seule.</p>
+        <p>Cliquer un objet ouvre sa fiche : c’est la ligne de la table, avec ses champs typés, ses listes de choix et ses références. Ce qu’on y écrit va dans le document. Plusieurs objets se sélectionnent ensemble et se parcourent avec ◀ ▶, en sautant ceux que les filtres masquent.</p>
         
         <p class="exemple"><b>Dans l’exemple</b> la fiche du piège P14, avec ses onglets : la ligne de la table, puis les formulaires que l’équipe a proposés.</p>
-        <ul class="utilise"><li>Fiche d’objet</li><li>Dessin et modification de formes</li><li>Annuler / rétablir</li><li>Enregistrement automatique</li></ul>
+        <ul class="utilise"><li>Fiche d’objet</li><li>Champs typés</li><li>Sélection multiple</li><li>Revue ◀ ▶</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
           <img src="cas-fiche.jpg" alt="La fiche d’un objet, à droite ; la sélection reste visible sur la carte." loading="lazy">
           <figcaption>La fiche d’un objet, à droite ; la sélection reste visible sur la carte.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Éditer</p>
+        <h3>Ajouter et modifier des géométries</h3>
+        <p>Atlas crée une couche vide — un nom, un type (point, ligne ou surface) et la table Grist qui la portera, montrée avant d’être écrite — puis on y dessine : chaque sommet s’accroche aux objets voisins (Alt pour l’éviter), l’en-tête donne la longueur ou l’aire en direct, et la fiche se remplit avant que rien ne parte. Un envoi écrit une seule ligne, géométrie et champs ensemble. Une forme existante se reprend sommet par sommet ; une colonne de coordonnées ou de WKT reste écrivable.</p>
+        <p class="pourquoi">Pas de détour par QGIS pour tracer un périmètre ou relever dix arbres. Chaque geste se défait : annuler l’ajout, le geste, la modification.</p>
+        <p class="exemple"><b>Dans l’exemple</b> les quatre pièges témoins sont entourés d’une surface : 4 sommets, 1,03 ha, 409 m de périmètre, lus pendant le tracé.</p>
+        <ul class="utilise"><li>Nouvelle couche</li><li>Tracé de points, lignes et surfaces</li><li>Accrochage</li><li>Modifier la forme</li><li>Annuler / rétablir</li><li>Création en série</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-dessin-trace.jpg" alt="Une surface en cours de tracé : l’aire et le périmètre suivent les sommets posés." loading="lazy">
+          <figcaption>Une surface en cours de tracé : l’aire et le périmètre suivent les sommets posés.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-dessin-fiche.jpg" alt="La forme est prête ; la fiche se remplit, et « Envoyer » écrit une ligne." loading="lazy">
+          <figcaption>La forme est prête ; la fiche se remplit, et « Envoyer » écrit une ligne.</figcaption>
         </figure>
       </div>
     </article>
@@ -321,22 +341,6 @@ section { margin: 0 0 3rem; }
         <figure class="large">
           <img src="cas-bulle.jpg" alt="La bulle du piège P14. Comptages fictifs." loading="lazy">
           <figcaption>La bulle du piège P14. Comptages fictifs.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Éditer</p>
-        <h3>Des formulaires pour le terrain</h3>
-        <p>Atlas réutilise les formulaires natifs de Grist. Hors édition, un formulaire que l’équipe a proposé s’ouvre en onglet sur l’objet touché : champs obligatoires signalés, valeurs de départ (la date du jour, la personne connectée), enregistrement qui écrit la ligne dans la table. Cela marche dans le navigateur d’un téléphone comme dans l’application.</p>
-        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter.</p>
-        <p class="exemple"><b>Dans l’exemple</b> le « Relevé de nuit » s’ouvre sur le piège touché, date préremplie.</p>
-        <ul class="utilise"><li>Formulaires de Grist</li><li>Valeurs de départ</li><li>Champs obligatoires</li><li>Téléphone</li></ul>
-      </div>
-      <div class="montre telephones">
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-releve-mobile.jpg" alt="Le formulaire de relevé, ouvert sur le piège P14." loading="lazy"></div>
-          <figcaption>Le formulaire de relevé, ouvert sur le piège P14.</figcaption>
         </figure>
       </div>
     </article>
@@ -359,11 +363,27 @@ section { margin: 0 0 3rem; }
     <article class="contexte">
       <div class="dit">
         <p class="role">Exploiter</p>
+        <h3>Formulaires, relevés et ajouts sur le terrain</h3>
+        <p>Atlas réutilise les formulaires natifs de Grist, et c’est en exploitation qu’ils servent. L’agent choisit un objet dans une liste, prend « le plus proche de moi » ou le touche : un formulaire que l’équipe a proposé s’ouvre en onglet sur lui, champs obligatoires signalés, valeurs de départ (la date du jour, la personne connectée). Un envoi écrit la ligne dans la table. Si l’auteur le propose, l’agent peut aussi ajouter un objet qui n’existe pas encore. Cela marche dans le navigateur d’un téléphone comme dans l’application.</p>
+        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter.</p>
+        <p class="exemple"><b>Dans l’exemple</b> le « Relevé de nuit » s’ouvre sur le piège touché, date préremplie.</p>
+        <ul class="utilise"><li>Formulaires de Grist</li><li>Pastille « Relevé »</li><li>Le plus proche de moi</li><li>Valeurs de départ</li><li>Ajout d’objet en Exploiter</li></ul>
+      </div>
+      <div class="montre telephones">
+        <figure class="telephone">
+          <div class="ecran"><img src="cas-releve-mobile.jpg" alt="Le formulaire de relevé, ouvert sur le piège P14." loading="lazy"></div>
+          <figcaption>Le formulaire de relevé, ouvert sur le piège P14.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Exploiter</p>
         <h3>Contextes et tournées</h3>
         <p>Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. « Choisir un objet » suit la même ligne. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.</p>
         
         <p class="exemple"><b>Dans l’exemple</b> le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.</p>
-        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Choisir un objet</li><li>Pastilles par étape</li></ul>
+        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Tracer sur un réseau</li><li>Choisir un objet</li><li>Pastilles par étape</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -376,10 +396,10 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Raconter</p>
         <h3>Un récit, et un trajet si besoin</h3>
-        <p>Chaque étape retient le cadrage, les couches visibles, les filtres, l’heure et le fond de plan. En lecture, la caméra passe d’une étape à l’autre. Si une ligne existe, on peut la poser comme trajet : les étapes se placent dessus et le lecteur suit le parcours. On choisit enfin ce que voit celui qui ouvre la scène : la carte, le récit, ou un contexte.</p>
+        <p>Chaque étape retient le cadrage, les couches visibles, les filtres, l’heure et le fond de plan. En lecture, la caméra passe d’une étape à l’autre. Si une ligne existe, on peut la poser comme trajet : les étapes se placent dessus et le lecteur suit le parcours. On choisit enfin ce que voit celui qui ouvre la scène : la carte, le récit, ou un contexte. Un trajet se pose sur une ligne existante ou se trace sur un réseau de routes et de sentiers, sans service externe : on touche un départ, des points de passage et une arrivée. Des étapes peuvent aussi se créer d’un coup, une par objet qui borde le trajet.</p>
         
         <p class="exemple"><b>Dans l’exemple</b> douze étapes, dont cinq contextes ; l’une est en plan, de nuit et sans la maquette, pour lire les zones d’ombre.</p>
-        <ul class="utilise"><li>Étapes capturées</li><li>Trajet</li><li>Lecture</li><li>Ouverture de la scène</li></ul>
+        <ul class="utilise"><li>Étapes capturées</li><li>Trajet</li><li>Itinéraire sur un réseau</li><li>Étapes depuis les objets</li><li>Lecture</li><li>Ouverture de la scène</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -410,18 +430,55 @@ section { margin: 0 0 3rem; }
     </article>
     <article class="contexte">
       <div class="dit">
-        <p class="role">Partager</p>
-        <h3>Une scène qui se retrouve et qui se partage</h3>
-        <p>Les scènes d’un compte se listent avec leur rôle, leur date et une miniature que l’auteur choisit d’un clic sur la carte. Dans Grist, on partage le document : la carte suit, avec les droits du document. Une scène peut aussi se publier seule, sous forme de manifeste, et s’ouvrir par son adresse (<code>?scene=</code>), dans une page ou une iframe. L’application Android ouvre les scènes depuis un compte, en lecture comme en relevé.</p>
-        <p class="pourquoi">Retirer l’accès au document ou la scène publiée suffit : rien n’a été recopié ailleurs.</p>
-        <p class="exemple"><b>Dans l’exemple</b> la scène est dans la liste avec sa miniature de nuit ; elle est aussi publiée seule, c’est la démonstration plus bas.</p>
-        <ul class="utilise"><li>Liste des projets</li><li>Miniature</li><li>Scène publiée</li><li>Iframe</li><li>Application Android</li></ul>
+        <p class="role">Dans la poche</p>
+        <h3>L’application Android</h3>
+        <p>Un navigateur ne peut pas présenter de clé API à l’instance Grist ; l’application le peut. Elle ouvre les scènes depuis un compte — instance et clé réglées une fois —, avec leur rôle, leur date et une miniature que l’auteur choisit d’un clic sur la carte. Son menu change de posture, de scène ou d’instance, et crée une scène, dans Grist ou sur l’appareil seul, que l’on peut envoyer plus tard vers un document neuf. Pour travailler sans réseau, on prépare la scène : tables, formulaires et photos sont gardés sur l’appareil. Les relevés saisis hors réseau attendent dans une file, visible dans la barre, et partent tout seuls au retour du réseau. La position de l’appareil sert à trouver l’objet le plus proche, et un itinéraire se confie à l’application de guidage.</p>
+        <p class="pourquoi">Sur le terrain, le réseau manque souvent : rien ne se perd, et chaque relevé arrive dans la table du document.</p>
+        <p class="exemple"><b>Dans l’exemple</b> l’agent prépare la scène la veille ; le soir, au parc, il relève les pièges sans réseau, puis les envoie.</p>
+        <ul class="utilise"><li>Menu principal</li><li>Liste des scènes</li><li>Miniature</li><li>Hors ligne</li><li>File d’envoi</li><li>Scène sur l’appareil</li><li>Position</li><li>Itinéraire</li></ul>
       </div>
       <div class="montre telephones">
+        <figure class="telephone">
+          <div class="ecran"><img src="cas-app-menu.jpg" alt="Le menu : posture, synchronisation, disponibilité hors ligne (scène prête, 485 Ko, 11 tables), scènes récentes, nouvelle scène." loading="lazy"></div>
+          <figcaption>Le menu : posture, synchronisation, disponibilité hors ligne (scène prête, 485 Ko, 11 tables), scènes récentes, nouvelle scène.</figcaption>
+        </figure>
+        <figure class="telephone">
+          <div class="ecran"><img src="cas-app-contexte.jpg" alt="Le choix d’un contexte, sur le téléphone." loading="lazy"></div>
+          <figcaption>Le choix d’un contexte, sur le téléphone.</figcaption>
+        </figure>
         <figure class="telephone">
           <div class="ecran"><img src="cas-liste-scenes.jpg" alt="La liste des projets, avec la miniature de la scène." loading="lazy"></div>
           <figcaption>La liste des projets, avec la miniature de la scène.</figcaption>
         </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Partager</p>
+        <h3>Exporter</h3>
+        <p>Ce que la carte montre se récupère : GeoJSON (entités et attributs), CSV (la géométrie en WKT), KML, GPX (points et traces ; les surfaces sont écartées et comptées), une image de la carte, ou un projet Atlas qui rouvre couches et réglages. Le menu propose la couche sélectionnée ou toutes ; une couche distante est annoncée comme absente du fichier.</p>
+        
+        <p class="exemple"><b>Dans l’exemple</b> la table des pièges s’exporte en GeoJSON pour QGIS, et la carte de nuit en image pour un rapport.</p>
+        <ul class="utilise"><li>GeoJSON</li><li>CSV</li><li>KML</li><li>GPX</li><li>Image</li><li>Projet Atlas</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-export.jpg" alt="Le menu d’export." loading="lazy">
+          <figcaption>Le menu d’export.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Partager</p>
+        <h3>Une scène qui se partage</h3>
+        <p>Dans Grist, on partage le document : la carte suit, avec les droits du document. Pour une page, l’intégration en iframe prend deux formes : <code>?embed=true</code>, page minimale en lecture forcée, et <code>?style=singlePage</code>, où les droits de la personne connectée s’appliquent ; <code>?navbar=false</code> retire la barre. Une scène peut aussi se publier seule, sous forme de manifeste, et s’ouvrir par son adresse (<code>?scene=</code>), sans document Grist.</p>
+        <p class="pourquoi">Retirer l’accès au document ou la scène publiée suffit : rien n’a été recopié ailleurs.</p>
+        <p class="exemple"><b>Dans l’exemple</b> la scène de l’exemple est publiée seule : c’est la démonstration, juste en dessous.</p>
+        <ul class="utilise"><li>Document Grist</li><li>Iframe (embed, singlePage)</li><li>Scène publiée</li><li>Droits du document</li></ul>
+      </div>
+      <div class="montre">
+
       </div>
     </article>
   </section>
