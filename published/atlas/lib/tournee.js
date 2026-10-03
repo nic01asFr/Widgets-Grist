@@ -8,7 +8,7 @@
  * Rien ici ne touche la carte, Grist ni le DOM. Le dessin de la ligne, la liste du panneau et le pas de ◀ ▶ restent l'affaire
  * de l'application.
  */
-import { projeter, longueurMetres } from './trajet.js?v=1.12.0';
+import { projeter, longueurMetres } from './trajet.js?v=1.12.1';
 
 export const VERSION = '1.0.0';
 

@@ -11,21 +11,21 @@
  * retire et `init()` prend le relais.
  */
 
-import { capacites, creerClient } from './data-client.js?v=1.12.0';
-import { installerAdaptateur } from './grist-adapter.js?v=1.12.0';
-import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=1.12.0';
-import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=1.12.0';
+import { capacites, creerClient } from './data-client.js?v=1.12.1';
+import { installerAdaptateur } from './grist-adapter.js?v=1.12.1';
+import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=1.12.1';
+import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=1.12.1';
 import {
   ClientLocal, estIdLocal, idDepuisDocument, idDocumentLocal, lireSceneLocale, scenesLocales, creerSceneLocale,
   supprimerSceneLocale, resumerScene, cleEnvoi,
-} from './scene-locale.js?v=1.12.0';
-import { listerEspacesEditables, nomParDefaut, sceneNeuve, planEnvoi, journalVide, envoyerScene } from './creer-document.js?v=1.12.0';
+} from './scene-locale.js?v=1.12.1';
+import { listerEspacesEditables, nomParDefaut, sceneNeuve, planEnvoi, journalVide, envoyerScene } from './creer-document.js?v=1.12.1';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication, phrasePreparation, phraseProgres,
   libelleRole, trierScenes, filtrerScenes, lirePrefsListe, ecrirePrefsListe, TRIS, FILTRES,
-} from './hote.js?v=1.12.0';
+} from './hote.js?v=1.12.1';
 
 export const VERSION = '1.0.0';
 

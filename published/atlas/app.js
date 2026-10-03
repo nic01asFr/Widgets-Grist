@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.12.0';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.12.1';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.12.0';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.12.0';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.12.0';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.12.1';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.12.1';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.12.1';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.12.0';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.12.0';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.12.0';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.12.0';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.12.0';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.12.0';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.12.0';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.12.0';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.12.0';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.12.0';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.12.0';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.12.0';
+} from './lib/parametres-objet.js?v=1.12.1';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.12.1';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.12.1';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.12.1';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.12.1';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.12.1';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.12.1';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.12.1';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.12.1';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.12.1';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.12.1';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.12.1';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,8 +36,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.12.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.12.0';
+} from './lib/scene-loader.js?v=1.12.1';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.12.1';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -46,51 +46,51 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.12.0';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.12.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.12.0';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.12.0';
+} from './lib/fiche-formulaire.js?v=1.12.1';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.12.1';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.12.1';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.12.1';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.12.0';
+} from './lib/classes.js?v=1.12.1';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.12.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.12.0';
+} from './lib/grappes.js?v=1.12.1';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.12.1';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.12.0';
+} from './lib/layer-order.js?v=1.12.1';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.12.0';
+} from './lib/table-reference.js?v=1.12.1';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.12.0';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.12.0';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.12.0';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.12.0';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.12.0';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.12.0';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.12.0';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.12.0';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.12.0';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.12.0';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.12.0';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.12.0';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.12.0';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.12.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.12.0';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.12.0';
+} from './lib/bulle-objet.js?v=1.12.1';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.12.1';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.12.1';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.12.1';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.12.1';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.12.1';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.12.1';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.12.1';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.12.1';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.12.1';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.12.1';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.12.1';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.12.1';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.12.1';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.12.1';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.12.1';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.12.0';
+} from './lib/terrain-base.js?v=1.12.1';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -108,20 +108,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.12.0';
+} from './lib/grist-sync.js?v=1.12.1';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.12.0';
+} from './lib/nouvelle-couche.js?v=1.12.1';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale,
-} from './lib/champ-formulaire.js?v=1.12.0';
+} from './lib/champ-formulaire.js?v=1.12.1';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.12.0';
+} from './lib/saisie-objet.js?v=1.12.1';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -129,7 +129,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.12.0';
+} from './lib/geometrie-saisie.js?v=1.12.1';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -141,14 +141,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.12.0';
+} from './lib/declarative-style.js?v=1.12.1';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.12.0';
+} from './lib/geo-tables.js?v=1.12.1';
 import {
   layerFieldNames,
   controlFieldType,
@@ -173,14 +173,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.12.0';
+} from './lib/controls.js?v=1.12.1';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.12.0';
+} from './lib/story.js?v=1.12.1';
 import {
   copieLineaire,
   estLineaire,
@@ -202,11 +202,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.12.0';
+} from './lib/trajet.js?v=1.12.1';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.12.0';
+} from './lib/manifest-binding.js?v=1.12.1';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -217,7 +217,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.12.0';
+} from './lib/viewport.js?v=1.12.1';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -232,30 +232,30 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.12.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.12.0';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.12.0';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.12.0';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.12.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.12.0';
+} from './lib/view-mode.js?v=1.12.1';
+import { mettreAPlat } from './lib/vue-import.js?v=1.12.1';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.12.1';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.12.1';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.12.1';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.12.1';
 import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.12.0';
+} from './lib/habillage-carte.js?v=1.12.1';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.12.0';
+} from './lib/viewer-controls.js?v=1.12.1';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.12.0';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.12.0';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.12.0';
+} from './lib/scene-prefs.js?v=1.12.1';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.12.1';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.12.1';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -6439,6 +6439,7 @@ function listDockPills() {
             kind: 'action',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
             label: 'Me localiser',
+            epingle: true,   // hors de la rangée qui défile : on la cherchait sans la trouver
             active: _suiviPosition,
             action: () => _geoloc?.trigger(),
         });
@@ -6562,6 +6563,59 @@ function renderDockSlotHost() {
     }
 }
 
+/** Une pastille du dock, en HTML. `actif` : allumée (réglage ouvert, ou suivi en cours). */
+function htmlPastille(p, { actif = false } = {}) {
+    const lbl = String(p.label).replace(/"/g, '&quot;');
+    const pid = String(p.id).replace(/"/g, '&quot;');
+    const ic = p.id === 'sun'
+        ? '<span class="sun-dot" aria-hidden="true"></span>'
+        : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
+    const lib = p.court ? `<span class="dock-fab-lib">${String(p.court).replace(/</g, '&lt;')}</span>` : '';
+    return `<button type="button" class="dock-fab ${p.court ? 'avec-lib' : ''} ${actif ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}${lib}</button>`;
+}
+
+/** Le geste d'une pastille : agir, ou ouvrir / refermer son réglage dans le panneau du dock. */
+function brancherPastilles(hote, pills) {
+    const dock = $('map-controls-dock');
+    hote.querySelectorAll('[data-pill]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.pill;
+            // Toutes les pastilles devoilaient un reglage : le composant n'avait
+            // que ce geste-la. Une pastille d'ACTION agit et s'arrete — sans
+            // cela « Recit » aurait ouvert un panneau vide.
+            const pastille = pills.find((p) => p.id === id);
+            if (pastille?.action) { pastille.action(); return; }
+            if (_openDockPill === id && !dock.classList.contains('collapsed')) {
+                dock.classList.add('collapsed');
+            } else {
+                _openDockPill = id;
+                dock.classList.remove('collapsed');
+                renderDockSlotHost();
+            }
+        });
+    });
+}
+
+/**
+ * La rangée de pastilles défile quand elle ne tient pas. Un fondu sur le bord qui cache encore des pastilles le dit — sans lui,
+ * la dernière était coupée net, ou restait hors de vue sans que rien n'annonce qu'on pouvait défiler.
+ */
+function majIndiceDefilement(hote) {
+    const g = hote.scrollLeft > 1;
+    const d = hote.scrollLeft + hote.clientWidth < hote.scrollWidth - 1;
+    hote.classList.toggle('fondu-g', g);
+    hote.classList.toggle('fondu-d', d);
+}
+function suivreDefilementDock(hote) {
+    if (!hote._defilementSuivi) {
+        hote._defilementSuivi = true;
+        hote.addEventListener('scroll', () => majIndiceDefilement(hote), { passive: true });
+        if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => majIndiceDefilement(hote)).observe(hote);
+    }
+    majIndiceDefilement(hote);
+    requestAnimationFrame(() => majIndiceDefilement(hote));
+}
+
 /** Dock pastilles — FABs + une capsule ouverte (env + données actives). */
 function refreshControlsDock() {
     const dock = $('map-controls-dock');
@@ -6569,8 +6623,16 @@ function refreshControlsDock() {
     const slotHost = $('dock-slot-host');
     if (!dock || !fabsHost) return;
 
-    const pills = listDockPills();
+    const toutes = listDockPills();
+    // Les pastilles épinglées (« Me localiser ») ne défilent pas avec la rangée : elles ont leur place sous la boussole.
+    const epinglees = toutes.filter((p) => p.epingle);
+    const pills = toutes.filter((p) => !p.epingle);
     const hasPills = pills.length > 0;
+    const hoteEpingle = $('dock-epingle');
+    if (hoteEpingle) {
+        hoteEpingle.innerHTML = epinglees.map((p) => htmlPastille(p, { actif: !!p.active })).join('');
+        brancherPastilles(hoteEpingle, epinglees);
+    }
     dock.classList.toggle('has-pills', hasPills);
     if (!hasPills) {
         // Replié, pour qu'une première pastille apparaisse en pastille et non
@@ -6609,34 +6671,12 @@ function refreshControlsDock() {
     // (soleil, 2D/3D, fonds, filtres) restent des pastilles. Un séparateur les distingue.
     const agit = (p) => !!p.court;
     fabsHost.innerHTML = pills.map((p, i) => {
-        const lbl = String(p.label).replace(/"/g, '&quot;');
-        const pid = String(p.id).replace(/"/g, '&quot;');
         const isOpen = (_openDockPill === p.id && !dock.classList.contains('collapsed')) || !!p.active;
-        const ic = p.id === 'sun'
-            ? '<span class="sun-dot" aria-hidden="true"></span>'
-            : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
-        const lib = agit(p) ? `<span class="dock-fab-lib">${String(p.court).replace(/</g, '&lt;')}</span>` : '';
         const sep = agit(p) && pills[i + 1] && !agit(pills[i + 1]) ? '<span class="dock-sep" aria-hidden="true"></span>' : '';
-        return `<button type="button" class="dock-fab ${agit(p) ? 'avec-lib' : ''} ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}${lib}</button>${sep}`;
+        return htmlPastille(p, { actif: isOpen }) + sep;
     }).join('');
-
-    fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.pill;
-            // Toutes les pastilles devoilaient un reglage : le composant n'avait
-            // que ce geste-la. Une pastille d'ACTION agit et s'arrete — sans
-            // cela « Recit » aurait ouvert un panneau vide.
-            const pastille = pills.find((p) => p.id === id);
-            if (pastille?.action) { pastille.action(); return; }
-            if (_openDockPill === id && !dock.classList.contains('collapsed')) {
-                dock.classList.add('collapsed');
-            } else {
-                _openDockPill = id;
-                dock.classList.remove('collapsed');
-                renderDockSlotHost();
-            }
-        });
-    });
+    brancherPastilles(fabsHost, pills);
+    suivreDefilementDock(fabsHost);
 
     if (!dock.classList.contains('collapsed') && _openDockPill) {
         renderDockSlotHost();
@@ -10779,6 +10819,37 @@ function hitLayerIds() {
     return STATE.layers.filter((l) => map.getLayer(l.id))
         .flatMap((l) => [l.id, ...['-icon', '-vaste'].map((s) => l.id + s).filter((id) => map.getLayer(id))]);
 }
+/**
+ * Les objets sous un toucher, le plus proche d'abord.
+ *
+ * Une couche en 3D n'offre au toucher qu'un cercle de 2 à 4,5 px posé au PIED de l'objet : un mât d'éclairage se touche
+ * en visant son pied, au pixel près — au doigt, c'était presque impossible, et le corps du mât, qui monte au-dessus
+ * du pied, ne comptait pas. On cherche donc dans une zone autour du point touché (large au doigt, mince à la souris,
+ * prolongée vers le bas puisque le pied est sous le corps), et l'on garde le plus proche, le corps d'un objet haut
+ * pesant moins que son pied en distance verticale.
+ */
+function objetsSousToucher(point, ids) {
+    if (!map || !ids?.length) return [];
+    const exacts = map.queryRenderedFeatures(point, { layers: ids });
+    if (exacts.length) return exacts;
+    const tactile = surTelephone() || (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches);
+    const tol = tactile ? 24 : 6;
+    const zone = [[point.x - tol, point.y - tol], [point.x + tol, point.y + Math.round(tol * (tactile ? 1.8 : 1))]];
+    const distance = (f) => {
+        const g = f.geometry;
+        if (g?.type !== 'Point') return tol;   // une forme proche passe après un point que l'on vise vraiment
+        const p = map.project(g.coordinates);
+        const dx = p.x - point.x;
+        const dy = p.y - point.y;
+        return Math.hypot(dx, dy > 0 ? dy * 0.5 : dy);
+    };
+    const vus = new Set();
+    return map.queryRenderedFeatures(zone, { layers: ids })
+        .filter((f) => { const k = `${f.layer.id}:${f.properties?._idx ?? f.id}`; if (vus.has(k)) return false; vus.add(k); return true; })
+        .map((f) => ({ f, d: distance(f) }))
+        .sort((a, b) => a.d - b.d)
+        .map((x) => x.f);
+}
 /** La couche Atlas d'un objet rendu, icône comprise. */
 function coucheDuRendu(idRendu) {
     const id = String(idRendu || '').replace(/-(icon|vaste)$/, '');
@@ -10793,7 +10864,7 @@ function setupInteraction() {
         if (trajetPickMode || _itineraire) { map.getCanvas().style.cursor = 'crosshair'; return; }
         if (boxing || boxJustEnded || locationPickMode) return;
         const ids = hitLayerIds();
-        const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
+        const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];   // le curseur ne vise que ce qui est sous lui
         map.getCanvas().style.cursor = feats.length ? (STATE.selection.mode ? 'crosshair' : 'pointer') : (STATE.selection.mode ? 'crosshair' : '');
     });
 
@@ -10808,7 +10879,7 @@ function setupInteraction() {
         const grappe = idsGrappes.length ? map.queryRenderedFeatures(e.point, { layers: idsGrappes })[0] : null;
         if (grappe) { zoomerSurGrappe(grappe); return; }
         const ids = hitLayerIds();
-        const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
+        const feats = objetsSousToucher(e.point, ids);
         if (!feats.length) {
             if (CONFIG.viewMode) closeViewPopup();
             return;
@@ -12632,7 +12703,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.12.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.12.1');
     return Feuille;
 }
 
@@ -12853,10 +12924,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.12.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.12.1'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.12.0');
+        const dc = await import('./lib/data-client.js?v=1.12.1');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -15737,7 +15808,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.12.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.12.1')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -17352,9 +17423,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.12.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.12.1');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.12.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.12.1');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
