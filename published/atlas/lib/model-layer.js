@@ -8,7 +8,7 @@
  * cercle 2D. Ce critère décide où ces réglages ont le droit d'apparaître, et où
  * ils ont le droit d'être écrits.
  */
-import { libelleFormulaire } from './fiche-formulaire.js?v=1.11.0';
+import { libelleFormulaire } from './fiche-formulaire.js?v=1.12.0';
 
 /** La couche est-elle rendue par des modèles 3D instanciés sur des points ? */
 export function isModelLayer(layer) {
@@ -21,7 +21,7 @@ export function isModelLayer(layer) {
 /**
  * Onglets de l'inspecteur d'objet.
  *
- * « Attributs » vaut pour toute couche : en écriture quand la source est une
+ * « Fiche » vaut pour toute couche : en écriture quand la source est une
  * table Grist, en lecture sinon. Sans lui, retirer le placement 3D laisserait un
  * inspecteur sans aucun onglet.
  *
@@ -30,7 +30,7 @@ export function isModelLayer(layer) {
 /**
  * Les onglets de l'inspecteur d'objet.
  *
- * « Attributs » disparaît en sélection multiple, et c'est voulu : **on n'édite
+ * « Fiche » disparaît en sélection multiple, et c'est voulu : **on n'édite
  * pas des attributs en masse**. Le corps retomberait sinon sur les valeurs d'un
  * objet arbitraire, qu'on croirait appliquer à tous.
  *
@@ -52,14 +52,14 @@ export const ONGLET_FICHE = 'Fiche';
 /**
  * Les onglets de la fiche d'un objet.
  *
- * > **Un onglet par formulaire**, et `Attributs` en est un : c'est le formulaire
+ * > **Un onglet par formulaire**, et `Fiche` en est un : c'est le formulaire
  * > déduit des colonnes de la table de la couche. Le tenir à part en aurait
  * > fait une exception, alors qu'il fait la même chose que les autres — rendre
  * > un FormDef. La liste des formulaires décide donc du nombre d'onglets, et
  * > l'ordre ne varie pas : le premier fait toujours la même chose.
  * >
  * > Le libellé vient de `libelleFormulaire` : un formulaire enregistré porte
- * > **son nom**, pas « Attributs » — l'afficher ainsi effacerait ce que son
+ * > **son nom**, pas « Fiche » — l'afficher ainsi effacerait ce que son
  * > auteur a écrit.
  *
  * Deux exclusions, chacune pour une raison :
@@ -83,7 +83,10 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
   // Hors édition, seuls les formulaires publiés ont un onglet : « Voir la fiche » tombait sur le formulaire de visite, le même
   // qu'ouvre « Nouvelle visite ». La fiche en consultation est un onglet à part, **après** les formulaires — celui d'un toucher
   // pour relever reste le premier. Sans formulaire, le corps de la fiche montre déjà les attributs : pas d'onglet seul.
-  if (consultation && (!multi || revue) && tabs.length) tabs.push({ cle: ONGLET_FICHE, libelle: ONGLET_FICHE, formulaire: null });
+  // Une Fiche **modifiable** (le formulaire de l'objet, proposé sur le terrain) tient déjà cette place : lui ajouter l'onglet de
+  // consultation ferait deux « Fiche » côte à côte.
+  const ficheDejaLa = tabs.some((t) => t.libelle === ONGLET_FICHE);
+  if (consultation && (!multi || revue) && tabs.length && !ficheDejaLa) tabs.push({ cle: ONGLET_FICHE, libelle: ONGLET_FICHE, formulaire: null });
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
   // Les paramètres du type de l'objet : seulement s'il en a. Sur une sélection multiple, jamais — sauf en
   // revue, où un curseur désigne un seul objet (comme pour l'onglet des attributs).

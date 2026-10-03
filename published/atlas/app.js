@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.11.0';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.12.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.11.0';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.11.0';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.11.0';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.12.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.12.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.12.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.11.0';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.11.0';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.11.0';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.11.0';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.11.0';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.11.0';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.11.0';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.11.0';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.11.0';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.11.0';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.11.0';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.11.0';
+} from './lib/parametres-objet.js?v=1.12.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.12.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.12.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.12.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.12.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.12.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.12.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.12.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.12.0';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.12.0';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.12.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.12.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,61 +36,61 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.11.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.11.0';
+} from './lib/scene-loader.js?v=1.12.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.12.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
   raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
-  gesteDEnregistrement, idFormulaireLibre,
+  gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.11.0';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.11.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.11.0';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.11.0';
+} from './lib/fiche-formulaire.js?v=1.12.0';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.12.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.12.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.12.0';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.11.0';
+} from './lib/classes.js?v=1.12.0';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.11.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.11.0';
+} from './lib/grappes.js?v=1.12.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.12.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.11.0';
+} from './lib/layer-order.js?v=1.12.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.11.0';
+} from './lib/table-reference.js?v=1.12.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.11.0';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.11.0';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.11.0';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.11.0';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.11.0';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.11.0';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.11.0';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.11.0';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.11.0';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.11.0';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.11.0';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.11.0';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.11.0';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.11.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.11.0';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.11.0';
+} from './lib/bulle-objet.js?v=1.12.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.12.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.12.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.12.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.12.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.12.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.12.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.12.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.12.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.12.0';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.12.0';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.12.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.12.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.12.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.12.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.12.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.11.0';
+} from './lib/terrain-base.js?v=1.12.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -108,16 +108,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.11.0';
+} from './lib/grist-sync.js?v=1.12.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.11.0';
+} from './lib/nouvelle-couche.js?v=1.12.0';
+import {
+  TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
+  phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale,
+} from './lib/champ-formulaire.js?v=1.12.0';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.11.0';
+} from './lib/saisie-objet.js?v=1.12.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -125,7 +129,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.11.0';
+} from './lib/geometrie-saisie.js?v=1.12.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -137,14 +141,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.11.0';
+} from './lib/declarative-style.js?v=1.12.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.11.0';
+} from './lib/geo-tables.js?v=1.12.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -169,14 +173,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.11.0';
+} from './lib/controls.js?v=1.12.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.11.0';
+} from './lib/story.js?v=1.12.0';
 import {
   copieLineaire,
   estLineaire,
@@ -198,11 +202,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.11.0';
+} from './lib/trajet.js?v=1.12.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.11.0';
+} from './lib/manifest-binding.js?v=1.12.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -213,7 +217,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.11.0';
+} from './lib/viewport.js?v=1.12.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -228,30 +232,30 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.11.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.11.0';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.11.0';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.11.0';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.11.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.11.0';
+} from './lib/view-mode.js?v=1.12.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.12.0';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.12.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.12.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.12.0';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.12.0';
 import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.11.0';
+} from './lib/habillage-carte.js?v=1.12.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.11.0';
+} from './lib/viewer-controls.js?v=1.12.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.11.0';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.11.0';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.11.0';
+} from './lib/scene-prefs.js?v=1.12.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.12.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.12.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -7056,12 +7060,20 @@ function renderControles() {
  * deux choses qu'un auteur configure *pour le lecteur*. Un formulaire
  * disponible hors edition est de la meme nature.
  *
- * ## Ce qu'il ne fait pas
+ * ## Ce qu'il fait, et ce qu'il ne fait pas
  *
- * **Il ne cree aucun formulaire.** Atlas n'en livre pas non plus. Un formulaire
- * derive n'existe nulle part : il se deduit des colonnes a chaque ouverture, et
- * rien n'est ecrit tant que personne ne l'ajuste. Definir appartient au
- * generateur, materialiser une table a `ensure-schema`.
+ * **Atlas ne livre aucun formulaire et n'en cree jamais de lui-meme.** Un
+ * formulaire derive n'existe nulle part : il se deduit des colonnes a chaque
+ * ouverture, et rien n'est ecrit tant que personne ne l'ajuste.
+ *
+ * Deux gestes explicites donnent pourtant aux couches les champs qui leur
+ * manquent (`lib/champ-formulaire.js`) : **« + Ajouter un champ »** cree une
+ * colonne (nom, type, choix) dans la table du formulaire, et **« + Relevé lié »**
+ * cree une table qui reference la couche, avec ses champs. Le formulaire derive
+ * les reprend tout seul ; seul un formulaire deja enregistre recoit le champ dans
+ * sa definition. Les formulaires natifs de Grist, eux, se reglent dans Grist.
+ * Definir en detail (conditions, audiences, pages) appartient au generateur,
+ * materialiser une table a `ensure-schema`.
  */
 function renderFormulaires() {
     $('module-title').textContent = 'Formulaires';
@@ -7075,7 +7087,7 @@ function renderFormulaires() {
     }
 
     const couches = STATE.layers.filter((l) => l.sourceTable);
-    let html = `<p class="fm-intro">Ce que la fiche d’un objet propose, couche par couche. Un formulaire activé s’ouvre aussi hors édition, en onglet sur l’objet.</p>`;
+    let html = `<p class="fm-intro">Ce que l’équipe peut saisir, couche par couche. Un formulaire « sur le terrain » s’ouvre en onglet sur l’objet, en Exploiter.</p>`;
 
     if (!couches.length) {
         body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.formulaire, 40)}</div>
@@ -7115,9 +7127,22 @@ function blocCoucheFormulaires(couche) {
     const formulaires = formulairesEnPlace(tous);
     const retires = tous.filter((f) => f.retire);
     const nb = (couche.geojson?.features?.length) || 0;
+    // Deux créations, dans l'en-tête de la couche : un champ pour la fiche (une colonne de la table de l'objet), et un
+    // formulaire qui ajoute une ligne. Elles ne dépendent d'aucune ligne de la liste, donc ne disparaissent pas avec elle.
+    const fiche = tous.find((f) => f.surLaCouche) || null;
+    const actions = schemaModifiable()
+        ? `<div class="fm-entete-actions">${fiche
+            ? `<button type="button" class="fm-mini" onclick="A.ouvrirAjoutChamp('${chaineJs(couche.id)}','${chaineJs(fiche.id)}')"
+                title="Ajouter un champ à la fiche : une colonne de la table ${escapeHtml(couche.sourceTable)}">+ Champ</button>` : ''}
+            <button type="button" class="fm-mini" onclick="A.ouvrirReleveLie('${chaineJs(couche.id)}')"
+                title="Créer un formulaire qui ajoute une ligne, rattachée à un objet de cette couche">+ Formulaire</button></div>`
+        : '';
     const entete = `<div class="fm-entete">
-            <span class="fm-couche" title="${escapeHtml(couche.name)}">${escapeHtml(couche.name)}</span>
-            <span class="fm-table">${escapeHtml(couche.sourceTable)}${nb ? ` · ${nb} obj.` : ''}</span>
+            <div class="fm-entete-titre">
+                <span class="fm-couche" title="${escapeHtml(couche.name)}">${escapeHtml(couche.name)}</span>
+                <span class="fm-table">${escapeHtml(couche.sourceTable)}${nb ? ` · ${nb} obj.` : ''}</span>
+            </div>
+            ${actions}
         </div>`;
 
     if (!tous.length) {
@@ -7134,23 +7159,17 @@ function blocCoucheFormulaires(couche) {
         return `<div class="fm-groupe"><div class="fm-groupe-titre">${titre}</div>${contenu}</div>`;
     };
 
-    const surLaCouche = formulaires.filter((f) => f.surLaCouche);
-    const liees = formulaires.filter((f) => !f.surLaCouche);
     // Ce qui sera vraiment proposé, pas ce qui est coché : un dérivé peut
     // figurer dans la liste enregistrée — d'une version antérieure, ou d'un
     // clic d'avant qu'il perde sa bascule — sans pouvoir être offert.
     const exposes = offertsEnLecture(formulaires).length;
 
     return `<section class="fm-carte">${entete}
-        ${groupe('Corriger l’objet', surLaCouche)}
-        ${groupe('Ajouter une ligne', liees, {
-            texte: 'Aucune table liée.',
-            detail: `Une table avec une colonne Ref: vers ${couche.sourceTable} apparaîtrait ici.`,
-        })}
-        ${retires.length ? `<div class="fm-groupe fm-retires"><div class="fm-groupe-titre">Retirés de la couche</div>${retires.map((f) => ligneRetiree(couche, f, esc)).join('')}</div>` : ''}
+        ${groupe('Formulaires', formulaires)}
+        ${retires.length ? `<div class="fm-groupe fm-retires"><div class="fm-groupe-titre">Masqués sur cette couche</div>${retires.map((f) => ligneRetiree(couche, f, esc)).join('')}</div>` : ''}
         <div class="fm-pied${exposes ? ' on' : ''}">${exposes
-            ? `Hors édition : <strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet${exposes > 3 ? ' — la barre défilera' : ''}`
-            : 'Hors édition : rien de proposé, la fiche reste en consultation'}</div>
+            ? `Sur le terrain : <strong>${exposes}</strong> onglet${exposes > 1 ? 's' : ''} sur l’objet${exposes > 3 ? ' — la barre défilera' : ''}`
+            : 'Sur le terrain : rien de proposé, la fiche reste en consultation'}</div>
     </section>`;
 }
 
@@ -7165,45 +7184,58 @@ function ligneFormulaire(couche, f, esc, tous = []) {
     // Un formulaire de Grist se règle dans Grist : on dit d'où il vient, et
     // qu'il suit ce qu'on y change.
     const origine = f.source === 'grist' ? 'formulaire Grist' : libelleStatut(f.statut);
+    const n = nbChamps(f);
+    const champsTxt = `${n} champ${n > 1 ? 's' : ''}`;
+    // Une table liée qui est aussi une couche (des lignes situées sur la carte) : l'étiquette le dit.
+    const coucheLiee = f.surLaCouche === false && STATE.layers.some((x) => x.sourceTable === f.tableId && x.kind === 'table');
+    // La fiche déduite n'a pas de bascule : sur le terrain, elle ne s'ouvre qu'en consultation. On le dit, plutôt que de
+    // laisser chercher pourquoi elle ne se propose pas.
     const detail = f.surLaCouche
-        ? (f.derive ? `déduit des colonnes · ${nbChamps(f)} champ${nbChamps(f) > 1 ? 's' : ''}` : `${origine}${f.version ? ` · v${f.version}` : ''}`)
-        : `→ ${f.tableId} · par <code>${f.via}</code>${f.derive ? ' · déduit' : ` · ${origine}`}`;
+        ? (f.derive ? `${champsTxt} · lecture seule sur le terrain` : `${champsTxt} · ${origine}${f.version ? ` · v${f.version}` : ''}`)
+        : `${champsTxt} · table <code>${escapeHtml(f.tableId)}</code>${f.derive ? '' : ` · ${origine}`}`;
 
     const geste = gesteDEnregistrement(f, STATE.formulaires);
+    // Ce qui est offert sur le terrain d'un formulaire de l'objet, c'est de le **modifier** ; d'un formulaire qui ajoute
+    // une ligne, de la saisir.
+    const libTerrain = f.surLaCouche ? 'Modifiable sur le terrain' : 'Sur le terrain';
+    const bascule = (clic, actif) => `<div class="fm-terrain" role="switch" tabindex="0" aria-checked="${actif}"
+            aria-label="${echapper(libTerrain)} : ${echapper(f.titre)}"
+            title="S’ouvre en onglet sur l’objet, en Exploiter"
+            onclick="${clic}"
+            onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();this.click()}"><div class="toggle ${actif ? 'on' : ''}"></div><span>${libTerrain}</span></div>`;
+    // Un formulaire déduit n'existe pas en base, donc ne peut pas être proposé : l'activer l'enregistre d'abord, en un
+    // seul geste (avant, « Composer » puis une bascule).
     const commande = geste
-        ? `<button class="btn btn-soft fm-commande"
-            onclick="A.enregistrerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}')"
-            title="${geste.verbe === 'composer' ? 'Créer un formulaire à partir de ces colonnes' : 'L’enregistrer pour pouvoir le proposer'}">${geste.libelle}</button>`
-        : `<div class="toggle ${f.expose ? 'on' : ''}" role="switch" tabindex="0"
-            aria-checked="${f.expose}"
-            aria-label="Proposer ${echapper(f.titre)} hors édition"
-            title="Proposé hors édition"
-            onclick="A.exposerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}')"></div>`;
+        ? bascule(`A.activerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}')`, false)
+        : bascule(`A.exposerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}')`, f.expose);
 
     // Le dernier formulaire en place ne se retire pas : l'objet n'aurait plus
     // de fiche. La raison est dite des qu'il y a eu un choix — une couche qui
-    // n'a jamais porte que `Attributs` garde sa ligne telle qu'avant.
+    // n'a jamais porte que `Fiche` garde sa ligne telle qu'avant.
     const garde = raisonNonRetirable(f, tous);
     const retirer = !garde
         ? `<button type="button" class="fm-lien" onclick="A.retirerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}', true)"
-            title="Ne plus proposer ce formulaire sur cette couche — rien n’est effacé">Retirer</button>`
+            title="Ne plus proposer ce formulaire sur cette couche — rien n’est effacé">Masquer sur cette couche</button>`
         : (tous.length > 1
             ? `<span title="Retirer est impossible : l’objet n’aurait plus de fiche">${escapeHtml(garde)}</span>`
             : '');
 
     return `<div class="fm-ligne">
         <div class="fm-ligne-tete">
-            <span class="fm-nom">${echapper(libelleFormulaire(f))}</span>
+            <span class="fm-nom">${echapper(libelleFormulaire(f))} <span class="fm-etiq ${f.surLaCouche ? 'modifie' : 'ajoute'}">${f.surLaCouche ? 'modifie l’objet' : 'ajoute une ligne'}</span>${coucheLiee ? ' <span class="fm-etiq geo" title="Cette table est aussi une couche : ses lignes s’affichent sur la carte">couche liée</span>' : ''}</span>
             ${commande}
         </div>
-        <div class="fm-detail">${detail}${retirer ? ` · ${retirer}` : ''}</div>
+        <div class="fm-detail">${detail}${retirer ? ` · ${retirer}` : ''}${geste && f.surLaCouche ? ` · <button type="button" class="fm-lien"
+            onclick="A.enregistrerFormulaire('${chaineJs(couche.id)}','${chaineJs(f.id)}')"
+            title="Créer une copie de la fiche, à régler à part (champs montrés, valeurs par défaut)">Créer une variante</button>` : ''}</div>
         ${cadreDesChamps(couche, f, esc)}
+        ${boutonAjoutChamp(couche, f)}
     </div>`;
 }
 
 /** Un formulaire retiré : son nom, et le geste qui le remet. */
 function ligneRetiree(couche, f, esc) {
-    const cible = f.surLaCouche ? 'corriger l’objet' : `ajouter à ${escapeHtml(f.tableId)}`;
+    const cible = f.surLaCouche ? 'modifie l’objet' : `ajoute une ligne · ${escapeHtml(f.tableId)}`;
     return `<div class="fm-ligne fm-ligne-retiree">
         <div class="fm-ligne-tete">
             <span class="fm-nom">${echapper(libelleFormulaire(f))}</span>
@@ -7254,8 +7286,8 @@ function cadreDesChamps(couche, f, esc) {
         const possibles = departsPossibles(typeDe.get(c.colId), { lie: true, moi: moiPossible(typeDe.get(c.colId)) });
         if (possibles.length < 2) return '';
         const actuel = departs[c.colId] || 'vide';
-        return `<select class="fm-depart${actuel !== 'vide' ? ' on' : ''}" aria-label="Valeur de départ de ${echapper(c.label)}"
-            title="Valeur de départ, à l’ouverture du formulaire"
+        return `<select class="fm-depart${actuel !== 'vide' ? ' on' : ''}" aria-label="Valeur par défaut de ${echapper(c.label)}"
+            title="Valeur par défaut, à l’ouverture du formulaire"
             onchange="A.reglerDepart('${chaineJs(couche.id)}','${chaineJs(f.id)}','${chaineJs(c.colId)}', this.value)">
             ${possibles.map((d) => `<option value="${d}"${d === actuel ? ' selected' : ''}>${LIBELLES_DEPART[d]}</option>`).join('')}
         </select>`;
@@ -7287,6 +7319,124 @@ function cadreDesChamps(couche, f, esc) {
         <summary>Champs montrés · ${montres} sur ${champs.length}${nbPreremplis ? ` · ${nbPreremplis} prérempli${nbPreremplis > 1 ? 's' : ''}` : ''}</summary>
         <div class="fm-champs-liste">${lignes}</div>
     </details>`;
+}
+
+/**
+ * Créer un champ, ou un relevé lié (lib/champ-formulaire.js).
+ *
+ * Composer un formulaire voulait dire choisir parmi les colonnes que la table avait déjà. Ces deux gestes donnent à
+ * une couche neuve, ou à un relevé, les champs qu'elle n'avait pas : un nom, un type, des choix — et la colonne naît.
+ *
+ * Les formulaires dérivés se recalculent depuis le schéma : un champ ajouté y paraît sans rien écrire de plus, et une
+ * table qui référence la couche paraît toute seule sous « Ajouter une ligne ». Seuls un formulaire déjà enregistré
+ * (on y ajoute le champ) et un relevé qu'on veut proposer hors édition (il faut l'enregistrer) demandent une écriture
+ * dans `Formulaires`.
+ */
+const _champ = { layerId: null, formId: null, libelle: '', typeId: 'texte', choix: '', requis: false, requisPossible: true, erreur: '', enCours: false };
+const _releve = {
+    layerId: null, nom: '', expose: true, champs: [], geometrie: null, sources: ['carte'],
+    libelle: '', typeId: 'texte', choix: '', requis: false, erreur: '', enCours: false,
+};
+
+/** Peut-on créer des colonnes ici : un document ou une scène sur l'appareil, en écriture. */
+function schemaModifiable() {
+    return !!CONFIG.grist.ready && canWrite(CONFIG.viewMode);
+}
+
+/** Le bouton sous un formulaire : pas pour un formulaire natif de Grist, qui se règle dans Grist. */
+function boutonAjoutChamp(couche, f) {
+    if (!schemaModifiable() || f.source === 'grist') return '';
+    // La fiche a son « + Champ » dans l'en-tête de la couche.
+    const fiche = formulairesDeLaCouche(couche, { avecRetires: true }).find((x) => x.surLaCouche);
+    if (fiche && fiche.id === f.id) return '';
+    return `<div class="fm-ajout"><button type="button" class="btn btn-soft fm-commande"
+        onclick="A.ouvrirAjoutChamp('${chaineJs(couche.id)}','${chaineJs(f.id)}')"
+        title="Créer un champ : la colonne est ajoutée à la table ${escapeHtml(f.tableId)}">+ Ajouter un champ</button></div>`;
+}
+
+/** Libellé, type et choix : la saisie d'un champ, la même pour « Ajouter un champ » et pour un relevé. */
+function htmlSaisieChamp(espace, d) {
+    const type = typeChamp(d.typeId);
+    return `<label class="input-label" for="${espace}-libelle">Nom du champ</label>
+        <input class="input" id="${espace}-libelle" maxlength="80" placeholder="Hauteur du fût (m)" value="${escapeHtml(d.libelle)}"
+            oninput="A.champSaisie('${espace}','libelle',this.value)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();A.champValider('${espace}')}">
+        <label class="input-label" for="${espace}-type" style="margin-top:10px">Type</label>
+        <select class="input" id="${espace}-type" onchange="A.champSaisie('${espace}','typeId',this.value,true)">
+            ${TYPES_CHAMP.map((t) => `<option value="${t.id}"${t.id === d.typeId ? ' selected' : ''}>${escapeHtml(t.libelle)}</option>`).join('')}
+        </select>
+        ${type?.choix ? `<label class="input-label" for="${espace}-choix" style="margin-top:10px">Choix possibles, un par ligne</label>
+        <textarea class="input" id="${espace}-choix" rows="4" placeholder="Bon&#10;Moyen&#10;Mauvais"
+            oninput="A.champSaisie('${espace}','choix',this.value)">${escapeHtml(d.choix)}</textarea>` : ''}
+        ${d.requisPossible === false ? '' : `<label class="fm-case"><input type="checkbox" id="${espace}-requis" ${d.requis ? 'checked' : ''}
+            onchange="A.champSaisie('${espace}','requis',this.checked)"> Champ obligatoire</label>`}`;
+}
+
+/**
+ * Crée la table d'un formulaire à géométrie **comme une couche** : la table, sa ligne d'inventaire et sa ligne d'apparence
+ * en une seule transaction (c'est ce que fait « Nouvelle couche »), puis la monte sur la carte. Elle porte déjà, dans son
+ * apparence, ce que l'auteur a permis : l'ajout en Exploiter, et les façons de poser le point.
+ *
+ * @returns {Promise<string>} le nom réel de la table (Grist peut en prendre un autre)
+ */
+async function creerCoucheLiee(plan, tables) {
+    const layer = makeLayer(plan.titre, plan.geometrie, { type: 'FeatureCollection', features: [] }, null, null);
+    layer.kind = 'table';
+    layer.sourceTable = plan.tableId;
+    layer.geometryColumn = colonneGeometrieNouvelleCouche(plan.geometrie);
+    layer.source = 'grist-table';
+    layer.controls = [];
+    initSymbolization(layer).creation = { exploiter: true, sources: plan.sources };
+    const { actions, indices } = actionsNouvelleCouche({
+        tableId: plan.tableId, type: plan.geometrie, tables, colonnes: plan.colonnes,
+        inventaire: ligneInventaire(layer), prefs: lignePrefs(layer),
+        schemas: { maquette: TABLE_SCHEMAS.Maquette_Layers, prefs: ATLAS_PREFS_SCHEMA },
+    });
+    const r = await grist.docApi.applyUserActions(actions);
+    const cree = lireCreation(r?.retValues, indices, plan.tableId);
+    layer.gristId = cree.gristId;
+    layer._prefRowId = cree.prefRowId;
+    _maquetteTablePrete = true;
+    if (cree.renommee) {
+        // Grist a pris un autre nom : l'inventaire et l'apparence doivent pointer la table réelle.
+        layer.sourceTable = cree.tableId;
+        const suite = [];
+        if (cree.gristId) suite.push(['UpdateRecord', 'Maquette_Layers', cree.gristId, ligneInventaire(layer)]);
+        if (cree.prefRowId) suite.push(['UpdateRecord', 'Atlas_LayerPrefs', cree.prefRowId, lignePrefs(layer)]);
+        if (suite.length) await grist.docApi.applyUserActions(suite);
+    }
+    STATE.layers.splice(insertionIndex(STATE.layers, layer.geometryType), 0, layer);
+    addLayerToMap(layer);
+    updateRailBadge();
+    return layer.sourceTable;
+}
+
+/**
+ * Enregistre un formulaire neuf dans `Formulaires` — publié et proposé sur le terrain si on le veut, brouillon sinon.
+ *
+ * C'est le geste « Enregistrer », fait à la création : la définition porte ce que la table ne dit pas (les champs
+ * obligatoires). Proposé, il rejoint aussi les formulaires que la couche offre, comme `exposerFormulaire` le fait.
+ */
+async function enregistrerNouveauFormulaire(couche, plan, tables, { expose = false } = {}) {
+    const T = window.FormulairesTable;
+    const D = window.FormDefFromTable;
+    if (!T || !D) throw new Error('Module formulaires indisponible');
+    if (!tables.includes('Formulaires')) await grist.docApi.applyUserActions(T.planCreateFormulairesTable());
+    await chargerFormulaires();
+    const def = defPourReleve(plan, D, { id: idFormulaireLibre(plan.tableId, STATE.formulaires) });
+    if (!def) throw new Error('Définition du formulaire introuvable');
+    const champs = T.rowFromFormDef(def, { statut: expose ? 'publie' : 'brouillon', version: 1 });
+    const colonnes = {};
+    for (const [k, v] of Object.entries(champs)) colonnes[k] = [v];
+    await grist.docApi.applyUserActions([['BulkAddRecord', 'Formulaires', [null], colonnes]]);
+    await chargerFormulaires();
+    if (!expose) return;
+    // Comme `exposerFormulaire` : on repart des seuls formulaires enregistrés déjà proposés, et on garde les autres réglages.
+    const avant = reglagesFormulaire(couche);
+    const exposes = new Set(formulairesDeLaCouche(couche).filter((f) => f.expose && !f.derive).map((f) => f.id));
+    exposes.add(def.id);
+    couche.formulaire = { fiche: avant.fiche, exposes: [...exposes], masques: avant.masques, retires: avant.retires, departs: avant.departs };
+    await saveLayerToGrist(couche, true);
 }
 
 /** Combien de champs un formulaire porte — ce que « dérivé » recouvre. */
@@ -9420,7 +9570,7 @@ let _formulaireMonte = false;
  */
 function enteteSansTable(layer, view) {
     const peut = peutPasserEnTable(layer, { lecture: !!view, grist: CONFIG.grist.ready });
-    const msg = '<div class="hint" style="margin-bottom:10px">Attributs en lecture seule — '
+    const msg = '<div class="hint" style="margin-bottom:10px">Fiche en lecture seule — '
         + 'les objets de cette couche ne sont pas des lignes Grist.</div>';
     if (!peut) return msg;
     const n = layer.geojson.features.length;
@@ -9992,10 +10142,92 @@ function quitterSaisieObjet(message) {
         const [idx] = rangsDepuisRowIds(layer.geojson?.features, [s.modification.rowId]);
         if (idx != null) enterSelectionMode(layer.id, idx);
         else renderInspector();
+    } else if (s?.parent) {
+        // Une ligne qu'on ajoutait à un objet : on revient à sa fiche, sur l'onglet qu'on avait quitté.
+        retourAuParent(s.parent);
     } else {
         renderInspector();
     }
     if (message) showToast(message, 'info');
+}
+
+/** La fiche de l'objet auquel on ajoutait une ligne, rouverte sur le même onglet. */
+function retourAuParent(p) {
+    const layer = STATE.layers.find((l) => l.id === p?.layerId);
+    if (!layer) { renderInspector(); return; }
+    const [idx] = rangsDepuisRowIds(layer.geojson?.features, [p.rowId]);
+    if (p.onglet) _inspObjTab = p.onglet;
+    if (idx != null) enterSelectionMode(layer.id, idx);
+    else renderInspector();
+}
+
+/**
+ * Une table liée à l'objet qui est aussi une couche (points, lignes ou surfaces) : le formulaire pose d'abord la forme, puis remplit.
+ * `null` si ce formulaire n'est pas dans ce cas — ou si le document n'en permet pas l'ajout ici.
+ */
+function coucheFilleGeo(f) {
+    if (!f || f.surLaCouche !== false) return null;
+    const l = STATE.layers.find((x) => x.sourceTable === f.tableId && x.kind === 'table' && x.geometryColumn
+        && ['Point', 'LineString', 'Polygon'].includes(familleGeometrie(x.geometryType)));
+    return l && creationPossible(l, contexteCreation(l)).ok ? l : null;
+}
+
+/**
+ * Les façons de poser la forme que l'auteur a permises pour cette couche, celles que cet appareil et cet objet permettent :
+ * la position de l'appareil demande une localisation, et la forme de l'objet ne se reprend que si elle est de la même famille.
+ */
+function sourcesPermises(fille, objet) {
+    const famille = familleGeometrie(fille?.geometryType);
+    const voulues = sourcesRetenues(fille?.style?.symbolization?.creation?.sources, famille);
+    const sources = voulues.length ? voulues : ['carte'];
+    return sources.filter((s) => {
+        if (s === 'position') return typeof navigator !== 'undefined' && !!navigator.geolocation && localisationDisponible();
+        if (s === 'centre') {
+            // Un point : le centre de l'objet, s'il en a un. Une ligne ou une surface : sa forme même, simple et de la même famille
+            // (les géométries multiples ne se saisissent pas encore).
+            const g = objet?.geometry;
+            if (!g) return false;
+            return famille === 'Point' ? !!featureCentroid(objet) : (!/^Multi/.test(g.type) && familleGeometrie(g.type) === famille);
+        }
+        return true;
+    });
+}
+
+/** La position de l'appareil, une fois : celle qu'une pastille de suivi a déjà retenue, sinon on la demande. */
+function positionAppareil() {
+    return new Promise((resolve) => {
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            showToast('La position de l’appareil n’est pas disponible ici', 'warning');
+            resolve(null);
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (p) => resolve({ lng: p.coords.longitude, lat: p.coords.latitude }),
+            (e) => { showToast('Position indisponible : ' + (e?.message || 'refusée'), 'warning'); resolve(null); },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        );
+    });
+}
+
+let _departGeo = null;   // { parentLayerId, rowId, formulaireId, filleId } : de quoi démarrer la saisie depuis l'onglet affiché
+
+/** L'onglet d'un formulaire qui pose une position : les façons de la poser, avant tout champ. */
+function monterDepartGeo(layer, props, formulaire, fille) {
+    const hote = $('insp-body');
+    const rowId = props?._row_id;
+    _formulaireMonte = true;
+    if (rowId == null) {
+        hote.innerHTML = '<div class="hint">Objet sans ligne Grist — formulaire indisponible.</div>';
+        return;
+    }
+    _departGeo = { parentLayerId: layer.id, rowId, formulaireId: formulaire.id, filleId: fille.id };
+    const famille = familleGeometrie(fille.geometryType);
+    const objet = (layer.geojson?.features || []).find((x) => x.properties?._row_id === rowId);
+    const permises = sourcesPermises(fille, objet);
+    const boutons = (permises.length ? permises : ['carte']).map((s, i) => `<button type="button" class="btn ${i === 0 ? 'btn-primary' : 'btn-soft'} btn-full" style="margin-top:8px"
+        onclick="A.nouvelleLigneGeo('${s}')">${escapeHtml(libelleSource(s, famille))}</button>`).join('');
+    hote.innerHTML = `<div class="hint">« ${echapper(formulaire.titre)} » ajoute une ligne à cet objet. On pose d’abord ${famille === 'Point' ? 'sa position' : 'sa forme'}, puis on remplit.
+        Rien n’est écrit avant l’envoi.</div>${boutons}`;
 }
 
 /** Le message d'abandon, selon ce qu'on abandonnait. */
@@ -10027,7 +10259,37 @@ function onSaisieClic(e) {
     const layer = STATE.layers.find((l) => l.id === s?.layerId);
     if (!layer) { quitterSaisieObjet(); return; }
     if (familleGeometrie(layer.geometryType) !== 'Point') return;
-    const p = pointDepuisClic(e.lngLat);
+    poserPointSaisie(e.lngLat);
+}
+
+/**
+ * Pose une ligne ou une surface déjà connue (celle de l'objet parent) comme forme de la saisie en cours. Si elle ne convient pas à la
+ * couche, on le dit et le tracé s'arme : l'agent peut la dessiner.
+ */
+function poserFormeSaisie(geom) {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    if (!layer) { quitterSaisieObjet(); return; }
+    const v = formeValidee(geom, layer.geometryType);
+    const cellules = v.ok ? cellulesPourCouche(layer, v.geometrie) : null;
+    if (!v.ok || !cellules) {
+        showToast(v.ok ? 'Cette forme ne peut pas s’écrire dans les colonnes de la couche.' : v.erreur, 'warning');
+        demarrerTrace(s, layer);
+        return;
+    }
+    s.geometrie = v.geometrie;
+    s.creation.cellules = cellules;
+    renderSaisieObjet();
+    ficheCedee = false;
+    openInspectorPanel();
+}
+
+/** Pose le point de la saisie en cours — par un clic, par la position de l'appareil ou par le centre de l'objet parent. */
+function poserPointSaisie(lngLat) {
+    const s = _saisieObjet;
+    const layer = STATE.layers.find((l) => l.id === s?.layerId);
+    if (!layer) { quitterSaisieObjet(); return; }
+    const p = pointDepuisClic(lngLat);
     if (!p.ok) { showToast(p.erreur, 'warning'); return; }
     const cellules = cellulesPourCouche(layer, p.geometrie);
     if (!cellules) { showToast('Ce point ne peut pas s’écrire dans les colonnes de la couche.', 'error'); return; }
@@ -10063,7 +10325,7 @@ function renderSaisieObjet() {
     else sous = libelleMesures(mesurerGeometrie(g || formeEnCours(s)), famille);
     $('insp-head').innerHTML = `
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${escapeHtml(layer.name)}</div>
-        <div class="insp-title">Nouvel objet</div>
+        <div class="insp-title">${s.parent ? echapper(titreSaisieLiee(s)) : 'Nouvel objet'}</div>
         <div class="insp-sub">${sous}</div>
         ${bandeauSerie(s)}`;
     $('insp-tabs').innerHTML = '';
@@ -10101,8 +10363,22 @@ function renderSaisieObjet() {
     const rappel = famille === 'Point'
         ? `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Cliquez ailleurs sur la carte pour déplacer le point.</div>`
         : `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Forme prête. « Retracer » la recommence sans vider la fiche.</div>`;
-    const formulaire = formulairesDeLaCouche(layer).find((f) => f.surLaCouche !== false && f.def) || null;
+    // Une ligne ajoutée à un objet : le formulaire est celui que la fiche de l'objet proposait (sa table, ses champs, ses valeurs
+    // par défaut), pas la fiche de la couche des lignes.
+    const parentCouche = s.parent ? STATE.layers.find((l) => l.id === s.parent.layerId) : null;
+    const formulaire = s.parent
+        ? (parentCouche ? formulairesDeLaCouche(parentCouche).find((f) => f.id === s.parent.formulaireId) : null) || null
+        : formulairesDeLaCouche(layer).find((f) => f.surLaCouche !== false && f.def) || null;
     const formDef = formulaire ? formDefCadre(formulaire.def, formulaire.masques) : null;
+    if (formDef && nbChampsDef(formDef) && moteurDisponible() && s.parent) {
+        hote.innerHTML = rappel;
+        hote.dataset.saisie = s.jeton;
+        hote.classList.toggle('forme-mono-etape', (formDef.sections || []).length <= 1);
+        s.formulaireMonte = true;
+        $('insp-foot').innerHTML = abandonner + outils;
+        monterSaisieLiee(s, layer, hote, formulaire, formDef);
+        return;
+    }
     if (formDef && nbChampsDef(formDef) && moteurDisponible()) {
         hote.innerHTML = rappel;
         hote.dataset.saisie = s.jeton;
@@ -10222,6 +10498,73 @@ async function apresCreationObjet(layer, rowId) {
     A.nouvelObjet(layer.id, { suite: { rowId, table: layer.sourceTable, serie } });
 }
 
+/** Le titre de la saisie d'une ligne ajoutée à un objet : « Nouveau » et le nom du formulaire. */
+function titreSaisieLiee(s) {
+    const parent = STATE.layers.find((l) => l.id === s?.parent?.layerId);
+    const f = parent && formulairesDeLaCouche(parent).find((x) => x.id === s.parent.formulaireId);
+    return `Nouveau · ${f?.titre || 'ligne'}`;
+}
+
+/**
+ * Monte le formulaire d'une ligne ajoutée à un objet, une fois la position posée. Les valeurs par défaut (la date du jour, la
+ * dernière saisie…) peuvent demander une lecture : on la fait avant le premier rendu, le moteur ne relit pas ses valeurs.
+ */
+function monterSaisieLiee(s, layer, hote, formulaire, formDef) {
+    const bloc = document.createElement('div');
+    hote.appendChild(bloc);
+    bloc.innerHTML = '<div class="hint">Préparation du formulaire…</div>';
+    const monter = ({ valeurs, preremplis }) => {
+        if (_saisieObjet !== s || !bloc.isConnected) return;   // abandonné pendant la lecture
+        bloc.innerHTML = '';
+        if (preremplis.length) {
+            const note = document.createElement('div');
+            note.className = 'releve-prerempli';
+            note.textContent = phrasePreremplis(preremplis);
+            bloc.before(note);
+        }
+        try {
+            window.FormEngine.mount(bloc, formDef, pontFormulaire({
+                couche: layer,
+                rowId: s.parent.rowId,
+                docApi: grist.docApi,
+                formulaire,
+                valeurs,
+                creation: s.creation,
+                peutEcrire: () => canWrite(CONFIG.viewMode) || postureDepuis(CONFIG) === 'exploiter',
+                signaler: (msg, ok) => showToast(msg, ok ? 'success' : 'error'),
+                apresEcriture: (_id, data) => { apresCreationLiee(s, formulaire, data); },
+            }));
+        } catch (e) {
+            console.error('[Atlas création liée] mount', e);
+            bloc.innerHTML = `<div class="hint">Formulaire indisponible : ${escapeHtml(e.message)}</div>`;
+        }
+    };
+    departsDuReleve(formulaire, formDef, s.parent.rowId)
+        .catch(() => ({ valeurs: {}, preremplis: [] }))
+        .then(monter);
+}
+
+/** Après l'envoi : retenir la saisie pour la prochaine, relire la couche des lignes, et revenir à la fiche de l'objet. */
+async function apresCreationLiee(s, formulaire, data) {
+    const fille = STATE.layers.find((l) => l.id === s.layerId);
+    const parent = s.parent;
+    retenirSaisie(formulaire, data);
+    _lignesReference.delete(formulaire.tableId);
+    arreterTrace(_saisieObjet);
+    _saisieObjet = null;
+    effacerSaisie();
+    document.body.classList.remove('mode-creation');
+    if (map) map.getCanvas().style.cursor = '';
+    try {
+        if (fille) await relireCouche(fille);
+    } catch (e) {
+        showToast('Ligne ajoutée, mais la couche n’a pas pu être relue : ' + e.message, 'warning');
+    }
+    updateLegend();
+    if (STATE.currentModule === 'couches') renderLayersPanel('couches');
+    retourAuParent(parent);
+}
+
 /** Le bandeau d'une série de créations : combien, et le dernier ajout, qu'on peut défaire ou ouvrir. */
 function bandeauSerie(s) {
     if (!(s?.serie > 0) || s.modification) return '';
@@ -10339,7 +10682,9 @@ function renderObjectInspector() {
         // `renderAttrFields` reste le repli — il devine les champs, et n'a que
         // deux types.
         if (formActif.def && !readOnly && moteurDisponible()) {
-            monterFormulaireEntite(layer, props, formActif, revue && multi ? count : 0, saisieTerrain);
+            const fille = coucheFilleGeo(formActif);
+            if (fille && count === 1) monterDepartGeo(layer, props, formActif, fille);
+            else monterFormulaireEntite(layer, props, formActif, revue && multi ? count : 0, saisieTerrain);
         } else if (!formActif.surLaCouche) {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + `<div class="hint">Relevé « ${echapper(formActif.titre)} » — indisponible ici : `
@@ -10400,7 +10745,7 @@ function renderObjectInspector() {
         // d'afficher en lecture seule. La sortie est dans le corps de la fiche
         // (« Enregistrer dans Grist »), la ou le blocage se lit ; le pied dit
         // seulement pourquoi il n'y a rien a enregistrer ici.
-        $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Attributs non modifiables — cette couche n'a pas de lignes Grist.</div>`;
+        $('insp-foot').innerHTML = `<div class="hint" style="margin:0;flex:1">Fiche non modifiable — cette couche n'a pas de lignes Grist.</div>`;
     } else {
         // « Reset » ne rétablit que les surcharges de placement 3D ; « Enregistrer »
         // persiste aussi les attributs, il reste donc dans tous les cas.
@@ -12287,7 +12632,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.11.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.12.0');
     return Feuille;
 }
 
@@ -12508,10 +12853,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.11.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.12.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.11.0');
+        const dc = await import('./lib/data-client.js?v=1.12.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -14105,7 +14450,7 @@ const A = {
      * Enregistrer un formulaire deduit — le seul chemin par lequel Atlas ecrit
      * dans `Formulaires`, et il part toujours d'un clic.
      *
-     * Sur la couche le geste est **composer** : `Attributs` reste la vue
+     * Sur la couche le geste est **composer** : `Fiche` reste la vue
      * complete de la table, et ce qu'on cree est un formulaire distinct, qu'on
      * pourra restreindre. Sur une table liee c'est **enregistrer** : le derive
      * est deja le formulaire de cette table, l'ecrire le rend proposable.
@@ -14113,6 +14458,326 @@ const A = {
      * La definition ecrite est celle qu'on voit — meme champs, meme ordre.
      * Partir d'autre chose surprendrait.
      */
+    // ---- Créer un champ, un relevé lié (voir le bloc « Créer un champ » du module Formulaires) ----
+    async ouvrirAjoutChamp(layerId, formId) {
+        if (!schemaModifiable() || !assertCanWrite('ajouter un champ')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
+        if (!f) return;
+        Object.assign(_champ, { layerId, formId, libelle: '', typeId: 'texte', choix: '', requis: false, requisPossible: !f.derive, erreur: '', enCours: false });
+        A.vueAjoutChamp();
+    },
+    vueAjoutChamp() {
+        const couche = STATE.layers.find((l) => l.id === _champ.layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === _champ.formId);
+        if (!f) { A.openModule('formulaires'); return; }
+        titreModule('Ajouter un champ');
+        $('module-body').innerHTML = `
+            <div class="section">
+                <div class="section-title">${escapeHtml(couche.name)} · ${echapper(libelleFormulaire(f))}</div>
+                ${htmlSaisieChamp('ac', _champ)}
+                <div class="layer-meta fm-apercu" id="ac-apercu" style="margin-top:10px" aria-live="polite"></div>
+                <div class="fm-erreur" id="ac-erreur" role="alert">${escapeHtml(_champ.erreur)}</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-soft" style="flex:1" onclick="A.openModule('formulaires')">Annuler</button>
+                    <button class="btn btn-primary" style="flex:1" id="ac-valider" onclick="A.champValider('ac')">Ajouter le champ</button>
+                </div>
+            </div>`;
+        A.champApercu('ac');
+        $('ac-libelle')?.focus();
+    },
+    /** Une frappe, un choix de type : l'état vit ici, pas dans le DOM. Le type redessine (les choix apparaissent ou non). */
+    champSaisie(espace, cle, valeur, redessiner) {
+        const d = espace === 'ac' ? _champ : _releve;
+        d[cle] = valeur;
+        if (redessiner) { if (espace === 'ac') A.vueAjoutChamp(); else A.vueReleveLie(); return; }
+        A.champApercu(espace);
+    },
+    champValider(espace) {
+        if (espace === 'ac') A.validerAjoutChamp(); else A.releveAjouterChamp();
+    },
+    /** Ce que le geste écrira, dit avant de l'écrire ; le bouton ne s'allume que pour un champ valide. */
+    champApercu(espace) {
+        if (espace === 'ac') {
+            const couche = STATE.layers.find((l) => l.id === _champ.layerId);
+            const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === _champ.formId);
+            if (!f) return;
+            const p = planAjoutChamp({ table: f.tableId, libelle: _champ.libelle, typeId: _champ.typeId, choix: _champ.choix, requis: _champ.requis && _champ.requisPossible, colonnes: STATE.schema?.[f.tableId] || [] });
+            const el = $('ac-apercu');
+            if (el) el.textContent = p.ok ? phraseAjoutChamp(p, { table: f.tableId, formulaire: libelleFormulaire(f) }) : (_champ.libelle.trim() ? p.erreur : '');
+            const b = $('ac-valider');
+            if (b) b.disabled = !p.ok || _champ.enCours;
+            return;
+        }
+        A.releveApercu();
+    },
+    /**
+     * Crée la colonne. Un formulaire dérivé la reprend tout seul au prochain calcul ; un formulaire enregistré reçoit le
+     * champ dans sa définition. Un refus n'écrit rien et ne bascule pas la carte en lecture : on peut avoir le droit
+     * d'écrire des lignes sans celui d'ajouter une colonne.
+     */
+    async validerAjoutChamp() {
+        if (_champ.enCours || !schemaModifiable() || !assertCanWrite('ajouter un champ')) return;
+        const couche = STATE.layers.find((l) => l.id === _champ.layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === _champ.formId);
+        if (!f) return;
+        const plan = planAjoutChamp({ table: f.tableId, libelle: _champ.libelle, typeId: _champ.typeId, choix: _champ.choix, requis: _champ.requis && _champ.requisPossible, colonnes: STATE.schema?.[f.tableId] || [] });
+        if (!plan.ok) { _champ.erreur = plan.erreur; A.vueAjoutChamp(); return; }
+        _champ.enCours = true;
+        showLoading('Ajout du champ…');
+        try {
+            await grist.docApi.applyUserActions(plan.actions);
+            // Un formulaire enregistré fige sa définition : le champ doit y entrer, sinon la colonne existerait sans
+            // jamais se saisir par ce formulaire.
+            const ligne = f.derive ? null : STATE.formulaires.find((e) => e.formId === f.id);
+            const T = window.FormulairesTable;
+            if (ligne?.rowId && T) {
+                const champ = champDepuisPlan(plan.colonne, window.FormDefFromTable, { requis: plan.requis });
+                const def = champ ? defAvecChamp(ligne.def, champ) : ligne.def;
+                if (def !== ligne.def) {
+                    await grist.docApi.applyUserActions([['UpdateRecord', 'Formulaires', ligne.rowId, { Def: JSON.stringify(def) }]]);
+                }
+            }
+            await chargerFormulaires();
+            // Les objets déjà chargés ne portent pas la colonne neuve : sans relecture, la fiche ne la proposerait pas.
+            if (f.surLaCouche) { try { await relireCouche(couche); } catch (e) { console.warn('[Atlas formulaire] relecture', e.message); } }
+            hideLoading();
+            _champ.enCours = false;
+            A.openModule('formulaires');
+            renderInspector();
+            showToast(`Champ « ${plan.colonne.label} » ajouté · colonne ${plan.colonne.id}`, 'success');
+        } catch (e) {
+            hideLoading();
+            _champ.enCours = false;
+            console.warn('[Atlas formulaire] ajout de champ refusé :', e?.message);
+            _champ.erreur = messageRefusChamp(e);
+            A.vueAjoutChamp();
+        }
+    },
+    async ouvrirReleveLie(layerId) {
+        if (!schemaModifiable() || !assertCanWrite('créer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        if (!couche) return;
+        let tables = [];
+        try { tables = await grist.docApi.listTables(); } catch (e) { /* le plan se refera à la création */ }
+        // La date est un champ comme un autre : on la propose d'office, et on peut la retirer. Sa valeur par défaut est le jour.
+        Object.assign(_releve, { layerId, nom: '', expose: true, geometrie: null, sources: ['carte'], champs: [{ libelle: 'Date', typeId: 'date', choix: '' }], libelle: '', typeId: 'texte', choix: '', requis: false, erreur: '', enCours: false, tables });
+        A.vueReleveLie();
+    },
+    vueReleveLie() {
+        const couche = STATE.layers.find((l) => l.id === _releve.layerId);
+        if (!couche) { A.openModule('formulaires'); return; }
+        const liste = _releve.champs.map((c, i) => `<li><span>${echapper(c.libelle)} <span class="fm-saisie-type">${escapeHtml(typeChamp(c.typeId)?.libelle || '')}${i === indexDatePrincipale(_releve.champs) ? ' · aujourd’hui par défaut' : ''}${c.requis ? ' · obligatoire' : ''}</span></span>
+            <button type="button" class="fm-lien" onclick="A.releveRetirerChamp(${i})">Retirer</button></li>`).join('');
+        titreModule('Nouveau formulaire');
+        $('module-body').innerHTML = `
+            <div class="section">
+                <div class="section-title">Pour ${escapeHtml(couche.name)}</div>
+                <p class="fm-intro" style="margin:0 0 10px">Chaque saisie ajoute une ligne, rattachée à un objet de cette couche, dans une nouvelle table.</p>
+                <label class="input-label" for="rl-nom">Nom du formulaire</label>
+                <input class="input" id="rl-nom" maxlength="80" placeholder="Visite d’entretien" value="${escapeHtml(_releve.nom)}"
+                    oninput="A.releveSaisie('nom',this.value)">
+                <div class="section-title" style="margin-top:14px">Position de chaque ligne</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap" role="group" aria-label="Position de chaque ligne">
+                    ${[[null, 'Aucune'], ['Point', 'Un point'], ['LineString', 'Une ligne'], ['Polygon', 'Une surface']].map(([g, lib]) => `<button type="button"
+                        class="btn ${_releve.geometrie === g ? 'btn-primary' : 'btn-soft'}" style="flex:1;min-width:84px" aria-pressed="${_releve.geometrie === g}"
+                        onclick="A.releveGeometrie(${g ? `'${g}'` : 'null'})">${lib}</button>`).join('')}
+                </div>
+                ${_releve.geometrie ? `<div class="layer-meta" style="margin-top:8px">La table sera aussi une couche : chaque ligne s’affiche sur la carte. Comment l’agent ${_releve.geometrie === 'Point' ? 'pose le point' : 'pose la forme'} :</div>
+                    ${SOURCES_PAR_GEOMETRIE[_releve.geometrie].map((s) => `<label class="fm-case"><input type="checkbox" ${_releve.sources.includes(s) ? 'checked' : ''}
+                        onchange="A.releveSource('${s}', this.checked)"> ${escapeHtml(libelleSource(s, _releve.geometrie))}</label>`).join('')}` : ''}
+                <div class="section-title" style="margin-top:14px">Champs</div>
+                ${liste ? `<ul class="fm-saisie-liste">${liste}</ul>` : '<div class="layer-meta">Aucun champ pour l’instant.</div>'}
+                <div class="section-title" style="margin-top:14px">Nouveau champ</div>
+                ${htmlSaisieChamp('rl', _releve)}
+                <button class="btn btn-soft btn-full" style="margin-top:10px" id="rl-ajouter" onclick="A.champValider('rl')">Ajouter à la liste</button>
+                <label class="fm-case" style="margin-top:14px"><input type="checkbox" id="rl-expose" ${_releve.expose ? 'checked' : ''} onchange="A.releveSaisie('expose',this.checked)"> Disponible sur le terrain</label>
+                <div class="layer-meta fm-apercu" id="rl-apercu" style="margin-top:10px" aria-live="polite"></div>
+                <div class="fm-erreur" id="rl-erreur" role="alert">${escapeHtml(_releve.erreur)}</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button class="btn btn-soft" style="flex:1" onclick="A.openModule('formulaires')">Annuler</button>
+                    <button class="btn btn-primary" style="flex:1" id="rl-creer" onclick="A.creerReleveLie()">Créer le formulaire</button>
+                </div>
+            </div>`;
+        A.releveApercu();
+        $('rl-nom')?.focus();
+    },
+    releveSaisie(cle, valeur) {
+        _releve[cle] = valeur;
+        A.releveApercu();
+    },
+    releveGeometrie(g) {
+        _releve.geometrie = g;
+        _releve.sources = ['carte'];   // les façons permises changent avec la forme : on repart de la carte
+        _releve.erreur = '';
+        A.vueReleveLie();
+    },
+    releveSource(cle, on) {
+        const voulues = new Set(_releve.sources);
+        if (on) voulues.add(cle); else voulues.delete(cle);
+        _releve.sources = sourcesRetenues([...voulues], _releve.geometrie || 'Point');
+        A.releveApercu();
+    },
+    releveRetirerChamp(i) {
+        _releve.champs.splice(i, 1);
+        _releve.erreur = '';
+        A.vueReleveLie();
+    },
+    /** Le plan du relevé tel qu'il est saisi, avec ou sans le champ en cours de frappe. */
+    _planReleve(avecBrouillon, complet = true) {
+        const couche = STATE.layers.find((l) => l.id === _releve.layerId);
+        const champs = avecBrouillon
+            ? [..._releve.champs, { libelle: _releve.libelle, typeId: _releve.typeId, choix: _releve.choix, requis: _releve.requis }]
+            : _releve.champs;
+        return planReleveLie({
+            // Sans nom, on ne peut pas juger les champs : un nom provisoire ne change rien à leurs identifiants.
+            nom: _releve.nom.trim() || 'Formulaire', coucheTable: couche?.sourceTable, coucheNom: couche?.name,
+            champs, dater: false, tables: _releve.tables || [],
+            geometrie: _releve.geometrie, sources: _releve.sources, complet,
+        });
+    },
+    /**
+     * Les champs du formulaire, **champ en cours de frappe compris**. Le laisser de côté perdait la saisie en silence : on
+     * tape « Durée », on clique « Créer », et la colonne n'existe pas. Un brouillon invalide bloque, et dit pourquoi.
+     */
+    _champsReleve() {
+        const libelle = _releve.libelle.trim();
+        if (!libelle) return { champs: _releve.champs, erreur: '' };
+        const p = A._planReleve(true, false);
+        if (!p.ok) return { champs: null, erreur: p.erreur };
+        return { champs: [..._releve.champs, { libelle, typeId: _releve.typeId, choix: _releve.choix, requis: _releve.requis }], erreur: '' };
+    },
+    releveApercu() {
+        const couche = STATE.layers.find((l) => l.id === _releve.layerId);
+        if (!couche) return;
+        // Le champ en cours de frappe est-il valable en soi ? S'il l'est, il compte : c'est ce que « Créer » écrira. Le formulaire entier, lui,
+        // doit avoir un champ en plus de la date.
+        const brouillon = _releve.libelle.trim() ? A._planReleve(true, false) : null;
+        const complet = A._planReleve(!!(brouillon && brouillon.ok), true);
+        const el = $('rl-apercu');
+        if (el) {
+            if (brouillon && !brouillon.ok) el.textContent = brouillon.erreur;
+            else if (!_releve.nom.trim()) el.textContent = _releve.champs.some((c) => c.typeId !== 'date') ? 'Donnez un nom au formulaire.' : '';
+            else el.textContent = complet.ok ? phraseReleveLie(complet, { coucheTable: couche.sourceTable, expose: _releve.expose }) : complet.erreur;
+        }
+        const ajouter = $('rl-ajouter');
+        if (ajouter) ajouter.disabled = !(brouillon && brouillon.ok);
+        const creer = $('rl-creer');
+        if (creer) creer.disabled = !(_releve.nom.trim() && complet.ok) || !!(brouillon && !brouillon.ok) || _releve.enCours;
+    },
+    releveAjouterChamp() {
+        const p = A._planReleve(true, false);
+        if (!p.ok) { _releve.erreur = p.erreur; A.vueReleveLie(); return; }
+        _releve.champs.push({ libelle: _releve.libelle.trim(), typeId: _releve.typeId, choix: _releve.choix, requis: _releve.requis });
+        Object.assign(_releve, { libelle: '', typeId: 'texte', choix: '', requis: false, erreur: '' });
+        A.vueReleveLie();
+        $('rl-libelle')?.focus();
+    },
+    /**
+     * Crée la table du relevé, puis — si on le veut proposé hors édition — l'enregistre dans `Formulaires` et l'expose.
+     * Deux écritures, parce que le nom réel de la table (Grist peut en prendre un autre) n'est connu qu'après la
+     * première ; si la seconde échoue, la table existe et son formulaire déduit reste disponible, on le dit.
+     */
+    async creerReleveLie() {
+        if (_releve.enCours || !schemaModifiable() || !assertCanWrite('créer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === _releve.layerId);
+        if (!couche) return;
+        _releve.enCours = true;
+        showLoading('Création du formulaire…');
+        let propose = null;
+        try {
+            const tables = await grist.docApi.listTables();
+            const eff = A._champsReleve();
+            if (!eff.champs) { hideLoading(); _releve.enCours = false; _releve.erreur = eff.erreur; A.vueReleveLie(); return; }
+            const plan = planReleveLie({
+                nom: _releve.nom, coucheTable: couche.sourceTable, coucheNom: couche.name,
+                champs: eff.champs, dater: false, tables,
+                geometrie: _releve.geometrie, sources: _releve.sources,
+            });
+            if (!plan.ok) { hideLoading(); _releve.enCours = false; _releve.erreur = plan.erreur; A.vueReleveLie(); return; }
+            let reel;
+            if (plan.geometrie) {
+                reel = await creerCoucheLiee(plan, tables);
+            } else {
+                const r = await grist.docApi.applyUserActions(plan.actions);
+                reel = (r?.retValues?.[0] && r.retValues[0].table_id) || plan.tableId;
+            }
+            const planReel = reel === plan.tableId ? plan : { ...plan, tableId: reel };
+            // Toujours enregistré, proposé ou non : un formulaire déduit n'a pas de définition, donc nulle part où garder qu'un
+            // champ est obligatoire.
+            try {
+                await enregistrerNouveauFormulaire(couche, planReel, tables, { expose: _releve.expose });
+                propose = _releve.expose ? true : null;
+            } catch (e) {
+                console.warn('[Atlas formulaire] formulaire non enregistré :', e?.message);
+                propose = false;
+            }
+            await chargerFormulaires();
+            hideLoading();
+            _releve.enCours = false;
+            A.openModule('formulaires');
+            refreshControlsDock();
+            renderInspector();
+            showToast(propose === false
+                ? `Formulaire « ${plan.titre} » : table ${reel} créée, mais le formulaire n’a pas pu être enregistré — il reste disponible tel que déduit des colonnes, sans champ obligatoire`
+                : `Formulaire « ${plan.titre} » créé · ${plan.geometrie ? 'couche' : 'table'} ${reel}${propose ? ' · sur le terrain' : ''}`, propose === false ? 'warning' : 'success');
+        } catch (e) {
+            hideLoading();
+            _releve.enCours = false;
+            console.warn('[Atlas formulaire] formulaire refusé :', e?.message);
+            _releve.erreur = messageRefusChamp(e, { releve: true });
+            A.vueReleveLie();
+        }
+    },
+    /**
+     * Activer un formulaire **déduit**, en un geste : l'enregistrer (publié), le proposer sur le terrain, et — pour la fiche
+     * de l'objet — retirer le déduit, qu'il remplace. Sans ce retrait, deux « Fiche » se suivraient dans la liste.
+     *
+     * Le formulaire enregistré reprend le cadrage du déduit (champs masqués). Rien n'est effacé : le déduit se remet depuis
+     * « Masqués sur cette couche ».
+     */
+    async activerFormulaire(layerId, formId) {
+        if (!assertCanWrite('proposer un formulaire')) return;
+        const couche = STATE.layers.find((l) => l.id === layerId);
+        const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
+        if (!f || !f.derive || !f.def) return;
+        const T = window.FormulairesTable;
+        if (!T) { showToast('Module formulaires indisponible', 'error'); return; }
+        try {
+            showLoading('Activation…');
+            const tables = await grist.docApi.listTables();
+            if (!tables.includes('Formulaires')) await grist.docApi.applyUserActions(T.planCreateFormulairesTable());
+            // La fiche s'appelle « Fiche » ; un formulaire lié garde son nom.
+            const titre = f.surLaCouche ? titreLibre('Fiche', f.tableId, STATE.formulaires) : (f.titre || f.tableId);
+            const def = { ...f.def, id: idFormulaireLibre(f.tableId, STATE.formulaires), title: titre };
+            const champs = T.rowFromFormDef(def, { statut: 'publie', version: 1 });
+            const colonnes = {};
+            for (const [k, v] of Object.entries(champs)) colonnes[k] = [v];
+            await grist.docApi.applyUserActions([['BulkAddRecord', 'Formulaires', [null], colonnes]]);
+            const avant = reglagesFormulaire(couche);
+            await chargerFormulaires();
+            // On repart des seuls formulaires enregistrés déjà proposés (comme `exposerFormulaire`), et on garde les autres réglages.
+            const exposes = new Set(formulairesDeLaCouche(couche).filter((x) => x.expose && !x.derive).map((x) => x.id));
+            exposes.add(def.id);
+            const retires = new Set(avant.retires);
+            if (f.surLaCouche) retires.add(f.id);
+            couche.formulaire = {
+                fiche: avant.fiche, exposes: [...exposes],
+                masques: { ...avant.masques, [def.id]: [...(f.masques || [])] },
+                retires: [...retires], departs: avant.departs,
+            };
+            await saveLayerToGrist(couche, true);
+            await chargerFormulaires();
+            hideLoading();
+            renderFormulaires();
+            renderInspector();
+            refreshControlsDock();
+            showToast(f.surLaCouche ? 'La fiche est modifiable sur le terrain' : `« ${titre} » est proposé sur le terrain`, 'success');
+        } catch (e) {
+            hideLoading();
+            showToast('Grist : ' + e.message, 'error');
+        }
+    },
     async enregistrerFormulaire(layerId, formId) {
         if (!assertCanWrite('enregistrer un formulaire')) return;
         const couche = STATE.layers.find((l) => l.id === layerId);
@@ -14248,7 +14913,7 @@ const A = {
         else { renderLayersPanel('couches'); renderInspector(); }
     },
     /** Arme la création d'un objet dans une couche : le prochain clic sur la carte pose le point. */
-    nouvelObjet(layerId, { suite = null } = {}) {
+    nouvelObjet(layerId, { suite = null, parent = null } = {}) {
         const layer = STATE.layers.find((l) => l.id === layerId);
         const possible = creationPossible(layer, contexteCreation(layer));
         if (!possible.ok) { showToast(possible.raison, 'warning'); return; }
@@ -14265,6 +14930,8 @@ const A = {
             // Suite d'une série : le dernier ajout, et combien de créés.
             precedente: suite ? { rowId: suite.rowId, table: suite.table } : null,
             serie: suite ? suite.serie : 0,
+            // Une ligne ajoutée à un objet : celui-ci, son formulaire, l'onglet à rouvrir ensuite.
+            parent: parent ? { layerId: parent.layerId, rowId: parent.rowId, formulaireId: parent.formulaireId, onglet: parent.onglet } : null,
         };
         _derniereCreation = null;
         document.body.classList.add('mode-creation');
@@ -14279,9 +14946,38 @@ const A = {
         openInspectorPanel();
         const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
             : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
+        // Position déjà donnée (celle de l'appareil, le centre de l'objet) : le point est posé, on passe au formulaire.
+        if (parent?.forme) { poserFormeSaisie(parent.forme); return; }
+        if (parent?.point) { poserPointSaisie(parent.point); return; }
         // En série, « Objet créé » vient d'être dit : on n'ajoute que la suite.
         showToast(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`, 'info');
         if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
+    },
+    /** Depuis l'onglet d'un formulaire qui pose une position : la poser (carte, appareil, centre de l'objet), puis remplir. */
+    async nouvelleLigneGeo(source) {
+        const d = _departGeo;
+        const parent = STATE.layers.find((l) => l.id === d?.parentLayerId);
+        const fille = STATE.layers.find((l) => l.id === d?.filleId);
+        if (!d || !parent || !fille) return;
+        let point = null;
+        let forme = null;
+        const famille = familleGeometrie(fille.geometryType);
+        if (source === 'position') {
+            point = await positionAppareil();
+            if (!point) return;
+        } else if (source === 'centre') {
+            const objet = (parent.geojson?.features || []).find((x) => x.properties?._row_id === d.rowId);
+            if (famille === 'Point') {
+                const c = objet ? featureCentroid(objet) : null;
+                if (!c) { showToast('Cet objet n’a pas de centre à utiliser', 'warning'); return; }
+                point = { lng: c[0], lat: c[1] };
+            } else {
+                // La forme même de l'objet : seulement si c'est la même famille que celle de la couche des lignes.
+                if (!objet?.geometry || /^Multi/.test(objet.geometry.type) || familleGeometrie(objet.geometry.type) !== famille) { showToast('La forme de cet objet ne convient pas à cette couche', 'warning'); return; }
+                forme = JSON.parse(JSON.stringify(objet.geometry));
+            }
+        }
+        A.nouvelObjet(fille.id, { parent: { layerId: parent.id, rowId: d.rowId, formulaireId: d.formulaireId, onglet: _inspObjTab, point, forme } });
     },
     /** Retire la ligne du dernier objet de la série ; la création en cours continue. */
     async annulerDernierAjout() {
@@ -15041,7 +15737,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.11.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.12.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -15303,7 +15999,7 @@ const A = {
             // Le bouton est dans le panneau de droite ; le module Formulaires
             // peut être ouvert à gauche au même moment. Il affichait encore
             // « Aucune table à saisir » alors que la table et sa fiche
-            // « Attributs » venaient d'exister.
+            // « Fiche » venaient d'exister.
             else if (STATE.currentModule === 'formulaires') renderFormulaires();
             renderInspector();
         } catch (e) {
@@ -16053,7 +16749,8 @@ const A = {
     /** Proposer (ou non) aux agents d'ajouter un objet à la couche, en Exploiter. */
     setCreationExploiter(id, on) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
-        initSymbolization(l).creation = { exploiter: !!on };
+        const sym = initSymbolization(l);
+        sym.creation = { ...(sym.creation || {}), exploiter: !!on };
         markDirty(); saveLayerPrefIfSynced(l);
         refreshControlsDock();
         showToast(on ? 'Les agents pourront ajouter un objet à cette couche, en Exploiter' : 'Ajout d’objet réservé à la préparation', 'info');
@@ -16655,9 +17352,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.11.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.12.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.11.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.12.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

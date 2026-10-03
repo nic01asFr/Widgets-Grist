@@ -7,7 +7,7 @@ import {
   parsePropertyNumber,
   resolveFeaturePropertyKey,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.11.0';
+} from './declarative-style.js?v=1.12.0';
 
 /**
  * Les champs d'une couche : ceux que le manifeste déclare, **puis** ceux que

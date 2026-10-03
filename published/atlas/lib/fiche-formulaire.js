@@ -28,10 +28,10 @@
  * > n'a pas le droit d'écrire. Le dépôt a déjà payé une fois pour ce défaut.
  */
 
-import { tablesReferencant } from './schema-grist.js?v=1.11.0';
-import { colonneDate } from './bulle-objet.js?v=1.11.0';
-import { detectGeometryColumn } from './geo-tables.js?v=1.11.0';
-import { televerserPieceJointe } from './data-client.js?v=1.11.0';
+import { tablesReferencant } from './schema-grist.js?v=1.12.0';
+import { colonneDate } from './bulle-objet.js?v=1.12.0';
+import { detectGeometryColumn } from './geo-tables.js?v=1.12.0';
+import { televerserPieceJointe } from './data-client.js?v=1.12.0';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {
@@ -173,12 +173,12 @@ export const RAISON_DERNIER_FORMULAIRE = 'dernier formulaire de la couche';
  * Pourquoi ce formulaire ne peut pas être retiré de la couche — `null` s'il le
  * peut.
  *
- * Tous se retirent, `Attributs` compris : une scène de terrain peut ne vouloir
+ * Tous se retirent, `Fiche` compris : une scène de terrain peut ne vouloir
  * qu'un formulaire personnalisé, et la vue complète de la table ne ferait alors
  * que doubler le relevé. Une seule garde : **le dernier formulaire en place**
  * reste — sans lui, l'objet n'aurait plus de fiche.
  *
- * > **Attributs ne se retirait pas** (16/09/2026) : on le tenait pour le point
+ * > **Fiche ne se retirait pas** (16/09/2026) : on le tenait pour le point
  * > de départ de toute composition. Il le reste, depuis le module, où un
  * > formulaire retiré se remet d'un clic ; le garder de force imposait un
  * > onglet que la scène ne voulait pas.
@@ -250,7 +250,7 @@ export function masquesValides(brut) {
  * table (`entableLayer`) : le modèle 3D et son placement.
  *
  * Elles se règlent sur la carte et dans l'onglet « Placement 3D » ; les offrir
- * en tête de la fiche « Attributs », au milieu du nom et de l'état, ferait
+ * en tête de la fiche « Fiche », au milieu du nom et de l'état, ferait
  * taper à la main un identifiant de modèle ou un décalage en mètres.
  */
 export const COLONNES_ATLAS = Object.freeze([
@@ -324,7 +324,7 @@ export function colonnesHorsFormulaire(couche, colonnes) {
  * pas ce que la table contient.
  *
  * Le dérivé de la table de la couche est donc **toujours** présent, en premier,
- * sous le nom `Attributs` — c'est ce qu'il est. La scène peut le retirer comme
+ * sous le nom `Fiche` — c'est ce qu'il est. La scène peut le retirer comme
  * les autres (`formulaire.retires`), tant qu'il n'est pas le dernier en place.
  * Pour les tables liées, il n'est qu'un **repli** : dès qu'un enregistré
  * existe, il suffit.
@@ -376,7 +376,7 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
       return def ? { formId: def.id, titre, tableCible, statut: null, def } : null;
     };
 
-    // Sur la couche, le dérivé vient EN PREMIER : « Attributs » est le premier
+    // Sur la couche, le dérivé vient EN PREMIER : « Fiche » est le premier
     // onglet, et le premier onglet fait toujours la même chose.
     if (surLaCouche) {
       const d = deriver();
@@ -392,7 +392,7 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   ajouterTable({
     tableCible: table,
     surLaCouche: true,
-    titre: 'Attributs',
+    titre: 'Fiche',
     ignorer: colonnesHorsFormulaire(couche, schema?.[table]),
   });
 
@@ -407,7 +407,7 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   // couche — le seul qui existait quand ce booléen a été écrit.
   //
   // > **Pas le premier tout court.** Depuis que le dérivé ouvre la liste, « le
-  // > premier » est `Attributs`, qui ne peut jamais être offert. L'héritage
+  // > premier » est `Fiche`, qui ne peut jamais être offert. L'héritage
   // > pointait donc sur rien, et la première écriture de la liste effaçait
   // > l'exposition réelle — sans erreur, sans message. Constaté sur le document
   // > de test : un relevé publié s'est retrouvé retiré.
@@ -418,7 +418,7 @@ export function formulairesPourCouche({ couche, entrees = [], schema = null } = 
   }
   // La garde du dernier formulaire vaut aussi à la relecture : des réglages
   // qui retireraient tout (un formulaire effacé de `Formulaires` depuis, un
-  // réglage écrit à la main) laissent le premier en place — `Attributs` dès
+  // réglage écrit à la main) laissent le premier en place — `Fiche` dès
   // que le schéma est là. Une couche garde toujours une fiche.
   if (out.length && out.every((f) => f.retire)) out[0].retire = false;
   for (const f of out) {
@@ -460,7 +460,7 @@ export function sansChamps(def, colIds) {
  *
  * | | Le geste | Pourquoi |
  * |---|---|---|
- * | **sur la couche** | **composer** | `Attributs` reste la vue complète de la table ; l'enregistrer tel quel en ferait un doublon. Ce qu'on veut, c'est un formulaire **choisi**, qui part de là |
+ * | **sur la couche** | **composer** | `Fiche` reste la vue complète de la table ; l'enregistrer tel quel en ferait un doublon. Ce qu'on veut, c'est un formulaire **choisi**, qui part de là |
  * | **lié** | **enregistrer** | le dérivé est déjà le formulaire de cette table ; l'enregistrer le rend proposable, et rien de plus |
  *
  * Dans les deux cas, une ligne apparaît dans `Formulaires` — et c'est bien un
@@ -525,15 +525,15 @@ export function idFormulaireLibre(tableId, entrees = []) {
 /**
  * Le libellé d'un onglet.
  *
- * Un formulaire enregistré porte **son nom** : l'afficher comme « Attributs »
+ * Un formulaire enregistré porte **son nom** : l'afficher comme « Fiche »
  * effacerait ce que son auteur a écrit, et laisserait croire qu'il montre
  * toutes les colonnes alors qu'il montre celles qu'on a choisies. Seul le
- * dérivé de la table de la couche s'appelle « Attributs » — parce que c'est
+ * dérivé de la table de la couche s'appelle « Fiche » — parce que c'est
  * exactement ce qu'il est.
  */
 export function libelleFormulaire(f) {
   if (!f) return '';
-  return (f.derive && f.surLaCouche) ? 'Attributs' : (f.titre || f.tableId || '');
+  return (f.derive && f.surLaCouche) ? 'Fiche' : (f.titre || f.tableId || '');
 }
 
 /**
@@ -1149,7 +1149,10 @@ export function pontFormulaire({
       // La référence entre ici, jamais par le formulaire : c'est le clic qui
       // fait foi. Sans `via`, on refuse plutôt que de créer un orphelin.
       if (!formulaire.via) throw new Error('Formulaire lié sans colonne de référence');
-      const champs = { ...data, [formulaire.via]: rowId };
+      // Une table liée qui est aussi une couche : la position se pose avant l'envoi, comme celle d'un objet, et vaut plus que
+      // ce que le formulaire dirait (elle passe après les champs, la référence après elle).
+      if (creation && !creation.cellules) throw new Error('Posez la position avant d’enregistrer');
+      const champs = { ...data, ...(creation?.cellules || {}), [formulaire.via]: rowId };
       const r = await ecrireLigne(docApi, [['AddRecord', table, null, champs]]);
       dire('Relevé ajouté', true);
       // L'appelant reçoit la ligne créée et ce qui a été écrit : de quoi

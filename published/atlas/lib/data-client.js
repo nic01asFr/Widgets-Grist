@@ -302,7 +302,7 @@ class ClientRest {
    * > plugin les sert comme n'importe quelle table, l'API REST **non** — son
    * > point `/records` ne connait que les tables de l'utilisateur. Sans ce
    * > detour, `chargerSchema` rend un schema VIDE dans l'application : plus de
-   * > formulaire deduit (« Attributs »), plus de formulaire lie, et la fiche
+   * > formulaire deduit (« Fiche »), plus de formulaire lie, et la fiche
    * > d'un objet parait n'en proposer aucun. Rien ne le signale — c'est une
    * > lecture qui echoue, pas une fonction absente.
    * >
