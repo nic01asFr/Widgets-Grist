@@ -91,7 +91,7 @@
       var m = modeles[idMo[l.Modele] - 1];
       return { Code: l.Code, Categorie: l.Categorie, Modele: idMo[l.Modele], hauteur_feu: l.Hauteur_feu_m, Annee_pose: l.Annee_pose, Abaissement_nuit_pct: l.Abaissement_nuit_pct, Etat: l.Etat, Zone: l.Zone,
         Dist_eau_m: l.Dist_eau_m, Dist_bois_m: l.Dist_bois_m, Longitude: l.Longitude, Latitude: l.Latitude, Source: l.Source, Donnee: l.Donnee,
-        Classe: idCl[m.Classe], temperatureCouleur: m.Temperature_K, puissance: PUISS[m.id], statut: l.Etat === 'Défectueux' ? 'decommissioned' : 'functional', Nom_modele: m.Libelle, Cellule: l.Cellule };
+        Classe: idCl[m.Classe], temperatureCouleur: m.Temperature_K, puissance: PUISS[m.id], statut: l.Etat === 'Défectueux' ? 'decommissioned' : 'functional', Nom_modele: m.Libelle, Cellule: l.Cellule, Teinte: classes[idCl[m.Classe] - 1].Libelle };
     });
     var rowsRe = lignes(releves, function (r) { return { Piege: r.piege, Nuit: unix(r.nuit), Duree_h: r.duree_h, Temp_c: r.temp_c, Vent_bft: r.vent_bft, Lepidopteres: r.Lepidopteres, Dipteres: r.Dipteres, Coleopteres: r.Coleopteres,
       Hymenopteres: r.Hymenopteres, Autres: r.Autres, Total: r.Total, Mois: r.Mois, WKT: r.WKT, Donnee: r.Donnee }; });
@@ -99,21 +99,36 @@
       var l = p.Luminaire ? rowsLu[idLu[p.Luminaire] - 1].fields : null;
       var mine = rowsRe.filter(function (r) { return r.fields.Piege === i + 1; });
       return { Nom: p.Nom, Type: p.Type, Luminaire: p.Luminaire ? idLu[p.Luminaire] : 0, Longitude: p.Longitude, Latitude: p.Latitude, Dist_eau_m: p.Dist_eau_m, Dist_luminaire_m: p.Dist_luminaire_m, Donnee: p.Donnee,
-        Modele: l ? l.Modele : 0, Classe: l ? l.Classe : classes.length + 1, Nuits: mine.length, Total_moyen: mine.length ? Math.round(mine.reduce(function (s, r) { return s + r.fields.Total; }, 0) / mine.length) : 0 };
+        Modele: l ? l.Modele : 0, Classe: l ? l.Classe : classes.length + 1, Teinte: l ? classes[l.Classe - 1].Libelle : 'Sans éclairage', Nuits: mine.length, Total_moyen: mine.length ? Math.round(mine.reduce(function (s, r) { return s + r.fields.Total; }, 0) / mine.length) : 0 };
     });
     tables = {
       Classes_spectrales: { cols: [['Libelle', 'Text'], ['Couleur', 'Text'], ['Rang', 'Int'], ['Attraction', 'Numeric'], ['Donnee', 'Text']], rows: rowsCl },
       Modeles: { cols: [['Libelle', 'Text'], ['Modele3D', 'Text'], ['Classe', 'Ref:Classes_spectrales'], ['Temperature_K', 'Int'], ['Flux_lm', 'Int'], ['ULOR_pct', 'Int'], ['Puissance_W', 'Int'], ['Remarque', 'Text'], ['Donnee', 'Text']], rows: rowsMo },
       Luminaires: { cols: [['Code', 'Text'], ['Categorie', 'Text'], ['Modele', 'Ref:Modeles'], ['hauteur_feu', 'Numeric'], ['Annee_pose', 'Int'], ['Abaissement_nuit_pct', 'Int'], ['Etat', 'Choice'], ['Zone', 'Choice'], ['Dist_eau_m', 'Int'], ['Dist_bois_m', 'Int'],
-        ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Source', 'Text'], ['Donnee', 'Text'], ['Classe', 'Ref:Classes_spectrales', true], ['temperatureCouleur', 'Int', true], ['puissance', 'Int', true], ['statut', 'Text', true], ['Nom_modele', 'Text', true], ['Cellule', 'Text', true]], rows: rowsLu },
+        ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Source', 'Text'], ['Donnee', 'Text'], ['Classe', 'Ref:Classes_spectrales', true], ['temperatureCouleur', 'Int', true], ['puissance', 'Int', true], ['statut', 'Text', true], ['Nom_modele', 'Text', true], ['Cellule', 'Text', true], ['Teinte', 'Text', true]], rows: rowsLu },
       Pieges: { cols: [['Nom', 'Text'], ['Type', 'Choice'], ['Luminaire', 'Ref:Luminaires'], ['Longitude', 'Numeric'], ['Latitude', 'Numeric'], ['Dist_eau_m', 'Int'], ['Dist_luminaire_m', 'Int'], ['Donnee', 'Text'],
-        ['Modele', 'Ref:Modeles', true], ['Classe', 'Ref:Classes_spectrales', true], ['Nuits', 'Int', true], ['Total_moyen', 'Int', true]], rows: rowsPi },
+        ['Modele', 'Ref:Modeles', true], ['Classe', 'Ref:Classes_spectrales', true], ['Teinte', 'Text', true], ['Nuits', 'Int', true], ['Total_moyen', 'Int', true]], rows: rowsPi },
       Releves: { cols: [['Piege', 'Ref:Pieges'], ['Nuit', 'Date'], ['Duree_h', 'Numeric'], ['Temp_c', 'Int'], ['Vent_bft', 'Int'], ['Lepidopteres', 'Int'], ['Dipteres', 'Int'], ['Coleopteres', 'Int'], ['Hymenopteres', 'Int'], ['Autres', 'Int'], ['Total', 'Int', true], ['Mois', 'Text', true], ['WKT', 'Text', true], ['Donnee', 'Text']], rows: rowsRe },
+      Tournees: { cols: [['Nom', 'Text'], ['WKT', 'Text'], ['Longueur_m', 'Int'], ['Arrets', 'Int'], ['Ordre', 'Text'], ['Donnee', 'Text']], rows: lignes(lire('tournees'), function (c) { return { Nom: c.Nom, WKT: c.WKT, Longueur_m: c.Longueur_m, Arrets: c.Arrets, Ordre: c.Ordre, Donnee: c.Donnee }; }) },
       Grille: { cols: [['Cle', 'Text'], ['WKT', 'Text'], ['N_lum', 'Int', true], ['Flux_total_lm', 'Int', true], ['K_moyen', 'Int', true], ['Donnee', 'Text']], rows: lignes(lire('grille'), function (c) { return { Cle: c.Cle, WKT: c.WKT, N_lum: c.N_lum, Flux_total_lm: c.Flux_total_lm, K_moyen: c.K_moyen, Donnee: c.Donnee }; }) }
     };
     tables.Atlas_ScenePrefs = { cols: [['ViewerJSON', 'Text'], ['SettingsJSON', 'Text'], ['ExpositionJSON', 'Text']], rows: [{ id: 1, fields: { ViewerJSON: '[]', SettingsJSON: '{}', ExpositionJSON: '{}' } }] };
     vis = { 'Modeles.Classe': 'Classes_spectrales.Libelle', 'Luminaires.Modele': 'Modeles.Libelle', 'Luminaires.Classe': 'Classes_spectrales.Libelle', 'Pieges.Luminaire': 'Luminaires.Code',
       'Pieges.Modele': 'Modeles.Libelle', 'Pieges.Classe': 'Classes_spectrales.Libelle', 'Releves.Piege': 'Pieges.Nom' };
+    // La configuration d'Atlas (couches, récit, scène) survit au rechargement de la page d'essai : on peut ainsi voir ce que fait
+    // l'application en rouvrant un document réglé, comme dans Grist. `?neuf=1` repart d'un document vierge.
+    try {
+      if (location.search.indexOf('neuf=1') >= 0) localStorage.removeItem('faux_longchamp_atlas');
+      var gardees = JSON.parse(localStorage.getItem('faux_longchamp_atlas') || 'null');
+      if (gardees) Object.keys(gardees).forEach(function (k) { tables[k] = gardees[k]; });
+    } catch (e) {}
+    window.__garderTables = function () {
+      try {
+        var sortie = {};
+        Object.keys(tables).forEach(function (k) { if (/^(Atlas_|Maquette_)/.test(k)) sortie[k] = tables[k]; });
+        localStorage.setItem('faux_longchamp_atlas', JSON.stringify(sortie));
+      } catch (e) {}
+    };
     window.__tables = tables;
     // Deux formulaires natifs : « Relevé de nuit » (table Releves) et « Poser un piège » (table Pieges).
     var Q = {
@@ -126,8 +141,8 @@
       'Pieges.Longitude': { question: 'Longitude' }, 'Pieges.Latitude': { question: 'Latitude' }
     };
     var FORMS = [
-      { view: 10, section: 29, nom: 'Relevé de nuit', titre: '# **Relevé de nuit**', table: 'Releves', champs: ['Piege', 'Nuit', 'Duree_h', 'Temp_c', 'Vent_bft', 'Lepidopteres', 'Dipteres', 'Coleopteres', 'Hymenopteres', 'Autres'], base: 500 },
-      { view: 11, section: 30, nom: 'Poser un piège', titre: '# **Poser un piège**', table: 'Pieges', champs: ['Nom', 'Type', 'Luminaire', 'Longitude', 'Latitude'], base: 600 }
+      { view: 10, section: 31, nom: 'Relevé de nuit', titre: '# **Relevé de nuit**', table: 'Releves', champs: ['Piege', 'Nuit', 'Duree_h', 'Temp_c', 'Vent_bft', 'Lepidopteres', 'Dipteres', 'Coleopteres', 'Hymenopteres', 'Autres'], base: 500 },
+      { view: 11, section: 32, nom: 'Poser un piège', titre: '# **Poser un piège**', table: 'Pieges', champs: ['Nom', 'Type', 'Luminaire', 'Longitude', 'Latitude'], base: 600 }
     ];
     window.__longchamp = {
       sql: function (q, noms, ids) {
@@ -229,15 +244,26 @@
     }
     if (chemin === '/apply') {
       var actions = JSON.parse((opts && opts.body) || '[]'); journal.push(actions);
-      actions.forEach(function (a) {
+      var suivant = function (t) { return t.rows.reduce(function (m, r) { return Math.max(m, r.id); }, 0) + 1; };
+      var retours = actions.map(function (a) {
         var t = tables[a[1]];
-        if (a[0] === 'AddTable') { tables[a[1]] = { cols: a[2].map(function (c) { return [c.id, c.type]; }), rows: [] }; return; }
-        if (!t) return;
-        if (a[0] === 'AddColumn') { t.cols.push([a[2], a[3] && a[3].type]); return; }
-        if (a[0] === 'UpdateRecord') { t.rows.forEach(function (r) { if (r.id === a[2]) Object.assign(r.fields, a[3]); }); return; }
-        if (a[0] === 'AddRecord') { t.rows.push({ id: t.rows.length + 1, fields: a[3] }); }
+        if (a[0] === 'AddTable') { tables[a[1]] = { cols: a[2].map(function (c) { return [c.id, c.type]; }), rows: [] }; return null; }
+        if (!t) return null;
+        if (a[0] === 'AddColumn') { t.cols.push([a[2], a[3] && a[3].type]); return null; }
+        if (a[0] === 'UpdateRecord') { t.rows.forEach(function (r) { if (r.id === a[2]) Object.assign(r.fields, a[3]); }); return null; }
+        if (a[0] === 'BulkUpdateRecord') { a[2].forEach(function (id, i) { t.rows.forEach(function (r) { if (r.id === id) Object.keys(a[3]).forEach(function (k) { r.fields[k] = a[3][k][i]; }); }); }); return null; }
+        if (a[0] === 'RemoveRecord') { t.rows = t.rows.filter(function (r) { return r.id !== a[2]; }); return null; }
+        if (a[0] === 'BulkRemoveRecord') { t.rows = t.rows.filter(function (r) { return a[2].indexOf(r.id) < 0; }); return null; }
+        if (a[0] === 'AddRecord') { var id = suivant(t); t.rows.push({ id: id, fields: a[3] }); return id; }
+        if (a[0] === 'BulkAddRecord') {
+          var cles = Object.keys(a[3]), n = cles.length ? a[3][cles[0]].length : 0, ids = [];
+          for (var i = 0; i < n; i++) { var f = {}; cles.forEach(function (k) { f[k] = a[3][k][i]; }); var nid = suivant(t); t.rows.push({ id: nid, fields: f }); ids.push(nid); }
+          return ids;
+        }
+        return null;
       });
-      return rep({ retValues: actions.map(function (a) { return a[0] === 'AddRecord' && tables[a[1]] ? tables[a[1]].rows.length : null; }) });
+      if (window.__garderTables) window.__garderTables();
+      return rep({ retValues: retours });
     }
     return rep({ error: 'inconnu' }, 404);
   };

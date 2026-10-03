@@ -378,3 +378,18 @@ describe('formulaires retires — un reglage de scene reversible', () => {
     assert.equal(layerPrefsPayload({ formulaire: { retires: [] } }).formulaire, null);
   });
 });
+
+describe('libellés des catégories (table de référence)', () => {
+  it('le libellé d’une catégorie traverse l’enregistrement et la réouverture', () => {
+    const layer = sampleLayer();
+    layer.style.symbolization.color = {
+      mode: 'categorized', field: 'Classe', palette: 'Tableau10', defaultColor: '#999999',
+      categories: [{ value: '3', color: '#f2d27a', label: 'Blanc chaud', count: 461 }, { value: '1', color: '#e8a234', label: 'Ambre', count: 16 }],
+    };
+    const decl = declarativeFromAtlasLayer(layer);
+    assert.deepEqual(decl.stops.map((s) => s.label), ['Blanc chaud', 'Ambre']);
+    // sans libellé, la valeur sert de libellé, comme avant
+    layer.style.symbolization.color.categories = [{ value: '7', color: '#000000', count: 1 }];
+    assert.equal(declarativeFromAtlasLayer(layer).stops[0].label, '7');
+  });
+});

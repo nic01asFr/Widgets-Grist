@@ -31,7 +31,8 @@ export function declarativeFromAtlasLayer(layer) {
     const field = resolveGristFieldName(layer._fields, sym.field) || sym.field;
     const stops = (sym.categories || []).map((c) => ({
       value: c.value,
-      label: String(c.value ?? ''),
+      // Le libellé d'une table de référence (un `Ref` arrive en identifiant) : sans lui, rouvrir la scène rendait « 3 » pour « Blanc chaud ».
+      label: String(c.label ?? c.value ?? ''),
       color: c.color || fb,
       opacity: 1,
     }));

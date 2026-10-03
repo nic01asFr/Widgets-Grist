@@ -263,6 +263,46 @@ cellules = collections.OrderedDict()
 for p in sorted(pts, key=lambda q: q['cellule']):
     cellules.setdefault(p['cellule'], []).append(p)
 
+# ------------------------------------------------------------------ la tournée de la campagne : un chemin réel entre les pièges
+# Réseau : tronçons de route BD TOPO (IGN, Licence Ouverte 2.0) du site, donc rues, chemins empierrés et sentiers du parc.
+import networkx as nx
+
+ROUTES = os.path.join(PIX, 'data/longchamp/lidar/bdtopo_roads.geojson')
+reseau = nx.Graph()
+for f in json.load(open(ROUTES, encoding='utf8'))['features']:
+    lignes = [f['geometry']['coordinates']] if f['geometry']['type'] == 'LineString' else f['geometry']['coordinates']
+    for ligne in lignes:
+        xy = [(round(q[0], 1), round(q[1], 1)) for q in ligne]
+        for a, b in zip(xy, xy[1:]):
+            if a != b:
+                reseau.add_edge(a, b, weight=math.hypot(a[0] - b[0], a[1] - b[1]))
+composante = max(nx.connected_components(reseau), key=len)
+reseau = reseau.subgraph(composante).copy()
+noeuds = list(reseau.nodes)
+
+
+def noeud_proche(x, y):
+    return min(noeuds, key=lambda n: math.hypot(n[0] - x, n[1] - y))
+
+
+arrets = [(g, noeud_proche(g['x'], g['y'])) for g in pieges]
+# Départ : le piège le plus au sud-ouest (l'entrée du parc côté boulevard), puis le plus proche non visité, par le chemin le plus court.
+restants = sorted(arrets, key=lambda a: a[0]['x'] + a[0]['y'])
+courant = restants.pop(0)
+ordre = [courant]
+while restants:
+    prochain = min(restants, key=lambda a: nx.shortest_path_length(reseau, courant[1], a[1], weight='weight'))
+    restants.remove(prochain)
+    ordre.append(prochain)
+    courant = prochain
+chemin = [ordre[0][1]]
+for (_, a), (_, b) in zip(ordre, ordre[1:]):
+    seg = nx.shortest_path(reseau, a, b, weight='weight')
+    chemin.extend(seg[1:])
+longueur_tournee = sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(chemin, chemin[1:]))
+coords_tournee = [tuple(round(v, 7) for v in vers_wgs.transform(x, y)) for x, y in chemin]
+ecart_max = max(math.hypot(g['x'] - n[0], g['y'] - n[1]) for g, n in arrets)
+
 # ------------------------------------------------------------------ écriture
 os.makedirs(SORTIE, exist_ok=True)
 
@@ -293,6 +333,8 @@ def _releve(r):
 ecrire('releves.json', [_releve(r) for r in releves])
 FLUX = {m[0]: m[5] for m in MODELES}
 TEMP = {m[0]: m[4] for m in MODELES}
+ecrire('tournees.json', [{'Nom': 'Campagne de juin — ronde de nuit', 'WKT': 'LINESTRING (' + ', '.join('%.7f %.7f' % c for c in coords_tournee) + ')',
+                          'Longueur_m': int(round(longueur_tournee)), 'Arrets': len(ordre), 'Ordre': ' > '.join(g['nom'] for g, _ in ordre), 'Donnee': 'tracé réel (réseau BD TOPO), ordre de passage fictif'}])
 ecrire('grille.json', [{'Cle': cle, 'WKT': wkt_cellule(cle), 'N_lum': len(v), 'Flux_total_lm': sum(FLUX[p['modele']] for p in v),
                         'K_moyen': int(round(sum(TEMP[p['modele']] for p in v) / len(v))), 'Donnee': 'calculée à partir de luminaires dont les caractéristiques sont fictives'}
                        for cle, v in cellules.items()])
@@ -305,6 +347,7 @@ for r in releves:
     pg = next(g for g in pieges if g['id'] == r['piege'])
     cle = pg['modele'] or 'témoin'
     tot[cle].append(sum(r[o[0]] for o in ORDRES))
+print('tournée :', int(round(longueur_tournee)), 'm,', len(ordre), 'arrêts, écart maximal au chemin', int(round(ecart_max)), 'm')
 print(len(cellules), 'cellules de', int(TAILLE_CELLULE), 'm')
 print(len(pts), 'points lumineux réels ;', len(pieges), 'pièges ;', len(releves), 'relevés')
 print('programmes par îlot :', collections.Counter(programmes.values()))

@@ -202,7 +202,7 @@ import {
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=20261002g';
+} from './lib/manifest-binding.js?v=20261003a';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,

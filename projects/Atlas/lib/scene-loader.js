@@ -17,7 +17,7 @@ import {
   applyDeclarativeToLayer,
 } from './declarative-style.js?v=20261001a';
 import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=20261002c';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=20261002g';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=20261003a';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
