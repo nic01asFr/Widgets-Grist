@@ -1046,6 +1046,57 @@ Le dock se redessine quand les formulaires arrivent (`chargerFormulaires`, aprè
 la carte) et quand l'auteur en propose ou en retire un : sans cela la pastille
 n'apparaissait qu'au geste suivant.
 
+## Créer un champ, un formulaire — module Formulaires (03/10/2026)
+
+Jusqu'ici « composer » voulait dire choisir parmi les colonnes existantes ; une couche née dans Atlas n'a que `nom` et sa géométrie. Trois ajouts, tous dans le
+module Formulaires (`lib/champ-formulaire.js`, logique pure, 65 tests ; l'interface est dans `app_v7.js`, bloc « Créer un champ, un relevé lié ») :
+
+- **« + Champ »** (en-tête de chaque couche) : un champ pour la **Fiche** — un nom, un type (texte, entier, décimal, oui/non, date, un ou plusieurs choix,
+  photos), les choix. Une seule `AddColumn` ; l'identifiant est dérivé du libellé (sans accents, jamais `id`/`manualSort`/`_…`/mot de Python, jamais déjà pris).
+  Un formulaire enregistré reçoit en plus le champ dans sa `Def`. Sous les autres formulaires (hors natifs de Grist), « + Ajouter un champ » fait la même chose.
+- **« + Formulaire »** : un formulaire qui **ajoute une ligne**, rattachée à un objet, dans une nouvelle table (colonne `Objet` en `Ref:` vers la couche). La date
+  est un **champ comme un autre**, proposé d'office et retirable (valeur par défaut : le jour, `departsProposes`) ; il faut au moins un champ en plus d'elle. Le champ
+  en cours de frappe est pris en compte à la création. Le formulaire est **toujours enregistré** (`Formulaires` ; `publie` et proposé si « Disponible sur le terrain »,
+  `brouillon` sinon), parce que c'est sa définition qui garde ce que la table ne dit pas : les champs **obligatoires** (`required` du champ, case « Champ obligatoire »,
+  offerte aussi sur « + Ajouter un champ » d'un formulaire enregistré, pas sur la fiche déduite qui n'a pas de définition). Deux écritures : si la seconde échoue, la table existe.
+- **Une géométrie par ligne** (« Position de chaque ligne » : aucune, un point, une ligne, une surface) : la table est alors **aussi une couche**
+  (`creerCoucheLiee` : `actionsNouvelleCouche` avec ses colonnes `Objet`, `latitude` + `longitude` pour un point ou `geometry_json` (GeoJSON) pour une ligne ou une surface, puis les champs ;
+  inventaire et apparence en une transaction). Son apparence porte `symbolization.creation = { exploiter: true, sources }`. Les sources dépendent de la forme
+  (`SOURCES_PAR_GEOMETRIE`) : un point peut se poser `carte`, `position` (appareil) ou `centre` (de l'objet) ; une ligne ou une surface se **trace** (`carte`) ou **reprend la forme de l'objet**
+  (`centre`, seulement si elle est simple et de la même famille — les géométries multiples ne se saisissent pas encore). Le créateur coche celles qu'il permet, l'agent choisit parmi elles. **En Exploiter**, l'onglet d'un tel formulaire sur la fiche de l'objet (`monterDepartGeo`) propose d'abord ces façons de poser le point ; la saisie
+  est celle de « Nouvel objet » (`nouvelObjet(fille, { parent })`, `poserPointSaisie`, `poserFormeSaisie` ; le tracé d'une ligne ou d'une surface est celui de l'édition géométrique, terra-draw) mais **avec le formulaire lié** de l'objet parent (`monterSaisieLiee`, valeurs par défaut
+  comprises) et le pont `pontFormulaire` écrit en une action `{ champs, latitude, longitude, Objet }` ; envoi ou abandon **reviennent à la fiche de l'objet**, sur le même onglet.
+
+**Date et heure.** Le type « Date et heure » crée un `DateTime:<fuseau>` (celui de l'appareil, `fuseauLocal()`) ; le moteur sait déjà l'écrire (secondes) et le préremplir avec l'heure. **Un seul champ de
+date est prérempli** (« aujourd'hui ») : celui que `colonneDate` choisit (un nom qui dit une date, sinon le premier) et que la « dernière visite » de la bulle lit (`indexDatePrincipale` le dit dans la liste).
+
+**La Fiche modifiable en un clic.** La ligne de la fiche déduite a la bascule « Modifiable sur le terrain » : `activerFormulaire` l'enregistre (publiée, titre « Fiche »), la propose
+(`exposes`) et **retire le déduit** (`retires`, reversible depuis « Masqués sur cette couche »), au lieu de « Composer » puis une bascule. `objectInspectorTabs` n'ajoute plus l'onglet de
+consultation « Fiche » quand une Fiche modifiable tient déjà la place. « Créer une variante » garde l'ancien « Composer » (copie à régler à part).
+
+**Vocabulaire (décidé avec l'auteur).** Un seul mot, **formulaire** ; il s'étiquette « modifie l'objet » (table de la couche) ou « ajoute une ligne » (table liée), et « couche liée »
+quand cette table est aussi une couche. **Fiche** est le nom du formulaire de l'objet (c'était « Attributs » en édition ; l'onglet de lecture portait déjà ce nom, `ONGLET_FICHE`).
+**« Sur le terrain »** remplace « proposé hors édition » (« Modifiable sur le terrain » pour un formulaire de l'objet). **« Valeur par défaut »** remplace « valeur de départ ». Un
+formulaire se **masque** sur la couche (« Masquer sur cette couche »), il ne se supprime pas. « Relevé » reste le nom de la pastille du dock.
+
+**Pourquoi c'est presque une opération de schéma.** Un formulaire *dérivé* se recalcule depuis les colonnes (`formDefDepuisColonnes`), et une table qui référence la couche est trouvée
+seule (`tablesReferencant`) : colonne ou table ajoutée, le formulaire paraît sans rien écrire de plus.
+
+**Pas fait** (maquette : `docs/maquettes/formulaires-refonte.html`) : « modifie l'objet » comme choix de création et « table existante » (couverts par « Créer une variante » et les tables liées
+détectées) ; ligne et surface ; « non modifiable » (date ou auteur posé à la saisie : à tester dans le moteur, la date doit être celle de l'appareil) ; aperçu du formulaire ; cartes
+repliables ; « Créer et déplacer des objets » comme réglage de la Fiche ; corriger ou supprimer une ligne saisie. Exclus :
+colonnes à formule (une scène sur l'appareil ne les calcule pas), étapes, conditions et cascades (la norme FormDef les porte, Atlas les lit et les respecte, le générateur les crée).
+
+**Éprouvé** : page d'essai (`index-vitrine-bulle.html?longchamp=1&config=1&neuf=1`, faux Grist qui garde libellés et options) — création d'un formulaire à point, saisie au centre de l'objet et sur la
+carte, abandon, retour à la fiche ; une ligne tracée (3 sommets, souris simulée) écrite en `geometry_json` avec `Objet` ; création d'une surface ; un champ « Date et heure » (`DateTime:Europe/Paris`, rendu `datetime-local`) ; moteur de scène locale (`AddTable` avec `Ref:`, `Choice`, couche à colonnes propres). **Éprouvé en Grist réel** (document 2PTWeCu66BzK, 03/10/2026, tout défait ensuite) : « + Champ » (Choice, apparaît dans la Fiche), « + Formulaire » avec `DateTime:Europe/Paris`, champ obligatoire
+(refus « Ce champ est obligatoire », `required` dans la `Def`) et un point par ligne (table, `Maquette_Layers` et `Atlas_LayerPrefs` créés d'un coup) ; saisie en Exploiter « Au centre de l'objet » :
+ligne écrite avec `Objet`, `latitude`, `longitude`, `Passage` (secondes) ; « Modifiable sur le terrain » sur la Fiche (publiée, déduite masquée).
+**Piège mesuré à cette occasion** : `AddColumn` sans `isFormula: false` crée en Grist réel une colonne « vide » (`isFormula` vrai, formule vide) que le schéma d'Atlas écarte comme colonne à
+formule — le champ n'apparaissait pas dans la Fiche. La fausse Grist de la page d'essai ne le reproduit pas. `AddTable` avec colonnes plates, lui, crée bien des colonnes de données.
+**Pas éprouvé** : application Android, « Ma position »
+(code écrit, geolocalisation non exercée ; refusée à l'iframe d'un widget Grist, où le bouton disparaît), **le tracé d'une ligne ou d'une surface au doigt sur téléphone** (tolérances posées, jamais testées),
+« Celle de l'objet » pour une surface (la grille n'était pas visible dans la page d'essai ; la reprise d'une forme simple est vérifiée par test, pas à l'écran).
+
 ## Les feuilles sur téléphone — une à la fois (18/09/2026)
 
 Sur téléphone, le panneau des modules et la fiche d'un objet sont des

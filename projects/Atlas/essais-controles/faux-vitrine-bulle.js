@@ -180,6 +180,7 @@
   }
 
   var journal = window.__journalRest = [];
+  var infos = {};   // libellé et options de colonne que les actions ajoutent : les métadonnées les rendent
   var vrai = window.fetch.bind(window);
   var neufs = window.__docsNeufs = {};
   var moteurNeuf = null;
@@ -251,7 +252,7 @@
       if (window.__longchamp) { var sq = window.__longchamp.sql(q, noms, ids); if (sq) return rep(sq); }
       if (/_grist_Tables_column/.test(q)) {
         var recs = [];
-        noms.forEach(function (nom, i) { tables[nom].cols.forEach(function (c) { var k = nom + '.' + c[0]; recs.push({ id: ids[k], fields: { id: ids[k], parentId: i + 1, colId: c[0], type: c[1], label: c[0], isFormula: !!c[2], widgetOptions: window.__longchamp ? window.__longchamp.options(k) : '{}', visibleCol: vis[k] ? ids[vis[k]] : 0 } }); }); });
+        noms.forEach(function (nom, i) { tables[nom].cols.forEach(function (c) { var k = nom + '.' + c[0]; recs.push({ id: ids[k], fields: { id: ids[k], parentId: i + 1, colId: c[0], type: c[1], label: (infos[k] && infos[k].label) || c[0], isFormula: !!c[2], widgetOptions: (infos[k] && infos[k].widgetOptions) || (window.__longchamp ? window.__longchamp.options(k) : '{}'), visibleCol: vis[k] ? ids[vis[k]] : 0 } }); }); });
         return rep({ records: recs });
       }
       if (/_grist_Tables/.test(q)) return rep({ records: noms.map(function (nom, i) { return { id: i + 1, fields: { id: i + 1, tableId: nom } }; }) });
@@ -262,9 +263,9 @@
       var suivant = function (t) { return t.rows.reduce(function (m, r) { return Math.max(m, r.id); }, 0) + 1; };
       var retours = actions.map(function (a) {
         var t = tables[a[1]];
-        if (a[0] === 'AddTable') { tables[a[1]] = { cols: a[2].map(function (c) { return [c.id, c.type]; }), rows: [] }; return null; }
+        if (a[0] === 'AddTable') { tables[a[1]] = { cols: a[2].map(function (c) { infos[a[1] + '.' + c.id] = { label: c.label, widgetOptions: c.widgetOptions }; return [c.id, c.type]; }), rows: [] }; return { table_id: a[1], id: 1, columns: a[2].map(function (c) { return c.id; }), views: [] }; }
         if (!t) return null;
-        if (a[0] === 'AddColumn') { t.cols.push([a[2], a[3] && a[3].type]); return null; }
+        if (a[0] === 'AddColumn') { t.cols.push([a[2], a[3] && a[3].type]); infos[a[1] + '.' + a[2]] = { label: a[3] && a[3].label, widgetOptions: a[3] && a[3].widgetOptions }; return null; }
         if (a[0] === 'UpdateRecord') { t.rows.forEach(function (r) { if (r.id === a[2]) Object.assign(r.fields, a[3]); }); return null; }
         if (a[0] === 'BulkUpdateRecord') { a[2].forEach(function (id, i) { t.rows.forEach(function (r) { if (r.id === id) Object.keys(a[3]).forEach(function (k) { r.fields[k] = a[3][k][i]; }); }); }); return null; }
         if (a[0] === 'RemoveRecord') { t.rows = t.rows.filter(function (r) { return r.id !== a[2]; }); return null; }

@@ -16,8 +16,8 @@ import {
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
 } from './declarative-style.js?v=20261001a';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=20261002c';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=20261003a';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=20261003g';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=20261003g';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 

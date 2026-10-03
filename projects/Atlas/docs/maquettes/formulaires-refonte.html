@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formulaires, refonte du panneau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Les jetons d'Atlas (index_v7.html), tels quels : la maquette doit se lire comme l'application. */
+:root {
+  --bg: #F4EFE3; --surface: #FFFFFF; --surface-muted: #FAF6EB;
+  --ink: #1F1B14; --text: #2D2820; --muted: #7A6F5E; --muted-light: #A89E8B;
+  --hairline: #E2DBC8; --hairline-strong: #C9C0A8;
+  --accent: #C44536; --accent-soft: #F5E9DC; --accent2: #2E4E54; --green: #5B7A4F;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --nouveau: #2E4E54;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+.page { max-width: 1480px; margin: 0 auto; padding: 40px 24px 80px; }
+h1, h2, h3, p { margin: 0; }
+code { font-family: var(--mono); font-size: .92em; }
+
+/* ---------- l'en-tête de la maquette ---------- */
+.entete { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px; align-items: end; padding-bottom: 28px; border-bottom: 1px solid var(--hairline-strong); }
+.entete h1 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 40px; line-height: 1.1; color: var(--ink); text-wrap: balance; }
+.entete .sous { margin-top: 10px; color: var(--muted); max-width: 52ch; }
+.principes { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: p; }
+.principes li { counter-increment: p; display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 13.5px; }
+.principes li::before { content: counter(p); font-family: var(--mono); font-size: 11px; color: var(--accent); padding-top: 2px; }
+.principes b { color: var(--ink); font-weight: 600; }
+
+/* ---------- le modèle : un formulaire, trois réglages ---------- */
+.mots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+.mot { padding: 16px 18px; border: 1px solid var(--hairline-strong); border-radius: 14px; background: var(--surface); }
+.mot h2 { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 20px; color: var(--ink); }
+.mot .def { margin-top: 4px; font-size: 13px; color: var(--text); }
+.mot .def b { font-weight: 600; color: var(--ink); }
+.mot .tech { margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+.modele-note { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.modele-note b { color: var(--ink); font-weight: 600; }
+
+/* ---------- les cadres ---------- */
+.cadres { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 44px 36px; margin-top: 36px; align-items: start; }
+.cadre-titre { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.cadre-titre .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.cadre-titre h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; color: var(--ink); }
+.panneau { background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 22px 20px 20px; box-shadow: 0 1px 0 var(--hairline), 0 18px 40px -28px rgba(31, 27, 20, .35); }
+.notes { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 12.5px; color: var(--muted); }
+.notes li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+.notes b { color: var(--ink); font-weight: 600; }
+
+/* repère numéroté, partagé par le cadre et sa liste de notes */
+.r { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font: 600 10px/1 var(--sans); flex: none; }
+.r.n { background: var(--nouveau); }
+.r.m { margin-left: 4px; }
+
+/* ---------- le panneau, comme dans Atlas ---------- */
+.p-titre { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 24px; color: var(--ink); }
+.p-intro { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.p-intro b { color: var(--text); font-weight: 600; }
+.retour { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; cursor: pointer; }
+.retour::before { content: ''; width: 6px; height: 6px; border-left: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-right: 2px; }
+.sous-titre { margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.carte { margin-top: 16px; border: 1px solid var(--hairline); border-radius: 14px; background: var(--surface); }
+.carte + .carte { margin-top: 10px; }
+.carte-tete { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.repli { width: 22px; height: 22px; flex: none; border: 0; background: none; padding: 0; cursor: pointer; position: relative; }
+.repli::before { content: ''; position: absolute; left: 8px; top: 6px; width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); transition: transform 140ms ease; }
+.carte:not(.ouverte) .repli::before { transform: rotate(-45deg); top: 8px; }
+.carte-nom { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.carte-nom .nom { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--ink); line-height: 1.2; }
+.carte-nom .meta { font-size: 11.5px; color: var(--muted); }
+.carte-actions { display: flex; gap: 6px; flex: none; }
+.mini { font: 600 11.5px/1 var(--sans); padding: 7px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong); background: var(--surface-muted); color: var(--text); cursor: pointer; white-space: nowrap; }
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini:focus-visible, .lien:focus-visible, .retour:focus-visible, .repli:focus-visible, .pastille:focus-visible, .bouton:focus-visible, .choix:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.carte-corps { padding: 0 14px 14px; }
+.carte:not(.ouverte) .carte-corps { display: none; }
+
+.groupe { margin-top: 12px; }
+.groupe h3 { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.ligne { padding: 10px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
+.ligne + .ligne { border-top: 1px dashed var(--hairline); }
+.ligne .titre { font-weight: 600; font-size: 13.5px; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ligne .resume { grid-column: 1; font-size: 12px; color: var(--muted); }
+.ligne .resume code { font-size: 11px; }
+.ligne .actions { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; margin-top: 4px; font-size: 12px; }
+.lien { font: inherit; font-size: 12px; color: var(--accent2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.badge { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: var(--surface-muted); border: 1px solid var(--hairline); color: var(--muted); white-space: nowrap; font-weight: 400; }
+.badge.nouveau { background: #E5EEF0; border-color: #BFD1D5; color: var(--nouveau); }
+/* l'étiquette de ce que le formulaire écrit : le seul endroit où la structure se lit */
+.etiq { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; font-weight: 600; border: 1px solid; }
+.etiq.modifie { color: var(--accent2); border-color: #BFD1D5; background: #F1F6F7; }
+.etiq.ajoute { color: #4A6A3F; border-color: #CBD9C3; background: #F0F5EC; }
+
+/* l'interrupteur étiqueté : l'action centrale du panneau dit enfin ce qu'elle fait */
+.bascule { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer; font-weight: 400; }
+.bascule .piste { position: relative; width: 34px; height: 20px; border-radius: 999px; background: #D8D0BC; transition: background 140ms ease; flex: none; }
+.bascule .piste::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(31,27,20,.3); transition: transform 140ms ease; }
+.bascule[aria-checked="true"] .piste { background: var(--accent); }
+.bascule[aria-checked="true"] .piste::after { transform: translateX(14px); }
+/* le réglage qui ne vaut que pour la fiche : la création et le déplacement d'objets */
+.sousreglage { grid-column: 1 / -1; margin-top: 8px; padding: 9px 11px; border-radius: 10px; background: var(--surface-muted); border: 1px solid var(--hairline); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
+.sousreglage .lib { font-size: 12.5px; color: var(--ink); font-weight: 600; }
+.sousreglage .aide { grid-column: 1; font-size: 11.5px; color: var(--muted); }
+
+.ajout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 8px; padding: 11px; border: 1.5px dashed var(--hairline-strong); border-radius: 10px; background: transparent; color: var(--accent2); font: 600 12.5px var(--sans); cursor: pointer; }
+.ajout:hover { border-color: var(--accent); color: var(--accent); }
+
+.terrain { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--surface-muted); border: 1px solid var(--hairline); }
+.terrain .lib { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.onglets { display: flex; gap: 4px; flex-wrap: wrap; align-items: flex-end; }
+.onglet { font-size: 12px; padding: 5px 10px; border-radius: 8px 8px 0 0; border: 1px solid var(--hairline); border-bottom-color: transparent; background: var(--surface); color: var(--muted); }
+.onglet.actif { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+.onglet.nv { color: var(--nouveau); }
+.terrain .carte-bouton { margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+.terrain .carte-bouton b { display: inline-block; padding: 3px 9px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 600; font-size: 11px; margin-right: 4px; }
+
+/* ---------- l'éditeur de champs ---------- */
+.champ { display: grid; grid-template-columns: 18px 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; }
+.champ.sans-poignee { grid-template-columns: 64px minmax(0, 1fr) auto; }
+.champ + .champ { border-top: 1px dashed var(--hairline); }
+.poignee { width: 10px; height: 14px; background: radial-gradient(circle, var(--muted-light) 1.2px, transparent 1.6px) 0 0 / 5px 5px; opacity: .8; }
+.type { font: 500 10.5px var(--mono); padding: 3px 0; text-align: center; border-radius: 6px; background: var(--surface-muted); border: 1px solid var(--hairline); color: var(--muted); }
+.champ .nom { font-size: 13px; color: var(--ink); min-width: 0; }
+.champ .nom small { display: block; font-size: 11px; color: var(--muted); }
+.champ.masque .nom { color: var(--muted-light); text-decoration: line-through; text-decoration-color: var(--hairline-strong); }
+.apercu { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--surface-muted); border: 1px solid var(--hairline); }
+.apercu .lib { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.f { margin-bottom: 9px; }
+.f label { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 3px; }
+.f .saisie { height: 32px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: #fff; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--ink); }
+.f .saisie.vide { color: var(--muted-light); }
+.f .saisie .fl { width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); margin-top: -3px; }
+
+/* la valeur par défaut d'un champ : un réglage du champ, pas du formulaire */
+.reglage-champ { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 2px 0 0 74px; padding: 7px 10px; border-radius: 8px; background: var(--surface-muted); border: 1px solid var(--hairline); font-size: 12px; color: var(--muted); }
+.reglage-champ .depart { display: inline-flex; align-items: center; gap: 6px; }
+.reglage-champ select { font: 500 12px var(--sans); color: var(--ink); border: 1px solid var(--hairline-strong); border-radius: 8px; background: #fff; padding: 4px 8px; }
+.reglage-champ .verrou { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+.reglage-champ .verrou i { width: 15px; height: 15px; border-radius: 4px; background: var(--accent); position: relative; flex: none; }
+.reglage-champ .verrou i::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(40deg); }
+
+/* où ranger les saisies : deux cartes, puis un détail qui dit ce que le choix implique */
+.choix[disabled] { opacity: .55; cursor: not-allowed; background: var(--surface-muted); }
+.cond .lien { margin-left: 4px; }
+.tables-liees { display: grid; gap: 6px; margin-top: 8px; }
+.table-liee { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; text-align: left; width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--hairline-strong); background: #fff; font: inherit; color: var(--text); cursor: pointer; }
+.table-liee .nom { font-weight: 600; font-size: 13px; color: var(--ink); font-family: var(--mono); }
+.table-liee .meta { font-size: 11.5px; color: var(--muted); text-align: right; }
+.table-liee[aria-pressed="true"] { border-color: var(--accent); background: #FFF8F2; }
+.variante { margin-top: 14px; }
+.variante .etiquette { margin-top: 0; }
+
+/* cases décochées */
+.case i.off, .reglage-champ .verrou i.off { background: #fff; border: 1.5px solid var(--hairline-strong); }
+.case i.off::after, .reglage-champ .verrou i.off::after { display: none; }
+.case small { color: var(--muted); font-size: 11.5px; }
+.cond { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--surface-muted); border: 1px dashed var(--hairline-strong); font-size: 12px; color: var(--muted); }
+
+/* ---------- cas d'usage, étapes sur téléphone ---------- */
+.etiq.geo { color: #7A5B1E; border-color: #E3D2A8; background: #FBF4E2; }
+.large { grid-column: 1 / -1; }
+.etapes { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+.etape { width: 296px; max-width: 100%; }
+.etape-titre { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; font-size: 13px; color: var(--ink); font-weight: 600; }
+.etape-titre .n { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 400; }
+.mtel { position: relative; height: 500px; border-radius: 26px; border: 6px solid var(--ink); background: #D9E2CF; overflow: hidden; box-shadow: 0 18px 36px -22px rgba(31,27,20,.5); }
+.mt-poly { position: absolute; left: 18%; top: 14%; width: 62%; height: 34%; background: rgba(46,78,84,.32); clip-path: polygon(6% 22%, 70% 0, 100% 46%, 78% 100%, 12% 86%); }
+.mt-poly.fort { background: rgba(46,78,84,.45); }
+.mt-route { position: absolute; left: -10%; top: 60%; width: 130%; height: 7px; background: #E7E0CC; transform: rotate(-9deg); }
+.mt-point { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(31,27,20,.5); transform: translate(-50%, -50%); }
+.mt-croix { position: absolute; width: 34px; height: 34px; transform: translate(-50%, -50%); }
+.mt-croix::before, .mt-croix::after { content: ''; position: absolute; background: var(--ink); }
+.mt-croix::before { left: 16px; top: 0; width: 2px; height: 34px; }
+.mt-croix::after { top: 16px; left: 0; height: 2px; width: 34px; }
+.mt-feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 18px 18px 0 0; padding: 8px 14px 14px; box-shadow: 0 -8px 24px rgba(31,27,20,.22); }
+.mt-feuille .prise { width: 36px; height: 4px; border-radius: 2px; background: var(--hairline-strong); margin: 0 auto 8px; }
+.mt-entete { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--ink); line-height: 1.2; }
+.mt-aide { margin: 8px 0 10px; font-size: 12px; color: var(--muted); }
+.mt-feuille .onglets { margin-top: 8px; }
+.mt-feuille .seg { margin-top: 8px; }
+.mt-feuille .seg button { font-size: 11px; padding: 7px 4px; }
+.mt-feuille .boutons { margin-top: 10px; }
+.mt-feuille .bouton { height: 36px; font-size: 12.5px; }
+.mt-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 7px 10px; border-radius: 10px; background: #F0F5EC; border: 1px solid #CBD9C3; font-size: 12px; color: #3E5535; }
+.mt-bandeau { position: absolute; left: 10px; right: 10px; top: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.94); font-size: 12px; color: var(--ink); box-shadow: 0 2px 8px rgba(31,27,20,.2); }
+.mt-feuille .f { margin-bottom: 7px; }
+.mt-feuille .f .saisie { height: 30px; }
+
+/* ---------- la création ---------- */
+.etiquette { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+.champ-texte { width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--hairline-strong); border-radius: 10px; background: #fff; font: 14px var(--sans); color: var(--ink); }
+.champ-texte:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+textarea.champ-texte { height: 76px; padding: 8px 12px; resize: none; line-height: 1.5; }
+.pastilles { display: flex; flex-wrap: wrap; gap: 6px; }
+.pastille { font: 500 12px var(--sans); padding: 7px 11px; border-radius: 999px; border: 1px solid var(--hairline-strong); background: #fff; color: var(--text); cursor: pointer; }
+.pastille[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.choix-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choix { text-align: left; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--hairline-strong); background: #fff; font: inherit; color: var(--text); cursor: pointer; }
+.choix b { display: block; font-size: 13px; color: var(--ink); }
+.choix span { display: block; margin-top: 3px; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.choix[aria-pressed="true"] { border-color: var(--accent); background: #FFF8F2; }
+.seg { display: inline-flex; width: 100%; border: 1px solid var(--hairline-strong); border-radius: 10px; overflow: hidden; background: #fff; }
+.seg button { flex: 1; padding: 8px 6px; border: 0; border-left: 1px solid var(--hairline); background: transparent; font: 500 12px var(--sans); color: var(--text); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.seg button small { display: block; font-size: 10px; opacity: .85; font-weight: 400; }
+.case { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
+.case i { width: 16px; height: 16px; border-radius: 4px; background: var(--accent); position: relative; flex: none; }
+.case i::after { content: ''; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(40deg); }
+.resume-ecriture { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: #EEF3EA; border: 1px solid #CBD9C3; font-size: 12px; color: #3E5535; }
+.resume-ecriture code { font-size: 11px; }
+.boutons { display: flex; gap: 8px; margin-top: 14px; }
+.bouton { flex: 1; height: 40px; border-radius: 10px; border: 1px solid var(--hairline-strong); background: var(--surface-muted); font: 600 13px var(--sans); color: var(--text); cursor: pointer; }
+.bouton.primaire { background: var(--accent); border-color: var(--accent); color: #fff; }
+.champ-saisie { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-top: 8px; padding: 10px; border: 1.5px dashed var(--accent); border-radius: 10px; background: #FFFDF8; }
+.champ-saisie .sec { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; }
+.champ-saisie .sec .pastille { padding: 4px 9px; font-size: 11px; }
+.champ-saisie .entree { height: 32px; border: 0; background: transparent; font: 13px var(--sans); color: var(--ink); min-width: 0; }
+.champ-saisie .entree::placeholder { color: var(--muted-light); }
+.champ-saisie .entree:focus-visible { outline: none; }
+.champ-saisie .entrer { font: 500 10.5px var(--mono); color: var(--muted); padding: 3px 6px; border: 1px solid var(--hairline-strong); border-radius: 5px; background: #fff; }
+
+/* ---------- le téléphone ---------- */
+.tel { width: 340px; max-width: 100%; margin: 0 auto; border-radius: 34px; border: 8px solid var(--ink); background: #CFC7B2; overflow: hidden; position: relative; height: 640px; box-shadow: 0 24px 48px -24px rgba(31,27,20,.5); }
+.tel .carte-fond { position: absolute; inset: 0; background:
+  radial-gradient(circle at 30% 24%, #8FB38C 0 3px, transparent 4px), radial-gradient(circle at 62% 18%, #8FB38C 0 3px, transparent 4px),
+  radial-gradient(circle at 50% 36%, #8FB38C 0 3px, transparent 4px),
+  linear-gradient(120deg, transparent 40%, #E7E0CC 40% 44%, transparent 44%), linear-gradient(60deg, transparent 52%, #E7E0CC 52% 55%, transparent 55%), #D9E2CF; }
+.tel .voile { position: absolute; inset: 0; background: rgba(31,27,20,.28); }
+.tel .feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 22px 22px 0 0; padding: 10px 18px 16px; box-shadow: 0 -10px 30px rgba(31,27,20,.25); }
+.tel .prise { width: 40px; height: 4px; border-radius: 2px; background: var(--hairline-strong); margin: 0 auto 10px; }
+.tel .feuille h2 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 21px; color: var(--ink); }
+.apercu-champ { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--surface-muted); border: 1px solid var(--hairline); }
+.apercu-champ .lib { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+/* ---------- le bas : vocabulaire, coût, décisions ---------- */
+.bas { margin-top: 56px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px; }
+.bas h2 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--ink); margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 0 12px 8px 0; }
+td { padding: 9px 12px 9px 0; border-top: 1px solid var(--hairline); vertical-align: top; }
+td:first-child { color: var(--muted); }
+td:nth-child(2) { color: var(--ink); font-weight: 600; }
+.cout { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 13px; }
+.cout li { padding-left: 14px; position: relative; }
+.cout li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 1.5px; background: var(--accent); }
+.cout b { color: var(--ink); }
+.question { margin-top: 22px; padding: 14px 16px; border-radius: 12px; background: var(--accent-soft); border: 1px solid #E8D3BC; font-size: 13px; }
+.question b { color: var(--ink); }
+.question ol { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; }
+.horsperimetre { margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+.horsperimetre b { color: var(--ink); }
+
+@media (max-width: 900px) {
+  .entete, .bas, .mots { grid-template-columns: 1fr; gap: 24px; }
+  .mots { gap: 12px; }
+  .entete h1 { font-size: 32px; }
+  .page { padding: 24px 16px 60px; }
+  .cadres { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="entete">
+  <div>
+    <h1>Formulaires, refonte du panneau</h1>
+    <p class="sous">Maquette de travail, deuxième version. Un seul objet, le formulaire, avec deux réglages : ce qu’il écrit, et s’il est offert sur le terrain. Les valeurs par défaut, dates comprises, se règlent champ par champ. Les données sont celles du cas Longchamp.</p>
+  </div>
+  <ol class="principes">
+    <li><span><b>Un seul mot : formulaire.</b> Ce qu’il écrit se lit sur une étiquette, pas dans deux familles de formulaires à comprendre.</span></li>
+    <li><span><b>Créer est le geste principal.</b> Un champ ou un formulaire s’ajoute depuis l’en-tête de la couche, pas depuis un bouton effacé en pied de carte.</span></li>
+    <li><span><b>Voir avant d’écrire.</b> Chaque création montre le formulaire obtenu et dit en une phrase ce qui sera écrit dans le document.</span></li>
+    <li><span><b>Rien d’effacé, rien d’ignoré.</b> Un champ qu’on retire se masque ; un champ en cours de saisie n’est jamais perdu en silence.</span></li>
+  </ol>
+</header>
+
+<section class="mots" aria-label="Le modèle">
+  <div class="mot">
+    <h2>Ce qu’il écrit</h2>
+    <p class="def"><b>Modifie l’objet</b> : remplit ou corrige la ligne de l’objet, une par objet. <b>Ajoute une ligne</b> : chaque saisie crée une ligne dans une table liée, rattachée à l’objet. Cette ligne peut avoir une <b>géométrie</b> : la table est alors aussi une <b>couche liée</b>.</p>
+    <p class="tech">La table cible décide : la table de la couche, ou une table avec une colonne <code>Ref:</code> vers elle. Le formulaire par défaut de l’objet s’appelle « Fiche ».</p>
+  </div>
+  <div class="mot">
+    <h2>La valeur par défaut d’un champ</h2>
+    <p class="def">Dans un formulaire qui ajoute une ligne, chaque champ a une <b>valeur par défaut</b> : <b>vide</b>, <b>aujourd’hui</b> (champ date), la <b>dernière saisie</b>, la <b>dernière ligne de l’objet</b>, ou <b>moi</b> (champ personne). Il peut en plus être <b>non modifiable</b>.</p>
+    <p class="tech">La valeur par défaut existe déjà, champ par champ. La « dernière visite » de la bulle lit la première colonne de type date de la table liée. La géométrie de la ligne a sa propre source (cadre 3).</p>
+  </div>
+  <div class="mot">
+    <h2>Sur le terrain</h2>
+    <p class="def"><b>Offert en onglet</b> quand on ouvre un objet en Exploiter. Seule la Fiche porte en plus <b>« Créer et déplacer des objets »</b>, parce que la création utilise la fiche.</p>
+    <p class="tech">Aujourd’hui « proposé hors édition », et « Nouvel objet » en réglage de couche.</p>
+  </div>
+</section>
+<p class="modele-note"><b>« Relevé »</b> n’est plus un type de formulaire : il reste le nom de la pastille du dock, et se dit en clair sur l’étiquette « ajoute une ligne ».</p>
+
+<div class="cadres">
+
+  <!-- ============ 1. LE PANNEAU ============ -->
+  <section aria-labelledby="c1">
+    <div class="cadre-titre"><span class="n">1</span><h2 id="c1">Le panneau</h2></div>
+    <div class="panneau">
+      <h2 class="p-titre">Formulaires</h2>
+      <p class="p-intro">Ce que l’équipe peut saisir, couche par couche. Un formulaire <b>sur le terrain</b> s’ouvre en onglet sur l’objet, en Exploiter.</p>
+
+      <article class="carte ouverte">
+        <header class="carte-tete">
+          <button class="repli" aria-label="Replier Pièges" aria-expanded="true"></button>
+          <div class="carte-nom"><span class="nom">Pièges</span><span class="meta">19 objets</span></div>
+          <div class="carte-actions"><button class="mini">+ Champ <span class="r m">1</span></button><button class="mini">+ Formulaire <span class="r m">1</span></button></div>
+        </header>
+        <div class="carte-corps">
+          <div class="groupe">
+            <h3>Formulaires <span class="r m">2</span></h3>
+
+            <div class="ligne">
+              <span class="titre">Fiche <span class="etiq modifie">modifie l’objet</span></span>
+              <span class="bascule" role="switch" aria-checked="true" tabindex="0"><span class="piste"></span>Sur le terrain</span>
+              <span class="resume">Nom, Type, Luminaire, Dist. eau, +3 · 7 champs</span>
+              <span class="actions"><button class="lien">Modifier</button><button class="lien">Aperçu</button><button class="lien">Masquer sur cette couche</button></span>
+              <div class="sousreglage">
+                <span class="lib">Créer et déplacer des objets <span class="r m">3</span></span>
+                <span class="bascule" role="switch" aria-checked="true" aria-label="Créer et déplacer des objets en exploitation" tabindex="0"><span class="piste"></span></span>
+                <span class="aide">En Exploiter, le bouton « Nouvel objet » et le déplacement de la forme sont offerts. La création utilise la fiche.</span>
+              </div>
+            </div>
+
+            <div class="ligne">
+              <span class="titre">Poser un piège <span class="etiq modifie">modifie l’objet</span> <span class="badge">Formulaire Grist</span></span>
+              <span class="bascule" role="switch" aria-checked="false" tabindex="0"><span class="piste"></span>Sur le terrain</span>
+              <span class="resume">3 champs · se règle dans Grist</span>
+            </div>
+
+            <div class="ligne">
+              <span class="titre">Relevé de nuit <span class="etiq ajoute">ajoute une ligne</span> <span class="etiq geo">couche liée · surfaces</span> <span class="r m">5</span> <span class="badge">Formulaire Grist</span></span>
+              <span class="bascule" role="switch" aria-checked="false" tabindex="0"><span class="piste"></span>Sur le terrain</span>
+              <span class="resume">9 champs · date préremplie · table <code>Releves</code> · 12 lignes</span>
+            </div>
+
+            <div class="ligne">
+              <span class="titre">Visite d’entretien <span class="etiq ajoute">ajoute une ligne</span> <span class="badge nouveau">nouveau</span></span>
+              <span class="bascule" role="switch" aria-checked="true" tabindex="0"><span class="piste"></span>Sur le terrain</span>
+              <span class="resume">4 champs · date préremplie · table <code>Visite_d_entretien</code> · 0 ligne</span>
+              <span class="actions"><button class="lien">Modifier</button><button class="lien">Aperçu</button></span>
+            </div>
+
+            <button class="ajout">+ Nouveau formulaire</button>
+          </div>
+
+          <div class="terrain">
+            <div class="lib">En Exploiter, sur un objet <span class="r m">4</span></div>
+            <div class="onglets"><span class="onglet actif">Fiche</span><span class="onglet nv">Visite d’entretien</span></div>
+            <div class="carte-bouton"><b>+ Nouvel objet</b> sur la carte</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="carte">
+        <header class="carte-tete">
+          <button class="repli" aria-label="Déplier Luminaires" aria-expanded="false"></button>
+          <div class="carte-nom"><span class="nom">Luminaires</span><span class="meta">643 objets · 1 formulaire sur le terrain</span></div>
+          <div class="carte-actions"><button class="mini">+ Champ</button><button class="mini">+ Formulaire</button></div>
+        </header>
+      </article>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>Deux créations, dans l’en-tête de la couche.</b> « + Champ » ajoute une colonne à la table de l’objet, donc à la Fiche ; « + Formulaire » ouvre la création (cadre 3). Elles restent visibles quand la carte est repliée.</span></li>
+      <li><span class="r">2</span><span><b>Une seule liste.</b> La Fiche d’abord, puis les formulaires qui modifient l’objet, puis ceux qui ajoutent une ligne. L’étiquette dit ce que chacun écrit ; « Composer » et « Enregistrer » disparaissent (activer un formulaire déduit l’enregistre en coulisse).</span></li>
+      <li><span class="r">3</span><span><b>Le réglage de création et de déplacement passe dans la Fiche.</b> Il est stocké au même endroit qu’aujourd’hui (réglage de la couche) ; seul son emplacement à l’écran change, là où il s’applique.</span></li>
+      <li><span class="r">4</span><span><b>Le pied de carte montre le résultat</b> : les onglets, et le bouton de la carte quand la création est offerte.</span></li>
+      <li><span class="r n">·</span><span><b>Un formulaire « avancé »</b> (étapes, conditions, listes en cascade, fait dans le générateur) s’affiche ici comme les autres, avec une pastille « avancé » et son nombre d’étapes. On le règle de la même façon : masquer des champs, sauf ceux dont un autre dépend, qui sont verrouillés. Il se crée et se refait dans le générateur.</span></li>
+      <li><span class="r">5</span><span><b>Une table liée qui porte une géométrie</b> est aussi une couche : l’étiquette le dit. C’est déjà le cas des relevés de nuit de la démo (des plots de 7 m). On la retrouve dans le panneau Couches, avec sa symbologie.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 2. MODIFIER ============ -->
+  <section aria-labelledby="c2">
+    <div class="cadre-titre"><span class="n">2</span><h2 id="c2">Modifier un formulaire</h2></div>
+    <div class="panneau">
+      <button class="retour">Formulaires</button>
+      <h2 class="p-titre">Fiche</h2>
+      <p class="sous-titre">modifie l’objet · table Pieges · 7 champs</p>
+
+      <div class="groupe">
+        <h3>Champs</h3>
+        <div class="champ sans-poignee"><span class="type">Texte</span><span class="nom">Nom</span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer Nom" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Choix</span><span class="nom">Type<small>Sous un luminaire, Témoin non éclairé</small></span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer Type" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Lien</span><span class="nom">Luminaire<small>vers Luminaires</small></span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer Luminaire" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Nombre</span><span class="nom">Dist. eau (m)</span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer Dist. eau" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Nombre</span><span class="nom">Dist. luminaire (m)</span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer Dist. luminaire" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ masque sans-poignee"><span class="type">Texte</span><span class="nom">Donnée</span><span class="bascule" role="switch" aria-checked="false" aria-label="Montrer Donnée" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Choix</span><span class="nom">État du piège <span class="badge nouveau">nouveau</span><small>Intact, À réparer, Manquant</small></span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer État du piège" tabindex="0"><span class="piste"></span></span></div>
+        <button class="ajout">+ Ajouter un champ <span class="r m">1</span></button>
+      </div>
+
+      <div class="apercu">
+        <div class="lib"><span>Aperçu, tel que sur le terrain <span class="r n m">2</span></span><span>6 champs</span></div>
+        <div class="f"><label>Nom</label><div class="saisie">P15</div></div>
+        <div class="f"><label>Type</label><div class="saisie">Sous un luminaire <span class="fl"></span></div></div>
+        <div class="f"><label>Luminaire</label><div class="saisie">90641 <span class="fl"></span></div></div>
+        <div class="f"><label>Dist. eau (m)</label><div class="saisie">19</div></div>
+        <div class="f"><label>Dist. luminaire (m)</label><div class="saisie">3</div></div>
+        <div class="f"><label>État du piège</label><div class="saisie vide">Choisir <span class="fl"></span></div></div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>L’ajout est dans la liste</b>, à l’endroit où l’on regarde les champs, et le nouveau champ y apparaît aussitôt, marqué « nouveau ». La colonne est créée dans la table du formulaire.</span></li>
+      <li><span class="r n">2</span><span><b>Un aperçu vivant</b>, rendu par le moteur de formulaire, suit chaque interrupteur. On voit ce que la personne verra.</span></li>
+      <li><span class="r n">·</span><span><b>Obligatoire</b> existe dans le moteur, mais un formulaire déduit n’en rend aucun et Atlas n’offre aucun réglage : à décider avant d’en montrer un.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 3. NOUVEAU FORMULAIRE ============ -->
+  <section aria-labelledby="c3">
+    <div class="cadre-titre"><span class="n">3</span><h2 id="c3">Nouveau formulaire</h2></div>
+    <div class="panneau">
+      <button class="retour">Formulaires</button>
+      <h2 class="p-titre">Nouveau formulaire</h2>
+      <p class="sous-titre">Pièges</p>
+
+      <label class="etiquette" for="m-nom">Nom du formulaire</label>
+      <input id="m-nom" class="champ-texte" value="Visite d’entretien">
+
+      <span class="etiquette">Que fait la saisie ? <span class="r m">1</span></span>
+      <div class="choix-deux" role="group" aria-label="Ce que fait la saisie">
+        <button class="choix" aria-pressed="false"><b>Modifie l’objet</b><span>Remplit ou corrige la ligne de l’objet. Aucune table créée.</span></button>
+        <button class="choix" aria-pressed="true"><b>Ajoute une ligne</b><span>Chaque saisie crée une ligne rattachée à l’objet.</span></button>
+      </div>
+
+      <span class="etiquette">Où ranger les saisies ? <span class="r m">2</span></span>
+      <div class="choix-deux" role="group" aria-label="Où ranger les saisies">
+        <button class="choix" aria-pressed="true"><b>Nouvelle table</b><span>Créée pour ce formulaire.</span></button>
+        <button class="choix" aria-pressed="false"><b>Table existante</b><span>Une table déjà liée aux pièges.</span></button>
+      </div>
+      <p class="cond">Nom de la table : <code>Visite_d_entretien</code>, tiré du nom du formulaire. <button class="lien">Modifier</button></p>
+
+      <span class="etiquette">Géométrie de chaque ligne <span class="r m">3</span></span>
+      <div class="seg" role="group" aria-label="Géométrie de chaque ligne"><button aria-pressed="true">Aucune</button><button aria-pressed="false">Point</button><button aria-pressed="false">Ligne</button><button aria-pressed="false">Surface</button></div>
+
+      <div class="groupe" style="margin-top:16px">
+        <h3>Champs</h3>
+        <div class="champ sans-poignee"><span class="type">Date</span><span class="nom">Date <span class="badge">ajouté d’office</span></span><button class="lien">Retirer</button>
+          <div class="reglage-champ"><span class="depart">Par défaut <select aria-label="Valeur par défaut de Date"><option>Aujourd’hui</option><option>Vide</option><option>Dernière saisie</option></select> <span class="r n m">4</span></span><span class="verrou"><i class="off"></i> Non modifiable</span></div></div>
+        <div class="champ sans-poignee"><span class="type">Oui/non</span><span class="nom">Piège nettoyé<small>par défaut : vide</small></span><button class="lien">Retirer</button></div>
+        <div class="champ sans-poignee"><span class="type">Texte</span><span class="nom">Remarques<small>par défaut : vide</small></span><button class="lien">Retirer</button></div>
+        <div class="champ-saisie">
+          <input class="entree" placeholder="Nom du champ suivant" value="Durée (min)" aria-label="Nom du champ suivant">
+          <span class="entrer">Entrée</span>
+          <div class="sec" role="group" aria-label="Type du champ">
+            <button class="pastille" aria-pressed="false">Texte</button><button class="pastille" aria-pressed="true">Nombre</button><button class="pastille" aria-pressed="false">Oui/non</button><button class="pastille" aria-pressed="false">Date</button><button class="pastille" aria-pressed="false">Choix</button><button class="pastille" aria-pressed="false">Photos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="case"><i></i> Disponible sur le terrain</div>
+
+      <div class="apercu">
+        <div class="lib"><span>Aperçu</span><span>4 champs</span></div>
+        <div class="f"><label>Date</label><div class="saisie">03/10/2026</div></div>
+        <div class="f"><label>Piège nettoyé</label><div class="saisie vide">Non</div></div>
+        <div class="f"><label>Remarques</label><div class="saisie vide">&nbsp;</div></div>
+        <div class="f"><label>Durée (min)</label><div class="saisie vide">&nbsp;</div></div>
+      </div>
+
+      <div class="resume-ecriture">Crée la table <code>Visite_d_entretien</code> (colonne <code>Objet</code> vers Pièges), y ajoute les 4 champs, et propose le formulaire sur le terrain. Rien d’autre n’est modifié. <span class="r n m">5</span></div>
+      <div class="boutons"><button class="bouton">Annuler</button><button class="bouton primaire">Créer le formulaire</button></div>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>Le premier choix est ce que fait la saisie.</b> « Modifie l’objet » : les champs se choisissent parmi ceux de la Fiche, plus des champs neufs ; aucune table créée, et la date n’est pas posée automatiquement (une colonne de date reste un champ comme un autre). « Ajoute une ligne » : la table se choisit juste en dessous.</span></li>
+      <li><span class="r">2</span><span><b>Deux cartes, puis un détail.</b> Le nom technique de la table n’est plus écrit sous un bouton, où il se lisait comme un libellé : il vient en ligne de détail, modifiable. « Table existante » ouvre la liste des tables liées à la couche, avec ce que chacune contient (ci-dessous).</span></li>
+      <li><span class="r">3</span><span><b>Une géométrie par ligne, ou aucune.</b> Choisir point, ligne ou surface crée la table comme une <b>couche liée</b> (colonnes de géométrie, inventaire, apparence) et ajoute la question de la source : voir le cadre 5. Une seule géométrie par table.</span></li>
+      <li><span class="r n">4</span><span><b>Pas de réglage de date propre au formulaire.</b> Un formulaire qui ajoute une ligne reçoit d’office un champ Date, retirable, avec la valeur par défaut « Aujourd’hui » que le panneau propose déjà. La valeur par défaut se règle champ par champ, pour une date comme pour une personne (« moi »). Seul « Non modifiable » est nouveau : il pose la valeur à la saisie, et n’est pas encore vérifié (la date doit être celle de l’appareil, pas celle de la synchronisation).</span></li>
+      <li><span class="r n">5</span><span><b>La phrase d’écriture</b> nomme la table et la colonne de liaison. Les identifiants techniques ne sont montrés qu’ici. Le champ en cours de frappe est pris en compte à la création.</span></li>
+      <li><span class="r n">·</span><span><b>Les règles du cadre.</b> « Que fait la saisie ? » ne se change plus après la création (la table cible diffère) ; « Créer » demande au moins un champ en plus de la date ; le nom du formulaire donne celui de la table, qui ne change plus ensuite ; la liste « Table existante » ne propose que les tables liées à la couche (jamais la table de la couche elle-même) et se grise s’il n’y en a pas.</span></li>
+    </ul>
+    <div class="panneau variante">
+      <span class="etiquette">Où ranger les saisies ? <span class="r n m">a</span></span>
+      <div class="choix-deux" role="group" aria-label="Où ranger les saisies">
+        <button class="choix" aria-pressed="false"><b>Nouvelle table</b><span>Créée pour ce formulaire.</span></button>
+        <button class="choix" aria-pressed="true"><b>Table existante</b><span>Une table déjà liée aux pièges.</span></button>
+      </div>
+      <div class="tables-liees" role="group" aria-label="Tables liées aux pièges">
+        <button class="table-liee" aria-pressed="true"><span class="nom">Releves</span><span class="meta">12 lignes · surfaces · liée par <code>Piege</code></span></button>
+        <button class="table-liee" aria-pressed="false"><span class="nom">Entretiens</span><span class="meta">3 lignes · sans géométrie · liée par <code>Objet</code></span></button>
+      </div>
+      <p class="cond">Les colonnes et la géométrie sont celles de la table. « Visite d’entretien » s’y ajoute comme un second formulaire ; les champs neufs deviennent des colonnes de cette table.</p>
+    </div>
+    <ul class="notes">
+      <li><span class="r n">a</span><span><b>Chaque table dit ce qu’elle contient</b> : son nombre de lignes, sa géométrie, et la colonne qui la relie aux pièges. C’est ce qui permet de choisir sans connaître les noms.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 3 bis. AVEC GÉOMÉTRIE ============ -->
+  <section aria-labelledby="c3b">
+    <div class="cadre-titre"><span class="n">3 bis</span><h2 id="c3b">Nouveau formulaire, avec géométrie</h2></div>
+    <div class="panneau">
+      <button class="retour">Formulaires</button>
+      <h2 class="p-titre">Nouveau formulaire</h2>
+      <p class="sous-titre">Ouvrages</p>
+
+      <label class="etiquette" for="g-nom">Nom du formulaire</label>
+      <input id="g-nom" class="champ-texte" value="Désordre">
+
+      <span class="etiquette">Que fait la saisie ?</span>
+      <div class="choix-deux" role="group" aria-label="Ce que fait la saisie">
+        <button class="choix" aria-pressed="false"><b>Modifie l’objet</b><span>Remplit ou corrige la ligne de l’objet.</span></button>
+        <button class="choix" aria-pressed="true"><b>Ajoute une ligne</b><span>Chaque saisie crée une ligne rattachée à l’objet.</span></button>
+      </div>
+
+      <span class="etiquette">Où ranger les saisies ?</span>
+      <div class="choix-deux" role="group" aria-label="Où ranger les saisies">
+        <button class="choix" aria-pressed="true"><b>Nouvelle table</b><span>Créée pour ce formulaire.</span></button>
+        <button class="choix" disabled aria-pressed="false"><b>Table existante</b><span>Aucune table n’est encore liée aux ouvrages.</span></button>
+      </div>
+      <p class="cond">Nom de la table : <code>Desordre</code>, tiré du nom du formulaire. <button class="lien">Modifier</button></p>
+
+      <span class="etiquette">Géométrie de chaque ligne</span>
+      <div class="seg" role="group" aria-label="Géométrie de chaque ligne"><button aria-pressed="false">Aucune</button><button aria-pressed="true">Point</button><button aria-pressed="false">Ligne</button><button aria-pressed="false">Surface</button></div>
+
+      <span class="etiquette">Comment la poser, sur le terrain <span class="r m">1</span></span>
+      <div class="case"><i></i> Sur la carte <small>(par défaut)</small></div>
+      <div class="case"><i></i> Ma position</div>
+      <div class="case"><i class="off"></i> Au centre de l’objet</div>
+
+      <div class="groupe" style="margin-top:16px">
+        <h3>Champs</h3>
+        <div class="champ sans-poignee"><span class="type">Date</span><span class="nom">Date <span class="badge">ajouté d’office</span></span><button class="lien">Retirer</button></div>
+        <div class="champ sans-poignee"><span class="type">Choix</span><span class="nom">Gravité<small>Mineur, Majeur, Critique</small></span><button class="lien">Retirer</button></div>
+        <div class="champ sans-poignee"><span class="type">Photos</span><span class="nom">Photo</span><button class="lien">Retirer</button></div>
+        <div class="champ-saisie">
+          <input class="entree" placeholder="Nom du champ suivant" aria-label="Nom du champ suivant">
+          <span class="entrer">Entrée</span>
+        </div>
+      </div>
+
+      <div class="case"><i></i> Disponible sur le terrain</div>
+
+      <div class="apercu">
+        <div class="lib"><span>Aperçu</span><span>3 champs + position</span></div>
+        <div class="f"><label>Position</label><div class="saisie vide">À poser sur la carte</div></div>
+        <div class="f"><label>Date</label><div class="saisie">03/10/2026</div></div>
+        <div class="f"><label>Gravité</label><div class="saisie vide">Choisir <span class="fl"></span></div></div>
+        <div class="f"><label>Photo</label><div class="saisie vide">Prendre une photo</div></div>
+      </div>
+
+      <div class="resume-ecriture">Crée la <b>couche</b> <code>Desordre</code> (points), avec la colonne <code>Objet</code> vers Ouvrages et 3 champs, l’ajoute aux couches, et propose le formulaire sur le terrain. Rien d’autre n’est modifié. <span class="r n m">2</span></div>
+      <div class="boutons"><button class="bouton">Annuler</button><button class="bouton primaire">Créer le formulaire</button></div>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>Le créateur coche les sources permises ; l’agent choisit parmi elles</b> (cadre 5). Pour un point : sur la carte, ma position, au centre de l’objet. Pour une ligne ou une surface : sur la carte, ou « celle de l’objet » seulement si l’objet a la même forme. Une seule source cochée, et l’agent ne voit plus de choix.</span></li>
+      <li><span class="r n">2</span><span><b>La phrase change</b> : elle annonce une couche, ses colonnes de géométrie sont créées sans qu’on les nomme, et l’aperçu montre la position en tête du formulaire. Avec « Table existante », la géométrie est celle de la table (affichée, non modifiable) ; ajouter une géométrie à une table qui n’en a pas n’est pas proposé.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 3 ter. MODIFIE L'OBJET ============ -->
+  <section aria-labelledby="c3c">
+    <div class="cadre-titre"><span class="n">3 ter</span><h2 id="c3c">Nouveau formulaire, qui modifie l’objet</h2></div>
+    <div class="panneau">
+      <button class="retour">Formulaires</button>
+      <h2 class="p-titre">Nouveau formulaire</h2>
+      <p class="sous-titre">Pièges</p>
+
+      <label class="etiquette" for="v-nom">Nom du formulaire</label>
+      <input id="v-nom" class="champ-texte" value="Contrôle rapide">
+
+      <span class="etiquette">Que fait la saisie ?</span>
+      <div class="choix-deux" role="group" aria-label="Ce que fait la saisie">
+        <button class="choix" aria-pressed="true"><b>Modifie l’objet</b><span>Remplit ou corrige la ligne de l’objet.</span></button>
+        <button class="choix" aria-pressed="false"><b>Ajoute une ligne</b><span>Chaque saisie crée une ligne rattachée à l’objet.</span></button>
+      </div>
+      <p class="cond">Écrit dans la table <code>Pieges</code>. Ni table, ni géométrie à choisir : la forme de l’objet se déplace depuis la Fiche. <span class="r n m">1</span></p>
+
+      <div class="groupe" style="margin-top:16px">
+        <h3>Champs de la table</h3>
+        <div class="champ sans-poignee"><span class="type">Texte</span><span class="nom">Nom</span><span class="bascule" role="switch" aria-checked="false" aria-label="Montrer Nom" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Choix</span><span class="nom">Type</span><span class="bascule" role="switch" aria-checked="false" aria-label="Montrer Type" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Nombre</span><span class="nom">Dist. eau (m)</span><span class="bascule" role="switch" aria-checked="false" aria-label="Montrer Dist. eau" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ sans-poignee"><span class="type">Choix</span><span class="nom">État du piège<small>Intact, À réparer, Manquant</small></span><span class="bascule" role="switch" aria-checked="true" aria-label="Montrer État du piège" tabindex="0"><span class="piste"></span></span></div>
+        <div class="champ-saisie">
+          <input class="entree" placeholder="Nouveau champ pour la table" aria-label="Nouveau champ">
+          <span class="entrer">Entrée</span>
+        </div>
+      </div>
+
+      <div class="case"><i></i> Disponible sur le terrain</div>
+
+      <div class="apercu">
+        <div class="lib"><span>Aperçu</span><span>1 champ</span></div>
+        <div class="f"><label>État du piège</label><div class="saisie vide">Choisir <span class="fl"></span></div></div>
+      </div>
+
+      <div class="resume-ecriture">N’écrit rien dans la structure : le formulaire montre 1 champ de la table <code>Pieges</code>, s’ajoute à la liste et se propose sur le terrain. <span class="r n m">2</span></div>
+      <div class="boutons"><button class="bouton">Annuler</button><button class="bouton primaire">Créer le formulaire</button></div>
+    </div>
+    <ul class="notes">
+      <li><span class="r n">1</span><span><b>Pas de table, pas de géométrie, pas de date posée</b> : la ligne existe déjà. Les champs se choisissent parmi les colonnes de la table (comme dans le cadre 2), plus des champs neufs ; une colonne de date reste un champ ordinaire. Une variante ne diffère de la Fiche que par les champs montrés.</span></li>
+      <li><span class="r n">2</span><span><b>La phrase est plus courte</b> : ce formulaire ne crée de colonne que si l’on ajoute un champ neuf, et la phrase le dit alors.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 4. TÉLÉPHONE ============ -->
+  <section aria-labelledby="c4">
+    <div class="cadre-titre"><span class="n">4</span><h2 id="c4">Sur téléphone : ajouter un champ</h2></div>
+    <div class="tel">
+      <div class="carte-fond"></div>
+      <div class="voile"></div>
+      <div class="feuille">
+        <div class="prise"></div>
+        <h2>Ajouter un champ</h2>
+        <p class="sous-titre">Fiche · Pièges</p>
+
+        <label class="etiquette" for="t-nom" style="margin-top:12px">Nom du champ</label>
+        <input id="t-nom" class="champ-texte" value="État du piège">
+
+        <span class="etiquette">Type <span class="r m">1</span></span>
+        <div class="pastilles" role="group" aria-label="Type du champ">
+          <button class="pastille" aria-pressed="false">Texte</button><button class="pastille" aria-pressed="false">Nombre</button><button class="pastille" aria-pressed="false">Oui/non</button><button class="pastille" aria-pressed="false">Date</button><button class="pastille" aria-pressed="true">Choix</button><button class="pastille" aria-pressed="false">Plusieurs choix</button><button class="pastille" aria-pressed="false">Photos</button>
+        </div>
+
+        <label class="etiquette" for="t-choix">Choix, un par ligne</label>
+        <textarea id="t-choix" class="champ-texte">Intact
+À réparer
+Manquant</textarea>
+
+        <div class="apercu-champ">
+          <div class="lib">Aperçu <span class="r n m">2</span></div>
+          <div class="f" style="margin:0"><label>État du piège</label><div class="saisie vide">Choisir <span class="fl"></span></div></div>
+        </div>
+        <div class="boutons"><button class="bouton">Annuler</button><button class="bouton primaire">Ajouter le champ</button></div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>Des pastilles plutôt qu’un menu déroulant</b> : huit types tiennent sur deux lignes et se touchent du pouce.</span></li>
+      <li><span class="r n">2</span><span><b>L’aperçu du champ seul</b> remplace la phrase technique ; l’identifiant de colonne n’apparaît qu’au message de confirmation. La même feuille sert à l’intérieur d’un formulaire.</span></li>
+    </ul>
+  </section>
+
+
+  <!-- ============ 5. EN EXPLOITER, AVEC GÉOMÉTRIE ============ -->
+  <section class="large" aria-labelledby="c5">
+    <div class="cadre-titre"><span class="n">5</span><h2 id="c5">En Exploiter : une ligne avec géométrie</h2></div>
+    <div class="etapes">
+      <div class="etape">
+        <div class="etape-titre"><span class="n">1</span> Ouvrir l’objet</div>
+        <div class="mtel">
+          <div class="mt-poly fort"></div><div class="mt-route"></div>
+          <div class="mt-feuille">
+            <div class="prise"></div>
+            <div class="mt-entete">Ouvrage · Pont de la Fare</div>
+            <div class="onglets"><span class="onglet">Fiche</span><span class="onglet actif">Désordre</span></div>
+            <p class="mt-aide">Ajoute un désordre à cet ouvrage : on pose d’abord sa position, puis on remplit.</p>
+            <div class="boutons"><button class="bouton primaire">Ajouter un désordre</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="etape">
+        <div class="etape-titre"><span class="n">2</span> Poser la géométrie <span class="r m">1</span></div>
+        <div class="mtel">
+          <div class="mt-poly"></div><div class="mt-route"></div>
+          <div class="mt-croix" style="left:46%;top:34%"></div><div class="mt-point" style="left:46%;top:34%"></div>
+          <div class="mt-bandeau">Touchez la carte pour poser le point</div>
+          <div class="mt-feuille">
+            <div class="prise"></div>
+            <div class="mt-entete">Désordre · position</div>
+            <div class="seg" role="group" aria-label="Source de la géométrie"><button aria-pressed="true">Sur la carte</button><button aria-pressed="false">Ma position</button><button aria-pressed="false" disabled>Au centre</button></div>
+            <p class="mt-aide">Rien n’est écrit avant l’envoi du formulaire.</p>
+            <div class="boutons"><button class="bouton">Annuler</button><button class="bouton primaire">Continuer</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="etape">
+        <div class="etape-titre"><span class="n">3</span> Remplir et envoyer <span class="r m">2</span></div>
+        <div class="mtel">
+          <div class="mt-poly"></div><div class="mt-route"></div><div class="mt-point" style="left:46%;top:20%"></div>
+          <div class="mt-feuille" style="top:96px">
+            <div class="prise"></div>
+            <div class="mt-entete">Désordre</div>
+            <div class="mt-chip"><span>Point posé sur la carte</span><button class="lien">Refaire</button></div>
+            <div class="f" style="margin-top:10px"><label>Gravité</label><div class="saisie vide">Choisir <span class="fl"></span></div></div>
+            <div class="f"><label>Photo</label><div class="saisie vide">Prendre une photo</div></div>
+            <div class="f"><label>Remarques</label><div class="saisie vide">&nbsp;</div></div>
+            <div class="f"><label>Date</label><div class="saisie">03/10/2026</div></div>
+            <div class="boutons"><button class="bouton primaire">Envoyer</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><span class="r">1</span><span><b>La forme se pose d’abord</b>, comme « Nouvel objet » aujourd’hui, et la colonne <code>Objet</code> est remplie par l’objet ouvert : c’est la seule pièce qui manque (aujourd’hui, créer sur une couche ne remplit aucune référence). Les sources proposées sont celles cochées à la création (cadre 3 bis) : ici deux, « au centre de l’objet » n’étant pas permise.</span></li>
+      <li><span class="r">2</span><span><b>La ligne est écrite en une fois</b> : géométrie, champs et date, avec la colonne <code>Objet</code>. Elle apparaît ensuite sur la carte, dans la couche liée « Désordres », avec sa symbologie.</span></li>
+      <li><span class="r n">·</span><span><b>Par étapes</b> : le point (sur la carte, ma position, celle de l’objet) d’abord ; le tracé d’une ligne ou d’une surface sur téléphone, plus lourd, ensuite.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ QUESTIONS SELON LE CHOIX ============ -->
+  <section class="large" aria-labelledby="qsc">
+    <div class="cadre-titre"><span class="n">·</span><h2 id="qsc">Quelles questions, selon le choix</h2></div>
+    <table>
+      <thead><tr><th>« Que fait la saisie ? »</th><th>Table</th><th>Géométrie</th><th>Champs</th><th>Date</th></tr></thead>
+      <tbody>
+        <tr><td>Modifie l’objet</td><td>Celle de la couche, fixe</td><td>Aucune : la forme se déplace depuis la Fiche</td><td>Colonnes de la table (montrer ou masquer) et champs neufs</td><td>Un champ ordinaire, sans valeur posée</td></tr>
+        <tr><td>Ajoute une ligne · nouvelle table</td><td>Nouvelle : créée, nommée d’après le formulaire (modifiable)</td><td>Aucune, point, ligne ou surface ; la table devient une couche liée</td><td>Champs neufs ; Date ajouté d’office, retirable</td><td>Valeur par défaut « Aujourd’hui », modifiable</td></tr>
+        <tr><td>Ajoute une ligne · table existante</td><td>Existante : choisie parmi les tables liées, avec leur contenu</td><td>Celle de la table, affichée et non modifiable</td><td>Colonnes de la table et champs neufs</td><td>Si la table a une colonne date : son champ</td></tr>
+      </tbody>
+    </table>
+    <p class="horsperimetre">Ce que la maquette ne montre pas : « Table existante » grisé tant qu’aucune table n’est liée, et « Créer » désactivé sans au moins un champ en plus de la date.</p>
+  </section>
+
+  <!-- ============ CAS D'USAGE ============ -->
+  <section class="large" aria-labelledby="cas">
+    <div class="cadre-titre"><span class="n">·</span><h2 id="cas">Les cas d’usage</h2></div>
+    <table>
+      <thead><tr><th>Cas</th><th>Objet (le parent)</th><th>Ligne ajoutée</th><th>Géométrie</th><th>Source</th><th>Valeurs par défaut utiles</th></tr></thead>
+      <tbody>
+        <tr><td>Désordre sur un ouvrage</td><td>Ouvrage (ligne ou surface)</td><td>Désordre, gravité, photo</td><td>Point, ou surface</td><td>Sur la carte</td><td>Date : aujourd’hui · Auteur : moi</td></tr>
+        <tr><td>Prélèvement autour d’un piège</td><td>Piège (point)</td><td>Comptage par groupe</td><td>Surface (plot)</td><td>Sur la carte, ou celle de l’objet</td><td>Date : aujourd’hui</td></tr>
+        <tr><td>Pointage d’une visite</td><td>Tout objet</td><td>Visite, remarques</td><td>Point</td><td>Ma position, non modifiable</td><td>Date : aujourd’hui, non modifiable</td></tr>
+        <tr><td>Anomalie précise sur un équipement</td><td>Luminaire, borne</td><td>Anomalie, photo</td><td>Point</td><td>Sur la carte (au doigt), ou ma position</td><td>Date · Auteur : moi</td></tr>
+        <tr><td>Parcours de comptage ou de contrôle</td><td>Site (surface)</td><td>Passage, durée, observations</td><td>Ligne (trace)</td><td>Sur la carte</td><td>Date : aujourd’hui</td></tr>
+        <tr><td>Emprise suivie d’une année à l’autre</td><td>Site, habitat</td><td>Emprise de l’espèce invasive</td><td>Surface</td><td>Sur la carte</td><td>Date : aujourd’hui</td></tr>
+        <tr><td>Visite d’entretien, relevé de nuit</td><td>Piège</td><td>Remarques, comptages</td><td>Aucune</td><td>—</td><td>Date : aujourd’hui</td></tr>
+      </tbody>
+    </table>
+    <p class="horsperimetre">Le dernier cas est celui des cadres 1 à 3 : sans géométrie, une ligne est un enregistrement daté rattaché à l’objet. Les six autres sont des <b>couches liées</b>, visibles sur la carte et filtrables comme n’importe quelle couche.</p>
+  </section>
+
+</div>
+
+<div class="bas">
+  <section>
+    <h2>Le vocabulaire, avant et après</h2>
+    <table>
+      <thead><tr><th>Aujourd’hui</th><th>Proposé</th><th>Pourquoi</th></tr></thead>
+      <tbody>
+        <tr><td>Corriger l’objet · Attributs · Fiche</td><td>Fiche, étiquette « modifie l’objet »</td><td>Un seul nom pour le formulaire par défaut, en édition comme en lecture.</td></tr>
+        <tr><td>Ajouter une ligne · relevé lié</td><td>Étiquette « ajoute une ligne »</td><td>La structure se lit sur le formulaire, pas dans une famille à part.</td></tr>
+        <tr><td>Proposé hors édition</td><td>Sur le terrain</td><td>Un seul mot partout : bascule, pied de carte, création.</td></tr>
+        <tr><td>Composer / Enregistrer, brouillon / publié</td><td>(disparaissent)</td><td>Activer un formulaire le sauvegarde. Le statut reste dans la table, hors de l’écran.</td></tr>
+        <tr><td>déduit des colonnes · formulaire Grist</td><td>Badge « Formulaire Grist » seul</td><td>Seul le formulaire natif est différent pour la personne : il se règle ailleurs.</td></tr>
+        <tr><td>Retirer</td><td>Masquer sur cette couche</td><td>Le geste est réversible ; le mot ne doit pas faire craindre une suppression.</td></tr>
+        <tr><td>(aucun)</td><td>Couche liée</td><td>Une table liée à l’objet qui porte une géométrie : l’étiquette du formulaire le dit, et elle figure aussi dans les couches.</td></tr>
+        <tr><td>Valeur de départ</td><td>Valeur par défaut</td><td>Le mot dit ce que la personne voit : la valeur que le champ porte à l’ouverture.</td></tr>
+        <tr><td>Case « Dater chaque relevé »</td><td>Un champ Date ajouté d’office</td><td>La date est un champ comme un autre : sa valeur par défaut se règle comme celle de tous les champs.</td></tr>
+        <tr><td>Relevé lié · « Nouvel objet » (réglage de couche)</td><td>Nouveau formulaire · « Créer et déplacer des objets » (sur la Fiche)</td><td>Chaque réglage se trouve là où il s’applique.</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <h2>Ce que cela demande</h2>
+    <ul class="cout">
+      <li><b>Activer un formulaire déduit</b> l’enregistre d’abord. Aujourd’hui <code>exposerFormulaire</code> refuse (« Enregistrez ce formulaire avant de le proposer ») ; il faut inverser ce refus.</li>
+      <li><b>La Fiche en Exploiter existe déjà, en lecture seule.</b> <code>objectInspectorTabs</code> ajoute un onglet « Fiche » de consultation <b>après</b> les formulaires proposés. Avec « Sur le terrain » sur la Fiche, deux cas sans doublon : désactivée, l’onglet reste de consultation (comme aujourd’hui) ; activée, la Fiche devient un onglet modifiable en premier et l’onglet de consultation disparaît. Sa bascule se lirait donc « Modifiable sur le terrain ». Dans le panneau actuel, la ligne dit déjà « lecture seule sur le terrain ».</li>
+      <li><b>Renommer « Attributs » en « Fiche »</b> : le titre est une constante de <code>formulairesPourCouche</code>, repris par une quarantaine de lignes de tests. L’onglet de lecture porte déjà ce nom (<code>ONGLET_FICHE</code>).</li>
+      <li><b>L’étiquette</b> se calcule depuis la table visée (<code>surLaCouche</code>). Pour un formulaire natif, elle suit la table et pas son rôle réel : « Poser un piège », qui porte sur la table de la couche, serait étiqueté « modifie l’objet » même s’il crée. Je n’ai pas lu sa définition.</li>
+      <li><b>« Créer et déplacer des objets »</b> déplace un réglage existant (<code>symbolization.creation.exploiter</code>) dans le panneau, sans migration. Le déplacement d’une forme suit la même condition que la création.</li>
+      <li><b>Table existante</b> : la liste des tables liées à la couche existe déjà (<code>tablesReferencant</code>) ; il faut l’offrir au choix et laisser plusieurs formulaires sur une même table.</li>
+      <li><b>« Non modifiable »</b> est le seul réglage de valeur par défaut qui n'existe pas. Il faut tester que le moteur envoie un champ verrouillé ou masqué avec la ligne. Une colonne Grist « à la création » daterait à la synchronisation (les relevés hors réseau partent plus tard), et une scène sur l'appareil ne calcule pas de formule : la valeur doit être posée par le formulaire, sur l'appareil.</li>
+      <li><b>Couche liée</b> : on compose l’existant. <code>actionsNouvelleCouche</code> crée la table, son inventaire et son apparence en une transaction ; on y ajoute la colonne <code>Objet</code> et les champs. Pièce manquante : lancer « Nouvel objet » depuis un objet parent avec la colonne <code>Objet</code> remplie, puis enchaîner le formulaire. Le point (sur la carte, ma position, celle de l’objet) vient d’abord ; ligne et surface sur téléphone ensuite.</li>
+      <li><b>Étapes, conditions, cascades</b> : la norme FormDef les porte (sections avec condition, règles ET / OU sur un champ, le contexte ou le groupe de la personne, liste liée Ref vers Ref, filtre dynamique) et le moteur les applique ; Atlas monte ce moteur tel quel et verrouille déjà les champs dont un autre dépend. Ce qu’Atlas ne fait pas, c’est les <b>créer</b> : ses formulaires composés n’ont qu’une section, sans condition ni obligation. Le générateur le fait, dans le même format. À vérifier : qu’un formulaire composé ici se rouvre sans perte dans le générateur, et où « + Ajouter un champ » place le champ quand il y a plusieurs étapes (aujourd’hui : à la fin de la dernière).</li>
+      <li><b>Date et heure</b> : le module de création n’offre aujourd’hui que « Date » (le fuseau fait partie du type Grist). Un relevé répété dans la journée perd son ordre ; il faut soit un type « Date et heure », soit ne pas le promettre. Le moteur sait déjà préremplir date et heure.</li>
+      <li><b>Les sources de géométrie</b> sont un réglage du formulaire (cases cochées à la création) ; l’agent choisit parmi elles. À stocker avec la définition du formulaire, comme les valeurs par défaut le sont avec la couche.</li>
+      <li><b>Limites de la géométrie</b> : une seule par table ; une table importée de QGIS n’est pas modifiable (centroïdes à recalculer) ; dans un widget Grist la localisation est refusée à l’iframe, donc « Ma position » s’efface et seul le dessin reste.</li>
+      <li><b>La valeur par défaut d’une fiche</b> : le code ne la propose que pour les formulaires qui ajoutent une ligne (une fiche part de la ligne existante). Le garder ainsi.</li>
+      <li><b>L’aperçu</b> réutilise le moteur en lecture seule. Cartes repliables : un état en mémoire. <b>Le nombre de lignes par table</b> demande une lecture par table liée.</li>
+    </ul>
+    <p class="horsperimetre"><b>Hors de cette version</b> : supprimer un objet ou une ligne (aucun geste n’existe), corriger une ligne déjà saisie, réordonner les champs, tracer une ligne ou une surface sur téléphone dans le formulaire (le point d’abord), créer des étapes, des conditions ou des cascades (le générateur le fait ; Atlas les lit et les respecte).</p>
+    <div class="question">
+      <b>Décisions pour vous</b>
+      <ol>
+        <li>Activer un formulaire déduit l’enregistre automatiquement : d’accord ?</li>
+        <li>« Fiche » remplace « Attributs » partout (onglet, formulaire, bouton « + Champ »), le mot « attribut » restant dans le texte courant ?</li>
+        <li>« Créer et déplacer des objets » devient un réglage de la Fiche, dans ce panneau ?</li>
+        <li>Le mot « valeur par défaut » remplace « départ » dans l’interface. Et « Non modifiable » (date ou auteur posé à la saisie) : je teste d’abord le moteur, puis nous décidons ?</li>
+        <li>La géométrie d’une ligne = une couche liée, par étapes (le point d’abord : sur la carte, ma position, celle de l’objet ; le tracé ensuite) : d’accord ?</li>
+        <li>Étapes, conditions et cascades : le générateur reste l’outil pour les créer, Atlas les affiche et les respecte (pastille « avancé »). D’accord pour cette version, avec, plus tard, une seule règle « afficher si » par champ ?</li>
+        <li>La liste « hors de cette version » vous convient, ou un de ses points est-il nécessaire ?</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+</main>
+</body>
+</html>

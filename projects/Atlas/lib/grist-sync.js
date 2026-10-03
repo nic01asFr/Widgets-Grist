@@ -10,10 +10,10 @@ import {
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=20261003a';
+} from './manifest-binding.js?v=20261003g';
 import { parseGristBool } from './grist-bool.js';
 import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=20261001a';
-import { isModelLayer } from './model-layer.js?v=20261003a';
+import { isModelLayer } from './model-layer.js?v=20261003g';
 import { parametresDObjetValides } from './parametres-objet.js?v=20261002g';
 import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=20261001a';
 import {

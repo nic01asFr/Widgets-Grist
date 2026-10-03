@@ -72,7 +72,17 @@ export function planNouvelleCouche({ nom, type, tables = [] } = {}) {
   const libre = String(nom == null ? '' : nom).trim();
   if (!libre) return { ok: false, erreur: 'Donnez un nom à la couche.' };
   if (!TYPES_COUCHE.includes(type)) return { ok: false, erreur: 'Choisissez point, ligne ou surface.' };
-  let base = idTableDepuisNom(libre);
+  return planNomDeTable(libre, tables);
+}
+
+/**
+ * Le nom de table libre pour un nom saisi : translittéré, jamais un nom d'Atlas, suffixé en cas de collision.
+ * Partagé avec les tables de relevé que crée le module Formulaires.
+ *
+ * @returns {{ ok: boolean, tableId?: string, erreur?: string, renomme?: boolean }}
+ */
+export function planNomDeTable(nom, tables = []) {
+  let base = idTableDepuisNom(nom);
   if (!base) return { ok: false, erreur: 'Le nom doit contenir au moins une lettre ou un chiffre.' };
   if (estReservee(base)) base = 'Couche_' + base;
   const prises = new Set(tables.map((t) => String(t).toLowerCase()));
@@ -112,13 +122,15 @@ export function colonneGeometrieNouvelleCouche(type) {
  * @param {object} p.inventaire ligne de `Maquette_Layers` (`ligneInventaire`)
  * @param {object} p.prefs ligne d'`Atlas_LayerPrefs` (`lignePrefs`)
  * @param {{ maquette: object[], prefs: object[] }} p.schemas colonnes des deux tables d'Atlas, si absentes
+ * @param {object[]} [p.colonnes] les colonnes de la table, à la place de `colonnesNouvelleCouche(type)`
  * @returns {{ actions: any[], indices: { table: number, inventaire: number, prefs: number } }}
  */
-export function actionsNouvelleCouche({ tableId, type, tables = [], inventaire, prefs, schemas }) {
+export function actionsNouvelleCouche({ tableId, type, tables = [], inventaire, prefs, schemas, colonnes = null }) {
   const actions = [];
   if (!tables.includes('Maquette_Layers')) actions.push(['AddTable', 'Maquette_Layers', schemas.maquette]);
   if (!tables.includes('Atlas_LayerPrefs')) actions.push(['AddTable', 'Atlas_LayerPrefs', schemas.prefs]);
-  const table = actions.push(['AddTable', tableId, colonnesNouvelleCouche(type)]) - 1;
+  // `colonnes` : une table qui est aussi une couche sans être « neuve » (celle d'un formulaire lié) a les siennes.
+  const table = actions.push(['AddTable', tableId, colonnes || colonnesNouvelleCouche(type)]) - 1;
   const ligne = actions.push(['AddRecord', 'Maquette_Layers', null, inventaire]) - 1;
   const pref = actions.push(['AddRecord', 'Atlas_LayerPrefs', null, prefs]) - 1;
   return { actions, indices: { table, inventaire: ligne, prefs: pref } };

@@ -425,7 +425,7 @@ test('le derive de la couche ne disparait jamais, meme avec un formulaire import
   assert.deepEqual(liste.filter((f) => f.surLaCouche).map((f) => f.id),
     ['derive:Batiments_locaux', 'releve']);
   assert.deepEqual(liste.filter((f) => f.surLaCouche).map(libelleFormulaire),
-    ['Attributs', 'Bâtiment — relevé']);
+    ['Fiche', 'Bâtiment — relevé']);
 });
 
 test('mais pour une table liee, le derive n’est qu’un repli', () => {
@@ -436,10 +436,10 @@ test('mais pour une table liee, le derive n’est qu’un repli', () => {
   assert.deepEqual(liste.filter((f) => f.tableId === 'Desordres').map((f) => f.id), ['derive:Desordres']);
 });
 
-test('un enregistre porte SON nom, jamais « Attributs »', () => {
-  // L'afficher comme « Attributs » effacerait ce que son auteur a ecrit, et
+test('un enregistre porte SON nom, jamais « Fiche »', () => {
+  // L'afficher comme « Fiche » effacerait ce que son auteur a ecrit, et
   // laisserait croire qu'il montre toutes les colonnes.
-  assert.equal(libelleFormulaire({ derive: true, surLaCouche: true, titre: 'Attributs' }), 'Attributs');
+  assert.equal(libelleFormulaire({ derive: true, surLaCouche: true, titre: 'Fiche' }), 'Fiche');
   assert.equal(libelleFormulaire({ derive: false, surLaCouche: true, titre: 'Bâtiment — relevé' }), 'Bâtiment — relevé');
   assert.equal(libelleFormulaire({ derive: true, surLaCouche: false, titre: 'Desordres' }), 'Desordres');
   assert.equal(libelleFormulaire(null), '');
@@ -633,9 +633,9 @@ test('colonnesHorsFormulaire redemande la geometrie au schema', () => {
 import { gesteDEnregistrement, idFormulaireLibre } from '../lib/fiche-formulaire.js';
 
 test('sur la couche on COMPOSE, sur une liee on ENREGISTRE', () => {
-  // « Attributs » reste la vue complete de la table : l'enregistrer tel quel en
+  // « Fiche » reste la vue complete de la table : l'enregistrer tel quel en
   // ferait un doublon. Ce qu'on veut la, c'est un formulaire choisi.
-  const attributs = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Attributs' };
+  const attributs = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Fiche' };
   assert.deepEqual(gesteDEnregistrement(attributs),
     { verbe: 'composer', libelle: 'Composer', titre: 'Saisie' });
 
@@ -672,7 +672,7 @@ test('une table sans nom exploitable garde un identifiant valable', () => {
 });
 
 test('l’ancien booleen se reporte sur le premier formulaire OFFRABLE', () => {
-  // Depuis que le derive ouvre la liste, « le premier » est Attributs, qui ne
+  // Depuis que le derive ouvre la liste, « le premier » est Fiche, qui ne
   // peut jamais etre offert. L'heritage pointait sur rien, et la premiere
   // ecriture de la liste effacait l'exposition reelle — sans erreur, sans
   // message. Constate sur le document de test.
@@ -872,7 +872,7 @@ test('une autre table ne compte pas', () => {
 });
 
 test('gesteDEnregistrement numérote à partir de ce qui est enregistré', () => {
-  const f = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Attributs' };
+  const f = { derive: true, surLaCouche: true, tableId: 'Batiments_locaux', titre: 'Fiche' };
   const deja = [{ titre: 'Saisie', def: { tableId: 'Batiments_locaux' } }];
   assert.equal(gesteDEnregistrement(f, deja).titre, 'Saisie 2');
   // Sans liste, le comportement reste celui d'une table vierge.
@@ -884,7 +884,7 @@ test('gesteDEnregistrement numérote à partir de ce qui est enregistré', () =>
 import { COLONNES_ATLAS, masquesParDefaut } from '../lib/fiche-formulaire.js';
 
 const DEF_ECLAIRAGE = {
-  id: 'derive:Atlas_Eclairage', tableId: 'Atlas_Eclairage', title: 'Attributs',
+  id: 'derive:Atlas_Eclairage', tableId: 'Atlas_Eclairage', title: 'Fiche',
   sections: [{ id: 's', fields: [
     { colId: 'highway', label: 'Highway', type: 'Text', widget: 'text' },
     { colId: 'ref', label: 'Ref', type: 'Text', widget: 'text' },
@@ -928,7 +928,7 @@ import {
 } from '../lib/fiche-formulaire.js';
 import { objectInspectorTabs } from '../lib/model-layer.js';
 
-test('tout formulaire se retire, Attributs compris — seule l’identité est exigée hors liste', () => {
+test('tout formulaire se retire, Fiche compris — seule l’identité est exigée hors liste', () => {
   assert.equal(formulaireRetirable({ id: 'attr', surLaCouche: true, derive: true }), true);
   assert.equal(formulaireRetirable({ id: 'releve', surLaCouche: true, derive: false }), true);
   assert.equal(formulaireRetirable({ id: 'visites', surLaCouche: false, derive: true }), true);
@@ -940,12 +940,12 @@ test('le dernier formulaire en place ne se retire pas, et la raison est dite', (
   const releve = { id: 'releve', surLaCouche: true, derive: false };
   assert.equal(raisonNonRetirable(attr, [attr, releve]), null);
   assert.equal(raisonNonRetirable(releve, [attr, releve]), null);
-  // Attributs déjà retiré : le relevé est le dernier en place.
+  // Fiche déjà retiré : le relevé est le dernier en place.
   const liste = [{ ...attr, retire: true }, releve];
   assert.equal(raisonNonRetirable(releve, liste), RAISON_DERNIER_FORMULAIRE);
   assert.equal(RAISON_DERNIER_FORMULAIRE, 'dernier formulaire de la couche');
   assert.equal(formulaireRetirable(releve, liste), false);
-  // Seul sur sa couche : Attributs garde sa place.
+  // Seul sur sa couche : Fiche garde sa place.
   assert.equal(raisonNonRetirable(attr, [attr]), RAISON_DERNIER_FORMULAIRE);
   assert.equal(raisonNonRetirable(null, [attr]), 'formulaire sans identifiant');
 });
@@ -966,7 +966,7 @@ const RELEVES = [
   { formId: 'photo', titre: 'Photo', statut: 'terrain', def: { id: 'photo', tableId: 'Reperes', sections: [] } },
 ];
 
-test('sans formulaire personnalisé, Attributs reste et ne peut pas se retirer', () => {
+test('sans formulaire personnalisé, Fiche reste et ne peut pas se retirer', () => {
   const liste = formulairesPourCouche({ couche: COUCHE_SEULE, entrees: [], schema: SCHEMA_SEUL });
   assert.deepEqual(liste.map((f) => f.id), ['derive:Reperes']);
   assert.equal(raisonNonRetirable(liste[0], liste), RAISON_DERNIER_FORMULAIRE);
@@ -976,13 +976,13 @@ test('sans formulaire personnalisé, Attributs reste et ne peut pas se retirer',
   assert.deepEqual(formulairesEnPlace(relue).map((f) => f.id), ['derive:Reperes']);
 });
 
-test('Attributs retiré : la fiche s’ouvre sur le premier formulaire restant', () => {
+test('Fiche retiré : la fiche s’ouvre sur le premier formulaire restant', () => {
   const couche = { ...COUCHE_SEULE, formulaire: { retires: ['derive:Reperes'], exposes: ['crue', 'photo'] } };
   const tous = formulairesPourCouche({ couche, entrees: RELEVES, schema: SCHEMA_SEUL });
   assert.deepEqual(tous.filter((f) => f.retire).map((f) => f.id), ['derive:Reperes']);
   const enPlace = formulairesEnPlace(tous);
   assert.deepEqual(enPlace.map((f) => f.id), ['crue', 'photo']);
-  // L'onglet Attributs a disparu, le premier onglet est le relevé.
+  // L'onglet Fiche a disparu, le premier onglet est le relevé.
   const tabs = objectInspectorTabs({ layer: couche, formulaires: enPlace });
   assert.deepEqual(tabs.map((t) => t.cle), ['crue', 'photo']);
   // Hors édition, seuls les restants sont offerts.
@@ -1005,7 +1005,7 @@ test('des réglages qui retireraient tout laissent le premier en place', () => {
   assert.deepEqual(formulairesEnPlace(tous).map((f) => f.id), ['derive:Reperes']);
 });
 
-test('les réglages sans Attributs retiré se relisent comme avant', () => {
+test('les réglages sans Fiche retiré se relisent comme avant', () => {
   const couche = { ...COUCHE_SEULE, formulaire: { retires: ['photo'], exposes: ['crue'] } };
   const tous = formulairesPourCouche({ couche, entrees: RELEVES, schema: SCHEMA_SEUL });
   assert.deepEqual(formulairesEnPlace(tous).map((f) => f.id), ['derive:Reperes', 'crue']);
@@ -1048,3 +1048,36 @@ test('un refus a l ecriture de la ligne se nomme comme tel', async () => {
   await assert.rejects(() => p.updateRow('x', 3, { nom: 'Mairie' }), /Enregistrement de la ligne refusé — HTTP 500/);
 });
 
+/* ---------- une ligne liée qui porte sa position ---------- */
+
+test('un formulaire lié à une couche de points écrit la position avec la ligne, et la référence passe en dernier', async () => {
+  const ecrit = [];
+  const docApi = { applyUserActions: async (actions) => { ecrit.push(...actions); return { retValues: [7] }; } };
+  const creation = { cellules: { latitude: 43.3, longitude: 5.39 } };
+  const pont = pontFormulaire({
+    couche: { sourceTable: 'Ouvrages' }, rowId: 12, docApi, peutEcrire: () => true, creation,
+    formulaire: { surLaCouche: false, tableId: 'Desordre', via: 'Objet' },
+  });
+  await pont.addRow('Desordre', { Gravite: 'Majeur', Objet: 999 });
+  assert.deepEqual(ecrit, [['AddRecord', 'Desordre', null, { Gravite: 'Majeur', latitude: 43.3, longitude: 5.39, Objet: 12 }]]);
+});
+
+test('sans position posée, un formulaire lié qui en demande une refuse d\'écrire', async () => {
+  const docApi = { applyUserActions: async () => { throw new Error('ne doit pas écrire'); } };
+  const pont = pontFormulaire({
+    couche: { sourceTable: 'Ouvrages' }, rowId: 12, docApi, peutEcrire: () => true, creation: { cellules: null },
+    formulaire: { surLaCouche: false, tableId: 'Desordre', via: 'Objet' },
+  });
+  await assert.rejects(() => pont.addRow('Desordre', { Gravite: 'Majeur' }), /Posez la position/);
+});
+
+test('un formulaire lié ordinaire n\'a pas de position à poser', async () => {
+  const ecrit = [];
+  const docApi = { applyUserActions: async (actions) => { ecrit.push(...actions); return { retValues: [3] }; } };
+  const pont = pontFormulaire({
+    couche: { sourceTable: 'Pieges' }, rowId: 5, docApi, peutEcrire: () => true,
+    formulaire: { surLaCouche: false, tableId: 'Releves', via: 'Piege' },
+  });
+  await pont.addRow('Releves', { Total: 4 });
+  assert.deepEqual(ecrit, [['AddRecord', 'Releves', null, { Total: 4, Piege: 5 }]]);
+});

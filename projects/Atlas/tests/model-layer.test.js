@@ -39,29 +39,29 @@ describe('objectInspectorTabs', () => {
   const surface = couche('mapbox', 'Polygon');
 
   /** Ce que `formulairesPourCouche` rend : le principal, puis les liés. */
-  const principal = { id: 'derive:Batiments', titre: 'Attributs', derive: true, surLaCouche: true };
+  const principal = { id: 'derive:Batiments', titre: 'Fiche', derive: true, surLaCouche: true };
   const visite = { id: 'visite-v2', titre: 'Visite', derive: false, surLaCouche: false };
   const desordre = { id: 'derive:Desordres', titre: 'Désordre constaté', derive: true, surLaCouche: false };
   const cles = (r) => r.map((o) => o.cle);
   const libelles = (r) => r.map((o) => o.libelle);
 
-  it('un onglet par formulaire, le principal nommé « Attributs »', () => {
+  it('un onglet par formulaire, le principal nommé « Fiche »', () => {
     // Le tenir a part en aurait fait une exception, alors qu'il fait la meme
     // chose que les autres : rendre un FormDef.
     const r = objectInspectorTabs({ layer: surface, formulaires: [principal, visite, desordre] });
-    assert.deepEqual(libelles(r), ['Attributs', 'Visite', 'Désordre constaté']);
+    assert.deepEqual(libelles(r), ['Fiche', 'Visite', 'Désordre constaté']);
     assert.deepEqual(cles(r), ['derive:Batiments', 'visite-v2', 'derive:Desordres']);
   });
 
   it('l’ordre ne varie pas — le premier onglet fait toujours la même chose', () => {
     const r = objectInspectorTabs({ layer: surface, formulaires: [principal, visite] });
-    assert.equal(r[0].libelle, 'Attributs');
+    assert.equal(r[0].libelle, 'Fiche');
     assert.equal(r[0].formulaire, principal);
   });
 
   it('objet 3D — le placement vient après les formulaires', () => {
     const r = objectInspectorTabs({ layer: modele, formulaires: [principal] });
-    assert.deepEqual(libelles(r), ['Attributs', 'Placement 3D']);
+    assert.deepEqual(libelles(r), ['Fiche', 'Placement 3D']);
     assert.equal(r[1].formulaire, null, 'le placement n’est pas un formulaire');
   });
 
@@ -76,9 +76,9 @@ describe('objectInspectorTabs', () => {
     // un curseur. La regle « pas d'edition en masse » tient : on modifie celui
     // sur lequel on est, et le corps doit le dire.
     assert.deepEqual(libelles(objectInspectorTabs({ layer: surface, formulaires: [principal, visite], multi: true, revue: true })),
-      ['Attributs', 'Visite']);
+      ['Fiche', 'Visite']);
     assert.deepEqual(libelles(objectInspectorTabs({ layer: modele, formulaires: [principal], multi: true, revue: true })),
-      ['Attributs', 'Placement 3D']);
+      ['Fiche', 'Placement 3D']);
   });
 
   it('aucun formulaire — aucun onglet, et le corps devra le dire', () => {
@@ -93,6 +93,24 @@ describe('objectInspectorTabs', () => {
   it('un formulaire sans identifiant n’a pas d’onglet', () => {
     // Sans cle stable, l'onglet actif ne survivrait pas au rendu suivant.
     assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [{ titre: 'X', surLaCouche: true }] }), []);
+  });
+
+  it('en consultation, la fiche en lecture seule vient après les formulaires proposés', () => {
+    const r = objectInspectorTabs({ layer: surface, formulaires: [visite], consultation: true });
+    assert.deepEqual(libelles(r), ['Visite', 'Fiche']);
+    assert.equal(r[1].formulaire, null, 'l’onglet de consultation n’est pas un formulaire');
+  });
+
+  it('une Fiche modifiable proposée sur le terrain prend la place de l’onglet de consultation', () => {
+    // Deux « Fiche » côte à côte : l'une modifiable, l'autre en lecture seule, pour la même ligne.
+    const ficheModifiable = { id: 'fiche-1', titre: 'Fiche', derive: false, surLaCouche: true };
+    const r = objectInspectorTabs({ layer: surface, formulaires: [ficheModifiable, visite], consultation: true });
+    assert.deepEqual(libelles(r), ['Fiche', 'Visite']);
+    assert.equal(r[0].formulaire, ficheModifiable);
+  });
+
+  it('sans formulaire proposé, pas d’onglet de consultation : le corps montre déjà les attributs', () => {
+    assert.deepEqual(objectInspectorTabs({ layer: surface, formulaires: [], consultation: true }), []);
   });
 });
 

@@ -15,7 +15,7 @@ import {
 import { parseGristBool } from './grist-bool.js';
 import { genreDeModele } from './modele-id.js?v=20261002g';
 import { parametresDeCoucheValides } from './parametres-objet.js?v=20261002g';
-import { departsValides } from './fiche-formulaire.js?v=20261002c';
+import { departsValides } from './fiche-formulaire.js?v=20261003g';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
 export function declarativeFromAtlasLayer(layer) {
