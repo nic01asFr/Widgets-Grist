@@ -6273,15 +6273,27 @@ function renderSynchroDockSlotHtml() {
     </div>`;
 }
 
-function renderReleveDockSlotHtml() {
-    const lignes = lignesReleve(couchesEnReleve().map((couche) => ({
+/**
+ * Ce que la pastille « Relevé » liste : une entrée par couche qui offre un formulaire ou l'ajout d'un objet. La pastille
+ * se décide sur cette même liste — une couche « en saisie » qui n'offre rien (en Lecture, souvent) donnait une pastille
+ * qui s'ouvrait sur du vide.
+ */
+function lignesDuReleve() {
+    return lignesReleve(couchesEnReleve().map((couche) => ({
         couche,
         formulaires: offertsEnLecture(formulairesDeLaCouche(couche)),
         creation: creationPossible(couche, contexteCreation(couche)).ok,
     })));
+}
+
+function renderReleveDockSlotHtml() {
+    const lignes = lignesDuReleve();
     const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const geo = localisationDisponible();
-    const rangees = lignes.map((l) => {
+    const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
+    const rangees = !lignes.length
+        ? `<div class="hint">${esc(alerte.allumee && alerte.texte ? alerte.texte : 'Rien à relever ici.')}</div>`
+        : lignes.map((l) => {
         const proche = geo && _dernierePosition ? objetProcheDeCouche(l.couche) : null;
         const nomProche = proche ? (nomObjet(proche.feature.properties || {}) || 'objet') : '';
         return `<div class="releve-couche">
@@ -6371,8 +6383,10 @@ function listDockPills() {
     // saisies d'un trajet, qui ne le concernent pas.
     const saisiesRecit = _storyPresenting && relevesDuContexte() === null
         && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
-    if (couchesEnReleve().length || saisiesRecit) {
-        const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
+    // Rien à relever et pas d'alerte : pas de pastille. Elle s'ouvrait sur un panneau vide (Lecture, scène dont le récit
+    // porte des saisies) ; seule l'alerte de proximité justifie une pastille sans ligne, et le panneau le dit alors.
+    const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
+    if (lignesDuReleve().length || (saisiesRecit && alerte.allumee)) {
         const pastilleReleve = {
             id: 'releve',
             kind: 'releve',
