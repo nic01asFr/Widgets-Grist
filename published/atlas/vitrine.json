@@ -28,7 +28,15 @@
     },
     {
       "titre": "Choisir un objet, sans le toucher",
-      "texte": "une liste montre les objets d’une couche, filtrés comme la carte : état, dernière visite, distance depuis votre position. La recherche porte sur le nom et sur les valeurs des champs — « Type : Pont maçonnerie » — et un objet s’ouvre de la même façon, quel que soit le chemin pris pour l’atteindre."
+      "texte": "une liste montre les objets d’une couche, filtrés comme la carte : état, dernière visite, distance depuis votre position. La recherche porte sur le nom et sur les valeurs des champs — « Type : Pont maçonnerie » — et un objet s’ouvre de la même façon, quel que soit le chemin pris pour l’atteindre. Dans un contexte qui a sa tournée, la liste suit la ligne : les ouvrages dans l’ordre du parcours, avec leur distance depuis le départ."
+    },
+    {
+      "titre": "Un contexte par travail, avec sa tournée",
+      "texte": "en exploitation, un contexte règle la carte pour un travail précis : couches visibles, filtres, et les relevés que la pastille « Relevé » propose. Il peut porter une tournée — la ligne d’une boucle, choisie dans une couche ou tracée sur un réseau — : elle se dessine avec le contexte, et les ouvrages qu’il montre se parcourent dans l’ordre de la ligne, depuis le panneau, avec ◀ ▶ ou dans la liste. L’exploitant ne règle rien : tout se joue en choisissant le contexte."
+    },
+    {
+      "titre": "Annuler, rétablir, enregistrer tout seul",
+      "texte": "l’apparence d’une couche — couleurs, tailles, classes, icônes, contrôles, visibilité — s’enregistre d’elle-même dans le document, après un court délai, avec un indicateur d’état. Annuler et rétablir (Ctrl+Z, Ctrl+Maj+Z) défont un réglage en remettant la couche exactement comme elle était ; l’enregistrement automatique se coupe d’un clic. Les saisies d’objets, elles, restent annulables dans Grist."
     },
     {
       "titre": "Dessiner dans la carte",
@@ -99,6 +107,10 @@
     {
       "version": "v1.7.0",
       "texte": "La fiche d’un objet est un formulaire : la ligne de la table, avec ses champs, que la scène peut proposer hors édition pour le terrain. Le bas de la carte se range — légende, récit, attribution, chacun sa place — et `?navbar=false` retire la barre pour l’intégration en cadre."
+    },
+    {
+      "version": "vitrine",
+      "texte": "Contextes avec tournée et relevés choisis par contexte, « Choisir un objet » dans l’ordre de la ligne, enregistrement automatique avec annuler et rétablir. Décrit avant la version qui les livre : ces points ne sont en ligne qu’avec elle."
     },
     {
       "version": "vitrine",
