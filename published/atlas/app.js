@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.10.2';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.11.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.10.2';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.10.2';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.10.2';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.11.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.11.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.11.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.10.2';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.10.2';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.10.2';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.10.2';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.10.2';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.10.2';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.10.2';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.10.2';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.10.2';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.10.2';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.10.2';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.10.2';
+} from './lib/parametres-objet.js?v=1.11.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.11.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.11.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.11.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.11.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.11.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.11.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.11.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.11.0';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.11.0';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.11.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.11.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,8 +36,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.10.2';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.10.2';
+} from './lib/scene-loader.js?v=1.11.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.11.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -45,38 +45,52 @@ import {
   raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
-  departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis,
-} from './lib/fiche-formulaire.js?v=1.10.2';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.10.2';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.10.2';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS } from './lib/model-layer.js?v=1.10.2';
+  departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
+} from './lib/fiche-formulaire.js?v=1.11.0';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.11.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.11.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.11.0';
+import {
+  stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
+  stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
+} from './lib/classes.js?v=1.11.0';
+import {
+  GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
+  zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
+} from './lib/grappes.js?v=1.11.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.11.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.10.2';
+} from './lib/layer-order.js?v=1.11.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
-  expressionRang, expressionIcone, idImage, tableReferencee,
-} from './lib/table-reference.js?v=1.10.2';
+  expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
+} from './lib/table-reference.js?v=1.11.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.10.2';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.10.2';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage } from './lib/contextes.js?v=1.10.2';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.10.2';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.10.2';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.10.2';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.10.2';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.10.2';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.10.2';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.10.2';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.10.2';
+} from './lib/bulle-objet.js?v=1.11.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.11.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.11.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.11.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.11.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.11.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.11.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.11.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.11.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.11.0';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.11.0';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.11.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.11.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.11.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.11.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.11.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.10.2';
+} from './lib/terrain-base.js?v=1.11.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -94,16 +108,16 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.10.2';
+} from './lib/grist-sync.js?v=1.11.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.10.2';
+} from './lib/nouvelle-couche.js?v=1.11.0';
 import {
-  creationPossible, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
+  creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.10.2';
+} from './lib/saisie-objet.js?v=1.11.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -111,7 +125,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.10.2';
+} from './lib/geometrie-saisie.js?v=1.11.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -123,14 +137,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.10.2';
+} from './lib/declarative-style.js?v=1.11.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.10.2';
+} from './lib/geo-tables.js?v=1.11.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -155,14 +169,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.10.2';
+} from './lib/controls.js?v=1.11.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.10.2';
+} from './lib/story.js?v=1.11.0';
 import {
   copieLineaire,
   estLineaire,
@@ -183,11 +197,12 @@ import {
   etatApresRecapture,
   retirerTrace,
   objetsAutour,
-} from './lib/trajet.js?v=1.10.2';
+  objetsLeLong,
+} from './lib/trajet.js?v=1.11.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.10.2';
+} from './lib/manifest-binding.js?v=1.11.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -198,7 +213,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.10.2';
+} from './lib/viewport.js?v=1.11.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -213,29 +228,30 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.10.2';
-import { mettreAPlat } from './lib/vue-import.js?v=1.10.2';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.10.2';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.10.2';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.10.2';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.10.2';
+} from './lib/view-mode.js?v=1.11.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.11.0';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.11.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.11.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.11.0';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.11.0';
 import {
   etageCoteACote,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.10.2';
+} from './lib/habillage-carte.js?v=1.11.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.10.2';
+} from './lib/viewer-controls.js?v=1.11.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.10.2';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.10.2';
+} from './lib/scene-prefs.js?v=1.11.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.11.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.11.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -325,10 +341,15 @@ const CONFIG = {
 const STATE = {
     projectName: '',
     location: { name: 'Vieux-Port · Marseille', lat: 43.2951, lng: 5.3740 },
+    /** Vrai quand quelqu'un a désigné le lieu (recherche, position, pointé, projet, manifeste) : sinon l'ancre suit les données. */
+    locationChoisie: false,
     layers: [],
     story: [],
     /** Les choix de l'auteur sur l'exposition (lib/exposition.js) : par où la scène s'ouvre. */
     exposition: { ouverture: { mode: 'carte' } },
+    /** La vignette de la scène dans la liste des projets (URL de données JPEG), et si elle reste à écrire. */
+    miniature: '',
+    _miniatureAEcrire: false,
     /** Ligne en mémoire, avant qu'une étape ne l'emporte dans le document. */
     trajet: null,
     viewerControls: createDefaultViewerControls(),
@@ -378,6 +399,8 @@ const _nouvelleCouche = { nom: '', type: 'Point', tables: [], enCours: false };
 let _storyIdx = 0;
 let _storyPresenting = false;
 let _contexteCle = null;   // clé de l'étape jouée comme contexte ; null = rien, ou le lecteur de récit
+let _cibleTournee = null;  // clé du contexte dont on pose la tournée (choix d'une ligne, tracé sur un réseau) ; null = on pose le trajet du récit
+let _tourneeVue = null;    // en édition : clé du contexte dont on montre la tournée sur la carte
 let trajetPickMode = false;
 let _trajetRemplace = false;
 let _trajetSuivi = false;
@@ -423,6 +446,7 @@ function markDirty() {
     dirty = true;
     _syncPaused = true;
     $('app-header').classList.add('dirty');
+    planifierEnregistrementAuto();
 }
 
 /**
@@ -437,7 +461,253 @@ function marquerEnregistre() {
     dirty = false;
     _syncPaused = false;
     $('app-header')?.classList.remove('dirty');
+    _enregEtat = 'propre';
+    majIndicateurEnregistrement();
 }
+
+// ============================================================
+// ENREGISTREMENT AUTOMATIQUE, ANNULER / RÉTABLIR
+// ============================================================
+/**
+ * L'apparence d'une couche s'enregistre seule, un instant après le dernier réglage. Ce qui s'enregistre est ce que
+ * « Enregistrer l'apparence » écrirait (les préférences de la couche) : les couches **copiées** (des entités détenues par
+ * Atlas, sans table) ne s'écrivent pas seules, parce que les écrire c'est réécrire leurs entités.
+ *
+ * Chaque enregistrement est un pas de l'historique (`lib/historique-apparence.js`) : « Annuler » remet l'instantané d'avant,
+ * « Rétablir » celui d'après. Des modifications **pas encore enregistrées** s'annulent d'abord, sans rien écrire : on
+ * revient au dernier état enregistré.
+ */
+const _historique = new Historique();
+let _enregEtat = 'propre';          // propre | modifie | envoi | erreur
+let _enregDernier = null;
+let _enregTimer = null;
+let _enregOccupe = false;
+let _enregRelancer = false;
+const AUTO_CLE = 'atlas_autosave';
+const DELAI_ENREG_AUTO_MS = 2500;
+
+function autoActif() { try { return localStorage.getItem(AUTO_CLE) !== '0'; } catch (_) { return true; } }
+function poserAuto(actif) {
+    try { localStorage.setItem(AUTO_CLE, actif ? '1' : '0'); } catch (_) { /* le choix ne sera pas retenu */ }
+    if (actif && _enregEtat === 'modifie') planifierEnregistrementAuto();
+    else majIndicateurEnregistrement();
+}
+const cleHistorique = (l) => clePrefsCouche(l) || l.id;
+/** Peut-on écrire l'apparence, ici et maintenant ? */
+function peutEnregistrerAuto() { return !!CONFIG.grist.ready && !CONFIG.viewMode && !_storyPresenting; }
+/** Les couches dont l'apparence s'écrit seule : celles qui ont une clé de préférences. */
+function couchesAuto() { return STATE.layers.filter((l) => clePrefsCouche(l)); }
+/** Ce qui est enregistré pour cette couche, tel qu'on vient de le lire ou de l'écrire. */
+function baselineApparence(layer) { if (clePrefsCouche(layer)) layer._apparence = capturerApparence(layer); }
+
+function majIndicateurEnregistrement() {
+    const b = $('btn-enreg');
+    if (!b) return;
+    const visible = !!CONFIG.grist.ready && !CONFIG.viewMode;
+    b.hidden = !visible;
+    if (!visible) return;
+    const auto = autoActif();
+    const textes = { propre: 'Enregistré', modifie: auto ? 'Modifié…' : 'Non enregistré', envoi: 'Enregistrement…', erreur: 'Échec · réessayer' };
+    b.dataset.etat = _enregEtat;
+    b.querySelector('.enreg-lib').textContent = textes[_enregEtat];
+    const quand = _enregDernier ? ' · ' + new Date(_enregDernier).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+    b.title = _enregEtat === 'propre' ? `Tout est enregistré${quand}` : textes[_enregEtat] + (auto ? '' : ' — enregistrement automatique désactivé');
+    b.setAttribute('aria-label', b.title);
+    majBoutonsAnnuler();
+}
+
+let _majBoutonsTimer = null;
+function majBoutonsAnnuler() {
+    clearTimeout(_majBoutonsTimer);
+    _majBoutonsTimer = setTimeout(() => {
+        const visible = !!CONFIG.grist.ready && !CONFIG.viewMode;
+        const un = $('btn-annuler'); const re = $('btn-retablir');
+        if (un) { un.hidden = !visible; un.disabled = !(_enregEtat !== 'propre' || _historique.peutAnnuler()); }
+        if (re) { re.hidden = !visible; re.disabled = !_historique.peutRetablir() || _enregEtat === 'modifie' || _enregEtat === 'erreur'; }
+    }, 60);
+}
+
+function planifierEnregistrementAuto() {
+    if (!peutEnregistrerAuto()) return;
+    _enregEtat = 'modifie';
+    majIndicateurEnregistrement();
+    if (!autoActif()) return;
+    clearTimeout(_enregTimer);
+    _enregTimer = setTimeout(() => { enregistrerAuto(); }, DELAI_ENREG_AUTO_MS);
+}
+
+/** Écrit l'apparence des couches qui ont changé depuis le dernier enregistrement. */
+async function enregistrerAuto() {
+    clearTimeout(_enregTimer);
+    if (!peutEnregistrerAuto()) return;
+    if (_enregOccupe) { _enregRelancer = true; return; }
+    _enregOccupe = true;
+    _enregEtat = 'envoi';
+    majIndicateurEnregistrement();
+    let echec = false;
+    try {
+        for (const layer of couchesAuto()) {
+            const snap = capturerApparence(layer);
+            const base = layer._apparence;
+            if (!base) { layer._apparence = snap; continue; }
+            if (memeApparence(base, snap)) continue;
+            try {
+                const ok = await saveLayerToGrist(layer, true, { lancer: true });
+                if (!ok) throw new Error('écriture non faite');
+                _historique.enregistrer(cleHistorique(layer), base, snap);
+                layer._apparence = snap;
+            } catch (e) { echec = true; console.warn('[Atlas] enregistrement automatique', e?.message || e); }
+        }
+    } finally { _enregOccupe = false; }
+    if (!echec) {
+        _enregDernier = Date.now();
+        marquerEnregistre();
+    } else {
+        _enregEtat = 'erreur';
+        majIndicateurEnregistrement();
+    }
+    if (_enregRelancer) { _enregRelancer = false; enregistrerAuto(); }
+}
+
+/** Repeint une couche dont on vient de remettre l'apparence. */
+function repeindreApparence(l) {
+    initSymbolization(l);
+    repeindreEntites(l);
+    applyLayerStyle(l);
+    if (l.controls?.length) applyControls(l);
+    syncLayerToMapState(l);
+    reconcilePanelVisibilityToMap();
+    applyLayerOrder();
+    Models3D.scheduleBuild();
+    updateLegend();
+    renderInspector();
+    refreshLayersPanelIfOpen();
+    refreshControlsDock();
+}
+
+/** Des modifications pas encore enregistrées : on revient au dernier état enregistré, sans rien écrire. */
+function annulerBrouillon() {
+    let n = 0;
+    for (const l of couchesAuto()) {
+        if (l._apparence && !memeApparence(l._apparence, capturerApparence(l))) {
+            restaurerApparence(l, l._apparence);
+            repeindreApparence(l);
+            n++;
+        }
+    }
+    return n;
+}
+
+async function appliquerPas(pas, cote) {
+    const layer = STATE.layers.find((l) => cleHistorique(l) === pas.cle);
+    if (!layer) { showToast('Cette couche n’existe plus', 'warning'); return false; }
+    restaurerApparence(layer, pas[cote]);
+    repeindreApparence(layer);
+    try {
+        const ok = await saveLayerToGrist(layer, true, { lancer: true });
+        if (!ok) throw new Error('écriture non faite');
+        layer._apparence = pas[cote];
+        _enregDernier = Date.now();
+        marquerEnregistre();
+    } catch (e) {
+        _enregEtat = 'erreur';
+        majIndicateurEnregistrement();
+        showToast('Non enregistré : ' + (e?.message || e), 'error');
+        return false;
+    }
+    return true;
+}
+
+async function annulerApparence() {
+    if (!peutEnregistrerAuto()) return;
+    clearTimeout(_enregTimer);
+    if (annulerBrouillon()) {
+        marquerEnregistre();
+        showToast('Modifications non enregistrées annulées', 'info');
+        return;
+    }
+    const pas = _historique.annuler();
+    if (!pas) { showToast('Rien à annuler', 'info'); majBoutonsAnnuler(); return; }
+    const nom = STATE.layers.find((l) => cleHistorique(l) === pas.cle)?.name || '';
+    if (await appliquerPas(pas, 'avant')) showToast(`Annulé${nom ? ' · ' + nom : ''}`, 'info');
+}
+
+async function retablirApparence() {
+    if (!peutEnregistrerAuto()) return;
+    // Des modifications non enregistrées passent avant : les rétablir par-dessus les écraserait.
+    if (_enregEtat === 'modifie' || _enregEtat === 'erreur') { showToast('Des modifications ne sont pas enregistrées : annulez-les ou enregistrez-les d’abord', 'warning'); return; }
+    const pas = _historique.retablir();
+    if (!pas) { showToast('Rien à rétablir', 'info'); majBoutonsAnnuler(); return; }
+    const nom = STATE.layers.find((l) => cleHistorique(l) === pas.cle)?.name || '';
+    if (await appliquerPas(pas, 'apres')) showToast(`Rétabli${nom ? ' · ' + nom : ''}`, 'info');
+}
+
+function fermerPanneauEnreg() {
+    document.getElementById('panneau-enreg')?.remove();
+    document.removeEventListener('pointerdown', _fermeturePanneauEnreg, true);
+    document.removeEventListener('keydown', _touchePanneauEnreg, true);
+}
+function _fermeturePanneauEnreg(e) { if (!e.target.closest?.('#panneau-enreg, #btn-enreg')) fermerPanneauEnreg(); }
+function _touchePanneauEnreg(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerPanneauEnreg(); } }
+
+/** Le réglage de l'enregistrement automatique, et l'enregistrement immédiat. */
+function ouvrirPanneauEnreg(ancre) {
+    if (document.getElementById('panneau-enreg')) { fermerPanneauEnreg(); return; }
+    const p = document.createElement('div');
+    p.id = 'panneau-enreg';
+    p.className = 'posture-menu panneau-enreg';
+    p.setAttribute('role', 'dialog');
+    p.setAttribute('aria-label', 'Enregistrement');
+    const auto = autoActif();
+    p.innerHTML = `<div class="posture-titre">Enregistrement</div>
+        <label class="enreg-reglage"><input type="checkbox" id="enreg-auto" ${auto ? 'checked' : ''}>
+            <span>Enregistrer automatiquement<small>L’apparence des couches s’écrit dans le document 2 s après le dernier réglage. Les couches copiées (sans table) s’enregistrent par « Enregistrer l’apparence ».</small></span></label>
+        <button type="button" class="btn btn-soft btn-full" id="enreg-maintenant">Enregistrer maintenant</button>`;
+    document.body.appendChild(p);
+    p.querySelector('#enreg-auto').onchange = (e) => poserAuto(e.target.checked);
+    p.querySelector('#enreg-maintenant').onclick = () => { fermerPanneauEnreg(); enregistrerAuto(); };
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        p.style.top = `${Math.min(r.bottom + 8, window.innerHeight - p.offsetHeight - 12)}px`;
+        p.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - p.offsetWidth - 12))}px`;
+    } else { p.classList.add('posture-feuille'); }
+    document.addEventListener('pointerdown', _fermeturePanneauEnreg, true);
+    document.addEventListener('keydown', _touchePanneauEnreg, true);
+}
+
+/**
+ * Les réglages d'apparence ne passent pas tous par `markDirty` : beaucoup ne font que repeindre. On regarde donc **après chaque
+ * geste dans les panneaux** (couleur, forme, contrôles, visibilité, ordre) si une couche enregistrée diffère de son dernier état
+ * enregistré — une comparaison de signatures, sans écrire. Une seule vérification par rafale de gestes.
+ */
+let _surveillanceTimer = null;
+function surveillerApparence() {
+    if (!peutEnregistrerAuto() || _enregOccupe) return;
+    for (const l of couchesAuto()) {
+        const base = l._apparence;
+        if (!base) { baselineApparence(l); continue; }
+        if (!memeApparence(base, capturerApparence(l))) { planifierEnregistrementAuto(); return; }
+    }
+}
+for (const type of ['input', 'change', 'click', 'pointerup']) {
+    document.addEventListener(type, (e) => {
+        if (!e.target.closest?.('#module-panel, #insp-main, #map-controls-dock')) return;
+        clearTimeout(_surveillanceTimer);
+        _surveillanceTimer = setTimeout(surveillerApparence, 400);
+    }, true);
+}
+
+// Ctrl/Cmd+Z annule, Ctrl/Cmd+Maj+Z ou Ctrl+Y rétablit — sauf dans un champ de saisie, qui garde le sien.
+document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const k = String(e.key).toLowerCase();
+    if (k !== 'z' && k !== 'y') return;
+    const c = e.target;
+    if (c && (c.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(c.tagName))) return;
+    if (!peutEnregistrerAuto()) return;
+    e.preventDefault();
+    if (k === 'y' || e.shiftKey) retablirApparence(); else annulerApparence();
+});
 
 // ============================================================
 // PALETTES
@@ -892,7 +1162,7 @@ function sequentialPaletteForSym(sym, layer) {
         if (hex.length) return hex;
     }
     const name = sym.colorRamp || sym.palette || 'Viridis';
-    return COLOR_PALETTES[name] || COLOR_PALETTES.Viridis;
+    return paletteEn(name, sym.inverse);
 }
 
 /**
@@ -971,8 +1241,19 @@ function layerStrokePaint(layer) {
     const st = initSymbolization(layer).stroke || {};
     return {
         width: st.enabled === false ? 0 : (Number.isFinite(st.width) ? st.width : 1.5),
-        color: st.mode === 'fixed' ? (st.color || layer.color) : layerPaintColor(layer),
+        color: st.mode === 'fixed' ? (st.color || layer.color)
+            : st.mode === 'regle' ? couleurContourRegle(layer, st)
+                : layerPaintColor(layer),
     };
+}
+
+/** La couleur d'un contour qui suit un champ : les classes de la règle, transparentes quand elles n'ont pas de couleur. */
+function couleurContourRegle(layer, st) {
+    const regle = st.regle;
+    if (!regle?.field || !regle.stops?.length) return TRANSPARENT;
+    return expressionCouleurDeclarative(
+        { kind: 'graduated', field: regle.field, stops: stopsPourCarte(regle.stops) }, TRANSPARENT, layer._fields || null,
+    ) || TRANSPARENT;
 }
 
 /**
@@ -1006,6 +1287,8 @@ function syncLayerSourceData(layer) {
     // Les centres suivent le même filtrage que les surfaces.
     const pts = map.getSource(pointFallbackId(layer));
     if (pts) pts.setData(centroidCollection(data));
+    const grappes = map.getSource(layer.id + '-grappes');
+    if (grappes) grappes.setData(centroidCollection(data));
 }
 function getLayerFields(layer) {
     if (layer._fields?.length) {
@@ -1030,8 +1313,13 @@ function getLayerFields(layer) {
     }
     return Array.from(keys).sort().map((k) => ({ id: k, type: detectFieldType(layer, k) }));
 }
-function paletteColor(name, i, total) {
-    const p = COLOR_PALETTES[name] || COLOR_PALETTES.Tableau10;
+/** Une palette, éventuellement retournée : le plus foncé devient le plus clair, la première classe la dernière. */
+function paletteEn(name, inverse, repli = 'Viridis') {
+    const p = COLOR_PALETTES[name] || COLOR_PALETTES[repli];
+    return inverse ? [...p].reverse() : p;
+}
+function paletteColor(name, i, total, inverse = false) {
+    const p = paletteEn(name, inverse, 'Tableau10');
     if (PALETTE_INFO[name]?.type === 'qualitative') return p[i % p.length];
     // sequential/divergent: spread across palette
     const idx = total <= 1 ? 0 : Math.round((i / (total - 1)) * (p.length - 1));
@@ -1057,8 +1345,8 @@ function transformedBounds(range, method) {
     if (method === 'sqrt') return [Math.sqrt(range[0]), Math.sqrt(range[1])];
     return [range[0], range[1]];
 }
-function buildColorGraduated(field, range, palette, method) {
-    const p = COLOR_PALETTES[palette] || COLOR_PALETTES.Viridis;
+function buildColorGraduated(field, range, palette, method, inverse = false) {
+    const p = paletteEn(palette, inverse);
     const [inMin, inMax] = transformedBounds(range, method);
     const expr = ['interpolate', ['linear'], transformedValueExpr(field, method)];
     const step = (inMax - inMin) / (p.length - 1) || 1;
@@ -2843,11 +3131,26 @@ function resolveFeatureProps(feature, layer) {
 // ============================================================
 // MAP (MapLibre)
 // ============================================================
+/**
+ * Le fond quand le réseau manque : un aplat. Sans lui, le style de base ne se lit jamais, la carte ne déclare jamais être
+ * chargée, et les couches — qui sont sur l'appareil — ne se montent pas : une scène préparée pour le terrain s'ouvrirait sur
+ * du blanc. Les glyphes restent ceux du réseau (les étiquettes manqueront, pas les données).
+ */
+const STYLE_HORS_RESEAU = {
+    version: 8, name: 'Hors réseau',
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    sources: {},
+    layers: [{ id: 'fond-hors-reseau', type: 'background', paint: { 'background-color': '#ece7da' } }],
+};
+let _fondDeRepli = false;
+
 function initMap() {
     const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.liberty;
+    // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
+    _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
     map = new maplibregl.Map({
         container: 'map',
-        style: _bm.style ? _bm.style() : _bm.url,
+        style: _fondDeRepli ? STYLE_HORS_RESEAU : (_bm.style ? _bm.style() : _bm.url),
         center: [STATE.location.lng, STATE.location.lat],
         zoom: CONFIG.defaultZoom,
         pitch: CONFIG.defaultPitch,
@@ -2859,6 +3162,15 @@ function initMap() {
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
 
     map.on('load', onStyleReady);
+    // Le style de base illisible (réseau coupé, instance injoignable) : un aplat, et les données s'affichent quand même.
+    map.on('error', (e) => {
+        if (_fondDeRepli || _styleUsable) return;
+        const msg = String(e?.error?.message || '');
+        if (!/fetch|network|load failed|failed to|timeout|offline|impossible/i.test(msg) && e?.error?.status !== 0) return;
+        _fondDeRepli = true;
+        try { map.setStyle(STYLE_HORS_RESEAU); } catch (_) { /* la carte reprendra au prochain essai */ }
+        showToast('Fond de carte indisponible sans réseau — vos données restent affichées', 'info');
+    });
     // Les icônes de catégorie se chargent quand la carte les réclame — y compris
     // après un changement de fond, qui vide les images du style.
     map.on('styleimagemissing', (e) => { if (e.id?.startsWith('atlas-ico-')) chargerIcone(e.id); });
@@ -3065,9 +3377,87 @@ function shouldAutoFitBounds(bounds) {
     return shouldAutoFitInitialBounds(bounds, cameraStorageKey());
 }
 
+/** La clé stable d'une couche pour le cadrage : sa table, sinon son nom (l'identifiant change d'une ouverture à l'autre). */
+const cleCadrage = (l) => l.sourceTable || l.name;
+function couchesCadrage() { return STATE.layers.map((l) => ({ id: cleCadrage(l), bornes: boundsFromGeoJSON(l.geojson) })); }
+function cameraCourante() {
+    const c = map.getCenter();
+    return { lng: c.lng, lat: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
+}
+
+/** Pose le cadrage demandé ; `anime` pour un geste de l'auteur, pas pour l'ouverture. */
+function poserCadrage(cible, anime) {
+    const duration = anime ? 900 : 0;
+    if (cible.type === 'bornes') map.fitBounds(cible.bornes, { padding: margeCadrage(), maxZoom: 16, duration });
+    else if (cible.type === 'camera') {
+        const o = { center: [cible.camera.lng, cible.camera.lat], zoom: cible.camera.zoom, pitch: cible.camera.pitch, bearing: cible.camera.bearing };
+        if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
+    } else {
+        const o = { center: cible.centre, zoom: cible.zoom };
+        if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
+    }
+}
+
+/**
+ * L'ancre de la scène (le soleil, le fuseau) suit les données tant que personne n'a désigné de lieu : une scène de Lyon ne
+ * se règle plus sur le Vieux-Port de Marseille parce qu'on n'a rien dit.
+ */
+function ancrerSurDonnees(bornes) {
+    if (STATE.locationChoisie) return;
+    const c = centreDesBornes(bornes);
+    if (!c) return;
+    STATE.location = { ...STATE.location, name: 'Emprise des données', lat: c.lat, lng: c.lng };
+    try { updateLighting(); } catch (_) { /* la scène n'est pas encore prête : l'éclairage se posera avec elle */ }
+}
+
+/** Quelqu'un vient de désigner un lieu : il devient l'ancre, et la scène s'ouvrira dessus. */
+function lieuChoisi() {
+    STATE.locationChoisie = true;
+    const l = STATE.location;
+    STATE.exposition = normaliserExposition({ ...STATE.exposition, cadrage: { mode: 'lieu', lieu: { lng: l.lng, lat: l.lat, nom: l.name } } });
+    persistScenePrefsDifferee(200);
+}
+
+/**
+ * Une scène qu'on vient de créer s'ouvre vide : on propose tout de suite d'y poser la première couche, plutôt que de laisser
+ * une carte sans rien. Le drapeau est posé par l'écran « Nouvelle scène » et ne sert qu'une fois.
+ */
+async function accueilSceneNeuve() {
+    try {
+        const id = await grist.docApi.getDocName();
+        if (!id || localStorage.getItem('atlas_nouvelle_scene') !== String(id)) return;
+        localStorage.removeItem('atlas_nouvelle_scene');
+        if (CONFIG.viewMode) return;
+        openModule('couches');
+        showToast('Scène créée — ajoutez-y une première couche', 'info');
+    } catch (_) { /* sans importance : la scène s'ouvre comme n'importe quelle autre */ }
+}
+
+/** Les préférences de la scène viennent d'arriver : le cadrage de l'auteur s'applique, sauf si l'on a déjà bougé la carte. */
+function appliquerCadrageDeScene() {
+    const c = STATE.exposition?.cadrage;
+    if (!c) return;
+    if (c.mode === 'lieu') {
+        STATE.location = { ...STATE.location, name: c.lieu.nom || STATE.location.name, lat: c.lieu.lat, lng: c.lieu.lng };
+        STATE.locationChoisie = true;
+    }
+    if (!map || CONFIG.sceneExterne) return;
+    try { if (sessionStorage.getItem(cameraStorageKey())) return; } catch (_) { /* stockage refusé : on applique */ }
+    const cible = cadrageEffectif({ cadrage: c, couches: couchesCadrage() });
+    if (cible && (cible.type !== 'bornes' || c.couche || STATE.layers.length)) { poserCadrage(cible, false); _initialViewportApplied = true; }
+}
+
 function applyInitialViewport(bounds) {
     if (_initialViewportApplied || !map) return;
-    const b = bounds || computeLayersBounds();
+    const cible = cadrageEffectif({ cadrage: STATE.exposition?.cadrage, couches: couchesCadrage() });
+    // Une vue figée ou un lieu : la caméra de session, si on en a une, prime comme pour toute reprise.
+    if (cible && cible.type !== 'bornes') {
+        if (!restoreMapCamera()) poserCadrage(cible, false);
+        _initialViewportApplied = true;
+        return;
+    }
+    const b = cible?.bornes || bounds || computeLayersBounds();
+    if (b) ancrerSurDonnees(computeLayersBounds() || b);
     if (b && shouldAutoFitBounds(b)) {
         map.fitBounds(b, { padding: margeCadrage(), maxZoom: 16, duration: 800 });
         _initialViewportApplied = true;
@@ -3322,6 +3712,7 @@ function removeLayerGfx(layer) {
     });
     if (map.getSource(layer.id)) map.removeSource(layer.id);
     if (map.getSource(pointFallbackId(layer))) map.removeSource(pointFallbackId(layer));
+    if (map.getSource(layer.id + '-grappes')) map.removeSource(layer.id + '-grappes');
 }
 
 /**
@@ -3369,11 +3760,25 @@ function addLayerToMap(layer) {
         const nFeats = data?.features?.length || 0;
         // maxzoom 22 : sur relief incliné, MapLibre 5.6.1 levait au maxzoom 18
         // par défaut (`_updateRetainedTiles`, cf. `optionsSourceGeojson`).
-        map.addSource(layer.id, optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }));
+        // Regroupement : les points se regroupent dans leur propre source ; pour une ligne ou une surface, ce sont
+        // leurs centres, dans une source à part, et la forme n'apparaît qu'au-delà du zoom de regroupement.
+        const symG = initSymbolization(layer);
+        const cfgG = configGrappes(symG);
+        const groupe = grappesActives(layer);
+        const estPointG = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+        layer._sourceGroupee = !!(groupe && estPointG);
+        layer._grappeZoom = groupe && !estPointG ? zoomFormes(cfgG) : null;
+        map.addSource(layer.id, {
+            ...optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }),
+            ...(layer._sourceGroupee ? optionsGrappes(cfgG, symG) : {}),
+        });
+        if (layer._grappeZoom != null) {
+            map.addSource(layer.id + '-grappes', { ...optionsSourceGeojson(centroidCollection(data)), ...optionsGrappes(cfgG, symG) });
+        }
         // Surfaces menues : source de centres pour le rendu en petite échelle.
         const isFlatPolygon = (layer.geometryType === 'Polygon' || layer.geometryType === 'MultiPolygon')
             && layer.style?.polygonMode === 'flat';
-        layer._pointFallbackZoom = isFlatPolygon ? pointFallbackZoom(layer.geojson) : null;
+        layer._pointFallbackZoom = isFlatPolygon && layer._grappeZoom == null ? pointFallbackZoom(layer.geojson) : null;
         // Nombre d'entités au moment de l'évaluation : une couche différée est
         // vide au montage, il faudra refaire le calcul quand elle se peuplera.
         layer._pointFallbackAt = layer.geojson?.features?.length || 0;
@@ -3450,13 +3855,13 @@ function colorExpression(layer, fallback) {
     if (sym.mode === 'categorized' && sym.field) {
         syncColorCategoriesFromFeatures(layer);
         const cats = sym.categories.length ? sym.categories
-            : getUniqueValues(layer, sym.field).map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, 99), count: v.count }));
+            : getUniqueValues(layer, sym.field).map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, 99, sym.inverse), count: v.count }));
         sym.categories = cats;
         return buildColorMatch(sym.field, cats, sym.defaultColor || sym.value || fallback || layer.color);
     }
     if (sym.mode === 'graduated' && sym.field) {
         const r = getNumericRange(layer, sym.field);
-        if (r.count) return buildColorGraduated(sym.field, [r.min, r.max], sym.colorRamp || sym.palette, sym.method);
+        if (r.count) return buildColorGraduated(sym.field, [r.min, r.max], sym.colorRamp || sym.palette, sym.method, sym.inverse);
     }
     return sym.value || fallback || layer.color;
 }
@@ -3485,6 +3890,7 @@ function ajouterCoucheIcones(layer) {
     const tri = cleDeTriReference(layer);
     map.addLayer({
         id: layer.id + '-icon', type: 'symbol', source: layer.id,
+        ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
         layout: {
             'icon-image': expressionIcone(ic.field, entrees),
             'icon-size': (ic.taille || 40) / 64,
@@ -3503,7 +3909,7 @@ function ajouterCoucheIcones(layer) {
 
 function applyPointStyle(layer) {
     const s = layer.style;
-    ['', '-hit', '-icon', '-label'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    ['', '-hit', '-icon', '-label', '-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
     const sym = initSymbolization(layer);
 
     if (s.mode === 'library' || s.mode === 'custom') {
@@ -3526,18 +3932,47 @@ function applyPointStyle(layer) {
         const stroke = layerStrokePaint(layer);
         const tri = cleDeTriReference(layer);
         map.addLayer({ id: layer.id, type: 'circle', source: layer.id,
+            ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
             ...(tri != null ? { layout: { 'circle-sort-key': tri } } : {}),
             paint: {
                 'circle-radius': radius,
                 'circle-color': layerPaintColor(layer),
                 'circle-stroke-width': stroke.width,
-                'circle-stroke-color': initSymbolization(layer).stroke?.mode === 'fixed'
+                'circle-stroke-color': ['fixed', 'regle'].includes(initSymbolization(layer).stroke?.mode)
                     ? stroke.color : '#ffffff',
                 'circle-opacity': layerPaintOpacity(layer),
             }});
     }
     ajouterCoucheIcones(layer);
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
+}
+
+/**
+ * Les ronds de regroupement : un par groupe, avec le nombre d'objets, et une couleur qui dit l'essentiel.
+ * Pour une ligne ou une surface, ils se posent sur les centres et ne se voient que sous le zoom où la forme paraît.
+ */
+function ajouterCouchesGrappes(layer) {
+    ['-grappe', '-grappe-n'].forEach((sfx) => { if (map.getLayer(layer.id + sfx)) map.removeLayer(layer.id + sfx); });
+    if (!grappesActives(layer)) return;
+    const estPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const source = estPoint ? layer.id : layer.id + '-grappes';
+    if (!map.getSource(source)) return;
+    const sym = initSymbolization(layer);
+    const cfg = configGrappes(sym);
+    const sous = (spec) => { if (!estPoint && Number.isFinite(layer._grappeZoom)) spec.maxzoom = layer._grappeZoom; return spec; };
+    map.addLayer(sous({ id: layer.id + '-grappe', type: 'circle', source, filter: FILTRE_GRAPPE, paint: {
+        'circle-color': couleurGrappe(cfg, sym), 'circle-radius': RAYON_GRAPPE, 'circle-opacity': 0.9,
+        'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } }));
+    map.addLayer(sous({ id: layer.id + '-grappe-n', type: 'symbol', source, filter: FILTRE_GRAPPE,
+        layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12, 'text-font': ['Noto Sans Regular'], 'text-allow-overlap': true },
+        paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(31,27,20,0.85)', 'text-halo-width': 1.5 } }));
+    // Un objet isolé (ni regroupé ni encore une forme) se montre en point, à la couleur de la couche.
+    if (!estPoint) {
+        if (map.getLayer(layer.id + '-pts')) map.removeLayer(layer.id + '-pts');
+        map.addLayer(sous({ id: layer.id + '-pts', type: 'circle', source, filter: FILTRE_ISOLE, paint: {
+            'circle-radius': 5, 'circle-color': layerPaintColor(layer), 'circle-stroke-width': 1.5, 'circle-stroke-color': '#ffffff' } }));
+    }
 }
 
 function applyLineStyle(layer) {
@@ -3549,9 +3984,12 @@ function applyLineStyle(layer) {
         if (r.count) width = buildNumGraduated(sym.size.field, [r.min, r.max], sym.size.outputRange, sym.size.method);
     }
     const tri = cleDeTriReference(layer);
-    map.addLayer({ id: layer.id, type: 'line', source: layer.id,
+    const ligne = { id: layer.id, type: 'line', source: layer.id,
         layout: { 'line-cap': 'round', 'line-join': 'round', ...(tri != null ? { 'line-sort-key': tri } : {}) },
-        paint: { 'line-color': layerPaintColor(layer), 'line-width': width, 'line-opacity': layerPaintOpacity(layer) } });
+        paint: { 'line-color': layerPaintColor(layer), 'line-width': width, 'line-opacity': layerPaintOpacity(layer) } };
+    if (Number.isFinite(layer._grappeZoom)) ligne.minzoom = layer._grappeZoom;
+    map.addLayer(ligne);
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
 }
 
@@ -3631,16 +4069,19 @@ function applyPolygonStyle(layer) {
     } else {
         const stroke = layerStrokePaint(layer);
         // Repli en points sous le seuil : les surfaces y seraient sous-pixel.
-        const zFallback = layer._pointFallbackZoom;
+        const zFallback = layer._grappeZoom ?? layer._pointFallbackZoom;
+        // Contour seul : le remplissage reste (il porte le clic et la sélection) mais ne se voit pas, et le trait
+        // ne descend pas sous 2 px — sans lui, la couche s'effacerait.
+        const contourSeul = sym.remplissage === 'contour';
         const fill = { id: layer.id, type: 'fill', source: layer.id, paint: {
-            'fill-color': layerPaintColor(layer), 'fill-opacity': layerPaintOpacity(layer) } };
+            'fill-color': layerPaintColor(layer), 'fill-opacity': contourSeul ? 0 : layerPaintOpacity(layer) } };
         const triFill = cleDeTriReference(layer);
         if (triFill != null) fill.layout = { 'fill-sort-key': triFill };
         poserBornesZoom(fill, layer, zFallback);
         map.addLayer(fill);
-        if (stroke.width > 0) {
+        if (stroke.width > 0 || contourSeul) {
             const outline = { id: layer.id + '-outline', type: 'line', source: layer.id, paint: {
-                'line-color': stroke.color, 'line-width': stroke.width } };
+                'line-color': stroke.color, 'line-width': contourSeul ? Math.max(2, stroke.width) : stroke.width } };
             poserBornesZoom(outline, layer, zFallback);
             map.addLayer(outline);
         }
@@ -3672,6 +4113,7 @@ function applyPolygonStyle(layer) {
                 } });
         }
     }
+    ajouterCouchesGrappes(layer);
     addLabelLayer(layer);
 }
 
@@ -3681,6 +4123,7 @@ function addLabelLayer(layer) {
     if (!sym?.enabled || !sym.field) return;
     const size = Number.isFinite(sym.size) ? sym.size : 12;
     map.addLayer({ id: layer.id + '-label', type: 'symbol', source: layer.id,
+        ...(layer._sourceGroupee ? { filter: FILTRE_ISOLE } : {}),
         layout: { 'text-field': ['to-string', ['get', sym.field]], 'text-size': size, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-font': ['Noto Sans Regular'] },
         paint: { 'text-color': sym.color || '#2D2820', 'text-halo-color': '#ffffff', 'text-halo-width': 1.4 } });
 }
@@ -4327,6 +4770,19 @@ function retirerPoignees() {
 }
 
 /** La ligne se voit pendant la lecture du récit, et dans le panneau Récit. */
+/** La tournée du contexte joué, ou `null`. */
+function tourneeActive() {
+    if (!_contexteCle) return null;
+    return tourneeDe((STATE.story || []).find((s) => s.cle === _contexteCle)?.state);
+}
+
+/** La tournée à dessiner : celle du contexte joué ; en édition du Récit, celle du contexte qu'on règle. */
+function tourneeAffichee() {
+    const cle = _contexteCle || (!_storyPresenting && STATE.currentModule === 'recit' ? _tourneeVue : null);
+    if (!cle) return null;
+    return tourneeDe((STATE.story || []).find((s) => s.cle === cle)?.state);
+}
+
 function trajetVisible() {
     return !!traceActuelle() && (_storyPresenting || STATE.currentModule === 'recit');
 }
@@ -4334,8 +4790,10 @@ function trajetVisible() {
 function rafraichirTrajet() {
     retirerPoignees();
     if (!assurerCoucheTrajet()) return;
-    const trace = traceActuelle();
-    const montrer = trajetVisible() && trace;
+    // Pendant un contexte, seule sa tournée se montre : le trajet du récit ne le concerne pas.
+    const tournee = tourneeAffichee();
+    const trace = _contexteCle ? tournee : (tournee || traceActuelle());
+    const montrer = tournee || (!_contexteCle && trajetVisible() && trace);
     const src = map.getSource('atlas-trajet');
     src?.setData(montrer ? {
         type: 'Feature',
@@ -4343,6 +4801,8 @@ function rafraichirTrajet() {
         geometry: { type: 'LineString', coordinates: trace.coordinates },
     } : { type: 'FeatureCollection', features: [] });
     if (!montrer) return;
+    // Une tournée se règle depuis le Récit, pas à la carte : ni poignées ni flèche de sens.
+    if (tournee) return;
     const edite = STATE.currentModule === 'recit' && !CONFIG.viewMode && !_storyPresenting && canWrite(CONFIG.viewMode);
     if (!edite) return;
 
@@ -4411,7 +4871,22 @@ function rafraichirTrajet() {
 function annulerChoixTrajet() {
     trajetPickMode = false;
     _trajetRemplace = false;
+    _cibleTournee = null;
     if (map) map.getCanvas().style.cursor = '';
+}
+
+/** Pose (ou remplace) la tournée d'un contexte : une copie figée de la ligne, dans le bloc `usage` de son étape. */
+function poserTourneeDepuis(cle, trace) {
+    const etape = (STATE.story || []).find((s) => s.cle === cle);
+    if (!etape || !usageDe(etape.state).contexte) { showToast('Ce contexte n’existe plus', 'warning'); return; }
+    const remplace = !!tourneeDe(etape.state);
+    etape.state = avecUsage(etape.state, { tournee: traceFigee(trace) });
+    _tourneeVue = cle;
+    markDirty();
+    persistStory(true);
+    rafraichirTrajet();
+    renderRecit();
+    showToast(remplace ? 'Tournée remplacée' : `Tournée posée — ${direLongueur(longueurMetres(trace.coordinates))}`, 'success');
 }
 
 function poserTrajetDepuis(choix) {
@@ -4423,17 +4898,24 @@ function poserTrajetDepuis(choix) {
         nom: choix.layer.name || '',
     };
     const remplacer = _trajetRemplace;
+    const cibleTournee = _cibleTournee;
     annulerChoixTrajet();
-    if (!STATE.story.length) {
+    // Une tournée appartient à son contexte : elle ne place aucune étape du récit.
+    if (cibleTournee) { poserTourneeDepuis(cibleTournee, trace); return; }
+    // Le trajet du récit ne concerne que les étapes du récit : les contextes ont leur tournée.
+    const etapes = STATE.story.filter((s) => !usageDe(s.state).contexte);
+    if (!etapes.length) {
         STATE.trajet = trace;
         rafraichirTrajet();
         renderRecit();
         showToast('Trajet prêt — chaque capture se posera au plus près de la vue', 'info');
         return;
     }
-    const ontPlace = STATE.story.every((s) => Number.isFinite(s.state?.abscisse));
+    const ontPlace = etapes.every((s) => Number.isFinite(s.state?.abscisse));
     let ecartMax = 0;
-    STATE.story.forEach((s, i) => {
+    STATE.story.forEach((s) => {
+        if (usageDe(s.state).contexte) return;
+        const i = etapes.indexOf(s);
         let abscisse;
         if (remplacer && ontPlace) {
             // Remplacer la ligne : mêmes proportions, vues inchangées.
@@ -4447,7 +4929,7 @@ function poserTrajetDepuis(choix) {
                     ecartMax = Math.max(ecartMax, place.distanceMetres);
                 }
             } else {
-                abscisse = placesInitiales(STATE.story.length)[i] ?? 0.5;
+                abscisse = placesInitiales(etapes.length)[i] ?? 0.5;
             }
         }
         s.state = fusionnerApresPhoto(s.state || {}, {
@@ -4468,6 +4950,65 @@ function poserTrajetDepuis(choix) {
     } else {
         showToast('Étapes posées sur le trajet, au plus près de chaque vue', 'success');
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* Itinéraire sur un réseau : départ, points de passage, arrivée       */
+/* ------------------------------------------------------------------ */
+
+/** `null` hors itinéraire ; sinon `{ layerId, reseau, points, marqueurs, calcul }`. */
+let _itineraire = null;
+const SOURCE_ITINERAIRE = 'atlas-itineraire';
+
+function effacerApercuItineraire() {
+    if (!map) return;
+    if (map.getLayer(SOURCE_ITINERAIRE)) map.removeLayer(SOURCE_ITINERAIRE);
+    if (map.getSource(SOURCE_ITINERAIRE)) map.removeSource(SOURCE_ITINERAIRE);
+}
+
+function terminerItineraire() {
+    if (!_itineraire) return;
+    _itineraire.marqueurs.forEach((m) => m.remove());
+    effacerApercuItineraire();
+    _itineraire = null;
+    if (map) map.getCanvas().style.cursor = '';
+}
+
+function dessinerApercuItineraire(coordonnees) {
+    effacerApercuItineraire();
+    if (!map || !coordonnees?.length) return;
+    map.addSource(SOURCE_ITINERAIRE, optionsSourceGeojson({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coordonnees } }));
+    map.addLayer({ id: SOURCE_ITINERAIRE, type: 'line', source: SOURCE_ITINERAIRE,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#0B6E99', 'line-width': 6, 'line-opacity': 0.9 } });
+}
+
+/** Un point de plus : on le numérote, et le chemin se retrace dès qu'il y a un départ et une arrivée. */
+function itineraireClic(e) {
+    const s = _itineraire;
+    if (!s) return;
+    const p = [e.lngLat.lng, e.lngLat.lat];
+    s.points.push(p);
+    const el = document.createElement('div');
+    el.className = 'trajet-poignee';
+    el.textContent = String(s.points.length);
+    s.marqueurs.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(p).addTo(map));
+    recalculerItineraire();
+    if (STATE.currentModule === 'recit') renderRecit();
+}
+
+function recalculerItineraire() {
+    const s = _itineraire;
+    if (!s) return;
+    s.calcul = s.points.length >= 2 ? calculerItineraire(s.reseau, s.points) : null;
+    dessinerApercuItineraire(s.calcul?.ok ? s.calcul.coordonnees : []);
+    if (s.calcul && !s.calcul.ok) showToast(s.calcul.raison, 'warning');
+}
+
+/** Les couches de lignes dont on peut tirer un réseau. */
+function couchesReseau() {
+    return STATE.layers.filter((l) => l.visible !== false && !l._distant && !l._raster
+        && (l.geojson?.features || []).some((f) => estLineaire(f.geometry?.type)));
 }
 
 function onTrajetPick(e) {
@@ -4493,7 +5034,7 @@ function onTrajetPick(e) {
     poserTrajetDepuis(best);
 }
 
-function choisirTrajet(remplacer) {
+function choisirTrajet(remplacer, cibleTournee = null) {
     if (!assertCanWrite(remplacer ? 'remplacer le trajet' : 'créer un trajet')) return;
     if (trajetPickMode) {
         annulerChoixTrajet();
@@ -4506,6 +5047,7 @@ function choisirTrajet(remplacer) {
         return;
     }
     _trajetRemplace = !!remplacer;
+    _cibleTournee = cibleTournee;
     trajetPickMode = true;
     if (map) map.getCanvas().style.cursor = 'crosshair';
     showToast(remplacer ? 'Choisissez la nouvelle ligne' : 'Choisissez une ligne sur la carte', 'info');
@@ -5074,6 +5616,88 @@ function closeModulePanel() {
 // ---- Lieu ----
 let searchTimer = null;
 let locationPickMode = false;
+/** Où la carte s'ouvre : trois façons, dont les données d'abord (lib/cadrage.js). */
+function htmlCadrage() {
+    const c = normaliserExposition(STATE.exposition).cadrage || null;
+    const avecEmprise = STATE.layers.filter((l) => boundsFromGeoJSON(l.geojson));
+    const mode = c?.mode || (avecEmprise.length ? 'donnees' : 'lieu');
+    const choix = (id, titre, aide, corps = '') => `<div class="cadrage-choix${mode === id ? ' on' : ''}">
+        <button type="button" role="radio" aria-checked="${mode === id}" class="cadrage-radio" onclick="A.setCadrage('${id}')"${id === 'donnees' && !avecEmprise.length ? ' disabled' : ''}>
+            <span class="cadrage-nom">${titre}</span><span class="cadrage-aide">${aide}</span></button>${mode === id ? corps : ''}</div>`;
+    const options = avecEmprise.map((l) => `<option value="${echapper(cleCadrage(l))}"${c?.couche === cleCadrage(l) ? ' selected' : ''}>${echapper(l.name)}</option>`).join('');
+    const surDonnees = choix('donnees', 'Sur mes données',
+        avecEmprise.length ? 'La carte s’ouvre sur l’emprise des couches.' : 'Aucune couche pour l’instant.',
+        avecEmprise.length > 1 ? `<select class="input" aria-label="Couches cadrées" onchange="A.setCadrage('donnees', this.value)">
+            <option value="">Toutes les couches</option>${options}</select>` : '');
+    const l = c?.mode === 'lieu' ? c.lieu : STATE.location;
+    const surLieu = choix('lieu', 'Sur un lieu précis', mode === 'lieu' ? echapper(l.nom || l.name || 'Lieu choisi') : 'Une adresse, une position, des coordonnées.', htmlOutilsLieu());
+    const v = c?.mode === 'vue' ? c.vue : null;
+    const surVue = choix('vue', 'Sur la vue actuelle', v ? `Figée à zoom ${v.zoom.toFixed(1)}, inclinaison ${Math.round(v.pitch)}°.` : 'Le cadrage que vous réglez sur la carte, tel quel.',
+        '<button type="button" class="btn btn-soft btn-full" onclick="A.setCadrage(\'vue\')">Utiliser la vue actuelle</button>');
+    return `<div class="section">
+        <div class="section-title">Ouverture de la carte${infoBulle('Où la carte s’ouvre pour tout le monde. Sur les données, elle suit les couches : une scène déplacée n’a pas à être recadrée. Le soleil et le fuseau se règlent sur le centre des données, tant qu’aucun lieu n’est désigné.')}</div>
+        <div class="cadrage-liste" role="radiogroup" aria-label="Ouverture de la carte">${surDonnees}${surLieu}${surVue}</div></div>`;
+}
+
+/** Les outils pour désigner un lieu : recherche, position, pointé, coordonnées. */
+function htmlOutilsLieu() {
+    const L = STATE.location;
+    return `<div class="cadrage-outils">
+        <input class="input" id="loc-search" placeholder="Adresse, ville, monument…" aria-label="Rechercher un lieu" oninput="A.searchLocation(this.value)">
+        <div class="search-results" id="loc-results"></div>
+        <div class="cadrage-boutons">
+            <button class="btn btn-soft" onclick="A.useGeolocation()">${icTrait(IC.epingle)} Ma position</button>
+            <button class="btn btn-soft" onclick="A.pickOnMap()">${icTrait(IC.carte)} Pointer</button>
+        </div>
+        <div class="dual">
+            <div><label class="input-label">Latitude</label><input class="input" id="loc-lat" type="number" step="0.0001" value="${(L.lat ?? '').toString()}"></div>
+            <div><label class="input-label">Longitude</label><input class="input" id="loc-lng" type="number" step="0.0001" value="${(L.lng ?? '').toString()}"></div>
+        </div>
+        <button class="btn btn-soft btn-full" onclick="A.applyManualCoords()">Aller</button>
+    </div>`;
+}
+
+/**
+ * La vignette de la scène dans la liste des projets : la vue actuelle de la carte, recadrée en 8:5 et réduite (JPEG, environ
+ * vingt Ko), écrite dans `Atlas_ScenePrefs.Miniature`. L'auteur la choisit : une carte cadrée sur le sujet vaut mieux
+ * qu'une capture prise au hasard.
+ */
+function capturerMiniature() {
+    if (!map) return;
+    if (!assertCanWrite('choisir la miniature de la scène')) return;
+    // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
+    map.once('render', () => {
+        try {
+            const src = map.getCanvas();
+            const L = 320, H = 200;
+            const c = document.createElement('canvas');
+            c.width = L; c.height = H;
+            let sw = src.width;
+            let sh = sw * H / L;
+            if (sh > src.height) { sh = src.height; sw = sh * L / H; }
+            c.getContext('2d').drawImage(src, (src.width - sw) / 2, (src.height - sh) / 2, sw, sh, 0, 0, L, H);
+            STATE.miniature = c.toDataURL('image/jpeg', 0.72);
+            STATE._miniatureAEcrire = true;
+            markDirty();
+            persistScenePrefsDifferee(200);
+            if (STATE.currentModule === 'lieu') renderLieu();
+            showToast('Miniature de la scène enregistrée', 'success');
+        } catch (e) { showToast('Miniature impossible : ' + e.message, 'error'); }
+    });
+    map.triggerRepaint();
+}
+
+/** Le bloc « Miniature » du module Lieu. */
+function htmlMiniature() {
+    const m = STATE.miniature;
+    return `<div class="section">
+        <div class="section-title">Miniature de la scène${infoBulle('L’image qui représente la scène dans la liste des projets de l’application. Cadrez la carte sur le sujet, puis « Utiliser la vue actuelle ».')}</div>
+        ${m ? `<img class="miniature-apercu" src="${escapeHtml(m)}" alt="Miniature actuelle de la scène">` : '<div class="miniature-vide">Aucune miniature : la liste montre l’initiale de la scène.</div>'}
+        <button class="btn btn-soft btn-full" onclick="A.capturerMiniature()">${m ? 'Remplacer par la vue actuelle' : 'Utiliser la vue actuelle'}</button>
+        ${m ? '<button type="button" class="btn-lien miniature-retirer" onclick="A.retirerMiniature()">Retirer la miniature</button>' : ''}
+    </div>`;
+}
+
 function renderLieu() {
     $('module-title').textContent = 'Lieu';
     const L = STATE.location;
@@ -5082,32 +5706,19 @@ function renderLieu() {
             <div class="section-title">Nom du projet</div>
             <input class="input" id="proj-name" placeholder="Ma maquette…" value="${STATE.projectName}" onchange="A.setProjectName(this.value)">
         </div>
-        <div class="loc-badge">
-            <span class="ic">${icTrait(IC.epingle)}</span>
-            <div>
-                <div class="nm">${L.name || 'Non défini'}</div>
-                <div class="co">${(L.lat ?? 0).toFixed(5)}°N · ${(L.lng ?? 0).toFixed(5)}°E</div>
+        ${htmlCadrage()}
+        ${htmlMiniature()}
+        <div class="section">
+            <div class="section-title">Ancre du soleil${infoBulle('Le point sur lequel se règlent le soleil et le fuseau de la scène. Tant qu’aucun lieu n’est désigné, c’est le centre des données.')}</div>
+            <div class="loc-badge">
+                <span class="ic">${icTrait(IC.epingle)}</span>
+                <div class="loc-texte">
+                    <div class="nm">${L.name || 'Non défini'}</div>
+                    <div class="co">${(L.lat ?? 0).toFixed(4)}°N · ${(L.lng ?? 0).toFixed(4)}°E</div>
+                </div>
             </div>
-            <button class="loc-change" onclick="A.recenter()">Recentrer</button>
-        </div>
-        <div class="section">
-            <div class="section-title">Rechercher un lieu</div>
-            <input class="input" id="loc-search" placeholder="Adresse, ville, monument…" oninput="A.searchLocation(this.value)">
-            <div class="search-results" id="loc-results"></div>
-        </div>
-        <div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.useGeolocation()">${icTrait(IC.epingle)} Ma position actuelle</button>
-            <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.pickOnMap()">${icTrait(IC.carte)} Pointer sur la carte</button>
-        </div>
-        <div class="section">
-            <div class="section-title">Coordonnées manuelles</div>
-            <div class="dual">
-                <div><label class="input-label">Latitude</label><input class="input" id="loc-lat" type="number" step="0.0001" value="${(L.lat ?? '').toString()}"></div>
-                <div><label class="input-label">Longitude</label><input class="input" id="loc-lng" type="number" step="0.0001" value="${(L.lng ?? '').toString()}"></div>
-            </div>
-            <button class="btn btn-soft btn-full" style="margin-top:10px" onclick="A.applyManualCoords()">Aller</button>
-        </div>
-`;
+            <button class="btn btn-soft btn-full" onclick="A.recenter()">${icTrait(IC.cible, 16)} Recentrer la carte</button>
+        </div>`;
 }
 
 // ---- Couches ----
@@ -5133,21 +5744,21 @@ function availableTablesSection() {
     const linked = new Set(STATE.layers.filter((l) => l.sourceTable).map((l) => l.sourceTable));
     const avail = _geoTables.filter((g) => !linked.has(g.table));
     if (!avail.length) return '';
-    return `<div class="section"><div class="section-title">Tables géo du document · à afficher</div><div class="layer-list">${avail.map((g) => `
-        <div class="layer-item" onclick="A.showGeoTable('${String(g.table).replace(/'/g, "\\'")}')">
-            <span class="layer-vis" title="Afficher comme couche">＋</span>
-            <div class="layer-info"><div class="layer-name">${g.table}</div><div class="layer-meta">${geoTableMeta(g)}</div></div>
-            <button class="layer-act" title="Afficher">${icTrait(IC.oeil)}</button>
-        </div>`).join('')}</div></div>`;
+    return `<div class="section"><div class="section-title">Tables du document${infoBulle('Les tables géographiques du document qui ne sont pas encore des couches. Touchez une table pour l’ajouter.')}</div><div class="table-liste">${avail.map((g) => `
+        <button type="button" class="table-item" onclick="A.showGeoTable('${String(g.table).replace(/'/g, "\\'")}')" title="Afficher « ${escapeHtml(g.table)} » comme couche">
+            <span class="table-nom">${escapeHtml(g.table)}</span>${Number.isFinite(g.count) ? `<span class="table-compte">${g.count} obj.</span>` : ''}
+            <span class="table-plus" aria-hidden="true">${icTrait(IC.plus, 16)}</span>
+        </button>`).join('')}</div></div>`;
 }
 
     const actions = () => `
         <div class="section layer-actions">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-primary" style="flex:1" onclick="A.openOSM()">${icTrait(IC.globe)} OSM</button>
-                <button class="btn btn-soft" style="flex:1" onclick="document.getElementById('file-input').click()">${icTrait(IC.fichier)} Fichier</button>
-                ${CONFIG.grist.ready ? `<button class="btn btn-soft" style="flex:1" onclick="A.openLinkTable()">${icTrait(IC.lien)} Table</button>` : ''}
-                ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" style="flex:1" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
+            <div class="section-title">Ajouter une couche</div>
+            <div class="actions-grille">
+                ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
+                <button class="btn btn-soft" onclick="document.getElementById('file-input').click()" title="Ouvrir un fichier GeoJSON">${icTrait(IC.fichier)} Fichier</button>
+                <button class="btn btn-soft" onclick="A.openOSM()" title="Importer depuis OpenStreetMap">${icTrait(IC.globe)} OSM</button>
+                ${CONFIG.grist.ready ? `<button class="btn btn-soft" onclick="A.openLinkTable()" title="Lier une autre table du document">${icTrait(IC.lien)} Autre table…</button>` : ''}
             </div>
         </div>`;
 
@@ -5162,18 +5773,17 @@ function renderLayersPanel(mode) {
         body.innerHTML = `
             <div class="empty"><div class="ic">${icTrait(IC.dossier, 40)}</div><div class="t">Aucune couche affichée</div><div class="h">Affiche une table ci-dessous, ou importe</div></div>
             ${availableTablesSection()}
-            <div class="section"><div class="drop" id="drop" onclick="document.getElementById('file-input').click()"><div class="ic">${icTrait(IC.fichier, 40)}</div><div class="t">Glissez un GeoJSON</div><div class="h">.geojson / .json</div></div></div>
+            <div class="section"><div class="drop" id="drop" onclick="document.getElementById('file-input').click()"><div class="ic">${icTrait(IC.fichier, 40)}</div><div class="t">Glissez un fichier</div><div class="h">GeoJSON, GPX, KML, CSV</div></div></div>
             ${actions()}`;
         wireDrop();
         return;
     }
     const allVis = STATE.layers.every((l) => l.visible !== false);
     body.innerHTML = `
-        <div class="section" style="margin-top:0">
-            <div style="display:flex;gap:8px">
-                <button class="btn ${allVis ? 'btn-dark' : 'btn-soft'}" style="flex:1" onclick="A.toggleAllLayers(true)">${icTrait(IC.oeil)} Tout</button>
-                <button class="btn ${!STATE.layers.some((l) => l.visible !== false) ? 'btn-dark' : 'btn-soft'}" style="flex:1" onclick="A.toggleAllLayers(false)">Masquer</button>
-            </div>
+        <div class="layer-bulk">
+            <span class="layer-bulk-compte">${STATE.layers.length} couche${STATE.layers.length > 1 ? 's' : ''}</span>
+            <button type="button" class="btn-lien" ${allVis ? 'aria-pressed="true"' : ''} onclick="A.toggleAllLayers(true)">Tout afficher</button>
+            <button type="button" class="btn-lien" ${!STATE.layers.some((l) => l.visible !== false) ? 'aria-pressed="true"' : ''} onclick="A.toggleAllLayers(false)">Tout masquer</button>
         </div>
         <div class="layer-list">
             ${displayOrder(STATE.layers).map((l) => {
@@ -5202,9 +5812,8 @@ function renderLayersPanel(mode) {
                             ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
                             : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
                     </div>
-                    ${linked ? `<button class="layer-act" onclick="A.refreshLayer('${l.id}', event)" title="Rafraîchir depuis la table">${icTrait(IC.rafraichir)}</button>` : ''}
-                    <button class="layer-act" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche">${icTrait(IC.cible)}</button>
-                    <button class="layer-del" onclick="A.deleteLayer('${l.id}', event)" title="Supprimer">${icTrait(IC.corbeille)}</button>
+                    <button class="layer-act layer-act-zoom" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche" aria-label="Zoomer sur ${escapeHtml(l.name)}">${icTrait(IC.cible)}</button>
+                    <button class="layer-act" onclick="A.menuCouche('${l.id}', event)" title="Autres actions" aria-label="Autres actions pour ${escapeHtml(l.name)}" aria-haspopup="menu">${icTrait(IC.plusieurs)}</button>
                 </div>`;
             }).join('')}
         </div>
@@ -5214,8 +5823,50 @@ function renderLayersPanel(mode) {
 }
 
 /** Liste couches en lecture : légende + zoom, sans paramétrage. */
+function fermerMenuCouche() {
+    document.getElementById('menu-couche')?.remove();
+    document.removeEventListener('pointerdown', _fermetureMenuCouche, true);
+    document.removeEventListener('keydown', _toucheMenuCouche, true);
+}
+function _fermetureMenuCouche(e) { if (!e.target.closest?.('#menu-couche')) fermerMenuCouche(); }
+function _toucheMenuCouche(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerMenuCouche(); } }
+
+/** Le menu des actions rares d'une ligne de couche : le zoom reste sur la ligne, ce qui détruit ou recharge passe ici. */
+function ouvrirMenuCouche(layer, ancre) {
+    fermerMenuCouche();
+    const menu = document.createElement('div');
+    menu.id = 'menu-couche';
+    menu.className = 'posture-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', `Actions pour ${layer.name}`);
+    const items = [];
+    if (isLinkedTableLayer(layer)) items.push({ id: 'rafraichir', nom: 'Rafraîchir depuis la table', ic: IC.rafraichir });
+    items.push({ id: 'supprimer', nom: 'Supprimer la couche', ic: IC.corbeille, danger: true });
+    menu.innerHTML = items.map((i) => `<button type="button" role="menuitem" class="posture-choix menu-couche-item${i.danger ? ' danger' : ''}" data-act="${i.id}">
+        <span class="posture-nom">${icTrait(i.ic, 16)} ${echapper(i.nom)}</span></button>`).join('');
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (ev) => {
+        const b = ev.target.closest('[data-act]');
+        if (!b) return;
+        fermerMenuCouche();
+        const evenement = { stopPropagation() {} };
+        if (b.dataset.act === 'rafraichir') A.refreshLayer(layer.id, evenement);
+        else A.deleteLayer(layer.id, evenement);
+    });
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        menu.style.top = `${Math.min(r.bottom + 6, window.innerHeight - menu.offsetHeight - 12)}px`;
+        menu.style.left = `${Math.max(12, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 12))}px`;
+    } else {
+        menu.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermetureMenuCouche, true);
+    document.addEventListener('keydown', _toucheMenuCouche, true);
+    menu.querySelector('.menu-couche-item')?.focus();
+}
+
 function renderLayersPanelLecture() {
-    $('module-title').textContent = 'Légende';
+    titreModule('Légende', 'Affichage tel que configuré par l’éditeur.');
     const body = $('module-body');
     // Même sens de lecture que le panneau d'édition : le dessus en premier.
     const visible = displayOrder(STATE.layers).filter((l) => l.visible !== false);
@@ -5224,7 +5875,6 @@ function renderLayersPanelLecture() {
         return;
     }
     body.innerHTML = `
-        <div class="hint">Affichage tel que configuré par l’éditeur.</div>
         <div class="layer-list">${visible.map((l) => {
             const is3D = l.style?.mode === 'library' || l.style?.mode === 'custom';
             return `<div class="layer-item">
@@ -5284,8 +5934,13 @@ const IC = {
     camera:    '<path d="M3 7h3l2-3h8l2 3h3v13H3z"/><circle cx="12" cy="13" r="3.2"/>',
     palette:   '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1-.8-1.5-.8-2.4 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-4-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.1" fill="currentColor"/><circle cx="15" cy="8.5" r="1.1" fill="currentColor"/>',
     cube:      '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
-    enregistrer:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+    enregistrer:'<path d="M12 3v13M7 11l5 5 5-5M5 21h14"/>',
     exporter:  '<path d="M12 3v13M7 8l5-5 5 5M5 21h14"/>',
+    plusieurs: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+    crayon:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
+    releve:    '<path d="M9 3h6v3H9z"/><path d="M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1"/><path d="m9 14 2 2 4-4"/>',
+    image:     '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/>',
+    tableur:   '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
     piste:     '<path d="M4 20V7a3 3 0 0 1 6 0v10a3 3 0 0 0 6 0V4"/><path d="M17 7h4M17 4h4"/>',
     plus:      '<path d="M12 5v14M5 12h14"/>',
     pieton:    '<circle cx="12" cy="4" r="2"/><path d="M12 7v6m0 0-3 8m3-8 3 8M8 10l4-2 4 2"/>',
@@ -5385,6 +6040,24 @@ function dockPillId(layer, field) {
     return `data:${layer.id}:${field}`;
 }
 
+/** La clé d'une pastille dans ce qu'une étape retient : l'environnement par son nom, un contrôle par sa table et son champ. */
+function clePastille(p) {
+    return p.kind === 'data' ? `data:${p.layer.sourceTable || p.layer.id}:${p.control.field}` : p.id;
+}
+
+/** Les pastilles de l'étape jouée (contexte compris), ou `null` : rien n'est dit, la scène décide. */
+function pastillesDeLetape() {
+    if (!_storyPresenting) return null;
+    return pastillesDe(STATE.story[_storyIdx]?.state);
+}
+
+/** Ce que l'auteur voit dans son dock à l'instant : l'environnement offert et les contrôles actifs, à retenir dans l'étape qu'il capture. */
+function pastillesACapturer() {
+    return listDockPills()
+        .filter((p) => p.kind === 'env' || p.kind === 'sun' || p.kind === 'data')
+        .map((p) => ({ id: clePastille(p), label: p.label }));
+}
+
 /** Pastilles dock : env (édition = toujours ; lecture = exposed) + données actives. */
 /**
  * Les couches ou l'on peut saisir, telles que la fiche les ouvrira.
@@ -5396,8 +6069,14 @@ function dockPillId(layer, field) {
  * d'ecrire.
  */
 function couchesEnReleve() {
-    return STATE.layers.filter((l) => l.visible !== false && (CONFIG.viewMode
-        ? coucheEnSaisie(l)
+    const propose = relevesDuContexte();
+    return couchesQuiOffrentUnReleve().filter((l) => l.visible !== false && releveProposeDans(propose, cleReleve(l)));
+}
+
+/** Les couches où un relevé est possible, visibles ou non : la règle seule, avant le contexte et la visibilité. */
+function couchesQuiOffrentUnReleve() {
+    return STATE.layers.filter((l) => (CONFIG.viewMode
+        ? (coucheEnSaisie(l) || creationPossible(l, contexteCreation(l)).ok)
         : saisieHorsEdition({
             view: true,
             aDesLignes: coucheAvecLignes(l),
@@ -5405,6 +6084,18 @@ function couchesEnReleve() {
             formulaires: formulairesDeLaCouche(l).filter(formulaireUtilisable),
             moteur: moteurDisponible(),
         })));
+}
+
+/** Comment une étape désigne une couche pour ses relevés : sa table, à défaut son identifiant (comme `findStoryLayer`). */
+function cleReleve(layer) { return layer.sourceTable || layer.id; }
+
+/**
+ * Les couches dont le contexte actif propose le relevé, ou `null` s'il ne dit rien (pas de contexte, ou un contexte sans règle :
+ * toutes les couches visibles gardent leur relevé).
+ */
+function relevesDuContexte() {
+    if (!_contexteCle) return null;
+    return relevesDe((STATE.story || []).find((s) => s.cle === _contexteCle)?.state);
 }
 
 /**
@@ -5421,10 +6112,168 @@ function localisationDisponible() {
     return !!b && !b.disabled && typeof navigator !== 'undefined' && !!navigator.geolocation;
 }
 
+/* ------------------------------------------------------------------ */
+/* Hors réseau — l'état de la synchronisation (application seulement)  */
+/* ------------------------------------------------------------------ */
+
+/** Le client hors réseau, quand l'application en a posé un ; `null` dans un widget Grist. */
+function clientHorsLigne() {
+    return (typeof grist !== 'undefined' && grist && grist._horsLigne) || null;
+}
+
+let _synchroDesabonner = null;
+/** Le dock suit la file : une pastille qui annonce « 2 en attente » doit se corriger quand elles partent. */
+function brancherSynchro() {
+    const hl = clientHorsLigne();
+    if (!hl || _synchroDesabonner) return;
+    _synchroDesabonner = hl.abonner(() => {
+        majBoutonsSynchro();
+        rafraichirPanneauSynchro();
+    });
+    majBoutonsSynchro();
+}
+
+/**
+ * Le bouton de synchronisation — dans la barre du haut, et sur la carte quand la barre est retirée : ce n'est pas une
+ * information cartographique. Il n'apparaît que lorsqu'il y a quelque chose à dire (hors réseau, en attente, à vérifier) ;
+ * la pastille dit la phrase : calme (rouge doux) hors réseau ou en attente, pleine quand il faut vérifier.
+ */
+function majBoutonsSynchro() {
+    const hl = clientHorsLigne();
+    const p = hl ? pastilleSynchro() : null;
+    for (const id of ['btn-synchro', 'hote-synchro']) {
+        const b = $(id);
+        if (!b) continue;
+        b.hidden = !p;
+        if (!p) continue;
+        b.title = p.label;
+        b.setAttribute('aria-label', p.label);
+        b.classList.remove('etat-alerte', 'etat-hors', 'etat-attente');
+        b.classList.add(p.alerte ? 'etat-alerte' : (!hl.etat().enLigne ? 'etat-hors' : 'etat-attente'));
+        const lib = b.querySelector('.synchro-lib');
+        if (lib) lib.textContent = p.label;
+    }
+}
+
+function fermerPanneauSynchro() {
+    document.getElementById('panneau-synchro')?.remove();
+    document.removeEventListener('pointerdown', _fermeturePanneauSynchro, true);
+    document.removeEventListener('keydown', _touchePanneauSynchro, true);
+}
+function _fermeturePanneauSynchro(e) {
+    if (!e.target.closest?.('#panneau-synchro, #btn-synchro, #hote-synchro')) fermerPanneauSynchro();
+}
+function _touchePanneauSynchro(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerPanneauSynchro(); } }
+
+/** Le contenu du panneau suit la file ; plus rien à dire, il se retire de lui-même. */
+function rafraichirPanneauSynchro() {
+    const panneau = document.getElementById('panneau-synchro');
+    if (!panneau) return;
+    if (!pastilleSynchro()) { fermerPanneauSynchro(); return; }
+    panneau.innerHTML = renderSynchroDockSlotHtml();
+}
+
+/** Ce qui est parti, ce qui attend, ce qui a été refusé : le même contenu que l'ancienne pastille, posé sous le bouton. */
+function ouvrirPanneauSynchro(ancre, ev) {
+    ev?.stopPropagation?.();
+    if (document.getElementById('panneau-synchro')) { fermerPanneauSynchro(); return; }
+    if (!clientHorsLigne()) return;
+    const panneau = document.createElement('div');
+    panneau.id = 'panneau-synchro';
+    panneau.className = 'posture-menu panneau-synchro';
+    panneau.setAttribute('role', 'dialog');
+    panneau.setAttribute('aria-label', 'Synchronisation');
+    panneau.innerHTML = renderSynchroDockSlotHtml();
+    document.body.appendChild(panneau);
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        panneau.style.top = `${Math.min(r.bottom + 8, window.innerHeight - panneau.offsetHeight - 12)}px`;
+        panneau.style.left = `${Math.max(12, Math.min(r.right - panneau.offsetWidth, window.innerWidth - panneau.offsetWidth - 12))}px`;
+    } else {
+        panneau.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermeturePanneauSynchro, true);
+    document.addEventListener('keydown', _touchePanneauSynchro, true);
+}
+
+/** La pastille de synchronisation : seulement quand il y a quelque chose à dire. */
+function pastilleSynchro() {
+    const hl = clientHorsLigne();
+    if (!hl) return null;
+    const e = hl.etat();
+    // Une scène faite sur l'appareil : rien ne l'attend côté réseau, mais elle n'existe encore nulle part ailleurs.
+    if (e.local) {
+        return {
+            id: 'synchro', kind: 'synchro', alerte: false, label: 'Sur l’appareil · à envoyer',
+            icon: '',
+        };
+    }
+    if (e.enLigne && !e.enAttente && !e.incertaines && !e.refusees) return null;
+    const aVerifier = e.refusees + e.incertaines;
+    let label;
+    if (aVerifier) label = `À vérifier · ${aVerifier}`;
+    else if (!e.enLigne) label = e.enAttente ? `Hors réseau · ${e.enAttente} en attente` : 'Hors réseau';
+    else label = `${e.enAttente} en attente`;
+    return {
+        id: 'synchro',
+        kind: 'synchro',
+        icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg>',
+        label,
+        alerte: aVerifier > 0,
+    };
+}
+
+function renderSynchroDockSlotHtml() {
+    const hl = clientHorsLigne();
+    if (!hl) return '';
+    const e = hl.etat();
+    if (e.local) {
+        const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        return `<div class="dock-slot-data dock-slot-synchro">
+            <div class="dock-slot-head"><span class="dock-slot-title">Scène sur cet appareil</span><span class="dock-slot-tag">à envoyer</span></div>
+            <div class="dock-slot-body">
+                <p class="releve-aide">« ${esc(e.nomScene)} » n’existe que sur cet appareil. Envoyez-la dans un document Grist pour la retrouver ailleurs, la partager et la sauvegarder.</p>
+                <div class="releve-actions"><button type="button" class="btn btn-dark btn-sm" onclick="A.envoyerSceneLocale()">Envoyer vers Grist…</button></div>
+            </div>
+        </div>`;
+    }
+    const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const quand = (t) => (t ? new Date(t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '');
+    const ETIQUETTES = { en_attente: 'en attente', en_cours: 'envoi…', incertaine: 'à vérifier', refusee: 'refusée' };
+    const instantanes = hl.instantanes();
+    const plusAncien = instantanes.length ? Math.min(...instantanes.map((i) => i.date)) : null;
+    const phrases = [];
+    if (!e.enLigne) phrases.push('Pas de réseau : vos relevés sont gardés sur l’appareil et partiront au retour du réseau.');
+    if (!e.durable) phrases.push('Le stockage de l’appareil est indisponible : ces relevés seront perdus si l’application se ferme.');
+    if (plusAncien && !e.enLigne) phrases.push(`Données affichées : celles de l’appareil, du ${quand(plusAncien)}.`);
+    if (e.derniereSynchro) phrases.push(`Dernier envoi réussi : ${quand(e.derniereSynchro)}.`);
+    const lignes = hl.entrees().map((x) => {
+        const gestes = (x.etat === 'refusee' || x.etat === 'incertaine')
+            ? `<button type="button" class="btn btn-soft btn-sm" onclick="A.synchroReessayer('${chaineJs(x.id)}')">${x.etat === 'incertaine' ? 'Renvoyer quand même' : 'Réessayer'}</button>
+               <button type="button" class="btn btn-soft btn-sm" onclick="A.synchroAbandonner('${chaineJs(x.id)}')">Abandonner</button>`
+            : '';
+        return `<div class="synchro-ligne etat-${esc(x.etat)}">
+            <div><span class="synchro-etat">${esc(ETIQUETTES[x.etat] || x.etat)}</span> ${esc(x.resume)}${x.pieceJointe ? ' · photo' : ''} <small>${esc(quand(x.date))}</small></div>
+            ${x.raison ? `<div class="synchro-raison">${esc(x.raison)}</div>` : ''}
+            ${x.etat === 'incertaine' ? '<div class="synchro-raison">L’envoi a été interrompu : la visite est peut-être déjà dans le document. Vérifiez avant de renvoyer.</div>' : ''}
+            ${gestes ? `<div class="releve-actions">${gestes}</div>` : ''}
+        </div>`;
+    }).join('');
+    return `<div class="dock-slot-data dock-slot-synchro">
+        <div class="dock-slot-head"><span class="dock-slot-title">Synchronisation</span><span class="dock-slot-tag">${e.enLigne ? 'en ligne' : 'hors réseau'}</span></div>
+        <div class="dock-slot-body">
+            ${phrases.map((p) => `<p class="releve-aide">${esc(p)}</p>`).join('')}
+            ${lignes}
+            ${e.enAttente && e.enLigne ? '<div class="releve-actions"><button type="button" class="btn btn-dark btn-sm" onclick="A.synchroEnvoyer()">Envoyer maintenant</button></div>' : ''}
+        </div>
+    </div>`;
+}
+
 function renderReleveDockSlotHtml() {
     const lignes = lignesReleve(couchesEnReleve().map((couche) => ({
         couche,
         formulaires: offertsEnLecture(formulairesDeLaCouche(couche)),
+        creation: creationPossible(couche, contexteCreation(couche)).ok,
     })));
     const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const geo = localisationDisponible();
@@ -5433,8 +6282,9 @@ function renderReleveDockSlotHtml() {
         const nomProche = proche ? (nomObjet(proche.feature.properties || {}) || 'objet') : '';
         return `<div class="releve-couche">
             <div class="releve-nom"><span class="sw" style="background:${esc(fondPastilleCouche(l.couche) || '#888')}"></span>${esc(l.nom)}</div>
-            <div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>
+            ${l.formulaires.length ? `<div class="releve-forms">${l.formulaires.map(esc).join(' · ')}</div>` : ''}
             <div class="releve-actions">
+                ${l.creation ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.nouvelObjet('${chaineJs(l.couche.id)}')">＋ Ajouter un objet</button>` : ''}
                 ${geo ? `<button type="button" class="btn btn-dark btn-sm" onclick="A.releveProche('${chaineJs(l.couche.id)}')">${proche
                     ? `Le plus proche : ${esc(nomProche)} <small>${esc(direDistance(proche.distance))}</small>`
                     : 'Le plus proche de moi'}</button>` : ''}
@@ -5445,9 +6295,8 @@ function renderReleveDockSlotHtml() {
         </div>`;
     }).join('');
     return `<div class="dock-slot-data dock-slot-releve">
-        <div class="dock-slot-head"><span class="dock-slot-title">Relevé</span></div>
+        <div class="dock-slot-head"><span class="dock-slot-title">Relevé${infoBulle('Touchez un objet sur la carte, ou choisissez-le dans la liste. « Cadrer » centre la carte sur la couche.')}</span></div>
         <div class="dock-slot-body">
-            <p class="releve-aide">Touchez un objet sur la carte, ou choisissez-le dans la liste.</p>
             ${rangees}
         </div>
     </div>`;
@@ -5470,6 +6319,8 @@ function objetProcheDeCouche(layer) {
 function listDockPills() {
     const pills = [];
     const vcs = STATE.viewerControls || createDefaultViewerControls();
+    // La synchronisation n'est pas une information de carte : elle vit dans la barre du haut (ou, quand la barre est
+    // retirée, parmi les commandes de la carte) — voir `majBoutonsSynchro`.
 
     // L'interrupteur gouverne la pastille, en edition comme en lecture.
     //
@@ -5490,9 +6341,13 @@ function listDockPills() {
     // vient EN TETE : c'est la seule qui lance quelque chose au lieu de
     // regler, et le lecteur doit la trouver sans chercher.
     const mobile = document.body.classList.contains('mobile-layout');
+    // Le récit est une visite guidée ; un contexte est un cadrage de travail (couches, filtres, heure) qu'on choisit sans
+    // séquence. Une étape marquée « contexte » sert donc le second, pas le premier : une scène dont toutes les étapes sont des
+    // contextes n'a pas de récit à lire, et lui offrir « Lire le récit » à côté de « Contexte » proposait deux fois la même chose.
+    const etapesDeRecit = (STATE.story || []).filter((s) => !usageDe(s.state).contexte).length;
     if (pastilleRecitRequise({
         lecture: CONFIG.viewMode,
-        nbEtapes: STATE.story?.length || 0,
+        nbEtapes: etapesDeRecit,
         enPresentation: lecteurRecitActif(),
     })) {
         pills.unshift({
@@ -5500,6 +6355,7 @@ function listDockPills() {
             kind: 'action',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>',
             label: 'Lire le récit',
+            court: 'Récit',
             action: () => A.storyPlay(0),
         });
     }
@@ -5507,7 +6363,10 @@ function listDockPills() {
     // — elle regroupe, pour ne pas charger le dock. Un formulaire publie ne
     // devenait rien de visible : le lecteur ne decouvrait qu'un objet se saisit
     // qu'en le touchant. Elle suit le recit, l'autre pastille qui agit.
-    const saisiesRecit = _storyPresenting && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
+    // Un contexte qui règle ses relevés décide seul : sa liste vide ne laisse pas la pastille ouverte sur du vide à cause des
+    // saisies d'un trajet, qui ne le concernent pas.
+    const saisiesRecit = _storyPresenting && relevesDuContexte() === null
+        && (STATE.story || []).some((s) => (s.state?.saisies || []).length);
     if (couchesEnReleve().length || saisiesRecit) {
         const alerte = _storyPresenting ? evaluerAlerte() : { allumee: false, texte: '' };
         const pastilleReleve = {
@@ -5515,6 +6374,7 @@ function listDockPills() {
             kind: 'releve',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/></svg>',
             label: alerte.allumee && alerte.texte ? `Relevé · ${alerte.texte}` : 'Relevé',
+            court: 'Relevé',
             alerte: !!alerte.allumee,
         };
         const iRecit = pills.findIndex((p) => p.id === 'recit');
@@ -5531,6 +6391,7 @@ function listDockPills() {
             kind: 'contexte',
             icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
             label: courant ? `Contexte · ${courant.titre}` : 'Contexte',
+            court: 'Contexte',
         });
     }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
@@ -5552,6 +6413,15 @@ function listDockPills() {
             layer,
             control: c,
         });
+    }
+    // Une étape jouée offre les pastilles de sa capture : ce que l'auteur voyait dans son dock. Elle ne touche ni au relevé, ni au
+    // contexte, ni au récit, qui suivent leurs règles. Une étape sans liste laisse les pastilles de la scène.
+    const offertes = pastillesDeLetape();
+    if (offertes) {
+        for (let i = pills.length - 1; i >= 0; i--) {
+            const p = pills[i];
+            if ((p.kind === 'env' || p.kind === 'sun' || p.kind === 'data') && !pastilleOfferte(offertes, clePastille(p))) pills.splice(i, 1);
+        }
     }
     // La localisation ferme la rangée, contre la boussole : les deux disent où
     // l'on est et vers où l'on regarde. Les contrôles de la carte viennent
@@ -5615,22 +6485,34 @@ function renderView3dDockSlotHtml() {
     const pitch = map?.getPitch() || 0;
     const is3d = pitch > 10;
     return `<div class="dock-slot-view3d">
-        <div class="dock-seg">
-            <button type="button" class="dock-seg-btn ${!is3d ? 'active' : ''}" onclick="A.setView3d(false)">2D</button>
-            <button type="button" class="dock-seg-btn ${is3d ? 'active' : ''}" onclick="A.setView3d(true)">3D</button>
+        <span class="dock-label">Vue</span>
+        <div class="dock-seg" role="group" aria-label="Vue 2D ou 3D">
+            <button type="button" class="dock-seg-btn ${!is3d ? 'active' : ''}" aria-pressed="${!is3d}" onclick="A.setView3d(false)">2D</button>
+            <button type="button" class="dock-seg-btn ${is3d ? 'active' : ''}" aria-pressed="${is3d}" onclick="A.setView3d(true)">3D</button>
         </div>
     </div>`;
 }
+
+/** Une pastille de couleur pour chaque fond : de quoi le reconnaître sans lire, à la place d'un emoji propre à chaque appareil. */
+const PASTILLES_FONDS = {
+    liberty: 'linear-gradient(135deg, #ece6d6 50%, #f2c14e 50%)',
+    bright: 'linear-gradient(135deg, #e3d3ac 50%, #9ec6e0 50%)',
+    positron: 'linear-gradient(135deg, #f1f1f1 50%, #d9d9d9 50%)',
+    'plan-ign': 'linear-gradient(135deg, #cfe3bf 50%, #f4f0e0 50%)',
+    'ortho-ign': 'linear-gradient(135deg, #51603f 50%, #8a7d5c 50%)',
+};
 
 function renderBasemapDockSlotHtml() {
     const keys = basemapChoicesForDock();
     const cur = STATE.settings.basemap;
     return `<div class="dock-slot-basemap">
-        <div class="dock-chips">${keys.map((k) => {
+        <span class="dock-label">Fond</span>
+        <div class="dock-seg" role="group" aria-label="Fond de carte">${keys.map((k) => {
             const b = BASEMAPS[k];
             const esc = String(k).replace(/'/g, "\\'");
             const lbl = String(b.label).replace(/"/g, '&quot;');
-            return `<button type="button" class="dock-chip ${cur === k ? 'active' : ''}" onclick="A.setBasemap('${esc}')" title="${lbl}">${b.icon}<span>${b.label}</span></button>`;
+            const sw = PASTILLES_FONDS[k] || '#ddd';
+            return `<button type="button" class="dock-seg-btn ${cur === k ? 'active' : ''}" aria-pressed="${cur === k}" onclick="A.setBasemap('${esc}')" title="${lbl}"><span class="dock-sw" style="background:${sw}" aria-hidden="true"></span><span>${b.label}</span></button>`;
         }).join('')}</div>
     </div>`;
 }
@@ -5646,7 +6528,7 @@ function renderDockSlotHost() {
     }
     // Le releve liste des couches et des boutons : il lui faut la hauteur d'un
     // controle de donnees, pas celle d'un interrupteur d'environnement.
-    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte');
+    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro');
     if (pill.id === 'sun') {
         slotHost.innerHTML = renderSunDockSlotHtml();
         updateSunStrip();
@@ -5658,15 +6540,20 @@ function renderDockSlotHost() {
         slotHost.innerHTML = renderReleveDockSlotHtml();
     } else if (pill.kind === 'contexte') {
         slotHost.innerHTML = renderContexteDockSlotHtml();
+    } else if (pill.kind === 'synchro') {
+        slotHost.innerHTML = renderSynchroDockSlotHtml();
     } else if (pill.kind === 'data') {
         const t = controlVariantDockLabel(pill.control);
         const label = (pill.label || '').replace(/</g, '&lt;');
+        const outils = htmlOutilsSelect(pill.layer, pill.control);
+        const n = pill.control.type === 'select' ? controlUniqueValues(pill.layer, pill.control.field, MAX_VALEURS_LISTE).length : 0;
         slotHost.innerHTML = `<div class="dock-slot-data">
             <div class="dock-slot-head">
                 <span class="dock-slot-title">${label}</span>
                 <span class="dock-slot-tag">${t}</span>
             </div>
-            <div class="dock-slot-body">${renderControlBody(pill.layer, pill.control)}</div>
+            ${outils ? `<div class="dock-ligne-outils"><span>${n} valeur${n > 1 ? 's' : ''}</span><span class="dock-outils">${outils}</span></div>` : ''}
+            <div class="dock-slot-body">${renderControlBody(pill.layer, pill.control, { dock: true })}</div>
         </div>`;
     }
 }
@@ -5714,14 +6601,19 @@ function refreshControlsDock() {
     // d'en arriver ici.
     if (!_openDockPill) dock.classList.add('collapsed');
 
-    fabsHost.innerHTML = pills.map((p) => {
+    // Deux familles : celles qui AGISSENT (lire le récit, relever, choisir un contexte) portent leur nom ; celles qui RÈGLENT
+    // (soleil, 2D/3D, fonds, filtres) restent des pastilles. Un séparateur les distingue.
+    const agit = (p) => !!p.court;
+    fabsHost.innerHTML = pills.map((p, i) => {
         const lbl = String(p.label).replace(/"/g, '&quot;');
         const pid = String(p.id).replace(/"/g, '&quot;');
         const isOpen = (_openDockPill === p.id && !dock.classList.contains('collapsed')) || !!p.active;
         const ic = p.id === 'sun'
             ? '<span class="sun-dot" aria-hidden="true"></span>'
             : `<span class="dock-fab-ic" aria-hidden="true">${p.icon}</span>`;
-        return `<button type="button" class="dock-fab ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}</button>`;
+        const lib = agit(p) ? `<span class="dock-fab-lib">${String(p.court).replace(/</g, '&lt;')}</span>` : '';
+        const sep = agit(p) && pills[i + 1] && !agit(pills[i + 1]) ? '<span class="dock-sep" aria-hidden="true"></span>' : '';
+        return `<button type="button" class="dock-fab ${agit(p) ? 'avec-lib' : ''} ${isOpen ? 'active' : ''} ${p.alerte ? 'alerte' : ''}" data-pill="${pid}" title="${lbl}" aria-label="${lbl}">${ic}${lib}</button>${sep}`;
     }).join('');
 
     fabsHost.querySelectorAll('[data-pill]').forEach((btn) => {
@@ -5763,7 +6655,7 @@ function appliquerHorlogeDeclaree(h) {
         STATE.settings.date = new Date(h.dateEpinglee + 'T12:00:00');
     }
     if (Number.isFinite(h.timeOfDay)) STATE.settings.timeOfDay = h.timeOfDay;
-    if (h.lieu) STATE.location = { ...STATE.location, lat: h.lieu.lat, lng: h.lieu.lng };
+    if (h.lieu) { STATE.location = { ...STATE.location, lat: h.lieu.lat, lng: h.lieu.lng }; STATE.locationChoisie = true; }
 }
 
 async function syncScenePrefsFromGrist() {
@@ -5771,6 +6663,8 @@ async function syncScenePrefsFromGrist() {
     const prefs = await loadScenePrefs(grist.docApi);
     STATE.viewerControls = prefs.viewerControls || createDefaultViewerControls();
     STATE.exposition = prefs.exposition || expositionVide();
+    STATE.miniature = prefs.miniature || '';
+    appliquerCadrageDeScene();
 
     // Les réglages retenus la fois d'avant priment sur les défauts du code :
     // qui a choisi un fond veut le retrouver, pas repartir de « liberty ». Ils
@@ -5817,7 +6711,10 @@ async function persistScenePrefs() {
             viewerControls: STATE.viewerControls,
             settings: STATE.settings,
             exposition: STATE.exposition,
+            // Écrite seulement quand l'auteur vient de la changer : vingt Ko ne se réécrivent pas à chaque réglage.
+            ...(STATE._miniatureAEcrire ? { miniature: STATE.miniature } : {}),
         }, { viewMode: false });
+        STATE._miniatureAEcrire = false;
     } catch (e) {
         console.warn('[Atlas] saveScenePrefs', e.message);
     }
@@ -5840,15 +6737,13 @@ function renderEnvControlsSection() {
             sub = `<div class="option-cards grid2" style="margin-top:8px">${Object.entries(BASEMAPS).map(([k, b]) => `
                 <div class="option-card ${allowed.has(k) ? 'active' : ''}" onclick="A.toggleViewerBasemapAllowed('${chaineJs(k)}')">
                     <div class="oc-icon">${b.icon}</div><div class="oc-label">${b.label}</div>
-                </div>`).join('')}</div>
-                <div class="hint" style="margin-top:6px">2–3 fonds max pour le dock lecture.</div>`;
+                </div>`).join('')}</div>`;
         }
         return `<div class="section">
             <div class="toggle-row">
                 <span class="tlabel">${vc.label}</span>
                 <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${vc.id}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${vc.label || vc.id} en lecture" title="Visible en lecture"></div>
             </div>
-            <div style="font-size:10.5px;color:var(--muted);margin-top:-4px">Visible en lecture · pastille carte</div>
             ${sub}
         </div>`;
     }).join('');
@@ -5879,17 +6774,24 @@ function renderDataControlRow(layer, field, type, c, profil) {
             <div class="toggle ${active ? 'on' : ''}" onclick="A.toggleControl('${chaineJs(layer.id)}','${chaineJs(field)}','${typeActuel}')" role="switch" tabindex="0" aria-checked="${active}" aria-label="Publier le contrôle ${escapeHtml(field)}" title="Afficher en lecture"></div>
         </div>
         <div class="control-variant-row">
-            <label class="control-variant-label" for="${idVar}">Type de contrôle</label>
-            <select id="${idVar}" class="input control-variant-select" onchange="A.setControlVariant('${chaineJs(layer.id)}','${chaineJs(field)}',this.value)">
+            <select id="${idVar}" class="input control-variant-select" aria-label="Type de contrôle" onchange="A.setControlVariant('${chaineJs(layer.id)}','${chaineJs(field)}',this.value)">
                 ${options}
-            </select>
+            </select>${variantHint ? infoBulle(variantHint) : ''}
         </div>
-        <p class="control-variant-hint">${escapeHtml(variantHint)}</p>
         ${active ? renderControlBody(layer, c) : ''}
     </div>`;
 }
 
-function renderControlBody(layer, c) {
+/** « Tout » et « Aucun » d'un contrôle à valeurs multiples ; vide pour un choix unique. */
+function htmlOutilsSelect(layer, c) {
+    if (c.type !== 'select' || c.variant === 'select_single') return '';
+    const lid = escapeHtml(String(layer.id).replace(/'/g, "\\'"));
+    const fid = escapeHtml(String(c.field).replace(/'/g, "\\'"));
+    return `<button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
+        <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>`;
+}
+
+function renderControlBody(layer, c, { dock = false } = {}) {
     const esc = (s) => escapeHtml(String(s).replace(/'/g, "\\'"));
     ensureControlVariant(c, c.type);
     const lid = esc(layer.id);
@@ -5922,7 +6824,8 @@ function renderControlBody(layer, c) {
         const ligne = (value, texte, count, classe = '') => `<label class="cat-row${classe}" style="cursor:pointer"><input type="${inputType}" name="${nameAttr}" ${isSelectValueChecked(c, value) ? 'checked' : ''} onchange="A.toggleControlValue('${lid}','${fid}','${chaineJs(value)}')"><span class="cat-value" title="${escapeHtml(texte)}">${escapeHtml(texte)}</span><span class="cat-count">${count == null ? '' : count}</span></label>`;
         const lignes = vals.map((v) => ligne(v.value, libelle(v.value), v.count)).join('')
             + (sansValeur.offert ? ligne('', '(sans valeur)', sansValeur.count, ' cat-row-vide') : '');
-        const outils = c.variant === 'select_single' ? '' : `<div class="ctl-outils">
+        // Dans le dock, « Tout / Aucun » est dans l'en-tête (`htmlOutilsSelect`) : une rangée de moins au-dessus de la liste.
+        const outils = dock || c.variant === 'select_single' ? '' : `<div class="ctl-outils">
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',true)">Tout</button>
             <button type="button" class="ctl-mini" onclick="A.toutesValeursControle('${lid}','${fid}',false)">Aucun</button>
         </div>`;
@@ -6055,28 +6958,13 @@ function rafraichirVuesControle() {
     if (_openDockPill) renderDockSlotHost();
 }
 
-function renderControlVariantMatrix() {
-    return `<details class="control-variant-matrix">
-        <summary>Guide des types de contrôle</summary>
-        <div class="control-variant-matrix-body">
-            <div class="cvm-group"><span class="cvm-k">Date</span>
-                <span><strong>Date ≤</strong> — cumul jusqu’à une date</span>
-                <span><strong>Date de/à</strong> — fenêtre stricte</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Nombre</span>
-                <span><strong>Plage</strong> — intervalle min/max</span>
-                <span><strong>Max / Min</strong> — seuil unique</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Catégorie</span>
-                <span><strong>Checklist</strong> — plusieurs valeurs</span>
-                <span><strong>Choix unique</strong> — une seule valeur</span>
-            </div>
-            <div class="cvm-group"><span class="cvm-k">Texte</span>
-                <span><strong>Contient</strong> — recherche sans majuscules ni accents</span>
-            </div>
-        </div>
-    </details>`;
-}
+/** Le guide des types de contrôle, en une bulle (il occupait un bloc déroulant au-dessus des champs). */
+const GUIDE_TYPES_CONTROLE = [
+    'Date : « ≤ » cumule jusqu’à une date, « de/à » est une fenêtre stricte.',
+    'Nombre : « Plage » est un intervalle min/max, « Max » et « Min » un seuil unique.',
+    'Catégorie : « Checklist » garde plusieurs valeurs, « Choix unique » une seule.',
+    'Texte : « Contient » cherche sans majuscules ni accents.',
+].join('\n');
 
 function renderControles() {
     if (CONFIG.viewMode) {
@@ -6084,13 +6972,13 @@ function renderControles() {
         closeModulePanel();
         return;
     }
-    $('module-title').textContent = 'Contrôles';
+    titreModule('Contrôles', 'Outils de mise en scène — activez les contrôles pour les publier en pastille sur la carte (visible en lecture). Puis capturez une étape de récit.');
     const body = $('module-body');
     const layer = STATE.layers.find((l) => l.id === STATE.selectedLayer) || STATE.layers[0];
 
-    let html = `<div class="hint">Outils de mise en scène — activez les contrôles pour les publier en pastille sur la carte (visible en lecture). Puis capturez une étape de récit.</div>`;
+    let html = '';
 
-    html += `<div class="section"><div class="section-title">Environnement</div>${renderEnvControlsSection()}</div>`;
+    html += `<div class="section"><div class="section-title">Environnement${infoBulle('Chaque interrupteur publie le contrôle en pastille sur la carte, visible en lecture. Pour les fonds de plan, deux ou trois au plus tiennent dans le dock de lecture.')}</div><div class="env-liste">${renderEnvControlsSection()}</div></div>`;
 
     if (!layer) {
         body.innerHTML = html + `<div class="empty" style="margin-top:12px"><div class="ic">${icTrait(IC.controles, 40)}</div><div class="t">Aucune couche</div><div class="h">Importez ou liez des données</div></div>`;
@@ -6118,11 +7006,10 @@ function renderControles() {
         }
     }
     const noteVides = vides.length
-        ? `<div class="hint" style="margin-top:10px">Sans valeur, donc sans filtre possible : ${vides.map((v) => `<code>${escapeHtml(v)}</code>`).join(', ')}.</div>`
+        ? `<div class="range-info" style="margin-top:10px">${vides.length} champ${vides.length > 1 ? 's' : ''} sans valeur${infoBulle('Sans valeur, donc sans filtre possible : ' + vides.join(', ') + '.')}</div>`
         : '';
 
-    html += `<div class="section"><div class="section-title">Données</div>`;
-    html += renderControlVariantMatrix();
+    html += `<div class="section"><div class="section-title">Données${infoBulle(GUIDE_TYPES_CONTROLE)}</div>`;
     html += STATE.layers.length > 1
         ? `<select class="input" style="margin-bottom:8px" onchange="A.controlLayer(this.value)">${STATE.layers.map((l) => `<option value="${l.id}" ${l.id === layer.id ? 'selected' : ''}>${escapeHtml(l.name)}</option>`).join('')}</select>`
         : `<div class="hint" style="margin-bottom:8px">Couche <strong>${escapeHtml(layer.name)}</strong></div>`;
@@ -6337,6 +7224,13 @@ function ligneRetiree(couche, f, esc) {
  */
 const _champsOuverts = new Set();
 
+/** « Moi » a un sens pour un champ qui désigne des personnes, quand on sait qui est connecté (l'application). */
+function moiPossible(champ) {
+    if (!CONFIG.grist.user?.email) return false;
+    const m = /^Ref(?:List)?:(.+)$/.exec(String(champ?.type || ''));
+    return !!(m && tableDePersonnes(STATE.schema, m[1]));
+}
+
 /**
  * Le cadrage : quels champs de ce formulaire cette scene montre.
  *
@@ -6357,7 +7251,7 @@ function cadreDesChamps(couche, f, esc) {
     const departs = f.surLaCouche ? null : (f.departs || {});
     const choixDepart = (c) => {
         if (!departs || c.masque) return '';
-        const possibles = departsPossibles(typeDe.get(c.colId), { lie: true });
+        const possibles = departsPossibles(typeDe.get(c.colId), { lie: true, moi: moiPossible(typeDe.get(c.colId)) });
         if (possibles.length < 2) return '';
         const actuel = departs[c.colId] || 'vide';
         return `<select class="fm-depart${actuel !== 'vide' ? ' on' : ''}" aria-label="Valeur de départ de ${echapper(c.label)}"
@@ -6406,6 +7300,54 @@ function libelleStatut(statut) {
     return 'brouillon';
 }
 
+/** Les couches de points dont on peut tirer des étapes le long du trajet. */
+function couchesDePointsPourEtapes() {
+    return STATE.layers.filter((l) => l.visible !== false && !l._distant && !l._raster
+        && (l.geometryType === 'Point') && (l.geojson?.features || []).length);
+}
+
+/** Une étape par objet qui borde le trajet : la tournée se compose depuis les objets, sans les capturer un à un. */
+function etapesLeLongHtml() {
+    const couches = couchesDePointsPourEtapes();
+    if (!couches.length) return '';
+    const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
+    return `<div class="section"><div class="section-title">Étapes depuis les objets${infoBulle('Une étape par objet situé près de la ligne, dans l’ordre du parcours : la tournée se compose d’un geste.')}</div>
+        <select id="etapes-couche" class="input">${options}</select>
+        <div class="dual" style="margin-top:8px">
+            <div><label class="input-label" for="etapes-rayon">À moins de (m)</label>
+            <input id="etapes-rayon" class="input" type="number" min="5" max="1000" step="5" value="50"></div>
+        </div>
+        <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.etapesLeLong()">Créer les étapes</button>
+    </div>`;
+}
+
+/** « Tracer sur un réseau » : pour un export de tronçons (BD TOPO, routes OSM), on ne choisit pas les tronçons un à un. */
+function boutonItineraireHtml() {
+    const couches = couchesReseau();
+    if (!couches.length) return '';
+    const options = couches.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${l.geojson.features.length})</option>`).join('');
+    return `<div class="section-title" style="margin-top:12px">Tracer sur un réseau${infoBulle('Pour des tronçons (routes, sentiers) : posez un départ, des points de passage et une arrivée, le chemin se trace sur le réseau.')}</div>
+        <select id="itineraire-couche" class="input">${options}</select>
+        <button class="btn btn-soft btn-full" style="margin-top:8px" onclick="A.itineraireDemarrer()">Poser les points sur la carte</button>`;
+}
+
+function itineraireEnCoursHtml() {
+    const s = _itineraire;
+    const n = s.points.length;
+    const ok = s.calcul?.ok;
+    const etat = n === 0 ? 'Touchez le départ sur la carte.'
+        : n === 1 ? 'Touchez le point suivant (arrivée, ou point de passage).'
+        : ok ? `${Math.round(s.calcul.longueurM)} m · ${n} points — touchez pour ajouter un point de passage ou une arrivée.`
+            : 'Le chemin ne se trace pas : voir le message, ou retirez le dernier point.';
+    return `<div class="section"><div class="hint">Tracé · ${escapeHtml(etat)}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-soft" style="flex:1" ${n ? '' : 'disabled'} onclick="A.itineraireRetirerDernier()">Retirer le dernier</button>
+            <button class="btn btn-soft" style="flex:1" onclick="A.itineraireAnnuler()">Annuler</button>
+        </div>
+        <button class="btn btn-dark btn-full" style="margin-top:8px" ${ok ? '' : 'disabled'} onclick="A.itineraireTerminer()">Terminer — en faire ${_cibleTournee ? 'la tournée' : 'le trajet'}</button>
+    </div>`;
+}
+
 function barreTrajetHtml() {
     if (CONFIG.viewMode) return '';
     const trace = traceActuelle();
@@ -6414,10 +7356,10 @@ function barreTrajetHtml() {
     if (trajetPickMode) {
         return `<div class="section"><button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Annuler le choix</button></div>`;
     }
+    if (_itineraire) return itineraireEnCoursHtml();
     if (!trace) {
         return `<div class="section">
-            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet</button>
-            <div class="hint" style="margin-top:6px">Chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues.</div>
+            <button class="btn btn-soft btn-full" onclick="A.choisirTrajet()">Créer un trajet${infoBulle('Pour une visite guidée : chaque étape se placera sur la ligne, au point le plus proche de sa vue. Retirer le trajet rétablit les vues. Pour une ligne de travail, voir la tournée d’un contexte.')}</button>${boutonItineraireHtml()}
         </div>`;
     }
     const metres = Math.round(longueurMetres(trace.coordinates));
@@ -6427,7 +7369,14 @@ function barreTrajetHtml() {
             <button class="btn btn-soft" style="flex:1" onclick="A.remplacerTrajet()">Remplacer</button>
             <button class="btn btn-soft" style="flex:1" onclick="A.retirerTrajet()">Retirer</button>
         </div>
-    </div>`;
+    </div>${etapesLeLongHtml()}`;
+}
+
+/** Les pastilles retenues à la capture de l'étape, dites sous son titre : « Pastilles : Fonds · État ». Rien si l'étape n'en retient pas. */
+function metaPastilles(s) {
+    const p = pastillesDe(s?.state);
+    if (!p) return '';
+    return `<div class="layer-meta">Pastilles : ${p.length ? p.map((x) => echapper(x.label)).join(' · ') : 'aucune'} <span style="opacity:.7">(à la capture)</span></div>`;
 }
 
 function metaEtapeTrajet(s) {
@@ -6463,7 +7412,7 @@ function htmlOuverture(steps) {
 }
 
 function renderRecit() {
-    $('module-title').textContent = 'Récit';
+    titreModule('Récit', 'Capture des étapes (caméra + couches + filtres + heure) et rejoue-les en présentation.');
     const body = $('module-body');
     const steps = STATE.story || [];
     rafraichirTrajet();
@@ -6487,8 +7436,7 @@ function renderRecit() {
                 </div>`).join('')}</div>`;
         return;
     }
-    let html = `<div class="hint">Capture des <strong>étapes</strong> (caméra + couches + filtres + heure) et rejoue-les en présentation.</div>
-        <div class="section" style="display:flex;gap:8px">
+    let html = `<div class="section" style="display:flex;gap:8px">
             <button class="btn btn-primary" style="flex:2" onclick="A.storyCapture()">${icTrait(IC.camera)} Capturer l'étape</button>
             ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">▶ Lecture</button>` : ''}
         </div>
@@ -6503,9 +7451,12 @@ function renderRecit() {
             <span class="layer-vis on" onclick="A.storyPlay(${i})" title="Aller à l'étape">▶</span>
             <div class="layer-info" style="flex:1">
                 ${metaEtapeTrajet(s)}
+                ${metaPastilles(s)}
                 <input class="input" style="font-weight:600;padding:4px 6px" value="${echapper(s.title || '')}" onchange="A.storySet(${i},'title',this.value)" placeholder="Titre étape ${i + 1}">
                 <textarea class="input" style="margin-top:4px;min-height:38px;font-size:12px" onchange="A.storySet(${i},'text',this.value)" placeholder="Texte…">${echapper(s.text || '')}</textarea>
                 <label class="contexte-opt" title="En exploitation, la pastille Contexte propose cette étape : elle règle la carte, et son texte sert de consigne"><input type="checkbox" ${usageDe(s.state).contexte ? 'checked' : ''} onchange="A.storyContexte(${i},this.checked)"> Proposer comme contexte</label>
+                ${htmlRelevesContexte(i, s)}
+                ${htmlTourneeContexte(i, s)}
             </div>
             <div style="display:flex;flex-direction:column;gap:2px">
                 <button class="layer-act" onclick="A.storyMove(${i},-1)" title="Monter">▲</button>
@@ -6515,6 +7466,57 @@ function renderRecit() {
             <button class="layer-del" onclick="A.storyDelete(${i})" title="Supprimer">${icTrait(IC.corbeille)}</button>
         </div>`).join('')}</div>`;
     body.innerHTML = html;
+}
+
+/**
+ * Les relevés qu'un contexte propose : une case par couche où un relevé est possible. Rien n'est écrit tant que tout est coché —
+ * le contexte ne dit rien, et une couche ajoutée plus tard sera proposée. Hors contexte, rien à régler.
+ */
+function htmlRelevesContexte(i, s) {
+    if (!usageDe(s.state).contexte) return '';
+    const couches = couchesQuiOffrentUnReleve();
+    if (!couches.length) return '';
+    const propose = relevesDe(s.state);
+    const cases = couches.map((l) => `<label class="contexte-opt contexte-releve"><input type="checkbox" ${releveProposeDans(propose, cleReleve(l)) ? 'checked' : ''} onchange="A.storyReleve(${i},'${chaineJs(cleReleve(l))}',this.checked)"> ${echapper(l.name || l.sourceTable || l.id)}</label>`).join('');
+    return `<div class="contexte-releves">
+        <div class="contexte-releves-titre">Relevés proposés${infoBulle('Ce que la pastille « Relevé » liste quand ce contexte est actif. Tout coché : toutes les couches visibles, comme sans réglage. Une couche décochée n\u2019y est plus listée ; le relevé d\u2019un objet touché sur la carte, lui, reste ouvert.')}</div>
+        ${cases}
+    </div>`;
+}
+
+/**
+ * La tournée d'un contexte : sa ligne de travail. Posée comme un trajet — une ligne choisie sur la carte, ou tracée sur un réseau —
+ * mais elle reste à son contexte et ne place aucune étape. Hors contexte, rien à régler.
+ */
+function htmlTourneeContexte(i, s) {
+    if (!usageDe(s.state).contexte) return '';
+    const trace = tourneeDe(s.state);
+    const enCours = !!_cibleTournee && _cibleTournee === s.cle;
+    const titre = `<div class="contexte-releves-titre">Tournée${infoBulle('La ligne de travail de ce contexte : elle s’affiche quand il est actif, et donne leur ordre aux ouvrages qu’il montre. Le trajet du récit, lui, sert une visite guidée.')}</div>`;
+    let corps;
+    if (enCours) {
+        corps = trajetPickMode
+            ? `<div class="hint">Touchez une ligne sur la carte.</div><div class="contexte-tournee-actions"><button class="btn btn-soft btn-sm" onclick="A.choisirTrajet()">Annuler le choix</button></div>`
+            : '<div class="hint">Tracé en cours — suivez les indications en haut du module.</div>';
+    } else if (trace) {
+        corps = `<div class="hint">${direLongueur(longueurMetres(trace.coordinates))}${trace.nom ? ' · ' + echapper(trace.nom) : ''}</div>
+            <div class="contexte-tournee-actions">
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeVoir(${i})">Voir</button>
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeChoisir(${i})">Remplacer</button>
+                <button class="btn btn-soft btn-sm" onclick="A.tourneeRetirer(${i})">Retirer</button>
+            </div>`;
+    } else {
+        const reseaux = couchesReseau();
+        const options = reseaux.map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)}</option>`).join('');
+        corps = lineairesDisponibles().length
+            ? `<div class="contexte-tournee-actions"><button class="btn btn-soft btn-sm" onclick="A.tourneeChoisir(${i})">Choisir une ligne</button></div>`
+            : '<div class="hint">Aucune ligne visible à choisir.</div>';
+        if (reseaux.length) {
+            corps += `<div class="contexte-tournee-actions"><select id="tournee-couche-${i}" class="input" aria-label="Réseau de lignes">${options}</select>
+                <button class="btn btn-soft btn-sm" onclick="A.itineraireDemarrer('tournee-couche-${i}', '${chaineJs(s.cle)}')">Tracer sur un réseau</button></div>`;
+        }
+    }
+    return `<div class="contexte-releves contexte-tournee-edition">${titre}${corps}</div>`;
 }
 
 /**
@@ -6712,7 +7714,7 @@ function appliquerOuverture() {
 /** L'auteur règle par où la scène s'ouvre. */
 function reglerOuverture(mode, cle = null) {
     if (!assertCanWrite('régler l’ouverture de la scène')) return;
-    STATE.exposition = normaliserExposition({ ouverture: { mode, cle } });
+    STATE.exposition = normaliserExposition({ ouverture: { mode, cle }, cadrage: STATE.exposition?.cadrage });
     markDirty();
     persistScenePrefsDifferee(200);
 }
@@ -6741,6 +7743,7 @@ function appliquerContexte(cle) {
     _storyIdx = ctx.index;
     applyStoryState(cloneStoryState(STATE.story[ctx.index].state));
     refreshControlsDock();
+    rafraichirTrajet();
 }
 
 /** Rend la scène de base. */
@@ -6750,6 +7753,49 @@ function quitterContexte() {
 }
 
 /** Le panneau de la pastille « Contexte » : les contextes proposés, et la consigne de celui qui est actif. */
+/**
+ * Les ouvrages que le contexte actif laisse voir, dans l'ordre de sa tournée ; `null` sans tournée. Seuls comptent les objets
+ * ponctuels des couches visibles, filtres du contexte appliqués : la ligne donne l'ordre, pas un périmètre. `coucheId` restreint à
+ * une couche (le pas de ◀ ▶ reste sur la couche de la sélection).
+ */
+function ordreTournee(coucheId = null) {
+    const trace = tourneeActive();
+    if (!trace) return null;
+    const objets = [];
+    for (const layer of STATE.layers) {
+        if (coucheId && layer.id !== coucheId) continue;
+        if (layer.visible === false || layer._distant || layer._raster) continue;
+        if (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint') continue;
+        const feats = layer.geojson?.features;
+        // Au-delà, le tri à chaque pas pèserait : on ne propose pas d'ordre sur une couche aussi dense.
+        if (!Array.isArray(feats) || feats.length > 5000) continue;
+        const garde = buildControlPredicate(layer);
+        feats.forEach((f, idx) => {
+            if (garde && !garde(f)) return;
+            const point = pointDuneFeature(f);
+            if (!point) return;
+            objets.push({ cle: `${layer.id}:${idx}`, coucheId: layer.id, idx, point, nom: nomObjet(f.properties || {}) || `Objet ${idx + 1}` });
+        });
+    }
+    return ordonnerLeLong(trace.coordinates, objets);
+}
+
+/** Le bloc « Tournée » du panneau « Contexte » : sa longueur, et les ouvrages dans l'ordre de la ligne. */
+function htmlTourneeContexteActif() {
+    const trace = tourneeActive();
+    if (!trace) return '';
+    const ordre = ordreTournee() || [];
+    const L = longueurMetres(trace.coordinates);
+    const n = ordre.length;
+    const resume = `Tournée · ${direLongueur(L)} · ${n ? `${n} ouvrage${n > 1 ? 's' : ''}` : 'aucun ouvrage'}`;
+    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage" onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
+        <span class="n">${i + 1}</span><span class="nm">${echapper(o.nom)}</span><span class="d">${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}</span></button>`).join('');
+    return `<details class="contexte-tournee"><summary>${echapper(resume)}${trace.nom ? ` <small>${echapper(trace.nom)}</small>` : ''}</summary>
+        ${n ? `<div class="contexte-ouvrages">${lignes}</div>${n > 150 ? `<div class="hint">Les 150 premiers sur ${n}.</div>` : ''}`
+            : '<div class="hint">Aucun ouvrage affiché par ce contexte : un filtre ou une couche masquée les écarte.</div>'}
+    </details>`;
+}
+
 function renderContexteDockSlotHtml() {
     const liste = contextesDisponibles();
     const actif = _contexteCle;
@@ -6759,13 +7805,16 @@ function renderContexteDockSlotHtml() {
         <span class="contexte-nom">${echapper(titre)}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
     </button>`;
     return `<div class="dock-slot-data dock-slot-contexte">
-        <div class="dock-slot-head"><span class="dock-slot-title">Contexte</span></div>
+        <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
+            ${courant ? `<div class="contexte-courant">
+                ${courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
+                ${htmlTourneeContexteActif()}
+            </div>` : ''}
             <div class="contexte-liste">
-                ${choix(null, 'Scène de base', 'La scène telle que l’équipe l’a réglée', !actif)}
+                ${choix(null, 'Scène de base', '', !actif)}
                 ${liste.map((c) => choix(c.cle, c.titre, '', c.cle === actif)).join('')}
             </div>
-            ${courant && courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
         </div>
     </div>`;
 }
@@ -6797,21 +7846,27 @@ function enterStoryPresentation(i) {
     applyStoryState(cloneStoryState(STATE.story[_storyIdx].state));
 }
 
+/** Le titre d'un module, avec une explication au survol quand le module en demande une. */
+function titreModule(titre, aide) {
+    const h = $('module-title');
+    h.textContent = titre;
+    if (aide) h.insertAdjacentHTML('beforeend', infoBulle(aide));
+}
+
 // ---- Modèles 3D ----
 // Module Modèles = gestion du CATALOGUE pour l'app (jeu, source, galerie).
 /** Les types du catalogue d'objets pointé, avec l'identifiant à écrire dans un champ ou un manifeste. */
 function galerieObjetsRealistes() {
     const objs = modelesObjets();
     if (!objs.length) return '';
-    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}${infoBulle('L\'identifiant objet:… se saisit dans le modèle d\'une couche, dans une catégorie, ou dans _modelId d\'un objet.')}</div>
         ${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : 'public'].filter(Boolean).join(' · ');
             return `<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="font-size:18px">${mm.icon}</span>
                 <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${escapeHtml(mm.name)}</div>
                 <div style="font-size:11px;color:var(--muted)">${escapeHtml(infos)} · <code>${escapeHtml(mm.id)}</code></div></div></div>`;
-        }).join('')}
-        <div class="hint" style="margin-top:6px">L'identifiant <code>objet:…</code> se saisit dans le modèle d'une couche, dans une catégorie, ou dans <code>_modelId</code> d'un objet.</div></div>`;
+        }).join('')}</div>`;
 }
 function renderModelsPanel() {
     $('module-title').textContent = 'Catalogue 3D';
@@ -6830,17 +7885,16 @@ function renderModelsPanel() {
             </div>
         </div>
         <div class="section">
-            <div class="section-title">Source des modèles (GLB)</div>
+            <div class="section-title">Source des modèles (GLB)${infoBulle('Doit contenir les dossiers colored et mono, et le catalogue (catalog, au format JSON). En local : sers la racine du repo et ouvre /projects/Atlas/index.html.')}</div>
             <div class="range-info" id="model-src-info" style="word-break:break-all">${MODEL_LIBRARY.baseUrl}</div>
             <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${MODEL_LIBRARY.baseRoot}" placeholder="https://…/models/">
             <div style="display:flex;gap:6px;margin-top:6px">
                 <button class="btn btn-soft" style="flex:1" onclick="A.testModelBase()">Tester</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setModelBase(document.getElementById('model-src-input').value)">Appliquer</button>
             </div>
-            <div class="hint" style="margin-top:6px">Doit contenir <code>colored/</code>, <code>mono/</code> et <code>catalog.json</code>. En local : sers la racine du repo et ouvre <code>/projects/Atlas/index.html</code>.</div>
         </div>
         <div class="section">
-            <div class="section-title">Catalogue d'objets</div>
+            <div class="section-title">Catalogue d'objets${infoBulle('Modèles générés d\'après les champs des objets (atlas-objets/0.1). Une couche de points s\'y soumet par l\'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.')}</div>
             <div class="range-info" style="word-break:break-all">${
                 CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas (intégré) — ' : ''}${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
                 : CATALOGUE_OBJETS.etat === 'erreur' ? `❌ ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
@@ -6851,7 +7905,6 @@ function renderModelsPanel() {
                 <button class="btn btn-soft" style="flex:1" onclick="A.setCatalogueObjets('')" title="Revenir au catalogue livré avec Atlas">Catalogue d’Atlas</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setCatalogueObjets(document.getElementById('catalogue-objets-input').value)">Pointer</button>
             </div>
-            <div class="hint" style="margin-top:6px">Modèles générés d'après les champs des objets (<code>atlas-objets/0.1</code>). Une couche de points s'y soumet par l'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.</div>
         </div>
         ${galerieObjetsRealistes()}
         <div class="section">
@@ -6886,17 +7939,16 @@ function renderSoleil() {
             <input type="range" class="rng acc" min="0" max="1439" step="5" value="${min}" oninput="A.setTime(this.value)">
         </div>
         <div class="section">
-            <div class="section-title">Date</div>
+            <div class="section-title">Date${infoBulle((STATE.settings.dateEpinglee ? 'La scène rouvrira sur ce jour.' : 'Non épinglée : la date n’est pas retenue d’une visite à l’autre.') + ' Heure du site, fuseau ' + fuseauScene(STATE.settings) + ' ; l’éclairage public suit le soleil à l’ancre de la scène (' + STATE.location.lat.toFixed(4) + '°N, ' + STATE.location.lng.toFixed(4) + '°E).')}</div>
             <input class="input" type="date" value="${dateStr}" onchange="A.setSunDate(this.value)">
             <div class="toggle-row" style="margin-top:8px"><span class="tlabel">Épingler cette date</span><div class="toggle ${STATE.settings.dateEpinglee ? 'on' : ''}" onclick="A.toggleDateEpinglee()" role="switch" tabindex="0" aria-checked="${!!STATE.settings.dateEpinglee}" aria-label="Épingler cette date"></div></div>
-            <div class="hint" style="margin-top:6px">${STATE.settings.dateEpinglee ? 'La scène rouvrira sur ce jour.' : 'Non épinglée : la date n’est pas retenue d’une visite à l’autre.'} Heure du site, fuseau ${escapeHtml(fuseauScene(STATE.settings))} ; l’éclairage public suit le soleil à l’ancre de la scène (${STATE.location.lat.toFixed(4)}°N, ${STATE.location.lng.toFixed(4)}°E).</div>
         </div>
         <div class="section">
             <div class="range-info">Soleil : <strong>${azimuth.toFixed(0)}° ${cardinal}</strong> · Hauteur <strong>${altitude.toFixed(1)}°</strong></div>
         </div>
         <div class="section">
-            <div class="toggle-row"><span class="tlabel">Ombres portées</span><div class="toggle ${STATE.settings.shadows ? 'on' : ''}" onclick="A.toggleSetting('shadows')" role="switch" tabindex="0" aria-checked="${!!STATE.settings.shadows}" aria-label="Ombres portées"></div></div>
-            <div class="hint" style="margin-top:8px">Vraies ombres des modèles 3D (direction = position solaire SunCalc), au zoom rue, ${STATE.settings.terrain3D ? '<strong>désactivées car le relief 3D est actif</strong>' : 'jusqu’à 1500 objets visibles'}. Le bâti n’a pas d’ombre (limite MapLibre).</div>
+            <div class="toggle-row"><span class="tlabel">Ombres portées${infoBulle('Vraies ombres des modèles 3D (direction = position solaire), au zoom rue, ' + (STATE.settings.terrain3D ? 'désactivées car le relief 3D est actif' : 'jusqu’à 1500 objets visibles') + '. Le bâti n’a pas d’ombre (limite MapLibre).')}</span><div class="toggle ${STATE.settings.shadows ? 'on' : ''}" onclick="A.toggleSetting('shadows')" role="switch" tabindex="0" aria-checked="${!!STATE.settings.shadows}" aria-label="Ombres portées"></div></div>
+            
         </div>`;
 }
 
@@ -6920,12 +7972,11 @@ function renderVues() {
             <input type="range" class="rng" min="-180" max="180" step="1" value="${Math.round(map?.getBearing() || 0)}" oninput="A.setBearing(this.value)">
         </div>
         <div class="section">
-            <div class="section-title">Projection</div>
+            <div class="section-title">Projection${infoBulle('Le globe (façon Google Earth) bascule automatiquement en plan une fois zoomé sur la zone.')}</div>
             <div class="seg">
                 <button class="${s.projection === 'globe' ? 'active' : ''}" onclick="A.setProjection('globe')">🌍 Globe</button>
                 <button class="${s.projection === 'mercator' ? 'active' : ''}" onclick="A.setProjection('mercator')">🗺️ Plan</button>
             </div>
-            <div class="hint" style="margin-top:8px">Le globe (façon Google Earth) bascule automatiquement en plan une fois zoomé sur la zone.</div>
         </div>
         <div class="section">
             <div class="section-title">Fond de carte</div>
@@ -6958,7 +8009,7 @@ function escLegend(s) {
 
 function legendCategoryColor(sym, value, index, total) {
     const cat = sym.categories?.find((x) => String(x.value) === String(value));
-    return cat?.color || paletteColor(sym.palette || 'Tableau10', index, total);
+    return cat?.color || paletteColor(sym.palette || 'Tableau10', index, total, sym.inverse);
 }
 
 /** Focus légende (ciblage lecture) — session only. */
@@ -6975,7 +8026,7 @@ function rampeGraduee(layer, sym) {
     const stopsDecl = (layer._declarative?.kind === 'graduated' ? layer._declarative.stops : null) || [];
     return stopsDecl.length
         ? stopsDecl.map((st) => st.color).filter(Boolean)
-        : (COLOR_PALETTES[sym.colorRamp || sym.palette || 'Viridis'] || COLOR_PALETTES.Viridis);
+        : paletteEn(sym.colorRamp || sym.palette || 'Viridis', sym.inverse);
 }
 
 /**
@@ -7033,6 +8084,9 @@ function buildLayerLegendHtml(layer) {
         return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}${headFocus}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${catRows}</div>`;
     }
 
+    if (sym.mode === 'graduated' && sym.field && sym.manuel && layer._declarative?.stops?.length) {
+        return legendeClassesCouleur(layer, sym, lid, clickable, total);
+    }
     if (sym.mode === 'graduated' && sym.field) {
         // Les couleurs du style déclaratif priment sur la rampe nommée — c'est
         // déjà la règle pour peindre la carte (cf. applyLayerStyle). La légende
@@ -7048,12 +8102,35 @@ function buildLayerLegendHtml(layer) {
     return `<div class="legend-group"><div class="legend-row${clickable}${focused}" data-legend="layer" data-layer-id="${lid}"><span class="swatch" style="background:${swatch}"></span><span class="nm">${escLegend(layer.name)}</span><span class="ct">${total}</span></div></div>`;
 }
 
+/** La légende d'un contour qui suit un champ : ce que disent les contours colorés, avec leur nombre. */
+function legendeContour(layer) {
+    const st = layer?.style?.symbolization?.stroke;
+    if (st?.mode !== 'regle' || st.enabled === false || !st.regle?.stops?.length) return '';
+    const cle = resolveFeaturePropertyKey(layer, st.regle.field);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, st.regle.stops);
+    const tries = [...st.regle.stops].sort((a, b) => Number(a.lower ?? -Infinity) - Number(b.lower ?? -Infinity));
+    const lignes = tries.map((s, i) => (s.color && comptes[i])
+        ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${escLegend(s.color)};border-radius:50%;box-sizing:border-box"></span><span class="nm">${escLegend(libelleClasse(st.regle.stops, i))}</span><span class="ct">${comptes[i]}</span></div>` : '').join('');
+    if (!lignes) return '';
+    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
+}
+
+/** La légende d'une couleur graduée en classes posées à la main : une ligne par classe, avec son nombre. */
+function legendeClassesCouleur(layer, sym, lid, clickable, total) {
+    const stops = layer._declarative?.stops || [];
+    const cle = resolveFeaturePropertyKey(layer, sym.field);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, stops);
+    const tries = [...stops].sort((a, b) => Number(a.lower ?? -Infinity) - Number(b.lower ?? -Infinity));
+    const lignes = tries.map((s, i) => `<div class="legend-row legend-sub"><span class="swatch" style="background:${escLegend(s.color || TRANSPARENT)}"></span><span class="nm">${escLegend(libelleClasse(stops, i))}</span><span class="ct">${comptes[i]}</span></div>`).join('');
+    return `<div class="legend-group"><div class="legend-row legend-head-row${clickable}" data-legend="layer" data-layer-id="${lid}"><span class="nm legend-layer-name">${escLegend(layer.name)}</span><span class="ct">${total}</span></div>${lignes}</div>`;
+}
+
 function updateLegend() {
     const body = $('legend-body');
     // La légende énumère dans le même sens que les panneaux : dessus d'abord.
     const vis = displayOrder(STATE.layers).filter((l) => l.visible !== false);
     if (vis.length === 0) { body.innerHTML = '<div class="legend-empty">Aucune couche visible</div>'; return; }
-    const html = vis.map((l) => buildLayerLegendHtml(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
+    const html = vis.map((l) => buildLayerLegendHtml(l) + legendeContour(l) + (coucheEclairage(l) ? Eclairage.htmlLegende(l) : '')).join('');
     body.innerHTML = html || '<div class="legend-empty">Aucun objet visible</div>';
 }
 
@@ -7249,10 +8326,11 @@ function boutonRevueObjets(layer) {
     // autant que de tables qui la referencent, nommer le premier laisserait
     // croire qu'il est le seul.
     const combien = formulairesDeLaCouche(layer).length;
-    const libelle = combien
-        ? `📝 Saisir sur les objets${combien > 1 ? ` · ${combien} formulaires` : ''}`
-        : '✏️ Éditer les objets un par un';
-    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
+    const libelle = combien ? `📝 Saisir${combien > 1 ? ` · ${combien}` : ''}` : '✏️ Éditer';
+    const titre = combien
+        ? `Saisir sur les objets${combien > 1 ? ` (${combien} formulaires)` : ''}`
+        : 'Éditer les objets un par un';
+    return `<button class="btn btn-soft insp-act" title="${titre}" aria-label="${titre}"
         onclick="A.editLayerObjects('${layer.id}')">${libelle}</button>`;
 }
 
@@ -7268,14 +8346,71 @@ function boutonRevueObjets(layer) {
  * > references internes -- d'ou `verifier-references.mjs`.
  */
 let inspSymTab = 'Couleur';
+/** Les blocs ouverts de l'onglet Forme (Taille d'abord) : retenus d'une couche à l'autre, comme l'onglet. */
+const blocsFormeOuverts = new Set(['Taille']);
+
+/** L'onglet Forme : ce qui dit comment un point (ou une ligne, une surface) se dessine — taille, icône, modèle 3D. */
+function symFormePanel(layer, sym, isPoint) {
+    if (!isPoint) return symSizePanel(layer, sym);
+    const bloc = (nom, corps) => `<details class="insp-bloc" ${blocsFormeOuverts.has(nom) ? 'open' : ''}
+        ontoggle="A.setBlocForme('${nom}', this.open)"><summary>${nom}</summary><div class="insp-bloc-corps">${corps}</div></details>`;
+    return bloc('Taille', symSizePanel(layer, sym)) + bloc('Icône', symIconePanel(layer, sym)) + bloc('Modèle 3D', symModelPanel(layer, sym));
+}
+
+/** Les actions sous le titre de la couche : une rangée, sans rien d'autre à faire défiler avant les réglages. */
+function actionsEntete(layer) {
+    const html = boutonEnTable(layer) + boutonRevueObjets(layer) + boutonNouvelObjet(layer);
+    return html ? `<div class="insp-actions">${html}</div>` : '';
+}
+
+/**
+ * Une explication au survol : un « i » discret, dont le texte s'affiche dans une bulle unique (`#info-bulle`) posée en
+ * `fixed` — une infobulle dans le panneau serait coupée par son défilement. Au clavier (focus) et au toucher (appui)
+ * comme à la souris. Ne mettre ici que ce qui explique ; ce qui avertit d'une conséquence reste écrit.
+ */
+function infoBulle(texte) {
+    const t = escapeHtml(texte);
+    return `<span class="info-i" tabindex="0" role="note" aria-label="${t}" data-info="${t}">i</span>`;
+}
+(function brancherInfoBulle() {
+    if (typeof document === 'undefined' || window.__infoBulleBranchee) return;
+    window.__infoBulleBranchee = true;
+    let bulle = null;
+    const cacher = () => { if (bulle) bulle.style.display = 'none'; };
+    const montrer = (el) => {
+        if (!bulle) {
+            bulle = document.createElement('div');
+            bulle.id = 'info-bulle';
+            bulle.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(bulle);
+        }
+        bulle.textContent = el.dataset.info || '';
+        bulle.style.display = 'block';
+        const r = el.getBoundingClientRect();
+        const w = Math.min(260, window.innerWidth - 16);
+        bulle.style.maxWidth = w + 'px';
+        const h = bulle.offsetHeight;
+        const x = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+        const dessous = r.bottom + 8 + h < window.innerHeight;
+        bulle.style.left = x + 'px';
+        bulle.style.top = (dessous ? r.bottom + 8 : Math.max(8, r.top - 8 - h)) + 'px';
+    };
+    const cible = (e) => e.target?.closest?.('.info-i');
+    document.addEventListener('mouseover', (e) => { const c = cible(e); if (c) montrer(c); });
+    document.addEventListener('mouseout', (e) => { if (cible(e)) cacher(); });
+    document.addEventListener('focusin', (e) => { const c = cible(e); if (c) montrer(c); });
+    document.addEventListener('focusout', (e) => { if (cible(e)) cacher(); });
+    document.addEventListener('click', (e) => { const c = cible(e); if (c) { e.preventDefault(); e.stopPropagation(); montrer(c); } else cacher(); }, true);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cacher(); });
+})();
+
 function renderSymbologyInspector(layer) {
     const sym = initSymbolization(layer);
     const isPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
-    const tabs = ['Couleur', 'Taille'];
-    if (isPoint) tabs.push('Icône', 'Modèle 3D');
-    if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
+    // Cinq onglets au plus : Couleur, Forme (taille, icône, modèle 3D), Étiquette, Bulle, Spécifications.
+    const tabs = ['Couleur', 'Forme', 'Étiquette'];
     if (layer.sourceTable && CONFIG.grist.ready) tabs.push('Bulle');
-    tabs.push('Étiquette');
+    if (isPoint && typesAvecSchema(layer).length) tabs.push('Spécifications');
     if (!tabs.includes(inspSymTab)) inspSymTab = 'Couleur';
 
     // Chip du modèle 3D lié à la couche (toujours visible dans l'inspecteur)
@@ -7297,16 +8432,12 @@ function renderSymbologyInspector(layer) {
         <div class="insp-title">${echapper(layer.name)}</div>
         <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
         ${modelChip}
-        ${boutonEnTable(layer)}
-        ${boutonRevueObjets(layer)}
-        ${boutonNouvelObjet(layer)}`;
+        ${actionsEntete(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
 
     const body = $('insp-body');
     if (inspSymTab === 'Couleur') body.innerHTML = symColorPanel(layer, sym);
-    else if (inspSymTab === 'Taille') body.innerHTML = symSizePanel(layer, sym);
-    else if (inspSymTab === 'Modèle 3D') body.innerHTML = symModelPanel(layer, sym);
-    else if (inspSymTab === 'Icône') body.innerHTML = symIconePanel(layer, sym);
+    else if (inspSymTab === 'Forme') body.innerHTML = symFormePanel(layer, sym, isPoint);
     else if (inspSymTab === 'Spécifications') body.innerHTML = symSpecsPanel(layer);
     else if (inspSymTab === 'Bulle') body.innerHTML = symBullePanel(layer, sym);
     else body.innerHTML = symLabelPanel(layer, sym);
@@ -7346,6 +8477,65 @@ function paletteList(layer, param, current, type) {
         </div>`).join('')}</div>`;
 }
 
+/** Le découpage d'une couleur graduée : réparti d'office, ou des seuils posés à la main. */
+function choixDecoupage(layer, c) {
+    return `<div class="section"><div class="section-title">Découpage</div><div class="seg">
+        <button class="${c.manuel ? '' : 'active'}" onclick="A.setDecoupage('${layer.id}','auto')">Automatique</button>
+        <button class="${c.manuel ? 'active' : ''}" onclick="A.setDecoupage('${layer.id}','manuel')">Seuils à la main</button>
+    </div></div>`;
+}
+
+/** Les classes d'une cible : la couleur graduée (style déclaratif) ou le contour (règle propre). */
+function classesDe(layer, cible) {
+    const sym = initSymbolization(layer);
+    if (cible === 'contour') return sym.stroke?.regle?.stops || [];
+    return layer._declarative?.kind === 'graduated' ? (layer._declarative.stops || []) : [];
+}
+function champDeClasses(layer, cible) {
+    const sym = initSymbolization(layer);
+    return cible === 'contour' ? sym.stroke?.regle?.field : sym.color.field;
+}
+
+/**
+ * L'éditeur de classes : une couleur par classe, les seuils entre elles, des comptes. Même éditeur pour la couleur
+ * et pour le contour — c'est la même règle (voir lib/classes.js).
+ */
+function editeurClasses(layer, cible) {
+    const stops = classesDe(layer, cible);
+    const champ = champDeClasses(layer, cible);
+    const esc = (x) => escapeHtml(String(x ?? ''));
+    const numeriques = getLayerFields(layer).filter((f) => f.type === 'numeric');
+    const selecteur = cible === 'contour'
+        ? `<select class="input" onchange="A.setClasses('${layer.id}','contour',{field:this.value})">${['<option value="">— champ —</option>'].concat(numeriques.map((f) => `<option value="${esc(f.id)}" ${champ === f.id ? 'selected' : ''}>${esc(f.label)}</option>`)).join('')}</select>`
+        : '';
+    if (!champ || !stops.length) return `<div class="section"><div class="section-title">Classes</div>${selecteur}</div>`;
+    const { seuils, couleurs } = seuilsDeStops(stops);
+    const cle = resolveFeaturePropertyKey(layer, champ);
+    const { comptes } = comptesParClasse(filteredGeoJSON(layer).features, cle, stops);
+    const lignes = couleurs.map((c, i) => {
+        const dernier = i === couleurs.length - 1;
+        const libre = cible === 'contour';
+        const coul = c ? `<input type="color" value="${esc(c)}" onchange="A.setClasses('${layer.id}','${cible}',{couleur:[${i},this.value]})" style="width:30px;height:26px;border:none;cursor:pointer">`
+            : `<span title="Pas de contour pour cette classe" style="display:inline-block;width:30px;text-align:center;color:var(--muted)">∅</span>`;
+        const sans = libre ? `<label title="Pas de contour pour cette classe" style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" ${c ? '' : 'checked'} onchange="A.setClasses('${layer.id}','${cible}',{vide:[${i},this.checked]})"> sans</label>` : '';
+        const borne = dernier
+            ? `<span style="flex:1;font-size:12px">au-delà de ${esc(seuils.length ? seuils[seuils.length - 1] : '')}</span>`
+            : `<span style="font-size:12px">jusqu’à</span><input class="input" type="number" step="any" value="${esc(seuils[i])}" style="width:84px" onchange="A.setClasses('${layer.id}','${cible}',{seuil:[${i},this.value]})">`;
+        return `<div style="display:flex;gap:8px;align-items:center;margin-top:6px">${coul}${borne}${sans}<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">${comptes[i] ?? 0}</span></div>`;
+    }).join('');
+    return `<div class="section"><div class="section-title">Classes${infoBulle('Une classe va jusqu’à son seuil, inclus. La dernière prend tout ce qui le dépasse.')}</div>${selecteur}${lignes}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn btn-soft btn-sm" onclick="A.setClasses('${layer.id}','${cible}',{ajouter:true})">＋ Seuil</button>
+            <button class="btn btn-soft btn-sm" ${seuils.length ? '' : 'disabled'} onclick="A.setClasses('${layer.id}','${cible}',{retirer:true})">− Seuil</button>
+            <button class="btn btn-soft btn-sm" onclick="A.setClasses('${layer.id}','${cible}',{inverser:true})">⇄ Inverser les couleurs</button>
+        </div></div>`;
+}
+
+function caseInverser(layer, param, on) {
+    return `<label class="toggle-row" style="margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px">
+        <input type="checkbox" ${on ? 'checked' : ''} onchange="A.setSymInverse('${layer.id}','${param}',this.checked)"> Inverser la palette</label>`;
+}
+
 function symColorPanel(layer, sym) {
     const c = sym.color;
     let inner = '';
@@ -7358,13 +8548,15 @@ function symColorPanel(layer, sym) {
     } else if (c.mode === 'categorized') {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, null)}</div>
             ${blocReferenceCouleur(layer, c)}
-            ${c.field && !c.reference ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.palette, 'qualitative')}</div>` : ''}
+            ${c.field && !c.reference ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.palette, 'qualitative')}${caseInverser(layer, 'color', c.inverse)}</div>` : ''}
             ${c.field ? `
             <div class="section"><div class="section-title">Catégories</div>${categoriesPreview(layer, c)}</div>` : ''}`;
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, 'numeric')}
             ${c.field ? rangeInfo(layer, c.field) : ''}</div>
-            ${c.field ? `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${methodChips(layer, 'color', c.method)}</div>` : ''}`;
+            ${c.field ? choixDecoupage(layer, c) + (c.manuel
+                ? editeurClasses(layer, 'couleur')
+                : `<div class="section"><div class="section-title">Palette</div>${paletteList(layer, 'color', c.colorRamp || c.palette, 'sequential')}${caseInverser(layer, 'color', c.inverse)}${methodChips(layer, 'color', c.method)}</div>`) : ''}`;
     }
     return `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'color', c.mode, ['single', 'categorized', 'graduated'])}</div>${inner}`;
 }
@@ -7443,11 +8635,29 @@ function blocReferenceCouleur(layer, c) {
         <button class="btn btn-primary btn-full" style="margin-top:6px" onclick="A.appliquerReferenceCouleur('${layer.id}')">Utiliser l’apparence de « ${escapeHtml(ref.table)} »</button></div>`;
 }
 
+/**
+ * Les champs d'une couche de points qui peuvent donner une icône : une présélection sur le schéma, puis la confirmation
+ * (une table de référence lue, une seule fois) champ par champ. `enCours` tant qu'une confirmation est attendue.
+ */
+function champsIcone(layer) {
+    if (!layer.sourceTable || !CONFIG.grist.ready || !STATE.schema) return { valides: [], enCours: false };
+    const noms = (layer._fields?.length ? layer._fields.map((f) => f.name) : Object.keys(layer.geojson?.features?.[0]?.properties || {}))
+        .filter((n) => n && !n.startsWith('_'));
+    const candidats = champsAvecImages(STATE.schema, layer.sourceTable, noms);
+    let enCours = false;
+    const valides = candidats.filter((n) => {
+        const ref = detecterPuisRedessiner(layer, n, 'icone');
+        if (ref === undefined) enCours = true;
+        return !!ref;
+    });
+    return { valides, enCours };
+}
+
 /** L'onglet Icône d'une couche de points : une image par valeur d'un champ. */
 function symIconePanel(layer, sym) {
     const ic = sym.icon || {};
-    const champs = (layer._fields?.length ? layer._fields.map((f) => f.name) : Object.keys(layer.geojson?.features?.[0]?.properties || {}))
-        .filter((n) => n && !n.startsWith('_'));
+    const { valides, enCours } = champsIcone(layer);
+    const champs = ic.field && !valides.includes(ic.field) ? [ic.field, ...valides] : valides;
     const choisi = ic.field || '';
     let corps = '';
     if (ic.mode === 'reference' && ic.field) {
@@ -7467,13 +8677,16 @@ function symIconePanel(layer, sym) {
                 <button class="btn btn-primary btn-full" style="margin-top:6px" onclick="A.appliquerIcones('${layer.id}', '${escapeHtml(choisi)}')">Afficher ces icônes</button>`
             : '<div class="range-info">Aucune table du document ne donne d’image pour ce champ.</div>';
     }
-    return `<div class="section"><div class="section-title">Icône selon le champ</div>
+    if (!champs.length) {
+        return `<div class="section"><div class="section-title">Icône selon le champ</div>
+            <div class="range-info">${enCours ? 'Recherche d’images dans le document…' : 'Aucun champ de cette couche ne renvoie à une table d’images.'}</div></div>`;
+    }
+    return `<div class="section"><div class="section-title">Icône selon le champ${infoBulle('L’icône se pose au-dessus du point, qui garde sa couleur : le type d’un ouvrage en image, son état en couleur.')}</div>
         <select class="input" onchange="A.choisirChampIcone('${layer.id}', this.value)">
             <option value="">— Champ —</option>
             ${champs.map((n) => `<option value="${escapeHtml(n)}" ${n === choisi ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
         </select></div>
-        ${corps}
-        <div class="hint" style="margin-top:8px">L’icône se pose au-dessus du point, qui garde sa couleur : le type d’un ouvrage en image, son état en couleur.</div>`;
+        ${corps}`;
 }
 
 /**
@@ -7503,9 +8716,8 @@ function symBullePanel(layer, sym) {
                 ${autres.map((c) => `<option value="${escapeHtml(c.colId)}" ${b.titre === c.colId ? 'selected' : ''}>${lib(c.colId)}</option>`).join('')}
             </select></div>
         ${photos.length ? `<div class="section"><div class="section-title">Photos</div>${photos.map((c) => coche('photos', c.colId, b.photos?.includes(c.colId))).join('')}</div>` : ''}
-        <div class="section"><div class="section-title">Pastilles d’état</div>
-            <div class="bulle-choix-liste">${autres.map((c) => coche('pastilles', c.colId, b.pastilles?.includes(c.colId))).join('')}</div>
-            <div class="hint" style="margin-top:4px">Leur couleur vient de la symbologie, ou de la table de référence du champ.</div></div>
+        <div class="section"><div class="section-title">Pastilles d’état${infoBulle('Leur couleur vient de la symbologie, ou de la table de référence du champ.')}</div>
+            <div class="bulle-choix-liste">${autres.map((c) => coche('pastilles', c.colId, b.pastilles?.includes(c.colId))).join('')}</div></div>
         <div class="section"><div class="section-title">Champs montrés</div>
             <div class="bulle-choix-liste">${autres.map((c) => coche('champs', c.colId, b.champs?.includes(c.colId))).join('')}</div></div>
         <div class="section"><div class="section-title">Dernière visite</div>
@@ -7602,7 +8814,7 @@ function categoriesPreview(layer, c) {
     if (!c.categories.length) syncColorCategoriesFromFeatures(layer);
     return `<div class="cats">${valeursOrdonnees(c, vals).slice(0, 30).map((v, i) => {
         const cat = c.categories.find((x) => String(x.value) === String(v.value));
-        const col = cat?.color || paletteColor(c.palette, i, vals.length);
+        const col = cat?.color || paletteColor(c.palette, i, vals.length, c.inverse);
         const lib = escapeHtml(libelleCategorie(c, v.value));
         return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
     }).join('')}${vals.length > 30 ? `<div class="range-info" style="margin-top:6px">+ ${vals.length - 30} autres</div>` : ''}</div>`;
@@ -7645,10 +8857,10 @@ function symAppearancePanel(layer, sym) {
     const opVal = auto ? defaultLayerOpacity(layer) : sym.opacity;
 
     const opacity = `<div class="section">
-        <div class="slider-head"><span class="lbl">Opacité</span><span class="val" id="op-val">${Math.round(opVal * 100)} %${auto ? ' (auto)' : ''}</span></div>
+        <div class="slider-head"><span class="lbl">Opacité${auto ? infoBulle('Suit l’opacité du style ; bouge le curseur pour la fixer.') : ''}</span><span class="val" id="op-val">${Math.round(opVal * 100)} %${auto ? ' (auto)' : ''}</span></div>
         <input type="range" class="rng acc" min="0" max="1" step="0.05" value="${opVal}" oninput="A.setSymOpacity('${layer.id}', this.value)">
         ${auto
-            ? '<div class="hint">Suit l’opacité du style ; bouge le curseur pour la fixer.</div>'
+            ? ''
             : `<button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.setSymOpacity('${layer.id}','auto')">↺ Revenir à l’automatique</button>`}
     </div>`;
 
@@ -7658,13 +8870,15 @@ function symAppearancePanel(layer, sym) {
     if (is3D || (isPolygon && !flat)) return opacity;
 
     const st = sym.stroke || {};
-    const mode = st.enabled === false ? 'none' : (st.mode === 'fixed' ? 'fixed' : 'follow');
+    const mode = st.enabled === false ? 'none' : (st.mode === 'fixed' ? 'fixed' : st.mode === 'regle' ? 'regle' : 'follow');
     const stroke = `<div class="section"><div class="section-title">Contour</div>
         <div class="seg">
             <button class="${mode === 'none' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','none')">Aucun</button>
             <button class="${mode === 'follow' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','follow')">Suit le remplissage</button>
             <button class="${mode === 'fixed' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','fixed')">Couleur fixe</button>
+            <button class="${mode === 'regle' ? 'active' : ''}" onclick="A.setStrokeMode('${layer.id}','regle')">Selon un champ</button>
         </div>
+        ${mode === 'regle' ? editeurClasses(layer, 'contour') : ''}
         ${mode === 'none' ? '' : `
         <div class="slider-head" style="margin-top:8px"><span class="lbl">Épaisseur</span><span class="val">${st.width ?? 1.5} px</span></div>
         <input type="range" class="rng acc" min="0.5" max="8" step="0.5" value="${st.width ?? 1.5}" oninput="A.setStrokeWidth('${layer.id}', this.value)">
@@ -7690,9 +8904,12 @@ function symSizePanel(layer, sym) {
         <div class="seg">
             <button class="${flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','flat')">▭ À plat</button>
             <button class="${!flat ? 'active' : ''}" onclick="A.setPolygonMode('${layer.id}','extruded')">◨ En volume</button>
-        </div>${vastes ? `<div class="hint" style="margin-top:8px">${vastes} surface${vastes > 1 ? 's' : ''} de plus de ${SEUIL_VOLUME_M} m ${vastes > 1 ? 'sont posées' : 'est posée'} à plat : sur le relief, un volume ne suit pas la pente à cette échelle.</div>` : ''}</div>` : '';
+        </div>${flat ? `<div class="section-title" style="margin-top:10px">Remplissage</div><div class="seg">
+            <button class="${sym.remplissage !== 'contour' ? 'active' : ''}" onclick="A.setRemplissage('${layer.id}','plein')">▣ Plein</button>
+            <button class="${sym.remplissage === 'contour' ? 'active' : ''}" onclick="A.setRemplissage('${layer.id}','contour')">▢ Contour seul</button>
+        </div>` : ''}${vastes ? `<div class="hint" style="margin-top:8px">${vastes} surface${vastes > 1 ? 's' : ''} de plus de ${SEUIL_VOLUME_M} m ${vastes > 1 ? 'sont posées' : 'est posée'} à plat : sur le relief, un volume ne suit pas la pente à cette échelle.</div>` : ''}</div>` : '';
     if (isPolygon && flat) {
-        return volume + symAppearancePanel(layer, sym);
+        return volume + symAppearancePanel(layer, sym) + symGrappesPanel(layer, sym);
     }
 
     const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
@@ -7715,7 +8932,32 @@ function symSizePanel(layer, sym) {
     }
     return volume
         + `<div class="section"><div class="section-title">Mode</div>${modeSeg(layer, 'size', s.mode, ['single', 'graduated'])}</div>`
-        + inner + basePanel + symAppearancePanel(layer, sym);
+        + inner + basePanel + symAppearancePanel(layer, sym) + (is3D ? '' : symGrappesPanel(layer, sym));
+}
+
+
+/** Le réglage de regroupement d'une couche : un interrupteur, puis ce qu'il faut pour le régler. */
+function symGrappesPanel(layer, sym) {
+    if (!grappable(layer)) return '';
+    const cfg = configGrappes(sym);
+    const estPoint = layer.geometryType === 'Point' || layer.geometryType === 'MultiPoint';
+    const titre = estPoint ? 'Regroupement' : 'Regroupement à petite échelle';
+    const aide = estPoint
+        ? 'Les objets proches se regroupent en un rond qui dit leur nombre, et se défont en zoomant.'
+        : 'Sous un certain zoom, les formes laissent place à des ronds qui regroupent leurs centres.';
+    const reglages = cfg.enabled ? `
+        ${estPoint ? `<div class="slider-head" style="margin-top:10px"><span class="lbl">Rayon de regroupement</span><span class="val">${cfg.rayon} px</span></div>
+        <input type="range" class="rng acc" min="20" max="150" step="5" value="${cfg.rayon}" onchange="A.setGrappes('${layer.id}',{rayon:+this.value})">` : ''}
+        <div class="slider-head" style="margin-top:10px"><span class="lbl">${estPoint ? 'Se défait à partir du zoom' : 'Les formes paraissent à partir du zoom'}</span><span class="val">${estPoint ? cfg.zoomMax : cfg.zoomMax + 1}</span></div>
+        <input type="range" class="rng acc" min="3" max="18" step="1" value="${cfg.zoomMax}" onchange="A.setGrappes('${layer.id}',{zoomMax:+this.value})">
+        <div class="section-title" style="margin-top:10px">Couleur du rond</div>
+        <div class="seg">
+            <button class="${cfg.couleur !== 'pire' ? 'active' : ''}" onclick="A.setGrappes('${layer.id}',{couleur:'couche'})">Celle de la couche</button>
+            <button class="${cfg.couleur === 'pire' ? 'active' : ''}" ${pireDisponible(sym) ? '' : 'disabled title="Demande une couleur lue dans une table de référence avec un rang de gravité"'} onclick="A.setGrappes('${layer.id}',{couleur:'pire'})">Le plus grave</button>
+        </div>` : '';
+    return `<div class="section"><div class="section-title">${titre}${infoBulle(aide)}</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="A.setGrappes('${layer.id}',{enabled:this.checked})"> Regrouper</label>${reglages}</div>`;
 }
 
 // ============================================================
@@ -8062,13 +9304,12 @@ function sectionObjetsRealistes(layer, selId) {
     if (!objs.length) return '';
     const inconnu = estIdObjet(selId) && !findModel(selId)
         ? `<div class="hint" style="margin-top:6px;color:var(--accent)">Le modèle choisi (<code>${escapeHtml(selId)}</code>) n'est pas dans ce catalogue : les objets de la couche ne s'affichent pas.</div>` : '';
-    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}</div>
+    return `<div class="section"><div class="section-title">Objets réalistes · ${objs.length}${infoBulle('Un objet réaliste est choisi par type : sa classe de hauteur se lit sur hauteurFeu ou height quand l\'objet les porte.')}</div>
         <div class="model-grid">${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : null].filter(Boolean).join(' · ');
             return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
-        }).join('')}</div>
-        <div class="hint" style="margin-top:6px">Un objet réaliste est choisi par type : sa classe de hauteur se lit sur <code>hauteurFeu</code> ou <code>height</code> quand l'objet les porte.</div>${inconnu}</div>`;
+        }).join('')}</div>${inconnu}</div>`;
 }
 function panneauCatalogueCouche(layer, selId) {
     const c = CATALOGUE_OBJETS;
@@ -8092,11 +9333,10 @@ function panneauCatalogueCouche(layer, selId) {
     const n = (layer.geojson?.features || []).length;
     // Un refus de licence ressemble a une panne : il se dit.
     const refus = refuses ? `<div class="hint" style="margin-top:6px;color:var(--accent)">${refuses} d'entre eux restent en modèle de repli : leurs fichiers sont réservés à un usage interne, et cette page est publique (hors Grist). Ouverte depuis un document Grist ou l'application, elle les affiche.</div>` : '';
-    return `<div class="section"><div class="section-title">Catalogue d'objets</div>
+    return `<div class="section"><div class="section-title">Catalogue d'objets${infoBulle('Le modèle de chaque objet est choisi d\'après ses champs ; variante, orientation et taille sont tirées de sa position. L\'échelle et l\'azimut de la couche s\'y appliquent en plus.')}</div>
         <div class="range-info" style="word-break:break-all">${etat}</div>
         ${c.cat ? `<div class="hint" style="margin-top:6px">${reconnus} objet(s) sur ${n} reconnu(s) par un type du catalogue. Les autres gardent le modèle de repli ci-dessous.</div>` : ''}
-        ${refus}
-        <div class="hint" style="margin-top:6px">Le modèle de chaque objet est choisi d'après ses champs ; variante, orientation et taille sont tirées de sa position. L'échelle et l'azimut de la couche s'y appliquent en plus.</div></div>
+        ${refus}</div>
         <div class="section"><div class="section-title">Repli (objets non reconnus)</div>
         <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>`;
 }
@@ -8202,9 +9442,8 @@ function enteteSansTable(layer, view) {
 function boutonEnTable(layer) {
     if (!peutPasserEnTable(layer, { lecture: CONFIG.viewMode, grist: CONFIG.grist.ready })) return '';
     const n = layer.geojson.features.length;
-    return `<div class="hint" style="margin:10px 0 0">Copie dans le document : ses objets n'ont pas de ligne Grist, donc pas de fiche à remplir.</div>
-        <button class="btn btn-soft btn-full" style="margin-top:8px"
-        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}</button>`;
+    return `<button class="btn btn-soft insp-act insp-act-pleine"
+        onclick="A.enregistrerDansGrist('${layer.id}')">Enregistrer en table Grist · ${n} objet${n > 1 ? 's' : ''}${infoBulle('Copie dans le document : ses objets n’ont pas de ligne Grist, donc pas de fiche à remplir.')}</button>`;
 }
 
 /**
@@ -8217,7 +9456,9 @@ function boutonEnTable(layer) {
  */
 function rappelRevue(totalRevue) {
     if (!(totalRevue > 1)) return '';
-    return `<div class="hint" style="margin-bottom:10px">Objet ${STATE.selection.multiIndex + 1} sur ${totalRevue} — vous modifiez celui-ci.</div>`;
+    // Le rang compte les objets qu'on voit : un filtre de contexte en écarte, la revue les saute.
+    const { rang, total } = rangRevue(STATE.layers.find((l) => l.id === STATE.selection.layerId));
+    return `<div class="hint" style="margin-bottom:10px">Objet ${rang} sur ${total} — vous modifiez celui-ci.</div>`;
 }
 
 /**
@@ -8363,7 +9604,21 @@ async function departsDuReleve(formulaire, formDef, rowId) {
             }
         }
     }
-    return sansValeursPerimees(formDef, valeursDeDepart(formDef, departs, { precedentes, derniere }));
+    // « Moi » : la ligne de la personne connectée dans la table des personnes que le champ désigne.
+    let moi = null;
+    if (voulus.has('moi') && CONFIG.grist.user?.email) {
+        const champs = (formDef?.sections || []).flatMap((s) => s.fields || []);
+        const parChamp = {};
+        for (const [colId, d] of Object.entries(departs)) {
+            if (d !== 'moi') continue;
+            const m = /^Ref(List)?:(.+)$/.exec(String(champs.find((c) => c.colId === colId)?.type || ''));
+            if (!m) continue;
+            const id = moiDansTable(STATE.schema?.[m[2]] || [], await lignesDeTable(m[2]), CONFIG.grist.user.email);
+            if (id != null) parChamp[colId] = m[1] ? ['L', id] : id;
+        }
+        moi = (champ) => parChamp[champ.colId];
+    }
+    return sansValeursPerimees(formDef, valeursDeDepart(formDef, departs, { precedentes, derniere, moi }));
 }
 
 /**
@@ -8703,10 +9958,23 @@ function finTrace(id) {
     openInspectorPanel();
 }
 
+/** Ce que `creationPossible` doit savoir de la situation : posture, et ce que le document accepte pour cette table. */
+function contexteCreation(layer) {
+    return {
+        viewMode: !!CONFIG.viewMode,
+        peutEcrire: canWrite(CONFIG.viewMode),
+        exploitation: postureDepuis(CONFIG) === 'exploiter',
+        verdictTable: layer?.sourceTable ? DROITS.verdict(layer.sourceTable) : 'inconnu',
+    };
+}
+
 function boutonNouvelObjet(layer) {
-    if (!creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) return '';
-    return `<button class="btn btn-soft btn-full" style="margin-top:8px"
-        onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus)} Nouvel objet</button>`;
+    if (!creationPossible(layer, contexteCreation(layer)).ok) return '';
+    const propose = creationProposeeEnExploitation(layer);
+    const reglage = CONFIG.viewMode ? '' : `<label class="insp-act-reglage">
+        <input type="checkbox" ${propose ? 'checked' : ''} onchange="A.setCreationExploiter('${layer.id}', this.checked)">
+        <span>Ajout possible aussi en <b>Exploiter</b>${infoBulle('Les agents peuvent ajouter un objet sur le terrain. Le document décide toujours : sans droit d’écriture sur la table, le bouton n’apparaît pas.')}</span></label>`;
+    return `<button class="btn btn-soft insp-act" onclick="A.nouvelObjet('${layer.id}')">${icTrait(IC.plus, 16)} Nouvel objet</button>${reglage}`;
 }
 
 function quitterSaisieObjet(message) {
@@ -9018,7 +10286,7 @@ function renderObjectInspector() {
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
     const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
-    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f) });
+    const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f), consultation: view && !!f });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
     const formActif = ongletActif?.formulaire || null;
@@ -9086,6 +10354,8 @@ function renderObjectInspector() {
             $('insp-body').innerHTML = rappelRevue(revue && multi ? count : 0)
                 + entete + renderAttrFields(layer, props, { readOnly });
         }
+    } else if (_inspObjTab === ONGLET_FICHE) {
+        $('insp-body').innerHTML = ficheConsultation(layer, f);
     } else if (_inspObjTab === ONGLET_SPECS) {
         $('insp-body').innerHTML = htmlSpecsObjet(layer, f, view);
     } else if (_inspObjTab === ONGLET_3D) {
@@ -9145,6 +10415,19 @@ function renderObjectInspector() {
 // ============================================================
 // INTERACTION (clic, hover, sélection, box-select)
 // ============================================================
+/** Toucher un regroupement : la carte s'approche jusqu'au zoom où il se défait. */
+function zoomerSurGrappe(f) {
+    const idCouche = String(f.layer.id).replace(/-grappe$/, '');
+    const couche = STATE.layers.find((l) => l.id === idCouche);
+    if (!couche) return;
+    const estPoint = couche.geometryType === 'Point' || couche.geometryType === 'MultiPoint';
+    const source = map.getSource(estPoint ? idCouche : idCouche + '-grappes');
+    const centre = f.geometry?.coordinates;
+    if (!source || !centre) return;
+    Promise.resolve(source.getClusterExpansionZoom(f.properties.cluster_id))
+        .then((z) => map.easeTo({ center: centre, zoom: Math.min((Number.isFinite(z) ? z : map.getZoom() + 2) + 0.4, 20), duration: 500 }))
+        .catch(() => map.easeTo({ center: centre, zoom: map.getZoom() + 2, duration: 500 }));
+}
 function hitLayerIds() {
     // L'icône d'une catégorie se touche comme son point : elle se dessine
     // au-dessus de lui, et c'est elle que le doigt vise.
@@ -9162,7 +10445,7 @@ function setupInteraction() {
     map.on('mousemove', (e) => {
         // Pendant un tracé, terra-draw pose ses curseurs (fermeture, accroche).
         if (_saisieObjet) { if (!_saisieObjet.trace) map.getCanvas().style.cursor = 'crosshair'; return; }
-        if (trajetPickMode) { map.getCanvas().style.cursor = 'crosshair'; return; }
+        if (trajetPickMode || _itineraire) { map.getCanvas().style.cursor = 'crosshair'; return; }
         if (boxing || boxJustEnded || locationPickMode) return;
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
@@ -9175,6 +10458,10 @@ function setupInteraction() {
         if (_saisieObjet) { onSaisieClic(e); return; }
         if (locationPickMode) { onLocationPick(e); return; }
         if (trajetPickMode) { onTrajetPick(e); return; }
+        if (_itineraire) { itineraireClic(e); return; }
+        const idsGrappes = STATE.layers.map((l) => l.id + '-grappe').filter((id) => map.getLayer(id));
+        const grappe = idsGrappes.length ? map.queryRenderedFeatures(e.point, { layers: idsGrappes })[0] : null;
+        if (grappe) { zoomerSurGrappe(grappe); return; }
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];
         if (!feats.length) {
@@ -9651,6 +10938,12 @@ function actionBulle(layer, idx, cfg, action, lien) {
     if (action === 'itineraire' && lien) { window.open(lien, '_blank', 'noopener'); return; }
     closeViewPopup();
     enterSelectionMode(layer.id, idx, { consultation: true });
+    // « Voir la fiche » ouvre les attributs, pas le formulaire de visite : sans onglet de fiche (couche sans formulaire publié), la
+    // fiche s'ouvre déjà sur eux.
+    if (action === 'fiche') {
+        _inspObjTab = ONGLET_FICHE;
+        renderObjectInspector();
+    }
     if (action === 'visite' && cfg.lien) {
         // L'onglet du formulaire de la table liée : on ajoute une visite, on ne
         // corrige pas l'objet. Faute de formulaire proposé, la fiche reste
@@ -9800,6 +11093,7 @@ async function onLocationPick(e) {
     map.getCanvas().style.cursor = '';
     const { lng, lat } = e.lngLat;
     STATE.location = { ...STATE.location, lat, lng, name: `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` };
+    lieuChoisi();
     if (STATE.currentModule === 'lieu') renderLieu();
     markDirty();
     showToast('Lieu défini', 'success');
@@ -9871,7 +11165,11 @@ function afterSelectionChange() {
     const n = STATE.selection.features.length;
     $('sel-label').innerHTML = `<strong>${n} objet${n > 1 ? 's' : ''}</strong> sélectionné${n > 1 ? 's' : ''}`;
     if (STATE.selection.multiIndex >= n) STATE.selection.multiIndex = 0;
-    $('sel-pos').textContent = n > 1 ? `${STATE.selection.multiIndex + 1} / ${n}` : `${n} / ${n}`;
+    const rev = n > 1 ? rangRevue(STATE.layers.find((l) => l.id === STATE.selection.layerId)) : null;
+    // Un objet seul, avec une tournée : son rang sur la ligne (« 4 / 12 »), puisque ◀ ▶ la suivent.
+    const ordreSel = n === 1 ? ordreTournee(STATE.selection.layerId) : null;
+    const rangSel = ordreSel ? rangDansTournee(ordreSel, `${STATE.selection.layerId}:${STATE.selection.features[0]}`) : null;
+    $('sel-pos').textContent = rev ? `${rev.rang} / ${rev.total}` : (rangSel && rangSel.rang > 0 ? `${rangSel.rang} / ${rangSel.total}` : `${n} / ${n}`);
     multiBaseValues = null;
     updateHighlight();
     renderInspector();
@@ -9961,9 +11259,8 @@ function clearFeatureOverrides(layer, idx) {
 // IMPORT — OSM (Overpass) & fichier
 // ============================================================
 async function openOSM() {
-    $('module-title').textContent = 'Import OSM';
+    titreModule('Import OSM', 'Zone importée = emprise visible, vue à plat. Zoomez pour réduire.');
     $('module-body').innerHTML = `
-        <div class="hint">Zone importée = emprise visible, vue à plat. Zoomez pour réduire.</div>
         <div class="range-info" id="osm-emprise" style="margin-bottom:12px">…</div>
         <div class="section"><div class="section-title">Objets prédéfinis</div>
             <div class="model-grid">${Object.entries(OSM_PRESETS).map(([k, p]) => `<div class="model-card" onclick="A.runOSM('${k}')"><div class="mi">${p.icon}</div><div class="mn">${p.name}</div></div>`).join('')}</div>
@@ -10153,6 +11450,7 @@ function finalizeNewLayer(layer) {
     updateRailBadge();
     fitToLayer(layer);
     markDirty();
+    baselineApparence(layer);
     if (STATE.currentModule === 'couches' || STATE.currentModule === 'symbo') renderLayersPanel(STATE.currentModule);
     else openModule('couches');
     saveLayerToGrist(layer, true);
@@ -10356,10 +11654,22 @@ function ajouterCoucheGeoJSON(nom, geojson) {
  * « Fichier » ajoute une couche — et dit ce qu'il a reçu quand ce n'en est pas
  * une. Un projet Atlas donné ici devenait une couche absurde, sans erreur.
  */
+/** Un GPX, un KML ou un CSV devient une ou plusieurs couches ; ce qui est écarté se dit. */
+function importerFichierFormat(nomFichier, contenu) {
+    const res = lireFichier(nomFichier, contenu);
+    let total = 0;
+    for (const c of res.couches) total += ajouterCoucheGeoJSON(c.nom, c.geojson);
+    if (!total) { showToast('Rien à importer dans ce fichier', 'warning'); return; }
+    const ecart = res.ignorees ? ` ; ${res.ignorees} écarté${res.ignorees > 1 ? 's' : ''} (position illisible ou absente)` : '';
+    showToast(`${total} élément${total > 1 ? 's' : ''} importé${total > 1 ? 's' : ''} · ${res.couches.length} couche${res.couches.length > 1 ? 's' : ''}${ecart}`, res.ignorees ? 'warning' : 'success');
+}
+
 async function processFile(file) {
     showLoading('Lecture du fichier…');
     try {
-        const obj = JSON.parse(await file.text());
+        const contenu = await file.text();
+        if (natureFichier(file.name, contenu)) { hideLoading(); importerFichierFormat(file.name, contenu); return; }
+        const obj = JSON.parse(contenu);
         const nature = natureJson(obj);
         hideLoading();
         if (nature !== 'geojson') { showToast(messageNature(nature), nature ? 'info' : 'error'); return; }
@@ -10606,6 +11916,8 @@ function tablesDeReleve() {
     const tables = new Set();
     for (const layer of STATE.layers) {
         for (const f of formulairesOffertsEnLecture(formulairesDeLaCouche(layer))) tables.add(f.tableId);
+        // Ajouter un objet est aussi un relevé : la table de la couche entre dans ce que *Exploiter* écrit.
+        if (creationProposeeEnExploitation(layer) && layer.sourceTable) tables.add(layer.sourceTable);
     }
     return [...tables];
 }
@@ -10772,69 +12084,60 @@ function enterViewModeOnWriteFail(err) {
  * Quand l'écriture est réellement autorisée, l'avatar devient la bascule
  * session lecture ↔ édition (essayage : `viewMode` bascule, `peutSaisir` non).
  */
+/** L'icone de chaque posture : la meme dans la barre et sur la carte. */
+const ICONES_POSTURE = Object.freeze({
+    preparer: icTrait(IC.crayon, 18),
+    exploiter: icTrait(IC.releve, 18),
+    lecture: icTrait(IC.oeil, 18),
+});
+
+/**
+ * Ce que dit la barre de ses droits : le bouton de posture (la même icône, le même nom que le bouton de la carte)
+ * et, si l'on sait qui est connecté, l'avatar. L'avatar ne fait plus que dire qui : la bascule est le bouton de posture.
+ *
+ * Le bouton de posture est toujours là. Quand rien ne peut changer (un seul droit), il dit seulement la posture,
+ * sans ouvrir de menu : « je ne peux rien écrire » et « je peux remplir les formulaires » restent deux situations
+ * différentes, et c'est ici qu'on vient chercher ce qu'on a le droit de faire.
+ */
 function updateUserBadge() {
-    const el = $('user-badge');
-    if (!el) return;
     const lecture = !!CONFIG.viewMode;
+    const posture = postureDepuis(CONFIG);
     const bascule = peutChangerDePosture();
-    // Trois etats, pas deux : « je ne peux rien ecrire » et « je peux remplir
-    // les formulaires publies » sont deux situations differentes, et c'est ici
-    // qu'un utilisateur vient chercher ce qu'il a le droit de faire.
-    const droit = { preparer: 'Édition autorisée', exploiter: 'Exploitation — relevé des formulaires publiés', lecture: 'Lecture seule' }[postureDepuis(CONFIG)];
+    const droit = { preparer: 'Édition autorisée', exploiter: 'Exploitation — relevé des formulaires publiés', lecture: 'Lecture seule' }[posture];
     const u = CONFIG.grist.user;
-    el.classList.toggle('ro', lecture);
-    el.classList.toggle('bascule-session', bascule);
-    // Barre retirée (application en lecture) : le retour à l'édition reste
-    // un bouton de la carte, pour qui peut écrire.
-    const retourEdition = $('hote-edition');
-    if (retourEdition) {
-        retourEdition.hidden = !(bascule && lecture);
-        retourEdition.title = titrePosture();
-        retourEdition.setAttribute('aria-label', titrePosture());
-    }
-    const badgeLecture = $('view-mode-badge');
-    if (badgeLecture) {
-        badgeLecture.textContent = LIBELLES[postureDepuis(CONFIG)].badge;
-        badgeLecture.classList.toggle('bascule-session', bascule && lecture);
-        if (bascule && lecture) {
-            badgeLecture.setAttribute('role', 'button');
-            badgeLecture.setAttribute('tabindex', '0');
-            badgeLecture.title = titrePosture();
-            badgeLecture.setAttribute('aria-label', badgeLecture.title);
-        } else {
-            badgeLecture.removeAttribute('role');
-            badgeLecture.removeAttribute('tabindex');
-            badgeLecture.removeAttribute('aria-label');
-            badgeLecture.removeAttribute('title');
+
+    const avatar = $('user-badge');
+    if (avatar) {
+        avatar.hidden = !u?.initiales;
+        if (u?.initiales) {
+            avatar.textContent = u.initiales;
+            avatar.title = `${u.name || u.email} — ${droit}`;
         }
+        avatar.classList.toggle('ro', lecture);
     }
-    if (bascule) {
-        el.setAttribute('role', 'button');
-        el.setAttribute('tabindex', '0');
-        const tip = titrePosture();
-        el.title = tip;
-        el.setAttribute('aria-label', tip);
-        // En essayage : 👁 (ou initiales) — le droit réel reste « éditeur qui
-        // regarde en lecture », mais l'infobulle dit le geste de bascule.
-        el.textContent = u?.initiales || (lecture ? '👁' : '✎');
-        return;
+
+    const titre = bascule ? titrePosture() : `${LIBELLES[posture].nom} — ${droit}`;
+    const posee = (el) => {
+        el.querySelector('.posture-ic').innerHTML = ICONES_POSTURE[posture];
+        el.title = titre;
+        el.setAttribute('aria-label', titre);
+        el.setAttribute('aria-disabled', String(!bascule));
+    };
+    const barre = $('btn-posture');
+    if (barre) {
+        posee(barre);
+        barre.querySelector('.posture-lib').textContent = LIBELLES[posture].nom;
     }
-    el.removeAttribute('role');
-    el.removeAttribute('tabindex');
-    el.removeAttribute('aria-label');
-    if (u?.initiales) {
-        // Identité résolue : on la montre, le droit passe en infobulle.
-        el.textContent = u.initiales;
-        el.title = `${u.name || u.email} — ${droit}`;
-    } else {
-        // Rien de résolu : afficher le droit, jamais une identité inventée.
-        el.textContent = lecture ? '👁' : '✎';
-        el.title = droit + (CONFIG.grist.userId ? ` · utilisateur ${CONFIG.grist.userId}` : '');
+    // Barre retirée (application en lecture) : la bascule reste un bouton de la carte, pour qui peut écrire.
+    const carte = $('hote-edition');
+    if (carte) {
+        carte.hidden = !(bascule && lecture);
+        posee(carte);
     }
 }
 
 /**
- * Changer de posture : le badge, l'avatar, le bouton de la carte et le menu de
+ * Changer de posture : le bouton de la barre, celui de la carte et le menu de
  * l'application ouvrent le même choix. La bascule lecture ↔ édition à deux états
  * ne pouvait ni exploiter sans éditer, ni regarder en lecture un éditeur qui peut
  * écrire.
@@ -10845,32 +12148,14 @@ function basculerLectureEditionSession(ancre = null) {
 }
 
 function wireBasculeLectureEdition() {
-    const activer = (e) => {
-        if (e.type === 'keydown') {
-            if (e.key !== 'Enter' && e.key !== ' ') return;
-            e.preventDefault();
-        }
-        // Ne réagir que si l'élément est réellement actionnable (évite un clic
-        // sur le badge Lecture quand la bascule n'est pas proposée).
-        const cible = e.currentTarget;
-        if (!cible?.classList?.contains('bascule-session')) return;
-        // Le badge Lecture vit dans `.brand` : sans ça, le clic ouvrirait le
-        // menu principal de l'application.
-        e.stopPropagation?.();
-        basculerLectureEditionSession(cible);
-    };
-    const badge = $('user-badge');
-    if (badge) {
-        badge.addEventListener('click', activer);
-        badge.addEventListener('keydown', activer);
-    }
-    const lecture = $('view-mode-badge');
-    if (lecture) {
-        lecture.addEventListener('click', activer);
-        lecture.addEventListener('keydown', activer);
-    }
-    // Un vrai bouton : le clavier et le clic passent par `click`.
+    // Deux vrais boutons, un seul geste : le clavier et le clic passent par `click`.
+    $('btn-posture')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
     $('hote-edition')?.addEventListener('click', (e) => basculerLectureEditionSession(e.currentTarget));
+    $('btn-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
+    $('btn-enreg')?.addEventListener('click', (e) => ouvrirPanneauEnreg(e.currentTarget));
+    $('btn-annuler')?.addEventListener('click', () => annulerApparence());
+    $('btn-retablir')?.addEventListener('click', () => retablirApparence());
+    $('hote-synchro')?.addEventListener('click', (e) => ouvrirPanneauSynchro(e.currentTarget, e));
 }
 
 /**
@@ -10940,8 +12225,6 @@ function applyViewModeChrome() {
     if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
     appliquerBarre();
-    const badge = $('view-mode-badge');
-    if (badge) badge.hidden = !CONFIG.viewMode;
     updateUserBadge();
     refreshViewerControlsHud();
     refreshStoryNavChrome();
@@ -11004,7 +12287,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.10.2');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.11.0');
     return Feuille;
 }
 
@@ -11225,10 +12508,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.10.2'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.11.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.10.2');
+        const dc = await import('./lib/data-client.js?v=1.11.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -11443,6 +12726,8 @@ async function initGrist() {
         } catch (e) {
             CONFIG.grist.userId = null;
         }
+        // Dans l'application, on se présente avec la clé : le profil dit qui est connecté (le widget, lui, ne le sait pas).
+        if (grist.user?.email || grist.user?.name) setUserIdentity(grist.user);
         applyViewModeChrome();
         CONFIG.docMode = await detectDocMode(grist.docApi);
         if (CONFIG.docMode === 'scene-manifest') {
@@ -11458,6 +12743,10 @@ async function initGrist() {
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
         await syncScenePrefsFromGrist();
+        STATE.layers.forEach(baselineApparence);
+        majIndicateurEnregistrement();
+        accueilSceneNeuve();
+        brancherSynchro();
         refreshControlsDock();
         appliquerOuverture();
         if (postureDepuis(CONFIG) === 'lecture') {
@@ -11919,17 +13208,17 @@ async function ecrireLigneInventaire(layer) {
     }
 }
 
-async function saveLayerToGrist(layer, silent) {
-    if (!CONFIG.grist.ready) return;
+async function saveLayerToGrist(layer, silent, { lancer = false } = {}) {
+    if (!CONFIG.grist.ready) return false;
     // Pendant un récit, ce que la couche montre est l'état de l'étape, pas sa
     // configuration : l'écrire remplacerait les préférences par celles d'une
     // étape (fermer une sélection ou toucher un filtre suffisait). Relevé à
     // l'audit du 02/10/2026 ; les contextes réutilisent cette restitution.
     if (_storyPresenting) {
         if (!silent) showToast('Quittez le récit pour enregistrer l’apparence', 'warning');
-        return;
+        return false;
     }
-    if (!assertCanWrite('enregistrer les préférences')) return;
+    if (!assertCanWrite('enregistrer les préférences')) return false;
     // Une couche que le manifeste decrit n'a que son apparence a enregistrer :
     // la donnee est deja quelque part. C'est cet aiguillage qui protegeait mal
     // `Maquette_Layers` — voir `clePrefsCouche`.
@@ -11941,11 +13230,13 @@ async function saveLayerToGrist(layer, silent) {
             if (ligneInventaireRequise(layer)) await ecrireLigneInventaire(layer);
             if (!silent) showToast(`Apparence enregistrée · ${layer.name}`, 'success');
             marquerEnregistre();
+            return true;
         } catch (e) {
             enterViewModeOnWriteFail(e);
             if (!silent) showToast('Grist : ' + e.message, 'error');
+            if (lancer) throw e;
         }
-        return;
+        return false;
     }
     try {
         await ensureMaquetteLayersTable();
@@ -12004,7 +13295,7 @@ async function restoreProject(p) {
     STATE.layers.forEach((l) => removeLayerGfx(l));
     STATE.layers = [];
     if (p.projectName) { STATE.projectName = p.projectName; $('project-name').textContent = p.projectName; }
-    if (p.location?.lat) { STATE.location = p.location; map.jumpTo({ center: [p.location.lng, p.location.lat] }); }
+    if (p.location?.lat) { STATE.location = p.location; STATE.locationChoisie = true; map.jumpTo({ center: [p.location.lng, p.location.lat] }); }
     if (p.settings) { Object.assign(STATE.settings, p.settings); STATE.settings.date = new Date(p.settings.date || Date.now()); MODEL_LIBRARY.set = STATE.settings.modelSet || 'colored'; }
     STATE.story = assurerCles(p.story || []);
     refreshStoryNavChrome();
@@ -12035,7 +13326,10 @@ function loadProject() {
         inp.value = '';
         if (!file) return;
         try {
-            const obj = JSON.parse(await file.text());
+            const contenu = await file.text();
+            // « Ouvrir » reconnaît aussi un GPX, un KML ou un CSV : ils s'ajoutent comme couches.
+            if (natureFichier(file.name, contenu)) { importerFichierFormat(file.name, contenu); return; }
+            const obj = JSON.parse(contenu);
             const nature = natureJson(obj);
             if (nature === 'projet') await restoreProject(obj);
             else if (nature === 'geojson') {
@@ -12048,28 +13342,143 @@ function loadProject() {
     };
     inp.click();
 }
-function exportProject() {
-    if (!STATE.layers.length) { showToast('Aucune couche à exporter', 'warning'); return; }
-    // Une couche distante — ou de tuiles — n'a rien à exporter : ses entités
-    // sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on
-    // l'ouvre ; mieux vaut ne rien produire et dire pourquoi.
-    const exportables = STATE.layers.filter((l) => l.geojson?.features?.length);
-    const absentes = STATE.layers.filter((l) => !l.geojson?.features?.length);
-    if (!exportables.length) {
+/** Remet un fichier à la personne : un lien invisible, cliqué. */
+function telecharger(blob, nom) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nom; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/** Les couches dont on peut sortir des entités, et celles que l'on ne détient pas (distantes, tuiles). */
+function couchesExportables() {
+    return {
+        exportables: STATE.layers.filter((l) => l.geojson?.features?.length),
+        absentes: STATE.layers.filter((l) => !l.geojson?.features?.length),
+    };
+}
+
+/**
+ * Sort les couches choisies dans un format d'échange (`lib/export-formats.js`). Une couche distante, ou de tuiles,
+ * n'a rien à exporter : ses entités sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on l'ouvre ;
+ * mieux vaut ne rien produire et dire pourquoi.
+ */
+function exporterCouches(format, couches) {
+    const { absentes } = couchesExportables();
+    if (!couches.length) {
         showToast(absentes.some((l) => l._distant)
             ? 'Rien à exporter : Atlas ne détient pas ces couches, seulement leurs adresses'
             : 'Rien à exporter : aucune couche ne porte d’entités', 'warning');
         return;
     }
-    const combined = { type: 'FeatureCollection', features: exportables.flatMap((l) => l.geojson.features) };
-    const blob = new Blob([JSON.stringify(combined, null, 2)], { type: 'application/geo+json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'atlas_export.geojson'; a.click(); URL.revokeObjectURL(url);
+    const base = couches.length === 1 ? couches[0].name : (STATE.projectName || STATE.location?.name || 'atlas_export');
+    let blob, ext, libelle, note = '';
+    if (format === 'geojson') {
+        blob = new Blob([JSON.stringify(versGeoJSON(couches), null, 2)], { type: 'application/geo+json' });
+        ext = 'geojson'; libelle = 'GeoJSON';
+    } else if (format === 'csv') {
+        // Le BOM (U+FEFF) : sans lui, Excel lit les accents de travers.
+        blob = new Blob(['\uFEFF', versCsv(couches)], { type: 'text/csv;charset=utf-8' });
+        ext = 'csv'; libelle = 'CSV';
+    } else if (format === 'kml') {
+        blob = new Blob([versKml(couches, base)], { type: 'application/vnd.google-earth.kml+xml' });
+        ext = 'kml'; libelle = 'KML';
+    } else if (format === 'gpx') {
+        const g = versGpx(couches, base);
+        if (!g.retenues) { showToast('GPX : ces couches n’ont ni points ni lignes — un polygone n’a pas de sens pour un GPS', 'warning'); return; }
+        blob = new Blob([g.xml], { type: 'application/gpx+xml' });
+        ext = 'gpx'; libelle = 'GPX';
+        if (g.ignorees) note = ` ; ${g.ignorees} surface${g.ignorees > 1 ? 's' : ''} écartée${g.ignorees > 1 ? 's' : ''}`;
+    } else return;
+    telecharger(blob, nomDeFichier(base, ext));
     // Un export partiel qui se tait ressemble à un export complet.
-    showToast(absentes.length
-        ? `Export GeoJSON — ${exportables.length} couche(s) ; ${absentes.length} non détenue(s), absente(s) du fichier`
-        : 'Export GeoJSON', absentes.length ? 'warning' : 'success');
+    const manque = absentes.length ? ` ; ${absentes.length} couche${absentes.length > 1 ? 's' : ''} non détenue${absentes.length > 1 ? 's' : ''}, absente${absentes.length > 1 ? 's' : ''} du fichier` : '';
+    showToast(`Export ${libelle} — ${couches.length} couche${couches.length > 1 ? 's' : ''}${note}${manque}`, (manque || note) ? 'warning' : 'success');
 }
+
+/** L'image de la carte telle qu'elle s'affiche (sans les panneaux). */
+function exporterImageCarte() {
+    if (!map) return;
+    // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
+    map.once('render', () => {
+        map.getCanvas().toBlob((blob) => {
+            if (!blob) { showToast('Image impossible à produire sur cet appareil', 'error'); return; }
+            telecharger(blob, nomDeFichier(STATE.projectName || STATE.location?.name || 'atlas_carte', 'png'));
+            showToast('Image de la carte (PNG)', 'success');
+        }, 'image/png');
+    });
+    map.triggerRepaint();
+}
+
+function fermerMenuExport() {
+    document.getElementById('export-menu')?.remove();
+    document.removeEventListener('pointerdown', _fermetureMenuExport, true);
+    document.removeEventListener('keydown', _toucheMenuExport, true);
+}
+function _fermetureMenuExport(e) { if (!e.target.closest?.('#export-menu')) fermerMenuExport(); }
+function _toucheMenuExport(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerMenuExport(); } }
+
+/** Les formats offerts, dans l'ordre où l'on s'en sert : échanger des données, puis garder le travail. */
+const FORMATS_EXPORT = [
+    { id: 'geojson', nom: 'GeoJSON', aide: 'Entités et attributs — QGIS, Grist, la plupart des outils web', ic: 'fichier', donnees: true },
+    { id: 'csv', nom: 'CSV', aide: 'Tableur — attributs, géométrie en WKT dans une colonne', ic: 'tableur', donnees: true },
+    { id: 'kml', nom: 'KML', aide: 'Google Earth, QGIS, applications de carte', ic: 'globe', donnees: true },
+    { id: 'gpx', nom: 'GPX', aide: 'GPS et randonnée — points et traces (les surfaces sont écartées)', ic: 'piste', donnees: true },
+    { id: 'image', nom: 'Image de la carte', aide: 'La carte telle qu’elle s’affiche, en PNG', ic: 'image', donnees: false },
+    { id: 'projet', nom: 'Projet Atlas', aide: 'Couches et réglages (.json), pour le rouvrir dans Atlas', ic: 'enregistrer', donnees: false },
+];
+
+/**
+ * Le menu d'export de la barre (et de « Plus » sur téléphone). Sur quelles couches : la couche sélectionnée si l'on
+ * en a une, sinon toutes celles qui portent des entités ; un choix permet d'en décider autrement.
+ */
+function ouvrirMenuExport(ancre = null) {
+    fermerMenuExport();
+    const { exportables } = couchesExportables();
+    const choisie = exportables.find((l) => l.id === STATE.selectedLayer);
+    const menu = document.createElement('div');
+    menu.id = 'export-menu';
+    menu.className = 'posture-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', 'Exporter');
+    const portee = exportables.length > 1
+        ? `<label class="export-portee">Couches
+            <select id="export-portee" class="input">
+                <option value="*">Toutes (${exportables.length})</option>
+                ${exportables.map((l) => `<option value="${echapper(l.id)}" ${choisie?.id === l.id ? 'selected' : ''}>${echapper(l.name)}</option>`).join('')}
+            </select></label>`
+        : '';
+    menu.innerHTML = `<div class="posture-titre">Exporter</div>${portee}` + FORMATS_EXPORT.map((f) => {
+        const offert = !f.donnees || exportables.length > 0;
+        return `<button type="button" role="menuitem" class="posture-choix export-choix" data-export="${f.id}"${offert ? '' : ' disabled'}>
+            <span class="posture-nom">${icTrait(IC[f.ic], 16)} ${echapper(f.nom)}</span>
+            <span class="posture-aide">${echapper(offert ? f.aide : 'Aucune couche ne porte d’entités')}</span>
+        </button>`;
+    }).join('');
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-export]');
+        if (!b || b.disabled) return;
+        const choix = menu.querySelector('#export-portee')?.value;
+        fermerMenuExport();
+        const id = b.dataset.export;
+        if (id === 'projet') { saveProject(); return; }
+        if (id === 'image') { exporterImageCarte(); return; }
+        const couches = !choix || choix === '*' ? exportables : exportables.filter((l) => l.id === choix);
+        exporterCouches(id, couches);
+    });
+    if (ancre && !surTelephone()) {
+        const r = ancre.getBoundingClientRect();
+        menu.style.top = `${Math.min(r.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
+        menu.style.left = `${Math.max(12, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 12))}px`;
+    } else {
+        menu.classList.add('posture-feuille');
+    }
+    document.addEventListener('pointerdown', _fermetureMenuExport, true);
+    document.addEventListener('keydown', _toucheMenuExport, true);
+    menu.querySelector('.export-choix:not([disabled])')?.focus();
+}
+function exportProject(ancre) { ouvrirMenuExport(ancre instanceof Element ? ancre : null); }
 
 // ============================================================
 // GEOCODING (Nominatim — libre, sans clé)
@@ -12111,6 +13520,7 @@ function buildCmdItems(q) {
         { label: 'Importer depuis OSM', kind: 'action', run: () => { openModule('couches'); openOSM(); }, ic: icTrait(IC.globe) },
         { label: 'Importer un fichier', kind: 'action', run: () => $('file-input').click(), ic: icTrait(IC.fichier) },
         { label: 'Télécharger le projet (.json)', kind: 'action', run: saveProject, ic: icTrait(IC.enregistrer) },
+        { label: 'Exporter… (GeoJSON, CSV, KML, GPX, image)', kind: 'action', run: () => ouvrirMenuExport(), ic: icTrait(IC.exporter) },
         { label: 'Ouvrir un projet ou un GeoJSON', kind: 'action', run: loadProject, ic: icTrait(IC.dossier) },
         { label: 'Exporter en GeoJSON', kind: 'action', run: exportProject, ic: icTrait(IC.exporter) },
         { label: 'Réinitialiser la vue', kind: 'action', run: () => A.resetView(), ic: icTrait(IC.rafraichir) },
@@ -12311,7 +13721,8 @@ function positionDeReference() {
 
 function ouvrirListe(layer) {
     if (!layer) return;
-    _liste = { coucheId: layer.id, requete: '', tri: 'proche', visites: null };
+    // Avec une tournée, la liste suit la ligne : c'est l'ordre dans lequel on travaille.
+    _liste = { coucheId: layer.id, requete: '', tri: ordreTournee(layer.id)?.length ? 'tournee' : 'proche', visites: null };
     inspectorUserClosed = false;
     document.body.classList.add('mode-liste');
     $('map-controls-dock')?.classList.add('collapsed');
@@ -12341,6 +13752,7 @@ function renderListeObjets() {
                 placeholder="Nom, domaine, état…" aria-label="Chercher dans les objets"
                 value="${echapper(_liste.requete)}" oninput="A.listeRecherche(this.value)">
             <div class="liste-tri" role="group" aria-label="Ordre">
+                ${ordreTournee(layer.id)?.length ? '<button type="button" id="liste-tri-tournee" onclick="A.listeTri(\'tournee\')">Le long de la tournée</button>' : ''}
                 <button type="button" id="liste-tri-proche" onclick="A.listeTri('proche')"></button>
                 <button type="button" id="liste-tri-nom" onclick="A.listeTri('nom')">A – Z</button>
                 ${gps ? '<button type="button" id="liste-gps" onclick="A.listeAutourDeMoi()">Ma position</button>' : ''}
@@ -12373,10 +13785,15 @@ function renderListeLignes() {
     const feats = layer.geojson?.features || [];
     const garde = buildControlPredicate(layer);
     const ref = positionDeReference();
+    // La tournée du contexte actif : la place de chaque objet sur la ligne. Sortie du contexte, on retombe sur « proches ».
+    const ordreT = ordreTournee(layer.id);
+    const rangs = ordreT ? new Map(ordreT.map((o, i) => [o.idx, { rang: i + 1, metres: o.metres, ecartM: o.ecartM }])) : null;
+    if (_liste.tri === 'tournee' && !rangs) _liste.tri = 'proche';
     const r = listerObjets(cache?.entrees || [], {
         requete: _liste.requete,
         position: ref.point,
         tri: _liste.tri,
+        rangs,
         visible: (e) => !garde || garde(feats[e.idx]),
     });
     const peutVisiter = !!formulaireDeReleve(layer);
@@ -12391,6 +13808,7 @@ function renderListeLignes() {
         proche.classList.toggle('on', _liste.tri === 'proche');
     }
     $('liste-tri-nom')?.classList.toggle('on', _liste.tri === 'nom');
+    $('liste-tri-tournee')?.classList.toggle('on', _liste.tri === 'tournee');
 
     if (!r.items.length) {
         hote.innerHTML = `<div class="hint">${_liste.requete
@@ -12406,7 +13824,10 @@ function renderListeLignes() {
             : '';
         const sous = [o.etat, visite].filter(Boolean).map(echapper).join(' · ');
         const trouve = o.trouveDans ? `<div class="liste-trouve">${echapper(o.trouveDans.libelle)} : ${echapper(o.trouveDans.texte)}</div>` : '';
-        const dist = o.distance != null ? direDistance(o.distance).replace(/^à /, '') : '';
+        // Le long de la tournée, la distance dite est celle depuis le départ de la ligne, pas celle d'où l'on se trouve.
+        const dist = _liste.tri === 'tournee' && o.metres != null
+            ? `${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}`
+            : (o.distance != null ? direDistance(o.distance).replace(/^à /, '') : '');
         return `<div class="liste-ligne" role="listitem" tabindex="0"
                 onclick="A.listeOuvrir('${chaineJs(layer.id)}', ${o.idx})"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();A.listeOuvrir('${chaineJs(layer.id)}', ${o.idx});}">
@@ -12482,6 +13903,8 @@ function showToast(msg, type = 'success') {
 function updateRailBadge() {
     const b = $('rail-couches-badge'); const n = STATE.layers.length;
     b.style.display = n ? 'block' : 'none'; b.textContent = n;
+    // Les couches changent : tant qu'aucun lieu n'est désigné, l'ancre du soleil suit leur emprise.
+    if (n && !STATE.locationChoisie) ancrerSurDonnees(computeLayersBounds());
 }
 
 // ============================================================
@@ -12740,8 +14163,46 @@ const A = {
     // Lieu
     recenter() { if (map) map.flyTo({ center: [STATE.location.lng, STATE.location.lat], zoom: 16, pitch: 55, duration: 1200 }); },
     searchLocation,
+    /**
+     * L'auteur dit où la carte s'ouvre : sur les données (toutes, ou une couche), sur un lieu, ou sur la vue actuelle.
+     * Le choix vit avec la scène et vaut pour tous ; l'auteur le voit aussitôt.
+     */
+    setCadrage(mode, valeur) {
+        if (!assertCanWrite('régler l’ouverture de la carte')) return;
+        let cadrage;
+        if (mode === 'donnees') cadrage = valeur ? { mode: 'donnees', couche: valeur } : { mode: 'donnees' };
+        else if (mode === 'vue') cadrage = { mode: 'vue', vue: cameraCourante() };
+        else {
+            // Le lieu part du lieu déjà désigné, sinon de ce que la carte montre : on ne saute pas ailleurs.
+            if (!STATE.locationChoisie) {
+                const c = map.getCenter();
+                STATE.location = { ...STATE.location, lat: c.lat, lng: c.lng, name: `${c.lat.toFixed(4)}°N, ${c.lng.toFixed(4)}°E` };
+                STATE.locationChoisie = true;
+            }
+            const l = STATE.location;
+            cadrage = { mode: 'lieu', lieu: { lng: l.lng, lat: l.lat, nom: l.name } };
+        }
+        STATE.exposition = normaliserExposition({ ...STATE.exposition, cadrage });
+        markDirty();
+        persistScenePrefsDifferee(200);
+        if (mode !== 'vue' && mode !== 'lieu') {
+            const cible = cadrageEffectif({ cadrage: STATE.exposition.cadrage, couches: couchesCadrage() });
+            if (cible) poserCadrage(cible, true);
+        }
+        renderLieu();
+    },
+    capturerMiniature() { capturerMiniature(); },
+    retirerMiniature() {
+        if (!assertCanWrite('retirer la miniature de la scène')) return;
+        STATE.miniature = '';
+        STATE._miniatureAEcrire = true;
+        markDirty();
+        persistScenePrefsDifferee(200);
+        renderLieu();
+    },
     pickSearch(name, lat, lng) {
         STATE.location = { ...STATE.location, name, lat: +lat, lng: +lng };
+        lieuChoisi();
         $('loc-results').classList.remove('open');
         $('project-name').textContent = STATE.projectName || name.split(',')[0];
         map.flyTo({ center: [+lng, +lat], zoom: 16, duration: 1200 });
@@ -12758,6 +14219,7 @@ const A = {
         navigator.geolocation.getCurrentPosition((pos) => {
             hideLoading();
             STATE.location = { ...STATE.location, name: 'Ma position', lat: pos.coords.latitude, lng: pos.coords.longitude };
+            lieuChoisi();
             map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16, duration: 1200 });
             renderLieu(); showToast('Position détectée', 'success');
         }, () => { hideLoading(); showToast('Géolocalisation refusée', 'warning'); }, { timeout: 10000 });
@@ -12766,6 +14228,7 @@ const A = {
         const lat = parseFloat($('loc-lat').value), lng = parseFloat($('loc-lng').value);
         if (isNaN(lat) || isNaN(lng)) { showToast('Coordonnées invalides', 'warning'); return; }
         STATE.location = { ...STATE.location, lat, lng, name: `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` };
+        lieuChoisi();
         map.flyTo({ center: [lng, lat], zoom: 16, duration: 1000 }); renderLieu();
     },
     setProjectName(v) { STATE.projectName = v; $('project-name').textContent = v || 'Nouveau projet'; markDirty(); },
@@ -12787,7 +14250,7 @@ const A = {
     /** Arme la création d'un objet dans une couche : le prochain clic sur la carte pose le point. */
     nouvelObjet(layerId, { suite = null } = {}) {
         const layer = STATE.layers.find((l) => l.id === layerId);
-        const possible = creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) });
+        const possible = creationPossible(layer, contexteCreation(layer));
         if (!possible.ok) { showToast(possible.raison, 'warning'); return; }
         if (lecteurRecitActif()) { showToast('Quittez la lecture du récit pour créer un objet', 'warning'); return; }
         // État exclusif : on sort de tout ce qui écoute aussi les clics.
@@ -12805,6 +14268,10 @@ const A = {
         };
         _derniereCreation = null;
         document.body.classList.add('mode-creation');
+        // En exploitation, la fiche de saisie ne s'affiche que sous `mode-saisie` : on l'allume le temps de la création.
+        if (CONFIG.viewMode) document.body.classList.add('mode-saisie');
+        // Le panneau du relevé a fait son office : ouvert, il recouvrirait la carte où l'on va poser le point.
+        if (_openDockPill === 'releve') $('map-controls-dock')?.classList.add('collapsed');
         const famille = familleGeometrie(layer.geometryType);
         if (map && famille === 'Point') map.getCanvas().style.cursor = 'crosshair';
         if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
@@ -13067,7 +14534,7 @@ const A = {
                 <div class="input-label" style="margin-top:10px">Géométrie</div>
                 <div style="display:flex;gap:6px" role="group" aria-label="Géométrie">${types}</div>
                 <div class="layer-meta" id="nc-apercu" style="margin-top:10px" aria-live="polite"></div>
-                <div class="layer-meta" style="margin-top:6px">Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie. Les autres champs s'ajoutent ensuite, dans Grist ou par le module Formulaires.</div>
+                <div class="layer-meta" style="margin-top:6px">${grist._horsLigne?.local ? 'La couche est créée avec les colonnes Nom et Géométrie, sur cet appareil ; elle ira dans Grist avec la scène.' : 'Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie.'} Les autres champs s'ajoutent ensuite, par le module Formulaires${grist._horsLigne?.local ? '' : ' ou dans Grist'}.</div>
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <button class="btn btn-soft" style="flex:1" onclick="A.openModule('couches')">Annuler</button>
                     <button class="btn btn-primary" style="flex:1" id="nc-creer" onclick="A.creerNouvelleCouche()">Créer la couche</button>
@@ -13149,7 +14616,7 @@ const A = {
             openModule('couches');
             // Une couche vide n'a pas d'autre raison d'être que d'être remplie :
             // on arme la création du premier objet quand l'outil existe.
-            if (creationPossible(layer, { viewMode: !!CONFIG.viewMode, peutEcrire: canWrite(CONFIG.viewMode) }).ok) {
+            if (creationPossible(layer, contexteCreation(layer)).ok) {
                 A.nouvelObjet(layer.id);
             }
         } catch (e) {
@@ -13379,7 +14846,7 @@ const A = {
         if (!assertCanWrite('capturer le récit')) return;
         const trace = traceActuelle();
         const photo = captureStoryState(map, STATE);
-        let state = fusionnerApresPhoto(photo, { saisies: saisiesCourantes() });
+        let state = { ...fusionnerApresPhoto(photo, { saisies: saisiesCourantes() }), pastilles: pastillesACapturer() };
         let ecart = 0;
         if (trace) {
             const centre = photo?.camera?.center;
@@ -13387,11 +14854,14 @@ const A = {
                 ? placeDepuisVue(trace.coordinates, centre)
                 : { abscisse: 0.5, distanceMetres: 0 };
             ecart = place.distanceMetres || 0;
-            state = fusionnerApresPhoto(photo, {
-                trace: traceFigee(trace),
-                abscisse: place.abscisse,
-                saisies: saisiesCourantes(),
-            });
+            state = {
+                ...fusionnerApresPhoto(photo, {
+                    trace: traceFigee(trace),
+                    abscisse: place.abscisse,
+                    saisies: saisiesCourantes(),
+                }),
+                pastilles: pastillesACapturer(),
+            };
             STATE.story.forEach((s) => { if (s.state) s.state.trace = traceFigee(trace); });
         }
         const premiere = !!(trace && !STATE.story.length);
@@ -13411,15 +14881,48 @@ const A = {
             showToast('Étape posée sur le trajet', 'success');
         }
     },
+    /** Une étape par objet qui borde le trajet, dans l'ordre du parcours. */
+    etapesLeLong() {
+        if (!assertCanWrite('composer le récit')) return;
+        const trace = traceActuelle();
+        const couche = STATE.layers.find((l) => l.id === $('etapes-couche')?.value);
+        const rayon = Math.min(1000, Math.max(5, Number($('etapes-rayon')?.value) || 50));
+        if (!trace || !couche) { showToast('Choisissez une couche de points', 'warning'); return; }
+        const objets = (couche.geojson?.features || []).map((f, i) => ({
+            idx: i, point: featureCentroidLngLat(f), nom: nomObjet(f.properties || {}) || '',
+        })).filter((o) => Array.isArray(o.point));
+        const liste = objetsLeLong(trace.coordinates, objets, rayon);
+        if (!liste.length) { showToast(`Aucun objet de « ${couche.name} » à moins de ${rayon} m du trajet`, 'info'); return; }
+        if (liste.length > 60 && !window.confirm(`${liste.length} objets : créer ${liste.length} étapes ?`)) return;
+        const photo = captureStoryState(map, STATE);
+        const dejaLa = STATE.story.length;
+        liste.forEach((o, k) => {
+            const state = fusionnerApresPhoto(
+                { ...photo, camera: { ...(photo.camera || {}), center: o.point, zoom: Math.max(17, photo.camera?.zoom || 0) } },
+                { trace: traceFigee(trace), abscisse: o.abscisse, saisies: saisiesCourantes() },
+            );
+            STATE.story.push({ title: o.nom || ('Étape ' + (dejaLa + k + 1)), text: '', state });
+        });
+        assurerCles(STATE.story);
+        STATE.story.forEach((s) => { if (s.state) s.state.trace = traceFigee(trace); });
+        STATE.story = trierParAbscisse(STATE.story);
+        markDirty();
+        persistStory(true);
+        renderRecit();
+        showToast(`${liste.length} étape${liste.length > 1 ? 's' : ''} créée${liste.length > 1 ? 's' : ''} le long du trajet`, 'success');
+    },
     storyRecapture(i) {
         if (!assertCanWrite('re-capturer le récit')) return;
         if (STATE.story[i]) {
             const precedent = STATE.story[i].state || {};
-            STATE.story[i].state = etatApresRecapture(
-                captureStoryState(map, STATE),
-                precedent,
-                saisiesCourantes(),
-            );
+            STATE.story[i].state = {
+                ...etatApresRecapture(
+                    captureStoryState(map, STATE),
+                    precedent,
+                    saisiesCourantes(),
+                ),
+                pastilles: pastillesACapturer(),
+            };
             markDirty();
             persistStory(true);
             showToast(
@@ -13468,6 +14971,46 @@ const A = {
     storyGo(i) { allerEtape(i); },
     storyStep(d) { allerEtape(_storyIdx + d); },
     choisirTrajet() { choisirTrajet(false); },
+    /** Itinéraire sur un réseau de lignes : départ, points de passage, arrivée. */
+    itineraireDemarrer(selectId = 'itineraire-couche', cibleTournee = null) {
+        if (!assertCanWrite(cibleTournee ? 'régler une tournée' : 'créer un trajet')) return;
+        const couche = STATE.layers.find((l) => l.id === $(selectId)?.value);
+        if (!couche) { showToast('Choisissez une couche de lignes', 'warning'); return; }
+        if (trajetPickMode) annulerChoixTrajet();
+        _cibleTournee = cibleTournee;
+        showLoading('Lecture du réseau…');
+        // Le réseau se construit hors de l'événement : plusieurs milliers de tronçons prennent un instant.
+        setTimeout(() => {
+            try {
+                const reseau = construireReseau(couche.geojson.features);
+                terminerItineraire();
+                _itineraire = { layerId: couche.id, reseau, points: [], marqueurs: [], calcul: null };
+                if (map) map.getCanvas().style.cursor = 'crosshair';
+                showToast('Touchez le départ sur la carte', 'info');
+            } catch (e) {
+                showToast('Réseau illisible : ' + e.message, 'error');
+            } finally {
+                hideLoading();
+                if (STATE.currentModule === 'recit') renderRecit();
+            }
+        }, 30);
+    },
+    itineraireRetirerDernier() {
+        const s = _itineraire; if (!s || !s.points.length) return;
+        s.points.pop();
+        s.marqueurs.pop()?.remove();
+        recalculerItineraire();
+        if (STATE.currentModule === 'recit') renderRecit();
+    },
+    itineraireAnnuler() { terminerItineraire(); _cibleTournee = null; if (STATE.currentModule === 'recit') renderRecit(); },
+    itineraireTerminer() {
+        const s = _itineraire;
+        if (!s?.calcul?.ok) return;
+        const couche = STATE.layers.find((l) => l.id === s.layerId);
+        const copie = s.calcul.coordonnees;
+        terminerItineraire();
+        if (couche) poserTrajetDepuis({ layer: couche, feature: null, copie });
+    },
     remplacerTrajet() { choisirTrajet(true); },
     retirerTrajet() { retirerTrajet(); },
     suivreTrajet() {
@@ -13494,7 +15037,51 @@ const A = {
     contexteAppliquer(cle) { appliquerContexte(cle); },
     ouvertureRegler(mode, cle) { reglerOuverture(mode, cle || null); renderRecit(); },
     contexteQuitter() { quitterContexte(); },
+    synchroEnvoyer() { clientHorsLigne()?.envoyer(); },
+    /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
+    async envoyerSceneLocale() {
+        fermerPanneauSynchro();
+        try { (await import('./lib/hote-ui.js?v=1.11.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+    },
+    async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
+    async synchroAbandonner(id) {
+        if (!window.confirm('Abandonner ce relevé ? Il ne sera pas envoyé et disparaîtra de la liste.')) return;
+        await clientHorsLigne()?.abandonner(id);
+    },
     /** L'auteur propose (ou non) cette étape comme contexte en exploitation. */
+    tourneeChoisir(i) {
+        if (!assertCanWrite('régler une tournée')) return;
+        const e = STATE.story[i];
+        if (!e || !usageDe(e.state).contexte) return;
+        _tourneeVue = e.cle;
+        if (trajetPickMode) annulerChoixTrajet();
+        choisirTrajet(false, e.cle);
+        rafraichirTrajet();
+    },
+    tourneeVoir(i) {
+        const e = STATE.story[i];
+        const trace = e && tourneeDe(e.state);
+        if (!trace) return;
+        _tourneeVue = e.cle;
+        rafraichirTrajet();
+        fitToFeatures([{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: trace.coordinates } }]);
+    },
+    tourneeRetirer(i) {
+        if (!assertCanWrite('retirer une tournée')) return;
+        const e = STATE.story[i];
+        if (!e || !tourneeDe(e.state)) return;
+        e.state = avecUsage(e.state, { tournee: null });
+        markDirty();
+        persistStory(true);
+        rafraichirTrajet();
+        renderRecit();
+        showToast('Tournée retirée', 'info');
+    },
+    /** Un ouvrage de la liste de la tournée : la carte s'y rend et sa fiche s'ouvre, comme depuis « Choisir un objet ». */
+    tourneeOuvrir(coucheId, idx) {
+        $('map-controls-dock')?.classList.add('collapsed');
+        allerAObjet(coucheId, idx);
+    },
     storyContexte(i, oui) {
         if (!assertCanWrite('proposer un contexte')) return;
         const etape = STATE.story[i];
@@ -13503,6 +15090,17 @@ const A = {
         markDirty();
         persistStory();
     },
+    storyReleve(i, cle, oui) {
+        if (!assertCanWrite('régler les relevés d’un contexte')) return;
+        const etape = STATE.story[i];
+        if (!etape || !usageDe(etape.state).contexte) return;
+        const toutes = couchesQuiOffrentUnReleve().map(cleReleve);
+        etape.state = avecUsage(etape.state, { releves: basculerReleve(relevesDe(etape.state), toutes, cle, !!oui) });
+        markDirty();
+        persistStory();
+        // Le contexte joué en ce moment peut être celui qu'on règle : la pastille suit.
+        if (_contexteCle && etape.cle === _contexteCle) refreshControlsDock();
+    },
     storyExit() {
         annulerAnimTrajet();
         arreterSuiviTrajet();
@@ -13510,6 +15108,7 @@ const A = {
         _alerteTexte = '';
         _storyPresenting = false;
         _contexteCle = null;
+        rafraichirTrajet();
         document.body.classList.remove('story-presenting');
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
@@ -13618,6 +15217,14 @@ const A = {
                 'warning');
         }
     },
+    /** Les actions rares d'une couche : rafraîchir depuis sa table, supprimer. */
+    menuCouche(id, e) {
+        e?.stopPropagation();
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        const ancre = e?.currentTarget;
+        ouvrirMenuCouche(l, ancre);
+    },
     deleteLayer(id, e) {
         e.stopPropagation();
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -13630,12 +15237,25 @@ const A = {
             grist.docApi.applyUserActions([['RemoveRecord', 'Maquette_Layers', l.gristId]])
                 .catch((err) => showToast('Suppression non enregistrée dans Grist : ' + (err?.message || err), 'error'));
         }
+        _historique.oublier(cleHistorique(l));
         STATE.layers = STATE.layers.filter((x) => x.id !== id);
         if (STATE.selectedLayer === id) STATE.selectedLayer = null;
         updateRailBadge(); Models3D.rebuildScene(); renderLayersPanel(STATE.currentModule); renderInspector(); updateLegend();
         showToast('Couche supprimée', 'success');
     },
-    saveLayer(id) { const l = STATE.layers.find((x) => x.id === id); if (l) saveLayerToGrist(l); markDirty(); },
+    async saveLayer(id) {
+        const l = STATE.layers.find((x) => x.id === id);
+        if (!l) return;
+        clearTimeout(_enregTimer);
+        const base = l._apparence;
+        const ok = await saveLayerToGrist(l, false);
+        if (ok && clePrefsCouche(l)) {
+            const snap = capturerApparence(l);
+            if (base) _historique.enregistrer(cleHistorique(l), base, snap);
+            l._apparence = snap;
+        }
+        if (ok) { _enregDernier = Date.now(); marquerEnregistre(); }
+    },
 
     // Modèles
     setModelCat(id, cat) { const l = STATE.layers.find((x) => x.id === id); if (l) { l._modelCat = cat; renderInspector(); } },
@@ -13658,7 +15278,8 @@ const A = {
         }
         applyPointStyle(l); Models3D.forceBuild(); renderInspector(); markDirty();
     },
-    openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Modèle 3D'; openModule('couches'); },
+    openLayerModel(id) { STATE.selectedLayer = id; inspSymTab = 'Forme'; blocsFormeOuverts.add('Modèle 3D'); openModule('couches'); },
+    setBlocForme(nom, ouvert) { if (ouvert) blocsFormeOuverts.add(nom); else blocsFormeOuverts.delete(nom); },
     /**
      * Cree la table de donnees d'une couche importee, et l'y relie.
      *
@@ -14288,6 +15909,16 @@ const A = {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         const sym = initSymbolization(l); sym[param].field = field || null;
         if (field && param === 'color' && sym.color.mode === 'categorized') regenCategories(l, 'color');
+        if (field && param === 'color' && sym.color.mode === 'graduated') {
+            // Sans cela, le découpage restait celui de 0 à 1 d'avant le choix du champ : toutes les valeurs dans la première classe.
+            const r = getNumericRange(l, field);
+            if (r.count) {
+                sym.color.inputRange = [r.min, r.max];
+                sym.color.manuel = false;
+                l._declarative = { ...(l._declarative || {}), kind: 'graduated', field, method: sym.color.method || 'linear',
+                    stops: graduatedStops(r.min, r.max, paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse), sym.color.method || 'linear') };
+            }
+        }
         if (field && param === 'model' && sym.model.mode === 'categorized') sym.model.categories = [];
         syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
     },
@@ -14300,7 +15931,7 @@ const A = {
         // meme carte que Lineaire.
         if (param === 'color' && sym.color.mode === 'graduated' && sym.color.field) {
             const r = getNumericRange(l, sym.color.field);
-            const pal = COLOR_PALETTES[sym.color.colorRamp || sym.color.palette] || [];
+            const pal = paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse);
             if (r.count && pal.length) {
                 l._declarative = {
                     ...(l._declarative || {}),
@@ -14325,10 +15956,23 @@ const A = {
         if (param === 'color' && l._declarative?.stops?.length) {
             l._declarative = {
                 ...l._declarative,
-                stops: recolorStops(l._declarative.stops, COLOR_PALETTES[palette] || []),
+                stops: recolorStops(l._declarative.stops, paletteEn(palette, sym.color.inverse)),
             };
         }
         syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector();
+    },
+    /** Inverser la palette : le plus foncé devient le plus clair. Vaut pour la couleur par catégorie et la couleur graduée. */
+    setSymInverse(id, param, on) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        if (!sym[param]) return;
+        sym[param].inverse = !!on;
+        if (sym[param].categories && !sym[param].reference) regenCategories(l, param);
+        if (param === 'color' && l._declarative?.stops?.length && l._declarative.kind === 'graduated') {
+            l._declarative = { ...l._declarative, stops: recolorStops(l._declarative.stops, paletteEn(sym.color.colorRamp || sym.color.palette, sym.color.inverse)) };
+        }
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); renderInspector(); updateLegend();
+        markDirty(); saveLayerPrefIfSynced(l);
     },
     setSymColorValue(id, v) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
@@ -14345,6 +15989,91 @@ const A = {
     setSymOutput(id, param, i, v) { const l = STATE.layers.find((x) => x.id === id); if (!l) return; initSymbolization(l)[param].outputRange[i] = +v; applyLayerStyle(l); },
 
     /** Surfaces à plat ou extrudées. Remonter en volume réactive la hauteur. */
+    /** Couleur graduée : répartie d'office, ou en classes dont on pose les seuils. */
+    setDecoupage(id, mode) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        const c = sym.color;
+        if (!c.field) return;
+        const r = getNumericRange(l, c.field);
+        if (mode === 'manuel') {
+            // Un premier passage en manuel repart des données (seuils ronds entre le minimum et le maximum), pas des
+            // classes d'avant ; ensuite, les seuils posés à la main sont respectés.
+            const deja = !!c.manuel;
+            c.manuel = true;
+            if (!deja) { A.setClasses(id, 'couleur', { init: true }); return; }
+        } else {
+            c.manuel = false;
+            if (r.count) {
+                l._declarative = { ...(l._declarative || {}), kind: 'graduated', field: c.field, method: c.method || 'linear',
+                    stops: graduatedStops(r.min, r.max, paletteEn(c.colorRamp || c.palette, c.inverse), c.method || 'linear') };
+            }
+        }
+        syncLayerDeclarative(l); repeindreEntites(l); applyLayerStyle(l); updateLegend(); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
+    /** Les classes d'une règle (couleur graduée ou contour) : seuils, couleurs, champ. */
+    setClasses(id, cible, patch = {}) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        const sym = initSymbolization(l);
+        const contour = cible === 'contour';
+        if (contour && !sym.stroke.regle) sym.stroke.regle = { field: '', stops: [] };
+        if (contour && patch.field !== undefined) { sym.stroke.regle.field = patch.field || ''; if (!patch.field) sym.stroke.regle.stops = []; else patch.init = true; }
+        const champ = contour ? sym.stroke.regle.field : sym.color.field;
+        let { seuils, couleurs } = seuilsDeStops(classesDe(l, cible));
+        if (patch.init || !couleurs.length) {
+            // Un découpage de départ : des seuils ronds entre le minimum et le maximum, du vert au rouge.
+            const r = champ ? getNumericRange(l, champ) : { count: 0 };
+            seuils = r.count ? seuilsAutomatiques(r.min, r.max, 3) : [];
+            couleurs = contour ? [COULEURS_PAR_DEFAUT[2], COULEURS_PAR_DEFAUT[1], ''] : [...COULEURS_PAR_DEFAUT];
+            couleurs = couleurs.slice(0, seuils.length + 1);
+            while (couleurs.length < seuils.length + 1) couleurs.push(couleurs[couleurs.length - 1] ?? COULEURS_PAR_DEFAUT[0]);
+        }
+        if (patch.seuil) { const v = Number(patch.seuil[1]); if (Number.isFinite(v)) seuils[patch.seuil[0]] = v; }
+        if (patch.couleur) couleurs[patch.couleur[0]] = patch.couleur[1];
+        if (patch.vide) { const [i, vide] = patch.vide; couleurs[i] = vide ? '' : (couleurs.find((x) => x) || COULEURS_PAR_DEFAUT[2]); }
+        if (patch.ajouter) {
+            const dernier = seuils.length ? seuils[seuils.length - 1] : 0;
+            const pas = seuils.length > 1 ? (seuils[seuils.length - 1] - seuils[seuils.length - 2]) : 1;
+            seuils.push(dernier + (pas || 1));
+            couleurs.push(couleurs[couleurs.length - 1] ?? '');
+        }
+        if (patch.retirer && seuils.length) { seuils.pop(); couleurs.pop(); }
+        if (patch.inverser) couleurs.reverse();
+        const stops = stopsDepuisSeuils(seuils, couleurs);
+        if (contour) {
+            sym.stroke.regle = { field: champ, stops };
+            sym.stroke.mode = 'regle'; sym.stroke.enabled = true;
+        } else {
+            sym.color.manuel = true;
+            l._declarative = { ...(l._declarative || {}), kind: 'graduated', field: champ, method: sym.color.method || 'linear', stops };
+            syncLayerDeclarative(l); repeindreEntites(l);
+        }
+        applyLayerStyle(l); updateLegend(); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
+    /** Proposer (ou non) aux agents d'ajouter un objet à la couche, en Exploiter. */
+    setCreationExploiter(id, on) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        initSymbolization(l).creation = { exploiter: !!on };
+        markDirty(); saveLayerPrefIfSynced(l);
+        refreshControlsDock();
+        showToast(on ? 'Les agents pourront ajouter un objet à cette couche, en Exploiter' : 'Ajout d’objet réservé à la préparation', 'info');
+    },
+    /** Regrouper les objets proches : réglage par couche, source reconstruite. */
+    setGrappes(id, patch) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l || !grappable(l)) return;
+        const sym = initSymbolization(l);
+        sym.cluster = { ...GRAPPES_DEFAUT, ...(sym.cluster || {}), ...patch };
+        addLayerToMap(l);
+        updateLegend();
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
+    /** Surfaces à plat : pleines, ou seulement leur contour. */
+    setRemplissage(id, mode) {
+        const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        initSymbolization(l).remplissage = mode === 'contour' ? 'contour' : 'plein';
+        applyLayerStyle(l);
+        renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
+    },
     setPolygonMode(id, mode) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         l.style = l.style || { mode: 'mapbox' };
@@ -14370,6 +16099,8 @@ const A = {
         st.enabled = mode !== 'none';
         if (mode !== 'none') st.mode = mode;
         if (mode === 'fixed' && !st.color) st.color = l.color;
+        // Un contour qui porte une information se lit mieux un peu épais.
+        if (mode === 'regle') { st.width = Math.max(Number.isFinite(st.width) ? st.width : 1.5, 3); if (!st.regle) A.setClasses(id, 'contour', { init: true }); }
         applyLayerStyle(l); renderInspector(); markDirty(); saveLayerPrefIfSynced(l);
     },
     setStrokeWidth(id, v) {
@@ -14472,7 +16203,7 @@ const A = {
         clearTimeout(_liste._t);
         _liste._t = setTimeout(renderListeLignes, 120);
     },
-    listeTri(tri) { if (_liste) { _liste.tri = tri === 'nom' ? 'nom' : 'proche'; renderListeLignes(); } },
+    listeTri(tri) { if (_liste) { _liste.tri = tri === 'nom' ? 'nom' : (tri === 'tournee' ? 'tournee' : 'proche'); renderListeLignes(); } },
     listeAutourDeMoi() {
         if (!_liste) return;
         if (_dernierePosition) { _liste.tri = 'proche'; renderListeLignes(); return; }
@@ -14605,26 +16336,48 @@ function regenCategories(layer, param) {
     const sym = layer.style.symbolization[param];
     const vals = getUniqueValues(layer, sym.field, 100);
     if (param === 'color') {
-        sym.categories = vals.map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, vals.length), count: v.count }));
+        sym.categories = vals.map((v, i) => ({ value: v.value, color: paletteColor(sym.palette, i, vals.length, sym.inverse), count: v.count }));
         if (layer.source === 'qgis2grist') {
             applyCategoryColorsToFeatures(layer);
             syncLayerSourceData(layer);
         }
     }
 }
+/**
+ * Le rang de l'objet courant parmi ceux que les filtres de la couche (ceux d'un contexte compris) laissent voir, et leur nombre
+ * — voir `lib/revue-selection.js`.
+ */
+function rangRevue(layer) {
+    const garde = layer ? buildControlPredicate(layer) : null;
+    return rangParmiAffiches(layer?.geojson?.features, garde, STATE.selection.features, STATE.selection.multiIndex);
+}
+
 function nav(dir) {
     const layer = STATE.layers.find((l) => l.id === STATE.selection.layerId); if (!layer) return;
     const n = STATE.selection.features.length;
     if (n > 1) {
-        STATE.selection.multiIndex = (STATE.selection.multiIndex + dir + n) % n;
-        flyToFeature(layer, STATE.selection.features[STATE.selection.multiIndex]);
-        $('sel-pos').textContent = `${STATE.selection.multiIndex + 1} / ${n}`;
+        const i = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), STATE.selection.features, STATE.selection.multiIndex, dir);
+        if (i == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
+        STATE.selection.multiIndex = i;
+        flyToFeature(layer, STATE.selection.features[i]);
+        const { rang, total } = rangRevue(layer);
+        $('sel-pos').textContent = `${rang} / ${total}`;
         updateHighlight();
         renderObjectInspector();
     } else {
         const total = layer.geojson.features.length;
         const cur = STATE.selection.features[0] ?? 0;
-        const next = (cur + dir + total) % total;
+        // Avec une tournée, ◀ ▶ suivent l'ordre de la ligne ; sinon l'ordre de la couche, en sautant ce que les filtres masquent.
+        const ordre = ordreTournee(layer.id);
+        let next;
+        if (ordre && ordre.length) {
+            const cle = voisinDansTournee(ordre, `${layer.id}:${cur}`, dir);
+            next = ordre.find((o) => o.cle === cle)?.idx ?? null;
+        } else {
+            const tous = Array.from({ length: total }, (_, k) => k);
+            next = pasAffiche(layer.geojson?.features, buildControlPredicate(layer), tous, cur, dir);
+        }
+        if (next == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
         STATE.selection.features = [next];
         flyToFeature(layer, next); afterSelectionChange();
     }
@@ -14636,9 +16389,28 @@ window.__Models3D = Models3D;
 // ============================================================
 // EVENT WIRING
 // ============================================================
+/**
+ * La barre de sélection se pose juste sous le dock — sa rangée de pastilles, ou son panneau quand un filtre est ouvert —
+ * et reste centrée. On mesure le dock plutôt que de deviner sa hauteur : elle change avec le panneau ouvert.
+ */
+function placerBarreSelection() {
+    const frame = $('map-frame');
+    const dock = $('map-controls-dock');
+    if (!frame) return;
+    let bas = 16;
+    if (dock && getComputedStyle(dock).display !== 'none') {
+        bas = dock.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+    }
+    frame.style.setProperty('--sel-top', `${Math.max(16, Math.round(bas + 12))}px`);
+}
+
 function wireMapControlsDock() {
     const dock = $('map-controls-dock');
     if (!dock) return;
+    if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(placerBarreSelection).observe(dock);
+        placerBarreSelection();
+    }
     const KEY = 'atlas_map_controls_collapsed';
     const apply = (collapsed) => {
         dock.classList.toggle('collapsed', !!collapsed);
@@ -14738,7 +16510,7 @@ function wireEvents() {
     });
     $('btn-save').addEventListener('click', saveProject);
     $('btn-load').addEventListener('click', loadProject);
-    $('btn-export').addEventListener('click', exportProject);
+    $('btn-export').addEventListener('click', (e) => ouvrirMenuExport(e.currentTarget));
     cablerMenuPrincipal();
     $('cmdk-trigger').addEventListener('click', openCmd);
     $('hote-recherche')?.addEventListener('click', openCmd);
@@ -14791,6 +16563,7 @@ function wireEvents() {
         }
         if (e.key === 'Escape') {
             if (_saisieObjet) quitterSaisieObjet(messageAbandon());
+            else if (_itineraire) { terminerItineraire(); showToast('Itinéraire annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); }
             else if (trajetPickMode) { annulerChoixTrajet(); showToast('Choix annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); }
             else if (locationPickMode) { locationPickMode = false; if (map) map.getCanvas().style.cursor = ''; showToast('Annulé', 'info'); }
             else if (STATE.selection.mode) exitSelectionMode();
@@ -14882,9 +16655,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.10.2');
+        const { capacites } = await import('./lib/data-client.js?v=1.11.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.10.2');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.11.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

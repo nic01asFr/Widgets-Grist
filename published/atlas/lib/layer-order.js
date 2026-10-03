@@ -53,7 +53,7 @@ export function layerGfxIds(layer) {
  * habillage ajouté à l'un et oublié ailleurs survivait au masquage — c'est
  * arrivé à `-pts` et à `-hit`. Une seule liste.
  */
-export const SUFFIXES_HABILLAGE = Object.freeze(['', '-vaste', '-vaste-contour', '-outline', '-pts', '-icon', '-label', '-hit']);
+export const SUFFIXES_HABILLAGE = Object.freeze(['', '-vaste', '-vaste-contour', '-outline', '-pts', '-icon', '-label', '-hit', '-grappe', '-grappe-n']);
 
 /**
  * Séquence complète, du bas vers le haut, couches système comprises.

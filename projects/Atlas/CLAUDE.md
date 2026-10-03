@@ -80,7 +80,7 @@ Lieu · Couches · Soleil · Vues · Contrôles · Récit · Réglages (+ symbol
 
 ## État actuel — fonctionne
 
-**En ligne : v1.10.2** (`published/atlas/`, GitHub Pages, 02/10/2026, commit `cefce59` sur `main`). La 1.10.1 a corrigé les pastilles de contrôle retirées par un contexte ; la 1.10.2 fait lire les contrôles publiés en entier (voir « Les contrôles publiés se lisent en entier »). L'APK 1.10.2 est publié en release `atlas-v1.10.2` (Latest, asset `atlas.apk`) ; le bouton de la vitrine le sert. Le fil du forum n'est pas mis à jour.
+**Version préparée : v1.11.0** (03/10/2026 ; non publiée tant que `main` ne l’a pas reçue). En ligne jusqu’ici : v1.10.2 (commit `cefce59`). La 1.11.0 apporte les contextes à tournée, les scènes hors ligne et locales, les imports/exports de fichiers, et la vitrine réécrite autour de la scène du Palais Longchamp (`published/atlas/demos/palais-longchamp/`).
 Contenu de la 1.10.0 : relevés de terrain (droits par table, postures, récit à clé, contextes, bulle d'objet, liste d'objets, tables de référence, WKT), identifiant de modèle `objet:<type>`, paramètres d'objet à trois niveaux et panneau « Spécifications », éclairage qui dit son état, colonne `atlas_3d_json` fiable. Bilan : `docs/BILAN-02-10-2026.md`.
 Tests : 1241 verts.
 

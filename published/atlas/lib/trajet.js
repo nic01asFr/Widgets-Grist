@@ -6,8 +6,8 @@
  * dessine à part. `captureStoryState` ne connaît pas ce module — la photo est
  * prise d'abord, le trajet est fusionné ensuite.
  */
-import { distanceMetres } from './releve.js?v=1.10.2';
-import { flattenCoords2D } from './grist-rows.js?v=1.10.2';
+import { distanceMetres } from './releve.js?v=1.11.0';
+import { flattenCoords2D } from './grist-rows.js?v=1.11.0';
 
 export const VERSION = '1.0.0';
 
@@ -266,4 +266,30 @@ export function objetsAutour(objets, position, rayonM, limite = 5) {
     .filter((o) => Number.isFinite(o.distance) && o.distance <= rayonM)
     .sort((a, b) => a.distance - b.distance)
     .slice(0, limite);
+}
+
+/**
+ * Les objets qui se trouvent le long d'une ligne, dans l'ordre du parcours.
+ *
+ * Une boucle de randonnée, un linéaire : les ouvrages à relever en la suivant sont ceux qui la bordent. Chacun est
+ * projeté sur la ligne ; il compte s'il en est à moins de `rayonM` mètres, et sa place est son abscisse. Deux objets
+ * à la même place gardent l'ordre où on les a reçus.
+ *
+ * @param {number[][]} coords  la ligne
+ * @param {Array<{point: number[]}>} objets  des objets portant leur position `[lng, lat]`
+ * @param {number} rayonM  distance maximale à la ligne
+ * @returns {Array<object>} les objets, chacun avec `abscisse` (0 à 1) et `ecartM`, triés par abscisse
+ */
+export function objetsLeLong(coords, objets, rayonM = 50) {
+  if (!Array.isArray(coords) || coords.length < 2 || !Number.isFinite(rayonM)) return [];
+  return (objets || [])
+    .map((o, i) => {
+      if (!Array.isArray(o?.point)) return null;
+      const p = projeter(coords, o.point);
+      if (!Number.isFinite(p.distanceMetres) || p.distanceMetres > rayonM) return null;
+      return { ...o, abscisse: p.abscisse, ecartM: p.distanceMetres, _ordre: i };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.abscisse - b.abscisse || a._ordre - b._ordre)
+    .map(({ _ordre, ...o }) => o);
 }

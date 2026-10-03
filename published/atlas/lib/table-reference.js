@@ -55,8 +55,27 @@ export function candidatsReference(schema, tableCouche, champ) {
   return out;
 }
 
+/**
+ * Les champs d'une couche qui peuvent donner une image : ceux dont une table candidate porte une colonne d'image.
+ * Sur le schéma seul, sans rien télécharger : l'onglet Icône ne propose que ces champs (et disparaît s'il n'y en a aucun).
+ *
+ * @param {Object<string, Array<{colId:string,type?:string}>>} schema
+ * @param {string} tableCouche
+ * @param {string[]} champs
+ * @returns {string[]}
+ */
+export function champsAvecImages(schema, tableCouche, champs) {
+  return (champs || []).filter((champ) => {
+    const col = (schema?.[tableCouche] || []).find((c) => c.colId === champ);
+    // Une valeur numérique, une date ou une case à cocher n'est pas une clé d'image.
+    if (col && /^(Numeric|Int|Bool|Date|DateTime|Attachments)/.test(String(col.type || ''))) return false;
+    return candidatsReference(schema, tableCouche, champ)
+      .some((cand) => (schema?.[cand.table] || []).some((c) => NOM_IMAGE.test(c.colId) && c.type !== 'Ref'));
+  });
+}
+
 const texte = (v) => (v == null ? '' : String(v).trim());
-const part = (lignes, col, test) => {
+const part =(lignes, col, test) => {
   const vals = lignes.map((l) => l[col]).filter((v) => v != null && v !== '');
   return vals.length ? vals.filter(test).length / vals.length : 0;
 };

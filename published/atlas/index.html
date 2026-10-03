@@ -181,20 +181,64 @@
             display: flex; align-items: center; justify-content: center; transition: var(--t-fast);
         }
         .btn-ghost:hover { background: var(--surface-muted); color: var(--ink); }
-        .btn-export {
-            background: var(--ink); color: var(--bg); border: none; cursor: pointer;
-            padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
-            display: flex; align-items: center; gap: 6px;
+        /* Le choix de posture : la meme icone, le meme habillage ici et sur la carte (#hote-edition). */
+        .btn-posture {
+            display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 9px;
+            background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 16px;
+            font: 500 12.5px/1 var(--sans); cursor: pointer; transition: var(--t-fast);
         }
-        .btn-export:hover { background: #34302A; }
+        .btn-posture:hover:not([aria-disabled="true"]) { border-color: var(--hairline-strong); background: var(--surface-muted); }
+        .btn-posture:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .btn-posture[aria-disabled="true"] { cursor: default; }
+        .posture-ic { display: inline-flex; color: var(--accent); }
+        .posture-ic .ic-trait { color: inherit; }
+        .avatar[hidden] { display: none; }
+        /* Le bouton de synchronisation : un point dit la gravite (rouge a verifier, ambre hors reseau, teal en attente). */
+        /* Enregistrement : l'etat a cote du nom du projet, annuler / retablir dans les actions. */
+        .enreg-etat { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; margin-left: 2px; background: none; border: none; border-radius: 13px; color: var(--muted); font: 500 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
+        .enreg-etat[hidden] { display: none; }
+        .enreg-etat:hover { background: var(--surface-muted); color: var(--ink); }
+        .enreg-etat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .enreg-etat[data-etat="propre"] .enreg-lib { display: none; }
+        .enreg-etat[data-etat="propre"] { color: var(--muted-light); }
+        .enreg-etat[data-etat="modifie"] .ic, .enreg-etat[data-etat="envoi"] .ic { color: var(--accent); }
+        .enreg-etat[data-etat="envoi"] .ic { animation: enreg-pulse 1s ease-in-out infinite; }
+        .enreg-etat[data-etat="erreur"] { color: var(--accent); font-weight: 700; }
+        @keyframes enreg-pulse { 50% { opacity: 0.35; } }
+        @media (prefers-reduced-motion: reduce) { .enreg-etat[data-etat="envoi"] .ic { animation: none; } }
+        .btn-ghost:disabled { opacity: 0.35; cursor: default; }
+        .btn-ghost:disabled:hover { background: transparent; color: var(--muted); }
+        .btn-ghost[hidden] { display: none; }
+        .dirty-dot { display: none !important; }
+        .panneau-enreg { width: min(340px, calc(100vw - 24px)); padding: 10px 12px; gap: 10px; }
+        .enreg-reglage { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; cursor: pointer; }
+        .enreg-reglage input { margin-top: 3px; }
+        .enreg-reglage small { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+        /* Une pastille a cote du nom du projet : calme (rouge doux) hors reseau ou en attente, pleine quand il faut verifier. */
+        .synchro-pastille {
+            display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; margin-left: 4px;
+            border-radius: 13px; border: 1px solid rgba(196, 69, 54, 0.28); background: var(--accent-soft); color: var(--accent);
+            font: 600 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+        }
+        .synchro-pastille[hidden], #hote-synchro[hidden] { display: none; }
+        .synchro-pastille:hover { border-color: var(--accent); }
+        .synchro-pastille:focus-visible, #hote-synchro:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .synchro-pastille.etat-alerte { background: var(--accent); border-color: var(--accent); color: #fff; }
+        /* Sur la carte (barre retiree) : meme signal, en rond. */
+        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: rgba(196, 69, 54, 0.35); }
+        #hote-synchro.etat-alerte { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .panneau-synchro { width: min(360px, calc(100vw - 24px)); padding: 10px 12px; }
+        .panneau-synchro .dock-slot-data { padding: 0; }
+        .export-portee { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+        .export-portee .input { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+        .export-choix .posture-nom { display: flex; align-items: center; gap: 8px; }
         .avatar {
             width: 30px; height: 30px; border-radius: 15px; margin-left: 6px;
             background: var(--accent2); color: white;
             display: flex; align-items: center; justify-content: center;
             font-size: 12px; font-weight: 600;
         }
-        .avatar.bascule-session,
-        .view-mode-badge.bascule-session { cursor: pointer; }
+        .avatar.bascule-session { cursor: pointer; }
 
         /* ============================================
            MAIN LAYOUT
@@ -285,6 +329,11 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
         .insp-close-btn:hover { color: var(--ink); border-color: var(--hairline-strong); }
+        /* Les actions sous le titre d'une couche : deux boutons cote a cote, la case dessous. */
+        .insp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .insp-act { flex: 1 1 0; min-width: 0; padding: 8px 10px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .insp-act-pleine { flex-basis: 100%; }
+        .insp-act-reglage { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
         .insp-head { padding: 16px 48px 14px 20px; border-bottom: 1px solid var(--hairline); flex-shrink: 0; }
         .insp-eyebrow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .insp-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
@@ -343,6 +392,19 @@
             max-width: 240px; overflow: hidden; text-overflow: ellipsis;
         }
         .insp-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+        /* Onglet Forme : taille, icone et modele 3D en blocs qui se replient. */
+        .insp-bloc { border-top: 1px solid var(--hairline); padding-top: 4px; }
+        .insp-bloc:first-child { border-top: none; padding-top: 0; }
+        .insp-bloc > summary {
+            list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 0;
+            font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .insp-bloc > summary::-webkit-details-marker { display: none; }
+        .insp-bloc > summary::before { content: '▸'; font-size: 10px; transition: transform .15s; }
+        .insp-bloc[open] > summary::before { transform: rotate(90deg); }
+        .insp-bloc > summary:hover { color: var(--ink); }
+        .insp-bloc > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        .insp-bloc-corps { display: flex; flex-direction: column; gap: 14px; padding: 4px 0 14px; }
         .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
         .insp-foot { padding: 14px 20px; border-top: 1px solid var(--hairline); display: flex; gap: 8px; flex-shrink: 0; }
 
@@ -485,6 +547,13 @@
         /* Le panneau haut plafonne a 200 px : au-dela d'une couche, la liste
            defile au lieu d'etre coupee. */
         .dock-slot-releve .dock-slot-body { max-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
+        /* La synchronisation : l'etat de la file des releves partis ou en attente. */
+        .dock-slot-synchro .dock-slot-body { max-height: min(46vh, 300px); overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-synchro .synchro-ligne { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12px; line-height: 1.4; }
+        .dock-slot-synchro .synchro-ligne:first-of-type { border-top: none; }
+        .dock-slot-synchro .synchro-etat { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.06); margin-right: 4px; }
+        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: rgba(196,69,54,.12); color: var(--accent); }
+        .dock-slot-synchro .synchro-raison { font-size: 11px; color: var(--muted); margin-top: 3px; }
         .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
         .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
         .dock-slot-data .releve-couche:first-of-type { border-top: none; padding-top: 2px; }
@@ -536,14 +605,7 @@
         .dock-slot-data .cat-row { border-radius: 8px; padding: 4px 6px; }
         .dock-slot-data .cat-row:hover { background: rgba(0,0,0,0.03); }
         .dock-slot-data .cat-count { opacity: 0.86; }
-        .dock-seg {
-            display: flex; border: 1px solid var(--hairline);
-            border-radius: 10px; overflow: hidden;
-        }
-        .dock-seg-btn {
-            padding: 6px 14px; border: none; background: transparent;
-            font-size: 12px; cursor: pointer; color: var(--muted);
-        }
+        .dock-seg-btn { border: none; background: transparent; cursor: pointer; color: var(--muted); }
         .dock-seg-btn.active { background: var(--ink); color: var(--bg); }
         .dock-slot-basemap .dock-chips {
             display: flex; gap: 6px; flex-wrap: nowrap;
@@ -634,6 +696,39 @@
         @media (max-width: 400px) {
             .dock-slot-sun .alt-lbl { display: none; }
         }
+        /* Dock : un meme habillage pour tous les controles, celui du soleil pour reference — une capsule, une ligne, un libelle
+           en petites capitales, des segments arrondis, pas de boites dans les boites. */
+        .dock-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); flex-shrink: 0; }
+        .dock-slot-basemap, .dock-slot-view3d { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .dock-seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--hairline); border-radius: 999px; background: var(--surface-muted); }
+        .dock-seg-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; flex-shrink: 0; transition: background-color 0.14s ease, color 0.14s ease; }
+        .dock-seg-btn:not(.active):hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+        .dock-seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .dock-sw { width: 13px; height: 13px; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.18); }
+        .dock-seg-btn.active .dock-sw { border-color: rgba(255,255,255,0.55); }
+        .dock-slot-basemap .dock-seg { overflow-x: auto; scrollbar-width: none; max-width: min(calc(100vw - 200px), 440px); }
+        .dock-slot-basemap .dock-seg::-webkit-scrollbar { display: none; }
+        /* Les pastilles qui agissent portent leur nom ; un trait les separe de celles qui reglent. */
+        .map-controls-dock .dock-fab.avec-lib { width: auto; padding: 0 14px; border-radius: 27px; gap: 8px; }
+        .dock-fab-lib { display: none; font: 600 12.5px/1 var(--sans); color: var(--ink); white-space: nowrap; }
+        @media (min-width: 900px) { .map-controls-dock .dock-fab.avec-lib .dock-fab-lib { display: inline; } }
+        .dock-sep { width: 1px; height: 26px; flex: 0 0 auto; margin: 0 2px; background: var(--hairline-strong); }
+        /* Contenu des panneaux : pas de carte beige dans la capsule blanche. */
+        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0; }
+        .dock-slot-data .cats { background: none; border: none; padding: 0; }
+        .dock-slot-data .cat-row { padding: 6px 4px; font-size: 12.5px; }
+        .dock-slot-data .cat-count { background: none; padding: 0; font-size: 10.5px; color: var(--muted); opacity: 1; }
+        .dock-ligne-outils { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 11px; color: var(--muted); }
+        .dock-outils { display: flex; gap: 2px; }
+        .dock-outils .ctl-mini { border: none; background: none; padding: 3px 7px; border-radius: 6px; color: var(--accent); font: 600 11.5px/1 var(--sans); cursor: pointer; }
+        .dock-outils .ctl-mini:hover { background: rgba(196,69,54,0.08); }
+        .dock-slot-title .info-i { margin-left: 6px; }
+        /* Téléphone : les fonds se reconnaissent à leur pastille ; seul le fond choisi garde son nom. */
+        @media (max-width: 480px) {
+            .dock-slot-basemap .dock-seg-btn { padding: 5px 8px; }
+            .dock-slot-basemap .dock-seg-btn:not(.active) > span:not(.dock-sw) { display: none; }
+        }
+        .dock-slot-data input[type="checkbox"], .dock-slot-data input[type="radio"] { accent-color: var(--accent); }
         .shadow-toggle {
             background: transparent; border: none; cursor: pointer; color: var(--muted);
             font-size: 11px; display: flex; align-items: center; gap: 4px;
@@ -677,18 +772,23 @@
         .legend-row.legend-sub .nm { font-size: 11px; color: var(--muted); }
         .legend-row .swatch.legend-grad { width: 28px; border-radius: 2px; }
 
-        /* Selection bar (top-center) — décale sous le dock ouvert */
+        /* Barre de sélection : centrée, juste SOUS le dock (sa rangée de pastilles, ou son panneau quand un filtre est ouvert). Sur
+           la ligne des pastilles, elle recouvrait « Relevé », « Contexte » et les filtres dès que la carte se rétrécit (fiche
+           ouverte). Rien ne se replie : chaque libellé tient sur une ligne. */
         .selection-bar {
             position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+            max-width: calc(100% - 32px);
             /* Clair, comme la légende, le dock et les cartes de la carte : la barre sombre
                jurait avec le reste. Que des jetons, pour qu'un thème sombre se règle en un lieu. */
             background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 24px;
             padding: 7px 7px 7px 18px; display: none; align-items: center; gap: 10px;
             font-size: 12.5px; box-shadow: 0 6px 20px rgba(45, 40, 32, 0.12); z-index: 10;
         }
-        body:has(.map-controls-dock:not(.collapsed)) .selection-bar.open {
-            top: 78px;
-        }
+        /* `--sel-top` : le bas du dock, mesuré (`placerBarreSelection`) ; 82 px, la rangée de pastilles, tant qu'il n'est pas lu. */
+        body:not(.mobile-layout):has(.map-controls-dock.has-pills) .selection-bar.open { top: var(--sel-top, 82px); }
+        /* Téléphone : la règle d'avant, la barre se décale sous le dock quand son panneau est ouvert. */
+        body.mobile-layout:has(.map-controls-dock:not(.collapsed)) .selection-bar.open { top: 78px; }
+        .selection-bar > * { white-space: nowrap; flex-shrink: 0; }
         .selection-bar.open { display: flex; }
         .selection-bar .sel-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--accent); }
         .selection-bar .vsep { width: 1px; height: 14px; background: var(--hairline-strong); }
@@ -719,11 +819,29 @@
             font-size: 10.5px; font-weight: 600; color: var(--muted);
             text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
         }
+        /* Un « i » qui explique au survol, au focus et au toucher (la bulle est posée par app_v7.js, en fixed). */
+        .info-i {
+            display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+            width: 15px; height: 15px; margin-left: 6px; border-radius: 50%;
+            border: 1px solid var(--muted); color: var(--muted);
+            font: italic 600 10px/1 var(--serif, Georgia, serif); text-transform: none; letter-spacing: 0;
+            cursor: help; user-select: none; flex: 0 0 auto;
+        }
+        .info-i:hover, .info-i:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+        #info-bulle {
+            position: fixed; z-index: 100000; display: none; pointer-events: none;
+            background: var(--ink); color: var(--surface); border-radius: 8px; padding: 8px 10px;
+            font: 400 12px/1.4 var(--sans, system-ui, sans-serif); text-transform: none; letter-spacing: 0;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25); white-space: pre-line;
+        }
         .field-meta { margin-top: 6px; font-size: 10.5px; color: var(--muted); font-family: var(--mono); }
 
         .control-variant-row {
             display: flex; align-items: center; gap: 8px; margin-top: 8px;
         }
+        /* Une liste de valeurs se lit en entier : le module défile, pas la liste. */
+        #module-body .cats { max-height: none; overflow: visible; }
+        .env-liste .section + .section { margin-top: 4px; }
         .control-variant-label {
             font-size: 10.5px; font-weight: 600; color: var(--muted);
             text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
@@ -869,6 +987,58 @@
         .preview-grad > span { flex: 1; }
         .preview-scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
+        /* Panneau Couches : l'en-tete de liste, la liste des tables, les boutons d'ajout. */
+        .layer-bulk { display: flex; align-items: center; gap: 12px; margin: 0 2px 8px; font-size: 12px; }
+        .layer-bulk-compte { margin-right: auto; color: var(--muted); font-family: var(--mono); font-size: 11px; }
+        .layer-bulk-compte, .btn-lien { white-space: nowrap; }
+        .actions-grille .btn { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+        .btn-lien { background: none; border: none; padding: 2px 0; font: inherit; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hairline-strong); }
+        .btn-lien:hover { color: var(--ink); }
+        .btn-lien[aria-pressed="true"] { color: var(--ink); font-weight: 600; text-decoration: none; }
+        .btn-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+        .layer-list + .section, .layer-list + .empty { margin-top: 20px; }
+        .table-liste { display: flex; flex-direction: column; }
+        .table-item {
+            display: flex; align-items: center; gap: 8px; width: 100%; min-height: 38px; padding: 6px 10px;
+            background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+            font: inherit; font-size: 12.5px; color: var(--text); text-align: left; transition: var(--t-fast);
+        }
+        .table-item:hover, .table-item:focus-visible { background: var(--surface-muted); outline: none; }
+        .table-item:focus-visible { border-color: var(--accent); }
+        .table-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .table-compte { font-family: var(--mono); font-size: 10px; color: var(--muted-light); }
+        .table-plus { display: inline-flex; color: var(--muted); }
+        .table-item:hover .table-plus { color: var(--accent); }
+        .actions-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .menu-couche-item .posture-nom { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .menu-couche-item.danger { color: var(--accent); }
+        .menu-couche-item { min-height: 40px; }
+        #menu-couche { width: min(250px, calc(100vw - 24px)); }
+        #menu-couche.posture-feuille { width: auto; }
+        /* Lieu : ou la carte s'ouvre, trois choix qui se deplient. */
+        .cadrage-liste { display: flex; flex-direction: column; gap: 8px; }
+        .cadrage-choix { border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); }
+        .cadrage-choix.on { border-color: var(--accent); background: var(--surface-muted); }
+        .cadrage-radio {
+            display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 10px 12px 10px 38px;
+            position: relative; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+        }
+        .cadrage-radio::before {
+            content: ''; position: absolute; left: 12px; top: 13px; width: 14px; height: 14px; border-radius: 50%;
+            border: 1.5px solid var(--muted); box-sizing: border-box;
+        }
+        .cadrage-choix.on .cadrage-radio::before { border-color: var(--accent); background: radial-gradient(var(--accent) 45%, transparent 50%); }
+        .cadrage-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+        .cadrage-radio:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px; }
+        .cadrage-nom { font-size: 13px; font-weight: 600; }
+        .cadrage-aide { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+        .cadrage-choix > .input, .cadrage-choix > .btn, .cadrage-outils { margin: 0 12px 12px; width: calc(100% - 24px); }
+        .cadrage-outils { display: flex; flex-direction: column; gap: 10px; }
+        .miniature-vide { margin-bottom: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-muted); border: 1px dashed var(--hairline-strong); font-size: 12px; line-height: 1.4; color: var(--muted); }
+        .miniature-retirer { align-self: flex-start; margin-top: 10px; font-size: 12px; }
+        .miniature-apercu { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 8px; border: 1px solid var(--hairline); margin-bottom: 8px; }
+        .cadrage-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cadrage-boutons .btn { white-space: nowrap; min-width: 0; padding-left: 6px; padding-right: 6px; gap: 6px; justify-content: center; font-size: 12.5px; }
         /* Layer list */
         .layer-list { display: flex; flex-direction: column; gap: 2px; }
         .layer-item {
@@ -912,7 +1082,8 @@
             .layer-item { gap: 5px; padding: 8px 6px; }
             .layer-meta .badge-saved { font-size: 0; padding: 1px 3px; }
             .layer-meta .badge-saved::before { content: '⛓'; font-size: 9px; }
-            .layer-item:not(.active):not(:hover) .layer-act { display: none; }
+            /* Le menu « autres actions » reste visible : c'est lui qu'on cherche. Seul le zoom se retire. */
+            .layer-item:not(.active):not(:hover) .layer-act-zoom { display: none; }
         }
         @media (pointer: fine) {
             @container (max-width: 300px) { .layer-grip { width: 16px; } }
@@ -935,7 +1106,10 @@
         .drop .h { font-size: 11px; color: var(--muted-light); margin-top: 4px; }
 
         /* Location badge */
-        .loc-badge { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-muted); border: 1px solid var(--hairline); border-radius: 10px; margin-bottom: 14px; }
+        .loc-badge { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-muted); border: 1px solid var(--hairline); border-radius: 10px; margin-bottom: 8px; }
+        .loc-badge .loc-texte { min-width: 0; flex: 1; }
+        .loc-badge .nm { overflow-wrap: anywhere; }
+        .loc-badge .co { margin-top: 2px; white-space: nowrap; }
         .loc-badge .ic { color: var(--accent); font-size: 18px; }
         .loc-badge .nm { font-size: 13px; font-weight: 500; color: var(--ink); }
         .loc-badge .co { font-size: 11px; color: var(--muted); font-family: var(--mono); }
@@ -1010,7 +1184,13 @@
         }
         .view-mode-badge[hidden] { display: none !important; }
         /* Pastille Contexte : les étapes que la scène propose en exploitation. */
-        .contexte-liste { display: flex; flex-direction: column; gap: 4px; }
+        /* Largeur fixe : sans elle, le panneau prenait celle de la consigne sur une seule ligne (jusqu'a toute la carte). Le contexte
+           actif — sa consigne, sa tournée — vient AVANT la liste : avec une dizaine de contextes, la liste cachait l'essentiel. */
+        .dock-slot-data.dock-slot-contexte { width: min(400px, calc(100vw - 160px)); max-width: 100%; }
+        .contexte-courant { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
+        /* La consigne du contexte actif se lit en entier : un défilement de plus dans le panneau, avec la liste dessous, perd le lecteur. */
+        .contexte-courant .contexte-consigne { margin-top: 0; padding-top: 0; border-top: 0; max-height: none; overflow: visible; }
+        .contexte-liste { display: flex; flex-direction: column; gap: 4px; max-height: min(34vh, 230px); overflow-y: auto; overscroll-behavior: contain; }
         .contexte-choix {
             display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left;
             min-height: 40px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
@@ -1022,6 +1202,20 @@
         .contexte-aide { font-size: 11.5px; color: var(--muted); }
         .contexte-consigne { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 12.5px; line-height: 1.45; max-height: 110px; overflow-y: auto; overscroll-behavior: contain; }
         .contexte-opt { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11.5px; color: var(--muted); cursor: pointer; }
+        .contexte-releves { margin: 6px 0 0 18px; padding-left: 10px; border-left: 2px solid var(--hairline); }
+        .contexte-tournee-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .contexte-tournee { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); }
+        .contexte-tournee summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+        .contexte-tournee summary small { font-weight: 400; color: var(--muted); margin-left: 4px; }
+        .contexte-ouvrages { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+        .contexte-ouvrage { display: flex; align-items: baseline; gap: 8px; text-align: left; background: none; border: 0; padding: 5px 4px; border-radius: 6px;
+            font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer; }
+        .contexte-ouvrage:hover { background: var(--surface-muted); }
+        .contexte-ouvrage:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .contexte-ouvrage .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted-light); min-width: 22px; }
+        .contexte-ouvrage .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .contexte-ouvrage .d { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+        .contexte-releves-titre { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink); letter-spacing: .02em; }
         /* Choix de posture : Préparer, Exploiter, Lecture. */
         .posture-menu {
             position: fixed; z-index: 9000; width: min(320px, calc(100vw - 24px));
@@ -1058,6 +1252,8 @@
            regle de l'avatar : ils heritaient d'un fond gris au lieu d'etre
            masques, et « Charger », « Enregistrer » et « Exporter » restaient
            donc offerts en lecture. */
+        body.view-mode .header-actions #btn-annuler,
+        body.view-mode .header-actions #btn-retablir,
         body.view-mode .header-actions #btn-load,
         body.view-mode .header-actions #btn-save,
         body.view-mode .header-actions #btn-export { display: none; }
@@ -1374,10 +1570,16 @@
                bouton garde son icone, perd son libelle. Les deux actions de
                projet passent dans le panneau Couches, ou elles sont a leur
                place — on ne charge pas la barre d'un telephone. */
-            body.mobile-layout .header-actions #btn-export > span { display: none; }
-            body.mobile-layout .header-actions #btn-export { padding: 6px 10px; }
+            body.mobile-layout .header-actions .posture-lib { display: none; }
+            body.mobile-layout .header-actions #btn-annuler,
+            body.mobile-layout .header-actions #btn-retablir { display: none; }
+            body.mobile-layout .enreg-lib { display: none; }
+            body.mobile-layout .btn-posture { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 50%; }
+            body.mobile-layout .avatar { display: none; }
             body.mobile-layout .header-actions #btn-load,
             body.mobile-layout .header-actions #btn-save { display: none; }
+            body.mobile-layout .synchro-lib { display: none; }
+            body.mobile-layout .synchro-pastille { width: 28px; height: 28px; padding: 0; justify-content: center; border-radius: 50%; }
             body.mobile-layout .brand-project { max-width: 8rem; overflow: hidden;
                 text-overflow: ellipsis; white-space: nowrap; }
             /* L'attribution de gauche passait SOUS la legende : chacune son etage. */
@@ -1534,7 +1736,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.10.2" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.11.0" />
 </head>
 <body>
     <div class="app">
@@ -1549,9 +1751,14 @@
                 <span class="brand-chevron" aria-hidden="true">▾</span>
                 <span class="brand-sep">/</span>
                 <span class="brand-project" id="project-name">Nouveau projet</span>
-                <span class="view-mode-badge" id="view-mode-badge" hidden>Lecture</span>
                 <span class="dirty-dot"></span>
             </div>
+            <button type="button" class="enreg-etat" id="btn-enreg" hidden aria-haspopup="dialog" data-etat="propre" title="Enregistrement" aria-label="Enregistrement">
+                <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span class="enreg-lib"></span>
+            </button>
+            <button type="button" class="synchro-pastille" id="btn-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
+                <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg><span class="synchro-lib"></span>
+            </button>
 
             <div class="cmdk" id="cmdk-trigger">
                 <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
@@ -1560,17 +1767,25 @@
             </div>
 
             <div class="header-actions">
+                <button class="btn-ghost" id="btn-annuler" hidden disabled title="Annuler (Ctrl+Z)" aria-label="Annuler">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+                </button>
+                <button class="btn-ghost" id="btn-retablir" hidden disabled title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>
+                </button>
                 <button class="btn-ghost" id="btn-load" title="Ouvrir un projet ou un GeoJSON" aria-label="Ouvrir un projet ou un GeoJSON">
                     <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/></svg>
                 </button>
                 <button class="btn-ghost" id="btn-save" title="Télécharger le projet (.json)" aria-label="Télécharger le projet (.json)">
-                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5M5 21h14"/></svg>
                 </button>
-                <button class="btn-export" id="btn-export">
-                    <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
-                    <span>Exporter</span>
+                <button class="btn-ghost" id="btn-export" title="Exporter (GeoJSON, CSV, KML, GPX, image)" aria-label="Exporter" aria-haspopup="menu">
+                    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
                 </button>
-                <div class="avatar" id="user-badge" title="Droits sur ce document">–</div>
+                <button type="button" class="btn-posture" id="btn-posture" aria-haspopup="menu" title="Posture" aria-label="Posture">
+                    <span class="posture-ic" aria-hidden="true"></span><span class="posture-lib"></span>
+                </button>
+                <div class="avatar" id="user-badge" title="Droits sur ce document" hidden>–</div>
             </div>
         </header>
 
@@ -1638,8 +1853,11 @@
                     <button type="button" class="commande-hote" id="hote-recherche" title="Rechercher un objet, une couche, un lieu" aria-label="Rechercher un objet, une couche, un lieu">
                         <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.3-4.3"/></svg>
                     </button>
-                    <button type="button" class="commande-hote" id="hote-edition" title="Revenir à l'édition" aria-label="Revenir à l'édition" hidden>
-                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+                    <button type="button" class="commande-hote" id="hote-synchro" hidden aria-haspopup="dialog" title="Synchronisation" aria-label="Synchronisation">
+                        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg>
+                    </button>
+                    <button type="button" class="commande-hote" id="hote-edition" title="Changer de posture" aria-label="Changer de posture" aria-haspopup="menu" hidden>
+                        <span class="posture-ic" aria-hidden="true"></span>
                     </button>
                 </div>
 
@@ -1747,9 +1965,9 @@
                  la place de les montrer sur un telephone. Sans elles, on peut
                  tout modifier sans jamais rien enregistrer. -->
             <div class="mp-groupe">Projet</div>
-            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span>Télécharger le projet</span></button>
+            <button type="button" data-action-plus="enregistrer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 11l5 5 5-5M5 21h14"/></svg><span>Télécharger le projet</span></button>
             <button type="button" data-action-plus="charger"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg><span>Ouvrir un projet</span></button>
-            <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter en GeoJSON</span></button>
+            <button type="button" data-action-plus="exporter"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg><span>Exporter…</span></button>
         </div>
     </div>
 
@@ -1766,9 +1984,9 @@
     </div>
 
     <div class="toasts" id="toasts"></div>
-    <input type="file" id="file-input" accept=".geojson,.json" style="display:none" />
-    <input type="file" id="project-input" accept=".json,.geojson" style="display:none" />
+    <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
+    <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.10.2"></script>
+    <script type="module" src="./app.js?v=1.11.0"></script>
 </body>
 </html>

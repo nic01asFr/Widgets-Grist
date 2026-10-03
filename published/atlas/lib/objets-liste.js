@@ -22,9 +22,9 @@
  *   s'explique ;
  * - **une référence se cherche par son libellé**, jamais par son numéro.
  */
-import { normaliser } from './palette-objets.js?v=1.10.2';
-import { distanceMetres } from './releve.js?v=1.10.2';
-import { dateCourte } from './bulle-objet.js?v=1.10.2';
+import { normaliser } from './palette-objets.js?v=1.11.0';
+import { distanceMetres } from './releve.js?v=1.11.0';
+import { dateCourte } from './bulle-objet.js?v=1.11.0';
 
 /** Au-delà, un texte de champ n'est plus une valeur à retrouver mais un paragraphe. */
 export const LONGUEUR_MAX_CHAMP = 160;
@@ -90,12 +90,13 @@ export function entreeObjet({ idx, rowId = null, nom = '', point = null, couleur
  * @param {object} [o]
  * @param {string} [o.requete]
  * @param {[number, number]|null} [o.position]  `[lng, lat]` d'où l'on mesure
- * @param {'proche'|'nom'} [o.tri]
+ * @param {'proche'|'nom'|'tournee'} [o.tri]  `tournee` : l'ordre de la ligne d'un contexte (voir `rangs`)
+ * @param {Map<number, {rang: number, metres: number, ecartM: number}>|null} [o.rangs]  la place de chaque objet sur la tournée
  * @param {number} [o.max]
  * @param {(e: object) => boolean} [o.visible]  ce que les filtres laissent voir
  * @returns {{ total: number, items: object[], tronque: boolean }}
  */
-export function listerObjets(entrees, { requete = '', position = null, tri = 'proche', max = MAX_LIGNES, visible = null } = {}) {
+export function listerObjets(entrees, { requete = '', position = null, tri = 'proche', max = MAX_LIGNES, visible = null, rangs = null } = {}) {
   const mots = normaliser(requete).split(/\s+/).filter(Boolean);
   const trouves = [];
   for (const e of entrees || []) {
@@ -123,6 +124,7 @@ export function listerObjets(entrees, { requete = '', position = null, tri = 'pr
       couleur: e.couleur,
       etat: e.etat,
       score,
+      ...(rangs?.has(e.idx) ? { rang: rangs.get(e.idx).rang, metres: rangs.get(e.idx).metres, ecartM: rangs.get(e.idx).ecartM } : {}),
     });
   }
   const parNom = (a, b) => a.nom.localeCompare(b.nom, 'fr', { numeric: true, sensitivity: 'base' });
@@ -132,7 +134,14 @@ export function listerObjets(entrees, { requete = '', position = null, tri = 'pr
     if (b.distance == null) return -1;
     return a.distance - b.distance || parNom(a, b);
   };
-  const ordre = tri === 'nom' ? parNom : parDistance;
+  // Le long de la tournée : l'ordre de la ligne ; un objet qu'elle ne classe pas passe après, par nom.
+  const parTournee = (a, b) => {
+    if (a.rang == null && b.rang == null) return parNom(a, b);
+    if (a.rang == null) return 1;
+    if (b.rang == null) return -1;
+    return a.rang - b.rang;
+  };
+  const ordre = tri === 'nom' ? parNom : (tri === 'tournee' && rangs ? parTournee : parDistance);
   trouves.sort((a, b) => (mots.length && b.score !== a.score ? b.score - a.score : ordre(a, b)));
   return {
     total: trouves.length,

@@ -202,7 +202,8 @@ for ident, nom, style_piege, visible in (
         'style': style_piege,
         'source': {'type': 'geojson', 'classe': 'externe'}, 'geojson': {'type': 'FeatureCollection', 'features': copy.deepcopy(feats)},
         'bbox': bbox_de(feats), 'featureCount': len(feats), 'crs': 'EPSG:4326',
-        'controls': copy.deepcopy(CONTROLES_PIEGE), 'fields': CHAMPS_PIEGE,
+        # Les filtres ne sont portés que par les ronds : la version 3D du même jeu les doublerait dans la barre.
+        'controls': copy.deepcopy(CONTROLES_PIEGE) if ident == 'pieges' else [], 'fields': CHAMPS_PIEGE,
         'licence': 'Positions et comptages fictifs ; modèle 3D créé pour le dépôt (Licence Ouverte 2.0)',
     })
 
@@ -266,6 +267,13 @@ NOM_COUCHE = {'Luminaires': 'luminaires', 'Pieges': 'pieges', 'Releves': 'releve
 VALEURS = {l['id']: {c['field']: c.get('values') for c in l.get('controls', [])} for l in couches}
 maquette_ids = [l['id'] for l in couches if l['id'] not in list(NOM_COUCHE.values()) + ['pieges-3d']]
 etapes = []
+
+def texte_public(texte):
+    # Une scène publiée s'ouvre en lecture : le panneau « Tournée » n'y est pas proposé. Le texte du document, lui, le mentionne.
+    return (texte.replace(' Ouvrez « Tournée » pour les prendre un à un, ou choisissez-en un dans la liste.', ' Dans un document Grist, en Exploitation, ce parcours se suit objet par objet.')
+                 .replace(' Ouvrez « Tournée » pour les prendre un à un.', ' Dans un document Grist, en Exploitation, cette tournée se suit objet par objet.'))
+
+
 for i, e in enumerate(recit['etapes']):
     visibles = {NOM_COUCHE[n] for n in e['couches']}
     # la maquette et les arbres accompagnent tout ce qui n'est pas un résultat posé à plat
@@ -298,7 +306,7 @@ for i, e in enumerate(recit['etapes']):
             tr = TOURNEE_PAR_CLE[e['tournee']]
             usage['tournee'] = {'type': 'LineString', 'coordinates': wkt_vers_geometrie(tr['WKT'])['coordinates'], 'sourceTable': None, 'nom': tr['Nom']}
         etat['usage'] = usage
-    etapes.append({'id': e.get('cle') or 'recit-%d' % (i + 1), 'title': e['titre'], 'description': e['texte'], 'state': etat})
+    etapes.append({'id': e.get('cle') or 'recit-%d' % (i + 1), 'title': e['titre'], 'description': texte_public(e['texte']), 'state': etat})
 
 scene = {
     'version': '0.2.2', 'manifest_version': 'V0.2',

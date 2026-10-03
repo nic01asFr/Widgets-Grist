@@ -103,6 +103,8 @@ export async function listerTousDocs(baseUrl, jeton, fetchFn, onEtape, delai = D
         docs.push({
           id: d.id, nom: d.name, org: org.name, espace: e.name,
           maj: d.updatedAt || d.createdAt || '',
+          // Le rôle de la personne sur ce document (`owners`, `editors`, `viewers`) : de quoi trier et filtrer la liste.
+          acces: d.access || '',
         });
       }
     }
@@ -149,6 +151,23 @@ export async function listerScenesAtlas(baseUrl, jeton, { onProgres, onTrouve, o
     return ok ? d : null;
   });
   return marques.filter(Boolean);
+}
+
+/** Au-delà, une miniature n'en est plus une : elle ralentirait la liste pour une vignette. */
+export const MINIATURE_MAX_CARACTERES = 120000;
+
+/**
+ * La miniature d'une scène : l'image que son auteur a choisie (`Atlas_ScenePrefs.Miniature`, une URL de données).
+ * Une lecture par scène, et seulement pour les scènes reconnues. `''` quand il n'y en a pas, ou qu'elle n'est pas une image
+ * plausible : jamais une exception, la liste doit s'afficher sans.
+ */
+export async function lireMiniature(docId, baseUrl, jeton, fetchFn, delai = DELAI_MS) {
+  const base = String(baseUrl || '').replace(/\/+$/, '');
+  try {
+    const r = await jget(`${base}/api/docs/${docId}/tables/Atlas_ScenePrefs/records?limit=1`, jeton, fetchFn, delai);
+    const v = r?.records?.[0]?.fields?.Miniature;
+    return typeof v === 'string' && /^data:image\/(jpeg|png|webp|svg\+xml)[;,]/.test(v) && v.length <= MINIATURE_MAX_CARACTERES ? v : '';
+  } catch (_) { return ''; }
 }
 
 /** Un rappel d'affichage qui echoue ne doit rien couter a la recherche. */

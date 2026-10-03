@@ -8,7 +8,7 @@
  * cercle 2D. Ce critère décide où ces réglages ont le droit d'apparaître, et où
  * ils ont le droit d'être écrits.
  */
-import { libelleFormulaire } from './fiche-formulaire.js?v=1.10.2';
+import { libelleFormulaire } from './fiche-formulaire.js?v=1.11.0';
 
 /** La couche est-elle rendue par des modèles 3D instanciés sur des points ? */
 export function isModelLayer(layer) {
@@ -46,6 +46,8 @@ export const ONGLET_3D = 'Placement 3D';
 
 /** L'onglet des paramètres d'un objet du catalogue (puissance, hauteur de feu…) : généré depuis le schéma de son type. */
 export const ONGLET_SPECS = 'Spécifications';
+/** Les attributs de l'objet, en consultation : l'onglet que « Voir la fiche » ouvre, là où seuls des formulaires ont un onglet. */
+export const ONGLET_FICHE = 'Fiche';
 
 /**
  * Les onglets de la fiche d'un objet.
@@ -70,7 +72,7 @@ export const ONGLET_SPECS = 'Spécifications';
  * @param {{layer: object, formulaires?: object[], multi?: boolean, revue?: boolean}} o
  * @returns {Array<{cle: string, libelle: string, formulaire: object|null}>}
  */
-export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false, specs = false } = {}) {
+export function objectInspectorTabs({ layer, formulaires = [], multi = false, revue = false, specs = false, consultation = false } = {}) {
   const tabs = [];
   if (!multi || revue) {
     for (const f of formulaires) {
@@ -78,6 +80,10 @@ export function objectInspectorTabs({ layer, formulaires = [], multi = false, re
       tabs.push({ cle: f.id, libelle: libelleFormulaire(f), formulaire: f });
     }
   }
+  // Hors édition, seuls les formulaires publiés ont un onglet : « Voir la fiche » tombait sur le formulaire de visite, le même
+  // qu'ouvre « Nouvelle visite ». La fiche en consultation est un onglet à part, **après** les formulaires — celui d'un toucher
+  // pour relever reste le premier. Sans formulaire, le corps de la fiche montre déjà les attributs : pas d'onglet seul.
+  if (consultation && (!multi || revue) && tabs.length) tabs.push({ cle: ONGLET_FICHE, libelle: ONGLET_FICHE, formulaire: null });
   if (isModelLayer(layer)) tabs.push({ cle: ONGLET_3D, libelle: ONGLET_3D, formulaire: null });
   // Les paramètres du type de l'objet : seulement s'il en a. Sur une sélection multiple, jamais — sauf en
   // revue, où un curseur désigne un seul objet (comme pour l'onglet des attributs).

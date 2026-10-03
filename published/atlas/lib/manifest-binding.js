@@ -5,17 +5,17 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.10.2';
+} from './declarative-style.js?v=1.11.0';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=1.10.2';
+} from './controls.js?v=1.11.0';
 import { parseGristBool } from './grist-bool.js';
-import { genreDeModele } from './modele-id.js?v=1.10.2';
-import { parametresDeCoucheValides } from './parametres-objet.js?v=1.10.2';
-import { departsValides } from './fiche-formulaire.js?v=1.10.2';
+import { genreDeModele } from './modele-id.js?v=1.11.0';
+import { parametresDeCoucheValides } from './parametres-objet.js?v=1.11.0';
+import { departsValides } from './fiche-formulaire.js?v=1.11.0';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
 export function declarativeFromAtlasLayer(layer) {
@@ -31,7 +31,8 @@ export function declarativeFromAtlasLayer(layer) {
     const field = resolveGristFieldName(layer._fields, sym.field) || sym.field;
     const stops = (sym.categories || []).map((c) => ({
       value: c.value,
-      label: String(c.value ?? ''),
+      // Le libellé d'une table de référence (un `Ref` arrive en identifiant) : sans lui, rouvrir la scène rendait « 3 » pour « Blanc chaud ».
+      label: String(c.label ?? c.value ?? ''),
       color: c.color || fb,
       opacity: 1,
     }));

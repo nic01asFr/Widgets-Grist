@@ -78,10 +78,12 @@ export function direDistance(m) {
  */
 export function lignesReleve(entrees) {
   return (entrees || [])
-    .filter((e) => e?.couche && Array.isArray(e.formulaires) && e.formulaires.length)
+    // Une couche figure au relevé par ses formulaires, ou parce que l'auteur propose d'y ajouter un objet.
+    .filter((e) => e?.couche && ((Array.isArray(e.formulaires) && e.formulaires.length) || e.creation))
     .map((e) => ({
       couche: e.couche,
       nom: e.couche.name || e.couche.sourceTable || 'Couche',
-      formulaires: [...new Set(e.formulaires.map((f) => f.titre).filter(Boolean))],
+      formulaires: [...new Set((e.formulaires || []).map((f) => f.titre).filter(Boolean))],
+      creation: !!e.creation,
     }));
 }

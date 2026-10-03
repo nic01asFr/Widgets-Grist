@@ -5,8 +5,8 @@ import {
   createDefaultViewerControls,
   parseViewerControls,
   serializeViewerControls,
-} from './viewer-controls.js?v=1.10.2';
-import { expositionDepuisJSON, expositionAEnregistrer, expositionVide } from './exposition.js?v=1.10.2';
+} from './viewer-controls.js?v=1.11.0';
+import { expositionDepuisJSON, expositionAEnregistrer, expositionVide } from './exposition.js?v=1.11.0';
 
 export const ATLAS_SCENE_PREFS_TABLE = 'Atlas_ScenePrefs';
 
@@ -15,6 +15,8 @@ export const SCENE_PREFS_SCHEMA = [
   { id: 'SettingsJSON', label: 'Réglages de scène (JSON)', type: 'Text' },
   // Les choix de l'auteur sur l'exposition (par où la scène s'ouvre) : lib/exposition.js.
   { id: 'ExpositionJSON', label: 'Exposition (JSON)', type: 'Text' },
+  // La vignette de la scène dans la liste des projets : une URL de données (JPEG), choisie par l'auteur.
+  { id: 'Miniature', label: 'Miniature (image)', type: 'Text' },
 ];
 
 /**
@@ -68,7 +70,7 @@ export function reglagesDepuisJSON(brut) {
   return reglagesAEnregistrer(obj);
 }
 
-/** @param {import('./viewer-controls.js?v=1.10.2').ViewerControl[]} list */
+/** @param {import('./viewer-controls.js?v=1.11.0').ViewerControl[]} list */
 export function prefsPayloadFromViewerControls(list) {
   return { ViewerJSON: JSON.stringify(serializeViewerControls(list)) };
 }
@@ -108,9 +110,9 @@ export async function ensureScenePrefsTable(docApi, opts = {}) {
   }
 }
 
-const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide() });
+const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide(), miniature: '' });
 
-/** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=1.10.2').ViewerControl[], settings: object }>} */
+/** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=1.11.0').ViewerControl[], settings: object }>} */
 export async function loadScenePrefs(docApi) {
   if (!docApi) return vide();
   try {
@@ -130,6 +132,7 @@ export async function loadScenePrefs(docApi) {
       viewerControls: viewerControlsFromPrefsRow(rec, 0),
       settings: reglagesDepuisJSON(rec.SettingsJSON?.[0]),
       exposition: expositionDepuisJSON(rec.ExpositionJSON?.[0]),
+      miniature: typeof rec.Miniature?.[0] === 'string' ? rec.Miniature[0] : '',
     };
   } catch (e) {
     console.warn('[Atlas scene-prefs] load', e.message);
@@ -137,7 +140,7 @@ export async function loadScenePrefs(docApi) {
   }
 }
 
-/** @param {{ viewerControls: import('./viewer-controls.js?v=1.10.2').ViewerControl[], settings?: object }} prefs */
+/** @param {{ viewerControls: import('./viewer-controls.js?v=1.11.0').ViewerControl[], settings?: object }} prefs */
 export async function saveScenePrefs(docApi, prefs, opts = {}) {
   if (!docApi || opts.viewMode) return;
   await ensureScenePrefsTable(docApi, opts);
@@ -149,6 +152,8 @@ export async function saveScenePrefs(docApi, prefs, opts = {}) {
     SettingsJSON: JSON.stringify(reglagesAEnregistrer(prefs.settings || {})),
     // Écrite seulement quand on la donne : un appelant qui ne la connaît pas ne l'efface pas.
     ...(prefs.exposition ? { ExpositionJSON: JSON.stringify(expositionAEnregistrer(prefs.exposition)) } : {}),
+    // Idem : la miniature ne s'efface que si on la donne vide.
+    ...(typeof prefs.miniature === 'string' ? { Miniature: prefs.miniature } : {}),
   };
   if (_prefRowId != null) {
     await docApi.applyUserActions([['UpdateRecord', ATLAS_SCENE_PREFS_TABLE, _prefRowId, data]]);

@@ -10,7 +10,7 @@
  *
  * Les deux portes demandent désormais d'abord ce qu'est le fichier.
  */
-import { deballerScene, verifierFormeScene } from './scene-externe.js?v=1.10.2';
+import { deballerScene, verifierFormeScene } from './scene-externe.js?v=1.11.0';
 
 /**
  * @param {any} obj le JSON lu
@@ -49,6 +49,6 @@ export function messageNature(nature) {
     case 'geojson':
       return 'Ce fichier est un GeoJSON : il s’ajoute comme couche.';
     default:
-      return 'Fichier non reconnu : ni projet Atlas, ni scène, ni GeoJSON.';
+      return 'Fichier non reconnu : ni projet Atlas, ni scène, ni GeoJSON, GPX, KML ou CSV.';
   }
 }

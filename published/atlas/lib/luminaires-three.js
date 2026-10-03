@@ -38,7 +38,7 @@
 import * as THREE from 'three';
 import {
   kelvinVersRvb, fluxDuPoint, intensiteAffichee, repartirSources, BUDGET_DEFAUT,
-} from './eclairage-rendu.js?v=1.10.2';
+} from './eclairage-rendu.js?v=1.11.0';
 
 export const VERSION = '0.1.0';
 

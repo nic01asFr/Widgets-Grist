@@ -1,7 +1,7 @@
 /**
  * Reconstruction GeoJSON depuis tables Grist (contrat qgis2grist / Scene Manifest).
  */
-import { manifestGeometryType } from './declarative-style.js?v=1.10.2';
+import { manifestGeometryType } from './declarative-style.js?v=1.11.0';
 import { lireWkt } from './wkt.js';
 
 /** Colonne Grist → lignes objet. */
