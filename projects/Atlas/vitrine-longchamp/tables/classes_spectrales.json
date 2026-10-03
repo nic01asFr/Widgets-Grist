@@ -1,0 +1,42 @@
+[
+ {
+  "id": "ambre",
+  "Libelle": "Ambre (≤ 2 200 K)",
+  "Couleur": "#e8a234",
+  "Rang": 1,
+  "Attraction": 0.35,
+  "Donnee": "fictive (règle de la démonstration)"
+ },
+ {
+  "id": "sodium",
+  "Libelle": "Sodium (≈ 2 000 K)",
+  "Couleur": "#c47a2c",
+  "Rang": 2,
+  "Attraction": 0.5,
+  "Donnee": "fictive (règle de la démonstration)"
+ },
+ {
+  "id": "chaud",
+  "Libelle": "Blanc chaud (≈ 3 000 K)",
+  "Couleur": "#f2d27a",
+  "Rang": 3,
+  "Attraction": 0.8,
+  "Donnee": "fictive (règle de la démonstration)"
+ },
+ {
+  "id": "neutre",
+  "Libelle": "Blanc neutre (≈ 4 000 K)",
+  "Couleur": "#cfd9e6",
+  "Rang": 4,
+  "Attraction": 1.2,
+  "Donnee": "fictive (règle de la démonstration)"
+ },
+ {
+  "id": "froid",
+  "Libelle": "Blanc froid (≥ 5 000 K)",
+  "Couleur": "#8fb4e8",
+  "Rang": 5,
+  "Attraction": 1.6,
+  "Donnee": "fictive (règle de la démonstration)"
+ }
+]

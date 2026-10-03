@@ -1,0 +1,90 @@
+[
+ {
+  "id": "M1",
+  "Libelle": "Lanterne LED blanc neutre",
+  "Modele3D": "streetlamp",
+  "Classe": "neutre",
+  "Temperature_K": 4000,
+  "Flux_lm": 5200,
+  "ULOR_pct": 3,
+  "Remarque": "Parc ancien rénové en 2014",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M2",
+  "Libelle": "Lanterne LED blanc chaud",
+  "Modele3D": "streetlamp",
+  "Classe": "chaud",
+  "Temperature_K": 3000,
+  "Flux_lm": 4200,
+  "ULOR_pct": 3,
+  "Remarque": "Référence actuelle de la Ville",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M3",
+  "Libelle": "Lanterne LED ambre",
+  "Modele3D": "streetlamp",
+  "Classe": "ambre",
+  "Temperature_K": 2200,
+  "Flux_lm": 3300,
+  "ULOR_pct": 0,
+  "Remarque": "Ambre à conversion de phosphore, abat-jour plan",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M4",
+  "Libelle": "Sodium haute pression",
+  "Modele3D": "streetlamp",
+  "Classe": "sodium",
+  "Temperature_K": 2000,
+  "Flux_lm": 6800,
+  "ULOR_pct": 8,
+  "Remarque": "Ancien parc, avant rénovation",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M5",
+  "Libelle": "Applique de façade LED",
+  "Modele3D": "wall_light",
+  "Classe": "chaud",
+  "Temperature_K": 3000,
+  "Flux_lm": 1500,
+  "ULOR_pct": 25,
+  "Remarque": "Éclaire aussi vers le haut",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M6",
+  "Libelle": "Encastré de sol LED",
+  "Modele3D": "bollard",
+  "Classe": "chaud",
+  "Temperature_K": 3000,
+  "Flux_lm": 600,
+  "ULOR_pct": 0,
+  "Remarque": "Balisage de cheminement",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M7",
+  "Libelle": "Boule opaline",
+  "Modele3D": "lampball",
+  "Classe": "neutre",
+  "Temperature_K": 4000,
+  "Flux_lm": 2400,
+  "ULOR_pct": 50,
+  "Remarque": "Diffuse dans toutes les directions",
+  "Donnee": "fictive (modèle d’exemple)"
+ },
+ {
+  "id": "M8",
+  "Libelle": "Projecteur LED de monument",
+  "Modele3D": "projector",
+  "Classe": "froid",
+  "Temperature_K": 5000,
+  "Flux_lm": 9000,
+  "ULOR_pct": 15,
+  "Remarque": "Mise en lumière de façade",
+  "Donnee": "fictive (modèle d’exemple)"
+ }
+]
