@@ -794,6 +794,11 @@
         }
         .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); font-style: italic; }
         .legend-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+        /* La légende s'étend en hauteur tant que la carte a la place : la fenêtre moins ce qui occupe le haut (en-tête, rangée de pastilles,
+           barre de sélection) et le bas (tête de la légende, marge). 220 px au moins ; pendant le récit et sur mobile, les ancrages propres restent. */
+        body:not(.mobile-layout):not(.story-presenting) .legend-body {
+            max-height: var(--legende-corps-max, max(220px, calc(100dvh - 250px)));
+        }
         .legend.collapsed .legend-body { display: none; }
         .legend-row { display: flex; align-items: center; gap: 10px; }
         .legend-row .swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -2088,6 +2093,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004r"></script>
+    <script type="module" src="./app_v7.js?v=20261004u"></script>
 </body>
 </html>

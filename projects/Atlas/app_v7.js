@@ -3242,6 +3242,8 @@ function initMap() {
             showAccuracyCircle: true,
         });
         map.addControl(_geoloc, 'bottom-right');
+        // MapLibre vérifie la permission après coup et désactive son bouton sans le dire : le dock relit le verdict une fois qu'il est rendu.
+        [1200, 4000].forEach((ms) => setTimeout(() => { try { refreshControlsDock(); } catch (_) { /* dock pas encore monté */ } }, ms));
         suivreBandeAttribution();
         // La pastille s'allume tant que la carte suit la position — l'état que
         // le bouton d'origine signalait en bleu. Déplacer la carte à la main
@@ -6466,7 +6468,9 @@ function listDockPills() {
     // ensuite, en s'éloignant de la boussole.
     if (pastilleLocalisationRequise({
         mobile,
-        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation,
+        // Utilisable, pas seulement présente : dans l'iframe d'un widget Grist la permission est refusée, MapLibre désactive son bouton, et une
+        // pastille qui ne fait rien est pire qu'une pastille absente.
+        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation && localisationDisponible(),
     })) {
         pills.push({
             id: 'localiser',
@@ -7856,9 +7860,28 @@ function mesurerEtageRecit() {
  * Légende et bulle côte à côte, ou empilées : on mesure la carte, pas la
  * fenêtre — en édition, rail et panneaux mangent la largeur.
  */
+/**
+ * Jusqu'où la légende dépliée peut monter : sous la colonne de boutons de gauche (les commandes de l'hôte), qu'elle ne doit pas gêner.
+ * Le bas de cette colonne est mesuré quand elle est visible puis retenu — elle se masque quand un panneau ou la barre de sélection
+ * s'ouvre, et la légende ne doit pas lui monter dessus à son retour.
+ */
+let _basCommandesGauche = 0;
+function majHauteurLegende() {
+    const frame = $('map-frame');
+    if (!frame) return;
+    const cmd = $('commandes-hote');
+    if (cmd && cmd.getClientRects().length) _basCommandesGauche = cmd.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+    const reserve = (_basCommandesGauche || 200) + 16;
+    const tete = $('legend-head')?.offsetHeight || 40;
+    // 8 px sous la légende, 8 px de respiration au-dessus de son corps.
+    const dispo = frame.clientHeight - reserve - tete - 16;
+    frame.style.setProperty('--legende-corps-max', `${Math.max(220, Math.floor(dispo))}px`);
+}
+
 function majEtageCarte() {
     const frame = $('map-frame');
     if (!frame) return;
+    majHauteurLegende();
     const cote = etageCoteACote({
         largeurCarte: frame.clientWidth,
         mobile: document.body.classList.contains('mobile-layout'),
@@ -17470,6 +17493,8 @@ function wireEvents() {
     // fenêtre : c'est la carte qu'on observe.
     if (typeof ResizeObserver !== 'undefined' && $('map-frame')) {
         new ResizeObserver(() => majEtageCarte()).observe($('map-frame'));
+        // Un bouton de plus à gauche (synchronisation, posture) allonge la colonne : la légende lui laisse la place.
+        if ($('commandes-hote')) new ResizeObserver(() => majHauteurLegende()).observe($('commandes-hote'));
     } else {
         majEtageCarte();
     }
