@@ -317,8 +317,54 @@
     return { type: 'Point', coordinates: sommets[0] };
   }
 
+  /**
+   * Une carte qui montre, et ou l'on ne repond pas.
+   *
+   * Illustrer une question — « voici ou sont ces cinq lieux » — n'est pas y
+   * repondre : aucun clic n'ecrit, et les reperes portent l'etiquette qu'ils
+   * ont dans la liste, pour qu'on puisse passer de l'un a l'autre des yeux.
+   */
+  function montrer(hote, opts) {
+    opts = opts || {};
+    var reperes = opts.reperes || [];
+    return chargerMapLibre().then(function (maplibregl) {
+      var centre = opts.centre;
+      if (!centre && reperes.length) {
+        // Sans cadrage donne, on se place sur les reperes.
+        var lon = 0, lat = 0;
+        reperes.forEach(function (r) { lon += Number(r.lon); lat += Number(r.lat); });
+        centre = [lon / reperes.length, lat / reperes.length];
+      }
+      var carte = new maplibregl.Map({
+        container: hote,
+        style: styleDuFond(opts.fond),
+        center: centre || [2.35, 46.6],
+        zoom: opts.zoom == null ? (reperes.length ? 13 : 5) : opts.zoom,
+        attributionControl: { compact: true },
+        interactive: opts.interactive !== false
+      });
+      carte.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+      carte.on('load', function () {
+        reperes.forEach(function (r) {
+          var lon = Number(r.lon), lat = Number(r.lat);
+          if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
+          var el = document.createElement('span');
+          el.className = 'fr-carte__repere';
+          el.textContent = r.etiquette == null ? '' : String(r.etiquette);
+          if (r.titre) el.title = String(r.titre);
+          new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(carte);
+        });
+      });
+      return {
+        carte: carte,
+        detruire: function () { try { carte.remove(); } catch (e) { /* deja partie */ } }
+      };
+    });
+  }
+
   return {
     VERSION: VERSION,
+    montrer: montrer,
     FONDS: Object.keys(FONDS),
     monter: monter,
     // Exposés pour les essais : ce que la carte calcule sans carte.

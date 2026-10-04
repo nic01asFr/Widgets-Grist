@@ -489,3 +489,26 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 @media (max-width: 30rem) {
   .fr-form .fr-carte { height: 13rem; }
 }
+
+/* Illustrer une question : l'image ou la carte vient avant la saisie, parce
+   qu'on regarde avant de répondre. */
+.fr-form .fr-illustration, .champ-bloc__rendu .fr-illustration { margin: 0 0 0.8rem; }
+.fr-form .fr-illustration__image img, .champ-bloc__rendu .fr-illustration__image img {
+  max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--bordure, #ddd);
+}
+.fr-form .fr-illustration__legende, .champ-bloc__rendu .fr-illustration__legende { margin-top: 0.3rem; }
+/* Une carte qui montre : on peut la déplacer, mais y cliquer n'écrit rien. */
+.fr-carte--montre { cursor: grab; }
+.fr-carte__repere {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.7rem; height: 1.7rem; border-radius: 999px;
+  background: var(--blue-france); color: #fff; font-size: 0.8rem; font-weight: 600;
+  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+/* Une page intégrée : elle occupe la largeur de la question, et sa hauteur
+   est celle qu'on lui a donnée — on ne devine pas le contenu d'autrui. */
+.fr-form .fr-illustration__cadre, .champ-bloc__rendu .fr-illustration__cadre {
+  width: 100%; border: 1px solid var(--bordure, #ddd); border-radius: 8px; background: #fff;
+}
+/* La carte du compositeur, où l'on pose les repères. */
+.fr-carte--composer { height: 14rem; margin-bottom: 0.5rem; cursor: crosshair; }

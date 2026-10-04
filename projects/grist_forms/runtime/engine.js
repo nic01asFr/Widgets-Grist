@@ -396,6 +396,21 @@
     return '';
   }
 
+  /**
+   * Une adresse qu'on accepte d'integrer dans la page.
+   *
+   * > **Seulement `https:`.** Une page integree s'execute chez la personne qui
+   * > repond ; `javascript:` executerait n'importe quoi dans le formulaire, et
+   * > `http:` ferait tomber la page entiere en contenu mixte. Le bac a sable
+   * > (`sandbox`) fait le reste : la page ne partage ni l'origine, ni les
+   * > cookies, et ne peut pas emmener le repondant ailleurs sans son geste.
+   */
+  function safeFrameUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    var u = url.trim();
+    return /^https:\/\//i.test(u) ? u : '';
+  }
+
   function renderBrandImg(url, alt, cssClass) {
     var safe = safeImageUrl(url);
     if (!safe) return '';
@@ -932,13 +947,75 @@
    * doit rendre une question utilisable. Un `Bool` devient une case, pas un
    * champ texte où la personne écrirait « oui ».
    */
+  /**
+   * Ce qui se montre avant qu'on reponde.
+   *
+   * > **Une question ne se comprend pas toujours avec des mots.** « Classez ces
+   * > cinq lieux » suppose qu'on sache ou ils sont ; « reconnaissez-vous cet
+   * > amenagement ? » suppose qu'on l'ait vu. Le questionnaire ecrit a la main
+   * > posait une carte au-dessus du classement — c'est cette place-la qu'on
+   * > rend ici, pour n'importe quelle question.
+   *
+   * Trois sources, declarees dans `options.illustration` :
+   *
+   *     { type: 'image', url, alt, legende }
+   *     { type: 'carte', centre, zoom, fond, reperes: [{ etiquette, lon, lat }] }
+   *
+   * L'image accepte une URL ou un fichier depose (une `data:` URL) ; `alt` est
+   * ce que lira quelqu'un qui ne voit pas l'image, et il n'est pas facultatif
+   * quand l'image porte l'information.
+   */
+  function renderIllustration(field) {
+    var ill = field && field.options && field.options.illustration;
+    if (!ill || !ill.type) return '';
+    var legende = ill.legende
+      ? '<figcaption class="fr-hint-text fr-illustration__legende">' + escapeHtml(ill.legende) + '</figcaption>'
+      : '';
+    if (ill.type === 'image') {
+      var img = renderBrandImg(ill.url, ill.alt, 'fr-illustration__image');
+      if (!img) return '';
+      return '<figure class="fr-illustration">' + img + legende + '</figure>';
+    }
+    if (ill.type === 'inclusion') {
+      // Une page integree : une vue Grist, un tableau de bord, un plan, un
+      // widget. Le formulaire devient le cadre d'un contexte, pas seulement
+      // une suite de questions.
+      var src = safeFrameUrl(ill.url);
+      if (!src) {
+        return ill.url
+          ? '<p class="fr-hint-text fr-illustration__refus">La page \u00e0 int\u00e9grer doit \u00eatre en <code>https</code>.</p>'
+          : '';
+      }
+      var hauteur = Number(ill.hauteur) > 0 ? Math.min(900, Number(ill.hauteur)) : 320;
+      return '<figure class="fr-illustration">' +
+        '<iframe class="fr-illustration__cadre" src="' + escapeHtml(src) + '" ' +
+        'title="' + escapeHtml(ill.titre || ill.legende || 'Contenu illustrant la question') + '" ' +
+        'style="height:' + hauteur + 'px" loading="lazy" referrerpolicy="no-referrer" ' +
+        'sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>' +
+        legende + '</figure>';
+    }
+    if (ill.type === 'carte') {
+      // La carte d'illustration ne recoit pas de reponse : elle montre ou sont
+      // les choses. Les reperes portent la meme etiquette que dans la liste.
+      return '<figure class="fr-illustration">' +
+        '<div class="fr-carte fr-carte--montre" data-carte-illustre="' + escapeHtml(field.colId) + '" ' +
+        'data-centre="' + escapeHtml(JSON.stringify(ill.centre || null)) + '" ' +
+        'data-zoom="' + escapeHtml(String(ill.zoom || '')) + '" ' +
+        'data-fond="' + escapeHtml(ill.fond || 'plan') + '" ' +
+        'data-reperes="' + escapeHtml(JSON.stringify(ill.reperes || [])) + '">' +
+        '<p class="fr-hint-text fr-carte__attente">La carte s\u2019affiche ici.</p></div>' +
+        legende + '</figure>';
+    }
+    return '';
+  }
+
   function renderFieldHtml(field, values, optionsList, formDef) {
     values = values || {};
     var value = values[field.colId];
     var parDefaut = Types && Types.defaultWidget ? Types.defaultWidget(field && field.type) : 'text';
     var renderer = WIDGET_RENDERERS[field && field.widget] ||
       WIDGET_RENDERERS[parDefaut] || WIDGET_RENDERERS.text;
-    var html = renderer(field, value, optionsList, formDef);
+    var html = renderIllustration(field) + renderer(field, value, optionsList, formDef);
     // Un `kind` est une couche posee sur la saisie, pas un widget de plus :
     // « Autre : … » s'ajoute a la liste deroulante comme aux cases a cocher.
     if (field && (field.kind === 'choix_autre' || field.kind === 'classement')) {
@@ -1616,6 +1693,7 @@
      * aurait recree une, et la position se serait perdue a chaque fois.
      */
     function brancherCartes(fields) {
+      brancherCartesIllustrees();
       var hotes = rootEl.querySelectorAll('.fr-carte[data-carte-de]');
       for (var i = 0; i < hotes.length; i++) (function (hote) {
         var colId = hote.getAttribute('data-carte-de');
@@ -1647,6 +1725,40 @@
             attente.textContent = 'La carte n\u2019a pas pu \u00eatre charg\u00e9e. ' +
               'Vous pouvez relever votre position ou saisir le lieu ci-dessous.';
           }
+        });
+      }(hotes[i]));
+    }
+
+    /**
+     * Les cartes qui illustrent, et ou l'on ne repond pas.
+     *
+     * Meme carte, meme fond, memes reperes qu'Atlas — mais aucun clic n'y
+     * ecrit : elle est la pour qu'on sache de quoi parle la question.
+     */
+    function brancherCartesIllustrees() {
+      var hotes = rootEl.querySelectorAll('.fr-carte[data-carte-illustre]');
+      for (var i = 0; i < hotes.length; i++) (function (hote) {
+        var cle = 'illustration:' + hote.getAttribute('data-carte-illustre');
+        if (cartes[cle] && cartes[cle].hote === hote) return;
+        if (cartes[cle]) { cartes[cle].vue.detruire(); delete cartes[cle]; }
+        var carteApi = typeof window !== 'undefined' ? window.FormCarte : null;
+        if (!carteApi || typeof carteApi.montrer !== 'function') return;
+        var centre = null, reperes = [];
+        try { centre = JSON.parse(hote.getAttribute('data-centre')); } catch (e) { centre = null; }
+        try { reperes = JSON.parse(hote.getAttribute('data-reperes')) || []; } catch (e) { reperes = []; }
+        var zoom = parseFloat(hote.getAttribute('data-zoom'));
+        carteApi.montrer(hote, {
+          centre: centre || undefined,
+          zoom: Number.isFinite(zoom) ? zoom : undefined,
+          fond: hote.getAttribute('data-fond'),
+          reperes: reperes
+        }).then(function (vue) {
+          var attente = hote.querySelector('.fr-carte__attente');
+          if (attente) attente.remove();
+          cartes[cle] = { hote: hote, vue: vue };
+        }).catch(function () {
+          var attente = hote.querySelector('.fr-carte__attente');
+          if (attente) attente.textContent = 'La carte n\u2019a pas pu \u00eatre charg\u00e9e.';
         });
       }(hotes[i]));
     }

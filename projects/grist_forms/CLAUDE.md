@@ -38,9 +38,9 @@ projects/grist_forms/
 └── docs/PUBLICATION.md
 ```
 
-## État — **v1 + phase 2 + audience + les saisies de l'enquête** (2026-10-04)
+## État — **v1 + phase 2 + audience + les saisies de l'enquête + l'illustration** (2026-10-04)
 
-`node --test projects/grist_forms/tests/*.test.js` → **208 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **216 tests verts**
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
@@ -73,6 +73,24 @@ Trois choses mesurées qui commandent ces choix :
 Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
 `colId` : sans cela, les rangs et la précision d'une autre personne restaient
 dans la ligne.
+
+### Illustrer une question (04/10/2026)
+
+Une question ne se comprend pas toujours avec des mots : « classez ces cinq
+lieux » suppose qu'on sache où ils sont. `options.illustration` pose quelque
+chose **avant** la saisie, pour n'importe quelle question — échelle comprise.
+
+| `type` | Ce qui s'affiche | Garde-fous |
+|---|---|---|
+| `image` | une image, URL ou fichier déposé (`data:`) | `alt` réclamé ; adresses exécutables refusées ; dépôt plafonné à 400 Ko |
+| `carte` | la carte d'Atlas, avec des repères étiquetés A, B, C… | aucune réponse n'y est écrite ; les repères se posent au clic dans le compositeur |
+| `inclusion` | une page entière : vue Grist, tableau de bord, **autre widget** | `https` seulement, bac à sable sans `allow-same-origin`, `loading="lazy"` |
+
+L'inclusion est le geste d'Artefactory ramené au formulaire : le répondant
+décide **devant** le contexte au lieu de l'avoir lu ailleurs une heure plus tôt.
+Éprouvé en Grist réel le 04/10/2026 — l'étape « Les lieux à traiter en
+priorité » porte la carte des cinq lieux, et la question suivante charge le
+widget Artefactory du dépôt dans le formulaire.
 
 ### Le compositeur, après l'essai en Grist réel (04/10/2026)
 

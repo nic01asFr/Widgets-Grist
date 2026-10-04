@@ -2180,6 +2180,60 @@ function renderBuilder() {
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
+  monterCarteDeComposition();
+}
+
+/**
+ * La carte sur laquelle on pose les reperes d'une illustration.
+ *
+ * > **Poser un repere, c'est montrer ou c'est.** Saisir deux nombres pour
+ * > chacun des cinq lieux d'un quartier serait demander des coordonnees a
+ * > quelqu'un qui regarde une carte. On choisit la proposition, on clique a
+ * > l'endroit, le repere s'y met.
+ */
+function monterCarteDeComposition() {
+  const hote = document.querySelector('.fr-carte--composer');
+  if (!hote || !window.FormCarte || typeof FormCarte.montrer !== 'function') return;
+  const [si, fi] = (hote.getAttribute('data-champ') || '').split('-').map(Number);
+  const f = S.currentDef?.sections?.[si]?.fields?.[fi];
+  const ill = f && f.options && f.options.illustration;
+  if (!ill) return;
+  const options = S.currentDef.choices[f.colId] || (f.options.choices || []);
+  const reperes = (ill.reperes || []).map((r) => ({
+    etiquette: r.etiquette, lon: r.lon, lat: r.lat, titre: r.option
+  }));
+  FormCarte.montrer(hote, { centre: ill.centre, zoom: ill.zoom, fond: ill.fond, reperes })
+    .then((vue) => {
+      const attente = hote.querySelector('.fr-hint-text');
+      if (attente) attente.remove();
+      vue.carte.on('click', (ev) => {
+        const choisi = S.repereEnCours;
+        if (!choisi || choisi.si !== si || choisi.fi !== fi) {
+          toast('Choisissez d’abord la proposition à placer', 'error');
+          return;
+        }
+        const rang = options.indexOf(choisi.option);
+        const etiquette = rang >= 0 ? String.fromCharCode(65 + rang) : '•';
+        const liste = (ill.reperes || []).filter((r) => r.option !== choisi.option);
+        liste.push({
+          option: choisi.option, etiquette,
+          lon: Math.round(ev.lngLat.lng * 1e6) / 1e6,
+          lat: Math.round(ev.lngLat.lat * 1e6) / 1e6
+        });
+        ill.reperes = liste;
+        // Le cadrage de la carte suit ce qu'on vient de regarder : sans lui,
+        // le public rouvrirait la carte ailleurs que sur les reperes.
+        const c = vue.carte.getCenter();
+        ill.centre = [Math.round(c.lng * 1e6) / 1e6, Math.round(c.lat * 1e6) / 1e6];
+        ill.zoom = Math.round(vue.carte.getZoom() * 10) / 10;
+        marquerModifie();
+        renderBuilder();
+      });
+    })
+    .catch(() => {
+      const attente = hote.querySelector('.fr-hint-text');
+      if (attente) attente.textContent = 'La carte n’a pas pu être chargée.';
+    });
 }
 
 /** Les réglages, ou le rendu : on passe de l'un à l'autre, on ne les subit pas côte à côte. */
@@ -2807,6 +2861,107 @@ function allerA(si, fi) {
   choisir('question', si, fi);
 }
 
+/**
+ * Illustrer une question.
+ *
+ * > **Une question ne se comprend pas toujours avec des mots.** « Classez ces
+ * > cinq lieux » suppose qu'on sache ou ils sont. Le questionnaire ecrit a la
+ * > main posait une carte au-dessus du classement ; ici, n'importe quelle
+ * > question peut porter une image, une carte, ou une page entiere.
+ *
+ * L'image vient d'une URL ou d'un fichier depose — le meme geste que pour le
+ * logo du questionnaire, et le meme garde-fou sur l'adresse. La carte situe
+ * des reperes, qu'on pose en cliquant : les saisir en chiffres serait demander
+ * des coordonnees a quelqu'un qui regarde un quartier. La page integree, elle,
+ * ouvre le formulaire sur ce qui existe deja ailleurs : une vue Grist publiee,
+ * un tableau de bord, un autre widget du depot — le repondant decide devant
+ * le contexte, au lieu de l'avoir lu dans un courriel une heure plus tot.
+ */
+function renderIllustrationDuChamp(def, si, f, fi) {
+  const ill = (f.options && f.options.illustration) || null;
+  const type = ill && ill.type ? ill.type : '';
+  const choix = [['', 'Aucune'], ['image', 'Une image'], ['carte', 'Une carte'],
+    ['inclusion', 'Une page (vue Grist, tableau de bord, widget…)']]
+    .map(([v, l]) => `<option value="${v}" ${type === v ? 'selected' : ''}>${l}</option>`).join('');
+
+  let corps = '';
+  if (type === 'image') {
+    corps = `
+      <div class="fr-input-group">
+        <label class="fr-label" for="ill-url-${si}-${fi}">Adresse de l’image</label>
+        <input class="fr-input" id="ill-url-${si}-${fi}" value="${esc(ill.url || '')}" placeholder="https://…"
+          onchange="App.onIllustration(${si}, ${fi}, 'url', this.value)">
+        <input class="fr-input fr-mt-1w" type="file" accept="image/*"
+          aria-label="Choisir une image sur cet appareil"
+          onchange="App.onIllustrationFichier(${si}, ${fi}, this.files && this.files[0])">
+      </div>
+      <div class="bloc__duo">
+        <div class="fr-input-group">
+          <label class="fr-label" for="ill-alt-${si}-${fi}">Description de l’image ${hintIcon('Ce que lira quelqu’un qui ne voit pas l’image. Obligatoire si l’image porte l’information.')}</label>
+          <input class="fr-input" id="ill-alt-${si}-${fi}" value="${esc(ill.alt || '')}"
+            onchange="App.onIllustration(${si}, ${fi}, 'alt', this.value)">
+        </div>
+        <div class="fr-input-group">
+          <label class="fr-label" for="ill-leg-${si}-${fi}">Légende</label>
+          <input class="fr-input" id="ill-leg-${si}-${fi}" value="${esc(ill.legende || '')}"
+            onchange="App.onIllustration(${si}, ${fi}, 'legende', this.value)">
+        </div>
+      </div>
+      ${ill.url && !ill.alt ? `<p class="fr-hint-text">Sans description, l’image n’existe pas pour qui ne la voit pas.</p>` : ''}`;
+  } else if (type === 'inclusion') {
+    corps = `
+      <div class="fr-input-group">
+        <label class="fr-label" for="ill-src-${si}-${fi}">Adresse de la page ${hintIcon('Une vue Grist publiée, un tableau de bord, un plan, un widget… En https : la page s’exécute chez la personne qui répond.')}</label>
+        <input class="fr-input" id="ill-src-${si}-${fi}" value="${esc(ill.url || '')}" placeholder="https://…"
+          onchange="App.onIllustration(${si}, ${fi}, 'url', this.value)">
+      </div>
+      <div class="bloc__duo">
+        <div class="fr-input-group">
+          <label class="fr-label" for="ill-h-${si}-${fi}">Hauteur (pixels)</label>
+          <input class="fr-input" id="ill-h-${si}-${fi}" type="number" min="120" max="900" step="20"
+            value="${ill.hauteur || 320}" onchange="App.onIllustration(${si}, ${fi}, 'hauteur', this.value)">
+        </div>
+        <div class="fr-input-group">
+          <label class="fr-label" for="ill-t-${si}-${fi}">Ce que la page montre ${hintIcon('Lu par les lecteurs d’écran à la place du contenu intégré.')}</label>
+          <input class="fr-input" id="ill-t-${si}-${fi}" value="${esc(ill.titre || '')}"
+            onchange="App.onIllustration(${si}, ${fi}, 'titre', this.value)">
+        </div>
+      </div>
+      <div class="fr-input-group">
+        <label class="fr-label" for="ill-legi-${si}-${fi}">Légende</label>
+        <input class="fr-input" id="ill-legi-${si}-${fi}" value="${esc(ill.legende || '')}"
+          onchange="App.onIllustration(${si}, ${fi}, 'legende', this.value)">
+      </div>
+      <p class="fr-hint-text">La page est isolée (bac à sable) : elle ne partage ni l’origine, ni les cookies du formulaire.</p>`;
+  } else if (type === 'carte') {
+    const reperes = ill.reperes || [];
+    const options = def.choices[f.colId] || (f.options && f.options.choices) || [];
+    corps = `
+      <p class="fr-hint-text">Cliquez sur la carte pour poser le repère de la proposition choisie.</p>
+      <div class="fr-select-group">
+        <label class="fr-label" for="ill-rep-${si}-${fi}">Proposition à placer</label>
+        <select class="fr-select" id="ill-rep-${si}-${fi}" onchange="App.illustrationRepere(${si}, ${fi}, this.value)">
+          <option value="">— choisir —</option>
+          ${options.map((o, k) => {
+            const pose = reperes.find((r) => r.option === o);
+            return `<option value="${esc(o)}">${String.fromCharCode(65 + k)} · ${esc(o)}${pose ? ' ✓' : ''}</option>`;
+          }).join('')}
+        </select>
+      </div>
+      <div class="fr-carte fr-carte--composer" id="ill-carte-${si}-${fi}"
+        data-champ="${si}-${fi}"><p class="fr-hint-text">La carte s’affiche ici.</p></div>
+      <p class="fr-hint-text">${reperes.length} repère(s) posé(s)${reperes.length ? ' — ' + esc(reperes.map((r) => r.etiquette).join(', ')) : ''}</p>
+      ${reperes.length ? `<button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.illustrationViderReperes(${si}, ${fi})">Retirer les repères</button>` : ''}`;
+  }
+
+  return `
+    <div class="fr-select-group fr-mt-1w">
+      <label class="fr-label" for="ill-${si}-${fi}">Illustration ${hintIcon('Ce qui se montre avant la question : une image, ou une carte qui situe ce dont on parle.')}</label>
+      <select class="fr-select" id="ill-${si}-${fi}" onchange="App.onIllustrationType(${si}, ${fi}, this.value)">${choix}</select>
+    </div>
+    ${corps}`;
+}
+
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
 function normaliserSelection() {
   const def = S.currentDef;
@@ -3279,6 +3434,7 @@ function renderFieldEditor(def, si, f, fi) {
             onchange="App.onFieldInput(${si}, ${fi}, 'required', this.checked)">
           <label class="fr-label" for="req-${si}-${fi}">Réponse obligatoire</label>
         </div>
+        ${renderIllustrationDuChamp(def, si, f, fi)}
         ${renderFieldPreview(f, si, fi)}
       </section>
 
@@ -3522,6 +3678,71 @@ function onFieldChoices(si, fi, text) {
   const f = S.currentDef.sections[si].fields[fi];
   const list = text.split('\n').map(s => s.trim()).filter(Boolean);
   if (f.colId) S.currentDef.choices[f.colId] = list;
+}
+
+/** Quelle sorte d'illustration cette question porte. */
+function onIllustrationType(si, fi, type) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (!type) delete f.options.illustration;
+  else {
+    const ancienne = f.options.illustration || {};
+    if (type === 'carte') {
+      f.options.illustration = { type: 'carte', fond: ancienne.fond || 'plan', reperes: ancienne.reperes || [] };
+    } else if (type === 'inclusion') {
+      f.options.illustration = { type: 'inclusion', url: ancienne.url || '', hauteur: ancienne.hauteur || 320,
+        titre: ancienne.titre || '', legende: ancienne.legende || '' };
+    } else {
+      f.options.illustration = { type: 'image', url: ancienne.url || '', alt: ancienne.alt || '',
+        legende: ancienne.legende || '' };
+    }
+  }
+  marquerModifie();
+  renderBuilder();
+}
+
+function onIllustration(si, fi, cle, valeur) {
+  const f = S.currentDef.sections[si].fields[fi];
+  if (!f.options || !f.options.illustration) return;
+  f.options.illustration[cle] = valeur;
+  marquerModifie();
+  renderBuilder();
+}
+
+/**
+ * Une image deposee depuis l'appareil.
+ *
+ * Elle part dans le FormDef, en `data:` URL : un formulaire doit pouvoir
+ * voyager — copie, publie, embarque — sans dependre d'un fichier reste
+ * ailleurs. Au-dela de quelques centaines de kilo-octets, on refuse : la
+ * definition se recharge a chaque ouverture, et une photo d'appareil la
+ * rendrait lourde pour tout le monde.
+ */
+function onIllustrationFichier(si, fi, fichier) {
+  if (!fichier) return;
+  const PLAFOND = 400 * 1024;
+  if (fichier.size > PLAFOND) {
+    toast('Image trop lourde (' + Math.round(fichier.size / 1024) + ' Ko). Réduisez-la, ou donnez son adresse.', 'error');
+    return;
+  }
+  const lecteur = new FileReader();
+  lecteur.onload = () => {
+    onIllustration(si, fi, 'url', String(lecteur.result || ''));
+  };
+  lecteur.readAsDataURL(fichier);
+}
+
+/** La proposition dont on va poser le repere au prochain clic sur la carte. */
+function illustrationRepere(si, fi, option) {
+  S.repereEnCours = option ? { si, fi, option } : null;
+}
+
+function illustrationViderReperes(si, fi) {
+  const f = S.currentDef.sections[si].fields[fi];
+  if (!f.options || !f.options.illustration) return;
+  f.options.illustration.reperes = [];
+  marquerModifie();
+  renderBuilder();
 }
 
 /** Combien de rangs un classement retient. */
@@ -4437,7 +4658,8 @@ window.App = {
   saveForm, refreshPreview: mountPreview, choisir, panneauDroit,
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
-  ouvrirPlan, allerA, fermerModale, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  ouvrirPlan, allerA, fermerModale,
+  onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /**
