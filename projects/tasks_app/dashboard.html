@@ -878,6 +878,33 @@ const TF = (function () {
         if (statusKnown(cfg, v)) return v;
         return cfg && cfg.firstValue != null ? cfg.firstValue : 'todo';
     }
+    // Statut de reouverture quand une tache terminee repasse sous 100 % : le premier statut actif, ou le
+    // suivant si de l'avancement existe deja (« En cours » plutot que « A faire »).
+    function reopenValue(cfg, progression) {
+        const live = cfg.list.filter(function (s) { return isLive(cfg, s.value); });
+        if (!live.length) return cfg.firstValue;
+        return (Number(progression) > 0 && live.length > 1) ? live[1].value : live[0].value;
+    }
+    // Cloture coherente : statut terminé <-> 100 % <-> dateCloture. Renvoie les champs DERIVES a ecrire en
+    // plus de ce qui change (changes = { statut } ou { progression }) ; ne modifie pas la tache.
+    //   - passer au statut terminé : 100 % et date de cloture (si elle n'etait pas deja posee) ;
+    //   - atteindre 100 % : statut terminé et date de cloture ;
+    //   - repasser sous 100 % ou quitter le statut terminé : date de cloture effacee (et statut rouvert).
+    function completionPatch(cfg, task, changes) {
+        const out = {};
+        if (!cfg || !task || !changes) return out;
+        const was = isDone(cfg, task.statut);
+        if ('statut' in changes) {
+            const now = isDone(cfg, changes.statut);
+            if (now) { if (Number(task.progression) !== 100) out.progression = 100; if (!was) out.dateCloture = todayGrist(); }
+            else if (was) out.dateCloture = null;
+        } else if ('progression' in changes) {
+            const p = Number(changes.progression);
+            if (p >= 100 && !was) { out.statut = cfg.doneValue; out.dateCloture = todayGrist(); }
+            else if (p < 100 && was) { out.statut = reopenValue(cfg, p); out.dateCloture = null; }
+        }
+        return out;
+    }
     function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
     // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
@@ -1341,6 +1368,8 @@ const TF = (function () {
         isDead: isDead,
         isLive: isLive,
         statusOf: statusOf,
+        completionPatch: completionPatch,
+        reopenValue: reopenValue,
         statusKnown: statusKnown,
         gristToDate: gristToDate,
         dateToGrist: dateToGrist,
@@ -1401,6 +1430,7 @@ let gristReady = false;
 let isEditMode = false;
 let selectedCompId = null;
 let dashConfig = { layout: DEFAULT_LAYOUT.map(c => ({...c, config:{...c.config}})) };
+let taskCols = new Set();   // colonnes reelles de Tasks (dateCloture n'existe que si le Plan a ete ouvert)
 let searchQuery = '';  // recherche texte (commune aux 4 widgets)
 let filters = { periode: 'all', projets: [], assignes: [], statuts: [] };
 // WBS-04: par défaut compter uniquement les feuilles (pas les parents) pour éviter double-compte
@@ -2155,6 +2185,7 @@ async function loadAllData() {
             grist.docApi.fetchTable('Projects'),
             grist.docApi.fetchTable('Team'),
         ]);
+        taskCols = new Set(Object.keys(td || {}));
         tasks=convert(td); projects=convert(pd); team=convert(md);
         rebuildChildrenCache();
         try { statusCfg = await TF.loadStatusConfig(grist, 'Tasks', 'statut', tasks.map(t => t && t.statut)); } catch (e) {}
@@ -2179,7 +2210,10 @@ async function markDone(taskId, event) {
     event.stopPropagation();
     if (!gristReady) return;
     try {
-        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.doneValue, progression: 100 }]]);
+        const t = tasks.find(x => x.id === taskId);
+        const rec = Object.assign({ statut: statusCfg.doneValue, progression: 100 }, TF.completionPatch(statusCfg, t || {}, { statut: statusCfg.doneValue }));
+        if (taskCols.size) { for (const k in rec) if (!taskCols.has(k)) delete rec[k]; }   // dateCloture n'existe que si le Plan a ete ouvert
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, rec]]);
         await loadAllData();
     } catch(e) { console.error(e); }
 }

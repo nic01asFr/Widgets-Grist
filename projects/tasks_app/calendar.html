@@ -1182,6 +1182,33 @@
                 if (statusKnown(cfg, v)) return v;
                 return cfg && cfg.firstValue != null ? cfg.firstValue : 'todo';
             }
+            // Statut de reouverture quand une tache terminee repasse sous 100 % : le premier statut actif, ou le
+            // suivant si de l'avancement existe deja (« En cours » plutot que « A faire »).
+            function reopenValue(cfg, progression) {
+                const live = cfg.list.filter(function (s) { return isLive(cfg, s.value); });
+                if (!live.length) return cfg.firstValue;
+                return (Number(progression) > 0 && live.length > 1) ? live[1].value : live[0].value;
+            }
+            // Cloture coherente : statut terminé <-> 100 % <-> dateCloture. Renvoie les champs DERIVES a ecrire en
+            // plus de ce qui change (changes = { statut } ou { progression }) ; ne modifie pas la tache.
+            //   - passer au statut terminé : 100 % et date de cloture (si elle n'etait pas deja posee) ;
+            //   - atteindre 100 % : statut terminé et date de cloture ;
+            //   - repasser sous 100 % ou quitter le statut terminé : date de cloture effacee (et statut rouvert).
+            function completionPatch(cfg, task, changes) {
+                const out = {};
+                if (!cfg || !task || !changes) return out;
+                const was = isDone(cfg, task.statut);
+                if ('statut' in changes) {
+                    const now = isDone(cfg, changes.statut);
+                    if (now) { if (Number(task.progression) !== 100) out.progression = 100; if (!was) out.dateCloture = todayGrist(); }
+                    else if (was) out.dateCloture = null;
+                } else if ('progression' in changes) {
+                    const p = Number(changes.progression);
+                    if (p >= 100 && !was) { out.statut = cfg.doneValue; out.dateCloture = todayGrist(); }
+                    else if (p < 100 && was) { out.statut = reopenValue(cfg, p); out.dateCloture = null; }
+                }
+                return out;
+            }
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
@@ -1645,6 +1672,8 @@
                 isDead: isDead,
                 isLive: isLive,
                 statusOf: statusOf,
+                completionPatch: completionPatch,
+                reopenValue: reopenValue,
                 statusKnown: statusKnown,
                 gristToDate: gristToDate,
                 dateToGrist: dateToGrist,
@@ -3353,7 +3382,7 @@
                 value = value ? dateToGrist(parseInputDate(value)) : null;
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
-            if (field === 'statut') { const _wasT = TF.isDone(statusCfg, data.statut), _nowT = TF.isDone(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = TF.todayGrist(); else if (!_nowT && _wasT) data.dateCloture = null; }
+            if (field === 'statut' || field === 'progression') Object.assign(data, TF.completionPatch(statusCfg, data, { [field]: value }));
             
             data[field] = value;
             
@@ -3387,6 +3416,7 @@
         function setProgressPreset(value) {
             const data = panelState.editData;
             if (!data) return;
+            if (Object.keys(TF.completionPatch(statusCfg, data, { progression: value })).length) { updateField('progression', value); return; }
             data.progression = value;
             syncLocalTask();
 

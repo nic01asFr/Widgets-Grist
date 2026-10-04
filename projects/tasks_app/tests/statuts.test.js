@@ -250,3 +250,29 @@ describe('statut d\'une tache (statusOf)', () => {
   it('range un statut supprime de la colonne dans le premier statut', () => assert.equal(TF.statusOf(cfg, { statut: 'todo' }), 'a_cadrer'));
   it('ne depend plus du code todo en dur', () => assert.notEqual(TF.statusOf(cfg, {}), 'todo'));
 });
+
+describe('cloture coherente (completionPatch)', () => {
+  const cfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'test');
+  const auj = TF.todayGrist();
+  it('statut terminé -> 100 % et date de cloture', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'inprogress', progression: 40 }, { statut: 'done' }), { progression: 100, dateCloture: auj });
+  });
+  it('statut terminé deja a 100 % -> seulement la date', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'review', progression: 100 }, { statut: 'done' }), { dateCloture: auj });
+  });
+  it('atteindre 100 % -> statut terminé et date', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'inprogress', progression: 60 }, { progression: 100 }), { statut: 'done', dateCloture: auj });
+  });
+  it('repasser sous 100 % -> reouverture et date effacee', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'done', progression: 100, dateCloture: 1 }, { progression: 50 }), { statut: 'inprogress', dateCloture: null });
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'done', progression: 100, dateCloture: 1 }, { progression: 0 }), { statut: 'todo', dateCloture: null });
+  });
+  it('quitter le statut terminé -> date effacee', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'done', progression: 100 }, { statut: 'review' }), { dateCloture: null });
+  });
+  it('ne fait rien quand rien ne change de cloture', () => {
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'inprogress', progression: 10 }, { progression: 80 }), {});
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'todo' }, { statut: 'inprogress' }), {});
+    assert.deepEqual(TF.completionPatch(cfg, { statut: 'todo' }, { titre: 'x' }), {});
+  });
+});
