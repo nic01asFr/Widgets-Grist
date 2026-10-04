@@ -29,19 +29,24 @@ button { color: inherit; }
 textarea { line-height: 1.45; }
 * { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
 
-/* 2. Barre du haut : DEUX lignes fixes, identiques dans les quatre widgets, quelle que soit la largeur.
-      Ligne 1 (navbar)  : titre | vue / navigation de periode | actions (+ Tache, ...).
-      Ligne 2 (bandeau) : recherche, filtres, affichage.
-      Rien ne change de ligne au redimensionnement : le contenu se compacte, et la zone « vue »
-      (navigation + controle segmente) defile horizontalement dans sa ligne si besoin. */
+/* 2. Barre du haut : UNE ligne, identique dans les quatre widgets.
+      titre | vue / navigation de periode | outils (recherche, filtres, affichage) | actions.
+      Quand la place manque, core/taskflow-core.js mesure le debordement reel et choisit, dans l'ordre :
+        (1) une ligne  (2) une ligne compacte (.hz-compact : libelles en icones, recherche dans le bandeau)
+        (3) deux lignes (.hz-two : les outils passent sous le titre)  (4) deux lignes compactes.
+      Le bandeau (.tf-tray) s'ouvre sous la barre pour saisir : recherche, filtres, affichage. */
 .header {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: "title view actions" "tools tools tools";
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "title view tools actions";
     align-items: center;
     column-gap: 14px;
     row-gap: var(--sp-2);
     padding: var(--sp-2) var(--sp-4) 10px;
+}
+.header.hz-two {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "title view actions" "tools tools tools";
 }
 .hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
 .hz-title { grid-area: title; gap: 10px; }
@@ -131,33 +136,57 @@ textarea { line-height: 1.45; }
 .nav-group { display: inline-flex; align-items: center; gap: 6px; }
 .current-period { min-width: 120px; text-align: center; font-size: var(--fs-md); font-weight: 650; white-space: nowrap; }
 
-/* 6. Menus : « Affichage », « ⋯ » et filtres s'ouvrent de la meme facon, avec la meme apparence. */
+/* 6. Bandeau de saisie : « Rechercher », « Filtres » et « Affichage » s'ouvrent au meme endroit, sous la barre,
+      sur toute la largeur. Il pousse le contenu (comme un volet) et se referme au meme bouton ou avec Echap.
+      Le menu « ⋯ » (actions) reste un menu deroulant. */
 .view-menu { position: relative; }
-.tf-menu-panel {
+.tf-tray {
+    grid-column: 1 / -1;
     display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 250;
-    flex-direction: column;
-    gap: var(--sp-3);
-    min-width: 240px;
-    max-width: calc(100vw - 24px);
-    padding: var(--sp-3);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--card-bg);
-    box-shadow: var(--shadow-lg);
+    margin: 2px calc(-1 * var(--sp-4)) -10px;
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 1px solid var(--border);
+    background: var(--surface-2, var(--bg));
 }
-[data-menu].open > .tf-menu-panel { display: flex; }
-.tf-menu-panel.align-right { left: auto; right: 0; }
-.tf-field { display: flex; flex-direction: column; gap: var(--sp-1); }
-.tf-field-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
+.header .tf-tray.open { display: block; }
+.header:not(.hz-two) .tf-tray { grid-row: 2; }
+.header.hz-two .tf-tray { grid-row: 3; }
+.tf-panel { display: none; }
+.tf-panel.open { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-3) 28px; }
+.tf-panel[data-panel="search"].open { display: block; }
+.tf-panel .search-box input { width: 100%; max-width: 440px; }
+.tf-panel .search-box { max-width: 440px; }
+.tf-field { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 150px; }
+.tf-field-label, .fm-group-label, .filter-section-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
 .tf-field select { width: 100%; max-width: none; }
-.tf-menu-panel .tf-menu-action { width: 100%; justify-content: flex-start; padding: 0 var(--sp-3); }
+.tf-panel .tf-menu-action { align-self: flex-end; padding: 0 var(--sp-3); }
 .filter-menu-right { right: 0; left: auto; min-width: 200px; }
-.hz-tools .filter-menu { left: 0; right: auto; max-width: calc(100vw - 24px); }
 .filter-option { font-size: var(--fs-sm); }
+/* Panneau de filtres : des groupes cote a cote, chacun une etiquette puis des pastilles a cocher. */
+.tf-panel .fm-group, .tf-panel .filter-section { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
+.tf-panel .fm-group-label { padding: 0; }
+.tf-panel .fm-group-items, .tf-panel .filter-checkboxes, .tf-panel .filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tf-panel .filter-option, .tf-panel .filter-check, .header .tf-panel .filter-btn {
+    display: inline-flex; align-items: center; gap: 5px; height: auto; padding: 3px 10px;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--card-bg); color: var(--text);
+    font-size: var(--fs-xs); font-weight: 500; cursor: pointer; white-space: nowrap;
+}
+.tf-panel .filter-option input { display: none; }
+.tf-panel .filter-option:hover, .tf-panel .filter-check:hover, .header .tf-panel .filter-btn:hover { border-color: var(--primary); background: var(--card-bg); }
+.tf-panel .filter-option:has(input:checked), .tf-panel .filter-check.active, .header .tf-panel .filter-btn.active {
+    background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); font-weight: 600;
+}
+.tf-panel .filter-option.muted { border-style: dashed; }
+.tf-panel .fm-foot { align-self: flex-end; border: none; margin: 0; padding: 0; }
+.tf-panel .fm-clear, .tf-panel .filter-clear { padding: 4px 8px; font-size: var(--fs-xs); }
+/* Boutons du bandeau : l'etat « ouvert » se voit sur le bouton. */
+.header [data-tray-toggle].is-open { background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); }
+.header [data-tray-toggle].is-open .btn-chev svg { transform: rotate(180deg); }
+.header .tf-search-toggle { display: none; position: relative; }
+.header.hz-compact .tf-search-toggle { display: inline-flex; }
+.header.hz-compact .tf-search > .search-box { display: none; }
+.tf-search-toggle.has-filter { color: var(--primary); border-color: var(--primary); background: var(--p-50, var(--primary-light)); }
+.tf-search { display: flex; align-items: center; }
 
 /* 7. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
 .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
@@ -226,12 +255,10 @@ textarea { line-height: 1.45; }
 }
 
 /* 10. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
-.filter-panel .filter-btn, .filter-check, .span-btn, .btn-icon, .cfg-input {
+.filter-check, .span-btn, .btn-icon, .cfg-input {
     background: var(--card-bg);
     color: var(--text);
 }
-.filter-panel .filter-btn { border-radius: 6px; padding: 5px 10px; }
-.filter-panel .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .btn-icon.active { background: var(--primary-light); color: var(--primary); }
 .accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
 
@@ -258,15 +285,12 @@ textarea { line-height: 1.45; }
        outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */
 .btn-label { white-space: nowrap; }
 .header .filter-btn { position: relative; }
-@media (max-width: 760px) {
-    .hz-tools .btn-label { display: none; }
-    .hz-tools .filter-btn, .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
-    .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
-}
-@media (max-width: 560px) {
-    .hz-actions .btn-label, .period-nav .btn-label { display: none; }
-    .hz-actions .btn:not(.icon-btn), .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
-}
+/* Le mode compact (.hz-compact) est decide par la mesure du debordement (voir 2), plus par une largeur fixe. */
+.header.hz-compact .hz-tools .btn-label { display: none; }
+.header.hz-compact .hz-tools .filter-btn, .header.hz-compact .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+.header.hz-compact .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
+.header.hz-top .hz-actions .btn-label, .header.hz-top .period-nav .btn-label { display: none; }
+.header.hz-top .hz-actions .btn:not(.icon-btn), .header.hz-top .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
 
 /* 13. Libelle de periode : forme complete par defaut, forme courte (« Oct. 26 ») quand la place manque. */
 .current-period .pl-short { display: none; }

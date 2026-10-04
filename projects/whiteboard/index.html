@@ -942,26 +942,20 @@ const TF = (function () {
         if (typeof document === 'undefined' || initUi.done) return;
         initUi.done = true;
         try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
-        const closeAll = (except) => {
-            document.querySelectorAll('[data-menu].open').forEach(m => { if (m !== except) m.classList.remove('open'); });
-        };
+        // Bandeau (recherche / filtres / affichage) : un clic sur le bouton l'ouvre ou le referme, Echap le referme.
+        // Il reste ouvert pendant la manipulation du widget : les filtres s'appliquent en direct.
         document.addEventListener('click', (e) => {
-            const toggle = e.target.closest ? e.target.closest('[data-menu-toggle]') : null;
-            const menu = e.target.closest ? e.target.closest('[data-menu]') : null;
-            closeAll(menu);
-            if (toggle && menu) {
-                const open = !menu.classList.contains('open');
-                menu.classList.toggle('open', open);
-                const panel = menu.querySelector('.tf-menu-panel');
-                if (open && panel) {
-                    panel.classList.remove('align-right');
-                    const r = panel.getBoundingClientRect();
-                    if (r.right > window.innerWidth - 8) panel.classList.add('align-right');
-                }
-                toggle.setAttribute('aria-expanded', String(open));
-            }
+            const toggle = e.target.closest ? e.target.closest('[data-tray-toggle]') : null;
+            if (toggle) trayToggle(toggle.getAttribute('data-tray-toggle'));
+            const host = document.getElementById('tfHeader');
+            if (host) syncSearchState(host);
         });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(null); });
+        document.addEventListener('input', () => { const host = document.getElementById('tfHeader'); if (host) syncSearchState(host); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const tray = document.getElementById('tfTray');
+            if (tray && tray.classList.contains('open')) trayToggle('', false);
+        });
         // Info-bulles « i » : alignees a droite si elles debordent du widget.
         const placeTip = (e) => {
             const tip = e.target.closest ? e.target.closest('.tf-info') : null;
@@ -1010,6 +1004,7 @@ const TF = (function () {
      * core/taskflow-ui.css. */
     const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const UI_ICONS = {
+        search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
         filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
         sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
         chevL: '<polyline points="15 18 9 12 15 6"/>',
@@ -1158,16 +1153,20 @@ const TF = (function () {
             nav(o.next, 'chevR', 'Période suivante') + '</div>' +
             '<button type="button" class="btn" onclick="' + escAttr(o.today) + '" title="Aujourd\'hui" aria-label="Aujourd\'hui">' + uiIcon('today') + '<span class="btn-label">Aujourd\'hui</span></button></div>';
     }
-    // Recherche. o = { id, oninput }
+    // Recherche. o = { id, oninput }. Champ en ligne quand la place le permet ; sinon (barre compacte) le champ
+    // est deplace dans le bandeau et un bouton loupe l'ouvre (voir placeSearch).
     function uiSearch(o) {
-        return '<div class="search-box"><input type="text" id="' + escAttr(o.id || 'searchInput') + '" placeholder="Rechercher..." oninput="' + escAttr(o.oninput) + '" aria-label="Rechercher"></div>';
+        return '<div class="tf-search">' +
+            '<button type="button" class="btn icon-btn tf-search-toggle" data-tray-toggle="search" aria-expanded="false" title="Rechercher" aria-label="Rechercher">' + uiIcon('search', 16) + '</button>' +
+            '<div class="search-box"><input type="text" id="' + escAttr(o.id || 'searchInput') + '" placeholder="Rechercher..." oninput="' + escAttr(o.oninput) + '" aria-label="Rechercher"></div></div>';
     }
-    // Bouton « Filtres » + menu deroulant. o = { toggle, containerId, buttonId, menuId, countId }
+    // Bouton « Filtres » + panneau. Le panneau s'ouvre dans le bandeau sous la barre (il y est deplace au montage).
+    // o = { containerId, buttonId, menuId, countId } (le gestionnaire de clic est celui du bandeau)
     function uiFilters(o) {
         return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
-            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '" title="Filtres" aria-label="Filtres">' + uiIcon('filter') + '<span class="btn-label">Filtres</span>' +
+            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' data-tray-toggle="filters" aria-expanded="false" title="Filtres" aria-label="Filtres">' + uiIcon('filter') + '<span class="btn-label">Filtres</span>' +
             '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
-            '<div class="filter-menu wide" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
+            '<div class="tf-panel" data-panel="filters" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
     }
     // Selecteurs de l'affichage : memes options partout. Les ids sont ceux lus par les widgets.
     function uiSelect(o) {
@@ -1185,9 +1184,9 @@ const TF = (function () {
     function uiDisplayMenu(o) {
         const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
         const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action"' + (a.id ? ' id="' + escAttr(a.id) + '"' : '') + ' onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
-        return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage" aria-label="Affichage">' +
+        return '<div class="view-menu"><button type="button" class="btn" data-tray-toggle="display" aria-expanded="false" title="Options d\'affichage" aria-label="Affichage">' +
             uiIcon('sliders') + '<span class="btn-label">Affichage</span><span class="btn-label btn-chev">' + uiIcon('chevD', 12) + '</span></button>' +
-            '<div class="tf-menu-panel" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
+            '<div class="tf-panel" data-panel="display" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
     }
     // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
     function uiMoreMenu(o) {
@@ -1211,17 +1210,121 @@ const TF = (function () {
         return uiTitle(o.title) +
             ((o.view && o.view.length) ? '<div class="hz-view">' + o.view.join('') + '</div>' : '') +
             '<div class="hz-tools">' + (o.tools || []).join('') + '</div>' +
-            '<div class="hz-actions">' + (o.actions || []).join('') + '</div>';
+            '<div class="hz-actions">' + (o.actions || []).join('') + '</div>' +
+            '<div class="tf-tray" id="tfTray"><div class="tf-panel" data-panel="search"></div></div>';
+    }
+
+    /* ----- Bandeau de saisie temporaire et ajustement de la barre ---------------------
+     * Recherche, filtres et affichage s'ouvrent dans un meme bandeau sous la barre (qui pousse le
+     * contenu, comme un volet) : on y saisit, puis on le referme. La barre tient sur UNE ligne quand
+     * la place le permet ; sinon elle se compacte (libelles en icones, recherche dans le bandeau), puis
+     * seulement en dernier recours passe sur deux lignes. L'ajustement mesure le debordement reel. */
+    function trayToggle(name, force) {
+        const tray = document.getElementById('tfTray');
+        if (!tray) return;
+        const panel = name ? tray.querySelector('.tf-panel[data-panel="' + name + '"]') : null;
+        if (name && !panel) return;
+        const open = !!panel && (typeof force === 'boolean' ? force : !panel.classList.contains('open'));
+        tray.querySelectorAll('.tf-panel.open').forEach(p => p.classList.remove('open'));
+        if (open) panel.classList.add('open');
+        tray.classList.toggle('open', open);
+        document.querySelectorAll('[data-tray-toggle]').forEach(b => {
+            const on = open && b.getAttribute('data-tray-toggle') === name;
+            b.classList.toggle('is-open', on);
+            b.setAttribute('aria-expanded', String(on));
+        });
+        if (open && name === 'search') { const i = panel.querySelector('input'); if (i) i.focus(); }
+    }
+    function syncSearchState(host) {
+        const input = host.querySelector('.search-box input');
+        const btn = host.querySelector('.tf-search-toggle');
+        if (input && btn) btn.classList.toggle('has-filter', !!input.value);
+    }
+    function placeSearch(host, compact) {
+        const box = host.querySelector('.search-box');
+        const slot = host.querySelector('.tf-search');
+        const panel = host.querySelector('.tf-panel[data-panel="search"]');
+        if (!box || !slot || !panel) return;
+        if (compact && box.parentNode !== panel) panel.appendChild(box);
+        if (!compact && box.parentNode !== slot) {
+            slot.appendChild(box);
+            if (panel.classList.contains('open')) trayToggle('search', false);
+        }
+    }
+    function headerFits(host, view, tools) {
+        if (host.scrollWidth > host.clientWidth + 1) return false;
+        if (view && view.scrollWidth > view.clientWidth + 1) return false;
+        if (tools && tools.scrollWidth > tools.clientWidth + 1) return false;
+        return !Array.prototype.some.call(host.querySelectorAll('.tf-seg'), s => s.scrollWidth > s.clientWidth + 1);
+    }
+    // Modes essayes dans l'ordre : [outils compacts, haut compact (actions, navigation), deux lignes].
+    // Sur deux lignes, les outils (2e ligne) gardent leurs libelles tant qu'ils tiennent.
+    const HEADER_MODES = [[false, false, false], [true, true, false], [false, false, true], [false, true, true], [true, true, true]];
+    function applyMode(host, m) {
+        host.classList.toggle('hz-compact', m[0]);
+        host.classList.toggle('hz-top', m[1]);
+        host.classList.toggle('hz-two', m[2]);
+    }
+    function fitHeader(host) {
+        host = host || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
+        if (!host || fitHeader.busy) return;
+        // Pendant la saisie dans le champ de recherche, la disposition ne bouge pas (le deplacer ferait perdre le focus).
+        const actif = document.activeElement;
+        if (actif && actif.matches && actif.matches('.search-box input') && host.contains(actif)) return;
+        fitHeader.busy = true;
+        try {
+            const view = host.querySelector('.hz-view');
+            const tools = host.querySelector('.hz-tools');
+            let chosen = HEADER_MODES.length - 1;
+            for (let i = 0; i < HEADER_MODES.length; i++) {
+                // Le champ de recherche doit etre a sa place DANS le mode essaye, sinon la mesure est fausse
+                // (absent de la barre, tout « tient » ; remis en place, plus rien ne tient : la barre clignotait).
+                placeSearch(host, HEADER_MODES[i][0]);
+                applyMode(host, HEADER_MODES[i]);
+                if (headerFits(host, view, tools)) { chosen = i; break; }
+            }
+            placeSearch(host, HEADER_MODES[chosen][0]);
+            applyMode(host, HEADER_MODES[chosen]);
+            syncSearchState(host);
+        } finally {
+            fitHeader.busy = false;
+            // nos propres deplacements ne doivent pas declencher une nouvelle mesure
+            if (fitHeader.observer) fitHeader.observer.takeRecords();
+        }
+    }
+    function setupHeader(host) {
+        const tray = host.querySelector('.tf-tray');
+        if (!tray) return;
+        host.querySelectorAll('.hz-view .tf-panel, .hz-tools .tf-panel, .hz-actions .tf-panel').forEach(p => tray.appendChild(p));
+        let attente = false;
+        const refit = () => { if (attente) return; attente = true; requestAnimationFrame(() => { attente = false; fitHeader(host); }); };
+        window.addEventListener('resize', refit);
+        if (typeof ResizeObserver !== 'undefined') {
+            let largeur = -1;
+            new ResizeObserver(() => { const w = host.clientWidth; if (w !== largeur) { largeur = w; refit(); } }).observe(host);
+        }
+        // Le texte de la periode change la largeur du contenu : on remesure (hors bandeau, qui n'y change rien).
+        if (typeof MutationObserver !== 'undefined') {
+            fitHeader.observer = new MutationObserver((muts) => {
+                if (fitHeader.busy) return;
+                if (muts.some(m => { const n = m.target.nodeType === 1 ? m.target : m.target.parentElement; return n && !n.closest('.tf-tray'); })) refit();
+            });
+            fitHeader.observer.observe(host, { childList: true, characterData: true, subtree: true });
+        }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+        fitHeader(host);
+        setTimeout(() => fitHeader(host), 300);
     }
     function mountHeader(o, el) {
         const host = el || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
-        if (host) host.innerHTML = uiHeader(o);
+        if (host) { host.innerHTML = uiHeader(o); setupHeader(host); }
         initUi();
     }
     const ui = {
         icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
         select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
-        displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader
+        displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader,
+        tray: trayToggle, refit: fitHeader
     };
 
     /* ----- En-tete de la fiche de tache ---------------------------------------

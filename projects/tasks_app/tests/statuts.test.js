@@ -135,7 +135,8 @@ describe('composants de la barre du haut', () => {
     it('le menu Affichage reprend les selects avec leurs ids et sans prefixe redondant', () => {
         const h = ui.displayMenu({ fields: [ui.sortField(), ui.colorField('Couleur des barres'), ui.levelField()], actions: [{ label: 'Ajuster', onclick: 'fitToTasks()' }] });
         for (const id of ['sortSelect', 'colorSelect', 'levelSelect']) assert.match(h, new RegExp('<select id="' + id + '"'));
-        assert.match(h, /data-menu-toggle/);
+        assert.match(h, /data-tray-toggle="display"/);
+        assert.match(h, /data-panel="display"/);
         assert.match(h, />Priorité</);
         assert.doesNotMatch(h, /Couleur :|Niveau :|Tri:/);
         assert.match(h, /fitToTasks\(\)/);

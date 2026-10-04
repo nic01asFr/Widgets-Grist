@@ -72,6 +72,12 @@ saveTaskToGrist()       // UpdateRecord ou AddRecord selon isNew
 
 Les filtres (projet, priorité, assigné, et statut dans le Kanban) sont un **état d'affichage local** : `broadcastFilters()` les écrit dans `localStorage` (`taskflow_<widget>_filters`), ils sont relus à l'ouverture. **Règle : manipuler un widget ne doit jamais appeler `grist.setOption(s)`** — Grist affiche alors le bouton « Enregistrer » de la section (constaté en réel). Seule exception : la disposition du Dashboard, écrite **une seule fois à la sortie du mode édition** (« Terminer », `flushConfig()`), jamais à chaque réglage. Aucun partage de filtres entre widgets n'est assuré.
 
+### Barre du haut et bandeau de saisie
+
+La barre est **une seule ligne** : titre | vue / navigation | outils (recherche, filtres, affichage) | actions. `TF.ui.mount` mesure le débordement réel (`fitHeader`) et choisit, dans l'ordre : une ligne ; une ligne compacte (libellés en icônes, champ de recherche déplacé dans le bandeau, loupe dans la barre) ; deux lignes (outils sous le titre) ; deux lignes compactes. Classes posées sur `.header` : `hz-compact` (outils), `hz-top` (actions et navigation), `hz-two`. Le champ de recherche est **toujours placé avant la mesure** de chaque mode (sinon la barre oscille).
+
+Recherche, filtres et affichage s'ouvrent dans un **bandeau commun** sous la barre (`#tfTray`, panneaux `.tf-panel[data-panel]`), qui pousse le contenu ; un seul panneau à la fois ; même bouton ou Échap pour refermer. Les panneaux sont déplacés dans le bandeau au montage, leurs ids sont conservés (`filterAllMenu`, `filterPanel`). Les rendus de filtres produisent des groupes `.fm-group` (étiquette + `.fm-group-items`). Le menu « ⋯ » reste un menu déroulant.
+
 ### Sélection inter-widgets (GEN-01)
 
 ```javascript
