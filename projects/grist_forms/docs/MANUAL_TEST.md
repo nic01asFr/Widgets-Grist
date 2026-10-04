@@ -99,11 +99,25 @@ Badge attendu dans Grist : **Connecté à Grist** (pas « Mode démo »).
 
 6. Retour builder → modifier titre Accueil ou ajouter une question
 7. **Enregistrer** puis **Remettre en ligne**
-   - [ ] Alerte « version déjà en ligne » affichée
-   - [ ] `Version++` dans `Formulaires`
+   - [x] Alerte « version déjà en ligne » affichée
+   - [x] `Version++` dans `Formulaires`
+   - [x] **Aucune page de plus** : `PublishedSectionRef` inchangé (vérifié 04/10/2026, section 15 réutilisée)
+   - [x] La page porte le titre du formulaire, pas « New page »
 8. Rouvrir la page **Remplir …**
-   - [ ] Modifications visibles (titre, nouvelle question)
+   - [x] Modifications visibles (titre, nouvelle question)
    - [ ] Conditions audience toujours actives
+
+### 5.4 Ajout vs correction de ligne (04/10/2026)
+
+Table cible avec des lignes existantes, curseur sur la ligne 1.
+
+9. Par défaut (case « Corriger la ligne sélectionnée » décochée)
+   - [x] Le bouton dit **Envoyer** et aucune mention de ligne n'apparaît
+   - [x] Envoyer **ajoute** une ligne ; les lignes existantes sont intactes
+10. Case cochée, **Enregistrer** puis **Remettre en ligne**
+   - [x] La page affiche « Modification de la ligne #1 » et les champs sont **préremplis**
+   - [x] Enregistrer met à jour cette ligne, et les colonnes absentes du formulaire gardent leur valeur
+   - [ ] Sur la ligne vierge (bas de la table), le formulaire revient à la création (`onNewRecord`)
 
 ### 5.3 Non-régression publish
 

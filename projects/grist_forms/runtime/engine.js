@@ -733,6 +733,71 @@
     return out;
   }
 
+  /**
+   * Le sens inverse de `Types.coerceForWrite` : une ligne Grist telle qu'elle
+   * arrive (`onRecord`, `fetchTable`) vers les valeurs que les champs rendent.
+   *
+   * > **L'écriture existait, la lecture non.** Chaque hôte qui ouvrait un
+   * > formulaire sur une ligne existante la réécrivait pour lui : Atlas en a
+   * > fait `valeurPourFormulaire`, la vue publiée ne l'a jamais fait — et
+   * > montrait donc des champs vides sur une ligne pleine. Enregistrer vidait
+   * > la ligne.
+   *
+   * Les dates sont le point délicat : Grist les garde en **secondes**. Une
+   * `Date` est minuit UTC et se rend telle quelle (`AAAA-MM-JJ` en UTC) ; un
+   * `DateTime` est un instant, qui se rend dans l'heure de la personne —
+   * c'est ainsi que `coerceForWrite` le relira.
+   */
+  function valuesFromRecord(formDef, record) {
+    var out = {};
+    if (!record) return out;
+    var sections = (formDef && formDef.sections) || [];
+    for (var i = 0; i < sections.length; i++) {
+      var fields = sections[i].fields || [];
+      for (var j = 0; j < fields.length; j++) {
+        var field = fields[j];
+        if (!Object.prototype.hasOwnProperty.call(record, field.colId)) continue;
+        var v = valueFromCell(field, record[field.colId]);
+        if (v !== undefined) out[field.colId] = v;
+      }
+    }
+    return out;
+  }
+
+  function deuxChiffres(n) { return (n < 10 ? '0' : '') + n; }
+
+  /** Secondes Unix, millisecondes ou `Date` → `Date`, sinon `null`. */
+  function versDate(v) {
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    if (typeof v === 'number' && isFinite(v)) {
+      // 1e11 secondes tombe en l'an 5138, 1e11 millisecondes en 1973 : le seuil sépare sans ambiguïté.
+      return new Date(Math.abs(v) < 1e11 ? v * 1000 : v);
+    }
+    var d = new Date(String(v));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function valueFromCell(field, raw) {
+    if (raw === undefined || raw === null || raw === '') return undefined;
+    var t = Types && Types.normalizeGristType ? Types.normalizeGristType(field.type) : field.type;
+    if (t === 'Date' || t === 'DateTime') {
+      var d = versDate(raw);
+      if (!d) return undefined;
+      if (t === 'Date') return d.toISOString().slice(0, 10);
+      return d.getFullYear() + '-' + deuxChiffres(d.getMonth() + 1) + '-' + deuxChiffres(d.getDate()) +
+        'T' + deuxChiffres(d.getHours()) + ':' + deuxChiffres(d.getMinutes());
+    }
+    if (t === 'Attachments') return raw;
+    if (Array.isArray(raw)) {
+      var items = (raw[0] === 'L' ? raw.slice(1) : raw);
+      return items.length ? items.map(String) : undefined;
+    }
+    if (t === 'Bool') return raw === true || raw === 1 || String(raw).toLowerCase() === 'true';
+    // Une référence vide vaut 0 côté Grist : ce n'est pas une ligne.
+    if (t === 'Ref') return Number(raw) > 0 ? raw : undefined;
+    return raw;
+  }
+
   function mount(rootEl, formDef, bridge) {
     if (!rootEl) return null;
     bridge = bridge || {};
@@ -1052,6 +1117,7 @@
     resolveParentFilterValue: resolveParentFilterValue,
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
+    valuesFromRecord: valuesFromRecord,
     mount: mount
   };
 }));

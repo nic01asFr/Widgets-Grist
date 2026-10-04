@@ -39,6 +39,10 @@
       "type": "string",
       "description": "Message affiché après soumission réussie"
     },
+    "editerLigneSelectionnee": {
+      "type": "boolean",
+      "description": "La vue publiée corrige la ligne sous le curseur (préremplie) au lieu d'en ajouter une. Défaut : faux."
+    },
     "branding": {
       "type": "object",
       "description": "Logo / images Accueil et Fin",

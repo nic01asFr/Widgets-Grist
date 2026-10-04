@@ -135,3 +135,43 @@ describe('Engine.resolveParentFilterValue', () => {
     assert.equal(Engine.resolveParentFilterValue(field, { Contact: 99 }, formDef, refRecords), null);
   });
 });
+
+describe('valuesFromRecord — une ligne Grist vers les champs', () => {
+  const def = {
+    sections: [{ id: 's1', label: 'E', fields: [
+      { colId: 'Nom', label: 'Nom', type: 'Text', widget: 'text' },
+      { colId: 'Jour', label: 'Jour', type: 'Date', widget: 'date' },
+      { colId: 'Instant', label: 'Instant', type: 'DateTime:Europe/Paris', widget: 'datetime' },
+      { colId: 'Modes', label: 'Modes', type: 'ChoiceList', widget: 'multiselect' },
+      { colId: 'Batiment', label: 'Batiment', type: 'Ref:Batiments', widget: 'select' },
+      { colId: 'Ouvert', label: 'Ouvert', type: 'Bool', widget: 'checkbox' }
+    ] }]
+  };
+
+  it('rend une Date en AAAA-MM-JJ depuis des secondes', () => {
+    const v = Engine.valuesFromRecord(def, { Jour: 1726617600 });
+    assert.equal(v.Jour, '2024-09-18');
+  });
+
+  it('rend un DateTime dans la forme attendue par le champ, et le relit à l identique', () => {
+    const secondes = 1726653600; // instant quelconque
+    const v = Engine.valuesFromRecord(def, { Instant: secondes });
+    assert.match(v.Instant, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    const Types = require('../shared/types.js');
+    assert.equal(Types.coerceForWrite({ type: 'DateTime' }, v.Instant), secondes);
+  });
+
+  it('deplie une liste Grist et garde une reference non vide', () => {
+    const v = Engine.valuesFromRecord(def, { Modes: ['L', 'Velo', 'Bus'], Batiment: 7, Ouvert: true });
+    assert.deepEqual(v.Modes, ['Velo', 'Bus']);
+    assert.equal(v.Batiment, 7);
+    assert.equal(v.Ouvert, true);
+  });
+
+  it('ignore une reference vide (0 cote Grist) et ce que le formulaire ne declare pas', () => {
+    const v = Engine.valuesFromRecord(def, { Batiment: 0, Inconnu: 'x', Nom: 'Mairie' });
+    assert.equal('Batiment' in v, false);
+    assert.equal('Inconnu' in v, false);
+    assert.equal(v.Nom, 'Mairie');
+  });
+});

@@ -53,6 +53,28 @@ projects/grist_forms/
 - Publish intra-doc ; Survey Manifest ; Attachments (upload depuis une vue custom : vérifié le 18/09/2026)
 - UX : slides Accueil/Fin, branding, placeholders, libellés inline
 
+### La vue publiée ajoute une ligne — trois corrections (04/10/2026)
+
+Mesuré en Grist réel : la page « Remplir » **écrasait** la ligne sous le curseur.
+Le bouton disait « Envoyer », aucune ligne n'était créée, et la ligne 1 prenait
+la place de la réponse. L'amorçage suivait `onRecord` sans jamais lire la ligne.
+
+| Avant | Maintenant |
+|---|---|
+| suit le curseur en silence, formulaire vide | **ajoute une ligne**, sauf si le formulaire demande le contraire (`editerLigneSelectionnee`, case en options avancées) |
+| en correction, champs vides → la ligne se vidait | la ligne entre dans le formulaire (`FormEngine.valuesFromRecord`), et `onNewRecord` revient à la création |
+| « Remettre en ligne » créait une page de plus, l'ancienne restant en service avec l'ancienne version | la page publiée est **réutilisée** (`PublishedSectionRef`, recréée si elle a été supprimée) et porte le titre du formulaire (`CreateViewSection` ignore le nom qu'on lui passe) |
+
+`valuesFromRecord` est le sens inverse de `Types.coerceForWrite` : il manquait au
+moteur, et chaque hôte l'avait réécrit pour lui. Les dates sont le point
+délicat — une `Date` se rend en UTC (minuit), un `DateTime` dans l'heure de la
+personne, parce que c'est ainsi que `coerceForWrite` les relit.
+
+**La `Def` enregistrée ne porte plus de clés internes** (`defPropre`) : le
+compositeur marquait ses champs (`_colIdLocked`) et `formdef.schema.json`
+interdit toute clé qu'il ne déclare pas. Un lecteur strict rejetait donc des
+formulaires que ce dépôt avait lui-même écrits.
+
 ### Validation live
 Checklist : `docs/MANUAL_TEST.md` §4–5. Guide publication : `docs/PUBLICATION.md`.
 

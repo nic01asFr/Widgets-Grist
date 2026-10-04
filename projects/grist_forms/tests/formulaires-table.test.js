@@ -24,3 +24,19 @@ it('plans AddTable for Formulaires', () => {
     'Statut', 'PublishedSectionRef', 'UpdatedAt'
   ]);
 });
+
+it('strips builder-only marks from the stored Def', () => {
+  const def = {
+    manifest_version: '1.0.0', id: 'f', title: 'F', tableId: 'T', composeMode: 'bind', choices: {},
+    _brouillon: true,
+    sections: [{ id: 's1', label: 'E1', _ouvert: true, fields: [{ colId: 'Nom', label: 'Nom', type: 'Text', widget: 'text', _colIdLocked: true }] }]
+  };
+  const row = F.rowFromFormDef(def, {});
+  const stored = JSON.parse(row.Def);
+  assert.equal(stored._brouillon, undefined);
+  assert.equal(stored.sections[0]._ouvert, undefined);
+  assert.equal(stored.sections[0].fields[0]._colIdLocked, undefined);
+  assert.equal(stored.sections[0].fields[0].colId, 'Nom');
+  // La définition d'origine n'est pas touchée : l'écran continue de s'en servir.
+  assert.equal(def.sections[0].fields[0]._colIdLocked, true);
+});

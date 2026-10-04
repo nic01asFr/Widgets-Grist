@@ -677,6 +677,9 @@ function newFormDef() {
     description: '',
     classification: 'cerema_internal',
     successMessage: 'Merci !',
+    // Une vue « Remplir » ajoute une ligne : c'est ce qu'on attend d'un
+    // formulaire. Corriger la ligne du curseur se demande.
+    editerLigneSelectionnee: false,
     branding: { logoUrl: '', logoAlt: '', successImageUrl: '', successImageAlt: '' },
     audience: { mode: 'none', tableId: '', emailCol: 'Email', groupCol: '', probe: false },
     tableId: '',
@@ -1498,6 +1501,11 @@ function editForm(id) {
   let def;
   try { def = JSON.parse(row.Def); } catch (e) { toast('Def JSON invalide pour ce formulaire', 'error'); return; }
   S.currentDef = def;
+  // L'identifiant de colonne d'un formulaire enregistré est une décision déjà
+  // prise : renommer son libellé ne doit pas le redériver, et viser une autre
+  // colonne. La marque de travail ne part plus dans `Def` (elle n'appartient
+  // pas au contrat), on la repose donc à l'ouverture.
+  (def.sections || []).forEach(s => (s.fields || []).forEach(f => { f._colIdLocked = true; }));
   ensureBranding(def);
   ensureAudience(def);
   S.currentRowId = id;
@@ -1618,6 +1626,12 @@ function renderBuilder() {
           <div class="fr-input-group"><label class="fr-label">Classification</label>
           <input class="fr-input" value="${esc(def.classification)}" oninput="App.onDefInput('classification', this.value)"></div>
         </div>
+      </div>
+      <div class="fr-checkbox-group fr-mt-2w">
+        <input type="checkbox" id="opt-editer-ligne" ${def.editerLigneSelectionnee ? 'checked' : ''}
+          onchange="App.onDefInput('editerLigneSelectionnee', this.checked)">
+        <label class="fr-label" for="opt-editer-ligne">Corriger la ligne sélectionnée au lieu d’en ajouter une
+          ${hintIcon('Par défaut, la page publiée ajoute une ligne. Cochez pour que le formulaire ouvre la ligne sous le curseur, préremplie, et l’enregistre.')}</label>
       </div>
       <p class="fr-hint-text fr-mt-1w">Chemins d’étapes, conditions, cascade et filtres se règlent directement sur chaque étape / question.</p>
     </details>
@@ -2659,6 +2673,45 @@ function extractSectionRef(result) {
   return deepFind(result, 0);
 }
 
+/**
+ * La section de la page déjà publiée, si elle existe encore.
+ *
+ * Une page se supprime dans Grist sans rien dire au formulaire : on vérifie
+ * avant de la réutiliser, et on en recrée une si elle a disparu.
+ */
+async function sectionPublieeValide(sectionRef) {
+  const ref = Number(sectionRef);
+  if (!Number.isFinite(ref) || ref <= 0) return null;
+  try {
+    const sections = await GristBridge.loadTable('_grist_Views_section');
+    const s = (sections || []).find(x => x.id === ref);
+    return s && s.parentKey === 'custom' ? ref : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * La page porte le titre du formulaire.
+ *
+ * `CreateViewSection` ignore le nom qu'on lui passe — les pages s'appelaient
+ * toutes « New page », et deux formulaires publiés devenaient indiscernables.
+ */
+async function nommerPagePubliee(sectionRef, nom) {
+  if (!nom) return;
+  try {
+    const sections = await GristBridge.loadTable('_grist_Views_section');
+    const s = (sections || []).find(x => x.id === sectionRef);
+    if (!s || !s.parentId) return;
+    await GristBridge.applyUserActions([
+      ['UpdateRecord', '_grist_Views', s.parentId, { name: nom }],
+      ['UpdateRecord', '_grist_Views_section', sectionRef, { title: nom }]
+    ]);
+  } catch (e) {
+    logPublish('La page n’a pas pu être renommée : ' + (e && e.message));
+  }
+}
+
 async function publishForm() {
   const def = S.currentDef;
   if (!def) return;
@@ -2692,15 +2745,26 @@ async function publishForm() {
     const tableRow = S.tables.find(t => t.tableId === def.tableId);
     if (!tableRow) throw new Error('Table cible introuvable : ' + def.tableId);
 
-    logPublish('Création de la page « ' + (def.title || def.id) + ' »…');
-    const createRes = await GristBridge.applyUserActions(Publish.planCreateCustomPage(tableRow.id, def.title || def.id));
-    const sectionRef = extractSectionRef(createRes);
-    if (!sectionRef) throw new Error('Impossible de déterminer la section créée (réponse CreateViewSection inattendue)');
+    // Remettre en ligne REMPLACE le formulaire figé sur la page déjà publiée,
+    // comme l'écran le promet. Créer une page de plus laissait l'ancienne en
+    // service avec l'ancienne version, sans que rien ne le dise.
+    const pageNom = def.title || def.id;
+    const rowPub = S.currentRowId ? S.forms.find(r => r.id === S.currentRowId) : null;
+    let sectionRef = await sectionPublieeValide(rowPub && rowPub.PublishedSectionRef);
+    if (sectionRef) {
+      logPublish('Page déjà publiée (section ' + sectionRef + ') : remplacement du formulaire figé…');
+    } else {
+      logPublish('Création de la page « ' + pageNom + ' »…');
+      const createRes = await GristBridge.applyUserActions(Publish.planCreateCustomPage(tableRow.id, pageNom));
+      sectionRef = extractSectionRef(createRes);
+      if (!sectionRef) throw new Error('Impossible de déterminer la section créée (réponse CreateViewSection inattendue)');
+    }
 
     logPublish('Application du snapshot figé (_html/_js) sur la section ' + sectionRef + '…');
     await GristBridge.applyUserActions([
       ['UpdateRecord', '_grist_Views_section', sectionRef, { options: optionsStr }]
     ]);
+    await nommerPagePubliee(sectionRef, pageNom);
 
     const row = S.forms.find(r => r.id === S.currentRowId);
     const nextVersion = (row ? row.Version : 0) + 1;

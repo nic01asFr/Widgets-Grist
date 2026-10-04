@@ -107,3 +107,17 @@ it('plans CreateViewSection for a custom page bound to tableRef', () => {
   assert.equal(actions[0][3], 'custom');
   assert.equal(actions[0][5], 'Remplir le formulaire');
 });
+
+it('la vue publiee ajoute une ligne par defaut, sans suivre le curseur', () => {
+  const doc = P.buildRuntimeDocument({ id: 'f', title: 'F', tableId: 'T', sections: [] }, {});
+  assert.ok(doc.includes('editerLigneSelectionnee'), 'la correction de ligne est conditionnee');
+  // Sans l'option, aucun ecouteur de curseur n'est pose : le formulaire cree.
+  const avantCondition = doc.slice(0, doc.indexOf('editerLigneSelectionnee'));
+  assert.ok(!avantCondition.includes('grist.onRecord'), 'onRecord ne doit pas etre pose hors de la condition');
+});
+
+it('la vue publiee en correction amorce le formulaire avec la ligne', () => {
+  const doc = P.buildRuntimeDocument({ id: 'f', title: 'F', tableId: 'T', editerLigneSelectionnee: true, sections: [] }, {});
+  assert.ok(doc.includes('FormEngine.valuesFromRecord'), 'les valeurs de la ligne entrent dans le formulaire');
+  assert.ok(doc.includes('onNewRecord'), 'la ligne vierge revient a la creation');
+});
