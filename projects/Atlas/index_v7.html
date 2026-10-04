@@ -440,6 +440,17 @@
         .dock-fabs.fondu-d { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent); }
         .dock-fabs.fondu-g { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 34px), transparent); }
         .dock-fabs.fondu-g.fondu-d { -webkit-mask-image: linear-gradient(to right, transparent, #000 34px, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to right, transparent, #000 34px, #000 calc(100% - 34px), transparent); }
+        /* Au bord de la rangée qui cache encore des pastilles, un flou dégradé en plus du fondu : le verre dépoli d'un défilement, pas une coupe sèche.
+           Le flou est celui de ce qui est DERRIÈRE (les pastilles qui s'effacent et la carte) ; son masque le fait croître vers le bord. */
+        .map-controls-dock.collapsed::before, .map-controls-dock.collapsed::after {
+            content: ''; position: absolute; top: 0; bottom: 0; width: 38px; z-index: 2; pointer-events: none; opacity: 0;
+            transition: opacity .15s ease;
+            -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+        }
+        .map-controls-dock.collapsed::before { left: 0; -webkit-mask-image: linear-gradient(to right, #000 10%, transparent); mask-image: linear-gradient(to right, #000 10%, transparent); }
+        .map-controls-dock.collapsed::after { right: 0; -webkit-mask-image: linear-gradient(to left, #000 10%, transparent); mask-image: linear-gradient(to left, #000 10%, transparent); }
+        .map-controls-dock.flou-g::before, .map-controls-dock.flou-d::after { opacity: 1; }
+        @media (prefers-reduced-transparency: reduce) { .map-controls-dock.collapsed::before, .map-controls-dock.collapsed::after { display: none; } }
         /* Les pastilles qui doivent rester à portée — « Me localiser » — ne défilent pas : elles se posent sous la boussole. */
         .dock-epingle { position: absolute; top: 80px; right: 16px; z-index: 9; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
         .dock-epingle:empty { display: none; }
@@ -2106,6 +2117,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261005d"></script>
+    <script type="module" src="./app_v7.js?v=20261005e"></script>
 </body>
 </html>

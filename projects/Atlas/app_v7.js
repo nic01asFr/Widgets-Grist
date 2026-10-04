@@ -6666,6 +6666,9 @@ function majIndiceDefilement(hote) {
     const d = hote.scrollLeft + hote.clientWidth < hote.scrollWidth - 1;
     hote.classList.toggle('fondu-g', g);
     hote.classList.toggle('fondu-d', d);
+    // Le flou du bord se pose sur le dock (il recouvre la rangée) : il suit les mêmes côtés que le fondu.
+    const dock = hote.closest('.map-controls-dock');
+    if (dock) { dock.classList.toggle('flou-g', g); dock.classList.toggle('flou-d', d); }
 }
 function suivreDefilementDock(hote) {
     if (!hote._defilementSuivi) {
