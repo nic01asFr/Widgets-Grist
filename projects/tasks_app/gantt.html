@@ -147,7 +147,9 @@
 
         .timeline-scroll { flex: 1; overflow: auto; }
         .timeline-grid { position: relative; min-height: 100%; }
-        .grid-row { height: var(--row-height); border-bottom: 1px solid var(--border); display: flex; }
+        .grid-row { height: var(--row-height); border-bottom: 1px solid var(--border); display: flex; position: relative; }
+        .grid-cols { position: absolute; top: 0; bottom: 0; left: 0; display: flex; pointer-events: none; }
+        .grid-cols .grid-cell { height: 100%; }
         .grid-cell { width: var(--cell-width); min-width: var(--cell-width); border-right: 1px solid var(--surface-2); height: 100%; }
         .grid-cell.weekend { background: var(--weekend-bg); }
         .grid-cell.today { background: rgba(79, 70, 229, 0.08); }
@@ -3077,22 +3079,30 @@
             const vStart = getViewStartDate();
             const vDays = getTotalDays();
 
-            let eStart = new Date(vStart.getTime());
-            let eEnd = addDays(vStart, vDays);
-            const vEnd = new Date(eEnd.getTime());
+            const vEnd = addDays(vStart, vDays);
+            // La frise se prolonge de part et d'autre de la periode annoncee (jours et semaines) : on fait defiler pour voir
+            // la suite (ou ce qui precede) au lieu de buter sur le bord. La periode, elle, garde toute la largeur (voir plus bas).
+            const OUTER = fitWindow ? 0 : (cfg.unit === 'day' ? 14 : cfg.unit === 'week' ? 28 : 0);
+            let eStart = addDays(vStart, -OUTER);
+            let eEnd = addDays(vEnd, OUTER);
 
             // Padding en jours selon la résolution de la vue
             const PADDING = cfg.unit === 'day' ? 3 : cfg.unit === 'week' ? 7 : cfg.unit === 'quarter' ? 30 : 14;
 
-            // N'étendre que pour les tâches qui chevauchent la période courante.
-            // Les tâches entièrement hors-période restent invisibles (navigation cohérente).
+            // La frise couvre TOUTES les taches datees (a l'echelle de la vue) : on les atteint en faisant defiler, la periode
+            // annoncee n'etant que la position d'ouverture. Garde-fou : au-dela de ±1000 jours (vue jour) ou ±3000 jours
+            // (autres vues) autour de la periode, une date aberrante n'etire pas la frise ; la navigation y mene.
+            const CAP = cfg.unit === 'day' ? 1000 : 3000;
+            const lo = addDays(vStart, -CAP), hi = addDays(vEnd, CAP);
             ft.forEach(t => {
-                const ts = gristToDate(t.dateDebut);
-                const te = gristToDate(t.dateEcheance);
+                let ts = gristToDate(t.dateDebut) || gristToDate(t.dateEcheance);
+                let te = gristToDate(t.dateEcheance) || ts;
                 if (!ts || !te) return;
-                if (te < vStart || ts > vEnd) return; // pas d'overlap → ignorer
+                if (te < lo || ts > hi) return;
+                if (ts < lo) ts = lo;
+                if (te > hi) te = hi;
                 if (ts < eStart) eStart = addDays(ts, -PADDING);
-                if (te > eEnd) eEnd = addDays(te, PADDING);
+                if (addDays(te, 1) > eEnd) eEnd = addDays(te, 1 + PADDING);   // le dernier jour de la tache est inclus
             });
 
             // Aligner le début sur la frontière de la grille
@@ -3137,7 +3147,10 @@
             const timelineEl = document.getElementById('timelineScroll');
             const availableWidth = (timelineEl && timelineEl.clientWidth > 10) ? timelineEl.clientWidth : 600;
             const plancher = fitWindow ? (MIN_CELL_WIDTH[eCfg.unit] || eCfg.cellWidth) : eCfg.cellWidth;
-            effectiveCellWidth = Math.max(plancher, Math.floor(availableWidth / numCells));
+            // La largeur se cale sur la PERIODE annoncee (pas sur la frise prolongee) : la semaine remplit l'ecran, le reste se
+            // decouvre en faisant defiler. Sous cadrage « Ajuster », c'est la plage entiere qui doit tenir.
+            const cellulesPeriode = fitWindow ? numCells : (eCfg.unit === 'day' ? vDays : eCfg.unit === 'week' ? Math.ceil(vDays / 7) : numCells);
+            effectiveCellWidth = Math.max(plancher, Math.floor(availableWidth / Math.max(1, cellulesPeriode)));
 
             // Mettre à jour --cell-width pour les vues jour (Sem/Mois)
             document.documentElement.style.setProperty('--cell-width', effectiveCellWidth + 'px');
@@ -3368,48 +3381,48 @@
             // pxPerDay = effectivePxPerDay (déjà calculé depuis effectiveCellWidth)
             const pxPerDay = effectivePxPerDay;
 
-            let gridHtml = '';
-            ft.forEach(() => {
-                gridHtml += '<div class="grid-row">';
-                if (cfg.unit === 'quarter') {
-                    // Une cellule de fond par trimestre : le fond doit suivre la graduation
-                    // de l'en-tete, sinon la grille se compte en jours et deborde.
-                    const effEnd = addDays(start, totalDays);
-                    let cur = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3, 1);
-                    const maintenant = new Date();
-                    while (cur < effEnd) {
-                        const finTrim = new Date(cur.getFullYear(), cur.getMonth() + 3, 1);
-                        const estTrimCourant = maintenant >= cur && maintenant < finTrim;
-                        gridHtml += '<div class="grid-cell ' + (estTrimCourant ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
-                        cur = finTrim;
-                    }
-                } else if (cfg.unit === 'month') {
-                    const effEnd = addDays(start, totalDays);
-                    let cur = new Date(start.getFullYear(), start.getMonth(), 1);
-                    while (cur < effEnd) {
-                        const m = cur.getMonth();
-                        const y = cur.getFullYear();
-                        const isCurrentMonth = (new Date().getMonth() === m && new Date().getFullYear() === y);
-                        gridHtml += '<div class="grid-cell ' + (isCurrentMonth ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
-                        cur = new Date(y, m + 1, 1);
-                    }
-                } else if (cfg.unit === 'week') {
-                    for (let i = 0; i < totalDays; i += 7) {
-                        const d = addDays(start, i);
-                        const isT = new Date() >= d && new Date() < addDays(d, 7);
-                        gridHtml += '<div class="grid-cell ' + (isT ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
-                    }
-                } else {
-                    for (let i = 0; i < totalDays; i++) {
-                        const d = addDays(start, i);
-                        const isWe = isWeekend(d);
-                        const isT = isSameDay(d, new Date());
-                        const isMonthStart = d.getDate() === 1;
-                        gridHtml += '<div class="grid-cell ' + (isWe ? 'weekend ' : '') + (isT ? 'today ' : '') + (isMonthStart ? 'month-start' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
-                    }
+            // Colonnes (jours, semaines, mois ou trimestres) dessinees UNE fois pour toute la hauteur ; les lignes ne portent
+            // plus que leur trait horizontal. Evite lignes x jours elements quand la frise couvre toutes les taches.
+            let colsHtml = '';
+            if (cfg.unit === 'quarter') {
+                // Une cellule de fond par trimestre : le fond doit suivre la graduation
+                // de l'en-tete, sinon la grille se compte en jours et deborde.
+                const effEnd = addDays(start, totalDays);
+                let cur = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3, 1);
+                const maintenant = new Date();
+                while (cur < effEnd) {
+                    const finTrim = new Date(cur.getFullYear(), cur.getMonth() + 3, 1);
+                    const estTrimCourant = maintenant >= cur && maintenant < finTrim;
+                    colsHtml += '<div class="grid-cell ' + (estTrimCourant ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
+                    cur = finTrim;
                 }
-                gridHtml += '</div>';
-            });
+            } else if (cfg.unit === 'month') {
+                const effEnd = addDays(start, totalDays);
+                let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+                while (cur < effEnd) {
+                    const m = cur.getMonth();
+                    const y = cur.getFullYear();
+                    const isCurrentMonth = (new Date().getMonth() === m && new Date().getFullYear() === y);
+                    colsHtml += '<div class="grid-cell ' + (isCurrentMonth ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
+                    cur = new Date(y, m + 1, 1);
+                }
+            } else if (cfg.unit === 'week') {
+                for (let i = 0; i < totalDays; i += 7) {
+                    const d = addDays(start, i);
+                    const isT = new Date() >= d && new Date() < addDays(d, 7);
+                    colsHtml += '<div class="grid-cell ' + (isT ? 'today' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
+                }
+            } else {
+                for (let i = 0; i < totalDays; i++) {
+                    const d = addDays(start, i);
+                    const isWe = isWeekend(d);
+                    const isT = isSameDay(d, new Date());
+                    const isMonthStart = d.getDate() === 1;
+                    colsHtml += '<div class="grid-cell ' + (isWe ? 'weekend ' : '') + (isT ? 'today ' : '') + (isMonthStart ? 'month-start' : '') + '" style="width:' + effectiveCellWidth + 'px"></div>';
+                }
+            }
+            let gridHtml = '<div class="grid-cols">' + colsHtml + '</div>';
+            ft.forEach(() => { gridHtml += '<div class="grid-row"></div>'; });
 
             const grid = document.getElementById('timelineGrid');
             grid.innerHTML = gridHtml;
