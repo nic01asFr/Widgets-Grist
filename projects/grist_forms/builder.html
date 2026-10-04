@@ -260,6 +260,49 @@
   }
   .champ-bloc--ajout:hover { border-color: var(--blue-france, #000091); color: var(--blue-france, #000091); }
 
+  /* Écrire une question, puis la suivante : le geste dominant. */
+  .ajout {
+    border: 1px dashed var(--grey-900, #ddd); border-radius: 8px; padding: 0.7rem 0.8rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .ajout__texte {
+    font: inherit; font-size: 1rem; width: 100%; padding: 0.55rem 0.7rem;
+    border: 1px solid var(--grey-925, #e5e5e5); border-bottom-width: 2px; border-radius: 5px 5px 0 0;
+    background: var(--fond-carte, #fff); color: inherit;
+  }
+  .ajout__types { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .ajout__type {
+    font: inherit; font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0.6rem; border-radius: 999px;
+    border: 1px solid var(--grey-925, #e5e5e5); background: transparent; color: var(--encre-douce, #666);
+  }
+  .ajout__type:hover { border-color: var(--blue-france, #000091); color: var(--blue-france, #000091); }
+  .ajout__type.est-actif { background: var(--blue-france, #000091); border-color: var(--blue-france, #000091); color: #fff; }
+
+  /* Déplacer : au clavier et au doigt, pas seulement à la souris. */
+  .champ-bloc__action[disabled] { opacity: 0.3; cursor: default; }
+  .champ-bloc__deplacer {
+    font: inherit; font-size: 0.72rem; padding: 0.1rem 0.3rem; border-radius: 5px;
+    border: 1px solid transparent; background: transparent; color: var(--encre-douce, #666); max-width: 8rem;
+  }
+  .champ-bloc__deplacer:hover { border-color: var(--grey-900, #ddd); }
+
+  /* Ce qui empêcherait le formulaire de marcher. */
+  .verif {
+    max-width: 52rem; margin: 0.6rem auto 0; background: var(--fond-carte, #fff);
+    border: 1px solid var(--warning, #b34000); border-radius: 8px; padding: 0.7rem 0.8rem;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .verif--ok { border-color: var(--success, #18753c); }
+  .verif__tete { font-size: 0.84rem; font-weight: 600; color: var(--warning, #b34000); margin: 0 0 0.3rem; }
+  .verif__ligne {
+    font: inherit; text-align: left; cursor: pointer; border: 1px solid transparent; border-radius: 5px;
+    background: transparent; color: inherit; padding: 0.3rem 0.4rem; display: flex; gap: 0.6rem; flex-wrap: wrap;
+  }
+  .verif__ligne:hover { background: var(--grey-975, #f6f6f6); border-color: var(--grey-925, #e5e5e5); }
+  .verif__ou { font-size: 0.78rem; color: var(--encre-douce, #666); flex: 0 0 14rem; }
+  .verif__quoi { font-size: 0.84rem; flex: 1 1 16rem; }
+  .barre-enregistrement__compte { font-size: 0.78rem; color: var(--encre-douce, #666); margin-right: auto; }
+
   /* Le plan de l'étape : ses questions en cartes, visibles d'un coup. */
   .atelier__plan { padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
   .plan__tete { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
@@ -1865,8 +1908,11 @@ function renderBuilder() {
       ${renderCanevas(def)}
     </div>
     ${colsDatalist}
+    ${renderVerification(def)}
     <div class="barre-enregistrement">
-      <span class="barre-enregistrement__etat">${esc(def.title || 'Sans titre')} — ${def.sections.length} étape(s), ${def.sections.reduce((n, s2) => n + (s2.fields || []).length, 0)} question(s)</span>
+      <span class="barre-enregistrement__etat">${S.dirty ? 'Modifications non enregistrées' : (S.enregistreA ? 'Enregistré à ' + S.enregistreA : esc(def.title || 'Sans titre'))}</span>
+      <span class="barre-enregistrement__compte">${def.sections.length} étape(s) · ${def.sections.reduce((n, s2) => n + (s2.fields || []).length, 0)} question(s)</span>
+      <button type="button" class="fr-btn fr-btn--secondary" onclick="App.basculerVerification()">Vérifier${(() => { const n = verifierFormulaire(def).length; return n ? ' (' + n + ')' : ''; })()}</button>
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
@@ -2016,6 +2062,16 @@ function renderCanevas(def) {
           <span class="champ-bloc__nature">${esc(natureCourte(f))}</span>
           ${marquesDeChamp(f)}
           <span class="champ-bloc__espace"></span>
+          <button type="button" class="champ-bloc__action" title="Monter" ${fi === 0 ? 'disabled' : ''}
+            onclick="App.deplacerChamp(${si}, ${fi}, -1)">↑</button>
+          <button type="button" class="champ-bloc__action" title="Descendre" ${fi === (section.fields.length - 1) ? 'disabled' : ''}
+            onclick="App.deplacerChamp(${si}, ${fi}, 1)">↓</button>
+          <button type="button" class="champ-bloc__action" title="Dupliquer" onclick="App.dupliquerChamp(${si}, ${fi})">⧉</button>
+          <select class="champ-bloc__deplacer" title="Déplacer vers une autre étape"
+            onchange="App.deplacerVersEtape(${si}, ${fi}, this.value); this.selectedIndex = 0;">
+            <option value="">→ étape…</option>
+            ${def.sections.map((sec, k) => k === si ? '' : `<option value="${k}">${k + 1}. ${esc(sec.label || '')}</option>`).join('')}
+          </select>
           <button type="button" class="champ-bloc__action" title="${ouvert ? 'Fermer' : 'Configurer cette question'}"
             onclick="App.choisir('${ouvert ? 'etape' : 'question'}', ${si}${ouvert ? '' : ', ' + fi})">${ouvert ? '✕' : '⚙'}</button>
         </div>
@@ -2037,7 +2093,7 @@ function renderCanevas(def) {
       </div>
       ${reglagesEtape}
       ${blocs}
-      <button type="button" class="champ-bloc champ-bloc--ajout" onclick="App.addField(${si})">+ Ajouter une question</button>
+      ${renderAjoutRapide(si)}
     </div>`;
 }
 
@@ -2047,6 +2103,153 @@ function optionsDApercu(def, f) {
   if (statiques && statiques.length) return statiques;
   if (f.type === 'Ref' || f.type === 'RefList') return [{ value: '', label: '(lignes de ' + (resolveRefTableOfField(f) || 'la table liée') + ')' }];
   return null;
+}
+
+/**
+ * Écrire une question, et passer à la suivante.
+ *
+ * Le geste dominant de la composition n'est pas de régler : c'est d'écrire.
+ * Avant, ajouter une question donnait une carte vide qu'il fallait ouvrir,
+ * nommer, puis typer — quatre gestes pour une ligne. Ici on écrit la question,
+ * on choisit son type d'un clic si le défaut ne convient pas, et Entrée crée la
+ * suivante sans quitter le clavier.
+ */
+function renderAjoutRapide(si) {
+  const types = ((window.FormUx && FormUx.SIMPLE_TYPES) || []).map(t =>
+    `<button type="button" class="ajout__type${S.typeAjout === t.key ? ' est-actif' : ''}"
+      onclick="App.typeAjout('${esc(t.key)}')">${esc(t.label)}</button>`).join('');
+  return `
+    <div class="ajout">
+      <input class="ajout__texte" id="ajout-rapide" placeholder="Écrire une question, puis Entrée…"
+        aria-label="Nouvelle question"
+        onkeydown="if (event.key === 'Enter') { event.preventDefault(); App.ajouterDepuisTexte(${si}, this.value); }">
+      <div class="ajout__types">${types}</div>
+    </div>`;
+}
+
+function typeAjout(cle) {
+  S.typeAjout = cle;
+  renderBuilder();
+  const champ = document.getElementById('ajout-rapide');
+  if (champ) champ.focus();
+}
+
+function ajouterDepuisTexte(si, texte) {
+  const libelle = String(texte || '').trim();
+  if (!libelle) return;
+  const section = S.currentDef.sections[si];
+  const champ = newField();
+  champ.label = libelle;
+  section.fields.push(champ);
+  const fi = section.fields.length - 1;
+  if (S.typeAjout) onFieldTypeKeyChange(si, fi, S.typeAjout);
+  onFieldLabelBlur(si, fi);   // dérive l'identifiant de colonne quand c'est le mode
+  marquerModifie();
+  renderBuilder();
+  const suivant = document.getElementById('ajout-rapide');
+  if (suivant) { suivant.value = ''; suivant.focus(); }
+}
+
+/** Déplacer, dupliquer, supprimer : sans glisser, donc au clavier et au doigt. */
+function deplacerChamp(si, fi, pas) {
+  const champs = S.currentDef.sections[si].fields;
+  const cible = fi + pas;
+  if (cible < 0 || cible >= champs.length) return;
+  const [c] = champs.splice(fi, 1);
+  champs.splice(cible, 0, c);
+  S.selection = { quoi: 'question', si: si, fi: cible };
+  marquerModifie();
+  renderBuilder();
+}
+
+function deplacerVersEtape(si, fi, cibleSi) {
+  const n = Number(cibleSi);
+  if (!Number.isFinite(n) || n === si || !S.currentDef.sections[n]) return;
+  const [c] = S.currentDef.sections[si].fields.splice(fi, 1);
+  S.currentDef.sections[n].fields.push(c);
+  S.selection = { quoi: 'question', si: n, fi: S.currentDef.sections[n].fields.length - 1 };
+  marquerModifie();
+  renderBuilder();
+}
+
+function dupliquerChamp(si, fi) {
+  const champs = S.currentDef.sections[si].fields;
+  const copie = JSON.parse(JSON.stringify(champs[fi]));
+  copie.colId = '';           // deux questions ne peuvent pas écrire dans la même colonne
+  copie.label = copie.label + ' (copie)';
+  champs.splice(fi + 1, 0, copie);
+  S.selection = { quoi: 'question', si: si, fi: fi + 1 };
+  marquerModifie();
+  renderBuilder();
+}
+
+/**
+ * Ce qui empêcherait le formulaire de marcher, dit avant d'enregistrer.
+ *
+ * Sur soixante questions, le risque n'est pas de mal ranger un réglage : c'est
+ * qu'une question n'écrive nulle part, que deux écrivent au même endroit, ou
+ * qu'une condition désigne une réponse qui vient après elle — et donc qui
+ * n'existe pas encore au moment où l'on en a besoin.
+ */
+function verifierFormulaire(def) {
+  const soucis = [];
+  const vus = {};
+  def.sections.forEach((section, si) => {
+    (section.fields || []).forEach((f, fi) => {
+      const ou = { si: si, fi: fi, question: f.label || f.colId || 'Question ' + (fi + 1) };
+      if (!String(f.label || '').trim()) soucis.push({ ...ou, quoi: 'Sans libellé : le public ne saura pas quoi répondre.' });
+      if (!String(f.colId || '').trim()) soucis.push({ ...ou, quoi: 'Aucune colonne : la réponse ne serait écrite nulle part.' });
+      else if (vus[f.colId]) soucis.push({ ...ou, quoi: `La colonne « ${f.colId} » est déjà utilisée par une autre question.` });
+      else vus[f.colId] = true;
+      const aChoix = (def.choices[f.colId] || []).length || ((f.options && f.options.choices) || []).length;
+      if ((f.type === 'Choice' || f.type === 'ChoiceList') && !aChoix) {
+        soucis.push({ ...ou, quoi: 'Aucune option proposée.' });
+      }
+      if ((f.type === 'Ref' || f.type === 'RefList') && !resolveRefTableOfField(f)) {
+        soucis.push({ ...ou, quoi: 'Aucune table liée : la liste serait vide.' });
+      }
+      // Une condition ne peut regarder qu'en arrière.
+      const regles = [];
+      (function lire(c) {
+        if (!c) return;
+        if (c.rules) return c.rules.forEach(lire);
+        if (c.field && (!c.source || c.source === 'field')) regles.push(c.field);
+      })(f.condition);
+      const avant = new Set(priorFields(def, si, fi).map(x => x.colId));
+      regles.forEach(colId => {
+        if (!avant.has(colId)) {
+          soucis.push({ ...ou, quoi: `La condition regarde « ${colId} », qui n’est pas posée avant cette question.` });
+        }
+      });
+    });
+  });
+  return soucis;
+}
+
+function basculerVerification() {
+  S.verification = !S.verification;
+  renderBuilder();
+}
+
+function renderVerification(def) {
+  if (!S.verification) return '';
+  const soucis = verifierFormulaire(def);
+  if (!soucis.length) {
+    return `<div class="verif verif--ok"><p>Rien à signaler : chaque question a un libellé, une colonne à elle, et ses conditions regardent en arrière.</p></div>`;
+  }
+  const lignes = soucis.map(x => `
+    <button type="button" class="verif__ligne" onclick="App.choisir('question', ${x.si}, ${x.fi})">
+      <span class="verif__ou">Étape ${x.si + 1} · ${esc(x.question)}</span>
+      <span class="verif__quoi">${esc(x.quoi)}</span>
+    </button>`).join('');
+  return `<div class="verif"><p class="verif__tete">${soucis.length} point(s) à regarder</p>${lignes}</div>`;
+}
+
+/** Ce qui a changé depuis le dernier enregistrement. */
+function marquerModifie() {
+  S.dirty = true;
+  const etat = document.querySelector('.barre-enregistrement__etat');
+  if (etat) etat.textContent = 'Modifications non enregistrées';
 }
 
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
@@ -2837,6 +3040,7 @@ function renderFieldEditor(def, si, f, fi) {
 }
 
 function onDefInput(prop, value) {
+  marquerModifie();
   S.currentDef[prop] = value;
   if (prop === 'title' && S.currentDef.composeMode === 'ensureSchema' && S.autoTable) {
     S.currentDef.tableId = FormUx.tableNameFromTitle(value);
@@ -2923,8 +3127,10 @@ function removeField(si, fi) {
   renderBuilder();
 }
 
-function onSectionInput(si, prop, value) { S.currentDef.sections[si][prop] = value; }
-function onFieldInput(si, fi, prop, value) { S.currentDef.sections[si].fields[fi][prop] = value; }
+function onSectionInput(si, prop, value) {
+  marquerModifie(); S.currentDef.sections[si][prop] = value; }
+function onFieldInput(si, fi, prop, value) {
+  marquerModifie(); S.currentDef.sections[si].fields[fi][prop] = value; }
 function onFieldOption(si, fi, key, value) {
   const f = S.currentDef.sections[si].fields[fi];
   f.options = f.options || {};
@@ -2988,6 +3194,7 @@ function onFieldTypeKeyChange(si, fi, key) {
 }
 
 function onFieldChoices(si, fi, text) {
+  marquerModifie();
   const f = S.currentDef.sections[si].fields[fi];
   const list = text.split('\n').map(s => s.trim()).filter(Boolean);
   if (f.colId) S.currentDef.choices[f.colId] = list;
@@ -3339,6 +3546,8 @@ async function saveForm() {
       if (found) S.currentRowId = found.id;
     }
 
+    S.dirty = false;
+    S.enregistreA = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     toast('Formulaire enregistré', 'success');
     const row = S.currentRowId ? S.forms.find(r => r.id === S.currentRowId) : null;
     if (row && row.Statut === 'publie') {
@@ -3743,7 +3952,8 @@ window.App = {
   onFieldConditionToggle, onFieldCondition,
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
-  saveForm, refreshPreview: mountPreview, choisir, panneauDroit, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  saveForm, refreshPreview: mountPreview, choisir, panneauDroit,
+  typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */
