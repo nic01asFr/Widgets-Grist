@@ -28,10 +28,11 @@ projects/grist_forms/
 │   ├── audience-setup.js    # Auto formule user.Email (trigger nouvelles lignes)
 │   ├── survey-project.js
 │   ├── ensure-schema.js
-│   ├── audience-setup.js    # Auto formule user.Email (trigger nouvelles lignes)
+│   ├── liens-table.js       # Tables liées : reconnaître, créer, écrire les lignes
 │   ├── formulaires-table.js
 │   └── publish.js
 ├── tests/
+├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
 ```
@@ -74,6 +75,35 @@ personne, parce que c'est ainsi que `coerceForWrite` les relit.
 compositeur marquait ses champs (`_colIdLocked`) et `formdef.schema.json`
 interdit toute clé qu'il ne déclare pas. Un lecteur strict rejetait donc des
 formulaires que ce dépôt avait lui-même écrits.
+
+### Tables liées — `shared/liens-table.js` (04/10/2026)
+
+Un formulaire qui **ajoute une ligne rattachée** à une autre : les heures d'une
+tâche, les visites d'un ouvrage, les dépenses d'une catégorie, les points
+dessinés d'une enquête. Atlas le fait depuis sa 1.12.0 pour la carto ; le motif
+n'a rien de cartographique, et ce module en porte la part générique — sans
+dépendre d'Atlas, qu'on ne touche pas.
+
+Il ne fait rien d'autre que rendre des identifiants, des actions et des refus :
+`tablesLiees` (reconnaître avant de créer), `planTableLiee`, `planLignesLiees`,
+`messageRefus`.
+
+**Quatre faits mesurés en Grist réel** (1.7.18, document anonyme, 04/10/2026) :
+
+| Fait | Conséquence |
+|---|---|
+| Un lot d'actions est **atomique** : si la seconde échoue, la première est annulée | la table et sa colonne inverse partent ensemble |
+| Une ligne créée dans un lot **ne peut pas y être désignée** — son id n'est rendu qu'au retour | le parent s'écrit avant ses enfants, en deux envois ; jamais l'inverse |
+| Cinq lignes d'un coup : **105 ms**, contre **535 ms** une par une | `planLignesLiees` groupe en un `BulkAddRecord` |
+| Sans colonne inverse, Grist **accepte** un rattachement vers la ligne 999 ; avec elle, il le **refuse** | `AddReverseColumn` est un garde-fou autant qu'un confort : le parent liste ses enfants sans formule |
+
+Un rattachement vide (`0`) reste accepté par Grist : c'est au formulaire de
+refuser, parce que le lien est un **fait du contexte** — l'objet ouvert, la
+ligne du curseur — et jamais une question posée à la personne.
+
+Éprouvé de bout en bout sur un document réel : table et colonne inverse créées,
+deux lignes écrites en une action, parent qui les liste (`['L',1,2]`), orphelin
+refusé, document remis en état.
 
 ### Validation live
 Checklist : `docs/MANUAL_TEST.md` §4–5. Guide publication : `docs/PUBLICATION.md`.
