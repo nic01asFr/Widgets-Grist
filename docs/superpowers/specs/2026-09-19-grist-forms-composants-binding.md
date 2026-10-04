@@ -177,3 +177,10 @@ Gains par rapport au questionnaire actuel : réponses masquées non écrites (R2
   qui fixe la surface de `bridge.editGeometry`.
 - **Spec carto** : `2026-07-29-form-binding-blocknote-cerema-design.md` §4 (« géométrie
   dans FormDef : hors scope ») est à amender si §3.4 est validé.
+
+> **Amendé le 04/10/2026** — la géométrie sort du formulaire (décision D4 de
+> `2026-10-04-grist-forms-registre-saisies.md`) : le formulaire porte le champ et
+> le format, l'hôte porte le geste de dessin. Convention de colonnes retenue :
+> celle d'Atlas (`latitude`+`longitude`, ou `geometry_json`), éprouvée en
+> production. Le §3.4 ci-dessous reste utile pour son raisonnement, pas pour sa
+> conclusion sur le widget `geo`.
