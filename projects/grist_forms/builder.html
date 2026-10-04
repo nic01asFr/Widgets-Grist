@@ -163,6 +163,16 @@
   .structure__etape { display: flex; flex-direction: column; gap: 1px; }
   .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
 
+  /* Les options d'une question liée : celles de la colonne, montrées telles quelles. */
+  .options-liees { margin-bottom: 1rem; }
+  .options-liees__liste {
+    list-style: none; margin: 0.3rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem;
+  }
+  .options-liees__liste li {
+    font-size: 0.82rem; padding: 0.15rem 0.55rem; border-radius: 999px;
+    background: var(--grey-975, #f6f6f6); border: 1px solid var(--grey-925, #e5e5e5);
+  }
+
   /* ── Rail · canevas · inspecteur ────────────────────────────────────────
      Trois colonnes stables : le parcours, le formulaire tel qu'il sera vu, et
      ce qu'on règle. Ouvrir un réglage ne déplace plus ce qu'on regarde. */
@@ -1666,10 +1676,16 @@ async function loadTablesAndColumns() {
     if (c.isFormula) return; // colonnes calculées non pertinentes comme cible de champ
     const table = S.tables.find(t => t.id === c.parentId);
     if (!table) return;
+    // Les choix d'une colonne Choice vivent dans ses `widgetOptions` : sans eux,
+    // le compositeur demandait de retaper à la main une liste que Grist détient
+    // déjà, et les deux divergeaient aussitôt.
+    var choix = null;
+    try { choix = JSON.parse(c.widgetOptions || '{}').choices || null; } catch (e) { choix = null; }
     S.columnsByTable[table.tableId].push({
       colId: c.colId,
       type: c.type,
       label: c.label || c.colId,
+      choix: choix,
       formula: c.formula || '',
       isFormula: !!c.isFormula,
       recalcWhen: c.recalcWhen
@@ -2308,7 +2324,10 @@ function verifierFormulaire(def) {
       if (!String(f.colId || '').trim()) soucis.push({ ...ou, quoi: 'Aucune colonne : la réponse ne serait écrite nulle part.' });
       else if (vus[f.colId]) soucis.push({ ...ou, quoi: `La colonne « ${f.colId} » est déjà utilisée par une autre question.` });
       else vus[f.colId] = true;
-      const aChoix = (def.choices[f.colId] || []).length || ((f.options && f.options.choices) || []).length;
+      const colonne = (S.columnsByTable[def.tableId] || []).find(c => c.colId === f.colId);
+      const aChoix = (def.choices[f.colId] || []).length
+        || ((f.options && f.options.choices) || []).length
+        || ((colonne && colonne.choix) || []).length;
       if ((f.type === 'Choice' || f.type === 'ChoiceList') && !aChoix) {
         soucis.push({ ...ou, quoi: 'Aucune option proposée.' });
       }
@@ -2357,6 +2376,44 @@ function marquerModifie() {
   S.dirty = true;
   const etat = document.querySelector('.barre-enregistrement__etat');
   if (etat) etat.textContent = 'Modifications non enregistrées';
+}
+
+/**
+ * D'où viennent les options d'une question à choix.
+ *
+ * > **En mode liaison, elles appartiennent à la colonne.** Le compositeur en
+ * > offrait une zone de texte libre, alimentée par `def.choices` — qui restait
+ * > vide pour une question liée, puisque ses choix sont portés par la colonne.
+ * > On voyait donc un champ vide sous une question qui propose quatre réponses,
+ * > et y écrire aurait fabriqué une seconde liste, que Grist aurait refusée.
+ *
+ * On les montre donc telles qu'elles sont, en disant où les changer. En mode
+ * création, la colonne n'existe pas encore : c'est bien ici qu'on les écrit.
+ */
+function renderOptionsDuChamp(def, si, f, fi, isBind) {
+  if (isBind) {
+    const col = (S.columnsByTable[def.tableId] || []).find(c => c.colId === f.colId);
+    const choix = (col && col.choix) || (f.options && f.options.choices) || [];
+    if (!f.colId) {
+      return `<p class="fr-hint-text">Choisissez une colonne : ses options seront celles de la question.</p>`;
+    }
+    if (!choix.length) {
+      return `<div class="fr-alert fr-alert--warning fr-mt-1w"><p>La colonne « ${esc(f.colId)} » ne déclare aucune liste de choix dans Grist. La question n’offrirait rien à choisir.</p></div>`;
+    }
+    return `
+      <div class="options-liees">
+        <p class="fr-label">Options proposées ${hintIcon('Elles viennent de la colonne : c’est dans Grist qu’on les change, et le formulaire suit.')}</p>
+        <ul class="options-liees__liste">${choix.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+        <p class="fr-hint-text">Définies par la colonne « ${esc(f.colId)} » dans Grist.</p>
+      </div>`;
+  }
+  const valeur = (def.choices[f.colId] || (f.options && f.options.choices) || []).join('\n');
+  return `
+    <div class="fr-input-group">
+      <label class="fr-label" for="opt-${si}-${fi}">Options proposées ${hintIcon('Une par ligne. Elles deviendront les choix de la colonne créée dans Grist.')}</label>
+      <textarea class="fr-input" id="opt-${si}-${fi}" rows="4"
+        oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(valeur)}</textarea>
+    </div>`;
 }
 
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
@@ -3083,22 +3140,21 @@ function renderFieldEditor(def, si, f, fi) {
             </select>
           </div>
           ${isBind ? `
-            <div class="fr-input-group"><label class="fr-label" for="col-${si}-${fi}">Colonne</label>
-              <input class="fr-input" id="col-${si}-${fi}" list="cols-datalist" value="${esc(f.colId)}"
-                onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)">
+            <div class="fr-select-group"><label class="fr-label" for="col-${si}-${fi}">Colonne ${hintIcon('Les réponses iront dans cette colonne de la table. Son type et, le cas échéant, sa liste de choix viennent d’elle.')}</label>
+              <select class="fr-select" id="col-${si}-${fi}" onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)">
+                <option value="">— choisir une colonne —</option>
+                ${(S.columnsByTable[def.tableId] || []).map(c => `<option value="${esc(c.colId)}" ${c.colId === f.colId ? 'selected' : ''}>${esc(c.label || c.colId)} · ${esc(c.type)}</option>`).join('')}
+                ${f.colId && !(S.columnsByTable[def.tableId] || []).some(c => c.colId === f.colId)
+                  ? `<option value="${esc(f.colId)}" selected>${esc(f.colId)} · absente de la table</option>` : ''}
+              </select>
             </div>` : `
-            <div class="fr-input-group"><label class="fr-label" for="col-${si}-${fi}">Nom de la colonne</label>
+            <div class="fr-input-group"><label class="fr-label" for="col-${si}-${fi}">Nom de la colonne ${hintIcon('Elle sera créée à l’enregistrement, avec le type choisi.')}</label>
               <input class="fr-input" id="col-${si}-${fi}" value="${esc(f.colId)}"
                 onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)">
             </div>`}
         </div>
 
-        ${isChoiceLike ? `
-          <div class="fr-input-group">
-            <label class="fr-label" for="opt-${si}-${fi}">Options proposées ${hintIcon('Une par ligne. Elles deviennent les choix de la colonne dans Grist.')}</label>
-            <textarea class="fr-input" id="opt-${si}-${fi}" rows="4"
-              oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(choicesValue)}</textarea>
-          </div>` : ''}
+        ${isChoiceLike ? renderOptionsDuChamp(def, si, f, fi, isBind) : ''}
 
         ${f.kind === 'echelle' ? `
           <div class="bloc__duo">
@@ -3278,6 +3334,14 @@ function onFieldColIdChange(si, fi, value) {
       f.options = f.options || {};
       if (rawType.indexOf('Ref:') === 0) { f.refTable = rawType.slice(4); f.options.refTable = f.refTable; }
       else if (rawType.indexOf('RefList:') === 0) { f.refTable = rawType.slice(8); f.options.refTable = f.refTable; }
+      // Les options viennent de la colonne : c'est elle qui les détient, et une
+      // liste saisie ici ne ferait que mentir sur ce que Grist acceptera.
+      if (col.choix && col.choix.length) {
+        f.options.choices = col.choix.slice();
+        delete def.choices[value];
+      } else {
+        delete f.options.choices;
+      }
     }
   }
   if (oldColId && oldColId !== value && def.choices[oldColId]) {
