@@ -78,6 +78,20 @@ La barre est **une seule ligne** : titre | vue / navigation | outils (recherche,
 
 Recherche, filtres et affichage s'ouvrent dans un **bandeau commun** sous la barre (`#tfTray`, panneaux `.tf-panel[data-panel]`), qui pousse le contenu ; un seul panneau à la fois ; même bouton ou Échap pour refermer. Les panneaux sont déplacés dans le bandeau au montage, leurs ids sont conservés (`filterAllMenu`, `filterPanel`). Les rendus de filtres produisent des groupes `.fm-group` (étiquette + `.fm-group-items`). Le menu « ⋯ » reste un menu déroulant.
 
+### Contexte commun de consultation (`TF.ctx`)
+
+Un seul état par **document** et par navigateur, lu et écrit par tous les widgets : filtres (projet, priorité, assigné, statut), couleur, tri, niveau, sous-tâches. Un filtre posé dans le Kanban s'applique donc au Gantt, au Calendrier et au Dashboard. Clés `taskflow_ctx_<identifiant du document>` (identifiant = `grist.docApi.getDocName()`, `demo` hors Grist). Jamais de `grist.setOption` (bouton « Enregistrer » de la section).
+
+- Chaque widget garde ses variables locales (`filters`, `colorMode`, `sortMode`, `workLevel`) et fait : `await TF.ctx.init(grist, '<widget>'); applyCtx();` après `grist.ready` (démo : `TF.ctx.bind('demo', '<widget>')`), `TF.ctx.set({...})` à chaque changement, `TF.ctx.onChange(...)` pour s'aligner quand un autre widget ou le choix d'une vue change le contexte. Valeur nulle = défaut du widget (tri : Kanban « manual », Gantt « priority »).
+- Types normalisés dans le contexte : identifiants (projet, assigné, priorité) en nombres, statuts en chaînes. Le Dashboard garde des chaînes en interne (`applyCtx` / `pushCtx`) et sa période reste locale.
+- `TF.ctx.prune({ project, assignee, status })` écarte les filtres sans objet (projet supprimé, membre retiré, statut renommé) ; une liste vide n'est pas appliquée. À appeler après chaque chargement de données (`pruneFilters`).
+- Synchronisation : événement `storage` (widgets d'une même page) et relecture au retour de focus. Le lanceur ne garde qu'un widget vivant : l'état se lit au chargement.
+- **Vues nommées** (personnelles, `taskflow_views_<doc>`) : instantané du contexte, champ « Vue » du menu Affichage (`TF.ui.viewsField()` à placer en tête de `displayMenu`). « (modifiée) » quand le contexte s'écarte de la vue. Pas de `prompt()` (bloqué dans les iframes) : nom saisi dans le champ.
+- **Position** du Gantt et du Calendrier (`TF.ctx.pos`) : mémorisée 12 h puis retour sur aujourd'hui.
+- **Rattachement à Tasks** : `TF.relinkToTasks(grist)`, appelé en fin de `ensureSchema` quand Tasks vient d'être créée, réécrit `tableRef` de la section (métadonnées, vérifié en réel directement et via le lanceur) si une seule section personnalisée est liée à la table par défaut vide. Sinon rien. L'iframe redémarre ; `TF.consumeRelinkNotice()` affiche l'avis. Piège : ne jamais le rappeler au démarrage (boucle de rechargements).
+- Vue enregistrée **par widget** (n°87, deux Gantt sur deux projets) : pas faite. Elle passerait par les options de la section (`setOptions`, donc « Enregistrer ») ; priorité de lecture envisagée : vue de la section > contexte commun > défauts.
+- Tests : `tests/contexte.test.js` (stockage factice partagé entre « widgets »).
+
 ### Rafraîchissement de secours et tri d'affichage
 
 - `grist.onRecords` ne se déclenche que pour la table **liée à la section**. Si elle n'est pas Tasks (cas courant : table proposée par défaut), `TF.watchTasks(grist, reload)` relit Tasks toutes les 15 s et au retour sur la page, et recharge seulement si elle a changé, sans interrompre une saisie (champ actif, fiche ou boîte ouverte). Les écritures du widget lui-même ne le déclenchent pas (`guardWrites` réinitialise la référence). À brancher après `grist.onRecords` dans tout nouveau widget qui lit Tasks. Conseil aux utilisateurs : lier la section à Tasks donne un rafraîchissement immédiat.
@@ -431,6 +445,8 @@ Utilisée par les pickers Project/Team. Tasks.couleur utilise un `<input type="c
 **Trade-off assumé** : chaque utilisateur/navigateur garde son propre tri et mode couleur. Pas de partage inter-utilisateurs ni inter-widgets via Grist. Si l'utilisateur ouvre le Gantt en mode "Projet" et le Kanban en mode "Priorité", c'est un cas légitime.
 
 **Les filtres** sont eux aussi locaux (`localStorage`) : aucun `grist.setOption` n'est appelé par une manipulation du widget (voir « Filtres (GEN-02) »).
+
+> Mise à jour : couleur, tri, niveau et filtres sont désormais **partagés entre les widgets d'un même document** (voir « Contexte commun de consultation »). Les clés `taskflow_<widget>_colormode|sort|worklevel|showsubs|filters` ne sont plus lues qu'une fois, pour reprendre les anciens réglages à la première ouverture.
 
 ### Application par widget
 

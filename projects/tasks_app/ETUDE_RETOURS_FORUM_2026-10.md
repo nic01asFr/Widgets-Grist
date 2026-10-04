@@ -90,3 +90,15 @@ Saisie mensuelle et réalisé lissé (n°89). Le Plan calcule le réalisé de de
 4. Saisie mensuelle de la Feuille de temps (S à M) et filtre par rôle du Plan (S).
 5. Champs complémentaires avec filtres et tris par type (M), baseline du Gantt (M).
 6. Gantt par projet en lecture seule (M), mapping de colonnes complet (L) en dernier, après clarification du fork.
+
+## 5. Mis en oeuvre le 4 octobre 2026 (contexte commun)
+
+Fait, testé (131 tests, démo, Grist réel pour le chargement et le rattachement) :
+- **Contexte commun par document** (`TF.ctx`) : filtres (projet, priorité, assigné, statut), couleur, tri, niveau, sous-tâches partagés entre Kanban, Gantt, Calendrier et Dashboard ; migration des anciennes clés ; filtres sans objet écartés au chargement.
+- **Statut** ajouté aux filtres du Gantt et du Calendrier ; **priorité** ajoutée au Dashboard.
+- **Vues nommées** personnelles (menu Affichage, « modifiée » quand le contexte s'en écarte).
+- **Position** du Gantt et du Calendrier mémorisée 12 h.
+- **Rattachement à Tasks** après la création des tables (une seule section candidate, table liée vide ou par défaut).
+- Correctifs de détail : info-bulle « i » coupée par la fiche (bulle flottante recadrée), liste déroulante des dépendances coupée en bas de la fiche (ouverture vers le haut), croix des puces de statut du Kanban sans effet, états vides du Kanban répétés dans chaque colonne (message complet une seule fois), « Tout effacer » du Gantt qui laissait les cases cochées.
+
+Reste (décisions attendues) : vue enregistrée par widget (n°87), vues partagées avec l'équipe (stockage au niveau du document), priorités et champs configurables, mapping de colonnes.

@@ -259,15 +259,34 @@ const TF = (function () {
             const tray = document.getElementById('tfTray');
             if (tray && tray.classList.contains('open')) trayToggle('', false);
         });
-        // Info-bulles « i » : alignees a droite si elles debordent du widget.
-        const placeTip = (e) => {
-            const tip = e.target.closest ? e.target.closest('.tf-info') : null;
+        // Info-bulles « i » : une bulle flottante unique, centree sous le « i » puis recadree dans la fenetre
+        // (retournee au-dessus si elle sortirait en bas). Placee sur le body : aucun conteneur ne la coupe.
+        let tipEl = null;
+        const hideTip = () => { if (tipEl) tipEl.style.display = 'none'; };
+        const showTip = (e) => {
+            const tip = e.target && e.target.closest ? e.target.closest('.tf-info') : null;
             if (!tip) return;
-            tip.classList.remove('tip-left');
-            if (tip.getBoundingClientRect().left + 232 > window.innerWidth - 8) tip.classList.add('tip-left');
+            if (!tipEl) {
+                tipEl = document.createElement('div');
+                tipEl.className = 'tf-tip-float';
+                tipEl.setAttribute('role', 'tooltip');
+                document.body.appendChild(tipEl);
+            }
+            tipEl.textContent = tip.getAttribute('data-tip') || '';
+            tipEl.style.left = '0px'; tipEl.style.top = '0px'; tipEl.style.display = 'block';
+            const r = tip.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight, m = 8, vw = window.innerWidth, vh = window.innerHeight;
+            const left = Math.max(m, Math.min(r.left + r.width / 2 - w / 2, vw - w - m));
+            let top = r.bottom + 8;
+            if (top + h > vh - m) top = Math.max(m, r.top - h - 8);
+            tipEl.style.left = left + 'px'; tipEl.style.top = top + 'px';
         };
-        document.addEventListener('mouseover', placeTip);
-        document.addEventListener('focusin', placeTip);
+        const leaveTip = (e) => { if (e.target && e.target.closest && e.target.closest('.tf-info')) hideTip(); };
+        document.addEventListener('mouseover', showTip);
+        document.addEventListener('focusin', showTip);
+        document.addEventListener('mouseout', leaveTip);
+        document.addEventListener('focusout', leaveTip);
+        document.addEventListener('scroll', hideTip, true);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTip(); });
         // Controles segmentes defilants : l'element actif est toujours ramene dans le champ.
         const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
         document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
@@ -508,6 +527,8 @@ const TF = (function () {
     const uiColorField = (title) => ({ label: 'Couleur', html: uiSelect({ id: 'colorSelect', onchange: 'changeColorMode(this.value)', title: title, options: UI_COLOR_OPTIONS }) });
     const uiLevelField = () => ({ label: 'Niveau', html: uiSelect({ id: 'levelSelect', onchange: 'changeWorkLevel(this.value)', title: UI_LEVEL_TITLE, options: UI_LEVEL_OPTIONS }) });
     const uiSortField = (options) => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: options || UI_SORT_OPTIONS }) });
+    // Vues enregistrees (contexte commun) : le contenu est rendu par TF.ctx a chaque changement.
+    const uiViewsField = () => ({ label: 'Vue', html: '<div class="tf-views"></div>' });
     // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
     function uiDisplayMenu(o) {
         const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
@@ -578,6 +599,19 @@ const TF = (function () {
             slot.appendChild(box);
             if (panel.classList.contains('open')) trayToggle('search', false);
         }
+    }
+    // Liste deroulante d'un champ de la fiche (.multi-select) : elle s'ouvre vers le bas, sauf si la fiche defile et
+    // qu'elle serait coupee par le bord de la zone visible alors qu'il y a plus de place au-dessus.
+    function placeDropdown(ms) {
+        if (!ms || !ms.querySelector) return;
+        ms.classList.remove('up');
+        const dd = ms.querySelector('.multi-select-dropdown');
+        if (!dd || !ms.classList.contains('open')) return;
+        const zone = ms.closest('.panel-content') || ms.closest('.panel');
+        const zr = zone ? zone.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+        const bas = Math.min(zr.bottom, window.innerHeight) - 4, haut = Math.max(zr.top, 0) + 4;
+        const t = ms.getBoundingClientRect(), r = dd.getBoundingClientRect();
+        if (r.bottom > bas && (t.top - haut) > (bas - t.bottom)) ms.classList.add('up');
     }
     // Diagnostic : la barre deborde-t-elle ? (utilise par les controles de largeur, pas par la mise en page)
     function headerOverflow(host) {
@@ -666,7 +700,7 @@ const TF = (function () {
     }
     const ui = {
         icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
-        select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
+        select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField, viewsField: uiViewsField, placeDropdown: placeDropdown,
         displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader,
         tray: trayToggle, refit: fitHeader, overflow: headerOverflow, modeForWidth: modeForWidth
     };
@@ -899,6 +933,264 @@ const TF = (function () {
         try { const r = await grist.docApi.applyUserActions(actions); return { ok: true, ret: r }; }
         catch (e) { return { ok: false, denied: isAccessError(e), message: (e && (e.message || e.toString())) || 'Erreur' }; }
     }
+    /* ----- Contexte commun de consultation --------------------------------------------
+     * Un seul etat par document et par navigateur, lu et ecrit par tous les widgets : filtres (projet, priorite,
+     * assigne, statut), couleur, tri, niveau, sous-taches. Un filtre pose dans le Kanban s'applique donc aussi
+     * au Gantt, au Calendrier et au Dashboard. Il vit dans le stockage local du navigateur (jamais dans les
+     * options Grist, sinon le bouton « Enregistrer » de la section s'allume a chaque manipulation) ; les widgets
+     * d'une meme page se previennent par l'evenement « storage ». Une valeur nulle = defaut propre au widget.
+     * Vues nommees : instantanes du contexte, personnels, dans le meme stockage. Position (date affichee) du
+     * Gantt et du Calendrier : memorisee quelques heures, puis on revient sur aujourd'hui. */
+    const CTX_COLORS = ['priority', 'project', 'assignee', 'status'];
+    const CTX_SORTS = ['manual', 'date', 'priority'];
+    const CTX_LEVELS = ['all', 'actions', 'parents'];
+    const CTX_POS_MAX_AGE = 12 * 3600 * 1000;
+    function ctxBlank() {
+        return { filters: { project: [], priority: [], assignee: [], status: [] }, color: null, sort: null, level: null, subs: null, view: null };
+    }
+    function ctxList(arr, conv) {
+        const out = [];
+        (Array.isArray(arr) ? arr : []).forEach(v => {
+            const x = conv(v);
+            if (conv === Number ? isFinite(x) : x !== '') { if (out.indexOf(x) === -1) out.push(x); }
+        });
+        return out;
+    }
+    // Normalise un contexte lu du stockage (ou venu d'un autre widget) : types fixes, valeurs inconnues ecartees.
+    function ctxClean(raw) {
+        const out = ctxBlank();
+        if (!raw || typeof raw !== 'object') return out;
+        const f = raw.filters && typeof raw.filters === 'object' ? raw.filters : {};
+        out.filters.project = ctxList(f.project, Number);
+        out.filters.priority = ctxList(f.priority, Number);
+        out.filters.assignee = ctxList(f.assignee, Number);
+        out.filters.status = ctxList(f.status, String);
+        out.color = CTX_COLORS.indexOf(raw.color) !== -1 ? raw.color : null;
+        out.sort = CTX_SORTS.indexOf(raw.sort) !== -1 ? raw.sort : null;
+        out.level = CTX_LEVELS.indexOf(raw.level) !== -1 ? raw.level : null;
+        out.subs = typeof raw.subs === 'boolean' ? raw.subs : null;
+        out.view = typeof raw.view === 'string' && raw.view ? raw.view : null;
+        return out;
+    }
+    // Ce qu'une vue memorise : tout le contexte sauf le nom de la vue elle-meme.
+    function ctxData(s) { return { filters: s.filters, color: s.color, sort: s.sort, level: s.level, subs: s.subs }; }
+    function createCtx(env) {
+        env = env || {};
+        const store = env.storage || null;
+        const now = env.now || Date.now;
+        let ns = null, state = ctxBlank(), views = [];
+        const listeners = [];
+        const keyCtx = () => 'taskflow_ctx_' + ns;
+        const keyViews = () => 'taskflow_views_' + ns;
+        const keyPos = (w) => 'taskflow_pos_' + ns + '_' + w;
+        const rd = (k) => { try { return store ? store.getItem(k) : null; } catch (e) { return null; } };
+        const wr = (k, v) => { try { if (store) store.setItem(k, v); } catch (e) { /* stockage indisponible */ } };
+        const copy = (o) => JSON.parse(JSON.stringify(o));
+        const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+        const parse = (s) => { try { return s ? JSON.parse(s) : null; } catch (e) { return null; } };
+        // Reglages memorises par widget avant le contexte commun : repris une fois, a la premiere ouverture du document.
+        function legacy(w) {
+            const s = ctxBlank();
+            if (!w) return s;
+            const f = parse(rd('taskflow_' + w + '_filters'));
+            if (f) s.filters = f;
+            s.color = rd('taskflow_' + w + '_colormode');
+            s.sort = rd('taskflow_' + w + '_sort');
+            s.level = rd('taskflow_' + w + '_worklevel');
+            const sub = rd('taskflow_' + w + '_showsubs');
+            s.subs = sub === null ? null : sub === '1';
+            return ctxClean(s);
+        }
+        function loadViews() {
+            const l = parse(rd(keyViews()));
+            return (Array.isArray(l) ? l : []).filter(v => v && typeof v.name === 'string' && v.name).map(v => ({ name: v.name, data: ctxData(ctxClean(v.data)) }));
+        }
+        function modified() {
+            if (!state.view) return false;
+            const v = views.find(x => x.name === state.view);
+            return !v || !same(ctxData(state), v.data);
+        }
+        // --- Selecteur de vues (menu Affichage) : rendu a chaque changement de contexte ou de liste de vues.
+        function viewsHtml() {
+            const mod = modified();
+            const opts = '<option value="">Aucune vue</option>' + views.map(v =>
+                '<option value="' + escAttr(v.name) + '"' + (v.name === state.view ? ' selected' : '') + '>' + escAttr(v.name) + (v.name === state.view && mod ? ' (modifiée)' : '') + '</option>').join('');
+            return '<select id="tfViewSelect" onchange="TF.ctx.pickView(this.value)" aria-label="Vue enregistrée">' + opts + '</select>' +
+                '<span class="tf-views-save"><input type="text" id="tfViewName" maxlength="40" placeholder="Nom de la vue" aria-label="Nom de la vue" value="' + escAttr(state.view || '') + '" ' +
+                'onkeydown="if(event.key===\'Enter\'){TF.ctx.saveViewFromUi();event.preventDefault();}">' +
+                '<button type="button" class="btn" onclick="TF.ctx.saveViewFromUi()" title="Enregistrer les filtres, le tri, la couleur et le niveau actuels sous ce nom">Enregistrer</button>' +
+                (state.view ? '<button type="button" class="btn" onclick="TF.ctx.removeViewFromUi()" title="Supprimer cette vue">Supprimer</button>' : '') + '</span>';
+        }
+        // Une vue supprimee ailleurs ne doit plus rester « active ».
+        function dropGhostView() {
+            if (state.view && !views.some(v => v.name === state.view)) { state = ctxClean(Object.assign(copy(state), { view: null })); wr(keyCtx(), JSON.stringify(state)); }
+        }
+        function renderViews() {
+            if (typeof document === 'undefined') return;
+            const a = document.activeElement;
+            if (a && a.id === 'tfViewName') return;   // ne pas effacer un nom en cours de saisie
+            document.querySelectorAll('.tf-views').forEach(el => { el.innerHTML = viewsHtml(); });
+        }
+        function commit(next, source) {
+            if (same(next, state)) return false;
+            state = next;
+            wr(keyCtx(), JSON.stringify(state));
+            renderViews();
+            // Le widget qui agit se met a jour lui-meme ; les autres, et lui-meme apres le choix d'une vue, sont prevenus.
+            if (source === 'external' || source === 'view') listeners.forEach(fn => { try { fn(copy(state), source); } catch (e) { /* un ecouteur ne bloque pas les autres */ } });
+            return true;
+        }
+        function refresh() {
+            if (ns === null) return;
+            const raw = parse(rd(keyCtx()));
+            const nv = loadViews();
+            const viewsChanged = !same(nv, views);
+            views = nv;
+            if (raw) {
+                const next = ctxClean(raw);
+                if (!same(next, state)) { state = next; dropGhostView(); renderViews(); listeners.forEach(fn => { try { fn(copy(state), 'external'); } catch (e) {} }); return; }
+            }
+            if (viewsChanged) { dropGhostView(); renderViews(); }
+        }
+        const api = {
+            // Associe le contexte a un document. widget = nom du widget, pour reprendre ses anciens reglages.
+            bind: function (docId, widget) {
+                ns = String(docId || 'doc');
+                const raw = parse(rd(keyCtx()));
+                state = raw ? ctxClean(raw) : legacy(widget);
+                if (!raw) wr(keyCtx(), JSON.stringify(state));
+                views = loadViews();
+                dropGhostView();
+                if (typeof window !== 'undefined' && !api._wired) {
+                    api._wired = true;
+                    window.addEventListener('storage', e => { if (e.key === keyCtx() || e.key === keyViews()) refresh(); });
+                    window.addEventListener('focus', refresh);
+                    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+                }
+                renderViews();
+                return copy(state);
+            },
+            init: async function (grist, widget) {
+                let id = null;
+                try {
+                    if (grist && grist.docApi && grist.docApi.getDocName) id = await Promise.race([grist.docApi.getDocName(), new Promise(r => setTimeout(() => r(null), 2000))]);
+                } catch (e) { /* identifiant indisponible : contexte commun a tous les documents du navigateur */ }
+                return api.bind(id, widget);
+            },
+            get: function () { return copy(state); },
+            // patch = { filters: { project: [..] }, color, sort, level, subs, view } ; seules les cles presentes changent.
+            set: function (patch) {
+                const next = copy(state);
+                patch = patch || {};
+                if (patch.filters) Object.keys(next.filters).forEach(k => { if (patch.filters[k] !== undefined) next.filters[k] = patch.filters[k]; });
+                ['color', 'sort', 'level', 'subs', 'view'].forEach(k => { if (k in patch) next[k] = patch[k]; });
+                return commit(ctxClean(next), 'local');
+            },
+            // fn(contexte, source) quand le contexte change SANS que ce widget en soit l'auteur : source = 'external' ou 'view'.
+            onChange: function (fn) { listeners.push(fn); },
+            // Ecarte les filtres devenus sans objet (projet supprime, membre retire, statut renomme) : ils masqueraient
+            // tout sans qu'on puisse les retirer. valid = { project: [ids], assignee: [ids], status: [valeurs] } ;
+            // une liste vide n'est pas appliquee (donnees pas encore lues). Retourne le nombre de filtres retires.
+            prune: function (valid) {
+                const next = copy(state);
+                let removed = 0;
+                ['project', 'assignee', 'status'].forEach(k => {
+                    const ok = valid && valid[k];
+                    if (!ok || !ok.length) return;
+                    const keep = new Set(ok.map(k === 'status' ? String : Number));
+                    const kept = next.filters[k].filter(v => keep.has(v));
+                    removed += next.filters[k].length - kept.length;
+                    next.filters[k] = kept;
+                });
+                if (removed) commit(next, 'prune');
+                return removed;
+            },
+            views: {
+                list: function () { return views.map(v => v.name); },
+                current: function () { return state.view; },
+                modified: modified,
+                save: function (name) {
+                    name = String(name == null ? '' : name).trim().slice(0, 40);
+                    if (!name) return false;
+                    const data = copy(ctxData(state));
+                    const i = views.findIndex(v => v.name === name);
+                    if (i >= 0) views[i].data = data; else views.push({ name: name, data: data });
+                    wr(keyViews(), JSON.stringify(views));
+                    if (!commit(ctxClean(Object.assign(copy(state), { view: name })), 'local')) renderViews();
+                    return true;
+                },
+                apply: function (name) {
+                    const v = views.find(x => x.name === name);
+                    if (!v) return false;
+                    commit(ctxClean(Object.assign(copy(v.data), { view: name })), 'view');
+                    return true;
+                },
+                clear: function () { return commit(ctxClean(Object.assign(copy(state), { view: null })), 'local'); },
+                remove: function (name) {
+                    const n = views.length;
+                    views = views.filter(v => v.name !== name);
+                    if (views.length === n) return false;
+                    wr(keyViews(), JSON.stringify(views));
+                    if (state.view === name) commit(ctxClean(Object.assign(copy(state), { view: null })), 'local'); else renderViews();
+                    return true;
+                }
+            },
+            // Appels des controles du menu Affichage.
+            pickView: function (name) { if (name) api.views.apply(name); else api.views.clear(); },
+            saveViewFromUi: function () {
+                const input = typeof document !== 'undefined' ? document.getElementById('tfViewName') : null;
+                const name = input ? input.value : '';
+                if (!api.views.save(name) && input) input.focus();
+                else if (input) input.blur();
+            },
+            removeViewFromUi: function () { if (state.view) api.views.remove(state.view); },
+            // Position affichee (Gantt, Calendrier) : { iso, fit, ... } memorisee 12 h au plus.
+            pos: {
+                get: function (widget) {
+                    if (ns === null) return null;
+                    const p = parse(rd(keyPos(widget)));
+                    return p && typeof p.t === 'number' && now() - p.t < CTX_POS_MAX_AGE ? p : null;
+                },
+                set: function (widget, value) { if (ns !== null) wr(keyPos(widget), JSON.stringify(Object.assign({}, value, { t: now() }))); }
+            },
+            renderViews: renderViews,
+            // Relit le stockage (appele sur l'evenement « storage », au retour de focus ; expose pour les tests).
+            refresh: refresh
+        };
+        return api;
+    }
+    let ctxStorage = null;
+    try { ctxStorage = typeof localStorage !== 'undefined' ? localStorage : null; } catch (e) { ctxStorage = null; }
+    const ctx = createCtx({ storage: ctxStorage });
+
+    // Un widget cree la table Tasks dans un document neuf alors qu'il est lie a la table par defaut de Grist
+    // (« Table1 ») : onRecords ne se declenche alors jamais pour Tasks. On rattache la section a Tasks, une seule
+    // fois, seulement si c'est sans ambiguite (une seule section personnalisee sur la table liee) et si la table
+    // liee est vide ou porte le nom par defaut. Grist recree alors l'iframe ; un avis s'affiche au redemarrage.
+    // Annulable (Ctrl+Z) dans Grist. Appeler juste apres la creation de Tasks, en fin de schema.
+    async function relinkToTasks(grist) {
+        try {
+            if (isReadOnly() || !grist || !grist.selectedTable) return false;
+            const liee = await grist.selectedTable.getTableId();
+            if (!liee || liee === 'Tasks') return false;
+            const tables = columnarToRows(await grist.docApi.fetchTable('_grist_Tables'));
+            const from = tables.find(t => t.tableId === liee), to = tables.find(t => t.tableId === 'Tasks');
+            if (!from || !to) return false;
+            const sections = columnarToRows(await grist.docApi.fetchTable('_grist_Views_section')).filter(s => s.parentKey === 'custom' && s.tableRef === from.id);
+            if (sections.length !== 1) return false;
+            const data = await grist.docApi.fetchTable(liee);
+            const vide = !data || !data.id || data.id.length === 0;
+            if (!vide && !/^Table\d+$/.test(liee)) return false;
+            try { localStorage.setItem('taskflow_relinked', '1'); } catch (e) {}
+            await grist.docApi.applyUserActions([['UpdateRecord', '_grist_Views_section', sections[0].id, { tableRef: to.id }]]);
+            return true;
+        } catch (e) { return false; }
+    }
+    // Vrai une seule fois, au demarrage qui suit un rattachement a Tasks (pour l'annoncer).
+    function consumeRelinkNotice() {
+        try { if (localStorage.getItem('taskflow_relinked')) { localStorage.removeItem('taskflow_relinked'); return true; } } catch (e) {}
+        return false;
+    }
     // Garde transverse : enrobe grist.docApi.applyUserActions une seule fois pour
     // respecter les droits sur TOUS les sites d'ecriture sans les modifier un a un.
     // - lecture seule -> bloque + opts.onReadOnly()
@@ -995,6 +1287,10 @@ const TF = (function () {
         initUi: initUi,
         searchMatch: searchMatch,
         watchTasks: watchTasks,
+        ctx: ctx,
+        createCtx: createCtx,
+        relinkToTasks: relinkToTasks,
+        consumeRelinkNotice: consumeRelinkNotice,
         sortTasks: sortTasks,
         setPeriodLabel: setPeriodLabel,
         monthYearShort: monthYearShort,
