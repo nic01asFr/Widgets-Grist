@@ -13,7 +13,7 @@
 import {
   familleGeometrie, colonnesGeometrie, cellulesGeometrie, normaliserGeometrie, validerGeometrie,
   nomsColonnesGeometrie,
-} from './geometrie-saisie.js?v=1.13.0';
+} from './geometrie-saisie.js?v=1.13.1';
 
 /** L'auteur a-t-il proposé aux agents d'ajouter un objet à cette couche ? (réglage de la couche, enregistré avec sa symbolisation) */
 export function creationProposeeEnExploitation(layer) {

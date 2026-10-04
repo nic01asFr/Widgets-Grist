@@ -13,8 +13,8 @@
  *
  * Ce module ne touche ni au DOM, ni à Grist.
  */
-import { contexteDeCle } from './contextes.js?v=1.13.0';
-import { normaliserCadrage } from './cadrage.js?v=1.13.0';
+import { contexteDeCle } from './contextes.js?v=1.13.1';
+import { normaliserCadrage } from './cadrage.js?v=1.13.1';
 
 /** Par où la scène s'ouvre pour qui ne l'édite pas. */
 export const OUVERTURES = Object.freeze(['carte', 'recit', 'contexte']);

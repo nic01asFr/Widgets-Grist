@@ -2,21 +2,21 @@
  * Récit / storymaps — étapes caméra + état scène, persistance Atlas_Story.
  * Binding : caméra, visibilité, contrôles, symbolisation (interop interactive_map).
  */
-import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.13.0';
+import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.13.1';
 import {
   captureSelectControlValues,
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=1.13.0';
+} from './controls.js?v=1.13.1';
 import {
   assurerCles,
   baseDepuisLignes,
   lireLignesRecit,
   planifierEcritureRecit,
-} from './recit-cles.js?v=1.13.0';
+} from './recit-cles.js?v=1.13.1';
 
-export { assurerCles } from './recit-cles.js?v=1.13.0';
+export { assurerCles } from './recit-cles.js?v=1.13.1';
 
 export const STORY_SCHEMA = [
   // La clé stable de l'étape (lib/recit-cles.js) : on la désigne par elle, jamais par son rang.
@@ -73,6 +73,8 @@ export function captureStoryState(map, state) {
       zoom: +map.getZoom().toFixed(2),
       pitch: +map.getPitch().toFixed(1),
       bearing: +map.getBearing().toFixed(1),
+      // La carte sur laquelle la vue est composée : rejouée sur un écran plus petit, elle recule du rapport des deux (`zoomPourEcran`).
+      ecran: (() => { const c = map.getContainer?.(); return c && c.clientWidth > 0 && c.clientHeight > 0 ? { largeur: c.clientWidth, hauteur: c.clientHeight } : undefined; })(),
     } : null,
     projection: state.settings.projection,
     timeOfDay: state.settings.timeOfDay,

@@ -186,6 +186,53 @@ export function dureeRestante({ debut, duree, maintenant }) {
   return Math.max(0, Math.round(debut + duree - maintenant));
 }
 
+/** La taille de carte pour laquelle une vue d'auteur est composée quand elle ne le dit pas : une fenêtre de bureau. */
+export const ECRAN_REF = Object.freeze({ largeur: 1100, hauteur: 700 });
+
+/**
+ * Le zoom qui montre sur cet écran ce que la vue montrait sur celui de l'auteur.
+ *
+ * Une vue figée (ouverture de la scène, contexte, étape de récit) enregistre un centre et un zoom, composés sur une carte de bureau. Sur un
+ * téléphone, le même zoom ne montre qu'une bande étroite : les entités des deux côtés sortent du cadre. On recule du rapport entre les
+ * deux écrans — sur le côté le plus contraint : une carte plus petite se dézoome, une plus grande garde le zoom de l'auteur (on ne zoome
+ * jamais plus qu'il ne l'a voulu).
+ *
+ * @param {number} zoom  le zoom de la vue
+ * @param {{largeur?: number, hauteur?: number, ref?: {largeur: number, hauteur: number}|null, max?: number}} ecran
+ *   `largeur`, `hauteur` : la zone visible de la carte ; `ref` : la carte de l'auteur si elle est connue ; `max` : le recul maximal, en niveaux
+ * @returns {number}
+ */
+export function zoomPourEcran(zoom, { largeur, hauteur, ref = null, max = 3 } = {}) {
+  const z = Number(zoom);
+  if (!Number.isFinite(z)) return zoom;
+  const l = Number(largeur);
+  const h = Number(hauteur);
+  if (!(l > 0) || !(h > 0)) return z;
+  const r = ref && ref.largeur > 0 && ref.hauteur > 0 ? ref : ECRAN_REF;
+  const rapport = Math.min(l / r.largeur, h / r.hauteur);
+  if (!(rapport < 1)) return z;
+  return +(z - Math.min(max, Math.log2(1 / rapport))).toFixed(2);
+}
+
+/**
+ * De combien déplacer la carte pour que l'emprise (un objet et sa bulle) se retrouve **au centre** de la zone visible — celle que les feuilles
+ * et les commandes du haut ne recouvrent pas. À la différence de `deplacementPourVoir`, qui ne bouge que si l'emprise sort, on recentre
+ * toujours : en suivant une tournée, chaque objet doit arriver au même endroit.
+ *
+ * @returns {{dx: number, dy: number}} en pixels, au sens de `map.panBy`
+ */
+export function deplacementPourCentrer({ emprise, carte, marges = MARGES_NULLES } = {}) {
+  const e = emprise || {};
+  if (![e.minX, e.minY, e.maxX, e.maxY].every(Number.isFinite)) return { dx: 0, dy: 0 };
+  const m = { ...MARGES_NULLES, ...marges };
+  const zl = m.left;
+  const zr = (carte?.largeur || 0) - m.right;
+  const zt = m.top;
+  const zb = (carte?.hauteur || 0) - m.bottom;
+  if (zr <= zl || zb <= zt) return { dx: 0, dy: 0 };
+  return { dx: Math.round((e.minX + e.maxX) / 2 - (zl + zr) / 2), dy: Math.round((e.minY + e.maxY) / 2 - (zt + zb) / 2) };
+}
+
 /**
  * Le module doit-il céder la place à la fiche ? Au-dessus de 720 px, rail,
  * module et fiche se posaient côte à côte : sur une tablette en portrait
