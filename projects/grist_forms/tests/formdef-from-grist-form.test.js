@@ -165,3 +165,41 @@ describe('formulairesGrist — cas relevés par la relecture du 02/10/2026', () 
     assert.equal(G.texteSimple('Ouvrages_2 et _gras_2'), 'Ouvrages_2 et _gras_2');
   });
 });
+
+describe('formulairesGrist — une mise en page que personne n a touchée', () => {
+  // Mesuré le 04/10/2026 sur grist.numerique : une section de type `form` créée
+  // par action affiche bien ses questions à l'écran, et son `layoutSpec` reste
+  // vide. Le lecteur ne rendait alors rien, sans un mot.
+  function metaSansMiseEnPage() {
+    const m = meta();
+    const sections = { ...m.sections, layoutSpec: m.sections.layoutSpec.map(() => '') };
+    return { ...m, sections };
+  }
+
+  it('retombe sur les champs de la section, dans leur ordre', () => {
+    const defs = G.formulairesGrist(metaSansMiseEnPage());
+    assert.equal(defs.length, 1);
+    const champs = defs[0].def.sections.flatMap((s) => s.fields.map((f) => f.colId));
+    // L'ordre de `parentPos`, et la colonne à formule reste écartée.
+    assert.deepEqual(champs, ['Ouvrage', 'Date_visite', 'Inspecteurs', 'Constat', 'Photo1', 'Etat']);
+  });
+
+  it('garde les réglages des questions malgré l absence de mise en page', () => {
+    const defs = G.formulairesGrist(metaSansMiseEnPage());
+    const parColId = Object.fromEntries(defs[0].def.sections.flatMap((s) => s.fields).map((f) => [f.colId, f]));
+    assert.equal(parColId.Ouvrage.label, 'Nom de l’ouvrage');
+    assert.equal(parColId.Constat.widget, 'textarea');
+    assert.equal(parColId.Etat.widget, 'radio');
+  });
+
+  it('nomme le formulaire par la vue, faute de titre dans la mise en page', () => {
+    const defs = G.formulairesGrist(metaSansMiseEnPage());
+    assert.equal(defs[0].titre, 'Formulaire visites');
+  });
+
+  it('préfère la mise en page quand elle existe', () => {
+    const defs = G.formulairesGrist(meta());
+    const champs = defs[0].def.sections.flatMap((s) => s.fields.map((f) => f.colId));
+    assert.equal(champs[0], 'Date_visite', 'l ordre de la mise en page, pas celui de parentPos');
+  });
+});

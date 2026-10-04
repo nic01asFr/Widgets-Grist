@@ -151,7 +151,11 @@
     var nomVue = {};
     lignes(meta.vues).forEach(function (v) { nomVue[v.id] = v.name; });
     var champParRef = {};
-    lignes(meta.champs).forEach(function (f) { champParRef[f.id] = f; });
+    var champsParSection = {};
+    lignes(meta.champs).forEach(function (f) {
+      champParRef[f.id] = f;
+      (champsParSection[f.parentId] = champsParSection[f.parentId] || []).push(f);
+    });
 
     var out = [];
     lignes(meta.sections).forEach(function (s) {
@@ -173,6 +177,21 @@
         sections.push(courante);
       };
 
+      var ajouterChamp = function (f) {
+        var col = f && colonneParRef[f.colRef];
+        if (!col || vus[col.colId]) return;
+        // `visibleCol` est, dans les métadonnées, le numéro d'une ligne de
+        // colonne ; le formulaire veut le nom. Celui du champ prime sur celui
+        // de la colonne, comme les autres réglages.
+        var affichee = colonneParRef[f.visibleCol || col.visibleCol];
+        var champ = champDepuisQuestion(Object.assign({}, col, { visibleCol: affichee ? affichee.colId : '' }), f.widgetOptions);
+        if (!champ) return;
+        vus[col.colId] = true;
+        if (!courante) nouvelleSection(enAttente);
+        courante.fields.push(champ);
+        nChamps++;
+      };
+
       parcourir(mise, function (n) {
         if (n.type === 'Paragraph') {
           var texte = texteSimple(n.text);
@@ -188,21 +207,33 @@
           nouvelleSection(enAttente);
           enAttente = null;
         } else if (n.type === 'Field') {
-          var f = champParRef[n.leaf];
-          var col = f && colonneParRef[f.colRef];
-          if (!col || vus[col.colId]) return;
-          // \`visibleCol\` est, dans les métadonnées, le numéro d'une ligne de
-          // colonne ; le formulaire veut le nom. Celui du champ prime sur celui
-          // de la colonne, comme les autres réglages.
-          var affichee = colonneParRef[f.visibleCol || col.visibleCol];
-          var champ = champDepuisQuestion(Object.assign({}, col, { visibleCol: affichee ? affichee.colId : '' }), f.widgetOptions);
-          if (!champ) return;
-          vus[col.colId] = true;
-          if (!courante) nouvelleSection(enAttente);
-          courante.fields.push(champ);
-          nChamps++;
+          ajouterChamp(champParRef[n.leaf]);
         }
       });
+
+      /*
+       * Un formulaire dont personne n'a touché la mise en page.
+       *
+       * > **`layoutSpec` reste vide tant que l'éditeur ne l'a pas écrit.**
+       * > Mesuré le 04/10/2026 sur grist.numerique : une section de type `form`
+       * > créée par action, puis ouverte, affiche bien ses quatre questions à
+       * > l'écran — et le lecteur ne rendait rien, sans un mot. Grist tient
+       * > alors la disposition par défaut pour lui, et seules les colonnes de
+       * > la section disent ce que le formulaire demande.
+       *
+       * On retombe donc sur elles, dans leur ordre, ce qui est exactement ce
+       * que Grist affiche. L'ordre et les titres repris de la mise en page
+       * restent prioritaires quand elle existe.
+       *
+       * Seulement quand elle est **absente** : une mise en page présente mais
+       * illisible est un signe d'autre chose, et on préfère ne rien rendre
+       * plutôt que d'inventer un formulaire à partir d'un reste.
+       */
+      if (!nChamps && !String(s.layoutSpec || '').trim()) {
+        (champsParSection[s.id] || []).slice()
+          .sort(function (a, b) { return (a.parentPos || 0) - (b.parentPos || 0); })
+          .forEach(ajouterChamp);
+      }
 
       sections = sections.filter(function (sec) { return sec.fields.length; });
       if (!sections.length) return;
