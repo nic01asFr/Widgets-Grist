@@ -640,13 +640,21 @@
             .toast { background: #060a14; }
         }
     /* <taskflow-ui> -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI */
-    /* ═════ Finition commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+    /* ═════ Interface commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
        Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
-       styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle
-       (police, hauteur et rayon des controles, segmentes, selects, fiche de tache, theme sombre). */
+       styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle. Les composants
+       de la barre du haut sont construits par TF.ui (core/taskflow-core.js) ; ici : leur apparence. */
 
+    /* 0. Jetons : echelle de polices, d'espacements, hauteur et rayons des controles. */
     :root {
         color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+        --fs-2xs: 0.66rem;                 /* etiquettes en majuscules, pastilles */
+        --fs-xs: 0.72rem;                  /* informations secondaires, aides */
+        --fs-sm: 0.8rem;                   /* controles : boutons, selects, filtres */
+        --fs-md: 0.875rem;                 /* texte courant, champs */
+        --fs-lg: 1.05rem;                  /* titre de fiche, sections */
+        --fs-xl: 1.25rem;                  /* titre du widget */
+        --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
         --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
         --ctl-r: 8px;                      /* rayon unique des controles */
         --seg-r: 6px;                      /* rayon des items d'un controle segmente */
@@ -656,13 +664,45 @@
         :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
     }
 
-    /* 1. Typographie : les controles heritent de la police du widget (ils restaient en Arial,
-          et les champs de date / la description en monospace). */
+    /* 1. Base : les controles heritent de la police du widget (ils restaient en Arial, et les champs de
+          date / la description en monospace) ; defilements fins et discrets partout, meme comportement. */
     button, input, select, textarea { font-family: inherit; }
     button { color: inherit; }
     textarea { line-height: 1.45; }
+    * { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
 
-    /* 2. Barre du haut : une seule hauteur, un seul rayon pour tous les controles. */
+    /* 2. Barre du haut : quatre zones identiques dans les quatre widgets.
+          titre | vue / navigation | outils (recherche, filtres, affichage) | actions (+ Tache, ...).
+          Ordre fixe, sans seuil de largeur : les zones passent a la ligne quand elles ne tiennent plus,
+          restent alignees a gauche, les outils s'etirent pour remplir la ligne et les actions terminent
+          toujours la derniere ligne, a droite (jamais seules ni au milieu). */
+    .header { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--sp-2) 14px; }
+    .hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+    .hz-title { order: 1; flex: none; gap: 10px; }
+    /* La zone « vue » se dissout dans la barre : navigation de periode et controle segmente se placent
+       comme les autres blocs (meme ligne que le titre quand ca tient, sinon ligne suivante). */
+    .hz-view { display: contents; }
+    .hz-view > * { order: 2; flex: none; max-width: 100%; }
+    .hz-tools { order: 3; flex: 1 1 auto; flex-wrap: wrap; }
+    .hz-actions { order: 4; flex: none; margin-left: auto; }
+    .header h1 { font-size: var(--fs-xl); }
+    .last-update, .hdr-glabel { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+    .hdr-glabel { font-weight: 550; }
+    .hz-tools .search-box input { width: clamp(110px, 12vw, 150px); }
+    @media (max-width: 520px) {
+        .hz-actions { order: 2; }
+        .hz-view > * { order: 3; }
+        .hz-view > .hdr-group, .hz-view > .period-nav { flex: 1 1 100%; }
+        .hz-tools { order: 4; flex: 1 1 100%; }
+        .hz-tools .search-box { flex: 1 1 100%; }
+        .hz-tools .search-box input { width: 100%; }
+        .hdr-glabel, .last-update { display: none; }
+    }
+    /* Dans le lanceur (?shell=1) le titre du widget est masque : l'onglet l'affiche deja. */
+    .in-shell .hz-title:not(:has(.last-update)) { display: none; }
+    .in-shell .hz-title h1 { display: none; }
+
+    /* 3. Controles de la barre : une seule hauteur, un seul rayon, une seule taille de police. */
     .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
     .header select, .header .search-box input {
         height: var(--ctl-h);
@@ -673,10 +713,12 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         padding-top: 0;
         padding-bottom: 0;
-        font-size: 0.8rem;
+        font-size: var(--fs-sm);
         font-weight: 550;
+        white-space: nowrap;
     }
     .header .icon-btn, .header .btn-nav, .header .btn-icon {
         width: var(--ctl-h);
@@ -684,43 +726,89 @@
         padding-left: 0;
         padding-right: 0;
     }
-    .header select, .header select#colorSelect, .header select#levelSelect {
+    .header select {
         border: 1px solid var(--border);
         background: var(--card-bg);
         color: var(--text);
-        font-size: 0.78rem;
-        padding: 0 8px;
+        font-size: var(--fs-sm);
+        padding: 0 var(--sp-2);
     }
-    .header .search-box input { font-size: 0.78rem; }
+    .header .search-box input { font-size: var(--fs-sm); }
 
-    /* 3. Controles segmentes (Grouper, vues du Gantt / Calendrier) : meme rayon, meme taille. */
-    .group-selector, .view-controls { padding: 3px; border-radius: 9px; }
-    .header .group-selector .btn, .header .view-controls .btn {
+    /* 4. Controle segmente (Grouper, vues du Gantt / Calendrier) : defile au lieu de passer a la ligne. */
+    .tf-seg {
+        display: inline-flex;
+        gap: 2px;
+        max-width: 100%;
+        padding: 3px;
+        border-radius: 9px;
+        background: var(--surface-2);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .tf-seg::-webkit-scrollbar { display: none; }
+    .header .tf-seg .btn {
+        flex: none;
         height: calc(var(--ctl-h) - 6px);
+        padding: 0 12px;
+        border: none;
         border-radius: var(--seg-r);
-        padding-top: 0;
-        padding-bottom: 0;
-        font-size: 0.78rem;
+        background: transparent;
+        box-shadow: none;
+        color: var(--text-muted);
     }
+    .header .tf-seg .btn:hover { background: rgba(127, 127, 127, 0.1); }
+    .header .tf-seg .btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
+    .hdr-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; max-width: 100%; }
 
-    /* 4. Dashboard : actions alignees a droite comme dans les autres widgets. */
-    .header-right { margin-left: auto; }
+    /* 5. Navigation de periode : identique dans le Gantt et le Calendrier (‹ periode › puis Aujourd'hui). */
+    .period-nav { display: inline-flex; align-items: center; gap: var(--sp-2); }
+    .nav-group { display: inline-flex; align-items: center; gap: 6px; }
+    .current-period { min-width: 120px; text-align: center; font-size: var(--fs-md); font-weight: 650; white-space: nowrap; }
 
-    /* 5. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+    /* 6. Menus : « Affichage », « ⋯ » et filtres s'ouvrent de la meme facon, avec la meme apparence. */
+    .view-menu { position: relative; }
+    .tf-menu-panel {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 250;
+        flex-direction: column;
+        gap: var(--sp-3);
+        min-width: 240px;
+        max-width: calc(100vw - 24px);
+        padding: var(--sp-3);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card-bg);
+        box-shadow: var(--shadow-lg);
+    }
+    [data-menu].open > .tf-menu-panel { display: flex; }
+    .tf-menu-panel.align-right { left: auto; right: 0; }
+    .tf-field { display: flex; flex-direction: column; gap: var(--sp-1); }
+    .tf-field-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
+    .tf-field select { width: 100%; max-width: none; }
+    .tf-menu-panel .tf-menu-action { width: 100%; justify-content: flex-start; padding: 0 var(--sp-3); }
+    .filter-menu-right { right: 0; left: auto; min-width: 200px; }
+    .hz-tools .filter-menu { left: 0; right: auto; max-width: calc(100vw - 24px); }
+    .filter-option { font-size: var(--fs-sm); }
+
+    /* 7. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
     .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
 
-    /* 6. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+    /* 8. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
           (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
     .panel-section-header {
         background: transparent;
-        margin: 0 0 8px 0;
-        padding: 12px 0 4px;
+        margin: 0 0 var(--sp-2) 0;
+        padding: var(--sp-3) 0 var(--sp-1);
         border-top: 1px solid var(--border);
         border-bottom: none;
     }
     .panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
     .panel-section-title {
-        font-size: 0.66rem;
+        font-size: var(--fs-2xs);
         font-weight: 700;
         letter-spacing: 0.05em;
         color: var(--text-light);
@@ -731,7 +819,39 @@
     /* Description : meme police que le reste (elle etait en monospace). */
     .form-textarea { font-family: inherit; }
 
-    /* 7. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+    /* 9. Fiche de tache : le titre est l'en-tete, la navigation « n/m » est integree a cote,
+          puis la fermeture. La fiche recouvre toute la hauteur du widget, barre du haut comprise
+          (elle contient peu de detail une fois une tache ouverte). */
+    .panel-header { justify-content: flex-start; gap: var(--sp-2); padding: 10px var(--sp-3) 10px var(--sp-4); background: var(--card-bg); }
+    .panel-header .panel-title-edit {
+        flex: 1; min-width: 0; width: auto; margin: 0; padding: 6px 0;
+        font-size: var(--fs-lg); font-weight: 700; line-height: 1.3;
+        border: none; border-bottom: 2px solid transparent; border-radius: 0;
+        text-overflow: ellipsis;
+    }
+    .panel-header .panel-title-edit:hover { border-bottom-color: var(--border); }
+    .panel-header .panel-title-edit:focus { border-bottom-color: var(--primary); outline: none; }
+    .panel-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+    .panel-nav { flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: var(--surface-2); }
+    .panel-nav-btn {
+        width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
+        background: transparent; color: var(--text-muted); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .panel-nav-btn:hover { background: var(--card-bg); color: var(--text); }
+    .panel-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .panel-back { flex: none; }
+    .panel-count { min-width: 30px; text-align: center; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .panel-close {
+        flex: none; width: 30px; height: 30px; border: none; border-radius: 8px;
+        background: transparent; color: var(--text-muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
+    }
+    .panel-close:hover { background: var(--surface-2); color: var(--text); }
+    @media (min-width: 561px) {
+        .panel { position: fixed; top: 0; bottom: 0; right: 0; height: auto; z-index: 300; }
+    }
+
+    /* 10. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
     .filter-panel .filter-btn, .filter-check, .span-btn, .btn-icon, .cfg-input {
         background: var(--card-bg);
         color: var(--text);
@@ -744,53 +864,7 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Calendar</h1>
-        <div class="header-center">
-            <div class="nav-group">
-                <button class="btn btn-icon" onclick="navigate(-1)">◀</button>
-                <span class="current-period" id="currentPeriod">Février 2026</span>
-                <button class="btn btn-icon" onclick="navigate(1)">▶</button>
-            </div>
-            <button class="btn" onclick="goToday()">Aujourd'hui</button>
-            <div class="view-controls">
-                <button class="btn active" onclick="setView('month')" id="btnMonth">Mois</button>
-                <button class="btn" onclick="setView('biweek')" id="btnBiweek">2 Sem</button>
-                <button class="btn" onclick="setView('week')" id="btnWeek">Semaine</button>
-                <button class="btn" onclick="setView('workweek')" id="btnWorkweek">5 Jours</button>
-                <button class="btn" onclick="setView('year')" id="btnYear">Année</button>
-                <button class="btn" onclick="setView('quarter')" id="btnQuarter">Trim.</button>
-                <button class="btn" onclick="setView('semester')" id="btnSemester">6 Mois</button>
-            </div>
-        </div>
-        <div class="header-right">
-            <select id="colorSelect" onchange="changeColorMode(this.value)" title="Couleur des événements">
-                <option value="priority">Couleur: Priorité</option>
-                <option value="project">Couleur: Projet</option>
-                <option value="assignee">Couleur: Assigné</option>
-                <option value="status">Couleur: Statut</option>
-            </select>
-            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)">
-                <option value="all">Niveau : Tous</option>
-                <option value="actions">Niveau : Actions</option>
-                <option value="parents">Niveau : Synthèses</option>
-            </select>
-            <div class="filter-dropdown">
-                <button class="filter-btn" id="filterBtn" onclick="toggleFilter('all')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtres<span class="filter-count" id="filterCount" style="display:none">0</span></button>
-                <div class="filter-menu wide" id="filterAllMenu"></div>
-            </div>
-            <div class="filter-dropdown">
-                <button class="btn icon-btn" onclick="toggleFilter('more')" title="Plus d'actions"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg></button>
-                <div class="filter-menu" id="filterMoreMenu" style="right:0;left:auto;min-width:200px">
-                    <div class="filter-option" id="moreSubsToggle" onclick="toggleShowSubtasks()"><span class="ms-ic">↳</span> Sous-tâches (hiérarchie)</div>
-                    <div class="filter-sep"></div>
-                    <div class="filter-option" onclick="exportPrint()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimer / PDF</div>
-                    <div class="filter-option" onclick="exportPNG()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Image PNG</div>
-                </div>
-            </div>
-            <button class="btn primary" onclick="openCreatePanel()">+ Tâche</button>
-        </div>
-    </div>
+    <div class="header" id="tfHeader"></div>
 
     <div class="filter-chips" id="filterChips" style="display:none"></div>
     <div class="main-content">
@@ -1048,6 +1122,177 @@
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
 
+            /* ----- Interface commune : menus et lanceur ------------------------------
+             * Menus deroulants generiques : un conteneur [data-menu] avec un bouton
+             * [data-menu-toggle] et un panneau .tf-menu-panel. Un clic sur le bouton ouvre /
+             * ferme, un clic ailleurs ou Echap ferme. Le panneau s'aligne a droite s'il
+             * deborderait du widget. Dans le lanceur (?shell=1) le titre du widget est masque :
+             * l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
+            function initUi() {
+                if (typeof document === 'undefined' || initUi.done) return;
+                initUi.done = true;
+                try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
+                const closeAll = (except) => {
+                    document.querySelectorAll('[data-menu].open').forEach(m => { if (m !== except) m.classList.remove('open'); });
+                };
+                document.addEventListener('click', (e) => {
+                    const toggle = e.target.closest ? e.target.closest('[data-menu-toggle]') : null;
+                    const menu = e.target.closest ? e.target.closest('[data-menu]') : null;
+                    closeAll(menu);
+                    if (toggle && menu) {
+                        const open = !menu.classList.contains('open');
+                        menu.classList.toggle('open', open);
+                        const panel = menu.querySelector('.tf-menu-panel');
+                        if (open && panel) {
+                            panel.classList.remove('align-right');
+                            const r = panel.getBoundingClientRect();
+                            if (r.right > window.innerWidth - 8) panel.classList.add('align-right');
+                        }
+                        toggle.setAttribute('aria-expanded', String(open));
+                    }
+                });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(null); });
+            }
+
+            /* ----- Composants de la barre du haut (tous les widgets) ----------------------
+             * Un meme composant a le meme balisage, la meme place et le meme comportement dans
+             * kanban, gantt, calendar et dashboard : chaque widget les COMPOSE (voir ui.header)
+             * au lieu de recopier du HTML. Les ids et les gestionnaires restent ceux du widget
+             * (ils sont passes en parametres). Disposition : titre | vue / navigation |
+             * outils (recherche, filtres, affichage) | actions. Le style est dans
+             * core/taskflow-ui.css. */
+            const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const UI_ICONS = {
+                filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+                sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+                chevL: '<polyline points="15 18 9 12 15 6"/>',
+                chevR: '<polyline points="9 18 15 12 9 6"/>',
+                chevD: '<polyline points="6 9 12 15 18 9"/>',
+                dots: '<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
+                download: '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+                refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
+                edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+                print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+                image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'
+            };
+            const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
+
+            // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
+            function uiTitle(t) {
+                t = t || {};
+                return '<div class="hz-title"><h1>' + (t.icon || '') + ' ' + escAttr(t.text) + '</h1>' + (t.meta || '') + '</div>';
+            }
+            // Controle segmente (Grouper, vues du Gantt / Calendrier). o = { label, cls, items: [{ label, id, view, title, onclick, active }] }
+            function uiSegmented(o) {
+                const items = (o.items || []).map(i =>
+                    '<button type="button" class="btn' + (i.active ? ' active' : '') + '"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') +
+                    (i.view ? ' data-view="' + escAttr(i.view) + '"' : '') + (i.title ? ' title="' + escAttr(i.title) + '"' : '') +
+                    ' onclick="' + escAttr(i.onclick) + '">' + escAttr(i.label) + '</button>').join('');
+                return '<div class="hdr-group">' + (o.label ? '<span class="hdr-glabel">' + escAttr(o.label) + '</span>' : '') +
+                    '<div class="tf-seg ' + escAttr(o.cls || '') + '" role="group"' + (o.label ? ' aria-label="' + escAttr(o.label) + '"' : '') + '>' + items + '</div></div>';
+            }
+            // Navigation de periode, IDENTIQUE dans le Gantt et le Calendrier : ‹ periode › puis « Aujourd'hui ».
+            // o = { prev, next, today, id, text }
+            function uiPeriodNav(o) {
+                const nav = (fn, ic, label) => '<button type="button" class="btn btn-icon btn-nav" onclick="' + escAttr(fn) + '" title="' + label + '" aria-label="' + label + '">' + uiIcon(ic, 16) + '</button>';
+                return '<div class="period-nav"><div class="nav-group">' + nav(o.prev, 'chevL', 'Période précédente') +
+                    '<span class="current-period" id="' + escAttr(o.id || 'currentPeriod') + '" aria-live="polite">' + escAttr(o.text) + '</span>' +
+                    nav(o.next, 'chevR', 'Période suivante') + '</div>' +
+                    '<button type="button" class="btn" onclick="' + escAttr(o.today) + '">Aujourd\'hui</button></div>';
+            }
+            // Recherche. o = { id, oninput }
+            function uiSearch(o) {
+                return '<div class="search-box"><input type="text" id="' + escAttr(o.id || 'searchInput') + '" placeholder="Rechercher..." oninput="' + escAttr(o.oninput) + '" aria-label="Rechercher"></div>';
+            }
+            // Bouton « Filtres » + menu deroulant. o = { toggle, containerId, buttonId, menuId, countId }
+            function uiFilters(o) {
+                return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+                    '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '">' + uiIcon('filter') + ' Filtres' +
+                    '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
+                    '<div class="filter-menu wide" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
+            }
+            // Selecteurs de l'affichage : memes options partout. Les ids sont ceux lus par les widgets.
+            function uiSelect(o) {
+                return '<select id="' + escAttr(o.id) + '" onchange="' + escAttr(o.onchange) + '"' + (o.title ? ' title="' + escAttr(o.title) + '"' : '') + '>' +
+                    o.options.map(p => '<option value="' + escAttr(p[0]) + '">' + escAttr(p[1]) + '</option>').join('') + '</select>';
+            }
+            const UI_COLOR_OPTIONS = [['priority', 'Priorité'], ['project', 'Projet'], ['assignee', 'Assigné'], ['status', 'Statut']];
+            const UI_LEVEL_OPTIONS = [['all', 'Tous'], ['actions', 'Actions'], ['parents', 'Synthèses']];
+            const UI_SORT_OPTIONS = [['priority', 'Priorité'], ['date', 'Date'], ['manual', 'Manuel']];
+            const UI_LEVEL_TITLE = 'Niveau affiché — Tous = arbre ; Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)';
+            const uiColorField = (title) => ({ label: 'Couleur', html: uiSelect({ id: 'colorSelect', onchange: 'changeColorMode(this.value)', title: title, options: UI_COLOR_OPTIONS }) });
+            const uiLevelField = () => ({ label: 'Niveau', html: uiSelect({ id: 'levelSelect', onchange: 'changeWorkLevel(this.value)', title: UI_LEVEL_TITLE, options: UI_LEVEL_OPTIONS }) });
+            const uiSortField = () => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: UI_SORT_OPTIONS }) });
+            // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
+            function uiDisplayMenu(o) {
+                const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
+                const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action" onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
+                return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage">' +
+                    uiIcon('sliders') + '<span>Affichage</span>' + uiIcon('chevD', 12) + '</button>' +
+                    '<div class="tf-menu-panel" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
+            }
+            // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
+            function uiMoreMenu(o) {
+                const items = (o.items || []).map(i => i.sep ? '<div class="filter-sep"></div>' :
+                    '<div class="filter-option"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') + ' onclick="' + escAttr(i.onclick) + '">' + (i.html || (i.icon ? uiIcon(i.icon) : '')) + ' ' + escAttr(i.label) + '</div>').join('');
+                const title = o.title || 'Plus d\'actions';
+                return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+                    '<button type="button" class="btn icon-btn" onclick="' + escAttr(o.toggle) + '" title="' + escAttr(title) + '" aria-label="' + escAttr(title) + '">' + uiIcon(o.icon || 'dots', 16) + '</button>' +
+                    '<div class="filter-menu filter-menu-right"' + (o.menuId ? ' id="' + escAttr(o.menuId) + '"' : '') + '>' + items + '</div></div>';
+            }
+            // Bouton generique. o = { id, label, icon, title, onclick, cls, primary, iconOnly, count }
+            function uiButton(o) {
+                const cls = o.cls || (o.primary ? 'btn primary' : (o.iconOnly ? 'btn icon-btn' : 'btn'));
+                return '<button type="button" class="' + escAttr(cls) + '"' + (o.id ? ' id="' + escAttr(o.id) + '"' : '') + ' onclick="' + escAttr(o.onclick) + '"' +
+                    (o.title ? ' title="' + escAttr(o.title) + '"' : '') + (o.iconOnly ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
+                    (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? ' ' : '') + escAttr(o.label) : '') +
+                    (o.count ? '<span class="filter-count" id="' + escAttr(o.count) + '" style="display:none">0</span>' : '') + '</button>';
+            }
+            // Barre complete. o = { title, view: [html], tools: [html], actions: [html] }
+            function uiHeader(o) {
+                return uiTitle(o.title) +
+                    ((o.view && o.view.length) ? '<div class="hz-view">' + o.view.join('') + '</div>' : '') +
+                    '<div class="hz-tools">' + (o.tools || []).join('') + '</div>' +
+                    '<div class="hz-actions">' + (o.actions || []).join('') + '</div>';
+            }
+            function mountHeader(o, el) {
+                const host = el || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
+                if (host) host.innerHTML = uiHeader(o);
+                initUi();
+            }
+            const ui = {
+                icon: uiIcon, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
+                select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
+                displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader
+            };
+
+            /* ----- En-tete de la fiche de tache ---------------------------------------
+             * Le titre editable (#taskTitle) EST l'en-tete ; la navigation "n/m" entre les
+             * taches est integree a cote (fleches + compteur), puis la fermeture. Le
+             * handler oninput de #taskTitle est celui de chaque widget (updateField).
+             * o = { title, placeholder, index, total, isNew, back, dotColor, dotTitle } */
+            function panelHeaderHtml(o) {
+                o = o || {};
+                const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                const chevron = (pts) => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="' + pts + '"/></svg>';
+                const hasNav = !o.isNew && Number(o.total) > 1;
+                const nav = hasNav
+                    ? '<div class="panel-nav" role="group" aria-label="Navigation entre les tâches">' +
+                        '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(-1)" title="Tâche précédente" aria-label="Tâche précédente">' + chevron('15 18 9 12 15 6') + '</button>' +
+                        '<span class="panel-count" aria-live="polite">' + (Number(o.index) + 1) + '/' + Number(o.total) + '</span>' +
+                        '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(1)" title="Tâche suivante" aria-label="Tâche suivante">' + chevron('9 18 15 12 9 6') + '</button>' +
+                      '</div>'
+                    : '';
+                const back = o.back
+                    ? '<button type="button" class="panel-nav-btn panel-back" onclick="backToPeriod()" title="Retour" aria-label="Retour">' + chevron('15 18 9 12 15 6') + '</button>'
+                    : '';
+                const dot = o.dotColor ? '<span class="panel-dot" style="background:' + esc(o.dotColor) + '" title="' + esc(o.dotTitle || '') + '"></span>' : '';
+                return back + dot +
+                    '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" aria-label="Titre">' +
+                    nav +
+                    '<button type="button" class="panel-close" onclick="confirmClosePanel()" title="Fermer" aria-label="Fermer">×</button>';
+            }
+
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
              */
@@ -1296,6 +1541,9 @@
                 isoDate: isoDate,
                 parseISODate: parseISODate,
                 colorModeLabel: colorModeLabel,
+                panelHeaderHtml: panelHeaderHtml,
+                initUi: initUi,
+                ui: ui,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -1316,6 +1564,36 @@
             };
         })();
         // </taskflow-core>
+
+        // Barre du haut : composants communs (core) composes pour ce widget.
+        TF.ui.mount({
+            title: { icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>', text: 'Calendar' },
+            view: [
+                TF.ui.periodNav({ prev: 'navigate(-1)', next: 'navigate(1)', today: 'goToday()' }),
+                TF.ui.segmented({ cls: 'view-controls', items: [
+                    { label: 'Mois', id: 'btnMonth', onclick: "setView('month')", active: true },
+                    { label: '2 Sem', id: 'btnBiweek', onclick: "setView('biweek')" },
+                    { label: 'Semaine', id: 'btnWeek', onclick: "setView('week')" },
+                    { label: '5 Jours', id: 'btnWorkweek', onclick: "setView('workweek')" },
+                    { label: 'Année', id: 'btnYear', onclick: "setView('year')" },
+                    { label: 'Trim.', id: 'btnQuarter', onclick: "setView('quarter')" },
+                    { label: '6 Mois', id: 'btnSemester', onclick: "setView('semester')" }
+                ] })
+            ],
+            tools: [
+                TF.ui.filters({ toggle: "toggleFilter('all')", buttonId: 'filterBtn', menuId: 'filterAllMenu' }),
+                TF.ui.displayMenu({ fields: [TF.ui.colorField('Couleur des événements'), TF.ui.levelField()] })
+            ],
+            actions: [
+                TF.ui.moreMenu({ toggle: "toggleFilter('more')", menuId: 'filterMoreMenu', items: [
+                    { id: 'moreSubsToggle', html: '<span class="ms-ic">↳</span>', label: 'Sous-tâches (hiérarchie)', onclick: 'toggleShowSubtasks()' },
+                    { sep: true },
+                    { icon: 'print', label: 'Imprimer / PDF', onclick: 'exportPrint()' },
+                    { icon: 'image', label: 'Image PNG', onclick: 'exportPNG()' }
+                ] }),
+                TF.ui.button({ label: '+ Tâche', onclick: 'openCreatePanel()', primary: true })
+            ]
+        });
 
         // ═══════════════════════════════════════════════════════════════════════
         // STATE
@@ -2698,17 +2976,6 @@
             const data = panelState.editData;
             if (!data) { backToPeriod(); return; }
 
-            const canNavigate = panelState.periodTasks.length > 1 && !panelState.isNew;
-            const navLabel = !panelState.isNew && panelState.periodTasks.length > 1 ? `${panelState.taskIndex + 1}/${panelState.periodTasks.length}` : '';
-            header.innerHTML = `
-                <div class="panel-nav">
-                    <button class="panel-nav-btn" onclick="backToPeriod()" title="Retour">←</button>
-                    <button class="panel-nav-btn" onclick="navigatePanelTask(-1)" ${!canNavigate ? 'disabled' : ''}>◀</button>
-                    ${navLabel ? `<span class="panel-title">${navLabel}</span>` : ''}
-                    <button class="panel-nav-btn" onclick="navigatePanelTask(1)" ${!canNavigate ? 'disabled' : ''}>▶</button>
-                </div>
-                <button class="panel-close" onclick="confirmClosePanel()">×</button>
-            `;
 
             const s = gristToDate(data.dateDebut);
             const e = gristToDate(data.dateEcheance);
@@ -2723,6 +2990,7 @@
             const descLabel = data.type === 'reunion' ? 'Ordre du jour' : data.type === 'jalon' ? "Critères d'acceptation" : 'Description';
             const assignLabel = data.type === 'reunion' ? 'Participants' : 'Assignés';
             const titlePlaceholder = data.type === 'jalon' ? 'Nom du jalon...' : data.type === 'reunion' ? 'Sujet de la réunion...' : 'Titre de la tâche...';
+            header.innerHTML = TF.panelHeaderHtml({ dotColor: (PRIORITY_COLORS[getPriority(data)] || '#94a3b8'), dotTitle: 'Priorité', title: data.titre, placeholder: titlePlaceholder, index: panelState.taskIndex, total: panelState.periodTasks.length, isNew: panelState.isNew, back: true });
 
             // Assignés
             const assigneesChips = data.assignees.map(id => `<span class="multi-select-chip">${escapeHtml(getTeamMemberName(id))}<span class="remove" onclick="event.stopPropagation();removeAssignee(${id})">×</span></span>`).join('');
@@ -2781,14 +3049,12 @@
             }).join('');
 
             content.innerHTML = `
-                <div class="panel-accent-bar" style="background:${priorityColor}"></div>
                 <div class="panel-type-row">
                     <span class="type-pill ${data.type === 'tache' ? 'selected' : ''}" onclick="updateField('type','tache')">Tâche</span>
                     <span class="type-pill ${data.type === 'jalon' ? 'selected' : ''}" onclick="updateField('type','jalon')">◆ Jalon</span>
                     <span class="type-pill ${data.type === 'reunion' ? 'selected' : ''}" onclick="updateField('type','reunion')" > Réunion</span>
                 </div>
                 ${currentProject ? `<div class="panel-crumb"><span class="pd" style="background:${projectColor}"></span>${escapeHtml(currentProject.nom)}</div>` : ''}
-                <input type="text" class="panel-title-edit" id="taskTitle" placeholder="${titlePlaceholder}" value="${escapeHtml(data.titre)}" oninput="updateField('titre', this.value, true)">
 
                 <div class="props-list">
                     <div class="prop-row pr-status">

@@ -896,6 +896,177 @@ const TF = (function () {
     const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
     function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
 
+    /* ----- Interface commune : menus et lanceur ------------------------------
+     * Menus deroulants generiques : un conteneur [data-menu] avec un bouton
+     * [data-menu-toggle] et un panneau .tf-menu-panel. Un clic sur le bouton ouvre /
+     * ferme, un clic ailleurs ou Echap ferme. Le panneau s'aligne a droite s'il
+     * deborderait du widget. Dans le lanceur (?shell=1) le titre du widget est masque :
+     * l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
+    function initUi() {
+        if (typeof document === 'undefined' || initUi.done) return;
+        initUi.done = true;
+        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
+        const closeAll = (except) => {
+            document.querySelectorAll('[data-menu].open').forEach(m => { if (m !== except) m.classList.remove('open'); });
+        };
+        document.addEventListener('click', (e) => {
+            const toggle = e.target.closest ? e.target.closest('[data-menu-toggle]') : null;
+            const menu = e.target.closest ? e.target.closest('[data-menu]') : null;
+            closeAll(menu);
+            if (toggle && menu) {
+                const open = !menu.classList.contains('open');
+                menu.classList.toggle('open', open);
+                const panel = menu.querySelector('.tf-menu-panel');
+                if (open && panel) {
+                    panel.classList.remove('align-right');
+                    const r = panel.getBoundingClientRect();
+                    if (r.right > window.innerWidth - 8) panel.classList.add('align-right');
+                }
+                toggle.setAttribute('aria-expanded', String(open));
+            }
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(null); });
+    }
+
+    /* ----- Composants de la barre du haut (tous les widgets) ----------------------
+     * Un meme composant a le meme balisage, la meme place et le meme comportement dans
+     * kanban, gantt, calendar et dashboard : chaque widget les COMPOSE (voir ui.header)
+     * au lieu de recopier du HTML. Les ids et les gestionnaires restent ceux du widget
+     * (ils sont passes en parametres). Disposition : titre | vue / navigation |
+     * outils (recherche, filtres, affichage) | actions. Le style est dans
+     * core/taskflow-ui.css. */
+    const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const UI_ICONS = {
+        filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+        sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+        chevL: '<polyline points="15 18 9 12 15 6"/>',
+        chevR: '<polyline points="9 18 15 12 9 6"/>',
+        chevD: '<polyline points="6 9 12 15 18 9"/>',
+        dots: '<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
+        download: '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+        refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
+        edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+        print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+        image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'
+    };
+    const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
+
+    // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
+    function uiTitle(t) {
+        t = t || {};
+        return '<div class="hz-title"><h1>' + (t.icon || '') + ' ' + escAttr(t.text) + '</h1>' + (t.meta || '') + '</div>';
+    }
+    // Controle segmente (Grouper, vues du Gantt / Calendrier). o = { label, cls, items: [{ label, id, view, title, onclick, active }] }
+    function uiSegmented(o) {
+        const items = (o.items || []).map(i =>
+            '<button type="button" class="btn' + (i.active ? ' active' : '') + '"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') +
+            (i.view ? ' data-view="' + escAttr(i.view) + '"' : '') + (i.title ? ' title="' + escAttr(i.title) + '"' : '') +
+            ' onclick="' + escAttr(i.onclick) + '">' + escAttr(i.label) + '</button>').join('');
+        return '<div class="hdr-group">' + (o.label ? '<span class="hdr-glabel">' + escAttr(o.label) + '</span>' : '') +
+            '<div class="tf-seg ' + escAttr(o.cls || '') + '" role="group"' + (o.label ? ' aria-label="' + escAttr(o.label) + '"' : '') + '>' + items + '</div></div>';
+    }
+    // Navigation de periode, IDENTIQUE dans le Gantt et le Calendrier : ‹ periode › puis « Aujourd'hui ».
+    // o = { prev, next, today, id, text }
+    function uiPeriodNav(o) {
+        const nav = (fn, ic, label) => '<button type="button" class="btn btn-icon btn-nav" onclick="' + escAttr(fn) + '" title="' + label + '" aria-label="' + label + '">' + uiIcon(ic, 16) + '</button>';
+        return '<div class="period-nav"><div class="nav-group">' + nav(o.prev, 'chevL', 'Période précédente') +
+            '<span class="current-period" id="' + escAttr(o.id || 'currentPeriod') + '" aria-live="polite">' + escAttr(o.text) + '</span>' +
+            nav(o.next, 'chevR', 'Période suivante') + '</div>' +
+            '<button type="button" class="btn" onclick="' + escAttr(o.today) + '">Aujourd\'hui</button></div>';
+    }
+    // Recherche. o = { id, oninput }
+    function uiSearch(o) {
+        return '<div class="search-box"><input type="text" id="' + escAttr(o.id || 'searchInput') + '" placeholder="Rechercher..." oninput="' + escAttr(o.oninput) + '" aria-label="Rechercher"></div>';
+    }
+    // Bouton « Filtres » + menu deroulant. o = { toggle, containerId, buttonId, menuId, countId }
+    function uiFilters(o) {
+        return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '">' + uiIcon('filter') + ' Filtres' +
+            '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
+            '<div class="filter-menu wide" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
+    }
+    // Selecteurs de l'affichage : memes options partout. Les ids sont ceux lus par les widgets.
+    function uiSelect(o) {
+        return '<select id="' + escAttr(o.id) + '" onchange="' + escAttr(o.onchange) + '"' + (o.title ? ' title="' + escAttr(o.title) + '"' : '') + '>' +
+            o.options.map(p => '<option value="' + escAttr(p[0]) + '">' + escAttr(p[1]) + '</option>').join('') + '</select>';
+    }
+    const UI_COLOR_OPTIONS = [['priority', 'Priorité'], ['project', 'Projet'], ['assignee', 'Assigné'], ['status', 'Statut']];
+    const UI_LEVEL_OPTIONS = [['all', 'Tous'], ['actions', 'Actions'], ['parents', 'Synthèses']];
+    const UI_SORT_OPTIONS = [['priority', 'Priorité'], ['date', 'Date'], ['manual', 'Manuel']];
+    const UI_LEVEL_TITLE = 'Niveau affiché — Tous = arbre ; Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)';
+    const uiColorField = (title) => ({ label: 'Couleur', html: uiSelect({ id: 'colorSelect', onchange: 'changeColorMode(this.value)', title: title, options: UI_COLOR_OPTIONS }) });
+    const uiLevelField = () => ({ label: 'Niveau', html: uiSelect({ id: 'levelSelect', onchange: 'changeWorkLevel(this.value)', title: UI_LEVEL_TITLE, options: UI_LEVEL_OPTIONS }) });
+    const uiSortField = () => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: UI_SORT_OPTIONS }) });
+    // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
+    function uiDisplayMenu(o) {
+        const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
+        const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action" onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
+        return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage">' +
+            uiIcon('sliders') + '<span>Affichage</span>' + uiIcon('chevD', 12) + '</button>' +
+            '<div class="tf-menu-panel" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
+    }
+    // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
+    function uiMoreMenu(o) {
+        const items = (o.items || []).map(i => i.sep ? '<div class="filter-sep"></div>' :
+            '<div class="filter-option"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') + ' onclick="' + escAttr(i.onclick) + '">' + (i.html || (i.icon ? uiIcon(i.icon) : '')) + ' ' + escAttr(i.label) + '</div>').join('');
+        const title = o.title || 'Plus d\'actions';
+        return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+            '<button type="button" class="btn icon-btn" onclick="' + escAttr(o.toggle) + '" title="' + escAttr(title) + '" aria-label="' + escAttr(title) + '">' + uiIcon(o.icon || 'dots', 16) + '</button>' +
+            '<div class="filter-menu filter-menu-right"' + (o.menuId ? ' id="' + escAttr(o.menuId) + '"' : '') + '>' + items + '</div></div>';
+    }
+    // Bouton generique. o = { id, label, icon, title, onclick, cls, primary, iconOnly, count }
+    function uiButton(o) {
+        const cls = o.cls || (o.primary ? 'btn primary' : (o.iconOnly ? 'btn icon-btn' : 'btn'));
+        return '<button type="button" class="' + escAttr(cls) + '"' + (o.id ? ' id="' + escAttr(o.id) + '"' : '') + ' onclick="' + escAttr(o.onclick) + '"' +
+            (o.title ? ' title="' + escAttr(o.title) + '"' : '') + (o.iconOnly ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
+            (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? ' ' : '') + escAttr(o.label) : '') +
+            (o.count ? '<span class="filter-count" id="' + escAttr(o.count) + '" style="display:none">0</span>' : '') + '</button>';
+    }
+    // Barre complete. o = { title, view: [html], tools: [html], actions: [html] }
+    function uiHeader(o) {
+        return uiTitle(o.title) +
+            ((o.view && o.view.length) ? '<div class="hz-view">' + o.view.join('') + '</div>' : '') +
+            '<div class="hz-tools">' + (o.tools || []).join('') + '</div>' +
+            '<div class="hz-actions">' + (o.actions || []).join('') + '</div>';
+    }
+    function mountHeader(o, el) {
+        const host = el || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
+        if (host) host.innerHTML = uiHeader(o);
+        initUi();
+    }
+    const ui = {
+        icon: uiIcon, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
+        select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
+        displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader
+    };
+
+    /* ----- En-tete de la fiche de tache ---------------------------------------
+     * Le titre editable (#taskTitle) EST l'en-tete ; la navigation "n/m" entre les
+     * taches est integree a cote (fleches + compteur), puis la fermeture. Le
+     * handler oninput de #taskTitle est celui de chaque widget (updateField).
+     * o = { title, placeholder, index, total, isNew, back, dotColor, dotTitle } */
+    function panelHeaderHtml(o) {
+        o = o || {};
+        const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const chevron = (pts) => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="' + pts + '"/></svg>';
+        const hasNav = !o.isNew && Number(o.total) > 1;
+        const nav = hasNav
+            ? '<div class="panel-nav" role="group" aria-label="Navigation entre les tâches">' +
+                '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(-1)" title="Tâche précédente" aria-label="Tâche précédente">' + chevron('15 18 9 12 15 6') + '</button>' +
+                '<span class="panel-count" aria-live="polite">' + (Number(o.index) + 1) + '/' + Number(o.total) + '</span>' +
+                '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(1)" title="Tâche suivante" aria-label="Tâche suivante">' + chevron('9 18 15 12 9 6') + '</button>' +
+              '</div>'
+            : '';
+        const back = o.back
+            ? '<button type="button" class="panel-nav-btn panel-back" onclick="backToPeriod()" title="Retour" aria-label="Retour">' + chevron('15 18 9 12 15 6') + '</button>'
+            : '';
+        const dot = o.dotColor ? '<span class="panel-dot" style="background:' + esc(o.dotColor) + '" title="' + esc(o.dotTitle || '') + '"></span>' : '';
+        return back + dot +
+            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" aria-label="Titre">' +
+            nav +
+            '<button type="button" class="panel-close" onclick="confirmClosePanel()" title="Fermer" aria-label="Fermer">×</button>';
+    }
+
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
      */
@@ -1144,6 +1315,9 @@ const TF = (function () {
         isoDate: isoDate,
         parseISODate: parseISODate,
         colorModeLabel: colorModeLabel,
+        panelHeaderHtml: panelHeaderHtml,
+        initUi: initUi,
+        ui: ui,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,

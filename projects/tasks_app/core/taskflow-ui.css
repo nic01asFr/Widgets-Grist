@@ -1,10 +1,18 @@
-/* ═════ Finition commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+/* ═════ Interface commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
    Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
-   styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle
-   (police, hauteur et rayon des controles, segmentes, selects, fiche de tache, theme sombre). */
+   styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle. Les composants
+   de la barre du haut sont construits par TF.ui (core/taskflow-core.js) ; ici : leur apparence. */
 
+/* 0. Jetons : echelle de polices, d'espacements, hauteur et rayons des controles. */
 :root {
     color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+    --fs-2xs: 0.66rem;                 /* etiquettes en majuscules, pastilles */
+    --fs-xs: 0.72rem;                  /* informations secondaires, aides */
+    --fs-sm: 0.8rem;                   /* controles : boutons, selects, filtres */
+    --fs-md: 0.875rem;                 /* texte courant, champs */
+    --fs-lg: 1.05rem;                  /* titre de fiche, sections */
+    --fs-xl: 1.25rem;                  /* titre du widget */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
     --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
     --ctl-r: 8px;                      /* rayon unique des controles */
     --seg-r: 6px;                      /* rayon des items d'un controle segmente */
@@ -14,13 +22,45 @@
     :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
 }
 
-/* 1. Typographie : les controles heritent de la police du widget (ils restaient en Arial,
-      et les champs de date / la description en monospace). */
+/* 1. Base : les controles heritent de la police du widget (ils restaient en Arial, et les champs de
+      date / la description en monospace) ; defilements fins et discrets partout, meme comportement. */
 button, input, select, textarea { font-family: inherit; }
 button { color: inherit; }
 textarea { line-height: 1.45; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
 
-/* 2. Barre du haut : une seule hauteur, un seul rayon pour tous les controles. */
+/* 2. Barre du haut : quatre zones identiques dans les quatre widgets.
+      titre | vue / navigation | outils (recherche, filtres, affichage) | actions (+ Tache, ...).
+      Ordre fixe, sans seuil de largeur : les zones passent a la ligne quand elles ne tiennent plus,
+      restent alignees a gauche, les outils s'etirent pour remplir la ligne et les actions terminent
+      toujours la derniere ligne, a droite (jamais seules ni au milieu). */
+.header { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--sp-2) 14px; }
+.hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.hz-title { order: 1; flex: none; gap: 10px; }
+/* La zone « vue » se dissout dans la barre : navigation de periode et controle segmente se placent
+   comme les autres blocs (meme ligne que le titre quand ca tient, sinon ligne suivante). */
+.hz-view { display: contents; }
+.hz-view > * { order: 2; flex: none; max-width: 100%; }
+.hz-tools { order: 3; flex: 1 1 auto; flex-wrap: wrap; }
+.hz-actions { order: 4; flex: none; margin-left: auto; }
+.header h1 { font-size: var(--fs-xl); }
+.last-update, .hdr-glabel { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.hdr-glabel { font-weight: 550; }
+.hz-tools .search-box input { width: clamp(110px, 12vw, 150px); }
+@media (max-width: 520px) {
+    .hz-actions { order: 2; }
+    .hz-view > * { order: 3; }
+    .hz-view > .hdr-group, .hz-view > .period-nav { flex: 1 1 100%; }
+    .hz-tools { order: 4; flex: 1 1 100%; }
+    .hz-tools .search-box { flex: 1 1 100%; }
+    .hz-tools .search-box input { width: 100%; }
+    .hdr-glabel, .last-update { display: none; }
+}
+/* Dans le lanceur (?shell=1) le titre du widget est masque : l'onglet l'affiche deja. */
+.in-shell .hz-title:not(:has(.last-update)) { display: none; }
+.in-shell .hz-title h1 { display: none; }
+
+/* 3. Controles de la barre : une seule hauteur, un seul rayon, une seule taille de police. */
 .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
 .header select, .header .search-box input {
     height: var(--ctl-h);
@@ -31,10 +71,12 @@ textarea { line-height: 1.45; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     padding-top: 0;
     padding-bottom: 0;
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 550;
+    white-space: nowrap;
 }
 .header .icon-btn, .header .btn-nav, .header .btn-icon {
     width: var(--ctl-h);
@@ -42,43 +84,89 @@ textarea { line-height: 1.45; }
     padding-left: 0;
     padding-right: 0;
 }
-.header select, .header select#colorSelect, .header select#levelSelect {
+.header select {
     border: 1px solid var(--border);
     background: var(--card-bg);
     color: var(--text);
-    font-size: 0.78rem;
-    padding: 0 8px;
+    font-size: var(--fs-sm);
+    padding: 0 var(--sp-2);
 }
-.header .search-box input { font-size: 0.78rem; }
+.header .search-box input { font-size: var(--fs-sm); }
 
-/* 3. Controles segmentes (Grouper, vues du Gantt / Calendrier) : meme rayon, meme taille. */
-.group-selector, .view-controls { padding: 3px; border-radius: 9px; }
-.header .group-selector .btn, .header .view-controls .btn {
+/* 4. Controle segmente (Grouper, vues du Gantt / Calendrier) : defile au lieu de passer a la ligne. */
+.tf-seg {
+    display: inline-flex;
+    gap: 2px;
+    max-width: 100%;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--surface-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tf-seg::-webkit-scrollbar { display: none; }
+.header .tf-seg .btn {
+    flex: none;
     height: calc(var(--ctl-h) - 6px);
+    padding: 0 12px;
+    border: none;
     border-radius: var(--seg-r);
-    padding-top: 0;
-    padding-bottom: 0;
-    font-size: 0.78rem;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
 }
+.header .tf-seg .btn:hover { background: rgba(127, 127, 127, 0.1); }
+.header .tf-seg .btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
+.hdr-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; max-width: 100%; }
 
-/* 4. Dashboard : actions alignees a droite comme dans les autres widgets. */
-.header-right { margin-left: auto; }
+/* 5. Navigation de periode : identique dans le Gantt et le Calendrier (‹ periode › puis Aujourd'hui). */
+.period-nav { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.nav-group { display: inline-flex; align-items: center; gap: 6px; }
+.current-period { min-width: 120px; text-align: center; font-size: var(--fs-md); font-weight: 650; white-space: nowrap; }
 
-/* 5. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+/* 6. Menus : « Affichage », « ⋯ » et filtres s'ouvrent de la meme facon, avec la meme apparence. */
+.view-menu { position: relative; }
+.tf-menu-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 250;
+    flex-direction: column;
+    gap: var(--sp-3);
+    min-width: 240px;
+    max-width: calc(100vw - 24px);
+    padding: var(--sp-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-lg);
+}
+[data-menu].open > .tf-menu-panel { display: flex; }
+.tf-menu-panel.align-right { left: auto; right: 0; }
+.tf-field { display: flex; flex-direction: column; gap: var(--sp-1); }
+.tf-field-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
+.tf-field select { width: 100%; max-width: none; }
+.tf-menu-panel .tf-menu-action { width: 100%; justify-content: flex-start; padding: 0 var(--sp-3); }
+.filter-menu-right { right: 0; left: auto; min-width: 200px; }
+.hz-tools .filter-menu { left: 0; right: auto; max-width: calc(100vw - 24px); }
+.filter-option { font-size: var(--fs-sm); }
+
+/* 7. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
 .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
 
-/* 6. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+/* 8. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
       (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
 .panel-section-header {
     background: transparent;
-    margin: 0 0 8px 0;
-    padding: 12px 0 4px;
+    margin: 0 0 var(--sp-2) 0;
+    padding: var(--sp-3) 0 var(--sp-1);
     border-top: 1px solid var(--border);
     border-bottom: none;
 }
 .panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .panel-section-title {
-    font-size: 0.66rem;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     letter-spacing: 0.05em;
     color: var(--text-light);
@@ -89,7 +177,39 @@ textarea { line-height: 1.45; }
 /* Description : meme police que le reste (elle etait en monospace). */
 .form-textarea { font-family: inherit; }
 
-/* 7. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+/* 9. Fiche de tache : le titre est l'en-tete, la navigation « n/m » est integree a cote,
+      puis la fermeture. La fiche recouvre toute la hauteur du widget, barre du haut comprise
+      (elle contient peu de detail une fois une tache ouverte). */
+.panel-header { justify-content: flex-start; gap: var(--sp-2); padding: 10px var(--sp-3) 10px var(--sp-4); background: var(--card-bg); }
+.panel-header .panel-title-edit {
+    flex: 1; min-width: 0; width: auto; margin: 0; padding: 6px 0;
+    font-size: var(--fs-lg); font-weight: 700; line-height: 1.3;
+    border: none; border-bottom: 2px solid transparent; border-radius: 0;
+    text-overflow: ellipsis;
+}
+.panel-header .panel-title-edit:hover { border-bottom-color: var(--border); }
+.panel-header .panel-title-edit:focus { border-bottom-color: var(--primary); outline: none; }
+.panel-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+.panel-nav { flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: var(--surface-2); }
+.panel-nav-btn {
+    width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.panel-nav-btn:hover { background: var(--card-bg); color: var(--text); }
+.panel-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.panel-back { flex: none; }
+.panel-count { min-width: 30px; text-align: center; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.panel-close {
+    flex: none; width: 30px; height: 30px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
+}
+.panel-close:hover { background: var(--surface-2); color: var(--text); }
+@media (min-width: 561px) {
+    .panel { position: fixed; top: 0; bottom: 0; right: 0; height: auto; z-index: 300; }
+}
+
+/* 10. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
 .filter-panel .filter-btn, .filter-check, .span-btn, .btn-icon, .cfg-input {
     background: var(--card-bg);
     color: var(--text);

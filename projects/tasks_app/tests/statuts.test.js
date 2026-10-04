@@ -91,3 +91,71 @@ describe('libelle des modes de couleur', () => {
         assert.equal(TF.colorModeLabel(undefined), '');
     });
 });
+
+describe('en-tete de la fiche de tache', () => {
+    it('le titre editable est l en-tete, echappe, avec fermeture', () => {
+        const h = TF.panelHeaderHtml({ title: 'A "citer" <b>', placeholder: 'Titre...', index: 0, total: 1, isNew: false });
+        assert.match(h, /id="taskTitle"/);
+        assert.match(h, /value="A &quot;citer&quot; &lt;b&gt;"/);
+        assert.match(h, /confirmClosePanel\(\)/);
+        assert.doesNotMatch(h, /<b>/);
+    });
+    it('la navigation n/m n apparait que s il y a plusieurs taches et que ce n est pas une creation', () => {
+        assert.match(TF.panelHeaderHtml({ title: 'x', index: 1, total: 5 }), />2\/5</);
+        assert.doesNotMatch(TF.panelHeaderHtml({ title: 'x', index: 0, total: 1 }), /panel-nav/);
+        assert.doesNotMatch(TF.panelHeaderHtml({ title: 'x', index: 0, total: 5, isNew: true }), /panel-nav/);
+    });
+    it('le bouton retour est optionnel (Calendrier)', () => {
+        assert.match(TF.panelHeaderHtml({ title: 'x', back: true }), /backToPeriod\(\)/);
+        assert.doesNotMatch(TF.panelHeaderHtml({ title: 'x' }), /backToPeriod/);
+    });
+    it('le point de couleur est optionnel et echappe', () => {
+        assert.match(TF.panelHeaderHtml({ title: 'x', dotColor: '#e5484d', dotTitle: 'Priorité' }), /class="panel-dot" style="background:#e5484d"/);
+        assert.doesNotMatch(TF.panelHeaderHtml({ title: 'x' }), /panel-dot/);
+        assert.doesNotMatch(TF.panelHeaderHtml({ title: 'x', dotColor: '"><script>' }), /<script>/);
+    });
+});
+
+describe('composants de la barre du haut', () => {
+    const ui = TF.ui;
+    it('la navigation de periode est identique pour le Gantt et le Calendrier', () => {
+        const g = ui.periodNav({ prev: 'navigate(-1)', next: 'navigate(1)', today: 'goToToday()' });
+        const c = ui.periodNav({ prev: 'navigate(-1)', next: 'navigate(1)', today: 'goToday()' });
+        assert.equal(g.replace('goToToday', 'X'), c.replace('goToday', 'X'));
+        assert.match(g, /id="currentPeriod"/);
+        assert.ok(g.indexOf('navigate(-1)') < g.indexOf('currentPeriod') && g.indexOf('currentPeriod') < g.indexOf('navigate(1)') && g.indexOf('navigate(1)') < g.indexOf('goToToday'));
+    });
+    it('le segmente garde ids, data-view, onclick et la classe active', () => {
+        const h = ui.segmented({ label: 'Grouper', cls: 'group-selector', items: [{ label: 'Statut', id: 'groupStatut', onclick: "setGroupBy('statut')", active: true }, { label: 'Mois', view: 'month', onclick: "setView('month')", title: 'Vue' }] });
+        assert.match(h, /class="tf-seg group-selector"/);
+        assert.match(h, /class="btn active" id="groupStatut" onclick="setGroupBy\('statut'\)"/);
+        assert.match(h, /data-view="month"/);
+        assert.match(h, /hdr-glabel">Grouper</);
+    });
+    it('le menu Affichage reprend les selects avec leurs ids et sans prefixe redondant', () => {
+        const h = ui.displayMenu({ fields: [ui.sortField(), ui.colorField('Couleur des barres'), ui.levelField()], actions: [{ label: 'Ajuster', onclick: 'fitToTasks()' }] });
+        for (const id of ['sortSelect', 'colorSelect', 'levelSelect']) assert.match(h, new RegExp('<select id="' + id + '"'));
+        assert.match(h, /data-menu-toggle/);
+        assert.match(h, />Priorité</);
+        assert.doesNotMatch(h, /Couleur :|Niveau :|Tri:/);
+        assert.match(h, /fitToTasks\(\)/);
+    });
+    it('les options de niveau et de couleur sont les memes partout', () => {
+        assert.deepEqual([...ui.levelField().html.matchAll(/value="(\w+)"/g)].map(m => m[1]), ['all', 'actions', 'parents']);
+        assert.deepEqual([...ui.colorField('x').html.matchAll(/value="(\w+)"/g)].map(m => m[1]), ['priority', 'project', 'assignee', 'status']);
+    });
+    it('l entete assemble les zones dans l ordre titre, vue, outils, actions', () => {
+        const h = ui.header({ title: { icon: '<svg/>', text: 'Kanban' }, view: ['<i id="v"></i>'], tools: ['<i id="t"></i>'], actions: ['<i id="a"></i>'] });
+        const pos = ['hz-title', 'hz-view', 'hz-tools', 'hz-actions'].map(z => h.indexOf(z));
+        assert.deepEqual([...pos].sort((a, b) => a - b), pos);
+        assert.ok(pos.every(p => p >= 0));
+        assert.doesNotMatch(ui.header({ title: { text: 'Dashboard' } }), /hz-view/);
+    });
+    it('le menu d actions ne porte plus de style en ligne et echappe ses libelles', () => {
+        const h = ui.moreMenu({ toggle: "toggleFilterMenu('more')", containerId: 'moreDropdown', menuId: 'filterMoreMenu', items: [{ label: 'A <b>', onclick: 'x()' }, { sep: true }] });
+        assert.doesNotMatch(h, /style=/);
+        assert.match(h, /filter-menu-right/);
+        assert.match(h, /A &lt;b&gt;/);
+        assert.match(h, /filter-sep/);
+    });
+});
