@@ -1932,6 +1932,43 @@
             // - lecture seule -> bloque + opts.onReadOnly()
             // - refus ACL au niveau ligne -> opts.onDenied(err) (le widget toast + recharge)
             // Les erreurs continuent d'etre levees (les try/catch existants les absorbent).
+            // Rafraichissement de secours. grist.onRecords ne se declenche que pour la table LIEE a la section : un widget lie a
+            // une autre table (cas courant : la table proposee par defaut a l'ajout du widget) ne voyait pas les saisies faites
+            // dans Tasks. Si la table liee n'est pas Tasks, on la relit toutes les 15 s (page visible) et au retour sur la page,
+            // et on recharge seulement si elle a change, sans interrompre une saisie en cours. opts = { table, every, busy }.
+            const watchState = { baseline: null, on: false };
+            function watchTasks(grist, reload, opts) {
+                opts = opts || {};
+                if (!grist || !grist.docApi || typeof document === 'undefined' || watchState.on) return;
+                watchState.on = true;
+                const table = opts.table || 'Tasks';
+                const occupe = () => {
+                    const a = document.activeElement;
+                    if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+                    if (document.querySelector('.panel.open, .tf-modal-overlay')) return true;
+                    return !!(opts.busy && opts.busy());
+                };
+                let enCours = false;
+                const verifier = async () => {
+                    if (enCours || document.visibilityState === 'hidden') return;
+                    enCours = true;
+                    try {
+                        const signature = JSON.stringify(await grist.docApi.fetchTable(table));
+                        if (watchState.baseline === null) watchState.baseline = signature;
+                        else if (signature !== watchState.baseline && !occupe()) { watchState.baseline = signature; await reload(); }
+                    } catch (e) { /* lecture impossible : on reessaiera */ }
+                    finally { enCours = false; }
+                };
+                (async () => {
+                    let liee = null;
+                    try { liee = await grist.selectedTable.getTableId(); } catch (e) { /* aucune table liee */ }
+                    if (liee === table) return;   // onRecords suffit
+                    setInterval(verifier, opts.every || 15000);
+                    document.addEventListener('visibilitychange', verifier);
+                    window.addEventListener('focus', verifier);
+                    verifier();
+                })();
+            }
             function guardWrites(grist, opts) {
                 opts = opts || {};
                 if (!grist || !grist.docApi || grist.docApi._tfGuarded) return;
@@ -1939,7 +1976,7 @@
                 grist.docApi._tfGuarded = true;
                 grist.docApi.applyUserActions = async function (actions) {
                     if (isReadOnly()) { try { opts.onReadOnly && opts.onReadOnly(); } catch (e) {} const err = new Error('Document en lecture seule'); err.tfReadOnly = true; throw err; }
-                    try { return await raw(actions); }
+                    try { const r = await raw(actions); watchState.baseline = null; return r; }   // nos propres ecritures ne doivent pas declencher un rechargement de secours
                     catch (e) { if (isAccessError(e)) { try { opts.onDenied && opts.onDenied(e); } catch (e2) {} } throw e; }
                 };
             }
@@ -1985,6 +2022,7 @@
                 panelHeaderHtml: panelHeaderHtml,
                 initUi: initUi,
                 searchMatch: searchMatch,
+                watchTasks: watchTasks,
                 sortTasks: sortTasks,
                 setPeriodLabel: setPeriodLabel,
                 monthYearShort: monthYearShort,
@@ -4059,6 +4097,7 @@
             try { await loadAllData(); } catch (e) { console.error('loadAllData error (continuing):', e); showToast('Chargement: ' + (e?.message || e), 'error'); }
             try {
                 grist.onRecords(async () => await loadAllData());
+                TF.watchTasks(grist, () => loadAllData());
                 grist.onRecord((rec) => {
                     if (rec?.id && rec.id !== selectedTaskId) { selectedTaskId = rec.id; render(); }
                 });
