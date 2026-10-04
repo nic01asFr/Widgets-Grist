@@ -183,8 +183,8 @@ textarea { line-height: 1.45; }
 .header [data-tray-toggle].is-open { background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); }
 .header [data-tray-toggle].is-open .btn-chev svg { transform: rotate(180deg); }
 .header .tf-search-toggle { display: none; position: relative; }
-.header.hz-compact .tf-search-toggle { display: inline-flex; }
-.header.hz-compact .tf-search > .search-box { display: none; }
+.header.hz-search .tf-search-toggle { display: inline-flex; }
+.header.hz-search .tf-search > .search-box { display: none; }
 .tf-search-toggle.has-filter { color: var(--primary); border-color: var(--primary); background: var(--p-50, var(--primary-light)); }
 .tf-search { display: flex; align-items: center; }
 

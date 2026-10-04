@@ -771,8 +771,8 @@
     .header [data-tray-toggle].is-open { background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); }
     .header [data-tray-toggle].is-open .btn-chev svg { transform: rotate(180deg); }
     .header .tf-search-toggle { display: none; position: relative; }
-    .header.hz-compact .tf-search-toggle { display: inline-flex; }
-    .header.hz-compact .tf-search > .search-box { display: none; }
+    .header.hz-search .tf-search-toggle { display: inline-flex; }
+    .header.hz-search .tf-search > .search-box { display: none; }
     .tf-search-toggle.has-filter { color: var(--primary); border-color: var(--primary); background: var(--p-50, var(--primary-light)); }
     .tf-search { display: flex; align-items: center; }
 
@@ -1553,43 +1553,46 @@
                     if (panel.classList.contains('open')) trayToggle('search', false);
                 }
             }
-            function headerFits(host, view, tools) {
-                if (host.scrollWidth > host.clientWidth + 1) return false;
-                if (view && view.scrollWidth > view.clientWidth + 1) return false;
-                if (tools && tools.scrollWidth > tools.clientWidth + 1) return false;
-                return !Array.prototype.some.call(host.querySelectorAll('.tf-seg'), s => s.scrollWidth > s.clientWidth + 1);
+            // Diagnostic : la barre deborde-t-elle ? (utilise par les controles de largeur, pas par la mise en page)
+            function headerOverflow(host) {
+                host = host || document.getElementById('tfHeader');
+                if (!host) return false;
+                const zones = ['.hz-view', '.hz-tools'].map(q => host.querySelector(q)).filter(Boolean);
+                return host.scrollWidth > host.clientWidth + 1 || zones.some(z => z.scrollWidth > z.clientWidth + 1) ||
+                    Array.prototype.some.call(host.querySelectorAll('.hz-view .tf-seg'), g => g.scrollWidth > g.clientWidth + 1);
             }
-            // Etat de la barre : { tools: outils en icones, top: actions et navigation en icones, bare: titre sans texte, two: deux lignes }.
+            // Etat de la barre : { top: actions et navigation en icones, search: recherche en loupe, tools: Filtres / Affichage aussi en icones,
+            // bare: titre sans texte, two: deux lignes }.
             function applyMode(host, m) {
-                host.classList.toggle('hz-compact', !!m.tools);
+                host.classList.toggle('hz-search', !!(m.search || m.tools));   // recherche en loupe (champ dans le bandeau)
+                host.classList.toggle('hz-compact', !!m.tools);                // Filtres / Affichage aussi en icones
                 host.classList.toggle('hz-top', !!m.top);
                 host.classList.toggle('hz-bare', !!m.bare);
                 host.classList.toggle('hz-two', !!m.two);
             }
-            // Decisions INDEPENDANTES par zone, a largeur egale le meme comportement dans tous les widgets :
-            //  1. une ligne ? sans compaction, puis toute compactee ;
-            //  2. sinon deux lignes : la ligne du haut se compacte (icones, puis titre sans texte) SEULEMENT si elle deborde,
-            //     et les outils (2e ligne) se compactent SEULEMENT s'ils ne tiennent pas dans leur ligne.
-            const ONE_ROW = [{}, { top: true }, { tools: true, top: true }];
-            const TOP_LEVELS = [{}, { top: true }, { top: true, bare: true }];
-            function topFits(host, view) {
-                if (host.scrollWidth > host.clientWidth + 1) return false;
-                if (view && view.scrollWidth > view.clientWidth + 1) return false;
-                return !Array.prototype.some.call(host.querySelectorAll('.hz-view .tf-seg'), s => s.scrollWidth > s.clientWidth + 1);
+            // La disposition ne depend QUE de la largeur du widget : a largeur egale, les quatre widgets se comportent
+            // exactement de la meme facon (une mesure du contenu donnait des barres differentes d'un widget a l'autre).
+            // Priorite a UNE seule ligne : on prefere des icones aux grands boutons, et la zone « vue » (periodes) defile
+            // au besoin. Deux lignes seulement sur un ecran etroit (telephone). Seuils cales sur le contenu le plus large
+            // (Calendrier : navigation + six periodes) ; le controle de largeur verifie qu'aucun widget ne deborde.
+            const HEADER_STEPS = [
+                [1480, {}],                                         // libelles complets
+                [1360, { top: true }],                              // actions et navigation en icones
+                [1240, { top: true, search: true }],                // + recherche en loupe
+                [1120, { top: true, tools: true }],                 // + Filtres / Affichage en icones
+                [720, { top: true, tools: true, bare: true }]       // + titre sans texte
+            ];
+            const TWO_ROWS_TOOLS = [[380, {}], [330, { search: true }], [0, { tools: true }]];   // outils, 2e ligne
+            function modeForWidth(w) {
+                for (const [min, m] of HEADER_STEPS) if (w >= min) return Object.assign({}, m);
+                const tools = TWO_ROWS_TOOLS.find(([min]) => w >= min)[1];
+                return Object.assign({ two: true, top: true, bare: true }, tools);
             }
             function chooseMode(host) {
-                const view = host.querySelector('.hz-view');
-                const tools = host.querySelector('.hz-tools');
-                // Le champ de recherche doit etre a sa place DANS le mode essaye, sinon la mesure est fausse
-                // (absent de la barre, tout « tient » ; remis en place, plus rien ne tient : la barre clignotait).
-                const essai = (m) => { placeSearch(host, !!m.tools); applyMode(host, m); };
-                for (const m of ONE_ROW) { essai(m); if (headerFits(host, view, tools)) return m; }
-                let top = TOP_LEVELS[TOP_LEVELS.length - 1];
-                for (const t of TOP_LEVELS) { essai(Object.assign({ two: true }, t)); if (topFits(host, view)) { top = t; break; } }
-                const deux = Object.assign({ two: true }, top);
-                essai(deux);
-                if (tools && tools.scrollWidth > tools.clientWidth + 1) { deux.tools = true; essai(deux); }
-                return deux;
+                const m = modeForWidth(host.clientWidth);
+                placeSearch(host, !!(m.search || m.tools));
+                applyMode(host, m);
+                return m;
             }
             function fitHeader(host) {
                 host = host || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
@@ -1639,7 +1642,7 @@
                 icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
                 select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
                 displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader,
-                tray: trayToggle, refit: fitHeader
+                tray: trayToggle, refit: fitHeader, overflow: headerOverflow, modeForWidth: modeForWidth
             };
 
             /* ----- En-tete de la fiche de tache ---------------------------------------

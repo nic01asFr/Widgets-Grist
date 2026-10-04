@@ -152,6 +152,21 @@ describe('composants de la barre du haut', () => {
         assert.ok(pos.every(p => p >= 0));
         assert.doesNotMatch(ui.header({ title: { text: 'Dashboard' } }), /hz-view/);
     });
+    it('la disposition de la barre ne depend que de la largeur : une ligne d abord, deux lignes sur ecran etroit', () => {
+        const m = ui.modeForWidth;
+        assert.deepEqual(m(1600), {});
+        assert.deepEqual(m(1400), { top: true });
+        assert.deepEqual(m(1300), { top: true, search: true });
+        assert.deepEqual(m(1200), { top: true, tools: true });
+        assert.deepEqual(m(900), { top: true, tools: true, bare: true });
+        assert.ok(!m(740).two, 'une seule ligne jusqu a 720 px');
+        const etroit = m(600);
+        assert.ok(etroit.two && etroit.top && etroit.bare);
+        assert.ok(!m(380).tools && m(340).search && m(300).tools, 'les outils de la 2e ligne gardent leurs libelles tant qu ils tiennent');
+        // jamais plus de compaction a une plus grande largeur
+        const rang = (x) => (x.two ? 10 : 0) + (x.top ? 1 : 0) + (x.search ? 1 : 0) + (x.tools ? 1 : 0) + (x.bare ? 1 : 0);
+        for (let w = 1700; w > 300; w -= 10) assert.ok(rang(m(w)) <= rang(m(w - 10)), 'monotone a ' + w);
+    });
     it('le menu d actions ne porte plus de style en ligne et echappe ses libelles', () => {
         const h = ui.moreMenu({ toggle: "toggleFilterMenu('more')", containerId: 'moreDropdown', menuId: 'filterMoreMenu', items: [{ label: 'A <b>', onclick: 'x()' }, { sep: true }] });
         assert.doesNotMatch(h, /style=/);
