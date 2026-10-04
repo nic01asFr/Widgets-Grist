@@ -57,7 +57,7 @@ const sections = [
     { ...choix('A1_Sexe', 'radio'), required: true },
     { ...choix('A2_Age', 'radio'), required: true },
     { ...choix('A3_Position', 'multiselect'), required: true,
-      aide: 'Plusieurs réponses possibles' },
+      description: 'Plusieurs réponses possibles' },
     { ...choix('A4_Anciennete', 'radio'), required: true, condition: habitant },
   ] },
 
@@ -80,7 +80,7 @@ const sections = [
 
   { id: 'D', label: 'Vos priorités d’amélioration', fields: [
     { ...choix('D1_Ameliorations', 'multiselect'),
-      aide: 'Choisissez jusqu’à 5 propositions',
+      description: 'Choisissez jusqu’à 5 propositions',
       options: { choices: col('D1_Ameliorations').choix, maxSelected: 5 } },
     base('D2_Autre', 'text'),
   ] },
@@ -146,7 +146,7 @@ const sections = [
   ] },
 
   { id: 'N', label: 'Pour finir', fields: [
-    { ...base('N1_Remarques', 'textarea'), aide: 'Champ libre — facultatif' },
+    { ...base('N1_Remarques', 'textarea'), description: 'Champ libre — facultatif' },
   ] },
 ];
 

@@ -152,17 +152,43 @@
     return evaluateCondition(field.condition, values, context);
   }
 
-  function collectSubmitData(formDef, values, context) {
+  /** Les types où omettre la colonne revient à y écrire 0 (mesuré en Grist réel). */
+  var TYPES_A_VIDER = { Int: true, Numeric: true, Date: true, DateTime: true, Ref: true };
+
+  /**
+   * Ce qui part dans Grist.
+   *
+   * > **Omettre une colonne numérique, c'est y écrire 0.** Mesuré sur les deux
+   * > instances : une colonne `Int` absente de l'action vaut 0, et `AVERAGE`
+   * > ignore le vide mais compte les zéros. Une question jamais posée tirait
+   * > donc les moyennes vers le bas, sans que rien ne le signale — on l'a vu
+   * > dans les réponses de l'enquête du 4ᵉ.
+   *
+   * À la **création**, une question masquée ou sans réponse s'écrit donc
+   * `null` explicitement. À la **correction** d'une ligne, non : le formulaire
+   * ne montre pas tout, et vider ce qu'il ne montre pas effacerait des données
+   * qu'il n'a jamais eu à connaître.
+   *
+   * @param {object} [opts] `{ creation: true }` pour écrire les vides
+   */
+  function collectSubmitData(formDef, values, context, opts) {
+    opts = opts || {};
     var out = {};
     var sections = (formDef && formDef.sections) || [];
     for (var i = 0; i < sections.length; i++) {
       var section = sections[i];
-      if (!isSectionVisible(section, values, context)) continue;
+      var sectionVisible = isSectionVisible(section, values, context);
       var fields = section.fields || [];
       for (var j = 0; j < fields.length; j++) {
         var field = fields[j];
-        if (!isFieldVisible(field, values, context)) continue;
-        out[field.colId] = Types.coerceForWrite(field, values[field.colId]);
+        var visible = sectionVisible && isFieldVisible(field, values, context);
+        if (!visible) {
+          if (opts.creation && TYPES_A_VIDER[Types.normalizeGristType(field.type)]) out[field.colId] = null;
+          continue;
+        }
+        var brut = values[field.colId];
+        // « Non concerné » est une réponse ; la colonne, elle, reste vide.
+        out[field.colId] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
       }
     }
     return out;
@@ -427,6 +453,107 @@
       renderLegend(field) + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
   }
 
+  /**
+   * « Non concerné » : une réponse, pas une absence de réponse.
+   *
+   * Elle s'écrit vide dans la colonne — un entier ne sait pas porter ce sens —
+   * mais elle vaut réponse à la validation, et elle se distingue d'une question
+   * jamais posée tant que le formulaire déclare une colonne pour la recueillir
+   * (`meta.nspCol`). Sans elle, les deux se confondent dans le vide, ce qui
+   * reste préférable au 0 que Grist écrirait si on omettait la colonne.
+   */
+  var VALEUR_NON_CONCERNE = 'NSP';
+
+  /** L'échelle d'un champ, telle que le formulaire la déclare, avec ses défauts. */
+  function echelleDe(formDef, field) {
+    var id = field && field.options && field.options.echelle;
+    var e = (formDef && formDef.echelles && formDef.echelles[id]) || {};
+    var min = Number.isFinite(e.min) ? e.min : 1;
+    var max = Number.isFinite(e.max) ? e.max : 5;
+    return {
+      min: min,
+      max: max > min ? max : min + 4,
+      libelles: Array.isArray(e.libelles) && e.libelles.length === 2 ? e.libelles : null,
+      nonConcerne: !!e.nonConcerne
+    };
+  }
+
+  /** Les boutons d'une échelle — partagés par le champ seul et la matrice. */
+  function boutonsEchelle(field, value, e) {
+    var html = '';
+    for (var n = e.min; n <= e.max; n++) {
+      var oid = fieldId(field) + '-' + n;
+      var coche = sameValue(value, n) ? ' checked' : '';
+      html += '<div class="fr-radio-group fr-echelle__cran">' +
+        '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + n + '"' + coche + ' />' +
+        '<label class="fr-label" for="' + oid + '">' + n + '</label></div>';
+    }
+    if (e.nonConcerne) {
+      var nid = fieldId(field) + '-nsp';
+      var cocheNsp = value === VALEUR_NON_CONCERNE ? ' checked' : '';
+      html += '<div class="fr-radio-group fr-echelle__nsp">' +
+        '<input type="radio" id="' + nid + '" name="' + escapeHtml(field.colId) + '" value="' +
+        VALEUR_NON_CONCERNE + '"' + cocheNsp + ' />' +
+        '<label class="fr-label" for="' + nid + '">Non concerné</label></div>';
+    }
+    return '<div class="fr-echelle__crans">' + html + '</div>';
+  }
+
+  /** Les deux libellés d'extrémité : ce qui dit ce que « 1 » et « 5 » veulent dire. */
+  function ancresEchelle(e) {
+    if (!e.libelles) return '';
+    return '<div class="fr-echelle__ancres">' +
+      '<span>' + e.min + ' · ' + escapeHtml(e.libelles[0]) + '</span>' +
+      '<span>' + escapeHtml(e.libelles[1]) + ' · ' + e.max + '</span></div>';
+  }
+
+  function renderEchelle(field, value, optionsList, formDef) {
+    var e = echelleDe(formDef, field);
+    return '<fieldset class="fr-fieldset fr-echelle" data-colid="' + escapeHtml(field.colId) + '" data-widget="echelle">' +
+      renderLegend(field) +
+      '<div class="fr-fieldset__content">' + boutonsEchelle(field, value, e) + ancresEchelle(e) + '</div>' +
+      '</fieldset>';
+  }
+
+  /**
+   * Une matrice : plusieurs affirmations qui partagent une échelle.
+   *
+   * Ce n'est pas un type, c'est une mise en page — les champs restent des
+   * échelles ordinaires, chacun dans sa colonne. L'échelle n'est annoncée
+   * qu'une fois, en tête, au lieu d'être répétée sous chaque ligne.
+   */
+  function renderMatrice(groupe, values, formDef, champsEnErreur) {
+    var e = echelleDe(formDef, groupe.fields[0]);
+    var lignes = groupe.fields.map(function (f) {
+      var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
+        ? '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
+        : '';
+      return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '">' +
+        '<span class="fr-matrice__intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
+        boutonsEchelle(f, values[f.colId], e) + erreur + '</div>';
+    }).join('');
+    return '<fieldset class="fr-fieldset fr-matrice" data-matrice="' + escapeHtml(groupe.matrice) + '">' +
+      (groupe.titre ? '<legend class="fr-fieldset__legend">' + escapeHtml(groupe.titre) + '</legend>' : '') +
+      ancresEchelle(e) + '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
+  }
+
+  /**
+   * Les champs d'une étape, regroupés : les échelles qui se suivent et partagent
+   * une matrice forment un bloc, le reste va seul.
+   */
+  function grouperParMatrice(fields) {
+    var groupes = [];
+    var courant = null;
+    (fields || []).forEach(function (f) {
+      var m = f.options && f.options.matrice;
+      if (m && courant && courant.matrice === m) { courant.fields.push(f); return; }
+      if (m) { courant = { matrice: m, fields: [f] }; groupes.push(courant); return; }
+      courant = null;
+      groupes.push({ fields: [f] });
+    });
+    return groupes;
+  }
+
   function renderLikert(field, value) {
     var itemsHtml = '';
     for (var i = 1; i <= 5; i++) {
@@ -496,15 +623,27 @@
     radio: function (f, v, opts) { return renderRadio(f, v, opts); },
     multiselect: function (f, v, opts) { return renderMultiselect(f, v, opts); },
     likert: function (f, v) { return renderLikert(f, v); },
+    echelle: function (f, v, opts, def) { return renderEchelle(f, v, opts, def); },
     file: function (f, v) { return renderFile(f, v); }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
-  function renderFieldHtml(field, values, optionsList) {
+  /**
+   * Un widget inconnu retombe sur celui que son type Grist appelle, pas sur du
+   * texte.
+   *
+   * C'est la règle de dégradation : un formulaire composé avec une saisie que
+   * ce moteur ne connaît pas encore — une copie figée, embarquée ailleurs —
+   * doit rendre une question utilisable. Un `Bool` devient une case, pas un
+   * champ texte où la personne écrirait « oui ».
+   */
+  function renderFieldHtml(field, values, optionsList, formDef) {
     values = values || {};
     var value = values[field.colId];
-    var renderer = WIDGET_RENDERERS[field && field.widget] || WIDGET_RENDERERS.text;
-    return renderer(field, value, optionsList);
+    var parDefaut = Types && Types.defaultWidget ? Types.defaultWidget(field && field.type) : 'text';
+    var renderer = WIDGET_RENDERERS[field && field.widget] ||
+      WIDGET_RENDERERS[parDefaut] || WIDGET_RENDERERS.text;
+    return renderer(field, value, optionsList, formDef);
   }
 
   // ── mount : runtime navigateur — étapes visibles, validation requise, submit ──
@@ -539,7 +678,7 @@
       var cb = rootEl.querySelector('[name="' + field.colId + '"]');
       return cb ? !!cb.checked : false;
     }
-    if (field.widget === 'radio' || field.widget === 'likert') {
+    if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
       return checkedRadio ? checkedRadio.value : null;
     }
@@ -951,9 +1090,15 @@
         '<span class="fr-stepper__state">Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span></p>' +
         '</nav>';
 
-      var fieldsHtml = fields.map(function (f) {
+      // Les échelles qui se suivent et partagent une matrice sont rendues
+      // ensemble : l'échelle n'est annoncée qu'une fois, pas sous chaque ligne.
+      var fieldsHtml = grouperParMatrice(fields).map(function (groupe) {
+        if (groupe.matrice && groupe.fields.length > 1) {
+          return renderMatrice(groupe, values, formDef, errorFields);
+        }
+        var f = groupe.fields[0];
         var opts = resolveOptionsForField(f);
-        var html = renderFieldHtml(f, values, opts);
+        var html = renderFieldHtml(f, values, opts, formDef);
         if (errorFields.indexOf(f.colId) !== -1) {
           html += '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>';
         }
@@ -1024,7 +1169,8 @@
               })
             : Promise.resolve(values);
           Promise.resolve(resolveAtt).then(function () {
-            var data = collectSubmitData(formDef, values, context);
+            var enCreation = !(bridge.editRowId || formDef.editRowId);
+            var data = collectSubmitData(formDef, values, context, { creation: enCreation });
             return defaultSubmit(bridge, formDef, data);
           }).then(function () {
             submitting = false;
@@ -1118,6 +1264,13 @@
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
     valuesFromRecord: valuesFromRecord,
+    // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
+    // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.
+    WIDGETS: Object.keys(WIDGET_RENDERERS),
+    KINDS: ['echelle'],
+    VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
+    echelleDe: echelleDe,
+    grouperParMatrice: grouperParMatrice,
     mount: mount
   };
 }));

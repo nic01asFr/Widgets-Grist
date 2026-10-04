@@ -79,13 +79,14 @@ describe('enquête du 4ᵉ — la traduction se branche sur les colonnes réelle
 });
 
 describe('enquête du 4ᵉ — ce que le moteur sait rendre aujourd’hui', () => {
-  const WIDGETS_MOTEUR = ['text', 'textarea', 'number', 'checkbox', 'date', 'datetime',
-    'select', 'radio', 'multiselect', 'likert', 'file'];
+  // C'est le moteur qui dit ce qu'il sait faire : une liste recopiée ici
+  // vieillirait en silence, et le compte cesserait de vouloir dire quelque chose.
+  const Engine = require('../runtime/engine.js');
 
   /** Ce qui empêche un champ d'être rendu tel quel, ou `null`. */
   function manque(f) {
-    if (f.kind) return f.kind;
-    if (!WIDGETS_MOTEUR.includes(f.widget)) return 'widget:' + f.widget;
+    if (f.kind && !Engine.KINDS.includes(f.kind)) return f.kind;
+    if (!Engine.WIDGETS.includes(f.widget)) return 'widget:' + f.widget;
     if (f.options && f.options.maxSelected) return 'option:maxSelected';
     return null;
   }
@@ -99,15 +100,14 @@ describe('enquête du 4ᵉ — ce que le moteur sait rendre aujourd’hui', () =
     // Le jour où l'une de ces lignes tombe à zéro, c'est que le lot est livré :
     // ce test doit alors être mis à jour, et c'est voulu.
     assert.deepEqual(parManque, {
-      echelle: 35,
       'widget:ouinon': 9,
       choix_autre: 1,
       classement: 1,
       'option:maxSelected': 1,
       geometrie: 1,
-    });
+    }, 'l’échelle est livrée : 35 questions de moins');
     const rendus = champs.filter((f) => !manque(f)).length;
-    assert.equal(rendus, 13);
+    assert.equal(rendus, 48);
     assert.equal(champs.length, 61);
   });
 
@@ -126,15 +126,15 @@ describe('enquête du 4ᵉ — ce que le moteur sait rendre aujourd’hui', () =
 });
 
 describe('enquête du 4ᵉ — la traduction reste dans le contrat', () => {
-  const connuesRacine = new Set(Object.keys(schemaFormDef.properties).concat(['meta', 'echelles']));
-  const connuesChamp = new Set(Object.keys(schemaFormDef.definitions.field.properties).concat(['kind', 'aide']));
+  const connuesRacine = new Set(Object.keys(schemaFormDef.properties));
+  const connuesChamp = new Set(Object.keys(schemaFormDef.definitions.field.properties));
 
   it('n’ajoute à la racine que ce que le registre déclare', () => {
     const inconnues = Object.keys(def).filter((k) => !connuesRacine.has(k));
     assert.deepEqual(inconnues, [], 'à déclarer dans formdef.schema.json avant d’implémenter');
   });
 
-  it('n’ajoute à un champ que `kind` et `aide`', () => {
+  it('n’ajoute à un champ rien que le schéma ne déclare', () => {
     const inconnues = new Set();
     champs.forEach((f) => Object.keys(f).forEach((k) => { if (!connuesChamp.has(k)) inconnues.add(k); }));
     assert.deepEqual([...inconnues], []);

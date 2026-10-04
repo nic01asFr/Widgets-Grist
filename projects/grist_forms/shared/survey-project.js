@@ -21,8 +21,17 @@
   }
 
   /** Profil ou type Grist → type Survey Manifest. */
-  function mapQuestionType(field) {
+  function mapQuestionType(field, echelles) {
     if (field.profile === 'likert5' || field.widget === 'likert') return 'likert5';
+    // Une échelle de 1 à 5 est l'échelle d'enquête que le Survey Manifest
+    // connaît ; au-delà, il n'a que « nombre », et l'échelle reste décrite à
+    // côté pour que rien ne se perde.
+    if (field.kind === 'echelle') {
+      var e = (echelles && echelles[field.options && field.options.echelle]) || {};
+      var min = typeof e.min === 'number' ? e.min : 1;
+      var max = typeof e.max === 'number' ? e.max : 5;
+      return (min === 1 && max === 5) ? 'likert5' : 'number';
+    }
     var t = normalizeGristType(field.type);
     var map = {
       ChoiceList: 'choice_list',
@@ -40,12 +49,21 @@
     return 'text';
   }
 
-  function mapQuestion(field) {
+  function mapQuestion(field, echelles) {
     var q = {
       colId: field.colId,
       label: field.label,
-      type: mapQuestionType(field)
+      type: mapQuestionType(field, echelles)
     };
+    if (field.kind === 'echelle') {
+      var ech = (echelles && echelles[field.options && field.options.echelle]) || null;
+      if (ech) {
+        q.echelle = { min: ech.min, max: ech.max };
+        if (ech.libelles) q.echelle.libelles = ech.libelles;
+        if (ech.nonConcerne) q.echelle.nonConcerne = true;
+      }
+      if (field.options && field.options.matrice) q.matrice = field.options.matrice;
+    }
     if (field.required) q.required = true;
     if (field.condition) q.condition = field.condition;
     if (field.profile) q.profile = field.profile;
@@ -81,7 +99,7 @@
           id: section.id,
           label: section.label,
           gate: section.gate != null ? section.gate : null,
-          questions: (section.fields || []).map(mapQuestion)
+          questions: (section.fields || []).map(function (f) { return mapQuestion(f, def.echelles); })
         };
         if (section.condition) sec.condition = section.condition;
         return sec;

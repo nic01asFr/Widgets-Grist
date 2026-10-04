@@ -203,3 +203,26 @@ body {
 }
 .fr-form__brand--success img { max-height: 140px; }
 .fr-form__success { max-width: 40rem; }
+
+/* ── Échelles et matrices ─────────────────────────────────────────────────
+   Une échelle se lit d'un coup d'œil : les crans alignés, et ce que valent
+   ses extrémités écrit dessous. En matrice, l'échelle n'est annoncée qu'une
+   fois ; sur un écran étroit, chaque ligne redevient un bloc. */
+.fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fr-echelle__cran, .fr-echelle__nsp { display: flex; align-items: center; gap: 4px; margin: 0; }
+.fr-echelle__cran label, .fr-echelle__nsp label { margin: 0; font-weight: 400; }
+.fr-echelle__nsp { margin-left: 10px; padding-left: 10px; border-left: 1px solid #ddd; }
+.fr-echelle__ancres {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 0.78rem; color: #666; margin-top: 4px;
+}
+.fr-matrice { padding: 0; border: none; }
+.fr-matrice__ligne {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  padding: 10px 0; border-top: 1px solid #eee;
+}
+.fr-matrice__ligne:first-child { border-top: none; }
+.fr-matrice__intitule { flex: 1 1 14rem; min-width: 0; }
+@media (max-width: 36rem) {
+  .fr-matrice__ligne { flex-direction: column; align-items: flex-start; }
+}

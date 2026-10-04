@@ -91,7 +91,7 @@
               "Visiteur occasionnel / touriste"
             ]
           },
-          "aide": "Plusieurs réponses possibles"
+          "description": "Plusieurs réponses possibles"
         },
         {
           "colId": "A4_Anciennete",
@@ -341,7 +341,7 @@
             ],
             "maxSelected": 5
           },
-          "aide": "Choisissez jusqu’à 5 propositions"
+          "description": "Choisissez jusqu’à 5 propositions"
         },
         {
           "colId": "D2_Autre",
@@ -1003,7 +1003,7 @@
           "type": "Text",
           "widget": "textarea",
           "required": false,
-          "aide": "Champ libre — facultatif"
+          "description": "Champ libre — facultatif"
         }
       ]
     }

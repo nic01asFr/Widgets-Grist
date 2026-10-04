@@ -117,6 +117,54 @@
           "type": "string"
         }
       }
+    },
+    "echelles": {
+      "type": "object",
+      "description": "Échelles partagées, indexées par clé : min, max, libelles des deux extrémités, nonConcerne",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "libelles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "nonConcerne": {
+            "type": "boolean",
+            "description": "Offrir « Non concerné », qui vaut réponse et s'écrit vide"
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Colonnes remplies sans question : horodatage, durée de remplissage, « non concerné »",
+      "additionalProperties": false,
+      "properties": {
+        "timestampCol": {
+          "type": "string"
+        },
+        "durationCol": {
+          "type": "string"
+        },
+        "nspCol": {
+          "type": "string",
+          "description": "ChoiceList où consigner les questions répondues « Non concerné »"
+        },
+        "emailCol": {
+          "type": "string"
+        }
+      }
     }
   },
   "definitions": {
@@ -261,6 +309,14 @@
         "polarity": {
           "type": "string",
           "description": "Méta polarité survey (peut être vide)"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Type dérivé (echelle, choix_autre, classement, intervalle, geometrie…). Absent = champ simple ; un lecteur qui l'ignore retombe sur type + widget."
+        },
+        "description": {
+          "type": "string",
+          "description": "Consigne affichée sous le libellé"
         }
       }
     },
