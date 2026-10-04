@@ -105,7 +105,7 @@
   }
   .bloc__duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; }
   .structure__marque { font-size: 0.7rem; color: var(--blue-france, #000091); flex: 0 0 auto; }
-  .structure__question.est-actif .structure__marque { color: #fff; }
+  .rail__etape.est-actif .structure__marque, .champ-bloc.est-ouvert .structure__marque { color: inherit; }
 
   /* ── L'atelier : structure | question | aperçu ─────────────────────────
      Mesuré avant : 34 357 px de haut, 45 écrans, 709 contrôles d'un coup.
@@ -138,30 +138,9 @@
   .atelier__apercu-cadre .fr-form { max-width: none; }
   .atelier__apercu-cadre .fr-form__actions { position: static; background: none; }
 
-  /* La structure : le plan du formulaire, lisible d'un coup d'œil. */
-  .structure__titre, .structure__question, .structure__ajout {
-    font: inherit; text-align: left; width: 100%; cursor: pointer;
-    border: 1px solid transparent; border-radius: 5px; background: transparent; color: inherit;
-    display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem;
-  }
-  .structure__titre { font-weight: 600; font-size: 0.88rem; }
-  .structure__titre--bout { color: var(--encre-douce, #666); }
-  .structure__question { font-size: 0.84rem; padding-left: 1.4rem; color: var(--grey-425, #3a3a3a); }
-  .structure__intitule { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .structure__nature, .structure__compte {
-    font-size: 0.7rem; color: var(--encre-douce, #666); flex: 0 0 auto; font-variant-numeric: tabular-nums;
-  }
-  .structure__chemin { color: var(--blue-france, #000091); font-size: 0.8rem; }
-  .structure__titre:hover, .structure__question:hover, .structure__ajout:hover { background: var(--grey-975, #f6f6f6); }
-  .structure__titre.est-actif, .structure__question.est-actif {
-    background: var(--blue-france, #000091); color: #fff; border-color: var(--blue-france, #000091);
-  }
-  .structure__titre.est-actif .structure__nature, .structure__question.est-actif .structure__nature,
-  .structure__titre.est-actif .structure__compte, .structure__question.est-actif .structure__chemin { color: #fff; opacity: 0.8; }
-  .structure__ajout { font-size: 0.8rem; color: var(--encre-douce, #666); padding-left: 1.4rem; }
-  .structure__ajout--etape { padding-left: 0.5rem; border-top: 1px solid var(--grey-950, #eee); margin-top: 0.3rem; }
-  .structure__etape { display: flex; flex-direction: column; gap: 1px; }
-  .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
+  /* Où partent les réponses : au pied du parcours, visible sans ouvrir de menu. */
+  .rail__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
+  .rail__pied .fr-input, .rail__pied .fr-select { font-size: 0.82rem; padding: 0.3rem 0.4rem; }
 
   /* Les options d'une question liée : celles de la colonne, montrées telles quelles. */
   .options-liees { margin-bottom: 1rem; }
@@ -280,6 +259,9 @@
     display: flex; flex-direction: column; gap: 0.7rem;
   }
   .canevas__entete { border-bottom: 1px solid var(--grey-950, #eee); padding-bottom: 0.6rem; }
+  .canevas__role { font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--encre-douce, #666); }
+  .canevas__public { padding: 0.5rem 0; }
+  .canevas__public .fr-form__header { margin-bottom: 0; }
   .canevas__titre {
     font: inherit; font-size: 1.25rem; font-weight: 600; cursor: pointer;
     background: none; border: none; color: inherit; padding: 0;
@@ -287,7 +269,6 @@
   .canevas__titre.est-actif { color: var(--blue-france, #000091); }
   .canevas__consigne { font-size: 0.92rem; color: var(--encre-douce, #666); margin: 0.2rem 0 0; }
   .canevas__matrice { font-size: 0.78rem; color: var(--blue-france, #000091); margin: 0.4rem 0 -0.2rem; }
-  .canevas__reglages { border: 1px dashed var(--grey-900, #ddd); border-radius: 8px; padding: 0.8rem; }
 
   /* Un champ : vu comme le public le verra, configurable sur place. */
   .champ-bloc {
@@ -1673,24 +1654,43 @@ async function loadTablesAndColumns() {
   S.columnsByTable = {};
   S.tables.forEach(t => { S.columnsByTable[t.tableId] = []; });
   columns.forEach(c => {
-    if (c.isFormula) return; // colonnes calculées non pertinentes comme cible de champ
+    if (!colonneOffrable(c)) return;
     const table = S.tables.find(t => t.id === c.parentId);
     if (!table) return;
-    // Les choix d'une colonne Choice vivent dans ses `widgetOptions` : sans eux,
-    // le compositeur demandait de retaper à la main une liste que Grist détient
-    // déjà, et les deux divergeaient aussitôt.
-    var choix = null;
-    try { choix = JSON.parse(c.widgetOptions || '{}').choices || null; } catch (e) { choix = null; }
-    S.columnsByTable[table.tableId].push({
-      colId: c.colId,
-      type: c.type,
-      label: c.label || c.colId,
-      choix: choix,
-      formula: c.formula || '',
-      isFormula: !!c.isFormula,
-      recalcWhen: c.recalcWhen
-    });
+    S.columnsByTable[table.tableId].push(colonneLue(c));
   });
+}
+
+/**
+ * Une colonne qu'une question peut remplir.
+ *
+ * Une colonne calculée refuse ce qu'on y écrirait, et `manualSort` est la
+ * mécanique d'ordre des lignes de Grist : les proposer, c'est inviter à lier
+ * une question à une case qui ne gardera pas la réponse. Vu en Grist réel, où
+ * la liste des colonnes s'ouvrait sur « manualSort · ManualSortPos ».
+ */
+function colonneOffrable(c) {
+  if (c.isFormula) return false;
+  if (c.colId === 'manualSort' || c.type === 'ManualSortPos') return false;
+  return true;
+}
+
+/** Une colonne Grist, lue une seule fois et de la même façon partout. */
+function colonneLue(c) {
+  // Les choix d'une colonne Choice vivent dans ses `widgetOptions` : sans eux,
+  // le compositeur demandait de retaper à la main une liste que Grist détient
+  // déjà, et les deux divergeaient aussitôt.
+  var choix = null;
+  try { choix = JSON.parse(c.widgetOptions || '{}').choices || null; } catch (e) { choix = null; }
+  return {
+    colId: c.colId,
+    type: c.type,
+    label: c.label || c.colId,
+    choix: choix,
+    formula: c.formula || '',
+    isFormula: !!c.isFormula,
+    recalcWhen: c.recalcWhen
+  };
 }
 
 async function reloadColumnsForTable(tableId) {
@@ -1699,15 +1699,8 @@ async function reloadColumnsForTable(tableId) {
   if (!table) return;
   const columns = await GristBridge.loadTable('_grist_Tables_column');
   S.columnsByTable[tableId] = columns
-    .filter(c => c.parentId === table.id && !c.isFormula)
-    .map(c => ({
-      colId: c.colId,
-      type: c.type,
-      label: c.label || c.colId,
-      formula: c.formula || '',
-      isFormula: !!c.isFormula,
-      recalcWhen: c.recalcWhen
-    }));
+    .filter(c => c.parentId === table.id && colonneOffrable(c))
+    .map(colonneLue);
 }
 
 async function refreshTablesAfterSchemaChange() {
@@ -2102,7 +2095,8 @@ function renderRailEtapes(def) {
     <button type="button" class="rail__bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
     <div class="rail__etapes">${etapes}</div>
     <button type="button" class="rail__ajout" onclick="App.addSection()">+ étape</button>
-    <button type="button" class="rail__bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>`;
+    <button type="button" class="rail__bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
+    <div class="rail__pied">${renderCibleEtMode(def)}</div>`;
 }
 
 /**
@@ -2162,7 +2156,23 @@ function renderControle(def, soucis) {
 function renderCanevas(def) {
   const sel = S.selection;
   if (sel.quoi === 'accueil' || sel.quoi === 'fin') {
-    return `<div class="canevas__page">${renderZoneQuestion(def)}</div>`;
+    // Vu en Grist réel : le canevas rendait les mêmes champs de saisie que
+    // l'inspecteur, côte à côte. Deux fois le même formulaire, et nulle part
+    // ce que le public lira. Le moteur rend la couverture et la page de fin.
+    const estAccueil = sel.quoi === 'accueil';
+    let rendu = '';
+    try {
+      rendu = estAccueil
+        ? (FormEngine.renderHeaderHtml(def) || '<p class="fr-hint-text">Ni titre, ni description, ni logo : la page s’ouvrira directement sur la première question.</p>')
+        : FormEngine.renderSuccessHtml(def);
+    } catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
+    return `
+      <div class="canevas__page">
+        <div class="canevas__entete">
+          <span class="canevas__role">${estAccueil ? 'Ce que le public lit en premier' : 'Ce que le public voit après avoir répondu'}</span>
+        </div>
+        <div class="fr-form canevas__public" aria-hidden="true">${rendu}</div>
+      </div>`;
   }
   const si = sel.si != null ? sel.si : 0;
   const section = def.sections[si];
@@ -2203,18 +2213,14 @@ function renderCanevas(def) {
       </div>`;
   }).join('');
 
-  const reglagesEtape = selectionEst('etape', si)
-    ? `<div class="canevas__reglages">${renderSectionEditor(def, section, si)}</div>` : '';
-
   return `
     <div class="canevas__page">
       <div class="canevas__entete">
         <button type="button" class="canevas__titre${selectionEst('etape', si) ? ' est-actif' : ''}"
-          onclick="App.choisir('${selectionEst('etape', si) ? 'question' : 'etape'}', ${si}${selectionEst('etape', si) ? ', 0' : ''})"
-          title="Régler l’étape">${esc(section.label || 'Étape ' + (si + 1))} ⚙</button>
+          onclick="App.choisir('etape', ${si})"
+          title="Régler cette étape">${esc(section.label || 'Étape ' + (si + 1))} ⚙</button>
         ${section.description ? `<p class="canevas__consigne">${esc(section.description)}</p>` : ''}
       </div>
-      ${reglagesEtape}
       ${blocs}
       ${renderAjoutRapide(si)}
     </div>`;
@@ -2442,39 +2448,6 @@ function selectionEst(quoi, si, fi) {
 function choisir(quoi, si, fi) {
   S.selection = { quoi: quoi, si: si, fi: fi };
   renderBuilder();
-}
-
-/** Le plan du formulaire : ses étapes, leurs questions, et ce qu'elles sont. */
-function renderStructure(def) {
-  const etapes = def.sections.map((section, si) => {
-    const questions = (section.fields || []).map((f, fi) => {
-      const actif = selectionEst('question', si, fi) ? ' est-actif' : '';
-      return `<button type="button" class="structure__question${actif}" onclick="App.choisir('question', ${si}, ${fi})">
-        <span class="structure__intitule">${esc(f.label || f.colId || 'Sans libellé')}</span>
-        ${marquesDeChamp(f)}
-        <span class="structure__nature">${esc(natureCourte(f))}</span>
-      </button>`;
-    }).join('');
-    const chemin = (section.condition || section.gate)
-      ? '<span class="structure__chemin" title="Cette étape ne s’affiche pas toujours">⤳</span>' : '';
-    return `
-      <div class="structure__etape">
-        <button type="button" class="structure__titre${selectionEst('etape', si) ? ' est-actif' : ''}" onclick="App.choisir('etape', ${si})">
-          <span class="structure__intitule">${esc(section.label || 'Étape ' + (si + 1))}</span>
-          ${chemin}<span class="structure__compte">${(section.fields || []).length}</span>
-        </button>
-        ${questions}
-        <button type="button" class="structure__ajout" onclick="App.addField(${si})">+ question</button>
-      </div>`;
-  }).join('');
-
-  return `
-    <button type="button" class="structure__titre structure__titre--bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
-    ${etapes}
-    <button type="button" class="structure__ajout structure__ajout--etape" onclick="App.addSection()">+ étape</button>
-    <button type="button" class="structure__titre structure__titre--bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
-    <div class="structure__pied">${renderCibleEtMode(def)}</div>
-  `;
 }
 
 /**
@@ -3844,11 +3817,10 @@ function ouvrirReglages() {
   if (menu) menu.open = false;
   goStep('builder');
   requestAnimationFrame(() => {
-    const avancees = document.querySelector('#builder details.fr-mt-3w, #builder details');
-    if (avancees) {
-      avancees.open = true;
-      avancees.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
+    const cible = document.getElementById('cible-table');
+    if (!cible) return;
+    cible.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    cible.focus();
   });
 }
 

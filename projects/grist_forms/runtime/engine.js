@@ -362,6 +362,41 @@
       '</div>';
   }
 
+  /**
+   * La couverture du questionnaire : logo, titre, intention.
+   *
+   * Le compositeur montrait ici ses propres champs de saisie, les mêmes que
+   * ceux de son panneau de réglages — on réglait donc deux fois la même chose
+   * sans jamais voir ce que le public lirait. Le rendu sort du moteur, comme
+   * celui des champs, pour qu'il n'en existe qu'un.
+   */
+  function renderHeaderHtml(formDef) {
+    var brand = (formDef && formDef.branding) || {};
+    var logoHtml = renderBrandImg(brand.logoUrl, brand.logoAlt, 'fr-form__brand fr-form__brand--logo');
+    if (!logoHtml && !(formDef && formDef.title) && !(formDef && formDef.description)) return '';
+    return '<header class="fr-form__header">' +
+      logoHtml +
+      (formDef.title ? '<h1 class="fr-h4">' + escapeHtml(formDef.title) + '</h1>' : '') +
+      (formDef.description ? '<p class="fr-text--sm">' + escapeHtml(formDef.description) + '</p>' : '') +
+      '</header>';
+  }
+
+  /** Ce qui s'affiche une fois la réponse envoyée. */
+  function renderSuccessHtml(formDef) {
+    var brand = (formDef && formDef.branding) || {};
+    var successImg = renderBrandImg(
+      brand.successImageUrl,
+      brand.successImageAlt,
+      'fr-form__brand fr-form__brand--success'
+    );
+    return '<div class="fr-form__success" role="status">' +
+      successImg +
+      (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
+      '<div class="fr-alert fr-alert--success"><p>' +
+      escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
+      '</p></div></div>';
+  }
+
   function placeholderAttr(field) {
     var ph = field && field.options && field.options.placeholder;
     if (ph == null || ph === '') return '';
@@ -1097,16 +1132,7 @@
         ? '<p class="fr-text--sm">Modification de la ligne #' + escapeHtml(editId) + '</p>'
         : '';
 
-      var brand = formDef.branding || {};
-      var logoHtml = renderBrandImg(brand.logoUrl, brand.logoAlt, 'fr-form__brand fr-form__brand--logo');
-      var headerHtml = '';
-      if (stepIndex === 0 && (formDef.title || formDef.description || logoHtml)) {
-        headerHtml = '<header class="fr-form__header">' +
-          logoHtml +
-          (formDef.title ? '<h1 class="fr-h4">' + escapeHtml(formDef.title) + '</h1>' : '') +
-          (formDef.description ? '<p class="fr-text--sm">' + escapeHtml(formDef.description) + '</p>' : '') +
-          '</header>';
-      }
+      var headerHtml = stepIndex === 0 ? renderHeaderHtml(formDef) : '';
 
       // Où j'en suis, et combien il reste : la première chose qu'on cherche en
       // ouvrant un questionnaire, et ce que l'enquête écrite à la main offrait
@@ -1207,18 +1233,7 @@
             return defaultSubmit(bridge, formDef, data);
           }).then(function () {
             submitting = false;
-            var brandDone = formDef.branding || {};
-            var successImg = renderBrandImg(
-              brandDone.successImageUrl,
-              brandDone.successImageAlt,
-              'fr-form__brand fr-form__brand--success'
-            );
-            rootEl.innerHTML = '<div class="fr-form__success" role="status">' +
-              successImg +
-              (formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
-              '<div class="fr-alert fr-alert--success"><p>' +
-              escapeHtml(formDef.successMessage || 'Formulaire envoyé avec succès.') +
-              '</p></div></div>';
+            rootEl.innerHTML = renderSuccessHtml(formDef);
           }, function (err) {
             submitting = false;
             submitError = (err && err.message) || 'Erreur lors de l\'envoi.';
@@ -1296,6 +1311,8 @@
     resolveParentFilterValue: resolveParentFilterValue,
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
+    renderHeaderHtml: renderHeaderHtml,
+    renderSuccessHtml: renderSuccessHtml,
     valuesFromRecord: valuesFromRecord,
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.
