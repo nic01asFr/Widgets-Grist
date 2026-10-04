@@ -1898,6 +1898,9 @@
         let overlayPointerStart = { x: 0, y: 0 };
         let searchQuery = '';  // recherche texte (commune aux 4 widgets)
         let filters = { project: [], priority: [], assignee: [] };  // GEN-02: Ajout assignee pour compatibilité inter-widgets
+        // Filtres : etat d'affichage propre a chaque lecteur (jamais ecrit dans les options Grist :
+        // cela declenchait le bouton « Enregistrer » de la section a chaque manipulation).
+        try { const _f = JSON.parse(localStorage.getItem('taskflow_calendar_filters') || 'null'); if (_f) Object.keys(filters).forEach(k => { if (Array.isArray(_f[k])) filters[k] = _f[k]; }); } catch (e) { /* stockage indisponible */ }
         let colorMode = localStorage.getItem('taskflow_calendar_colormode') || 'priority';
         let showSubtasks = localStorage.getItem('taskflow_calendar_showsubs') === '1';  // WBS-03
         // #9 niveau de travail (par widget, opt-in, defaut 'all') : 'actions' = feuilles, 'parents' = noeuds de synthese.
@@ -2225,10 +2228,7 @@
         
         // GEN-02: Broadcast des filtres vers les autres widgets
         function broadcastFilters() {
-            if (gristReady && typeof grist !== 'undefined' && grist.setOption) {
-                try { grist.setOption('filters', { project: filters.project, priority: filters.priority, assignee: filters.assignee }); }
-                catch (e) { console.log('setOption not available'); }
-            }
+            try { localStorage.setItem('taskflow_calendar_filters', JSON.stringify(filters)); } catch (e) { /* stockage indisponible */ }
         }
         function changeColorMode(mode) {
             colorMode = mode;
@@ -3893,16 +3893,6 @@
                 grist.onRecords(async () => await loadAllData());
                 grist.onRecord((rec) => {
                     if (rec?.id && rec.id !== selectedTaskId) { selectedTaskId = rec.id; render(); }
-                });
-                grist.onOptions((options, interaction) => {
-                    if (options?.filters && interaction?.source !== 'self') {
-                        const f = options.filters;
-                        filters.project = Array.isArray(f.project) ? f.project : [];
-                        filters.priority = Array.isArray(f.priority) ? f.priority : [];
-                        filters.assignee = Array.isArray(f.assignee) ? f.assignee : [];
-                        updateFilterMenus();
-                        render();
-                    }
                 });
             } catch (e) { console.error('Grist listeners error:', e); }
         }

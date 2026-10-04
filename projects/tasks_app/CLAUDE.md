@@ -70,23 +70,7 @@ saveTaskToGrist()       // UpdateRecord ou AddRecord selon isNew
 
 ### Filtres (GEN-02)
 
-Les filtres sont enregistrés dans les options du widget (`grist.setOption('filters', …)`) puis relus par `grist.onOptions()` : ils survivent à la réouverture. Le Kanban y inclut aussi le **statut**.
-
-> **À vérifier en Grist réel avant de s'y fier :** les options Grist sont propres à chaque section de page ; ce mécanisme n'est pas démontré comme un partage de filtres entre deux widgets distincts. Le code ci-dessous est l'intention d'origine, pas une garantie.
-
-```javascript
-// Émission (dans toggleFilterValue)
-function broadcastFilters() {
-    grist.widgetApi?.setOptions({ filters });
-}
-
-// Réception (dans initGrist)
-grist.onOptions((options) => {
-    if (options?.filters) { applyExternalFilters(options.filters); render(); }
-});
-```
-
-**Important Dashboard :** les filtres du dashboard sont locaux (in-memory) et ne passent PAS par `setOptions` pour éviter une boucle de re-rendu. Seule la config layout est persistée.
+Les filtres (projet, priorité, assigné, et statut dans le Kanban) sont un **état d'affichage local** : `broadcastFilters()` les écrit dans `localStorage` (`taskflow_<widget>_filters`), ils sont relus à l'ouverture. **Règle : manipuler un widget ne doit jamais appeler `grist.setOption(s)`** — Grist affiche alors le bouton « Enregistrer » de la section (constaté en réel). Seule exception : la configuration explicite de la disposition du Dashboard en mode édition. Aucun partage de filtres entre widgets n'est assuré.
 
 ### Sélection inter-widgets (GEN-01)
 
@@ -432,7 +416,7 @@ Utilisée par les pickers Project/Team. Tasks.couleur utilise un `<input type="c
 
 **Trade-off assumé** : chaque utilisateur/navigateur garde son propre tri et mode couleur. Pas de partage inter-utilisateurs ni inter-widgets via Grist. Si l'utilisateur ouvre le Gantt en mode "Projet" et le Kanban en mode "Priorité", c'est un cas légitime.
 
-**Les filtres** (`filters.project`, `filters.priority`, `filters.assignee`) continuent d'utiliser `grist.setOption` (partagés inter-widgets) — c'est le comportement attendu pour un filtre collaboratif.
+**Les filtres** sont eux aussi locaux (`localStorage`) : aucun `grist.setOption` n'est appelé par une manipulation du widget (voir « Filtres (GEN-02) »).
 
 ### Application par widget
 
@@ -450,7 +434,7 @@ function getTaskColor(t) { /* hiérarchie ci-dessus */ }
 function getTaskBarGradient(t) { return 'linear-gradient(135deg, ' + c + ', color-mix(in srgb, ' + c + ' 70%, white))'; }
 async function setProjectColor(projectId, color) { /* UpdateRecord Projects.couleur */ }
 async function setMemberColor(memberId, color) { /* UpdateRecord Team.couleur */ }
-function changeColorMode(mode) { /* localStorage + grist.setOption */ }
+function changeColorMode(mode) { /* localStorage */ }
 ```
 
 ### Légende (Gantt uniquement)

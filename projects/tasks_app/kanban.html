@@ -1762,6 +1762,9 @@
         // #9 niveau de travail (par widget, opt-in, defaut 'all') : 'actions' = feuilles, 'parents' = noeuds de synthese.
         let workLevel = localStorage.getItem('taskflow_kanban_worklevel') || 'all';
         let filters = { project: [], priority: [], assignee: [], status: [] };  // KAN-01: Ajout filtre statut
+        // Filtres : etat d'affichage propre a chaque lecteur (jamais ecrit dans les options Grist :
+        // cela declenchait le bouton « Enregistrer » de la section a chaque manipulation).
+        try { const _f = JSON.parse(localStorage.getItem('taskflow_kanban_filters') || 'null'); if (_f) Object.keys(filters).forEach(k => { if (Array.isArray(_f[k])) filters[k] = _f[k]; }); } catch (e) { /* stockage indisponible */ }
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, columnTasks: [], columnKey: null, editData: null };
         let sortableInstances = [];
         let saveTimeout = null;
@@ -2812,17 +2815,6 @@
             try {
                 grist.onRecords(async () => await loadAllData());
                 grist.onRecord((rec) => { if (rec?.id && rec.id !== selectedTaskId) { selectedTaskId = rec.id; render(); } });
-                grist.onOptions((options, interaction) => {
-                    if (options?.filters && interaction?.source !== 'self') {
-                        const f = options.filters;
-                        filters.project = Array.isArray(f.project) ? f.project : [];
-                        filters.priority = Array.isArray(f.priority) ? f.priority : [];
-                        filters.assignee = Array.isArray(f.assignee) ? f.assignee : [];
-                        filters.status = Array.isArray(f.status) ? f.status : [];
-                        updateFilterMenus();
-                        render();
-                    }
-                });
                 { const s = document.getElementById('colorSelect'); if (s) s.value = colorMode; }
                 { const s = document.getElementById('levelSelect'); if (s) s.value = workLevel; }
             } catch (e) { console.error('Grist listeners error:', e); }
@@ -2830,10 +2822,7 @@
         
         // GEN-02: Broadcast des filtres vers les autres widgets
         function broadcastFilters() {
-            if (gristReady && typeof grist !== 'undefined' && grist.setOption) {
-                try { grist.setOption('filters', { project: filters.project, priority: filters.priority, assignee: filters.assignee, status: filters.status }); } 
-                catch (e) { console.log('setOption not available'); }
-            }
+            try { localStorage.setItem('taskflow_kanban_filters', JSON.stringify(filters)); } catch (e) { /* stockage indisponible */ }
         }
 
         function useDemoMode() {

@@ -1868,6 +1868,9 @@
         let sortableInstance = null;
         let searchQuery = '';  // recherche texte (commune aux 4 widgets)
         let filters = { project: [], assignee: [], priority: [] };  // GEN-02: Arrays pour compatibilité inter-widgets
+        // Filtres : etat d'affichage propre a chaque lecteur (jamais ecrit dans les options Grist :
+        // cela declenchait le bouton « Enregistrer » de la section a chaque manipulation).
+        try { const _f = JSON.parse(localStorage.getItem('taskflow_gantt_filters') || 'null'); if (_f) Object.keys(filters).forEach(k => { if (Array.isArray(_f[k])) filters[k] = _f[k]; }); } catch (e) { /* stockage indisponible */ }
         let dragState = { active: false, type: null, taskId: null, startX: 0, originalLeft: 0, originalWidth: 0, originalStart: null, originalEnd: null };
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, taskList: [], editData: null };
         let overlayPointerStart = { x: 0, y: 0 };
@@ -2374,10 +2377,7 @@
         }
         function clearFilter(key) { filters[key] = []; updateFilterUI(); broadcastFilters(); render(); }
         function broadcastFilters() {
-            if (gristReady && typeof grist !== 'undefined' && grist.setOption) {
-                try { grist.setOption('filters', { project: filters.project, priority: filters.priority, assignee: filters.assignee }); } 
-                catch (e) { console.log('setOption not available'); }
-            }
+            try { localStorage.setItem('taskflow_gantt_filters', JSON.stringify(filters)); } catch (e) { /* stockage indisponible */ }
         }
         function updateFilterMenus() {
             const grp = (label, html, first) => '<div class="fm-group-label'+(first?' first':'')+'">'+label+'</div>'+html;
@@ -3928,16 +3928,6 @@
                             expandedTasks.add(cur.parentTask);
                             cur = tasks.find(t => t.id === cur.parentTask);
                         }
-                        render();
-                    }
-                });
-                grist.onOptions((options, interaction) => {
-                    if (options?.filters && interaction?.source !== 'self') {
-                        const f = options.filters;
-                        filters.project = Array.isArray(f.project) ? f.project : [];
-                        filters.priority = Array.isArray(f.priority) ? f.priority : [];
-                        filters.assignee = Array.isArray(f.assignee) ? f.assignee : [];
-                        updateFilterMenus();
                         render();
                     }
                 });
