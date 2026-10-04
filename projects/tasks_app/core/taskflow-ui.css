@@ -286,3 +286,16 @@ textarea { line-height: 1.45; }
 .tf-modal .btn.danger:hover { filter: brightness(0.92); }
 .delete-confirm-actions.delete-confirm-col { flex-direction: column; }
 .delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }
+
+/* 15. Etat vide du document (tables absentes) : une phrase claire, centree, sans donnees fictives. */
+.tf-notice { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 240px; padding: var(--sp-4); text-align: center; color: var(--text-muted); }
+.tf-notice-title { font-size: var(--fs-lg); font-weight: 650; color: var(--text); }
+.tf-notice-sub { max-width: 380px; font-size: var(--fs-md); line-height: 1.5; }
+
+/* 16. Champ de recherche : memes regles dans les quatre widgets (icone a gauche, rayon et hauteur de la barre). */
+.search-box { position: relative; display: flex; align-items: center; }
+.search-box input { padding: 6px 10px 6px 28px; border: 1px solid var(--border); border-radius: var(--ctl-r); font-family: inherit; color: var(--text); width: 140px; background: var(--card-bg); }
+.search-box input:focus { outline: none; border-color: var(--primary); }
+.search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
+:root[data-theme="dark"] .search-box::before { filter: invert(0.75); }

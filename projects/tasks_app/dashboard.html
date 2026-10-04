@@ -591,6 +591,19 @@
     .tf-modal .btn.danger:hover { filter: brightness(0.92); }
     .delete-confirm-actions.delete-confirm-col { flex-direction: column; }
     .delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }
+
+    /* 15. Etat vide du document (tables absentes) : une phrase claire, centree, sans donnees fictives. */
+    .tf-notice { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 240px; padding: var(--sp-4); text-align: center; color: var(--text-muted); }
+    .tf-notice-title { font-size: var(--fs-lg); font-weight: 650; color: var(--text); }
+    .tf-notice-sub { max-width: 380px; font-size: var(--fs-md); line-height: 1.5; }
+
+    /* 16. Champ de recherche : memes regles dans les quatre widgets (icone a gauche, rayon et hauteur de la barre). */
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box input { padding: 6px 10px 6px 28px; border: 1px solid var(--border); border-radius: var(--ctl-r); font-family: inherit; color: var(--text); width: 140px; background: var(--card-bg); }
+    .search-box input:focus { outline: none; border-color: var(--primary); }
+    .search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
+    :root[data-theme="dark"] .search-box::before { filter: invert(0.75); }
     /* </taskflow-ui> */
     </style>
 </head>
@@ -995,6 +1008,15 @@ const TF = (function () {
     // Aide discrete : petite icone « i » dont le texte s'affiche au survol (ou au focus clavier).
     function uiInfo(text) {
         return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
+    }
+    // Les donnees d'exemple ne s'affichent d'elles-memes que sur une page ouverte directement (essai, apercu),
+    // ou sur demande (?demo). Dans un document Grist (iframe), une table vide reste vide : montrer des
+    // taches fictives laissait croire qu'elles existaient et faisait ecrire sur des lignes inexistantes.
+    function shouldAutoDemo() {
+        try {
+            if (/[?&]demo(=|&|$)/.test(location.search)) return true;
+            return window.self === window.top;
+        } catch (e) { return false; }
     }
     // Boite de dialogue interne (remplace confirm() natif, bloque dans les iframes de Grist et hors charte).
     // o = { title, message, confirmLabel, cancelLabel, danger, actions: [{ label, value, danger }] }
@@ -1450,6 +1472,7 @@ const TF = (function () {
         isDead: isDead,
         isLive: isLive,
         statusOf: statusOf,
+        shouldAutoDemo: shouldAutoDemo,
         confirm: uiConfirm,
         deletePlan: deletePlan,
         deleteConfirmHtml: deleteConfirmHtml,
@@ -1515,6 +1538,7 @@ let gristReady = false;
 let isEditMode = false;
 let selectedCompId = null;
 let dashConfig = { layout: DEFAULT_LAYOUT.map(c => ({...c, config:{...c.config}})) };
+let tasksMissing = false;   // la table Tasks n'existe pas dans ce document
 let taskCols = new Set();   // colonnes reelles de Tasks (dateCloture n'existe que si le Plan a ete ouvert)
 let searchQuery = '';  // recherche texte (commune aux 4 widgets)
 let filters = { periode: 'all', projets: [], assignes: [], statuts: [] };
@@ -1856,6 +1880,11 @@ function renderGrid() {
     const grid = document.getElementById('dashboardGrid');
     grid.innerHTML = '';
     grid.className = 'dashboard-grid' + (isEditMode ? ' edit-mode' : '');
+    if (tasksMissing) {
+        grid.innerHTML = '<div class="tf-notice"><div class="tf-notice-title">Aucune table de tâches dans ce document</div>' +
+            '<div class="tf-notice-sub">Ouvrez d\'abord le Kanban ou le Gantt sur ce document : ils créent les tables TaskFlow. Le Dashboard s\'alimentera ensuite tout seul.</div></div>';
+        return;
+    }
     dashConfig.layout.forEach(comp => grid.appendChild(createComp(comp)));
 }
 
@@ -2273,11 +2302,10 @@ const convert = data => {
 async function loadAllData() {
     if (!gristReady) return;
     try {
-        const [td,pd,md]=await Promise.all([
-            grist.docApi.fetchTable('Tasks'),
-            grist.docApi.fetchTable('Projects'),
-            grist.docApi.fetchTable('Team'),
-        ]);
+        // Une table absente ne doit pas bloquer les autres ni laisser le squelette : on la signale.
+        const grab = async (name) => { try { return await grist.docApi.fetchTable(name); } catch (e) { return null; } };
+        const [td,pd,md]=await Promise.all([grab('Tasks'), grab('Projects'), grab('Team')]);
+        tasksMissing = !td;
         taskCols = new Set(Object.keys(td || {}));
         tasks=convert(td); projects=convert(pd); team=convert(md);
         rebuildChildrenCache();
@@ -2335,6 +2363,7 @@ async function init() {
 }
 
 function useDemoMode() {
+    gristReady = false;   // les donnees d'exemple ne s'ecrivent jamais dans Grist
     document.body.insertAdjacentHTML('beforeend','<div class="demo-badge">Démo</div>');
     team = [
         { id:1, nom:'Alice Martin',   actif:true, couleur:'#4f46e5' },
@@ -2367,7 +2396,7 @@ function useDemoMode() {
 
 renderDashSkeleton();  // 06 · squelette pendant le chargement
 // Repli auto vers données d'exemple si Grist ne renvoie rien sous 2.8s (aperçu / hors-ligne)
-setTimeout(function(){ try { if ((typeof tasks==='undefined' || !tasks || !tasks.length) && typeof useDemoMode==='function') useDemoMode(); } catch(e){ console.log(e); } }, 2800);
+setTimeout(function(){ try { if ((typeof tasks==='undefined' || !tasks || !tasks.length) && TF.shouldAutoDemo() && typeof useDemoMode==='function') useDemoMode(); } catch(e){ console.log(e); } }, 2800);
 // WBS-04: sync bouton "Feuilles uniquement" au chargement
 { const b = document.getElementById('btnLeavesOnly'); if (b) b.classList.toggle('active', leavesOnly); }
 try { if (new URLSearchParams(location.search).has('nav')) document.body.classList.add('suite-nav'); } catch (e) {}

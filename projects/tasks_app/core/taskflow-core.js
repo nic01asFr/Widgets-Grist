@@ -311,6 +311,15 @@ const TF = (function () {
     function uiInfo(text) {
         return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
     }
+    // Les donnees d'exemple ne s'affichent d'elles-memes que sur une page ouverte directement (essai, apercu),
+    // ou sur demande (?demo). Dans un document Grist (iframe), une table vide reste vide : montrer des
+    // taches fictives laissait croire qu'elles existaient et faisait ecrire sur des lignes inexistantes.
+    function shouldAutoDemo() {
+        try {
+            if (/[?&]demo(=|&|$)/.test(location.search)) return true;
+            return window.self === window.top;
+        } catch (e) { return false; }
+    }
     // Boite de dialogue interne (remplace confirm() natif, bloque dans les iframes de Grist et hors charte).
     // o = { title, message, confirmLabel, cancelLabel, danger, actions: [{ label, value, danger }] }
     // Resout avec la valeur de l'action choisie (true par defaut), ou false si annule (bouton, Echap, clic dehors).
@@ -765,6 +774,7 @@ const TF = (function () {
         isDead: isDead,
         isLive: isLive,
         statusOf: statusOf,
+        shouldAutoDemo: shouldAutoDemo,
         confirm: uiConfirm,
         deletePlan: deletePlan,
         deleteConfirmHtml: deleteConfirmHtml,
