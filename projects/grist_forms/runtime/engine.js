@@ -316,8 +316,15 @@
 
   function fieldId(field) { return 'field-' + field.colId; }
 
+  /**
+   * « Obligatoire » se lit dans la ligne du libellé.
+   *
+   * C'était une aide (`fr-hint-text`), donc un bloc sous la question : chaque
+   * champ requis prenait une ligne pour un seul mot, et la page s'allongeait
+   * d'autant.
+   */
   function requiredHint(field) {
-    return field.required ? ' <span class="fr-hint-text">(obligatoire)</span>' : '';
+    return field.required ? ' <span class="fr-obligatoire">obligatoire</span>' : '';
   }
 
   /**

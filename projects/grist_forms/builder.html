@@ -163,6 +163,72 @@
   .structure__etape { display: flex; flex-direction: column; gap: 1px; }
   .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
 
+  /* ── Rail · canevas · inspecteur ────────────────────────────────────────
+     Trois colonnes stables : le parcours, le formulaire tel qu'il sera vu, et
+     ce qu'on règle. Ouvrir un réglage ne déplace plus ce qu'on regarde. */
+  .atelier3 {
+    display: grid; grid-template-columns: 13.5rem minmax(0, 1fr) 27rem;
+    gap: 1px; background: var(--grey-925, #e5e5e5);
+    border: 1px solid var(--grey-925, #e5e5e5); border-radius: 8px; overflow: hidden;
+    height: calc(100vh - 7.5rem);
+  }
+  .atelier3 > * { background: var(--fond-carte, #fff); min-width: 0; overflow: auto; }
+
+  .rail { padding: 0.5rem; display: flex; flex-direction: column; gap: 1px; }
+  .rail__etapes { display: flex; flex-direction: column; gap: 1px; }
+  .rail__etape, .rail__bout, .rail__ajout {
+    font: inherit; text-align: left; width: 100%; cursor: pointer; color: inherit;
+    display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.5rem;
+    border: 1px solid transparent; border-radius: 6px; background: transparent; font-size: 0.86rem;
+  }
+  .rail__bout { font-weight: 600; color: var(--encre-douce, #666); }
+  .rail__ajout { color: var(--encre-douce, #666); font-size: 0.8rem; }
+  .rail__etape:hover, .rail__bout:hover, .rail__ajout:hover { background: var(--grey-975, #f6f6f6); }
+  .rail__etape.est-actif, .rail__bout.est-actif {
+    background: var(--blue-france, #000091); color: #fff; border-color: var(--blue-france, #000091);
+  }
+  .rail__rang {
+    font-size: 0.74rem; font-variant-numeric: tabular-nums; flex: 0 0 auto;
+    background: var(--grey-950, #eee); border-radius: 999px; padding: 0 0.35rem; color: var(--grey-425, #3a3a3a);
+  }
+  .rail__etape.est-actif .rail__rang { background: rgba(255,255,255,0.25); color: #fff; }
+  .rail__nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rail__compte, .rail__chemin { font-size: 0.72rem; opacity: 0.7; flex: 0 0 auto; }
+
+  .inspecteur { display: flex; flex-direction: column; }
+  .inspecteur__onglets { display: flex; gap: 2px; padding: 0.4rem 0.5rem 0; border-bottom: 1px solid var(--grey-950, #eee); }
+  .inspecteur__onglet {
+    font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0.3rem 0.7rem;
+    border: 1px solid transparent; border-bottom: none; border-radius: 5px 5px 0 0;
+    background: transparent; color: var(--encre-douce, #666);
+  }
+  .inspecteur__onglet.est-actif { background: var(--grey-975, #f6f6f6); color: var(--blue-france, #000091); font-weight: 600; }
+  .inspecteur__corps { flex: 1 1 auto; overflow: auto; padding: 0.8rem 0.9rem; }
+
+  .controle { display: flex; flex-direction: column; gap: 2px; }
+  .controle--ok { color: var(--success, #18753c); }
+  .controle__tete { font-size: 0.86rem; font-weight: 600; color: var(--warning, #b34000); margin: 0 0 0.4rem; }
+  .controle__ligne {
+    font: inherit; text-align: left; cursor: pointer; border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: inherit; padding: 0.4rem 0.5rem; display: flex; flex-direction: column; gap: 2px;
+  }
+  .controle__ligne:hover { background: var(--grey-975, #f6f6f6); border-color: var(--grey-925, #e5e5e5); }
+  .controle__ou { font-size: 0.74rem; color: var(--encre-douce, #666); }
+  .controle__quoi { font-size: 0.84rem; }
+
+  /* Le canevas occupe sa colonne : la page garde sa largeur de lecture, centrée. */
+  .canevas { padding: 1rem; }
+  .canevas__page { max-width: 42rem; }
+
+  @media (max-width: 78rem) {
+    .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); }
+    .inspecteur { grid-column: 1 / -1; max-height: 26rem; }
+  }
+  @media (max-width: 48rem) {
+    .atelier3 { grid-template-columns: 1fr; height: auto; }
+    .rail { max-height: 11rem; }
+  }
+
   /* ── Les étapes en barre, le canevas en dessous ─────────────────────────
      Une étape est ce que le public verra sur un écran : la barre dit le
      parcours, le canevas montre l'écran choisi. */
@@ -1903,16 +1969,15 @@ function renderBuilder() {
   const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
 
   el.innerHTML = `
-    ${renderBarreEtapes(def)}
-    <div class="canevas" id="canevas">
-      ${renderCanevas(def)}
+    <div class="atelier3">
+      <nav class="rail" aria-label="Étapes du formulaire">${renderRailEtapes(def)}</nav>
+      <div class="canevas" id="canevas">${renderCanevas(def)}</div>
+      <aside class="inspecteur" aria-label="Réglages">${renderInspecteur(def)}</aside>
     </div>
     ${colsDatalist}
-    ${renderVerification(def)}
     <div class="barre-enregistrement">
       <span class="barre-enregistrement__etat">${S.dirty ? 'Modifications non enregistrées' : (S.enregistreA ? 'Enregistré à ' + S.enregistreA : esc(def.title || 'Sans titre'))}</span>
       <span class="barre-enregistrement__compte">${def.sections.length} étape(s) · ${def.sections.reduce((n, s2) => n + (s2.fields || []).length, 0)} question(s)</span>
-      <button type="button" class="fr-btn fr-btn--secondary" onclick="App.basculerVerification()">Vérifier${(() => { const n = verifierFormulaire(def).length; return n ? ' (' + n + ')' : ''; })()}</button>
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
@@ -1999,31 +2064,74 @@ function renderApercuCarte(f, def) {
 }
 
 /**
- * Les étapes en barre : le parcours entier sur une ligne.
+ * Le rail des étapes : le parcours, de haut en bas.
  *
- * Une étape est ce que le public verra sur un écran ; la barre dit donc le
- * parcours, et le canevas en-dessous montre l'écran choisi. L'ancien panneau de
- * structure listait les soixante et une questions verticalement — c'est le
- * canevas qui les montre désormais, telles qu'elles seront vues.
+ * Une barre horizontale tenait quatre étapes et faisait défiler les dix autres.
+ * Verticalement, les quatorze sont là, avec leur nom entier, leur nombre de
+ * questions et la marque de celles qui ne s'affichent pas toujours. La largeur
+ * ainsi rendue va au formulaire et à ses réglages.
  */
-function renderBarreEtapes(def) {
+function renderRailEtapes(def) {
   const etapes = def.sections.map((section, si) => {
     const actif = (S.selection.si === si && S.selection.quoi !== 'accueil' && S.selection.quoi !== 'fin') ? ' est-actif' : '';
     const chemin = (section.condition || section.gate)
-      ? '<span class="pastille__chemin" title="Cette étape ne s’affiche pas toujours">⤳</span>' : '';
-    return `<button type="button" class="pastille${actif}" onclick="App.choisir('etape', ${si})" title="${esc(section.label || '')}">
-      <span class="pastille__rang">${si + 1}</span>
-      <span class="pastille__nom">${esc(section.label || 'Sans titre')}</span>
-      ${chemin}<span class="pastille__compte">${(section.fields || []).length}</span>
+      ? '<span class="rail__chemin" title="Cette étape ne s’affiche pas toujours">⤳</span>' : '';
+    return `<button type="button" class="rail__etape${actif}" onclick="App.choisir('etape', ${si})">
+      <span class="rail__rang">${si + 1}</span>
+      <span class="rail__nom">${esc(section.label || 'Sans titre')}</span>
+      ${chemin}<span class="rail__compte">${(section.fields || []).length}</span>
     </button>`;
   }).join('');
   return `
-    <nav class="barre-etapes" aria-label="Étapes du formulaire">
-      <button type="button" class="pastille pastille--bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
-      <div class="barre-etapes__defile">${etapes}</div>
-      <button type="button" class="pastille pastille--ajout" onclick="App.addSection()" title="Ajouter une étape">+</button>
-      <button type="button" class="pastille pastille--bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
-    </nav>`;
+    <button type="button" class="rail__bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
+    <div class="rail__etapes">${etapes}</div>
+    <button type="button" class="rail__ajout" onclick="App.addSection()">+ étape</button>
+    <button type="button" class="rail__bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>`;
+}
+
+/**
+ * L'inspecteur : ce qu'on règle, toujours au même endroit.
+ *
+ * Les réglages s'ouvraient sous le champ et poussaient la page : à chaque
+ * ouverture, ce qu'on regardait se déplaçait. Ils tiennent maintenant une
+ * colonne à eux ; le canevas ne bouge plus, et le champ choisi s'y signale.
+ */
+function renderInspecteur(def) {
+  const onglet = S.inspecteur === 'controle' ? 'controle' : 'reglages';
+  const soucis = verifierFormulaire(def);
+  return `
+    <div class="inspecteur__onglets" role="tablist">
+      <button type="button" role="tab" class="inspecteur__onglet${onglet === 'reglages' ? ' est-actif' : ''}"
+        aria-selected="${onglet === 'reglages'}" onclick="App.inspecteur('reglages')">Réglages</button>
+      <button type="button" role="tab" class="inspecteur__onglet${onglet === 'controle' ? ' est-actif' : ''}"
+        aria-selected="${onglet === 'controle'}" onclick="App.inspecteur('controle')">Contrôle${soucis.length ? ' (' + soucis.length + ')' : ''}</button>
+    </div>
+    <div class="inspecteur__corps">
+      ${onglet === 'reglages' ? renderZoneQuestion(def) : renderControle(def, soucis)}
+    </div>`;
+}
+
+function inspecteur(onglet) {
+  S.inspecteur = onglet;
+  renderBuilder();
+}
+
+/** Ce qui empêcherait le formulaire de marcher, et où aller le corriger. */
+function renderControle(def, soucis) {
+  if (!soucis.length) {
+    return `<div class="controle controle--ok">
+      <p>Rien à signaler.</p>
+      <p class="fr-hint-text">Chaque question a un libellé, une colonne à elle, et ses conditions ne regardent que des réponses déjà posées.</p>
+    </div>`;
+  }
+  return `<div class="controle">
+    <p class="controle__tete">${soucis.length} point(s) à regarder</p>
+    ${soucis.map(x => `
+      <button type="button" class="controle__ligne" onclick="App.choisir('question', ${x.si}, ${x.fi})">
+        <span class="controle__ou">Étape ${x.si + 1} · ${esc(x.question)}</span>
+        <span class="controle__quoi">${esc(x.quoi)}</span>
+      </button>`).join('')}
+  </div>`;
 }
 
 /**
@@ -2072,11 +2180,10 @@ function renderCanevas(def) {
             <option value="">→ étape…</option>
             ${def.sections.map((sec, k) => k === si ? '' : `<option value="${k}">${k + 1}. ${esc(sec.label || '')}</option>`).join('')}
           </select>
-          <button type="button" class="champ-bloc__action" title="${ouvert ? 'Fermer' : 'Configurer cette question'}"
-            onclick="App.choisir('${ouvert ? 'etape' : 'question'}', ${si}${ouvert ? '' : ', ' + fi})">${ouvert ? '✕' : '⚙'}</button>
+          <button type="button" class="champ-bloc__action" title="Régler cette question"
+            onclick="App.choisir('question', ${si}, ${fi})">⚙</button>
         </div>
         <div class="champ-bloc__rendu" aria-hidden="true">${rendu}</div>
-        ${ouvert ? `<div class="champ-bloc__reglages">${renderFieldEditor(def, si, f, fi)}</div>` : ''}
       </div>`;
   }).join('');
 
@@ -3953,7 +4060,7 @@ window.App = {
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
   saveForm, refreshPreview: mountPreview, choisir, panneauDroit,
-  typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */

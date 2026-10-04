@@ -348,3 +348,50 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-label .fr-hint-text, .fr-fieldset__legend .fr-hint-text {
   display: block; font-weight: 400; margin-top: 0.15rem;
 }
+
+/* ── Les champs tels qu'on les remplit ────────────────────────────────────
+   Une option n'est pas un bouton radio posé à côté d'un mot : c'est une ligne
+   entière qu'on touche. Au doigt, viser un disque de 20 px est un échec ;
+   viser une rangée de 44 px ne l'est pas. */
+.fr-form .fr-fieldset__content,
+.champ-bloc__rendu .fr-fieldset__content { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.fr-form .fr-radio-group, .fr-form .fr-checkbox-group,
+.champ-bloc__rendu .fr-radio-group, .champ-bloc__rendu .fr-checkbox-group {
+  border: 1px solid var(--bord); border-radius: 8px; padding: 0 0.8rem;
+  background: var(--fond-carte); cursor: pointer; transition: border-color .12s ease;
+}
+.fr-form .fr-radio-group:hover, .fr-form .fr-checkbox-group:hover { border-color: var(--blue-france); }
+.fr-form .fr-radio-group label, .fr-form .fr-checkbox-group label,
+.champ-bloc__rendu .fr-radio-group label, .champ-bloc__rendu .fr-checkbox-group label {
+  flex: 1 1 auto; padding: 0.65rem 0; cursor: pointer; font-weight: 400;
+}
+.fr-form .fr-radio-group:has(input:checked),
+.fr-form .fr-checkbox-group:has(input:checked),
+.champ-bloc__rendu .fr-radio-group:has(input:checked),
+.champ-bloc__rendu .fr-checkbox-group:has(input:checked) {
+  border-color: var(--blue-france); background: color-mix(in srgb, var(--blue-france) 6%, var(--fond-carte));
+}
+.fr-form .fr-radio-group:focus-within, .fr-form .fr-checkbox-group:focus-within {
+  outline: 2px solid var(--blue-france); outline-offset: 1px;
+}
+
+/* Les crans d'une échelle restent en ligne : ce sont des degrés, pas des options. */
+.fr-form .fr-echelle__crans .fr-radio-group,
+.champ-bloc__rendu .fr-echelle__crans .fr-radio-group { border: none; padding: 0; background: none; }
+
+/* « obligatoire » : une marque discrète dans la ligne du libellé. */
+.fr-obligatoire {
+  font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--error, #ce0500); margin-left: 0.4rem; white-space: nowrap;
+}
+
+/* Les champs libres : même hauteur, même repère au focus. */
+.fr-form .fr-input:focus-visible, .fr-form .fr-select:focus-visible {
+  outline: 2px solid var(--blue-france); outline-offset: 1px;
+}
+.fr-form textarea.fr-input { min-height: 5.5rem; }
+.fr-form .fr-input-group, .fr-form .fr-select-group, .fr-form .fr-fieldset,
+.champ-bloc__rendu .fr-input-group, .champ-bloc__rendu .fr-select-group, .champ-bloc__rendu .fr-fieldset {
+  margin-bottom: 1.1rem;
+}
