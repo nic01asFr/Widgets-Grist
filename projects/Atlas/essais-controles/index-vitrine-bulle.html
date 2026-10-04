@@ -786,6 +786,9 @@
         }
         .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); font-style: italic; }
         .legend-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+        /* Barre de défilement fine standard dans les cadres arrondis qui rognent (légende, bulle d'objet) : la barre native y laissait sa piste se dessiner
+           hors du cadre — bande beige au-dessus de la légende. */
+        .legend, .legend *, .atlas-bulle, .atlas-bulle * { scrollbar-width: thin; scrollbar-color: rgba(120, 110, 95, 0.45) transparent; }
         /* La légende s'étend en hauteur tant que la carte a la place : la fenêtre moins ce qui occupe le haut (en-tête, rangée de pastilles,
            barre de sélection) et le bas (tête de la légende, marge). 220 px au moins ; pendant le récit et sur mobile, les ancrages propres restent. */
         body:not(.mobile-layout):not(.story-presenting) .legend-body {
@@ -1465,8 +1468,8 @@
             background: rgba(196, 69, 54, 0.14);
             outline: 1px solid rgba(196, 69, 54, 0.35);
         }
-        /* L'indication n'est vraie que s'il y a des lignes sur lesquelles cliquer : jamais en Préparer. */
-        body.view-mode .legend:has(.legend-clickable) .legend-head .t::after {
+        /* L'indication dit que les lignes de la légende ciblent : vraie dans toutes les postures, tant qu'il y a des lignes. */
+        .legend:has(.legend-clickable) .legend-head .t::after {
             content: " · clic pour cibler";
             font-family: var(--sans, inherit); font-style: normal; font-weight: 500;
             font-size: 10px; color: var(--muted); letter-spacing: 0;
@@ -2086,6 +2089,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004y"></script>
+    <script type="module" src="./app_v7.js?v=20261005a"></script>
 </body>
 </html>

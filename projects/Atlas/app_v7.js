@@ -8416,7 +8416,8 @@ function buildLayerLegendHtml(layer) {
     etiqueterCategoriesRef(layer);
     const total = formatLayerCount(layer);
     const lid = escLegend(layer.id);
-    const clickable = CONFIG.viewMode ? ' legend-clickable' : '';
+    // Cliquable dans toutes les postures : cibler ne change que la caméra et la surbrillance de la légende, rien dans les données.
+    const clickable = ' legend-clickable';
 
     if (sym.mode === 'categorized' && sym.field) {
         syncColorCategoriesFromFeatures(layer);
@@ -8516,9 +8517,8 @@ function featuresMatchingCategory(layer, field, value) {
     });
 }
 
-/** Clic légende (lecture) : zoom couche ou catégorie. */
+/** Clic légende : zoom sur la couche ou la catégorie, en Préparer comme en Exploiter et en Lecture. */
 function onLegendClick(e) {
-    if (!CONFIG.viewMode) return;
     const row = e.target.closest('[data-legend]');
     if (!row) return;
     const layerId = row.dataset.layerId;
@@ -12859,8 +12859,7 @@ function applyViewModeChrome() {
     fermerListe({ rendre: false });
     if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
-    // Les lignes de la légende ne sont cliquables (cibler) qu'en Exploiter et en Lecture : elle se redessine avec la posture, sinon elles gardaient
-    // celle d'avant — pointeur et survol d'un geste qui, en Préparer, ne fait rien.
+    // La légende se redessine avec la posture : son contenu en dépend (couches visibles, contexte).
     updateLegend();
     appliquerBarre();
     updateUserBadge();
