@@ -78,6 +78,80 @@
     .app-bar { flex-wrap: wrap; }
     .app-bar__etat { order: -1; }
   }
+  /* ── L'atelier : structure | question | aperçu ─────────────────────────
+     Mesuré avant : 34 357 px de haut, 45 écrans, 709 contrôles d'un coup.
+     Les trois zones défilent chacune pour elle-même ; sur écran étroit, elles
+     s'empilent et la structure passe devant. */
+  .atelier {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr) 20rem;
+    gap: 1px;
+    background: var(--grey-925, #e5e5e5);
+    border: 1px solid var(--grey-925, #e5e5e5);
+    border-radius: 8px;
+    overflow: hidden;
+    /* Hauteur fixe : ce sont les zones qui défilent, pas la page. Sans quoi
+       la colonne centrale rallonge l'écran et on perd le bénéfice. */
+    height: calc(100vh - 8.5rem);
+  }
+  .atelier > * { background: var(--fond-carte, #fff); min-width: 0; overflow: auto; }
+  .atelier__structure { padding: 0.6rem; display: flex; flex-direction: column; gap: 1px; }
+  .atelier__question { padding: 1rem 1.1rem; }
+  .atelier__titre { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+                    color: var(--encre-douce, #666); margin: 0 0 0.75rem; font-weight: 600; }
+  .atelier__apercu { display: flex; flex-direction: column; }
+  .atelier__apercu-tete {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--grey-950, #eee);
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--encre-douce, #666);
+  }
+  .atelier__apercu-cadre { padding: 0.8rem; font-size: 0.92rem; }
+  .atelier__apercu-cadre .fr-form { max-width: none; }
+  .atelier__apercu-cadre .fr-form__actions { position: static; background: none; }
+
+  /* La structure : le plan du formulaire, lisible d'un coup d'œil. */
+  .structure__titre, .structure__question, .structure__ajout {
+    font: inherit; text-align: left; width: 100%; cursor: pointer;
+    border: 1px solid transparent; border-radius: 5px; background: transparent; color: inherit;
+    display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem;
+  }
+  .structure__titre { font-weight: 600; font-size: 0.88rem; }
+  .structure__titre--bout { color: var(--encre-douce, #666); }
+  .structure__question { font-size: 0.84rem; padding-left: 1.4rem; color: var(--grey-425, #3a3a3a); }
+  .structure__intitule { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .structure__nature, .structure__compte {
+    font-size: 0.7rem; color: var(--encre-douce, #666); flex: 0 0 auto; font-variant-numeric: tabular-nums;
+  }
+  .structure__chemin { color: var(--blue-france, #000091); font-size: 0.8rem; }
+  .structure__titre:hover, .structure__question:hover, .structure__ajout:hover { background: var(--grey-975, #f6f6f6); }
+  .structure__titre.est-actif, .structure__question.est-actif {
+    background: var(--blue-france, #000091); color: #fff; border-color: var(--blue-france, #000091);
+  }
+  .structure__titre.est-actif .structure__nature, .structure__question.est-actif .structure__nature,
+  .structure__titre.est-actif .structure__compte, .structure__question.est-actif .structure__chemin { color: #fff; opacity: 0.8; }
+  .structure__ajout { font-size: 0.8rem; color: var(--encre-douce, #666); padding-left: 1.4rem; }
+  .structure__ajout--etape { padding-left: 0.5rem; border-top: 1px solid var(--grey-950, #eee); margin-top: 0.3rem; }
+  .structure__etape { display: flex; flex-direction: column; gap: 1px; }
+  .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
+
+  /* Enregistrer ne se cherche pas : barre fixe, état à côté du bouton. */
+  .barre-enregistrement {
+    position: sticky; bottom: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    margin-top: 0.6rem; padding: 0.6rem 0.2rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    background: var(--fond-page, #f6f6f6);
+  }
+  .barre-enregistrement__etat { font-size: 0.82rem; color: var(--encre-douce, #666); }
+
+  @media (max-width: 68rem) {
+    .atelier { grid-template-columns: 13rem minmax(0, 1fr); }
+    .atelier__apercu { display: none; }
+  }
+  @media (max-width: 44rem) {
+    .atelier { grid-template-columns: 1fr; min-height: 0; }
+    .atelier__structure { max-height: 14rem; }
+  }
+
   .builder-step {
     background: #fff;
     padding: 1rem 1.1rem;
@@ -1573,9 +1647,22 @@ function editForm(id) {
 // ═══════════════════════════════════════════════════════════
 // ÉTAPE 2 — Construction (sections / champs)
 // ═══════════════════════════════════════════════════════════
+/**
+ * L'écran de composition, en trois zones.
+ *
+ * > **Mesuré avant d'y toucher** : l'enquête du 4ᵉ chargée dans l'ancien écran
+ * > faisait **34 357 px de haut — 45 écrans de défilement** — et affichait
+ * > **709 contrôles d'un coup**, toutes les questions dépliées en même temps.
+ * > On ne pouvait ni voir la forme du questionnaire, ni réordonner, ni
+ * > travailler une question sans défiler par-dessus les soixante autres.
+ *
+ * Trois zones : la **structure** (ce que le formulaire est), **la question**
+ * choisie — une seule à la fois —, et l'**aperçu**, qui répond pendant qu'on
+ * écrit au lieu d'attendre dans l'onglet voisin. Sur écran étroit, elles
+ * s'empilent.
+ */
 function renderBuilder() {
   const el = document.getElementById('builder');
-  const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
   if (!S.currentDef) {
     el.innerHTML = `<p class="fr-text--sm">Sélectionnez ou créez un formulaire depuis l'étape « Mes formulaires ».</p>`;
     return;
@@ -1583,119 +1670,432 @@ function renderBuilder() {
   const def = S.currentDef;
   ensureBranding(def);
   ensureAudience(def);
-  const brand = def.branding;
-  const aud = def.audience;
+  normaliserSelection();
+
+  const cols = S.columnsByTable[def.tableId] || [];
+  const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
+
+  el.innerHTML = `
+    <div class="atelier">
+      <aside class="atelier__structure" aria-label="Structure du formulaire">
+        ${renderStructure(def)}
+      </aside>
+      <div class="atelier__question">
+        ${renderZoneQuestion(def)}
+      </div>
+      <aside class="atelier__apercu" aria-label="Aperçu">
+        <div class="atelier__apercu-tete">
+          <span>Aperçu</span>
+          <button type="button" class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
+            onclick="App.refreshPreview()" title="Actualiser l’aperçu">↻</button>
+        </div>
+        <div class="atelier__apercu-cadre" id="builder-preview-mount"></div>
+      </aside>
+    </div>
+    ${colsDatalist}
+    <div class="barre-enregistrement">
+      <span class="barre-enregistrement__etat">${esc(def.title || 'Sans titre')} — ${def.sections.length} étape(s), ${def.sections.reduce((n, s2) => n + (s2.fields || []).length, 0)} question(s)</span>
+      <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
+    </div>
+  `;
+  monterApercuAtelier();
+}
+
+/** La sélection courante, ramenée à quelque chose qui existe encore. */
+function normaliserSelection() {
+  const def = S.currentDef;
+  const sel = S.selection || { quoi: 'accueil' };
+  if (sel.quoi === 'question') {
+    const section = def.sections[sel.si];
+    S.selection = (section && section.fields[sel.fi]) ? sel : { quoi: 'accueil' };
+  } else if (sel.quoi === 'etape') {
+    S.selection = def.sections[sel.si] ? sel : { quoi: 'accueil' };
+  } else {
+    S.selection = sel;
+  }
+}
+
+function selectionEst(quoi, si, fi) {
+  const s = S.selection || {};
+  if (s.quoi !== quoi) return false;
+  if (si != null && s.si !== si) return false;
+  if (fi != null && s.fi !== fi) return false;
+  return true;
+}
+
+/** Choisir ce qu'on compose : la zone centrale et l'aperçu suivent. */
+function choisir(quoi, si, fi) {
+  S.selection = { quoi: quoi, si: si, fi: fi };
+  renderBuilder();
+}
+
+/** Le plan du formulaire : ses étapes, leurs questions, et ce qu'elles sont. */
+function renderStructure(def) {
+  const etapes = def.sections.map((section, si) => {
+    const questions = (section.fields || []).map((f, fi) => {
+      const actif = selectionEst('question', si, fi) ? ' est-actif' : '';
+      return `<button type="button" class="structure__question${actif}" onclick="App.choisir('question', ${si}, ${fi})">
+        <span class="structure__intitule">${esc(f.label || f.colId || 'Sans libellé')}</span>
+        <span class="structure__nature">${esc(natureCourte(f))}</span>
+      </button>`;
+    }).join('');
+    const chemin = (section.condition || section.gate)
+      ? '<span class="structure__chemin" title="Cette étape ne s’affiche pas toujours">⤳</span>' : '';
+    return `
+      <div class="structure__etape">
+        <button type="button" class="structure__titre${selectionEst('etape', si) ? ' est-actif' : ''}" onclick="App.choisir('etape', ${si})">
+          <span class="structure__intitule">${esc(section.label || 'Étape ' + (si + 1))}</span>
+          ${chemin}<span class="structure__compte">${(section.fields || []).length}</span>
+        </button>
+        ${questions}
+        <button type="button" class="structure__ajout" onclick="App.addField(${si})">+ question</button>
+      </div>`;
+  }).join('');
+
+  return `
+    <button type="button" class="structure__titre structure__titre--bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
+    ${etapes}
+    <button type="button" class="structure__ajout structure__ajout--etape" onclick="App.addSection()">+ étape</button>
+    <button type="button" class="structure__titre structure__titre--bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
+    <div class="structure__pied">${renderCibleEtMode(def)}</div>
+  `;
+}
+
+/** Ce qu'est une question, en deux mots, pour se repérer dans la structure. */
+function natureCourte(f) {
+  if (f.kind === 'echelle') return 'échelle';
+  const parType = {
+    Text: f.widget === 'textarea' ? 'paragraphe' : 'texte',
+    Int: 'nombre', Numeric: 'nombre', Bool: 'oui/non',
+    Date: 'date', DateTime: 'date et heure',
+    Choice: 'choix', ChoiceList: 'choix multiples',
+    Attachments: 'fichiers'
+  };
+  const t = String(f.type || '').replace(/:.*$/, '');
+  if (t === 'Ref' || t === 'RefList') return 'référence';
+  return parType[t] || (f.kind || f.widget || 'question');
+}
+
+/** Où partent les réponses : une ligne en pied de structure, pas un bloc. */
+function renderCibleEtMode(def) {
   const isEnsure = def.composeMode === 'ensureSchema';
   const tableOptions = S.tables.map(t =>
     `<option value="${esc(t.tableId)}" ${t.tableId === def.tableId ? 'selected' : ''}>${esc(t.tableId)}</option>`
   ).join('');
-  const cols = S.columnsByTable[def.tableId] || [];
-  const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
-  const sectionsHtml = def.sections.map((section, si) => renderSectionEditor(def, section, si)).join('');
+  if (isEnsure) {
+    return `
+      <label class="fr-label fr-text--sm" for="cible-table">Table des réponses</label>
+      <input class="fr-input" id="cible-table" list="tables-datalist" value="${esc(def.tableId)}" placeholder="Reponses_…"
+        onchange="App.onTableChange(this.value)" oninput="App.onDefInput('tableId', this.value); App.onManualTableEdit()">
+      <datalist id="tables-datalist">${S.tables.map(t => `<option value="${esc(t.tableId)}">`).join('')}</datalist>
+      <p class="mode-hint">Colonnes créées à l’enregistrement —
+        <button type="button" onclick="App.onComposeModeChange('bind')">utiliser des colonnes existantes</button></p>`;
+  }
+  return `
+    <label class="fr-label fr-text--sm" for="cible-table">Table des réponses</label>
+    <select class="fr-select" id="cible-table" onchange="App.onTableChange(this.value)">${tableOptions}</select>
+    <p class="mode-hint">Colonnes existantes —
+      <button type="button" onclick="App.onComposeModeChange('ensureSchema')">les créer automatiquement</button></p>`;
+}
 
-  el.innerHTML = `
-    <h2 class="fr-h5">Questions</h2>
-
-    <div class="sections-stage">
-      <h3 class="fr-h6">Parcours</h3>
-
-      <div class="section-card section-card--intro">
-        <div class="section-card__head">
-          <span class="section-step">Accueil</span>
-          <input class="inline-form-title" value="${esc(def.title)}"
-            placeholder="Titre du questionnaire"
-            aria-label="Titre du questionnaire"
-            oninput="App.onDefInput('title', this.value)"
-            onblur="App.onTitleBlur()">
-        </div>
-        ${renderBrandSlot({
-          kind: 'logo',
-          urlKey: 'logoUrl',
-          altKey: 'logoAlt',
-          url: brand.logoUrl,
-          alt: brand.logoAlt
-        })}
-        <textarea class="inline-form-desc" rows="2"
-          placeholder="Description affichée en tête du formulaire…"
-          aria-label="Description"
-          oninput="App.onDefInput('description', this.value)">${esc(def.description)}</textarea>
-        ${renderAudienceBlock(aud)}
+/** Ce qu'on compose : l'accueil, une étape, une question, ou la fin. */
+function renderZoneQuestion(def) {
+  const sel = S.selection;
+  if (sel.quoi === 'accueil') {
+    const brand = def.branding;
+    return `
+      <h3 class="atelier__titre">Accueil</h3>
+      <div class="fr-input-group">
+        <label class="fr-label" for="acc-titre">Titre du questionnaire</label>
+        <input class="fr-input" id="acc-titre" value="${esc(def.title)}" placeholder="Ce que le public lit en premier"
+          oninput="App.onDefInput('title', this.value)" onblur="App.onTitleBlur()">
       </div>
-
-      ${sectionsHtml}
-      <button type="button" class="fr-btn fr-btn--secondary add-section-btn" onclick="App.addSection()">+ Ajouter une section</button>
-
-      <div class="section-card section-card--outro">
-        <div class="section-card__head">
-          <span class="section-step">Fin</span>
-          <span class="inline-section-title section-card__static-label">Page de confirmation</span>
-        </div>
-        ${renderBrandSlot({
-          kind: 'success',
-          urlKey: 'successImageUrl',
-          altKey: 'successImageAlt',
-          url: brand.successImageUrl,
-          alt: brand.successImageAlt,
-          logoUrl: brand.logoUrl,
-          logoAlt: brand.logoAlt,
-          previewClass: 'brand-slot__preview--success'
-        })}
-        <textarea class="inline-success-msg" rows="2"
-          placeholder="Merci ! Votre réponse a bien été enregistrée."
-          aria-label="Message de succès"
+      <div class="fr-input-group">
+        <label class="fr-label" for="acc-desc">Description</label>
+        <textarea class="fr-input" id="acc-desc" rows="3" placeholder="À quoi sert cette enquête, qui la mène…"
+          oninput="App.onDefInput('description', this.value)">${esc(def.description)}</textarea>
+      </div>
+      ${renderBrandSlot({ kind: 'logo', urlKey: 'logoUrl', altKey: 'logoAlt', url: brand.logoUrl, alt: brand.logoAlt })}
+      ${renderAudienceBlock(def.audience)}`;
+  }
+  if (sel.quoi === 'fin') {
+    const brand = def.branding;
+    return `
+      <h3 class="atelier__titre">Page de confirmation</h3>
+      <div class="fr-input-group">
+        <label class="fr-label" for="fin-msg">Message de succès</label>
+        <textarea class="fr-input" id="fin-msg" rows="3" placeholder="Merci ! Votre réponse a bien été enregistrée."
           oninput="App.onDefInput('successMessage', this.value)">${esc(def.successMessage)}</textarea>
       </div>
-    </div>
+      ${renderBrandSlot({
+        kind: 'success', urlKey: 'successImageUrl', altKey: 'successImageAlt',
+        url: brand.successImageUrl, alt: brand.successImageAlt,
+        logoUrl: brand.logoUrl, logoAlt: brand.logoAlt, previewClass: 'brand-slot__preview--success'
+      })}`;
+  }
+  if (sel.quoi === 'etape') {
+    return `<h3 class="atelier__titre">Étape ${sel.si + 1}</h3>${renderSectionEditor(def, def.sections[sel.si], sel.si)}`;
+  }
+  const section = def.sections[sel.si];
+  const champ = section.fields[sel.fi];
+  return `
+    <h3 class="atelier__titre">${esc(section.label || 'Étape ' + (sel.si + 1))}</h3>
+    ${renderFieldEditor(def, sel.si, champ, sel.fi)}`;
+}
 
-    <div class="form-meta-strip fr-mt-2w">
-      ${isEnsure ? `
-        <div class="fr-input-group fr-mb-0">
-          <label class="fr-label">Les réponses seront enregistrées dans la table :</label>
-          <input class="fr-input" list="tables-datalist" value="${esc(def.tableId)}"
-            placeholder="Reponses_…"
-            onchange="App.onTableChange(this.value)" oninput="App.onDefInput('tableId', this.value); App.onManualTableEdit()">
-          <datalist id="tables-datalist">${S.tables.map(t => `<option value="${esc(t.tableId)}">`).join('')}</datalist>
-        </div>
-        <p class="mode-hint">Mode : création automatique des colonnes
-          — <button type="button" onclick="App.onComposeModeChange('bind')">passer aux colonnes existantes</button></p>
-        <div class="fr-alert fr-alert--info fr-mt-1w"><p>À l’enregistrement, les colonnes manquantes seront créées automatiquement.</p></div>
-      ` : `
-        <div class="fr-select-group fr-mb-0">
-          <label class="fr-label">Table existante</label>
-          <select class="fr-select" onchange="App.onTableChange(this.value)">${tableOptions}</select>
-        </div>
-        <p class="mode-hint">Mode : colonnes existantes
-          — <button type="button" onclick="App.onComposeModeChange('ensureSchema')">passer à la création automatique</button></p>
-      `}
-    </div>
-    ${colsDatalist}
-
-    <details class="json-preview fr-mt-2w" ${S.showAdvanced ? 'open' : ''}>
-      <summary>Options avancées</summary>
-      <div class="fr-grid-row fr-grid-row--gutters fr-mt-1w">
-        <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-input-group"><label class="fr-label">Identifiant du formulaire (FormId)</label>
-          <input class="fr-input" value="${esc(def.id)}" oninput="App.onDefInput('id', this.value)"></div>
-        </div>
-        <div class="fr-col-12 fr-col-md-6">
-          <div class="fr-input-group"><label class="fr-label">Classification</label>
-          <input class="fr-input" value="${esc(def.classification)}" oninput="App.onDefInput('classification', this.value)"></div>
-        </div>
-      </div>
-      <div class="fr-checkbox-group fr-mt-2w">
-        <input type="checkbox" id="opt-editer-ligne" ${def.editerLigneSelectionnee ? 'checked' : ''}
-          onchange="App.onDefInput('editerLigneSelectionnee', this.checked)">
-        <label class="fr-label" for="opt-editer-ligne">Corriger la ligne sélectionnée au lieu d’en ajouter une
-          ${hintIcon('Par défaut, la page publiée ajoute une ligne. Cochez pour que le formulaire ouvre la ligne sous le curseur, préremplie, et l’enregistre.')}</label>
-      </div>
-      <p class="fr-hint-text fr-mt-1w">Chemins d’étapes, conditions, cascade et filtres se règlent directement sur chaque étape / question.</p>
-    </details>
-
-    <div class="fr-mt-4w"><button class="fr-btn" onclick="App.saveForm()">Enregistrer</button></div>
-  `;
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY);
+/** L'aperçu, posé sur l'étape qu'on compose. */
+function monterApercuAtelier() {
+  const cible = document.getElementById('builder-preview-mount');
+  if (!cible || !window.FormEngine) return;
+  const sel = S.selection || {};
+  const def = S.currentDef;
+  // L'aperçu ne montre que les étapes visibles : une étape conditionnelle non
+  // remplie n'y figure pas. Le rang du compositeur n'est donc pas celui de
+  // l'aperçu — sans cette traduction, on compose une étape et on en regarde
+  // une autre.
+  let depart = 0;
+  if (sel.si != null && window.FormEngine.isSectionVisible) {
+    const visibles = def.sections.filter((sec) => window.FormEngine.isSectionVisible(sec, {}, {}));
+    const rang = visibles.indexOf(def.sections[sel.si]);
+    depart = rang >= 0 ? rang : 0;
+  }
+  const vue = window.FormEngine.mount(cible, def, {
+    submit: () => Promise.resolve(),
+    loadTable: S.isDemo ? null : ((t) => GristBridge.loadTable(t)),
+    skipProbe: true,
+    etapeDepart: depart
   });
+  S.apercuAtelier = vue;
+}
+
+function renderFieldPreview(f, si, fi) {
+  const configuredPh = (f.options && f.options.placeholder) || '';
+  const isTextLike = f.type === 'Text' || f.type === 'Int' || f.type === 'Numeric';
+  if (isTextLike && (f.widget === 'text' || f.widget === 'textarea' || f.type === 'Int' || f.type === 'Numeric')) {
+    const onPh = `App.onFieldOption(${si}, ${fi}, 'placeholder', this.value)`;
+    const control = f.widget === 'textarea'
+      ? `<textarea class="fr-input" rows="2" placeholder="Saisir le placeholder…"
+          aria-label="Placeholder" oninput="${onPh}">${esc(configuredPh)}</textarea>`
+      : `<input class="fr-input" type="${f.type === 'Int' || f.type === 'Numeric' ? 'number' : 'text'}"
+          value="${esc(configuredPh)}" placeholder="Saisir le placeholder…"
+          aria-label="Placeholder" oninput="${onPh}">`;
+    return `<div class="field-preview is-editable">
+      ${control}
+    </div>`;
+  }
+  const ph = 'Aperçu du champ';
+  let inner = '';
+  if (f.type === 'Bool') {
+    inner = `<div class="fr-checkbox-group"><input type="checkbox" disabled><label class="fr-label">Oui / Non</label></div>`;
+  } else if (f.type === 'Choice') {
+    inner = `<select class="fr-select" disabled><option>${esc(ph)}</option></select>`;
+  } else if (f.type === 'ChoiceList') {
+    inner = `<div class="fr-checkbox-group"><input type="checkbox" disabled><label class="fr-label">Option…</label></div>`;
+  } else if (f.type === 'Attachments') {
+    inner = `<input class="fr-input" type="text" disabled value="Pièce jointe…">`;
+  } else if (f.type === 'Date') {
+    inner = `<input class="fr-input" type="date" disabled>`;
+  } else if (f.type === 'Ref' || f.type === 'RefList') {
+    inner = `<select class="fr-select" disabled><option>Liste liée…</option></select>`;
+  } else {
+    inner = `<input class="fr-input" type="text" disabled placeholder="${esc(ph)}">`;
+  }
+  return `<div class="field-preview is-static">${inner}</div>`;
+}
+
+function renderConditionValueInput(scope, si, fi, ruleIndex, sourceField, currentValue) {
+  const v = currentValue != null ? String(currentValue) : '';
+  const onChange = scope === 'section'
+    ? `App.onSectionRule(${si}, ${ruleIndex}, 'value', this.value)`
+    : `App.onFieldRule(${si}, ${fi}, ${ruleIndex}, 'value', this.value)`;
+  if (!sourceField) {
+    return `<input class="fr-input" value="${esc(v)}" oninput="${onChange}" placeholder="Valeur">`;
+  }
+  if (sourceField.type === 'Bool') {
+    return `<select class="fr-select" onchange="${onChange}">
+      <option value="true" ${v === 'true' || currentValue === true ? 'selected' : ''}>Oui</option>
+      <option value="false" ${v === 'false' || currentValue === false ? 'selected' : ''}>Non</option>
+    </select>`;
+  }
+  if (sourceField.type === 'Choice' && sourceField.choices && sourceField.choices.length) {
+    return `<select class="fr-select" onchange="${onChange}">
+      <option value="">—</option>
+      ${sourceField.choices.map(c => {
+        const val = typeof c === 'object' ? c.value : c;
+        const lab = typeof c === 'object' ? (c.label || c.value) : c;
+        return `<option value="${esc(val)}" ${String(val) === v ? 'selected' : ''}>${esc(lab)}</option>`;
+      }).join('')}
+    </select>`;
+  }
+  if (sourceField.type === 'Date') {
+    return `<input class="fr-input" type="date" value="${esc(v)}" onchange="${onChange}">`;
+  }
+  if (sourceField.type === 'Int' || sourceField.type === 'Numeric') {
+    return `<input class="fr-input" type="number" value="${esc(v)}" oninput="${onChange}">`;
+  }
+  return `<input class="fr-input" value="${esc(v)}" oninput="${onChange}" placeholder="Valeur">`;
+}
+
+function renderConditionEditor(scope, si, fi, condition, prior) {
+  const compound = FormUx.normalizeToCompound(condition);
+  const enabled = !!condition;
+  const toggleFn = scope === 'section'
+    ? `App.onSectionConditionToggle(${si}, this.checked)`
+    : `App.onFieldConditionToggle(${si}, ${fi}, this.checked)`;
+  const opFn = scope === 'section'
+    ? `App.onSectionConditionOp(${si}, this.value)`
+    : `App.onFieldConditionOp(${si}, ${fi}, this.value)`;
+  const addFn = scope === 'section'
+    ? `App.onSectionRuleAdd(${si})`
+    : `App.onFieldRuleAdd(${si}, ${fi})`;
+
+  if (!enabled) {
+    return `
+      <div class="behavior-panel">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" id="cond-${scope}-${si}-${fi != null ? fi : 's'}" onchange="${toggleFn}">
+          <label class="fr-label field-hint" for="cond-${scope}-${si}-${fi != null ? fi : 's'}">
+            <span>${scope === 'section' ? 'Afficher cette étape seulement si…' : 'Afficher cette question seulement si…'}</span>
+            ${hintIcon(CONDITION_PANEL_TIP)}
+          </label>
+        </div>
+      </div>`;
+  }
+
+  const rulesHtml = compound.rules.map((rule, ri) => {
+    const selKey = ruleSelectKey(rule);
+    const isCtx = selKey.indexOf('context:') === 0;
+    const isAud = selKey.indexOf('audience:') === 0;
+    const src = (!isCtx && !isAud)
+      ? (findFieldMeta(S.currentDef, rule.field || rule.path) || prior.find(p => p.colId === (rule.field || rule.path)))
+      : (isCtx ? { type: 'Bool' } : { type: 'Text' });
+    const ops = isAud
+      ? [
+          { value: 'in', label: 'dans' },
+          { value: 'notIn', label: 'pas dans' },
+          { value: '==', label: 'égal à' },
+          { value: '!=', label: 'différent de' }
+        ]
+      : (isCtx && (rule.path === 'userEmail' || selKey === 'context:userEmail')
+        ? FormUx.operatorsForType('Text')
+        : (isCtx ? [{ value: '==', label: 'égal à' }, { value: '!=', label: 'différent de' }] : FormUx.operatorsForType(src && src.type)));
+    const opOpts = ops.map(o =>
+      `<option value="${esc(o.value)}" ${rule.operator === o.value ? 'selected' : ''}>${esc(o.label)}</option>`
+    ).join('');
+    const fieldSelect = scope === 'section'
+      ? `App.onSectionRule(${si}, ${ri}, 'field', this.value)`
+      : `App.onFieldRule(${si}, ${fi}, ${ri}, 'field', this.value)`;
+    const opSelect = scope === 'section'
+      ? `App.onSectionRule(${si}, ${ri}, 'operator', this.value)`
+      : `App.onFieldRule(${si}, ${fi}, ${ri}, 'operator', this.value)`;
+    const delFn = scope === 'section'
+      ? `App.onSectionRuleRemove(${si}, ${ri})`
+      : `App.onFieldRuleRemove(${si}, ${fi}, ${ri})`;
+    const valueHint = isAud
+      ? 'Emails ou groupes, séparés par des virgules'
+      : (isCtx && rule.path !== 'userEmail' ? 'Oui ou Non' : 'Valeur attendue');
+    const srcTip = ruleOptionTip(selKey);
+    const opTip = operatorTip(rule.operator, isAud, isCtx);
+    return `
+      <div class="rule-row">
+        <div class="fr-select-group">${hintLabel('Source', CONDITION_SOURCE_TIP)}
+          <select class="fr-select" onchange="${fieldSelect}">
+            <option value="">—</option>
+            <optgroup label="Contexte">${CONTEXT_RULE_OPTS.map(o =>
+              `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
+            ).join('')}</optgroup>
+            <optgroup label="Audience">${AUDIENCE_RULE_OPTS.map(o =>
+              `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
+            ).join('')}</optgroup>
+            ${prior.length ? `<optgroup label="Questions précédentes">${prior.map(p =>
+              `<option value="field:${esc(p.colId)}" ${selKey === 'field:' + p.colId ? 'selected' : ''}>${esc(p.label)}</option>`
+            ).join('')}</optgroup>` : ''}
+          </select>
+          <p class="fr-hint-text">${esc(srcTip)}</p>
+        </div>
+        <div class="fr-select-group">${hintLabel('Opérateur', opTip)}
+          <select class="fr-select" onchange="${opSelect}">${opOpts}</select>
+        </div>
+        <div class="fr-input-group">${hintLabel('Valeur', isAud ? valueHint : (isCtx && rule.path !== 'userEmail' ? 'Oui = critère vrai, Non = critère faux.' : CONDITION_VALUE_TIP))}
+          ${isCtx && rule.path !== 'userEmail'
+            ? `<select class="fr-select" onchange="${scope === 'section'
+                ? `App.onSectionRule(${si}, ${ri}, 'value', this.value === 'true')`
+                : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value === 'true')`}">
+                <option value="true" ${rule.value === true || rule.value === 'true' ? 'selected' : ''}>Oui</option>
+                <option value="false" ${rule.value === false || rule.value === 'false' ? 'selected' : ''}>Non</option>
+              </select>`
+            : (isAud
+              ? `<input class="fr-input" value="${esc(Array.isArray(rule.value) ? rule.value.join(', ') : (rule.value != null ? rule.value : ''))}"
+                  placeholder="${esc(valueHint)}"
+                  oninput="${scope === 'section'
+                    ? `App.onSectionRule(${si}, ${ri}, 'value', this.value)`
+                    : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value)`}">`
+              : renderConditionValueInput(scope, si, fi, ri, src, rule.value))}
+        </div>
+        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer la règle" onclick="${delFn}">✕</button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="behavior-panel">
+      <div class="fr-checkbox-group">
+        <input type="checkbox" id="cond-${scope}-${si}-${fi != null ? fi : 's'}" checked onchange="${toggleFn}">
+        <label class="fr-label field-hint" for="cond-${scope}-${si}-${fi != null ? fi : 's'}">
+          <span>${scope === 'section' ? 'Afficher cette étape seulement si…' : 'Afficher cette question seulement si…'}</span>
+          ${hintIcon(CONDITION_PANEL_TIP)}
+        </label>
+      </div>
+      <div class="fr-select-group fr-mt-1w">
+        ${hintLabel('Combinaison des règles', CONDITION_COMBO_TIP)}
+        <select class="fr-select" onchange="${opFn}">
+          <option value="and" ${compound.op === 'and' ? 'selected' : ''}>Toutes (ET)</option>
+          <option value="or" ${compound.op === 'or' ? 'selected' : ''}>Au moins une (OU)</option>
+        </select>
+      </div>
+      ${rulesHtml}
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="${addFn}">+ Ajouter une règle</button>
+    </div>`;
+}
+
+/**
+ * L'éditeur d'une étape, sans ses questions : elles vivent maintenant dans la
+ * colonne de structure, et ne se composent qu'une à la fois.
+ */
+function renderSectionEditor(def, section, si) {
+  const prior = priorFields(def, si, null);
+  const condSummary = FormUx.summarizeCondition(section.condition || (section.gate ? { field: section.gate, operator: '==', value: true } : null));
+  const pathBadge = (section.condition || section.gate)
+    ? `<span class="cfg-badge path">Chemin : ${esc(condSummary || section.gate)}</span>` : '';
+
+  // Un ancien `gate` s'affiche comme la condition qu'il est.
+  let sectionCond = section.condition;
+  if (!sectionCond && section.gate) {
+    sectionCond = { field: section.gate, operator: '==', value: true };
+  }
+
+  return `
+    <div class="section-card">
+      <div class="section-card__head">
+        <span class="section-step">Étape ${si + 1}</span>
+        <input class="inline-section-title" value="${esc(section.label)}"
+          placeholder="Titre de l’étape"
+          aria-label="Titre de l’étape ${si + 1}"
+          oninput="App.onSectionInput(${si}, 'label', this.value)">
+        <div class="section-card__actions">
+          <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer l’étape" onclick="App.removeSection(${si})">🗑</button>
+        </div>
+      </div>
+      <div class="fr-input-group">
+        <label class="fr-label" for="sec-desc-${si}">Consigne de l’étape</label>
+        <textarea class="fr-input" id="sec-desc-${si}" rows="2"
+          placeholder="Ce qu’on explique avant les questions…"
+          oninput="App.onSectionInput(${si}, 'description', this.value)">${esc(section.description || '')}</textarea>
+      </div>
+      ${pathBadge ? `<div class="badge-row">${pathBadge}</div>` : ''}
+      ${si === 0 ? '' : renderConditionEditor('section', si, null, sectionCond, prior)}
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm add-field-btn" onclick="App.addField(${si})">+ Ajouter une question</button>
+    </div>
+  `;
 }
 
 function renderFieldPreview(f, si, fi) {
@@ -2934,7 +3334,7 @@ window.App = {
   onFieldConditionToggle, onFieldCondition,
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
-  saveForm, refreshPreview: mountPreview, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  saveForm, refreshPreview: mountPreview, choisir, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */

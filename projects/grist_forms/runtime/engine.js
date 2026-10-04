@@ -955,7 +955,9 @@
     if (!rootEl) return null;
     bridge = bridge || {};
     var values = initialValues(formDef, bridge.values);
-    var stepIndex = 0;
+    // L'hôte peut demander d'ouvrir sur une étape : le compositeur montre
+    // celle qu'on travaille, pas la première.
+    var stepIndex = Number.isFinite(bridge.etapeDepart) ? Math.max(0, bridge.etapeDepart) : 0;
     var errorFields = [];
     var submitting = false;
     var submitError = '';

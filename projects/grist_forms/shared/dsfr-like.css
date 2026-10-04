@@ -343,3 +343,8 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   }
   .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
 }
+
+/* Une consigne se lit sous son libellé, pas dans son prolongement. */
+.fr-label .fr-hint-text, .fr-fieldset__legend .fr-hint-text {
+  display: block; font-weight: 400; margin-top: 0.15rem;
+}
