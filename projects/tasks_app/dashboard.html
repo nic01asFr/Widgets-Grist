@@ -650,7 +650,7 @@ const CATALOG = {
 };
 
 const CONFIG_FIELDS = {
-    kpi:      [{ key:'metric',  label:'Métrique',     options:[['total','Total tâches'],['inprogress','En cours'],['done','Terminées (tout)'],['done_week','Terminées ce sem.'],['late','En retard'],['rate','Taux de complétion %']] }],
+    kpi:      [{ key:'metric',  label:'Métrique',     options:[['total','Total tâches'],['inprogress','Actives (non terminées)'],['done','Terminées (tout)'],['done_week','Terminées ce sem.'],['late','En retard'],['rate','Taux de complétion %']] }],
     donut:    [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type']] }],
     bars:     [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type'],['assignee','Assigné']] }],
     list:     [
@@ -680,7 +680,7 @@ const FILTER_FIELDS = [
 
 const DEFAULT_LAYOUT = [
     { id:'c1', type:'kpi',      colSpan:1, title:'Total',      config:{ metric:'total' } },
-    { id:'c2', type:'kpi',      colSpan:1, title:'En cours',   config:{ metric:'inprogress' } },
+    { id:'c2', type:'kpi',      colSpan:1, title:'Actives',    config:{ metric:'inprogress' } },
     { id:'c3', type:'kpi',      colSpan:1, title:'Terminées',  config:{ metric:'done' } },
     { id:'c4', type:'kpi',      colSpan:1, title:'En retard',  config:{ metric:'late' } },
     { id:'c5', type:'donut',    colSpan:2, title:'Par statut', config:{ groupBy:'statut' } },
@@ -2168,7 +2168,8 @@ function renderList(comp, ft) {
     if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&TF.isLive(statusCfg, getStatus(t));});
     else if (preset==='today')     list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&isSameDay(d,today);});
     else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&TF.isLive(statusCfg, getStatus(t));});
-    else if (preset==='inprogress')list = ft.filter(t=>getStatus(t)==='inprogress');
+    // « En cours » = actives hors premier statut (a faire), quels que soient les statuts configures
+    else if (preset==='inprogress')list = ft.filter(t=>{ const st=getStatus(t); return TF.isLive(statusCfg, st) && st!==statusCfg.firstValue; });
     if (!list.length) return '<div class="empty-state"><div class="empty-text">Aucune tâche</div></div>';
     return `<div class="list-items">${list.slice(0,limit).map(t=>{
         const p=getPriority(t), s=getStatus(t);
@@ -2238,7 +2239,7 @@ function render() {
     renderGrid();
     renderFilterChips();
     if (filterPanelOpen) renderFilterPanel();
-    document.getElementById('lastUpdate').textContent = 'Mis à jour: ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent = 'Mis à jour: ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + (leavesOnly ? ' · feuilles uniquement' : '');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2257,7 +2258,10 @@ function saveConfig() {
 function loadConfig(opts) {
     if (opts?.dash?.layout?.length) {
         dashConfig = opts.dash;
-        dashConfig.layout.forEach(c => { if (!c.config) c.config = {}; });
+        dashConfig.layout.forEach(c => {
+            if (!c.config) c.config = {};
+            if (c.type === 'kpi' && c.config.metric === 'inprogress' && c.title === 'En cours') c.title = 'Actives';
+        });
     }
     // Filtres intentionnellement non chargés depuis options → locaux uniquement
 }
