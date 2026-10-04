@@ -311,6 +311,77 @@ const TF = (function () {
     function uiInfo(text) {
         return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
     }
+    // Boite de dialogue interne (remplace confirm() natif, bloque dans les iframes de Grist et hors charte).
+    // o = { title, message, confirmLabel, cancelLabel, danger, actions: [{ label, value, danger }] }
+    // Resout avec la valeur de l'action choisie (true par defaut), ou false si annule (bouton, Echap, clic dehors).
+    function uiConfirm(o) {
+        o = o || {};
+        const actions = o.actions || [{ label: o.confirmLabel || 'Confirmer', value: true, danger: !!o.danger }];
+        return new Promise(function (resolve) {
+            const prev = document.activeElement;
+            const ov = document.createElement('div');
+            ov.className = 'tf-modal-overlay';
+            ov.innerHTML = '<div class="tf-modal" role="alertdialog" aria-modal="true" aria-labelledby="tfModalTitle">' +
+                '<div class="tf-modal-title" id="tfModalTitle">' + escAttr(o.title || '') + '</div>' +
+                (o.message ? '<div class="tf-modal-msg">' + escAttr(o.message) + '</div>' : '') +
+                '<div class="tf-modal-actions"><button type="button" class="btn" data-i="-1">' + escAttr(o.cancelLabel || 'Annuler') + '</button>' +
+                actions.map(function (a, i) { return '<button type="button" class="btn ' + (a.danger ? 'danger' : 'primary') + '" data-i="' + i + '">' + escAttr(a.label) + '</button>'; }).join('') +
+                '</div></div>';
+            function close(v) {
+                document.removeEventListener('keydown', onKey, true);
+                if (ov.parentNode) ov.parentNode.removeChild(ov);
+                try { if (prev && prev.focus) prev.focus(); } catch (e) { /* focus perdu : sans consequence */ }
+                resolve(v);
+            }
+            function onKey(e) {
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(false); }
+            }
+            // Echap en phase de capture : la fiche situee derriere ne doit pas reagir au meme appui.
+            document.addEventListener('keydown', onKey, true);
+            ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(false); });
+            ov.addEventListener('click', function (e) {
+                const b = e.target.closest && e.target.closest('button[data-i]');
+                if (!b) return;
+                const i = Number(b.getAttribute('data-i'));
+                close(i < 0 ? false : actions[i].value);
+            });
+            document.body.appendChild(ov);
+            // Un geste destructeur n'est jamais le bouton par defaut.
+            const focusSel = actions.some(function (a) { return a.danger; }) ? 'button[data-i="-1"]' : 'button.primary';
+            const f = ov.querySelector(focusSel); if (f) f.focus();
+        });
+    }
+    // Plan de suppression d'une tache : tasks = liste des taches (avec parentTask), mode = 'detach' (les
+    // sous-taches deviennent des taches principales) ou 'cascade' (tout est supprime). Renvoie les actions
+    // Grist et ce qu'il faut changer localement (mode demo).
+    function deletePlan(tasks, taskId, mode) {
+        const kids = {};
+        (tasks || []).forEach(function (t) { if (t && t.parentTask) (kids[t.parentTask] = kids[t.parentTask] || []).push(t.id); });
+        const removed = [taskId], detached = [];
+        if (mode === 'cascade') {
+            const seen = {}; seen[taskId] = true;
+            for (let i = 0; i < removed.length; i++) (kids[removed[i]] || []).forEach(function (k) { if (!seen[k]) { seen[k] = true; removed.push(k); } });
+        } else {
+            (kids[taskId] || []).forEach(function (k) { detached.push(k); });
+        }
+        const actions = detached.map(function (k) { return ['UpdateRecord', 'Tasks', k, { parentTask: null }]; })
+            .concat(removed.map(function (id) { return ['RemoveRecord', 'Tasks', id]; }));
+        return { actions: actions, removed: removed, detached: detached };
+    }
+    // Contenu de la confirmation de suppression dans la fiche : simple, ou a trois issues si la tache a
+    // des sous-taches. Les boutons appellent confirmDelete(mode) / hideDeleteConfirm() du widget.
+    function deleteConfirmHtml(nKids) {
+        const btn = function (cls, onclick, label) { return '<button type="button" class="delete-confirm-btn ' + cls + '" onclick="' + onclick + '">' + label + '</button>'; };
+        if (!nKids) {
+            return '<div class="delete-confirm-text">Supprimer cette tâche ?</div><div class="delete-confirm-actions">' +
+                btn('cancel', 'hideDeleteConfirm()', 'Annuler') + btn('confirm', "confirmDelete('detach')", 'Supprimer') + '</div>';
+        }
+        const n = nKids === 1 ? '1 sous-tâche' : nKids + ' sous-tâches';
+        return '<div class="delete-confirm-text">Cette tâche a ' + n + '. Que faire ?</div><div class="delete-confirm-actions delete-confirm-col">' +
+            btn('keep', "confirmDelete('detach')", 'La supprimer seule (les sous-tâches deviennent des tâches)') +
+            btn('confirm', "confirmDelete('cascade')", 'Tout supprimer (' + (nKids === 1 ? 'avec sa sous-tâche' : 'avec ses ' + nKids + ' sous-tâches') + ')') +
+            btn('cancel', 'hideDeleteConfirm()', 'Annuler') + '</div>';
+    }
     // Recherche commune aux quatre widgets : titre, description, tags, projet, assignes ; insensible a la
     // casse et aux accents ; plusieurs mots = tous doivent etre presents. ctx = { projects, team }.
     const searchNorm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -694,6 +765,9 @@ const TF = (function () {
         isDead: isDead,
         isLive: isLive,
         statusOf: statusOf,
+        confirm: uiConfirm,
+        deletePlan: deletePlan,
+        deleteConfirmHtml: deleteConfirmHtml,
         completionPatch: completionPatch,
         reopenValue: reopenValue,
         statusKnown: statusKnown,

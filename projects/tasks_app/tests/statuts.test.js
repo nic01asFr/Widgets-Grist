@@ -276,3 +276,42 @@ describe('cloture coherente (completionPatch)', () => {
     assert.deepEqual(TF.completionPatch(cfg, { statut: 'todo' }, { titre: 'x' }), {});
   });
 });
+
+describe('suppression d\'une tache (deletePlan)', () => {
+  const tasks = [{ id: 1 }, { id: 2, parentTask: 1 }, { id: 3, parentTask: 2 }, { id: 4, parentTask: 1 }, { id: 5 }];
+  it('detach : le parent seul est supprime, ses enfants directs deviennent racines', () => {
+    const p = TF.deletePlan(tasks, 1, 'detach');
+    assert.deepEqual(p.removed, [1]);
+    assert.deepEqual(p.detached, [2, 4]);
+    assert.deepEqual(p.actions, [['UpdateRecord', 'Tasks', 2, { parentTask: null }], ['UpdateRecord', 'Tasks', 4, { parentTask: null }], ['RemoveRecord', 'Tasks', 1]]);
+  });
+  it('cascade : toute la descendance est supprimee, rien n\'est detache', () => {
+    const p = TF.deletePlan(tasks, 1, 'cascade');
+    assert.deepEqual(p.removed.sort(), [1, 2, 3, 4]);
+    assert.deepEqual(p.detached, []);
+    assert.equal(p.actions.length, 4);
+    assert.ok(p.actions.every(a => a[0] === 'RemoveRecord'));
+  });
+  it('une tache sans enfant n\'a qu\'une action', () => {
+    assert.deepEqual(TF.deletePlan(tasks, 5, 'detach').actions, [['RemoveRecord', 'Tasks', 5]]);
+  });
+  it('ne boucle pas sur un cycle parent/enfant', () => {
+    const cyc = [{ id: 1, parentTask: 2 }, { id: 2, parentTask: 1 }];
+    assert.deepEqual(TF.deletePlan(cyc, 1, 'cascade').removed.sort(), [1, 2]);
+  });
+});
+
+describe('confirmation de suppression', () => {
+  it('simple sans sous-tache', () => {
+    const h = TF.deleteConfirmHtml(0);
+    assert.match(h, /Supprimer cette tâche \?/);
+    assert.doesNotMatch(h, /cascade/);
+  });
+  it('a trois issues avec sous-taches', () => {
+    const h = TF.deleteConfirmHtml(3);
+    assert.match(h, /3 sous-tâches/);
+    assert.match(h, /confirmDelete\('detach'\)/);
+    assert.match(h, /confirmDelete\('cascade'\)/);
+    assert.match(h, /hideDeleteConfirm\(\)/);
+  });
+});

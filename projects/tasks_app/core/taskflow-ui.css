@@ -275,3 +275,14 @@ textarea { line-height: 1.45; }
     .current-period .pl-short { display: inline; }
     .current-period { min-width: 64px; }
 }
+
+/* 14. Boite de dialogue interne (TF.confirm) et confirmation de suppression a trois issues. */
+.tf-modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: rgba(16, 24, 40, 0.45); }
+.tf-modal { width: min(380px, 100%); display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4) calc(var(--sp-4) + 2px); background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+.tf-modal-title { font-size: var(--fs-lg); font-weight: 650; }
+.tf-modal-msg { font-size: var(--fs-md); line-height: 1.5; color: var(--text-muted); }
+.tf-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
+.tf-modal .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.tf-modal .btn.danger:hover { filter: brightness(0.92); }
+.delete-confirm-actions.delete-confirm-col { flex-direction: column; }
+.delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }

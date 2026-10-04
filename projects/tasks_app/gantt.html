@@ -863,6 +863,17 @@
         .current-period .pl-short { display: inline; }
         .current-period { min-width: 64px; }
     }
+
+    /* 14. Boite de dialogue interne (TF.confirm) et confirmation de suppression a trois issues. */
+    .tf-modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: rgba(16, 24, 40, 0.45); }
+    .tf-modal { width: min(380px, 100%); display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4) calc(var(--sp-4) + 2px); background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+    .tf-modal-title { font-size: var(--fs-lg); font-weight: 650; }
+    .tf-modal-msg { font-size: var(--fs-md); line-height: 1.5; color: var(--text-muted); }
+    .tf-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
+    .tf-modal .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .tf-modal .btn.danger:hover { filter: brightness(0.92); }
+    .delete-confirm-actions.delete-confirm-col { flex-direction: column; }
+    .delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }
     /* </taskflow-ui> */
     </style>
 </head>
@@ -1255,6 +1266,77 @@
             function uiInfo(text) {
                 return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
             }
+            // Boite de dialogue interne (remplace confirm() natif, bloque dans les iframes de Grist et hors charte).
+            // o = { title, message, confirmLabel, cancelLabel, danger, actions: [{ label, value, danger }] }
+            // Resout avec la valeur de l'action choisie (true par defaut), ou false si annule (bouton, Echap, clic dehors).
+            function uiConfirm(o) {
+                o = o || {};
+                const actions = o.actions || [{ label: o.confirmLabel || 'Confirmer', value: true, danger: !!o.danger }];
+                return new Promise(function (resolve) {
+                    const prev = document.activeElement;
+                    const ov = document.createElement('div');
+                    ov.className = 'tf-modal-overlay';
+                    ov.innerHTML = '<div class="tf-modal" role="alertdialog" aria-modal="true" aria-labelledby="tfModalTitle">' +
+                        '<div class="tf-modal-title" id="tfModalTitle">' + escAttr(o.title || '') + '</div>' +
+                        (o.message ? '<div class="tf-modal-msg">' + escAttr(o.message) + '</div>' : '') +
+                        '<div class="tf-modal-actions"><button type="button" class="btn" data-i="-1">' + escAttr(o.cancelLabel || 'Annuler') + '</button>' +
+                        actions.map(function (a, i) { return '<button type="button" class="btn ' + (a.danger ? 'danger' : 'primary') + '" data-i="' + i + '">' + escAttr(a.label) + '</button>'; }).join('') +
+                        '</div></div>';
+                    function close(v) {
+                        document.removeEventListener('keydown', onKey, true);
+                        if (ov.parentNode) ov.parentNode.removeChild(ov);
+                        try { if (prev && prev.focus) prev.focus(); } catch (e) { /* focus perdu : sans consequence */ }
+                        resolve(v);
+                    }
+                    function onKey(e) {
+                        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(false); }
+                    }
+                    // Echap en phase de capture : la fiche situee derriere ne doit pas reagir au meme appui.
+                    document.addEventListener('keydown', onKey, true);
+                    ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(false); });
+                    ov.addEventListener('click', function (e) {
+                        const b = e.target.closest && e.target.closest('button[data-i]');
+                        if (!b) return;
+                        const i = Number(b.getAttribute('data-i'));
+                        close(i < 0 ? false : actions[i].value);
+                    });
+                    document.body.appendChild(ov);
+                    // Un geste destructeur n'est jamais le bouton par defaut.
+                    const focusSel = actions.some(function (a) { return a.danger; }) ? 'button[data-i="-1"]' : 'button.primary';
+                    const f = ov.querySelector(focusSel); if (f) f.focus();
+                });
+            }
+            // Plan de suppression d'une tache : tasks = liste des taches (avec parentTask), mode = 'detach' (les
+            // sous-taches deviennent des taches principales) ou 'cascade' (tout est supprime). Renvoie les actions
+            // Grist et ce qu'il faut changer localement (mode demo).
+            function deletePlan(tasks, taskId, mode) {
+                const kids = {};
+                (tasks || []).forEach(function (t) { if (t && t.parentTask) (kids[t.parentTask] = kids[t.parentTask] || []).push(t.id); });
+                const removed = [taskId], detached = [];
+                if (mode === 'cascade') {
+                    const seen = {}; seen[taskId] = true;
+                    for (let i = 0; i < removed.length; i++) (kids[removed[i]] || []).forEach(function (k) { if (!seen[k]) { seen[k] = true; removed.push(k); } });
+                } else {
+                    (kids[taskId] || []).forEach(function (k) { detached.push(k); });
+                }
+                const actions = detached.map(function (k) { return ['UpdateRecord', 'Tasks', k, { parentTask: null }]; })
+                    .concat(removed.map(function (id) { return ['RemoveRecord', 'Tasks', id]; }));
+                return { actions: actions, removed: removed, detached: detached };
+            }
+            // Contenu de la confirmation de suppression dans la fiche : simple, ou a trois issues si la tache a
+            // des sous-taches. Les boutons appellent confirmDelete(mode) / hideDeleteConfirm() du widget.
+            function deleteConfirmHtml(nKids) {
+                const btn = function (cls, onclick, label) { return '<button type="button" class="delete-confirm-btn ' + cls + '" onclick="' + onclick + '">' + label + '</button>'; };
+                if (!nKids) {
+                    return '<div class="delete-confirm-text">Supprimer cette tâche ?</div><div class="delete-confirm-actions">' +
+                        btn('cancel', 'hideDeleteConfirm()', 'Annuler') + btn('confirm', "confirmDelete('detach')", 'Supprimer') + '</div>';
+                }
+                const n = nKids === 1 ? '1 sous-tâche' : nKids + ' sous-tâches';
+                return '<div class="delete-confirm-text">Cette tâche a ' + n + '. Que faire ?</div><div class="delete-confirm-actions delete-confirm-col">' +
+                    btn('keep', "confirmDelete('detach')", 'La supprimer seule (les sous-tâches deviennent des tâches)') +
+                    btn('confirm', "confirmDelete('cascade')", 'Tout supprimer (' + (nKids === 1 ? 'avec sa sous-tâche' : 'avec ses ' + nKids + ' sous-tâches') + ')') +
+                    btn('cancel', 'hideDeleteConfirm()', 'Annuler') + '</div>';
+            }
             // Recherche commune aux quatre widgets : titre, description, tags, projet, assignes ; insensible a la
             // casse et aux accents ; plusieurs mots = tous doivent etre presents. ctx = { projects, team }.
             const searchNorm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -1638,6 +1720,9 @@
                 isDead: isDead,
                 isLive: isLive,
                 statusOf: statusOf,
+                confirm: uiConfirm,
+                deletePlan: deletePlan,
+                deleteConfirmHtml: deleteConfirmHtml,
                 completionPatch: completionPatch,
                 reopenValue: reopenValue,
                 statusKnown: statusKnown,
@@ -2859,7 +2944,7 @@
         }
         function confirmClosePanel() {
             if (panelState.isNew && panelState.editData?.titre?.trim()) {
-                if (confirm('Fermer sans créer la tâche ?')) closePanel();
+                TF.confirm({ title: 'Fermer sans créer la tâche ?', message: 'Ce qui a été saisi sera perdu.', confirmLabel: 'Fermer sans créer', danger: true }).then(ok => { if (ok) closePanel(); });
             } else { closePanel(); }
         }
 
@@ -3176,7 +3261,7 @@
                     '</div>' : '') +
 
                 (!panelState.isNew ?
-                    '<div class="panel-footer-left"><button class="panel-btn danger" onclick="showDeleteConfirm()" style="width:auto;padding:10px 14px">Suppr.</button></div><div class="delete-confirm" id="deleteConfirm"><div class="delete-confirm-text">Supprimer ?</div><div class="delete-confirm-actions"><button class="delete-confirm-btn cancel" onclick="hideDeleteConfirm()">Annuler</button><button class="delete-confirm-btn confirm" onclick="confirmDelete()">Supprimer</button></div></div>' : '');
+                    '<div class="panel-footer-left"><button class="panel-btn danger" onclick="showDeleteConfirm()" style="width:auto;padding:10px 14px">Suppr.</button></div><div class="delete-confirm" id="deleteConfirm">' + TF.deleteConfirmHtml(getChildren(panelState.taskId).length) + '</div>' : '');
 
             if (panelState.isNew) {
                 const canCreate = data.titre && data.titre.trim().length > 0;
@@ -3492,35 +3577,15 @@
             }
         }
 
-        async function confirmDelete() {
+        async function confirmDelete(mode) {
             if (panelState.isNew || !panelState.taskId) return;
-
-            // WBS-05: si la tâche a des descendants, demander cascade ou détachement
-            const descendants = getAllDescendants(panelState.taskId);
-            let ids = [panelState.taskId];
-            if (descendants.length) {
-                const choice = confirm('Cette tâche contient ' + descendants.length + ' sous-tâche(s).\n\nOK = supprimer tout (cascade)\nAnnuler = détacher les enfants (ils deviennent racines)');
-                if (choice) ids = [panelState.taskId, ...descendants.map(d => d.id)];
-                else {
-                    // Détacher : mettre parentTask=null sur les enfants directs, puis delete le parent
-                    const directKids = getChildren(panelState.taskId);
-                    if (gristReady) {
-                        try {
-                            const detachActions = directKids.map(k => ['UpdateRecord', 'Tasks', k.id, { parentTask: null }]);
-                            await grist.docApi.applyUserActions([...detachActions, ['RemoveRecord', 'Tasks', panelState.taskId]]);
-                            showToast('Supprimée (enfants détachés)', 'success');
-                            closePanel(); await loadAllData();
-                        } catch (e) { showToast('Erreur suppression', 'error'); }
-                    }
-                    return;
-                }
-            }
-
+            const plan = TF.deletePlan(tasks, panelState.taskId, mode);
+            const n = plan.removed.length;
+            const msg = n > 1 ? n + ' tâches supprimées' : (plan.detached.length ? 'Supprimée (sous-tâches conservées)' : 'Supprimée');
             if (gristReady) {
                 try {
-                    const actions = ids.map(id => ['RemoveRecord', 'Tasks', id]);
-                    await grist.docApi.applyUserActions(actions);
-                    showToast(ids.length > 1 ? `${ids.length} tâches supprimées` : 'Supprimée', 'success');
+                    await grist.docApi.applyUserActions(plan.actions);
+                    showToast(msg, 'success');
                     closePanel();
                     await loadAllData();
                 } catch (e) {
@@ -3528,8 +3593,10 @@
                     showToast('Erreur suppression', 'error');
                 }
             } else {
-                tasks = tasks.filter(t => !ids.includes(t.id));
-                showToast('Supprimée', 'success');
+                tasks = tasks.filter(t => !plan.removed.includes(t.id));
+                tasks.forEach(t => { if (plan.detached.includes(t.id)) t.parentTask = null; });
+                if (typeof rebuildChildrenCache === 'function') rebuildChildrenCache();
+                showToast(msg, 'success');
                 closePanel();
                 render();
             }
