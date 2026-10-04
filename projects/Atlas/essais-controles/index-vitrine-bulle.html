@@ -1465,7 +1465,8 @@
             background: rgba(196, 69, 54, 0.14);
             outline: 1px solid rgba(196, 69, 54, 0.35);
         }
-        body.view-mode .legend-head .t::after {
+        /* L'indication n'est vraie que s'il y a des lignes sur lesquelles cliquer : jamais en Préparer. */
+        body.view-mode .legend:has(.legend-clickable) .legend-head .t::after {
             content: " · clic pour cibler";
             font-family: var(--sans, inherit); font-style: normal; font-weight: 500;
             font-size: 10px; color: var(--muted); letter-spacing: 0;
@@ -2085,6 +2086,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004w"></script>
+    <script type="module" src="./app_v7.js?v=20261004y"></script>
 </body>
 </html>

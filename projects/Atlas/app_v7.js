@@ -7890,7 +7890,9 @@ function majEtageCarte() {
     document.body.classList.toggle('legende-au-ras', legendeAuRas({
         largeurCarte: frame.clientWidth,
         mobile: document.body.classList.contains('mobile-layout'),
-        enRecit: _storyPresenting,
+        // La bulle du récit, pas `_storyPresenting` : celui-ci devient vrai dès qu'un contexte ou l'ouverture de la scène applique un état,
+        // sans bulle ni classe `story-presenting` — l'étage n'y change pas.
+        enRecit: document.body.classList.contains('story-presenting'),
     }));
     if (_storyPresenting) mesurerEtageRecit();
     majBandeauInfos();
@@ -8184,6 +8186,7 @@ function enterStoryPresentation(i) {
     _storyPresenting = true;
     _contexteCle = null;
     document.body.classList.add('story-presenting');
+    majEtageCarte();
     rafraichirTrajet();
     // Sur téléphone, la légende se pose sur la bulle : repliée, elle n'y prend
     // qu'une ligne ; le lecteur la rouvre d'un toucher.
@@ -12856,6 +12859,9 @@ function applyViewModeChrome() {
     fermerListe({ rendre: false });
     if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
+    // Les lignes de la légende ne sont cliquables (cibler) qu'en Exploiter et en Lecture : elle se redessine avec la posture, sinon elles gardaient
+    // celle d'avant — pointeur et survol d'un geste qui, en Préparer, ne fait rien.
+    updateLegend();
     appliquerBarre();
     updateUserBadge();
     refreshViewerControlsHud();
@@ -16100,6 +16106,7 @@ const A = {
         _contexteCle = null;
         rafraichirTrajet();
         document.body.classList.remove('story-presenting');
+        majEtageCarte();
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
         mesurerEtageRecit();
