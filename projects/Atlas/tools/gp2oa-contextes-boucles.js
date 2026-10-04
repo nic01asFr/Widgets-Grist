@@ -30,7 +30,6 @@
     out.push(c[c.length - 1]);
     return out.map((p) => [+p[0].toFixed(6), +p[1].toFixed(6)]);
   };
-  const km = (m) => (m / 1000).toFixed(1).replace('.', ',') + ' km';
   // Le modèle : une étape qui filtre déjà sur l'unité.
   const modele = JSON.parse(S.getValue(S.getRowIds().find((id) => S.getValue(id, 'Cle') === 'ctx-sainte-baume'), 'StateJSON'));
   const boucles = [
@@ -58,7 +57,8 @@
     cols.Cle.push(d.cle);
     cols.Step.push(debut + 1 + i);
     cols.Title.push(d.titre);
-    cols.Description.push(`${d.titre} · ${km(longueur(brute))}. Les ouvrages de l’${d.unite.replace('Unité', 'unité')}, dans l’ordre du parcours : ouvrez « Tournée », ou touchez-en un sur la carte.`);
+    // La consigne dit seulement ce que l'auteur a à dire : la longueur et le nombre d'ouvrages sont calculés par Atlas, et la pastille « Tournée » se montre d'elle-même.
+    cols.Description.push(`Les ouvrages de l’${d.unite.replace('Unité', 'unité')}, dans l’ordre du parcours.`);
     cols.StateJSON.push(JSON.stringify(etat));
   });
   await dd.sendAction(['BulkAddRecord', 'Atlas_Story', boucles.map(() => null), cols]);

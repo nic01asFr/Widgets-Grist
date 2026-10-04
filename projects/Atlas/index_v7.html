@@ -521,8 +521,12 @@
         .map-controls-dock .dock-panel.dock-panel-tall {
             height: auto; max-height: min(62vh, 460px);
             border-radius: 16px; align-items: flex-start;
-            padding-top: 10px; padding-bottom: 10px;
+            padding: 10px 12px; position: relative;
         }
+        /* Dans un panneau haut, la flèche de repli se pose en haut à droite, sur la ligne du titre : elle laissait une colonne vide à droite
+           de toute la liste. Le titre lui laisse la place. */
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-collapse { position: absolute; top: 8px; right: 8px; z-index: 1; }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-data > :first-child { padding-right: 34px; }
         .dock-slot-host {
             display: flex; align-items: center;
             flex: 1; min-width: 0; overflow: hidden;
@@ -1209,16 +1213,25 @@
         .dock-slot-data.dock-slot-contexte { width: min(400px, calc(100vw - 160px)); max-width: 100%; }
         .contexte-courant { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
         /* La consigne du contexte actif se lit en entier : un défilement de plus dans le panneau, avec la liste dessous, perd le lecteur. */
-        .contexte-courant .contexte-consigne { margin-top: 0; padding-top: 0; border-top: 0; max-height: none; overflow: visible; }
-        .contexte-liste { display: flex; flex-direction: column; gap: 4px; max-height: min(34vh, 230px); overflow-y: auto; overscroll-behavior: contain; }
+        /* La consigne tient sur deux lignes ; un toucher la déplie. Elle prenait quatre lignes sur sept, avant la liste qu'on vient chercher. */
+        .contexte-courant .contexte-consigne {
+            margin-top: 0; padding-top: 0; border-top: 0; max-height: none; overflow: hidden; cursor: pointer;
+            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+        }
+        .contexte-courant .contexte-consigne.ouvert { display: block; }
+        .contexte-courant .contexte-consigne:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        .contexte-liste { display: flex; flex-direction: column; gap: 3px; max-height: min(44vh, 300px); overflow-y: auto; overscroll-behavior: contain; }
         .contexte-choix {
             display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left;
-            min-height: 40px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            min-height: 34px; padding: 5px 10px; border-radius: 8px; cursor: pointer;
             border: 1px solid var(--hairline); background: var(--surface); color: var(--text); font: inherit;
         }
         .contexte-choix.on { border-color: var(--accent); background: var(--surface-muted); }
         .contexte-choix:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
         .contexte-nom { font-weight: 600; font-size: 13px; }
+        .contexte-ligne { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+        .contexte-tournee-ico { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: 11.5px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .contexte-choix.on .contexte-tournee-ico { color: var(--accent); }
         .contexte-aide { font-size: 11.5px; color: var(--muted); }
         .contexte-consigne { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 12.5px; line-height: 1.45; max-height: 110px; overflow-y: auto; overscroll-behavior: contain; }
         .contexte-opt { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11.5px; color: var(--muted); cursor: pointer; }
@@ -2043,6 +2056,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004i"></script>
+    <script type="module" src="./app_v7.js?v=20261004j"></script>
 </body>
 </html>

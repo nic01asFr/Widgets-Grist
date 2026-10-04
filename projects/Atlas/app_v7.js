@@ -6424,7 +6424,7 @@ function listDockPills() {
                 id: 'tournee',
                 kind: 'tournee',
                 icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>',
-                label: av ? `Tournée · ${av.rang} / ${av.total}` : 'Démarrer la tournée',
+                label: (av ? `Tournée · ${av.rang} / ${av.total}` : 'Démarrer la tournée') + (longueurDeTournee(tourneeActive()) ? ` · ${longueurDeTournee(tourneeActive())}` : ''),
                 court: 'Tournée',
                 active: !!av,
                 ...(av ? {} : { action: demarrerTournee }),
@@ -8082,6 +8082,14 @@ function pasTournee(dir) {
     if (v) allerAObjet(v.coucheId, v.idx);
 }
 
+/** La longueur dite d'une tournée (« 9,4 km »), ou '' si la ligne n'en a pas. */
+function longueurDeTournee(trace) {
+    return trace?.coordinates?.length >= 2 ? direLongueur(longueurMetres(trace.coordinates)) : '';
+}
+
+/** Le pictogramme d'un parcours : deux points reliés par un chemin. */
+const ICONE_TOURNEE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>';
+
 /** Le rang et le nombre d'ouvrages de la tournée en cours, pour la pastille. */
 function avancementTournee() {
     const t = tourneeEnCours();
@@ -8101,7 +8109,7 @@ function renderTourneeDockSlotHtml() {
     const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage${o.cle === t.courant ? ' courant' : ''}" ${o.cle === t.courant ? 'aria-current="true"' : ''} onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
         <span class="n">${i + 1}</span><span class="nm">${echapper(o.nom)}</span><span class="d">${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}</span></button>`).join('');
     return `<div class="dock-slot-data dock-slot-tournee">
-        <div class="dock-slot-head"><span class="dock-slot-title">Tournée · ${av && av.rang ? `${av.rang} / ${av.total}` : `${ordre.length} ouvrages`}</span>
+        <div class="dock-slot-head"><span class="dock-slot-title">Tournée · ${av && av.rang ? `${av.rang} / ${av.total}` : `${ordre.length} ouvrages`}${longueurDeTournee(trace) ? ` · ${longueurDeTournee(trace)}` : ''}</span>
             <span class="tournee-actions">
                 <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage précédent" onclick="A.tourneePas(-1)">Précédent</button>
                 <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage suivant" onclick="A.tourneePas(1)">Suivant</button>
@@ -8115,15 +8123,20 @@ function renderContexteDockSlotHtml() {
     const liste = contextesDisponibles();
     const actif = _contexteCle;
     const courant = actif ? liste.find((c) => c.cle === actif) : null;
-    const choix = (cle, titre, aide, on) => `<button type="button" class="contexte-choix${on ? ' on' : ''}" aria-pressed="${on}"
+    // Un contexte qui porte une tournée le dit d'un pictogramme et de sa longueur, avant même d'être activé.
+    const tourneeDuContexte = (cle) => longueurDeTournee(tourneeDe((STATE.story || []).find((s) => s.cle === cle)?.state));
+    const choix = (cle, titre, aide, on) => {
+        const longueur = cle === null ? '' : tourneeDuContexte(cle);
+        return `<button type="button" class="contexte-choix${on ? ' on' : ''}" aria-pressed="${on}"
         onclick="${cle === null ? 'A.contexteQuitter()' : `A.contexteAppliquer('${chaineJs(cle)}')`}">
-        <span class="contexte-nom">${echapper(titre)}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
+        <span class="contexte-ligne"><span class="contexte-nom">${echapper(titre)}</span>${longueur ? `<span class="contexte-tournee-ico" title="Ce contexte porte une tournée de ${echapper(longueur)}">${ICONE_TOURNEE}${echapper(longueur)}</span>` : ''}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
     </button>`;
+    };
     return `<div class="dock-slot-data dock-slot-contexte">
         <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
             ${courant ? `<div class="contexte-courant">
-                ${courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
+                ${courant.texte.trim() ? `<div class="contexte-consigne" role="button" tabindex="0" title="Toucher pour lire en entier" onclick="this.classList.toggle('ouvert')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('ouvert');}">${assainirTexte(courant.texte)}</div>` : ''}
             </div>` : ''}
             <div class="contexte-liste">
                 ${choix(null, 'Scène de base', '', !actif)}
