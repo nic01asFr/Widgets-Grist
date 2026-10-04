@@ -1756,9 +1756,11 @@
             body.mobile-layout .map-controls-dock:not(.collapsed) .dock-panel {
                 max-width: min(100vw - 24px, 320px);
             }
-            body.mobile-layout .map-controls-dock.collapsed .dock-fabs {
-                max-width: min(calc(100vw - 100px), 240px);
-            }
+            /* La rangée de pastilles prend toute la largeur que la carte lui laisse : de 16 px du bord gauche à la boussole (82 px + marge). Elle ne se
+               limite plus à 240 px — sur un grand téléphone ou une tablette en portrait, elle laissait un vide à gauche et rognait ses pastilles.
+               Quand la colonne de boutons de l'hôte est affichée à gauche (application, barre retirée), elle lui laisse 60 px de plus. */
+            body.mobile-layout .map-controls-dock.collapsed .dock-fabs { max-width: calc(100cqw - 98px); }
+            body.mobile-layout.commandes-hote-visibles .map-controls-dock.collapsed .dock-fabs { max-width: calc(100cqw - 158px); }
             body.mobile-layout .map-frame { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
             /* La légende se pose au-dessus de l'attribution, comme la bulle du
                récit : à 72 px (édition) ou 16 px (lecture), elle en recouvrait le
@@ -2073,6 +2075,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004u"></script>
+    <script type="module" src="./app_v7.js?v=20261004v"></script>
 </body>
 </html>
