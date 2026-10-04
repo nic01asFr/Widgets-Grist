@@ -85,16 +85,20 @@
         .task-list { width: var(--task-list-width); min-width: var(--task-list-width); overflow-y: auto; border-right: 1px solid var(--border); background: var(--card-bg); }
 
         /* 06 · États vides & chargement */
+        .tf-period-hint { position: absolute; top: 0; bottom: 0; left: var(--task-list-width); right: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); pointer-events: none; }
+        .tf-period-hint .tf-period-card { pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); max-width: 280px; padding: var(--sp-4); text-align: center; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+        .tf-period-hint .tf-empty-title { font-weight: 600; font-size: var(--fs-md); color: var(--text); }
+        .tf-period-hint .tf-empty-sub { font-size: var(--fs-sm); color: var(--text-light); line-height: 1.5; }
         .tf-overlay { position: absolute; inset: 0; background: var(--card-bg); z-index: 6; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .tf-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; max-width: 320px; }
         .tf-empty .tf-empty-glyph { width: 48px; height: 48px; border-radius: 13px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-light); }
         .tf-empty .tf-empty-glyph svg { width: 24px; height: 24px; }
         .tf-empty .tf-empty-title { font-weight: 600; font-size: 0.92rem; color: var(--text); }
         .tf-empty .tf-empty-sub { font-size: 0.78rem; color: var(--text-light); line-height: 1.5; }
-        .tf-empty .tf-empty-btn { margin-top: 4px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 0.78rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .tf-empty .tf-empty-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-        .tf-empty .tf-empty-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .tf-empty .tf-empty-btn.primary:hover { background: var(--primary-dark); }
+        .tf-empty .tf-empty-btn, .tf-period-card .tf-empty-btn { margin-top: 4px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 0.78rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .tf-empty .tf-empty-btn:hover, .tf-period-card .tf-empty-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .tf-empty .tf-empty-btn.primary, .tf-period-card .tf-empty-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .tf-empty .tf-empty-btn.primary:hover, .tf-period-card .tf-empty-btn.primary:hover { background: var(--primary-dark); }
         .tf-sk { background: linear-gradient(90deg, var(--bg) 25%, var(--border) 37%, var(--bg) 63%); background-size: 400% 100%; border-radius: 5px; animation: tfsk 1.4s ease infinite; }
         @keyframes tfsk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
         .tf-gskel { width: 100%; height: 100%; display: flex; flex-direction: column; }
@@ -883,6 +887,7 @@
                     <div class="timeline-grid" id="timelineGrid"></div>
                 </div>
                 <div class="tf-overlay" id="ganttOverlay" style="display:none"></div>
+                <div class="tf-period-hint" id="ganttPeriodHint" style="display:none"></div>
             </div>
             <div class="legend" id="ganttLegend"></div>
         </div>
@@ -2259,16 +2264,37 @@
             ov.innerHTML = '<div class="tf-gskel">'+rows+'</div>';
             ov.style.display = "flex";
         }
-        function clearAllGanttFilters() { filters = { project: [], assignee: [], priority: [] }; updateFilterUI(); broadcastFilters(); render(); }
+        function clearAllGanttFilters() {
+            filters = { project: [], assignee: [], priority: [] }; searchQuery = '';
+            const si = document.getElementById('searchInput'); if (si) si.value = '';
+            updateFilterUI(); broadcastFilters(); render();
+        }
+        // Des tâches existent mais aucune ne tombe dans la période affichée : on le dit et on propose de s'y rendre.
+        function updatePeriodHint() {
+            const el = document.getElementById('ganttPeriodHint'); if (!el) return;
+            const ft = getFilteredTasks();
+            const fin = addDays(effectiveStart, effectiveDays);
+            const datees = ft.filter(t => gristToDate(t.dateDebut) && gristToDate(t.dateEcheance));
+            const dansLaPeriode = datees.some(t => gristToDate(t.dateEcheance) >= effectiveStart && gristToDate(t.dateDebut) <= fin);
+            if (!ft.length || dansLaPeriode) { el.style.display = 'none'; el.innerHTML = ''; return; }
+            el.innerHTML = '<div class="tf-period-card"><div class="tf-empty-title">' +
+                (datees.length ? 'Aucune tâche sur cette période' : 'Aucune tâche n\'a de dates') + '</div>' +
+                '<div class="tf-empty-sub">' + (datees.length
+                    ? 'Les tâches de la liste sont planifiées à d\'autres dates.'
+                    : 'Renseignez un début et une échéance pour les voir sur la timeline.') + '</div>' +
+                (datees.length ? '<button class="tf-empty-btn primary" onclick="fitToTasks()">Voir les tâches</button>' : '') + '</div>';
+            el.style.display = 'flex';
+        }
         function updateGanttOverlay() {
             const ov = document.getElementById("ganttOverlay"); if (!ov) return;
-            if (currentVisible && currentVisible.length > 0) { ov.style.display = "none"; ov.innerHTML = ""; return; }
-            const hasFilters = filters.project.length || filters.assignee.length || filters.priority.length;
+            if (currentVisible && currentVisible.length > 0) { ov.style.display = "none"; ov.innerHTML = ""; updatePeriodHint(); return; }
+            const hint = document.getElementById('ganttPeriodHint'); if (hint) { hint.style.display = 'none'; hint.innerHTML = ''; }
+            const hasFilters = searchQuery || filters.project.length || filters.assignee.length || filters.priority.length;
             const gicon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>';
             const search = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
             let html;
             if (hasFilters) {
-                html = '<div class="tf-empty"><span class="tf-empty-glyph">'+search+'</span><div class="tf-empty-title">Aucune tâche ne correspond</div><div class="tf-empty-sub">Aucune tâche planifiée ne passe les filtres actifs.</div><button class="tf-empty-btn" onclick="clearAllGanttFilters()">Effacer les filtres</button></div>';
+                html = '<div class="tf-empty"><span class="tf-empty-glyph">'+search+'</span><div class="tf-empty-title">Aucune tâche ne correspond</div><div class="tf-empty-sub">Aucune tâche planifiée ne passe la recherche ou les filtres actifs.</div><button class="tf-empty-btn" onclick="clearAllGanttFilters()">Tout effacer</button></div>';
             } else {
                 html = '<div class="tf-empty"><span class="tf-empty-glyph">'+gicon+'</span><div class="tf-empty-title">Aucune tâche à planifier</div><div class="tf-empty-sub">Créez une première tâche avec des dates pour la voir apparaître sur la timeline.</div><button class="tf-empty-btn primary" onclick="openCreatePanel()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle tâche</button></div>';
             }
