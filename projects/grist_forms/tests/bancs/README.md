@@ -47,3 +47,42 @@ repose le `GristBridgeParent` d'Artefactory.
 > est **le canal, pas la permission**. Un relais à la Artefactory est la voie
 > praticable ; il reviendrait à prêter l'accès Grist du formulaire à la page
 > intégrée, et doit donc rester un choix explicite de qui compose.
+
+## `carte-traces.html` — le point, le trajet, le contour
+
+Les trois saisies géométriques, hors Grist, pour éprouver le geste lui-même.
+La page expose `window.__cartes[colId]` (pour déplacer la carte entre deux
+clics, un outil cliquant toujours au centre) et affiche en bas ce que les
+colonnes portent.
+
+    https://localhost:8443/projects/grist_forms/tests/bancs/carte-traces.html
+
+### Mesuré le 05/10/2026 — quatre défauts, aucun visible à l'œil
+
+La saisie ligne/surface était écrite depuis le 04/10 et n'avait jamais été
+essayée. Elle ne marchait pas, et chaque défaut en cachait le suivant :
+
+1. **terra-draw ne se chargeait pas.** Son adaptateur publie un import nu
+   (`from "terra-draw"`). Atlas le résout par un `importmap` dans sa page ; le
+   formulaire n'est pas maître de la sienne. Il pointe désormais l'import
+   lui-même. Le `+esm` de jsDelivr résoudrait aussi, mais vers terra-draw 1.30 :
+   deux copies, deux versions.
+2. **Rien n'était écrit** : le tracé passait par la fonction des points, qui
+   ignore son argument et relit l'état des sommets — état que le tracé venait de
+   vider. Ligne bien dessinée, colonne vide.
+3. **`finish` n'arrivait pas** quand le geste de terminaison n'était pas trouvé.
+   On écoute `change` : chaque sommet posé s'inscrit, comme pour les points.
+4. **`getSnapshot()` rend aussi les sommets de guidage** : prendre la dernière
+   feature écrivait `POINT` là où l'on attend une ligne.
+
+Et un cinquième, en bout de chaîne : au premier clic, terra-draw tient une
+ligne de deux sommets confondus (le point posé, et le fantôme sous le curseur),
+que la normalisation d'Atlas ramène à un seul — d'où `LINESTRING (un point)`,
+que rien ne sait relire. Le contrôle de forme se fait donc **après**
+normalisation.
+
+Résultat attendu après trois clics sur chaque carte :
+
+    POINT (5.3984928 43.3035003)
+    LINESTRING (5.3985286 43.3034857, 5.4036785 43.3016118, 5.3976703 43.2991132)
+    POLYGON ((5.3985286 43.3034792, 5.4015327 43.3000437, 5.4041076 43.3034792, 5.3985286 43.3034792))

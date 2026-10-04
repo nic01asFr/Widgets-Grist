@@ -40,7 +40,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
 
-`node --test projects/grist_forms/tests/*.test.js` → **225 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **233 tests verts**
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
@@ -73,6 +73,29 @@ Trois choses mesurées qui commandent ces choix :
 Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
 `colId` : sans cela, les rangs et la précision d'une autre personne restaient
 dans la ligne.
+
+### Tracer une ligne, une surface (05/10/2026)
+
+La saisie `geometrie` en `LineString` / `Polygon` etait ecrite depuis la veille
+et n'avait jamais ete essayee : l'enquete du 4e ne demande que des points. Elle
+ne marchait pas, et **chaque defaut en cachait le suivant** — detail et mesures
+dans `tests/bancs/README.md`.
+
+- **L'adaptateur de terra-draw publie un import nu** (`from "terra-draw"`).
+  Atlas le resout par un `importmap` dans sa page ; le formulaire vit dans une
+  page qu'il n'a pas ecrite (widget, compositeur, page publiee). Il pointe donc
+  l'import lui-meme, sur le module qu'il vient de charger.
+- **Le trace ecrit sa geometrie directement** : il passait par la fonction des
+  points, qui relit un etat que le trace venait de vider.
+- **On ecoute `change`, pas seulement `finish`** : qui ne trouve pas le geste de
+  terminaison croit avoir repondu et n'a rien ecrit.
+- **On ne retient que la forme demandee** dans `getSnapshot()`, qui rend aussi
+  les sommets de guidage.
+- **Le controle de forme vient apres la normalisation d'Atlas** : au premier
+  clic, terra-draw tient deux sommets confondus que la normalisation ramene a
+  un seul.
+
+Eprouve au banc le 05/10/2026 : point, ligne a trois sommets, surface fermee.
 
 ### Le bandeau et la page d'accueil (05/10/2026)
 

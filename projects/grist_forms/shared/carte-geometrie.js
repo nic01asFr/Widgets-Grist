@@ -42,6 +42,7 @@
   /** Les mêmes versions qu'Atlas : une carte qui diverge est une carte de plus. */
   var MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js';
   var MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css';
+  var BLANCS = '\\s*';
   var TERRA_DRAW = 'https://cdn.jsdelivr.net/npm/terra-draw@1.35.0/dist/terra-draw.module.js';
   var TERRA_ADAPTER = 'https://cdn.jsdelivr.net/npm/terra-draw-maplibre-gl-adapter@1.4.1/dist/terra-draw-maplibre-gl-adapter.module.js';
 
@@ -137,13 +138,44 @@
   }
 
   var _traceur = null;
+  /**
+   * L'adaptateur de terra-draw publie un import nu, que le navigateur ne sait
+   * pas resoudre.
+   *
+   * > Son fichier commence par `import{TerraDrawExtend}from"terra-draw"` : un
+   * > nom de paquet, pas une adresse. **Atlas le resout par un `importmap`
+   * > pose dans sa page** — il est maitre de sa page. Le formulaire, lui, vit
+   * > dans une page qu'il n'a pas ecrite : widget Grist, compositeur, page
+   * > publiee. Il ne peut ni poser un `importmap` a temps, ni ecraser celui de
+   * > son hote.
+   *
+   * On pointe donc l'import sur le module qu'on vient de charger. Le `+esm` de
+   * jsDelivr resoudrait aussi, mais vers terra-draw 1.30 : deux copies, deux
+   * versions, et un adaptateur qui etend une base qui n'est pas celle des
+   * modes. Ici, une seule copie, la meme version qu'Atlas.
+   */
+  function resoudreImportNu(source, nom, adresse) {
+    var motif = new RegExp('(from' + BLANCS + '["' + "'" + '])' + nom + '(["' + "'" + '])', 'g');
+    return String(source).replace(motif, '$1' + adresse + '$2');
+  }
+
   function chargerTraceur() {
     if (!_traceur) {
-      _traceur = Promise.all([
-        import(/* @vite-ignore */ TERRA_DRAW),
-        import(/* @vite-ignore */ TERRA_ADAPTER)
-      ]).then(function (mods) {
-        return { td: mods[0], Adapter: mods[1].TerraDrawMapLibreGLAdapter };
+      _traceur = import(/* @vite-ignore */ TERRA_DRAW).then(function (td) {
+        return fetch(TERRA_ADAPTER).then(function (r) {
+          if (!r.ok) throw new Error('adaptateur : ' + r.status);
+          return r.text();
+        }).then(function (source) {
+          var patche = resoudreImportNu(source, 'terra-draw', TERRA_DRAW);
+          var url = URL.createObjectURL(new Blob([patche], { type: 'text/javascript' }));
+          return import(/* @vite-ignore */ url).then(function (mod) {
+            URL.revokeObjectURL(url);
+            return { td: td, Adapter: mod.TerraDrawMapLibreGLAdapter };
+          }, function (e) {
+            URL.revokeObjectURL(url);
+            throw e;
+          });
+        });
       });
       _traceur.catch(function () { _traceur = null; });
     }
@@ -195,20 +227,41 @@
 
       var etat = { sommets: lireValeur(geo, opts.valeur, famille) };
 
-      function publier() {
-        var g = versGeometrie(etat.sommets, type, multiple);
-        // La normalisation d'Atlas : 7 decimales (≈ 1 cm, un GPS de terrain
-        // en fait 3 a 5 m) et les sommets en double retires. Sans elle, la
-        // colonne recevait quinze chiffres apres la virgule, soit du volume
-        // sans information.
+      /**
+       * Ecrire une geometrie dans la colonne.
+       *
+       * La normalisation d'Atlas d'abord : 7 decimales (≈ 1 cm, la ou un GPS
+       * de terrain en fait 3 a 5 m) et les sommets en double retires. Sans
+       * elle, la colonne recevait quinze chiffres apres la virgule, soit du
+       * volume sans information.
+       */
+      function ecrireGeometrie(g) {
         if (g && geo.normaliserGeometrie) g = geo.normaliserGeometrie(g);
-        onChange(g && geo.ecrireWkt ? geo.ecrireWkt(g) : '');
+        // Rien a ecrire : la personne a tout efface, la colonne se vide.
+        if (!g) { onChange(''); return; }
+        // Une forme en cours de trace n'est pas une forme. Terra-draw tient un
+        // sommet fantome sous le curseur : au premier clic, sa « ligne » a deux
+        // sommets confondus, que la normalisation d'Atlas ramene a un seul.
+        // Ecrite telle quelle, elle donnait `LINESTRING (5.39 43.30)` — que
+        // rien ne sait relire. On garde alors ce qui etait deja la.
+        if (!geometrieFormee(g)) return;
+        onChange(geo.ecrireWkt ? geo.ecrireWkt(g) : '');
+      }
+
+      /** Les points posés au doigt : la geometrie se recalcule depuis l'etat. */
+      function publierPoints() {
+        ecrireGeometrie(versGeometrie(etat.sommets, type, multiple));
       }
 
       if (famille === 'Point') {
-        installerPoints(carte, maplibregl, etat, multiple, publier);
+        installerPoints(carte, maplibregl, etat, multiple, publierPoints);
       } else {
-        installerTrace(carte, geo, type, etat, publier, hote);
+        // > **Le trace ecrit sa geometrie directement.** Il passait par la
+        // > fonction des points, qui ignore son argument et relit l'etat des
+        // > sommets — etat que le trace venait de vider. Resultat : une ligne
+        // > bien dessinee sur la carte, et une colonne vide. Mesure le
+        // > 05/10/2026, au premier essai de la saisie ligne/surface.
+        installerTrace(carte, geo, type, etat, ecrireGeometrie, hote);
       }
 
       return {
@@ -263,7 +316,25 @@
    * saisi, et la saisie à la main sous la carte prend le relais. Une question
    * ne devient pas impossible parce qu'un CDN est lent.
    */
-  function installerTrace(carte, geo, type, etat, publier, hote) {
+  /**
+   * Une geometrie en cours de trace n'est pas encore une geometrie.
+   *
+   * Au premier sommet, terra-draw tient deja une « ligne » d'un seul point :
+   * ecrite telle quelle, elle donne `LINESTRING (5.39 43.30)`, que rien ne sait
+   * relire. On attend donc qu'il y ait de quoi faire une forme — deux sommets
+   * pour une ligne, un anneau ferme pour une surface.
+   */
+  function geometrieFormee(g) {
+    if (!g) return false;
+    if (g.type === 'LineString') return (g.coordinates || []).length >= 2;
+    if (g.type === 'Polygon') {
+      var anneau = (g.coordinates || [])[0] || [];
+      return anneau.length >= 4;
+    }
+    return true;
+  }
+
+  function installerTrace(carte, geo, type, etat, ecrireGeometrie, hote) {
     chargerTraceur().then(function (t) {
       var draw = new t.td.TerraDraw({
         adapter: new t.Adapter({ map: carte, lib: window.maplibregl }),
@@ -272,28 +343,42 @@
           new t.td.TerraDrawSelectMode()
         ]
       });
+      var attendu = type.indexOf('Line') >= 0 ? 'LineString' : 'Polygon';
       draw.start();
       draw.setMode(type.indexOf('Line') >= 0 ? 'linestring' : 'polygon');
-      draw.on('finish', function () {
-        var fc = draw.getSnapshot();
-        var f = fc && fc.length ? fc[fc.length - 1] : null;
+      // La session de trace reste attachee a sa carte : c'est par la qu'on
+      // l'efface, et par la qu'un banc d'essai la regarde.
+      hote.__trace = draw;
+
+      // > **On ecoute `change`, et pas seulement `finish`.** Un trace se
+      // > termine par un geste qu'il faut connaitre — recliquer le dernier
+      // > sommet, double-toucher. Qui ne le trouve pas croit avoir repondu et
+      // > n'a rien ecrit : mesure du 05/10/2026, la ligne etait bien tracee sur
+      // > la carte, la colonne restait vide. Chaque sommet pose s'inscrit donc,
+      // > comme pour les points, et `finish` ne fait que confirmer.
+      function recolter() {
+        // `getSnapshot` rend aussi les sommets de guidage que terra-draw
+        // affiche pendant le trace : prendre la derniere feature venue, c'est
+        // ecrire un POINT la ou l'on attend une ligne. On ne retient donc que
+        // la forme demandee.
+        var fc = draw.getSnapshot() || [];
+        var f = null;
+        for (var i = fc.length - 1; i >= 0; i--) {
+          var g = fc[i] && fc[i].geometry;
+          if (g && g.type === attendu) { f = fc[i]; break; }
+        }
         if (!f) return;
-        var g = geo.normaliserGeometrie ? geo.normaliserGeometrie(f.geometry) : f.geometry;
         etat.sommets = [];
-        publierGeometrie(geo, g, publier);
-      });
+        ecrireGeometrie(f.geometry);
+      }
+      draw.on('change', recolter);
+      draw.on('finish', recolter);
     }).catch(function () {
       var note = document.createElement('p');
       note.className = 'fr-hint-text fr-carte__panne';
       note.textContent = 'Le tracé n’a pas pu être chargé. Vous pouvez décrire le lieu ou saisir sa géométrie ci-dessous.';
       hote.parentNode.appendChild(note);
     });
-  }
-
-  function publierGeometrie(geo, g, publier) {
-    // `publier` ferme sur l'état des points ; pour un tracé, on écrit direct.
-    var wkt = g && geo.ecrireWkt ? geo.ecrireWkt(g) : '';
-    publier.ecrire ? publier.ecrire(wkt) : publier(wkt);
   }
 
   /** Les sommets déjà saisis, relus depuis le WKT de la colonne. */
@@ -369,6 +454,8 @@
     monter: monter,
     // Exposés pour les essais : ce que la carte calcule sans carte.
     versGeometrie: versGeometrie,
+    resoudreImportNu: resoudreImportNu,
+    geometrieFormee: geometrieFormee,
     styleDuFond: styleDuFond
   };
 }));
