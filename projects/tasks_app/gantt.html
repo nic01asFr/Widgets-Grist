@@ -3614,9 +3614,6 @@
             const isParent = hasChildren(task);
             if (isParent && type !== 'move') return;
 
-            e.preventDefault();
-            e.stopPropagation();
-
             // Capturer les descendants pour drag en bloc du parent
             const descendants = isParent ? getAllDescendants(id).map(d => ({
                 id: d.id,
@@ -3624,10 +3621,22 @@
                 originalEnd: gristToDate(d.dateEcheance)
             })).filter(d => d.originalStart && d.originalEnd) : [];
 
+            // Un parent sans dates propres affiche l'etendue de ses enfants : c'est elle qui sert de point de depart
+            // (sinon le deplacement calculait a partir d'une date vide et ecrivait des dates en 1970).
+            let originalStart = gristToDate(task.dateDebut), originalEnd = gristToDate(task.dateEcheance);
+            if ((!originalStart || !originalEnd) && descendants.length) {
+                if (!originalStart) originalStart = new Date(Math.min.apply(null, descendants.map(d => d.originalStart.getTime())));
+                if (!originalEnd) originalEnd = new Date(Math.max.apply(null, descendants.map(d => d.originalEnd.getTime())));
+            }
+            if (!originalStart || !originalEnd) return;   // aucune date : rien a deplacer
+
+            e.preventDefault();
+            e.stopPropagation();
+
             dragState = {
                 active: true, type: type, taskId: id, startX: e.clientX,
                 originalLeft: parseFloat(bar.style.left), originalWidth: parseFloat(bar.style.width),
-                originalStart: gristToDate(task.dateDebut), originalEnd: gristToDate(task.dateEcheance),
+                originalStart: originalStart, originalEnd: originalEnd,
                 descendants: descendants
             };
 
@@ -3678,6 +3687,9 @@
             const dx = e.clientX - dragState.startX;
             const daysDelta = Math.round(dx / pxPerDay);
 
+            // Simple clic (aucun decalage) : on n'ecrit rien et on laisse le clic ouvrir la fiche.
+            if (daysDelta === 0) { dragState.active = false; return; }
+
             let newStart = dragState.originalStart, newEnd = dragState.originalEnd;
             if (dragState.type === 'move') { newStart = addDays(dragState.originalStart, daysDelta); newEnd = addDays(dragState.originalEnd, daysDelta); }
             else if (dragState.type === 'resize-right') newEnd = addDays(dragState.originalEnd, daysDelta);
@@ -3710,7 +3722,13 @@
 
                     const extras = childUpdates.length + cascadeUpdates.length;
                     showToast(extras > 0 ? `Dates mises à jour (+${extras} tâches liées)` : 'Dates mises à jour', 'success');
-                } catch (err) { showToast('Erreur de mise à jour', 'error'); }
+                } catch (err) {
+                    // Echec (droits, reseau) : on relit la base, sinon la barre resterait la ou l'utilisateur l'a lachee.
+                    showToast('Erreur de mise à jour', 'error');
+                    dragState.active = false;
+                    await loadAllData();
+                    return;
+                }
             }
 
             dragState.active = false;
