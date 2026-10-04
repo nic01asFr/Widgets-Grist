@@ -280,6 +280,30 @@ const TF = (function () {
         const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
         document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
         setTimeout(revealActive, 300);
+        // Clavier : cartes, lignes et barres sont atteignables par Tab et s'ouvrent avec Entree ou Espace.
+        // Les widgets les creent chacun a leur facon (HTML ou DOM) : on les repere une fois rendus.
+        const ACTIVABLES = '.task-card, .task-row, .gantt-bar, .gantt-milestone, .event-bar, .week-event-bar';
+        const rendreActivables = () => {
+            document.querySelectorAll(ACTIVABLES).forEach(el => {
+                if (el.hasAttribute('tabindex')) return;
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('role', 'button');
+                const titre = el.querySelector('.card-title, .task-name, .gantt-bar-label, .milestone-label');
+                const nom = ((titre && titre.textContent) || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+                if (nom) el.setAttribute('aria-label', nom);
+            });
+        };
+        let planifie = false;
+        const planifier = () => { if (planifie) return; planifie = true; requestAnimationFrame(() => { planifie = false; rendreActivables(); }); };
+        if (typeof MutationObserver !== 'undefined' && document.body) new MutationObserver(planifier).observe(document.body, { childList: true, subtree: true });
+        planifier();
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const el = e.target;
+            if (!el || el.getAttribute('role') !== 'button' || !el.matches || !el.matches(ACTIVABLES)) return;
+            e.preventDefault();
+            el.click();
+        });
     }
 
     /* ----- Composants de la barre du haut (tous les widgets) ----------------------

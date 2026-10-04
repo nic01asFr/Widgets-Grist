@@ -604,6 +604,10 @@
     .search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
     @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
     :root[data-theme="dark"] .search-box::before { filter: invert(0.75); }
+
+    /* 17. Focus clavier visible sur ce qui s'ouvre : carte, ligne, barre. */
+    .task-card:focus-visible, .task-row:focus-visible, .gantt-bar:focus-visible, .gantt-milestone:focus-visible,
+    .event-bar:focus-visible, .week-event-bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     /* </taskflow-ui> */
     </style>
 </head>
@@ -978,6 +982,30 @@ const TF = (function () {
         const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
         document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
         setTimeout(revealActive, 300);
+        // Clavier : cartes, lignes et barres sont atteignables par Tab et s'ouvrent avec Entree ou Espace.
+        // Les widgets les creent chacun a leur facon (HTML ou DOM) : on les repere une fois rendus.
+        const ACTIVABLES = '.task-card, .task-row, .gantt-bar, .gantt-milestone, .event-bar, .week-event-bar';
+        const rendreActivables = () => {
+            document.querySelectorAll(ACTIVABLES).forEach(el => {
+                if (el.hasAttribute('tabindex')) return;
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('role', 'button');
+                const titre = el.querySelector('.card-title, .task-name, .gantt-bar-label, .milestone-label');
+                const nom = ((titre && titre.textContent) || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+                if (nom) el.setAttribute('aria-label', nom);
+            });
+        };
+        let planifie = false;
+        const planifier = () => { if (planifie) return; planifie = true; requestAnimationFrame(() => { planifie = false; rendreActivables(); }); };
+        if (typeof MutationObserver !== 'undefined' && document.body) new MutationObserver(planifier).observe(document.body, { childList: true, subtree: true });
+        planifier();
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const el = e.target;
+            if (!el || el.getAttribute('role') !== 'button' || !el.matches || !el.matches(ACTIVABLES)) return;
+            e.preventDefault();
+            el.click();
+        });
     }
 
     /* ----- Composants de la barre du haut (tous les widgets) ----------------------

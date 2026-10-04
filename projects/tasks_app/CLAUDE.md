@@ -68,9 +68,11 @@ renderPanelTask()       // rafraîchit le DOM du panel depuis editData
 saveTaskToGrist()       // UpdateRecord ou AddRecord selon isNew
 ```
 
-### Filtres inter-widgets (GEN-02)
+### Filtres (GEN-02)
 
-Les filtres sont diffusés entre widgets via `grist.widgetApi.setOptions()` + `grist.onOptions()`.
+Les filtres sont enregistrés dans les options du widget (`grist.setOption('filters', …)`) puis relus par `grist.onOptions()` : ils survivent à la réouverture. Le Kanban y inclut aussi le **statut**.
+
+> **À vérifier en Grist réel avant de s'y fier :** les options Grist sont propres à chaque section de page ; ce mécanisme n'est pas démontré comme un partage de filtres entre deux widgets distincts. Le code ci-dessous est l'intention d'origine, pas une garantie.
 
 ```javascript
 // Émission (dans toggleFilterValue)

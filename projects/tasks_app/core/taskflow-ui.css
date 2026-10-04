@@ -299,3 +299,7 @@ textarea { line-height: 1.45; }
 .search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
 :root[data-theme="dark"] .search-box::before { filter: invert(0.75); }
+
+/* 17. Focus clavier visible sur ce qui s'ouvre : carte, ligne, barre. */
+.task-card:focus-visible, .task-row:focus-visible, .gantt-bar:focus-visible, .gantt-milestone:focus-visible,
+.event-bar:focus-visible, .week-event-bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
