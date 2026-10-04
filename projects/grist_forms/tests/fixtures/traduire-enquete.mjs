@@ -42,6 +42,10 @@ function ouiNon(colId, extra = {}) {
 }
 function echelle(colId, echelleId, matrice, condition) {
   const f = base(colId, 'echelle');
+  // L'échelle affiche ses crans : répéter « (1–5) » dans la phrase est du bruit.
+  f.label = f.label.replace(/\s*\(1[–-]5\)\s*$/, '')
+    .replace(/\s*\(1 insuffisant → 5 suffisant\)\s*$/, '')
+    .replace(/\s*\(1 surtout pas → 5 en priorité\)\s*$/, '');
   f.kind = 'echelle';
   f.options = { echelle: echelleId, matrice };
   if (condition) f.condition = condition;
@@ -50,6 +54,23 @@ function echelle(colId, echelleId, matrice, condition) {
 function matrice(colIds, echelleId, matriceId, condition) {
   return colIds.map((c) => echelle(c, echelleId, matriceId, condition));
 }
+
+// ── les questions posées au public, une par matrice ──────────────────────
+// Le nom d'une colonne n'est pas une question : « Espaces publics agréables
+// (1–5) » dit à la base ce qu'elle range, pas au passant ce qu'on lui demande.
+const matrices = {
+  c_perception: { titre: 'Que pensez-vous des espaces publics du quartier ?', consigne: 'Pour chaque affirmation, dites à quel point vous êtes d’accord.' },
+  f_stationnement: { titre: 'Qu’attendez-vous du stationnement des voitures ?', consigne: 'Pour chaque proposition, dites à quel point vous êtes d’accord.' },
+  f_moto: { titre: 'Et pour les deux-roues motorisés ?' },
+  g_vitesses: { titre: 'Comment jugez-vous la circulation dans le quartier ?' },
+  h_bus: { titre: 'Que pensez-vous du bus dans le quartier ?' },
+  i_arceaux: { titre: 'Y a-t-il assez d’arceaux pour attacher les vélos ?' },
+  i_cohabitation: { titre: 'Et la cohabitation sur les trottoirs ?' },
+  j_ecoles: { titre: 'Que pensez-vous des abords d’école ?' },
+  k_chaleur: { titre: 'Ressentez-vous la chaleur dans le quartier ?' },
+  l_vegetalisation: { titre: 'Que pensez-vous de la végétalisation ?' },
+  m_modes: { titre: 'Quels modes de déplacement faudrait-il privilégier ?', consigne: 'En aménageant la voirie du quartier.' },
+};
 
 // ── le questionnaire ──────────────────────────────────────────────────────
 const sections = [
@@ -160,6 +181,7 @@ const formDef = {
   tableId: 'Reponses',
   composeMode: 'bind',
   meta: { timestampCol: 'Horodatage', durationCol: 'DureeSecondes' },
+  matrices,
   echelles: {
     accord: { min: 1, max: 5, libelles: ['Pas du tout d’accord', 'Tout à fait d’accord'], nonConcerne: true },
     arceaux: { min: 1, max: 5, libelles: ['Très insuffisant', 'Très suffisant'], nonConcerne: true },

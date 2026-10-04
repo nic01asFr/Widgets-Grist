@@ -165,6 +165,24 @@
           "type": "string"
         }
       }
+    },
+    "matrices": {
+      "type": "object",
+      "description": "Matrices : la question posée une fois pour plusieurs échelles qui la déclinent",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titre": {
+            "type": "string",
+            "description": "La question, telle que le public la lit"
+          },
+          "consigne": {
+            "type": "string",
+            "description": "Comment y répondre"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -213,6 +231,10 @@
           "items": {
             "$ref": "#/definitions/field"
           }
+        },
+        "description": {
+          "type": "string",
+          "description": "Consigne de l'étape"
         }
       }
     },

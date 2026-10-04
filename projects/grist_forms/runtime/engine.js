@@ -522,8 +522,21 @@
    * échelles ordinaires, chacun dans sa colonne. L'échelle n'est annoncée
    * qu'une fois, en tête, au lieu d'être répétée sous chaque ligne.
    */
+  /**
+   * Ce que la matrice demande, en une phrase.
+   *
+   * Sans elle, le public lisait cinq intitulés sans savoir ce qu'on lui
+   * demandait d'en faire. La question se déclare une fois, à côté de l'échelle
+   * qu'elle partage (`formDef.matrices`), et non sur chacun de ses champs.
+   */
+  function matriceDe(formDef, id) {
+    var m = (formDef && formDef.matrices && formDef.matrices[id]) || {};
+    return { titre: m.titre || '', consigne: m.consigne || '' };
+  }
+
   function renderMatrice(groupe, values, formDef, champsEnErreur) {
     var e = echelleDe(formDef, groupe.fields[0]);
+    var entete = matriceDe(formDef, groupe.matrice);
     var lignes = groupe.fields.map(function (f) {
       var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
         ? '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
@@ -533,7 +546,8 @@
         boutonsEchelle(f, values[f.colId], e) + erreur + '</div>';
     }).join('');
     return '<fieldset class="fr-fieldset fr-matrice" data-matrice="' + escapeHtml(groupe.matrice) + '">' +
-      (groupe.titre ? '<legend class="fr-fieldset__legend">' + escapeHtml(groupe.titre) + '</legend>' : '') +
+      (entete.titre ? '<legend class="fr-fieldset__legend fr-matrice__question">' + escapeHtml(entete.titre) + '</legend>' : '') +
+      (entete.consigne ? '<p class="fr-hint-text">' + escapeHtml(entete.consigne) + '</p>' : '') +
       ancresEchelle(e) + '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
   }
 
@@ -1085,9 +1099,17 @@
           '</header>';
       }
 
-      var stepperHtml = '<nav class="fr-stepper" aria-label="Étapes du formulaire">' +
-        '<p class="fr-stepper__title">' + escapeHtml(section.label) +
-        '<span class="fr-stepper__state">Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span></p>' +
+      // Où j'en suis, et combien il reste : la première chose qu'on cherche en
+      // ouvrant un questionnaire, et ce que l'enquête écrite à la main offrait
+      // alors que le moteur ne le disait qu'en toutes lettres.
+      var avancement = Math.round(((stepIndex + 1) / sections.length) * 100);
+      var stepperHtml = '<nav class="fr-progression" aria-label="Progression">' +
+        '<div class="fr-progression__piste"><span style="width:' + avancement + '%"></span></div>' +
+        '<p class="fr-progression__etat">' +
+        '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
+        '<span>' + avancement + ' %</span></p>' +
+        '<h2 class="fr-progression__titre">' + escapeHtml(section.label) + '</h2>' +
+        (section.description ? '<p class="fr-hint-text">' + escapeHtml(section.description) + '</p>' : '') +
         '</nav>';
 
       // Les échelles qui se suivent et partagent une matrice sont rendues
@@ -1109,8 +1131,10 @@
         ? '<div class="fr-alert fr-alert--error" role="alert"><p>' + escapeHtml(submitError) + '</p></div>'
         : '';
 
-      var navHtml = '<div class="fr-btns-group fr-btns-group--inline">' +
-        (stepIndex > 0 ? '<button type="button" class="fr-btn fr-btn--secondary" data-action="prev">Précédent</button>' : '') +
+      // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
+      // à côté du bouton : en haut d'un écran long, personne ne le voit.
+      var navHtml = '<div class="fr-form__actions">' +
+        (stepIndex > 0 ? '<button type="button" class="fr-btn fr-btn--secondary" data-action="prev">Précédent</button>' : '<span></span>') +
         (isLast
           ? '<button type="button" class="fr-btn" data-action="submit"' + (submitting ? ' disabled' : '') + '>' +
             (submitting ? 'Envoi…' : (editId ? 'Enregistrer' : 'Envoyer')) + '</button>'

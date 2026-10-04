@@ -226,3 +226,120 @@ body {
 @media (max-width: 36rem) {
   .fr-matrice__ligne { flex-direction: column; align-items: flex-start; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOCLE DE LISIBILITÉ (04/10/2026)
+
+   Le formulaire s'adresse au grand public, souvent debout, sur un téléphone.
+   Trois règles chiffrées, et une quatrième qui n'est pas une mesure :
+
+     se lit     corps 17 px, question 18 px, consigne 15 px ; contraste ≥ 4,5:1
+     se touche  44 px de côté par cible, 8 px entre deux
+     se repère  progression visible, action sous les yeux
+     se dit     des phrases, jamais des noms de colonnes
+
+   Le thème suit celui de Grist, qui l'impose en style EN LIGNE sur <html> :
+   on s'y accorde au lieu de lutter (leçon payée dans Atlas).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --texte: 1.0625rem;        /* 17 px */
+  --texte-question: 1.125rem;
+  --texte-consigne: 0.9375rem;
+  --cible: 2.75rem;          /* 44 px */
+  --ecart: 0.5rem;
+  --fond-page: var(--grey-975);
+  --fond-carte: var(--grey-1000);
+  --encre: var(--grey-200);
+  --encre-douce: var(--grey-625);
+  --bord: var(--grey-900);
+}
+
+/* Grist impose son thème ; on l'épouse. */
+:root[data-grist-theme="dark"],
+:root[data-grist-appearance="dark"] {
+  --fond-page: #1a1d1b;
+  --fond-carte: #22262400;
+  --fond-carte: #222624;
+  --encre: #edf1ec;
+  --encre-douce: #a7b0a9;
+  --bord: #39423c;
+  --grey-975: #1f2320;
+  --grey-950: #2a2f2b;
+  --grey-925: #39423c;
+  --blue-france: #9aa2ff;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) {
+    --fond-page: #1a1d1b;
+    --fond-carte: #222624;
+    --encre: #edf1ec;
+    --encre-douce: #a7b0a9;
+    --bord: #39423c;
+    --grey-975: #1f2320;
+    --grey-950: #2a2f2b;
+    --grey-925: #39423c;
+    --blue-france: #9aa2ff;
+    color-scheme: dark;
+  }
+}
+
+body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); color: var(--encre); }
+
+/* Un formulaire se lit en colonne étroite : au-delà, l'œil perd sa ligne. */
+.fr-form { max-width: 38rem; margin-inline: auto; }
+.fr-form .fr-label { font-size: var(--texte); font-weight: 600; color: var(--encre); }
+.fr-form .fr-hint-text { font-size: var(--texte-consigne); color: var(--encre-douce); }
+.fr-form .fr-fieldset__legend { font-size: var(--texte-question); font-weight: 600; line-height: 1.35; }
+
+/* Ce qui se touche : 44 px, et de l'air entre deux cibles. */
+.fr-form .fr-input, .fr-form .fr-select, .fr-form textarea.fr-input { min-height: var(--cible); font-size: var(--texte); }
+.fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
+.fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
+.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--blue-france); }
+.fr-radio-group label, .fr-checkbox-group label { font-weight: 400; }
+
+/* Progression : où j'en suis, combien il reste. */
+.fr-progression { margin-bottom: 1.25rem; }
+.fr-progression__piste { height: 6px; border-radius: 6px; background: var(--grey-950); overflow: hidden; }
+.fr-progression__piste span { display: block; height: 100%; background: var(--blue-france); transition: width .25s ease; }
+.fr-progression__etat {
+  display: flex; justify-content: space-between; margin: 0.35rem 0 0.75rem;
+  font-size: 0.82rem; color: var(--encre-douce); font-variant-numeric: tabular-nums;
+}
+.fr-progression__titre { font-size: 1.25rem; margin: 0; line-height: 1.3; }
+
+/* L'action reste sous les yeux. */
+.fr-form__actions {
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--ecart);
+  margin-top: 1.5rem; padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--fond-page) 35%);
+}
+
+/* Échelle : des crans qu'un doigt atteint. */
+.fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.fr-echelle__cran { flex: 1 1 var(--cible); }
+.fr-echelle__cran label {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--cible); min-width: var(--cible); padding: 0 0.5rem;
+  border: 1px solid var(--bord); border-radius: 6px; cursor: pointer; background: var(--fond-carte);
+}
+.fr-echelle__cran input { position: absolute; opacity: 0; width: 0; height: 0; }
+.fr-echelle__cran input:checked + label { background: var(--blue-france); border-color: var(--blue-france); color: #fff; }
+.fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+.fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
+.fr-echelle__ancres { font-size: 0.86rem; color: var(--encre-douce); }
+
+/* Matrice : un tableau sur grand écran, des cartes sur téléphone. */
+.fr-matrice__question { margin-bottom: 0.25rem; }
+.fr-matrice__ligne { border-top: 1px solid var(--grey-950); padding: 0.85rem 0; }
+.fr-matrice__intitule { font-size: var(--texte); }
+@media (max-width: 36rem) {
+  .fr-matrice__ligne {
+    border: 1px solid var(--bord); border-radius: 8px; padding: 0.85rem;
+    margin-bottom: 0.6rem; background: var(--fond-carte);
+  }
+  .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
+}

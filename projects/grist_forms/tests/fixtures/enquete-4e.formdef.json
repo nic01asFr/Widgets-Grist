@@ -11,6 +11,44 @@
     "timestampCol": "Horodatage",
     "durationCol": "DureeSecondes"
   },
+  "matrices": {
+    "c_perception": {
+      "titre": "Que pensez-vous des espaces publics du quartier ?",
+      "consigne": "Pour chaque affirmation, dites à quel point vous êtes d’accord."
+    },
+    "f_stationnement": {
+      "titre": "Qu’attendez-vous du stationnement des voitures ?",
+      "consigne": "Pour chaque proposition, dites à quel point vous êtes d’accord."
+    },
+    "f_moto": {
+      "titre": "Et pour les deux-roues motorisés ?"
+    },
+    "g_vitesses": {
+      "titre": "Comment jugez-vous la circulation dans le quartier ?"
+    },
+    "h_bus": {
+      "titre": "Que pensez-vous du bus dans le quartier ?"
+    },
+    "i_arceaux": {
+      "titre": "Y a-t-il assez d’arceaux pour attacher les vélos ?"
+    },
+    "i_cohabitation": {
+      "titre": "Et la cohabitation sur les trottoirs ?"
+    },
+    "j_ecoles": {
+      "titre": "Que pensez-vous des abords d’école ?"
+    },
+    "k_chaleur": {
+      "titre": "Ressentez-vous la chaleur dans le quartier ?"
+    },
+    "l_vegetalisation": {
+      "titre": "Que pensez-vous de la végétalisation ?"
+    },
+    "m_modes": {
+      "titre": "Quels modes de déplacement faudrait-il privilégier ?",
+      "consigne": "En aménageant la voirie du quartier."
+    }
+  },
   "echelles": {
     "accord": {
       "min": 1,
@@ -226,7 +264,7 @@
       "fields": [
         {
           "colId": "C1_EP_Agreables",
-          "label": "Espaces publics agréables (1–5)",
+          "label": "Espaces publics agréables",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -238,7 +276,7 @@
         },
         {
           "colId": "C2_EP_Adaptes",
-          "label": "Espaces publics adaptés à mes besoins (1–5)",
+          "label": "Espaces publics adaptés à mes besoins",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -250,7 +288,7 @@
         },
         {
           "colId": "C3_EP_Accessibles",
-          "label": "Espaces publics accessibles PMR/poussettes (1–5)",
+          "label": "Espaces publics accessibles PMR/poussettes",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -262,7 +300,7 @@
         },
         {
           "colId": "C4_EP_Entretenus",
-          "label": "Espaces publics bien entretenus (1–5)",
+          "label": "Espaces publics bien entretenus",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -274,7 +312,7 @@
         },
         {
           "colId": "C5_EP_Securite",
-          "label": "Sentiment de sécurité pour se déplacer (1–5)",
+          "label": "Sentiment de sécurité pour se déplacer",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -414,7 +452,7 @@
         },
         {
           "colId": "F2a_AjouterPlaces",
-          "label": "Stationnement : ajouter des places sur voirie (1–5)",
+          "label": "Stationnement : ajouter des places sur voirie",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -426,7 +464,7 @@
         },
         {
           "colId": "F2b_LimiterDuree",
-          "label": "Stationnement : limiter la durée / payant non-résidents (1–5)",
+          "label": "Stationnement : limiter la durée / payant non-résidents",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -438,7 +476,7 @@
         },
         {
           "colId": "F2c_PasDePotentiel",
-          "label": "Stationnement : aucun potentiel de places supplémentaires (1–5)",
+          "label": "Stationnement : aucun potentiel de places supplémentaires",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -450,7 +488,7 @@
         },
         {
           "colId": "F2d_ReserverResidents",
-          "label": "Stationnement : réserver aux résidents (1–5)",
+          "label": "Stationnement : réserver aux résidents",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -462,7 +500,7 @@
         },
         {
           "colId": "F2e_SupprimerPlaces",
-          "label": "Stationnement : supprimer des places (1–5)",
+          "label": "Stationnement : supprimer des places",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -474,7 +512,7 @@
         },
         {
           "colId": "F2f_MieuxSanctionner",
-          "label": "Stationnement : mieux surveiller/sanctionner (1–5)",
+          "label": "Stationnement : mieux surveiller/sanctionner",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -486,7 +524,7 @@
         },
         {
           "colId": "F4_Moto_Facile",
-          "label": "Stationnement moto/scooter sans difficulté (1–5)",
+          "label": "Stationnement moto/scooter sans difficulté",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -509,7 +547,7 @@
       "fields": [
         {
           "colId": "G1_VitessesConvenables",
-          "label": "Vitesses de circulation convenables (1–5)",
+          "label": "Vitesses de circulation convenables",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -521,7 +559,7 @@
         },
         {
           "colId": "G2_VitessesExcessives",
-          "label": "Vitesses excessives de certains automobilistes (1–5)",
+          "label": "Vitesses excessives de certains automobilistes",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -533,7 +571,7 @@
         },
         {
           "colId": "G3_TraverseesSures",
-          "label": "Traversées piétonnes sûres (1–5)",
+          "label": "Traversées piétonnes sûres",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -606,7 +644,7 @@
         },
         {
           "colId": "H3_AccesArrets",
-          "label": "Accès/attente aux arrêts de bus satisfaisants (1–5)",
+          "label": "Accès/attente aux arrêts de bus satisfaisants",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -623,7 +661,7 @@
         },
         {
           "colId": "H4_Horaires",
-          "label": "Horaires de bus respectés (1–5)",
+          "label": "Horaires de bus respectés",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -653,7 +691,7 @@
         },
         {
           "colId": "I1_ArceauxSuffisance",
-          "label": "Nombre d’arceaux vélos sur voirie (1 insuffisant → 5 suffisant)",
+          "label": "Nombre d’arceaux vélos sur voirie",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -670,7 +708,7 @@
         },
         {
           "colId": "I4_VelosMalGares",
-          "label": "Vélos/trottinettes mal garés gênants à pied (1–5)",
+          "label": "Vélos/trottinettes mal garés gênants à pied",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -719,7 +757,7 @@
         },
         {
           "colId": "J1_AccesConflictuels",
-          "label": "Abords d’école dangereux/tendus entre modes (1–5)",
+          "label": "Abords d’école dangereux/tendus entre modes",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -736,7 +774,7 @@
         },
         {
           "colId": "J2_PrioriteEcoles",
-          "label": "Sécuriser les abords d’école = priorité (1–5)",
+          "label": "Sécuriser les abords d’école = priorité",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -766,7 +804,7 @@
         },
         {
           "colId": "K1_TropChaud",
-          "label": "Trop chaud dans les espaces publics empruntés (1–5)",
+          "label": "Trop chaud dans les espaces publics empruntés",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -783,7 +821,7 @@
         },
         {
           "colId": "K2_ManqueOmbrage",
-          "label": "Manque d’ombrage dans le quartier (1–5)",
+          "label": "Manque d’ombrage dans le quartier",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -800,7 +838,7 @@
         },
         {
           "colId": "K3_EspacesFrais",
-          "label": "Souhait d’accès à des espaces frais proches (1–5)",
+          "label": "Souhait d’accès à des espaces frais proches",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -830,7 +868,7 @@
         },
         {
           "colId": "L1_Satisfait",
-          "label": "Satisfait de la végétalisation actuelle (1–5)",
+          "label": "Satisfait de la végétalisation actuelle",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -847,7 +885,7 @@
         },
         {
           "colId": "L2_PlusArbres",
-          "label": "Plus d’arbres dans les rues (1–5)",
+          "label": "Plus d’arbres dans les rues",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -864,7 +902,7 @@
         },
         {
           "colId": "L3_SupprStatPourArbres",
-          "label": "Supprimer du stationnement pour planter (1–5)",
+          "label": "Supprimer du stationnement pour planter",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -881,7 +919,7 @@
         },
         {
           "colId": "L4_ArbustesPlantes",
-          "label": "Plus d’arbustes/plantes au sol (1–5)",
+          "label": "Plus d’arbustes/plantes au sol",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -898,7 +936,7 @@
         },
         {
           "colId": "L5_PlusParcs",
-          "label": "Plus d’espaces verts/parcs (1–5)",
+          "label": "Plus d’espaces verts/parcs",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -921,7 +959,7 @@
       "fields": [
         {
           "colId": "M1_Mode_Voiture",
-          "label": "Prioriser la voiture (1 surtout pas → 5 en priorité)",
+          "label": "Prioriser la voiture",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -933,7 +971,7 @@
         },
         {
           "colId": "M2_Mode_Bus",
-          "label": "Prioriser le bus (1–5)",
+          "label": "Prioriser le bus",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -945,7 +983,7 @@
         },
         {
           "colId": "M3_Mode_Velo",
-          "label": "Prioriser le vélo (1–5)",
+          "label": "Prioriser le vélo",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -957,7 +995,7 @@
         },
         {
           "colId": "M4_Mode_Trottinette",
-          "label": "Prioriser la trottinette (1–5)",
+          "label": "Prioriser la trottinette",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -969,7 +1007,7 @@
         },
         {
           "colId": "M5_Mode_Pieton",
-          "label": "Prioriser la marche à pied (1–5)",
+          "label": "Prioriser la marche à pied",
           "type": "Int",
           "widget": "echelle",
           "required": false,
@@ -981,7 +1019,7 @@
         },
         {
           "colId": "M6_Mode_2RM",
-          "label": "Prioriser les deux-roues motorisés (1–5)",
+          "label": "Prioriser les deux-roues motorisés",
           "type": "Int",
           "widget": "echelle",
           "required": false,
