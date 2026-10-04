@@ -353,6 +353,11 @@
     border: 1px solid var(--grey-925, #e5e5e5); border-bottom-width: 2px; border-radius: 5px 5px 0 0;
     background: var(--fond-carte, #fff); color: inherit;
   }
+  .ajout__titre { margin: 0; font-size: 0.92rem; font-weight: 600; }
+  .ajout__ligne { display: flex; gap: 0.5rem; align-items: stretch; }
+  .ajout__ligne .ajout__texte { flex: 1 1 auto; }
+  .ajout__valider { flex: 0 0 auto; }
+  .ajout__aide { margin: 0; font-size: 0.78rem; color: var(--encre-douce, #666); }
   .ajout__types { display: flex; flex-wrap: wrap; gap: 0.3rem; }
   .ajout__type {
     font: inherit; font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0.6rem; border-radius: 999px;
@@ -2295,11 +2300,21 @@ function renderAjoutRapide(si) {
   const types = ((window.FormUx && FormUx.SIMPLE_TYPES) || []).map(t =>
     `<button type="button" class="ajout__type${S.typeAjout === t.key ? ' est-actif' : ''}"
       onclick="App.typeAjout('${esc(t.key)}')">${esc(t.label)}</button>`).join('');
+  // Le bouton « + Ajouter une question » a disparu de la carte d'étape : il
+  // n'avait pas sa place dans les réglages, puisqu'on ajoute en regardant le
+  // formulaire. Mais une ligne de saisie muette ne dit pas qu'elle ajoute :
+  // elle s'annonce, et un bouton double la touche Entrée.
   return `
     <div class="ajout">
-      <input class="ajout__texte" id="ajout-rapide" placeholder="Écrire une question, puis Entrée…"
-        aria-label="Nouvelle question"
-        onkeydown="if (event.key === 'Enter') { event.preventDefault(); App.ajouterDepuisTexte(${si}, this.value); }">
+      <p class="ajout__titre">Ajouter une question à cette étape</p>
+      <div class="ajout__ligne">
+        <input class="ajout__texte" id="ajout-rapide" placeholder="Écrire la question, puis Entrée…"
+          aria-label="Nouvelle question"
+          onkeydown="if (event.key === 'Enter') { event.preventDefault(); App.ajouterDepuisTexte(${si}, this.value); }">
+        <button type="button" class="fr-btn ajout__valider"
+          onclick="App.ajouterDepuisTexte(${si}, document.getElementById('ajout-rapide').value)">Ajouter</button>
+      </div>
+      <p class="ajout__aide">Type de réponse :</p>
       <div class="ajout__types">${types}</div>
     </div>`;
 }
