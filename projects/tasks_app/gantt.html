@@ -1234,12 +1234,10 @@
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
 
-            /* ----- Interface commune : menus et lanceur ------------------------------
-             * Menus deroulants generiques : un conteneur [data-menu] avec un bouton
-             * [data-menu-toggle] et un panneau .tf-menu-panel. Un clic sur le bouton ouvre /
-             * ferme, un clic ailleurs ou Echap ferme. Le panneau s'aligne a droite s'il
-             * deborderait du widget. Dans le lanceur (?shell=1) le titre du widget est masque :
-             * l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
+            /* ----- Interface commune : bandeau, info-bulles, clavier et lanceur ----------
+             * Les boutons [data-tray-toggle] ouvrent / ferment le bandeau de saisie sous la barre
+             * (voir trayToggle) ; Echap le ferme. Dans le lanceur (?shell=1) le titre du widget est
+             * masque : l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
             function initUi() {
                 if (typeof document === 'undefined' || initUi.done) return;
                 initUi.done = true;

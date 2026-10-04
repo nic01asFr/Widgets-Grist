@@ -48,8 +48,6 @@
         .filter-count { background: var(--primary); color: #fff; border-radius: 999px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 0.6rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; }
 
         /* ── Filter panel ── */
-        .filter-panel { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 10px 16px; display: none; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
-        .filter-panel.open { display: flex; }
         .filter-section { display: flex; flex-direction: column; gap: 5px; }
         .filter-section-label { font-size: var(--fs-2xs); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -127,7 +125,7 @@
         @media (max-width: 560px) {
             .header { padding: 8px 12px; gap: 6px; }
             .btn { min-height: 38px; }
-            .filter-panel, .edit-panel { width: 100% !important; }
+            .edit-panel { width: 100% !important; }
         }
         :root {
             --primary:#3e5de7; --primary-dark:#2742b8; --primary-light:#e7ecfe;
@@ -297,7 +295,7 @@
         /* ── Print ── */
         @media print {
             body { background: white !important; }
-            .header, .filter-panel, .demo-badge, .edit-panel { display: none !important; }
+            .header, .demo-badge, .edit-panel { display: none !important; }
             .main { padding: 0 !important; margin-right: 0 !important; }
             .component { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
             @page { size: landscape; margin: 1cm; }
@@ -963,12 +961,10 @@ const TF = (function () {
     const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
     function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
 
-    /* ----- Interface commune : menus et lanceur ------------------------------
-     * Menus deroulants generiques : un conteneur [data-menu] avec un bouton
-     * [data-menu-toggle] et un panneau .tf-menu-panel. Un clic sur le bouton ouvre /
-     * ferme, un clic ailleurs ou Echap ferme. Le panneau s'aligne a droite s'il
-     * deborderait du widget. Dans le lanceur (?shell=1) le titre du widget est masque :
-     * l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
+    /* ----- Interface commune : bandeau, info-bulles, clavier et lanceur ----------
+     * Les boutons [data-tray-toggle] ouvrent / ferment le bandeau de saisie sous la barre
+     * (voir trayToggle) ; Echap le ferme. Dans le lanceur (?shell=1) le titre du widget est
+     * masque : l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
     function initUi() {
         if (typeof document === 'undefined' || initUi.done) return;
         initUi.done = true;
@@ -1743,7 +1739,6 @@ function rebuildChildrenCache() {
 const isRoot = (t) => !t?.parentTask;
 const getChildren = (id) => childrenByParent.get(id) || [];
 const hasChildren = (t) => t && getChildren(t.id).length > 0;
-let filterPanelOpen = false;
 
 // STATUS_LABELS / STATUS_COLORS supprimes : statuts lus dynamiquement via statusCfg (#1)
 const PRIORITY_LABELS = { 1:'Critique', 2:'Haute', 3:'Moyenne', 4:'Basse' };
@@ -1824,13 +1819,6 @@ function toggleFilterAssigne(id) { const s=String(id); filters.assignes=filters.
 function toggleFilterStatut(v)  { filters.statuts=filters.statuts.includes(v)?filters.statuts.filter(x=>x!==v):[...filters.statuts,v]; render(); }
 function setPeriode(p)           { filters.periode=p; render(); }
 function clearFilters()          { filters={periode:'all',projets:[],assignes:[],statuts:[]}; render(); }
-
-function toggleFilterPanel() {
-    filterPanelOpen = !filterPanelOpen;
-    document.getElementById('filterPanel').classList.toggle('open', filterPanelOpen);
-    document.getElementById('filterToggleBtn').classList.toggle('active', filterPanelOpen);
-    if (filterPanelOpen) renderFilterPanel();
-}
 
 function renderFilterPanel() {
     const PERIODE_OPTIONS = [['week','Semaine'],['month','Mois'],['quarter','Trimestre'],['all','Tout']];
