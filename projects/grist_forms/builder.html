@@ -7,35 +7,82 @@
 <link rel="stylesheet" href="shared/dsfr-like.css">
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
-  .app-header {
-    background: #fff;
-    border-bottom: 1px solid var(--grey-900, #ddd);
-    padding: 1rem 0;
-    box-shadow: 0 1px 0 rgba(0, 0, 145, 0.06);
-  }
-  #steps {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+  /* Une seule barre : étapes à gauche, état de la connexion à droite. */
+  .app-bar {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.4rem 0.9rem;
     background: #fff;
     border-bottom: 1px solid var(--grey-925, #e5e5e5);
-    flex-wrap: wrap;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    position: sticky; top: 0; z-index: 10;
   }
-  #steps .fr-btn { border-radius: 4px; }
+  #steps { display: flex; gap: 0.25rem; flex: 1 1 auto; flex-wrap: wrap; min-width: 0; }
+  /* Les étapes sont un sélecteur segmenté, pas quatre gros boutons. */
+  #steps .fr-btn {
+    border-radius: 999px; padding: 0.25rem 0.75rem; font-size: 0.85rem; font-weight: 500;
+    background: transparent; color: var(--grey-200, #3a3a3a); border: 1px solid transparent;
+    box-shadow: none; min-height: 0;
+  }
+  #steps .fr-btn:hover { background: var(--grey-975, #f3f3fb); }
   #steps .fr-btn.is-active {
     background: var(--blue-france, #000091);
     color: #fff;
     border-color: var(--blue-france, #000091);
   }
+  .app-bar__etat {
+    font-size: 0.75rem; color: var(--grey-400, #666); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+  }
+  .app-bar__etat::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--grey-700, #999);
+  }
+  .app-bar__etat.est-connecte::before { background: #18753c; }
+  .app-bar__etat.est-demo::before { background: #b34000; }
+  /* Le menu : un seul point d'entrée pour voir, exporter, régler. */
+  .app-menu { position: relative; }
+  .app-menu > summary {
+    list-style: none; cursor: pointer; border-radius: 6px;
+    padding: 0.15rem 0.5rem; font-size: 1.1rem; line-height: 1.4;
+    color: var(--grey-200, #3a3a3a); border: 1px solid transparent;
+  }
+  .app-menu > summary::-webkit-details-marker { display: none; }
+  .app-menu > summary:hover { background: var(--grey-975, #f3f3fb); }
+  .app-menu[open] > summary { background: var(--grey-975, #f3f3fb); border-color: var(--grey-925, #e5e5e5); }
+  .app-menu__panneau {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+    width: min(26rem, calc(100vw - 1.5rem));
+    max-height: min(70vh, 32rem); overflow: auto;
+    background: #fff; border: 1px solid var(--grey-925, #e5e5e5); border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(22, 22, 22, 0.12);
+    padding: 0.75rem 0.9rem;
+  }
+  .app-menu__titre {
+    font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-400, #666); margin: 0.7rem 0 0.35rem;
+  }
+  .app-menu__titre:first-child { margin-top: 0; }
+  .app-menu__lignes { display: flex; flex-direction: column; gap: 0.3rem; }
+  .app-menu__action {
+    font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer;
+    padding: 0.4rem 0.55rem; border-radius: 5px;
+    background: transparent; border: 1px solid transparent; color: var(--grey-100, #1e1e1e);
+  }
+  .app-menu__action:hover { background: var(--grey-975, #f3f3fb); border-color: var(--grey-925, #e5e5e5); }
+  .app-menu__action[disabled] { opacity: 0.45; cursor: default; }
+  .app-menu__note { font-size: 0.78rem; color: var(--grey-400, #666); margin: 0.2rem 0 0; }
+  .app-menu pre {
+    max-height: 16rem; overflow: auto; font-size: 0.72rem; line-height: 1.5;
+    background: var(--grey-975, #f6f6f6); padding: 0.6rem; border-radius: 5px; margin: 0.3rem 0 0;
+  }
+  @media (max-width: 36rem) {
+    .app-bar { flex-wrap: wrap; }
+    .app-bar__etat { order: -1; }
+  }
   .builder-step {
     background: #fff;
-    padding: 1.5rem;
-    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    border-radius: 6px;
     border: 1px solid var(--grey-925, #e5e5e5);
-    box-shadow: 0 1px 3px rgba(22, 22, 22, 0.06);
   }
   .sections-stage {
     max-width: 40rem;
@@ -530,23 +577,28 @@
 </head>
 <body>
 
-<header class="app-header">
-  <div class="fr-container">
-    <div class="fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
-      <div class="fr-col">
-        <h1 class="fr-h4 fr-mb-0">Form Builder — essence formulaires Grist</h1>
-        <p class="fr-text--sm fr-mb-0">Composer, prévisualiser et publier un formulaire intra-doc</p>
-      </div>
-      <div class="fr-col fr-col--auto">
-        <span id="status-badge" class="fr-badge fr-badge--info">Initialisation…</span>
-      </div>
-    </div>
-  </div>
+<!--
+  Une seule ligne de chrome : le widget vit dans un panneau de Grist, et chaque
+  rangée d'en-tête est prise sur le formulaire qu'on compose. Le titre et la
+  devise sont partis — la personne sait où elle est, elle vient de choisir ce
+  widget. Reste ce qui sert : où j'en suis, et si Grist répond.
+-->
+<header class="app-bar">
+  <nav id="steps" aria-label="Étapes du builder"></nav>
+  <span id="status-badge" class="app-bar__etat" title="État de la connexion à Grist">Initialisation…</span>
+  <!--
+    Un seul endroit pour ce qui n'est pas la composition : voir la définition,
+    l'exporter, régler ce qui vaut pour tout le formulaire. C'était dispersé —
+    un bouton de téléchargement et deux replis « Technique » au fond de l'onglet
+    Aperçu, invisibles depuis les trois autres.
+  -->
+  <details id="menu-options" class="app-menu">
+    <summary class="app-menu__bouton" title="Options, export et réglages" aria-label="Options">⋯</summary>
+    <div class="app-menu__panneau" id="menu-options-panneau"></div>
+  </details>
 </header>
 
-<nav id="steps" aria-label="Étapes du builder"></nav>
-
-<main class="fr-container fr-my-4w">
+<main class="fr-container fr-my-2w">
   <section id="forms-list" class="builder-step"><p class="fr-text--sm">Chargement…</p></section>
   <section id="builder" class="builder-step" hidden></section>
   <section id="preview" class="builder-step" hidden></section>
@@ -1358,12 +1410,15 @@ function render() {
 function renderStatusBadge() {
   const badge = document.getElementById('status-badge');
   if (!badge) return;
+  // Une pastille et deux mots : l'état tient sur la barre, sans prendre de ligne.
   if (S.isDemo) {
-    badge.className = 'fr-badge fr-badge--warning';
-    badge.textContent = 'Mode démo (hors Grist)';
+    badge.className = 'app-bar__etat est-demo';
+    badge.textContent = 'Hors Grist';
+    badge.title = 'Mode démo : rien n’est écrit dans un document';
   } else {
-    badge.className = 'fr-badge fr-badge--success';
-    badge.textContent = 'Connecté à Grist';
+    badge.className = 'app-bar__etat est-connecte';
+    badge.textContent = 'Connecté';
+    badge.title = 'Connecté à Grist';
   }
 }
 
@@ -2506,10 +2561,6 @@ function renderPreviewStep() {
     el.innerHTML = `<p class="fr-text--sm">Sélectionnez ou créez un formulaire pour voir l'aperçu.</p>`;
     return;
   }
-  const def = S.currentDef;
-  let smJson = '';
-  try { smJson = JSON.stringify(SurveyProject.formDefToSurveyManifest(def), null, 2); } catch (e) { smJson = 'Erreur de projection : ' + e.message; }
-
   el.innerHTML = `
     <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-2w">
       <div class="fr-col"><h2 class="fr-h5 fr-mb-0">Aperçu</h2></div>
@@ -2518,16 +2569,98 @@ function renderPreviewStep() {
       </div>
     </div>
     <div class="preview-frame" id="preview-mount"></div>
-    <details class="json-preview">
-      <summary>Technique</summary>
-      <div class="fr-mt-1w">
-        <button class="fr-btn fr-btn--secondary fr-btn--sm" onclick="App.downloadSurveyManifest()">Télécharger Survey Manifest (.json)</button>
-      </div>
-      <details class="json-preview"><summary>FormDef (JSON)</summary><pre>${esc(JSON.stringify(def, null, 2))}</pre></details>
-      <details class="json-preview"><summary>Projection Survey Manifest (JSON)</summary><pre>${esc(smJson)}</pre></details>
-    </details>
   `;
   mountPreview();
+}
+
+/**
+ * Le menu : voir, exporter, régler — ce qui vaut pour le formulaire entier,
+ * accessible depuis n'importe quelle étape.
+ *
+ * Il se peuple à l'ouverture, pas au rendu de chaque écran : son contenu dépend
+ * du formulaire courant, qui change sous lui.
+ */
+function renderMenuOptions() {
+  const panneau = document.getElementById('menu-options-panneau');
+  if (!panneau) return;
+  const def = S.currentDef;
+  if (!def) {
+    panneau.innerHTML = `<p class="app-menu__note">Choisissez un formulaire pour voir sa définition, l’exporter ou la régler.</p>`;
+    return;
+  }
+  let smJson = '';
+  try { smJson = JSON.stringify(SurveyProject.formDefToSurveyManifest(def), null, 2); }
+  catch (e) { smJson = 'Projection impossible : ' + (e && e.message); }
+
+  panneau.innerHTML = `
+    <p class="app-menu__titre">Exporter</p>
+    <div class="app-menu__lignes">
+      <button class="app-menu__action" onclick="App.downloadFormDef()">Télécharger la définition (.json)</button>
+      <button class="app-menu__action" onclick="App.downloadSurveyManifest()">Télécharger le Survey Manifest (.json)</button>
+      <button class="app-menu__action" onclick="App.copierFormDef()">Copier la définition</button>
+    </div>
+    <p class="app-menu__titre">Réglages du formulaire</p>
+    <div class="app-menu__lignes">
+      <p class="app-menu__note">Identifiant : <code>${esc(def.id)}</code> — table : <code>${esc(def.tableId || '—')}</code></p>
+      <button class="app-menu__action" onclick="App.ouvrirReglages()">Ouvrir les options avancées…</button>
+    </div>
+    <p class="app-menu__titre">Voir</p>
+    <details class="json-preview"><summary>Définition (FormDef)</summary><pre>${esc(JSON.stringify(def, null, 2))}</pre></details>
+    <details class="json-preview"><summary>Projection Survey Manifest</summary><pre>${esc(smJson)}</pre></details>
+  `;
+}
+
+/** Fermer le menu : un clic ailleurs, ou Échap. */
+function installerMenuOptions() {
+  const menu = document.getElementById('menu-options');
+  if (!menu) return;
+  menu.addEventListener('toggle', () => { if (menu.open) renderMenuOptions(); });
+  document.addEventListener('click', (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.open) menu.open = false; });
+}
+
+function telechargerJson(objet, nom) {
+  const blob = new Blob([JSON.stringify(objet, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nom;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadFormDef() {
+  if (!S.currentDef) return;
+  try { telechargerJson(FormulairesTable.defPropre(S.currentDef), (S.currentDef.id || 'formulaire') + '.json'); }
+  catch (e) { toast('Erreur export : ' + (e && e.message), 'error'); }
+}
+
+async function copierFormDef() {
+  if (!S.currentDef) return;
+  const texte = JSON.stringify(FormulairesTable.defPropre(S.currentDef), null, 2);
+  try {
+    await navigator.clipboard.writeText(texte);
+    toast('Définition copiée', 'success');
+  } catch (e) {
+    // Le presse-papier est refusé dans certaines iframes : on ne ment pas.
+    toast('Copie refusée par le navigateur — utilisez le téléchargement', 'error');
+  }
+}
+
+/** Les réglages d'ensemble vivent sur l'écran des questions : on y mène. */
+function ouvrirReglages() {
+  const menu = document.getElementById('menu-options');
+  if (menu) menu.open = false;
+  goStep('builder');
+  requestAnimationFrame(() => {
+    const avancees = document.querySelector('#builder details.fr-mt-3w, #builder details');
+    if (avancees) {
+      avancees.open = true;
+      avancees.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  });
 }
 
 function downloadSurveyManifest() {
@@ -2801,7 +2934,7 @@ window.App = {
   onFieldConditionToggle, onFieldCondition,
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
-  saveForm, refreshPreview: mountPreview, downloadSurveyManifest, publishForm
+  saveForm, refreshPreview: mountPreview, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */
@@ -3922,6 +4055,7 @@ window.App = {
 })();
 
 // Démarrage
+installerMenuOptions();
 init();
 </script>
 </body>
