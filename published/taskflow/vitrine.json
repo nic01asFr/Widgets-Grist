@@ -14,6 +14,10 @@
       "texte": "Kanban, Gantt, Calendrier, Tableau de bord, Plan de charge, Feuille de temps, Organigramme, Whiteboard — toutes sur les mêmes tables."
     },
     {
+      "titre": "Un contexte commun aux vues",
+      "texte": "filtres, tri, couleur et niveau suivent d'un widget à l'autre ; les vues nommées se retrouvent partout."
+    },
+    {
       "titre": "Plan de charge",
       "texte": "capacité et charge par personne, prévu / réalisé / reste / disponible, absences et temps partiels datés."
     },
@@ -35,6 +39,14 @@
     }
   ],
   "journal": [
+    {
+      "version": "v1.3.0",
+      "texte": "La tâche parente suit ses sous-tâches : si l'on déplace une sous-tâche hors de ses bornes, la parente s'ajuste en un seul geste, annulable d'un Ctrl+Z. Filtres, tri et vues nommées partagés entre le Kanban, le Gantt, le Calendrier et le Dashboard ; statut au Gantt et au Calendrier ; frise du Gantt complète et défilante ; statuts fait / annulé / actif ; une série de corrections issues de l'audit (dates décalées d'un jour, tâches qui disparaissaient, suppression d'un parent)."
+    },
+    {
+      "version": "v1.2.0",
+      "texte": "Feuille de temps et Organigramme, droits d'accès dérivés de la hiérarchie, réalisé daté dans le Plan de charge."
+    },
     {
       "version": "v1.1.2",
       "texte": "Whiteboard harmonisé : thème sombre automatique, notes lisibles, initialisation silencieuse."

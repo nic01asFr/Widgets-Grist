@@ -109,10 +109,16 @@ body { display: flex; flex-direction: column; background: var(--bg); }
 // ── Config (auto local / prod) ─────────────────────────────────────
 const LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const PROD  = 'https://nic01asfr.github.io/Widgets-Grist/taskflow/';
-// dev : tasks_app/<id>.html ; whiteboard est dans projects/whiteboard/. prod : taskflow/<id>/
+// dev : les widgets sont resolus RELATIVEMENT au lanceur (tasks_app/<id>.html ; le
+// whiteboard est dans projects/whiteboard/), donc sur n'importe quel serveur de dev,
+// port ou worktree. prod : taskflow/<id>/
 function urlFor(id) {
-  if (id === 'whiteboard') return (LOCAL ? 'http://localhost:3001/whiteboard/index.html' : PROD + 'whiteboard/') + '?shell=1';
-  return (LOCAL ? 'http://localhost:3001/tasks_app/' + id + '.html' : PROD + id + '/') + '?shell=1';
+  // En dev local, pas de Grist derriere le lanceur : ?demo garde les donnees d'exemple dans les iframes.
+  // (Grist ajoute ?access=… au lanceur : dans un document, jamais de donnees d'exemple.)
+  const dansGrist = /[?&]access=/.test(location.search);
+  const q = '?shell=1' + (LOCAL && !dansGrist ? '&demo=1' : '');
+  if (id === 'whiteboard') return (LOCAL ? new URL('../whiteboard/index.html', location.href).href : PROD + 'whiteboard/') + q;
+  return (LOCAL ? new URL(id + '.html', location.href).href : PROD + id + '/') + q;
 }
 
 // ── Onglets (statiques) ──

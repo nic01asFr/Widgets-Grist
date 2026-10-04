@@ -27,10 +27,10 @@
         .header h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .header-filters { flex: 1; display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; overflow: hidden; min-width: 0; }
         .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .last-update { font-size: 0.71rem; color: var(--text-muted); white-space: nowrap; }
+        .last-update { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 
         /* ── Boutons ── */
-        .btn { padding: 6px 10px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 6px; font-size: 0.77rem; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .btn { padding: 6px 10px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 6px; font-size: var(--fs-sm); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
         .btn:hover { background: var(--bg); }
         .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
         .btn.primary:hover { background: var(--primary-dark); }
@@ -38,28 +38,26 @@
 
         /* ── Filter chips (pill harmonisé) ── */
         .filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; padding: 9px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); }
-        .filter-chip { display: inline-flex; align-items: center; gap: 6px; height: 25px; padding: 0 5px 0 10px; background: var(--p-50, var(--primary-light)); color: var(--primary); border: 1px solid var(--primary); border-radius: 999px; font-size: 0.71rem; font-weight: 600; white-space: nowrap; }
+        .filter-chip { display: inline-flex; align-items: center; gap: 6px; height: 25px; padding: 0 5px 0 10px; background: var(--p-50, var(--primary-light)); color: var(--primary); border: 1px solid var(--primary); border-radius: 999px; font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; }
         .filter-chip .fc-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-        .filter-chip button { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: inherit; cursor: pointer; font-size: 0.85rem; line-height: 1; opacity: .65; padding: 0; }
+        .filter-chip button { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: inherit; cursor: pointer; font-size: var(--fs-md); line-height: 1; opacity: .65; padding: 0; }
         .filter-chip button:hover { opacity: 1; background: rgba(62,93,231,.18); }
-        .hf-label { font-size: 0.71rem; color: var(--text-light); font-weight: 600; margin-right: 2px; }
-        .hf-clear { font-size: 0.71rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; font-weight: 550; }
+        .hf-label { font-size: var(--fs-xs); color: var(--text-light); font-weight: 600; margin-right: 2px; }
+        .hf-clear { font-size: var(--fs-xs); color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; font-weight: 550; }
         .hf-clear:hover { background: var(--bg); color: var(--text); }
         .filter-count { background: var(--primary); color: #fff; border-radius: 999px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 0.6rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; }
 
         /* ── Filter panel ── */
-        .filter-panel { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 10px 16px; display: none; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
-        .filter-panel.open { display: flex; }
         .filter-section { display: flex; flex-direction: column; gap: 5px; }
-        .filter-section-label { font-size: 0.69rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .filter-section-label { font-size: var(--fs-2xs); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
-        .filter-btn { padding: 3px 9px; border: 1px solid var(--border); background: white; border-radius: 5px; font-size: 0.74rem; cursor: pointer; transition: all 0.1s; }
+        .filter-btn { padding: 3px 9px; border: 1px solid var(--border); background: white; border-radius: 6px; font-size: var(--fs-xs); cursor: pointer; transition: all 0.1s; }
         .filter-btn:hover { background: var(--bg); }
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .filter-checkboxes { display: flex; gap: 5px; flex-wrap: wrap; }
-        .filter-check { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.74rem; cursor: pointer; background: white; transition: all 0.1s; }
+        .filter-check { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: var(--fs-xs); cursor: pointer; background: white; transition: all 0.1s; }
         .filter-check.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-        .filter-clear { padding: 3px 8px; border: none; background: none; font-size: 0.74rem; color: var(--danger); cursor: pointer; text-decoration: underline; }
+        .filter-clear { padding: 3px 8px; border: none; background: none; font-size: var(--fs-xs); color: var(--danger); cursor: pointer; text-decoration: underline; }
 
         /* ── Main ── */
         .main { flex: 1; overflow: auto; padding: 14px; transition: margin-right 0.25s ease; }
@@ -70,7 +68,7 @@
         @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 768px)  { .dashboard-grid { grid-template-columns: 1fr; } }
         /* 06 · Chargement (skeleton) */
-        .tf-sk { background: linear-gradient(90deg, var(--bg) 25%, var(--border) 37%, var(--bg) 63%); background-size: 400% 100%; border-radius: 5px; animation: tfsk 1.4s ease infinite; }
+        .tf-sk { background: linear-gradient(90deg, var(--bg) 25%, var(--border) 37%, var(--bg) 63%); background-size: 400% 100%; border-radius: 6px; animation: tfsk 1.4s ease infinite; }
         @keyframes tfsk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 
         /* ── Component ── */
@@ -88,7 +86,7 @@
         /* ── Component header ── */
         .comp-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px 7px; border-bottom: 1px solid var(--border); min-height: 38px; }
         .comp-title-wrap { display: flex; align-items: center; gap: 5px; min-width: 0; }
-        .comp-title { font-size: 0.81rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .comp-title { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .comp-filter-badge { font-size: 0.63rem; background: var(--info-light); color: var(--info); padding: 1px 5px; border-radius: 8px; white-space: nowrap; }
 
         /* ── Edit controls (on component in edit mode) ── */
@@ -97,7 +95,7 @@
         .span-btn { width: 20px; height: 20px; border: none; border-right: 1px solid var(--border); background: white; font-size: 0.64rem; cursor: pointer; }
         .span-btn:last-child { border-right: none; }
         .span-btn.active { background: var(--primary); color: white; }
-        .btn-icon { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 4px; background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 0.78rem; transition: all 0.1s; }
+        .btn-icon { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 4px; background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: var(--fs-sm); transition: all 0.1s; }
         .btn-icon:hover { background: var(--bg); }
         .btn-icon.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
         .btn-icon.danger { border-color: #fca5a5; color: var(--danger); }
@@ -108,7 +106,7 @@
 
         /* ── KPI ── */
         .kpi-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
-        .kpi-label { font-size: 0.77rem; color: var(--text-muted); margin-top: 4px; }
+        .kpi-label { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 4px; }
         .kpi-total     .kpi-value { color: var(--primary); }
         .kpi-inprogress .kpi-value { color: var(--info); }
         .kpi-done      .kpi-value, .kpi-done_week .kpi-value, .kpi-rate .kpi-value { color: var(--success); }
@@ -127,7 +125,7 @@
         @media (max-width: 560px) {
             .header { padding: 8px 12px; gap: 6px; }
             .btn { min-height: 38px; }
-            .filter-panel, .edit-panel { width: 100% !important; }
+            .edit-panel { width: 100% !important; }
         }
         :root {
             --primary:#3e5de7; --primary-dark:#2742b8; --primary-light:#e7ecfe;
@@ -164,27 +162,27 @@
         .donut-chart svg { transform: rotate(-90deg); }
         .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
         .donut-center-value { font-size: 1.3rem; font-weight: 700; }
-        .donut-center-label { font-size: 0.65rem; color: var(--text-muted); }
+        .donut-center-label { font-size: var(--fs-2xs); color: var(--text-muted); }
         .donut-legend { display: flex; flex-direction: column; gap: 6px; }
-        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.77rem; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .legend-value { margin-left: auto; font-weight: 600; padding-left: 8px; }
 
         /* ── Bars ── */
         .bar-chart { display: flex; flex-direction: column; gap: 9px; }
         .bar-row { display: flex; align-items: center; gap: 9px; }
-        .bar-label { width: 66px; font-size: 0.76rem; text-align: right; color: var(--text-muted); flex-shrink: 0; }
-        .bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width 0.4s ease; }
-        .bar-fill span { font-size: 0.67rem; font-weight: 600; color: white; }
+        .bar-label { width: 66px; font-size: var(--fs-sm); text-align: right; color: var(--text-muted); flex-shrink: 0; }
+        .bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width 0.4s ease; }
+        .bar-fill span { font-size: var(--fs-2xs); font-weight: 600; color: white; }
 
         /* ── Workload ── */
         .workload-list { display: flex; flex-direction: column; gap: 9px; }
         .workload-item { display: flex; align-items: center; gap: 9px; }
-        .workload-avatar { width: 28px; height: 28px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.73rem; flex-shrink: 0; }
+        .workload-avatar { width: 28px; height: 28px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: var(--fs-xs); flex-shrink: 0; }
         .workload-info { flex: 1; min-width: 0; }
-        .workload-name { font-size: 0.8rem; font-weight: 500; }
-        .workload-tasks { font-size: 0.69rem; color: var(--text-muted); }
+        .workload-name { font-size: var(--fs-sm); font-weight: 500; }
+        .workload-tasks { font-size: var(--fs-2xs); color: var(--text-muted); }
         .workload-bar { width: 90px; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
         .workload-bar-fill { height: 100%; border-radius: 3px; background: var(--primary); }
         .workload-bar-fill.high { background: var(--danger); }
@@ -192,22 +190,22 @@
 
         /* ── Upcoming ── */
         .upcoming-list { display: flex; flex-direction: column; gap: 6px; }
-        .upcoming-item { display: flex; align-items: center; gap: 9px; padding: 7px 9px; background: var(--bg); border-radius: 7px; cursor: pointer; transition: background 0.1s; }
+        .upcoming-item { display: flex; align-items: center; gap: 9px; padding: 7px 9px; background: var(--bg); border-radius: 8px; cursor: pointer; transition: background 0.1s; }
         .upcoming-item:hover { background: var(--primary-light); }
         .upcoming-date { min-width: 42px; text-align: center; padding: 4px 5px; border-radius: 6px; background: var(--card-bg); border: 1px solid var(--border); }
-        .upcoming-date-day { font-size: 0.95rem; font-weight: 700; line-height: 1; }
+        .upcoming-date-day { font-size: var(--fs-lg); font-weight: 700; line-height: 1; }
         .upcoming-date-month { font-size: 0.58rem; color: var(--text-muted); text-transform: uppercase; }
         .upcoming-date.late   { background: var(--danger-light); border-color: var(--danger); }
         .upcoming-date.late   .upcoming-date-day { color: var(--danger); }
         .upcoming-date.today  { background: var(--primary-light); border-color: var(--primary); }
         .upcoming-date.today  .upcoming-date-day { color: var(--primary); }
         .upcoming-info { flex: 1; min-width: 0; }
-        .upcoming-title { font-size: 0.8rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .upcoming-meta { font-size: 0.69rem; color: var(--text-muted); display: flex; gap: 8px; margin-top: 1px; }
+        .upcoming-title { font-size: var(--fs-sm); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .upcoming-meta { font-size: var(--fs-2xs); color: var(--text-muted); display: flex; gap: 8px; margin-top: 1px; }
         .upcoming-prio { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; align-self: center; }
         .upcoming-prio.p1 { background:#ef4444; } .upcoming-prio.p2 { background:#f59e0b; }
         .upcoming-prio.p3 { background:#3b82f6; } .upcoming-prio.p4 { background:#64748b; }
-        .upcoming-done-btn { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .upcoming-done-btn { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: var(--fs-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
         .upcoming-done-btn:hover { background: var(--success); border-color: var(--success); color: #fff; }
 
         /* ── Projects ── */
@@ -215,12 +213,12 @@
         .project-item { display: flex; align-items: center; gap: 9px; }
         .project-color { width: 3px; height: 36px; border-radius: 2px; flex-shrink: 0; }
         .project-info { flex: 1; min-width: 0; }
-        .project-name { font-size: 0.8rem; font-weight: 500; }
-        .project-stats { font-size: 0.69rem; color: var(--text-muted); }
+        .project-name { font-size: var(--fs-sm); font-weight: 500; }
+        .project-stats { font-size: var(--fs-2xs); color: var(--text-muted); }
         .project-progress { width: 85px; flex-shrink: 0; }
         .project-progress-bar { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
         .project-progress-fill { height: 100%; background: var(--success); border-radius: 3px; }
-        .project-progress-text { font-size: 0.67rem; color: var(--text-muted); text-align: right; margin-top: 1px; }
+        .project-progress-text { font-size: var(--fs-2xs); color: var(--text-muted); text-align: right; margin-top: 1px; }
 
         /* ── List ── */
         .list-items { display: flex; flex-direction: column; gap: 3px; }
@@ -230,10 +228,10 @@
         .list-prio.p1 { background:#ef4444; } .list-prio.p2 { background:#f59e0b; }
         .list-prio.p3 { background:#3b82f6; } .list-prio.p4 { background:#64748b; }
         .list-info { flex: 1; min-width: 0; }
-        .list-title { font-size: 0.79rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .list-meta { font-size: 0.69rem; color: var(--text-muted); display: flex; gap: 6px; align-items: center; margin-top: 1px; }
+        .list-title { font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-meta { font-size: var(--fs-2xs); color: var(--text-muted); display: flex; gap: 6px; align-items: center; margin-top: 1px; }
         .text-danger { color: var(--danger) !important; }
-        .status-badge { padding: 1px 5px; border-radius: 4px; font-size: 0.66rem; font-weight: 500; }
+        .status-badge { padding: 1px 5px; border-radius: 4px; font-size: var(--fs-2xs); font-weight: 500; }
         .s-todo { background:#f1f5f9; color:var(--text-muted); }
         .s-inprogress { background:var(--info-light); color:var(--info); }
         .s-review { background:var(--warning-light); color:var(--warning); }
@@ -246,16 +244,16 @@
         .edit-panel { position: fixed; right: 0; top: 0; bottom: 0; width: var(--edit-panel-width); background: var(--card-bg); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 150; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; overflow: hidden; }
         .edit-panel.open { transform: translateX(0); }
         .edit-panel-hdr { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        .edit-panel-title { font-size: 0.88rem; font-weight: 700; }
+        .edit-panel-title { font-size: var(--fs-md); font-weight: 700; }
         .edit-panel-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
 
         /* ── Edit sections ── */
         .edit-section { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .edit-section-hdr { padding: 8px 11px; background: var(--bg); font-size: 0.79rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        .edit-section-hdr { padding: 8px 11px; background: var(--bg); font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
         .edit-section-body { padding: 11px; display: flex; flex-direction: column; gap: 8px; }
         .cfg-row { display: flex; flex-direction: column; gap: 3px; }
-        .cfg-label { font-size: 0.71rem; color: var(--text-muted); font-weight: 500; }
-        .cfg-input { width: 100%; padding: 5px 7px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.77rem; background: white; }
+        .cfg-label { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 500; }
+        .cfg-input { width: 100%; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: var(--fs-sm); background: white; }
         .cfg-input:focus { outline: none; border-color: var(--primary); }
         .cfg-filter-row { display: flex; gap: 5px; }
         .cfg-filter-row .cfg-input { flex: 1; }
@@ -267,8 +265,8 @@
         .accordion-header { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; transition: background 0.1s; user-select: none; }
         .accordion-header:hover { background: var(--bg); }
         .accordion-item.open > .accordion-header { background: var(--primary-light); }
-        .accordion-label { flex: 1; font-size: 0.79rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-        .accordion-chevron { font-size: 0.65rem; color: var(--text-muted); transition: transform 0.15s; flex-shrink: 0; }
+        .accordion-label { flex: 1; font-size: var(--fs-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+        .accordion-chevron { font-size: var(--fs-2xs); color: var(--text-muted); transition: transform 0.15s; flex-shrink: 0; }
         .accordion-item.open .accordion-chevron { transform: rotate(90deg); }
         .accordion-body { padding: 10px 11px; background: #f5f7ff; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
 
@@ -277,81 +275,387 @@
         .catalog-item { padding: 10px 7px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
         .catalog-item:hover { border-color: var(--primary); background: var(--primary-light); }
         .catalog-icon { font-size: 1.2rem; margin-bottom: 3px; }
-        .catalog-label { font-size: 0.71rem; color: var(--text-muted); font-weight: 500; }
+        .catalog-label { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 500; }
 
         /* ── Export dropdown ── */
         .filter-dropdown { position: relative; }
         .filter-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); min-width: 155px; padding: 5px; z-index: 200; display: none; }
         .filter-menu.open { display: block; }
-        .filter-option { padding: 6px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.77rem; }
+        .filter-option { padding: 6px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); }
         .filter-option:hover { background: var(--bg); }
 
         /* ── Empty state ── */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 22px; color: var(--text-muted); text-align: center; gap: 7px; }
         .empty-icon { font-size: 1.4rem; }
-        .empty-text { font-size: 0.8rem; }
+        .empty-text { font-size: var(--fs-sm); }
 
         /* ── Demo badge ── */
-        .demo-badge { position: fixed; bottom: 10px; right: 10px; background: var(--warning); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; z-index: 300; }
+        .demo-badge { position: fixed; bottom: 10px; right: 10px; background: var(--warning); color: white; padding: 4px 10px; border-radius: 4px; font-size: var(--fs-xs); font-weight: 600; z-index: 300; }
 
         /* ── Print ── */
         @media print {
             body { background: white !important; }
-            .header, .filter-panel, .demo-badge, .edit-panel { display: none !important; }
+            .header, .demo-badge, .edit-panel { display: none !important; }
             .main { padding: 0 !important; margin-right: 0 !important; }
             .component { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
             @page { size: landscape; margin: 1cm; }
         }
+    /* <taskflow-ui> -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI */
+    /* ═════ Interface commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+       Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
+       styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle. Les composants
+       de la barre du haut sont construits par TF.ui (core/taskflow-core.js) ; ici : leur apparence. */
+
+    /* 0. Jetons : echelle de polices, d'espacements, hauteur et rayons des controles. */
+    :root {
+        color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+        --fs-2xs: 0.66rem;                 /* etiquettes en majuscules, pastilles */
+        --fs-xs: 0.72rem;                  /* informations secondaires, aides */
+        --fs-sm: 0.8rem;                   /* controles : boutons, selects, filtres */
+        --fs-md: 0.875rem;                 /* texte courant, champs */
+        --fs-lg: 1.05rem;                  /* titre de fiche, sections */
+        --fs-xl: 1.25rem;                  /* titre du widget */
+        --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+        --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
+        --ctl-r: 8px;                      /* rayon unique des controles */
+        --seg-r: 6px;                      /* rayon des items d'un controle segmente */
+        --weekend-bg: #fef2f2;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
+    }
+
+    /* 1. Base : les controles heritent de la police du widget (ils restaient en Arial, et les champs de
+          date / la description en monospace) ; defilements fins et discrets partout, meme comportement. */
+    button, input, select, textarea { font-family: inherit; }
+    button { color: inherit; }
+    textarea { line-height: 1.45; }
+    * { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
+
+    /* 2. Barre du haut : UNE ligne, identique dans les quatre widgets.
+          titre | vue / navigation de periode | outils (recherche, filtres, affichage) | actions.
+          Quand la place manque, core/taskflow-core.js mesure le debordement reel et choisit, dans l'ordre :
+            (1) une ligne  (2) une ligne compacte (.hz-compact : libelles en icones, recherche dans le bandeau)
+            (3) deux lignes (.hz-two : les outils passent sous le titre)  (4) deux lignes compactes.
+          Le bandeau (.tf-tray) s'ouvre sous la barre pour saisir : recherche, filtres, affichage. */
+    .header {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        grid-template-areas: "title view tools actions";
+        align-items: center;
+        column-gap: 14px;
+        row-gap: var(--sp-2);
+        padding: var(--sp-2) var(--sp-4) 10px;
+    }
+    .header.hz-two {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "title view actions" "tools tools tools";
+    }
+    .hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+    .hz-title { grid-area: title; gap: 10px; }
+    .hz-view { grid-area: view; overflow-x: auto; scrollbar-width: none; }
+    .hz-view::-webkit-scrollbar { display: none; }
+    /* fondu discret au bord droit : signale qu'on peut faire defiler (invisible quand tout tient) */
+    .hz-view { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+    .hz-view > * { flex: none; }
+    .hz-actions { grid-area: actions; }
+    .hz-tools { grid-area: tools; }
+    .header h1 { font-size: var(--fs-xl); }
+    .hz-title-text { white-space: nowrap; }
+    .last-update, .hdr-glabel { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+    .hdr-glabel { font-weight: 550; }
+    .hz-tools .search-box { flex: 0 1 150px; min-width: 90px; }
+    .hz-tools .search-box input { width: 100%; }
+    @media (max-width: 640px) {
+        .hz-title-text, .last-update, .hdr-glabel { display: none; }
+    }
+    /* Dans le lanceur (?shell=1) le titre du widget est masque : l'onglet l'affiche deja. */
+    .in-shell .hz-title:not(:has(.last-update)) { display: none; }
+    .in-shell .hz-title h1 { display: none; }
+
+    /* 3. Controles de la barre : une seule hauteur, un seul rayon, une seule taille de police. */
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
+    .header select, .header .search-box input {
+        height: var(--ctl-h);
+        box-sizing: border-box;
+        border-radius: var(--ctl-r);
+    }
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: var(--fs-sm);
+        font-weight: 550;
+        white-space: nowrap;
+    }
+    .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        width: var(--ctl-h);
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .header select {
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: var(--fs-sm);
+        padding: 0 var(--sp-2);
+    }
+    .header .search-box input { font-size: var(--fs-sm); }
+
+    /* 4. Controle segmente (Grouper, vues du Gantt / Calendrier) : defile au lieu de passer a la ligne. */
+    .tf-seg {
+        display: inline-flex;
+        gap: 2px;
+        max-width: 100%;
+        padding: 3px;
+        border-radius: 9px;
+        background: var(--surface-2);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .tf-seg::-webkit-scrollbar { display: none; }
+    .header .tf-seg .btn {
+        flex: none;
+        height: calc(var(--ctl-h) - 6px);
+        padding: 0 12px;
+        border: none;
+        border-radius: var(--seg-r);
+        background: transparent;
+        box-shadow: none;
+        color: var(--text-muted);
+    }
+    .header .tf-seg .btn:hover { background: rgba(127, 127, 127, 0.1); }
+    .header .tf-seg .btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
+    .hdr-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; max-width: 100%; }
+    .hz-view > .tf-seg, .hz-view > .hdr-group { flex: 0 1 auto; min-width: 150px; }
+    .hdr-group > .tf-seg { flex: 0 1 auto; min-width: 0; }
+
+    /* 5. Navigation de periode : identique dans le Gantt et le Calendrier (‹ periode › puis Aujourd'hui). */
+    .period-nav { display: inline-flex; align-items: center; gap: var(--sp-2); }
+    .nav-group { display: inline-flex; align-items: center; gap: 6px; }
+    .current-period { min-width: 120px; text-align: center; font-size: var(--fs-md); font-weight: 650; white-space: nowrap; }
+
+    /* 6. Bandeau de saisie : « Rechercher », « Filtres » et « Affichage » s'ouvrent au meme endroit, sous la barre,
+          sur toute la largeur. Il pousse le contenu (comme un volet) et se referme au meme bouton ou avec Echap.
+          Le menu « ⋯ » (actions) reste un menu deroulant. */
+    .view-menu { position: relative; }
+    .tf-tray {
+        grid-column: 1 / -1;
+        display: none;
+        margin: 2px calc(-1 * var(--sp-4)) -10px;
+        padding: var(--sp-3) var(--sp-4);
+        border-top: 1px solid var(--border);
+        background: var(--surface-2, var(--bg));
+    }
+    .header .tf-tray.open { display: block; }
+    .header:not(.hz-two) .tf-tray { grid-row: 2; }
+    .header.hz-two .tf-tray { grid-row: 3; }
+    .tf-panel { display: none; }
+    .tf-panel.open { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-3) 28px; }
+    .tf-panel[data-panel="search"].open { display: block; }
+    .tf-panel .search-box input { width: 100%; max-width: 440px; }
+    .tf-panel .search-box { max-width: 440px; }
+    .tf-field { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 150px; }
+    .tf-field-label, .fm-group-label, .filter-section-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
+    .tf-field select { width: 100%; max-width: none; }
+    .tf-panel .tf-menu-action { align-self: flex-end; padding: 0 var(--sp-3); }
+    /* Vues enregistrees : liste, puis nom + Enregistrer / Supprimer.
+       Sur une seule ligne : la liste, puis le nom et les boutons ; le bloc prend la place libre du panneau et les
+       reglages d'affichage (tri, couleur, niveau) se rangent a sa suite. Il passe a la ligne quand la place manque. */
+    .tf-field:has(.tf-views) { flex: 1 1 440px; min-width: min(100%, 300px); }
+    .tf-views { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .tf-field .tf-views select { width: auto; flex: 1 1 170px; min-width: 150px; }
+    .tf-views-save { display: flex; flex: 2 1 250px; min-width: 0; gap: 6px; }
+    .tf-views-save input {
+        flex: 1 1 120px; min-width: 0; height: 34px; padding: 0 10px; box-sizing: border-box;
+        border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: var(--fs-xs);
+    }
+    .tf-views-save input:focus { outline: none; border-color: var(--primary); }
+    .tf-views-save .btn { height: 34px; }
+    .filter-menu-right { right: 0; left: auto; min-width: 200px; }
+    .filter-option { font-size: var(--fs-sm); }
+    /* Panneau de filtres : des groupes cote a cote, chacun une etiquette puis des pastilles a cocher. */
+    .tf-panel .fm-group, .tf-panel .filter-section { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
+    .tf-panel .fm-group-label { padding: 0; }
+    .tf-panel .fm-group-items, .tf-panel .filter-checkboxes, .tf-panel .filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tf-panel .filter-option, .tf-panel .filter-check, .header .tf-panel .filter-btn {
+        display: inline-flex; align-items: center; gap: 5px; height: auto; padding: 3px 10px;
+        border: 1px solid var(--border); border-radius: 999px; background: var(--card-bg); color: var(--text);
+        font-size: var(--fs-xs); font-weight: 500; cursor: pointer; white-space: nowrap;
+    }
+    .tf-panel .filter-option input { display: none; }
+    .tf-panel .filter-option:hover, .tf-panel .filter-check:hover, .header .tf-panel .filter-btn:hover { border-color: var(--primary); background: var(--card-bg); }
+    .tf-panel .filter-option:has(input:checked), .tf-panel .filter-check.active, .header .tf-panel .filter-btn.active {
+        background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); font-weight: 600;
+    }
+    .tf-panel .filter-option.muted { border-style: dashed; }
+    .tf-panel .fm-foot { align-self: flex-end; border: none; margin: 0; padding: 0; }
+    .tf-panel .fm-clear, .tf-panel .filter-clear { padding: 4px 8px; font-size: var(--fs-xs); }
+    /* Boutons du bandeau : l'etat « ouvert » se voit sur le bouton. */
+    .header [data-tray-toggle].is-open { background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); }
+    .header [data-tray-toggle].is-open .btn-chev svg { transform: rotate(180deg); }
+    .header .tf-search-toggle { display: none; position: relative; }
+    .header.hz-search .tf-search-toggle { display: inline-flex; }
+    .header.hz-search .tf-search > .search-box { display: none; }
+    .tf-search-toggle.has-filter { color: var(--primary); border-color: var(--primary); background: var(--p-50, var(--primary-light)); }
+    .tf-search { display: flex; align-items: center; }
+
+    /* 7. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+    .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
+
+    /* 8. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+          (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
+    .panel-section-header {
+        background: transparent;
+        margin: 0 0 var(--sp-2) 0;
+        padding: var(--sp-3) 0 var(--sp-1);
+        border-top: 1px solid var(--border);
+        border-bottom: none;
+    }
+    .panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    .panel-section-title {
+        font-size: var(--fs-2xs);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--text-light);
+    }
+    /* Progression : une jauge (le curseur) + le pourcentage + les raccourcis ; la mini-barre faisait doublon. */
+    .prop-row .progress-bar-mini { display: none; }
+    .progress-slider { width: 100%; }
+    /* Description : meme police que le reste (elle etait en monospace). */
+    .form-textarea { font-family: inherit; }
+    /* Temps & charge : la valeur s'ajuste a son contenu, sans fleches natives, et l'unite « h » reste collee
+       a la valeur (elle flottait a droite d'un champ de largeur fixe, avec un grand vide). */
+    .panel .tc-box .tcv { display: flex; align-items: baseline; gap: var(--sp-1); }
+    .panel .tc-box .tcv input { width: 4ch; min-width: 2ch; -moz-appearance: textfield; appearance: textfield; }
+    .panel .tc-box .tcv input::-webkit-outer-spin-button,
+    .panel .tc-box .tcv input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    @supports (field-sizing: content) { .panel .tc-box .tcv input { field-sizing: content; width: auto; } }
+    /* Choix de priorite / statut : le point et le libelle restent sur une seule ligne (« Moyenne » se coupait). */
+    .priority-pill, .status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; min-width: 0; }
+
+    /* 9. Fiche de tache : le titre est l'en-tete, la navigation « n/m » est integree a cote,
+          puis la fermeture. La fiche recouvre toute la hauteur du widget, barre du haut comprise
+          (elle contient peu de detail une fois une tache ouverte). */
+    .panel-header { justify-content: flex-start; gap: var(--sp-2); padding: 10px var(--sp-3) 10px var(--sp-4); background: var(--card-bg); }
+    .panel-header .panel-title-edit {
+        flex: 1; min-width: 0; width: auto; margin: 0; padding: 6px 0;
+        font-size: var(--fs-lg); font-weight: 700; line-height: 1.3;
+        border: none; border-bottom: 2px solid transparent; border-radius: 0;
+        text-overflow: ellipsis;
+    }
+    .panel-header .panel-title-edit:hover { border-bottom-color: var(--border); }
+    .panel-header .panel-title-edit:focus { border-bottom-color: var(--primary); outline: none; }
+    .panel-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+    .panel-nav { flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: var(--surface-2); }
+    .panel-nav-btn {
+        width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
+        background: transparent; color: var(--text-muted); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .panel-nav-btn:hover { background: var(--card-bg); color: var(--text); }
+    .panel-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .panel-back { flex: none; }
+    .panel-count { min-width: 30px; text-align: center; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .panel-close {
+        flex: none; width: 30px; height: 30px; border: none; border-radius: 8px;
+        background: transparent; color: var(--text-muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
+    }
+    .panel-close:hover { background: var(--surface-2); color: var(--text); }
+    @media (min-width: 561px) {
+        .panel { position: fixed; top: 0; bottom: 0; right: 0; height: auto; z-index: 300; }
+    }
+
+    /* 10. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+    .filter-check, .span-btn, .btn-icon, .cfg-input {
+        background: var(--card-bg);
+        color: var(--text);
+    }
+    .btn-icon.active { background: var(--primary-light); color: var(--primary); }
+    .accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
+
+    /* 11. Aide discrete « i » : l'explication (etat vide, consigne) s'affiche au survol ou au focus,
+           au lieu d'une phrase permanente qui prend de la place. */
+    .tf-info {
+        position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
+        width: 16px; height: 16px; margin-left: 6px; border: 1px solid var(--border-dark, var(--border)); border-radius: 50%;
+        color: var(--text-light); font: italic 700 0.66rem/1 Georgia, serif; text-transform: none; letter-spacing: 0; cursor: help;
+    }
+    .tf-info:hover, .tf-info:focus-visible { color: var(--primary); border-color: var(--primary); outline: none; }
+    /* Liste deroulante de la fiche ouverte vers le haut quand le bas de la zone visible la couperait (voir placeDropdown). */
+    .multi-select.up .multi-select-dropdown { top: auto; bottom: 100%; margin-top: 0; margin-bottom: 4px; }
+    /* La bulle est UN element flottant place sur le <body> (voir initUi) : positionnee dans la fenetre et recadree
+       sur ses bords, elle n'est jamais coupee par le panneau defilant ou la colonne qui contient le « i ». */
+    .tf-tip-float {
+        position: fixed; z-index: 2000; display: none; pointer-events: none;
+        width: max-content; max-width: min(260px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 8px;
+        background: var(--text, #1f2738); color: var(--card-bg, #fff); box-shadow: var(--shadow-lg);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-style: normal; font-weight: 500;
+        font-size: var(--fs-xs); line-height: 1.4; text-align: left; white-space: normal;
+    }
+
+    /* 12. Libelles des boutons : icone + libelle quand la place le permet, icone seule sinon. Les memes
+           outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */
+    .btn-label { white-space: nowrap; }
+    .header .filter-btn { position: relative; }
+    /* Le mode compact (.hz-compact) est decide par la mesure du debordement (voir 2), plus par une largeur fixe. */
+    .header.hz-compact .hz-tools .btn-label { display: none; }
+    .header.hz-compact .hz-tools .filter-btn, .header.hz-compact .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+    .header.hz-compact .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
+    .header.hz-bare .hz-title-text, .header.hz-bare .hz-title h1 { display: none; }
+    .header.hz-top .hz-actions .btn-label, .header.hz-top .period-nav .btn-label { display: none; }
+    .header.hz-top .hz-actions .btn:not(.icon-btn), .header.hz-top .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+
+    /* 13. Libelle de periode : forme complete par defaut, forme courte (« Oct. 26 ») quand la place manque. */
+    .current-period .pl-short { display: none; }
+    @media (max-width: 760px) {
+        .current-period .pl-long { display: none; }
+        .current-period .pl-short { display: inline; }
+        .current-period { min-width: 64px; }
+    }
+
+    /* 14. Boite de dialogue interne (TF.confirm) et confirmation de suppression a trois issues. */
+    .tf-modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: rgba(16, 24, 40, 0.45); }
+    .tf-modal { width: min(380px, 100%); display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4) calc(var(--sp-4) + 2px); background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+    .tf-modal-title { font-size: var(--fs-lg); font-weight: 650; }
+    .tf-modal-msg { font-size: var(--fs-md); line-height: 1.5; color: var(--text-muted); }
+    .tf-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
+    .tf-modal .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .tf-modal .btn.danger:hover { filter: brightness(0.92); }
+    .delete-confirm-actions.delete-confirm-col { flex-direction: column; }
+    .delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }
+
+    /* 15. Etat vide du document (tables absentes) : une phrase claire, centree, sans donnees fictives. */
+    .tf-notice { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 240px; padding: var(--sp-4); text-align: center; color: var(--text-muted); }
+    .tf-notice-title { font-size: var(--fs-lg); font-weight: 650; color: var(--text); }
+    .tf-notice-sub { max-width: 380px; font-size: var(--fs-md); line-height: 1.5; }
+
+    /* 16. Champ de recherche : memes regles dans les quatre widgets (icone a gauche, rayon et hauteur de la barre). */
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box input { padding: 6px 10px 6px 28px; border: 1px solid var(--border); border-radius: var(--ctl-r); font-family: inherit; color: var(--text); width: 140px; background: var(--card-bg); }
+    .search-box input:focus { outline: none; border-color: var(--primary); }
+    .search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
+    :root[data-theme="dark"] .search-box::before { filter: invert(0.75); }
+
+    /* 17. Focus clavier visible sur ce qui s'ouvre : carte, ligne, barre. */
+    .task-card:focus-visible, .task-row:focus-visible, .gantt-bar:focus-visible, .gantt-milestone:focus-visible,
+    .event-bar:focus-visible, .week-event-bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    /* </taskflow-ui> */
     </style>
 </head>
 <body>
 <div class="dashboard">
     <!-- ── Header ── -->
-    <div class="header">
-        <h1>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Dashboard
-        </h1>
-        <div class="header-right">
-            <span class="last-update" id="lastUpdate">--</span>
-            <button class="btn" id="filterToggleBtn" onclick="toggleFilterPanel()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-                Filtres<span class="filter-count" id="filterCount" style="display:none">0</span>
-            </button>
-            <button class="btn" id="btnLeavesOnly" onclick="toggleLeavesOnly()" title="Compter uniquement les feuilles (éviter double-compte parent+enfants)">
-                ↳ Feuilles
-            </button>
-            <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Modifier
-            </button>
-            <div class="filter-dropdown" id="exportDropdown">
-                <button class="btn" onclick="document.getElementById('exportMenu').classList.toggle('open');event.stopPropagation()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Exporter
-                </button>
-                <div class="filter-menu" id="exportMenu">
-                    <div class="filter-option" onclick="exportPrint()">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                        Imprimer / PDF
-                    </div>
-                    <div class="filter-option" onclick="exportPNG()">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        Image PNG
-                    </div>
-                </div>
-            </div>
-            <button class="btn primary" onclick="loadAllData()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                Actualiser
-            </button>
-        </div>
-    </div>
+    <div class="header" id="tfHeader"></div>
 
     <div class="filter-chips" id="headerFilters" style="display:none"></div>
 
     <!-- ── Filter panel ── -->
-    <div class="filter-panel" id="filterPanel"></div>
 
     <!-- ── Main grid ── -->
     <div class="main" id="main">
@@ -386,7 +690,7 @@ const CATALOG = {
 };
 
 const CONFIG_FIELDS = {
-    kpi:      [{ key:'metric',  label:'Métrique',     options:[['total','Total tâches'],['inprogress','En cours'],['done','Terminées (tout)'],['done_week','Terminées ce sem.'],['late','En retard'],['rate','Taux de complétion %']] }],
+    kpi:      [{ key:'metric',  label:'Métrique',     options:[['total','Total tâches'],['inprogress','Actives (non terminées)'],['done','Terminées (tout)'],['done_week','Terminées ce sem.'],['late','En retard'],['rate','Taux de complétion %']] }],
     donut:    [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type']] }],
     bars:     [{ key:'groupBy', label:'Grouper par',  options:[['statut','Statut'],['priorite','Priorité'],['projet','Projet'],['type','Type'],['assignee','Assigné']] }],
     list:     [
@@ -416,7 +720,7 @@ const FILTER_FIELDS = [
 
 const DEFAULT_LAYOUT = [
     { id:'c1', type:'kpi',      colSpan:1, title:'Total',      config:{ metric:'total' } },
-    { id:'c2', type:'kpi',      colSpan:1, title:'En cours',   config:{ metric:'inprogress' } },
+    { id:'c2', type:'kpi',      colSpan:1, title:'Actives',    config:{ metric:'inprogress' } },
     { id:'c3', type:'kpi',      colSpan:1, title:'Terminées',  config:{ metric:'done' } },
     { id:'c4', type:'kpi',      colSpan:1, title:'En retard',  config:{ metric:'late' } },
     { id:'c5', type:'donut',    colSpan:2, title:'Par statut', config:{ groupBy:'statut' } },
@@ -466,6 +770,60 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion.
+     * Les motifs sont ANCRES au debut du libelle et limites aux formes de
+     * participe/adjectif (Valide, Termine, Livre...) : une phase active comme
+     * "Realisation", "A valider", "En cours de validation" ou "Non termine"
+     * ne doit jamais etre prise pour une cloture. ------------------------------ */
+    const DONE_HINT = /^\s*(?:termin[ée]e?s?|clos(?:e|es)?|cl[oô]tur[ée]e?s?|fini(?:e|s|es)?|achev[ée]e?s?|livr[ée]e?s?|r[ée]alis[ée]e?s?|compl[eè]t(?:e|es|[ée]e?s?)?|valid[ée]e?s?|done|closed|finished|completed?|delivered)(?![a-zà-ÿ])/i;
+    const DEAD_HINT = /^\s*(?:annul[ée]e?s?|abandonn[ée]e?s?|rejet[ée]e?s?|cancel(?:l?ed)?|caduc(?:que|s|ques)?|rejected|abandoned)(?![a-zà-ÿ])/i;
+
+    /* ----- Dates --------------------------------------------------------------
+     * Une colonne Date de Grist stocke des SECONDES a MINUIT UTC. Les widgets
+     * ecrivaient minuit LOCAL (22:00 UTC la veille en France : la table Grist
+     * affichait un jour de moins) et la fiche lisait en UTC (un jour de moins
+     * aussi). Convention unique ici :
+     *   - ecriture canonique : minuit UTC du jour calendaire local choisi ;
+     *   - lecture tolerante : une valeur multiple de 86400 est un jour UTC
+     *     (canonique) ; toute autre valeur est un ancien instant ecrit par les
+     *     widgets, lu comme avant en jour calendaire LOCAL. Aucune migration
+     *     n'est necessaire et les documents existants s'affichent a l'identique. */
+    function gristToDate(ts) {
+        if (ts == null || ts === '') return null;
+        const n = Number(ts);
+        if (!isFinite(n) || !n) return null;
+        if (n % 86400 === 0) { const u = new Date(n * 1000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); }
+        const l = new Date(n * 1000);
+        return new Date(l.getFullYear(), l.getMonth(), l.getDate());
+    }
+    function dateToGrist(d) {
+        if (!d || isNaN(d.getTime())) return null;
+        return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 1000;
+    }
+    // Numero de jour (depuis 1970) du jour calendaire d'une valeur Grist, quelle que soit sa convention.
+    function dayNum(ts) {
+        const d = gristToDate(ts);
+        return d ? Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) : null;
+    }
+    function todayGrist() { return dateToGrist(new Date()); }
+    // 'AAAA-MM-JJ' <-> Date locale (valeur des <input type="date">), sans decalage de fuseau.
+    function isoDate(d) {
+        if (!d || isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function parseISODate(s) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+        return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+    }
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -504,11 +862,24 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier statut NON annule (ancienne convention "dernier = fait",
+        // corrigee quand le dernier est "Annule"), a defaut le dernier de la liste.
+        const isDeadHint = s => DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value);
+        let doneValue = null;
+        for (const s of final) { if (!isDeadHint(s) && (DONE_HINT.test(s.label) || DONE_HINT.test(s.value))) doneValue = s.value; }
+        if (doneValue == null) {
+            for (const s of final) { if (!isDeadHint(s)) doneValue = s.value; }
+        }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => isDeadHint(s) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -557,6 +928,606 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    // Statut d'une tache tel que les widgets le traitent : sa valeur si elle figure dans la configuration,
+    // sinon le PREMIER statut configure. Une tache au statut vide (ou supprime de la colonne Choice) reste
+    // ainsi visible, rangee dans la premiere colonne, au lieu de disparaitre du Kanban.
+    function statusKnown(cfg, value) { return !!cfg && !!cfg.list && cfg.list.some(function (s) { return s.value === value; }); }
+    function statusOf(cfg, t) {
+        const v = t ? t.statut : null;
+        if (statusKnown(cfg, v)) return v;
+        return cfg && cfg.firstValue != null ? cfg.firstValue : 'todo';
+    }
+    // Statut de reouverture quand une tache terminee repasse sous 100 % : le premier statut actif, ou le
+    // suivant si de l'avancement existe deja (« En cours » plutot que « A faire »).
+    function reopenValue(cfg, progression) {
+        const live = cfg.list.filter(function (s) { return isLive(cfg, s.value); });
+        if (!live.length) return cfg.firstValue;
+        return (Number(progression) > 0 && live.length > 1) ? live[1].value : live[0].value;
+    }
+    // Cloture coherente : statut terminé <-> 100 % <-> dateCloture. Renvoie les champs DERIVES a ecrire en
+    // plus de ce qui change (changes = { statut } ou { progression }) ; ne modifie pas la tache.
+    //   - passer au statut terminé : 100 % et date de cloture (si elle n'etait pas deja posee) ;
+    //   - atteindre 100 % : statut terminé et date de cloture ;
+    //   - repasser sous 100 % ou quitter le statut terminé : date de cloture effacee (et statut rouvert).
+    function completionPatch(cfg, task, changes) {
+        const out = {};
+        if (!cfg || !task || !changes) return out;
+        const was = isDone(cfg, task.statut);
+        if ('statut' in changes) {
+            const now = isDone(cfg, changes.statut);
+            if (now) { if (Number(task.progression) !== 100) out.progression = 100; if (!was) out.dateCloture = todayGrist(); }
+            else if (was) out.dateCloture = null;
+        } else if ('progression' in changes) {
+            const p = Number(changes.progression);
+            if (p >= 100 && !was) { out.statut = cfg.doneValue; out.dateCloture = todayGrist(); }
+            else if (p < 100 && was) { out.statut = reopenValue(cfg, p); out.dateCloture = null; }
+        }
+        return out;
+    }
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+
+    // Coherence debut / echeance dans la fiche : une echeance ne precede jamais le debut. A appeler AVANT d'ecrire la
+    // nouvelle valeur (data = tache en cours d'edition, value = nouvelle date Grist). Retourne null si rien a corriger,
+    // sinon { patch, message } : changer le debut au-dela de l'echeance decale l'echeance (duree conservee) ; ramener
+    // l'echeance avant le debut l'aligne sur le debut.
+    function datesPatch(data, field, value) {
+        if (!data || (field !== 'dateDebut' && field !== 'dateEcheance')) return null;
+        const d = Number(field === 'dateDebut' ? value : data.dateDebut), e = Number(field === 'dateEcheance' ? value : data.dateEcheance);
+        if (!(d > 0) || !(e > 0) || e >= d) return null;
+        if (field === 'dateEcheance') return { patch: { dateEcheance: d }, message: 'L’échéance ne peut pas précéder le début : elle est alignée sur le début.' };
+        const od = Number(data.dateDebut), oe = Number(data.dateEcheance);
+        const span = od > 0 && oe >= od ? oe - od : 0;
+        return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
+    }
+    // Une tache parente suit ses sous-taches. Apres le changement de dates de la tache `changedId`, retourne les mises a
+    // jour [{ id, dateDebut, dateEcheance }] a ecrire sur ses ascendantes (de proche en proche) :
+    // Chaque borne se traite a part :
+    //   - la sous-tache portait la borne de sa parente (debut ou fin identique) : la parente SUIT la nouvelle borne,
+    //     dans les deux sens ;
+    //   - sinon (plage volontairement plus large de ce cote) : elle ne s'agrandit que si une sous-tache la depasse.
+    // list = taches APRES le changement ; prev = { dateDebut, dateEcheance } de la tache avant le changement
+    // (a defaut, la parente est traitee comme large). Ne modifie pas list.
+    function parentSpanUpdates(list, changedId, prev) {
+        const after = (list || []).map(t => Object.assign({}, t));
+        const before = (list || []).map(t => Object.assign({}, t));
+        const byA = new Map(after.map(t => [t.id, t]));
+        const cb = before.find(t => t.id === changedId);
+        if (cb && prev) { cb.dateDebut = prev.dateDebut; cb.dateEcheance = prev.dateEcheance; }
+        const byB = new Map(before.map(t => [t.id, t]));
+        const num = (v) => (Number(v) > 0 ? Number(v) : 0);
+        const span = (arr, pid) => {
+            let s = 0, e = 0;
+            arr.forEach(k => {
+                if (k.parentTask !== pid) return;
+                const ks = num(k.dateDebut) || num(k.dateEcheance), ke = num(k.dateEcheance) || ks;
+                if (!ks) return;
+                if (!s || ks < s) s = ks;
+                if (!e || ke > e) e = ke;
+            });
+            return s ? { start: s, end: e } : null;
+        };
+        const out = [];
+        let cur = byA.get(changedId), guard = 0;
+        while (cur && cur.parentTask && guard++ < 64) {
+            const p = byA.get(cur.parentTask);
+            if (!p) break;
+            const sa = span(after, p.id);
+            if (!sa) break;
+            const sb = span(before, p.id);
+            const pb = byB.get(p.id) || p;
+            const ps = num(p.dateDebut), pe = num(p.dateEcheance);
+            const tightS = !!sb && !!prev && num(pb.dateDebut) === sb.start;   // une sous-tache portait le debut
+            const tightE = !!sb && !!prev && num(pb.dateEcheance) === sb.end;  // une sous-tache portait la fin
+            const ns = (tightS || !ps) ? sa.start : Math.min(ps, sa.start);
+            const ne = (tightE || !pe) ? sa.end : Math.max(pe, sa.end);
+            if (ns !== ps || ne !== pe) { p.dateDebut = ns; p.dateEcheance = ne; out.push({ id: p.id, dateDebut: ns, dateEcheance: ne }); }
+            cur = p;
+        }
+        return out;
+    }
+    // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
+    const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
+    function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
+
+    /* ----- Interface commune : bandeau, info-bulles, clavier et lanceur ----------
+     * Les boutons [data-tray-toggle] ouvrent / ferment le bandeau de saisie sous la barre
+     * (voir trayToggle) ; Echap le ferme. Dans le lanceur (?shell=1) le titre du widget est
+     * masque : l'onglet l'affiche deja. A appeler une fois, en fin de script du widget. */
+    function initUi() {
+        if (typeof document === 'undefined' || initUi.done) return;
+        initUi.done = true;
+        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
+        // Bandeau (recherche / filtres / affichage) : un clic sur le bouton l'ouvre ou le referme, Echap le referme.
+        // Il reste ouvert pendant la manipulation du widget : les filtres s'appliquent en direct.
+        document.addEventListener('click', (e) => {
+            const toggle = e.target.closest ? e.target.closest('[data-tray-toggle]') : null;
+            if (toggle) trayToggle(toggle.getAttribute('data-tray-toggle'));
+            const host = document.getElementById('tfHeader');
+            if (host) syncSearchState(host);
+        });
+        document.addEventListener('input', () => { const host = document.getElementById('tfHeader'); if (host) syncSearchState(host); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const tray = document.getElementById('tfTray');
+            if (tray && tray.classList.contains('open')) trayToggle('', false);
+        });
+        // Info-bulles « i » : une bulle flottante unique, centree sous le « i » puis recadree dans la fenetre
+        // (retournee au-dessus si elle sortirait en bas). Placee sur le body : aucun conteneur ne la coupe.
+        let tipEl = null;
+        const hideTip = () => { if (tipEl) tipEl.style.display = 'none'; };
+        const showTip = (e) => {
+            const tip = e.target && e.target.closest ? e.target.closest('.tf-info') : null;
+            if (!tip) return;
+            if (!tipEl) {
+                tipEl = document.createElement('div');
+                tipEl.className = 'tf-tip-float';
+                tipEl.setAttribute('role', 'tooltip');
+                document.body.appendChild(tipEl);
+            }
+            tipEl.textContent = tip.getAttribute('data-tip') || '';
+            tipEl.style.left = '0px'; tipEl.style.top = '0px'; tipEl.style.display = 'block';
+            const r = tip.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight, m = 8, vw = window.innerWidth, vh = window.innerHeight;
+            const left = Math.max(m, Math.min(r.left + r.width / 2 - w / 2, vw - w - m));
+            let top = r.bottom + 8;
+            if (top + h > vh - m) top = Math.max(m, r.top - h - 8);
+            tipEl.style.left = left + 'px'; tipEl.style.top = top + 'px';
+        };
+        const leaveTip = (e) => { if (e.target && e.target.closest && e.target.closest('.tf-info')) hideTip(); };
+        document.addEventListener('mouseover', showTip);
+        document.addEventListener('focusin', showTip);
+        document.addEventListener('mouseout', leaveTip);
+        document.addEventListener('focusout', leaveTip);
+        document.addEventListener('scroll', hideTip, true);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTip(); });
+        // Controles segmentes defilants : l'element actif est toujours ramene dans le champ.
+        const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+        document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
+        setTimeout(revealActive, 300);
+        // Clavier : cartes, lignes et barres sont atteignables par Tab et s'ouvrent avec Entree ou Espace.
+        // Les widgets les creent chacun a leur facon (HTML ou DOM) : on les repere une fois rendus.
+        const ACTIVABLES = '.task-card, .task-row, .gantt-bar, .gantt-milestone, .event-bar, .week-event-bar';
+        const rendreActivables = () => {
+            document.querySelectorAll(ACTIVABLES).forEach(el => {
+                if (el.hasAttribute('tabindex')) return;
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('role', 'button');
+                const titre = el.querySelector('.card-title, .task-name, .gantt-bar-label, .milestone-label');
+                const nom = ((titre && titre.textContent) || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+                if (nom) el.setAttribute('aria-label', nom);
+            });
+        };
+        let planifie = false;
+        const planifier = () => { if (planifie) return; planifie = true; requestAnimationFrame(() => { planifie = false; rendreActivables(); }); };
+        if (typeof MutationObserver !== 'undefined' && document.body) new MutationObserver(planifier).observe(document.body, { childList: true, subtree: true });
+        planifier();
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const el = e.target;
+            if (!el || el.getAttribute('role') !== 'button' || !el.matches || !el.matches(ACTIVABLES)) return;
+            e.preventDefault();
+            el.click();
+        });
+    }
+
+    /* ----- Composants de la barre du haut (tous les widgets) ----------------------
+     * Un meme composant a le meme balisage, la meme place et le meme comportement dans
+     * kanban, gantt, calendar et dashboard : chaque widget les COMPOSE (voir ui.header)
+     * au lieu de recopier du HTML. Les ids et les gestionnaires restent ceux du widget
+     * (ils sont passes en parametres). Disposition : titre | vue / navigation |
+     * outils (recherche, filtres, affichage) | actions. Le style est dans
+     * core/taskflow-ui.css. */
+    const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const UI_ICONS = {
+        search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+        filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+        sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+        chevL: '<polyline points="15 18 9 12 15 6"/>',
+        chevR: '<polyline points="9 18 15 12 9 6"/>',
+        chevD: '<polyline points="6 9 12 15 18 9"/>',
+        dots: '<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
+        download: '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+        refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
+        edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+        print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+        image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+        plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
+    };
+    const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
+
+    // Aide discrete : petite icone « i » dont le texte s'affiche au survol (ou au focus clavier).
+    function uiInfo(text) {
+        return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
+    }
+    // Les donnees d'exemple ne s'affichent d'elles-memes que sur une page ouverte directement (essai, apercu),
+    // ou sur demande (?demo). Dans un document Grist (iframe), une table vide reste vide : montrer des
+    // taches fictives laissait croire qu'elles existaient et faisait ecrire sur des lignes inexistantes.
+    function shouldAutoDemo() {
+        try {
+            if (/[?&]demo(=|&|$)/.test(location.search)) return true;
+            return window.self === window.top;
+        } catch (e) { return false; }
+    }
+    // Boite de dialogue interne (remplace confirm() natif, bloque dans les iframes de Grist et hors charte).
+    // o = { title, message, confirmLabel, cancelLabel, danger, actions: [{ label, value, danger }] }
+    // Resout avec la valeur de l'action choisie (true par defaut), ou false si annule (bouton, Echap, clic dehors).
+    function uiConfirm(o) {
+        o = o || {};
+        const actions = o.actions || [{ label: o.confirmLabel || 'Confirmer', value: true, danger: !!o.danger }];
+        return new Promise(function (resolve) {
+            const prev = document.activeElement;
+            const ov = document.createElement('div');
+            ov.className = 'tf-modal-overlay';
+            ov.innerHTML = '<div class="tf-modal" role="alertdialog" aria-modal="true" aria-labelledby="tfModalTitle">' +
+                '<div class="tf-modal-title" id="tfModalTitle">' + escAttr(o.title || '') + '</div>' +
+                (o.message ? '<div class="tf-modal-msg">' + escAttr(o.message) + '</div>' : '') +
+                '<div class="tf-modal-actions"><button type="button" class="btn" data-i="-1">' + escAttr(o.cancelLabel || 'Annuler') + '</button>' +
+                actions.map(function (a, i) { return '<button type="button" class="btn ' + (a.danger ? 'danger' : 'primary') + '" data-i="' + i + '">' + escAttr(a.label) + '</button>'; }).join('') +
+                '</div></div>';
+            function close(v) {
+                document.removeEventListener('keydown', onKey, true);
+                if (ov.parentNode) ov.parentNode.removeChild(ov);
+                try { if (prev && prev.focus) prev.focus(); } catch (e) { /* focus perdu : sans consequence */ }
+                resolve(v);
+            }
+            function onKey(e) {
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(false); }
+            }
+            // Echap en phase de capture : la fiche situee derriere ne doit pas reagir au meme appui.
+            document.addEventListener('keydown', onKey, true);
+            ov.addEventListener('mousedown', function (e) { if (e.target === ov) close(false); });
+            ov.addEventListener('click', function (e) {
+                const b = e.target.closest && e.target.closest('button[data-i]');
+                if (!b) return;
+                const i = Number(b.getAttribute('data-i'));
+                close(i < 0 ? false : actions[i].value);
+            });
+            document.body.appendChild(ov);
+            // Un geste destructeur n'est jamais le bouton par defaut.
+            const focusSel = actions.some(function (a) { return a.danger; }) ? 'button[data-i="-1"]' : 'button.primary';
+            const f = ov.querySelector(focusSel); if (f) f.focus();
+        });
+    }
+    // Plan de suppression d'une tache : tasks = liste des taches (avec parentTask), mode = 'detach' (les
+    // sous-taches deviennent des taches principales) ou 'cascade' (tout est supprime). Renvoie les actions
+    // Grist et ce qu'il faut changer localement (mode demo).
+    function deletePlan(tasks, taskId, mode) {
+        const kids = {};
+        (tasks || []).forEach(function (t) { if (t && t.parentTask) (kids[t.parentTask] = kids[t.parentTask] || []).push(t.id); });
+        const removed = [taskId], detached = [];
+        if (mode === 'cascade') {
+            const seen = {}; seen[taskId] = true;
+            for (let i = 0; i < removed.length; i++) (kids[removed[i]] || []).forEach(function (k) { if (!seen[k]) { seen[k] = true; removed.push(k); } });
+        } else {
+            (kids[taskId] || []).forEach(function (k) { detached.push(k); });
+        }
+        const actions = detached.map(function (k) { return ['UpdateRecord', 'Tasks', k, { parentTask: null }]; })
+            .concat(removed.map(function (id) { return ['RemoveRecord', 'Tasks', id]; }));
+        return { actions: actions, removed: removed, detached: detached };
+    }
+    // Contenu de la confirmation de suppression dans la fiche : simple, ou a trois issues si la tache a
+    // des sous-taches. Les boutons appellent confirmDelete(mode) / hideDeleteConfirm() du widget.
+    function deleteConfirmHtml(nKids) {
+        const btn = function (cls, onclick, label) { return '<button type="button" class="delete-confirm-btn ' + cls + '" onclick="' + onclick + '">' + label + '</button>'; };
+        if (!nKids) {
+            return '<div class="delete-confirm-text">Supprimer cette tâche ?</div><div class="delete-confirm-actions">' +
+                btn('cancel', 'hideDeleteConfirm()', 'Annuler') + btn('confirm', "confirmDelete('detach')", 'Supprimer') + '</div>';
+        }
+        const n = nKids === 1 ? '1 sous-tâche' : nKids + ' sous-tâches';
+        return '<div class="delete-confirm-text">Cette tâche a ' + n + '. Que faire ?</div><div class="delete-confirm-actions delete-confirm-col">' +
+            btn('keep', "confirmDelete('detach')", 'La supprimer seule (les sous-tâches deviennent des tâches)') +
+            btn('confirm', "confirmDelete('cascade')", 'Tout supprimer (' + (nKids === 1 ? 'avec sa sous-tâche' : 'avec ses ' + nKids + ' sous-tâches') + ')') +
+            btn('cancel', 'hideDeleteConfirm()', 'Annuler') + '</div>';
+    }
+    // Recherche commune aux quatre widgets : titre, description, tags, projet, assignes ; insensible a la
+    // casse et aux accents ; plusieurs mots = tous doivent etre presents. ctx = { projects, team }.
+    const searchNorm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    function searchMatch(t, query, ctx) {
+        const q = searchNorm(query).trim();
+        if (!q) return true;
+        if (!t) return false;
+        ctx = ctx || {};
+        const list = (v) => (Array.isArray(v) && v[0] === 'L') ? v.slice(1) : [];
+        const proj = (ctx.projects || []).find(p => p && p.id === t.projet);
+        const names = list(t.assignees).map(id => { const m = (ctx.team || []).find(x => x && x.id === id); return m ? m.nom : ''; });
+        const hay = searchNorm([t.titre, t.description, list(t.tags).join(' '), proj ? proj.nom : '', names.join(' ')].join(' '));
+        return q.split(/\s+/).every(w => hay.indexOf(w) !== -1);
+    }
+    // Tri commun (affichage seulement, rien n'est ecrit dans les donnees). Modes :
+    //   manual   : ordre de la table, inchange ;
+    //   date     : echeance. Les taches en cours d'abord, de la plus proche a la plus lointaine ; puis les taches
+    //              closees (terminees / abandonnees), de la plus recente a la plus ancienne. Sans echeance : en dernier ;
+    //   priority : priorite (1 = critique) puis echeance.
+    // Retourne une NOUVELLE liste ; le tri est stable (a criteres egaux, l'ordre de la table est conserve).
+    function sortTasks(list, mode, cfg) {
+        const arr = (list || []).slice();
+        if (mode !== 'date' && mode !== 'priority') return arr;
+        const echeance = (t) => { const v = Number(t && t.dateEcheance); return v > 0 ? v : null; };
+        const prio = (t) => parseInt(t && t.priorite, 10) || 3;
+        const fermee = (t) => !!cfg && !isLive(cfg, statusOf(cfg, t));
+        const parDate = (a, b, desc) => {
+            const da = echeance(a), db = echeance(b);
+            if (da === null || db === null) return da === db ? 0 : (da === null ? 1 : -1);
+            return desc ? db - da : da - db;
+        };
+        arr.sort((a, b) => {
+            if (mode === 'priority') return (prio(a) - prio(b)) || parDate(a, b, false);
+            const fa = fermee(a), fb = fermee(b);
+            if (fa !== fb) return fa ? 1 : -1;
+            return parDate(a, b, fa) || (prio(a) - prio(b));
+        });
+        return arr;
+    }
+    // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
+    function uiTitle(t) {
+        t = t || {};
+        return '<div class="hz-title"><h1>' + (t.icon || '') + '<span class="hz-title-text">' + escAttr(t.text) + '</span></h1>' + (t.meta || '') + '</div>';
+    }
+    // Controle segmente (Grouper, vues du Gantt / Calendrier). o = { label, cls, items: [{ label, id, view, title, onclick, active }] }
+    function uiSegmented(o) {
+        const items = (o.items || []).map(i =>
+            '<button type="button" class="btn' + (i.active ? ' active' : '') + '"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') +
+            (i.view ? ' data-view="' + escAttr(i.view) + '"' : '') + (i.title ? ' title="' + escAttr(i.title) + '"' : '') +
+            ' onclick="' + escAttr(i.onclick) + '">' + escAttr(i.label) + '</button>').join('');
+        return '<div class="hdr-group">' + (o.label ? '<span class="hdr-glabel">' + escAttr(o.label) + '</span>' : '') +
+            '<div class="tf-seg ' + escAttr(o.cls || '') + '" role="group"' + (o.label ? ' aria-label="' + escAttr(o.label) + '"' : '') + '>' + items + '</div></div>';
+    }
+    // Libelle de periode a deux formes : complete (« Octobre 2026 ») et courte (« Oct. 26 »). Le CSS
+    // bascule sur la courte quand la place manque ; l'info-bulle garde toujours la forme complete.
+    const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    function monthShort(d) { const m = MOIS_COURTS[d.getMonth()]; return m.charAt(0).toUpperCase() + m.slice(1); }
+    function monthYearShort(d) { return monthShort(d) + ' ' + String(d.getFullYear()).slice(-2); }
+    function setPeriodLabel(long, short, id) {
+        const el = document.getElementById(id || 'currentPeriod');
+        if (!el) return;
+        el.title = String(long);
+        el.innerHTML = '<span class="pl-long">' + escAttr(long) + '</span><span class="pl-short">' + escAttr(short == null ? long : short) + '</span>';
+    }
+    // Navigation de periode, IDENTIQUE dans le Gantt et le Calendrier : ‹ periode › puis « Aujourd'hui ».
+    // o = { prev, next, today, id, text }
+    function uiPeriodNav(o) {
+        const nav = (fn, ic, label) => '<button type="button" class="btn btn-icon btn-nav" onclick="' + escAttr(fn) + '" title="' + label + '" aria-label="' + label + '">' + uiIcon(ic, 16) + '</button>';
+        return '<div class="period-nav"><div class="nav-group">' + nav(o.prev, 'chevL', 'Période précédente') +
+            '<span class="current-period" id="' + escAttr(o.id || 'currentPeriod') + '" aria-live="polite">' + escAttr(o.text) + '</span>' +
+            nav(o.next, 'chevR', 'Période suivante') + '</div>' +
+            '<button type="button" class="btn" onclick="' + escAttr(o.today) + '" title="Aujourd\'hui" aria-label="Aujourd\'hui">' + uiIcon('today') + '<span class="btn-label">Aujourd\'hui</span></button></div>';
+    }
+    // Recherche. o = { id, oninput }. Champ en ligne quand la place le permet ; sinon (barre compacte) le champ
+    // est deplace dans le bandeau et un bouton loupe l'ouvre (voir placeSearch).
+    function uiSearch(o) {
+        return '<div class="tf-search">' +
+            '<button type="button" class="btn icon-btn tf-search-toggle" data-tray-toggle="search" aria-expanded="false" title="Rechercher" aria-label="Rechercher">' + uiIcon('search', 16) + '</button>' +
+            '<div class="search-box"><input type="text" id="' + escAttr(o.id || 'searchInput') + '" placeholder="Rechercher..." oninput="' + escAttr(o.oninput) + '" aria-label="Rechercher"></div></div>';
+    }
+    // Bouton « Filtres » + panneau. Le panneau s'ouvre dans le bandeau sous la barre (il y est deplace au montage).
+    // o = { containerId, buttonId, menuId, countId } (le gestionnaire de clic est celui du bandeau)
+    function uiFilters(o) {
+        return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' data-tray-toggle="filters" aria-expanded="false" title="Filtres" aria-label="Filtres">' + uiIcon('filter') + '<span class="btn-label">Filtres</span>' +
+            '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
+            '<div class="tf-panel" data-panel="filters" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
+    }
+    // Selecteurs de l'affichage : memes options partout. Les ids sont ceux lus par les widgets.
+    function uiSelect(o) {
+        return '<select id="' + escAttr(o.id) + '" onchange="' + escAttr(o.onchange) + '"' + (o.title ? ' title="' + escAttr(o.title) + '"' : '') + '>' +
+            o.options.map(p => '<option value="' + escAttr(p[0]) + '">' + escAttr(p[1]) + '</option>').join('') + '</select>';
+    }
+    const UI_COLOR_OPTIONS = [['priority', 'Priorité'], ['project', 'Projet'], ['assignee', 'Assigné'], ['status', 'Statut']];
+    const UI_LEVEL_OPTIONS = [['all', 'Tous'], ['actions', 'Actions'], ['parents', 'Synthèses']];
+    const UI_SORT_OPTIONS = [['priority', 'Priorité'], ['date', 'Date'], ['manual', 'Manuel']];
+    const UI_LEVEL_TITLE = 'Niveau affiché — Tous = arbre ; Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)';
+    const uiColorField = (title) => ({ label: 'Couleur', html: uiSelect({ id: 'colorSelect', onchange: 'changeColorMode(this.value)', title: title, options: UI_COLOR_OPTIONS }) });
+    const uiLevelField = () => ({ label: 'Niveau', html: uiSelect({ id: 'levelSelect', onchange: 'changeWorkLevel(this.value)', title: UI_LEVEL_TITLE, options: UI_LEVEL_OPTIONS }) });
+    const uiSortField = (options) => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: options || UI_SORT_OPTIONS }) });
+    // Vues enregistrees (contexte commun) : le contenu est rendu par TF.ctx a chaque changement.
+    const uiViewsField = () => ({ label: 'Vue', html: '<div class="tf-views"></div>' });
+    // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
+    function uiDisplayMenu(o) {
+        const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
+        const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action"' + (a.id ? ' id="' + escAttr(a.id) + '"' : '') + ' onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
+        return '<div class="view-menu"><button type="button" class="btn" data-tray-toggle="display" aria-expanded="false" title="Options d\'affichage" aria-label="Affichage">' +
+            uiIcon('sliders') + '<span class="btn-label">Affichage</span><span class="btn-label btn-chev">' + uiIcon('chevD', 12) + '</span></button>' +
+            '<div class="tf-panel" data-panel="display" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
+    }
+    // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
+    function uiMoreMenu(o) {
+        const items = (o.items || []).map(i => i.sep ? '<div class="filter-sep"></div>' :
+            '<div class="filter-option"' + (i.id ? ' id="' + escAttr(i.id) + '"' : '') + ' onclick="' + escAttr(i.onclick) + '">' + (i.html || (i.icon ? uiIcon(i.icon) : '')) + ' ' + escAttr(i.label) + '</div>').join('');
+        const title = o.title || 'Plus d\'actions';
+        return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
+            '<button type="button" class="btn icon-btn" onclick="' + escAttr(o.toggle) + '" title="' + escAttr(title) + '" aria-label="' + escAttr(title) + '">' + uiIcon(o.icon || 'dots', 16) + '</button>' +
+            '<div class="filter-menu filter-menu-right"' + (o.menuId ? ' id="' + escAttr(o.menuId) + '"' : '') + '>' + items + '</div></div>';
+    }
+    // Bouton generique. o = { id, label, icon, title, onclick, cls, primary, iconOnly, count }
+    function uiButton(o) {
+        const cls = o.cls || (o.primary ? 'btn primary' : (o.iconOnly ? 'btn icon-btn' : 'btn'));
+        return '<button type="button" class="' + escAttr(cls) + '"' + (o.id ? ' id="' + escAttr(o.id) + '"' : '') + ' onclick="' + escAttr(o.onclick) + '"' +
+            ((o.title || (o.icon && o.label)) ? ' title="' + escAttr(o.title || o.label) + '"' : '') + ((o.iconOnly || o.icon) ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
+            (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? '<span class="btn-label">' + escAttr(o.label) + '</span>' : escAttr(o.label)) : '') +
+            (o.count ? '<span class="filter-count" id="' + escAttr(o.count) + '" style="display:none">0</span>' : '') + '</button>';
+    }
+    // Barre complete. o = { title, view: [html], tools: [html], actions: [html] }
+    function uiHeader(o) {
+        return uiTitle(o.title) +
+            ((o.view && o.view.length) ? '<div class="hz-view">' + o.view.join('') + '</div>' : '') +
+            '<div class="hz-tools">' + (o.tools || []).join('') + '</div>' +
+            '<div class="hz-actions">' + (o.actions || []).join('') + '</div>' +
+            '<div class="tf-tray" id="tfTray"><div class="tf-panel" data-panel="search"></div></div>';
+    }
+
+    /* ----- Bandeau de saisie temporaire et ajustement de la barre ---------------------
+     * Recherche, filtres et affichage s'ouvrent dans un meme bandeau sous la barre (qui pousse le
+     * contenu, comme un volet) : on y saisit, puis on le referme. La barre tient sur UNE ligne quand
+     * la place le permet ; sinon elle se compacte (libelles en icones, recherche dans le bandeau), puis
+     * seulement en dernier recours passe sur deux lignes. L'ajustement mesure le debordement reel. */
+    function trayToggle(name, force) {
+        const tray = document.getElementById('tfTray');
+        if (!tray) return;
+        const panel = name ? tray.querySelector('.tf-panel[data-panel="' + name + '"]') : null;
+        if (name && !panel) return;
+        const open = !!panel && (typeof force === 'boolean' ? force : !panel.classList.contains('open'));
+        tray.querySelectorAll('.tf-panel.open').forEach(p => p.classList.remove('open'));
+        if (open) panel.classList.add('open');
+        tray.classList.toggle('open', open);
+        document.querySelectorAll('[data-tray-toggle]').forEach(b => {
+            const on = open && b.getAttribute('data-tray-toggle') === name;
+            b.classList.toggle('is-open', on);
+            b.setAttribute('aria-expanded', String(on));
+        });
+        if (open && name === 'search') { const i = panel.querySelector('input'); if (i) i.focus(); }
+    }
+    function syncSearchState(host) {
+        const input = host.querySelector('.search-box input');
+        const btn = host.querySelector('.tf-search-toggle');
+        if (input && btn) btn.classList.toggle('has-filter', !!input.value);
+    }
+    function placeSearch(host, compact) {
+        const box = host.querySelector('.search-box');
+        const slot = host.querySelector('.tf-search');
+        const panel = host.querySelector('.tf-panel[data-panel="search"]');
+        if (!box || !slot || !panel) return;
+        if (compact && box.parentNode !== panel) panel.appendChild(box);
+        if (!compact && box.parentNode !== slot) {
+            slot.appendChild(box);
+            if (panel.classList.contains('open')) trayToggle('search', false);
+        }
+    }
+    // Liste deroulante d'un champ de la fiche (.multi-select) : elle s'ouvre vers le bas, sauf si la fiche defile et
+    // qu'elle serait coupee par le bord de la zone visible alors qu'il y a plus de place au-dessus.
+    function placeDropdown(ms) {
+        if (!ms || !ms.querySelector) return;
+        ms.classList.remove('up');
+        const dd = ms.querySelector('.multi-select-dropdown');
+        if (!dd || !ms.classList.contains('open')) return;
+        const zone = ms.closest('.panel-content') || ms.closest('.panel');
+        const zr = zone ? zone.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+        const bas = Math.min(zr.bottom, window.innerHeight) - 4, haut = Math.max(zr.top, 0) + 4;
+        const t = ms.getBoundingClientRect(), r = dd.getBoundingClientRect();
+        if (r.bottom > bas && (t.top - haut) > (bas - t.bottom)) ms.classList.add('up');
+    }
+    // Diagnostic : la barre deborde-t-elle ? (utilise par les controles de largeur, pas par la mise en page)
+    function headerOverflow(host) {
+        host = host || document.getElementById('tfHeader');
+        if (!host) return false;
+        const zones = ['.hz-view', '.hz-tools'].map(q => host.querySelector(q)).filter(Boolean);
+        return host.scrollWidth > host.clientWidth + 1 || zones.some(z => z.scrollWidth > z.clientWidth + 1) ||
+            Array.prototype.some.call(host.querySelectorAll('.hz-view .tf-seg'), g => g.scrollWidth > g.clientWidth + 1);
+    }
+    // Etat de la barre : { top: actions et navigation en icones, search: recherche en loupe, tools: Filtres / Affichage aussi en icones,
+    // bare: titre sans texte, two: deux lignes }.
+    function applyMode(host, m) {
+        host.classList.toggle('hz-search', !!(m.search || m.tools));   // recherche en loupe (champ dans le bandeau)
+        host.classList.toggle('hz-compact', !!m.tools);                // Filtres / Affichage aussi en icones
+        host.classList.toggle('hz-top', !!m.top);
+        host.classList.toggle('hz-bare', !!m.bare);
+        host.classList.toggle('hz-two', !!m.two);
+    }
+    // La disposition ne depend QUE de la largeur du widget : a largeur egale, les quatre widgets se comportent
+    // exactement de la meme facon (une mesure du contenu donnait des barres differentes d'un widget a l'autre).
+    // Priorite a UNE seule ligne : on prefere des icones aux grands boutons, et la zone « vue » (periodes) defile
+    // au besoin. Deux lignes seulement sur un ecran etroit (telephone). Seuils cales sur le contenu le plus large
+    // (Calendrier : navigation + six periodes) ; le controle de largeur verifie qu'aucun widget ne deborde.
+    const HEADER_STEPS = [
+        [1480, {}],                                         // libelles complets
+        [1360, { top: true }],                              // actions et navigation en icones
+        [1240, { top: true, search: true }],                // + recherche en loupe
+        [1120, { top: true, tools: true }],                 // + Filtres / Affichage en icones
+        [720, { top: true, tools: true, bare: true }]       // + titre sans texte
+    ];
+    function modeForWidth(w) {
+        for (const [min, m] of HEADER_STEPS) if (w >= min) return Object.assign({}, m);
+        // Deux lignes : les libelles des outils (Rechercher, Filtres, Affichage) ne s'affichent que sur la
+        // premiere ligne quand la place y est ; sur la 2e ligne, des icones seulement.
+        return { two: true, top: true, tools: true, bare: true };
+    }
+    function chooseMode(host) {
+        const m = modeForWidth(host.clientWidth);
+        placeSearch(host, !!(m.search || m.tools));
+        applyMode(host, m);
+        return m;
+    }
+    function fitHeader(host) {
+        host = host || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
+        if (!host || fitHeader.busy) return;
+        // Pendant la saisie dans le champ de recherche, la disposition ne bouge pas (le deplacer ferait perdre le focus).
+        const actif = document.activeElement;
+        if (actif && actif.matches && actif.matches('.search-box input') && host.contains(actif)) return;
+        fitHeader.busy = true;
+        try {
+            chooseMode(host);
+            syncSearchState(host);
+        } finally {
+            fitHeader.busy = false;
+            // nos propres deplacements ne doivent pas declencher une nouvelle mesure
+            if (fitHeader.observer) fitHeader.observer.takeRecords();
+        }
+    }
+    function setupHeader(host) {
+        const tray = host.querySelector('.tf-tray');
+        if (!tray) return;
+        host.querySelectorAll('.hz-view .tf-panel, .hz-tools .tf-panel, .hz-actions .tf-panel').forEach(p => tray.appendChild(p));
+        let attente = false;
+        const refit = () => { if (attente) return; attente = true; requestAnimationFrame(() => { attente = false; fitHeader(host); }); };
+        window.addEventListener('resize', refit);
+        if (typeof ResizeObserver !== 'undefined') {
+            let largeur = -1;
+            new ResizeObserver(() => { const w = host.clientWidth; if (w !== largeur) { largeur = w; refit(); } }).observe(host);
+        }
+        // Le texte de la periode change la largeur du contenu : on remesure (hors bandeau, qui n'y change rien).
+        if (typeof MutationObserver !== 'undefined') {
+            fitHeader.observer = new MutationObserver((muts) => {
+                if (fitHeader.busy) return;
+                if (muts.some(m => { const n = m.target.nodeType === 1 ? m.target : m.target.parentElement; return n && !n.closest('.tf-tray'); })) refit();
+            });
+            fitHeader.observer.observe(host, { childList: true, characterData: true, subtree: true });
+        }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+        fitHeader(host);
+        setTimeout(() => fitHeader(host), 300);
+    }
+    function mountHeader(o, el) {
+        const host = el || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
+        if (host) { host.innerHTML = uiHeader(o); setupHeader(host); }
+        initUi();
+    }
+    const ui = {
+        icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
+        select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField, viewsField: uiViewsField, placeDropdown: placeDropdown,
+        displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader,
+        tray: trayToggle, refit: fitHeader, overflow: headerOverflow, modeForWidth: modeForWidth
+    };
+
+    /* ----- En-tete de la fiche de tache ---------------------------------------
+     * Le titre editable (#taskTitle) EST l'en-tete ; la navigation "n/m" entre les
+     * taches est integree a cote (fleches + compteur), puis la fermeture. Le
+     * handler oninput de #taskTitle est celui de chaque widget (updateField).
+     * o = { title, placeholder, index, total, isNew, back, dotColor, dotTitle } */
+    function panelHeaderHtml(o) {
+        o = o || {};
+        const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const chevron = (pts) => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="' + pts + '"/></svg>';
+        const hasNav = !o.isNew && Number(o.total) > 1;
+        const nav = hasNav
+            ? '<div class="panel-nav" role="group" aria-label="Navigation entre les tâches">' +
+                '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(-1)" title="Tâche précédente" aria-label="Tâche précédente">' + chevron('15 18 9 12 15 6') + '</button>' +
+                '<span class="panel-count" aria-live="polite">' + (Number(o.index) + 1) + '/' + Number(o.total) + '</span>' +
+                '<button type="button" class="panel-nav-btn" onclick="navigatePanelTask(1)" title="Tâche suivante" aria-label="Tâche suivante">' + chevron('9 18 15 12 9 6') + '</button>' +
+              '</div>'
+            : '';
+        const back = o.back
+            ? '<button type="button" class="panel-nav-btn panel-back" onclick="backToPeriod()" title="Retour" aria-label="Retour">' + chevron('15 18 9 12 15 6') + '</button>'
+            : '';
+        const dot = o.dotColor ? '<span class="panel-dot" style="background:' + esc(o.dotColor) + '" title="' + esc(o.dotTitle || '') + '"></span>' : '';
+        return back + dot +
+            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" aria-label="Titre">' +
+            nav +
+            '<button type="button" class="panel-close" onclick="confirmClosePanel()" title="Fermer" aria-label="Fermer">×</button>';
+    }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -673,8 +1644,8 @@ const TF = (function () {
             if (!charges.length) continue;
             const s = t.dateDebut, e = t.dateEcheance;
             if (s == null || e == null) continue;
-            const day0 = Math.floor((s * 1000) / 86400000);
-            const day1 = Math.floor((e * 1000) / 86400000);
+            const day0 = dayNum(s);
+            const day1 = dayNum(e);
             const nDays = Math.max(day1 - day0 + 1, 1);
             for (const c of charges) {
                 const perDay = (Number(c.heures) || 0) / nDays;
@@ -721,7 +1692,7 @@ const TF = (function () {
         for (const t of (tasks || [])) {
             const charges = getCharges ? getCharges(t) : parseCharges(t && t.charges);
             if (!charges.length || t.dateDebut == null || t.dateEcheance == null) continue;
-            const d0 = Math.floor((t.dateDebut * 1000) / 86400000), d1 = Math.floor((t.dateEcheance * 1000) / 86400000);
+            const d0 = dayNum(t.dateDebut), d1 = dayNum(t.dateEcheance);
             const days = [];
             for (let dd = d0; dd <= d1; dd++) { if (workdays) { const wd = new Date(dd * 86400000).getUTCDay(); if (wd < 1 || wd > 5) continue; } days.push(dd); }
             if (!days.length) days.push(d0);
@@ -759,11 +1730,306 @@ const TF = (function () {
         try { const r = await grist.docApi.applyUserActions(actions); return { ok: true, ret: r }; }
         catch (e) { return { ok: false, denied: isAccessError(e), message: (e && (e.message || e.toString())) || 'Erreur' }; }
     }
+    /* ----- Contexte commun de consultation --------------------------------------------
+     * Un seul etat par document et par navigateur, lu et ecrit par tous les widgets : filtres (projet, priorite,
+     * assigne, statut), couleur, tri, niveau, sous-taches. Un filtre pose dans le Kanban s'applique donc aussi
+     * au Gantt, au Calendrier et au Dashboard. Il vit dans le stockage local du navigateur (jamais dans les
+     * options Grist, sinon le bouton « Enregistrer » de la section s'allume a chaque manipulation) ; les widgets
+     * d'une meme page se previennent par l'evenement « storage ». Une valeur nulle = defaut propre au widget.
+     * Vues nommees : instantanes du contexte, personnels, dans le meme stockage. Position (date affichee) du
+     * Gantt et du Calendrier : memorisee quelques heures, puis on revient sur aujourd'hui. */
+    const CTX_COLORS = ['priority', 'project', 'assignee', 'status'];
+    const CTX_SORTS = ['manual', 'date', 'priority'];
+    const CTX_LEVELS = ['all', 'actions', 'parents'];
+    const CTX_POS_MAX_AGE = 12 * 3600 * 1000;
+    function ctxBlank() {
+        return { filters: { project: [], priority: [], assignee: [], status: [] }, color: null, sort: null, level: null, subs: null, view: null };
+    }
+    function ctxList(arr, conv) {
+        const out = [];
+        (Array.isArray(arr) ? arr : []).forEach(v => {
+            const x = conv(v);
+            if (conv === Number ? isFinite(x) : x !== '') { if (out.indexOf(x) === -1) out.push(x); }
+        });
+        return out;
+    }
+    // Normalise un contexte lu du stockage (ou venu d'un autre widget) : types fixes, valeurs inconnues ecartees.
+    function ctxClean(raw) {
+        const out = ctxBlank();
+        if (!raw || typeof raw !== 'object') return out;
+        const f = raw.filters && typeof raw.filters === 'object' ? raw.filters : {};
+        out.filters.project = ctxList(f.project, Number);
+        out.filters.priority = ctxList(f.priority, Number);
+        out.filters.assignee = ctxList(f.assignee, Number);
+        out.filters.status = ctxList(f.status, String);
+        out.color = CTX_COLORS.indexOf(raw.color) !== -1 ? raw.color : null;
+        out.sort = CTX_SORTS.indexOf(raw.sort) !== -1 ? raw.sort : null;
+        out.level = CTX_LEVELS.indexOf(raw.level) !== -1 ? raw.level : null;
+        out.subs = typeof raw.subs === 'boolean' ? raw.subs : null;
+        out.view = typeof raw.view === 'string' && raw.view ? raw.view : null;
+        return out;
+    }
+    // Ce qu'une vue memorise : tout le contexte sauf le nom de la vue elle-meme.
+    function ctxData(s) { return { filters: s.filters, color: s.color, sort: s.sort, level: s.level, subs: s.subs }; }
+    function createCtx(env) {
+        env = env || {};
+        const store = env.storage || null;
+        const now = env.now || Date.now;
+        let ns = null, state = ctxBlank(), views = [];
+        const listeners = [];
+        const keyCtx = () => 'taskflow_ctx_' + ns;
+        const keyViews = () => 'taskflow_views_' + ns;
+        const keyPos = (w) => 'taskflow_pos_' + ns + '_' + w;
+        const rd = (k) => { try { return store ? store.getItem(k) : null; } catch (e) { return null; } };
+        const wr = (k, v) => { try { if (store) store.setItem(k, v); } catch (e) { /* stockage indisponible */ } };
+        const copy = (o) => JSON.parse(JSON.stringify(o));
+        const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+        const parse = (s) => { try { return s ? JSON.parse(s) : null; } catch (e) { return null; } };
+        // Reglages memorises par widget avant le contexte commun : repris une fois, a la premiere ouverture du document.
+        function legacy(w) {
+            const s = ctxBlank();
+            if (!w) return s;
+            const f = parse(rd('taskflow_' + w + '_filters'));
+            if (f) s.filters = f;
+            s.color = rd('taskflow_' + w + '_colormode');
+            s.sort = rd('taskflow_' + w + '_sort');
+            s.level = rd('taskflow_' + w + '_worklevel');
+            const sub = rd('taskflow_' + w + '_showsubs');
+            s.subs = sub === null ? null : sub === '1';
+            return ctxClean(s);
+        }
+        function loadViews() {
+            const l = parse(rd(keyViews()));
+            return (Array.isArray(l) ? l : []).filter(v => v && typeof v.name === 'string' && v.name).map(v => ({ name: v.name, data: ctxData(ctxClean(v.data)) }));
+        }
+        function modified() {
+            if (!state.view) return false;
+            const v = views.find(x => x.name === state.view);
+            return !v || !same(ctxData(state), v.data);
+        }
+        // --- Selecteur de vues (menu Affichage) : rendu a chaque changement de contexte ou de liste de vues.
+        function viewsHtml() {
+            const mod = modified();
+            const opts = '<option value="">Aucune vue</option>' + views.map(v =>
+                '<option value="' + escAttr(v.name) + '"' + (v.name === state.view ? ' selected' : '') + '>' + escAttr(v.name) + (v.name === state.view && mod ? ' (modifiée)' : '') + '</option>').join('');
+            return '<select id="tfViewSelect" onchange="TF.ctx.pickView(this.value)" aria-label="Vue enregistrée">' + opts + '</select>' +
+                '<span class="tf-views-save"><input type="text" id="tfViewName" maxlength="40" placeholder="Nom de la vue" aria-label="Nom de la vue" value="' + escAttr(state.view || '') + '" ' +
+                'onkeydown="if(event.key===\'Enter\'){TF.ctx.saveViewFromUi();event.preventDefault();}">' +
+                '<button type="button" class="btn" onclick="TF.ctx.saveViewFromUi()" title="Enregistrer les filtres, le tri, la couleur et le niveau actuels sous ce nom">Enregistrer</button>' +
+                (state.view ? '<button type="button" class="btn" onclick="TF.ctx.removeViewFromUi()" title="Supprimer cette vue">Supprimer</button>' : '') + '</span>';
+        }
+        // Une vue supprimee ailleurs ne doit plus rester « active ».
+        function dropGhostView() {
+            if (state.view && !views.some(v => v.name === state.view)) { state = ctxClean(Object.assign(copy(state), { view: null })); wr(keyCtx(), JSON.stringify(state)); }
+        }
+        function renderViews() {
+            if (typeof document === 'undefined') return;
+            const a = document.activeElement;
+            if (a && a.id === 'tfViewName') return;   // ne pas effacer un nom en cours de saisie
+            document.querySelectorAll('.tf-views').forEach(el => { el.innerHTML = viewsHtml(); });
+        }
+        function commit(next, source) {
+            if (same(next, state)) return false;
+            state = next;
+            wr(keyCtx(), JSON.stringify(state));
+            renderViews();
+            // Le widget qui agit se met a jour lui-meme ; les autres, et lui-meme apres le choix d'une vue, sont prevenus.
+            if (source === 'external' || source === 'view') listeners.forEach(fn => { try { fn(copy(state), source); } catch (e) { /* un ecouteur ne bloque pas les autres */ } });
+            return true;
+        }
+        function refresh() {
+            if (ns === null) return;
+            const raw = parse(rd(keyCtx()));
+            const nv = loadViews();
+            const viewsChanged = !same(nv, views);
+            views = nv;
+            if (raw) {
+                const next = ctxClean(raw);
+                if (!same(next, state)) { state = next; dropGhostView(); renderViews(); listeners.forEach(fn => { try { fn(copy(state), 'external'); } catch (e) {} }); return; }
+            }
+            if (viewsChanged) { dropGhostView(); renderViews(); }
+        }
+        const api = {
+            // Associe le contexte a un document. widget = nom du widget, pour reprendre ses anciens reglages.
+            bind: function (docId, widget) {
+                ns = String(docId || 'doc');
+                const raw = parse(rd(keyCtx()));
+                state = raw ? ctxClean(raw) : legacy(widget);
+                if (!raw) wr(keyCtx(), JSON.stringify(state));
+                views = loadViews();
+                dropGhostView();
+                if (typeof window !== 'undefined' && !api._wired) {
+                    api._wired = true;
+                    window.addEventListener('storage', e => { if (e.key === keyCtx() || e.key === keyViews()) refresh(); });
+                    window.addEventListener('focus', refresh);
+                    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+                }
+                renderViews();
+                return copy(state);
+            },
+            init: async function (grist, widget) {
+                let id = null;
+                try {
+                    if (grist && grist.docApi && grist.docApi.getDocName) id = await Promise.race([grist.docApi.getDocName(), new Promise(r => setTimeout(() => r(null), 2000))]);
+                } catch (e) { /* identifiant indisponible : contexte commun a tous les documents du navigateur */ }
+                return api.bind(id, widget);
+            },
+            get: function () { return copy(state); },
+            // patch = { filters: { project: [..] }, color, sort, level, subs, view } ; seules les cles presentes changent.
+            set: function (patch) {
+                const next = copy(state);
+                patch = patch || {};
+                if (patch.filters) Object.keys(next.filters).forEach(k => { if (patch.filters[k] !== undefined) next.filters[k] = patch.filters[k]; });
+                ['color', 'sort', 'level', 'subs', 'view'].forEach(k => { if (k in patch) next[k] = patch[k]; });
+                return commit(ctxClean(next), 'local');
+            },
+            // fn(contexte, source) quand le contexte change SANS que ce widget en soit l'auteur : source = 'external' ou 'view'.
+            onChange: function (fn) { listeners.push(fn); },
+            // Ecarte les filtres devenus sans objet (projet supprime, membre retire, statut renomme) : ils masqueraient
+            // tout sans qu'on puisse les retirer. valid = { project: [ids], assignee: [ids], status: [valeurs] } ;
+            // une liste vide n'est pas appliquee (donnees pas encore lues). Retourne le nombre de filtres retires.
+            prune: function (valid) {
+                const next = copy(state);
+                let removed = 0;
+                ['project', 'assignee', 'status'].forEach(k => {
+                    const ok = valid && valid[k];
+                    if (!ok || !ok.length) return;
+                    const keep = new Set(ok.map(k === 'status' ? String : Number));
+                    const kept = next.filters[k].filter(v => keep.has(v));
+                    removed += next.filters[k].length - kept.length;
+                    next.filters[k] = kept;
+                });
+                if (removed) commit(next, 'prune');
+                return removed;
+            },
+            views: {
+                list: function () { return views.map(v => v.name); },
+                current: function () { return state.view; },
+                modified: modified,
+                save: function (name) {
+                    name = String(name == null ? '' : name).trim().slice(0, 40);
+                    if (!name) return false;
+                    const data = copy(ctxData(state));
+                    const i = views.findIndex(v => v.name === name);
+                    if (i >= 0) views[i].data = data; else views.push({ name: name, data: data });
+                    wr(keyViews(), JSON.stringify(views));
+                    if (!commit(ctxClean(Object.assign(copy(state), { view: name })), 'local')) renderViews();
+                    return true;
+                },
+                apply: function (name) {
+                    const v = views.find(x => x.name === name);
+                    if (!v) return false;
+                    commit(ctxClean(Object.assign(copy(v.data), { view: name })), 'view');
+                    return true;
+                },
+                clear: function () { return commit(ctxClean(Object.assign(copy(state), { view: null })), 'local'); },
+                remove: function (name) {
+                    const n = views.length;
+                    views = views.filter(v => v.name !== name);
+                    if (views.length === n) return false;
+                    wr(keyViews(), JSON.stringify(views));
+                    if (state.view === name) commit(ctxClean(Object.assign(copy(state), { view: null })), 'local'); else renderViews();
+                    return true;
+                }
+            },
+            // Appels des controles du menu Affichage.
+            pickView: function (name) { if (name) api.views.apply(name); else api.views.clear(); },
+            saveViewFromUi: function () {
+                const input = typeof document !== 'undefined' ? document.getElementById('tfViewName') : null;
+                const name = input ? input.value : '';
+                if (!api.views.save(name) && input) input.focus();
+                else if (input) input.blur();
+            },
+            removeViewFromUi: function () { if (state.view) api.views.remove(state.view); },
+            // Position affichee (Gantt, Calendrier) : { iso, fit, ... } memorisee 12 h au plus.
+            pos: {
+                get: function (widget) {
+                    if (ns === null) return null;
+                    const p = parse(rd(keyPos(widget)));
+                    return p && typeof p.t === 'number' && now() - p.t < CTX_POS_MAX_AGE ? p : null;
+                },
+                set: function (widget, value) { if (ns !== null) wr(keyPos(widget), JSON.stringify(Object.assign({}, value, { t: now() }))); }
+            },
+            renderViews: renderViews,
+            // Relit le stockage (appele sur l'evenement « storage », au retour de focus ; expose pour les tests).
+            refresh: refresh
+        };
+        return api;
+    }
+    let ctxStorage = null;
+    try { ctxStorage = typeof localStorage !== 'undefined' ? localStorage : null; } catch (e) { ctxStorage = null; }
+    const ctx = createCtx({ storage: ctxStorage });
+
+    // Un widget cree la table Tasks dans un document neuf alors qu'il est lie a la table par defaut de Grist
+    // (« Table1 ») : onRecords ne se declenche alors jamais pour Tasks. On rattache la section a Tasks, une seule
+    // fois, seulement si c'est sans ambiguite (une seule section personnalisee sur la table liee) et si la table
+    // liee est vide ou porte le nom par defaut. Grist recree alors l'iframe ; un avis s'affiche au redemarrage.
+    // Annulable (Ctrl+Z) dans Grist. Appeler juste apres la creation de Tasks, en fin de schema.
+    async function relinkToTasks(grist) {
+        try {
+            if (isReadOnly() || !grist || !grist.selectedTable) return false;
+            const liee = await grist.selectedTable.getTableId();
+            if (!liee || liee === 'Tasks') return false;
+            const tables = columnarToRows(await grist.docApi.fetchTable('_grist_Tables'));
+            const from = tables.find(t => t.tableId === liee), to = tables.find(t => t.tableId === 'Tasks');
+            if (!from || !to) return false;
+            const sections = columnarToRows(await grist.docApi.fetchTable('_grist_Views_section')).filter(s => s.parentKey === 'custom' && s.tableRef === from.id);
+            if (sections.length !== 1) return false;
+            const data = await grist.docApi.fetchTable(liee);
+            const vide = !data || !data.id || data.id.length === 0;
+            if (!vide && !/^Table\d+$/.test(liee)) return false;
+            try { localStorage.setItem('taskflow_relinked', '1'); } catch (e) {}
+            await grist.docApi.applyUserActions([['UpdateRecord', '_grist_Views_section', sections[0].id, { tableRef: to.id }]]);
+            return true;
+        } catch (e) { return false; }
+    }
+    // Vrai une seule fois, au demarrage qui suit un rattachement a Tasks (pour l'annoncer).
+    function consumeRelinkNotice() {
+        try { if (localStorage.getItem('taskflow_relinked')) { localStorage.removeItem('taskflow_relinked'); return true; } } catch (e) {}
+        return false;
+    }
     // Garde transverse : enrobe grist.docApi.applyUserActions une seule fois pour
     // respecter les droits sur TOUS les sites d'ecriture sans les modifier un a un.
     // - lecture seule -> bloque + opts.onReadOnly()
     // - refus ACL au niveau ligne -> opts.onDenied(err) (le widget toast + recharge)
     // Les erreurs continuent d'etre levees (les try/catch existants les absorbent).
+    // Rafraichissement de secours. grist.onRecords ne se declenche que pour la table LIEE a la section : un widget lie a
+    // une autre table (cas courant : la table proposee par defaut a l'ajout du widget) ne voyait pas les saisies faites
+    // dans Tasks. Si la table liee n'est pas Tasks, on la relit toutes les 15 s (page visible) et au retour sur la page,
+    // et on recharge seulement si elle a change, sans interrompre une saisie en cours. opts = { table, every, busy }.
+    const watchState = { baseline: null, on: false };
+    function watchTasks(grist, reload, opts) {
+        opts = opts || {};
+        if (!grist || !grist.docApi || typeof document === 'undefined' || watchState.on) return;
+        watchState.on = true;
+        const table = opts.table || 'Tasks';
+        const occupe = () => {
+            const a = document.activeElement;
+            if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+            if (document.querySelector('.panel.open, .tf-modal-overlay')) return true;
+            return !!(opts.busy && opts.busy());
+        };
+        let enCours = false;
+        const verifier = async () => {
+            if (enCours || document.visibilityState === 'hidden') return;
+            enCours = true;
+            try {
+                const signature = JSON.stringify(await grist.docApi.fetchTable(table));
+                if (watchState.baseline === null) watchState.baseline = signature;
+                else if (signature !== watchState.baseline && !occupe()) { watchState.baseline = signature; await reload(); }
+            } catch (e) { /* lecture impossible : on reessaiera */ }
+            finally { enCours = false; }
+        };
+        (async () => {
+            let liee = null;
+            try { liee = await grist.selectedTable.getTableId(); } catch (e) { /* aucune table liee */ }
+            if (liee === table) return;   // onRecords suffit
+            setInterval(verifier, opts.every || 15000);
+            document.addEventListener('visibilitychange', verifier);
+            window.addEventListener('focus', verifier);
+            verifier();
+        })();
+    }
     function guardWrites(grist, opts) {
         opts = opts || {};
         if (!grist || !grist.docApi || grist.docApi._tfGuarded) return;
@@ -771,7 +2037,7 @@ const TF = (function () {
         grist.docApi._tfGuarded = true;
         grist.docApi.applyUserActions = async function (actions) {
             if (isReadOnly()) { try { opts.onReadOnly && opts.onReadOnly(); } catch (e) {} const err = new Error('Document en lecture seule'); err.tfReadOnly = true; throw err; }
-            try { return await raw(actions); }
+            try { const r = await raw(actions); watchState.baseline = null; return r; }   // nos propres ecritures ne doivent pas declencher un rechargement de secours
             catch (e) { if (isAccessError(e)) { try { opts.onDenied && opts.onDenied(e); } catch (e2) {} } throw e; }
         };
     }
@@ -796,6 +2062,39 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
+        statusOf: statusOf,
+        shouldAutoDemo: shouldAutoDemo,
+        confirm: uiConfirm,
+        deletePlan: deletePlan,
+        deleteConfirmHtml: deleteConfirmHtml,
+        completionPatch: completionPatch,
+        datesPatch: datesPatch,
+        parentSpanUpdates: parentSpanUpdates,
+        reopenValue: reopenValue,
+        statusKnown: statusKnown,
+        gristToDate: gristToDate,
+        dateToGrist: dateToGrist,
+        dayNum: dayNum,
+        todayGrist: todayGrist,
+        isoDate: isoDate,
+        parseISODate: parseISODate,
+        colorModeLabel: colorModeLabel,
+        panelHeaderHtml: panelHeaderHtml,
+        initUi: initUi,
+        searchMatch: searchMatch,
+        watchTasks: watchTasks,
+        ctx: ctx,
+        createCtx: createCtx,
+        relinkToTasks: relinkToTasks,
+        consumeRelinkNotice: consumeRelinkNotice,
+        sortTasks: sortTasks,
+        setPeriodLabel: setPeriodLabel,
+        monthYearShort: monthYearShort,
+        monthShort: monthShort,
+        ui: ui,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
@@ -817,13 +2116,51 @@ const TF = (function () {
 })();
 // </taskflow-core>
 
+// Barre du haut : composants communs (core) composes pour ce widget.
+TF.ui.mount({
+    title: { icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>', text: 'Dashboard', meta: '<span class="last-update" id="lastUpdate">--</span>' },
+    tools: [
+        TF.ui.search({ oninput: 'handleSearch(this.value)' }),
+        TF.ui.filters({ buttonId: 'filterToggleBtn', menuId: 'filterPanel', countId: 'filterCount' }),
+        TF.ui.displayMenu({ fields: [TF.ui.viewsField()], actions: [{ id: 'btnLeavesOnly', label: '↳ Feuilles uniquement', title: 'Compter uniquement les feuilles (éviter le double-compte parent + enfants)', onclick: 'toggleLeavesOnly()' }] })
+    ],
+    actions: [
+        TF.ui.button({ id: 'editToggleBtn', icon: 'edit', label: 'Modifier', onclick: 'toggleEditMode()' }),
+        TF.ui.moreMenu({ toggle: "document.getElementById('exportMenu').classList.toggle('open');event.stopPropagation()", containerId: 'exportDropdown', menuId: 'exportMenu', icon: 'download', title: 'Exporter', items: [
+            { icon: 'print', label: 'Imprimer / PDF', onclick: 'exportPrint()' },
+            { icon: 'image', label: 'Image PNG', onclick: 'exportPNG()' }
+        ] }),
+        TF.ui.button({ icon: 'refresh', title: 'Actualiser', onclick: 'loadAllData()', iconOnly: true })
+    ]
+});
+
 let tasks = [], projects = [], team = [];
 let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig
 let gristReady = false;
 let isEditMode = false;
 let selectedCompId = null;
 let dashConfig = { layout: DEFAULT_LAYOUT.map(c => ({...c, config:{...c.config}})) };
-let filters = { periode: 'all', projets: [], assignes: [], statuts: [] };
+let tasksMissing = false;   // la table Tasks n'existe pas dans ce document
+let taskCols = new Set();   // colonnes reelles de Tasks (dateCloture n'existe que si le Plan a ete ouvert)
+let searchQuery = '';  // recherche texte (commune aux 4 widgets)
+// Projet, priorite, assigne et statut viennent du contexte commun (TF.ctx), partage avec les autres widgets du
+// document (identifiants en chaines ici) ; la periode reste propre au Dashboard.
+let filters = { periode: 'all', projets: [], priorites: [], assignes: [], statuts: [] };
+function applyCtx() {
+    const c = TF.ctx.get().filters;
+    filters.projets = c.project.map(String); filters.priorites = c.priority.map(String);
+    filters.assignes = c.assignee.map(String); filters.statuts = c.status.slice();
+}
+function pushCtx() {
+    TF.ctx.set({ filters: { project: filters.projets.map(Number), priority: filters.priorites.map(Number), assignee: filters.assignes.map(Number), status: filters.statuts } });
+}
+// Un autre widget (ou le choix d'une vue) a change le contexte : on s'aligne.
+TF.ctx.onChange(() => { applyCtx(); if (typeof render === 'function') render(); });
+// Ecarte les filtres sans objet (projet supprime, membre retire, statut renomme) : ils vidaient l'ecran sans recours.
+function pruneFilters() {
+    const gone = TF.ctx.prune({ project: projects.map(p => p.id), assignee: team.map(m => m.id), status: statusCfg.values });
+    if (gone) applyCtx();   // les puces « Filtres actifs » montrent ce qui reste
+}
 // WBS-04: par défaut compter uniquement les feuilles (pas les parents) pour éviter double-compte
 let leavesOnly = localStorage.getItem('taskflow_dashboard_leavesonly') !== '0';
 
@@ -854,7 +2191,6 @@ function rebuildChildrenCache() {
 const isRoot = (t) => !t?.parentTask;
 const getChildren = (id) => childrenByParent.get(id) || [];
 const hasChildren = (t) => t && getChildren(t.id).length > 0;
-let filterPanelOpen = false;
 
 // STATUS_LABELS / STATUS_COLORS supprimes : statuts lus dynamiquement via statusCfg (#1)
 const PRIORITY_LABELS = { 1:'Critique', 2:'Haute', 3:'Moyenne', 4:'Basse' };
@@ -865,13 +2201,13 @@ let _compIdCounter = 100;
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════════════════════════════════════
-const gristToDate  = ts => ts ? new Date(ts * 1000) : null;
+const gristToDate  = TF.gristToDate;   // convention Grist portee par le core
 const escapeHtml   = t  => { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
 const isSameDay    = (a,b) => a && b && a.getDate()===b.getDate() && a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear();
 const addDays      = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
 const startOfWeek  = d => { const t=new Date(d); const dow=t.getDay(); return addDays(t,-(dow===0?6:dow-1)); };
 const getPriority  = t => parseInt(t?.priorite)||3;
-const getStatus    = t => t?.statut||'todo';
+const getStatus    = t => TF.statusOf(statusCfg, t);
 
 const getAssigneesArray = t => {
     if (!t?.assignees) return [];
@@ -909,7 +2245,9 @@ function getFilteredTasks(compFilter, ignoreLeaves) {
         const pStart = getPeriodStart(filters.periode);
         ft = ft.filter(t => { const d=gristToDate(t.dateEcheance); return d && d >= pStart; });
     }
+    if (searchQuery) ft = ft.filter(t => TF.searchMatch(t, searchQuery, { projects, team }));
     if (filters.projets.length)  ft = ft.filter(t => filters.projets.includes(String(t.projet)));
+    if (filters.priorites.length) ft = ft.filter(t => filters.priorites.includes(String(getPriority(t))));
     if (filters.assignes.length) ft = ft.filter(t => getAssigneesArray(t).some(a => filters.assignes.includes(String(a))));
     if (filters.statuts.length)  ft = ft.filter(t => filters.statuts.includes(getStatus(t)));
     if (compFilter && compFilter.field && compFilter.value) {
@@ -926,21 +2264,15 @@ function getFilteredTasks(compFilter, ignoreLeaves) {
 }
 
 function hasActiveFilters() {
-    return filters.periode!=='all' || filters.projets.length || filters.assignes.length || filters.statuts.length;
+    return filters.periode!=='all' || filters.projets.length || filters.priorites.length || filters.assignes.length || filters.statuts.length;
 }
 
-function toggleFilterProjet(id) { const s=String(id); filters.projets=filters.projets.includes(s)?filters.projets.filter(x=>x!==s):[...filters.projets,s]; render(); }
-function toggleFilterAssigne(id) { const s=String(id); filters.assignes=filters.assignes.includes(s)?filters.assignes.filter(x=>x!==s):[...filters.assignes,s]; render(); }
-function toggleFilterStatut(v)  { filters.statuts=filters.statuts.includes(v)?filters.statuts.filter(x=>x!==v):[...filters.statuts,v]; render(); }
+function toggleFilterProjet(id) { const s=String(id); filters.projets=filters.projets.includes(s)?filters.projets.filter(x=>x!==s):[...filters.projets,s]; pushCtx(); render(); }
+function toggleFilterPriorite(p) { const s=String(p); filters.priorites=filters.priorites.includes(s)?filters.priorites.filter(x=>x!==s):[...filters.priorites,s]; pushCtx(); render(); }
+function toggleFilterAssigne(id) { const s=String(id); filters.assignes=filters.assignes.includes(s)?filters.assignes.filter(x=>x!==s):[...filters.assignes,s]; pushCtx(); render(); }
+function toggleFilterStatut(v)  { filters.statuts=filters.statuts.includes(v)?filters.statuts.filter(x=>x!==v):[...filters.statuts,v]; pushCtx(); render(); }
 function setPeriode(p)           { filters.periode=p; render(); }
-function clearFilters()          { filters={periode:'all',projets:[],assignes:[],statuts:[]}; render(); }
-
-function toggleFilterPanel() {
-    filterPanelOpen = !filterPanelOpen;
-    document.getElementById('filterPanel').classList.toggle('open', filterPanelOpen);
-    document.getElementById('filterToggleBtn').classList.toggle('active', filterPanelOpen);
-    if (filterPanelOpen) renderFilterPanel();
-}
+function clearFilters()          { filters={periode:'all',projets:[],priorites:[],assignes:[],statuts:[]}; pushCtx(); render(); }
 
 function renderFilterPanel() {
     const PERIODE_OPTIONS = [['week','Semaine'],['month','Mois'],['quarter','Trimestre'],['all','Tout']];
@@ -958,6 +2290,13 @@ function renderFilterPanel() {
                 ${projects.filter(p=>p.actif!==false).map(p => `<span class="filter-check ${filters.projets.includes(String(p.id))?'active':''}" onclick="toggleFilterProjet(${p.id})"><span style="color:${p.couleur||'#6366f1'}">●</span> ${escapeHtml(p.nom)}</span>`).join('')}
             </div>
         </div>`;
+    html += `
+        <div class="filter-section">
+            <div class="filter-section-label">Priorité</div>
+            <div class="filter-checkboxes">
+                ${[1,2,3,4].map(p => `<span class="filter-check ${filters.priorites.includes(String(p))?'active':''}" onclick="toggleFilterPriorite(${p})"><span style="color:${PRIORITY_COLORS[p]}">●</span> ${PRIORITY_LABELS[p]}</span>`).join('')}
+            </div>
+        </div>`;
     if (team.length) html += `
         <div class="filter-section">
             <div class="filter-section-label">Assigné</div>
@@ -972,7 +2311,6 @@ function renderFilterPanel() {
                 ${statusCfg.list.map(s => `<span class="filter-check ${filters.statuts.includes(s.value)?'active':''}" onclick="toggleFilterStatut('${s.value}')">${s.label}</span>`).join('')}
             </div>
         </div>`;
-    if (hasActiveFilters()) html += `<div class="filter-section" style="justify-content:flex-end"><button class="filter-clear" onclick="clearFilters()">Réinitialiser</button></div>`;
     document.getElementById('filterPanel').innerHTML = html;
 }
 
@@ -980,11 +2318,12 @@ function renderFilterChips() {
     const chips = [];
     if (filters.periode!=='all') { const labels={week:'Semaine',month:'Mois',quarter:'Trimestre'}; chips.push(`<span class="filter-chip">${labels[filters.periode]}<button title="Retirer" onclick="setPeriode('all')">×</button></span>`); }
     filters.projets.forEach(id => { const p=projects.find(x=>String(x.id)===id); if(p) chips.push(`<span class="filter-chip"><span class="fc-dot" style="background:${p.couleur||'#6366f1'}"></span>${escapeHtml(p.nom)}<button title="Retirer" onclick="toggleFilterProjet(${p.id})">×</button></span>`); });
+    filters.priorites.forEach(p => { chips.push(`<span class="filter-chip"><span class="fc-dot" style="background:${PRIORITY_COLORS[p]}"></span>${PRIORITY_LABELS[p]}<button title="Retirer" onclick="toggleFilterPriorite(${p})">×</button></span>`); });
     filters.assignes.forEach(id => { const m=team.find(x=>String(x.id)===id); if(m) chips.push(`<span class="filter-chip">${escapeHtml((m.nom||'').split(' ')[0])}<button title="Retirer" onclick="toggleFilterAssigne(${m.id})">×</button></span>`); });
     filters.statuts.forEach(v => { const sc=TF.getStatus(statusCfg,v); chips.push(`<span class="filter-chip"><span class="fc-dot" style="background:${sc.fillColor}"></span>${sc.label}<button title="Retirer" onclick="toggleFilterStatut('${v}')">×</button></span>`); });
-    const total = (filters.periode!=='all'?1:0) + filters.projets.length + filters.assignes.length + filters.statuts.length;
+    const total = (filters.periode!=='all'?1:0) + filters.projets.length + filters.priorites.length + filters.assignes.length + filters.statuts.length;
     const cnt = document.getElementById('filterCount'); if (cnt) { cnt.textContent = total; cnt.style.display = total ? 'inline-flex' : 'none'; }
-    const ftb = document.getElementById('filterToggleBtn'); if (ftb) ftb.classList.toggle('active', total>0);
+    const ftb = document.getElementById('filterToggleBtn'); if (ftb) ftb.classList.toggle('has-filter', total>0);
     const host = document.getElementById('headerFilters');
     host.style.display = chips.length ? 'flex' : 'none';
     host.innerHTML = chips.length ? ('<span class="hf-label">Filtres actifs</span>' + chips.join('') + '<span class="hf-clear" onclick="clearFilters()">Tout effacer</span>') : '';
@@ -995,6 +2334,7 @@ function renderFilterChips() {
 // ═══════════════════════════════════════════════════════════════════════════════
 function toggleEditMode() {
     isEditMode = !isEditMode;
+    if (!isEditMode) flushConfig();   // fin de la configuration : une seule ecriture
     selectedCompId = null;
     document.getElementById('editPanel').classList.toggle('open', isEditMode);
     document.getElementById('main').classList.toggle('panel-open', isEditMode);
@@ -1023,8 +2363,16 @@ function removeComponent(id, e) {
     renderGrid(); renderEditPanel(); saveConfig();
 }
 
+// Identifiant unique : le compteur repart de 100 a chaque ouverture, il doit donc depasser ceux de la disposition enregistree
+function nextCompId() {
+    let n = _compIdCounter;
+    dashConfig.layout.forEach(c => { const m = /^c(\d+)$/.exec(String(c.id)); if (m) n = Math.max(n, Number(m[1])); });
+    _compIdCounter = n + 1;
+    return 'c' + _compIdCounter;
+}
+
 function addComponent(type) {
-    const id = 'c' + (++_compIdCounter);
+    const id = nextCompId();
     const def = CATALOG[type];
     const defaults = { kpi:{ metric:'total' }, donut:{ groupBy:'statut' }, bars:{ groupBy:'statut' }, list:{ preset:'all', limit:10 }, upcoming:{ horizon:14 }, velocity:{ weeks:6 }, workload:{}, projects:{} };
     dashConfig.layout.push({ id, type, colSpan: def.defaultSpan, title: def.label, config: { ...defaults[type] } });
@@ -1130,7 +2478,7 @@ function renderEditPanel() {
     };
     const catalogItems = Object.keys(CATALOG).map(type => `
         <div class="catalog-item" onclick="addComponent('${type}')">
-            <div class="catalog-label" style="font-size:0.79rem;font-weight:600">${CATALOG_LABELS[type]}</div>
+            <div class="catalog-label" style="font-size: var(--fs-sm);font-weight:600">${CATALOG_LABELS[type]}</div>
         </div>`).join('');
 
     body.innerHTML = `
@@ -1153,6 +2501,11 @@ function renderGrid() {
     const grid = document.getElementById('dashboardGrid');
     grid.innerHTML = '';
     grid.className = 'dashboard-grid' + (isEditMode ? ' edit-mode' : '');
+    if (tasksMissing) {
+        grid.innerHTML = '<div class="tf-notice"><div class="tf-notice-title">Aucune table de tâches dans ce document</div>' +
+            '<div class="tf-notice-sub">Ouvrez d\'abord le Kanban ou le Gantt sur ce document : ils créent les tables TaskFlow. Le Dashboard s\'alimentera ensuite tout seul.</div></div>';
+        return;
+    }
     dashConfig.layout.forEach(comp => grid.appendChild(createComp(comp)));
 }
 
@@ -1214,11 +2567,11 @@ function renderKPI(comp, ft) {
     let value = 0, label = '';
     switch (metric) {
         case 'total':     value = ft.length;                                                                            label = 'tâches au total'; break;
-        case 'inprogress':value = ft.filter(t=>!TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches actives'; break;
-        case 'done':      value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches terminées'; break;
-        case 'done_week': value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length; label = 'terminées cette semaine'; break;
-        case 'late':      value = ft.filter(t=>{ const d=gristToDate(t.dateEcheance); return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t)); }).length; label = 'en retard'; break;
-        case 'rate':      { const done=ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length; value=ft.length?Math.round(done/ft.length*100):0; label='% complété'; break; }
+        case 'inprogress':value = ft.filter(t=>TF.isLive(statusCfg, getStatus(t))).length;                                           label = 'tâches actives'; break;
+        case 'done':      value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length;                                           label = 'tâches terminées'; break;
+        case 'done_week': value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length; label = 'terminées cette semaine'; break;
+        case 'late':      value = ft.filter(t=>{ const d=gristToDate(t.dateEcheance); return d&&d<today&&TF.isLive(statusCfg, getStatus(t)); }).length; label = 'en retard'; break;
+        case 'rate':      { const done=ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length; value=ft.length?Math.round(done/ft.length*100):0; label='% complété'; break; }
     }
     const cls = { total:'kpi-total', inprogress:'kpi-inprogress', done:'kpi-done', done_week:'kpi-done_week', late:'kpi-late', rate:'kpi-rate' }[metric]||'';
     const lateClass = metric==='late'&&value>0 ? 'kpi-late-border' : '';
@@ -1286,7 +2639,7 @@ function renderWorkload(comp, ft) {
             const id = resolveMember(a); if (id == null) return;
             if (!byAssignee[id]) byAssignee[id]={ total:0, active:0 };
             byAssignee[id].total++;
-            if (!TF.isTerminal(statusCfg, getStatus(t))) byAssignee[id].active++;
+            if (TF.isLive(statusCfg, getStatus(t))) byAssignee[id].active++;
         });
     });
     const maxActive = Math.max(...team.map(m=>(byAssignee[m.id]||{}).active||0), 1);
@@ -1323,7 +2676,7 @@ function renderCharge(comp, ft) {
             <div class="workload-info"><div class="workload-name">${escapeHtml(m.nom)}</div><div class="workload-tasks">${h} h allouée${h>1?'s':''}</div></div>
             <div class="workload-bar"><div class="workload-bar-fill ${lvl}" style="width:${pct}%"></div></div>
         </div>`;
-    }).join('')}<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);text-align:right">Total : <strong>${totalH}</strong> h</div></div>`;
+    }).join('')}<div style="margin-top:8px;font-size: var(--fs-sm);color:var(--text-muted);text-align:right">Total : <strong>${totalH}</strong> h</div></div>`;
 }
 
 // #3 plan de charge temporel — grille personne × période (semaine/mois) avec taux vs capacité
@@ -1341,10 +2694,10 @@ function renderPlanCharge(comp, ft) {
     const includeDone = comp.config.includeDone === 'oui';
     const defaultCap = parseFloat(comp.config.capacite) || 35;
     let planTasks = ft;
-    if (!includeDone) planTasks = planTasks.filter(t => !TF.isTerminal(statusCfg, getStatus(t)));
+    if (!includeDone) planTasks = planTasks.filter(t => TF.isLive(statusCfg, getStatus(t)));
     const byMP = TF.chargeByMemberPeriod(planTasks, granularity);
     const undated = planTasks.filter(t => TF.parseCharges(t.charges).length && (t.dateDebut == null || t.dateEcheance == null)).length;
-    if (!Object.keys(byMP).length && !undated) return '<div class="empty-state"><div class="empty-icon">▦</div><div class="empty-text">Aucune charge datée à planifier</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Renseignez la charge par personne + des dates sur les tâches.</div></div>';
+    if (!Object.keys(byMP).length && !undated) return '<div class="empty-state"><div class="empty-icon">▦</div><div class="empty-text">Aucune charge datée à planifier</div><div style="font-size: var(--fs-xs);color:var(--text-muted);margin-top:4px">Renseignez la charge par personne + des dates sur les tâches.</div></div>';
     const offset = planChargeOffset[comp.id] || 0;
     const periods = TF.periodRange(TF.shiftPeriods(new Date(), granularity, offset), granularity, horizon);
     const nowKey = TF.periodKey(new Date(), granularity);
@@ -1352,14 +2705,14 @@ function renderPlanCharge(comp, ft) {
     const capPer = (m) => granularity === 'month' ? capWeek(m) * 52 / 12 : capWeek(m);
     const plabel = (p) => granularity === 'month' ? (p.slice(5) + '/' + p.slice(2, 4)) : ('S' + p.slice(6));
     const cellColor = (h, cap) => { const r = cap > 0 ? h / cap : 0; return r > 1 ? '#e5484d' : r > 0.85 ? '#f59e0b' : r > 0 ? '#3b82f6' : 'transparent'; };
-    const navBtn = 'background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:1px 9px;cursor:pointer;font-size:0.8rem';
-    let html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button onclick="planChargeShift(\'' + comp.id + '\',-1)" style="' + navBtn + '">◀</button><span style="font-size:0.74rem;color:var(--text-muted)">' + plabel(periods[0]) + ' → ' + plabel(periods[periods.length - 1]) + '</span><button onclick="planChargeShift(\'' + comp.id + '\',1)" style="' + navBtn + '">▶</button>' + (offset !== 0 ? '<button onclick="planChargeReset(\'' + comp.id + '\')" style="' + navBtn + ';font-size:0.72rem">Aujourd\'hui</button>' : '') + '</div>';
-    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.74rem"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:600">Membre</th>';
+    const navBtn = 'background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:1px 9px;cursor:pointer;font-size: var(--fs-sm)';
+    let html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button onclick="planChargeShift(\'' + comp.id + '\',-1)" style="' + navBtn + '">◀</button><span style="font-size: var(--fs-xs);color:var(--text-muted)">' + plabel(periods[0]) + ' → ' + plabel(periods[periods.length - 1]) + '</span><button onclick="planChargeShift(\'' + comp.id + '\',1)" style="' + navBtn + '">▶</button>' + (offset !== 0 ? '<button onclick="planChargeReset(\'' + comp.id + '\')" style="' + navBtn + ';font-size: var(--fs-xs)">Aujourd\'hui</button>' : '') + '</div>';
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size: var(--fs-xs)"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:600">Membre</th>';
     for (const p of periods) html += '<th style="padding:4px 6px;text-align:center;font-weight:600;color:' + (p === nowKey ? 'var(--primary,#6366f1)' : 'var(--text-muted)') + '">' + plabel(p) + (p === nowKey ? ' •' : '') + '</th>';
     html += '</tr></thead><tbody>';
     for (const m of members) {
         const cap = capPer(m);
-        html += '<tr><td style="padding:4px 8px;white-space:nowrap;border-top:1px solid var(--border)">' + escapeHtml(m.nom) + ' <span style="color:var(--text-muted);font-size:0.7rem">(' + Math.round(cap) + 'h)</span></td>';
+        html += '<tr><td style="padding:4px 8px;white-space:nowrap;border-top:1px solid var(--border)">' + escapeHtml(m.nom) + ' <span style="color:var(--text-muted);font-size: var(--fs-xs)">(' + Math.round(cap) + 'h)</span></td>';
         for (const p of periods) {
             const h = Math.round(((byMP[m.id] || {})[p] || 0) * 10) / 10;
             const col = cellColor(h, cap);
@@ -1369,8 +2722,8 @@ function renderPlanCharge(comp, ft) {
         html += '</tr>';
     }
     html += '</tbody></table></div>';
-    html += '<div style="margin-top:8px;display:flex;gap:14px;font-size:0.72rem;color:var(--text-muted);flex-wrap:wrap"><span><span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border-radius:2px;vertical-align:middle"></span> charge OK</span><span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;vertical-align:middle"></span> &gt; 85% capacité</span><span><span style="display:inline-block;width:10px;height:10px;background:#e5484d;border-radius:2px;vertical-align:middle"></span> surcharge</span><span>· = aucune charge</span></div>';
-    if (undated) html += '<div style="margin-top:6px;font-size:0.72rem;color:#f59e0b">&#9888; ' + undated + ' tâche' + (undated > 1 ? 's' : '') + ' chargée' + (undated > 1 ? 's' : '') + ' sans dates — non planifiée' + (undated > 1 ? 's' : '') + '.</div>';
+    html += '<div style="margin-top:8px;display:flex;gap:14px;font-size: var(--fs-xs);color:var(--text-muted);flex-wrap:wrap"><span><span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border-radius:2px;vertical-align:middle"></span> charge OK</span><span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;vertical-align:middle"></span> &gt; 85% capacité</span><span><span style="display:inline-block;width:10px;height:10px;background:#e5484d;border-radius:2px;vertical-align:middle"></span> surcharge</span><span>· = aucune charge</span></div>';
+    if (undated) html += '<div style="margin-top:6px;font-size: var(--fs-xs);color:#f59e0b">&#9888; ' + undated + ' tâche' + (undated > 1 ? 's' : '') + ' chargée' + (undated > 1 ? 's' : '') + ' sans dates — non planifiée' + (undated > 1 ? 's' : '') + '.</div>';
     return html;
 }
 
@@ -1379,7 +2732,7 @@ function renderUpcoming(comp, ft) {
     const today = new Date(); today.setHours(0,0,0,0);
     const upcoming = ft.filter(t => {
         const d=gristToDate(t.dateEcheance);
-        if (!d || TF.isTerminal(statusCfg, getStatus(t))) return false;
+        if (!d || !TF.isLive(statusCfg, getStatus(t))) return false;
         return Math.ceil((d-today)/86400000) <= horizon;
     }).map(t => ({ t, d:gristToDate(t.dateEcheance), days:Math.ceil((gristToDate(t.dateEcheance)-today)/86400000) }))
       .sort((a,b)=>a.d-b.d).slice(0,8);
@@ -1411,7 +2764,7 @@ function renderProjects(comp, ft) {
         if (!t.projet) return;
         if (!stats[t.projet]) stats[t.projet]={ total:0, done:0, prog:0 };
         stats[t.projet].total++;
-        if (TF.isTerminal(statusCfg, getStatus(t))) stats[t.projet].done++;
+        if (TF.isDone(statusCfg, getStatus(t))) stats[t.projet].done++;
         stats[t.projet].prog += (t.progression||0);
     });
     return `<div class="projects-list">${active.filter(p=>stats[p.id]).map(p => {
@@ -1433,16 +2786,17 @@ function renderList(comp, ft) {
     const limit  = parseInt(comp.config.limit)||10;
     const today  = new Date(); today.setHours(0,0,0,0);
     let list = ft;
-    if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t));});
+    if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&TF.isLive(statusCfg, getStatus(t));});
     else if (preset==='today')     list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&isSameDay(d,today);});
-    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&!TF.isTerminal(statusCfg, getStatus(t));});
-    else if (preset==='inprogress')list = ft.filter(t=>getStatus(t)==='inprogress');
+    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&TF.isLive(statusCfg, getStatus(t));});
+    // « En cours » = actives hors premier statut (a faire), quels que soient les statuts configures
+    else if (preset==='inprogress')list = ft.filter(t=>{ const st=getStatus(t); return TF.isLive(statusCfg, st) && st!==statusCfg.firstValue; });
     if (!list.length) return '<div class="empty-state"><div class="empty-text">Aucune tâche</div></div>';
     return `<div class="list-items">${list.slice(0,limit).map(t=>{
         const p=getPriority(t), s=getStatus(t);
         const d=gristToDate(t.dateEcheance);
         const proj=projects.find(x=>x.id===t.projet);
-        const isLate=d&&d<today&&!TF.isTerminal(statusCfg, s);
+        const isLate=d&&d<today&&TF.isLive(statusCfg, s);
         return `<div class="list-item" onclick="selectTask(${t.id})">
             <div class="list-prio p${p}"></div>
             <div class="list-info">
@@ -1465,7 +2819,7 @@ function renderVelocity(comp, ft) {
         const start = startOfWeek(addDays(today, -w*7));
         const end   = addDays(start, 7);
         const count = ft.filter(t => {
-            if (!TF.isTerminal(statusCfg, getStatus(t))) return false;
+            if (!TF.isDone(statusCfg, getStatus(t))) return false;
             const d=gristToDate(t.dateEcheance);
             return d && d>=start && d<end;
         }).length;
@@ -1505,8 +2859,8 @@ function renderDashSkeleton() {
 function render() {
     renderGrid();
     renderFilterChips();
-    if (filterPanelOpen) renderFilterPanel();
-    document.getElementById('lastUpdate').textContent = 'Mis à jour: ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    renderFilterPanel();
+    document.getElementById('lastUpdate').textContent = 'Mis à jour: ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + (leavesOnly ? ' · feuilles uniquement' : '');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1514,9 +2868,14 @@ function render() {
 // ═══════════════════════════════════════════════════════════════════════════════
 let _saving = false;
 
-function saveConfig() {
-    if (!gristReady) return;
-    // Seul le layout est persisté — les filtres restent locaux (pas de rechargement)
+// La disposition ne s'ecrit dans les options qu'a la sortie du mode edition : chaque ecriture fait apparaitre
+// le bouton « Enregistrer » de Grist, qui ne doit jamais surgir pendant l'usage normal ni a chaque clic de reglage.
+let _configModifiee = false;
+function saveConfig() { _configModifiee = true; }
+function flushConfig() {
+    if (!_configModifiee || !gristReady) return;
+    _configModifiee = false;
+    // Seul le layout est persiste — les filtres restent locaux (pas de rechargement)
     _saving = true;
     grist.widgetApi?.setOptions({ dash: dashConfig });
     setTimeout(() => { _saving = false; }, 600);
@@ -1525,7 +2884,10 @@ function saveConfig() {
 function loadConfig(opts) {
     if (opts?.dash?.layout?.length) {
         dashConfig = opts.dash;
-        dashConfig.layout.forEach(c => { if (!c.config) c.config = {}; });
+        dashConfig.layout.forEach(c => {
+            if (!c.config) c.config = {};
+            if (c.type === 'kpi' && c.config.metric === 'inprogress' && c.title === 'En cours') c.title = 'Actives';
+        });
     }
     // Filtres intentionnellement non chargés depuis options → locaux uniquement
 }
@@ -1570,18 +2932,21 @@ const convert = data => {
 async function loadAllData() {
     if (!gristReady) return;
     try {
-        const [td,pd,md]=await Promise.all([
-            grist.docApi.fetchTable('Tasks'),
-            grist.docApi.fetchTable('Projects'),
-            grist.docApi.fetchTable('Team'),
-        ]);
+        // Une table absente ne doit pas bloquer les autres ni laisser le squelette : on la signale.
+        const grab = async (name) => { try { return await grist.docApi.fetchTable(name); } catch (e) { return null; } };
+        const [td,pd,md]=await Promise.all([grab('Tasks'), grab('Projects'), grab('Team')]);
+        tasksMissing = !td;
+        taskCols = new Set(Object.keys(td || {}));
         tasks=convert(td); projects=convert(pd); team=convert(md);
         rebuildChildrenCache();
         try { statusCfg = await TF.loadStatusConfig(grist, 'Tasks', 'statut', tasks.map(t => t && t.statut)); } catch (e) {}
+        pruneFilters();
         render();
     } catch(e) { console.log('Error loading data:', e); }
 }
 // WBS-04: toggle "Feuilles uniquement"
+function handleSearch(q) { searchQuery = q; render(); }
+
 function toggleLeavesOnly() {
     leavesOnly = !leavesOnly;
     localStorage.setItem('taskflow_dashboard_leavesonly', leavesOnly ? '1' : '0');
@@ -1597,7 +2962,10 @@ async function markDone(taskId, event) {
     event.stopPropagation();
     if (!gristReady) return;
     try {
-        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.terminalValue, progression: 100 }]]);
+        const t = tasks.find(x => x.id === taskId);
+        const rec = Object.assign({ statut: statusCfg.doneValue, progression: 100 }, TF.completionPatch(statusCfg, t || {}, { statut: statusCfg.doneValue }));
+        if (taskCols.size) { for (const k in rec) if (!taskCols.has(k)) delete rec[k]; }   // dateCloture n'existe que si le Plan a ete ouvert
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, rec]]);
         await loadAllData();
     } catch(e) { console.error(e); }
 }
@@ -1614,11 +2982,13 @@ async function init() {
         // #7 respect des droits : bandeau lecture seule + garde transverse (le dashboard lit surtout ; la config layout reste locale/options).
         TF.readOnlyBanner();
         TF.guardWrites(grist, { onReadOnly: () => {}, onDenied: () => { loadAllData(); } });
+        await TF.ctx.init(grist, 'dashboard'); applyCtx();   // contexte commun lu avant le premier rendu
         const opts = await grist.widgetApi.getOptions();
         loadConfig(opts);
         await loadAllData();
         grist.onOptions(opts => { if (_saving) return; loadConfig(opts); render(); });
         grist.onRecords(async () => await loadAllData());
+        TF.watchTasks(grist, () => loadAllData(), { busy: () => isEditMode });
     } catch(e) {
         console.log('Demo mode');
         useDemoMode();
@@ -1626,6 +2996,8 @@ async function init() {
 }
 
 function useDemoMode() {
+    gristReady = false;   // les donnees d'exemple ne s'ecrivent jamais dans Grist
+    TF.ctx.bind('demo', 'dashboard'); applyCtx();
     document.body.insertAdjacentHTML('beforeend','<div class="demo-badge">Démo</div>');
     team = [
         { id:1, nom:'Alice Martin',   actif:true, couleur:'#4f46e5' },
@@ -1658,7 +3030,7 @@ function useDemoMode() {
 
 renderDashSkeleton();  // 06 · squelette pendant le chargement
 // Repli auto vers données d'exemple si Grist ne renvoie rien sous 2.8s (aperçu / hors-ligne)
-setTimeout(function(){ try { if ((typeof tasks==='undefined' || !tasks || !tasks.length) && typeof useDemoMode==='function') useDemoMode(); } catch(e){ console.log(e); } }, 2800);
+setTimeout(function(){ try { if ((typeof tasks==='undefined' || !tasks || !tasks.length) && TF.shouldAutoDemo() && typeof useDemoMode==='function') useDemoMode(); } catch(e){ console.log(e); } }, 2800);
 // WBS-04: sync bouton "Feuilles uniquement" au chargement
 { const b = document.getElementById('btnLeavesOnly'); if (b) b.classList.toggle('active', leavesOnly); }
 try { if (new URLSearchParams(location.search).has('nav')) document.body.classList.add('suite-nav'); } catch (e) {}
