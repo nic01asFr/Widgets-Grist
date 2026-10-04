@@ -1718,8 +1718,16 @@ function removeComponent(id, e) {
     renderGrid(); renderEditPanel(); saveConfig();
 }
 
+// Identifiant unique : le compteur repart de 100 a chaque ouverture, il doit donc depasser ceux de la disposition enregistree
+function nextCompId() {
+    let n = _compIdCounter;
+    dashConfig.layout.forEach(c => { const m = /^c(\d+)$/.exec(String(c.id)); if (m) n = Math.max(n, Number(m[1])); });
+    _compIdCounter = n + 1;
+    return 'c' + _compIdCounter;
+}
+
 function addComponent(type) {
-    const id = 'c' + (++_compIdCounter);
+    const id = nextCompId();
     const def = CATALOG[type];
     const defaults = { kpi:{ metric:'total' }, donut:{ groupBy:'statut' }, bars:{ groupBy:'statut' }, list:{ preset:'all', limit:10 }, upcoming:{ horizon:14 }, velocity:{ weeks:6 }, workload:{}, projects:{} };
     dashConfig.layout.push({ id, type, colSpan: def.defaultSpan, title: def.label, config: { ...defaults[type] } });
