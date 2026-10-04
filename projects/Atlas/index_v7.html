@@ -527,6 +527,19 @@
            de toute la liste. Le titre lui laisse la place. */
         .map-controls-dock .dock-panel.dock-panel-tall .dock-collapse { position: absolute; top: 8px; right: 8px; z-index: 1; }
         .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-data > :first-child { padding-right: 34px; }
+        /* La hauteur du panneau haut est bornée ; son contenu s'y range au lieu de la dépasser. Une liste dont la hauteur maximale dépassait la place
+           restante était rognée par le panneau, et sa piste de défilement — composée à part — se dessinait en dessous (bande beige). */
+        .map-controls-dock .dock-panel.dock-panel-tall { --haut-panneau: min(62vh, 460px); max-height: var(--haut-panneau); }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-host { align-items: flex-start; min-height: 0; max-height: calc(var(--haut-panneau) - 22px); }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-data { min-height: 0; max-height: calc(var(--haut-panneau) - 22px); }
+        /* Les défilements du dock utilisent la barre fine standard : la barre native, imbriquée dans un panneau arrondi qui rogne, laissait
+           sa piste se dessiner sous le panneau (bande beige à l'ouverture de « Contexte »). */
+        .map-controls-dock .dock-panel, .map-controls-dock .dock-panel * { scrollbar-width: thin; scrollbar-color: rgba(120, 110, 95, 0.45) transparent; }
+        .dock-slot-contexte > .dock-slot-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+        .dock-slot-contexte .contexte-courant { flex: 0 0 auto; }
+        .dock-slot-contexte .contexte-liste { flex: 1 1 auto; min-height: 0; max-height: none; }
+        .dock-slot-tournee > .dock-slot-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-tournee .contexte-ouvrages { max-height: none; overflow: visible; }
         .dock-slot-host {
             display: flex; align-items: center;
             flex: 1; min-width: 0; overflow: hidden;
@@ -2072,6 +2085,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004n"></script>
+    <script type="module" src="./app_v7.js?v=20261004q"></script>
 </body>
 </html>
