@@ -760,6 +760,8 @@
     .progress-slider { width: 100%; }
     /* Description : meme police que le reste (elle etait en monospace). */
     .form-textarea { font-family: inherit; }
+    /* Choix de priorite / statut : le point et le libelle restent sur une seule ligne (« Moyenne » se coupait). */
+    .priority-pill, .status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; min-width: 0; }
 
     /* 9. Fiche de tache : le titre est l'en-tete, la navigation « n/m » est integree a cote,
           puis la fermeture. La fiche recouvre toute la hauteur du widget, barre du haut comprise
@@ -2887,7 +2889,6 @@
                     '<span class="type-pill ' + (data.type === 'jalon' ? 'selected' : '') + '" onclick="updateField(\'type\',\'jalon\')">◆ Jalon</span>' +
                     '<span class="type-pill ' + (data.type === 'reunion' ? 'selected' : '') + '" onclick="updateField(\'type\',\'reunion\')"> Réunion</span>' +
                 '</div>' +
-                (currentProject ? '<div class="panel-crumb"><span class="pd" style="background:' + projectColor + '"></span>' + escapeHtml(currentProject.nom) + '</div>' : '') +
 
                 '<div class="props-list">' +
                     '<div class="prop-row pr-status"><span class="prop-label">Statut</span><div class="prop-value"><div class="status-selector">' +
