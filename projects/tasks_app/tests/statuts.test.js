@@ -161,8 +161,8 @@ describe('composants de la barre du haut', () => {
         assert.deepEqual(m(900), { top: true, tools: true, bare: true });
         assert.ok(!m(740).two, 'une seule ligne jusqu a 720 px');
         const etroit = m(600);
-        assert.ok(etroit.two && etroit.top && etroit.bare);
-        assert.ok(!m(380).tools && m(340).search && m(300).tools, 'les outils de la 2e ligne gardent leurs libelles tant qu ils tiennent');
+        assert.ok(etroit.two && etroit.top && etroit.bare && etroit.tools);
+        assert.ok(m(380).tools && m(300).tools, 'sur deux lignes, les outils sont en icones : les libelles ne s affichent que sur la premiere ligne');
         // jamais plus de compaction a une plus grande largeur
         const rang = (x) => (x.two ? 10 : 0) + (x.top ? 1 : 0) + (x.search ? 1 : 0) + (x.tools ? 1 : 0) + (x.bare ? 1 : 0);
         for (let w = 1700; w > 300; w -= 10) assert.ok(rang(m(w)) <= rang(m(w - 10)), 'monotone a ' + w);

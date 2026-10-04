@@ -1280,11 +1280,11 @@ const TF = (function () {
         [1120, { top: true, tools: true }],                 // + Filtres / Affichage en icones
         [720, { top: true, tools: true, bare: true }]       // + titre sans texte
     ];
-    const TWO_ROWS_TOOLS = [[380, {}], [330, { search: true }], [0, { tools: true }]];   // outils, 2e ligne
     function modeForWidth(w) {
         for (const [min, m] of HEADER_STEPS) if (w >= min) return Object.assign({}, m);
-        const tools = TWO_ROWS_TOOLS.find(([min]) => w >= min)[1];
-        return Object.assign({ two: true, top: true, bare: true }, tools);
+        // Deux lignes : les libelles des outils (Rechercher, Filtres, Affichage) ne s'affichent que sur la
+        // premiere ligne quand la place y est ; sur la 2e ligne, des icones seulement.
+        return { two: true, top: true, tools: true, bare: true };
     }
     function chooseMode(host) {
         const m = modeForWidth(host.clientWidth);
