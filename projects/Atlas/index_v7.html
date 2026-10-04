@@ -630,8 +630,18 @@
         }
         /* Les deux curseurs d'une plage : la poignee deborde de sa piste de 7 px de chaque cote, et le panneau
            coupe ce qui deborde. Une marge les garde entiers ; l'ecart entre les deux les rend saisissables. */
-        .dock-slot-data .rng { display: block; width: calc(100% - 16px); max-width: none; margin: 6px 8px 0; }
-        .dock-slot-data .rng + .rng { margin-top: 18px; }
+        /* Écrites avec `input[type=range]` : la règle générale des curseurs (`input[type=range].rng { width: 100% }`) est plus spécifique qu'un simple
+           `.dock-slot-data .rng`, qui perdait — les curseurs débordaient de 8 px et la poignée de droite était rognée. */
+        .dock-slot-data input[type=range].rng { display: block; width: calc(100% - 16px); max-width: none; margin: 8px 8px 0; box-sizing: border-box; }
+        .dock-slot-data input[type=range].rng + input[type=range].rng { margin-top: 20px; }
+        /* Sous le dernier curseur, la place de la moitié de sa poignée : sinon le panneau la coupe par le bas. */
+        @media (pointer: coarse) {
+            /* Au doigt, une poignée de 14 px ne se saisit pas : 22 px, et la marge qui la garde entière suit. */
+            .dock-slot-data input[type=range].rng::-webkit-slider-thumb { width: 22px; height: 22px; border-radius: 11px; }
+            .dock-slot-data input[type=range].rng::-moz-range-thumb { width: 22px; height: 22px; border-radius: 11px; }
+            .dock-slot-data input[type=range].rng { width: calc(100% - 24px); margin-left: 12px; margin-right: 12px; }
+            .dock-slot-data .dock-slot-body { padding-bottom: 14px; }
+        }
         .dock-slot-data .range-info {
             font-size: 12.5px; color: var(--ink); margin: 0 0 5px 0 !important;
         }
@@ -751,7 +761,7 @@
         }
         .dock-sep { width: 1px; height: 26px; flex: 0 0 auto; margin: 0 2px; background: var(--hairline-strong); }
         /* Contenu des panneaux : pas de carte beige dans la capsule blanche. */
-        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0; }
+        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0 0 9px; }
         .dock-slot-data .cats { background: none; border: none; padding: 0; }
         .dock-slot-data .cat-row { padding: 6px 4px; font-size: 12.5px; }
         .dock-slot-data .cat-count { background: none; padding: 0; font-size: 10.5px; color: var(--muted); opacity: 1; }
@@ -2095,6 +2105,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004v"></script>
+    <script type="module" src="./app_v7.js?v=20261004w"></script>
 </body>
 </html>
