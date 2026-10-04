@@ -466,3 +466,26 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-geo__ligne, .champ-bloc__rendu .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .fr-form .fr-geo__ligne .fr-input, .champ-bloc__rendu .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
 .fr-form .fr-geo__etat:empty, .champ-bloc__rendu .fr-geo__etat:empty { display: none; }
+
+/* ── La carte d'une question de lieu ────────────────────────────────────────
+   Assez grande pour viser au doigt, pas au point d'occuper l'écran : on doit
+   voir la question au-dessus et le bouton en dessous sans défiler deux fois. */
+.fr-form .fr-carte, .champ-bloc__rendu .fr-carte {
+  height: 16rem; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--bordure, #ddd); background: var(--grey-975, #f6f6f6);
+  display: flex; align-items: center; justify-content: center;
+}
+.fr-form .fr-carte__attente, .champ-bloc__rendu .fr-carte__attente {
+  margin: 0; padding: 0 1rem; text-align: center;
+}
+.fr-form .fr-carte__mode, .champ-bloc__rendu .fr-carte__mode { margin: 0.4rem 0 0.6rem; }
+/* Un point pose : assez gros pour qu'on puisse le reprendre au doigt. */
+.fr-carte__point {
+  width: 1.5rem; height: 1.5rem; border-radius: 999px; cursor: pointer;
+  border: 2px solid #fff; background: var(--error, #ce0500);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.fr-carte__point:focus-visible { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+@media (max-width: 30rem) {
+  .fr-form .fr-carte { height: 13rem; }
+}

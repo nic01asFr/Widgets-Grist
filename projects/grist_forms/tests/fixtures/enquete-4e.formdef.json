@@ -595,8 +595,17 @@
             },
             "saisies": [
               "carte"
-            ]
-          }
+            ],
+            "carte": {
+              "centre": [
+                5.4,
+                43.303
+              ],
+              "zoom": 14,
+              "fond": "plan"
+            }
+          },
+          "description": "Facultatif. Un point par endroit : vitesse excessive, traversée dangereuse, carrefour accidentogène… Inutile d’être précis au mètre, c’est la zone qui compte."
         },
         {
           "colId": "G2_RuesConcernees",

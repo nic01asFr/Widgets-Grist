@@ -1082,6 +1082,7 @@
 <script src="shared/types.js"></script>
 <script src="shared/attachments.js"></script>
 <script src="shared/session-context.js"></script>
+<script src="shared/carte-geometrie.js"></script>
 <script src="runtime/engine.js"></script>
 <script src="shared/survey-project.js"></script>
 <script src="shared/ensure-schema.js"></script>
@@ -2936,6 +2937,22 @@ function renderZoneQuestion(def) {
   return renderFieldEditor(def, sel.si, champ, sel.fi);
 }
 
+/**
+ * Le rang, dans l'apercu, de l'etape qu'on compose.
+ *
+ * L'apercu ne montre que les etapes visibles : une etape conditionnelle non
+ * remplie n'y figure pas. Le rang du compositeur n'est donc pas celui de
+ * l'apercu — sans cette traduction, on compose une etape et on en regarde une
+ * autre.
+ */
+function etapeVisibleCourante(def) {
+  const sel = S.selection || {};
+  if (!def || sel.si == null || !window.FormEngine || !FormEngine.isSectionVisible) return 0;
+  const visibles = def.sections.filter((sec) => FormEngine.isSectionVisible(sec, {}, {}));
+  const rang = visibles.indexOf(def.sections[sel.si]);
+  return rang >= 0 ? rang : 0;
+}
+
 /** L'aperçu, posé sur l'étape qu'on compose. */
 function monterApercuAtelier() {
   const cible = document.getElementById('builder-preview-mount');
@@ -4168,7 +4185,13 @@ function mountPreview() {
     }
   };
   try {
-    FormEngine.mount(mountEl, defPourApercu(S.currentDef), previewBridge);
+    FormEngine.mount(mountEl, defPourApercu(S.currentDef), Object.assign(previewBridge, {
+      // On arrive sur l'etape qu'on etait en train de composer : sans cela,
+      // verifier la septieme demandait de repondre aux six premieres.
+      etapeDepart: etapeVisibleCourante(S.currentDef),
+      loadTable: S.isDemo ? null : function (t) { return GristBridge.loadTable(t); },
+      skipProbe: true
+    }));
   } catch (e) {
     mountEl.innerHTML = `<div class="fr-alert fr-alert--error"><p>Erreur de rendu : ${esc(e.message)}</p></div>`;
   }
@@ -4335,19 +4358,20 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, engineJs, cssText] = await Promise.all([
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, engineJs, cssText] = await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/attachments.js'),
       fetchScriptSource('shared/session-context.js'),
+      fetchScriptSource('shared/carte-geometrie.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
         return r.text();
       })
     ]);
-    const fullHtml = Publish.buildRuntimeDocument(def, { bridgeJs, typesJs, attachmentsJs, sessionContextJs, engineJs, cssText });
+    const fullHtml = Publish.buildRuntimeDocument(def, { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 

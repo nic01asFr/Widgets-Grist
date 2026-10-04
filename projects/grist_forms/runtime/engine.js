@@ -825,12 +825,32 @@
     return i === 0 ? '1<sup>re</sup> place' : (i + 1) + '<sup>e</sup> place';
   }
 
-  /** Un point sur la Terre, saisi au doigt : « Utiliser ma position ». */
+  /**
+   * Un lieu : sur la carte, au doigt — ou a la main si tout le reste manque.
+   *
+   * > **La carte et ses regles viennent d'Atlas** (`shared/carte-geometrie.js`
+   * > monte MapLibre et appelle les modules purs d'Atlas). Elle ne se charge
+   * > que si la question demande une carte, et son absence ne rend pas la
+   * > question impossible : le champ sous la carte accepte le WKT, et la
+   * > position du telephone pose un point.
+   */
   function renderGeo(field, value) {
     var id = fieldId(field);
     var v = value == null ? '' : String(value);
+    var o = (field && field.options) || {};
+    var avecCarte = o.carte !== false;
+    var type = o.geometrie || 'Point';
+    var carte = avecCarte
+      ? '<div class="fr-carte" data-carte-de="' + escapeHtml(field.colId) + '" ' +
+        'data-type="' + escapeHtml(type) + '" ' +
+        'data-centre="' + escapeHtml(JSON.stringify((o.carte && o.carte.centre) || null)) + '" ' +
+        'data-zoom="' + escapeHtml(String((o.carte && o.carte.zoom) || '')) + '" ' +
+        'data-fond="' + escapeHtml((o.carte && o.carte.fond) || 'plan') + '">' +
+        '<p class="fr-hint-text fr-carte__attente">La carte s\u2019affiche ici.</p></div>' +
+        '<p class="fr-hint-text fr-carte__mode">' + consigneCarte(type) + '</p>'
+      : '';
     return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo">' +
-      renderLabel(field, id) +
+      renderLabel(field, id) + carte +
       '<div class="fr-geo__ligne">' +
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
       'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)" />' +
@@ -838,6 +858,16 @@
       '</div>' +
       '<p class="fr-hint-text fr-geo__etat" role="status"></p>' +
       '</div>';
+  }
+
+  /** Ce qu'on attend de la personne, selon ce qu'on lui demande de poser. */
+  function consigneCarte(type) {
+    if (/^Multi/.test(type) && /Point/.test(type)) {
+      return 'Touchez la carte pour poser un point \u00e0 chaque endroit concern\u00e9. Touchez un point pour l\u2019enlever.';
+    }
+    if (/Point/.test(type)) return 'Touchez la carte pour poser le point. Touchez-le pour l\u2019enlever.';
+    if (/Line/.test(type)) return 'Tracez le trajet, point par point. Double-touchez pour terminer.';
+    return 'Tracez le contour, point par point. Double-touchez pour fermer.';
   }
 
   /**
@@ -1416,11 +1446,15 @@
       wireEvents(fields);
     }
 
+    // Les cartes vivantes, par colonne : une carte ne se redessine pas.
+    var cartes = {};
+
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
       brancherClassements(fields);
       brancherPositions();
+      brancherCartes(fields);
       var inputs = rootEl.querySelectorAll('input, select, textarea');
       for (var i = 0; i < inputs.length; i++) {
         if (typeof inputs[i].addEventListener === 'function') {
@@ -1545,6 +1579,50 @@
           if (cases[k].checked) cases[k].setAttribute('data-etait-coche', 'oui');
         }
       }(blocs[i]));
+    }
+
+    /**
+     * Les cartes de l'etape, montees une fois chacune.
+     *
+     * Le moteur redessine l'etape a chaque reponse ; une carte, elle, ne se
+     * redessine pas : on la garde par colonne tant que la question est a
+     * l'ecran, et on la jette en quittant l'etape. Sans cela, chaque clic en
+     * aurait recree une, et la position se serait perdue a chaque fois.
+     */
+    function brancherCartes(fields) {
+      var hotes = rootEl.querySelectorAll('.fr-carte[data-carte-de]');
+      for (var i = 0; i < hotes.length; i++) (function (hote) {
+        var colId = hote.getAttribute('data-carte-de');
+        if (cartes[colId] && cartes[colId].hote === hote) return;
+        if (cartes[colId]) { cartes[colId].vue.detruire(); delete cartes[colId]; }
+        var carteApi = typeof window !== 'undefined' ? window.FormCarte : null;
+        if (!carteApi || typeof carteApi.monter !== 'function') return;
+        var centre = null;
+        try { centre = JSON.parse(hote.getAttribute('data-centre')); } catch (e) { centre = null; }
+        var zoom = parseFloat(hote.getAttribute('data-zoom'));
+        carteApi.monter(hote, {
+          type: hote.getAttribute('data-type'),
+          valeur: values[colId],
+          centre: centre || undefined,
+          zoom: Number.isFinite(zoom) ? zoom : undefined,
+          fond: hote.getAttribute('data-fond'),
+          onChange: function (wkt) {
+            values[colId] = wkt;
+            var champ = rootEl.querySelector('input[name="' + colId + '"]');
+            if (champ) champ.value = wkt;
+          }
+        }).then(function (vue) {
+          var attente = hote.querySelector('.fr-carte__attente');
+          if (attente) attente.remove();
+          cartes[colId] = { hote: hote, vue: vue };
+        }).catch(function (e) {
+          var attente = hote.querySelector('.fr-carte__attente');
+          if (attente) {
+            attente.textContent = 'La carte n\u2019a pas pu \u00eatre charg\u00e9e. ' +
+              'Vous pouvez relever votre position ou saisir le lieu ci-dessous.';
+          }
+        });
+      }(hotes[i]));
     }
 
     /**

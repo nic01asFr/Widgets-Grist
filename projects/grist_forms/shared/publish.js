@@ -71,6 +71,9 @@
     var typesJs = bundles.typesJs || '';
     var attachmentsJs = bundles.attachmentsJs || '';
     var sessionContextJs = bundles.sessionContextJs || '';
+    // La carte ne pese rien tant qu'aucune question de lieu n'est posee :
+    // le module ne charge MapLibre qu'au moment ou il monte une carte.
+    var carteJs = bundles.carteJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -81,6 +84,7 @@
       typesJs,
       attachmentsJs,
       sessionContextJs,
+      carteJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',
