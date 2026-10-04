@@ -2599,7 +2599,8 @@
             tasksInPeriod.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
 
             const lanes = [];
-            const maxLanes = 3;
+            const maxLanes = 6;
+            let hidden = 0;
 
             tasksInPeriod.forEach(({ task, start, end }) => {
                 const barStart = Math.max(start.getTime(), weekStart.getTime());
@@ -2651,8 +2652,27 @@
 
                     bar.addEventListener('click', (e) => { e.stopPropagation(); openTaskPanel(task.id); });
                     container.appendChild(bar);
+                } else {
+                    hidden++;
                 }
             });
+
+            // La zone « journee » grandit avec les voies utilisees ; au-dela, « +N » ouvre la liste de la periode
+            const used = Math.min(lanes.length, maxLanes);
+            if (container.parentElement) container.parentElement.style.minHeight = Math.max(80, used * 22 + (hidden ? 30 : 10)) + 'px';
+            if (hidden > 0) {
+                const more = document.createElement('div');
+                more.className = 'more-events';
+                more.textContent = '+' + hidden + (hidden > 1 ? ' autres' : ' autre');
+                more.title = 'Voir toutes les tâches de la période';
+                more.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    panelState = { open: true, mode: 'period', periodType: 'week', periodDate: weekStart, periodTasks: tasksInPeriod.map(x => x.task), taskId: null, taskIndex: -1, isNew: false, editData: null };
+                    renderPanelPeriod();
+                    openPanel();
+                });
+                container.appendChild(more);
+            }
         }
 
         function renderWeek() {
