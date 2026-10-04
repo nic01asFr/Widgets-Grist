@@ -3387,7 +3387,7 @@
             if (data.dateDebut && data.dateEcheance && data.dateDebut > data.dateEcheance) { showToast('La date de début ne peut pas dépasser la date de fin', 'error'); return; }
             syncLocalTask();  // FIX: Synchroniser localement avant envoi API
             const record = { titre: data.titre, description: data.description, type: data.type, priorite: data.priorite, statut: data.statut, progression: data.progression, dateDebut: data.dateDebut, dateEcheance: data.dateEcheance, projet: data.projet, assignees: toGristRefList(data.assignees), dependDe: toGristRefList(data.dependDe), tags: toGristChoiceList(data.tags), estimationH: data.estimationH, tempsPasse: data.tempsPasse, subtasks: subtasksToJson(data.subtasks), couleur: data.couleur || null, parentTask: data.parentTask || null, charges: TF.chargesToJson((data.charges || []).filter(c => data.assignees.includes(c.teamId))), dateCloture: data.dateCloture || null };
-            try { const parents = parentSpanActions(); await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', panelState.taskId, pruneTaskRecord(record)]].concat(parents)); showSaveIndicator(); if (parents.length) { showToast('Tâche parente ajustée à ses sous-tâches', 'info'); render(); } } catch (e) { showToast('Erreur sauvegarde', 'error'); }
+            try { const parents = parentSpanActions(); await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', panelState.taskId, pruneTaskRecord(record)]].concat(parents)); showSaveIndicator(); if (parents.length) { showToast('Tâche parente ajustée à ses sous-tâches', 'info'); render(); } } catch (e) { if (!(e && e.tfReadOnly)) showToast('Erreur sauvegarde', 'error'); }
         }
 
         async function createTask() {

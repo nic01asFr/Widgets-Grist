@@ -4372,7 +4372,7 @@
                 showSaveIndicator();
                 if (parents.length) { showToast('Tâche parente ajustée à ses sous-tâches', 'info'); render(); }
             } catch (e) {
-                showToast('Erreur de sauvegarde', 'error');
+                if (!(e && e.tfReadOnly)) showToast('Erreur de sauvegarde', 'error');
             }
         }
         

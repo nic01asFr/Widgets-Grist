@@ -4280,8 +4280,7 @@
                 if (idx !== -1) tasks[idx] = { ...tasks[idx], ...record };
                 if (cascade.length) { showToast('Dates mises à jour (+' + cascade.length + ' tâche' + (cascade.length > 1 ? 's' : '') + ' liée' + (cascade.length > 1 ? 's' : '') + ')', 'success'); render(); }
             } catch (e) {
-                console.error(e);
-                showToast('Erreur sauvegarde', 'error');
+                if (!(e && e.tfReadOnly)) { console.error(e); showToast('Erreur sauvegarde', 'error'); }   // « Lecture seule » est deja annonce par la garde d'ecriture
                 await loadAllData();   // annule la propagation faite en memoire
             }
         }
