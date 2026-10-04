@@ -1382,6 +1382,30 @@
       }
     }
 
+    /**
+     * Arriver en haut de l'etape suivante.
+     *
+     * > **On passait a l'etape suivante en restant ou l'on etait** : au bas
+     * > d'un ecran, devant la fin d'une liste de questions qu'on n'avait pas
+     * > posees. Sur une enquete de quatorze etapes, chaque « Suivant »
+     * > demandait de remonter a la main pour lire la premiere question.
+     *
+     * Le focus va au titre de l'etape : le defilement suit, et un lecteur
+     * d'ecran annonce ou l'on vient d'arriver. `preventScroll` puis
+     * `scrollIntoView` plutot qu'un `window.scrollTo` : le formulaire vit
+     * tantot dans la page, tantot dans un cadre qui defile tout seul — c'est
+     * au navigateur de trouver lequel remonter.
+     */
+    function remonterEnHaut() {
+      var titre = rootEl.querySelector('.fr-progression__titre') ||
+        rootEl.querySelector('.fr-form__header') || rootEl.firstElementChild;
+      if (!titre) return;
+      try { titre.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
+      if (typeof titre.scrollIntoView === 'function') {
+        titre.scrollIntoView({ block: 'start', behavior: 'auto' });
+      }
+    }
+
     function render() {
       var sections = getVisibleSections(formDef, values, context);
       if (!sections.length) {
@@ -1409,7 +1433,7 @@
         '<p class="fr-progression__etat">' +
         '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
         '<span>' + avancement + ' %</span></p>' +
-        '<h2 class="fr-progression__titre">' + escapeHtml(section.label) + '</h2>' +
+        '<h2 class="fr-progression__titre" tabindex="-1">' + escapeHtml(section.label) + '</h2>' +
         (section.description ? '<p class="fr-hint-text">' + escapeHtml(section.description) + '</p>' : '') +
         '</nav>';
 
@@ -1469,7 +1493,7 @@
       if (prevBtn && typeof prevBtn.addEventListener === 'function') {
         prevBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values);
-          stepIndex -= 1; errorFields = []; render();
+          stepIndex -= 1; errorFields = []; render(); remonterEnHaut();
         });
       }
       var nextBtn = rootEl.querySelector('[data-action="next"]');
@@ -1477,8 +1501,10 @@
         nextBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values);
           var missing = validateRequired(fields, values);
-          if (missing.length) { errorFields = missing; render(); return; }
-          errorFields = []; stepIndex += 1; render();
+          // Une reponse manquante ne fait pas changer d'etape : on remonte
+          // quand meme, sinon le message reste hors de l'ecran.
+          if (missing.length) { errorFields = missing; render(); remonterEnHaut(); return; }
+          errorFields = []; stepIndex += 1; render(); remonterEnHaut();
         });
       }
       var submitBtn = rootEl.querySelector('[data-action="submit"]');
