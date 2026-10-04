@@ -111,6 +111,17 @@ describe('planLignesLiees — une seule écriture, jamais d orphelin', () => {
 });
 
 describe('messageRefus — dire ce que Grist a refusé', () => {
+  // Formes relevées en posant de vraies règles d'accès (04/10/2026).
+  it('distingue le refus d ajouter et le refus de corriger', () => {
+    assert.match(L.messageRefus(new Error('Blocked by table create access rules')), /ajouter une ligne/);
+    assert.match(L.messageRefus(new Error('Blocked by table update access rules')), /corriger cette ligne/);
+    assert.match(L.messageRefus(new Error('Blocked by column read access rules')), /règle d’accès/);
+  });
+
+  it('nomme une colonne de rattachement qui n est pas une référence', () => {
+    assert.match(L.messageRefus(new Error('[Sandbox] ValueError reverse column can only be added to a reference column')), /référence vers la table parente/);
+  });
+
   it('nomme la ligne parente disparue', () => {
     const m = L.messageRefus(new Error("[Sandbox] AssertionError docactions.[Bulk]UpdateRecord for non-existent record #999"));
     assert.match(m, /n’existe plus/);

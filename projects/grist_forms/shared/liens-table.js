@@ -210,21 +210,40 @@
   /**
    * Ce qu'un refus de Grist veut dire, dans les mots de la personne.
    *
-   * Les formes sont celles que Grist rend réellement (mesurées le 04/10/2026) :
-   * `KeyError 'X'` pour une colonne ou une table absente, `AssertionError …
-   * non-existent record #N` pour une ligne parente disparue entre l'ouverture
-   * du formulaire et son envoi.
+   * Les formes sont celles que Grist rend réellement, relevées le 04/10/2026 en
+   * posant de vraies règles d'accès sur un document :
+   *
+   * | Ce qu'on tente | Ce que Grist répond |
+   * |---|---|
+   * | corriger une ligne fermée par une règle | `Blocked by table update access rules` |
+   * | ajouter une ligne dans une table fermée | `Blocked by table create access rules` |
+   * | écrire dans une colonne absente | `KeyError 'X'` |
+   * | rattacher à une ligne disparue | `AssertionError … non-existent record #N` |
+   *
+   * > **Écrire des données et modifier la structure sont deux droits.** Une
+   * > règle qui ferme l'écriture d'une table laisse passer `AddColumn` : on
+   * > peut donc avoir le droit de créer la table liée sans celui d'y écrire,
+   * > et l'inverse. Les deux refus se nomment séparément.
    */
   function messageRefus(erreur) {
     var msg = String((erreur && erreur.message) || erreur || '');
+    if (/Blocked by .*create access rules/i.test(msg)) {
+      return 'Vos droits ne permettent pas d’ajouter une ligne dans cette table.';
+    }
+    if (/Blocked by .*update access rules/i.test(msg)) {
+      return 'Vos droits ne permettent pas de corriger cette ligne.';
+    }
+    if (/Blocked by/i.test(msg)) {
+      return 'Grist refuse : une règle d’accès s’y oppose.';
+    }
     if (/non-existent record/i.test(msg)) {
       return 'La ligne à laquelle cette saisie se rattache n’existe plus. Rouvrez-la et recommencez.';
     }
     if (/KeyError/i.test(msg)) {
       return 'Le document ne contient pas ce que le formulaire attendait. Rechargez-le et réessayez.';
     }
-    if (/not allowed|access denied|forbidden/i.test(msg)) {
-      return 'Grist refuse : vos droits ne permettent pas d’écrire dans cette table.';
+    if (/reverse column can only be added to a reference column/i.test(msg)) {
+      return 'La colonne de rattachement doit être une référence vers la table parente.';
     }
     return 'Grist refuse : ' + (msg || 'erreur inconnue');
   }
