@@ -163,7 +163,8 @@
   }
   .atelier3 > * { background: var(--fond-carte, #fff); min-width: 0; overflow: auto; }
 
-  .rail { padding: 0.5rem; display: flex; flex-direction: column; gap: 1px; }
+  .rail { padding: 0 0.5rem 0.5rem; display: flex; flex-direction: column; gap: 1px; }
+  .rail .colonne__role { margin: 0 -0.5rem 0.4rem; }
   .rail__etapes { display: flex; flex-direction: column; gap: 1px; }
   .rail__etape, .rail__bout, .rail__ajout {
     font: inherit; text-align: left; width: 100%; cursor: pointer; color: inherit;
@@ -185,6 +186,7 @@
   .rail__compte, .rail__chemin { font-size: 0.72rem; opacity: 0.7; flex: 0 0 auto; }
 
   .inspecteur { display: flex; flex-direction: column; }
+  .inspecteur .colonne__role { padding-bottom: 0.35rem; border-bottom: none; }
   .inspecteur__onglets { display: flex; gap: 2px; padding: 0.4rem 0.5rem 0; border-bottom: 1px solid var(--grey-950, #eee); }
   .inspecteur__onglet {
     font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0.3rem 0.7rem;
@@ -206,8 +208,32 @@
   .controle__quoi { font-size: 0.84rem; }
 
   /* Le canevas occupe sa colonne : la page garde sa largeur de lecture, centrée. */
-  .canevas { padding: 1rem; }
-  .canevas__page { max-width: 42rem; }
+  .canevas { padding: 0; background: var(--grey-975, #f6f6f6); }
+  .canevas__page {
+    max-width: 42rem; margin: 0 1rem 1rem;
+    background: var(--fond-carte, #fff); border: 1px solid var(--grey-925, #e5e5e5);
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+  }
+
+  /* ── À quoi sert chaque colonne, dit en un mot ───────────────────────────
+     « Étape 1 » s'affichait trois fois, du même poids, sans qu'on sache
+     laquelle agissait. Chaque colonne annonce désormais son rôle, et seule
+     celle des réglages nomme le sujet sur lequel on agit. */
+  .colonne__role {
+    position: sticky; top: 0; z-index: 2; margin: 0;
+    padding: 0.45rem 0.9rem; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase; color: var(--encre-douce, #666);
+    background: var(--grey-975, #f6f6f6); border-bottom: 1px solid var(--grey-925, #e5e5e5);
+  }
+  .colonne__sujet {
+    font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--grey-425, #3a3a3a);
+  }
+  /* Un libellé long ne doit pas repousser les onglets : il se coupe. */
+  .colonne__role { display: flex; gap: 0.4rem; align-items: baseline; white-space: nowrap; }
+  .colonne__sujet { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .rail { background: var(--grey-990, #fafafa); }
+  .canevas__titre-public { font-size: 1.3rem; margin: 0; }
+  .section-card__retirer { margin-top: 0.6rem; color: var(--rouge, #ce0500); font-size: 0.84rem; }
 
   @media (max-width: 78rem) {
     .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); }
@@ -1979,7 +2005,10 @@ function renderBuilder() {
 
   el.innerHTML = `
     <div class="atelier3">
-      <nav class="rail" aria-label="Étapes du formulaire">${renderRailEtapes(def)}</nav>
+      <nav class="rail" aria-label="Parcours du formulaire">
+        <p class="colonne__role">Parcours</p>
+        ${renderRailEtapes(def)}
+      </nav>
       <div class="canevas" id="canevas">${renderCanevas(def)}</div>
       <aside class="inspecteur" aria-label="Réglages">${renderInspecteur(def)}</aside>
     </div>
@@ -2110,6 +2139,7 @@ function renderInspecteur(def) {
   const onglet = S.inspecteur === 'controle' ? 'controle' : 'reglages';
   const soucis = verifierFormulaire(def);
   return `
+    <p class="colonne__role">Réglages <span class="colonne__sujet">${esc(sujetCourant(def))}</span></p>
     <div class="inspecteur__onglets" role="tablist">
       <button type="button" role="tab" class="inspecteur__onglet${onglet === 'reglages' ? ' est-actif' : ''}"
         aria-selected="${onglet === 'reglages'}" onclick="App.inspecteur('reglages')">Réglages</button>
@@ -2119,6 +2149,27 @@ function renderInspecteur(def) {
     <div class="inspecteur__corps">
       ${onglet === 'reglages' ? renderZoneQuestion(def) : renderControle(def, soucis)}
     </div>`;
+}
+
+/**
+ * Ce qu'on regle en ce moment, dit en toutes lettres.
+ *
+ * > « Étape 1 » s'affichait trois fois — dans le rail, en titre du canevas et
+ * > dans les reglages — avec le meme poids, et aucune des trois ne disait a
+ * > quoi elle servait. Le nom de l'etape appartient au parcours ; ici on
+ * > nomme le **sujet de l'action**, et le canevas ne porte plus de titre
+ * > d'editeur, seulement ce que le public lira.
+ */
+function sujetCourant(def) {
+  const sel = S.selection || {};
+  if (sel.quoi === 'accueil') return 'de l’accueil';
+  if (sel.quoi === 'fin') return 'de la page de fin';
+  const section = def.sections[sel.si] || {};
+  if (sel.quoi === 'etape') return 'de l’étape « ' + (section.label || 'sans titre') + ' »';
+  // Le numéro de la question est déjà dans le fil « 1 sur n » juste dessous :
+  // on nomme ici ce dont il s'agit, pas son rang.
+  const champ = (section.fields || [])[sel.fi] || {};
+  return 'de la question « ' + (champ.label || 'sans libellé') + ' »';
 }
 
 function inspecteur(onglet) {
@@ -2167,10 +2218,8 @@ function renderCanevas(def) {
         : FormEngine.renderSuccessHtml(def);
     } catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
     return `
+      <p class="colonne__role">Aperçu <span class="colonne__sujet">${estAccueil ? 'ce que le public lit en premier' : 'ce que le public voit après avoir répondu'}</span></p>
       <div class="canevas__page">
-        <div class="canevas__entete">
-          <span class="canevas__role">${estAccueil ? 'Ce que le public lit en premier' : 'Ce que le public voit après avoir répondu'}</span>
-        </div>
         <div class="fr-form canevas__public" aria-hidden="true">${rendu}</div>
       </div>`;
   }
@@ -2214,11 +2263,10 @@ function renderCanevas(def) {
   }).join('');
 
   return `
+    <p class="colonne__role">Aperçu <span class="colonne__sujet">étape ${si + 1} sur ${def.sections.length}</span></p>
     <div class="canevas__page">
       <div class="canevas__entete">
-        <button type="button" class="canevas__titre${selectionEst('etape', si) ? ' est-actif' : ''}"
-          onclick="App.choisir('etape', ${si})"
-          title="Régler cette étape">${esc(section.label || 'Étape ' + (si + 1))} ⚙</button>
+        <h2 class="canevas__titre-public">${esc(section.label || 'Étape ' + (si + 1))}</h2>
         ${section.description ? `<p class="canevas__consigne">${esc(section.description)}</p>` : ''}
       </div>
       ${blocs}
@@ -2273,6 +2321,10 @@ function ajouterDepuisTexte(si, texte) {
   const fi = section.fields.length - 1;
   if (S.typeAjout) onFieldTypeKeyChange(si, fi, S.typeAjout);
   onFieldLabelBlur(si, fi);   // dérive l'identifiant de colonne quand c'est le mode
+  // La question qu'on vient d'écrire devient le sujet des réglages : c'est
+  // d'elle qu'on va dire où elle se range. Le clavier, lui, reste sur la
+  // ligne d'ajout pour enchaîner.
+  S.selection = { quoi: 'question', si: si, fi: fi };
   marquerModifie();
   renderBuilder();
   const suivant = document.getElementById('ajout-rapide');
@@ -2509,7 +2561,6 @@ function renderZoneQuestion(def) {
   if (sel.quoi === 'accueil') {
     const brand = def.branding;
     return `
-      <h3 class="atelier__titre">Accueil</h3>
       <div class="fr-input-group">
         <label class="fr-label" for="acc-titre">Titre du questionnaire</label>
         <input class="fr-input" id="acc-titre" value="${esc(def.title)}" placeholder="Ce que le public lit en premier"
@@ -2526,7 +2577,6 @@ function renderZoneQuestion(def) {
   if (sel.quoi === 'fin') {
     const brand = def.branding;
     return `
-      <h3 class="atelier__titre">Page de confirmation</h3>
       <div class="fr-input-group">
         <label class="fr-label" for="fin-msg">Message de succès</label>
         <textarea class="fr-input" id="fin-msg" rows="3" placeholder="Merci ! Votre réponse a bien été enregistrée."
@@ -2539,13 +2589,11 @@ function renderZoneQuestion(def) {
       })}`;
   }
   if (sel.quoi === 'etape') {
-    return `<h3 class="atelier__titre">Étape ${sel.si + 1}</h3>${renderSectionEditor(def, def.sections[sel.si], sel.si)}`;
+    return renderSectionEditor(def, def.sections[sel.si], sel.si);
   }
   const section = def.sections[sel.si];
   const champ = section.fields[sel.fi];
-  return `
-    <h3 class="atelier__titre">${esc(section.label || 'Étape ' + (sel.si + 1))}</h3>
-    ${renderFieldEditor(def, sel.si, champ, sel.fi)}`;
+  return renderFieldEditor(def, sel.si, champ, sel.fi);
 }
 
 /** L'aperçu, posé sur l'étape qu'on compose. */
@@ -2780,247 +2828,21 @@ function renderSectionEditor(def, section, si) {
 
   return `
     <div class="section-card">
-      <div class="section-card__head">
-        <span class="section-step">Étape ${si + 1}</span>
-        <input class="inline-section-title" value="${esc(section.label)}"
-          placeholder="Titre de l’étape"
-          aria-label="Titre de l’étape ${si + 1}"
+      <div class="fr-input-group">
+        <label class="fr-label" for="sec-titre-${si}">Titre de l’étape ${hintIcon('Le public le lit en haut de l’écran.')}</label>
+        <input class="fr-input" id="sec-titre-${si}" value="${esc(section.label)}"
+          placeholder="Ex. Votre quartier"
           oninput="App.onSectionInput(${si}, 'label', this.value)">
-        <div class="section-card__actions">
-          <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer l’étape" onclick="App.removeSection(${si})">🗑</button>
-        </div>
       </div>
       <div class="fr-input-group">
-        <label class="fr-label" for="sec-desc-${si}">Consigne de l’étape</label>
+        <label class="fr-label" for="sec-desc-${si}">Consigne de l’étape ${hintIcon('Facultatif : ce qu’on explique avant les questions.')}</label>
         <textarea class="fr-input" id="sec-desc-${si}" rows="2"
           placeholder="Ce qu’on explique avant les questions…"
           oninput="App.onSectionInput(${si}, 'description', this.value)">${esc(section.description || '')}</textarea>
       </div>
       ${pathBadge ? `<div class="badge-row">${pathBadge}</div>` : ''}
       ${si === 0 ? '' : renderConditionEditor('section', si, null, sectionCond, prior)}
-      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm add-field-btn" onclick="App.addField(${si})">+ Ajouter une question</button>
-    </div>
-  `;
-}
-
-function renderFieldPreview(f, si, fi) {
-  const configuredPh = (f.options && f.options.placeholder) || '';
-  const isTextLike = f.type === 'Text' || f.type === 'Int' || f.type === 'Numeric';
-  if (isTextLike && (f.widget === 'text' || f.widget === 'textarea' || f.type === 'Int' || f.type === 'Numeric')) {
-    const onPh = `App.onFieldOption(${si}, ${fi}, 'placeholder', this.value)`;
-    const control = f.widget === 'textarea'
-      ? `<textarea class="fr-input" rows="2" placeholder="Saisir le placeholder…"
-          aria-label="Placeholder" oninput="${onPh}">${esc(configuredPh)}</textarea>`
-      : `<input class="fr-input" type="${f.type === 'Int' || f.type === 'Numeric' ? 'number' : 'text'}"
-          value="${esc(configuredPh)}" placeholder="Saisir le placeholder…"
-          aria-label="Placeholder" oninput="${onPh}">`;
-    return `<div class="field-preview is-editable">
-      ${control}
-    </div>`;
-  }
-  const ph = 'Aperçu du champ';
-  let inner = '';
-  if (f.type === 'Bool') {
-    inner = `<div class="fr-checkbox-group"><input type="checkbox" disabled><label class="fr-label">Oui / Non</label></div>`;
-  } else if (f.type === 'Choice') {
-    inner = `<select class="fr-select" disabled><option>${esc(ph)}</option></select>`;
-  } else if (f.type === 'ChoiceList') {
-    inner = `<div class="fr-checkbox-group"><input type="checkbox" disabled><label class="fr-label">Option…</label></div>`;
-  } else if (f.type === 'Attachments') {
-    inner = `<input class="fr-input" type="text" disabled value="Pièce jointe…">`;
-  } else if (f.type === 'Date') {
-    inner = `<input class="fr-input" type="date" disabled>`;
-  } else if (f.type === 'Ref' || f.type === 'RefList') {
-    inner = `<select class="fr-select" disabled><option>Liste liée…</option></select>`;
-  } else {
-    inner = `<input class="fr-input" type="text" disabled placeholder="${esc(ph)}">`;
-  }
-  return `<div class="field-preview is-static">${inner}</div>`;
-}
-
-function renderConditionValueInput(scope, si, fi, ruleIndex, sourceField, currentValue) {
-  const v = currentValue != null ? String(currentValue) : '';
-  const onChange = scope === 'section'
-    ? `App.onSectionRule(${si}, ${ruleIndex}, 'value', this.value)`
-    : `App.onFieldRule(${si}, ${fi}, ${ruleIndex}, 'value', this.value)`;
-  if (!sourceField) {
-    return `<input class="fr-input" value="${esc(v)}" oninput="${onChange}" placeholder="Valeur">`;
-  }
-  if (sourceField.type === 'Bool') {
-    return `<select class="fr-select" onchange="${onChange}">
-      <option value="true" ${v === 'true' || currentValue === true ? 'selected' : ''}>Oui</option>
-      <option value="false" ${v === 'false' || currentValue === false ? 'selected' : ''}>Non</option>
-    </select>`;
-  }
-  if (sourceField.type === 'Choice' && sourceField.choices && sourceField.choices.length) {
-    return `<select class="fr-select" onchange="${onChange}">
-      <option value="">—</option>
-      ${sourceField.choices.map(c => {
-        const val = typeof c === 'object' ? c.value : c;
-        const lab = typeof c === 'object' ? (c.label || c.value) : c;
-        return `<option value="${esc(val)}" ${String(val) === v ? 'selected' : ''}>${esc(lab)}</option>`;
-      }).join('')}
-    </select>`;
-  }
-  if (sourceField.type === 'Date') {
-    return `<input class="fr-input" type="date" value="${esc(v)}" onchange="${onChange}">`;
-  }
-  if (sourceField.type === 'Int' || sourceField.type === 'Numeric') {
-    return `<input class="fr-input" type="number" value="${esc(v)}" oninput="${onChange}">`;
-  }
-  return `<input class="fr-input" value="${esc(v)}" oninput="${onChange}" placeholder="Valeur">`;
-}
-
-function renderConditionEditor(scope, si, fi, condition, prior) {
-  const compound = FormUx.normalizeToCompound(condition);
-  const enabled = !!condition;
-  const toggleFn = scope === 'section'
-    ? `App.onSectionConditionToggle(${si}, this.checked)`
-    : `App.onFieldConditionToggle(${si}, ${fi}, this.checked)`;
-  const opFn = scope === 'section'
-    ? `App.onSectionConditionOp(${si}, this.value)`
-    : `App.onFieldConditionOp(${si}, ${fi}, this.value)`;
-  const addFn = scope === 'section'
-    ? `App.onSectionRuleAdd(${si})`
-    : `App.onFieldRuleAdd(${si}, ${fi})`;
-
-  if (!enabled) {
-    return `
-      <div class="behavior-panel">
-        <div class="fr-checkbox-group">
-          <input type="checkbox" id="cond-${scope}-${si}-${fi != null ? fi : 's'}" onchange="${toggleFn}">
-          <label class="fr-label field-hint" for="cond-${scope}-${si}-${fi != null ? fi : 's'}">
-            <span>${scope === 'section' ? 'Afficher cette étape seulement si…' : 'Afficher cette question seulement si…'}</span>
-            ${hintIcon(CONDITION_PANEL_TIP)}
-          </label>
-        </div>
-      </div>`;
-  }
-
-  const rulesHtml = compound.rules.map((rule, ri) => {
-    const selKey = ruleSelectKey(rule);
-    const isCtx = selKey.indexOf('context:') === 0;
-    const isAud = selKey.indexOf('audience:') === 0;
-    const src = (!isCtx && !isAud)
-      ? (findFieldMeta(S.currentDef, rule.field || rule.path) || prior.find(p => p.colId === (rule.field || rule.path)))
-      : (isCtx ? { type: 'Bool' } : { type: 'Text' });
-    const ops = isAud
-      ? [
-          { value: 'in', label: 'dans' },
-          { value: 'notIn', label: 'pas dans' },
-          { value: '==', label: 'égal à' },
-          { value: '!=', label: 'différent de' }
-        ]
-      : (isCtx && (rule.path === 'userEmail' || selKey === 'context:userEmail')
-        ? FormUx.operatorsForType('Text')
-        : (isCtx ? [{ value: '==', label: 'égal à' }, { value: '!=', label: 'différent de' }] : FormUx.operatorsForType(src && src.type)));
-    const opOpts = ops.map(o =>
-      `<option value="${esc(o.value)}" ${rule.operator === o.value ? 'selected' : ''}>${esc(o.label)}</option>`
-    ).join('');
-    const fieldSelect = scope === 'section'
-      ? `App.onSectionRule(${si}, ${ri}, 'field', this.value)`
-      : `App.onFieldRule(${si}, ${fi}, ${ri}, 'field', this.value)`;
-    const opSelect = scope === 'section'
-      ? `App.onSectionRule(${si}, ${ri}, 'operator', this.value)`
-      : `App.onFieldRule(${si}, ${fi}, ${ri}, 'operator', this.value)`;
-    const delFn = scope === 'section'
-      ? `App.onSectionRuleRemove(${si}, ${ri})`
-      : `App.onFieldRuleRemove(${si}, ${fi}, ${ri})`;
-    const valueHint = isAud
-      ? 'Emails ou groupes, séparés par des virgules'
-      : (isCtx && rule.path !== 'userEmail' ? 'Oui ou Non' : 'Valeur attendue');
-    const srcTip = ruleOptionTip(selKey);
-    const opTip = operatorTip(rule.operator, isAud, isCtx);
-    return `
-      <div class="rule-row">
-        <div class="fr-select-group">${hintLabel('Source', CONDITION_SOURCE_TIP)}
-          <select class="fr-select" onchange="${fieldSelect}">
-            <option value="">—</option>
-            <optgroup label="Contexte">${CONTEXT_RULE_OPTS.map(o =>
-              `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
-            ).join('')}</optgroup>
-            <optgroup label="Audience">${AUDIENCE_RULE_OPTS.map(o =>
-              `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
-            ).join('')}</optgroup>
-            ${prior.length ? `<optgroup label="Questions précédentes">${prior.map(p =>
-              `<option value="field:${esc(p.colId)}" ${selKey === 'field:' + p.colId ? 'selected' : ''}>${esc(p.label)}</option>`
-            ).join('')}</optgroup>` : ''}
-          </select>
-          <p class="fr-hint-text">${esc(srcTip)}</p>
-        </div>
-        <div class="fr-select-group">${hintLabel('Opérateur', opTip)}
-          <select class="fr-select" onchange="${opSelect}">${opOpts}</select>
-        </div>
-        <div class="fr-input-group">${hintLabel('Valeur', isAud ? valueHint : (isCtx && rule.path !== 'userEmail' ? 'Oui = critère vrai, Non = critère faux.' : CONDITION_VALUE_TIP))}
-          ${isCtx && rule.path !== 'userEmail'
-            ? `<select class="fr-select" onchange="${scope === 'section'
-                ? `App.onSectionRule(${si}, ${ri}, 'value', this.value === 'true')`
-                : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value === 'true')`}">
-                <option value="true" ${rule.value === true || rule.value === 'true' ? 'selected' : ''}>Oui</option>
-                <option value="false" ${rule.value === false || rule.value === 'false' ? 'selected' : ''}>Non</option>
-              </select>`
-            : (isAud
-              ? `<input class="fr-input" value="${esc(Array.isArray(rule.value) ? rule.value.join(', ') : (rule.value != null ? rule.value : ''))}"
-                  placeholder="${esc(valueHint)}"
-                  oninput="${scope === 'section'
-                    ? `App.onSectionRule(${si}, ${ri}, 'value', this.value)`
-                    : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value)`}">`
-              : renderConditionValueInput(scope, si, fi, ri, src, rule.value))}
-        </div>
-        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer la règle" onclick="${delFn}">✕</button>
-      </div>`;
-  }).join('');
-
-  return `
-    <div class="behavior-panel">
-      <div class="fr-checkbox-group">
-        <input type="checkbox" id="cond-${scope}-${si}-${fi != null ? fi : 's'}" checked onchange="${toggleFn}">
-        <label class="fr-label field-hint" for="cond-${scope}-${si}-${fi != null ? fi : 's'}">
-          <span>${scope === 'section' ? 'Afficher cette étape seulement si…' : 'Afficher cette question seulement si…'}</span>
-          ${hintIcon(CONDITION_PANEL_TIP)}
-        </label>
-      </div>
-      <div class="fr-select-group fr-mt-1w">
-        ${hintLabel('Combinaison des règles', CONDITION_COMBO_TIP)}
-        <select class="fr-select" onchange="${opFn}">
-          <option value="and" ${compound.op === 'and' ? 'selected' : ''}>Toutes (ET)</option>
-          <option value="or" ${compound.op === 'or' ? 'selected' : ''}>Au moins une (OU)</option>
-        </select>
-      </div>
-      ${rulesHtml}
-      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="${addFn}">+ Ajouter une règle</button>
-    </div>`;
-}
-
-function renderSectionEditor(def, section, si) {
-  const fieldsHtml = section.fields.map((f, fi) => renderFieldEditor(def, si, f, fi)).join('');
-  const prior = priorFields(def, si, null);
-  const condSummary = FormUx.summarizeCondition(section.condition || (section.gate ? { field: section.gate, operator: '==', value: true } : null));
-  const pathBadge = (section.condition || section.gate)
-    ? `<span class="cfg-badge path">Chemin : ${esc(condSummary || section.gate)}</span>` : '';
-
-  // Migrate gate → condition display if only gate set
-  let sectionCond = section.condition;
-  if (!sectionCond && section.gate) {
-    sectionCond = { field: section.gate, operator: '==', value: true };
-  }
-
-  return `
-    <div class="section-card">
-      <div class="section-card__head">
-        <span class="section-step">Étape ${si + 1}</span>
-        <input class="inline-section-title" value="${esc(section.label)}"
-          placeholder="Titre de l’étape"
-          aria-label="Titre de l’étape ${si + 1}"
-          oninput="App.onSectionInput(${si}, 'label', this.value)">
-        <div class="section-card__actions">
-          <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer l’étape" onclick="App.removeSection(${si})">🗑</button>
-        </div>
-      </div>
-      ${pathBadge ? `<div class="badge-row">${pathBadge}</div>` : ''}
-      ${si === 0 ? '' : renderConditionEditor('section', si, null, sectionCond, prior)}
-      ${fieldsHtml}
-      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm add-field-btn" onclick="App.addField(${si})">+ Ajouter une question</button>
+      <button type="button" class="fr-btn fr-btn--tertiary section-card__retirer" onclick="App.removeSection(${si})">Supprimer cette étape</button>
     </div>
   `;
 }
