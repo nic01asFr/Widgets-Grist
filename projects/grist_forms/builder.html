@@ -1081,6 +1081,7 @@
   <section id="builder" class="builder-step" hidden></section>
   <section id="preview" class="builder-step" hidden></section>
   <section id="publish-log" class="builder-step" hidden></section>
+  <section id="synthese" class="builder-step" hidden></section>
 </main>
 
 <div id="toast-container"></div>
@@ -1091,6 +1092,8 @@
 <script src="shared/session-context.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
+  <script src="shared/synthese.js"></script>
+  <script src="shared/synthese-vue.js"></script>
 <script src="runtime/engine.js"></script>
 <script src="shared/survey-project.js"></script>
 <script src="shared/ensure-schema.js"></script>
@@ -1132,7 +1135,8 @@ const STEPS = [
   { id: 'forms', label: '1. Mes formulaires' },
   { id: 'builder', label: '2. Questions' },
   { id: 'preview', label: '3. Aperçu' },
-  { id: 'publish', label: '4. Mettre en ligne' }
+  { id: 'publish', label: '4. Mettre en ligne' },
+  { id: 'synthese', label: '5. Synthèse' }
 ];
 
 // Données mock hors Grist — assez pour composer/prévisualiser un formulaire complet.
@@ -2007,6 +2011,50 @@ function goStep(step) {
   if (step === 'builder') { renderBuilder(); document.getElementById('builder').hidden = false; }
   if (step === 'preview') { renderPreviewStep(); document.getElementById('preview').hidden = false; }
   if (step === 'publish') { renderPublishStep(); document.getElementById('publish-log').hidden = false; }
+  if (step === 'synthese') { renderSyntheseStep(); document.getElementById('synthese').hidden = false; }
+}
+
+/**
+ * Ce que les reponses disent, relues par la definition qui les a produites.
+ *
+ * > **Un formulaire sans restitution est un formulaire a moitie.** On a passe
+ * > du temps a bien poser les questions ; la table, elle, ne montre que des
+ * > entiers dans des colonnes. Cet ecran ne refait pas un tableau de bord —
+ * > Grist en fait de meilleurs — il rend le sens que seul le FormDef porte :
+ * > ce que « 4 » veut dire, a quelle etape la question etait posee, et de quel
+ * > cote penche une echelle.
+ */
+async function renderSyntheseStep() {
+  const zone = document.getElementById('synthese');
+  const def = S.currentDef;
+  if (!def) {
+    zone.innerHTML = `<div class="fr-alert fr-alert--info"><p>Ouvrez un formulaire pour en voir la synthèse.</p></div>`;
+    return;
+  }
+  zone.innerHTML = `
+    <div class="bloc">
+      <div class="bloc__tete">
+        <h2 class="fr-h5">Synthèse</h2>
+        <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="App.goStep('synthese')">Actualiser</button>
+      </div>
+      <p class="fr-hint-text">Lecture seule : rien n’est écrit dans le document.</p>
+      <div id="synthese-rendu" class="fr-synthese"><p class="fr-hint-text">Lecture des réponses…</p></div>
+    </div>`;
+  const cible = document.getElementById('synthese-rendu');
+  try {
+    const lignes = await lireReponses(def);
+    const modele = FormSynthese.construire(def, lignes);
+    cible.innerHTML = FormSyntheseVue.rendre(modele, def);
+  } catch (e) {
+    cible.innerHTML = `<div class="fr-alert fr-alert--error"><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+/** Les reponses de la table cible, remises en lignes. */
+async function lireReponses(def) {
+  if (S.isDemo) return [];
+  const data = await GristBridge.loadTable(def.tableId);
+  return FormSynthese.enLignes(data);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3601,6 +3649,15 @@ function renderFieldEditor(def, si, f, fi) {
                 <option value="">Aucune</option>${matriceOpts}
               </select>
             </div>
+          </div>
+          <div class="fr-select-group">
+            <label class="fr-label" for="pol-${si}-${fi}">Ce que « haut » veut dire ${hintIcon('« Les espaces sont agréables » et « Il faudrait ajouter des places » se notent toutes deux de 1 à 5, mais un 5 est une bonne nouvelle dans un cas et une demande dans l’autre. Sans cette marque, la synthèse les range ensemble.')}</label>
+            <select class="fr-select" id="pol-${si}-${fi}" onchange="App.onFieldOption(${si}, ${fi}, 'polarite', this.value)">
+              <option value="" ${!(f.options && f.options.polarite) ? 'selected' : ''}>Non précisé — la question ne ressortira pas</option>
+              <option value="satisfaction" ${f.options && f.options.polarite === 'satisfaction' ? 'selected' : ''}>Un point de satisfaction (haut = ça va)</option>
+              <option value="besoin" ${f.options && f.options.polarite === 'besoin' ? 'selected' : ''}>Un besoin, un problème (haut = à traiter)</option>
+              <option value="preference" ${f.options && f.options.polarite === 'preference' ? 'selected' : ''}>Une préférence (haut = souhaité)</option>
+            </select>
           </div>` : ''}
 
         ${isRefLike ? `

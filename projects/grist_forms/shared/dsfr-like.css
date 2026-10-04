@@ -646,3 +646,68 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 /* Les mêmes règles dans l'aperçu du compositeur. */
 .champ-bloc__rendu .fr-dessin__planche { background: #fff; }
 .champ-bloc__rendu .fr-dessin__toile { touch-action: none; }
+
+/* ---------------------------------------------------------------
+   La synthèse : la table relue par le FormDef.
+
+   Mêmes classes, même air que le formulaire — une enquête et sa
+   restitution ne viennent pas de deux maisons différentes.
+   --------------------------------------------------------------- */
+.fr-synthese { max-width: 56rem; margin-inline: auto; padding: 1rem; }
+.fr-synthese__h1 { font-size: 1.5rem; color: var(--blue-france); margin: 0 0 1rem; }
+
+.fr-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.fr-chiffre {
+  background: var(--fond-carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+}
+.fr-chiffre__libelle {
+  margin: 0; font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--encre-douce);
+}
+.fr-chiffre__valeur { margin: 0.15rem 0 0; font-size: 1.6rem; font-weight: 700; color: var(--blue-france); }
+.fr-chiffre__precision { margin: 0; font-size: 0.78rem; color: var(--encre-douce); }
+
+.fr-synthese__bloc {
+  background: var(--fond-carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  padding: 1rem 1.125rem;
+  margin-bottom: 1rem;
+}
+.fr-synthese__titre { font-size: 1.125rem; margin: 0 0 0.25rem; }
+.fr-synthese__h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+.fr-synthese__vide { font-style: italic; }
+
+.fr-ressort { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+.fr-ressort__h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+.fr-ressort__h3--besoin { color: #b34000; }
+.fr-ressort__h3--satisfaction { color: #18753c; }
+.fr-ressort__h3--preference { color: var(--blue-france); }
+
+.fr-barre { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; }
+.fr-barre__corps { flex: 1; min-width: 0; }
+.fr-barre__libelle { margin: 0 0 0.2rem; font-size: 0.875rem; }
+.fr-barre__note { color: var(--encre-douce); font-size: 0.8rem; }
+.fr-barre__piste { height: 0.5rem; background: var(--grey-950); border-radius: 0.5rem; overflow: hidden; }
+.fr-barre__piste span { display: block; height: 100%; background: var(--encre-douce); }
+.fr-barre__piste--besoin span { background: #b34000; }
+.fr-barre__piste--satisfaction span { background: #18753c; }
+.fr-barre__piste--preference span { background: var(--blue-france); }
+.fr-barre__n { margin: 0.15rem 0 0; font-size: 0.72rem; color: var(--encre-douce); }
+.fr-barre__valeur { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3rem; text-align: right; }
+
+.fr-verbatim {
+  margin: 0.35rem 0; padding: 0.5rem 0.75rem;
+  background: var(--grey-975); border-left: 3px solid var(--bord);
+  border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.875rem;
+}
+.fr-synthese__source { margin: 0.75rem 0 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--encre-douce); }
+.fr-synthese__autres { margin-top: 0.75rem; }

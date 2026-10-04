@@ -271,7 +271,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "c_perception"
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -283,7 +284,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "c_perception"
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -295,7 +297,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "c_perception"
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -307,7 +310,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "c_perception"
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -319,7 +323,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "c_perception"
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -459,7 +464,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -471,7 +477,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -483,7 +490,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -495,7 +503,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -507,7 +516,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -519,7 +529,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_stationnement"
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
           }
         },
         {
@@ -531,7 +542,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "f_moto"
+            "matrice": "f_moto",
+            "polarite": "satisfaction"
           },
           "condition": {
             "field": "B4_MotoScooter",
@@ -554,7 +566,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "g_vitesses"
+            "matrice": "g_vitesses",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -566,7 +579,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "g_vitesses"
+            "matrice": "g_vitesses",
+            "polarite": "besoin"
           }
         },
         {
@@ -578,7 +592,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "g_vitesses"
+            "matrice": "g_vitesses",
+            "polarite": "satisfaction"
           }
         },
         {
@@ -660,7 +675,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "h_bus"
+            "matrice": "h_bus",
+            "polarite": "satisfaction"
           },
           "condition": {
             "field": "H0_ConcerneTC",
@@ -677,7 +693,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "h_bus"
+            "matrice": "h_bus",
+            "polarite": "satisfaction"
           },
           "condition": {
             "field": "H0_ConcerneTC",
@@ -707,7 +724,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "arceaux",
-            "matrice": "i_arceaux"
+            "matrice": "i_arceaux",
+            "polarite": "satisfaction"
           },
           "condition": {
             "field": "I0_ConcerneVelo",
@@ -724,7 +742,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "i_cohabitation"
+            "matrice": "i_cohabitation",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "I0_ConcerneVelo",
@@ -773,7 +792,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "j_ecoles"
+            "matrice": "j_ecoles",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "J0_ConcerneEcoles",
@@ -790,7 +810,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "j_ecoles"
+            "matrice": "j_ecoles",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "J0_ConcerneEcoles",
@@ -820,7 +841,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "k_chaleur"
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "K0_ConcerneChaleur",
@@ -837,7 +859,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "k_chaleur"
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "K0_ConcerneChaleur",
@@ -854,7 +877,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "k_chaleur"
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "K0_ConcerneChaleur",
@@ -884,7 +908,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "l_vegetalisation"
+            "matrice": "l_vegetalisation",
+            "polarite": "satisfaction"
           },
           "condition": {
             "field": "L0_ConcerneVegetal",
@@ -901,7 +926,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "l_vegetalisation"
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "L0_ConcerneVegetal",
@@ -918,7 +944,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "l_vegetalisation"
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "L0_ConcerneVegetal",
@@ -935,7 +962,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "l_vegetalisation"
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "L0_ConcerneVegetal",
@@ -952,7 +980,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "accord",
-            "matrice": "l_vegetalisation"
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
           },
           "condition": {
             "field": "L0_ConcerneVegetal",
@@ -975,7 +1004,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         },
         {
@@ -987,7 +1017,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         },
         {
@@ -999,7 +1030,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         },
         {
@@ -1011,7 +1043,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         },
         {
@@ -1023,7 +1056,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         },
         {
@@ -1035,7 +1069,8 @@
           "kind": "echelle",
           "options": {
             "echelle": "priorite",
-            "matrice": "m_modes"
+            "matrice": "m_modes",
+            "polarite": "preference"
           }
         }
       ]

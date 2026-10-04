@@ -40,7 +40,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
 
-`node --test projects/grist_forms/tests/*.test.js` → **243 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **267 tests verts**
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
@@ -73,6 +73,35 @@ Trois choses mesurées qui commandent ces choix :
 Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
 `colId` : sans cela, les rangs et la précision d'une autre personne restaient
 dans la ligne.
+
+### La synthese : la table relue par le FormDef (05/10/2026)
+
+Un formulaire sans restitution est un formulaire a moitie. La table des
+reponses n'est pas lisible seule : une echelle y ecrit `4` dans une colonne
+d'entiers, un classement est eclate en trois colonnes, « Autre » vit ailleurs
+que la liste a laquelle il appartient. Le FormDef, lui, sait tout cela.
+
+- `shared/synthese.js` — **calcul pur**, sans HTML ni Grist : chiffres de tete,
+  stats d'echelle, scores de classement, frequences, verbatims, lieux. Testable
+  sans ecran, reutilisable derriere un export ou une page publiee.
+- `shared/synthese-vue.js` — **mise en page seule**. Si un chiffre est faux, il
+  l'etait avant d'arriver.
+- **`options.polarite`** (`satisfaction | besoin | preference`) : ce que « haut »
+  veut dire sur une echelle. Sans elle, « Les espaces sont agreables » et
+  « Il faudrait ajouter des places » se rangent ensemble, alors qu'un 5 est une
+  bonne nouvelle dans un cas et une demande dans l'autre. Les 35 echelles de
+  l'enquete la portent, reprise du questionnaire ecrit a la main.
+- **Le `n` ne quitte jamais le pourcentage** : « 70 % » sur quatre reponses et
+  « 70 % » sur deux cents ne disent pas la meme chose.
+- **Un classement se lit en points**, pas en pourcentage : afficher « 100 % »
+  pour le premier laisserait croire que tout le monde l'a cite.
+- Ecran « 5. Synthese » du compositeur, en lecture seule.
+
+**Ce qu'on ne fait pas, volontairement** : des graphiques, des croisements, des
+agregats libres. Grist les fait mieux. Ce qui lui manque, et qui est ici, c'est
+le sens que seul le FormDef porte.
+
+Eprouve en Grist reel le 05/10/2026 sur 25 reponses.
 
 ### Un canevas qu'on compose (05/10/2026)
 

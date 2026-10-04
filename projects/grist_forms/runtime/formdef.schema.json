@@ -329,7 +329,17 @@
         "options": {
           "type": "object",
           "description": "Options de la saisie. Outre placeholder / refTable / visibleCol / step : `choices` (liste proposée), `maxSelected` (plafond de cases cochées), `libelleOui` et `libelleNon` (oui/non), `valeurAutre` et `consigneAutre` (réponse libre), `rangs` (nombre de rangs retenus d'un classement), et `colonnes`, qui dit où la réponse se range quand ce n'est pas dans la colonne du `colId` : { valeur, autre, rangs: [colonne par rang], geometrie }.",
-          "additionalProperties": true
+          "additionalProperties": true,
+          "properties": {
+            "polarite": {
+              "enum": [
+                "satisfaction",
+                "besoin",
+                "preference"
+              ],
+              "description": "Sur une echelle : ce que « haut » veut dire. Sans elle, « Les espaces sont agreables » et « Il faudrait ajouter des places » se rangent ensemble, alors qu'un 5 est une bonne nouvelle dans un cas et une demande dans l'autre."
+            }
+          }
         },
         "condition": {
           "description": "Condition d'affichage { field, operator, value }",
