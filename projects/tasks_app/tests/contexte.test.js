@@ -292,3 +292,22 @@ describe('tache parente : elle suit ses sous-taches', () => {
         assert.equal(JSON.stringify(l), copie);
     });
 });
+
+describe('donnees d exemple : ?demo explicite', () => {
+    function avecUrl(search, fn) {
+        const avant = globalThis.location;
+        globalThis.location = { search: search };
+        try { return fn(); } finally { if (avant === undefined) delete globalThis.location; else globalThis.location = avant; }
+    }
+    it('?demo, ?demo=1 et ?shell=1&demo=1 sont une demande explicite', () => {
+        for (const q of ['?demo', '?demo=1', '?shell=1&demo=1', '?demo&shell=1'])
+            assert.equal(avecUrl(q, () => TF.isExplicitDemo()), true, q);
+    });
+    it('un document Grist (?access=…) ou un nom voisin ne le sont pas', () => {
+        for (const q of ['', '?shell=1', '?access=full&readonly=false&culture=fr-FR', '?demonstration=1', '?nodemo=1'])
+            assert.equal(avecUrl(q, () => TF.isExplicitDemo()), false, q);
+    });
+    it('sans page (pas de location), ce n est jamais une demande de demo', () => {
+        assert.equal(TF.isExplicitDemo(), false);
+    });
+});
