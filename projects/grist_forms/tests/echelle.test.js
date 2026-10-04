@@ -151,18 +151,43 @@ describe('échelle — la saisie', () => {
   });
 });
 
-describe('dégradation — un widget inconnu retombe sur le type', () => {
-  it('un oui/non devient une case, pas un champ texte', () => {
+describe('oui / non — deux boutons, pas une case', () => {
+  it('pose la question au lieu de l’affirmer', () => {
     const f = { colId: 'B3_Velo', label: 'Possédez-vous un vélo ?', type: 'Bool', widget: 'ouinon' };
     const html = Engine.renderFieldHtml(f, {}, null, def);
-    assert.ok(html.includes('type="checkbox"'), 'une case à cocher');
-    assert.ok(!html.includes('type="text"'));
+    assert.ok(html.includes('type="radio"'), 'deux boutons');
+    assert.ok(!html.includes('type="checkbox"'), 'plus de case à cocher');
+    assert.ok(html.includes('>Oui<') && html.includes('>Non<'));
   });
 
-  it('une saisie à venir reste remplissable', () => {
-    const geo = { colId: 'G_Geometries', label: 'Les endroits concernés', type: 'Text', widget: 'geo', kind: 'geometrie' };
-    const html = Engine.renderFieldHtml(geo, {}, null, def);
-    assert.ok(html.includes('type="text"'));
-    assert.ok(html.includes('Les endroits concernés'));
+  it('se relit : la réponse cochée revient quand on repasse', () => {
+    const f = { colId: 'B3_Velo', label: 'Vélo ?', type: 'Bool', widget: 'ouinon' };
+    const html = Engine.renderFieldHtml(f, { B3_Velo: false }, null, def);
+    assert.ok(/value="false"[^>]*checked/.test(html), '« Non » reste coché');
+    assert.ok(!/value="true"[^>]*checked/.test(html));
+  });
+
+  it('les libellés se disent autrement quand la question l’appelle', () => {
+    const f = { colId: 'X', label: 'Vous êtes ?', type: 'Bool', widget: 'ouinon',
+      options: { libelleOui: 'Plutôt d’accord', libelleNon: 'Plutôt pas' } };
+    const html = Engine.renderFieldHtml(f, {}, null, def);
+    assert.ok(html.includes('Plutôt d’accord') && html.includes('Plutôt pas'));
+  });
+});
+
+describe('dégradation — un widget inconnu retombe sur le type', () => {
+  it('une saisie que ce moteur ne connaît pas reste remplissable', () => {
+    // Une copie figée du formulaire, embarquée ailleurs, peut demander une
+    // saisie écrite après elle : la question doit rester posable.
+    const f = { colId: 'X', label: 'Dessinez votre trajet', type: 'Text', widget: 'curseur_3d' };
+    const html = Engine.renderFieldHtml(f, {}, null, def);
+    assert.ok(html.includes('type="text"'), 'le type Grist commande');
+    assert.ok(html.includes('Dessinez votre trajet'));
+  });
+
+  it('un oui/non inconnu retomberait sur la case du type Bool', () => {
+    const f = { colId: 'B', label: 'Vélo ?', type: 'Bool', widget: 'bascule_inedite' };
+    const html = Engine.renderFieldHtml(f, {}, null, def);
+    assert.ok(html.includes('type="checkbox"'));
   });
 });

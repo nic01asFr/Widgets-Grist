@@ -262,7 +262,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Widget de rendu (text, textarea, select, checkbox, etc.)"
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -270,7 +270,7 @@
         },
         "options": {
           "type": "object",
-          "description": "Options widget / type (placeholder, refTable, visibleCol, step, etc.)",
+          "description": "Options de la saisie. Outre placeholder / refTable / visibleCol / step : `choices` (liste proposée), `maxSelected` (plafond de cases cochées), `libelleOui` et `libelleNon` (oui/non), `valeurAutre` et `consigneAutre` (réponse libre), `rangs` (nombre de rangs retenus d'un classement), et `colonnes`, qui dit où la réponse se range quand ce n'est pas dans la colonne du `colId` : { valeur, autre, rangs: [colonne par rang], geometrie }.",
           "additionalProperties": true
         },
         "condition": {
@@ -334,7 +334,7 @@
         },
         "kind": {
           "type": "string",
-          "description": "Type dérivé (echelle, choix_autre, classement, intervalle, geometrie…). Absent = champ simple ; un lecteur qui l'ignore retombe sur type + widget."
+          "description": "Une couche posée sur la saisie, pas un widget de plus. Reconnues : echelle (crans et ancrages déclarés dans `echelles`), choix_autre (une réponse libre à côté de la liste), classement (des rangs, chacun dans sa colonne), geometrie (un lieu)."
         },
         "description": {
           "type": "string",

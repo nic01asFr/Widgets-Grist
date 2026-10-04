@@ -395,3 +395,53 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .champ-bloc__rendu .fr-input-group, .champ-bloc__rendu .fr-select-group, .champ-bloc__rendu .fr-fieldset {
   margin-bottom: 1.1rem;
 }
+
+/* ── Les saisies de l'enquête ───────────────────────────────────────────────
+   Oui / Non côte à côte, « Autre » qui se déplie, cases plafonnées,
+   classement au doigt, position relevée. Tout reste à 44 px de cible et
+   lisible sur un téléphone tenu à une main. */
+
+/* Oui / Non : deux boutons de même largeur, dans la même ligne. */
+.fr-form .fr-fieldset__content--ligne {
+  flex-direction: row; flex-wrap: wrap; gap: 0.6rem;
+}
+.fr-form .fr-fieldset__content--ligne .fr-radio-group { flex: 1 1 8rem; justify-content: center; }
+
+/* « Autre : … » — révélé seulement quand on l'a choisi. */
+.fr-form .fr-autre {
+  margin: 0.3rem 0 0 1.6rem; padding-left: 0.8rem;
+  border-left: 3px solid var(--blue-france);
+}
+.fr-form .fr-autre--repliee { display: none; }
+
+/* Le plafond se lit avant de cocher, et se tient. */
+.fr-form .fr-plafond {
+  margin: -0.2rem 0 0.4rem; font-variant-numeric: tabular-nums;
+}
+.fr-form .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
+
+/* Classer : des rangées qu'on monte et qu'on descend. */
+.fr-form .fr-classement__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.fr-form .fr-classement__item {
+  display: flex; align-items: center; gap: 0.6rem; min-height: var(--cible, 2.75rem);
+  padding: 0.3rem 0.6rem; border: 1px solid var(--bordure, #ddd); border-radius: 8px;
+  background: var(--fond-carte, #fff);
+}
+.fr-form .fr-classement__item--hors { opacity: 0.55; border-style: dashed; }
+.fr-form .fr-classement__rang {
+  flex: 0 0 1.8rem; height: 1.8rem; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; background: var(--blue-france); color: #fff; font-variant-numeric: tabular-nums;
+}
+.fr-form .fr-classement__item--hors .fr-classement__rang { background: var(--bordure, #ddd); color: var(--encre-douce, #666); }
+.fr-form .fr-classement__texte { flex: 1 1 auto; min-width: 0; }
+.fr-form .fr-classement__bouton {
+  flex: 0 0 auto; width: 2.4rem; height: 2.4rem; font: inherit; font-size: 1.1rem; cursor: pointer;
+  border: 1px solid var(--bordure, #ddd); border-radius: 6px; background: transparent; color: inherit;
+}
+.fr-form .fr-classement__bouton[disabled] { opacity: 0.3; cursor: default; }
+
+/* Relever sa position : le bouton tient dans la ligne, et passe dessous
+   quand l'écran est étroit. */
+.fr-form .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.fr-form .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
+.fr-form .fr-geo__etat:empty { display: none; }

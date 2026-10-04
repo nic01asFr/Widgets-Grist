@@ -171,6 +171,25 @@
    *
    * @param {object} [opts] `{ creation: true }` pour écrire les vides
    */
+  /**
+   * Le classement s'ecrit rang par rang.
+   *
+   * `options.colonnes.rangs` nomme les colonnes du 1er, du 2e, du 3e choix.
+   * Les propositions au-dela du dernier rang ne sont pas des reponses : elles
+   * n'ont pas ete classees, et les colonnes correspondantes restent vides —
+   * sinon une personne qui a classe deux lieux en verrait apparaitre un
+   * troisieme qu'elle n'a pas choisi.
+   */
+  function ecrireRangs(out, field, brut, opts) {
+    var rangs = colonnesDe(field).rangs || [];
+    var choisis = Array.isArray(brut) ? brut : (brut == null ? [] : [brut]);
+    for (var i = 0; i < rangs.length; i++) {
+      var v = choisis[i];
+      out[rangs[i]] = (v == null || v === '' || v === VALEUR_NON_CONCERNE) ? null : String(v);
+    }
+    return out;
+  }
+
   function collectSubmitData(formDef, values, context, opts) {
     opts = opts || {};
     var out = {};
@@ -183,12 +202,35 @@
         var field = fields[j];
         var visible = sectionVisible && isFieldVisible(field, values, context);
         if (!visible) {
-          if (opts.creation && TYPES_A_VIDER[Types.normalizeGristType(field.type)]) out[field.colId] = null;
+          // Une question cachee ne laisse pas la valeur d'une autre personne
+          // dans la ligne : ses colonnes sont vidées, y compris celles qu'elle
+          // ne nomme pas par son `colId`.
+          var caches = colonnesDe(field);
+          if (opts.creation && TYPES_A_VIDER[Types.normalizeGristType(field.type)] && !caches.rangs) {
+            out[(caches.valeur) || field.colId] = null;
+          }
+          (caches.rangs || []).forEach(function (c) { out[c] = null; });
+          if (caches.autre) out[caches.autre] = null;
           continue;
         }
         var brut = values[field.colId];
-        // « Non concerné » est une réponse ; la colonne, elle, reste vide.
-        out[field.colId] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
+        var cols = colonnesDe(field);
+        if (field.kind === 'classement') {
+          // Les rangs retenus vont chacun dans leur colonne ; la question
+          // elle-même n'en a pas, et n'écrit nulle part.
+          ecrireRangs(out, field, brut, opts);
+        } else if (cols.valeur && cols.valeur !== field.colId) {
+          out[cols.valeur] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
+        } else {
+          // « Non concerné » est une réponse ; la colonne, elle, reste vide.
+          out[field.colId] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
+        }
+        // Le texte libre de « Autre » a sa propre colonne : écrit dans la liste,
+        // Grist le garderait mais l'encadrerait en rouge (mesuré).
+        if (cols.autre) {
+          var libre = values[cols.autre];
+          out[cols.autre] = (valeurAutreChoisie(field, values) && libre) ? String(libre) : null;
+        }
       }
     }
     return out;
@@ -491,8 +533,15 @@
         '<label class="fr-label" for="' + oid + '">' + escapeHtml(o.label) + '</label>' +
         '</div>';
     }).join('');
-    return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="multiselect">' +
-      renderLegend(field) + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
+    // Un plafond annonce avant de choisir, pas un refus apres coup.
+    var max = field.options && field.options.maxSelected;
+    var plafond = max
+      ? '<p class="fr-hint-text fr-plafond" data-max="' + max + '">' +
+        selected.length + ' sur ' + max + ' maximum</p>'
+      : '';
+    return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="multiselect"' +
+      (max ? ' data-max="' + max + '"' : '') + '>' +
+      renderLegend(field) + plafond + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
   }
 
   /**
@@ -668,6 +717,132 @@
       '" multiple' + acceptAttr + reqAttr + ' />' + camera + hint + '</div>';
   }
 
+  /**
+   * Les colonnes ou une saisie range sa reponse.
+   *
+   * Une question du formulaire n'est pas toujours une colonne : « vos trois
+   * lieux prioritaires » se range dans trois colonnes de rang, et « Autre :
+   * … » demande une colonne de texte a cote de la liste. `options.colonnes`
+   * dit lesquelles ; le `colId` reste le nom de la question.
+   */
+  function colonnesDe(field) {
+    return (field && field.options && field.options.colonnes) || {};
+  }
+
+  /**
+   * Oui / Non en deux boutons plutot qu'une case a cocher.
+   *
+   * > **Une case a cocher ne pose pas de question, elle affirme.** « Possedez-
+   * > vous un velo ? » avec une case vide se lit « non » aussi bien que « pas
+   * > encore repondu ». Deux boutons obligent a choisir, et la personne voit
+   * > ce qu'elle a repondu.
+   *
+   * Grist ne sait pas vider un `Bool` (mesure) : sans reponse, la colonne
+   * recevra `false`. Une question qui doit distinguer « non » de « sans
+   * reponse » se pose en liste de choix, pas en oui/non.
+   */
+  function renderOuiNon(field, value) {
+    var o = (field && field.options) || {};
+    var opts = [{ value: 'true', label: o.libelleOui || 'Oui' },
+                { value: 'false', label: o.libelleNon || 'Non' }];
+    var coche = (value === true || value === 'true') ? 'true'
+      : ((value === false || value === 'false') ? 'false' : null);
+    var itemsHtml = opts.map(function (op, i) {
+      var oid = fieldId(field) + '-' + i;
+      return '<div class="fr-radio-group">' +
+        '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + op.value + '"' +
+        (coche === op.value ? ' checked' : '') + ' />' +
+        '<label class="fr-label" for="' + oid + '">' + escapeHtml(op.label) + '</label>' +
+        '</div>';
+    }).join('');
+    return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="ouinon">' +
+      renderLegend(field) + '<div class="fr-fieldset__content fr-fieldset__content--ligne">' + itemsHtml + '</div></fieldset>';
+  }
+
+  /**
+   * Classer des propositions, de la plus importante a la moins importante.
+   *
+   * Monter et descendre plutot que glisser-deposer : le glisser ne marche ni
+   * au clavier ni au doigt sur un ecran qui defile. Seuls les premiers rangs
+   * comptent — `options.rangs` dit combien — et chacun va dans sa colonne.
+   */
+  function renderClassement(field, value, optionsList) {
+    var options = resolveOptions(field, optionsList);
+    var rangs = (field.options && field.options.rangs) || options.length;
+    var ordre = Array.isArray(value) && value.length ? value.map(String) : null;
+    var rangees = ordre
+      ? ordre.map(function (v) {
+          var trouve = null;
+          options.forEach(function (o) { if (String(o.value) === v) trouve = o; });
+          return trouve || { value: v, label: v };
+        }).concat(options.filter(function (o) { return ordre.indexOf(String(o.value)) === -1; }))
+      : options.slice();
+    var itemsHtml = rangees.map(function (o, i) {
+      var retenu = i < rangs;
+      return '<li class="fr-classement__item' + (retenu ? '' : ' fr-classement__item--hors') + '" data-valeur="' + escapeHtml(o.value) + '">' +
+        '<span class="fr-classement__rang">' + (retenu ? (i + 1) : '\u00b7') + '</span>' +
+        '<span class="fr-classement__texte">' + escapeHtml(o.label) + '</span>' +
+        '<button type="button" class="fr-classement__bouton" data-sens="-1" aria-label="Monter"' +
+        (i === 0 ? ' disabled' : '') + '>&#8593;</button>' +
+        '<button type="button" class="fr-classement__bouton" data-sens="1" aria-label="Descendre"' +
+        (i === rangees.length - 1 ? ' disabled' : '') + '>&#8595;</button>' +
+        '</li>';
+    }).join('');
+    return '<fieldset class="fr-fieldset fr-classement" data-colid="' + escapeHtml(field.colId) + '" data-widget="classement" data-rangs="' + rangs + '">' +
+      renderLegend(field) +
+      '<p class="fr-hint-text">Du plus important au moins important. Les ' + rangs + ' premiers seront retenus.</p>' +
+      '<ol class="fr-classement__liste">' + itemsHtml + '</ol></fieldset>';
+  }
+
+  /** Un point sur la Terre, saisi au doigt : « Utiliser ma position ». */
+  function renderGeo(field, value) {
+    var id = fieldId(field);
+    var v = value == null ? '' : String(value);
+    return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo">' +
+      renderLabel(field, id) +
+      '<div class="fr-geo__ligne">' +
+      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)" />' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
+      '</div>' +
+      '<p class="fr-hint-text fr-geo__etat" role="status"></p>' +
+      '</div>';
+  }
+
+  /**
+   * « Autre : … » — une reponse qu'on n'avait pas prevue, dans sa colonne.
+   *
+   * > **La reponse libre ne va pas dans la colonne de choix.** Grist l'y garde,
+   * > mais l'encadre en rouge : elle n'est pas dans la liste (mesure le
+   * > 04/10/2026). La liste recoit « Autre », qui est une option comme les
+   * > autres ; le texte va dans `options.colonnes.autre`.
+   *
+   * Le bloc s'ajoute **par-dessus** la saisie habituelle, quelle qu'elle soit :
+   * une liste deroulante, des cases, des boutons. Un `kind` est une couche, pas
+   * un widget de plus.
+   */
+  function blocAutre(field, values) {
+    var o = (field && field.options) || {};
+    var col = colonnesDe(field).autre;
+    if (!col) return '';
+    var id = fieldId(field) + '-autre-texte';
+    var libre = values && values[col] != null ? String(values[col]) : '';
+    var choisi = valeurAutreChoisie(field, values);
+    return '<div class="fr-autre' + (choisi ? '' : ' fr-autre--repliee') + '" data-autre-de="' + escapeHtml(field.colId) + '">' +
+      '<label class="fr-label" for="' + id + '">' + escapeHtml(o.consigneAutre || 'Precisez') + '</label>' +
+      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(col) + '" value="' + escapeHtml(libre) + '" />' +
+      '</div>';
+  }
+
+  /** La valeur « Autre » est-elle retenue dans la reponse courante ? */
+  function valeurAutreChoisie(field, values) {
+    var o = (field && field.options) || {};
+    var cible = String(o.valeurAutre || 'Autre');
+    var v = values ? values[field.colId] : null;
+    if (Array.isArray(v)) return v.map(String).indexOf(cible) !== -1;
+    return v != null && String(v) === cible;
+  }
+
   var WIDGET_RENDERERS = {
     text: function (f, v) { return renderTextLike(f, v, false); },
     textarea: function (f, v) { return renderTextLike(f, v, true); },
@@ -680,7 +855,10 @@
     multiselect: function (f, v, opts) { return renderMultiselect(f, v, opts); },
     likert: function (f, v) { return renderLikert(f, v); },
     echelle: function (f, v, opts, def) { return renderEchelle(f, v, opts, def); },
-    file: function (f, v) { return renderFile(f, v); }
+    file: function (f, v) { return renderFile(f, v); },
+    ouinon: function (f, v) { return renderOuiNon(f, v); },
+    classement: function (f, v, opts) { return renderClassement(f, v, opts); },
+    geo: function (f, v) { return renderGeo(f, v); }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
@@ -699,7 +877,13 @@
     var parDefaut = Types && Types.defaultWidget ? Types.defaultWidget(field && field.type) : 'text';
     var renderer = WIDGET_RENDERERS[field && field.widget] ||
       WIDGET_RENDERERS[parDefaut] || WIDGET_RENDERERS.text;
-    return renderer(field, value, optionsList, formDef);
+    var html = renderer(field, value, optionsList, formDef);
+    // Un `kind` est une couche posee sur la saisie, pas un widget de plus :
+    // « Autre : … » s'ajoute a la liste deroulante comme aux cases a cocher.
+    if (field && (field.kind === 'choix_autre' || field.kind === 'classement')) {
+      html += blocAutre(field, values);
+    }
+    return html;
   }
 
   // ── mount : runtime navigateur — étapes visibles, validation requise, submit ──
@@ -734,9 +918,16 @@
       var cb = rootEl.querySelector('[name="' + field.colId + '"]');
       return cb ? !!cb.checked : false;
     }
-    if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle') {
+    if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle' ||
+        field.widget === 'ouinon') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
       return checkedRadio ? checkedRadio.value : null;
+    }
+    if (field.widget === 'classement') {
+      var items = rootEl.querySelectorAll('[data-colid="' + field.colId + '"] .fr-classement__item');
+      var ordre = [];
+      for (var k = 0; k < items.length; k++) ordre.push(items[k].getAttribute('data-valeur'));
+      return ordre.length ? ordre : null;
     }
     if (field.widget === 'multiselect') {
       var checkedBoxes = rootEl.querySelectorAll('input[name="' + field.colId + '"]:checked');
@@ -766,6 +957,13 @@
   function readSectionValues(rootEl, fields, values) {
     for (var i = 0; i < fields.length; i++) {
       values[fields[i].colId] = readFieldValue(rootEl, fields[i], values[fields[i].colId]);
+      // Le texte de « Autre » vit dans sa colonne, pas dans le colId de la
+      // question : sans cette lecture, il se perdait au premier re-rendu.
+      var autre = colonnesDe(fields[i]).autre;
+      if (autre && typeof rootEl.querySelector === 'function') {
+        var champ = rootEl.querySelector('[name="' + autre + '"]');
+        if (champ) values[autre] = champ.value;
+      }
     }
     return values;
   }
@@ -1182,6 +1380,9 @@
 
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
+      brancherPlafonds();
+      brancherClassements(fields);
+      brancherPositions();
       var inputs = rootEl.querySelectorAll('input, select, textarea');
       for (var i = 0; i < inputs.length; i++) {
         if (typeof inputs[i].addEventListener === 'function') {
@@ -1241,6 +1442,89 @@
           });
         });
       }
+    }
+
+    /**
+     * Le plafond se voit, et se tient.
+     *
+     * « Choisissez jusqu'a 5 propositions » : laisser cocher la sixieme pour
+     * refuser ensuite serait un piege. Les cases non cochees se grisent quand
+     * le compte y est, et le compteur dit ou l'on en est.
+     */
+    function brancherPlafonds() {
+      var groupes = rootEl.querySelectorAll('[data-widget="multiselect"][data-max]');
+      for (var i = 0; i < groupes.length; i++) (function (groupe) {
+        var max = parseInt(groupe.getAttribute('data-max'), 10);
+        var cases = groupe.querySelectorAll('input[type="checkbox"]');
+        var compteur = groupe.querySelector('.fr-plafond');
+        function tenir() {
+          var n = 0, j;
+          for (j = 0; j < cases.length; j++) if (cases[j].checked) n++;
+          for (j = 0; j < cases.length; j++) {
+            if (!cases[j].checked) cases[j].disabled = n >= max;
+          }
+          if (compteur) compteur.textContent = n + ' sur ' + max + ' maximum';
+        }
+        for (var k = 0; k < cases.length; k++) {
+          if (typeof cases[k].addEventListener === 'function') cases[k].addEventListener('change', tenir);
+        }
+        tenir();
+      }(groupes[i]));
+    }
+
+    /** Monter et descendre une proposition, et renumeroter ce qui bouge. */
+    function brancherClassements(fields) {
+      var listes = rootEl.querySelectorAll('[data-widget="classement"]');
+      for (var i = 0; i < listes.length; i++) (function (bloc) {
+        var boutons = bloc.querySelectorAll('.fr-classement__bouton');
+        for (var k = 0; k < boutons.length; k++) {
+          if (typeof boutons[k].addEventListener !== 'function') continue;
+          boutons[k].addEventListener('click', function (ev) {
+            if (ev && ev.preventDefault) ev.preventDefault();
+            var item = this.parentNode;
+            var sens = parseInt(this.getAttribute('data-sens'), 10);
+            var voisin = sens < 0 ? item.previousElementSibling : item.nextElementSibling;
+            if (!voisin) return;
+            if (sens < 0) item.parentNode.insertBefore(item, voisin);
+            else item.parentNode.insertBefore(voisin, item);
+            readSectionValues(rootEl, fields, values);
+            planifierRendu();
+          });
+        }
+      }(listes[i]));
+    }
+
+    /**
+     * « Utiliser ma position » : le geste attendu sur un telephone.
+     *
+     * Le navigateur demande l'autorisation ; un refus n'est pas une panne, on
+     * le dit et la saisie a la main reste possible. La geometrie est ecrite en
+     * WKT, qui est ce qu'Atlas et QGIS lisent d'une colonne texte.
+     */
+    function brancherPositions() {
+      var blocs = rootEl.querySelectorAll('[data-widget="geo"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var bouton = bloc.querySelector('.fr-geo__ici');
+        var champ = bloc.querySelector('input[type="text"]');
+        var etat = bloc.querySelector('.fr-geo__etat');
+        if (!bouton || typeof bouton.addEventListener !== 'function') return;
+        bouton.addEventListener('click', function () {
+          var geo = typeof navigator !== 'undefined' && navigator.geolocation;
+          if (!geo) { if (etat) etat.textContent = 'Ce navigateur ne sait pas donner votre position.'; return; }
+          if (etat) etat.textContent = 'Recherche de votre position\u2026';
+          geo.getCurrentPosition(function (pos) {
+            var lon = Math.round(pos.coords.longitude * 1e6) / 1e6;
+            var lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
+            champ.value = 'POINT(' + lon + ' ' + lat + ')';
+            if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
+            if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
+              champ.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }, function () {
+            if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.';
+          }, { enableHighAccuracy: true, timeout: 15000 });
+        });
+      }(blocs[i]));
     }
 
     function boot() {
@@ -1317,7 +1601,7 @@
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.
     WIDGETS: Object.keys(WIDGET_RENDERERS),
-    KINDS: ['echelle'],
+    KINDS: ['echelle', 'choix_autre', 'classement', 'geometrie'],
     VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
     echelleDe: echelleDe,
     grouperParMatrice: grouperParMatrice,

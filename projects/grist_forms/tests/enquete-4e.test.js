@@ -87,7 +87,6 @@ describe('enquête du 4ᵉ — ce que le moteur sait rendre aujourd’hui', () =
   function manque(f) {
     if (f.kind && !Engine.KINDS.includes(f.kind)) return f.kind;
     if (!Engine.WIDGETS.includes(f.widget)) return 'widget:' + f.widget;
-    if (f.options && f.options.maxSelected) return 'option:maxSelected';
     return null;
   }
 
@@ -97,17 +96,12 @@ describe('enquête du 4ᵉ — ce que le moteur sait rendre aujourd’hui', () =
       const m = manque(f);
       if (m) parManque[m] = (parManque[m] || 0) + 1;
     }
-    // Le jour où l'une de ces lignes tombe à zéro, c'est que le lot est livré :
-    // ce test doit alors être mis à jour, et c'est voulu.
-    assert.deepEqual(parManque, {
-      'widget:ouinon': 9,
-      choix_autre: 1,
-      classement: 1,
-      'option:maxSelected': 1,
-      geometrie: 1,
-    }, 'l’échelle est livrée : 35 questions de moins');
+    // L'écart est refermé : les 61 questions de l'enquête se rendent avec ce
+    // que le moteur sait faire. Si une saisie venait à manquer de nouveau,
+    // c'est ici qu'elle apparaîtrait, nommée.
+    assert.deepEqual(parManque, {}, 'plus aucune question hors de portée du moteur');
     const rendus = champs.filter((f) => !manque(f)).length;
-    assert.equal(rendus, 48);
+    assert.equal(rendus, 61);
     assert.equal(champs.length, 61);
   });
 
