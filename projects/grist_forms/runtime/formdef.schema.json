@@ -59,6 +59,14 @@
         },
         "successImageAlt": {
           "type": "string"
+        },
+        "organisation": {
+          "type": "string",
+          "description": "Qui publie le questionnaire, dans le bandeau (ex. « CEREMA »)"
+        },
+        "organisationDetail": {
+          "type": "string",
+          "description": "Second rang du bandeau, sous l'organisation (ex. « Ville de Marseille »)"
         }
       }
     },
@@ -181,6 +189,56 @@
             "type": "string",
             "description": "Comment y répondre"
           }
+        }
+      }
+    },
+    "accueil": {
+      "type": "object",
+      "description": "La page d'accueil : ce qu'on lit avant de decider de repondre",
+      "additionalProperties": false,
+      "properties": {
+        "titre": {
+          "type": "string",
+          "description": "Le titre de la page d'accueil, qui n'est pas celui du bandeau"
+        },
+        "texte": {
+          "type": "string",
+          "description": "Presentation. Gras avec **…**, paragraphes separes par une ligne vide"
+        },
+        "dureeMinutes": {
+          "type": "number",
+          "description": "Duree estimee : annoncee en premier encart, et mesuree a l'envoi"
+        },
+        "dureeTexte": {
+          "type": "string",
+          "description": "La suite de l'encart de duree (ce que le questionnaire epargne, par exemple)"
+        },
+        "encarts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ton": {
+                "enum": [
+                  "attention",
+                  "discret"
+                ],
+                "description": "« attention » se voit (fond jaune, filet) ; « discret » se lit si on le cherche (mentions, RGPD)"
+              },
+              "titre": {
+                "type": "string"
+              },
+              "texte": {
+                "type": "string",
+                "description": "Gras avec **…**"
+              }
+            }
+          }
+        },
+        "bouton": {
+          "type": "string",
+          "description": "Libelle du bouton de depart (defaut : « Commencer »)"
         }
       }
     }

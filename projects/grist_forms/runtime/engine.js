@@ -233,6 +233,19 @@
         }
       }
     }
+
+    // Deux colonnes que personne ne remplit a la main. L'horodatage dit quand
+    // la reponse est arrivee ; la duree dit combien de temps elle a coute, et
+    // c'est elle qui permet de verifier l'estimation annoncee en accueil au
+    // lieu de la reconduire d'une enquete a l'autre. Grist compte les dates en
+    // secondes, pas en millisecondes.
+    var meta = (formDef && formDef.meta) || {};
+    if (opts.creation !== false) {
+      if (meta.timestampCol) out[meta.timestampCol] = Math.round(Date.now() / 1000);
+      if (meta.durationCol && Number(opts.demarreA) > 0) {
+        out[meta.durationCol] = Math.round((Date.now() - Number(opts.demarreA)) / 1000);
+      }
+    }
     return out;
   }
 
@@ -417,6 +430,103 @@
     return '<div class="' + (cssClass || 'fr-form__brand') + '">' +
       '<img src="' + escapeHtml(safe) + '" alt="' + escapeHtml(alt || '') + '" />' +
       '</div>';
+  }
+
+  /**
+   * Le gras, et rien d'autre.
+   *
+   * > Un texte d'accueil sans gras se lit mal : le nom des quartiers, le mot
+   * > « anonyme », la duree sont ce qu'on cherche des yeux. Mais ouvrir le HTML
+   * > a qui compose un formulaire, c'est ouvrir le formulaire a qui saurait s'en
+   * > servir. On echappe donc tout, puis on rend `**ceci**` seul.
+   */
+  function enrichirTexte(texte) {
+    var sur = escapeHtml(String(texte == null ? '' : texte));
+    return sur.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  /** Les paragraphes se separent par une ligne vide, comme partout ailleurs. */
+  function paragraphes(texte, cssClass) {
+    var blocs = String(texte == null ? '' : texte).split(/\n\s*\n/);
+    var out = '';
+    for (var i = 0; i < blocs.length; i++) {
+      var t = blocs[i].trim();
+      if (t) out += '<p' + (cssClass ? ' class="' + cssClass + '"' : '') + '>' + enrichirTexte(t) + '</p>';
+    }
+    return out;
+  }
+
+  /**
+   * Le bandeau : qui demande, et sur quoi.
+   *
+   * > **Il reste a l'ecran du debut a la fin.** Une personne qui arrive par un
+   * > lien partage ne sait pas qui l'interroge ; a la septieme etape, elle ne
+   * > s'en souvient plus. Le questionnaire ecrit a la main portait cette barre
+   * > sur chaque ecran — le moteur n'affichait son en-tete qu'a la premiere
+   * > etape, et le melangeait avec la presentation.
+   */
+  function renderBandeauHtml(formDef) {
+    var brand = (formDef && formDef.branding) || {};
+    var logoHtml = renderBrandImg(brand.logoUrl, brand.logoAlt, 'fr-bandeau__logo');
+    var orga = brand.organisation
+      ? '<p class="fr-bandeau__orga">' + escapeHtml(brand.organisation) +
+        (brand.organisationDetail ? '<small>' + escapeHtml(brand.organisationDetail) + '</small>' : '') +
+        '</p>'
+      : '';
+    var titre = formDef && formDef.title
+      ? '<h1 class="fr-bandeau__titre">' + escapeHtml(formDef.title) + '</h1>' : '';
+    if (!logoHtml && !orga && !titre) return '';
+    return '<header class="fr-bandeau"><div class="fr-bandeau__inner">' +
+      logoHtml + orga + titre + '</div></header>';
+  }
+
+  /**
+   * La page d'accueil.
+   *
+   * > **Un questionnaire ne commence pas par sa premiere question.** Il commence
+   * > par ce qui permet de decider d'y repondre : qui le publie, pourquoi, pour
+   * > combien de temps, et ce qu'il advient des reponses. L'enquete ecrite a la
+   * > main consacrait un ecran entier a cela ; le moteur l'avait reduit a un
+   * > en-tete pose au-dessus de la premiere etape, ou il se lisait comme un
+   * > titre de section parmi d'autres.
+   *
+   * La duree annoncee n'est pas decorative : c'est la premiere question que se
+   * pose quelqu'un a qui l'on demande son avis, et la raison la plus frequente
+   * d'abandonner avant la fin.
+   */
+  function renderAccueilHtml(formDef) {
+    var a = (formDef && formDef.accueil) || {};
+    var titre = a.titre || (formDef && formDef.title) || '';
+    var texte = a.texte || (formDef && formDef.description) || '';
+
+    var encarts = '';
+    if (Number(a.dureeMinutes) > 0) {
+      encarts += '<div class="fr-encart fr-encart--attention">' +
+        '<strong>⏱ Environ ' + escapeHtml(String(a.dureeMinutes)) + ' minutes.</strong>' +
+        (a.dureeTexte ? ' ' + enrichirTexte(a.dureeTexte) : '') + '</div>';
+    }
+    var liste = a.encarts || [];
+    for (var i = 0; i < liste.length; i++) {
+      var e = liste[i] || {};
+      var ton = e.ton === 'attention' ? 'attention' : 'discret';
+      encarts += '<div class="fr-encart fr-encart--' + ton + '">' +
+        (e.titre ? '<strong>' + escapeHtml(e.titre) + '</strong> ' : '') +
+        enrichirTexte(e.texte || '') + '</div>';
+    }
+
+    return '<section class="fr-accueil">' +
+      (titre ? '<h2 class="fr-accueil__titre" tabindex="-1">' + escapeHtml(titre) + '</h2>' : '') +
+      paragraphes(texte) + encarts +
+      '<div class="fr-form__actions fr-form__actions--fin">' +
+      '<button type="button" class="fr-btn" data-action="commencer">' +
+      escapeHtml(a.bouton || 'Commencer') + ' →</button></div></section>';
+  }
+
+  /** Y a-t-il une page d'accueil a franchir avant la premiere question ? */
+  function aUnAccueil(formDef) {
+    var a = formDef && formDef.accueil;
+    if (!a) return false;
+    return !!(a.titre || a.texte || a.dureeMinutes || (a.encarts && a.encarts.length));
   }
 
   /**
@@ -1343,6 +1453,12 @@
     // L'hôte peut demander d'ouvrir sur une étape : le compositeur montre
     // celle qu'on travaille, pas la première.
     var stepIndex = Number.isFinite(bridge.etapeDepart) ? Math.max(0, bridge.etapeDepart) : 0;
+    // L'accueil n'est pas une etape : c'est l'ecran qu'on franchit pour entrer.
+    // Le compositeur, lui, demande une etape precise — il a deja decide.
+    var surAccueil = aUnAccueil(formDef) && !Number.isFinite(bridge.etapeDepart);
+    // Le chrono part quand on commence vraiment, pas quand la page s'ouvre :
+    // lire la presentation n'est pas repondre.
+    var demarreA = surAccueil ? 0 : Date.now();
     var errorFields = [];
     var submitting = false;
     var submitError = '';
@@ -1474,12 +1590,18 @@
      * au navigateur de trouver lequel remonter.
      */
     function remonterEnHaut() {
-      var titre = rootEl.querySelector('.fr-progression__titre') ||
+      var titre = rootEl.querySelector('.fr-accueil__titre') ||
+        rootEl.querySelector('.fr-progression__titre') ||
         rootEl.querySelector('.fr-form__header') || rootEl.firstElementChild;
       if (!titre) return;
+      // Le focus va au titre de l'etape : c'est lui qu'un lecteur d'ecran doit
+      // annoncer. Mais l'oeil, lui, remonte jusqu'au bandeau : s'arreter au
+      // titre poussait hors de l'ecran l'enseigne et l'avancement, c'est-a-dire
+      // qui demande et combien il reste.
       try { titre.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
-      if (typeof titre.scrollIntoView === 'function') {
-        titre.scrollIntoView({ block: 'start', behavior: 'auto' });
+      var haut = rootEl.querySelector('.fr-bandeau') || titre;
+      if (typeof haut.scrollIntoView === 'function') {
+        haut.scrollIntoView({ block: 'start', behavior: 'auto' });
       }
     }
 
@@ -1499,7 +1621,12 @@
         ? '<p class="fr-text--sm">Modification de la ligne #' + escapeHtml(editId) + '</p>'
         : '';
 
-      var headerHtml = stepIndex === 0 ? renderHeaderHtml(formDef) : '';
+      // Avec une page d'accueil, c'est le bandeau qui porte le titre, sur tous
+      // les ecrans ; sans elle, l'en-tete d'origine reste pose sur la premiere
+      // etape, et les formulaires deja en service ne bougent pas.
+      var avecAccueil = aUnAccueil(formDef);
+      var bandeauHtml = avecAccueil ? renderBandeauHtml(formDef) : '';
+      var headerHtml = (!avecAccueil && stepIndex === 0) ? renderHeaderHtml(formDef) : '';
 
       // Où j'en suis, et combien il reste : la première chose qu'on cherche en
       // ouvrant un questionnaire, et ce que l'enquête écrite à la main offrait
@@ -1536,14 +1663,32 @@
       // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
       // à côté du bouton : en haut d'un écran long, personne ne le voit.
       var navHtml = '<div class="fr-form__actions">' +
-        (stepIndex > 0 ? '<button type="button" class="fr-btn fr-btn--secondary" data-action="prev">Précédent</button>' : '<span></span>') +
+        ((stepIndex > 0 || avecAccueil)
+          ? '<button type="button" class="fr-btn fr-btn--secondary" data-action="prev">Précédent</button>'
+          : '<span></span>') +
         (isLast
           ? '<button type="button" class="fr-btn" data-action="submit"' + (submitting ? ' disabled' : '') + '>' +
             (submitting ? 'Envoi…' : (editId ? 'Enregistrer' : 'Envoyer')) + '</button>'
           : '<button type="button" class="fr-btn" data-action="next">Suivant</button>') +
         '</div>';
 
-      rootEl.innerHTML = '<form class="fr-form" novalidate>' + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+      if (surAccueil) {
+        rootEl.innerHTML = '<form class="fr-form fr-form--accueil" novalidate>' +
+          bandeauHtml + renderAccueilHtml(formDef) + '</form>';
+        var cmd = rootEl.querySelector('[data-action="commencer"]');
+        if (cmd && typeof cmd.addEventListener === 'function') {
+          cmd.addEventListener('click', function () {
+            surAccueil = false;
+            demarreA = Date.now();
+            render();
+            remonterEnHaut();
+          });
+        }
+        return;
+      }
+
+      rootEl.innerHTML = '<form class="fr-form" novalidate>' +
+        bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       wireEvents(fields);
     }
 
@@ -1570,7 +1715,8 @@
       if (prevBtn && typeof prevBtn.addEventListener === 'function') {
         prevBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values);
-          stepIndex -= 1; errorFields = []; render(); remonterEnHaut();
+          if (stepIndex === 0) surAccueil = true; else stepIndex -= 1;
+          errorFields = []; render(); remonterEnHaut();
         });
       }
       var nextBtn = rootEl.querySelector('[data-action="next"]');
@@ -1605,7 +1751,8 @@
             : Promise.resolve(values);
           Promise.resolve(resolveAtt).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
-            var data = collectSubmitData(formDef, values, context, { creation: enCreation });
+            var data = collectSubmitData(formDef, values, context,
+              { creation: enCreation, demarreA: demarreA });
             return defaultSubmit(bridge, formDef, data);
           }).then(function () {
             submitting = false;
@@ -1865,6 +2012,9 @@
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
     renderHeaderHtml: renderHeaderHtml,
+    renderBandeauHtml: renderBandeauHtml,
+    renderAccueilHtml: renderAccueilHtml,
+    aUnAccueil: aUnAccueil,
     renderSuccessHtml: renderSuccessHtml,
     valuesFromRecord: valuesFromRecord,
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture

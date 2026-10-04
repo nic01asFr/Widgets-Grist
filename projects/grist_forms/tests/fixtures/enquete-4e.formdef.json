@@ -1055,5 +1055,23 @@
       ]
     }
   ],
-  "choices": {}
+  "choices": {},
+  "branding": {
+    "organisation": "CEREMA",
+    "organisationDetail": "Ville de Marseille"
+  },
+  "accueil": {
+    "titre": "Votre avis sur les espaces publics du quartier",
+    "texte": "Le Cerema réalise, pour la Ville de Marseille, une étude sur la voirie, les espaces publics, le stationnement et les mobilités dans les quartiers **Chartreux** et **La Blancarde** (4ᵉ arrondissement). Ce questionnaire recueille votre **perception** pour affiner le diagnostic et nourrir les propositions d’aménagement.",
+    "dureeMinutes": 8,
+    "dureeTexte": "Le questionnaire s’adapte à vos réponses : selon votre profil, certaines sections vous seront épargnées. Il n’y a pas de bonne ou de mauvaise réponse.",
+    "encarts": [
+      {
+        "ton": "discret",
+        "titre": "Anonymat & données (RGPD).",
+        "texte": "Ce questionnaire est **anonyme** : aucune donnée permettant de vous identifier n’est demandée. Les réponses sont traitées par le Cerema pour le seul besoin de l’étude commandée par la Ville de Marseille, conservées pour la durée de l’étude, et exploitées de manière agrégée. Contact délégué à la protection des données : [à compléter par le Cerema]."
+      }
+    ],
+    "bouton": "Commencer"
+  }
 }

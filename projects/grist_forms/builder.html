@@ -185,6 +185,13 @@
     font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--encre-douce, #666); margin: 0 0 0.6rem; display: flex; align-items: center; gap: 0.4rem;
   }
+  .bloc__intitule {
+    font-size: 0.8125rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--encre-douce);
+    margin: 1.25rem 0 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--bord);
+  }
+  .bloc__intitule span { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .encart-edit { border: 1px solid var(--bord); border-radius: 4px; padding: 0.75rem; margin-bottom: 0.5rem; }
   .bloc__duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; }
   .structure__marque { font-size: 0.7rem; color: var(--blue-france, #000091); flex: 0 0 auto; }
   .rail__etape.est-actif .structure__marque, .champ-bloc.est-ouvert .structure__marque { color: inherit; }
@@ -1532,6 +1539,19 @@ function applyRuleSourceKey(rule, key) {
   }
 }
 
+/**
+ * L'accueil du formulaire, cree quand on commence a le composer.
+ *
+ * Il n'existe pas par defaut : un formulaire sans accueil s'ouvre sur sa
+ * premiere question, et c'est bien ce qu'on veut pour une fiche de saisie.
+ * C'est l'enquete adressee a des inconnus qui a besoin d'une couverture.
+ */
+function ensureAccueil(def) {
+  if (!def.accueil || typeof def.accueil !== 'object') def.accueil = {};
+  if (!Array.isArray(def.accueil.encarts)) def.accueil.encarts = [];
+  return def.accueil;
+}
+
 function ensureBranding(def) {
   if (!def.branding || typeof def.branding !== 'object') {
     def.branding = { logoUrl: '', logoAlt: '', successImageUrl: '', successImageAlt: '' };
@@ -2429,7 +2449,10 @@ function renderCanevas(def) {
     let rendu = '';
     try {
       rendu = estAccueil
-        ? (FormEngine.renderHeaderHtml(def) || '<p class="fr-hint-text">Ni titre, ni description, ni logo : la page s’ouvrira directement sur la première question.</p>')
+        ? ((FormEngine.aUnAccueil(def)
+            ? FormEngine.renderBandeauHtml(def) + FormEngine.renderAccueilHtml(def)
+            : FormEngine.renderHeaderHtml(def))
+          || '<p class="fr-hint-text">Ni titre, ni description, ni logo : la page s’ouvrira directement sur la première question.</p>')
         : FormEngine.renderSuccessHtml(def);
     } catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
     return `
@@ -3056,18 +3079,85 @@ function renderZoneQuestion(def) {
   const sel = S.selection;
   if (sel.quoi === 'accueil') {
     const brand = def.branding;
+    const acc = ensureAccueil(def);
     return `
+      <p class="bloc__intitule">Le bandeau <span>reste à l’écran du début à la fin</span></p>
+      <div class="bloc__duo">
+        <div class="fr-input-group">
+          <label class="fr-label" for="acc-orga">Qui publie ${hintIcon('Le nom court, à gauche du bandeau. Une personne arrivée par un lien partagé ne sait pas qui l’interroge.')}</label>
+          <input class="fr-input" id="acc-orga" value="${esc(brand.organisation || '')}" placeholder="CEREMA"
+            oninput="App.onBrandingInput('organisation', this.value)">
+        </div>
+        <div class="fr-input-group">
+          <label class="fr-label" for="acc-orga2">Pour qui</label>
+          <input class="fr-input" id="acc-orga2" value="${esc(brand.organisationDetail || '')}" placeholder="Ville de Marseille"
+            oninput="App.onBrandingInput('organisationDetail', this.value)">
+        </div>
+      </div>
       <div class="fr-input-group">
-        <label class="fr-label" for="acc-titre">Titre du questionnaire</label>
-        <input class="fr-input" id="acc-titre" value="${esc(def.title)}" placeholder="Ce que le public lit en premier"
+        <label class="fr-label" for="acc-titre">Sur quoi porte l’enquête ${hintIcon('Le titre long, dans le bandeau. Il n’est pas le titre de la page d’accueil.')}</label>
+        <input class="fr-input" id="acc-titre" value="${esc(def.title)}" placeholder="Espaces publics, mobilités — quartiers…"
           oninput="App.onDefInput('title', this.value)" onblur="App.onTitleBlur()">
       </div>
-      <div class="fr-input-group">
-        <label class="fr-label" for="acc-desc">Description</label>
-        <textarea class="fr-input" id="acc-desc" rows="3" placeholder="À quoi sert cette enquête, qui la mène…"
-          oninput="App.onDefInput('description', this.value)">${esc(def.description)}</textarea>
-      </div>
       ${renderBrandSlot({ kind: 'logo', urlKey: 'logoUrl', altKey: 'logoAlt', url: brand.logoUrl, alt: brand.logoAlt })}
+
+      <p class="bloc__intitule">La page d’accueil <span>ce qu’on lit pour décider de répondre</span></p>
+      <div class="fr-input-group">
+        <label class="fr-label" for="acc-h2">Titre de la page</label>
+        <input class="fr-input" id="acc-h2" value="${esc(acc.titre || '')}" placeholder="Votre avis sur…"
+          oninput="App.onAccueil('titre', this.value)">
+      </div>
+      <div class="fr-input-group">
+        <label class="fr-label" for="acc-texte">Présentation ${hintIcon('Pourquoi cette enquête, et par qui. Le gras s’écrit **entre deux astérisques** ; une ligne vide sépare deux paragraphes.')}</label>
+        <textarea class="fr-input" id="acc-texte" rows="5" placeholder="Le Cerema réalise, pour…"
+          oninput="App.onAccueil('texte', this.value)">${esc(acc.texte || def.description || '')}</textarea>
+      </div>
+      <div class="bloc__duo">
+        <div class="fr-input-group">
+          <label class="fr-label" for="acc-duree">Durée estimée (minutes) ${hintIcon('La première question que se pose quelqu’un à qui l’on demande son avis, et la raison la plus fréquente d’abandonner. Le moteur mesure la vraie durée : l’estimation se vérifie.')}</label>
+          <input class="fr-input" id="acc-duree" type="number" min="1" max="60" value="${acc.dureeMinutes || ''}"
+            oninput="App.onAccueil('dureeMinutes', this.value)">
+        </div>
+        <div class="fr-input-group">
+          <label class="fr-label" for="acc-bouton">Libellé du bouton</label>
+          <input class="fr-input" id="acc-bouton" value="${esc(acc.bouton || '')}" placeholder="Commencer"
+            oninput="App.onAccueil('bouton', this.value)">
+        </div>
+      </div>
+      ${acc.dureeMinutes ? `
+      <div class="fr-input-group">
+        <label class="fr-label" for="acc-duree-t">Ce qu’on ajoute à la durée</label>
+        <input class="fr-input" id="acc-duree-t" value="${esc(acc.dureeTexte || '')}"
+          placeholder="Le questionnaire s’adapte à vos réponses…"
+          oninput="App.onAccueil('dureeTexte', this.value)">
+      </div>` : ''}
+
+      <p class="bloc__intitule">Les mentions <span>RGPD, conditions, avertissements</span></p>
+      ${(acc.encarts || []).map((e, i) => `
+        <div class="encart-edit">
+          <div class="bloc__duo">
+            <div class="fr-select-group">
+              <label class="fr-label" for="acc-e-ton-${i}">Ton</label>
+              <select class="fr-select" id="acc-e-ton-${i}" onchange="App.onEncart(${i}, 'ton', this.value)">
+                <option value="discret" ${e.ton !== 'attention' ? 'selected' : ''}>Discret — se lit si on le cherche</option>
+                <option value="attention" ${e.ton === 'attention' ? 'selected' : ''}>En évidence — se voit</option>
+              </select>
+            </div>
+            <div class="fr-input-group">
+              <label class="fr-label" for="acc-e-t-${i}">Intitulé</label>
+              <input class="fr-input" id="acc-e-t-${i}" value="${esc(e.titre || '')}" placeholder="Anonymat & données (RGPD)."
+                oninput="App.onEncart(${i}, 'titre', this.value)">
+            </div>
+          </div>
+          <div class="fr-input-group">
+            <label class="fr-label" for="acc-e-x-${i}">Texte</label>
+            <textarea class="fr-input" id="acc-e-x-${i}" rows="3"
+              oninput="App.onEncart(${i}, 'texte', this.value)">${esc(e.texte || '')}</textarea>
+          </div>
+          <button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.retirerEncart(${i})">Retirer</button>
+        </div>`).join('')}
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="App.ajouterEncart()">Ajouter une mention</button>
+
       ${renderAudienceBlock(def.audience)}`;
   }
   if (sel.quoi === 'fin') {
@@ -3102,6 +3192,9 @@ function renderZoneQuestion(def) {
  */
 function etapeVisibleCourante(def) {
   const sel = S.selection || {};
+  // Quand c'est l'accueil qu'on compose, on ne demande aucune etape : le
+  // moteur ouvre alors sur sa page d'accueil, qui est bien ce qu'on regarde.
+  if (sel.quoi === 'accueil' && FormEngine.aUnAccueil && FormEngine.aUnAccueil(def)) return undefined;
   if (!def || sel.si == null || !window.FormEngine || !FormEngine.isSectionVisible) return 0;
   const visibles = def.sections.filter((sec) => FormEngine.isSectionVisible(sec, {}, {}));
   const rang = visibles.indexOf(def.sections[sel.si]);
@@ -3118,7 +3211,8 @@ function monterApercuAtelier() {
   // remplie n'y figure pas. Le rang du compositeur n'est donc pas celui de
   // l'aperçu — sans cette traduction, on compose une étape et on en regarde
   // une autre.
-  let depart = 0;
+  let depart = (sel.quoi === 'accueil' && window.FormEngine.aUnAccueil && window.FormEngine.aUnAccueil(def))
+    ? undefined : 0;
   if (sel.si != null && window.FormEngine.isSectionVisible) {
     const visibles = def.sections.filter((sec) => window.FormEngine.isSectionVisible(sec, {}, {}));
     const rang = visibles.indexOf(def.sections[sel.si]);
@@ -3517,6 +3611,40 @@ function onDefInput(prop, value) {
   if (prop === 'title' && S.currentDef.composeMode === 'ensureSchema' && S.autoTable) {
     S.currentDef.tableId = FormUx.tableNameFromTitle(value);
   }
+}
+
+function onAccueil(cle, valeur) {
+  const a = ensureAccueil(S.currentDef);
+  marquerModifie();
+  if (cle === 'dureeMinutes') {
+    const n = Number(valeur);
+    if (n > 0) a.dureeMinutes = n; else delete a.dureeMinutes;
+    renderBuilder();
+    return;
+  }
+  a[cle] = valeur == null ? '' : String(valeur);
+}
+
+function onEncart(i, cle, valeur) {
+  const a = ensureAccueil(S.currentDef);
+  if (!a.encarts[i]) return;
+  marquerModifie();
+  a.encarts[i][cle] = valeur == null ? '' : String(valeur);
+  if (cle === 'ton') renderBuilder();
+}
+
+function ajouterEncart() {
+  const a = ensureAccueil(S.currentDef);
+  a.encarts.push({ ton: 'discret', titre: '', texte: '' });
+  marquerModifie();
+  renderBuilder();
+}
+
+function retirerEncart(i) {
+  const a = ensureAccueil(S.currentDef);
+  a.encarts.splice(i, 1);
+  marquerModifie();
+  renderBuilder();
 }
 
 function onBrandingInput(key, value) {
@@ -4646,7 +4774,7 @@ async function publishForm() {
 window.App = {
   goStep, newForm, editForm,
   cancelWizard, startWizardCreate, startWizardBind, applyTemplate,
-  onDefInput, onBrandingInput, onBrandingFile, refreshBuilderBrand, reuseIntroImage, onAudienceInput, onTitleBlur, onManualTableEdit, onTableChange, onComposeModeChange,
+  onDefInput, onAccueil, onEncart, ajouterEncart, retirerEncart, onBrandingInput, onBrandingFile, refreshBuilderBrand, reuseIntroImage, onAudienceInput, onTitleBlur, onManualTableEdit, onTableChange, onComposeModeChange,
   addSection, removeSection, addField, removeField,
   onSectionInput, onFieldInput, onFieldOption, onFieldLabelBlur, onFieldColIdChange,
   onFieldTypeChange, onFieldTypeKeyChange, onFieldChoices,

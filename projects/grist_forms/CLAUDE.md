@@ -38,9 +38,9 @@ projects/grist_forms/
 └── docs/PUBLICATION.md
 ```
 
-## État — **v1 + phase 2 + audience + les saisies de l'enquête + l'illustration** (2026-10-04)
+## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
 
-`node --test projects/grist_forms/tests/*.test.js` → **216 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **225 tests verts**
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
@@ -73,6 +73,34 @@ Trois choses mesurées qui commandent ces choix :
 Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
 `colId` : sans cela, les rangs et la précision d'une autre personne restaient
 dans la ligne.
+
+### Le bandeau et la page d'accueil (05/10/2026)
+
+Un questionnaire ne commence pas par sa premiere question. Il commence par ce
+qui permet de decider d'y repondre : qui le publie, pourquoi, pour combien de
+temps, et ce qu'il advient des reponses. Le moteur avait reduit cela a un
+en-tete pose au-dessus de la premiere etape, ou il se lisait comme un titre de
+section parmi d'autres.
+
+- **`branding.organisation` / `organisationDetail`** : le bandeau, qui **reste a
+  l'ecran du debut a la fin**. Une personne arrivee par un lien partage ne sait
+  pas qui l'interroge ; a la septieme etape, elle ne s'en souvient plus.
+- **`accueil`** : `titre`, `texte`, `dureeMinutes` + `dureeTexte`, `encarts`
+  (`ton: attention | discret`), `bouton`. Un ecran a part : la progression y est
+  masquee, « Precedent » y ramene depuis la premiere etape.
+- **Le gras seul** : le texte est echappe, puis `**ceci**` devient `<strong>`.
+  Ouvrir le HTML a qui compose, c'est l'ouvrir a qui saurait s'en servir.
+- **Le chrono part au clic sur « Commencer »**, pas a l'ouverture : lire la
+  presentation n'est pas repondre. `meta.timestampCol` et `meta.durationCol` se
+  remplissent seuls a l'envoi (en secondes) — la duree annoncee se verifie au
+  lieu de se reconduire d'une enquete a l'autre.
+- **On remonte jusqu'au bandeau** en changeant d'etape, pas jusqu'au titre :
+  s'arreter au titre poussait hors de l'ecran l'enseigne et l'avancement. La
+  barre de progression est `sticky`.
+
+Repris du questionnaire ecrit a la main (document `e1j5ym1Bd5ec`, widget
+*Custom widget builder*). Eprouve en Grist reel le 05/10/2026 : accueil,
+« Commencer », etape 1 avec bandeau et avancement, retour a l'accueil.
 
 ### Illustrer une question (04/10/2026)
 

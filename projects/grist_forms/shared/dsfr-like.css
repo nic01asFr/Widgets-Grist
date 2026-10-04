@@ -270,6 +270,7 @@ body {
   --grey-950: #2a2f2b;
   --grey-925: #39423c;
   --blue-france: #9aa2ff;
+  --encart-attention: #3a3220;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -283,6 +284,7 @@ body {
     --grey-950: #2a2f2b;
     --grey-925: #39423c;
     --blue-france: #9aa2ff;
+    --encart-attention: #3a3220;
     color-scheme: dark;
   }
 }
@@ -512,3 +514,77 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 /* La carte du compositeur, où l'on pose les repères. */
 .fr-carte--composer { height: 14rem; margin-bottom: 0.5rem; cursor: crosshair; }
+
+/* ---------------------------------------------------------------
+   Le bandeau et la page d'accueil.
+
+   Le bandeau reste a l'ecran du debut a la fin : qui demande, et sur
+   quoi. La page d'accueil, elle, se franchit une fois — c'est ce
+   qu'on lit pour decider de repondre.
+   --------------------------------------------------------------- */
+.fr-bandeau {
+  background: var(--fond-carte, #fff);
+  border-bottom: 2px solid var(--blue-france);
+  padding: 0.875rem 1rem;
+  margin: -1rem -1rem 0;
+}
+.fr-bandeau__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+.fr-bandeau__logo { max-height: 2.5rem; width: auto; }
+.fr-bandeau__orga {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1.1;
+  color: var(--blue-france);
+  border-right: 1px solid var(--grey-900);
+  padding-right: 0.875rem;
+}
+.fr-bandeau__orga small { display: block; font-weight: 400; color: var(--encre-douce); }
+.fr-bandeau__titre { font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--encre); }
+
+/* L'avancement suit : en bas d'une etape longue, savoir ou l'on en est
+   vaut mieux que de devoir remonter pour le lire. */
+.fr-form .fr-progression {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--fond-page);
+  padding-top: 0.5rem;
+}
+
+.fr-accueil { padding-top: 1.5rem; }
+.fr-accueil__titre {
+  font-size: 1.375rem;
+  margin: 0 0 0.75rem;
+  color: var(--blue-france);
+}
+.fr-accueil__titre:focus { outline: none; }
+.fr-accueil p { margin: 0 0 0.75rem; }
+
+.fr-encart {
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius);
+  margin: 0.875rem 0;
+  font-size: 0.875rem;
+}
+.fr-encart--attention {
+  background: var(--encart-attention, #fef6e3);
+  border-left: 4px solid #ffca00;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.fr-encart--discret {
+  background: var(--grey-975);
+  color: var(--encre-douce);
+  font-size: 0.78125rem;
+}
+.fr-form__actions--fin { justify-content: flex-end; }
+
+/* Les memes regles dans l'apercu du compositeur. */
+.champ-bloc__rendu .fr-bandeau { margin: 0 0 0.75rem; }
+.champ-bloc__rendu .fr-accueil { padding-top: 0; }
