@@ -163,6 +163,103 @@
   .structure__etape { display: flex; flex-direction: column; gap: 1px; }
   .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
 
+  /* ── Les étapes en barre, le canevas en dessous ─────────────────────────
+     Une étape est ce que le public verra sur un écran : la barre dit le
+     parcours, le canevas montre l'écran choisi. */
+  .barre-etapes {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.5rem 0.2rem; position: sticky; top: 2.75rem; z-index: 6;
+    background: var(--fond-page, #f6f6f6);
+  }
+  .barre-etapes__defile {
+    display: flex; gap: 0.35rem; overflow-x: auto; flex: 1 1 auto;
+    scrollbar-width: thin; padding-bottom: 2px;
+  }
+  .pastille {
+    font: inherit; font-size: 0.82rem; cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.3rem 0.6rem; border-radius: 999px;
+    border: 1px solid var(--grey-925, #e5e5e5); background: var(--fond-carte, #fff); color: inherit;
+    max-width: 14rem;
+  }
+  .pastille:hover { border-color: var(--blue-france, #000091); }
+  .pastille.est-actif { background: var(--blue-france, #000091); border-color: var(--blue-france, #000091); color: #fff; }
+  .pastille__rang {
+    font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.74rem;
+    background: var(--grey-950, #eee); border-radius: 999px; padding: 0 0.35rem; color: var(--grey-425, #3a3a3a);
+  }
+  .pastille.est-actif .pastille__rang { background: rgba(255,255,255,0.25); color: #fff; }
+  .pastille__nom { overflow: hidden; text-overflow: ellipsis; }
+  .pastille__compte, .pastille__chemin { font-size: 0.72rem; opacity: 0.75; }
+  .pastille--bout, .pastille--ajout { flex: 0 0 auto; }
+  .pastille--ajout { font-size: 1rem; line-height: 1; padding: 0.25rem 0.6rem; }
+
+  .canevas { padding: 0.2rem 0 1rem; }
+  .canevas__page {
+    /* La page garde une colonne de lecture : c'est ainsi que le public la verra.
+       La largeur en trop sert aux réglages, posés à côté du champ ouvert. */
+    max-width: 52rem; margin-inline: auto;
+    background: var(--fond-carte, #fff); border: 1px solid var(--grey-925, #e5e5e5);
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+    display: flex; flex-direction: column; gap: 0.7rem;
+  }
+  .canevas__entete { border-bottom: 1px solid var(--grey-950, #eee); padding-bottom: 0.6rem; }
+  .canevas__titre {
+    font: inherit; font-size: 1.25rem; font-weight: 600; cursor: pointer;
+    background: none; border: none; color: inherit; padding: 0;
+  }
+  .canevas__titre.est-actif { color: var(--blue-france, #000091); }
+  .canevas__consigne { font-size: 0.92rem; color: var(--encre-douce, #666); margin: 0.2rem 0 0; }
+  .canevas__matrice { font-size: 0.78rem; color: var(--blue-france, #000091); margin: 0.4rem 0 -0.2rem; }
+  .canevas__reglages { border: 1px dashed var(--grey-900, #ddd); border-radius: 8px; padding: 0.8rem; }
+
+  /* Un champ : vu comme le public le verra, configurable sur place. */
+  .champ-bloc {
+    border: 1px solid transparent; border-radius: 8px; padding: 0.5rem 0.6rem;
+    position: relative; background: var(--fond-carte, #fff);
+  }
+  .champ-bloc:hover { border-color: var(--grey-925, #e5e5e5); }
+  .champ-bloc.est-ouvert { border-color: var(--blue-france, #000091); background: var(--grey-975, #f6f6f6); }
+  .champ-bloc__barre {
+    display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem;
+    color: var(--encre-douce, #666); margin-bottom: 0.3rem;
+  }
+  .champ-bloc__rang {
+    font-variant-numeric: tabular-nums; background: var(--grey-950, #eee);
+    border-radius: 999px; padding: 0 0.35rem;
+  }
+  .champ-bloc__espace { flex: 1 1 auto; }
+  .champ-bloc__action {
+    font: inherit; cursor: pointer; border: 1px solid transparent; background: transparent;
+    border-radius: 5px; padding: 0.1rem 0.4rem; color: var(--encre-douce, #666);
+  }
+  .champ-bloc__action:hover { border-color: var(--grey-900, #ddd); background: var(--grey-975, #f6f6f6); }
+  /* Le rendu est une image de ce que verra le public : on ne saisit pas dedans. */
+  .champ-bloc__rendu { pointer-events: none; user-select: none; }
+  .champ-bloc__rendu .fr-form__actions { display: none; }
+  .champ-bloc__reglages {
+    margin-top: 0.6rem; border-top: 1px solid var(--grey-900, #ddd); padding-top: 0.7rem;
+  }
+  /* Assez large : les réglages se posent à côté du champ, qui reste à sa place.
+     La page s'élargit juste le temps qu'une question soit ouverte. */
+  @media (min-width: 76rem) {
+    .canevas__page:has(.champ-bloc.est-ouvert) { max-width: 82rem; }
+    .champ-bloc.est-ouvert {
+      display: grid; grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+      gap: 0 1.2rem; align-items: start;
+    }
+    .champ-bloc.est-ouvert .champ-bloc__barre { grid-column: 1 / -1; }
+    .champ-bloc.est-ouvert .champ-bloc__reglages {
+      margin-top: 0; border-top: none; border-left: 1px solid var(--grey-900, #ddd);
+      padding-top: 0; padding-left: 1.2rem; max-height: 60vh; overflow: auto;
+    }
+  }
+  .champ-bloc--ajout {
+    border: 1px dashed var(--grey-900, #ddd); color: var(--encre-douce, #666);
+    text-align: center; cursor: pointer; font: inherit; font-size: 0.9rem; padding: 0.8rem;
+  }
+  .champ-bloc--ajout:hover { border-color: var(--blue-france, #000091); color: var(--blue-france, #000091); }
+
   /* Le plan de l'étape : ses questions en cartes, visibles d'un coup. */
   .atelier__plan { padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
   .plan__tete { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
@@ -1762,26 +1859,10 @@ function renderBuilder() {
   const cols = S.columnsByTable[def.tableId] || [];
   const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
 
-  const ongletDroit = S.panneauDroit === 'apercu' ? 'apercu' : 'reglages';
   el.innerHTML = `
-    <div class="atelier">
-      <aside class="atelier__structure" aria-label="Structure du formulaire">
-        ${renderStructure(def)}
-      </aside>
-      <div class="atelier__plan" aria-label="Plan de l’étape">
-        ${renderPlanEtape(def)}
-      </div>
-      <aside class="atelier__detail" aria-label="Réglages">
-        <div class="atelier__onglets" role="tablist">
-          <button type="button" role="tab" class="atelier__onglet${ongletDroit === 'reglages' ? ' est-actif' : ''}"
-            aria-selected="${ongletDroit === 'reglages'}" onclick="App.panneauDroit('reglages')">Réglages</button>
-          <button type="button" role="tab" class="atelier__onglet${ongletDroit === 'apercu' ? ' est-actif' : ''}"
-            aria-selected="${ongletDroit === 'apercu'}" onclick="App.panneauDroit('apercu')">Aperçu</button>
-        </div>
-        <div class="atelier__detail-corps">
-          ${ongletDroit === 'reglages' ? renderZoneQuestion(def) : '<div class="atelier__apercu-cadre" id="builder-preview-mount"></div>'}
-        </div>
-      </aside>
+    ${renderBarreEtapes(def)}
+    <div class="canevas" id="canevas">
+      ${renderCanevas(def)}
     </div>
     ${colsDatalist}
     <div class="barre-enregistrement">
@@ -1789,7 +1870,6 @@ function renderBuilder() {
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
-  if (ongletDroit === 'apercu') monterApercuAtelier();
 }
 
 /** Les réglages, ou le rendu : on passe de l'un à l'autre, on ne les subit pas côte à côte. */
@@ -1870,6 +1950,103 @@ function renderApercuCarte(f, def) {
   if (t === 'Date' || t === 'DateTime') return '<span class="mini"><i class="mini__champ">jj/mm/aaaa</i></span>';
   if (t === 'Ref' || t === 'RefList') return `<span class="mini"><i class="mini__champ">${esc(resolveRefTableOfField(f) || 'table liée')}</i></span>`;
   return '<span class="mini"><i class="mini__champ">&nbsp;</i></span>';
+}
+
+/**
+ * Les étapes en barre : le parcours entier sur une ligne.
+ *
+ * Une étape est ce que le public verra sur un écran ; la barre dit donc le
+ * parcours, et le canevas en-dessous montre l'écran choisi. L'ancien panneau de
+ * structure listait les soixante et une questions verticalement — c'est le
+ * canevas qui les montre désormais, telles qu'elles seront vues.
+ */
+function renderBarreEtapes(def) {
+  const etapes = def.sections.map((section, si) => {
+    const actif = (S.selection.si === si && S.selection.quoi !== 'accueil' && S.selection.quoi !== 'fin') ? ' est-actif' : '';
+    const chemin = (section.condition || section.gate)
+      ? '<span class="pastille__chemin" title="Cette étape ne s’affiche pas toujours">⤳</span>' : '';
+    return `<button type="button" class="pastille${actif}" onclick="App.choisir('etape', ${si})" title="${esc(section.label || '')}">
+      <span class="pastille__rang">${si + 1}</span>
+      <span class="pastille__nom">${esc(section.label || 'Sans titre')}</span>
+      ${chemin}<span class="pastille__compte">${(section.fields || []).length}</span>
+    </button>`;
+  }).join('');
+  return `
+    <nav class="barre-etapes" aria-label="Étapes du formulaire">
+      <button type="button" class="pastille pastille--bout${selectionEst('accueil') ? ' est-actif' : ''}" onclick="App.choisir('accueil')">Accueil</button>
+      <div class="barre-etapes__defile">${etapes}</div>
+      <button type="button" class="pastille pastille--ajout" onclick="App.addSection()" title="Ajouter une étape">+</button>
+      <button type="button" class="pastille pastille--bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
+    </nav>`;
+}
+
+/**
+ * Le canevas : l'étape telle que le public la verra, et chaque champ
+ * configurable sur place.
+ *
+ * > **Les champs sont dessinés par le moteur lui-même** (`renderFieldHtml`),
+ * > en lecture seule. Redessiner ici une version « éditeur » aurait fait deux
+ * > rendus pour une seule apparence, et ils auraient divergé au premier type
+ * > ajouté.
+ */
+function renderCanevas(def) {
+  const sel = S.selection;
+  if (sel.quoi === 'accueil' || sel.quoi === 'fin') {
+    return `<div class="canevas__page">${renderZoneQuestion(def)}</div>`;
+  }
+  const si = sel.si != null ? sel.si : 0;
+  const section = def.sections[si];
+  if (!section) return '<div class="canevas__page"><p>Aucune étape.</p></div>';
+
+  let derniereMatrice = null;
+  const blocs = (section.fields || []).map((f, fi) => {
+    const ouvert = selectionEst('question', si, fi);
+    const matrice = (f.options && f.options.matrice) || null;
+    const enteteMatrice = (matrice && matrice !== derniereMatrice)
+      ? `<p class="canevas__matrice">▦ ${esc(((def.matrices || {})[matrice] || {}).titre || matrice)}</p>` : '';
+    derniereMatrice = matrice;
+    let rendu = '';
+    try { rendu = window.FormEngine ? FormEngine.renderFieldHtml(f, {}, optionsDApercu(def, f), def) : ''; }
+    catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
+    return `
+      ${enteteMatrice}
+      <div class="champ-bloc${ouvert ? ' est-ouvert' : ''}">
+        <div class="champ-bloc__barre">
+          <span class="champ-bloc__rang">${fi + 1}</span>
+          <span class="champ-bloc__nature">${esc(natureCourte(f))}</span>
+          ${marquesDeChamp(f)}
+          <span class="champ-bloc__espace"></span>
+          <button type="button" class="champ-bloc__action" title="${ouvert ? 'Fermer' : 'Configurer cette question'}"
+            onclick="App.choisir('${ouvert ? 'etape' : 'question'}', ${si}${ouvert ? '' : ', ' + fi})">${ouvert ? '✕' : '⚙'}</button>
+        </div>
+        <div class="champ-bloc__rendu" aria-hidden="true">${rendu}</div>
+        ${ouvert ? `<div class="champ-bloc__reglages">${renderFieldEditor(def, si, f, fi)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const reglagesEtape = selectionEst('etape', si)
+    ? `<div class="canevas__reglages">${renderSectionEditor(def, section, si)}</div>` : '';
+
+  return `
+    <div class="canevas__page">
+      <div class="canevas__entete">
+        <button type="button" class="canevas__titre${selectionEst('etape', si) ? ' est-actif' : ''}"
+          onclick="App.choisir('${selectionEst('etape', si) ? 'question' : 'etape'}', ${si}${selectionEst('etape', si) ? ', 0' : ''})"
+          title="Régler l’étape">${esc(section.label || 'Étape ' + (si + 1))} ⚙</button>
+        ${section.description ? `<p class="canevas__consigne">${esc(section.description)}</p>` : ''}
+      </div>
+      ${reglagesEtape}
+      ${blocs}
+      <button type="button" class="champ-bloc champ-bloc--ajout" onclick="App.addField(${si})">+ Ajouter une question</button>
+    </div>`;
+}
+
+/** Les options qu'un champ montre dans le canevas, sans aller chercher Grist. */
+function optionsDApercu(def, f) {
+  const statiques = def.choices[f.colId] || (f.options && f.options.choices) || null;
+  if (statiques && statiques.length) return statiques;
+  if (f.type === 'Ref' || f.type === 'RefList') return [{ value: '', label: '(lignes de ' + (resolveRefTableOfField(f) || 'la table liée') + ')' }];
+  return null;
 }
 
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
