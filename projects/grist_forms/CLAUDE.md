@@ -40,7 +40,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
 
-`node --test projects/grist_forms/tests/*.test.js` → **233 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **243 tests verts**
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
@@ -73,6 +73,31 @@ Trois choses mesurées qui commandent ces choix :
 Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
 `colId` : sans cela, les rangs et la précision d'une autre personne restaient
 dans la ligne.
+
+### Un canevas qu'on compose (05/10/2026)
+
+`widget: 'dessin'`, sur une colonne `Attachments`. **Ce n'est pas une
+illustration, c'est une reponse** : on demande d'entourer le desordre sur une
+photo, de croquer une implantation, de signer un constat.
+
+- **Le dessin est garde comme une liste de traits en coordonnees 0–1**, jamais
+  comme des pixels. Une annotation faite sur un telephone de 360 px doit se
+  retrouver au bon endroit sur l'image exportee, qui en fait 1200 ; le
+  formulaire se redessine a chaque reponse, et sans modele le croquis
+  disparaitrait au premier changement d'avis ; « annuler » ne s'improvise pas
+  sur des pixels.
+- **Le fond fait partie de l'image produite** : ce qui arrive dans la base est
+  ce que la personne a vu, pas un calque illisible sans son support.
+- **La signature n'est pas un croquis** : un seul geste (effacer), pas de
+  palette, cadre plus large que haut. `options.dessin.usage`.
+- **Le PNG est depose dans un champ fichier cache** (`DataTransfer`) : la
+  lecture, le plafond du nombre de pieces jointes et le televersement a l'envoi
+  restent ceux des fichiers, sans un cas de plus dans le moteur.
+- **Un canevas ne se remplit pas au clavier.** Le compositeur le dit : ne rendre
+  la question obligatoire que si la reponse peut aussi se donner autrement.
+
+Eprouve au banc puis en Grist reel le 05/10/2026 : a l'envoi, les colonnes
+`Attachments` recoivent bien leurs pieces jointes.
 
 ### Tracer une ligne, une surface (05/10/2026)
 

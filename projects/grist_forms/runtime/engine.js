@@ -820,6 +820,56 @@
     } catch (e) { return false; }
   }
 
+  /**
+   * Un canevas qu'on compose : annoter une photo, croquer, signer.
+   *
+   * > **Ce n'est pas une illustration, c'est une reponse.** Le dessin part en
+   * > piece jointe, comme une photo prise sur le terrain — le composant
+   * > (`shared/dessin.js`) produit un PNG, qu'on depose dans un champ fichier
+   * > cache. Tout le reste du chemin existe deja : `attachments.js` televerse
+   * > a l'envoi, et `readFieldValue` lit ce champ comme n'importe quel autre.
+   *
+   * Sans le composant, le champ fichier reste : on peut toujours joindre une
+   * photo annotee a la main. Une question ne devient pas impossible parce qu'un
+   * canevas ne s'est pas monte.
+   */
+  function renderDessin(field, value) {
+    var id = fieldId(field);
+    var o = (field && field.options) || {};
+    var d = o.dessin || {};
+    var noms = [];
+    if (Attachments.filesFromValue) {
+      noms = Attachments.filesFromValue(value).map(function (f) { return f.name; });
+    }
+    if (!noms.length && Attachments.idsFromValue) {
+      var ids = Attachments.idsFromValue(value);
+      if (ids.length) noms = ids.map(function (x) { return 'dessin #' + x; });
+    }
+    var etat = noms.length
+      ? '<p class="fr-hint-text fr-dessin__etat">' + escapeHtml(noms.join(', ')) + '</p>'
+      : '<p class="fr-hint-text fr-dessin__etat">' + escapeHtml(consigneDessin(d)) + '</p>';
+    return '<div class="fr-input-group fr-dessin-groupe" data-colid="' + escapeHtml(field.colId) +
+      '" data-widget="dessin">' +
+      renderLabel(field, id) +
+      '<div class="fr-dessin-hote" data-dessin-de="' + escapeHtml(field.colId) + '" ' +
+      'data-usage="' + escapeHtml(d.usage || 'croquis') + '" ' +
+      'data-fond="' + escapeHtml(d.fond || '') + '" ' +
+      'data-hauteur="' + escapeHtml(String(d.hauteur || '')) + '" ' +
+      'data-trait="' + escapeHtml(String(d.trait || '')) + '" ' +
+      'data-couleurs="' + escapeHtml(JSON.stringify(d.couleurs || null)) + '">' +
+      '<p class="fr-hint-text fr-dessin__attente">La zone de dessin s’affiche ici.</p></div>' +
+      '<input type="file" class="fr-dessin__fichier" id="' + id + '" name="' + escapeHtml(field.colId) +
+      '" accept="image/png" hidden />' +
+      etat + '</div>';
+  }
+
+  /** Ce qu'on attend de la personne, selon l'usage du canevas. */
+  function consigneDessin(d) {
+    if (d && d.usage === 'signature') return 'Signez dans le cadre, au doigt ou à la souris.';
+    if (d && d.fond) return 'Dessinez sur l’image pour montrer ce dont vous parlez.';
+    return 'Dessinez dans le cadre.';
+  }
+
   function renderFile(field, value) {
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
@@ -1044,7 +1094,8 @@
     file: function (f, v) { return renderFile(f, v); },
     ouinon: function (f, v) { return renderOuiNon(f, v); },
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
-    geo: function (f, v) { return renderGeo(f, v); }
+    geo: function (f, v) { return renderGeo(f, v); },
+    dessin: function (f, v) { return renderDessin(f, v); }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
@@ -1190,7 +1241,7 @@
       for (var i = 0; i < checkedBoxes.length; i++) arr.push(checkedBoxes[i].value);
       return arr;
     }
-    if (field.widget === 'file') {
+    if (field.widget === 'file' || field.widget === 'dessin') {
       // Deux champs peuvent porter ce nom : la selection de fichiers et la
       // prise de vue. On lit les deux.
       var selecteur = 'input[type="file"][name="' + field.colId + '"]';
@@ -1694,6 +1745,8 @@
 
     // Les cartes vivantes, par colonne : une carte ne se redessine pas.
     var cartes = {};
+    // Les dessins, par colonne : le modele survit au re-rendu, pas le canevas.
+    var dessins = {};
 
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
@@ -1701,6 +1754,7 @@
       brancherClassements(fields);
       brancherPositions();
       brancherCartes(fields);
+      brancherDessins();
       var inputs = rootEl.querySelectorAll('input, select, textarea');
       for (var i = 0; i < inputs.length; i++) {
         if (typeof inputs[i].addEventListener === 'function') {
@@ -1839,6 +1893,76 @@
      * l'ecran, et on la jette en quittant l'etape. Sans cela, chaque clic en
      * aurait recree une, et la position se serait perdue a chaque fois.
      */
+    /**
+     * Les canevas de dessin.
+     *
+     * > **Le formulaire se redessine a chaque reponse** — conditions, cascades,
+     * > filtres. Un canevas monte a l'instant d'avant est alors remplace par un
+     * > canevas vierge. Les traits sont donc gardes ici, dans leur modele
+     * > (fractions de 0 a 1), et remis au nouveau canevas : on ne perd pas son
+     * > croquis parce qu'on a change d'avis sur une case a cocher.
+     *
+     * Le fichier produit est depose dans le champ fichier cache par un
+     * `DataTransfer` : la lecture, le plafond du nombre de pieces jointes et le
+     * televersement a l'envoi restent ceux des fichiers, sans un cas de plus.
+     */
+    function brancherDessins() {
+      var hotes = rootEl.querySelectorAll('.fr-dessin-hote[data-dessin-de]');
+      for (var i = 0; i < hotes.length; i++) (function (hote) {
+        var colId = hote.getAttribute('data-dessin-de');
+        if (dessins[colId] && dessins[colId].hote === hote) return;
+        if (dessins[colId] && dessins[colId].vue) dessins[colId].vue.detruire();
+        var api = typeof window !== 'undefined' ? window.FormDessin : null;
+        if (!api || typeof api.monter !== 'function') return;
+        var couleurs = null;
+        try { couleurs = JSON.parse(hote.getAttribute('data-couleurs')); } catch (e) { couleurs = null; }
+        var garde = dessins[colId] || {};
+        api.monter(hote, {
+          usage: hote.getAttribute('data-usage'),
+          fond: hote.getAttribute('data-fond') || '',
+          hauteur: parseFloat(hote.getAttribute('data-hauteur')) || 0,
+          trait: parseFloat(hote.getAttribute('data-trait')) || 0,
+          couleurs: couleurs || null,
+          traits: garde.traits || [],
+          nom: colId,
+          libelle: 'Zone de dessin',
+          onChange: function (file, dataUrl, traits) {
+            var entree = dessins[colId] || {};
+            entree.traits = traits;
+            dessins[colId] = entree;
+            deposerFichier(colId, file);
+          }
+        }).then(function (vue) {
+          var attente = hote.querySelector('.fr-dessin__attente');
+          if (attente) attente.remove();
+          dessins[colId] = { hote: hote, vue: vue, traits: garde.traits || [] };
+          // Un dessin repris apres un re-rendu doit redeposer son fichier :
+          // le champ cache, lui, a bien ete recree vide.
+          if (garde.traits && garde.traits.length && vue.exporter) {
+            vue.exporter().then(function (res) { deposerFichier(colId, res.file); });
+          }
+        }).catch(function () {
+          var attente = hote.querySelector('.fr-dessin__attente');
+          if (attente) attente.textContent = 'La zone de dessin n’a pas pu être chargée.';
+        });
+      }(hotes[i]));
+    }
+
+    /** Poser un fichier produit dans le champ cache, comme s'il avait ete choisi. */
+    function deposerFichier(colId, file) {
+      var champ = rootEl.querySelector('input[type="file"][name="' + colId + '"]');
+      if (!champ) return;
+      try {
+        var dt = new DataTransfer();
+        if (file) dt.items.add(file);
+        champ.files = dt.files;
+      } catch (e) {
+        // Vieux navigateur sans DataTransfer : la valeur passe par l'etat.
+        values[colId] = file ? [file] : null;
+      }
+      values[colId] = file ? [file] : null;
+    }
+
     function brancherCartes(fields) {
       brancherCartesIllustrees();
       var hotes = rootEl.querySelectorAll('.fr-carte[data-carte-de]');

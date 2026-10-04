@@ -86,3 +86,24 @@ Résultat attendu après trois clics sur chaque carte :
     POINT (5.3984928 43.3035003)
     LINESTRING (5.3985286 43.3034857, 5.4036785 43.3016118, 5.3976703 43.2991132)
     POLYGON ((5.3985286 43.3034792, 5.4015327 43.3000437, 5.4041076 43.3034792, 5.3985286 43.3034792))
+
+## `dessin.html` — le canevas qu'on compose
+
+Trois canevas : un croquis libre, une annotation sur fond, une signature. La
+page expose `bancTrait(colId, points)` (points en fractions de 0 à 1) et
+`bancMontrer(colId)` (affiche l'image produite), et liste en bas ce que portent
+les champs fichier — c'est ce qui partira en pièce jointe.
+
+    https://localhost:8443/projects/grist_forms/tests/bancs/dessin.html
+
+### Mesuré le 05/10/2026
+
+Les trois canevas produisent un PNG dès le premier trait fini : ~33 Ko pour un
+croquis, ~20 Ko pour une signature. L'annotation **inclut son fond** — ce qui
+arrive dans la base est ce que la personne a vu, pas un calque d'annotations
+illisible sans son support.
+
+Éprouvé ensuite en Grist réel (document d'essai, formulaire publié, deux
+colonnes `Attachments`) : à l'envoi, `Z_Croquis` et `Z_Signature` reçoivent
+`["L", 2]` et `["L", 1]` — les pièces jointes sont bien téléversées par le
+chemin de `attachments.js`, sans un cas de plus.

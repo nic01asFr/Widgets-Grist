@@ -74,6 +74,8 @@
     // La carte ne pese rien tant qu'aucune question de lieu n'est posee :
     // le module ne charge MapLibre qu'au moment ou il monte une carte.
     var carteJs = bundles.carteJs || '';
+    // Le dessin, de meme : rien ne se charge tant qu'aucune question n'en pose.
+    var dessinJs = bundles.dessinJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -85,6 +87,7 @@
       attachmentsJs,
       sessionContextJs,
       carteJs,
+      dessinJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',

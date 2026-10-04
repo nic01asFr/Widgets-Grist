@@ -132,6 +132,13 @@ body {
   border-color: var(--blue-france);
 }
 .fr-btn--secondary:hover { background: #f0f0ff; }
+.fr-btn--tertiary {
+  background: transparent;
+  color: var(--blue-france);
+  border: 1px solid var(--bord);
+}
+.fr-btn--tertiary:hover { background: var(--grey-950); }
+.fr-btn--sm { min-height: 2rem; padding: 0.25rem 0.75rem; font-size: 0.875rem; }
 .fr-btn--tertiary-no-outline {
   color: var(--blue-france);
   background: transparent;
@@ -588,3 +595,54 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 /* Les memes regles dans l'apercu du compositeur. */
 .champ-bloc__rendu .fr-bandeau { margin: 0 0 0.75rem; }
 .champ-bloc__rendu .fr-accueil { padding-top: 0; }
+
+/* ---------------------------------------------------------------
+   Le canevas qu'on compose.
+
+   Ce n'est pas une illustration : la personne produit quelque chose,
+   et ce quelque chose part en piece jointe.
+   --------------------------------------------------------------- */
+.fr-dessin__planche {
+  position: relative;
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  background: var(--fond-carte);
+  overflow: hidden;
+}
+.fr-dessin__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Sans cela, le doigt fait defiler la page au lieu de tracer. */
+  touch-action: none;
+  cursor: crosshair;
+}
+.fr-dessin--signature .fr-dessin__planche { background: #fff; }
+.fr-dessin--signature .fr-dessin__toile { cursor: cell; }
+
+.fr-dessin__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.fr-dessin__palette { display: flex; gap: 0.35rem; }
+.fr-dessin__couleur {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--bord);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+.fr-dessin__couleur[aria-checked="true"] {
+  border-color: var(--encre);
+  box-shadow: 0 0 0 2px var(--fond-carte), 0 0 0 4px var(--encre);
+}
+.fr-dessin__barre .fr-btn[disabled] { opacity: 0.45; cursor: default; }
+.fr-dessin__etat { margin-top: 0.35rem; }
+
+/* Les mêmes règles dans l'aperçu du compositeur. */
+.champ-bloc__rendu .fr-dessin__planche { background: #fff; }
+.champ-bloc__rendu .fr-dessin__toile { touch-action: none; }

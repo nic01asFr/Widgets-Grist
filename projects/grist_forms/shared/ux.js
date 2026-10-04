@@ -33,6 +33,9 @@
     { key: 'radio', type: 'Choice', widget: 'radio', label: 'Choix en boutons' },
     { key: 'classement', type: 'Choice', widget: 'classement', kind: 'classement', label: 'Classement' },
     { key: 'geo', type: 'Text', widget: 'geo', kind: 'geometrie', label: 'Lieu (position)' },
+    // Un dessin arrive dans la base comme une photo : en piece jointe.
+    { key: 'dessin', type: 'Attachments', widget: 'dessin', label: 'Dessin / annotation' },
+    { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
     // La case a cocher reste disponible : une acceptation de conditions n'est
     // pas une question a deux reponses, c'est un accord qu'on donne ou non.
     { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Case à cocher' }

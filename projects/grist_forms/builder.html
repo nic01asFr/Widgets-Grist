@@ -1090,6 +1090,7 @@
 <script src="shared/attachments.js"></script>
 <script src="shared/session-context.js"></script>
 <script src="shared/carte-geometrie.js"></script>
+  <script src="shared/dessin.js"></script>
 <script src="runtime/engine.js"></script>
 <script src="shared/survey-project.js"></script>
 <script src="shared/ensure-schema.js"></script>
@@ -2760,6 +2761,37 @@ function renderReglagesSaisie(def, si, f, fi, isBind) {
       <p class="fr-hint-text">Sans réponse, Grist écrira « non » : une question qui doit distinguer « non » de « sans réponse » se pose en liste de choix.</p>`;
   }
 
+  // ── Dessin : ce qu'on demande de composer ──
+  if (f.widget === 'dessin') {
+    const d = o.dessin || {};
+    const usage = d.usage || 'croquis';
+    return `
+      <div class="fr-select-group">
+        <label class="fr-label" for="des-u-${si}-${fi}">Ce qu’on demande ${hintIcon('Une signature se fait d’un trait, en noir, dans un cadre large : ni palette, ni annulation. Un croquis se construit.')}</label>
+        <select class="fr-select" id="des-u-${si}-${fi}" onchange="App.onDessin(${si}, ${fi}, 'usage', this.value)">
+          <option value="croquis" ${usage === 'croquis' ? 'selected' : ''}>Un croquis, ou une annotation</option>
+          <option value="signature" ${usage === 'signature' ? 'selected' : ''}>Une signature</option>
+        </select>
+      </div>
+      ${usage === 'croquis' ? `
+      <div class="fr-input-group">
+        <label class="fr-label" for="des-f-${si}-${fi}">Fond à annoter ${hintIcon('Une photo, un plan, un schéma : la personne dessine dessus, et le fond part dans l’image. Laissez vide pour un canevas blanc.')}</label>
+        <input class="fr-input" id="des-f-${si}-${fi}" value="${esc(d.fond || '')}" placeholder="https://…"
+          onchange="App.onDessin(${si}, ${fi}, 'fond', this.value)">
+        <input class="fr-input fr-mt-1w" type="file" accept="image/*"
+          aria-label="Choisir un fond sur cet appareil"
+          onchange="App.onDessinFichier(${si}, ${fi}, this.files && this.files[0])">
+      </div>` : ''}
+      <div class="fr-input-group">
+        <label class="fr-label" for="des-h-${si}-${fi}">Hauteur du cadre (pixels)</label>
+        <input class="fr-input" id="des-h-${si}-${fi}" type="number" min="120" max="700" step="20"
+          value="${d.hauteur || (usage === 'signature' ? 180 : 320)}"
+          onchange="App.onDessin(${si}, ${fi}, 'hauteur', this.value)">
+      </div>
+      <p class="fr-hint-text">Le dessin part en pièce jointe, comme une photo. La colonne doit être de type <code>Attachments</code>.</p>
+      <p class="fr-hint-text">Un canevas ne se remplit pas au clavier : ne rendez cette question obligatoire que si la réponse peut aussi se donner autrement.</p>`;
+  }
+
   // ── Classement : combien de rangs, et ou ils vont ──
   if (f.kind === 'classement') {
     const rangs = o.rangs || (cols.rangs || []).length || 3;
@@ -3808,6 +3840,43 @@ function onFieldChoices(si, fi, text) {
   if (f.colId) S.currentDef.choices[f.colId] = list;
 }
 
+/** Ce que le canevas demande de composer. */
+function onDessin(si, fi, cle, valeur) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const d = f.options.dessin || (f.options.dessin = {});
+  marquerModifie();
+  if (cle === 'hauteur') {
+    const n = Number(valeur);
+    if (n > 0) d.hauteur = n; else delete d.hauteur;
+  } else if (cle === 'usage') {
+    d.usage = valeur;
+    // Une signature ne s'annote pas : le fond n'aurait plus de sens.
+    if (valeur === 'signature') delete d.fond;
+  } else {
+    if (valeur) d[cle] = String(valeur); else delete d[cle];
+  }
+  renderBuilder();
+}
+
+/**
+ * Un fond depose depuis l'appareil.
+ *
+ * Il part dans le FormDef en `data:`, comme l'illustration, et sous le meme
+ * plafond : la definition se recharge a chaque ouverture du formulaire.
+ */
+function onDessinFichier(si, fi, fichier) {
+  if (!fichier) return;
+  const PLAFOND = 400 * 1024;
+  if (fichier.size > PLAFOND) {
+    toast('Fond trop lourd (' + Math.round(fichier.size / 1024) + ' Ko). Réduisez-le, ou donnez son adresse.', 'error');
+    return;
+  }
+  const lecteur = new FileReader();
+  lecteur.onload = () => onDessin(si, fi, 'fond', String(lecteur.result || ''));
+  lecteur.readAsDataURL(fichier);
+}
+
 /** Quelle sorte d'illustration cette question porte. */
 function onIllustrationType(si, fi, type) {
   const f = S.currentDef.sections[si].fields[fi];
@@ -4707,20 +4776,23 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, engineJs, cssText] = await Promise.all([
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, engineJs, cssText] =
+      await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/attachments.js'),
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
+      fetchScriptSource('shared/dessin.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
         return r.text();
       })
     ]);
-    const fullHtml = Publish.buildRuntimeDocument(def, { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, engineJs, cssText });
+    const fullHtml = Publish.buildRuntimeDocument(def,
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -4787,6 +4859,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
+  onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
