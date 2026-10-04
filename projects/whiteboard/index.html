@@ -1257,13 +1257,37 @@ const TF = (function () {
         if (tools && tools.scrollWidth > tools.clientWidth + 1) return false;
         return !Array.prototype.some.call(host.querySelectorAll('.tf-seg'), s => s.scrollWidth > s.clientWidth + 1);
     }
-    // Modes essayes dans l'ordre : [outils compacts, haut compact (actions, navigation), deux lignes].
-    // Sur deux lignes, les outils (2e ligne) gardent leurs libelles tant qu'ils tiennent.
-    const HEADER_MODES = [[false, false, false], [true, true, false], [false, false, true], [false, true, true], [true, true, true]];
+    // Etat de la barre : { tools: outils en icones, top: actions et navigation en icones, bare: titre sans texte, two: deux lignes }.
     function applyMode(host, m) {
-        host.classList.toggle('hz-compact', m[0]);
-        host.classList.toggle('hz-top', m[1]);
-        host.classList.toggle('hz-two', m[2]);
+        host.classList.toggle('hz-compact', !!m.tools);
+        host.classList.toggle('hz-top', !!m.top);
+        host.classList.toggle('hz-bare', !!m.bare);
+        host.classList.toggle('hz-two', !!m.two);
+    }
+    // Decisions INDEPENDANTES par zone, a largeur egale le meme comportement dans tous les widgets :
+    //  1. une ligne ? sans compaction, puis toute compactee ;
+    //  2. sinon deux lignes : la ligne du haut se compacte (icones, puis titre sans texte) SEULEMENT si elle deborde,
+    //     et les outils (2e ligne) se compactent SEULEMENT s'ils ne tiennent pas dans leur ligne.
+    const ONE_ROW = [{}, { top: true }, { tools: true, top: true }];
+    const TOP_LEVELS = [{}, { top: true }, { top: true, bare: true }];
+    function topFits(host, view) {
+        if (host.scrollWidth > host.clientWidth + 1) return false;
+        if (view && view.scrollWidth > view.clientWidth + 1) return false;
+        return !Array.prototype.some.call(host.querySelectorAll('.hz-view .tf-seg'), s => s.scrollWidth > s.clientWidth + 1);
+    }
+    function chooseMode(host) {
+        const view = host.querySelector('.hz-view');
+        const tools = host.querySelector('.hz-tools');
+        // Le champ de recherche doit etre a sa place DANS le mode essaye, sinon la mesure est fausse
+        // (absent de la barre, tout « tient » ; remis en place, plus rien ne tient : la barre clignotait).
+        const essai = (m) => { placeSearch(host, !!m.tools); applyMode(host, m); };
+        for (const m of ONE_ROW) { essai(m); if (headerFits(host, view, tools)) return m; }
+        let top = TOP_LEVELS[TOP_LEVELS.length - 1];
+        for (const t of TOP_LEVELS) { essai(Object.assign({ two: true }, t)); if (topFits(host, view)) { top = t; break; } }
+        const deux = Object.assign({ two: true }, top);
+        essai(deux);
+        if (tools && tools.scrollWidth > tools.clientWidth + 1) { deux.tools = true; essai(deux); }
+        return deux;
     }
     function fitHeader(host) {
         host = host || (typeof document !== 'undefined' ? document.getElementById('tfHeader') : null);
@@ -1273,18 +1297,7 @@ const TF = (function () {
         if (actif && actif.matches && actif.matches('.search-box input') && host.contains(actif)) return;
         fitHeader.busy = true;
         try {
-            const view = host.querySelector('.hz-view');
-            const tools = host.querySelector('.hz-tools');
-            let chosen = HEADER_MODES.length - 1;
-            for (let i = 0; i < HEADER_MODES.length; i++) {
-                // Le champ de recherche doit etre a sa place DANS le mode essaye, sinon la mesure est fausse
-                // (absent de la barre, tout « tient » ; remis en place, plus rien ne tient : la barre clignotait).
-                placeSearch(host, HEADER_MODES[i][0]);
-                applyMode(host, HEADER_MODES[i]);
-                if (headerFits(host, view, tools)) { chosen = i; break; }
-            }
-            placeSearch(host, HEADER_MODES[chosen][0]);
-            applyMode(host, HEADER_MODES[chosen]);
+            chooseMode(host);
             syncSearchState(host);
         } finally {
             fitHeader.busy = false;

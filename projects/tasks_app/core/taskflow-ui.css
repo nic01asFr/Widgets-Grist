@@ -289,6 +289,7 @@ textarea { line-height: 1.45; }
 .header.hz-compact .hz-tools .btn-label { display: none; }
 .header.hz-compact .hz-tools .filter-btn, .header.hz-compact .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
 .header.hz-compact .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
+.header.hz-bare .hz-title-text, .header.hz-bare .hz-title h1 { display: none; }
 .header.hz-top .hz-actions .btn-label, .header.hz-top .period-nav .btn-label { display: none; }
 .header.hz-top .hz-actions .btn:not(.icon-btn), .header.hz-top .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
 
