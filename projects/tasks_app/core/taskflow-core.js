@@ -48,6 +48,44 @@ const TF = (function () {
     const DONE_HINT = /^\s*(?:termin[ée]e?s?|clos(?:e|es)?|cl[oô]tur[ée]e?s?|fini(?:e|s|es)?|achev[ée]e?s?|livr[ée]e?s?|r[ée]alis[ée]e?s?|compl[eè]t(?:e|es|[ée]e?s?)?|valid[ée]e?s?|done|closed|finished|completed?|delivered)(?![a-zà-ÿ])/i;
     const DEAD_HINT = /^\s*(?:annul[ée]e?s?|abandonn[ée]e?s?|rejet[ée]e?s?|cancel(?:l?ed)?|caduc(?:que|s|ques)?|rejected|abandoned)(?![a-zà-ÿ])/i;
 
+    /* ----- Dates --------------------------------------------------------------
+     * Une colonne Date de Grist stocke des SECONDES a MINUIT UTC. Les widgets
+     * ecrivaient minuit LOCAL (22:00 UTC la veille en France : la table Grist
+     * affichait un jour de moins) et la fiche lisait en UTC (un jour de moins
+     * aussi). Convention unique ici :
+     *   - ecriture canonique : minuit UTC du jour calendaire local choisi ;
+     *   - lecture tolerante : une valeur multiple de 86400 est un jour UTC
+     *     (canonique) ; toute autre valeur est un ancien instant ecrit par les
+     *     widgets, lu comme avant en jour calendaire LOCAL. Aucune migration
+     *     n'est necessaire et les documents existants s'affichent a l'identique. */
+    function gristToDate(ts) {
+        if (ts == null || ts === '') return null;
+        const n = Number(ts);
+        if (!isFinite(n) || !n) return null;
+        if (n % 86400 === 0) { const u = new Date(n * 1000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); }
+        const l = new Date(n * 1000);
+        return new Date(l.getFullYear(), l.getMonth(), l.getDate());
+    }
+    function dateToGrist(d) {
+        if (!d || isNaN(d.getTime())) return null;
+        return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 1000;
+    }
+    // Numero de jour (depuis 1970) du jour calendaire d'une valeur Grist, quelle que soit sa convention.
+    function dayNum(ts) {
+        const d = gristToDate(ts);
+        return d ? Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) : null;
+    }
+    function todayGrist() { return dateToGrist(new Date()); }
+    // 'AAAA-MM-JJ' <-> Date locale (valeur des <input type="date">), sans decalage de fuseau.
+    function isoDate(d) {
+        if (!d || isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function parseISODate(s) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+        return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+    }
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -278,8 +316,8 @@ const TF = (function () {
             if (!charges.length) continue;
             const s = t.dateDebut, e = t.dateEcheance;
             if (s == null || e == null) continue;
-            const day0 = Math.floor((s * 1000) / 86400000);
-            const day1 = Math.floor((e * 1000) / 86400000);
+            const day0 = dayNum(s);
+            const day1 = dayNum(e);
             const nDays = Math.max(day1 - day0 + 1, 1);
             for (const c of charges) {
                 const perDay = (Number(c.heures) || 0) / nDays;
@@ -326,7 +364,7 @@ const TF = (function () {
         for (const t of (tasks || [])) {
             const charges = getCharges ? getCharges(t) : parseCharges(t && t.charges);
             if (!charges.length || t.dateDebut == null || t.dateEcheance == null) continue;
-            const d0 = Math.floor((t.dateDebut * 1000) / 86400000), d1 = Math.floor((t.dateEcheance * 1000) / 86400000);
+            const d0 = dayNum(t.dateDebut), d1 = dayNum(t.dateEcheance);
             const days = [];
             for (let dd = d0; dd <= d1; dd++) { if (workdays) { const wd = new Date(dd * 86400000).getUTCDay(); if (wd < 1 || wd > 5) continue; } days.push(dd); }
             if (!days.length) days.push(d0);
@@ -404,6 +442,12 @@ const TF = (function () {
         isDone: isDone,
         isDead: isDead,
         isLive: isLive,
+        gristToDate: gristToDate,
+        dateToGrist: dateToGrist,
+        dayNum: dayNum,
+        todayGrist: todayGrist,
+        isoDate: isoDate,
+        parseISODate: parseISODate,
         colorModeLabel: colorModeLabel,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
