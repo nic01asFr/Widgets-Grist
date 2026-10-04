@@ -826,6 +826,16 @@
         .sel-btn.danger { background: rgba(196,69,54,0.12); border-color: rgba(196,69,54,0.35); color: var(--accent); }
         .sel-btn.danger:hover { background: rgba(196,69,54,0.22); }
         .sel-count { font-family: var(--mono); font-size: 11px; opacity: 0.85; }
+        /* La barre de sélection se compacte selon la largeur de la CARTE, pas de la fenêtre : rail, module et fiche la rétrécissent, et la barre
+           (chaque libellé sur une ligne) débordait de sa capsule. Du moins utile au plus utile : « Désélectionner », puis « Tout », puis le
+           point ; le libellé s'abrège par une ellipse plutôt que de pousser les boutons dehors. */
+        .map-frame { container-type: inline-size; container-name: carte; }
+        .selection-bar { overflow: hidden; }
+        .selection-bar #sel-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .selection-bar > .sel-btn, .selection-bar > .sel-count, .selection-bar > .vsep, .selection-bar > .sel-dot { flex-shrink: 0; }
+        @container carte (max-width: 760px) { .selection-bar #sel-clear { display: none; } }
+        @container carte (max-width: 600px) { .selection-bar #sel-all { display: none; } .selection-bar .vsep { display: none; } }
+        @container carte (max-width: 460px) { .selection-bar .sel-dot { display: none; } .selection-bar { padding-left: 12px; } }
 
         /* Selection box (shift-drag) */
         .selection-box {
@@ -1229,8 +1239,11 @@
         .contexte-choix.on { border-color: var(--accent); background: var(--surface-muted); }
         .contexte-choix:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
         .contexte-nom { font-weight: 600; font-size: 13px; }
-        .contexte-ligne { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
-        .contexte-tournee-ico { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: 11.5px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+        /* Un titre long revient à la ligne dans sa colonne ; la longueur de la tournée reste d'un bloc, alignée sur la PREMIÈRE ligne. */
+        .contexte-choix { justify-content: center; }
+        .contexte-ligne { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; min-width: 0; }
+        .contexte-nom { min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+        .contexte-tournee-ico { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; white-space: nowrap; font-size: 11.5px; line-height: 1.3; padding-top: 1px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
         .contexte-choix.on .contexte-tournee-ico { color: var(--accent); }
         .contexte-aide { font-size: 11.5px; color: var(--muted); }
         .contexte-consigne { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 12.5px; line-height: 1.45; max-height: 110px; overflow-y: auto; overscroll-behavior: contain; }
@@ -1379,6 +1392,10 @@
             bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
         }
         body:not(.mobile-layout) #story-present { bottom: var(--etage-bas); }
+        /* Légende au ras du bas : quand la carte est assez large, elle se pose sur la ligne du cartouche d'attribution (à sa gauche) au lieu
+           de s'empiler au-dessus. Les deux partagent la même distance au bord. Pendant le récit, la bulle prend cette ligne : rien ne change. */
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout) .legend { bottom: 8px; }
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0 8px 8px 0; }
         /* Côte à côte : la bulle se centre dans ce que la légende laisse libre.
            Avec `left`, `right` et des marges automatiques, `max-width` la
            ramène à 520 px et le reste se répartit de part et d'autre. */
@@ -2056,6 +2073,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004j"></script>
+    <script type="module" src="./app_v7.js?v=20261004m"></script>
 </body>
 </html>

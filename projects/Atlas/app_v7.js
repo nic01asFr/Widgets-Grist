@@ -240,10 +240,11 @@ import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from '.
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
+  legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=20260911b';
+} from './lib/habillage-carte.js?v=20261004a';
 import {
   createDefaultViewerControls,
   getViewerControl,
@@ -7863,6 +7864,11 @@ function majEtageCarte() {
         mobile: document.body.classList.contains('mobile-layout'),
     });
     document.body.classList.toggle('etage-cote-a-cote', cote);
+    document.body.classList.toggle('legende-au-ras', legendeAuRas({
+        largeurCarte: frame.clientWidth,
+        mobile: document.body.classList.contains('mobile-layout'),
+        enRecit: _storyPresenting,
+    }));
     if (_storyPresenting) mesurerEtageRecit();
     majBandeauInfos();
 }
@@ -14221,8 +14227,9 @@ function decisionPour(layer) {
         enSaisie: coucheEnSaisie(layer),
         distant: !!layer?._distant,
         enPresentation: _storyPresenting,
-        // Les saisies d'une étape ou d'un contexte ouvrent la fiche pour saisir : en Lecture la saisie est fermée, la bulle est la bonne vue.
-        saisiesEtape: coucheDansSaisiesEtape(layer) && !!CONFIG.peutSaisir,
+        // Les saisies d'une étape ou d'un contexte ouvrent la fiche pour saisir. Pas en Lecture (la saisie est fermée : la bulle est la bonne vue),
+        // ni pendant une tournée : chaque ouvrage s'y ouvre par sa bulle, d'où l'on choisit de le traiter (« Nouvelle visite ») ou d'y aller (« Itinéraire »).
+        saisiesEtape: coucheDansSaisiesEtape(layer) && !!CONFIG.peutSaisir && !tourneeEnCours(),
     });
 }
 

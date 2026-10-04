@@ -8,6 +8,8 @@ import {
   ETAGE,
   largeurMinCoteACote,
   etageCoteACote,
+  largeurMinLegendeAuRas,
+  legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
@@ -119,5 +121,23 @@ describe('pastilleLocalisationRequise — sur mobile seulement', () => {
   it('absente quand le navigateur ne sait pas localiser', () => {
     assert.equal(pastilleLocalisationRequise({ mobile: true, geolocalisation: false }), false);
     assert.equal(pastilleLocalisationRequise(), false);
+  });
+});
+
+describe('legendeAuRas — la légende sur la ligne du cartouche d\u2019attribution', () => {
+  it('le seuil : marge + légende + gouttière + attribution dépliée + marge', () => {
+    assert.equal(largeurMinLegendeAuRas(), 24 + 220 + 16 + 500 + 24);
+  });
+  it('oui quand la carte est assez large, non en dessous', () => {
+    const seuil = largeurMinLegendeAuRas();
+    assert.equal(legendeAuRas({ largeurCarte: seuil }), true);
+    assert.equal(legendeAuRas({ largeurCarte: seuil - 1 }), false);
+    assert.equal(legendeAuRas({ largeurCarte: 1400 }), true);
+  });
+  it('jamais sur mobile, jamais pendant le récit, jamais sans mesure', () => {
+    assert.equal(legendeAuRas({ largeurCarte: 1400, mobile: true }), false);
+    assert.equal(legendeAuRas({ largeurCarte: 1400, enRecit: true }), false);
+    assert.equal(legendeAuRas({}), false);
+    assert.equal(legendeAuRas({ largeurCarte: NaN }), false);
   });
 });
