@@ -78,6 +78,35 @@
     .app-bar { flex-wrap: wrap; }
     .app-bar__etat { order: -1; }
   }
+  /* Pleine largeur : le widget occupe le panneau que Grist lui donne. Les
+     écrans qui ne sont pas l'atelier gardent une colonne de lecture. */
+  .app-main { padding: 0.7rem; }
+  .builder-step { max-width: 64rem; margin-inline: auto; }
+  #builder.builder-step { max-width: none; padding: 0; border: none; background: none; }
+
+  /* Le panneau d'une question : des blocs, et ce qu'ils permettent en une phrase. */
+  .panneau__fil {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.8rem; color: var(--encre-douce, #666);
+    border-bottom: 1px solid var(--grey-950, #eee); padding-bottom: 0.5rem; margin-bottom: 0.9rem;
+  }
+  .panneau__fil-espace { flex: 1 1 auto; }
+  .panneau__nav {
+    font: inherit; font-size: 1rem; line-height: 1; cursor: pointer;
+    border: 1px solid var(--grey-925, #e5e5e5); background: transparent; color: inherit;
+    border-radius: 5px; padding: 0.15rem 0.5rem;
+  }
+  .panneau__nav[disabled] { opacity: 0.35; cursor: default; }
+  .bloc { border-top: 1px solid var(--grey-950, #eee); padding-top: 0.9rem; margin-top: 0.9rem; }
+  .bloc:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .bloc__titre {
+    font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--encre-douce, #666); margin: 0 0 0.6rem; display: flex; align-items: center; gap: 0.4rem;
+  }
+  .bloc__duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; }
+  .structure__marque { font-size: 0.7rem; color: var(--blue-france, #000091); flex: 0 0 auto; }
+  .structure__question.est-actif .structure__marque { color: #fff; }
+
   /* ── L'atelier : structure | question | aperçu ─────────────────────────
      Mesuré avant : 34 357 px de haut, 45 écrans, 709 contrôles d'un coup.
      Les trois zones défilent chacune pour elle-même ; sur écran étroit, elles
@@ -672,7 +701,7 @@
   </details>
 </header>
 
-<main class="fr-container fr-my-2w">
+<main class="app-main">
   <section id="forms-list" class="builder-step"><p class="fr-text--sm">Chargement…</p></section>
   <section id="builder" class="builder-step" hidden></section>
   <section id="preview" class="builder-step" hidden></section>
@@ -1736,6 +1765,7 @@ function renderStructure(def) {
       const actif = selectionEst('question', si, fi) ? ' est-actif' : '';
       return `<button type="button" class="structure__question${actif}" onclick="App.choisir('question', ${si}, ${fi})">
         <span class="structure__intitule">${esc(f.label || f.colId || 'Sans libellé')}</span>
+        ${marquesDeChamp(f)}
         <span class="structure__nature">${esc(natureCourte(f))}</span>
       </button>`;
     }).join('');
@@ -1759,6 +1789,22 @@ function renderStructure(def) {
     <button type="button" class="structure__titre structure__titre--bout${selectionEst('fin') ? ' est-actif' : ''}" onclick="App.choisir('fin')">Fin</button>
     <div class="structure__pied">${renderCibleEtMode(def)}</div>
   `;
+}
+
+/**
+ * Ce qui pèse sur une question, en marques : obligatoire, conditionnelle, liée
+ * à une autre, groupée en matrice. On voit d'un coup d'œil où sont les
+ * enchaînements, sans ouvrir une à une les soixante questions.
+ */
+function marquesDeChamp(f) {
+  const m = [];
+  if (f.required) m.push('<span class="structure__marque" title="Réponse obligatoire">●</span>');
+  if (f.condition) m.push('<span class="structure__marque" title="Ne s’affiche que sous condition">⤳</span>');
+  if ((f.cascade && f.cascade.parentField) || (f.dynamicFilter && f.dynamicFilter.parentField)) {
+    m.push('<span class="structure__marque" title="Sa liste dépend d’une autre réponse">⇄</span>');
+  }
+  if (f.options && f.options.matrice) m.push('<span class="structure__marque" title="Groupée en matrice">▦</span>');
+  return m.join('');
 }
 
 /** Ce qu'est une question, en deux mots, pour se repérer dans la structure. */
@@ -2320,6 +2366,14 @@ function renderSectionEditor(def, section, si) {
   `;
 }
 
+/**
+ * Le panneau d'une question, rangé par intention plutôt qu'en liste de réglages.
+ *
+ * Quatre blocs, dans l'ordre où l'on se pose les questions : ce que le public
+ * voit, où la réponse se range, quand la question s'affiche, et ce qu'elle
+ * propose. Chaque bloc dit en une phrase ce qu'il permet — c'est par là qu'on
+ * découvre ce que l'outil sait faire, sans lire une documentation.
+ */
 function renderFieldEditor(def, si, f, fi) {
   const isBind = def.composeMode === 'bind';
   const isChoiceLike = f.type === 'Choice' || f.type === 'ChoiceList';
@@ -2348,85 +2402,121 @@ function renderFieldEditor(def, si, f, fi) {
     `<option value="${esc(c.colId)}" ${(f.options && f.options.visibleCol) === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`
   ).join('');
 
-  const badges = [];
-  if (f.condition) badges.push(`<span class="cfg-badge cond">${esc(FormUx.summarizeCondition(f.condition))}</span>`);
-  if (f.cascade && f.cascade.parentField) badges.push(`<span class="cfg-badge cascade">Cascade ← ${esc(f.cascade.parentField)}</span>`);
-  if (f.dynamicFilter && f.dynamicFilter.parentField) {
-    const dynLabel = f.dynamicFilter.parentResolve === 'refRow' && f.dynamicFilter.parentValueColumn
-      ? `${f.dynamicFilter.parentField}.${f.dynamicFilter.parentValueColumn}`
-      : f.dynamicFilter.parentField;
-    badges.push(`<span class="cfg-badge dynamic">Filtre ← ${esc(dynLabel)}</span>`);
-  }
+  const section = def.sections[si];
+  const nb = (section.fields || []).length;
+  const echelle = f.kind === 'echelle' ? ((f.options && f.options.echelle) || '') : '';
+  const matrice = f.kind === 'echelle' ? ((f.options && f.options.matrice) || '') : '';
+  const echelleOpts = Object.keys(def.echelles || {}).map(k =>
+    `<option value="${esc(k)}" ${echelle === k ? 'selected' : ''}>${esc(k)}</option>`).join('');
+  const matriceOpts = Object.keys(def.matrices || {}).map(k =>
+    `<option value="${esc(k)}" ${matrice === k ? 'selected' : ''}>${esc((def.matrices[k] || {}).titre || k)}</option>`).join('');
 
   return `
     <div class="field-editor">
-      <div class="field-editor__head">
-        <input class="inline-label" value="${esc(f.label)}"
-          placeholder="Libellé de la question"
-          aria-label="Libellé de la question"
-          oninput="App.onFieldInput(${si}, ${fi}, 'label', this.value)"
-          onblur="App.onFieldLabelBlur(${si}, ${fi})">
-        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer" onclick="App.removeField(${si}, ${fi})">🗑</button>
+      <div class="panneau__fil">
+        <button type="button" class="panneau__nav" ${fi > 0 ? `onclick="App.choisir('question', ${si}, ${fi - 1})"` : 'disabled'} title="Question précédente">‹</button>
+        <span>Question ${fi + 1} sur ${nb}</span>
+        <button type="button" class="panneau__nav" ${fi < nb - 1 ? `onclick="App.choisir('question', ${si}, ${fi + 1})"` : 'disabled'} title="Question suivante">›</button>
+        <span class="panneau__fil-espace"></span>
+        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer la question" onclick="App.removeField(${si}, ${fi})">🗑</button>
       </div>
-      ${renderFieldPreview(f, si, fi)}
-      <div class="field-props">
-        ${isBind ? `
-          <div class="fr-input-group"><label class="fr-label">Colonne</label>
-          <input class="fr-input" list="cols-datalist" value="${esc(f.colId)}" onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)"></div>
-        ` : ''}
-        <div class="fr-select-group"><label class="fr-label">Type</label>
-        <select class="fr-select" onchange="App.onFieldTypeKeyChange(${si}, ${fi}, this.value)">
-          ${simpleOpts}
-          <optgroup label="Avancé">${advancedOpts}</optgroup>
-        </select></div>
-        <div class="fr-checkbox-group"><input type="checkbox" id="req-${si}-${fi}" ${f.required ? 'checked' : ''} onchange="App.onFieldInput(${si}, ${fi}, 'required', this.checked)">
-        <label class="fr-label" for="req-${si}-${fi}">Requis</label></div>
-      </div>
-      <div class="badge-row">${badges.join('')}</div>
 
-      ${isChoiceLike ? `
-        <div class="fr-input-group"><label class="fr-label">Options (une par ligne)</label>
-        <textarea class="fr-input" rows="3" oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(choicesValue)}</textarea></div>
-      ` : ''}
-
-      ${isRefLike ? `
-        <div class="fr-grid-row fr-grid-row--gutters fr-mt-1w">
-          <div class="fr-col-12 fr-col-md-6">
-            <div class="fr-select-group"><label class="fr-label">Table liée</label>
-            <select class="fr-select" onchange="App.onFieldRefTable(${si}, ${fi}, this.value)"><option value="">—</option>${refTableOptions}</select></div>
-          </div>
-          <div class="fr-col-12 fr-col-md-6">
-            <div class="fr-select-group"><label class="fr-label">Colonne affichée</label>
-            <select class="fr-select" onchange="App.onFieldVisibleCol(${si}, ${fi}, this.value)">
-              <option value="">Nom (défaut)</option>${visibleColOpts}
-            </select></div>
-          </div>
+      <section class="bloc">
+        <h4 class="bloc__titre">Ce que le public voit ${hintIcon('La phrase que lit la personne qui répond. Écrivez une question, pas un nom de colonne : « Les espaces publics sont agréables » plutôt que « EP_Agreables (1–5) ».')}</h4>
+        <div class="fr-input-group">
+          <label class="fr-label" for="lab-${si}-${fi}">Question posée</label>
+          <input class="fr-input" id="lab-${si}-${fi}" value="${esc(f.label)}"
+            placeholder="Ce que lit la personne qui répond"
+            oninput="App.onFieldInput(${si}, ${fi}, 'label', this.value)"
+            onblur="App.onFieldLabelBlur(${si}, ${fi})">
         </div>
-        ${f.type === 'Ref' ? renderRefBehaviorPanels(def, si, fi, f, refParents, dynParents, filterColOpts, resolveRefTableOfField(f)) : ''}
-      ` : ''}
+        <div class="fr-input-group">
+          <label class="fr-label" for="desc-${si}-${fi}">Consigne</label>
+          <input class="fr-input" id="desc-${si}-${fi}" value="${esc(f.description || '')}"
+            placeholder="Précision affichée sous la question (facultatif)"
+            oninput="App.onFieldInput(${si}, ${fi}, 'description', this.value)">
+        </div>
+        <div class="fr-checkbox-group">
+          <input type="checkbox" id="req-${si}-${fi}" ${f.required ? 'checked' : ''}
+            onchange="App.onFieldInput(${si}, ${fi}, 'required', this.checked)">
+          <label class="fr-label" for="req-${si}-${fi}">Réponse obligatoire</label>
+        </div>
+        ${renderFieldPreview(f, si, fi)}
+      </section>
 
-      ${renderConditionEditor('field', si, fi, f.condition, prior)}
+      <section class="bloc">
+        <h4 class="bloc__titre">Où la réponse se range ${hintIcon('Chaque question écrit dans une colonne Grist. Le type décide de ce que la colonne accepte, et de la façon de répondre.')}</h4>
+        <div class="bloc__duo">
+          <div class="fr-select-group"><label class="fr-label" for="type-${si}-${fi}">Type de réponse</label>
+            <select class="fr-select" id="type-${si}-${fi}" onchange="App.onFieldTypeKeyChange(${si}, ${fi}, this.value)">
+              ${simpleOpts}
+              <optgroup label="Avancé">${advancedOpts}</optgroup>
+            </select>
+          </div>
+          ${isBind ? `
+            <div class="fr-input-group"><label class="fr-label" for="col-${si}-${fi}">Colonne</label>
+              <input class="fr-input" id="col-${si}-${fi}" list="cols-datalist" value="${esc(f.colId)}"
+                onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)">
+            </div>` : `
+            <div class="fr-input-group"><label class="fr-label" for="col-${si}-${fi}">Nom de la colonne</label>
+              <input class="fr-input" id="col-${si}-${fi}" value="${esc(f.colId)}"
+                onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)">
+            </div>`}
+        </div>
 
-      <details class="json-preview">
-        <summary>Technique</summary>
-        <div class="fr-grid-row fr-grid-row--gutters fr-mt-1w">
-          ${!isBind ? `
-            <div class="fr-col-12 fr-col-md-6">
-              <div class="fr-input-group"><label class="fr-label">colId</label>
-              <input class="fr-input" value="${esc(f.colId)}" onchange="App.onFieldColIdChange(${si}, ${fi}, this.value)"></div>
+        ${isChoiceLike ? `
+          <div class="fr-input-group">
+            <label class="fr-label" for="opt-${si}-${fi}">Options proposées ${hintIcon('Une par ligne. Elles deviennent les choix de la colonne dans Grist.')}</label>
+            <textarea class="fr-input" id="opt-${si}-${fi}" rows="4"
+              oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(choicesValue)}</textarea>
+          </div>` : ''}
+
+        ${f.kind === 'echelle' ? `
+          <div class="bloc__duo">
+            <div class="fr-select-group"><label class="fr-label" for="ech-${si}-${fi}">Échelle ${hintIcon('Les bornes et les mots qui disent ce que valent les extrémités. Plusieurs questions peuvent partager la même.')}</label>
+              <select class="fr-select" id="ech-${si}-${fi}" onchange="App.onFieldOption(${si}, ${fi}, 'echelle', this.value)">${echelleOpts}</select>
             </div>
-          ` : ''}
-          <div class="fr-col-12 fr-col-md-6">
-            <div class="fr-select-group"><label class="fr-label">Widget</label>
-            <select class="fr-select" onchange="App.onFieldInput(${si}, ${fi}, 'widget', this.value)">${widgetOptions}</select></div>
+            <div class="fr-select-group"><label class="fr-label" for="mat-${si}-${fi}">Regroupée avec ${hintIcon('Les questions d’une même matrice sont posées ensemble, sous une seule question et une seule échelle.')}</label>
+              <select class="fr-select" id="mat-${si}-${fi}" onchange="App.onFieldOption(${si}, ${fi}, 'matrice', this.value)">
+                <option value="">Aucune</option>${matriceOpts}
+              </select>
+            </div>
+          </div>` : ''}
+
+        ${isRefLike ? `
+          <div class="bloc__duo">
+            <div class="fr-select-group"><label class="fr-label">Table liée</label>
+              <select class="fr-select" onchange="App.onFieldRefTable(${si}, ${fi}, this.value)"><option value="">—</option>${refTableOptions}</select>
+            </div>
+            <div class="fr-select-group"><label class="fr-label">Colonne affichée ${hintIcon('Ce que la personne lit dans la liste : le nom de la ligne, plutôt que son identifiant.')}</label>
+              <select class="fr-select" onchange="App.onFieldVisibleCol(${si}, ${fi}, this.value)">
+                <option value="">Nom (défaut)</option>${visibleColOpts}
+              </select>
+            </div>
+          </div>` : ''}
+
+        <details class="json-preview">
+          <summary>Technique</summary>
+          <div class="fr-select-group fr-mt-1w"><label class="fr-label">Contrôle de saisie</label>
+            <select class="fr-select" onchange="App.onFieldInput(${si}, ${fi}, 'widget', this.value)">${widgetOptions}</select>
           </div>
-        </div>
-      </details>
+        </details>
+      </section>
+
+      <section class="bloc">
+        <h4 class="bloc__titre">Quand elle s’affiche ${hintIcon('Une question peut dépendre d’une réponse précédente. Sans condition, elle est toujours posée. Les conditions ne remplacent pas les droits Grist : elles cachent, elles ne protègent pas.')}</h4>
+        ${renderConditionEditor('field', si, fi, f.condition, prior)}
+      </section>
+
+      ${isRefLike && f.type === 'Ref' ? `
+        <section class="bloc">
+          <h4 class="bloc__titre">Ce qu’elle propose ${hintIcon('La liste peut se restreindre selon une réponse précédente : la commune d’une région choisie, les contacts d’un même service.')}</h4>
+          ${renderRefBehaviorPanels(def, si, fi, f, refParents, dynParents, filterColOpts, resolveRefTableOfField(f))}
+        </section>` : ''}
     </div>
   `;
 }
 
-// ── Handlers de mutation d'état (App.*) ──────────────────────────────────
 function onDefInput(prop, value) {
   S.currentDef[prop] = value;
   if (prop === 'title' && S.currentDef.composeMode === 'ensureSchema' && S.autoTable) {
