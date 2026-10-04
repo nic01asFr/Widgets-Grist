@@ -526,7 +526,7 @@ aggregateDates(t)     // min(starts descendants), max(ends descendants)
 | Métrique | Règle si `hasChildren(t)` |
 |----------|---------------------------|
 | Progression | **Auto-calculée** (moyenne pondérée par `estimationH` si dispo, sinon simple) — jamais persistée |
-| Dates | **Stockées explicitement** (l'utilisateur peut vouloir réserver une plage plus large que les enfants) — bouton "Ajuster aux bornes des sous-tâches" à venir |
+| Dates | **Stockées explicitement**, mais la parente **suit ses sous-tâches** (`TF.parentSpanUpdates`, appelé à chaque changement de dates d'une tâche : fiche des 3 widgets, glisser du Gantt) : parente « serrée » (dates = bornes des enfants) = elle suit leurs nouvelles bornes dans les deux sens ; parente à plage volontairement plus large = elle ne s'agrandit que si un enfant la dépasse. Remonte de proche en proche ; les tâches qui dépendent de la parente sont décalées si besoin (Gantt). Suppression, création et changement de parent ne la recalculent pas. |
 | Assignés | **Pas d'agrégation** — le parent peut avoir son propriétaire distinct |
 
 ### Schéma (additif, rétrocompatible)

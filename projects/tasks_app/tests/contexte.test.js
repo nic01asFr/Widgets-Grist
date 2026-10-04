@@ -228,3 +228,53 @@ describe('coherence debut / echeance de la fiche', () => {
         assert.deepEqual(r.patch, { dateEcheance: 150 * J });
     });
 });
+
+describe('tache parente : elle suit ses sous-taches', () => {
+    const J = 86400;
+    const t = (id, d, e, parentTask) => ({ id, dateDebut: d * J, dateEcheance: e * J, parentTask: parentTask || null });
+    // Dev (1) serree sur ses trois enfants 2, 3, 4
+    const base = () => [t(1, 10, 30), t(2, 10, 14, 1), t(3, 15, 22, 1), t(4, 23, 30, 1)];
+
+    it('une parente serree suit le debut de son premier enfant, reculé ou avancé', () => {
+        const l = base(); l[1].dateDebut = 12 * J; l[1].dateEcheance = 16 * J;            // enfant 2 decale de 2 jours
+        const r = TF.parentSpanUpdates(l, 2, { dateDebut: 10 * J, dateEcheance: 14 * J });
+        assert.deepEqual(r, [{ id: 1, dateDebut: 12 * J, dateEcheance: 30 * J }]);
+        const l2 = base(); l2[1].dateDebut = 8 * J;                                        // avance
+        assert.deepEqual(TF.parentSpanUpdates(l2, 2, { dateDebut: 10 * J, dateEcheance: 14 * J }), [{ id: 1, dateDebut: 8 * J, dateEcheance: 30 * J }]);
+    });
+    it('une parente serree suit la fin de son dernier enfant', () => {
+        const l = base(); l[3].dateEcheance = 35 * J;
+        assert.deepEqual(TF.parentSpanUpdates(l, 4, { dateDebut: 23 * J, dateEcheance: 30 * J }), [{ id: 1, dateDebut: 10 * J, dateEcheance: 35 * J }]);
+    });
+    it('une parente a la plage volontairement plus large ne bouge pas tant que les enfants y tiennent', () => {
+        const l = base(); l[0].dateDebut = 5 * J; l[0].dateEcheance = 40 * J;             // reservee plus large
+        l[1].dateDebut = 12 * J;
+        assert.deepEqual(TF.parentSpanUpdates(l, 2, { dateDebut: 10 * J, dateEcheance: 14 * J }), []);
+    });
+    it('une parente large s\'agrandit si un enfant la depasse', () => {
+        const l = base(); l[0].dateDebut = 5 * J; l[0].dateEcheance = 40 * J;
+        l[3].dateEcheance = 45 * J;
+        assert.deepEqual(TF.parentSpanUpdates(l, 4, { dateDebut: 23 * J, dateEcheance: 30 * J }), [{ id: 1, dateDebut: 5 * J, dateEcheance: 45 * J }]);
+    });
+    it('remonte de proche en proche jusqu\'a la racine', () => {
+        // 1 > 2 > 3 ; tout serre
+        const l = [t(1, 10, 20), t(2, 10, 20, 1), t(3, 10, 20, 2)];
+        l[2].dateEcheance = 25 * J;
+        const r = TF.parentSpanUpdates(l, 3, { dateDebut: 10 * J, dateEcheance: 20 * J });
+        assert.deepEqual(r.map(x => x.id), [2, 1]);
+        assert.ok(r.every(x => x.dateEcheance === 25 * J));
+    });
+    it('sans parente, ou sans dates chez les enfants, ou sans etat precedent : rien d\'invente', () => {
+        assert.deepEqual(TF.parentSpanUpdates([t(1, 10, 20)], 1, { dateDebut: 1, dateEcheance: 2 }), []);
+        const l = base(); l[1].dateDebut = null; l[1].dateEcheance = null; l[2].dateDebut = null; l[2].dateEcheance = null; l[3].dateDebut = null; l[3].dateEcheance = null;
+        assert.deepEqual(TF.parentSpanUpdates(l, 2, { dateDebut: 10 * J, dateEcheance: 14 * J }), []);
+        const l3 = base(); l3[1].dateDebut = 12 * J;
+        assert.deepEqual(TF.parentSpanUpdates(l3, 2, null), [], 'sans etat precedent la parente est traitee comme large : elle ne rétrécit pas');
+    });
+    it('ne modifie pas la liste recue', () => {
+        const l = base(); l[1].dateDebut = 12 * J;
+        const copie = JSON.stringify(l);
+        TF.parentSpanUpdates(l, 2, { dateDebut: 10 * J, dateEcheance: 14 * J });
+        assert.equal(JSON.stringify(l), copie);
+    });
+});

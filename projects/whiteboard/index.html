@@ -941,6 +941,50 @@ const TF = (function () {
         const span = od > 0 && oe >= od ? oe - od : 0;
         return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
     }
+    // Une tache parente suit ses sous-taches. Apres le changement de dates de la tache `changedId`, retourne les mises a
+    // jour [{ id, dateDebut, dateEcheance }] a ecrire sur ses ascendantes (de proche en proche) :
+    //   - parente « serree » avant le changement (ses dates = bornes de ses sous-taches) : elle SUIT les nouvelles bornes,
+    //     dans les deux sens ;
+    //   - parente a la plage volontairement plus large : elle ne s'agrandit que si une sous-tache la depasse.
+    // list = taches APRES le changement ; prev = { dateDebut, dateEcheance } de la tache avant le changement
+    // (a defaut, la parente est traitee comme large). Ne modifie pas list.
+    function parentSpanUpdates(list, changedId, prev) {
+        const after = (list || []).map(t => Object.assign({}, t));
+        const before = (list || []).map(t => Object.assign({}, t));
+        const byA = new Map(after.map(t => [t.id, t]));
+        const cb = before.find(t => t.id === changedId);
+        if (cb && prev) { cb.dateDebut = prev.dateDebut; cb.dateEcheance = prev.dateEcheance; }
+        const byB = new Map(before.map(t => [t.id, t]));
+        const num = (v) => (Number(v) > 0 ? Number(v) : 0);
+        const span = (arr, pid) => {
+            let s = 0, e = 0;
+            arr.forEach(k => {
+                if (k.parentTask !== pid) return;
+                const ks = num(k.dateDebut) || num(k.dateEcheance), ke = num(k.dateEcheance) || ks;
+                if (!ks) return;
+                if (!s || ks < s) s = ks;
+                if (!e || ke > e) e = ke;
+            });
+            return s ? { start: s, end: e } : null;
+        };
+        const out = [];
+        let cur = byA.get(changedId), guard = 0;
+        while (cur && cur.parentTask && guard++ < 64) {
+            const p = byA.get(cur.parentTask);
+            if (!p) break;
+            const sa = span(after, p.id);
+            if (!sa) break;
+            const sb = span(before, p.id);
+            const pb = byB.get(p.id) || p;
+            const tight = !!sb && !!prev && num(pb.dateDebut) === sb.start && num(pb.dateEcheance) === sb.end;
+            const ps = num(p.dateDebut), pe = num(p.dateEcheance);
+            const ns = (tight || !ps) ? sa.start : Math.min(ps, sa.start);
+            const ne = (tight || !pe) ? sa.end : Math.max(pe, sa.end);
+            if (ns !== ps || ne !== pe) { p.dateDebut = ns; p.dateEcheance = ne; out.push({ id: p.id, dateDebut: ns, dateEcheance: ne }); }
+            cur = p;
+        }
+        return out;
+    }
     // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
     const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
     function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
@@ -1983,6 +2027,7 @@ const TF = (function () {
         deleteConfirmHtml: deleteConfirmHtml,
         completionPatch: completionPatch,
         datesPatch: datesPatch,
+        parentSpanUpdates: parentSpanUpdates,
         reopenValue: reopenValue,
         statusKnown: statusKnown,
         gristToDate: gristToDate,

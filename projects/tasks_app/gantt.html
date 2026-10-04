@@ -1261,6 +1261,50 @@
                 const span = od > 0 && oe >= od ? oe - od : 0;
                 return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
             }
+            // Une tache parente suit ses sous-taches. Apres le changement de dates de la tache `changedId`, retourne les mises a
+            // jour [{ id, dateDebut, dateEcheance }] a ecrire sur ses ascendantes (de proche en proche) :
+            //   - parente « serree » avant le changement (ses dates = bornes de ses sous-taches) : elle SUIT les nouvelles bornes,
+            //     dans les deux sens ;
+            //   - parente a la plage volontairement plus large : elle ne s'agrandit que si une sous-tache la depasse.
+            // list = taches APRES le changement ; prev = { dateDebut, dateEcheance } de la tache avant le changement
+            // (a defaut, la parente est traitee comme large). Ne modifie pas list.
+            function parentSpanUpdates(list, changedId, prev) {
+                const after = (list || []).map(t => Object.assign({}, t));
+                const before = (list || []).map(t => Object.assign({}, t));
+                const byA = new Map(after.map(t => [t.id, t]));
+                const cb = before.find(t => t.id === changedId);
+                if (cb && prev) { cb.dateDebut = prev.dateDebut; cb.dateEcheance = prev.dateEcheance; }
+                const byB = new Map(before.map(t => [t.id, t]));
+                const num = (v) => (Number(v) > 0 ? Number(v) : 0);
+                const span = (arr, pid) => {
+                    let s = 0, e = 0;
+                    arr.forEach(k => {
+                        if (k.parentTask !== pid) return;
+                        const ks = num(k.dateDebut) || num(k.dateEcheance), ke = num(k.dateEcheance) || ks;
+                        if (!ks) return;
+                        if (!s || ks < s) s = ks;
+                        if (!e || ke > e) e = ke;
+                    });
+                    return s ? { start: s, end: e } : null;
+                };
+                const out = [];
+                let cur = byA.get(changedId), guard = 0;
+                while (cur && cur.parentTask && guard++ < 64) {
+                    const p = byA.get(cur.parentTask);
+                    if (!p) break;
+                    const sa = span(after, p.id);
+                    if (!sa) break;
+                    const sb = span(before, p.id);
+                    const pb = byB.get(p.id) || p;
+                    const tight = !!sb && !!prev && num(pb.dateDebut) === sb.start && num(pb.dateEcheance) === sb.end;
+                    const ps = num(p.dateDebut), pe = num(p.dateEcheance);
+                    const ns = (tight || !ps) ? sa.start : Math.min(ps, sa.start);
+                    const ne = (tight || !pe) ? sa.end : Math.max(pe, sa.end);
+                    if (ns !== ps || ne !== pe) { p.dateDebut = ns; p.dateEcheance = ne; out.push({ id: p.id, dateDebut: ns, dateEcheance: ne }); }
+                    cur = p;
+                }
+                return out;
+            }
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
@@ -2303,6 +2347,7 @@
                 deleteConfirmHtml: deleteConfirmHtml,
                 completionPatch: completionPatch,
                 datesPatch: datesPatch,
+                parentSpanUpdates: parentSpanUpdates,
                 reopenValue: reopenValue,
                 statusKnown: statusKnown,
                 gristToDate: gristToDate,
@@ -2685,6 +2730,19 @@
         function getBlockedTasks(taskId) { return tasks.filter(t => getDependsOnArray(t).includes(taskId)); }
         
         // GANTT-06: Propagation des dates aux tâches dépendantes
+        // Les taches parentes suivent leurs sous-taches (voir TF.parentSpanUpdates). Appliquer apres le changement de dates de
+        // `changedId` (deja ecrit dans `tasks`) ; prev = ses dates d'avant. Retourne les mises a jour a ecrire : parentes ajustees
+        // puis taches qui dependent d'elles (decalees si besoin).
+        function parentSpanCascade(changedId, prev) {
+            const ups = TF.parentSpanUpdates(tasks, changedId, prev);
+            const all = ups.slice();
+            ups.forEach(u => {
+                const t = tasks.find(x => x.id === u.id);
+                if (t) { t.dateDebut = u.dateDebut; t.dateEcheance = u.dateEcheance; }
+            });
+            ups.forEach(u => propagateDependencyDates(u.id).forEach(c => all.push(c)));
+            return all;
+        }
         function propagateDependencyDates(changedTaskId, visited = new Set()) {
             if (visited.has(changedTaskId)) return []; // Protection contre les cycles
             visited.add(changedTaskId);
@@ -3955,6 +4013,9 @@
         function updateField(field, value, noSave) {
             const data = panelState.editData;
             if (!data) return;
+            if (field === 'dateDebut' || field === 'dateEcheance') {   // dates d'avant (syncLocalTask les ecrase), pour que la tache parente suive
+                if (!panelState.datesBefore) { const lt = tasks.find(x => x.id === panelState.taskId); if (lt) panelState.datesBefore = { id: lt.id, dateDebut: lt.dateDebut, dateEcheance: lt.dateEcheance }; }
+            }
 
             let datesFix = null;
             if (field === 'dateDebut' || field === 'dateEcheance') {
@@ -4205,8 +4266,10 @@
                 // Dates modifiees dans la fiche : memes regles que le glisser sur la timeline (taches dependantes decalees).
                 let cascade = [];
                 if (panelState.datesTouched && idx !== -1) {
+                    const prev = (panelState.datesBefore && panelState.datesBefore.id === panelState.taskId) ? panelState.datesBefore : { dateDebut: tasks[idx].dateDebut, dateEcheance: tasks[idx].dateEcheance };
+                    panelState.datesBefore = null;
                     tasks[idx] = { ...tasks[idx], ...record };   // la propagation lit la nouvelle echeance
-                    cascade = propagateDependencyDates(panelState.taskId);
+                    cascade = propagateDependencyDates(panelState.taskId).concat(parentSpanCascade(panelState.taskId, prev));
                     cascade.forEach(u => actions.push(['UpdateRecord', 'Tasks', u.id, { dateDebut: u.dateDebut, dateEcheance: u.dateEcheance }]));
                 }
                 await grist.docApi.applyUserActions(actions);
@@ -4381,6 +4444,7 @@
             else if (dragState.type === 'resize-right') newEnd = addDays(dragState.originalEnd, daysDelta);
             else if (dragState.type === 'resize-left') newStart = addDays(dragState.originalStart, daysDelta);
 
+            const prevDates = { dateDebut: task.dateDebut, dateEcheance: task.dateEcheance };
             task.dateDebut = dateToGrist(newStart);
             task.dateEcheance = dateToGrist(newEnd);
 
@@ -4397,7 +4461,7 @@
             }
 
             // GANTT-06: Propager les changements aux tâches dépendantes
-            const cascadeUpdates = propagateDependencyDates(task.id);
+            const cascadeUpdates = propagateDependencyDates(task.id).concat(parentSpanCascade(task.id, prevDates));
 
             if (gristReady) {
                 try {
