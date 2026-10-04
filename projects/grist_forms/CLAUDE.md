@@ -32,14 +32,62 @@ projects/grist_forms/
 │   ├── formulaires-table.js
 │   └── publish.js
 ├── tests/
+│   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
 ├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
 ```
 
-## État — **v1 + phase 2 + audience** (2026-07-27)
+## État — **v1 + phase 2 + audience + les saisies de l'enquête** (2026-10-04)
 
-`node --test projects/grist_forms/tests/*.test.js` → **82 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **208 tests verts**
+
+### Les quatre saisies qui manquaient (04/10/2026)
+
+L'enquête du 4ᵉ arrondissement — 61 questions, prise comme pierre de touche —
+en demandait quatre que le moteur ne savait pas rendre. Elles ne sont pas des
+variantes d'affichage : chacune **range sa réponse ailleurs que dans la colonne
+qui porte son nom**, et c'est `options.colonnes` qui le dit.
+
+| Saisie | `widget` / `kind` | Où va la réponse |
+|---|---|---|
+| Oui / Non en deux boutons | `widget: 'ouinon'` | la colonne `Bool` |
+| « Autre : … » | `kind: 'choix_autre'` | la liste reçoit « Autre », le texte va dans `colonnes.autre` |
+| Cases plafonnées | `options.maxSelected` | la colonne `ChoiceList` |
+| Classement | `widget: 'classement'`, `kind: 'classement'` | un rang par colonne, `colonnes.rangs` |
+| Lieu | `widget: 'geo'`, `kind: 'geometrie'` | le WKT dans une colonne texte |
+
+Trois choses mesurées qui commandent ces choix :
+
+- **Une valeur hors-liste est conservée par Grist, mais encadrée en rouge.**
+  C'est pourquoi « Autre » est une option de la liste, et la précision une
+  colonne à part. En mode liaison, le compositeur vérifie que la colonne
+  propose bien le mot, et offre de l'y ajouter.
+- **Grist ne sait pas vider un `Bool`** : sans réponse, un oui/non écrit
+  « non ». Une question qui doit distinguer « non » de « sans réponse » se
+  pose en liste de choix.
+- **Une `ChoiceList` conserve l'ordre**, ce qui permettrait d'y ranger un
+  classement ; l'enquête préfère une colonne par rang, et c'est le FormDef qui
+  tranche.
+
+Une question cachée vide aussi les colonnes qu'elle ne nomme pas par son
+`colId` : sans cela, les rangs et la précision d'une autre personne restaient
+dans la ligne.
+
+### Le compositeur, après l'essai en Grist réel (04/10/2026)
+
+- **Trois colonnes, trois rôles nommés** : *Parcours* (les étapes), *Aperçu*
+  (le formulaire tel que le public le verra), *Réglages* (le sujet de l'action,
+  dit en toutes lettres). « Étape 1 » s'affichait trois fois, du même poids.
+- **La colonne se choisit dans une liste**, et ses options sont celles de la
+  colonne — montrées en lecture seule, jamais retapées. Les colonnes calculées
+  et `manualSort` ne sont pas proposées : on ne peut pas y écrire.
+- **Quitter un formulaire modifié se demande** (`S.dirty` servait à rien).
+- **Le plan du formulaire** (menu ⋯) montre les 61 questions d'un coup.
+- **L'aperçu se regarde en téléphone** : c'est là que le public répondra.
+- **Le harnais E2E a quitté le widget** (`tests/e2e-hook.js`, chargé sur
+  `?e2e=1`) : il écoute les messages du parent, il n'a rien à faire dans un
+  formulaire en service.
 
 ### Livré
 - Wizard Créer / Brancher ; templates (Satisfaction = chemin recontact)
