@@ -168,6 +168,8 @@
         /* GANTT-04: Label externe pour barres étroites */
         .gantt-bar-external-label { position: absolute; left: 100%; margin-left: 6px; font-size: var(--fs-xs); font-weight: 500; color: var(--text); white-space: nowrap; pointer-events: none; }
         .gantt-bar.narrow-bar .gantt-bar-label { display: none; }
+        /* Titre trop long pour la barre : coupe avec « … » (le conteneur est un flex, text-overflow ne s'applique qu'a l'element texte). */
+        .gantt-bar-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .gantt-bar:not(.narrow-bar) .gantt-bar-external-label { display: none; }
 
         /* Milestones */
@@ -1244,6 +1246,19 @@
             }
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
+            // Coherence debut / echeance dans la fiche : une echeance ne precede jamais le debut. A appeler AVANT d'ecrire la
+            // nouvelle valeur (data = tache en cours d'edition, value = nouvelle date Grist). Retourne null si rien a corriger,
+            // sinon { patch, message } : changer le debut au-dela de l'echeance decale l'echeance (duree conservee) ; ramener
+            // l'echeance avant le debut l'aligne sur le debut.
+            function datesPatch(data, field, value) {
+                if (!data || (field !== 'dateDebut' && field !== 'dateEcheance')) return null;
+                const d = Number(field === 'dateDebut' ? value : data.dateDebut), e = Number(field === 'dateEcheance' ? value : data.dateEcheance);
+                if (!(d > 0) || !(e > 0) || e >= d) return null;
+                if (field === 'dateEcheance') return { patch: { dateEcheance: d }, message: 'L’échéance ne peut pas précéder le début : elle est alignée sur le début.' };
+                const od = Number(data.dateDebut), oe = Number(data.dateEcheance);
+                const span = od > 0 && oe >= od ? oe - od : 0;
+                return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
+            }
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
@@ -2285,6 +2300,7 @@
                 deletePlan: deletePlan,
                 deleteConfirmHtml: deleteConfirmHtml,
                 completionPatch: completionPatch,
+                datesPatch: datesPatch,
                 reopenValue: reopenValue,
                 statusKnown: statusKnown,
                 gristToDate: gristToDate,
@@ -3019,7 +3035,9 @@
             const search = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
             let html;
             if (hasFilters) {
-                html = '<div class="tf-empty"><span class="tf-empty-glyph">'+search+'</span><div class="tf-empty-title">Aucune tâche ne correspond</div><div class="tf-empty-sub">Aucune tâche planifiée ne passe la recherche ou les filtres actifs.</div><button class="tf-empty-btn" onclick="clearAllGanttFilters()">Tout effacer</button></div>';
+                // Avec des filtres actifs, la barre « Filtres actifs » (au-dessus) porte deja « Tout effacer » : pas de second bouton.
+                const parFiltres = filters.project.length || filters.assignee.length || filters.priority.length || filters.status.length;
+                html = '<div class="tf-empty"><span class="tf-empty-glyph">'+search+'</span><div class="tf-empty-title">Aucune tâche ne correspond</div><div class="tf-empty-sub">' + (parFiltres ? 'Aucune tâche planifiée ne passe les filtres actifs : retirez-en un ci-dessus.' : 'Aucune tâche planifiée ne correspond à la recherche.') + '</div>' + (parFiltres ? '' : '<button class="tf-empty-btn" onclick="clearAllGanttFilters()">Effacer la recherche</button>') + '</div>';
             } else {
                 html = '<div class="tf-empty"><span class="tf-empty-glyph">'+gicon+'</span><div class="tf-empty-title">Aucune tâche à planifier</div><div class="tf-empty-sub">Créez une première tâche avec des dates pour la voir apparaître sur la timeline.</div><button class="tf-empty-btn primary" onclick="openCreatePanel()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle tâche</button></div>';
             }
@@ -3914,14 +3932,17 @@
             const data = panelState.editData;
             if (!data) return;
 
+            let datesFix = null;
             if (field === 'dateDebut' || field === 'dateEcheance') {
                 value = value ? dateToGrist(TF.parseISODate(value)) : null;
                 panelState.datesTouched = true;   // la sauvegarde decalera les taches dependantes
+                datesFix = TF.datesPatch(data, field, value);
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
             if (field === 'statut' || field === 'progression') Object.assign(data, TF.completionPatch(statusCfg, data, { [field]: value }));
 
             data[field] = value;
+            if (datesFix) { Object.assign(data, datesFix.patch); showToast(datesFix.message, 'info'); }
 
             if (field === 'type' && value === 'jalon' && data.dateDebut) {
                 data.dateEcheance = data.dateDebut;

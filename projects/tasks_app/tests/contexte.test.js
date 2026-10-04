@@ -206,3 +206,25 @@ describe('rattachement a Tasks', () => {
         assert.equal(await TF.relinkToTasks(g), false); assert.equal(g.actions.length, 0);
     });
 });
+
+describe('coherence debut / echeance de la fiche', () => {
+    const J = 86400;
+    it('rien a corriger quand l\'ordre est respecte ou qu\'une date manque', () => {
+        assert.equal(TF.datesPatch({ dateDebut: 100 * J, dateEcheance: 110 * J }, 'dateEcheance', 120 * J), null);
+        assert.equal(TF.datesPatch({ dateDebut: 100 * J, dateEcheance: null }, 'dateDebut', 130 * J), null);
+        assert.equal(TF.datesPatch({ dateDebut: 100 * J, dateEcheance: 110 * J }, 'titre', 5), null);
+    });
+    it('une echeance avant le debut est alignee sur le debut', () => {
+        const r = TF.datesPatch({ dateDebut: 100 * J, dateEcheance: 110 * J }, 'dateEcheance', 90 * J);
+        assert.deepEqual(r.patch, { dateEcheance: 100 * J });
+        assert.match(r.message, /ne peut pas précéder/);
+    });
+    it('un debut apres l\'echeance decale l\'echeance en gardant la duree', () => {
+        const r = TF.datesPatch({ dateDebut: 100 * J, dateEcheance: 110 * J }, 'dateDebut', 150 * J);
+        assert.deepEqual(r.patch, { dateEcheance: 160 * J });
+    });
+    it('sans debut precedent, le nouveau debut au-dela de l\'echeance donne une tache d\'un jour', () => {
+        const r = TF.datesPatch({ dateDebut: null, dateEcheance: 110 * J }, 'dateDebut', 150 * J);
+        assert.deepEqual(r.patch, { dateEcheance: 150 * J });
+    });
+});

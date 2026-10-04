@@ -90,6 +90,9 @@ Un seul état par **document** et par navigateur, lu et écrit par tous les widg
 - **Position** du Gantt et du Calendrier (`TF.ctx.pos`) : mémorisée 12 h puis retour sur aujourd'hui.
 - **Rattachement à Tasks** : `TF.relinkToTasks(grist)`, appelé en fin de `ensureSchema` quand Tasks vient d'être créée, réécrit `tableRef` de la section (métadonnées, vérifié en réel directement et via le lanceur) si une seule section personnalisée est liée à la table par défaut vide. Sinon rien. L'iframe redémarre ; `TF.consumeRelinkNotice()` affiche l'avis. Piège : ne jamais le rappeler au démarrage (boucle de rechargements).
 - Vue enregistrée **par widget** (n°87, deux Gantt sur deux projets) : pas faite. Elle passerait par les options de la section (`setOptions`, donc « Enregistrer ») ; priorité de lecture envisagée : vue de la section > contexte commun > défauts.
+- **Dates de la fiche** : `TF.datesPatch(data, field, value)` (appelé par `updateField` des trois widgets avant d'écrire) garantit qu'une échéance ne précède jamais le début : début repoussé au-delà de l'échéance = échéance décalée (durée conservée) ; échéance avant le début = alignée sur le début, avec un avis.
+- **Calendrier, vues semaine / 5 jours / 2 semaines** : pas de grille horaire (les tâches n'ont pas d'heure) ; la zone « Jour » occupe toute la hauteur. 7 et 5 jours utilisent les mêmes cartes que le mois (`buildBarContent`, niveau `full`) ; 2 semaines reste en barres fines.
+- **Info-bulle « i »** : une bulle flottante unique sur le body (`.tf-tip-float`), recadrée dans la fenêtre ; ne plus utiliser `::after` (coupé par les conteneurs défilants). **Liste déroulante de la fiche** (`.multi-select`) : `TF.ui.placeDropdown(el)` à appeler après l'ouverture (ouvre vers le haut si le bas de la zone visible la couperait).
 - Tests : `tests/contexte.test.js` (stockage factice partagé entre « widgets »).
 
 ### Rafraîchissement de secours et tri d'affichage

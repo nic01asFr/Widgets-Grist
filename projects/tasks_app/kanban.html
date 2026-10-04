@@ -1159,6 +1159,19 @@
             }
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
+            // Coherence debut / echeance dans la fiche : une echeance ne precede jamais le debut. A appeler AVANT d'ecrire la
+            // nouvelle valeur (data = tache en cours d'edition, value = nouvelle date Grist). Retourne null si rien a corriger,
+            // sinon { patch, message } : changer le debut au-dela de l'echeance decale l'echeance (duree conservee) ; ramener
+            // l'echeance avant le debut l'aligne sur le debut.
+            function datesPatch(data, field, value) {
+                if (!data || (field !== 'dateDebut' && field !== 'dateEcheance')) return null;
+                const d = Number(field === 'dateDebut' ? value : data.dateDebut), e = Number(field === 'dateEcheance' ? value : data.dateEcheance);
+                if (!(d > 0) || !(e > 0) || e >= d) return null;
+                if (field === 'dateEcheance') return { patch: { dateEcheance: d }, message: 'L’échéance ne peut pas précéder le début : elle est alignée sur le début.' };
+                const od = Number(data.dateDebut), oe = Number(data.dateEcheance);
+                const span = od > 0 && oe >= od ? oe - od : 0;
+                return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
+            }
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
@@ -2200,6 +2213,7 @@
                 deletePlan: deletePlan,
                 deleteConfirmHtml: deleteConfirmHtml,
                 completionPatch: completionPatch,
+                datesPatch: datesPatch,
                 reopenValue: reopenValue,
                 statusKnown: statusKnown,
                 gristToDate: gristToDate,
@@ -3127,10 +3141,12 @@
             const data = panelState.editData;
             if (!data) return;
             // BUG-01 FIX: Utiliser parseInputDate pour éviter problèmes de timezone
-            if (field === 'dateDebut' || field === 'dateEcheance') value = value ? dateToGrist(parseInputDate(value)) : null;
+            let datesFix = null;
+            if (field === 'dateDebut' || field === 'dateEcheance') { value = value ? dateToGrist(parseInputDate(value)) : null; datesFix = TF.datesPatch(data, field, value); }
             // dateCloture auto : posee quand on passe au statut terminal, effacee si on rouvre
             if (field === 'statut' || field === 'progression') Object.assign(data, TF.completionPatch(statusCfg, data, { [field]: value }));
             data[field] = value;
+            if (datesFix) { Object.assign(data, datesFix.patch); showToast(datesFix.message, 'info'); renderPanelTask(); }
             if (field === 'type' && value === 'jalon' && data.dateDebut) data.dateEcheance = data.dateDebut;
             
             // Synchroniser le task local pour affichage immédiat

@@ -163,7 +163,9 @@
         /* Week View */
         .week-grid { flex: 1; display: none; overflow-y: auto; overflow-x: hidden; background: var(--card-bg); }
         .week-grid.active { display: block; }
-        .week-sticky { position: sticky; top: 0; z-index: 10; background: var(--card-bg); }
+        /* Les taches n'ont pas d'heure : pas de grille horaire, la zone « Jour » (colonnes cliquables) occupe toute la hauteur. */
+        .week-sticky { position: sticky; top: 0; z-index: 10; background: var(--card-bg); min-height: 100%; display: flex; flex-direction: column; }
+        .week-sticky .week-allday { flex: 1; }
         .week-header { display: grid; grid-template-columns: 50px repeat(7, 1fr); background: var(--bg); border-bottom: 1px solid var(--border); }
         .week-header-cell { padding: 8px 4px; text-align: center; border-right: 1px solid var(--border); }
         .week-header-cell:last-child { border-right: none; }
@@ -187,21 +189,14 @@
         .week-event-bar.p2 { background: linear-gradient(135deg, var(--warning), #fbbf24); }
         .week-event-bar.p3 { background: linear-gradient(135deg, var(--info), #60a5fa); }
         .week-event-bar.p4 { background: linear-gradient(135deg, var(--text-muted), #94a3b8); }
+        .week-event-bar.rich { height: 62px; flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 3px 7px; white-space: normal; border-radius: 6px; }
         .week-event-bar.milestone { background: transparent !important; box-shadow: none; color: var(--text); }
         .week-event-bar.milestone::before { content: '◆'; margin-right: 3px; font-size: var(--fs-xs); }
         .week-event-bar.milestone.p1::before { color: var(--danger); }
         .week-event-bar.milestone.p2::before { color: var(--warning); }
         .week-event-bar.milestone.p3::before { color: var(--info); }
         .week-event-bar.milestone.p4::before { color: var(--text-muted); }
-        .week-event-bar.done { opacity: 0.5; }
-        .week-timeline { display: grid; grid-template-columns: 50px repeat(7, 1fr); }
-        .week-hours { border-right: 1px solid var(--border); background: var(--bg); }
-        .week-hour-label { height: 48px; padding: 0 6px; font-size: var(--fs-2xs); color: var(--text-muted); text-align: right; display: flex; align-items: flex-start; justify-content: flex-end; padding-top: 2px; }
-        .week-day-column { border-right: 1px solid var(--border); position: relative; }
-        .week-day-column:last-child { border-right: none; }
-        .week-day-column.weekend { background: var(--weekend-bg); }
-        .week-hour-slot { height: 48px; border-bottom: 1px solid var(--border); cursor: crosshair; position: relative; transition: background 0.1s; }
-        .week-hour-slot:hover { background: rgba(79, 70, 229, 0.05); }
+        .week-event-bar.done { opacity: 0.5; }
 
         /* Year View */
         .year-grid { flex: 1; display: none; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; overflow-y: auto; background: var(--bg); }
@@ -1275,6 +1270,19 @@
             }
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
+            // Coherence debut / echeance dans la fiche : une echeance ne precede jamais le debut. A appeler AVANT d'ecrire la
+            // nouvelle valeur (data = tache en cours d'edition, value = nouvelle date Grist). Retourne null si rien a corriger,
+            // sinon { patch, message } : changer le debut au-dela de l'echeance decale l'echeance (duree conservee) ; ramener
+            // l'echeance avant le debut l'aligne sur le debut.
+            function datesPatch(data, field, value) {
+                if (!data || (field !== 'dateDebut' && field !== 'dateEcheance')) return null;
+                const d = Number(field === 'dateDebut' ? value : data.dateDebut), e = Number(field === 'dateEcheance' ? value : data.dateEcheance);
+                if (!(d > 0) || !(e > 0) || e >= d) return null;
+                if (field === 'dateEcheance') return { patch: { dateEcheance: d }, message: 'L’échéance ne peut pas précéder le début : elle est alignée sur le début.' };
+                const od = Number(data.dateDebut), oe = Number(data.dateEcheance);
+                const span = od > 0 && oe >= od ? oe - od : 0;
+                return { patch: { dateEcheance: d + span }, message: 'Échéance décalée pour conserver la durée.' };
+            }
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
             const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
             function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
@@ -2316,6 +2324,7 @@
                 deletePlan: deletePlan,
                 deleteConfirmHtml: deleteConfirmHtml,
                 completionPatch: completionPatch,
+                datesPatch: datesPatch,
                 reopenValue: reopenValue,
                 statusKnown: statusKnown,
                 gristToDate: gristToDate,
@@ -3173,7 +3182,9 @@
             tasksInPeriod.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
 
             const lanes = [];
-            const maxLanes = 6;
+            const maxLanes = 12;
+            const rich = numDays <= 7;      // 7 ou 5 jours : colonnes assez larges pour une carte complete
+            const step = rich ? 66 : 22;    // hauteur d'une voie
             let hidden = 0;
 
             tasksInPeriod.forEach(({ task, start, end }) => {
@@ -3198,31 +3209,17 @@
                     bar.className = ['week-event-bar', `p${p}`,
                         isMilestone ? 'milestone' : '',
                         isClosed ? 'done' : '',
+                        rich && !isMilestone ? 'rich' : '',
                         task.id === selectedTaskId ? 'selected' : '',
                         continuedFromPrev ? 'continued-left' : '',
                         continuesNext ? 'continues-right' : ''
                     ].filter(Boolean).join(' ');
                     const projectColor = task.projet ? getProjectColor(task.projet) : null;
-                    bar.style.cssText = `left:${startDay / numDays * 100}%; width:${(endDay - startDay + 1) / numDays * 100}%; top:${lane * 22}px;${projectColor ? ` border-left-color:${projectColor};` : ''}`;
+                    bar.style.cssText = `left:${startDay / numDays * 100}%; width:${(endDay - startDay + 1) / numDays * 100}%; top:${lane * step}px;${projectColor ? ` border-left-color:${projectColor};` : ''}`;
                     if (!isMilestone) bar.style.background = getTaskBarGradient(task);
 
-                    // B: Chevrons de continuation
-                    if (continuedFromPrev) {
-                        const arrL = document.createElement('span');
-                        arrL.className = 'bar-chevron bar-chevron-left';
-                        arrL.textContent = '◄';
-                        bar.appendChild(arrL);
-                    }
-                    const titleSpan = document.createElement('span');
-                    titleSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-                    titleSpan.textContent = task.titre || 'Sans titre';
-                    bar.appendChild(titleSpan);
-                    if (continuesNext) {
-                        const arrR = document.createElement('span');
-                        arrR.className = 'bar-chevron bar-chevron-right';
-                        arrR.textContent = '►';
-                        bar.appendChild(arrR);
-                    }
+                    // Memes cartes que le mois : titre + statut, dates, avatars (vue 7 ou 5 jours) ; barre fine en vue 2 semaines
+                    buildBarContent(bar, task, rich && !isMilestone ? 'full' : 'compact', continuedFromPrev, continuesNext, isMilestone);
 
                     bar.addEventListener('click', (e) => { e.stopPropagation(); openTaskPanel(task.id); });
                     container.appendChild(bar);
@@ -3233,7 +3230,7 @@
 
             // La zone « journee » grandit avec les voies utilisees ; au-dela, « +N » ouvre la liste de la periode
             const used = Math.min(lanes.length, maxLanes);
-            if (container.parentElement) container.parentElement.style.minHeight = Math.max(80, used * 22 + (hidden ? 30 : 10)) + 'px';
+            if (container.parentElement) container.parentElement.style.minHeight = Math.max(80, used * step + (hidden ? 30 : 10)) + 'px';
             if (hidden > 0) {
                 const more = document.createElement('div');
                 more.className = 'more-events';
@@ -3262,25 +3259,15 @@
             }
             headerHtml += '</div>';
 
-            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(7, 1fr);"><div class="week-allday-label">Jour</div>';
+            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(7, 1fr);"><div class="week-allday-label"></div>';
             for (let d = 0; d < 7; d++) {
                 const date = addDays(weekStart, d);
                 alldayHtml += `<div class="week-allday-cell ${isWeekend(date) ? 'weekend' : ''}" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
             }
             alldayHtml += '<div class="week-events-container" id="weekEventsContainer"></div></div>';
             
-            let timelineHtml = '<div class="week-timeline"><div class="week-hours">';
-            for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-label">${String(h).padStart(2,'0')}:00</div>`;
-            timelineHtml += '</div>';
-            for (let d = 0; d < 7; d++) {
-                const date = addDays(weekStart, d);
-                timelineHtml += `<div class="week-day-column ${isWeekend(date) ? 'weekend' : ''}">`;
-                for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-slot" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
-                timelineHtml += '</div>';
-            }
-            timelineHtml += '</div>';
             
-            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>${timelineHtml}`;
+            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>`;
             renderWeekEventBars('weekEventsContainer', ft, weekStart, 7);
         }
 
@@ -3298,25 +3285,15 @@
             }
             headerHtml += '</div>';
 
-            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(14, 1fr);"><div class="week-allday-label">Jour</div>';
+            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(14, 1fr);"><div class="week-allday-label"></div>';
             for (let d = 0; d < 14; d++) {
                 const date = addDays(weekStart, d);
                 alldayHtml += `<div class="week-allday-cell ${isWeekend(date) ? 'weekend' : ''}" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
             }
             alldayHtml += '<div class="week-events-container" id="biweekEventsContainer"></div></div>';
 
-            let timelineHtml = '<div class="week-timeline" style="grid-template-columns: 50px repeat(14, 1fr);"><div class="week-hours">';
-            for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-label">${String(h).padStart(2,'0')}:00</div>`;
-            timelineHtml += '</div>';
-            for (let d = 0; d < 14; d++) {
-                const date = addDays(weekStart, d);
-                timelineHtml += `<div class="week-day-column ${isWeekend(date) ? 'weekend' : ''}">`;
-                for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-slot" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
-                timelineHtml += '</div>';
-            }
-            timelineHtml += '</div>';
 
-            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>${timelineHtml}`;
+            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>`;
             renderWeekEventBars('biweekEventsContainer', ft, weekStart, 14);
         }
         
@@ -3334,25 +3311,15 @@
             }
             headerHtml += '</div>';
 
-            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(5, 1fr);"><div class="week-allday-label">Jour</div>';
+            let alldayHtml = '<div class="week-allday" style="grid-template-columns: 50px repeat(5, 1fr);"><div class="week-allday-label"></div>';
             for (let d = 0; d < 5; d++) {
                 const date = addDays(weekStart, d);
                 alldayHtml += `<div class="week-allday-cell" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
             }
             alldayHtml += '<div class="week-events-container" id="workweekEventsContainer"></div></div>';
 
-            let timelineHtml = '<div class="week-timeline" style="grid-template-columns: 50px repeat(5, 1fr);"><div class="week-hours">';
-            for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-label">${String(h).padStart(2,'0')}:00</div>`;
-            timelineHtml += '</div>';
-            for (let d = 0; d < 5; d++) {
-                const date = addDays(weekStart, d);
-                timelineHtml += `<div class="week-day-column">`;
-                for (let h = 0; h < 24; h++) timelineHtml += `<div class="week-hour-slot" onclick="openDayPanel(new Date(${date.getTime()}))"></div>`;
-                timelineHtml += '</div>';
-            }
-            timelineHtml += '</div>';
 
-            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>${timelineHtml}`;
+            grid.innerHTML = `<div class="week-sticky">${headerHtml}${alldayHtml}</div>`;
             renderWeekEventBars('workweekEventsContainer', ft, weekStart, 5);
         }
         
@@ -4081,13 +4048,16 @@
             if (!data) return;
             
             // BUG-01 FIX: Convert date strings to Grist timestamps using robust parsing
+            let datesFix = null;
             if (field === 'dateDebut' || field === 'dateEcheance') {
                 value = value ? dateToGrist(parseInputDate(value)) : null;
+                datesFix = TF.datesPatch(data, field, value);
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
             if (field === 'statut' || field === 'progression') Object.assign(data, TF.completionPatch(statusCfg, data, { [field]: value }));
-            
+
             data[field] = value;
+            if (datesFix) { Object.assign(data, datesFix.patch); showToast(datesFix.message, 'info'); }
             
             // Jalon: sync dates
             if (field === 'type' && value === 'jalon' && data.dateDebut) {
