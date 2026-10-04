@@ -78,6 +78,14 @@ La barre est **une seule ligne** : titre | vue / navigation | outils (recherche,
 
 Recherche, filtres et affichage s'ouvrent dans un **bandeau commun** sous la barre (`#tfTray`, panneaux `.tf-panel[data-panel]`), qui pousse le contenu ; un seul panneau à la fois ; même bouton ou Échap pour refermer. Les panneaux sont déplacés dans le bandeau au montage, leurs ids sont conservés (`filterAllMenu`, `filterPanel`). Les rendus de filtres produisent des groupes `.fm-group` (étiquette + `.fm-group-items`). Le menu « ⋯ » reste un menu déroulant.
 
+### Rafraîchissement de secours et tri d'affichage
+
+- `grist.onRecords` ne se déclenche que pour la table **liée à la section**. Si elle n'est pas Tasks (cas courant : table proposée par défaut), `TF.watchTasks(grist, reload)` relit Tasks toutes les 15 s et au retour sur la page, et recharge seulement si elle a changé, sans interrompre une saisie (champ actif, fiche ou boîte ouverte). Les écritures du widget lui-même ne le déclenchent pas (`guardWrites` réinitialise la référence). À brancher après `grist.onRecords` dans tout nouveau widget qui lit Tasks. Conseil aux utilisateurs : lier la section à Tasks donne un rafraîchissement immédiat.
+- `TF.sortTasks(liste, mode, cfg)` : tri d'affichage commun (`manual`, `date`, `priority`), jamais écrit dans les données. En `date` : tâches en cours de la plus proche à la plus lointaine, puis tâches closes de la plus récente à la plus ancienne, sans échéance en dernier. Utilisé par le Kanban (réglage « Tri » du menu Affichage, mémorisé en local).
+- Gantt, vues année et pluriannuelle : la plage se termine sur la frontière de la dernière colonne et `dateToX(date)` calcule la position (colonne + fraction de colonne). Ne plus utiliser `jours × pxPerDay` pour positionner une barre dans ces vues (`pxPerDay` reste valable pour les distances de glisser-déposer).
+
+Les demandes restantes du forum et leur étude sont dans `ETUDE_RETOURS_FORUM_2026-10.md`.
+
 ### Sélection inter-widgets (GEN-01)
 
 ```javascript
