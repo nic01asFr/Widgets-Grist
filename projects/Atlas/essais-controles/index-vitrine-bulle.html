@@ -1390,6 +1390,9 @@
            de s'empiler au-dessus. Les deux partagent la même distance au bord. Pendant le récit, la bulle prend cette ligne : rien ne change. */
         body.legende-au-ras:not(.story-presenting):not(.mobile-layout) .legend { bottom: 8px; }
         body.legende-au-ras:not(.story-presenting):not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0 8px 8px 0; }
+        /* Légende repliée (35 px) et cartouche (24 px) : leurs TEXTES se lisent sur la même ligne, c'est-à-dire que leurs centres coïncident —
+           le cartouche monte de la moitié de l'écart. Légende dépliée, c'est le bas des deux qui s'aligne. */
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout):has(.legend.collapsed) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin-bottom: 13px; }
         /* Côte à côte : la bulle se centre dans ce que la légende laisse libre.
            Avec `left`, `right` et des marges automatiques, `max-width` la
            ramène à 520 px et le reste se répartit de part et d'autre. */
@@ -2065,6 +2068,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004q"></script>
+    <script type="module" src="./app_v7.js?v=20261004r"></script>
 </body>
 </html>
