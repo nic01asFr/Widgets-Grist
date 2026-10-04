@@ -2847,12 +2847,20 @@ function marquesDeChamp(f) {
     m.push('<span class="structure__marque" title="Sa liste dépend d’une autre réponse">⇄</span>');
   }
   if (f.options && f.options.matrice) m.push('<span class="structure__marque" title="Groupée en matrice">▦</span>');
+  if (f.options && f.options.autreLibre) m.push('<span class="structure__marque" title="Accepte une réponse libre">✎</span>');
+  if (f.options && f.options.maxSelected) m.push(`<span class="structure__marque" title="Au plus ${f.options.maxSelected} réponses">≤${f.options.maxSelected}</span>`);
   return m.join('');
 }
 
 /** Ce qu'est une question, en deux mots, pour se repérer dans la structure. */
 function natureCourte(f) {
+  // Le `kind` et le widget disent ce qu'est la question mieux que son type
+  // Grist : une géométrie se range dans du texte, et ce n'est pas du texte.
   if (f.kind === 'echelle') return 'échelle';
+  if (f.kind === 'geometrie' || f.widget === 'geo') return 'lieu';
+  if (f.kind === 'classement' || f.widget === 'classement') return 'classement';
+  if (f.widget === 'ouinon') return 'oui/non';
+  if (f.widget === 'radio') return 'choix en boutons';
   const parType = {
     Text: f.widget === 'textarea' ? 'paragraphe' : 'texte',
     Int: 'nombre', Numeric: 'nombre', Bool: 'oui/non',

@@ -570,6 +570,16 @@
   }
 
   /** Les boutons d'une échelle — partagés par le champ seul et la matrice. */
+  /**
+   * Les crans, et rien qu'eux, sur la rangee.
+   *
+   * > **« Non concerné » occupait une place dans la rangee**, et poussait les
+   * > crans vers la gauche : le « 5 » ne tombait plus sous « Tout à fait
+   * > d'accord · 5 », et l'echelle ne correspondait plus a ses propres mots.
+   * > Ce n'est pas un degre de l'echelle : c'est la sortie de l'echelle.
+   *
+   * Il va donc sous les ancrages, ou il se lit pour ce qu'il est.
+   */
   function boutonsEchelle(field, value, e) {
     var html = '';
     for (var n = e.min; n <= e.max; n++) {
@@ -579,15 +589,18 @@
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + n + '"' + coche + ' />' +
         '<label class="fr-label" for="' + oid + '">' + n + '</label></div>';
     }
-    if (e.nonConcerne) {
-      var nid = fieldId(field) + '-nsp';
-      var cocheNsp = value === VALEUR_NON_CONCERNE ? ' checked' : '';
-      html += '<div class="fr-radio-group fr-echelle__nsp">' +
-        '<input type="radio" id="' + nid + '" name="' + escapeHtml(field.colId) + '" value="' +
-        VALEUR_NON_CONCERNE + '"' + cocheNsp + ' />' +
-        '<label class="fr-label" for="' + nid + '">Non concerné</label></div>';
-    }
     return '<div class="fr-echelle__crans">' + html + '</div>';
+  }
+
+  /** La sortie de l'echelle, posee sous elle. */
+  function sortieEchelle(field, value, e) {
+    if (!e.nonConcerne) return '';
+    var nid = fieldId(field) + '-nsp';
+    var coche = value === VALEUR_NON_CONCERNE ? ' checked' : '';
+    return '<div class="fr-radio-group fr-echelle__nsp">' +
+      '<input type="radio" id="' + nid + '" name="' + escapeHtml(field.colId) + '" value="' +
+      VALEUR_NON_CONCERNE + '"' + coche + ' />' +
+      '<label class="fr-label" for="' + nid + '">Non concerné</label></div>';
   }
 
   /** Les deux libellés d'extrémité : ce qui dit ce que « 1 » et « 5 » veulent dire. */
@@ -602,7 +615,8 @@
     var e = echelleDe(formDef, field);
     return '<fieldset class="fr-fieldset fr-echelle" data-colid="' + escapeHtml(field.colId) + '" data-widget="echelle">' +
       renderLegend(field) +
-      '<div class="fr-fieldset__content">' + boutonsEchelle(field, value, e) + ancresEchelle(e) + '</div>' +
+      '<div class="fr-fieldset__content">' + boutonsEchelle(field, value, e) + ancresEchelle(e) +
+      sortieEchelle(field, value, e) + '</div>' +
       '</fieldset>';
   }
 

@@ -211,7 +211,9 @@ body {
 .fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .fr-echelle__cran, .fr-echelle__nsp { display: flex; align-items: center; gap: 4px; margin: 0; }
 .fr-echelle__cran label, .fr-echelle__nsp label { margin: 0; font-weight: 400; }
-.fr-echelle__nsp { margin-left: 10px; padding-left: 10px; border-left: 1px solid #ddd; }
+/* « Non concerné » n'est pas un degré : il se pose sous l'échelle, pour que
+   les crans tombent sous les mots qui les nomment. */
+.fr-echelle__nsp { margin-top: 0.5rem; }
 .fr-echelle__ancres {
   display: flex; justify-content: space-between; gap: 12px;
   font-size: 0.78rem; color: #666; margin-top: 4px;
@@ -402,10 +404,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    lisible sur un téléphone tenu à une main. */
 
 /* Oui / Non : deux boutons de même largeur, dans la même ligne. */
-.fr-form .fr-fieldset__content--ligne {
+.fr-form .fr-fieldset__content--ligne, .champ-bloc__rendu .fr-fieldset__content--ligne {
   flex-direction: row; flex-wrap: wrap; gap: 0.6rem;
 }
-.fr-form .fr-fieldset__content--ligne .fr-radio-group { flex: 1 1 8rem; justify-content: center; }
+.fr-form .fr-fieldset__content--ligne .fr-radio-group, .champ-bloc__rendu .fr-fieldset__content--ligne .fr-radio-group { flex: 1 1 8rem; justify-content: center; }
 
 /* « Autre : … » — révélé seulement quand on l'a choisi, y compris dans
    l'aperçu du compositeur : il montre ce que le public verra. */
@@ -416,33 +418,33 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-autre--repliee, .champ-bloc__rendu .fr-autre--repliee { display: none; }
 
 /* Le plafond se lit avant de cocher, et se tient. */
-.fr-form .fr-plafond {
+.fr-form .fr-plafond, .champ-bloc__rendu .fr-plafond {
   margin: -0.2rem 0 0.4rem; font-variant-numeric: tabular-nums;
 }
-.fr-form .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
+.fr-form .fr-checkbox-group input:disabled + .fr-label, .champ-bloc__rendu .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
 
 /* Classer : des rangées qu'on monte et qu'on descend. */
-.fr-form .fr-classement__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.fr-form .fr-classement__item {
+.fr-form .fr-classement__liste, .champ-bloc__rendu .fr-classement__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.fr-form .fr-classement__item, .champ-bloc__rendu .fr-classement__item {
   display: flex; align-items: center; gap: 0.6rem; min-height: var(--cible, 2.75rem);
   padding: 0.3rem 0.6rem; border: 1px solid var(--bordure, #ddd); border-radius: 8px;
   background: var(--fond-carte, #fff);
 }
-.fr-form .fr-classement__item--hors { opacity: 0.55; border-style: dashed; }
-.fr-form .fr-classement__rang {
+.fr-form .fr-classement__item--hors, .champ-bloc__rendu .fr-classement__item--hors { opacity: 0.55; border-style: dashed; }
+.fr-form .fr-classement__rang, .champ-bloc__rendu .fr-classement__rang {
   flex: 0 0 1.8rem; height: 1.8rem; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 999px; background: var(--blue-france); color: #fff; font-variant-numeric: tabular-nums;
 }
-.fr-form .fr-classement__item--hors .fr-classement__rang { background: var(--bordure, #ddd); color: var(--encre-douce, #666); }
-.fr-form .fr-classement__texte { flex: 1 1 auto; min-width: 0; }
-.fr-form .fr-classement__bouton {
+.fr-form .fr-classement__item--hors .fr-classement__rang, .champ-bloc__rendu .fr-classement__item--hors .fr-classement__rang { background: var(--bordure, #ddd); color: var(--encre-douce, #666); }
+.fr-form .fr-classement__texte, .champ-bloc__rendu .fr-classement__texte { flex: 1 1 auto; min-width: 0; }
+.fr-form .fr-classement__bouton, .champ-bloc__rendu .fr-classement__bouton {
   flex: 0 0 auto; width: 2.4rem; height: 2.4rem; font: inherit; font-size: 1.1rem; cursor: pointer;
   border: 1px solid var(--bordure, #ddd); border-radius: 6px; background: transparent; color: inherit;
 }
-.fr-form .fr-classement__bouton[disabled] { opacity: 0.3; cursor: default; }
+.fr-form .fr-classement__bouton[disabled], .champ-bloc__rendu .fr-classement__bouton[disabled] { opacity: 0.3; cursor: default; }
 
 /* Relever sa position : le bouton tient dans la ligne, et passe dessous
    quand l'écran est étroit. */
-.fr-form .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.fr-form .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
-.fr-form .fr-geo__etat:empty { display: none; }
+.fr-form .fr-geo__ligne, .champ-bloc__rendu .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.fr-form .fr-geo__ligne .fr-input, .champ-bloc__rendu .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
+.fr-form .fr-geo__etat:empty, .champ-bloc__rendu .fr-geo__etat:empty { display: none; }
