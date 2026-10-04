@@ -1,18 +1,24 @@
 #!/usr/bin/env node
 /*
- * build-taskflow.js — Inline le module commun TaskFlow dans chaque widget.
+ * build-taskflow.js — Inline les modules communs TaskFlow dans chaque widget.
  *
- * Architecture : source DRY, livrable autonome.
- *   - Source unique : projects/tasks_app/core/taskflow-core.js
- *   - Chaque widget reste un fichier HTML autonome (collable dans le custom widget
- *     builder de Grist, resilient). Le core est INLINE entre deux marqueurs :
+ * Architecture : sources DRY, livrables autonomes. Chaque widget reste un fichier
+ * HTML autonome (collable dans le custom widget builder de Grist, resilient).
  *
- *       // <taskflow-core>
- *       ... contenu genere, ne pas editer a la main ...
- *       // </taskflow-core>
+ *   1. Core JavaScript (tous les widgets, Plan et Whiteboard compris)
+ *      - source unique : projects/tasks_app/core/taskflow-core.js
+ *      - inline entre deux lignes de commentaire JS "// <taskflow-core>" et
+ *        "// </taskflow-core>".
  *
- * Le script remplace tout ce qui se trouve entre les marqueurs par le contenu du
- * core, en respectant l'indentation du marqueur d'ouverture. Idempotent.
+ *   2. Interface CSS commune (kanban, gantt, calendar, dashboard uniquement ;
+ *      le Plan et le Whiteboard gardent leur propre identite visuelle)
+ *      - source unique : projects/tasks_app/core/taskflow-ui.css
+ *      - inline entre deux commentaires CSS ouvrant et fermant dont le texte est
+ *        "taskflow-ui" (voir BLOCKS ci-dessous ; ils ne sont pas ecrits ici car
+ *        une fermeture de commentaire fermerait cet en-tete).
+ *
+ * Le script remplace tout ce qui se trouve entre les marqueurs par le contenu de
+ * la source, en respectant l'indentation du marqueur d'ouverture. Idempotent.
  *
  * Un widget sans marqueurs est ignore (avertissement), jamais modifie.
  *
@@ -25,6 +31,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const CORE_PATH = path.join(ROOT, 'projects', 'tasks_app', 'core', 'taskflow-core.js');
+const UI_PATH = path.join(ROOT, 'projects', 'tasks_app', 'core', 'taskflow-ui.css');
 
 // Widgets cibles. Le Whiteboard n'adopte qu'un sous-ensemble mais partage les memes
 // marqueurs : le core est concu pour etre inerte si ses fonctions ne sont pas appelees.
@@ -36,25 +43,67 @@ const TARGETS = [
     path.join(ROOT, 'projects', 'tasks_app', 'plan.html'),
     path.join(ROOT, 'projects', 'whiteboard', 'index.html')
 ];
+// Le CSS commun ne concerne que les 4 widgets principaux.
+const UI_TARGETS = TARGETS.slice(0, 4);
 
-const OPEN = '// <taskflow-core>';
-const CLOSE = '// </taskflow-core>';
+const NOTE = ' -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI';
+const BLOCKS = [
+    {
+        nom: 'core',
+        source: CORE_PATH,
+        targets: TARGETS,
+        open: '// <taskflow-core>',
+        close: '// </taskflow-core>',
+        openLine: (indent) => indent + '// <taskflow-core>' + NOTE,
+        closeLine: (indent) => indent + '// </taskflow-core>'
+    },
+    {
+        nom: 'ui',
+        source: UI_PATH,
+        targets: UI_TARGETS,
+        open: '/* <taskflow-ui>',
+        close: '/* </taskflow-ui>',
+        openLine: (indent) => indent + '/* <taskflow-ui>' + NOTE + ' */',
+        closeLine: (indent) => indent + '/* </taskflow-ui> */'
+    }
+];
 
-function readCore() {
-    if (!fs.existsSync(CORE_PATH)) {
-        console.error('ERREUR: core introuvable: ' + CORE_PATH);
+function readSource(block) {
+    if (!fs.existsSync(block.source)) {
+        console.error('ERREUR: source ' + block.nom + ' introuvable: ' + block.source);
         process.exit(1);
     }
-    // On retire un eventuel shebang/commentaire d'en-tete propre au fichier source ?
-    // Non : le core est ecrit pour etre inlinable tel quel. On le prend integralement.
-    return fs.readFileSync(CORE_PATH, 'utf8').replace(/\r\n/g, '\n').replace(/\s+$/, '');
+    // La source est ecrite pour etre inlinable telle quelle : on la prend integralement.
+    return fs.readFileSync(block.source, 'utf8').replace(/\r\n/g, '\n').replace(/\s+$/, '');
 }
 
-function indentBlock(block, indent) {
-    return block.split('\n').map(line => (line.length ? indent + line : line)).join('\n');
+// Remplace le bloc balise dans `lines`. Retourne { lines } ou { skipped } ou { error }.
+function inlineBlock(lines, block, content, name) {
+    // Matching LIGNE PAR LIGNE : un marqueur n'est reconnu que s'il est SEUL sur sa
+    // ligne (apres trim, la ligne COMMENCE par le marqueur). Cela evite toute
+    // collision avec une occurrence du texte du marqueur a l'interieur du contenu.
+    const isOpen = (l) => l.trim().indexOf(block.open) === 0;
+    const isClose = (l) => l.trim().indexOf(block.close) === 0;
+
+    const openLine = lines.findIndex(isOpen);
+    if (openLine === -1) {
+        console.warn('IGNORE (pas de marqueurs ' + block.nom + '): ' + name);
+        return { skipped: true };
+    }
+    let closeLine = -1;
+    for (let i = openLine + 1; i < lines.length; i++) { if (isClose(lines[i])) { closeLine = i; break; } }
+    if (closeLine === -1) {
+        console.error('ERREUR (marqueur fermant ' + block.nom + ' absent): ' + name);
+        return { error: true };
+    }
+    const indent = (lines[openLine].match(/^[ \t]*/) || [''])[0];
+    const body = content.split('\n').map(line => (line.length ? indent + line : line));
+    return {
+        lines: [].concat(lines.slice(0, openLine), [block.openLine(indent)], body, [block.closeLine(indent)], lines.slice(closeLine + 1))
+    };
 }
 
-function buildFile(filePath, core, check) {
+function buildFile(filePath, sources, check) {
     const name = path.relative(ROOT, filePath);
     if (!fs.existsSync(filePath)) {
         console.warn('IGNORE (absent): ' + name);
@@ -62,36 +111,15 @@ function buildFile(filePath, core, check) {
     }
     const original = fs.readFileSync(filePath, 'utf8');
     const eol = original.indexOf('\r\n') !== -1 ? '\r\n' : '\n';
-    const lines = original.replace(/\r\n/g, '\n').split('\n');
+    let lines = original.replace(/\r\n/g, '\n').split('\n');
 
-    // Matching LIGNE PAR LIGNE : un marqueur n'est reconnu que s'il est SEUL sur sa
-    // ligne (apres trim, la ligne COMMENCE par le marqueur). Cela evite toute
-    // collision avec une occurrence du texte du marqueur a l'interieur du core.
-    const isOpen = (l) => l.trim().indexOf(OPEN) === 0;
-    const isClose = (l) => l.trim().indexOf(CLOSE) === 0;
-
-    const openLine = lines.findIndex(isOpen);
-    if (openLine === -1) {
-        console.warn('IGNORE (pas de marqueurs ' + OPEN + '): ' + name);
-        return { changed: false, skipped: true };
+    for (const block of BLOCKS) {
+        if (block.targets.indexOf(filePath) === -1 || sources[block.nom] == null) continue;
+        const r = inlineBlock(lines, block, sources[block.nom], name);
+        if (r.error) return { changed: false, error: true };
+        if (r.lines) lines = r.lines;
     }
-    let closeLine = -1;
-    for (let i = openLine + 1; i < lines.length; i++) { if (isClose(lines[i])) { closeLine = i; break; } }
-    if (closeLine === -1) {
-        console.error('ERREUR (marqueur fermant absent): ' + name);
-        return { changed: false, error: true };
-    }
-
-    const indent = (lines[openLine].match(/^[ \t]*/) || [''])[0];
-    const coreLines = core.split('\n').map(line => (line.length ? indent + line : line));
-
-    const next = []
-        .concat(lines.slice(0, openLine))
-        .concat([indent + OPEN + ' -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI'])
-        .concat(coreLines)
-        .concat([indent + CLOSE])
-        .concat(lines.slice(closeLine + 1))
-        .join(eol);
+    const next = lines.join(eol);
 
     if (next === original) {
         console.log('OK (a jour): ' + name);
@@ -108,10 +136,15 @@ function buildFile(filePath, core, check) {
 
 function main() {
     const check = process.argv.includes('--check');
-    const core = readCore();
+    const sources = {};
+    for (const block of BLOCKS) {
+        // La source CSS est optionnelle tant qu'aucun widget n'en porte les marqueurs.
+        if (block.nom === 'ui' && !fs.existsSync(block.source)) { sources.ui = null; continue; }
+        sources[block.nom] = readSource(block);
+    }
     let desync = false, error = false;
     for (const f of TARGETS) {
-        const r = buildFile(f, core, check);
+        const r = buildFile(f, sources, check);
         if (r.desync) desync = true;
         if (r.error) error = true;
     }

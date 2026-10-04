@@ -122,7 +122,7 @@
         .month-day { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; overflow: hidden; cursor: pointer; position: relative; transition: background 0.15s; }
         .month-day:last-child { border-right: none; }
         .month-day:hover { background: rgba(79, 70, 229, 0.03); }
-        .month-day.weekend { background: #fef2f2; }
+        .month-day.weekend { background: var(--weekend-bg); }
         .month-day.other-month { opacity: 0.4; }
         .month-day.today .day-number { background: var(--primary); color: white; }
         .month-day.selected { background: var(--primary-light) !important; }
@@ -167,7 +167,7 @@
         .week-header { display: grid; grid-template-columns: 50px repeat(7, 1fr); background: var(--bg); border-bottom: 1px solid var(--border); }
         .week-header-cell { padding: 8px 4px; text-align: center; border-right: 1px solid var(--border); }
         .week-header-cell:last-child { border-right: none; }
-        .week-header-cell.weekend { background: #fef2f2; }
+        .week-header-cell.weekend { background: var(--weekend-bg); }
         .week-header-day { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
         .week-header-date { font-size: 1.1rem; font-weight: 600; color: var(--text); cursor: pointer; }
         .week-header-date:hover { color: var(--primary); }
@@ -178,7 +178,7 @@
         .week-allday-cell { border-right: 1px solid var(--border); cursor: pointer; min-height: 70px; }
         .week-allday-cell:last-child { border-right: none; }
         .week-allday-cell:hover { background: rgba(79, 70, 229, 0.03); }
-        .week-allday-cell.weekend { background: #fef2f2; }
+        .week-allday-cell.weekend { background: var(--weekend-bg); }
         .week-events-container { position: absolute; left: 50px; right: 0; top: 4px; bottom: 4px; pointer-events: none; }
         .week-event-bar { position: absolute; height: 18px; border-radius: 3px; padding: 0 6px; font-size: 0.65rem; font-weight: 500; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; cursor: pointer; pointer-events: auto; box-shadow: 0 1px 2px rgba(0,0,0,0.15); transition: transform 0.1s, box-shadow 0.1s; border-left: 3px solid rgba(255,255,255,0.5); }
         .week-event-bar:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); z-index: 10; }
@@ -199,7 +199,7 @@
         .week-hour-label { height: 48px; padding: 0 6px; font-size: 0.65rem; color: var(--text-muted); text-align: right; display: flex; align-items: flex-start; justify-content: flex-end; padding-top: 2px; }
         .week-day-column { border-right: 1px solid var(--border); position: relative; }
         .week-day-column:last-child { border-right: none; }
-        .week-day-column.weekend { background: #fef2f2; }
+        .week-day-column.weekend { background: var(--weekend-bg); }
         .week-hour-slot { height: 48px; border-bottom: 1px solid var(--border); cursor: crosshair; position: relative; transition: background 0.1s; }
         .week-hour-slot:hover { background: rgba(79, 70, 229, 0.05); }
 
@@ -430,7 +430,7 @@
         .dep-item .icon { font-size: 0.7rem; color: var(--text-muted); }
 
         /* Delete Confirm */
-        .delete-confirm { background: #fef2f2; border: 1px solid var(--danger); border-radius: 8px; padding: 12px; margin-top: 12px; display: none; }
+        .delete-confirm { background: var(--weekend-bg); border: 1px solid var(--danger); border-radius: 8px; padding: 12px; margin-top: 12px; display: none; }
         .delete-confirm.visible { display: block; }
         .delete-confirm-text { font-size: 0.8rem; color: var(--danger); margin-bottom: 10px; }
         .delete-confirm-actions { display: flex; gap: 8px; }
@@ -639,6 +639,108 @@
             .demo-badge { color: #1f2738; }
             .toast { background: #060a14; }
         }
+    /* <taskflow-ui> -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI */
+    /* ═════ Finition commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+       Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
+       styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle
+       (police, hauteur et rayon des controles, segmentes, selects, fiche de tache, theme sombre). */
+
+    :root {
+        color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+        --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
+        --ctl-r: 8px;                      /* rayon unique des controles */
+        --seg-r: 6px;                      /* rayon des items d'un controle segmente */
+        --weekend-bg: #fef2f2;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
+    }
+
+    /* 1. Typographie : les controles heritent de la police du widget (ils restaient en Arial,
+          et les champs de date / la description en monospace). */
+    button, input, select, textarea { font-family: inherit; }
+    button { color: inherit; }
+    textarea { line-height: 1.45; }
+
+    /* 2. Barre du haut : une seule hauteur, un seul rayon pour tous les controles. */
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
+    .header select, .header .search-box input {
+        height: var(--ctl-h);
+        box-sizing: border-box;
+        border-radius: var(--ctl-r);
+    }
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: 0.8rem;
+        font-weight: 550;
+    }
+    .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        width: var(--ctl-h);
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .header select, .header select#colorSelect, .header select#levelSelect {
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 0.78rem;
+        padding: 0 8px;
+    }
+    .header .search-box input { font-size: 0.78rem; }
+
+    /* 3. Controles segmentes (Grouper, vues du Gantt / Calendrier) : meme rayon, meme taille. */
+    .group-selector, .view-controls { padding: 3px; border-radius: 9px; }
+    .header .group-selector .btn, .header .view-controls .btn {
+        height: calc(var(--ctl-h) - 6px);
+        border-radius: var(--seg-r);
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: 0.78rem;
+    }
+
+    /* 4. Dashboard : actions alignees a droite comme dans les autres widgets. */
+    .header-right { margin-left: auto; }
+
+    /* 5. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+    .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
+
+    /* 6. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+          (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
+    .panel-section-header {
+        background: transparent;
+        margin: 0 0 8px 0;
+        padding: 12px 0 4px;
+        border-top: 1px solid var(--border);
+        border-bottom: none;
+    }
+    .panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    .panel-section-title {
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--text-light);
+    }
+    /* Progression : une jauge (le curseur) + le pourcentage + les raccourcis ; la mini-barre faisait doublon. */
+    .prop-row .progress-bar-mini { display: none; }
+    .progress-slider { width: 100%; }
+    /* Description : meme police que le reste (elle etait en monospace). */
+    .form-textarea { font-family: inherit; }
+
+    /* 7. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+    .filter-panel .filter-btn, .filter-check, .span-btn, .btn-icon, .cfg-input {
+        background: var(--card-bg);
+        color: var(--text);
+    }
+    .filter-panel .filter-btn { border-radius: 6px; padding: 5px 10px; }
+    .filter-panel .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-icon.active { background: var(--primary-light); color: var(--primary); }
+    .accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
+    /* </taskflow-ui> */
     </style>
 </head>
 <body>
@@ -662,13 +764,13 @@
             </div>
         </div>
         <div class="header-right">
-            <select id="colorSelect" onchange="changeColorMode(this.value)" title="Couleur des événements" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.72rem;background:var(--card-bg)">
+            <select id="colorSelect" onchange="changeColorMode(this.value)" title="Couleur des événements">
                 <option value="priority">Couleur: Priorité</option>
                 <option value="project">Couleur: Projet</option>
                 <option value="assignee">Couleur: Assigné</option>
                 <option value="status">Couleur: Statut</option>
             </select>
-            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.72rem;background:var(--card-bg)">
+            <select id="levelSelect" onchange="changeWorkLevel(this.value)" title="Niveau affiché — Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)">
                 <option value="all">Niveau : Tous</option>
                 <option value="actions">Niveau : Actions</option>
                 <option value="parents">Niveau : Synthèses</option>
@@ -903,6 +1005,10 @@
             function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
             // Ni fait ni annule = actif.
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
+
+            // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
+            const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
+            function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
 
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -1145,6 +1251,7 @@
                 isDone: isDone,
                 isDead: isDead,
                 isLive: isLive,
+                colorModeLabel: colorModeLabel,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -2677,7 +2784,7 @@
                             <input type="color" value="${data.couleur || getTaskColor(data)}" onchange="updateField('couleur', this.value)" style="width:36px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px">
                             ${data.couleur
                                 ? `<button class="btn" style="padding:4px 10px;font-size:0.72rem" onclick="updateField('couleur', null)">Réinitialiser</button>`
-                                : `<span style="font-size:0.72rem;color:var(--text-muted)">Héritée du mode « ${colorMode} »</span>`}
+                                : `<span style="font-size:0.72rem;color:var(--text-muted)">Héritée du mode « ${TF.colorModeLabel(colorMode)} »</span>`}
                         </div></div>
                     </div>
                     ${(!panelState.isNew || data.parentTask) ? `

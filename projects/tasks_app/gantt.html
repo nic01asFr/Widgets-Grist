@@ -24,7 +24,7 @@
             /* Shadows */
             --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
             /* Layout */
-            --row-height: 44px; --task-list-width: 260px; --cell-width: 34px; --panel-width: 400px;
+            --row-height: 44px; --task-list-width: 300px; --cell-width: 34px; --panel-width: 400px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
@@ -77,7 +77,7 @@
         .month-cell { padding: 4px 0; text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); border-right: 1px solid var(--border); flex-shrink: 0; }
         .timeline-header-days { display: flex; }
         .day-cell { width: var(--cell-width); min-width: var(--cell-width); padding: 6px 2px; text-align: center; font-size: 0.68rem; color: var(--text-muted); border-right: 1px solid var(--border); background: var(--bg); }
-        .day-cell.weekend { background: #fef2f2; color: #ef4444; }
+        .day-cell.weekend { background: var(--weekend-bg); color: #ef4444; }
         .day-cell.today { background: var(--primary); color: white; font-weight: 700; }
         .day-cell.month-start { border-left: 2px solid var(--border); }
 
@@ -115,8 +115,8 @@
         .task-priority-bar.p4 { background: var(--text-muted); }
         .task-info { flex: 1; min-width: 0; }
         .task-name { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-        .task-dates { font-size: 0.65rem; color: var(--text-muted); }
+        .task-meta { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin-top: 2px; min-width: 0; overflow: hidden; }
+        .task-dates { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
         .task-progress-badge { font-size: 0.6rem; color: var(--text-muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; }
         .task-subtask-badge { font-size: 0.6rem; color: var(--text-muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; display: inline-flex; align-items: center; gap: 2px; }
         .task-subtask-badge.complete { color: var(--success); }
@@ -144,8 +144,8 @@
         .timeline-scroll { flex: 1; overflow: auto; }
         .timeline-grid { position: relative; min-height: 100%; }
         .grid-row { height: var(--row-height); border-bottom: 1px solid var(--border); display: flex; }
-        .grid-cell { width: var(--cell-width); min-width: var(--cell-width); border-right: 1px solid #f1f5f9; height: 100%; }
-        .grid-cell.weekend { background: #fef2f2; }
+        .grid-cell { width: var(--cell-width); min-width: var(--cell-width); border-right: 1px solid var(--surface-2); height: 100%; }
+        .grid-cell.weekend { background: var(--weekend-bg); }
         .grid-cell.today { background: rgba(79, 70, 229, 0.08); }
         .grid-cell.month-start { border-left: 1px solid var(--border); }
 
@@ -354,7 +354,7 @@
         .dep-item:hover { background: var(--primary-light); }
 
         /* Delete confirm */
-        .delete-confirm { background: #fef2f2; border: 1px solid var(--danger); border-radius: 8px; padding: 12px; margin-top: 12px; display: none; }
+        .delete-confirm { background: var(--weekend-bg); border: 1px solid var(--danger); border-radius: 8px; padding: 12px; margin-top: 12px; display: none; }
         .delete-confirm.visible { display: block; }
         .delete-confirm-text { font-size: 0.8rem; color: var(--danger); margin-bottom: 10px; }
         .delete-confirm-actions { display: flex; gap: 8px; }
@@ -581,6 +581,108 @@
             .demo-badge { color: #1f2738; }
             .toast { background: #060a14; }
         }
+    /* <taskflow-ui> -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI */
+    /* ═════ Finition commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+       Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
+       styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle
+       (police, hauteur et rayon des controles, segmentes, selects, fiche de tache, theme sombre). */
+
+    :root {
+        color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+        --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
+        --ctl-r: 8px;                      /* rayon unique des controles */
+        --seg-r: 6px;                      /* rayon des items d'un controle segmente */
+        --weekend-bg: #fef2f2;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
+    }
+
+    /* 1. Typographie : les controles heritent de la police du widget (ils restaient en Arial,
+          et les champs de date / la description en monospace). */
+    button, input, select, textarea { font-family: inherit; }
+    button { color: inherit; }
+    textarea { line-height: 1.45; }
+
+    /* 2. Barre du haut : une seule hauteur, un seul rayon pour tous les controles. */
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
+    .header select, .header .search-box input {
+        height: var(--ctl-h);
+        box-sizing: border-box;
+        border-radius: var(--ctl-r);
+    }
+    .header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: 0.8rem;
+        font-weight: 550;
+    }
+    .header .icon-btn, .header .btn-nav, .header .btn-icon {
+        width: var(--ctl-h);
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .header select, .header select#colorSelect, .header select#levelSelect {
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 0.78rem;
+        padding: 0 8px;
+    }
+    .header .search-box input { font-size: 0.78rem; }
+
+    /* 3. Controles segmentes (Grouper, vues du Gantt / Calendrier) : meme rayon, meme taille. */
+    .group-selector, .view-controls { padding: 3px; border-radius: 9px; }
+    .header .group-selector .btn, .header .view-controls .btn {
+        height: calc(var(--ctl-h) - 6px);
+        border-radius: var(--seg-r);
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: 0.78rem;
+    }
+
+    /* 4. Dashboard : actions alignees a droite comme dans les autres widgets. */
+    .header-right { margin-left: auto; }
+
+    /* 5. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+    .demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
+
+    /* 6. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+          (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
+    .panel-section-header {
+        background: transparent;
+        margin: 0 0 8px 0;
+        padding: 12px 0 4px;
+        border-top: 1px solid var(--border);
+        border-bottom: none;
+    }
+    .panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    .panel-section-title {
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--text-light);
+    }
+    /* Progression : une jauge (le curseur) + le pourcentage + les raccourcis ; la mini-barre faisait doublon. */
+    .prop-row .progress-bar-mini { display: none; }
+    .progress-slider { width: 100%; }
+    /* Description : meme police que le reste (elle etait en monospace). */
+    .form-textarea { font-family: inherit; }
+
+    /* 7. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+    .filter-panel .filter-btn, .filter-check, .span-btn, .btn-icon, .cfg-input {
+        background: var(--card-bg);
+        color: var(--text);
+    }
+    .filter-panel .filter-btn { border-radius: 6px; padding: 5px 10px; }
+    .filter-panel .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-icon.active { background: var(--primary-light); color: var(--primary); }
+    .accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
+    /* </taskflow-ui> */
     </style>
 </head>
 <body>
@@ -872,6 +974,10 @@
             // Ni fait ni annule = actif.
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
+            // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
+            const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
+            function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
+
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
              */
@@ -1113,6 +1219,7 @@
                 isDone: isDone,
                 isDead: isDead,
                 isLive: isLive,
+                colorModeLabel: colorModeLabel,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -2517,7 +2624,7 @@
                         '<input type="color" value="' + (data.couleur || getTaskColor(data)) + '" onchange="updateField(\'couleur\', this.value)" style="width:36px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px">' +
                         (data.couleur
                             ? '<button class="btn" style="padding:4px 10px;font-size:0.72rem" onclick="updateField(\'couleur\', null)">Réinitialiser</button>'
-                            : '<span style="font-size:0.72rem;color:var(--text-muted)">Héritée du mode « ' + colorMode + ' »</span>') +
+                            : '<span style="font-size:0.72rem;color:var(--text-muted)">Héritée du mode « ' + TF.colorModeLabel(colorMode) + ' »</span>') +
                     '</div></div></div>' +
                     '<div class="prop-row"><span class="prop-label">' + assignLabel + '</span><div class="prop-value">' +
                         (data.assignees.length ? '<div class="asg-list">' + data.assignees.map(function(id){ var nm=getTeamMemberName(id)||'?'; var initials=nm.split(' ').filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); var mem=team.find(function(x){return x.id===id;}); return '<div class="asg"><span class="asg-ava" style="background:'+getTeamMemberColor(id)+'">'+escapeHtml(initials)+'</span><span class="an">'+escapeHtml(nm)+'</span>'+(mem&&mem.role?'<span class="ar">'+escapeHtml(mem.role)+'</span>':'')+'<button class="asg-x" title="Retirer" onclick="removeAssignee('+id+')">×</button></div>'; }).join('') + '</div>' : '') +

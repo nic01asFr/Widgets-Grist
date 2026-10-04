@@ -80,3 +80,14 @@ describe('detection de la cloture positive', () => {
         assert.equal(TF.isTerminal(cfg, 'Validé'), false);
     });
 });
+
+describe('libelle des modes de couleur', () => {
+    it('traduit les modes connus et laisse passer les autres', () => {
+        assert.equal(TF.colorModeLabel('priority'), 'priorité');
+        assert.equal(TF.colorModeLabel('project'), 'projet');
+        assert.equal(TF.colorModeLabel('assignee'), 'assigné');
+        assert.equal(TF.colorModeLabel('status'), 'statut');
+        assert.equal(TF.colorModeLabel('autre'), 'autre');
+        assert.equal(TF.colorModeLabel(undefined), '');
+    });
+});

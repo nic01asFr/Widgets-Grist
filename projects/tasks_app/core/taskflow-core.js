@@ -159,6 +159,10 @@ const TF = (function () {
     // Ni fait ni annule = actif.
     function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
+    // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
+    const COLOR_MODE_LABELS = { priority: 'priorité', project: 'projet', assignee: 'assigné', status: 'statut' };
+    function colorModeLabel(mode) { return COLOR_MODE_LABELS[mode] || String(mode || ''); }
+
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
      */
@@ -400,6 +404,7 @@ const TF = (function () {
         isDone: isDone,
         isDead: isDead,
         isLive: isLive,
+        colorModeLabel: colorModeLabel,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
