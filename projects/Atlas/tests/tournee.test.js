@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tourneeValide, ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from '../lib/tournee.js';
+import { tourneeValide, ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from '../lib/tournee.js';
 import { tourneeDe, avecUsage, usageDe } from '../lib/contextes.js';
 
 // Une ligne de ~1,1 km d'ouest en est, vers 43,3° N.
@@ -76,4 +76,22 @@ test('avecUsage garde la tournée avec le contexte, la remplace, la retire, et n
   assert.equal(avecUsage(etat, { contexte: false }).usage, undefined);
   assert.deepEqual(avecUsage({ camera: 1 }, { contexte: true, tournee: t }).usage, { contexte: true, tournee: t });
   assert.deepEqual(usageDe(etat), { contexte: true });
+});
+
+test('par ou commencer : le premier sans position, le premier devant soi avec elle', () => {
+  const ordre = [
+    { abscisse: 0.1, ecartM: 5 }, { abscisse: 0.4, ecartM: 8 }, { abscisse: 0.7, ecartM: 3 }, { abscisse: 0.95, ecartM: 900 },
+  ];
+  assert.equal(departDeTournee(ordre), 0);
+  assert.equal(departDeTournee(ordre, null), 0);
+  assert.equal(departDeTournee(ordre, 0.05), 0);
+  assert.equal(departDeTournee(ordre, 0.3), 1);
+  assert.equal(departDeTournee(ordre, 0.6), 2);
+  // Sur l'ouvrage meme : on ne le saute pas (un pas en arriere tolere : 25 m sur 1 000 m).
+  assert.equal(departDeTournee(ordre, 0.41, { totalM: 1000 }), 1);
+  assert.equal(departDeTournee(ordre, 0.41), 2);
+  // Passe le dernier ouvrage de la ligne, ou devant un seul ouvrage hors ligne : on recommence.
+  assert.equal(departDeTournee(ordre, 0.9), 0);
+  assert.equal(departDeTournee([], 0.2), -1);
+  assert.equal(departDeTournee(null), -1);
 });

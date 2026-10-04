@@ -73,7 +73,7 @@ import {
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
 import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=20261003c';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=20261003a';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=20261004a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261003a';
@@ -6417,6 +6417,19 @@ function listDockPills() {
             label: courant ? `Contexte · ${courant.titre}` : 'Contexte',
             court: 'Contexte',
         });
+        // La tournée a son bouton quand le contexte en porte une : c'est une action (on la démarre), pas un réglage.
+        if (tourneeActive()) {
+            const av = avancementTournee();
+            pills.splice(pills.findIndex((p) => p.id === 'contexte') + 1, 0, {
+                id: 'tournee',
+                kind: 'tournee',
+                icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>',
+                label: av ? `Tournée · ${av.rang} / ${av.total}` : 'Démarrer la tournée',
+                court: 'Tournée',
+                active: !!av,
+                ...(av ? {} : { action: demarrerTournee }),
+            });
+        }
     }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
     // (U+FE0F). Un glyphe symbolique rare — ici `▦` U+25A6 — n'existe pas dans
@@ -6553,7 +6566,7 @@ function renderDockSlotHost() {
     }
     // Le releve liste des couches et des boutons : il lui faut la hauteur d'un
     // controle de donnees, pas celle d'un interrupteur d'environnement.
-    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro');
+    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro' || pill.kind === 'tournee');
     if (pill.id === 'sun') {
         slotHost.innerHTML = renderSunDockSlotHtml();
         updateSunStrip();
@@ -6565,6 +6578,8 @@ function renderDockSlotHost() {
         slotHost.innerHTML = renderReleveDockSlotHtml();
     } else if (pill.kind === 'contexte') {
         slotHost.innerHTML = renderContexteDockSlotHtml();
+    } else if (pill.kind === 'tournee') {
+        slotHost.innerHTML = renderTourneeDockSlotHtml();
     } else if (pill.kind === 'synchro') {
         slotHost.innerHTML = renderSynchroDockSlotHtml();
     } else if (pill.kind === 'data') {
@@ -8001,20 +8016,99 @@ function ordreTournee(coucheId = null) {
     return ordonnerLeLong(trace.coordinates, objets);
 }
 
-/** Le bloc « Tournée » du panneau « Contexte » : sa longueur, et les ouvrages dans l'ordre de la ligne. */
-function htmlTourneeContexteActif() {
+/**
+ * La tournée commencée dans le contexte actif : `{ cleContexte, coucheId, courant }` (`courant` = la clé « couche:indice » du dernier
+ * ouvrage ouvert), ou `null`. Elle s'arrête d'elle-même quand on change de contexte.
+ */
+let _tournee = null;
+function tourneeEnCours() {
+    if (_tournee && (_tournee.cleContexte !== _contexteCle || !tourneeActive())) _tournee = null;
+    return _tournee;
+}
+
+/** Le dernier ouvrage ouvert de la tournée : le compteur de la pastille le suit, d'où qu'on l'ait ouvert (carte, liste, ◀ ▶). */
+function noterTournee(coucheId, idx) {
+    const t = tourneeEnCours();
+    if (!t || t.coucheId !== coucheId) return;
+    const cle = `${coucheId}:${idx}`;
+    if (t.courant === cle) return;
+    t.courant = cle;
+    refreshControlsDock();
+}
+
+/** Le voisin d'un ouvrage le long de la tournée (en bouclant), sur sa couche ; `null` sans tournée. */
+function voisinTournee(coucheId, idx, dir) {
+    const ordre = ordreTournee(coucheId);
+    if (!ordre?.length) return null;
+    const cle = voisinDansTournee(ordre, `${coucheId}:${idx}`, dir);
+    const o = ordre.find((x) => x.cle === cle);
+    return o ? { coucheId, idx: o.idx } : null;
+}
+
+/**
+ * Démarre la tournée du contexte : par l'ouvrage le plus proche devant soi quand on connaît sa position, par le premier sinon.
+ * L'ouvrage s'ouvre comme partout (bulle, fiche ou saisie selon la posture) ; ◀ ▶ suivent ensuite la ligne.
+ */
+function demarrerTournee() {
     const trace = tourneeActive();
-    if (!trace) return '';
-    const ordre = ordreTournee() || [];
-    const L = longueurMetres(trace.coordinates);
-    const n = ordre.length;
-    const resume = `Tournée · ${direLongueur(L)} · ${n ? `${n} ouvrage${n > 1 ? 's' : ''}` : 'aucun ouvrage'}`;
-    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage" onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
+    if (!trace) return;
+    // On travaille sur les couches de relevé du contexte quand il en définit (la ronde des pièges, pas les luminaires qui l'entourent) ;
+    // sinon sur tout ce qu'il laisse voir.
+    const propose = relevesDuContexte();
+    const tout = ordreTournee() || [];
+    const ordre = propose ? tout.filter((o) => { const l = STATE.layers.find((x) => x.id === o.coucheId); return l && releveProposeDans(propose, cleReleve(l)); }) : tout;
+    if (!ordre.length) { showToast('Aucun ouvrage affiché par ce contexte', 'warning'); return; }
+    const abscisse = _dernierePosition ? projeter(trace.coordinates, _dernierePosition).abscisse : null;
+    const o = ordre[Math.max(0, departDeTournee(ordre, abscisse, { totalM: longueurMetres(trace.coordinates) }))];
+    _tournee = { cleContexte: _contexteCle, coucheId: o.coucheId, courant: o.cle };
+    $('map-controls-dock')?.classList.add('collapsed');
+    refreshControlsDock();
+    allerAObjet(o.coucheId, o.idx);
+}
+
+function arreterTournee() {
+    if (!_tournee) return;
+    _tournee = null;
+    $('map-controls-dock')?.classList.add('collapsed');
+    refreshControlsDock();
+}
+
+/** Passer à l'ouvrage suivant (`dir` = 1) ou précédent (`dir` = -1) de la tournée. */
+function pasTournee(dir) {
+    const t = tourneeEnCours();
+    if (!t) return;
+    const [coucheId, idx] = [t.coucheId, Number(String(t.courant || '').split(':').pop())];
+    const v = voisinTournee(coucheId, Number.isFinite(idx) ? idx : -1, dir);
+    if (v) allerAObjet(v.coucheId, v.idx);
+}
+
+/** Le rang et le nombre d'ouvrages de la tournée en cours, pour la pastille. */
+function avancementTournee() {
+    const t = tourneeEnCours();
+    if (!t) return null;
+    const ordre = ordreTournee(t.coucheId) || [];
+    const r = rangDansTournee(ordre, t.courant);
+    return { rang: r.rang, total: r.total };
+}
+
+/** Le panneau de la pastille « Tournée » : où l'on en est, ◀ ▶, arrêter, et les ouvrages dans l'ordre de la ligne. */
+function renderTourneeDockSlotHtml() {
+    const t = tourneeEnCours();
+    const trace = tourneeActive();
+    if (!t || !trace) return '<div class="dock-slot-data"><div class="hint">Aucune tournée en cours.</div></div>';
+    const ordre = ordreTournee(t.coucheId) || [];
+    const av = avancementTournee();
+    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage${o.cle === t.courant ? ' courant' : ''}" ${o.cle === t.courant ? 'aria-current="true"' : ''} onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
         <span class="n">${i + 1}</span><span class="nm">${echapper(o.nom)}</span><span class="d">${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}</span></button>`).join('');
-    return `<details class="contexte-tournee"><summary>${echapper(resume)}${trace.nom ? ` <small>${echapper(trace.nom)}</small>` : ''}</summary>
-        ${n ? `<div class="contexte-ouvrages">${lignes}</div>${n > 150 ? `<div class="hint">Les 150 premiers sur ${n}.</div>` : ''}`
-            : '<div class="hint">Aucun ouvrage affiché par ce contexte : un filtre ou une couche masquée les écarte.</div>'}
-    </details>`;
+    return `<div class="dock-slot-data dock-slot-tournee">
+        <div class="dock-slot-head"><span class="dock-slot-title">Tournée · ${av && av.rang ? `${av.rang} / ${av.total}` : `${ordre.length} ouvrages`}</span>
+            <span class="tournee-actions">
+                <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage précédent" onclick="A.tourneePas(-1)">Précédent</button>
+                <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage suivant" onclick="A.tourneePas(1)">Suivant</button>
+                <button type="button" class="btn btn-soft btn-sm" onclick="A.tourneeArreter()">Arrêter</button>
+            </span></div>
+        <div class="dock-slot-body"><div class="contexte-ouvrages">${lignes}</div>${ordre.length > 150 ? `<div class="hint">Les 150 premiers sur ${ordre.length}.</div>` : ''}</div>
+    </div>`;
 }
 
 function renderContexteDockSlotHtml() {
@@ -8030,7 +8124,6 @@ function renderContexteDockSlotHtml() {
         <div class="dock-slot-body">
             ${courant ? `<div class="contexte-courant">
                 ${courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
-                ${htmlTourneeContexteActif()}
             </div>` : ''}
             <div class="contexte-liste">
                 ${choix(null, 'Scène de base', '', !actif)}
@@ -10699,7 +10792,9 @@ function renderObjectInspector() {
     // En terrain, seuls les formulaires que la scene a rendus disponibles ont un
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
-    const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
+    // Un formulaire qui ajoute une ligne n'a d'onglet que si la saisie est ouverte : en Lecture il n'y a rien à y faire, et un onglet qui ne
+    // dit que « indisponible ici » n'a pas à s'afficher.
+    const formulaires = view ? offertsEnLecture(tousFormulaires).filter((f) => f.surLaCouche || saisieTerrain) : tousFormulaires;
     const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f), consultation: view && !!f });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
@@ -11063,6 +11158,42 @@ function bulleActive(layer) {
     return !!(b?.actif && layer.sourceTable && CONFIG.grist.ready);
 }
 
+/**
+ * La suite de la bulle ouverte : les objets d'où l'on vient quand ce n'est pas la tournée (la liste « Choisir un objet », dans son
+ * ordre), sous la forme `{ coucheId, idxs }`. `null` : l'objet a été touché sur la carte.
+ */
+let _suiteBulle = null;
+
+/**
+ * Le rang d'un objet dans ce que ◀ ▶ parcourent depuis sa bulle, et ses voisins : la tournée du contexte quand il y en a une, sinon la
+ * liste d'où l'on vient. `null` si la bulle n'a pas de suite — les flèches ne s'affichent alors pas.
+ */
+function suiteDeBulle(layer, idx) {
+    const ordre = ordreTournee(layer.id);
+    if (ordre?.length) {
+        const r = rangDansTournee(ordre, `${layer.id}:${idx}`);
+        if (r.rang > 0) return { rang: r.rang, total: r.total, voisin: (dir) => voisinTournee(layer.id, idx, dir), liste: null };
+    }
+    const s = _suiteBulle;
+    if (s && s.coucheId === layer.id && Array.isArray(s.idxs) && s.idxs.length > 1) {
+        const i = s.idxs.indexOf(idx);
+        if (i >= 0) {
+            const n = s.idxs.length;
+            return { rang: i + 1, total: n, liste: s, voisin: (dir) => ({ coucheId: layer.id, idx: s.idxs[(i + (dir < 0 ? -1 : 1) + n) % n] }) };
+        }
+    }
+    return null;
+}
+
+/** La barre de la bulle : ◀ rang ▶ à gauche quand il y a une suite, la fermeture à droite. */
+function htmlBarreBulle(suite) {
+    const bouton = (nav, libelle, trace) => `<button type="button" class="bulle-btn" data-nav="${nav}" aria-label="${libelle}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${trace}"/></svg></button>`;
+    return `<div class="bulle-barre">
+        ${suite ? `<div class="bulle-suite" role="group" aria-label="Objets de la suite">${bouton('precedent', 'Objet précédent', 'M15 6l-6 6 6 6')}<span class="bulle-rang" aria-live="polite">${suite.rang} / ${suite.total}</span>${bouton('suivant', 'Objet suivant', 'M9 6l6 6-6 6')}</div>` : '<span></span>'}
+        ${bouton('fermer', 'Fermer', 'M6 6l12 12M18 6L6 18').replace('class="bulle-btn"', 'class="bulle-btn bulle-fermer"')}
+    </div>`;
+}
+
 const _urlsPhotos = new Map();   // id de pièce jointe -> Promise<url>
 /**
  * L'adresse d'une photo. Dans l'application, l'adaptateur lit le fichier avec
@@ -11144,9 +11275,10 @@ async function derniereVisite(layer, rowId, lien) {
 }
 
 /** La mise en page d'une bulle (le contenu vient de `modeleBulle`). */
-function htmlBulle(m) {
+function htmlBulle(m, suite = null) {
     const e = escapeHtml;
-    return `<div class="atlas-bulle">
+    return `<div class="atlas-bulle${m.photos.length ? ' avec-photos' : ''}">
+        ${htmlBarreBulle(suite)}
         ${m.photos.length ? `<div class="bulle-photos">${m.photos.map((id) => `<img data-photo="${id}" alt="" loading="lazy">`).join('')}</div>` : ''}
         ${m.titre ? `<div class="bulle-titre">${e(m.titre)}</div>` : ''}
         ${m.pastilles.length ? `<div class="bulle-pastilles">${m.pastilles.map((p) => `<span class="bulle-pastille" title="${e(p.libelle)}"${p.couleur ? ` style="background:${e(p.couleur)};color:${p.encre}"` : ''}>${e(p.texte)}</span>`).join('')}</div>` : ''}
@@ -11201,11 +11333,21 @@ async function ouvrirBulle(layer, idx, feature, lngLat) {
     const centre = lngLat ? [lngLat.lng, lngLat.lat] : featureCentroidLngLat(feature);
     if (!centre) return;
     // Un squelette tout de suite : la bulle répond au toucher, le reste suit.
-    _viewPopup = new maplibregl.Popup({ maxWidth: '320px', closeButton: true, closeOnClick: true, className: 'atlas-view-popup atlas-bulle-popup' })
+    const suite = suiteDeBulle(layer, idx);
+    // La fermeture et les flèches sont celles de la bulle (`htmlBarreBulle`), pas le « × » par défaut de MapLibre.
+    _viewPopup = new maplibregl.Popup({ maxWidth: '320px', closeButton: false, closeOnClick: true, className: 'atlas-view-popup atlas-bulle-popup' })
         .setLngLat(centre)
-        .setHTML(`<div class="atlas-bulle"><div class="bulle-titre">${escapeHtml(nomObjet(props) || layer.name)}</div><div class="range-info">…</div></div>`)
+        .setHTML(`<div class="atlas-bulle">${htmlBarreBulle(suite)}<div class="bulle-titre">${escapeHtml(nomObjet(props) || layer.name)}</div><div class="range-info">…</div></div>`)
         .addTo(map);
     const popup = _viewPopup;
+    popup.getElement().addEventListener('click', (ev) => {
+        const b = ev.target.closest('[data-nav]');
+        if (!b) return;
+        ev.stopPropagation();
+        if (b.dataset.nav === 'fermer') { closeViewPopup(); return; }
+        const v = suite?.voisin(b.dataset.nav === 'precedent' ? -1 : 1);
+        if (v) allerAObjet(v.coucheId, v.idx, { suite: suite.liste });
+    });
     const champsRef = [...new Set([cfg.titre, ...(cfg.champs || [])].filter(Boolean))];
     const [apparences, libelles, derniere] = await Promise.all([
         Promise.all((cfg.pastilles || []).map(async (c) => [c, await apparencesDeChamp(layer, c).catch(() => new Map())])),
@@ -11238,7 +11380,7 @@ async function ouvrirBulle(layer, idx, feature, lngLat) {
         const pe = pastilleEtat(Eclairage.etats.get(`${layer.id}:${idx}`));
         if (pe) m.pastilles.unshift(pe);
     }
-    popup.setHTML(htmlBulle(m));
+    popup.setHTML(htmlBulle(m, suite));
     const el = popup.getElement();
     garderBulleVisible(el);
     // Un compteur « 1 / 3 » sur les photos : la bande défile au doigt, sans barre.
@@ -11491,11 +11633,12 @@ function buildViewPopupHtml(layer, feature, idx) {
  * distante il n'y a pas de source : la feature rendue **est** tout ce qu'on
  * aura, et elle porte les attributs, qui sont ce que la fiche montre.
  */
-function showViewFeaturePopup(layer, idx, lngLat, featureRendue = null) {
+function showViewFeaturePopup(layer, idx, lngLat, featureRendue = null, suite = null) {
     if (!map || typeof maplibregl === 'undefined') return;
     const feature = layer.geojson?.features?.[idx] || featureRendue;
     if (!feature) return;
     closeViewPopup();
+    _suiteBulle = suite;
     if (bulleActive(layer)) { ouvrirBulle(layer, idx, feature, lngLat); return; }
     let coords = lngLat;
     if (!coords && feature.geometry?.type === 'Point') {
@@ -14032,7 +14175,7 @@ function buildCmdItems(q) {
  * ouvrait la fiche de saisie même quand la couche avait une bulle (constaté le
  * 01/10/2026) : le toucher et la recherche ne menaient pas au même endroit.
  */
-function allerAObjet(coucheId, idx) {
+function allerAObjet(coucheId, idx, { suite = null } = {}) {
     const layer = STATE.layers.find((l) => l.id === coucheId);
     const f = layer?.geojson?.features?.[idx];
     if (!f) return;
@@ -14041,7 +14184,7 @@ function allerAObjet(coucheId, idx) {
     // recaler une fois la carte immobile. La règle est celle du toucher.
     if (decisionPour(layer) === 'fiche') { ouvrirObjet(layer, idx); return; }
     const c = featureCentroidLngLat(f);
-    const ouvrir = () => ouvrirObjet(layer, idx, { lngLat: c ? { lng: c[0], lat: c[1] } : null });
+    const ouvrir = () => ouvrirObjet(layer, idx, { lngLat: c ? { lng: c[0], lat: c[1] } : null, suite });
     if (map?.isMoving()) map.once('moveend', ouvrir); else ouvrir();
 }
 
@@ -14065,13 +14208,15 @@ function decisionPour(layer) {
         enSaisie: coucheEnSaisie(layer),
         distant: !!layer?._distant,
         enPresentation: _storyPresenting,
-        saisiesEtape: coucheDansSaisiesEtape(layer),
+        // Les saisies d'une étape ou d'un contexte ouvrent la fiche pour saisir : en Lecture la saisie est fermée, la bulle est la bonne vue.
+        saisiesEtape: coucheDansSaisiesEtape(layer) && !!CONFIG.peutSaisir,
     });
 }
 
 /** Ouvre l'objet comme la règle le veut. La liste ouverte se replie : elle recouvrirait la bulle. */
-function ouvrirObjet(layer, idx, { lngLat = null, feature = null } = {}) {
+function ouvrirObjet(layer, idx, { lngLat = null, feature = null, suite = null } = {}) {
     if (!layer) return null;
+    noterTournee(layer.id, idx);
     const decision = decisionPour(layer);
     if (decision === 'fiche') {
         closeViewPopup();
@@ -14079,7 +14224,7 @@ function ouvrirObjet(layer, idx, { lngLat = null, feature = null } = {}) {
         enterSelectionMode(layer.id, idx);
     } else {
         fermerListe();
-        showViewFeaturePopup(layer, idx, lngLat, feature);
+        showViewFeaturePopup(layer, idx, lngLat, feature, suite);
     }
     return decision;
 }
@@ -14243,6 +14388,7 @@ function renderListeLignes() {
         rangs,
         visible: (e) => !garde || garde(feats[e.idx]),
     });
+    _liste.affiches = r.items.map((o) => o.idx);
     const peutVisiter = !!formulaireDeReleve(layer);
     const total = cache?.entrees.length || 0;
 
@@ -15875,6 +16021,9 @@ const A = {
         renderRecit();
         showToast('Tournée retirée', 'info');
     },
+    tourneeDemarrer() { demarrerTournee(); },
+    tourneeArreter() { arreterTournee(); },
+    tourneePas(dir) { pasTournee(dir < 0 ? -1 : 1); },
     /** Un ouvrage de la liste de la tournée : la carte s'y rend et sa fiche s'ouvre, comme depuis « Choisir un objet ». */
     tourneeOuvrir(coucheId, idx) {
         $('map-controls-dock')?.classList.add('collapsed');
@@ -17016,7 +17165,9 @@ const A = {
         const layer = STATE.layers.find((l) => l.id === coucheId);
         if (!layer) return;
         $('map-controls-dock')?.classList.add('collapsed');
-        allerAObjet(coucheId, idx);
+        // Depuis la liste, ◀ ▶ de la bulle parcourent les objets qu'elle montre, dans son ordre.
+        const idxs = _liste?.coucheId === coucheId ? (_liste.affiches || []) : [];
+        allerAObjet(coucheId, idx, { suite: idxs.length > 1 ? { coucheId, idxs: [...idxs] } : null });
     },
     /** « Visite » sur une ligne : le formulaire de relevé de cet objet, sans passer par la bulle. */
     listeVisite(coucheId, idx) {
@@ -17179,6 +17330,7 @@ function nav(dir) {
         if (next == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
         STATE.selection.features = [next];
         flyToFeature(layer, next); afterSelectionChange();
+        noterTournee(layer.id, next);
     }
 }
 window.A = A;

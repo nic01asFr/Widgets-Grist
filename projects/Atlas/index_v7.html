@@ -1463,7 +1463,7 @@
             flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover;
             scroll-snap-align: start; cursor: zoom-in;
         }
-        .atlas-bulle .bulle-titre { font-size: 14px; font-weight: 700; margin-top: 10px; margin-bottom: 6px; padding-right: 18px; }
+        .atlas-bulle .bulle-titre { font-size: 14px; font-weight: 700; margin-top: 10px; margin-bottom: 6px; }
         .atlas-bulle .bulle-pastilles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
         .atlas-bulle .bulle-pastille {
             border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600;
@@ -1476,6 +1476,40 @@
         }
         .atlas-bulle .bulle-champs dt { color: var(--muted, #8a7a68); flex-shrink: 0; }
         .atlas-bulle .bulle-champs dd { margin: 0; text-align: right; word-break: break-word; }
+        /* Barre de la bulle : fermeture et ◀ ▶ aux couleurs de la bulle, au lieu du « × » par défaut de MapLibre. Sur une photo, des pastilles
+           claires qui se lisent sur n'importe quelle image. */
+        .atlas-bulle { position: relative; }
+        .atlas-bulle > .bulle-barre {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            margin: 8px 8px 0;
+        }
+        .atlas-bulle.avec-photos > .bulle-barre { position: absolute; top: 8px; left: 8px; right: 8px; margin: 0; z-index: 2; }
+        .atlas-bulle .bulle-btn {
+            display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+            width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+            background: var(--surface-muted, #f1ece2); color: var(--ink, #1e140a);
+            transition: background .12s ease, transform .12s ease;
+        }
+        .atlas-bulle .bulle-btn:hover { background: var(--hairline-strong, #e3dccb); }
+        .atlas-bulle .bulle-btn:active { transform: scale(.94); }
+        .atlas-bulle .bulle-btn:focus-visible { outline: 2px solid var(--accent, #C44536); outline-offset: 1px; }
+        .atlas-bulle .bulle-suite {
+            display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 999px;
+            background: var(--surface-muted, #f1ece2);
+        }
+        .atlas-bulle .bulle-suite .bulle-btn { width: 28px; height: 28px; background: transparent; }
+        .atlas-bulle .bulle-suite .bulle-btn:hover { background: var(--hairline-strong, #e3dccb); }
+        .atlas-bulle .bulle-rang { min-width: 44px; text-align: center; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .atlas-bulle.avec-photos .bulle-suite,
+        .atlas-bulle.avec-photos .bulle-fermer { background: rgba(255,255,255,.92); box-shadow: 0 1px 4px rgba(0,0,0,.28); }
+        .atlas-bulle.avec-photos .bulle-suite .bulle-btn { background: transparent; }
+        @media (pointer: coarse) {
+            .atlas-bulle .bulle-btn { width: 36px; height: 36px; }
+            .atlas-bulle .bulle-suite .bulle-btn { width: 34px; height: 34px; }
+        }
+        .dock-slot-tournee .dock-slot-head { flex-wrap: wrap; gap: 6px; }
+        .dock-slot-tournee .tournee-actions { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+        .contexte-ouvrage.courant { background: var(--surface-muted); font-weight: 600; }
         .atlas-bulle .bulle-derniere { color: var(--muted, #8a7a68); margin-bottom: 8px; }
         .atlas-bulle .bulle-derniere span { font-weight: 600; color: var(--ink, #1e140a); }
         .atlas-bulle .bulle-derniere em { font-style: normal; }
@@ -2009,6 +2043,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app_v7.js?v=20261004b"></script>
+    <script type="module" src="./app_v7.js?v=20261004i"></script>
 </body>
 </html>
