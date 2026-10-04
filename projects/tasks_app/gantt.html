@@ -2122,7 +2122,9 @@
                 const depEnd = gristToDate(depTask.dateEcheance);
                 
                 if (!depStart || !depEnd) return;
-                
+                // Une tache deja terminee ou annulee garde ses dates : on ne rejoue pas l'histoire.
+                if (TF.isDone(statusCfg, depTask.statut) || TF.isDead(statusCfg, depTask.statut)) return;
+
                 // Si la tâche dépendante commence avant la fin de la tâche modifiée, la décaler
                 const requiredStart = addDays(changedEnd, 1); // Commence le jour suivant
                 
@@ -2669,7 +2671,7 @@
                     '<div class="task-info">' +
                         '<div class="task-name">' + (jalon ? '◆ ' : '') + (escapeHtml(t.titre) || 'Sans titre') + '</div>' +
                         '<div class="task-meta">' +
-                            '<span class="task-dates">' + formatDateShort(start) + ' → ' + formatDateShort(end) + '</span>' +
+                            '<span class="task-dates">' + (start && end ? formatDateShort(start) + ' → ' + formatDateShort(end) : start ? 'Dès le ' + formatDateShort(start) : end ? 'Jusqu\'au ' + formatDateShort(end) : 'Sans dates') + '</span>' +
                             (!jalon ? '<span class="task-progress-badge">' + progress + '%</span>' : '') +
                             subBadge +
                             childBadge +
@@ -2801,7 +2803,8 @@
                 // Dates effectives : agrégées si parent sans dates propres, sinon dates du parent
                 let tStart = gristToDate(t.dateDebut), tEnd = gristToDate(t.dateEcheance);
                 if (isParent && (!tStart || !tEnd)) { const agg = aggregateDates(t); if (!tStart) tStart = gristToDate(agg.start); if (!tEnd) tEnd = gristToDate(agg.end); }
-                if (!tStart || !tEnd) return;
+                if (!tStart && !tEnd) return;                // sans aucune date : pas de barre (la liste l'indique)
+                if (!tStart) tStart = tEnd; else if (!tEnd) tEnd = tStart;   // une seule borne : barre d'un jour
 
                 const p = getTaskPriority(t);
                 const jalon = isJalon(t);
@@ -3311,6 +3314,7 @@
 
             if (field === 'dateDebut' || field === 'dateEcheance') {
                 value = value ? dateToGrist(TF.parseISODate(value)) : null;
+                panelState.datesTouched = true;   // la sauvegarde decalera les taches dependantes
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
             if (field === 'statut' || field === 'progression') Object.assign(data, TF.completionPatch(statusCfg, data, { [field]: value }));
@@ -3548,13 +3552,24 @@
             };
 
             try {
-                await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', panelState.taskId, pruneTaskRecord(record)]]);
-                showSaveIndicator();
+                const actions = [['UpdateRecord', 'Tasks', panelState.taskId, pruneTaskRecord(record)]];
                 const idx = tasks.findIndex(t => t.id === panelState.taskId);
+                // Dates modifiees dans la fiche : memes regles que le glisser sur la timeline (taches dependantes decalees).
+                let cascade = [];
+                if (panelState.datesTouched && idx !== -1) {
+                    tasks[idx] = { ...tasks[idx], ...record };   // la propagation lit la nouvelle echeance
+                    cascade = propagateDependencyDates(panelState.taskId);
+                    cascade.forEach(u => actions.push(['UpdateRecord', 'Tasks', u.id, { dateDebut: u.dateDebut, dateEcheance: u.dateEcheance }]));
+                }
+                await grist.docApi.applyUserActions(actions);
+                panelState.datesTouched = false;
+                showSaveIndicator();
                 if (idx !== -1) tasks[idx] = { ...tasks[idx], ...record };
+                if (cascade.length) { showToast('Dates mises à jour (+' + cascade.length + ' tâche' + (cascade.length > 1 ? 's' : '') + ' liée' + (cascade.length > 1 ? 's' : '') + ')', 'success'); render(); }
             } catch (e) {
                 console.error(e);
                 showToast('Erreur sauvegarde', 'error');
+                await loadAllData();   // annule la propagation faite en memoire
             }
         }
 
