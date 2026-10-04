@@ -180,7 +180,7 @@ import {
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=20261003g';
+} from './lib/story.js?v=20261005a';
 import {
   copieLineaire,
   estLineaire,
@@ -214,10 +214,12 @@ import {
   distanceCameraObjet,
   cameraDeclaree,
   deplacementPourVoir,
+  deplacementPourCentrer,
+  zoomPourEcran,
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=20260926a';
+} from './lib/viewport.js?v=20261005a';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -3392,15 +3394,32 @@ function cameraCourante() {
     return { lng: c.lng, lat: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
 }
 
+/**
+ * La zone de la carte qui se voit (ce que les feuilles et la barre du bas ne recouvrent pas), pour qu'une vue composée sur un grand écran
+ * se rejoue sur un petit : voir `zoomPourEcran`. `null` tant que la carte n'a pas de taille.
+ */
+function ecranVisible() {
+    const c = map?.getContainer?.();
+    if (!c || !c.clientWidth || !c.clientHeight) return null;
+    const m = margesActuelles();
+    return { largeur: c.clientWidth - (m.left || 0) - (m.right || 0), hauteur: c.clientHeight - (m.top || 0) - (m.bottom || 0) };
+}
+
+/** Le zoom d'une vue d'auteur, ramené à cet écran. `ref` : la carte sur laquelle elle a été composée, quand elle le dit. */
+function zoomAdapte(zoom, ref = null) {
+    const e = ecranVisible();
+    return e ? zoomPourEcran(zoom, { ...e, ref }) : zoom;
+}
+
 /** Pose le cadrage demandé ; `anime` pour un geste de l'auteur, pas pour l'ouverture. */
 function poserCadrage(cible, anime) {
     const duration = anime ? 900 : 0;
     if (cible.type === 'bornes') map.fitBounds(cible.bornes, { padding: margeCadrage(), maxZoom: 16, duration });
     else if (cible.type === 'camera') {
-        const o = { center: [cible.camera.lng, cible.camera.lat], zoom: cible.camera.zoom, pitch: cible.camera.pitch, bearing: cible.camera.bearing };
+        const o = { center: [cible.camera.lng, cible.camera.lat], zoom: zoomAdapte(cible.camera.zoom), pitch: cible.camera.pitch, bearing: cible.camera.bearing };
         if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
     } else {
-        const o = { center: cible.centre, zoom: cible.zoom };
+        const o = { center: cible.centre, zoom: zoomAdapte(cible.zoom) };
         if (anime) map.flyTo({ ...o, duration }); else map.jumpTo(o);
     }
 }
@@ -5480,7 +5499,9 @@ function applyStoryState(s, opts = {}) {
         }
         map.flyTo({
             center: s.camera.center,
-            zoom: s.camera.zoom,
+            // Composée sur la carte de l'auteur (`ecran`, ou un écran de bureau à défaut) : sur un téléphone on recule, pour que les entités
+            // des deux côtés restent dans le cadre.
+            zoom: zoomAdapte(s.camera.zoom, s.camera.ecran || null),
             pitch: s.camera.pitch,
             bearing: s.camera.bearing,
             padding: margesActuelles({ bulle: mesurerEtageRecit() }),
@@ -11520,6 +11541,14 @@ function garderBulleVisible(el) {
         ({ emprise } = mesurer());
         r = deplacementPourVoir({ emprise, carte, marges, marge: 8 });
     }
+    if (surTelephone() && !r.cadrer) {
+        // Sur téléphone, l'objet et sa bulle se centrent dans ce que les feuilles et la rangée de pastilles laissent voir : en suivant une tournée,
+        // chaque objet arrive au même endroit. (Au bureau, la carte ne bouge que si la bulle sort.)
+        const pastilles = $('dock-fabs')?.getClientRects().length ? ($('dock-fabs').getBoundingClientRect().bottom - rc.top + 8) : 0;
+        const centrage = deplacementPourCentrer({ emprise: mesurer().emprise, carte, marges: { ...marges, top: Math.max(marges.top || 0, pastilles) } });
+        if (centrage.dx || centrage.dy) map.panBy([centrage.dx, centrage.dy], { duration: 350 });
+        return;
+    }
     if (!r.cadrer && (r.dx || r.dy)) map.panBy([r.dx, r.dy], { duration: 300 });
 }
 
@@ -16026,9 +16055,16 @@ const A = {
         if (!_storyPresenting) return;
         ouvrirObjet(STATE.layers.find((l) => l.id === coucheId), idx);
     },
-    contexteAppliquer(cle) { appliquerContexte(cle); },
+    contexteAppliquer(cle) {
+        appliquerContexte(cle);
+        // Sur téléphone, le panneau recouvre la carte : on vient de choisir ce qu'on veut y voir, il se replie.
+        if (surTelephone()) $('map-controls-dock')?.classList.add('collapsed');
+    },
     ouvertureRegler(mode, cle) { reglerOuverture(mode, cle || null); renderRecit(); },
-    contexteQuitter() { quitterContexte(); },
+    contexteQuitter() {
+        quitterContexte();
+        if (surTelephone()) $('map-controls-dock')?.classList.add('collapsed');
+    },
     synchroEnvoyer() { clientHorsLigne()?.envoyer(); },
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
