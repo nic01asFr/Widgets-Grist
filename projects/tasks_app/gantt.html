@@ -760,6 +760,13 @@
     .progress-slider { width: 100%; }
     /* Description : meme police que le reste (elle etait en monospace). */
     .form-textarea { font-family: inherit; }
+    /* Temps & charge : la valeur s'ajuste a son contenu, sans fleches natives, et l'unite « h » reste collee
+       a la valeur (elle flottait a droite d'un champ de largeur fixe, avec un grand vide). */
+    .panel .tc-box .tcv { display: flex; align-items: baseline; gap: var(--sp-1); }
+    .panel .tc-box .tcv input { width: 4ch; min-width: 2ch; -moz-appearance: textfield; appearance: textfield; }
+    .panel .tc-box .tcv input::-webkit-outer-spin-button,
+    .panel .tc-box .tcv input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    @supports (field-sizing: content) { .panel .tc-box .tcv input { field-sizing: content; width: auto; } }
     /* Choix de priorite / statut : le point et le libelle restent sur une seule ligne (« Moyenne » se coupait). */
     .priority-pill, .status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; min-width: 0; }
 
