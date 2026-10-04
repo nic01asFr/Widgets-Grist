@@ -6,23 +6,23 @@ import {
   rowsToGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.12.2';
+} from './grist-rows.js?v=1.12.3';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.12.2';
+} from './manifest-binding.js?v=1.12.3';
 import { parseGristBool } from './grist-bool.js';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.12.2';
-import { isModelLayer } from './model-layer.js?v=1.12.2';
-import { parametresDObjetValides } from './parametres-objet.js?v=1.12.2';
-import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.12.2';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.12.3';
+import { isModelLayer } from './model-layer.js?v=1.12.3';
+import { parametresDObjetValides } from './parametres-objet.js?v=1.12.3';
+import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.12.3';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.12.2';
+} from './declarative-style.js?v=1.12.3';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 

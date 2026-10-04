@@ -5,8 +5,8 @@ import {
   createDefaultViewerControls,
   parseViewerControls,
   serializeViewerControls,
-} from './viewer-controls.js?v=1.12.2';
-import { expositionDepuisJSON, expositionAEnregistrer, expositionVide } from './exposition.js?v=1.12.2';
+} from './viewer-controls.js?v=1.12.3';
+import { expositionDepuisJSON, expositionAEnregistrer, expositionVide } from './exposition.js?v=1.12.3';
 
 export const ATLAS_SCENE_PREFS_TABLE = 'Atlas_ScenePrefs';
 
@@ -70,7 +70,7 @@ export function reglagesDepuisJSON(brut) {
   return reglagesAEnregistrer(obj);
 }
 
-/** @param {import('./viewer-controls.js?v=1.12.2').ViewerControl[]} list */
+/** @param {import('./viewer-controls.js?v=1.12.3').ViewerControl[]} list */
 export function prefsPayloadFromViewerControls(list) {
   return { ViewerJSON: JSON.stringify(serializeViewerControls(list)) };
 }
@@ -112,7 +112,7 @@ export async function ensureScenePrefsTable(docApi, opts = {}) {
 
 const vide = () => ({ viewerControls: createDefaultViewerControls(), settings: {}, exposition: expositionVide(), miniature: '' });
 
-/** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=1.12.2').ViewerControl[], settings: object }>} */
+/** @returns {Promise<{ viewerControls: import('./viewer-controls.js?v=1.12.3').ViewerControl[], settings: object }>} */
 export async function loadScenePrefs(docApi) {
   if (!docApi) return vide();
   try {
@@ -140,7 +140,7 @@ export async function loadScenePrefs(docApi) {
   }
 }
 
-/** @param {{ viewerControls: import('./viewer-controls.js?v=1.12.2').ViewerControl[], settings?: object }} prefs */
+/** @param {{ viewerControls: import('./viewer-controls.js?v=1.12.3').ViewerControl[], settings?: object }} prefs */
 export async function saveScenePrefs(docApi, prefs, opts = {}) {
   if (!docApi || opts.viewMode) return;
   await ensureScenePrefsTable(docApi, opts);
