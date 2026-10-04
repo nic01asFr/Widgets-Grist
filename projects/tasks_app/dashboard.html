@@ -466,6 +466,22 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion.
+     * Les motifs sont ANCRES au debut du libelle et limites aux formes de
+     * participe/adjectif (Valide, Termine, Livre...) : une phase active comme
+     * "Realisation", "A valider", "En cours de validation" ou "Non termine"
+     * ne doit jamais etre prise pour une cloture. ------------------------------ */
+    const DONE_HINT = /^\s*(?:termin[ée]e?s?|clos(?:e|es)?|cl[oô]tur[ée]e?s?|fini(?:e|s|es)?|achev[ée]e?s?|livr[ée]e?s?|r[ée]alis[ée]e?s?|compl[eè]t(?:e|es|[ée]e?s?)?|valid[ée]e?s?|done|closed|finished|completed?|delivered)(?![a-zà-ÿ])/i;
+    const DEAD_HINT = /^\s*(?:annul[ée]e?s?|abandonn[ée]e?s?|rejet[ée]e?s?|cancel(?:l?ed)?|caduc(?:que|s|ques)?|rejected|abandoned)(?![a-zà-ÿ])/i;
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -504,11 +520,24 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier statut NON annule (ancienne convention "dernier = fait",
+        // corrigee quand le dernier est "Annule"), a defaut le dernier de la liste.
+        const isDeadHint = s => DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value);
+        let doneValue = null;
+        for (const s of final) { if (!isDeadHint(s) && (DONE_HINT.test(s.label) || DONE_HINT.test(s.value))) doneValue = s.value; }
+        if (doneValue == null) {
+            for (const s of final) { if (!isDeadHint(s)) doneValue = s.value; }
+        }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => isDeadHint(s) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -557,6 +586,12 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -796,6 +831,9 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
@@ -1214,11 +1252,11 @@ function renderKPI(comp, ft) {
     let value = 0, label = '';
     switch (metric) {
         case 'total':     value = ft.length;                                                                            label = 'tâches au total'; break;
-        case 'inprogress':value = ft.filter(t=>!TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches actives'; break;
-        case 'done':      value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length;                                           label = 'tâches terminées'; break;
-        case 'done_week': value = ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length; label = 'terminées cette semaine'; break;
-        case 'late':      value = ft.filter(t=>{ const d=gristToDate(t.dateEcheance); return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t)); }).length; label = 'en retard'; break;
-        case 'rate':      { const done=ft.filter(t=>TF.isTerminal(statusCfg, getStatus(t))).length; value=ft.length?Math.round(done/ft.length*100):0; label='% complété'; break; }
+        case 'inprogress':value = ft.filter(t=>TF.isLive(statusCfg, getStatus(t))).length;                                           label = 'tâches actives'; break;
+        case 'done':      value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length;                                           label = 'tâches terminées'; break;
+        case 'done_week': value = ft.filter(t=>TF.isDone(statusCfg, getStatus(t)) && gristToDate(t.dateEcheance)>=weekStart).length; label = 'terminées cette semaine'; break;
+        case 'late':      value = ft.filter(t=>{ const d=gristToDate(t.dateEcheance); return d&&d<today&&TF.isLive(statusCfg, getStatus(t)); }).length; label = 'en retard'; break;
+        case 'rate':      { const done=ft.filter(t=>TF.isDone(statusCfg, getStatus(t))).length; value=ft.length?Math.round(done/ft.length*100):0; label='% complété'; break; }
     }
     const cls = { total:'kpi-total', inprogress:'kpi-inprogress', done:'kpi-done', done_week:'kpi-done_week', late:'kpi-late', rate:'kpi-rate' }[metric]||'';
     const lateClass = metric==='late'&&value>0 ? 'kpi-late-border' : '';
@@ -1286,7 +1324,7 @@ function renderWorkload(comp, ft) {
             const id = resolveMember(a); if (id == null) return;
             if (!byAssignee[id]) byAssignee[id]={ total:0, active:0 };
             byAssignee[id].total++;
-            if (!TF.isTerminal(statusCfg, getStatus(t))) byAssignee[id].active++;
+            if (TF.isLive(statusCfg, getStatus(t))) byAssignee[id].active++;
         });
     });
     const maxActive = Math.max(...team.map(m=>(byAssignee[m.id]||{}).active||0), 1);
@@ -1341,7 +1379,7 @@ function renderPlanCharge(comp, ft) {
     const includeDone = comp.config.includeDone === 'oui';
     const defaultCap = parseFloat(comp.config.capacite) || 35;
     let planTasks = ft;
-    if (!includeDone) planTasks = planTasks.filter(t => !TF.isTerminal(statusCfg, getStatus(t)));
+    if (!includeDone) planTasks = planTasks.filter(t => TF.isLive(statusCfg, getStatus(t)));
     const byMP = TF.chargeByMemberPeriod(planTasks, granularity);
     const undated = planTasks.filter(t => TF.parseCharges(t.charges).length && (t.dateDebut == null || t.dateEcheance == null)).length;
     if (!Object.keys(byMP).length && !undated) return '<div class="empty-state"><div class="empty-icon">▦</div><div class="empty-text">Aucune charge datée à planifier</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Renseignez la charge par personne + des dates sur les tâches.</div></div>';
@@ -1379,7 +1417,7 @@ function renderUpcoming(comp, ft) {
     const today = new Date(); today.setHours(0,0,0,0);
     const upcoming = ft.filter(t => {
         const d=gristToDate(t.dateEcheance);
-        if (!d || TF.isTerminal(statusCfg, getStatus(t))) return false;
+        if (!d || !TF.isLive(statusCfg, getStatus(t))) return false;
         return Math.ceil((d-today)/86400000) <= horizon;
     }).map(t => ({ t, d:gristToDate(t.dateEcheance), days:Math.ceil((gristToDate(t.dateEcheance)-today)/86400000) }))
       .sort((a,b)=>a.d-b.d).slice(0,8);
@@ -1411,7 +1449,7 @@ function renderProjects(comp, ft) {
         if (!t.projet) return;
         if (!stats[t.projet]) stats[t.projet]={ total:0, done:0, prog:0 };
         stats[t.projet].total++;
-        if (TF.isTerminal(statusCfg, getStatus(t))) stats[t.projet].done++;
+        if (TF.isDone(statusCfg, getStatus(t))) stats[t.projet].done++;
         stats[t.projet].prog += (t.progression||0);
     });
     return `<div class="projects-list">${active.filter(p=>stats[p.id]).map(p => {
@@ -1433,16 +1471,16 @@ function renderList(comp, ft) {
     const limit  = parseInt(comp.config.limit)||10;
     const today  = new Date(); today.setHours(0,0,0,0);
     let list = ft;
-    if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&!TF.isTerminal(statusCfg, getStatus(t));});
+    if (preset==='overdue')   list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&d<today&&TF.isLive(statusCfg, getStatus(t));});
     else if (preset==='today')     list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);return d&&isSameDay(d,today);});
-    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&!TF.isTerminal(statusCfg, getStatus(t));});
+    else if (preset==='upcoming')  list = ft.filter(t=>{const d=gristToDate(t.dateEcheance);const diff=d&&Math.ceil((d-today)/86400000);return diff!==null&&diff>=0&&diff<=14&&TF.isLive(statusCfg, getStatus(t));});
     else if (preset==='inprogress')list = ft.filter(t=>getStatus(t)==='inprogress');
     if (!list.length) return '<div class="empty-state"><div class="empty-text">Aucune tâche</div></div>';
     return `<div class="list-items">${list.slice(0,limit).map(t=>{
         const p=getPriority(t), s=getStatus(t);
         const d=gristToDate(t.dateEcheance);
         const proj=projects.find(x=>x.id===t.projet);
-        const isLate=d&&d<today&&!TF.isTerminal(statusCfg, s);
+        const isLate=d&&d<today&&TF.isLive(statusCfg, s);
         return `<div class="list-item" onclick="selectTask(${t.id})">
             <div class="list-prio p${p}"></div>
             <div class="list-info">
@@ -1465,7 +1503,7 @@ function renderVelocity(comp, ft) {
         const start = startOfWeek(addDays(today, -w*7));
         const end   = addDays(start, 7);
         const count = ft.filter(t => {
-            if (!TF.isTerminal(statusCfg, getStatus(t))) return false;
+            if (!TF.isDone(statusCfg, getStatus(t))) return false;
             const d=gristToDate(t.dateEcheance);
             return d && d>=start && d<end;
         }).length;
@@ -1597,7 +1635,7 @@ async function markDone(taskId, event) {
     event.stopPropagation();
     if (!gristReady) return;
     try {
-        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.terminalValue, progression: 100 }]]);
+        await grist.docApi.applyUserActions([['UpdateRecord', 'Tasks', taskId, { statut: statusCfg.doneValue, progression: 100 }]]);
         await loadAllData();
     } catch(e) { console.error(e); }
 }

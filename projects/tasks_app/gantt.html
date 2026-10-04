@@ -745,6 +745,22 @@
             const DEFAULTS_BY_VALUE = {};
             for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+            /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+             * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+             * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+             *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+             *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+             *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+             * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+             * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+             * piloter la completion.
+             * Les motifs sont ANCRES au debut du libelle et limites aux formes de
+             * participe/adjectif (Valide, Termine, Livre...) : une phase active comme
+             * "Realisation", "A valider", "En cours de validation" ou "Non termine"
+             * ne doit jamais etre prise pour une cloture. ------------------------------ */
+            const DONE_HINT = /^\s*(?:termin[ée]e?s?|clos(?:e|es)?|cl[oô]tur[ée]e?s?|fini(?:e|s|es)?|achev[ée]e?s?|livr[ée]e?s?|r[ée]alis[ée]e?s?|compl[eè]t(?:e|es|[ée]e?s?)?|valid[ée]e?s?|done|closed|finished|completed?|delivered)(?![a-zà-ÿ])/i;
+            const DEAD_HINT = /^\s*(?:annul[ée]e?s?|abandonn[ée]e?s?|rejet[ée]e?s?|cancel(?:l?ed)?|caduc(?:que|s|ques)?|rejected|abandoned)(?![a-zà-ÿ])/i;
+
             // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
             function columnarToRows(data) {
                 if (!data || Array.isArray(data)) return data || [];
@@ -783,11 +799,24 @@
                 const final = clean.length ? clean : DEFAULT_STATUSES.slice();
                 const byValue = {};
                 for (const s of final) byValue[s.value] = s;
+                // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+                // repli = dernier statut NON annule (ancienne convention "dernier = fait",
+                // corrigee quand le dernier est "Annule"), a defaut le dernier de la liste.
+                const isDeadHint = s => DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value);
+                let doneValue = null;
+                for (const s of final) { if (!isDeadHint(s) && (DONE_HINT.test(s.label) || DONE_HINT.test(s.value))) doneValue = s.value; }
+                if (doneValue == null) {
+                    for (const s of final) { if (!isDeadHint(s)) doneValue = s.value; }
+                }
+                if (doneValue == null) doneValue = final[final.length - 1].value;
+                const deadValues = final.filter(s => isDeadHint(s) && s.value !== doneValue).map(s => s.value);
                 return {
                     list: final,
                     byValue,
                     values: final.map(s => s.value),
-                    terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+                    terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+                    doneValue: doneValue,      // statut = "fait" (cloture positive)
+                    deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
                     firstValue: final[0].value,
                     source: clean.length ? source : 'default'
                 };
@@ -836,6 +865,12 @@
                 return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
             }
             function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+            // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+            function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+            // Cloture "negative" (annule/abandonne/rejete).
+            function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+            // Ni fait ni annule = actif.
+            function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
             /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
              * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -1075,6 +1110,9 @@
                 buildStatusConfig: buildStatusConfig,
                 getStatus: getStatus,
                 isTerminal: isTerminal,
+                isDone: isDone,
+                isDead: isDead,
+                isLive: isLive,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
                 parseCharges: parseCharges,
@@ -2418,12 +2456,12 @@
             const timeOver = passe > estim && estim > 0;
 
             // Prérequis jalon (auto depuis dependDe)
-            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isTerminal(statusCfg, t?.statut); }).length;
+            const doneCount = data.dependDe.filter(id => { const t = tasks.find(x => x.id === id); return TF.isDone(statusCfg, t?.statut); }).length;
             const prereqHtml = data.dependDe.map(id => {
                 const t = tasks.find(x => x.id === id);
                 if (!t) return '';
                 const st = t.statut || 'todo';
-                return '<div class="prereq-item ' + (TF.isTerminal(statusCfg, st) ? 'done' : '') + '" onclick="openTaskPanel(' + id + ')"><span class="prereq-item-icon">' + (TF.isTerminal(statusCfg, st) ? '✓' : '○') + '</span><span class="prereq-item-title">' + escapeHtml(t.titre) + '</span><span class="prereq-badge" style="background:' + TF.getStatus(statusCfg, st).fillColor + ';color:' + TF.getStatus(statusCfg, st).textColor + '">' + escapeHtml(TF.getStatus(statusCfg, st).label) + '</span></div>';
+                return '<div class="prereq-item ' + (TF.isDone(statusCfg, st) ? 'done' : '') + '" onclick="openTaskPanel(' + id + ')"><span class="prereq-item-icon">' + (TF.isDone(statusCfg, st) ? '✓' : '○') + '</span><span class="prereq-item-title">' + escapeHtml(t.titre) + '</span><span class="prereq-badge" style="background:' + TF.getStatus(statusCfg, st).fillColor + ';color:' + TF.getStatus(statusCfg, st).textColor + '">' + escapeHtml(TF.getStatus(statusCfg, st).label) + '</span></div>';
             }).join('');
 
             content.innerHTML =
@@ -2438,7 +2476,7 @@
 
                 '<div class="props-list">' +
                     '<div class="prop-row pr-status"><span class="prop-label">Statut</span><div class="prop-value"><div class="status-selector">' +
-                        (data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.terminalValue)).map(s => '<div class="status-pill ' + (data.statut === s.value ? 'selected' : '') + '" data-status="' + escapeHtml(s.value) + '" onclick="updateField(\'statut\', this.dataset.status)"><span class="panel-pill-dot" style="background:' + s.fillColor + '"></span>' + escapeHtml(s.label) + '</div>').join('') +
+                        (data.type !== 'jalon' ? statusCfg.list : statusCfg.list.filter(s => s.value === statusCfg.firstValue || s.value === statusCfg.doneValue)).map(s => '<div class="status-pill ' + (data.statut === s.value ? 'selected' : '') + '" data-status="' + escapeHtml(s.value) + '" onclick="updateField(\'statut\', this.dataset.status)"><span class="panel-pill-dot" style="background:' + s.fillColor + '"></span>' + escapeHtml(s.label) + '</div>').join('') +
                     '</div></div></div>' +
                     (data.type !== 'reunion' ?
                         '<div class="prop-row"><span class="prop-label">Priorité</span><div class="prop-value"><div class="priority-selector">' +
@@ -2577,7 +2615,7 @@
                 value = value ? dateToGrist(new Date(value)) : null;
             }
             // dateCloture auto : posee au statut terminal, effacee si reouverture
-            if (field === 'statut') { const _wasT = TF.isTerminal(statusCfg, data.statut), _nowT = TF.isTerminal(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
+            if (field === 'statut') { const _wasT = TF.isDone(statusCfg, data.statut), _nowT = TF.isDone(statusCfg, value); if (_nowT && !_wasT) data.dateCloture = Math.floor(Date.now() / 1000); else if (!_nowT && _wasT) data.dateCloture = null; }
 
             data[field] = value;
 

@@ -295,6 +295,22 @@ const TF = (function () {
     const DEFAULTS_BY_VALUE = {};
     for (var _i = 0; _i < DEFAULT_STATUSES.length; _i++) DEFAULTS_BY_VALUE[DEFAULT_STATUSES[_i].value] = DEFAULT_STATUSES[_i];
 
+    /* ----- Sémantique statut : terminé / annulé / actif ---------------------
+     * On NE se fie plus a "le dernier = termine" (faux pour des statuts de
+     * gouvernance ou le dernier est "Annule"). On distingue 3 notions :
+     *   - DONE  : cloture POSITIVE (Valide/Termine/Clos) -> compte comme fait
+     *   - DEAD  : cloture NEGATIVE (Annule/Abandonne/Rejete) -> exclu des "actives"/"en retard"
+     *   - LIVE  : ni fait ni annule (En attente / En suspens ...)
+     * Detection par libelle (heuristique), surchargeable via cfg.doneValue /
+     * cfg.deadValues. isTerminal reste dispo (retro-compat) mais ne doit plus
+     * piloter la completion.
+     * Les motifs sont ANCRES au debut du libelle et limites aux formes de
+     * participe/adjectif (Valide, Termine, Livre...) : une phase active comme
+     * "Realisation", "A valider", "En cours de validation" ou "Non termine"
+     * ne doit jamais etre prise pour une cloture. ------------------------------ */
+    const DONE_HINT = /^\s*(?:termin[ée]e?s?|clos(?:e|es)?|cl[oô]tur[ée]e?s?|fini(?:e|s|es)?|achev[ée]e?s?|livr[ée]e?s?|r[ée]alis[ée]e?s?|compl[eè]t(?:e|es|[ée]e?s?)?|valid[ée]e?s?|done|closed|finished|completed?|delivered)(?![a-zà-ÿ])/i;
+    const DEAD_HINT = /^\s*(?:annul[ée]e?s?|abandonn[ée]e?s?|rejet[ée]e?s?|cancel(?:l?ed)?|caduc(?:que|s|ques)?|rejected|abandoned)(?![a-zà-ÿ])/i;
+
     // Convertit un tableau Grist colonnaire en tableau d'objets lignes.
     function columnarToRows(data) {
         if (!data || Array.isArray(data)) return data || [];
@@ -333,11 +349,24 @@ const TF = (function () {
         const final = clean.length ? clean : DEFAULT_STATUSES.slice();
         const byValue = {};
         for (const s of final) byValue[s.value] = s;
+        // done = dernier statut dont le libelle/valeur evoque une cloture positive ;
+        // repli = dernier statut NON annule (ancienne convention "dernier = fait",
+        // corrigee quand le dernier est "Annule"), a defaut le dernier de la liste.
+        const isDeadHint = s => DEAD_HINT.test(s.label) || DEAD_HINT.test(s.value);
+        let doneValue = null;
+        for (const s of final) { if (!isDeadHint(s) && (DONE_HINT.test(s.label) || DONE_HINT.test(s.value))) doneValue = s.value; }
+        if (doneValue == null) {
+            for (const s of final) { if (!isDeadHint(s)) doneValue = s.value; }
+        }
+        if (doneValue == null) doneValue = final[final.length - 1].value;
+        const deadValues = final.filter(s => isDeadHint(s) && s.value !== doneValue).map(s => s.value);
         return {
             list: final,
             byValue,
             values: final.map(s => s.value),
-            terminalValue: final[final.length - 1].value, // convention "dernier = termine"
+            terminalValue: final[final.length - 1].value, // retro-compat ("dernier"), NE PAS utiliser pour la completion
+            doneValue: doneValue,      // statut = "fait" (cloture positive)
+            deadValues: deadValues,    // statuts = "annule" (exclus des actives / en retard)
             firstValue: final[0].value,
             source: clean.length ? source : 'default'
         };
@@ -386,6 +415,12 @@ const TF = (function () {
         return { value: value, label: value || '', fillColor: '#94a3b8', textColor: '#ffffff' };
     }
     function isTerminal(cfg, value) { return !!cfg && value === cfg.terminalValue; }
+    // Completion "positive" (remplace l'usage de isTerminal pour "fait").
+    function isDone(cfg, value) { return !!cfg && value === (cfg.doneValue != null ? cfg.doneValue : cfg.terminalValue); }
+    // Cloture "negative" (annule/abandonne/rejete).
+    function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
+    // Ni fait ni annule = actif.
+    function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
     /* Seme les options (choix + couleurs) sur une colonne Choice si elle n'en a
      * pas encore. Defensif. A appeler depuis ensureSchema apres creation.
@@ -625,6 +660,9 @@ const TF = (function () {
         buildStatusConfig: buildStatusConfig,
         getStatus: getStatus,
         isTerminal: isTerminal,
+        isDone: isDone,
+        isDead: isDead,
+        isLive: isLive,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,
         parseCharges: parseCharges,
@@ -667,7 +705,8 @@ const portefById = (id) => S.portefeuilles.find(p => p.id === id);
 function portefKeyOf(t) { const p = projById(t.projet); return (p && p.portefeuille) ? String(p.portefeuille) : '0'; }
 const groupLabel = (g) => g === 'project' ? 'Projet' : g === 'role' ? 'Rôle' : g === 'portefeuille' ? 'Portefeuille' : 'Personne';
 const activeTeam = () => S.team.filter(m => m.actif !== false);
-const isTerminal = (t) => TF.isTerminal(statusCfg, t.statut);
+const isDone = (t) => TF.isDone(statusCfg, t.statut);
+const isLive = (t) => TF.isLive(statusCfg, t.statut);
 const capOf = (m) => (Number(m && m.capaciteHebdo) > 0 ? Number(m.capaciteHebdo) : 35);
 const capPeriod = (cap) => S.granularity === 'month' ? cap * 52 / 12 : cap;
 const plabel = (p) => S.granularity === 'month' ? (p.slice(5) + '/' + p.slice(2, 4)) : ('S' + p.slice(6));
@@ -681,7 +720,7 @@ function subLabel(d) { return S.granularity === 'month' ? '' : (d.getUTCDate() +
 const r1 = (n) => Math.round(n * 10) / 10;
 
 function planTasks() {
-  let ts = S.includeDone ? S.tasks : S.tasks.filter(t => !isTerminal(t));
+  let ts = S.includeDone ? S.tasks : S.tasks.filter(t => isLive(t));
   const f = S.extFilters;  // filtres partagés diffusés par la suite (onOptions)
   if (f) {
     if (f.project != null && f.project !== '') ts = ts.filter(t => String(t.projet) === String(f.project));
@@ -703,7 +742,7 @@ function realCharges(t) {
   if (!tot || !tp) return []; return cs.map(c => ({ teamId: c.teamId, heures: c.heures * tp / tot }));
 }
 // Réalisé : tempsPasse réparti (mesure) ; à défaut, pour une tâche CLÔTURÉE, réalisé estimé = prévu (étalé sur la période réelle via dateCloture, cf render).
-function realisedCharges(t) { const rc = realCharges(t); if (rc.length) return rc; return isTerminal(t) ? effCharges(t) : []; }
+function realisedCharges(t) { const rc = realCharges(t); if (rc.length) return rc; return isDone(t) ? effCharges(t) : []; }
 function chargesFor(t) {
   if (S.mode === 'realise') return realisedCharges(t);
   if (S.mode === 'reste') { const rm = {}; for (const c of realisedCharges(t)) rm[c.teamId] = c.heures; return effCharges(t).map(c => ({ teamId: c.teamId, heures: Math.max(c.heures - (rm[c.teamId] || 0), 0) })).filter(c => c.heures > 0); }
@@ -848,7 +887,7 @@ function render() {
   document.getElementById('navToday').style.display = S.offset !== 0 ? '' : 'none';
 
   const _rmode = S.mode === 'realise' || S.mode === 'reste';
-  const tasks = planTasks().map(t => (_rmode && isTerminal(t) && t.dateCloture && t.dateCloture >= t.dateDebut) ? Object.assign({}, t, { dateEcheance: t.dateCloture }) : t); // réalisé/reste : redater les tâches clôturées sur leur date de clôture réelle
+  const tasks = planTasks().map(t => (_rmode && isDone(t) && t.dateCloture && t.dateCloture >= t.dateDebut) ? Object.assign({}, t, { dateEcheance: t.dateCloture }) : t); // réalisé/reste : redater les tâches clôturées sur leur date de clôture réelle
   const dispo = S.mode === 'dispo';  // mode "capacité disponible" = cap - charge planifiée
   // #5 : en Réalisé/Reste, si la Feuille de temps existe, on place les heures dans leur période RÉELLE (datée) au lieu d'étaler tempsPasse.
   const exactReal = S.hasEntries && (S.mode === 'realise' || S.mode === 'reste');

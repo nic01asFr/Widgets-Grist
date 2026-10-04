@@ -28,7 +28,7 @@ Le code commun (conversions, dates, statuts dynamiques, calcul de charge, `charg
 
 ### Statuts dynamiques (`statusCfg`)
 
-Les statuts ne sont **plus** une enum hardcodée : ils sont lus depuis les Choices réels de la colonne `Tasks.statut` via `TF.loadStatusConfig()` → `statusCfg.byValue[v] = {value, label, fillColor, textColor}`, `statusCfg.terminalValue`, `TF.isTerminal(cfg, value)`. Le dernier statut est considéré « terminal » (clôture). Aucune valeur de statut n'est codée en dur.
+Les statuts ne sont **plus** une enum hardcodée : ils sont lus depuis les Choices réels de la colonne `Tasks.statut` via `TF.loadStatusConfig()` → `statusCfg.byValue[v] = {value, label, fillColor, textColor}`, `statusCfg.doneValue` / `statusCfg.deadValues`, `TF.isDone` / `TF.isDead` / `TF.isLive(cfg, value)`. Trois notions : **fait** (clôture positive : Validé, Terminé, Livré…), **annulé** (Annulé, Abandonné, Rejeté…), **actif** (ni l'un ni l'autre). Le statut « fait » est détecté par le libellé (formes ancrées : « Réalisation », « À valider », « Non terminé » ne comptent pas), à défaut c'est le dernier statut non annulé (ancienne convention « dernier = terminé »). `terminalValue` / `isTerminal` (= le dernier) restent exposés par compatibilité mais ne pilotent plus la complétion. Tests : `npm run test:taskflow`. Aucune valeur de statut n'est codée en dur.
 
 ### Convention `?nav`
 
@@ -284,7 +284,7 @@ JSON `[{teamId, heures}]` = répartition de l'effort par assigné. `effCharges(t
 
 ### `dateCloture`
 
-Posée automatiquement au passage en **statut terminal** (`TF.isTerminal`), effacée si réouverture. Pilote le réalisé-sur-clôture et le calcul de **délai**. Écrite par Kanban/Gantt/Calendar (au changement de statut / drag), **seulement si la colonne existe** (opt-in).
+Posée automatiquement au passage en statut **fait** (`TF.isDone`), effacée si réouverture. Pilote le réalisé-sur-clôture et le calcul de **délai**. Écrite par Kanban/Gantt/Calendar (au changement de statut / drag), **seulement si la colonne existe** (opt-in).
 
 ### Portefeuille — regroupement de projets (opt-in, JPP #11)
 
