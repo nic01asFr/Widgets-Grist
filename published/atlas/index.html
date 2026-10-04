@@ -521,8 +521,25 @@
         .map-controls-dock .dock-panel.dock-panel-tall {
             height: auto; max-height: min(62vh, 460px);
             border-radius: 16px; align-items: flex-start;
-            padding-top: 10px; padding-bottom: 10px;
+            padding: 10px 12px; position: relative;
         }
+        /* Dans un panneau haut, la flèche de repli se pose en haut à droite, sur la ligne du titre : elle laissait une colonne vide à droite
+           de toute la liste. Le titre lui laisse la place. */
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-collapse { position: absolute; top: 8px; right: 8px; z-index: 1; }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-data > :first-child { padding-right: 34px; }
+        /* La hauteur du panneau haut est bornée ; son contenu s'y range au lieu de la dépasser. Une liste dont la hauteur maximale dépassait la place
+           restante était rognée par le panneau, et sa piste de défilement — composée à part — se dessinait en dessous (bande beige). */
+        .map-controls-dock .dock-panel.dock-panel-tall { --haut-panneau: min(62vh, 460px); max-height: var(--haut-panneau); }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-host { align-items: flex-start; min-height: 0; max-height: calc(var(--haut-panneau) - 22px); }
+        .map-controls-dock .dock-panel.dock-panel-tall .dock-slot-data { min-height: 0; max-height: calc(var(--haut-panneau) - 22px); }
+        /* Les défilements du dock utilisent la barre fine standard : la barre native, imbriquée dans un panneau arrondi qui rogne, laissait
+           sa piste se dessiner sous le panneau (bande beige à l'ouverture de « Contexte »). */
+        .map-controls-dock .dock-panel, .map-controls-dock .dock-panel * { scrollbar-width: thin; scrollbar-color: rgba(120, 110, 95, 0.45) transparent; }
+        .dock-slot-contexte > .dock-slot-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+        .dock-slot-contexte .contexte-courant { flex: 0 0 auto; }
+        .dock-slot-contexte .contexte-liste { flex: 1 1 auto; min-height: 0; max-height: none; }
+        .dock-slot-tournee > .dock-slot-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+        .dock-slot-tournee .contexte-ouvrages { max-height: none; overflow: visible; }
         .dock-slot-host {
             display: flex; align-items: center;
             flex: 1; min-width: 0; overflow: hidden;
@@ -613,8 +630,18 @@
         }
         /* Les deux curseurs d'une plage : la poignee deborde de sa piste de 7 px de chaque cote, et le panneau
            coupe ce qui deborde. Une marge les garde entiers ; l'ecart entre les deux les rend saisissables. */
-        .dock-slot-data .rng { display: block; width: calc(100% - 16px); max-width: none; margin: 6px 8px 0; }
-        .dock-slot-data .rng + .rng { margin-top: 18px; }
+        /* Écrites avec `input[type=range]` : la règle générale des curseurs (`input[type=range].rng { width: 100% }`) est plus spécifique qu'un simple
+           `.dock-slot-data .rng`, qui perdait — les curseurs débordaient de 8 px et la poignée de droite était rognée. */
+        .dock-slot-data input[type=range].rng { display: block; width: calc(100% - 16px); max-width: none; margin: 8px 8px 0; box-sizing: border-box; }
+        .dock-slot-data input[type=range].rng + input[type=range].rng { margin-top: 20px; }
+        /* Sous le dernier curseur, la place de la moitié de sa poignée : sinon le panneau la coupe par le bas. */
+        @media (pointer: coarse) {
+            /* Au doigt, une poignée de 14 px ne se saisit pas : 22 px, et la marge qui la garde entière suit. */
+            .dock-slot-data input[type=range].rng::-webkit-slider-thumb { width: 22px; height: 22px; border-radius: 11px; }
+            .dock-slot-data input[type=range].rng::-moz-range-thumb { width: 22px; height: 22px; border-radius: 11px; }
+            .dock-slot-data input[type=range].rng { width: calc(100% - 24px); margin-left: 12px; margin-right: 12px; }
+            .dock-slot-data .dock-slot-body { padding-bottom: 14px; }
+        }
         .dock-slot-data .range-info {
             font-size: 12.5px; color: var(--ink); margin: 0 0 5px 0 !important;
         }
@@ -734,7 +761,7 @@
         }
         .dock-sep { width: 1px; height: 26px; flex: 0 0 auto; margin: 0 2px; background: var(--hairline-strong); }
         /* Contenu des panneaux : pas de carte beige dans la capsule blanche. */
-        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0; }
+        .dock-slot-data .dock-slot-body { background: transparent; border: none; padding: 0 0 9px; }
         .dock-slot-data .cats { background: none; border: none; padding: 0; }
         .dock-slot-data .cat-row { padding: 6px 4px; font-size: 12.5px; }
         .dock-slot-data .cat-count { background: none; padding: 0; font-size: 10.5px; color: var(--muted); opacity: 1; }
@@ -777,6 +804,14 @@
         }
         .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); font-style: italic; }
         .legend-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+        /* Barre de défilement fine standard dans les cadres arrondis qui rognent (légende, bulle d'objet) : la barre native y laissait sa piste se dessiner
+           hors du cadre — bande beige au-dessus de la légende. */
+        .legend, .legend *, .atlas-bulle, .atlas-bulle * { scrollbar-width: thin; scrollbar-color: rgba(120, 110, 95, 0.45) transparent; }
+        /* La légende s'étend en hauteur tant que la carte a la place : la fenêtre moins ce qui occupe le haut (en-tête, rangée de pastilles,
+           barre de sélection) et le bas (tête de la légende, marge). 220 px au moins ; pendant le récit et sur mobile, les ancrages propres restent. */
+        body:not(.mobile-layout):not(.story-presenting) .legend-body {
+            max-height: var(--legende-corps-max, max(220px, calc(100dvh - 250px)));
+        }
         .legend.collapsed .legend-body { display: none; }
         .legend-row { display: flex; align-items: center; gap: 10px; }
         .legend-row .swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -822,6 +857,16 @@
         .sel-btn.danger { background: rgba(196,69,54,0.12); border-color: rgba(196,69,54,0.35); color: var(--accent); }
         .sel-btn.danger:hover { background: rgba(196,69,54,0.22); }
         .sel-count { font-family: var(--mono); font-size: 11px; opacity: 0.85; }
+        /* La barre de sélection se compacte selon la largeur de la CARTE, pas de la fenêtre : rail, module et fiche la rétrécissent, et la barre
+           (chaque libellé sur une ligne) débordait de sa capsule. Du moins utile au plus utile : « Désélectionner », puis « Tout », puis le
+           point ; le libellé s'abrège par une ellipse plutôt que de pousser les boutons dehors. */
+        .map-frame { container-type: inline-size; container-name: carte; }
+        .selection-bar { overflow: hidden; }
+        .selection-bar #sel-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .selection-bar > .sel-btn, .selection-bar > .sel-count, .selection-bar > .vsep, .selection-bar > .sel-dot { flex-shrink: 0; }
+        @container carte (max-width: 760px) { .selection-bar #sel-clear { display: none; } }
+        @container carte (max-width: 600px) { .selection-bar #sel-all { display: none; } .selection-bar .vsep { display: none; } }
+        @container carte (max-width: 460px) { .selection-bar .sel-dot { display: none; } .selection-bar { padding-left: 12px; } }
 
         /* Selection box (shift-drag) */
         .selection-box {
@@ -1209,16 +1254,27 @@
         .dock-slot-data.dock-slot-contexte { width: min(400px, calc(100vw - 160px)); max-width: 100%; }
         .contexte-courant { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
         /* La consigne du contexte actif se lit en entier : un défilement de plus dans le panneau, avec la liste dessous, perd le lecteur. */
+        /* La consigne tient sur deux lignes ; un toucher la déplie. Elle prenait quatre lignes sur sept, avant la liste qu'on vient chercher. */
         .contexte-courant .contexte-consigne { margin-top: 0; padding-top: 0; border-top: 0; max-height: none; overflow: visible; }
-        .contexte-liste { display: flex; flex-direction: column; gap: 4px; max-height: min(34vh, 230px); overflow-y: auto; overscroll-behavior: contain; }
+        .contexte-consigne-btn { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; line-height: inherit; text-align: left; cursor: pointer; }
+        .contexte-consigne-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        .contexte-consigne-txt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+        .contexte-consigne.ouvert .contexte-consigne-txt { display: block; overflow: visible; }
+        .contexte-liste { display: flex; flex-direction: column; gap: 3px; max-height: min(44vh, 300px); overflow-y: auto; overscroll-behavior: contain; }
         .contexte-choix {
             display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left;
-            min-height: 40px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            min-height: 34px; padding: 5px 10px; border-radius: 8px; cursor: pointer;
             border: 1px solid var(--hairline); background: var(--surface); color: var(--text); font: inherit;
         }
         .contexte-choix.on { border-color: var(--accent); background: var(--surface-muted); }
         .contexte-choix:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
         .contexte-nom { font-weight: 600; font-size: 13px; }
+        /* Un titre long revient à la ligne dans sa colonne ; la longueur de la tournée reste d'un bloc, alignée sur la PREMIÈRE ligne. */
+        .contexte-choix { justify-content: center; }
+        .contexte-ligne { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; min-width: 0; }
+        .contexte-nom { min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+        .contexte-tournee-ico { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; white-space: nowrap; font-size: 11.5px; line-height: 1.3; padding-top: 1px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .contexte-choix.on .contexte-tournee-ico { color: var(--accent); }
         .contexte-aide { font-size: 11.5px; color: var(--muted); }
         .contexte-consigne { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: 12.5px; line-height: 1.45; max-height: 110px; overflow-y: auto; overscroll-behavior: contain; }
         .contexte-opt { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11.5px; color: var(--muted); cursor: pointer; }
@@ -1366,6 +1422,13 @@
             bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
         }
         body:not(.mobile-layout) #story-present { bottom: var(--etage-bas); }
+        /* Légende au ras du bas : quand la carte est assez large, elle se pose sur la ligne du cartouche d'attribution (à sa gauche) au lieu
+           de s'empiler au-dessus. Les deux partagent la même distance au bord. Pendant le récit, la bulle prend cette ligne : rien ne change. */
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout) .legend { bottom: 8px; }
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin: 0 8px 8px 0; }
+        /* Légende repliée (35 px) et cartouche (24 px) : leurs TEXTES se lisent sur la même ligne, c'est-à-dire que leurs centres coïncident —
+           le cartouche monte de la moitié de l'écart. Légende dépliée, c'est le bas des deux qui s'aligne. */
+        body.legende-au-ras:not(.story-presenting):not(.mobile-layout):has(.legend.collapsed) #map .maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { margin-bottom: 13px; }
         /* Côte à côte : la bulle se centre dans ce que la légende laisse libre.
            Avec `left`, `right` et des marges automatiques, `max-width` la
            ramène à 520 px et le reste se répartit de part et d'autre. */
@@ -1423,7 +1486,8 @@
             background: rgba(196, 69, 54, 0.14);
             outline: 1px solid rgba(196, 69, 54, 0.35);
         }
-        body.view-mode .legend-head .t::after {
+        /* L'indication dit que les lignes de la légende ciblent : vraie dans toutes les postures, tant qu'il y a des lignes. */
+        .legend:has(.legend-clickable) .legend-head .t::after {
             content: " · clic pour cibler";
             font-family: var(--sans, inherit); font-style: normal; font-weight: 500;
             font-size: 10px; color: var(--muted); letter-spacing: 0;
@@ -1463,7 +1527,7 @@
             flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover;
             scroll-snap-align: start; cursor: zoom-in;
         }
-        .atlas-bulle .bulle-titre { font-size: 14px; font-weight: 700; margin-top: 10px; margin-bottom: 6px; padding-right: 18px; }
+        .atlas-bulle .bulle-titre { font-size: 14px; font-weight: 700; margin-top: 10px; margin-bottom: 6px; }
         .atlas-bulle .bulle-pastilles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
         .atlas-bulle .bulle-pastille {
             border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600;
@@ -1476,6 +1540,40 @@
         }
         .atlas-bulle .bulle-champs dt { color: var(--muted, #8a7a68); flex-shrink: 0; }
         .atlas-bulle .bulle-champs dd { margin: 0; text-align: right; word-break: break-word; }
+        /* Barre de la bulle : fermeture et ◀ ▶ aux couleurs de la bulle, au lieu du « × » par défaut de MapLibre. Sur une photo, des pastilles
+           claires qui se lisent sur n'importe quelle image. */
+        .atlas-bulle { position: relative; }
+        .atlas-bulle > .bulle-barre {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            margin: 8px 8px 0;
+        }
+        .atlas-bulle.avec-photos > .bulle-barre { position: absolute; top: 8px; left: 8px; right: 8px; margin: 0; z-index: 2; }
+        .atlas-bulle .bulle-btn {
+            display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+            width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+            background: var(--surface-muted, #f1ece2); color: var(--ink, #1e140a);
+            transition: background .12s ease, transform .12s ease;
+        }
+        .atlas-bulle .bulle-btn:hover { background: var(--hairline-strong, #e3dccb); }
+        .atlas-bulle .bulle-btn:active { transform: scale(.94); }
+        .atlas-bulle .bulle-btn:focus-visible { outline: 2px solid var(--accent, #C44536); outline-offset: 1px; }
+        .atlas-bulle .bulle-suite {
+            display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 999px;
+            background: var(--surface-muted, #f1ece2);
+        }
+        .atlas-bulle .bulle-suite .bulle-btn { width: 28px; height: 28px; background: transparent; }
+        .atlas-bulle .bulle-suite .bulle-btn:hover { background: var(--hairline-strong, #e3dccb); }
+        .atlas-bulle .bulle-rang { min-width: 44px; text-align: center; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .atlas-bulle.avec-photos .bulle-suite,
+        .atlas-bulle.avec-photos .bulle-fermer { background: rgba(255,255,255,.92); box-shadow: 0 1px 4px rgba(0,0,0,.28); }
+        .atlas-bulle.avec-photos .bulle-suite .bulle-btn { background: transparent; }
+        @media (pointer: coarse) {
+            .atlas-bulle .bulle-btn { width: 36px; height: 36px; }
+            .atlas-bulle .bulle-suite .bulle-btn { width: 34px; height: 34px; }
+        }
+        .dock-slot-tournee .dock-slot-head { flex-wrap: wrap; gap: 6px; }
+        .dock-slot-tournee .tournee-actions { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+        .contexte-ouvrage.courant { background: var(--surface-muted); font-weight: 600; }
         .atlas-bulle .bulle-derniere { color: var(--muted, #8a7a68); margin-bottom: 8px; }
         .atlas-bulle .bulle-derniere span { font-weight: 600; color: var(--ink, #1e140a); }
         .atlas-bulle .bulle-derniere em { font-style: normal; }
@@ -1690,9 +1788,11 @@
             body.mobile-layout .map-controls-dock:not(.collapsed) .dock-panel {
                 max-width: min(100vw - 24px, 320px);
             }
-            body.mobile-layout .map-controls-dock.collapsed .dock-fabs {
-                max-width: min(calc(100vw - 100px), 240px);
-            }
+            /* La rangée de pastilles prend toute la largeur que la carte lui laisse : de 16 px du bord gauche à la boussole (82 px + marge). Elle ne se
+               limite plus à 240 px — sur un grand téléphone ou une tablette en portrait, elle laissait un vide à gauche et rognait ses pastilles.
+               Quand la colonne de boutons de l'hôte est affichée à gauche (application, barre retirée), elle lui laisse 60 px de plus. */
+            body.mobile-layout .map-controls-dock.collapsed .dock-fabs { max-width: calc(100cqw - 98px); }
+            body.mobile-layout.commandes-hote-visibles .map-controls-dock.collapsed .dock-fabs { max-width: calc(100cqw - 158px); }
             body.mobile-layout .map-frame { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
             /* La légende se pose au-dessus de l'attribution, comme la bulle du
                récit : à 72 px (édition) ou 16 px (lecture), elle en recouvrait le
@@ -1756,7 +1856,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.12.3" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.13.0" />
 </head>
 <body>
     <div class="app">
@@ -2009,6 +2109,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.12.3"></script>
+    <script type="module" src="./app.js?v=1.13.0"></script>
 </body>
 </html>

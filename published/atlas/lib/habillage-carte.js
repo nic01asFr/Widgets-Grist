@@ -23,7 +23,29 @@ export const ETAGE = Object.freeze({
   // En deçà, le texte d'une étape passe sur trop de lignes : la bulle monte
   // plus haut que la légende qu'elle était censée côtoyer.
   bulleMin: 360,
+  // L'attribution dépliée (sources comprises) : la plus longue qu'on lui ait vue. Repliée en « i », elle tient dans bien moins.
+  attribution: 500,
 });
+
+/** Largeur de carte à partir de laquelle la légende tient sur la ligne de l'attribution. */
+export function largeurMinLegendeAuRas(e = ETAGE) {
+  return e.marge + e.legende + e.gouttiere + e.attribution + e.marge;
+}
+
+/**
+ * La légende se pose-t-elle au ras du bas, sur la même ligne que le cartouche d'attribution ?
+ *
+ * Oui quand la carte est assez large pour que la légende (à gauche) et l'attribution dépliée (à droite) ne se touchent pas : on gagne
+ * la hauteur de l'étage que la légende réservait au-dessus de l'attribution. Sinon elle reste au-dessus, comme avant. Pendant le récit,
+ * la bulle prend cette ligne : l'étage ne change pas. Sur mobile, ce sont les ancrages du téléphone qui décident.
+ *
+ * @param {{largeurCarte?: number, mobile?: boolean, enRecit?: boolean}} etat
+ */
+export function legendeAuRas({ largeurCarte, mobile, enRecit } = {}) {
+  if (mobile || enRecit) return false;
+  const l = Number(largeurCarte);
+  return Number.isFinite(l) && l >= largeurMinLegendeAuRas();
+}
 
 /** Largeur de carte à partir de laquelle légende et bulle tiennent côte à côte. */
 export function largeurMinCoteACote(e = ETAGE) {

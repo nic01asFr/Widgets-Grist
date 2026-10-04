@@ -17,7 +17,7 @@
  * Module pur : des coordonnées en entrée, des coordonnées en sortie.
  */
 
-import { distanceMetres } from './releve.js?v=1.12.3';
+import { distanceMetres } from './releve.js?v=1.13.0';
 
 export const VERSION = '1.0.0';
 

@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.12.3';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.13.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.12.3';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.12.3';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.12.3';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.13.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.13.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.13.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.12.3';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.12.3';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.12.3';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.12.3';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.12.3';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.12.3';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.12.3';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.12.3';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.12.3';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.12.3';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.12.3';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.12.3';
+} from './lib/parametres-objet.js?v=1.13.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.13.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.13.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.13.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.13.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.13.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.13.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.13.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.13.0';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.13.0';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.13.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.13.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,8 +36,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.12.3';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.12.3';
+} from './lib/scene-loader.js?v=1.13.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.13.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -46,51 +46,51 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.12.3';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.12.3';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.12.3';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.12.3';
+} from './lib/fiche-formulaire.js?v=1.13.0';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.13.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.13.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.13.0';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.12.3';
+} from './lib/classes.js?v=1.13.0';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.12.3';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.12.3';
+} from './lib/grappes.js?v=1.13.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.13.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.12.3';
+} from './lib/layer-order.js?v=1.13.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.12.3';
+} from './lib/table-reference.js?v=1.13.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.12.3';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.12.3';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.12.3';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur } from './lib/tournee.js?v=1.12.3';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.12.3';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.12.3';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.12.3';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.12.3';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.12.3';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.12.3';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.12.3';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.12.3';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.12.3';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.12.3';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.12.3';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.12.3';
+} from './lib/bulle-objet.js?v=1.13.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.13.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.13.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.13.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.13.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.13.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.13.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.13.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.13.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.13.0';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.13.0';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.13.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.13.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.13.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.13.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.13.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.12.3';
+} from './lib/terrain-base.js?v=1.13.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -108,20 +108,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.12.3';
+} from './lib/grist-sync.js?v=1.13.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.12.3';
+} from './lib/nouvelle-couche.js?v=1.13.0';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.12.3';
+} from './lib/champ-formulaire.js?v=1.13.0';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.12.3';
+} from './lib/saisie-objet.js?v=1.13.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -129,7 +129,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.12.3';
+} from './lib/geometrie-saisie.js?v=1.13.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -141,14 +141,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.12.3';
+} from './lib/declarative-style.js?v=1.13.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.12.3';
+} from './lib/geo-tables.js?v=1.13.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -173,14 +173,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.12.3';
+} from './lib/controls.js?v=1.13.0';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.12.3';
+} from './lib/story.js?v=1.13.0';
 import {
   copieLineaire,
   estLineaire,
@@ -202,11 +202,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.12.3';
+} from './lib/trajet.js?v=1.13.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.12.3';
+} from './lib/manifest-binding.js?v=1.13.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -217,7 +217,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.12.3';
+} from './lib/viewport.js?v=1.13.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -232,30 +232,31 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.12.3';
-import { mettreAPlat } from './lib/vue-import.js?v=1.12.3';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.12.3';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.12.3';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.12.3';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.12.3';
+} from './lib/view-mode.js?v=1.13.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.13.0';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.13.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.13.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.13.0';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.13.0';
 import {
   etageCoteACote,
+  legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.12.3';
+} from './lib/habillage-carte.js?v=1.13.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.12.3';
+} from './lib/viewer-controls.js?v=1.13.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.12.3';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.12.3';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.12.3';
+} from './lib/scene-prefs.js?v=1.13.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.13.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.13.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3241,6 +3242,8 @@ function initMap() {
             showAccuracyCircle: true,
         });
         map.addControl(_geoloc, 'bottom-right');
+        // MapLibre vérifie la permission après coup et désactive son bouton sans le dire : le dock relit le verdict une fois qu'il est rendu.
+        [1200, 4000].forEach((ms) => setTimeout(() => { try { refreshControlsDock(); } catch (_) { /* dock pas encore monté */ } }, ms));
         suivreBandeAttribution();
         // La pastille s'allume tant que la carte suit la position — l'état que
         // le bouton d'origine signalait en bleu. Déplacer la carte à la main
@@ -6417,6 +6420,19 @@ function listDockPills() {
             label: courant ? `Contexte · ${courant.titre}` : 'Contexte',
             court: 'Contexte',
         });
+        // La tournée a son bouton quand le contexte en porte une : c'est une action (on la démarre), pas un réglage.
+        if (tourneeActive()) {
+            const av = avancementTournee();
+            pills.splice(pills.findIndex((p) => p.id === 'contexte') + 1, 0, {
+                id: 'tournee',
+                kind: 'tournee',
+                icon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>',
+                label: (av ? `Tournée · ${av.rang} / ${av.total}` : 'Démarrer la tournée') + (longueurDeTournee(tourneeActive()) ? ` · ${longueurDeTournee(tourneeActive())}` : ''),
+                court: 'Tournée',
+                active: !!av,
+                ...(av ? {} : { action: demarrerTournee }),
+            });
+        }
     }
     // Icônes du dock : s'en tenir aux emoji, avec leur sélecteur de variante
     // (U+FE0F). Un glyphe symbolique rare — ici `▦` U+25A6 — n'existe pas dans
@@ -6452,7 +6468,9 @@ function listDockPills() {
     // ensuite, en s'éloignant de la boussole.
     if (pastilleLocalisationRequise({
         mobile,
-        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation,
+        // Utilisable, pas seulement présente : dans l'iframe d'un widget Grist la permission est refusée, MapLibre désactive son bouton, et une
+        // pastille qui ne fait rien est pire qu'une pastille absente.
+        geolocalisation: !!_geoloc && typeof navigator !== 'undefined' && !!navigator.geolocation && localisationDisponible(),
     })) {
         pills.push({
             id: 'localiser',
@@ -6553,7 +6571,7 @@ function renderDockSlotHost() {
     }
     // Le releve liste des couches et des boutons : il lui faut la hauteur d'un
     // controle de donnees, pas celle d'un interrupteur d'environnement.
-    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro');
+    panel?.classList.toggle('dock-panel-tall', pill.kind === 'data' || pill.kind === 'releve' || pill.kind === 'contexte' || pill.kind === 'synchro' || pill.kind === 'tournee');
     if (pill.id === 'sun') {
         slotHost.innerHTML = renderSunDockSlotHtml();
         updateSunStrip();
@@ -6565,6 +6583,8 @@ function renderDockSlotHost() {
         slotHost.innerHTML = renderReleveDockSlotHtml();
     } else if (pill.kind === 'contexte') {
         slotHost.innerHTML = renderContexteDockSlotHtml();
+    } else if (pill.kind === 'tournee') {
+        slotHost.innerHTML = renderTourneeDockSlotHtml();
     } else if (pill.kind === 'synchro') {
         slotHost.innerHTML = renderSynchroDockSlotHtml();
     } else if (pill.kind === 'data') {
@@ -7840,14 +7860,40 @@ function mesurerEtageRecit() {
  * Légende et bulle côte à côte, ou empilées : on mesure la carte, pas la
  * fenêtre — en édition, rail et panneaux mangent la largeur.
  */
+/**
+ * Jusqu'où la légende dépliée peut monter : sous la colonne de boutons de gauche (les commandes de l'hôte), qu'elle ne doit pas gêner.
+ * Le bas de cette colonne est mesuré quand elle est visible puis retenu — elle se masque quand un panneau ou la barre de sélection
+ * s'ouvre, et la légende ne doit pas lui monter dessus à son retour.
+ */
+let _basCommandesGauche = 0;
+function majHauteurLegende() {
+    const frame = $('map-frame');
+    if (!frame) return;
+    const cmd = $('commandes-hote');
+    if (cmd && cmd.getClientRects().length) _basCommandesGauche = cmd.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+    const reserve = (_basCommandesGauche || 200) + 16;
+    const tete = $('legend-head')?.offsetHeight || 40;
+    // 8 px sous la légende, 8 px de respiration au-dessus de son corps.
+    const dispo = frame.clientHeight - reserve - tete - 16;
+    frame.style.setProperty('--legende-corps-max', `${Math.max(220, Math.floor(dispo))}px`);
+}
+
 function majEtageCarte() {
     const frame = $('map-frame');
     if (!frame) return;
+    majHauteurLegende();
     const cote = etageCoteACote({
         largeurCarte: frame.clientWidth,
         mobile: document.body.classList.contains('mobile-layout'),
     });
     document.body.classList.toggle('etage-cote-a-cote', cote);
+    document.body.classList.toggle('legende-au-ras', legendeAuRas({
+        largeurCarte: frame.clientWidth,
+        mobile: document.body.classList.contains('mobile-layout'),
+        // La bulle du récit, pas `_storyPresenting` : celui-ci devient vrai dès qu'un contexte ou l'ouverture de la scène applique un état,
+        // sans bulle ni classe `story-presenting` — l'étage n'y change pas.
+        enRecit: document.body.classList.contains('story-presenting'),
+    }));
     if (_storyPresenting) mesurerEtageRecit();
     majBandeauInfos();
 }
@@ -8001,36 +8047,127 @@ function ordreTournee(coucheId = null) {
     return ordonnerLeLong(trace.coordinates, objets);
 }
 
-/** Le bloc « Tournée » du panneau « Contexte » : sa longueur, et les ouvrages dans l'ordre de la ligne. */
-function htmlTourneeContexteActif() {
+/**
+ * La tournée commencée dans le contexte actif : `{ cleContexte, coucheId, courant }` (`courant` = la clé « couche:indice » du dernier
+ * ouvrage ouvert), ou `null`. Elle s'arrête d'elle-même quand on change de contexte.
+ */
+let _tournee = null;
+function tourneeEnCours() {
+    if (_tournee && (_tournee.cleContexte !== _contexteCle || !tourneeActive())) _tournee = null;
+    return _tournee;
+}
+
+/** Le dernier ouvrage ouvert de la tournée : le compteur de la pastille le suit, d'où qu'on l'ait ouvert (carte, liste, ◀ ▶). */
+function noterTournee(coucheId, idx) {
+    const t = tourneeEnCours();
+    if (!t || t.coucheId !== coucheId) return;
+    const cle = `${coucheId}:${idx}`;
+    if (t.courant === cle) return;
+    t.courant = cle;
+    refreshControlsDock();
+}
+
+/** Le voisin d'un ouvrage le long de la tournée (en bouclant), sur sa couche ; `null` sans tournée. */
+function voisinTournee(coucheId, idx, dir) {
+    const ordre = ordreTournee(coucheId);
+    if (!ordre?.length) return null;
+    const cle = voisinDansTournee(ordre, `${coucheId}:${idx}`, dir);
+    const o = ordre.find((x) => x.cle === cle);
+    return o ? { coucheId, idx: o.idx } : null;
+}
+
+/**
+ * Démarre la tournée du contexte : par l'ouvrage le plus proche devant soi quand on connaît sa position, par le premier sinon.
+ * L'ouvrage s'ouvre comme partout (bulle, fiche ou saisie selon la posture) ; ◀ ▶ suivent ensuite la ligne.
+ */
+function demarrerTournee() {
     const trace = tourneeActive();
-    if (!trace) return '';
-    const ordre = ordreTournee() || [];
-    const L = longueurMetres(trace.coordinates);
-    const n = ordre.length;
-    const resume = `Tournée · ${direLongueur(L)} · ${n ? `${n} ouvrage${n > 1 ? 's' : ''}` : 'aucun ouvrage'}`;
-    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage" onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
+    if (!trace) return;
+    // On travaille sur les couches de relevé du contexte quand il en définit (la ronde des pièges, pas les luminaires qui l'entourent) ;
+    // sinon sur tout ce qu'il laisse voir.
+    const propose = relevesDuContexte();
+    const tout = ordreTournee() || [];
+    const ordre = propose ? tout.filter((o) => { const l = STATE.layers.find((x) => x.id === o.coucheId); return l && releveProposeDans(propose, cleReleve(l)); }) : tout;
+    if (!ordre.length) { showToast('Aucun ouvrage affiché par ce contexte', 'warning'); return; }
+    const abscisse = _dernierePosition ? projeter(trace.coordinates, _dernierePosition).abscisse : null;
+    const o = ordre[Math.max(0, departDeTournee(ordre, abscisse, { totalM: longueurMetres(trace.coordinates) }))];
+    _tournee = { cleContexte: _contexteCle, coucheId: o.coucheId, courant: o.cle };
+    $('map-controls-dock')?.classList.add('collapsed');
+    refreshControlsDock();
+    allerAObjet(o.coucheId, o.idx);
+}
+
+function arreterTournee() {
+    if (!_tournee) return;
+    _tournee = null;
+    $('map-controls-dock')?.classList.add('collapsed');
+    refreshControlsDock();
+}
+
+/** Passer à l'ouvrage suivant (`dir` = 1) ou précédent (`dir` = -1) de la tournée. */
+function pasTournee(dir) {
+    const t = tourneeEnCours();
+    if (!t) return;
+    const [coucheId, idx] = [t.coucheId, Number(String(t.courant || '').split(':').pop())];
+    const v = voisinTournee(coucheId, Number.isFinite(idx) ? idx : -1, dir);
+    if (v) allerAObjet(v.coucheId, v.idx);
+}
+
+/** La longueur dite d'une tournée (« 9,4 km »), ou '' si la ligne n'en a pas. */
+function longueurDeTournee(trace) {
+    return trace?.coordinates?.length >= 2 ? direLongueur(longueurMetres(trace.coordinates)) : '';
+}
+
+/** Le pictogramme d'un parcours : deux points reliés par un chemin. */
+const ICONE_TOURNEE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>';
+
+/** Le rang et le nombre d'ouvrages de la tournée en cours, pour la pastille. */
+function avancementTournee() {
+    const t = tourneeEnCours();
+    if (!t) return null;
+    const ordre = ordreTournee(t.coucheId) || [];
+    const r = rangDansTournee(ordre, t.courant);
+    return { rang: r.rang, total: r.total };
+}
+
+/** Le panneau de la pastille « Tournée » : où l'on en est, ◀ ▶, arrêter, et les ouvrages dans l'ordre de la ligne. */
+function renderTourneeDockSlotHtml() {
+    const t = tourneeEnCours();
+    const trace = tourneeActive();
+    if (!t || !trace) return '<div class="dock-slot-data"><div class="hint">Aucune tournée en cours.</div></div>';
+    const ordre = ordreTournee(t.coucheId) || [];
+    const av = avancementTournee();
+    const lignes = ordre.slice(0, 150).map((o, i) => `<button type="button" class="contexte-ouvrage${o.cle === t.courant ? ' courant' : ''}" ${o.cle === t.courant ? 'aria-current="true"' : ''} onclick="A.tourneeOuvrir('${chaineJs(o.coucheId)}',${o.idx})">
         <span class="n">${i + 1}</span><span class="nm">${echapper(o.nom)}</span><span class="d">${direLongueur(o.metres)}${o.ecartM > 250 ? ' · hors ligne' : ''}</span></button>`).join('');
-    return `<details class="contexte-tournee"><summary>${echapper(resume)}${trace.nom ? ` <small>${echapper(trace.nom)}</small>` : ''}</summary>
-        ${n ? `<div class="contexte-ouvrages">${lignes}</div>${n > 150 ? `<div class="hint">Les 150 premiers sur ${n}.</div>` : ''}`
-            : '<div class="hint">Aucun ouvrage affiché par ce contexte : un filtre ou une couche masquée les écarte.</div>'}
-    </details>`;
+    return `<div class="dock-slot-data dock-slot-tournee">
+        <div class="dock-slot-head"><span class="dock-slot-title">Tournée · ${av && av.rang ? `${av.rang} / ${av.total}` : `${ordre.length} ouvrages`}${longueurDeTournee(trace) ? ` · ${longueurDeTournee(trace)}` : ''}</span>
+            <span class="tournee-actions">
+                <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage précédent" onclick="A.tourneePas(-1)">Précédent</button>
+                <button type="button" class="btn btn-soft btn-sm" aria-label="Ouvrage suivant" onclick="A.tourneePas(1)">Suivant</button>
+                <button type="button" class="btn btn-soft btn-sm" onclick="A.tourneeArreter()">Arrêter</button>
+            </span></div>
+        <div class="dock-slot-body"><div class="contexte-ouvrages">${lignes}</div>${ordre.length > 150 ? `<div class="hint">Les 150 premiers sur ${ordre.length}.</div>` : ''}</div>
+    </div>`;
 }
 
 function renderContexteDockSlotHtml() {
     const liste = contextesDisponibles();
     const actif = _contexteCle;
     const courant = actif ? liste.find((c) => c.cle === actif) : null;
-    const choix = (cle, titre, aide, on) => `<button type="button" class="contexte-choix${on ? ' on' : ''}" aria-pressed="${on}"
+    // Un contexte qui porte une tournée le dit d'un pictogramme et de sa longueur, avant même d'être activé.
+    const tourneeDuContexte = (cle) => longueurDeTournee(tourneeDe((STATE.story || []).find((s) => s.cle === cle)?.state));
+    const choix = (cle, titre, aide, on) => {
+        const longueur = cle === null ? '' : tourneeDuContexte(cle);
+        return `<button type="button" class="contexte-choix${on ? ' on' : ''}" aria-pressed="${on}"
         onclick="${cle === null ? 'A.contexteQuitter()' : `A.contexteAppliquer('${chaineJs(cle)}')`}">
-        <span class="contexte-nom">${echapper(titre)}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
+        <span class="contexte-ligne"><span class="contexte-nom">${echapper(titre)}</span>${longueur ? `<span class="contexte-tournee-ico" title="Ce contexte porte une tournée de ${echapper(longueur)}">${ICONE_TOURNEE}${echapper(longueur)}</span>` : ''}</span>${aide ? `<span class="contexte-aide">${echapper(aide)}</span>` : ''}
     </button>`;
+    };
     return `<div class="dock-slot-data dock-slot-contexte">
         <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
             ${courant ? `<div class="contexte-courant">
-                ${courant.texte.trim() ? `<div class="contexte-consigne">${assainirTexte(courant.texte)}</div>` : ''}
-                ${htmlTourneeContexteActif()}
+                ${courant.texte.trim() ? `<div class="contexte-consigne"><button type="button" class="contexte-consigne-btn" title="Toucher pour lire en entier" aria-expanded="false" onclick="this.parentNode.classList.toggle('ouvert'); this.setAttribute('aria-expanded', this.parentNode.classList.contains('ouvert'))"><span class="contexte-consigne-txt">${assainirTexte(courant.texte)}</span></button></div>` : ''}
             </div>` : ''}
             <div class="contexte-liste">
                 ${choix(null, 'Scène de base', '', !actif)}
@@ -8049,6 +8186,7 @@ function enterStoryPresentation(i) {
     _storyPresenting = true;
     _contexteCle = null;
     document.body.classList.add('story-presenting');
+    majEtageCarte();
     rafraichirTrajet();
     // Sur téléphone, la légende se pose sur la bulle : repliée, elle n'y prend
     // qu'une ligne ; le lecteur la rouvre d'un toucher.
@@ -8278,7 +8416,8 @@ function buildLayerLegendHtml(layer) {
     etiqueterCategoriesRef(layer);
     const total = formatLayerCount(layer);
     const lid = escLegend(layer.id);
-    const clickable = CONFIG.viewMode ? ' legend-clickable' : '';
+    // Cliquable dans toutes les postures : cibler ne change que la caméra et la surbrillance de la légende, rien dans les données.
+    const clickable = ' legend-clickable';
 
     if (sym.mode === 'categorized' && sym.field) {
         syncColorCategoriesFromFeatures(layer);
@@ -8378,9 +8517,8 @@ function featuresMatchingCategory(layer, field, value) {
     });
 }
 
-/** Clic légende (lecture) : zoom couche ou catégorie. */
+/** Clic légende : zoom sur la couche ou la catégorie, en Préparer comme en Exploiter et en Lecture. */
 function onLegendClick(e) {
-    if (!CONFIG.viewMode) return;
     const row = e.target.closest('[data-legend]');
     if (!row) return;
     const layerId = row.dataset.layerId;
@@ -10699,7 +10837,9 @@ function renderObjectInspector() {
     // En terrain, seuls les formulaires que la scene a rendus disponibles ont un
     // onglet. En edition ils sont tous la, sinon on ne pourrait pas composer
     // celui qu'on n'a pas encore expose.
-    const formulaires = view ? offertsEnLecture(tousFormulaires) : tousFormulaires;
+    // Un formulaire qui ajoute une ligne n'a d'onglet que si la saisie est ouverte : en Lecture il n'y a rien à y faire, et un onglet qui ne
+    // dit que « indisponible ici » n'a pas à s'afficher.
+    const formulaires = view ? offertsEnLecture(tousFormulaires).filter((f) => f.surLaCouche || saisieTerrain) : tousFormulaires;
     const tabs = objectInspectorTabs({ layer, formulaires, multi, revue, specs: (!multi || revue) && !!f && specsOffertes(layer, f), consultation: view && !!f });
     if (!_inspObjTab || !tabs.some((t) => t.cle === _inspObjTab)) _inspObjTab = tabs[0]?.cle || null;
     const ongletActif = tabs.find((t) => t.cle === _inspObjTab) || null;
@@ -11063,6 +11203,42 @@ function bulleActive(layer) {
     return !!(b?.actif && layer.sourceTable && CONFIG.grist.ready);
 }
 
+/**
+ * La suite de la bulle ouverte : les objets d'où l'on vient quand ce n'est pas la tournée (la liste « Choisir un objet », dans son
+ * ordre), sous la forme `{ coucheId, idxs }`. `null` : l'objet a été touché sur la carte.
+ */
+let _suiteBulle = null;
+
+/**
+ * Le rang d'un objet dans ce que ◀ ▶ parcourent depuis sa bulle, et ses voisins : la tournée du contexte quand il y en a une, sinon la
+ * liste d'où l'on vient. `null` si la bulle n'a pas de suite — les flèches ne s'affichent alors pas.
+ */
+function suiteDeBulle(layer, idx) {
+    const ordre = ordreTournee(layer.id);
+    if (ordre?.length) {
+        const r = rangDansTournee(ordre, `${layer.id}:${idx}`);
+        if (r.rang > 0) return { rang: r.rang, total: r.total, voisin: (dir) => voisinTournee(layer.id, idx, dir), liste: null };
+    }
+    const s = _suiteBulle;
+    if (s && s.coucheId === layer.id && Array.isArray(s.idxs) && s.idxs.length > 1) {
+        const i = s.idxs.indexOf(idx);
+        if (i >= 0) {
+            const n = s.idxs.length;
+            return { rang: i + 1, total: n, liste: s, voisin: (dir) => ({ coucheId: layer.id, idx: s.idxs[(i + (dir < 0 ? -1 : 1) + n) % n] }) };
+        }
+    }
+    return null;
+}
+
+/** La barre de la bulle : ◀ rang ▶ à gauche quand il y a une suite, la fermeture à droite. */
+function htmlBarreBulle(suite) {
+    const bouton = (nav, libelle, trace) => `<button type="button" class="bulle-btn" data-nav="${nav}" aria-label="${libelle}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${trace}"/></svg></button>`;
+    return `<div class="bulle-barre">
+        ${suite ? `<div class="bulle-suite" role="group" aria-label="Objets de la suite">${bouton('precedent', 'Objet précédent', 'M15 6l-6 6 6 6')}<span class="bulle-rang" aria-live="polite">${suite.rang} / ${suite.total}</span>${bouton('suivant', 'Objet suivant', 'M9 6l6 6-6 6')}</div>` : '<span></span>'}
+        ${bouton('fermer', 'Fermer', 'M6 6l12 12M18 6L6 18').replace('class="bulle-btn"', 'class="bulle-btn bulle-fermer"')}
+    </div>`;
+}
+
 const _urlsPhotos = new Map();   // id de pièce jointe -> Promise<url>
 /**
  * L'adresse d'une photo. Dans l'application, l'adaptateur lit le fichier avec
@@ -11144,9 +11320,10 @@ async function derniereVisite(layer, rowId, lien) {
 }
 
 /** La mise en page d'une bulle (le contenu vient de `modeleBulle`). */
-function htmlBulle(m) {
+function htmlBulle(m, suite = null) {
     const e = escapeHtml;
-    return `<div class="atlas-bulle">
+    return `<div class="atlas-bulle${m.photos.length ? ' avec-photos' : ''}">
+        ${htmlBarreBulle(suite)}
         ${m.photos.length ? `<div class="bulle-photos">${m.photos.map((id) => `<img data-photo="${id}" alt="" loading="lazy">`).join('')}</div>` : ''}
         ${m.titre ? `<div class="bulle-titre">${e(m.titre)}</div>` : ''}
         ${m.pastilles.length ? `<div class="bulle-pastilles">${m.pastilles.map((p) => `<span class="bulle-pastille" title="${e(p.libelle)}"${p.couleur ? ` style="background:${e(p.couleur)};color:${p.encre}"` : ''}>${e(p.texte)}</span>`).join('')}</div>` : ''}
@@ -11201,11 +11378,21 @@ async function ouvrirBulle(layer, idx, feature, lngLat) {
     const centre = lngLat ? [lngLat.lng, lngLat.lat] : featureCentroidLngLat(feature);
     if (!centre) return;
     // Un squelette tout de suite : la bulle répond au toucher, le reste suit.
-    _viewPopup = new maplibregl.Popup({ maxWidth: '320px', closeButton: true, closeOnClick: true, className: 'atlas-view-popup atlas-bulle-popup' })
+    const suite = suiteDeBulle(layer, idx);
+    // La fermeture et les flèches sont celles de la bulle (`htmlBarreBulle`), pas le « × » par défaut de MapLibre.
+    _viewPopup = new maplibregl.Popup({ maxWidth: '320px', closeButton: false, closeOnClick: true, className: 'atlas-view-popup atlas-bulle-popup' })
         .setLngLat(centre)
-        .setHTML(`<div class="atlas-bulle"><div class="bulle-titre">${escapeHtml(nomObjet(props) || layer.name)}</div><div class="range-info">…</div></div>`)
+        .setHTML(`<div class="atlas-bulle">${htmlBarreBulle(suite)}<div class="bulle-titre">${escapeHtml(nomObjet(props) || layer.name)}</div><div class="range-info">…</div></div>`)
         .addTo(map);
     const popup = _viewPopup;
+    popup.getElement().addEventListener('click', (ev) => {
+        const b = ev.target.closest('[data-nav]');
+        if (!b) return;
+        ev.stopPropagation();
+        if (b.dataset.nav === 'fermer') { closeViewPopup(); return; }
+        const v = suite?.voisin(b.dataset.nav === 'precedent' ? -1 : 1);
+        if (v) allerAObjet(v.coucheId, v.idx, { suite: suite.liste });
+    });
     const champsRef = [...new Set([cfg.titre, ...(cfg.champs || [])].filter(Boolean))];
     const [apparences, libelles, derniere] = await Promise.all([
         Promise.all((cfg.pastilles || []).map(async (c) => [c, await apparencesDeChamp(layer, c).catch(() => new Map())])),
@@ -11238,7 +11425,7 @@ async function ouvrirBulle(layer, idx, feature, lngLat) {
         const pe = pastilleEtat(Eclairage.etats.get(`${layer.id}:${idx}`));
         if (pe) m.pastilles.unshift(pe);
     }
-    popup.setHTML(htmlBulle(m));
+    popup.setHTML(htmlBulle(m, suite));
     const el = popup.getElement();
     garderBulleVisible(el);
     // Un compteur « 1 / 3 » sur les photos : la bande défile au doigt, sans barre.
@@ -11491,11 +11678,12 @@ function buildViewPopupHtml(layer, feature, idx) {
  * distante il n'y a pas de source : la feature rendue **est** tout ce qu'on
  * aura, et elle porte les attributs, qui sont ce que la fiche montre.
  */
-function showViewFeaturePopup(layer, idx, lngLat, featureRendue = null) {
+function showViewFeaturePopup(layer, idx, lngLat, featureRendue = null, suite = null) {
     if (!map || typeof maplibregl === 'undefined') return;
     const feature = layer.geojson?.features?.[idx] || featureRendue;
     if (!feature) return;
     closeViewPopup();
+    _suiteBulle = suite;
     if (bulleActive(layer)) { ouvrirBulle(layer, idx, feature, lngLat); return; }
     let coords = lngLat;
     if (!coords && feature.geometry?.type === 'Point') {
@@ -12671,6 +12859,8 @@ function applyViewModeChrome() {
     fermerListe({ rendre: false });
     if (listeOuverte) closeInspectorPanel();
     document.body.classList.toggle('view-mode', !!CONFIG.viewMode);
+    // La légende se redessine avec la posture : son contenu en dépend (couches visibles, contexte).
+    updateLegend();
     appliquerBarre();
     updateUserBadge();
     refreshViewerControlsHud();
@@ -12734,7 +12924,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.12.3');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.13.0');
     return Feuille;
 }
 
@@ -12955,10 +13145,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.12.3'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.13.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.12.3');
+        const dc = await import('./lib/data-client.js?v=1.13.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -14032,7 +14222,7 @@ function buildCmdItems(q) {
  * ouvrait la fiche de saisie même quand la couche avait une bulle (constaté le
  * 01/10/2026) : le toucher et la recherche ne menaient pas au même endroit.
  */
-function allerAObjet(coucheId, idx) {
+function allerAObjet(coucheId, idx, { suite = null } = {}) {
     const layer = STATE.layers.find((l) => l.id === coucheId);
     const f = layer?.geojson?.features?.[idx];
     if (!f) return;
@@ -14041,7 +14231,7 @@ function allerAObjet(coucheId, idx) {
     // recaler une fois la carte immobile. La règle est celle du toucher.
     if (decisionPour(layer) === 'fiche') { ouvrirObjet(layer, idx); return; }
     const c = featureCentroidLngLat(f);
-    const ouvrir = () => ouvrirObjet(layer, idx, { lngLat: c ? { lng: c[0], lat: c[1] } : null });
+    const ouvrir = () => ouvrirObjet(layer, idx, { lngLat: c ? { lng: c[0], lat: c[1] } : null, suite });
     if (map?.isMoving()) map.once('moveend', ouvrir); else ouvrir();
 }
 
@@ -14065,13 +14255,16 @@ function decisionPour(layer) {
         enSaisie: coucheEnSaisie(layer),
         distant: !!layer?._distant,
         enPresentation: _storyPresenting,
-        saisiesEtape: coucheDansSaisiesEtape(layer),
+        // Les saisies d'une étape ou d'un contexte ouvrent la fiche pour saisir. Pas en Lecture (la saisie est fermée : la bulle est la bonne vue),
+        // ni pendant une tournée : chaque ouvrage s'y ouvre par sa bulle, d'où l'on choisit de le traiter (« Nouvelle visite ») ou d'y aller (« Itinéraire »).
+        saisiesEtape: coucheDansSaisiesEtape(layer) && !!CONFIG.peutSaisir && !tourneeEnCours(),
     });
 }
 
 /** Ouvre l'objet comme la règle le veut. La liste ouverte se replie : elle recouvrirait la bulle. */
-function ouvrirObjet(layer, idx, { lngLat = null, feature = null } = {}) {
+function ouvrirObjet(layer, idx, { lngLat = null, feature = null, suite = null } = {}) {
     if (!layer) return null;
+    noterTournee(layer.id, idx);
     const decision = decisionPour(layer);
     if (decision === 'fiche') {
         closeViewPopup();
@@ -14079,7 +14272,7 @@ function ouvrirObjet(layer, idx, { lngLat = null, feature = null } = {}) {
         enterSelectionMode(layer.id, idx);
     } else {
         fermerListe();
-        showViewFeaturePopup(layer, idx, lngLat, feature);
+        showViewFeaturePopup(layer, idx, lngLat, feature, suite);
     }
     return decision;
 }
@@ -14243,6 +14436,7 @@ function renderListeLignes() {
         rangs,
         visible: (e) => !garde || garde(feats[e.idx]),
     });
+    _liste.affiches = r.items.map((o) => o.idx);
     const peutVisiter = !!formulaireDeReleve(layer);
     const total = cache?.entrees.length || 0;
 
@@ -15839,7 +16033,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.12.3')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.13.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -15875,6 +16069,9 @@ const A = {
         renderRecit();
         showToast('Tournée retirée', 'info');
     },
+    tourneeDemarrer() { demarrerTournee(); },
+    tourneeArreter() { arreterTournee(); },
+    tourneePas(dir) { pasTournee(dir < 0 ? -1 : 1); },
     /** Un ouvrage de la liste de la tournée : la carte s'y rend et sa fiche s'ouvre, comme depuis « Choisir un objet ». */
     tourneeOuvrir(coucheId, idx) {
         $('map-controls-dock')?.classList.add('collapsed');
@@ -15908,6 +16105,7 @@ const A = {
         _contexteCle = null;
         rafraichirTrajet();
         document.body.classList.remove('story-presenting');
+        majEtageCarte();
         const ov = document.getElementById('story-present');
         if (ov) ov.remove();
         mesurerEtageRecit();
@@ -17016,7 +17214,9 @@ const A = {
         const layer = STATE.layers.find((l) => l.id === coucheId);
         if (!layer) return;
         $('map-controls-dock')?.classList.add('collapsed');
-        allerAObjet(coucheId, idx);
+        // Depuis la liste, ◀ ▶ de la bulle parcourent les objets qu'elle montre, dans son ordre.
+        const idxs = _liste?.coucheId === coucheId ? (_liste.affiches || []) : [];
+        allerAObjet(coucheId, idx, { suite: idxs.length > 1 ? { coucheId, idxs: [...idxs] } : null });
     },
     /** « Visite » sur une ligne : le formulaire de relevé de cet objet, sans passer par la bulle. */
     listeVisite(coucheId, idx) {
@@ -17179,6 +17379,7 @@ function nav(dir) {
         if (next == null) { showToast('Aucun objet affiché : les filtres les masquent tous', 'warning'); return; }
         STATE.selection.features = [next];
         flyToFeature(layer, next); afterSelectionChange();
+        noterTournee(layer.id, next);
     }
 }
 window.A = A;
@@ -17298,6 +17499,8 @@ function wireEvents() {
     // fenêtre : c'est la carte qu'on observe.
     if (typeof ResizeObserver !== 'undefined' && $('map-frame')) {
         new ResizeObserver(() => majEtageCarte()).observe($('map-frame'));
+        // Un bouton de plus à gauche (synchronisation, posture) allonge la colonne : la légende lui laisse la place.
+        if ($('commandes-hote')) new ResizeObserver(() => majHauteurLegende()).observe($('commandes-hote'));
     } else {
         majEtageCarte();
     }
@@ -17454,9 +17657,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.12.3');
+        const { capacites } = await import('./lib/data-client.js?v=1.13.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.12.3');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.13.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

@@ -8,7 +8,7 @@
  * Rien ici ne touche la carte, Grist ni le DOM. Le dessin de la ligne, la liste du panneau et le pas de ◀ ▶ restent l'affaire
  * de l'application.
  */
-import { projeter, longueurMetres } from './trajet.js?v=1.12.3';
+import { projeter, longueurMetres } from './trajet.js?v=1.13.0';
 
 export const VERSION = '1.0.0';
 
@@ -68,6 +68,25 @@ export function voisinDansTournee(ordre, cle, dir) {
   const i = ordre.findIndex((o) => o.cle === cle);
   if (i < 0) return (dir < 0 ? ordre[n - 1] : ordre[0]).cle;
   return ordre[(((i + (dir < 0 ? -1 : 1)) % n) + n) % n].cle;
+}
+
+/**
+ * Par où commencer la tournée. Sans position : par le premier ouvrage. Avec elle (déjà projetée sur la ligne, `abscisse` de 0 à 1) :
+ * par le premier ouvrage que la ligne longe **devant soi** — un pas en arrière est toléré (`toleranceM`, sur `totalM` de ligne), pour
+ * ne pas sauter l'ouvrage sur lequel on se tient. Passé le dernier, on recommence au premier. Un ouvrage « hors ligne » ne sert
+ * pas de départ.
+ *
+ * @param {Array<{abscisse: number, ecartM: number}>} ordre  l'ordre de la ligne (`ordonnerLeLong`)
+ * @param {number|null} [abscisse]
+ * @param {{toleranceM?: number, totalM?: number, lointainM?: number}} [o]
+ * @returns {number} l'indice dans `ordre`, ou -1 si la liste est vide
+ */
+export function departDeTournee(ordre, abscisse = null, { toleranceM = 25, totalM = 0, lointainM = 250 } = {}) {
+  if (!Array.isArray(ordre) || !ordre.length) return -1;
+  if (!Number.isFinite(abscisse)) return 0;
+  const tol = totalM > 0 ? toleranceM / totalM : 0;
+  const i = ordre.findIndex((o) => o.ecartM <= lointainM && o.abscisse >= abscisse - tol);
+  return i < 0 ? 0 : i;
 }
 
 /** « 850 m » sous le kilomètre, « 3,2 km » au-delà. */
