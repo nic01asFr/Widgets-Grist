@@ -458,6 +458,15 @@ const TF = (function () {
     // Cloture "negative" (annule/abandonne/rejete).
     function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
     // Ni fait ni annule = actif.
+    // Statut d'une tache tel que les widgets le traitent : sa valeur si elle figure dans la configuration,
+    // sinon le PREMIER statut configure. Une tache au statut vide (ou supprime de la colonne Choice) reste
+    // ainsi visible, rangee dans la premiere colonne, au lieu de disparaitre du Kanban.
+    function statusKnown(cfg, value) { return !!cfg && !!cfg.list && cfg.list.some(function (s) { return s.value === value; }); }
+    function statusOf(cfg, t) {
+        const v = t ? t.statut : null;
+        if (statusKnown(cfg, v)) return v;
+        return cfg && cfg.firstValue != null ? cfg.firstValue : 'todo';
+    }
     function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
     // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
@@ -920,6 +929,8 @@ const TF = (function () {
         isDone: isDone,
         isDead: isDead,
         isLive: isLive,
+        statusOf: statusOf,
+        statusKnown: statusKnown,
         gristToDate: gristToDate,
         dateToGrist: dateToGrist,
         dayNum: dayNum,

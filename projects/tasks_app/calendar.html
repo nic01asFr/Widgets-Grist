@@ -1173,6 +1173,15 @@
             // Cloture "negative" (annule/abandonne/rejete).
             function isDead(cfg, value) { return !!cfg && Array.isArray(cfg.deadValues) && cfg.deadValues.indexOf(value) !== -1; }
             // Ni fait ni annule = actif.
+            // Statut d'une tache tel que les widgets le traitent : sa valeur si elle figure dans la configuration,
+            // sinon le PREMIER statut configure. Une tache au statut vide (ou supprime de la colonne Choice) reste
+            // ainsi visible, rangee dans la premiere colonne, au lieu de disparaitre du Kanban.
+            function statusKnown(cfg, value) { return !!cfg && !!cfg.list && cfg.list.some(function (s) { return s.value === value; }); }
+            function statusOf(cfg, t) {
+                const v = t ? t.statut : null;
+                if (statusKnown(cfg, v)) return v;
+                return cfg && cfg.firstValue != null ? cfg.firstValue : 'todo';
+            }
             function isLive(cfg, value) { return !isDone(cfg, value) && !isDead(cfg, value); }
 
             // Libelle francais d'un mode de couleur (colorMode : priority / project / assignee / status).
@@ -1635,6 +1644,8 @@
                 isDone: isDone,
                 isDead: isDead,
                 isLive: isLive,
+                statusOf: statusOf,
+                statusKnown: statusKnown,
                 gristToDate: gristToDate,
                 dateToGrist: dateToGrist,
                 dayNum: dayNum,
@@ -2898,7 +2909,7 @@
                 open: true, mode: 'task', periodType: panelState.periodType, periodDate: panelState.periodDate,
                 periodTasks: panelState.periodTasks, taskId: null, taskIndex: -1, isNew: true,
                 editData: {
-                    titre: '', description: '', type: 'tache', priorite: '3', statut: 'todo', progression: 0,
+                    titre: '', description: '', type: 'tache', priorite: '3', statut: statusCfg.firstValue, progression: 0,
                     dateDebut: dateToGrist(targetDate), dateEcheance: dateToGrist(addDays(targetDate, 7)),
                     projet: projects.length > 0 ? projects[0].id : null,
                     assignees: [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [],
@@ -2917,7 +2928,7 @@
             panelState = {
                 open: true, mode: 'task', periodType: null, periodDate: null, periodTasks: [], taskId: null, taskIndex: -1, isNew: true,
                 editData: {
-                    titre: '', description: '', type: 'tache', priorite: '3', statut: 'todo', progression: 0,
+                    titre: '', description: '', type: 'tache', priorite: '3', statut: statusCfg.firstValue, progression: 0,
                     dateDebut: dateToGrist(today), dateEcheance: dateToGrist(addDays(today, 7)),
                     projet: parent?.projet || (projects.length > 0 ? projects[0].id : null),
                     assignees: [], dependDe: [], tags: [], estimationH: null, tempsPasse: null, subtasks: [],
@@ -2962,7 +2973,7 @@
                 description: task.description || '',
                 type: task.type || 'tache',
                 priorite: String(task.priorite || '3'),
-                statut: task.statut || 'todo',
+                statut: TF.statusOf(statusCfg, task),
                 progression: task.progression || 0,
                 dateDebut: task.dateDebut,
                 dateEcheance: task.dateEcheance,
@@ -3153,7 +3164,7 @@
             const prereqHtml = data.dependDe.map(id => {
                 const t = tasks.find(x => x.id === id);
                 if (!t) return '';
-                const st = t.statut || 'todo';
+                const st = TF.statusOf(statusCfg, t);
                 return `<div class="prereq-item ${TF.isDone(statusCfg, st) ? 'done' : ''}" onclick="openTaskPanel(${id})"><span class="prereq-item-icon">${TF.isDone(statusCfg, st) ? '✓' : '○'}</span><span class="prereq-item-title">${escapeHtml(t.titre)}</span><span class="prereq-badge" style="background:${TF.getStatus(statusCfg, st).fillColor};color:${TF.getStatus(statusCfg, st).textColor}">${escapeHtml(TF.getStatus(statusCfg, st).label)}</span></div>`;
             }).join('');
 
@@ -3274,7 +3285,7 @@
                         return `<div class="prereq-item" onclick="openTaskPanel(${k.id})">
                             <span style="width:3px;height:16px;border-radius:2px;flex-shrink:0;background:${PRIORITY_COLORS[kp]};display:inline-block"></span>
                             <span class="prereq-item-title">${escapeHtml(k.titre)}</span>
-                            <span class="prereq-badge ${k.statut || 'todo'}">${kprog}%</span>
+                            <span class="prereq-badge ${TF.statusOf(statusCfg, k)}">${kprog}%</span>
                         </div>`;
                     }).join('');
                     return `<div class="panel-section">
@@ -3613,7 +3624,7 @@
                 description: data.description || '',
                 type: data.type || 'tache',
                 priorite: data.priorite || '3',
-                statut: data.statut || 'todo',
+                statut: TF.statusOf(statusCfg, data),
                 progression: data.progression || 0,
                 dateDebut: data.dateDebut,
                 dateEcheance: data.dateEcheance,

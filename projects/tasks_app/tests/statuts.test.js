@@ -236,3 +236,17 @@ describe('libelle de periode court', () => {
     } finally { delete global.document; }
   });
 });
+
+describe('statut d\'une tache (statusOf)', () => {
+  const cfg = TF.buildStatusConfig([
+    { value: 'a_cadrer', label: 'A cadrer' }, { value: 'en_cours', label: 'En cours' }, { value: 'clos', label: 'Clos' }
+  ], 'test');
+  it('garde un statut connu', () => assert.equal(TF.statusOf(cfg, { statut: 'en_cours' }), 'en_cours'));
+  it('range un statut vide dans le premier statut configure', () => {
+    assert.equal(TF.statusOf(cfg, { statut: '' }), 'a_cadrer');
+    assert.equal(TF.statusOf(cfg, { statut: null }), 'a_cadrer');
+    assert.equal(TF.statusOf(cfg, {}), 'a_cadrer');
+  });
+  it('range un statut supprime de la colonne dans le premier statut', () => assert.equal(TF.statusOf(cfg, { statut: 'todo' }), 'a_cadrer'));
+  it('ne depend plus du code todo en dur', () => assert.notEqual(TF.statusOf(cfg, {}), 'todo'));
+});
