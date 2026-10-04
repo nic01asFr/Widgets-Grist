@@ -187,6 +187,34 @@ describe('aide discrete « i »', () => {
     });
 });
 
+describe('tri d affichage commun', () => {
+    const cfg = TF.buildStatusConfig([{ value: 'todo' }, { value: 'inprogress' }, { value: 'done' }], 'test');
+    const J = 86400;
+    const t = (id, statut, jours, priorite) => ({ id, statut, dateEcheance: jours == null ? null : 1700000000 + jours * J, priorite: priorite || '3' });
+    const ids = (l) => l.map(x => x.id).join(',');
+    const liste = [t(1, 'todo', 30), t(2, 'done', 5), t(3, 'inprogress', 10), t(4, 'done', 20), t(5, 'todo', null), t(6, 'todo', 2)];
+
+    it('manuel : ordre de la table, sur une copie', () => {
+        const r = TF.sortTasks(liste, 'manual', cfg);
+        assert.equal(ids(r), '1,2,3,4,5,6');
+        assert.notEqual(r, liste);
+    });
+    it('echeance : en cours du plus proche au plus lointain, puis closes de la plus recente a la plus ancienne, sans date en dernier', () => {
+        assert.equal(ids(TF.sortTasks(liste, 'date', cfg)), '6,3,1,5,4,2');
+    });
+    it('echeance : stable a criteres egaux (ordre de la table conserve)', () => {
+        const l = [t(1, 'todo', 3), t(2, 'todo', 3), t(3, 'todo', 3)];
+        assert.equal(ids(TF.sortTasks(l, 'date', cfg)), '1,2,3');
+    });
+    it('priorite : critique d abord, puis echeance', () => {
+        const l = [t(1, 'todo', 5, '3'), t(2, 'todo', 9, '1'), t(3, 'todo', 2, '1'), t(4, 'todo', 1, '4')];
+        assert.equal(ids(TF.sortTasks(l, 'priority', cfg)), '3,2,1,4');
+    });
+    it('sans configuration de statuts, l echeance reste croissante', () => {
+        assert.equal(ids(TF.sortTasks([t(1, 'x', 9), t(2, 'x', 1)], 'date')), '2,1');
+    });
+});
+
 describe('recherche commune', () => {
     const ctx = { projects: [{ id: 1, nom: 'Refonte Portail' }], team: [{ id: 1, nom: 'Alice Martin' }, { id: 2, nom: 'Bob Durant' }] };
     const t = { titre: 'Réunion client', description: 'Préparer la démo', tags: ['L', 'qa', 'tests'], projet: 1, assignees: ['L', 1] };

@@ -1146,6 +1146,31 @@ const TF = (function () {
         const hay = searchNorm([t.titre, t.description, list(t.tags).join(' '), proj ? proj.nom : '', names.join(' ')].join(' '));
         return q.split(/\s+/).every(w => hay.indexOf(w) !== -1);
     }
+    // Tri commun (affichage seulement, rien n'est ecrit dans les donnees). Modes :
+    //   manual   : ordre de la table, inchange ;
+    //   date     : echeance. Les taches en cours d'abord, de la plus proche a la plus lointaine ; puis les taches
+    //              closees (terminees / abandonnees), de la plus recente a la plus ancienne. Sans echeance : en dernier ;
+    //   priority : priorite (1 = critique) puis echeance.
+    // Retourne une NOUVELLE liste ; le tri est stable (a criteres egaux, l'ordre de la table est conserve).
+    function sortTasks(list, mode, cfg) {
+        const arr = (list || []).slice();
+        if (mode !== 'date' && mode !== 'priority') return arr;
+        const echeance = (t) => { const v = Number(t && t.dateEcheance); return v > 0 ? v : null; };
+        const prio = (t) => parseInt(t && t.priorite, 10) || 3;
+        const fermee = (t) => !!cfg && !isLive(cfg, statusOf(cfg, t));
+        const parDate = (a, b, desc) => {
+            const da = echeance(a), db = echeance(b);
+            if (da === null || db === null) return da === db ? 0 : (da === null ? 1 : -1);
+            return desc ? db - da : da - db;
+        };
+        arr.sort((a, b) => {
+            if (mode === 'priority') return (prio(a) - prio(b)) || parDate(a, b, false);
+            const fa = fermee(a), fb = fermee(b);
+            if (fa !== fb) return fa ? 1 : -1;
+            return parDate(a, b, fa) || (prio(a) - prio(b));
+        });
+        return arr;
+    }
     // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
     function uiTitle(t) {
         t = t || {};
@@ -1206,7 +1231,7 @@ const TF = (function () {
     const UI_LEVEL_TITLE = 'Niveau affiché — Tous = arbre ; Actions = tâches sans sous-tâche (feuilles) ; Synthèses = tâches qui regroupent des sous-tâches (parents)';
     const uiColorField = (title) => ({ label: 'Couleur', html: uiSelect({ id: 'colorSelect', onchange: 'changeColorMode(this.value)', title: title, options: UI_COLOR_OPTIONS }) });
     const uiLevelField = () => ({ label: 'Niveau', html: uiSelect({ id: 'levelSelect', onchange: 'changeWorkLevel(this.value)', title: UI_LEVEL_TITLE, options: UI_LEVEL_OPTIONS }) });
-    const uiSortField = () => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: UI_SORT_OPTIONS }) });
+    const uiSortField = (options) => ({ label: 'Tri', html: uiSelect({ id: 'sortSelect', onchange: 'changeSortMode(this.value)', options: options || UI_SORT_OPTIONS }) });
     // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
     function uiDisplayMenu(o) {
         const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
@@ -1656,6 +1681,7 @@ const TF = (function () {
         panelHeaderHtml: panelHeaderHtml,
         initUi: initUi,
         searchMatch: searchMatch,
+        sortTasks: sortTasks,
         setPeriodLabel: setPeriodLabel,
         monthYearShort: monthYearShort,
         monthShort: monthShort,
@@ -1850,7 +1876,6 @@ function renderFilterPanel() {
                 ${statusCfg.list.map(s => `<span class="filter-check ${filters.statuts.includes(s.value)?'active':''}" onclick="toggleFilterStatut('${s.value}')">${s.label}</span>`).join('')}
             </div>
         </div>`;
-    if (hasActiveFilters()) html += `<div class="filter-section" style="justify-content:flex-end"><button class="filter-clear" onclick="clearFilters()">Réinitialiser</button></div>`;
     document.getElementById('filterPanel').innerHTML = html;
 }
 
