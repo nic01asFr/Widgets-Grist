@@ -494,6 +494,19 @@ const TF = (function () {
             }
         });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(null); });
+        // Info-bulles « i » : alignees a droite si elles debordent du widget.
+        const placeTip = (e) => {
+            const tip = e.target.closest ? e.target.closest('.tf-info') : null;
+            if (!tip) return;
+            tip.classList.remove('tip-left');
+            if (tip.getBoundingClientRect().left + 232 > window.innerWidth - 8) tip.classList.add('tip-left');
+        };
+        document.addEventListener('mouseover', placeTip);
+        document.addEventListener('focusin', placeTip);
+        // Controles segmentes defilants : l'element actif est toujours ramene dans le champ.
+        const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+        document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
+        setTimeout(revealActive, 300);
     }
 
     /* ----- Composants de la barre du haut (tous les widgets) ----------------------
@@ -515,14 +528,34 @@ const TF = (function () {
         refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
         edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
         print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
-        image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'
+        image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+        plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
     };
     const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
+    // Aide discrete : petite icone « i » dont le texte s'affiche au survol (ou au focus clavier).
+    function uiInfo(text) {
+        return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
+    }
+    // Recherche commune aux quatre widgets : titre, description, tags, projet, assignes ; insensible a la
+    // casse et aux accents ; plusieurs mots = tous doivent etre presents. ctx = { projects, team }.
+    const searchNorm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    function searchMatch(t, query, ctx) {
+        const q = searchNorm(query).trim();
+        if (!q) return true;
+        if (!t) return false;
+        ctx = ctx || {};
+        const list = (v) => (Array.isArray(v) && v[0] === 'L') ? v.slice(1) : [];
+        const proj = (ctx.projects || []).find(p => p && p.id === t.projet);
+        const names = list(t.assignees).map(id => { const m = (ctx.team || []).find(x => x && x.id === id); return m ? m.nom : ''; });
+        const hay = searchNorm([t.titre, t.description, list(t.tags).join(' '), proj ? proj.nom : '', names.join(' ')].join(' '));
+        return q.split(/\s+/).every(w => hay.indexOf(w) !== -1);
+    }
     // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
     function uiTitle(t) {
         t = t || {};
-        return '<div class="hz-title"><h1>' + (t.icon || '') + ' ' + escAttr(t.text) + '</h1>' + (t.meta || '') + '</div>';
+        return '<div class="hz-title"><h1>' + (t.icon || '') + '<span class="hz-title-text">' + escAttr(t.text) + '</span></h1>' + (t.meta || '') + '</div>';
     }
     // Controle segmente (Grouper, vues du Gantt / Calendrier). o = { label, cls, items: [{ label, id, view, title, onclick, active }] }
     function uiSegmented(o) {
@@ -533,6 +566,17 @@ const TF = (function () {
         return '<div class="hdr-group">' + (o.label ? '<span class="hdr-glabel">' + escAttr(o.label) + '</span>' : '') +
             '<div class="tf-seg ' + escAttr(o.cls || '') + '" role="group"' + (o.label ? ' aria-label="' + escAttr(o.label) + '"' : '') + '>' + items + '</div></div>';
     }
+    // Libelle de periode a deux formes : complete (« Octobre 2026 ») et courte (« Oct. 26 »). Le CSS
+    // bascule sur la courte quand la place manque ; l'info-bulle garde toujours la forme complete.
+    const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    function monthShort(d) { const m = MOIS_COURTS[d.getMonth()]; return m.charAt(0).toUpperCase() + m.slice(1); }
+    function monthYearShort(d) { return monthShort(d) + ' ' + String(d.getFullYear()).slice(-2); }
+    function setPeriodLabel(long, short, id) {
+        const el = document.getElementById(id || 'currentPeriod');
+        if (!el) return;
+        el.title = String(long);
+        el.innerHTML = '<span class="pl-long">' + escAttr(long) + '</span><span class="pl-short">' + escAttr(short == null ? long : short) + '</span>';
+    }
     // Navigation de periode, IDENTIQUE dans le Gantt et le Calendrier : ‹ periode › puis « Aujourd'hui ».
     // o = { prev, next, today, id, text }
     function uiPeriodNav(o) {
@@ -540,7 +584,7 @@ const TF = (function () {
         return '<div class="period-nav"><div class="nav-group">' + nav(o.prev, 'chevL', 'Période précédente') +
             '<span class="current-period" id="' + escAttr(o.id || 'currentPeriod') + '" aria-live="polite">' + escAttr(o.text) + '</span>' +
             nav(o.next, 'chevR', 'Période suivante') + '</div>' +
-            '<button type="button" class="btn" onclick="' + escAttr(o.today) + '">Aujourd\'hui</button></div>';
+            '<button type="button" class="btn" onclick="' + escAttr(o.today) + '" title="Aujourd\'hui" aria-label="Aujourd\'hui">' + uiIcon('today') + '<span class="btn-label">Aujourd\'hui</span></button></div>';
     }
     // Recherche. o = { id, oninput }
     function uiSearch(o) {
@@ -549,7 +593,7 @@ const TF = (function () {
     // Bouton « Filtres » + menu deroulant. o = { toggle, containerId, buttonId, menuId, countId }
     function uiFilters(o) {
         return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
-            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '">' + uiIcon('filter') + ' Filtres' +
+            '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '" title="Filtres" aria-label="Filtres">' + uiIcon('filter') + '<span class="btn-label">Filtres</span>' +
             '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
             '<div class="filter-menu wide" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
     }
@@ -568,9 +612,9 @@ const TF = (function () {
     // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
     function uiDisplayMenu(o) {
         const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
-        const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action" onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
-        return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage">' +
-            uiIcon('sliders') + '<span>Affichage</span>' + uiIcon('chevD', 12) + '</button>' +
+        const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action"' + (a.id ? ' id="' + escAttr(a.id) + '"' : '') + ' onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
+        return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage" aria-label="Affichage">' +
+            uiIcon('sliders') + '<span class="btn-label">Affichage</span><span class="btn-label btn-chev">' + uiIcon('chevD', 12) + '</span></button>' +
             '<div class="tf-menu-panel" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
     }
     // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
@@ -586,8 +630,8 @@ const TF = (function () {
     function uiButton(o) {
         const cls = o.cls || (o.primary ? 'btn primary' : (o.iconOnly ? 'btn icon-btn' : 'btn'));
         return '<button type="button" class="' + escAttr(cls) + '"' + (o.id ? ' id="' + escAttr(o.id) + '"' : '') + ' onclick="' + escAttr(o.onclick) + '"' +
-            (o.title ? ' title="' + escAttr(o.title) + '"' : '') + (o.iconOnly ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
-            (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? ' ' : '') + escAttr(o.label) : '') +
+            ((o.title || (o.icon && o.label)) ? ' title="' + escAttr(o.title || o.label) + '"' : '') + ((o.iconOnly || o.icon) ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
+            (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? '<span class="btn-label">' + escAttr(o.label) + '</span>' : escAttr(o.label)) : '') +
             (o.count ? '<span class="filter-count" id="' + escAttr(o.count) + '" style="display:none">0</span>' : '') + '</button>';
     }
     // Barre complete. o = { title, view: [html], tools: [html], actions: [html] }
@@ -603,7 +647,7 @@ const TF = (function () {
         initUi();
     }
     const ui = {
-        icon: uiIcon, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
+        icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
         select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
         displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader
     };
@@ -885,6 +929,10 @@ const TF = (function () {
         colorModeLabel: colorModeLabel,
         panelHeaderHtml: panelHeaderHtml,
         initUi: initUi,
+        searchMatch: searchMatch,
+        setPeriodLabel: setPeriodLabel,
+        monthYearShort: monthYearShort,
+        monthShort: monthShort,
         ui: ui,
         seedStatusChoices: seedStatusChoices,
         setRefDisplayColumns: setRefDisplayColumns,

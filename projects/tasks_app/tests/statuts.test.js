@@ -159,3 +159,80 @@ describe('composants de la barre du haut', () => {
         assert.match(h, /filter-sep/);
     });
 });
+
+describe('aide discrete « i »', () => {
+    it('porte le texte en info-bulle et pour les lecteurs d ecran, echappe', () => {
+        const h = TF.ui.info('Aucune sous-tâche. "Décomposez" <ici>');
+        assert.ok(h.includes('class="tf-info"'));
+        assert.ok(h.includes('data-tip="Aucune sous-tâche. &quot;Décomposez&quot; &lt;ici&gt;"'));
+        assert.ok(h.includes('aria-label="Aucune sous-tâche.'));
+        assert.ok(h.includes('tabindex="0"'));
+        assert.ok(!h.includes('<ici>'));
+    });
+});
+
+describe('recherche commune', () => {
+    const ctx = { projects: [{ id: 1, nom: 'Refonte Portail' }], team: [{ id: 1, nom: 'Alice Martin' }, { id: 2, nom: 'Bob Durant' }] };
+    const t = { titre: 'Réunion client', description: 'Préparer la démo', tags: ['L', 'qa', 'tests'], projet: 1, assignees: ['L', 1] };
+    it('requete vide = tout passe', () => {
+        assert.equal(TF.searchMatch(t, '', ctx), true);
+        assert.equal(TF.searchMatch(t, '   ', ctx), true);
+    });
+    it('insensible a la casse et aux accents', () => {
+        assert.equal(TF.searchMatch(t, 'REUNION', ctx), true);
+        assert.equal(TF.searchMatch(t, 'preparer la demo', ctx), true);
+    });
+    it('cherche dans les tags, le projet et les assignes', () => {
+        assert.equal(TF.searchMatch(t, 'qa', ctx), true);
+        assert.equal(TF.searchMatch(t, 'portail', ctx), true);
+        assert.equal(TF.searchMatch(t, 'alice', ctx), true);
+        assert.equal(TF.searchMatch(t, 'bob', ctx), false);
+    });
+    it('plusieurs mots : tous doivent etre presents', () => {
+        assert.equal(TF.searchMatch(t, 'client alice', ctx), true);
+        assert.equal(TF.searchMatch(t, 'client bob', ctx), false);
+    });
+    it('tolere une tache sans champs et un contexte absent', () => {
+        assert.equal(TF.searchMatch({}, 'x'), false);
+        assert.equal(TF.searchMatch(null, 'x'), false);
+        assert.equal(TF.searchMatch({ titre: 'x' }, 'x'), true);
+    });
+});
+
+describe('libelles de boutons repliables', () => {
+    it('Filtres, Affichage, Aujourd hui et le bouton de creation portent un libelle masquable et une info-bulle', () => {
+        const f = TF.ui.filters({ toggle: 'x()' });
+        assert.ok(f.includes('<span class="btn-label">Filtres</span>') && f.includes('title="Filtres"'));
+        const d = TF.ui.displayMenu({ fields: [] });
+        assert.ok(d.includes('<span class="btn-label">Affichage</span>') && d.includes('aria-label="Affichage"'));
+        const n = TF.ui.periodNav({ prev: 'a()', next: 'b()', today: 'c()' });
+        assert.ok(n.includes('<span class="btn-label">Aujourd\'hui</span>'));
+        const b = TF.ui.button({ icon: 'plus', label: 'Tâche', title: 'Nouvelle tâche', onclick: 'x()', primary: true });
+        assert.ok(b.includes('<span class="btn-label">Tâche</span>') && b.includes('title="Nouvelle tâche"') && b.includes('class="btn primary"'));
+    });
+    it('un bouton sans icone garde son libelle en clair', () => {
+        const b = TF.ui.button({ label: 'Modifier', onclick: 'x()' });
+        assert.ok(!b.includes('btn-label') && b.includes('>Modifier<'));
+    });
+});
+
+describe('libelle de periode court', () => {
+  it('abrege le mois et l\'annee', () => {
+    assert.equal(TF.monthYearShort(new Date(2026, 9, 4)), 'Oct. 26');
+    assert.equal(TF.monthYearShort(new Date(2026, 4, 4)), 'Mai 26');
+    assert.equal(TF.monthYearShort(new Date(2027, 1, 1)), 'Févr. 27');
+    assert.equal(TF.monthYearShort(new Date(2026, 7, 1)), 'Août 26');
+  });
+  it('rend les deux formes dans le libelle', () => {
+    const el = { title: '', innerHTML: '' };
+    global.document = { getElementById: () => el };
+    try {
+      TF.setPeriodLabel('Octobre 2026', 'Oct. 26');
+      assert.equal(el.title, 'Octobre 2026');
+      assert.match(el.innerHTML, /pl-long">Octobre 2026</);
+      assert.match(el.innerHTML, /pl-short">Oct\. 26</);
+      TF.setPeriodLabel('2026');
+      assert.match(el.innerHTML, /pl-short">2026</);
+    } finally { delete global.document; }
+  });
+});

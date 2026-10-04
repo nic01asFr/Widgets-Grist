@@ -613,32 +613,37 @@
     textarea { line-height: 1.45; }
     * { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
 
-    /* 2. Barre du haut : quatre zones identiques dans les quatre widgets.
-          titre | vue / navigation | outils (recherche, filtres, affichage) | actions (+ Tache, ...).
-          Ordre fixe, sans seuil de largeur : les zones passent a la ligne quand elles ne tiennent plus,
-          restent alignees a gauche, les outils s'etirent pour remplir la ligne et les actions terminent
-          toujours la derniere ligne, a droite (jamais seules ni au milieu). */
-    .header { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--sp-2) 14px; }
+    /* 2. Barre du haut : DEUX lignes fixes, identiques dans les quatre widgets, quelle que soit la largeur.
+          Ligne 1 (navbar)  : titre | vue / navigation de periode | actions (+ Tache, ...).
+          Ligne 2 (bandeau) : recherche, filtres, affichage.
+          Rien ne change de ligne au redimensionnement : le contenu se compacte, et la zone « vue »
+          (navigation + controle segmente) defile horizontalement dans sa ligne si besoin. */
+    .header {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "title view actions" "tools tools tools";
+        align-items: center;
+        column-gap: 14px;
+        row-gap: var(--sp-2);
+        padding: var(--sp-2) var(--sp-4) 10px;
+    }
     .hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
-    .hz-title { order: 1; flex: none; gap: 10px; }
-    /* La zone « vue » se dissout dans la barre : navigation de periode et controle segmente se placent
-       comme les autres blocs (meme ligne que le titre quand ca tient, sinon ligne suivante). */
-    .hz-view { display: contents; }
-    .hz-view > * { order: 2; flex: none; max-width: 100%; }
-    .hz-tools { order: 3; flex: 1 1 auto; flex-wrap: wrap; }
-    .hz-actions { order: 4; flex: none; margin-left: auto; }
+    .hz-title { grid-area: title; gap: 10px; }
+    .hz-view { grid-area: view; overflow-x: auto; scrollbar-width: none; }
+    .hz-view::-webkit-scrollbar { display: none; }
+    /* fondu discret au bord droit : signale qu'on peut faire defiler (invisible quand tout tient) */
+    .hz-view { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+    .hz-view > * { flex: none; }
+    .hz-actions { grid-area: actions; }
+    .hz-tools { grid-area: tools; }
     .header h1 { font-size: var(--fs-xl); }
+    .hz-title-text { white-space: nowrap; }
     .last-update, .hdr-glabel { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
     .hdr-glabel { font-weight: 550; }
-    .hz-tools .search-box input { width: clamp(110px, 12vw, 150px); }
-    @media (max-width: 520px) {
-        .hz-actions { order: 2; }
-        .hz-view > * { order: 3; }
-        .hz-view > .hdr-group, .hz-view > .period-nav { flex: 1 1 100%; }
-        .hz-tools { order: 4; flex: 1 1 100%; }
-        .hz-tools .search-box { flex: 1 1 100%; }
-        .hz-tools .search-box input { width: 100%; }
-        .hdr-glabel, .last-update { display: none; }
+    .hz-tools .search-box { flex: 0 1 150px; min-width: 90px; }
+    .hz-tools .search-box input { width: 100%; }
+    @media (max-width: 640px) {
+        .hz-title-text, .last-update, .hdr-glabel { display: none; }
     }
     /* Dans le lanceur (?shell=1) le titre du widget est masque : l'onglet l'affiche deja. */
     .in-shell .hz-title:not(:has(.last-update)) { display: none; }
@@ -702,6 +707,8 @@
     .header .tf-seg .btn:hover { background: rgba(127, 127, 127, 0.1); }
     .header .tf-seg .btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
     .hdr-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; max-width: 100%; }
+    .hz-view > .tf-seg, .hz-view > .hdr-group { flex: 0 1 auto; min-width: 150px; }
+    .hdr-group > .tf-seg { flex: 0 1 auto; min-width: 0; }
 
     /* 5. Navigation de periode : identique dans le Gantt et le Calendrier (‹ periode › puis Aujourd'hui). */
     .period-nav { display: inline-flex; align-items: center; gap: var(--sp-2); }
@@ -811,6 +818,47 @@
     .filter-panel .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .btn-icon.active { background: var(--primary-light); color: var(--primary); }
     .accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
+
+    /* 11. Aide discrete « i » : l'explication (etat vide, consigne) s'affiche au survol ou au focus,
+           au lieu d'une phrase permanente qui prend de la place. */
+    .tf-info {
+        position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
+        width: 16px; height: 16px; margin-left: 6px; border: 1px solid var(--border-dark, var(--border)); border-radius: 50%;
+        color: var(--text-light); font: italic 700 0.66rem/1 Georgia, serif; text-transform: none; letter-spacing: 0; cursor: help;
+    }
+    .tf-info:hover, .tf-info:focus-visible { color: var(--primary); border-color: var(--primary); outline: none; }
+    .tf-info::after {
+        content: attr(data-tip); position: absolute; left: -4px; top: calc(100% + 8px); z-index: 400;
+        width: max-content; max-width: 220px; padding: 8px 10px; border-radius: 8px;
+        background: var(--text, #1f2738); color: var(--card-bg, #fff); box-shadow: var(--shadow-lg);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-style: normal; font-weight: 500;
+        font-size: var(--fs-xs); line-height: 1.4; text-align: left; white-space: normal;
+        opacity: 0; pointer-events: none; transition: opacity 0.12s;
+    }
+    .tf-info.tip-left::after { left: auto; right: -4px; }
+    .tf-info:hover::after, .tf-info:focus-visible::after { opacity: 1; }
+
+    /* 12. Libelles des boutons : icone + libelle quand la place le permet, icone seule sinon. Les memes
+           outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */
+    .btn-label { white-space: nowrap; }
+    .header .filter-btn { position: relative; }
+    @media (max-width: 760px) {
+        .hz-tools .btn-label { display: none; }
+        .hz-tools .filter-btn, .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+        .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
+    }
+    @media (max-width: 560px) {
+        .hz-actions .btn-label, .period-nav .btn-label { display: none; }
+        .hz-actions .btn:not(.icon-btn), .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+    }
+
+    /* 13. Libelle de periode : forme complete par defaut, forme courte (« Oct. 26 ») quand la place manque. */
+    .current-period .pl-short { display: none; }
+    @media (max-width: 760px) {
+        .current-period .pl-long { display: none; }
+        .current-period .pl-short { display: inline; }
+        .current-period { min-width: 64px; }
+    }
     /* </taskflow-ui> */
     </style>
 </head>
@@ -1122,6 +1170,19 @@
                     }
                 });
                 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(null); });
+                // Info-bulles « i » : alignees a droite si elles debordent du widget.
+                const placeTip = (e) => {
+                    const tip = e.target.closest ? e.target.closest('.tf-info') : null;
+                    if (!tip) return;
+                    tip.classList.remove('tip-left');
+                    if (tip.getBoundingClientRect().left + 232 > window.innerWidth - 8) tip.classList.add('tip-left');
+                };
+                document.addEventListener('mouseover', placeTip);
+                document.addEventListener('focusin', placeTip);
+                // Controles segmentes defilants : l'element actif est toujours ramene dans le champ.
+                const revealActive = () => document.querySelectorAll('.tf-seg .btn.active').forEach(b => { if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+                document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tf-seg .btn')) setTimeout(revealActive, 60); });
+                setTimeout(revealActive, 300);
             }
 
             /* ----- Composants de la barre du haut (tous les widgets) ----------------------
@@ -1143,14 +1204,34 @@
                 refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
                 edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
                 print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
-                image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'
+                image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+                plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+                today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
             };
             const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
+            // Aide discrete : petite icone « i » dont le texte s'affiche au survol (ou au focus clavier).
+            function uiInfo(text) {
+                return '<span class="tf-info" tabindex="0" role="img" aria-label="' + escAttr(text) + '" data-tip="' + escAttr(text) + '">i</span>';
+            }
+            // Recherche commune aux quatre widgets : titre, description, tags, projet, assignes ; insensible a la
+            // casse et aux accents ; plusieurs mots = tous doivent etre presents. ctx = { projects, team }.
+            const searchNorm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            function searchMatch(t, query, ctx) {
+                const q = searchNorm(query).trim();
+                if (!q) return true;
+                if (!t) return false;
+                ctx = ctx || {};
+                const list = (v) => (Array.isArray(v) && v[0] === 'L') ? v.slice(1) : [];
+                const proj = (ctx.projects || []).find(p => p && p.id === t.projet);
+                const names = list(t.assignees).map(id => { const m = (ctx.team || []).find(x => x && x.id === id); return m ? m.nom : ''; });
+                const hay = searchNorm([t.titre, t.description, list(t.tags).join(' '), proj ? proj.nom : '', names.join(' ')].join(' '));
+                return q.split(/\s+/).every(w => hay.indexOf(w) !== -1);
+            }
             // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
             function uiTitle(t) {
                 t = t || {};
-                return '<div class="hz-title"><h1>' + (t.icon || '') + ' ' + escAttr(t.text) + '</h1>' + (t.meta || '') + '</div>';
+                return '<div class="hz-title"><h1>' + (t.icon || '') + '<span class="hz-title-text">' + escAttr(t.text) + '</span></h1>' + (t.meta || '') + '</div>';
             }
             // Controle segmente (Grouper, vues du Gantt / Calendrier). o = { label, cls, items: [{ label, id, view, title, onclick, active }] }
             function uiSegmented(o) {
@@ -1161,6 +1242,17 @@
                 return '<div class="hdr-group">' + (o.label ? '<span class="hdr-glabel">' + escAttr(o.label) + '</span>' : '') +
                     '<div class="tf-seg ' + escAttr(o.cls || '') + '" role="group"' + (o.label ? ' aria-label="' + escAttr(o.label) + '"' : '') + '>' + items + '</div></div>';
             }
+            // Libelle de periode a deux formes : complete (« Octobre 2026 ») et courte (« Oct. 26 »). Le CSS
+            // bascule sur la courte quand la place manque ; l'info-bulle garde toujours la forme complete.
+            const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+            function monthShort(d) { const m = MOIS_COURTS[d.getMonth()]; return m.charAt(0).toUpperCase() + m.slice(1); }
+            function monthYearShort(d) { return monthShort(d) + ' ' + String(d.getFullYear()).slice(-2); }
+            function setPeriodLabel(long, short, id) {
+                const el = document.getElementById(id || 'currentPeriod');
+                if (!el) return;
+                el.title = String(long);
+                el.innerHTML = '<span class="pl-long">' + escAttr(long) + '</span><span class="pl-short">' + escAttr(short == null ? long : short) + '</span>';
+            }
             // Navigation de periode, IDENTIQUE dans le Gantt et le Calendrier : ‹ periode › puis « Aujourd'hui ».
             // o = { prev, next, today, id, text }
             function uiPeriodNav(o) {
@@ -1168,7 +1260,7 @@
                 return '<div class="period-nav"><div class="nav-group">' + nav(o.prev, 'chevL', 'Période précédente') +
                     '<span class="current-period" id="' + escAttr(o.id || 'currentPeriod') + '" aria-live="polite">' + escAttr(o.text) + '</span>' +
                     nav(o.next, 'chevR', 'Période suivante') + '</div>' +
-                    '<button type="button" class="btn" onclick="' + escAttr(o.today) + '">Aujourd\'hui</button></div>';
+                    '<button type="button" class="btn" onclick="' + escAttr(o.today) + '" title="Aujourd\'hui" aria-label="Aujourd\'hui">' + uiIcon('today') + '<span class="btn-label">Aujourd\'hui</span></button></div>';
             }
             // Recherche. o = { id, oninput }
             function uiSearch(o) {
@@ -1177,7 +1269,7 @@
             // Bouton « Filtres » + menu deroulant. o = { toggle, containerId, buttonId, menuId, countId }
             function uiFilters(o) {
                 return '<div class="filter-dropdown"' + (o.containerId ? ' id="' + escAttr(o.containerId) + '"' : '') + '>' +
-                    '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '">' + uiIcon('filter') + ' Filtres' +
+                    '<button type="button" class="filter-btn"' + (o.buttonId ? ' id="' + escAttr(o.buttonId) + '"' : '') + ' onclick="' + escAttr(o.toggle) + '" title="Filtres" aria-label="Filtres">' + uiIcon('filter') + '<span class="btn-label">Filtres</span>' +
                     '<span class="filter-count" id="' + escAttr(o.countId || 'filterCount') + '" style="display:none">0</span></button>' +
                     '<div class="filter-menu wide" id="' + escAttr(o.menuId || 'filterAllMenu') + '"></div></div>';
             }
@@ -1196,9 +1288,9 @@
             // Menu « Affichage » : regroupe couleur, niveau, tri et les actions de vue. o = { fields: [{ label, html }], actions: [{ label, onclick, title }] }
             function uiDisplayMenu(o) {
                 const fields = (o.fields || []).map(f => '<label class="tf-field"><span class="tf-field-label">' + escAttr(f.label) + '</span>' + f.html + '</label>').join('');
-                const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action" onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
-                return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage">' +
-                    uiIcon('sliders') + '<span>Affichage</span>' + uiIcon('chevD', 12) + '</button>' +
+                const acts = (o.actions || []).map(a => '<button type="button" class="btn tf-menu-action"' + (a.id ? ' id="' + escAttr(a.id) + '"' : '') + ' onclick="' + escAttr(a.onclick) + '"' + (a.title ? ' title="' + escAttr(a.title) + '"' : '') + '>' + escAttr(a.label) + '</button>').join('');
+                return '<div class="view-menu" data-menu><button type="button" class="btn" data-menu-toggle aria-haspopup="true" aria-expanded="false" title="Options d\'affichage" aria-label="Affichage">' +
+                    uiIcon('sliders') + '<span class="btn-label">Affichage</span><span class="btn-label btn-chev">' + uiIcon('chevD', 12) + '</span></button>' +
                     '<div class="tf-menu-panel" role="group" aria-label="Options d\'affichage">' + fields + acts + '</div></div>';
             }
             // Menu d'actions (« ⋯ », export). o = { toggle, containerId, menuId, icon, title, items: [{ label, icon, html, id, onclick } | { sep: true }] }
@@ -1214,8 +1306,8 @@
             function uiButton(o) {
                 const cls = o.cls || (o.primary ? 'btn primary' : (o.iconOnly ? 'btn icon-btn' : 'btn'));
                 return '<button type="button" class="' + escAttr(cls) + '"' + (o.id ? ' id="' + escAttr(o.id) + '"' : '') + ' onclick="' + escAttr(o.onclick) + '"' +
-                    (o.title ? ' title="' + escAttr(o.title) + '"' : '') + (o.iconOnly ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
-                    (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? ' ' : '') + escAttr(o.label) : '') +
+                    ((o.title || (o.icon && o.label)) ? ' title="' + escAttr(o.title || o.label) + '"' : '') + ((o.iconOnly || o.icon) ? ' aria-label="' + escAttr(o.title || o.label) + '"' : '') + '>' +
+                    (o.icon ? uiIcon(o.icon, o.iconOnly ? 16 : 14) : '') + (o.label && !o.iconOnly ? (o.icon ? '<span class="btn-label">' + escAttr(o.label) + '</span>' : escAttr(o.label)) : '') +
                     (o.count ? '<span class="filter-count" id="' + escAttr(o.count) + '" style="display:none">0</span>' : '') + '</button>';
             }
             // Barre complete. o = { title, view: [html], tools: [html], actions: [html] }
@@ -1231,7 +1323,7 @@
                 initUi();
             }
             const ui = {
-                icon: uiIcon, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
+                icon: uiIcon, info: uiInfo, title: uiTitle, segmented: uiSegmented, periodNav: uiPeriodNav, search: uiSearch, filters: uiFilters,
                 select: uiSelect, colorField: uiColorField, levelField: uiLevelField, sortField: uiSortField,
                 displayMenu: uiDisplayMenu, moreMenu: uiMoreMenu, button: uiButton, header: uiHeader, mount: mountHeader
             };
@@ -1513,6 +1605,10 @@
                 colorModeLabel: colorModeLabel,
                 panelHeaderHtml: panelHeaderHtml,
                 initUi: initUi,
+                searchMatch: searchMatch,
+                setPeriodLabel: setPeriodLabel,
+                monthYearShort: monthYearShort,
+                monthShort: monthShort,
                 ui: ui,
                 seedStatusChoices: seedStatusChoices,
                 setRefDisplayColumns: setRefDisplayColumns,
@@ -1550,6 +1646,7 @@
                 ] })
             ],
             tools: [
+                TF.ui.search({ oninput: 'handleSearch(this.value)' }),
                 TF.ui.filters({ toggle: "toggleFilterMenu('filterGantt')", containerId: 'filterGantt', menuId: 'filterAllMenu' }),
                 TF.ui.displayMenu({
                     fields: [TF.ui.sortField(), TF.ui.colorField('Couleur des barres'), TF.ui.levelField()],
@@ -1561,7 +1658,7 @@
                     { icon: 'print', label: 'Imprimer / PDF', onclick: 'exportPrint()' },
                     { icon: 'image', label: 'Image PNG', onclick: 'exportPNG()' }
                 ] }),
-                TF.ui.button({ label: '+ Tâche', onclick: 'openCreatePanel()', primary: true })
+                TF.ui.button({ icon: 'plus', label: 'Tâche', title: 'Nouvelle tâche', onclick: 'openCreatePanel()', primary: true })
             ]
         });
 
@@ -1588,6 +1685,7 @@
         let expandedTasks = new Set();
         try { expandedTasks = new Set(JSON.parse(localStorage.getItem('taskflow_gantt_expanded') || '[]').map(Number).filter(n => !isNaN(n))); } catch (e) {}
         let sortableInstance = null;
+        let searchQuery = '';  // recherche texte (commune aux 4 widgets)
         let filters = { project: [], assignee: [], priority: [] };  // GEN-02: Arrays pour compatibilité inter-widgets
         let dragState = { active: false, type: null, taskId: null, startX: 0, originalLeft: 0, originalWidth: 0, originalStart: null, originalEnd: null };
         let panelState = { open: false, isNew: false, taskId: null, taskIndex: -1, taskList: [], editData: null };
@@ -2012,23 +2110,24 @@
         }
         function updatePeriodLabel() {
             const start = getViewStartDate();
-            let text = '';
+            let text = '', court = null;
             // Sous cadrage libre, le libellé annonce la plage réelle, pas une période calendaire.
             if (fitWindow) {
                 const fin = addDays(fitWindow.start, fitWindow.days);
-                document.getElementById('currentPeriod').textContent =
-                    formatDateShort(fitWindow.start) + ' ' + start.getFullYear() + ' - ' + formatDateShort(fin) + ' ' + fin.getFullYear();
+                TF.setPeriodLabel(
+                    formatDateShort(fitWindow.start) + ' ' + start.getFullYear() + ' - ' + formatDateShort(fin) + ' ' + fin.getFullYear(),
+                    formatDateShort(fitWindow.start) + ' - ' + formatDateShort(fin));
                 return;
             }
             switch (currentView) {
-                case 'week': text = 'S' + getWeekNumber(start) + ' · ' + formatDateShort(start) + ' - ' + formatDateShort(addDays(start, 6)); break;
-                case 'month': text = MONTHS[start.getMonth()] + ' ' + start.getFullYear(); break;
-                case 'quarter': text = 'T' + (Math.floor(start.getMonth() / 3) + 1) + ' ' + start.getFullYear(); break;
-                case 'semester': text = 'S' + (Math.floor(start.getMonth() / 6) + 1) + ' ' + start.getFullYear(); break;
+                case 'week': text = 'S' + getWeekNumber(start) + ' · ' + formatDateShort(start) + ' - ' + formatDateShort(addDays(start, 6)); court = 'S' + getWeekNumber(start) + ' · ' + TF.monthYearShort(start); break;
+                case 'month': text = MONTHS[start.getMonth()] + ' ' + start.getFullYear(); court = TF.monthYearShort(start); break;
+                case 'quarter': text = 'T' + (Math.floor(start.getMonth() / 3) + 1) + ' ' + start.getFullYear(); court = 'T' + (Math.floor(start.getMonth() / 3) + 1) + ' ' + String(start.getFullYear()).slice(-2); break;
+                case 'semester': text = 'S' + (Math.floor(start.getMonth() / 6) + 1) + ' ' + start.getFullYear(); court = 'S' + (Math.floor(start.getMonth() / 6) + 1) + ' ' + String(start.getFullYear()).slice(-2); break;
                 case 'year': text = start.getFullYear().toString(); break;
-                case 'multi': text = start.getFullYear() + ' - ' + addDays(start, getTotalDays()).getFullYear(); break;
+                case 'multi': text = start.getFullYear() + ' - ' + addDays(start, getTotalDays()).getFullYear(); court = String(start.getFullYear()).slice(-2) + ' - ' + String(addDays(start, getTotalDays()).getFullYear()).slice(-2); break;
             }
-            document.getElementById('currentPeriod').textContent = text;
+            TF.setPeriodLabel(text, court);
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -2127,11 +2226,13 @@
             bar.innerHTML = '<span class="fc-label">Filtres actifs</span>' + chips.join('') + '<span class="fc-clear-all" onclick="clearAllGanttFilters()">Tout effacer</span>';
         }
                 function taskMatchesFilters(t) {
+            if (searchQuery && !TF.searchMatch(t, searchQuery, { projects, team })) return false;
             if (filters.project.length && !filters.project.includes(t.projet)) return false;
             if (filters.assignee.length && !getAssigneesArray(t).some(a => filters.assignee.includes(a))) return false;
             if (filters.priority.length && !filters.priority.includes(getTaskPriority(t))) return false;
             return true;
         }
+        function handleSearch(q) { searchQuery = q; render(); }
         function getFilteredTasks() { return tasks.filter(taskMatchesFilters); }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -2988,15 +3089,15 @@
                     }).join('');
                     const addBtn = '<button class="panel-btn" style="width:auto;padding:6px 12px;font-size:0.78rem;margin-top:6px;margin-right:6px" onclick="openCreateTaskWithParent(' + panelState.taskId + ')">+ Sous-tâche</button>';
                     const adjustBtn = kids.length ? '<button class="btn" style="padding:6px 12px;font-size:0.78rem;margin-top:6px" onclick="adjustParentDatesToChildren()" title="Aligner les dates du parent sur min/max des descendants">↔ Ajuster dates</button>' : '';
-                    return '<div class="panel-section"><div class="panel-section-header"><span class="panel-section-title">Sous-tâches (hiérarchie)</span>' + (kids.length ? '<span class="panel-section-badge">' + kids.length + '</span>' : '') + '</div>' +
+                    return '<div class="panel-section"><div class="panel-section-header"><span class="panel-section-title">Sous-tâches (hiérarchie)</span>' + (kids.length ? '<span class="panel-section-badge">' + kids.length + '</span>' : TF.ui.info("Aucune sous-tâche. Décomposez cette tâche en étapes planifiables.")) + '</div>' +
                         parentLink +
-                        (kids.length ? '<div class="prereq-list">' + kidsList + '</div>' : '<div class="prereq-empty">Aucune sous-tâche. Décomposez cette tâche en étapes planifiables.</div>') +
+                        (kids.length ? '<div class="prereq-list">' + kidsList + '</div>' : '') +
                         addBtn + adjustBtn + '</div>';
                 })() : '') +
 
                 (data.type === 'jalon' ?
-                    '<div class="panel-section"><div class="panel-section-header"><span class="panel-section-title">Prérequis</span>' + (data.dependDe.length ? '<span class="panel-section-badge">' + doneCount + '/' + data.dependDe.length + '</span>' : '') + '</div>' +
-                    '<div class="prereq-list">' + (prereqHtml || '<div class="prereq-empty">Aucune dépendance — liez des tâches amont via le panneau d\'une tâche.</div>') + '</div></div>' :
+                    '<div class="panel-section"><div class="panel-section-header"><span class="panel-section-title">Prérequis</span>' + (data.dependDe.length ? '<span class="panel-section-badge">' + doneCount + '/' + data.dependDe.length + '</span>' : TF.ui.info("Aucune dépendance — liez des tâches amont via le panneau d'une tâche.")) + '</div>' +
+                    '<div class="prereq-list">' + prereqHtml + '</div></div>' :
                     '<div class="panel-section"><div class="panel-section-header"><span class="panel-section-title">' + (data.type === 'reunion' ? 'Points à traiter' : 'Checklist') + '</span>' + (subtasksTotal > 0 ? '<span class="panel-section-badge">' + subtasksDone + '/' + subtasksTotal + '</span>' : '') + '</div>' +
                     '<div class="subtask-list">' + (data.subtasks || []).map(function(st) { return '<div class="subtask-item ' + (st.done ? 'done' : '') + '"><input type="checkbox" class="subtask-checkbox" ' + (st.done ? 'checked' : '') + ' onchange="toggleSubtask(' + st.id + ')"><input class="subtask-text" value="' + escapeHtml(st.text) + '" onchange="editSubtask(' + st.id + ', this.value)" onkeydown="if(event.key===\'Enter\')this.blur()"><button class="subtask-remove" onclick="removeSubtask(' + st.id + ')">×</button></div>'; }).join('') + '</div>' +
                     '<div class="subtask-add"><input type="text" id="newSubtaskInput" placeholder="Ajouter..." onkeydown="handleSubtaskKeydown(event)"><button onclick="addSubtask()">+</button></div></div>') +
