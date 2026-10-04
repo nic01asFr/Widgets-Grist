@@ -943,9 +943,10 @@ const TF = (function () {
     }
     // Une tache parente suit ses sous-taches. Apres le changement de dates de la tache `changedId`, retourne les mises a
     // jour [{ id, dateDebut, dateEcheance }] a ecrire sur ses ascendantes (de proche en proche) :
-    //   - parente « serree » avant le changement (ses dates = bornes de ses sous-taches) : elle SUIT les nouvelles bornes,
+    // Chaque borne se traite a part :
+    //   - la sous-tache portait la borne de sa parente (debut ou fin identique) : la parente SUIT la nouvelle borne,
     //     dans les deux sens ;
-    //   - parente a la plage volontairement plus large : elle ne s'agrandit que si une sous-tache la depasse.
+    //   - sinon (plage volontairement plus large de ce cote) : elle ne s'agrandit que si une sous-tache la depasse.
     // list = taches APRES le changement ; prev = { dateDebut, dateEcheance } de la tache avant le changement
     // (a defaut, la parente est traitee comme large). Ne modifie pas list.
     function parentSpanUpdates(list, changedId, prev) {
@@ -976,10 +977,11 @@ const TF = (function () {
             if (!sa) break;
             const sb = span(before, p.id);
             const pb = byB.get(p.id) || p;
-            const tight = !!sb && !!prev && num(pb.dateDebut) === sb.start && num(pb.dateEcheance) === sb.end;
             const ps = num(p.dateDebut), pe = num(p.dateEcheance);
-            const ns = (tight || !ps) ? sa.start : Math.min(ps, sa.start);
-            const ne = (tight || !pe) ? sa.end : Math.max(pe, sa.end);
+            const tightS = !!sb && !!prev && num(pb.dateDebut) === sb.start;   // une sous-tache portait le debut
+            const tightE = !!sb && !!prev && num(pb.dateEcheance) === sb.end;  // une sous-tache portait la fin
+            const ns = (tightS || !ps) ? sa.start : Math.min(ps, sa.start);
+            const ne = (tightE || !pe) ? sa.end : Math.max(pe, sa.end);
             if (ns !== ps || ne !== pe) { p.dateDebut = ns; p.dateEcheance = ne; out.push({ id: p.id, dateDebut: ns, dateEcheance: ne }); }
             cur = p;
         }

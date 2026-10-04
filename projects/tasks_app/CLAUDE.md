@@ -526,7 +526,7 @@ aggregateDates(t)     // min(starts descendants), max(ends descendants)
 | Métrique | Règle si `hasChildren(t)` |
 |----------|---------------------------|
 | Progression | **Auto-calculée** (moyenne pondérée par `estimationH` si dispo, sinon simple) — jamais persistée |
-| Dates | **Stockées explicitement**, mais la parente **suit ses sous-tâches** (`TF.parentSpanUpdates`, appelé à chaque changement de dates d'une tâche : fiche des 3 widgets, glisser du Gantt) : parente « serrée » (dates = bornes des enfants) = elle suit leurs nouvelles bornes dans les deux sens ; parente à plage volontairement plus large = elle ne s'agrandit que si un enfant la dépasse. Remonte de proche en proche ; les tâches qui dépendent de la parente sont décalées si besoin (Gantt). Suppression, création et changement de parent ne la recalculent pas. |
+| Dates | **Stockées explicitement**, mais la parente **suit ses sous-tâches** (`TF.parentSpanUpdates`, appelé à chaque changement de dates d'une tâche : fiche des 3 widgets, glisser du Gantt) : borne par borne : la sous-tâche qui portait le début (ou la fin) de sa parente le déplace avec elle, dans les deux sens ; sinon (plage volontairement plus large de ce côté) la parente ne s'agrandit que si une sous-tâche la dépasse. Un seul `applyUserActions` : un seul Ctrl+Z dans Grist annule la sous-tâche et la parente. Remonte de proche en proche ; les tâches qui dépendent de la parente sont décalées si besoin (Gantt). Suppression, création et changement de parent ne la recalculent pas. |
 | Assignés | **Pas d'agrégation** — le parent peut avoir son propriétaire distinct |
 
 ### Schéma (additif, rétrocompatible)

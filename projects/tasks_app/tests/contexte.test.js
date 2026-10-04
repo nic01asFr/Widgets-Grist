@@ -242,6 +242,20 @@ describe('tache parente : elle suit ses sous-taches', () => {
         const l2 = base(); l2[1].dateDebut = 8 * J;                                        // avance
         assert.deepEqual(TF.parentSpanUpdates(l2, 2, { dateDebut: 10 * J, dateEcheance: 14 * J }), [{ id: 1, dateDebut: 8 * J, dateEcheance: 30 * J }]);
     });
+    it('chaque borne se traite a part : le premier enfant porte le debut, la fin reste reservee', () => {
+        const l = [t(1, 10, 35), t(2, 10, 14, 1), t(3, 15, 30, 1)];                     // parente finissant apres ses enfants
+        l[1].dateDebut = 12 * J;
+        assert.deepEqual(TF.parentSpanUpdates(l, 2, { dateDebut: 10 * J, dateEcheance: 14 * J }), [{ id: 1, dateDebut: 12 * J, dateEcheance: 35 * J }]);
+    });
+    it('deplacer un enfant dehors puis le remettre : la borne revient avec lui', () => {
+        const l = base(); l[3].dateEcheance = 35 * J;
+        const aller = TF.parentSpanUpdates(l, 4, { dateDebut: 23 * J, dateEcheance: 30 * J });
+        assert.equal(aller[0].dateEcheance, 35 * J);
+        l[0].dateEcheance = 35 * J;                                                      // parente ecrite par l'aller
+        l[3].dateEcheance = 30 * J;
+        const retour = TF.parentSpanUpdates(l, 4, { dateDebut: 23 * J, dateEcheance: 35 * J });
+        assert.deepEqual(retour, [{ id: 1, dateDebut: 10 * J, dateEcheance: 30 * J }]);
+    });
     it('une parente serree suit la fin de son dernier enfant', () => {
         const l = base(); l[3].dateEcheance = 35 * J;
         assert.deepEqual(TF.parentSpanUpdates(l, 4, { dateDebut: 23 * J, dateEcheance: 30 * J }), [{ id: 1, dateDebut: 10 * J, dateEcheance: 35 * J }]);
