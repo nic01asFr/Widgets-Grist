@@ -86,11 +86,22 @@ describe('classement — les rangs vont chacun dans leur colonne', () => {
     },
   };
 
-  it('montre l’ordre, et dit lesquels seront retenus', () => {
+  it('se pose en grille : une ligne par proposition, une colonne par rang', () => {
     const html = Engine.renderFieldHtml(champ, {}, null, def);
     assert.ok(html.includes('data-rangs="3"'));
-    assert.ok(html.includes('Les 3 premiers seront retenus'));
-    assert.ok(html.includes('fr-classement__item--hors'), 'au-delà du 3ᵉ, c’est hors classement');
+    assert.ok(html.includes('1<sup>re</sup> place') && html.includes('3<sup>e</sup> place'));
+    assert.ok(html.includes('Sébastopol') && html.includes('Longchamp'));
+    // Une place par colonne : les boutons d’un même rang partagent leur nom.
+    assert.ok(html.includes('name="E_Lieux_prioritaires__rang0"'));
+    assert.ok(html.includes('name="E_Lieux_prioritaires__rang2"'));
+    assert.ok(!html.includes('__rang3'), 'pas de quatrième place');
+  });
+
+  it('montre les places déjà attribuées', () => {
+    const html = Engine.renderFieldHtml(champ, { E_Lieux_prioritaires: ['Longchamp', null, 'Audran'] }, null, def);
+    assert.ok(/name="E_Lieux_prioritaires__rang0" value="Longchamp" checked/.test(html));
+    assert.ok(/name="E_Lieux_prioritaires__rang2" value="Audran" checked/.test(html));
+    assert.ok(!/rang1[^>]*checked/.test(html), 'la 2ᵉ place reste libre');
   });
 
   it('les trois premiers partent dans E1, E2, E3 — et la question n’écrit pas sous son nom', () => {

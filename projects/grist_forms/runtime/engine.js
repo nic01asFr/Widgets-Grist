@@ -774,38 +774,55 @@
   }
 
   /**
-   * Classer des propositions, de la plus importante a la moins importante.
+   * Classer : une ligne par proposition, une colonne par rang.
    *
-   * Monter et descendre plutot que glisser-deposer : le glisser ne marche ni
-   * au clavier ni au doigt sur un ecran qui defile. Seuls les premiers rangs
-   * comptent — `options.rangs` dit combien — et chacun va dans sa colonne.
+   * > **Monter et descendre ne dit pas ce qu'on attribue.** Avec six
+   * > propositions et trois places a donner, la personne ne classe pas une
+   * > liste : elle designe un premier, un deuxieme, un troisieme. La grille le
+   * > montre — c'est la forme qu'avait le questionnaire ecrit a la main, et
+   * > c'est aussi celle des colonnes qui recoivent la reponse : une par rang.
+   *
+   * Une place ne se donne qu'une fois, et une proposition n'en prend qu'une :
+   * les deux regles se tiennent a la saisie. Recliquer une case la libere,
+   * puisqu'un bouton radio ne se decoche pas tout seul.
    */
   function renderClassement(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
-    var rangs = (field.options && field.options.rangs) || options.length;
-    var ordre = Array.isArray(value) && value.length ? value.map(String) : null;
-    var rangees = ordre
-      ? ordre.map(function (v) {
-          var trouve = null;
-          options.forEach(function (o) { if (String(o.value) === v) trouve = o; });
-          return trouve || { value: v, label: v };
-        }).concat(options.filter(function (o) { return ordre.indexOf(String(o.value)) === -1; }))
-      : options.slice();
-    var itemsHtml = rangees.map(function (o, i) {
-      var retenu = i < rangs;
-      return '<li class="fr-classement__item' + (retenu ? '' : ' fr-classement__item--hors') + '" data-valeur="' + escapeHtml(o.value) + '">' +
-        '<span class="fr-classement__rang">' + (retenu ? (i + 1) : '\u00b7') + '</span>' +
-        '<span class="fr-classement__texte">' + escapeHtml(o.label) + '</span>' +
-        '<button type="button" class="fr-classement__bouton" data-sens="-1" aria-label="Monter"' +
-        (i === 0 ? ' disabled' : '') + '>&#8593;</button>' +
-        '<button type="button" class="fr-classement__bouton" data-sens="1" aria-label="Descendre"' +
-        (i === rangees.length - 1 ? ' disabled' : '') + '>&#8595;</button>' +
-        '</li>';
+    var rangs = (field.options && field.options.rangs) || Math.min(3, options.length);
+    var choisis = Array.isArray(value) ? value.map(function (v) { return v == null ? '' : String(v); }) : [];
+    var id = fieldId(field);
+
+    var entetes = '';
+    for (var r = 0; r < rangs; r++) {
+      entetes += '<th scope="col">' + rangLibelle(r) + '</th>';
+    }
+    var lignes = options.map(function (o, i) {
+      var cases = '';
+      for (var r2 = 0; r2 < rangs; r2++) {
+        var coche = choisis[r2] === String(o.value) ? ' checked' : '';
+        var cid = id + '-r' + r2 + '-o' + i;
+        cases += '<td class="fr-rangs__case">' +
+          '<input type="radio" id="' + cid + '" name="' + escapeHtml(field.colId) + '__rang' + r2 + '" ' +
+          'value="' + escapeHtml(o.value) + '"' + coche + ' />' +
+          '<label class="fr-label" for="' + cid + '">' +
+          '<span class="fr-rangs__lu">' + rangLibelle(r2) + ' : ' + escapeHtml(o.label) + '</span></label></td>';
+      }
+      return '<tr><th scope="row" class="fr-rangs__intitule">' + escapeHtml(o.label) + '</th>' + cases + '</tr>';
     }).join('');
-    return '<fieldset class="fr-fieldset fr-classement" data-colid="' + escapeHtml(field.colId) + '" data-widget="classement" data-rangs="' + rangs + '">' +
+
+    return '<fieldset class="fr-fieldset fr-classement" data-colid="' + escapeHtml(field.colId) + '" ' +
+      'data-widget="classement" data-rangs="' + rangs + '">' +
       renderLegend(field) +
-      '<p class="fr-hint-text">Du plus important au moins important. Les ' + rangs + ' premiers seront retenus.</p>' +
-      '<ol class="fr-classement__liste">' + itemsHtml + '</ol></fieldset>';
+      '<p class="fr-hint-text">Cochez la place voulue pour chaque proposition. Une proposition = une place ; ' +
+      'recliquez une case pour l\u2019enlever.</p>' +
+      '<div class="fr-rangs__cadre"><table class="fr-rangs">' +
+      '<thead><tr><th scope="col">Proposition</th>' + entetes + '</tr></thead>' +
+      '<tbody>' + lignes + '</tbody></table></div></fieldset>';
+  }
+
+  /** « 1ʳᵉ place », « 2ᵉ place »… — ce que la colonne du tableau annonce. */
+  function rangLibelle(i) {
+    return i === 0 ? '1<sup>re</sup> place' : (i + 1) + '<sup>e</sup> place';
   }
 
   /** Un point sur la Terre, saisi au doigt : « Utiliser ma position ». */
@@ -938,10 +955,17 @@
       return checkedRadio ? checkedRadio.value : null;
     }
     if (field.widget === 'classement') {
-      var items = rootEl.querySelectorAll('[data-colid="' + field.colId + '"] .fr-classement__item');
+      var bloc = rootEl.querySelector('[data-colid="' + field.colId + '"]');
+      if (!bloc) return previous != null ? previous : null;
+      var combien = parseInt(bloc.getAttribute('data-rangs'), 10) || 0;
       var ordre = [];
-      for (var k = 0; k < items.length; k++) ordre.push(items[k].getAttribute('data-valeur'));
-      return ordre.length ? ordre : null;
+      var rempli = false;
+      for (var k = 0; k < combien; k++) {
+        var coche = bloc.querySelector('input[name="' + field.colId + '__rang' + k + '"]:checked');
+        ordre.push(coche ? coche.value : null);
+        if (coche) rempli = true;
+      }
+      return rempli ? ordre : null;
     }
     if (field.widget === 'multiselect') {
       var checkedBoxes = rootEl.querySelectorAll('input[name="' + field.colId + '"]:checked');
@@ -1486,26 +1510,41 @@
       }(groupes[i]));
     }
 
-    /** Monter et descendre une proposition, et renumeroter ce qui bouge. */
+    /**
+     * Les deux regles d'un classement, tenues a la saisie.
+     *
+     * Une place ne se donne qu'une fois — c'est le propre d'un groupe de
+     * boutons radio. Une proposition n'en prend qu'une : cocher sa deuxieme
+     * place lui retire la premiere, au lieu de la laisser deux fois classee.
+     * Et recliquer une case la libere, ce qu'un radio ne fait pas tout seul.
+     */
     function brancherClassements(fields) {
-      var listes = rootEl.querySelectorAll('[data-widget="classement"]');
-      for (var i = 0; i < listes.length; i++) (function (bloc) {
-        var boutons = bloc.querySelectorAll('.fr-classement__bouton');
-        for (var k = 0; k < boutons.length; k++) {
-          if (typeof boutons[k].addEventListener !== 'function') continue;
-          boutons[k].addEventListener('click', function (ev) {
-            if (ev && ev.preventDefault) ev.preventDefault();
-            var item = this.parentNode;
-            var sens = parseInt(this.getAttribute('data-sens'), 10);
-            var voisin = sens < 0 ? item.previousElementSibling : item.nextElementSibling;
-            if (!voisin) return;
-            if (sens < 0) item.parentNode.insertBefore(item, voisin);
-            else item.parentNode.insertBefore(voisin, item);
+      var blocs = rootEl.querySelectorAll('[data-widget="classement"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var colId = bloc.getAttribute('data-colid');
+        var cases = bloc.querySelectorAll('input[type="radio"]');
+        for (var k = 0; k < cases.length; k++) {
+          if (typeof cases[k].addEventListener !== 'function') continue;
+          // `click` et non `change` : il faut voir le clic sur une case deja cochee.
+          cases[k].addEventListener('click', function () {
+            var moi = this;
+            if (moi.getAttribute('data-etait-coche') === 'oui') {
+              moi.checked = false;
+              moi.removeAttribute('data-etait-coche');
+            } else {
+              for (var j = 0; j < cases.length; j++) {
+                // la meme proposition ailleurs : elle quitte son autre place
+                if (cases[j] !== moi && cases[j].value === moi.value) cases[j].checked = false;
+                cases[j].removeAttribute('data-etait-coche');
+              }
+              moi.setAttribute('data-etait-coche', 'oui');
+            }
             readSectionValues(rootEl, fields, values);
             planifierRendu();
           });
+          if (cases[k].checked) cases[k].setAttribute('data-etait-coche', 'oui');
         }
-      }(listes[i]));
+      }(blocs[i]));
     }
 
     /**

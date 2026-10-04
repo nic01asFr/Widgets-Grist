@@ -423,25 +423,43 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 .fr-form .fr-checkbox-group input:disabled + .fr-label, .champ-bloc__rendu .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
 
-/* Classer : des rangées qu'on monte et qu'on descend. */
-.fr-form .fr-classement__liste, .champ-bloc__rendu .fr-classement__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.fr-form .fr-classement__item, .champ-bloc__rendu .fr-classement__item {
-  display: flex; align-items: center; gap: 0.6rem; min-height: var(--cible, 2.75rem);
-  padding: 0.3rem 0.6rem; border: 1px solid var(--bordure, #ddd); border-radius: 8px;
-  background: var(--fond-carte, #fff);
+/* Classer : une grille, une ligne par proposition, une colonne par place.
+   C'est la forme du questionnaire papier, et celle des colonnes qui recoivent
+   la reponse. Sur telephone, le tableau defile de lui-meme. */
+.fr-form .fr-rangs__cadre, .champ-bloc__rendu .fr-rangs__cadre { overflow-x: auto; }
+.fr-form .fr-rangs, .champ-bloc__rendu .fr-rangs {
+  width: 100%; border-collapse: collapse; font-size: 0.95rem;
 }
-.fr-form .fr-classement__item--hors, .champ-bloc__rendu .fr-classement__item--hors { opacity: 0.55; border-style: dashed; }
-.fr-form .fr-classement__rang, .champ-bloc__rendu .fr-classement__rang {
-  flex: 0 0 1.8rem; height: 1.8rem; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 999px; background: var(--blue-france); color: #fff; font-variant-numeric: tabular-nums;
+.fr-form .fr-rangs th, .fr-form .fr-rangs td,
+.champ-bloc__rendu .fr-rangs th, .champ-bloc__rendu .fr-rangs td {
+  border-bottom: 1px solid var(--bordure, #ddd); padding: 0.35rem 0.5rem; text-align: center;
 }
-.fr-form .fr-classement__item--hors .fr-classement__rang, .champ-bloc__rendu .fr-classement__item--hors .fr-classement__rang { background: var(--bordure, #ddd); color: var(--encre-douce, #666); }
-.fr-form .fr-classement__texte, .champ-bloc__rendu .fr-classement__texte { flex: 1 1 auto; min-width: 0; }
-.fr-form .fr-classement__bouton, .champ-bloc__rendu .fr-classement__bouton {
-  flex: 0 0 auto; width: 2.4rem; height: 2.4rem; font: inherit; font-size: 1.1rem; cursor: pointer;
-  border: 1px solid var(--bordure, #ddd); border-radius: 6px; background: transparent; color: inherit;
+.fr-form .fr-rangs thead th, .champ-bloc__rendu .fr-rangs thead th {
+  font-size: 0.82rem; font-weight: 600; color: var(--encre-douce, #666); white-space: nowrap;
 }
-.fr-form .fr-classement__bouton[disabled], .champ-bloc__rendu .fr-classement__bouton[disabled] { opacity: 0.3; cursor: default; }
+.fr-form .fr-rangs__intitule, .champ-bloc__rendu .fr-rangs__intitule {
+  text-align: left; font-weight: 400; min-width: 12rem;
+}
+.fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 5.5rem; }
+/* La case entiere est la cible : 44 px, au doigt. */
+.fr-form .fr-rangs__case label, .champ-bloc__rendu .fr-rangs__case label {
+  display: block; margin: 0 auto; width: 2.4rem; height: 2.4rem; border-radius: 999px;
+  border: 2px solid var(--bordure, #ddd); cursor: pointer;
+}
+.fr-form .fr-rangs__case input, .champ-bloc__rendu .fr-rangs__case input {
+  position: absolute; opacity: 0; width: 0; height: 0;
+}
+.fr-form .fr-rangs__case input:checked + label, .champ-bloc__rendu .fr-rangs__case input:checked + label {
+  background: var(--blue-france); border-color: var(--blue-france);
+}
+.fr-form .fr-rangs__case input:focus-visible + label, .champ-bloc__rendu .fr-rangs__case input:focus-visible + label {
+  outline: 2px solid var(--blue-france); outline-offset: 2px;
+}
+/* Ce que lit un lecteur d'ecran, et que l'oeil n'a pas besoin de voir. */
+.fr-rangs__lu {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
 
 /* Relever sa position : le bouton tient dans la ligne, et passe dessous
    quand l'écran est étroit. */
