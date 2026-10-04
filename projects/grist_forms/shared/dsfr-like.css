@@ -407,12 +407,13 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 .fr-form .fr-fieldset__content--ligne .fr-radio-group { flex: 1 1 8rem; justify-content: center; }
 
-/* « Autre : … » — révélé seulement quand on l'a choisi. */
-.fr-form .fr-autre {
+/* « Autre : … » — révélé seulement quand on l'a choisi, y compris dans
+   l'aperçu du compositeur : il montre ce que le public verra. */
+.fr-form .fr-autre, .champ-bloc__rendu .fr-autre {
   margin: 0.3rem 0 0 1.6rem; padding-left: 0.8rem;
   border-left: 3px solid var(--blue-france);
 }
-.fr-form .fr-autre--repliee { display: none; }
+.fr-form .fr-autre--repliee, .champ-bloc__rendu .fr-autre--repliee { display: none; }
 
 /* Le plafond se lit avant de cocher, et se tient. */
 .fr-form .fr-plafond {

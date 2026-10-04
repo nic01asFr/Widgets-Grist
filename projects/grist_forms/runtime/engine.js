@@ -829,7 +829,7 @@
     var libre = values && values[col] != null ? String(values[col]) : '';
     var choisi = valeurAutreChoisie(field, values);
     return '<div class="fr-autre' + (choisi ? '' : ' fr-autre--repliee') + '" data-autre-de="' + escapeHtml(field.colId) + '">' +
-      '<label class="fr-label" for="' + id + '">' + escapeHtml(o.consigneAutre || 'Precisez') + '</label>' +
+      '<label class="fr-label" for="' + id + '">' + escapeHtml(o.consigneAutre || 'Précisez') + '</label>' +
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(col) + '" value="' + escapeHtml(libre) + '" />' +
       '</div>';
   }

@@ -2489,6 +2489,116 @@ function renderOptionsDuChamp(def, si, f, fi, isBind) {
     </div>`;
 }
 
+/**
+ * Ce qui est propre a une saisie, et a elle seule.
+ *
+ * > **Une saisie range sa reponse ailleurs que dans sa colonne.** Un classement
+ * > ecrit un rang par colonne, « Autre : … » demande une colonne de texte a
+ * > cote de la liste. Ces colonnes ne se devinent pas : elles se choisissent
+ * > ici, dans la liste des colonnes de la table, pas dans un JSON.
+ *
+ * Rien ne s'affiche pour une saisie qui n'a pas de reglage propre : le panneau
+ * ne montre que ce qui s'applique a la question qu'on regle.
+ */
+function renderReglagesSaisie(def, si, f, fi, isBind) {
+  const o = f.options || {};
+  const cols = o.colonnes || {};
+  const texte = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Text');
+  const choix = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Choice');
+  const optCols = (liste, courant) => liste.map(c =>
+    `<option value="${esc(c.colId)}" ${c.colId === courant ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('');
+
+  // ── Oui / Non : les deux mots qu'on lit ──
+  if (f.widget === 'ouinon') {
+    return `
+      <div class="bloc__duo">
+        <div class="fr-input-group"><label class="fr-label" for="oui-${si}-${fi}">Mot pour « oui » ${hintIcon('« Oui », « Tout à fait », « J’y suis favorable »… Ce que le public lit sur le bouton.')}</label>
+          <input class="fr-input" id="oui-${si}-${fi}" value="${esc(o.libelleOui || '')}" placeholder="Oui"
+            oninput="App.onFieldOption(${si}, ${fi}, 'libelleOui', this.value)"></div>
+        <div class="fr-input-group"><label class="fr-label" for="non-${si}-${fi}">Mot pour « non »</label>
+          <input class="fr-input" id="non-${si}-${fi}" value="${esc(o.libelleNon || '')}" placeholder="Non"
+            oninput="App.onFieldOption(${si}, ${fi}, 'libelleNon', this.value)"></div>
+      </div>
+      <p class="fr-hint-text">Sans réponse, Grist écrira « non » : une question qui doit distinguer « non » de « sans réponse » se pose en liste de choix.</p>`;
+  }
+
+  // ── Classement : combien de rangs, et ou ils vont ──
+  if (f.kind === 'classement') {
+    const rangs = o.rangs || (cols.rangs || []).length || 3;
+    const lignes = [];
+    for (let r = 0; r < rangs; r++) {
+      lignes.push(`
+        <div class="fr-select-group"><label class="fr-label" for="rang-${si}-${fi}-${r}">Colonne du ${r + 1}${r === 0 ? 'ᵉʳ' : 'ᵉ'} choix</label>
+          <select class="fr-select" id="rang-${si}-${fi}-${r}" onchange="App.onFieldRang(${si}, ${fi}, ${r}, this.value)">
+            <option value="">— choisir —</option>${optCols(choix, (cols.rangs || [])[r])}
+          </select></div>`);
+    }
+    return `
+      <div class="fr-input-group"><label class="fr-label" for="nbr-${si}-${fi}">Nombre de rangs retenus ${hintIcon('Les propositions au-delà ne sont pas des réponses : elles n’ont pas été classées.')}</label>
+        <input class="fr-input" id="nbr-${si}-${fi}" type="number" min="1" max="10" value="${rangs}"
+          onchange="App.onFieldRangs(${si}, ${fi}, this.value)"></div>
+      <div class="bloc__duo">${lignes.join('')}</div>
+      ${renderReglageAutre(def, si, f, fi, texte, optCols)}`;
+  }
+
+  // ── Listes : plafond de cases, et reponse libre ──
+  const estChoix = f.type === 'Choice' || f.type === 'ChoiceList';
+  if (estChoix) {
+    const plafond = f.type === 'ChoiceList' ? `
+      <div class="fr-input-group"><label class="fr-label" for="max-${si}-${fi}">Nombre maximal de réponses ${hintIcon('Laissez vide pour ne pas limiter. Le public voit le compte, et les autres cases se grisent une fois le compte atteint.')}</label>
+        <input class="fr-input" id="max-${si}-${fi}" type="number" min="1" placeholder="sans limite"
+          value="${o.maxSelected || ''}" onchange="App.onFieldMax(${si}, ${fi}, this.value)"></div>` : '';
+    return plafond + renderReglageAutre(def, si, f, fi, texte, optCols);
+  }
+  return '';
+}
+
+/**
+ * « Autre : … » — la case qui l'autorise, la colonne qui le recueille, et ce
+ * que la liste doit proposer pour que ça marche.
+ *
+ * > **L'etat ne se deduit pas de la colonne choisie.** Il etait porte par la
+ * > presence de `colonnes.autre` : cocher la case sans avoir encore designe la
+ * > colonne la decochait aussitot. C'est `options.autreLibre` qui dit l'intention,
+ * > et la colonne se choisit ensuite.
+ *
+ * En mode liaison, la valeur « Autre » doit figurer dans la liste de la
+ * colonne, sinon Grist l'encadrera en rouge. On le dit, et on propose de
+ * l'ajouter a la colonne — c'est un geste sur le document, il se demande.
+ */
+function renderReglageAutre(def, si, f, fi, texte, optCols) {
+  const o = f.options || {};
+  const cols = o.colonnes || {};
+  const actif = !!o.autreLibre;
+  const mot = o.valeurAutre || 'Autre';
+  const colonne = (S.columnsByTable[def.tableId] || []).find(c => c.colId === f.colId);
+  const listeColonne = (colonne && colonne.choix) || null;
+  const manqueDansListe = actif && def.composeMode === 'bind' && listeColonne && listeColonne.indexOf(mot) === -1;
+  return `
+    <div class="fr-checkbox-group fr-mt-1w">
+      <input type="checkbox" id="autre-${si}-${fi}" ${actif ? 'checked' : ''}
+        onchange="App.onFieldAutre(${si}, ${fi}, this.checked)">
+      <label class="fr-label" for="autre-${si}-${fi}">Autoriser une réponse libre ${hintIcon('Une option « Autre » s’ajoute à la liste, et ce que la personne écrit va dans une colonne de texte à part — écrit dans la liste, Grist le garderait mais l’encadrerait en rouge.')}</label>
+    </div>
+    ${actif ? `
+      <div class="bloc__duo">
+        <div class="fr-select-group"><label class="fr-label" for="autrecol-${si}-${fi}">Colonne de la précision</label>
+          <select class="fr-select" id="autrecol-${si}-${fi}" onchange="App.onFieldAutreCol(${si}, ${fi}, this.value)">
+            <option value="">— choisir une colonne texte —</option>${optCols(texte, cols.autre || '')}
+          </select></div>
+        <div class="fr-input-group"><label class="fr-label" for="autreval-${si}-${fi}">Mot affiché</label>
+          <input class="fr-input" id="autreval-${si}-${fi}" value="${esc(o.valeurAutre || '')}" placeholder="Autre"
+            onchange="App.onFieldOption(${si}, ${fi}, 'valeurAutre', this.value)"></div>
+      </div>
+      ${!cols.autre ? `<p class="fr-hint-text">Sans colonne de précision, la réponse libre ne serait enregistrée nulle part.</p>` : ''}
+      ${manqueDansListe ? `
+        <div class="fr-alert fr-alert--warning fr-mt-1w">
+          <p>La colonne « ${esc(f.colId)} » ne propose pas « ${esc(mot)} » : Grist encadrerait la réponse en rouge.</p>
+          <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w"
+            onclick="App.ajouterChoixALaColonne(${si}, ${fi})">Ajouter « ${esc(mot)} » à la colonne</button>
+        </div>` : ''}` : ''}`;
+}
+
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
 function normaliserSelection() {
   const def = S.currentDef;
@@ -2965,6 +3075,7 @@ function renderFieldEditor(def, si, f, fi) {
         </div>
 
         ${isChoiceLike ? renderOptionsDuChamp(def, si, f, fi, isBind) : ''}
+        ${renderReglagesSaisie(def, si, f, fi, isBind)}
 
         ${f.kind === 'echelle' ? `
           <div class="bloc__duo">
@@ -3179,6 +3290,114 @@ function onFieldChoices(si, fi, text) {
   const f = S.currentDef.sections[si].fields[fi];
   const list = text.split('\n').map(s => s.trim()).filter(Boolean);
   if (f.colId) S.currentDef.choices[f.colId] = list;
+}
+
+/** Combien de rangs un classement retient. */
+function onFieldRangs(si, fi, valeur) {
+  const f = S.currentDef.sections[si].fields[fi];
+  const n = Math.max(1, Math.min(10, parseInt(valeur, 10) || 3));
+  f.options = f.options || {};
+  f.options.rangs = n;
+  f.options.colonnes = f.options.colonnes || {};
+  const rangs = (f.options.colonnes.rangs || []).slice(0, n);
+  while (rangs.length < n) rangs.push('');
+  f.options.colonnes.rangs = rangs;
+  marquerModifie();
+  renderBuilder();
+}
+
+/** La colonne ou atterrit le choix de rang n. */
+function onFieldRang(si, fi, rang, colId) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  f.options.colonnes = f.options.colonnes || {};
+  const rangs = (f.options.colonnes.rangs || []).slice();
+  rangs[rang] = colId;
+  f.options.colonnes.rangs = rangs;
+  marquerModifie();
+  renderBuilder();
+}
+
+/** Le plafond de cases cochees. */
+function onFieldMax(si, fi, valeur) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const n = parseInt(valeur, 10);
+  if (Number.isFinite(n) && n > 0) f.options.maxSelected = n;
+  else delete f.options.maxSelected;
+  marquerModifie();
+  renderBuilder();
+}
+
+/**
+ * Autoriser une reponse libre.
+ *
+ * L'option « Autre » s'ajoute a la liste proposee, car c'est elle que la
+ * colonne acceptera : ecrire le texte libre a sa place serait refuse par
+ * Grist, qui l'encadrerait en rouge.
+ */
+function onFieldAutre(si, fi, actif) {
+  const def = S.currentDef;
+  const f = def.sections[si].fields[fi];
+  f.options = f.options || {};
+  f.options.colonnes = f.options.colonnes || {};
+  if (actif) {
+    f.options.autreLibre = true;
+    if (!f.options.valeurAutre) f.options.valeurAutre = 'Autre';
+    if (f.type === 'Choice' || f.type === 'ChoiceList') f.kind = 'choix_autre';
+    // En mode création, la liste nous appartient : « Autre » s'y ajoute.
+    if (def.composeMode === 'ensureSchema') {
+      const liste = def.choices[f.colId] || (f.options.choices || []);
+      if (liste.indexOf(f.options.valeurAutre) === -1) {
+        def.choices[f.colId] = liste.concat([f.options.valeurAutre]);
+      }
+    }
+    // Une seule colonne texte libre : c'est forcément celle-là.
+    const texte = (S.columnsByTable[def.tableId] || [])
+      .filter(c => c.type === 'Text' && c.colId !== f.colId);
+    if (!f.options.colonnes.autre && texte.length === 1) f.options.colonnes.autre = texte[0].colId;
+  } else {
+    delete f.options.autreLibre;
+    delete f.options.colonnes.autre;
+    if (f.kind === 'choix_autre') delete f.kind;
+  }
+  marquerModifie();
+  renderBuilder();
+}
+
+/**
+ * Ajouter « Autre » à la liste de la colonne, dans Grist.
+ *
+ * Le compositeur écrit déjà le schéma quand il crée les colonnes ; ici il
+ * modifie une colonne existante, et c'est pourquoi le geste se demande au
+ * lieu de se faire tout seul quand on coche la case.
+ */
+async function ajouterChoixALaColonne(si, fi) {
+  const def = S.currentDef;
+  const f = def.sections[si].fields[fi];
+  const mot = (f.options && f.options.valeurAutre) || 'Autre';
+  const colonne = (S.columnsByTable[def.tableId] || []).find(c => c.colId === f.colId);
+  if (!colonne) return;
+  const liste = (colonne.choix || []).concat([mot]);
+  try {
+    await GristBridge.applyUserActions([['ModifyColumn', def.tableId, f.colId, {
+      widgetOptions: JSON.stringify({ choices: liste, choiceOptions: {} })
+    }]]);
+    colonne.choix = liste;
+    toast(`« ${mot} » ajouté à la colonne ${f.colId}`, 'success');
+  } catch (e) {
+    toast('Grist a refusé la modification de la colonne : ' + (e && e.message ? e.message : ''), 'error');
+  }
+  renderBuilder();
+}
+
+function onFieldAutreCol(si, fi, colId) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  f.options.colonnes = f.options.colonnes || {};
+  if (colId) f.options.colonnes.autre = colId; else delete f.options.colonnes.autre;
+  marquerModifie();
+  renderBuilder();
 }
 
 function onFieldRefTable(si, fi, value) {
@@ -3933,7 +4152,8 @@ window.App = {
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
   saveForm, refreshPreview: mountPreview, choisir, panneauDroit,
-  typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
+  onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */
