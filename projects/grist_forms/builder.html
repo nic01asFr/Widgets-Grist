@@ -113,7 +113,7 @@
      s'empilent et la structure passe devant. */
   .atelier {
     display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr) 20rem;
+    grid-template-columns: 14rem minmax(0, 1fr) 24rem;
     gap: 1px;
     background: var(--grey-925, #e5e5e5);
     border: 1px solid var(--grey-925, #e5e5e5);
@@ -163,6 +163,62 @@
   .structure__etape { display: flex; flex-direction: column; gap: 1px; }
   .structure__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
 
+  /* Le plan de l'étape : ses questions en cartes, visibles d'un coup. */
+  .atelier__plan { padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .plan__tete { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .plan__titre {
+    font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+    background: transparent; border: 1px solid transparent; border-radius: 6px;
+    padding: 0.25rem 0.5rem; color: inherit;
+  }
+  .plan__titre:hover { background: var(--grey-975, #f6f6f6); }
+  .plan__titre.est-actif { background: var(--blue-france, #000091); color: #fff; }
+  .plan__chemin { font-size: 0.78rem; color: var(--blue-france, #000091); }
+  .plan__compte { font-size: 0.78rem; color: var(--encre-douce, #666); margin-left: auto; }
+  .plan__vide { padding: 2rem 1rem; text-align: center; color: var(--encre-douce, #666); }
+  .plan__grille {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0.6rem; align-content: start;
+  }
+  .carte {
+    font: inherit; text-align: left; cursor: pointer; color: inherit;
+    display: flex; flex-direction: column; gap: 0.3rem;
+    padding: 0.6rem 0.7rem; border: 1px solid var(--grey-925, #e5e5e5); border-radius: 8px;
+    background: var(--fond-carte, #fff); min-width: 0;
+  }
+  .carte:hover { border-color: var(--blue-france, #000091); }
+  .carte.est-actif { border-color: var(--blue-france, #000091); box-shadow: inset 0 0 0 1px var(--blue-france, #000091); }
+  .carte__tete { display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--encre-douce, #666); }
+  .carte__rang {
+    background: var(--grey-950, #eee); border-radius: 999px; padding: 0 0.4rem; font-variant-numeric: tabular-nums;
+  }
+  .carte__nature { text-transform: lowercase; }
+  .carte__question { font-size: 0.92rem; font-weight: 500; line-height: 1.3; }
+  .carte__consigne { font-size: 0.78rem; color: var(--encre-douce, #666); }
+  .carte__apercu { margin-top: 0.2rem; }
+  .carte--ajout {
+    align-items: center; justify-content: center; border-style: dashed; color: var(--encre-douce, #666);
+    min-height: 5rem; font-size: 0.86rem;
+  }
+  .mini { display: flex; flex-wrap: wrap; gap: 3px; }
+  .mini i {
+    font-style: normal; font-size: 0.7rem; color: var(--encre-douce, #666);
+    border: 1px solid var(--grey-925, #e5e5e5); border-radius: 4px; padding: 1px 5px; background: var(--grey-975, #f6f6f6);
+  }
+  .mini__champ { flex: 1 1 auto; }
+  .mini__vide { font-size: 0.72rem; color: var(--warning, #b34000); }
+
+  /* Le détail : réglages ou rendu, en onglets — pas deux panneaux concurrents. */
+  .atelier__detail { display: flex; flex-direction: column; }
+  .atelier__onglets { display: flex; gap: 2px; padding: 0.4rem 0.5rem 0; border-bottom: 1px solid var(--grey-950, #eee); }
+  .atelier__onglet {
+    font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0.3rem 0.7rem;
+    border: 1px solid transparent; border-bottom: none; border-radius: 5px 5px 0 0;
+    background: transparent; color: var(--encre-douce, #666);
+  }
+  .atelier__onglet.est-actif { background: var(--grey-975, #f6f6f6); color: var(--blue-france, #000091); font-weight: 600; }
+  .atelier__detail-corps { flex: 1 1 auto; overflow: auto; padding: 0.8rem 0.9rem; }
+
   /* Enregistrer ne se cherche pas : barre fixe, état à côté du bouton. */
   .barre-enregistrement {
     position: sticky; bottom: 0; z-index: 8;
@@ -172,13 +228,15 @@
   }
   .barre-enregistrement__etat { font-size: 0.82rem; color: var(--encre-douce, #666); }
 
-  @media (max-width: 68rem) {
+  @media (max-width: 72rem) {
+    /* Le plan passe sous les réglages plutôt que de se tasser à trois colonnes. */
     .atelier { grid-template-columns: 13rem minmax(0, 1fr); }
-    .atelier__apercu { display: none; }
+    .atelier__detail { grid-column: 1 / -1; max-height: 24rem; }
   }
-  @media (max-width: 44rem) {
-    .atelier { grid-template-columns: 1fr; min-height: 0; }
-    .atelier__structure { max-height: 14rem; }
+  @media (max-width: 46rem) {
+    .atelier { grid-template-columns: 1fr; height: auto; }
+    .atelier__structure { max-height: 12rem; }
+    .atelier__detail { max-height: none; }
   }
 
   .builder-step {
@@ -1704,21 +1762,25 @@ function renderBuilder() {
   const cols = S.columnsByTable[def.tableId] || [];
   const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
 
+  const ongletDroit = S.panneauDroit === 'apercu' ? 'apercu' : 'reglages';
   el.innerHTML = `
     <div class="atelier">
       <aside class="atelier__structure" aria-label="Structure du formulaire">
         ${renderStructure(def)}
       </aside>
-      <div class="atelier__question">
-        ${renderZoneQuestion(def)}
+      <div class="atelier__plan" aria-label="Plan de l’étape">
+        ${renderPlanEtape(def)}
       </div>
-      <aside class="atelier__apercu" aria-label="Aperçu">
-        <div class="atelier__apercu-tete">
-          <span>Aperçu</span>
-          <button type="button" class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
-            onclick="App.refreshPreview()" title="Actualiser l’aperçu">↻</button>
+      <aside class="atelier__detail" aria-label="Réglages">
+        <div class="atelier__onglets" role="tablist">
+          <button type="button" role="tab" class="atelier__onglet${ongletDroit === 'reglages' ? ' est-actif' : ''}"
+            aria-selected="${ongletDroit === 'reglages'}" onclick="App.panneauDroit('reglages')">Réglages</button>
+          <button type="button" role="tab" class="atelier__onglet${ongletDroit === 'apercu' ? ' est-actif' : ''}"
+            aria-selected="${ongletDroit === 'apercu'}" onclick="App.panneauDroit('apercu')">Aperçu</button>
         </div>
-        <div class="atelier__apercu-cadre" id="builder-preview-mount"></div>
+        <div class="atelier__detail-corps">
+          ${ongletDroit === 'reglages' ? renderZoneQuestion(def) : '<div class="atelier__apercu-cadre" id="builder-preview-mount"></div>'}
+        </div>
       </aside>
     </div>
     ${colsDatalist}
@@ -1727,7 +1789,87 @@ function renderBuilder() {
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
-  monterApercuAtelier();
+  if (ongletDroit === 'apercu') monterApercuAtelier();
+}
+
+/** Les réglages, ou le rendu : on passe de l'un à l'autre, on ne les subit pas côte à côte. */
+function panneauDroit(quoi) {
+  S.panneauDroit = quoi;
+  renderBuilder();
+}
+
+/**
+ * Le plan de l'étape : ses questions en cartes, sur plusieurs colonnes.
+ *
+ * C'est l'objet que compose la personne — une étape est ce que le public verra
+ * sur un écran. L'ancien compositeur en faisait une liste verticale de blocs
+ * dépliés ; la structure de gauche rend cette liste inutile, et la largeur
+ * disponible permet de voir toute l'étape sans défiler.
+ */
+function renderPlanEtape(def) {
+  const sel = S.selection || {};
+  if (sel.quoi === 'accueil' || sel.quoi === 'fin') {
+    const quoi = sel.quoi === 'accueil' ? 'l’accueil' : 'la page de confirmation';
+    return `<div class="plan__vide"><p>Vous composez ${quoi}. Ses réglages sont à droite.</p>
+      <p class="fr-hint-text">Choisissez une étape à gauche pour revenir aux questions.</p></div>`;
+  }
+  const si = sel.si != null ? sel.si : 0;
+  const section = def.sections[si];
+  if (!section) return '<div class="plan__vide"><p>Aucune étape.</p></div>';
+
+  const cartes = (section.fields || []).map((f, fi) => {
+    const actif = selectionEst('question', si, fi) ? ' est-actif' : '';
+    const apercu = renderApercuCarte(f, def);
+    return `<button type="button" class="carte${actif}" onclick="App.choisir('question', ${si}, ${fi})">
+      <span class="carte__tete">
+        <span class="carte__rang">${fi + 1}</span>
+        <span class="carte__nature">${esc(natureCourte(f))}</span>
+        ${marquesDeChamp(f)}
+      </span>
+      <span class="carte__question">${esc(f.label || f.colId || 'Sans libellé')}</span>
+      ${f.description ? `<span class="carte__consigne">${esc(f.description)}</span>` : ''}
+      <span class="carte__apercu">${apercu}</span>
+    </button>`;
+  }).join('');
+
+  const chemin = (section.condition || section.gate)
+    ? `<span class="plan__chemin" title="Cette étape ne s’affiche pas toujours">⤳ ${esc(FormUx.summarizeCondition(section.condition || { field: section.gate, operator: '==', value: true }) || '')}</span>`
+    : '';
+
+  return `
+    <div class="plan__tete">
+      <button type="button" class="plan__titre${selectionEst('etape', si) ? ' est-actif' : ''}"
+        onclick="App.choisir('etape', ${si})" title="Régler l’étape">
+        Étape ${si + 1} · ${esc(section.label || '')}
+      </button>
+      ${chemin}
+      <span class="plan__compte">${(section.fields || []).length} question(s)</span>
+    </div>
+    <div class="plan__grille">
+      ${cartes}
+      <button type="button" class="carte carte--ajout" onclick="App.addField(${si})">+ Ajouter une question</button>
+    </div>`;
+}
+
+/** Ce que la question donnera à voir, en miniature et sans interaction. */
+function renderApercuCarte(f, def) {
+  if (f.kind === 'echelle') {
+    const e = window.FormEngine && FormEngine.echelleDe ? FormEngine.echelleDe(def, f) : { min: 1, max: 5 };
+    let crans = '';
+    for (let n = e.min; n <= e.max; n++) crans += `<i class="mini__cran">${n}</i>`;
+    return `<span class="mini">${crans}${e.nonConcerne ? '<i class="mini__nsp">n.c.</i>' : ''}</span>`;
+  }
+  const t = String(f.type || '').replace(/:.*$/, '');
+  if (t === 'Choice' || t === 'ChoiceList') {
+    const choix = (def.choices[f.colId] || (f.options && f.options.choices) || []).slice(0, 3);
+    if (!choix.length) return '<span class="mini mini__vide">aucune option</span>';
+    return `<span class="mini">${choix.map(c => `<i class="mini__option">${esc(String(c).slice(0, 18))}</i>`).join('')}${(def.choices[f.colId] || []).length > 3 ? '<i class="mini__option">…</i>' : ''}</span>`;
+  }
+  if (t === 'Bool') return '<span class="mini"><i class="mini__option">Oui</i><i class="mini__option">Non</i></span>';
+  if (t === 'Attachments') return '<span class="mini"><i class="mini__champ">fichier…</i></span>';
+  if (t === 'Date' || t === 'DateTime') return '<span class="mini"><i class="mini__champ">jj/mm/aaaa</i></span>';
+  if (t === 'Ref' || t === 'RefList') return `<span class="mini"><i class="mini__champ">${esc(resolveRefTableOfField(f) || 'table liée')}</i></span>`;
+  return '<span class="mini"><i class="mini__champ">&nbsp;</i></span>';
 }
 
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
@@ -3424,7 +3566,7 @@ window.App = {
   onFieldConditionToggle, onFieldCondition,
   onSectionConditionToggle, onSectionConditionOp, onSectionRuleAdd, onSectionRuleRemove, onSectionRule,
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
-  saveForm, refreshPreview: mountPreview, choisir, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  saveForm, refreshPreview: mountPreview, choisir, panneauDroit, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */
