@@ -70,7 +70,7 @@ saveTaskToGrist()       // UpdateRecord ou AddRecord selon isNew
 
 ### Filtres (GEN-02)
 
-Les filtres (projet, priorité, assigné, et statut dans le Kanban) sont un **état d'affichage local** : `broadcastFilters()` les écrit dans `localStorage` (`taskflow_<widget>_filters`), ils sont relus à l'ouverture. **Règle : manipuler un widget ne doit jamais appeler `grist.setOption(s)`** — Grist affiche alors le bouton « Enregistrer » de la section (constaté en réel). Seule exception : la configuration explicite de la disposition du Dashboard en mode édition. Aucun partage de filtres entre widgets n'est assuré.
+Les filtres (projet, priorité, assigné, et statut dans le Kanban) sont un **état d'affichage local** : `broadcastFilters()` les écrit dans `localStorage` (`taskflow_<widget>_filters`), ils sont relus à l'ouverture. **Règle : manipuler un widget ne doit jamais appeler `grist.setOption(s)`** — Grist affiche alors le bouton « Enregistrer » de la section (constaté en réel). Seule exception : la disposition du Dashboard, écrite **une seule fois à la sortie du mode édition** (« Terminer », `flushConfig()`), jamais à chaque réglage. Aucun partage de filtres entre widgets n'est assuré.
 
 ### Sélection inter-widgets (GEN-01)
 

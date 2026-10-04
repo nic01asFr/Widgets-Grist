@@ -249,10 +249,10 @@ textarea { line-height: 1.45; }
     background: var(--text, #1f2738); color: var(--card-bg, #fff); box-shadow: var(--shadow-lg);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-style: normal; font-weight: 500;
     font-size: var(--fs-xs); line-height: 1.4; text-align: left; white-space: normal;
-    opacity: 0; pointer-events: none; transition: opacity 0.12s;
+    display: none; pointer-events: none;   /* display:none : une bulle invisible agrandissait la zone defilante de la fiche */
 }
 .tf-info.tip-left::after { left: auto; right: -4px; }
-.tf-info:hover::after, .tf-info:focus-visible::after { opacity: 1; }
+.tf-info:hover::after, .tf-info:focus-visible::after { display: block; }
 
 /* 12. Libelles des boutons : icone + libelle quand la place le permet, icone seule sinon. Les memes
        outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */

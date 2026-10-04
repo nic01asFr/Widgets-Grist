@@ -554,10 +554,10 @@
         background: var(--text, #1f2738); color: var(--card-bg, #fff); box-shadow: var(--shadow-lg);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-style: normal; font-weight: 500;
         font-size: var(--fs-xs); line-height: 1.4; text-align: left; white-space: normal;
-        opacity: 0; pointer-events: none; transition: opacity 0.12s;
+        display: none; pointer-events: none;   /* display:none : une bulle invisible agrandissait la zone defilante de la fiche */
     }
     .tf-info.tip-left::after { left: auto; right: -4px; }
-    .tf-info:hover::after, .tf-info:focus-visible::after { opacity: 1; }
+    .tf-info:hover::after, .tf-info:focus-visible::after { display: block; }
 
     /* 12. Libelles des boutons : icone + libelle quand la place le permet, icone seule sinon. Les memes
            outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */
@@ -1742,6 +1742,7 @@ function renderFilterChips() {
 // ═══════════════════════════════════════════════════════════════════════════════
 function toggleEditMode() {
     isEditMode = !isEditMode;
+    if (!isEditMode) flushConfig();   // fin de la configuration : une seule ecriture
     selectedCompId = null;
     document.getElementById('editPanel').classList.toggle('open', isEditMode);
     document.getElementById('main').classList.toggle('panel-open', isEditMode);
@@ -2275,9 +2276,14 @@ function render() {
 // ═══════════════════════════════════════════════════════════════════════════════
 let _saving = false;
 
-function saveConfig() {
-    if (!gristReady) return;
-    // Seul le layout est persisté — les filtres restent locaux (pas de rechargement)
+// La disposition ne s'ecrit dans les options qu'a la sortie du mode edition : chaque ecriture fait apparaitre
+// le bouton « Enregistrer » de Grist, qui ne doit jamais surgir pendant l'usage normal ni a chaque clic de reglage.
+let _configModifiee = false;
+function saveConfig() { _configModifiee = true; }
+function flushConfig() {
+    if (!_configModifiee || !gristReady) return;
+    _configModifiee = false;
+    // Seul le layout est persiste — les filtres restent locaux (pas de rechargement)
     _saving = true;
     grist.widgetApi?.setOptions({ dash: dashConfig });
     setTimeout(() => { _saving = false; }, 600);
