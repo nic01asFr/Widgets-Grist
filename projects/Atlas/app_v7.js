@@ -8142,7 +8142,7 @@ function renderContexteDockSlotHtml() {
         <div class="dock-slot-head"><span class="dock-slot-title">Contexte${infoBulle('Un contexte règle la carte — couches, filtres, heure — pour un travail précis ; sa consigne s’affiche dessous. « Scène de base » rend la scène telle que l’équipe l’a réglée.')}</span></div>
         <div class="dock-slot-body">
             ${courant ? `<div class="contexte-courant">
-                ${courant.texte.trim() ? `<div class="contexte-consigne" role="button" tabindex="0" title="Toucher pour lire en entier" onclick="this.classList.toggle('ouvert')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('ouvert');}">${assainirTexte(courant.texte)}</div>` : ''}
+                ${courant.texte.trim() ? `<div class="contexte-consigne"><button type="button" class="contexte-consigne-btn" title="Toucher pour lire en entier" aria-expanded="false" onclick="this.parentNode.classList.toggle('ouvert'); this.setAttribute('aria-expanded', this.parentNode.classList.contains('ouvert'))"><span class="contexte-consigne-txt">${assainirTexte(courant.texte)}</span></button></div>` : ''}
             </div>` : ''}
             <div class="contexte-liste">
                 ${choix(null, 'Scène de base', '', !actif)}
