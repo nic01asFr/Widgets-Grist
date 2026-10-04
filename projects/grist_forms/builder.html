@@ -82,6 +82,88 @@
      écrans qui ne sont pas l'atelier gardent une colonne de lecture. */
   .app-main { padding: 0.7rem; }
   .builder-step { max-width: 64rem; margin-inline: auto; }
+
+  /* Mes formulaires : des cartes qui remplissent la largeur, pas cinq colonnes
+     etroites. On reconnait son questionnaire a son nom et a ce qu'il demande. */
+  .form-cartes {
+    display: grid; gap: 0.8rem;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  }
+  .form-carte {
+    font: inherit; text-align: left; cursor: pointer; color: inherit;
+    display: flex; flex-direction: column; gap: 0.3rem;
+    padding: 0.9rem 1rem; border: 1px solid var(--grey-925, #e5e5e5);
+    border-radius: 10px; background: var(--fond-carte, #fff);
+  }
+  .form-carte:hover { border-color: var(--blue-france, #000091); }
+  .form-carte__tete { display: flex; align-items: center; gap: 0.5rem; }
+  .form-carte__version { font-size: 0.74rem; color: var(--encre-douce, #666); }
+  .form-carte__nom { font-size: 1.05rem; font-weight: 600; }
+  .form-carte__detail { font-size: 0.84rem; color: var(--encre-douce, #666); }
+  .form-carte__table { font-size: 0.8rem; color: var(--encre-douce, #666); }
+  .form-carte__note { font-size: 0.78rem; color: var(--orange, #b34000); }
+
+  /* Une modale pour ce qui se regarde sans quitter ce qu'on fait. */
+  .modale {
+    border: none; border-radius: 12px; padding: 0; max-width: min(58rem, 92vw);
+    width: 100%; max-height: 86vh; background: var(--fond-carte, #fff); color: inherit;
+  }
+  .modale::backdrop { background: rgba(0, 0, 18, 0.35); }
+  .modale__tete {
+    display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1.1rem;
+    border-bottom: 1px solid var(--grey-925, #e5e5e5); position: sticky; top: 0;
+    background: var(--fond-carte, #fff);
+  }
+  .modale__titre { margin: 0; font-size: 1.05rem; flex: 1 1 auto; }
+  .modale__fermer {
+    font: inherit; font-size: 1rem; cursor: pointer; width: 2.2rem; height: 2.2rem;
+    border: 1px solid var(--grey-925, #e5e5e5); border-radius: 6px; background: transparent; color: inherit;
+  }
+  .modale__corps { padding: 1rem 1.1rem 1.4rem; overflow: auto; max-height: calc(86vh - 4rem); }
+
+  /* Le plan : toutes les etapes, toutes les questions, en colonnes. */
+  .plan__grille {
+    display: grid; gap: 1rem; margin-top: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  }
+  .plan__etape { display: flex; flex-direction: column; gap: 2px; }
+  .plan__etape-titre {
+    margin: 0 0 0.3rem; font-size: 0.86rem; display: flex; align-items: center; gap: 0.4rem;
+    padding-bottom: 0.25rem; border-bottom: 1px solid var(--grey-925, #e5e5e5);
+  }
+  .plan__compte { font-size: 0.74rem; color: var(--encre-douce, #666); margin-left: auto; }
+  .plan__question {
+    font: inherit; text-align: left; cursor: pointer; color: inherit; width: 100%;
+    display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.4rem;
+    border: 1px solid transparent; border-radius: 5px; background: transparent; font-size: 0.82rem;
+  }
+  .plan__question:hover { background: var(--grey-975, #f6f6f6); border-color: var(--grey-925, #e5e5e5); }
+  .plan__rang { font-size: 0.72rem; color: var(--encre-douce, #666); flex: 0 0 1.1rem; font-variant-numeric: tabular-nums; }
+  .plan__intitule { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plan__nature { font-size: 0.72rem; color: var(--encre-douce, #666); flex: 0 0 auto; }
+  .plan__souci {
+    flex: 0 0 auto; width: 1.1rem; height: 1.1rem; border-radius: 999px;
+    background: var(--orange, #b34000); color: #fff; font-size: 0.7rem;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* L'apercu : une scene, et dedans l'ecran qu'on veut voir. */
+  .apercu-barre { display: flex; align-items: center; gap: 0.6rem; }
+  .apercu-largeur { display: inline-flex; border: 1px solid var(--grey-925, #e5e5e5); border-radius: 999px; overflow: hidden; }
+  .apercu-largeur__bouton {
+    font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0.35rem 0.9rem;
+    border: none; background: transparent; color: var(--encre-douce, #666);
+  }
+  .apercu-largeur__bouton.est-actif { background: var(--blue-france, #000091); color: #fff; }
+  .apercu-scene { background: var(--grey-975, #f6f6f6); border-radius: 12px; padding: 1rem; }
+  .apercu-scene--telephone .preview-frame {
+    max-width: 24rem; margin-inline: auto; background: var(--fond-carte, #fff);
+    border: 1px solid var(--grey-925, #e5e5e5); border-radius: 14px; padding: 0.9rem;
+  }
+  .apercu-scene--ordinateur .preview-frame {
+    max-width: 48rem; margin-inline: auto; background: var(--fond-carte, #fff);
+    border: 1px solid var(--grey-925, #e5e5e5); border-radius: 10px; padding: 1.4rem 1.8rem;
+  }
   #builder.builder-step { max-width: none; padding: 0; border: none; background: none; }
 
   /* Le panneau d'une question : des blocs, et ce qu'ils permettent en une phrase. */
@@ -1081,6 +1163,44 @@ function hintLabel(text, tip, forId) {
   return `<label class="fr-label field-hint"${forAttr}><span>${esc(text)}</span>${hintIcon(tip)}</label>`;
 }
 
+/**
+ * Une modale, pour ce qui se regarde sans quitter ce qu'on fait.
+ *
+ * `<dialog>` natif : la touche Echap, le fond cliquable et le piege a focus
+ * viennent du navigateur, et il n'y a rien a reimplementer.
+ */
+function ouvrirModale(titre, contenuHtml) {
+  let d = document.getElementById('modale');
+  if (!d) {
+    d = document.createElement('dialog');
+    d.id = 'modale';
+    d.className = 'modale';
+    document.body.appendChild(d);
+    d.addEventListener('click', (ev) => { if (ev.target === d) d.close(); });
+  }
+  d.innerHTML = `
+    <div class="modale__tete">
+      <h3 class="modale__titre">${titre}</h3>
+      <button type="button" class="modale__fermer" onclick="App.fermerModale()" aria-label="Fermer">\u2715</button>
+    </div>
+    <div class="modale__corps">${contenuHtml}</div>`;
+  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+}
+
+function fermerModale() {
+  const d = document.getElementById('modale');
+  if (d && typeof d.close === 'function') d.close();
+  else if (d) d.removeAttribute('open');
+}
+
+// Fermer l'onglet, ou recharger la page, passe par le navigateur : lui aussi
+// doit prevenir. Le texte est le sien ; on ne peut que demander l'arret.
+window.addEventListener('beforeunload', function (ev) {
+  if (!S.dirty) return;
+  ev.preventDefault();
+  ev.returnValue = '';
+});
+
 function toast(message, type) {
   const container = document.getElementById('toast-container');
   const div = document.createElement('div');
@@ -1836,7 +1956,28 @@ function renderSteps() {
   `).join('');
 }
 
+/**
+ * Quitter un formulaire modifie se demande.
+ *
+ * `S.dirty` etait tenu a jour et ne servait a rien : revenir a la liste, ou
+ * ouvrir un autre formulaire, effacait sans un mot une heure de travail. Le
+ * compositeur ne peut pas enregistrer tout seul — une question a demi ecrite
+ * n'est pas une version — alors il demande.
+ */
+function peutQuitterLeFormulaire() {
+  if (!S.dirty || !S.currentDef) return true;
+  const titre = S.currentDef.title || 'ce formulaire';
+  const ok = window.confirm(
+    'Les modifications de \u00ab ' + titre + ' \u00bb ne sont pas enregistr\u00e9es.\n\n' +
+    'Quitter maintenant les perdra. Continuer ?');
+  if (ok) S.dirty = false;
+  return ok;
+}
+
 function goStep(step) {
+  // Les quatre ecrans travaillent sur le meme formulaire : seul le retour a la
+  // liste le quitte vraiment.
+  if (step === 'forms' && S.step === 'builder' && !peutQuitterLeFormulaire()) return;
   S.step = step;
   renderSteps();
   document.querySelectorAll('.builder-step').forEach(el => { el.hidden = true; });
@@ -1882,18 +2023,30 @@ function renderFormsList() {
     return;
   }
 
-  const rows = S.forms.map(f => `
-    <tr>
-      <td>${esc(f.Nom)}</td>
-      <td>${esc(f.TableCible)}</td>
-      <td>${esc(f.Version)}</td>
-      <td>
-        <span class="fr-badge ${f.Statut === 'publie' ? 'fr-badge--success' : 'fr-badge--info'}">${esc(f.Statut)}</span>
-        ${f.Statut === 'publie' ? `<span class="publish-hint">Toute modification des questions exige de remettre en ligne</span>` : ''}
-      </td>
-      <td><button class="fr-btn fr-btn--sm" onclick="App.editForm(${f.id})">Éditer</button></td>
-    </tr>
-  `).join('');
+  // Une ligne de tableau ne dit pas grand-chose d'un questionnaire : on
+  // reconnait le sien a son nom, a ce qu'il demande et a son etat. Des cartes,
+  // donc, qui remplissent la largeur disponible au lieu de cinq colonnes
+  // etroites.
+  const cartes = S.forms.map(f => {
+    let combien = '';
+    try {
+      const d = JSON.parse(f.Def || '{}');
+      const nbQ = (d.sections || []).reduce((n, sec) => n + ((sec.fields || []).length), 0);
+      combien = `${(d.sections || []).length} étape(s) · ${nbQ} question(s)`;
+    } catch (e) { combien = ''; }
+    const publie = f.Statut === 'publie';
+    return `
+      <button type="button" class="form-carte" onclick="App.editForm(${f.id})">
+        <span class="form-carte__tete">
+          <span class="fr-badge ${publie ? 'fr-badge--success' : 'fr-badge--info'}">${publie ? 'En ligne' : 'Brouillon'}</span>
+          <span class="form-carte__version">v${esc(f.Version)}</span>
+        </span>
+        <span class="form-carte__nom">${esc(f.Nom || 'Sans titre')}</span>
+        <span class="form-carte__detail">${esc(combien)}</span>
+        <span class="form-carte__table">Les réponses vont dans <strong>${esc(f.TableCible)}</strong></span>
+        ${publie ? `<span class="form-carte__note">Toute modification des questions exige de remettre en ligne</span>` : ''}
+      </button>`;
+  }).join('');
 
   el.innerHTML = `
     <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-2w">
@@ -1901,12 +2054,13 @@ function renderFormsList() {
       <div class="fr-col fr-col--auto"><button class="fr-btn" onclick="App.newForm()">+ Nouveau formulaire</button></div>
     </div>
     ${S.forms.length
-      ? `<table class="fr-table"><thead><tr><th>Nom</th><th>Table cible</th><th>Version</th><th>Statut</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      ? `<div class="form-cartes">${cartes}</div>`
       : `<p class="fr-text--sm">Aucun formulaire pour le moment${S.isDemo ? ' (mode démo)' : ''}.</p>`}
   `;
 }
 
 function newForm() {
+  if (!peutQuitterLeFormulaire()) return;
   S.wizardOpen = true;
   renderFormsList();
 }
@@ -1958,6 +2112,7 @@ function applyTemplate(templateId) {
 }
 
 function editForm(id) {
+  if (!peutQuitterLeFormulaire()) return;
   const row = S.forms.find(f => f.id === id);
   if (!row) return;
   let def;
@@ -2281,7 +2436,12 @@ function renderCanevas(def) {
 
 /** Les options qu'un champ montre dans le canevas, sans aller chercher Grist. */
 function optionsDApercu(def, f) {
-  const statiques = def.choices[f.colId] || (f.options && f.options.choices) || null;
+  // En mode liaison, la liste appartient a la colonne : c'est elle qu'il faut
+  // montrer, sinon l'apercu affiche une question sans reponses possibles alors
+  // que le formulaire publie en proposera.
+  const colonne = (S.columnsByTable[def.tableId] || []).find(c => c.colId === f.colId);
+  const statiques = (colonne && colonne.choix && colonne.choix.length ? colonne.choix : null)
+    || def.choices[f.colId] || (f.options && f.options.choices) || null;
   if (statiques && statiques.length) return statiques;
   if (f.type === 'Ref' || f.type === 'RefList') return [{ value: '', label: '(lignes de ' + (resolveRefTableOfField(f) || 'la table liée') + ')' }];
   return null;
@@ -2597,6 +2757,53 @@ function renderReglageAutre(def, si, f, fi, texte, optCols) {
           <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w"
             onclick="App.ajouterChoixALaColonne(${si}, ${fi})">Ajouter « ${esc(mot)} » à la colonne</button>
         </div>` : ''}` : ''}`;
+}
+
+/**
+ * Le plan du formulaire entier, d'un coup d'oeil.
+ *
+ * Le rail montre les etapes, le canevas une etape a la fois : sur soixante
+ * questions, il manquait l'endroit ou l'on voit tout — pour verifier l'ordre,
+ * reperer un doublon, retrouver « cette question-la, quelque part ». Il
+ * s'ouvre a la demande, et chaque ligne mene a la question.
+ */
+function ouvrirPlan() {
+  const menu = document.getElementById('menu-options');
+  if (menu) menu.open = false;
+  const def = S.currentDef;
+  if (!def) { toast('Ouvrez d\u2019abord un formulaire', 'error'); return; }
+  const soucis = verifierFormulaire(def);
+  const parQuestion = {};
+  soucis.forEach(x => { parQuestion[x.si + ':' + x.fi] = (parQuestion[x.si + ':' + x.fi] || 0) + 1; });
+
+  const etapes = def.sections.map((section, si) => {
+    const questions = (section.fields || []).map((f, fi) => `
+      <button type="button" class="plan__question" onclick="App.allerA(${si}, ${fi})">
+        <span class="plan__rang">${fi + 1}</span>
+        <span class="plan__intitule">${esc(f.label || f.colId || 'Sans libell\u00e9')}</span>
+        ${marquesDeChamp(f)}
+        <span class="plan__nature">${esc(natureCourte(f))}</span>
+        ${parQuestion[si + ':' + fi] ? `<span class="plan__souci" title="\u00c0 regarder">!</span>` : ''}
+      </button>`).join('');
+    return `
+      <section class="plan__etape">
+        <h4 class="plan__etape-titre">${si + 1}. ${esc(section.label || 'Sans titre')}
+          <span class="plan__compte">${(section.fields || []).length}</span></h4>
+        ${questions || '<p class="fr-hint-text">Aucune question.</p>'}
+      </section>`;
+  }).join('');
+
+  const nbQ = def.sections.reduce((n, s2) => n + (s2.fields || []).length, 0);
+  ouvrirModale(`Plan de \u00ab ${esc(def.title || 'Sans titre')} \u00bb`, `
+    <p class="fr-hint-text">${def.sections.length} \u00e9tape(s) \u00b7 ${nbQ} question(s)${soucis.length ? ' \u00b7 ' + soucis.length + ' point(s) \u00e0 regarder' : ''}</p>
+    <div class="plan__grille">${etapes}</div>`);
+}
+
+/** Aller droit a une question depuis le plan. */
+function allerA(si, fi) {
+  fermerModale();
+  goStep('builder');
+  choisir('question', si, fi);
 }
 
 /** La sélection courante, ramenée à quelque chose qui existe encore. */
@@ -3779,14 +3986,27 @@ function renderPreviewStep() {
     el.innerHTML = `<p class="fr-text--sm">Sélectionnez ou créez un formulaire pour voir l'aperçu.</p>`;
     return;
   }
+  // La plupart des gens repondront a un questionnaire public depuis leur
+  // telephone : l'apercu doit pouvoir le montrer, sinon on ne verifie jamais
+  // ce que la majorite verra.
+  const largeur = S.apercuLargeur === 'ordinateur' ? 'ordinateur' : 'telephone';
   el.innerHTML = `
     <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-2w">
       <div class="fr-col"><h2 class="fr-h5 fr-mb-0">Aperçu</h2></div>
-      <div class="fr-col fr-col--auto">
+      <div class="fr-col fr-col--auto apercu-barre">
+        <div class="apercu-largeur" role="group" aria-label="Largeur d’aperçu">
+          <button type="button" class="apercu-largeur__bouton${largeur === 'telephone' ? ' est-actif' : ''}"
+            onclick="App.apercuLargeur('telephone')">Téléphone</button>
+          <button type="button" class="apercu-largeur__bouton${largeur === 'ordinateur' ? ' est-actif' : ''}"
+            onclick="App.apercuLargeur('ordinateur')">Ordinateur</button>
+        </div>
         <button class="fr-btn fr-btn--secondary" onclick="App.refreshPreview()">Actualiser</button>
       </div>
     </div>
-    <div class="preview-frame" id="preview-mount"></div>
+    <p class="fr-hint-text">Les réponses ne sont pas enregistrées : c'est un essai.</p>
+    <div class="apercu-scene apercu-scene--${largeur}">
+      <div class="preview-frame" id="preview-mount"></div>
+    </div>
   `;
   mountPreview();
 }
@@ -3823,6 +4043,9 @@ function renderMenuOptions() {
       <button class="app-menu__action" onclick="App.ouvrirReglages()">Ouvrir les options avancées…</button>
     </div>
     <p class="app-menu__titre">Voir</p>
+    <div class="app-menu__lignes">
+      <button class="app-menu__action" onclick="App.ouvrirPlan()">Le plan du formulaire…</button>
+    </div>
     <details class="json-preview"><summary>Définition (FormDef)</summary><pre>${esc(JSON.stringify(def, null, 2))}</pre></details>
     <details class="json-preview"><summary>Projection Survey Manifest</summary><pre>${esc(smJson)}</pre></details>
   `;
@@ -3898,6 +4121,34 @@ function downloadSurveyManifest() {
   }
 }
 
+/**
+ * Le formulaire tel que le public le recevra.
+ *
+ * En mode liaison, les listes de choix vivent dans les colonnes Grist : le
+ * FormDef n'a pas a les recopier, et un apercu qui ne les lit pas montre des
+ * questions sans reponses possibles. On les pose ici, sur une copie — le
+ * formulaire enregistre, lui, reste tel qu'il a ete compose.
+ */
+function defPourApercu(def) {
+  if (!def) return def;
+  const copie = JSON.parse(JSON.stringify(def));
+  const colonnes = S.columnsByTable[copie.tableId] || [];
+  copie.choices = copie.choices || {};
+  (copie.sections || []).forEach(section => (section.fields || []).forEach(f => {
+    if (copie.choices[f.colId] && copie.choices[f.colId].length) return;
+    if (f.options && f.options.choices && f.options.choices.length) return;
+    const col = colonnes.find(c => c.colId === f.colId);
+    if (col && col.choix && col.choix.length) copie.choices[f.colId] = col.choix.slice();
+  }));
+  return copie;
+}
+
+/** Voir le formulaire comme on le verra : sur un telephone, ou en grand. */
+function apercuLargeur(quoi) {
+  S.apercuLargeur = quoi;
+  renderPreviewStep();
+}
+
 function mountPreview() {
   const mountEl = document.getElementById('preview-mount');
   if (!mountEl) return;
@@ -3909,7 +4160,7 @@ function mountPreview() {
     }
   };
   try {
-    FormEngine.mount(mountEl, S.currentDef, previewBridge);
+    FormEngine.mount(mountEl, defPourApercu(S.currentDef), previewBridge);
   } catch (e) {
     mountEl.innerHTML = `<div class="fr-alert fr-alert--error"><p>Erreur de rendu : ${esc(e.message)}</p></div>`;
   }
@@ -4153,7 +4404,8 @@ window.App = {
   onFieldConditionOp, onFieldRuleAdd, onFieldRuleRemove, onFieldRule,
   saveForm, refreshPreview: mountPreview, choisir, panneauDroit,
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
-  onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
+  onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
+  ouvrirPlan, allerA, fermerModale, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 
 /** Hook E2E : ?e2e=1 ou widget connecté à Grist (postMessage parent). */
