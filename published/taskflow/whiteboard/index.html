@@ -1104,9 +1104,14 @@ const TF = (function () {
     // Les donnees d'exemple ne s'affichent d'elles-memes que sur une page ouverte directement (essai, apercu),
     // ou sur demande (?demo). Dans un document Grist (iframe), une table vide reste vide : montrer des
     // taches fictives laissait croire qu'elles existaient et faisait ecrire sur des lignes inexistantes.
+    // ?demo demande explicitement les donnees d'exemple : le widget n'attend alors aucune reponse de Grist (hors
+    // document, derriere le lanceur, elle ne vient jamais et le squelette restait affiche).
+    function isExplicitDemo() {
+        try { return /[?&]demo(=|&|$)/.test(location.search); } catch (e) { return false; }
+    }
     function shouldAutoDemo() {
         try {
-            if (/[?&]demo(=|&|$)/.test(location.search)) return true;
+            if (isExplicitDemo()) return true;
             return window.self === window.top;
         } catch (e) { return false; }
     }
@@ -2024,6 +2029,7 @@ const TF = (function () {
         isLive: isLive,
         statusOf: statusOf,
         shouldAutoDemo: shouldAutoDemo,
+        isExplicitDemo: isExplicitDemo,
         confirm: uiConfirm,
         deletePlan: deletePlan,
         deleteConfirmHtml: deleteConfirmHtml,

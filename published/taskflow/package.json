@@ -1,6 +1,6 @@
 {
   "name": "taskflow",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Suite de widgets de gestion de projet pour Grist",
   "authors": [
     {

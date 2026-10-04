@@ -113,10 +113,11 @@ const PROD  = 'https://nic01asfr.github.io/Widgets-Grist/taskflow/';
 // whiteboard est dans projects/whiteboard/), donc sur n'importe quel serveur de dev,
 // port ou worktree. prod : taskflow/<id>/
 function urlFor(id) {
-  // En dev local, pas de Grist derriere le lanceur : ?demo garde les donnees d'exemple dans les iframes.
+  // Hors document Grist (dev local, page ouverte directement, apercu de la vitrine), personne ne repond derriere
+  // le lanceur : ?demo garde les donnees d'exemple dans les iframes, sans attente.
   // (Grist ajoute ?access=… au lanceur : dans un document, jamais de donnees d'exemple.)
   const dansGrist = /[?&]access=/.test(location.search);
-  const q = '?shell=1' + (LOCAL && !dansGrist ? '&demo=1' : '');
+  const q = '?shell=1' + (!dansGrist ? '&demo=1' : '');
   if (id === 'whiteboard') return (LOCAL ? new URL('../whiteboard/index.html', location.href).href : PROD + 'whiteboard/') + q;
   return (LOCAL ? new URL(id + '.html', location.href).href : PROD + id + '/') + q;
 }

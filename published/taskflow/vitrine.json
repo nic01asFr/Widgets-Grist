@@ -40,6 +40,10 @@
   ],
   "journal": [
     {
+      "version": "v1.3.1",
+      "texte": "Hors d'un document Grist (aperçu en direct de cette page, lanceur ouvert seul), le Dashboard, le Kanban, le Gantt et le Calendrier restaient sur leur squelette : ils affichent de nouveau leurs données d'exemple, aussitôt. Dans un document Grist, rien ne change."
+    },
+    {
       "version": "v1.3.0",
       "texte": "La tâche parente suit ses sous-tâches : si l'on déplace une sous-tâche hors de ses bornes, la parente s'ajuste en un seul geste, annulable d'un Ctrl+Z. Filtres, tri et vues nommées partagés entre le Kanban, le Gantt, le Calendrier et le Dashboard ; statut au Gantt et au Calendrier ; frise du Gantt complète et défilante ; statuts fait / annulé / actif ; une série de corrections issues de l'audit (dates décalées d'un jour, tâches qui disparaissaient, suppression d'un parent)."
     },
