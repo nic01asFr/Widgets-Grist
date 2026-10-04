@@ -2389,6 +2389,9 @@
         // Cadrage pose par « Ajuster » : fenêtre libre, non recalée sur une frontière de période.
         // Nul en temps normal ; toute navigation explicite le remet à nul et rend la main aux vues fixes.
         let fitWindow = null;   // { start: Date, days: number }
+        // La plage affichee est elargie (marge avant/apres) : apres une navigation explicite, le defilement se cale sur le debut de la
+        // periode annoncee dans la barre, sans toucher au defilement de l'utilisateur lors des rendus suivants (redimensionnement, donnees).
+        let alignOnRender = true;
         let selectedTaskId = null;
         // Filtres, tri, couleur et niveau viennent du contexte commun (TF.ctx), partage avec les autres widgets du
         // document et jamais ecrit dans les options Grist (cela allumait le bouton « Enregistrer »).
@@ -2775,6 +2778,7 @@
         function setView(view) {
             currentView = view;
             fitWindow = null;   // choix explicite d'une vue : on quitte le cadrage « Ajuster »
+            alignOnRender = true;
             localStorage.setItem('taskflow_gantt_view', view);
             document.querySelectorAll('.view-controls .btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
             document.documentElement.style.setProperty('--cell-width', VIEW_CONFIG[view].cellWidth + 'px');
@@ -2794,11 +2798,13 @@
                 document.documentElement.style.setProperty('--cell-width', VIEW_CONFIG[currentView].cellWidth + 'px');
             }
             viewStartDate = new Date(p.start);
+            alignOnRender = true;
             fitWindow = p.fit && isFinite(p.fit.start) && p.fit.days > 0 ? { start: new Date(p.fit.start), days: p.fit.days } : null;
         }
         function navigate(dir) {
             // Naviguer depuis un cadrage libre : on repart de sa borne gauche, en vue fixe.
             if (fitWindow) { viewStartDate = new Date(fitWindow.start.getTime()); fitWindow = null; }
+            alignOnRender = true;
             const cfg = VIEW_CONFIG[currentView];
             if (typeof cfg.navStep === 'number') viewStartDate = addDays(viewStartDate, dir * cfg.navStep);
             else if (cfg.navStep === 'month') viewStartDate = new Date(viewStartDate.getFullYear(), viewStartDate.getMonth() + dir, 1);
@@ -2808,7 +2814,7 @@
             savePos();
             render();
         }
-        function goToToday() { fitWindow = null; viewStartDate = new Date(); savePos(); render(); }
+        function goToToday() { fitWindow = null; viewStartDate = new Date(); alignOnRender = true; savePos(); render(); }
 
         function fitToTasks() {
             const ft = getFilteredTasks();
@@ -2851,6 +2857,7 @@
             // la recalerait sur le début de période et « Ajuster » n'ajusterait rien.
             viewStartDate = minDate;
             fitWindow = { start: minDate, days: Math.max(spanDays, 1) };
+            alignOnRender = true;
             localStorage.setItem('taskflow_gantt_view', currentView);
             document.querySelectorAll('.view-controls .btn').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
             document.documentElement.style.setProperty('--cell-width', VIEW_CONFIG[currentView].cellWidth + 'px');
@@ -3436,7 +3443,7 @@
                 const selected = t.id === selectedTaskId;
                 const dimmed = dimmedSet.has(t.id);
 
-                if (left + width < -50 || left > totalWidth + 50) return;
+                if (left + width <= 0 || left >= totalWidth) return;   // entierement hors de la plage affichee : pas de barre (elle flottait au-dela de la frise)
 
                 if (jalon) {
                     const m = document.createElement('div');
@@ -3452,7 +3459,7 @@
                 } else {
                     const bar = document.createElement('div');
                     const barLeft = Math.max(0, left);
-                    const barWidth = Math.max(width - (barLeft - left), 12);
+                    const barWidth = Math.max(Math.min(left + width, totalWidth) - barLeft, 12);   // coupee aux bords de la frise
                     const isNarrow = barWidth < 60;
                     const progVal = isParent ? aggregateProgress(t) : (t.progression || 0);
                     bar.className = 'gantt-bar p' + p + (selected ? ' selected' : '') + (isNarrow ? ' narrow-bar' : '') + (isParent ? ' parent' : '') + (dimmed ? ' dimmed' : '');
@@ -3549,6 +3556,10 @@
             const monthsHeader = document.getElementById('monthsHeader');
             const daysHeader = document.getElementById('daysHeader');
 
+            if (alignOnRender && tasks.length) {
+                alignOnRender = false;
+                timeline.scrollLeft = Math.max(0, Math.round(dateToX(getViewStartDate())));
+            }
             // Appliquer immédiatement la position de scroll courante (après chaque render)
             const initX = timeline.scrollLeft;
             monthsHeader.style.transform = 'translateX(-' + initX + 'px)';
