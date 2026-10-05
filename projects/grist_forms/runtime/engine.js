@@ -379,7 +379,14 @@
    * d'autant.
    */
   function requiredHint(field) {
-    return field.required ? ' <span class="fr-obligatoire">obligatoire</span>' : '';
+    // > **Une asterisque rouge, pas le mot « obligatoire ».** Le mot repete
+    // > vingt fois sur une page devient du bruit qu'on cesse de voir ; une
+    // > marque, elle, se retrouve d'un coup d'oeil quand l'envoi est refuse et
+    // > qu'il faut trouver ce qui manque. Le mot reste pour qui ne voit pas
+    // > l'ecran : il est lu, pas affiche.
+    if (!field.required) return '';
+    return ' <span class="fr-obligatoire" aria-hidden="true">*</span>' +
+      '<span class="fr-sr-only"> obligatoire</span>';
   }
 
   /**
@@ -638,10 +645,15 @@
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = sameValue(value, o.value) ? ' checked' : '';
-      return '<div class="fr-radio-group">' +
+      // > **La carte EST l'etiquette.** Un `<label for>` pose a cote de la
+      // > coche ne rend cliquable que le texte : le reste de la carte — la
+      // > marge, l'espace a droite du mot — ne repond pas, et sur un telephone
+      // > on vise une cible de quelques millimetres. En enveloppant la coche
+      // > et le texte dans le `<label>`, tout l'interieur de la carte coche.
+      return '<label class="fr-radio-group" for="' + oid + '">' +
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
-        '<label class="fr-label" for="' + oid + '">' + escapeHtml(o.label) + '</label>' +
-        '</div>';
+        '<span class="fr-label">' + escapeHtml(o.label) + '</span>' +
+        '</label>';
     }).join('');
     return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
       renderLegend(field) + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
@@ -653,10 +665,10 @@
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = selected.indexOf(String(o.value)) !== -1 ? ' checked' : '';
-      return '<div class="fr-checkbox-group">' +
+      return '<label class="fr-checkbox-group" for="' + oid + '">' +
         '<input type="checkbox" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
-        '<label class="fr-label" for="' + oid + '">' + escapeHtml(o.label) + '</label>' +
-        '</div>';
+        '<span class="fr-label">' + escapeHtml(o.label) + '</span>' +
+        '</label>';
     }).join('');
     // Un plafond annonce avant de choisir, pas un refus apres coup.
     var max = field.options && field.options.maxSelected;
@@ -938,11 +950,11 @@
       : ((value === false || value === 'false') ? 'false' : null);
     var itemsHtml = opts.map(function (op, i) {
       var oid = fieldId(field) + '-' + i;
-      return '<div class="fr-radio-group">' +
+      return '<label class="fr-radio-group" for="' + oid + '">' +
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + op.value + '"' +
         (coche === op.value ? ' checked' : '') + ' />' +
-        '<label class="fr-label" for="' + oid + '">' + escapeHtml(op.label) + '</label>' +
-        '</div>';
+        '<span class="fr-label">' + escapeHtml(op.label) + '</span>' +
+        '</label>';
     }).join('');
     return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="ouinon">' +
       renderLegend(field) + '<div class="fr-fieldset__content fr-fieldset__content--ligne">' + itemsHtml + '</div></fieldset>';
@@ -976,10 +988,13 @@
       for (var r2 = 0; r2 < rangs; r2++) {
         var coche = choisis[r2] === String(o.value) ? ' checked' : '';
         var cid = id + '-r' + r2 + '-o' + i;
+        // La case entiere coche : viser un rond de 20 px au doigt, dans une
+        // grille de cinq lignes sur trois colonnes, demande une precision que
+        // personne n'a en marchant.
         cases += '<td class="fr-rangs__case">' +
+          '<label class="fr-rangs__cible" for="' + cid + '">' +
           '<input type="radio" id="' + cid + '" name="' + escapeHtml(field.colId) + '__rang' + r2 + '" ' +
           'value="' + escapeHtml(o.value) + '"' + coche + ' />' +
-          '<label class="fr-label" for="' + cid + '">' +
           '<span class="fr-rangs__lu">' + rangLibelle(r2) + ' : ' + escapeHtml(o.label) + '</span></label></td>';
       }
       return '<tr><th scope="row" class="fr-rangs__intitule">' + escapeHtml(o.label) + '</th>' + cases + '</tr>';
@@ -1702,7 +1717,13 @@
         var opts = resolveOptionsForField(f);
         var html = renderFieldHtml(f, values, opts, formDef);
         if (errorFields.indexOf(f.colId) !== -1) {
-          html += '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>';
+          // > **Le message doit tenir a sa question.** Pose seul entre deux
+          // > blocs, il flotte : on le lit au-dessus de la question suivante et
+          // > l'on corrige la mauvaise. La question en defaut et son message
+          // > sont donc enfermes ensemble, et le bloc porte un filet rouge.
+          html = '<div class="fr-champ--erreur">' + html +
+            '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">' +
+            'Ce champ est obligatoire.</p></div>';
         }
         return html;
       }).join('');

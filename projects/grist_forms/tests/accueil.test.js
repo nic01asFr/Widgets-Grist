@@ -95,3 +95,30 @@ describe('l’horodatage et la durée', () => {
     assert.equal('Horodatage' in out, false);
   });
 });
+
+describe('une question obligatoire se repère', () => {
+  const Engine = require('../runtime/engine.js');
+  const d = { manifest_version: '1.0.0', id: 'f', tableId: 'T', composeMode: 'bind', choices: {}, sections: [] };
+
+  it('porte une astérisque, pas le mot répété vingt fois', () => {
+    const html = Engine.renderFieldHtml(
+      { colId: 'A', label: 'Votre âge', type: 'Text', widget: 'text', required: true }, {}, null, d);
+    assert.ok(html.includes('fr-obligatoire'));
+    assert.ok(html.includes('>*<'), 'une marque, pas un mot');
+    assert.ok(!/>obligatoire</.test(html), 'le mot ne s’affiche plus');
+  });
+
+  it('mais le mot reste lu par qui ne voit pas l’écran', () => {
+    const html = Engine.renderFieldHtml(
+      { colId: 'A', label: 'Votre âge', type: 'Text', widget: 'text', required: true }, {}, null, d);
+    assert.ok(html.includes('fr-sr-only'));
+    assert.ok(html.includes('obligatoire'), 'présent dans le texte lu');
+    assert.ok(html.includes('aria-hidden="true"'), 'l’astérisque n’est pas lue deux fois');
+  });
+
+  it('rien du tout quand la question ne l’est pas', () => {
+    const html = Engine.renderFieldHtml(
+      { colId: 'A', label: 'Votre âge', type: 'Text', widget: 'text' }, {}, null, d);
+    assert.ok(!html.includes('fr-obligatoire'));
+  });
+});

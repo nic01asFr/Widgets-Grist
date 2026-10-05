@@ -309,7 +309,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
 .fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
 .fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--blue-france); }
-.fr-radio-group label, .fr-checkbox-group label { font-weight: 400; }
+.fr-radio-group .fr-label, .fr-checkbox-group .fr-label { font-weight: 400; }
 
 /* Progression : où j'en suis, combien il reste. */
 .fr-progression { margin-bottom: 1.25rem; }
@@ -373,8 +373,8 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   background: var(--fond-carte); cursor: pointer; transition: border-color .12s ease;
 }
 .fr-form .fr-radio-group:hover, .fr-form .fr-checkbox-group:hover { border-color: var(--blue-france); }
-.fr-form .fr-radio-group label, .fr-form .fr-checkbox-group label,
-.champ-bloc__rendu .fr-radio-group label, .champ-bloc__rendu .fr-checkbox-group label {
+.fr-form .fr-radio-group .fr-label, .fr-form .fr-checkbox-group .fr-label,
+.champ-bloc__rendu .fr-radio-group .fr-label, .champ-bloc__rendu .fr-checkbox-group .fr-label {
   flex: 1 1 auto; padding: 0.65rem 0; cursor: pointer; font-weight: 400;
 }
 .fr-form .fr-radio-group:has(input:checked),
@@ -391,10 +391,24 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-echelle__crans .fr-radio-group,
 .champ-bloc__rendu .fr-echelle__crans .fr-radio-group { border: none; padding: 0; background: none; }
 
-/* « obligatoire » : une marque discrète dans la ligne du libellé. */
+/* Obligatoire : une asterisque rouge dans la ligne du libelle. Le mot,
+   repete sur chaque question, devenait du bruit ; la marque se retrouve
+   d'un coup d'oeil quand l'envoi est refuse. */
 .fr-obligatoire {
-  font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em;
-  color: var(--error, #ce0500); margin-left: 0.4rem; white-space: nowrap;
+  color: var(--error, #ce0500);
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+/* Lu par les lecteurs d'ecran, invisible a l'ecran. */
+.fr-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Les champs libres : même hauteur, même repère au focus. */
@@ -749,3 +763,36 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   max-height: 60vh;
   object-fit: contain;
 }
+
+
+/* ---------------------------------------------------------------
+   Toute la carte coche, pas seulement la coche.
+
+   Un `<label for>` pose a cote du rond ne rend cliquable que le
+   texte : la marge et l'espace a droite du mot ne repondent pas. La
+   carte est donc elle-meme le `<label>` — tout son interieur coche.
+   --------------------------------------------------------------- */
+label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
+
+/* La case d'une grille de classement : la cible est la cellule, pas le
+   rond de 20 px qu'il faudrait viser au doigt. */
+.fr-rangs__cible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--cible);
+  cursor: pointer;
+  margin: 0;
+}
+.fr-rangs__case { padding: 0; }
+
+
+/* Une question en defaut : le message tient a elle, pas a la suivante. */
+.fr-champ--erreur {
+  border-left: 3px solid var(--error, #ce0500);
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.fr-champ--erreur > .fr-error-text { margin: 0.35rem 0 0; }
+.fr-champ--erreur .fr-fieldset, .fr-champ--erreur .fr-input-group { margin-bottom: 0; }
