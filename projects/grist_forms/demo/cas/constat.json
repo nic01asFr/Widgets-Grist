@@ -1,0 +1,92 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-constat",
+  "title": "Constat de désordre",
+  "tableId": "Constats",
+  "composeMode": "ensureSchema",
+  "successMessage": "Constat enregistré et signé.",
+  "branding": {
+    "organisation": "Service technique",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Constater un désordre, et le signer",
+    "texte": "Le désordre se **montre** sur l’image plutôt que de se décrire en mots, et la signature vaut reconnaissance du constat.",
+    "dureeMinutes": 3,
+    "bouton": "Établir le constat"
+  },
+  "choices": {},
+  "meta": {
+    "timestampCol": "Horodatage"
+  },
+  "sections": [
+    {
+      "id": "quoi",
+      "label": "Le désordre",
+      "fields": [
+        {
+          "colId": "Nature",
+          "label": "Nature du désordre",
+          "type": "Choice",
+          "widget": "select",
+          "required": true,
+          "options": {
+            "choices": [
+              "Revêtement dégradé",
+              "Fuite",
+              "Éclairage en panne",
+              "Dépôt sauvage",
+              "Dégradation volontaire",
+              "Autre"
+            ]
+          }
+        },
+        {
+          "colId": "Annotation",
+          "label": "Entourez le désordre sur le plan",
+          "type": "Attachments",
+          "widget": "dessin",
+          "help": "Dessinez sur l’image pour montrer ce dont vous parlez.",
+          "options": {
+            "dessin": {
+              "usage": "croquis",
+              "hauteur": 300,
+              "fond": "cas/fond-constat.svg"
+            }
+          }
+        },
+        {
+          "colId": "Detail",
+          "label": "Ce qu’il faut savoir",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "signature",
+      "label": "Signature",
+      "fields": [
+        {
+          "colId": "Nom",
+          "label": "Nom de la personne qui constate",
+          "type": "Text",
+          "widget": "text",
+          "required": true
+        },
+        {
+          "colId": "Signature",
+          "label": "Votre signature",
+          "type": "Attachments",
+          "widget": "dessin",
+          "help": "Signez dans le cadre, au doigt ou à la souris.",
+          "options": {
+            "dessin": {
+              "usage": "signature"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

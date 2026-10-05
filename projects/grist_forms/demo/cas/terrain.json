@@ -1,0 +1,138 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-terrain",
+  "title": "Relevé du mobilier urbain",
+  "tableId": "Releves",
+  "composeMode": "ensureSchema",
+  "successMessage": "Relevé enregistré. Vous pouvez en saisir un autre.",
+  "branding": {
+    "organisation": "Service technique",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Relever un équipement sur le terrain",
+    "texte": "Une fiche par équipement : sa nature, son état, sa position et une photo. La fiche se remplit **sur le téléphone**, debout, devant l’objet.",
+    "dureeMinutes": 2,
+    "bouton": "Commencer le relevé"
+  },
+  "choices": {},
+  "meta": {
+    "timestampCol": "Horodatage"
+  },
+  "sections": [
+    {
+      "id": "objet",
+      "label": "L’équipement",
+      "fields": [
+        {
+          "colId": "Nature",
+          "label": "De quoi s’agit-il ?",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Banc",
+              "Corbeille",
+              "Arceau vélo",
+              "Potelet",
+              "Jardinière",
+              "Autre"
+            ]
+          }
+        },
+        {
+          "colId": "NaturePrecision",
+          "label": "Précisez",
+          "type": "Text",
+          "widget": "text",
+          "visibleIf": {
+            "all": [
+              {
+                "field": "Nature",
+                "op": "==",
+                "value": "Autre"
+              }
+            ]
+          }
+        },
+        {
+          "colId": "Etat",
+          "label": "Son état",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Bon",
+              "Usé mais utilisable",
+              "Dégradé",
+              "Hors service"
+            ]
+          }
+        },
+        {
+          "colId": "AIntervenir",
+          "label": "Une intervention est-elle nécessaire ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "options": {
+            "libelleOui": "Oui, à programmer",
+            "libelleNon": "Non"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ou",
+      "label": "Où il se trouve",
+      "fields": [
+        {
+          "colId": "Position",
+          "label": "Sa position",
+          "type": "Text",
+          "widget": "geo",
+          "kind": "geometrie",
+          "required": true,
+          "help": "Touchez la carte, ou utilisez votre position.",
+          "options": {
+            "geometrie": "Point",
+            "carte": {
+              "centre": [
+                2.7336,
+                47.9986
+              ],
+              "zoom": 17,
+              "fond": "ortho"
+            }
+          }
+        },
+        {
+          "colId": "Photo",
+          "label": "Une photo de l’équipement",
+          "type": "Attachments",
+          "widget": "file",
+          "options": {
+            "accept": "image/*",
+            "maxFiles": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "note",
+      "label": "Remarques",
+      "fields": [
+        {
+          "colId": "Remarque",
+          "label": "Ce que vous avez constaté",
+          "type": "Text",
+          "widget": "textarea",
+          "options": {
+            "placeholder": "Graffiti sur le dossier, lame descellée…"
+          }
+        }
+      ]
+    }
+  ]
+}

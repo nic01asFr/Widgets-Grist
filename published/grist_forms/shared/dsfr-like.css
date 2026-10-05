@@ -464,18 +464,43 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   text-align: left; font-weight: 400; min-width: 12rem;
 }
 .fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 5.5rem; }
-/* La case entiere est la cible : 44 px, au doigt. */
-.fr-form .fr-rangs__case label, .champ-bloc__rendu .fr-rangs__case label {
-  display: block; margin: 0 auto; width: 2.4rem; height: 2.4rem; border-radius: 999px;
-  border: 2px solid var(--bordure, #ddd); cursor: pointer;
-}
+/* > **La cible est la cellule, le rond n'est qu'un dessin.** La case portait
+   son apparence sur le `<label>` lui-meme, qui faisait 2,4 rem : viser ce rond
+   au doigt, dans un tableau de cinq lignes sur trois colonnes, demandait une
+   precision que personne n'a en marchant. Le label occupe donc toute la
+   cellule, et le rond devient un pseudo-element — il se voit, il ne se vise
+   plus. */
 .fr-form .fr-rangs__case input, .champ-bloc__rendu .fr-rangs__case input {
   position: absolute; opacity: 0; width: 0; height: 0;
 }
-.fr-form .fr-rangs__case input:checked + label, .champ-bloc__rendu .fr-rangs__case input:checked + label {
-  background: var(--blue-france); border-color: var(--blue-france);
+.fr-form .fr-rangs__cible, .champ-bloc__rendu .fr-rangs__cible {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; min-height: var(--cible, 2.75rem); margin: 0; cursor: pointer;
 }
-.fr-form .fr-rangs__case input:focus-visible + label, .champ-bloc__rendu .fr-rangs__case input:focus-visible + label {
+/* > **Un rond plein ne dit pas quelle place.** Trois colonnes de ronds
+   identiques : pour savoir si c'est la premiere ou la troisieme, il faut
+   remonter a l'en-tete et compter. Le rang s'ecrit donc dans le rond des qu'il
+   est choisi — on lit le classement sans quitter la ligne. */
+.fr-form .fr-rangs__cible::before, .champ-bloc__rendu .fr-rangs__cible::before {
+  content: attr(data-rang); display: flex; align-items: center; justify-content: center;
+  width: 2.4rem; height: 2.4rem; border-radius: 999px;
+  border: 2px solid var(--bord, #ddd);
+  font-size: 0.9375rem; font-weight: 700; color: transparent;
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+.fr-form .fr-rangs__cible:hover::before, .champ-bloc__rendu .fr-rangs__cible:hover::before {
+  border-color: var(--blue-france);
+}
+.fr-form .fr-rangs__cible:has(input:checked)::before,
+.champ-bloc__rendu .fr-rangs__cible:has(input:checked)::before {
+  background: var(--blue-france); border-color: var(--blue-france); color: #fff;
+}
+/* Une proposition qui a trouvé sa place se distingue de celles qui attendent. */
+.fr-form .fr-rangs tr:has(input:checked), .champ-bloc__rendu .fr-rangs tr:has(input:checked) {
+  background: color-mix(in srgb, var(--blue-france) 5%, transparent);
+}
+.fr-form .fr-rangs__cible:focus-within::before,
+.champ-bloc__rendu .fr-rangs__cible:focus-within::before {
   outline: 2px solid var(--blue-france); outline-offset: 2px;
 }
 /* Ce que lit un lecteur d'ecran, et que l'oeil n'a pas besoin de voir. */
@@ -774,18 +799,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    --------------------------------------------------------------- */
 label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 
-/* La case d'une grille de classement : la cible est la cellule, pas le
-   rond de 20 px qu'il faudrait viser au doigt. */
-.fr-rangs__cible {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: var(--cible);
-  cursor: pointer;
-  margin: 0;
-}
-.fr-rangs__case { padding: 0; }
+.fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { padding: 0; }
 
 
 /* Une question en defaut : le message tient a elle, pas a la suivante. */
@@ -796,3 +810,42 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 }
 .fr-champ--erreur > .fr-error-text { margin: 0.35rem 0 0; }
 .fr-champ--erreur .fr-fieldset, .fr-champ--erreur .fr-input-group { margin-bottom: 0; }
+
+/* Un repère de carte lié à une proposition : la lettre se retrouve dans la
+   question, et toucher le repère signale la ligne qu'il désigne. */
+.fr-repere-lie {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 0.25rem;
+  border-radius: 0.7rem; background: var(--blue-france); color: #fff;
+  font-size: 0.75rem; font-weight: 700; margin-right: 0.4rem;
+}
+.fr-carte__repere--bouton { cursor: pointer; border: none; font: inherit; }
+.fr-carte__repere--bouton:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.est-designe { animation: fr-designe 1.6s ease; }
+.fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--blue-france) 10%, transparent); }
+@keyframes fr-designe {
+  0%, 60% { background: color-mix(in srgb, var(--blue-france) 14%, transparent); }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .est-designe { animation: none; } }
+
+
+/* > **Le titre d'etape recoit le focus en changeant d'etape** — c'est ce qui
+   fait annoncer « Ou il se trouve » par un lecteur d'ecran. Mais un titre n'est
+   pas un bouton : le cadre que le navigateur dessine autour laissait croire
+   qu'on pouvait le toucher. Le focus reste, sa marque s'efface. */
+.fr-progression__titre:focus, .fr-accueil__titre:focus { outline: none; }
+
+/* Sur un telephone, le champ et son bouton passent l'un sous l'autre : cote a
+   cote, ils debordaient et toute la page glissait horizontalement. */
+@media (max-width: 30rem) {
+  .fr-form .fr-geo__ligne, .champ-bloc__rendu .fr-geo__ligne { flex-direction: column; }
+  .fr-form .fr-geo__ligne .fr-input, .champ-bloc__rendu .fr-geo__ligne .fr-input { flex: 1 1 auto; width: 100%; }
+  .fr-form .fr-geo__ligne .fr-btn, .champ-bloc__rendu .fr-geo__ligne .fr-btn { width: 100%; }
+}
+
+/* Rien ne doit faire glisser la page de cote : une largeur de trop, et le
+   formulaire entier se lit en diagonale sur un telephone. */
+.fr-form, .fr-accueil, .fr-synthese { overflow-x: hidden; }
+.fr-form table { max-width: 100%; }

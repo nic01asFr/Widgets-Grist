@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560">
+  <rect x="0" y="0" width="900" height="560" fill="#eef1f4"/>
+  <rect x="0" y="250" width="900" height="110" fill="#d7dde3"/>
+  <text x="16" y="240" font-family="system-ui,sans-serif" font-size="16" fill="#7a858f">rue des Tilleuls</text>
+  <rect x="60" y="90" width="300" height="140" fill="#c9d2da"/><text x="76" y="130" font-family="system-ui,sans-serif" font-size="17" fill="#4a5560">Bâtiment A</text>
+  <rect x="520" y="90" width="320" height="140" fill="#c9d2da"/><text x="536" y="130" font-family="system-ui,sans-serif" font-size="17" fill="#4a5560">Bâtiment B</text>
+  <rect x="120" y="400" width="240" height="120" fill="#cfe0cf"/><text x="136" y="438" font-family="system-ui,sans-serif" font-size="17" fill="#4a6a4a">Square</text>
+  <rect x="520" y="400" width="300" height="120" fill="#dfe4e8"/><text x="536" y="438" font-family="system-ui,sans-serif" font-size="17" fill="#5a6570">Parking</text>
+  <line x1="0" y1="305" x2="900" y2="305" stroke="#fff" stroke-width="3" stroke-dasharray="22 16"/>
+  <text x="16" y="36" font-family="system-ui,sans-serif" font-size="19" fill="#2b343d">Plan de principe — fond de constat</text>
+  <text x="16" y="60" font-family="system-ui,sans-serif" font-size="14" fill="#7a858f">Dessinez dessus pour montrer l’endroit concerné.</text>
+</svg>

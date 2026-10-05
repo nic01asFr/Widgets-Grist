@@ -89,25 +89,108 @@
         "texte": "Ce qui est demandé, ce qui va bien, ce qui est préféré. Les classements en points, les listes en citations, les réponses libres telles quelles — et l'effectif à côté de chaque pourcentage."
       }
     ],
-    "titreContextes": "À quoi ça sert",
+    "titreContextes": "Quatre façons de s’en servir",
     "contextes": [
       {
-        "titre": "Consultation du public",
-        "texte": "une enquête de perception, avec les lieux signalés sur la carte et la restitution qui se remplit au fil des réponses."
+        "role": "Pour une collectivité",
+        "titre": "Consulter le public",
+        "texte": "Un questionnaire qui s’adapte : une étape entière est épargnée à qui n’est pas concerné, les échelles se regroupent en matrice pour tenir sur un écran, et le classement se pose en grille plutôt qu’en liste à faire glisser.",
+        "pourquoi": "Les réponses arrivent dans la table du document, pas chez un prestataire.",
+        "exemple": "le réaménagement d’une place : usage, perception, priorités, et un endroit à pointer sur la carte.",
+        "utilise": [
+          "Étapes et conditions",
+          "Échelles en matrice",
+          "Classement",
+          "Carte à repères"
+        ],
+        "images": [
+          {
+            "image": "cas-matrice.jpeg",
+            "legende": "Cinq affirmations, une seule échelle annoncée : la matrice tient sur un écran."
+          },
+          {
+            "image": "cas-classement.jpeg",
+            "legende": "La carte situe les propositions, et chaque lettre se retrouve dans la grille. Toucher un repère désigne sa ligne ; le rang choisi s’écrit dans le rond."
+          }
+        ]
       },
       {
-        "titre": "Relevé de terrain",
-        "texte": "une fiche remplie sur le téléphone : photo prise sur place, position du point, croquis de l'implantation."
+        "role": "Pour un agent de terrain",
+        "titre": "Relever sur place",
+        "texte": "Une fiche par équipement, remplie debout devant l’objet : sa nature, son état, sa position touchée sur la carte, et la photo prise à l’instant.",
+        "pourquoi": "Pas d’application à installer : une page, un lien, et la ligne est dans la table.",
+        "exemple": "le mobilier urbain d’un quartier — banc, corbeille, arceau — avec son état et sa position.",
+        "utilise": [
+          "Carte et position",
+          "Photo prise sur place",
+          "Conditions"
+        ],
+        "format": "mobile",
+        "images": [
+          {
+            "image": "cas-terrain.jpeg",
+            "legende": "Le fond photographique de l’IGN, le point au doigt, et la photo dans la foulée."
+          }
+        ]
       },
       {
-        "titre": "Constat et accord",
-        "texte": "une annotation sur la photo du désordre, une signature dans le cadre, et la pièce jointe arrive dans la ligne."
+        "role": "Pour un constat",
+        "titre": "Montrer, et signer",
+        "texte": "Le désordre se montre sur l’image plutôt que de se décrire en mots. La signature se trace dans son cadre, et part en pièce jointe comme le reste.",
+        "pourquoi": "Ce qui arrive dans la base est ce que la personne a vu : le fond fait partie de l’image produite.",
+        "exemple": "un revêtement dégradé, entouré sur le plan du secteur, puis signé.",
+        "utilise": [
+          "Annotation sur fond",
+          "Signature",
+          "Pièces jointes"
+        ],
+        "images": [
+          {
+            "image": "cas-annotation.jpeg",
+            "legende": "On entoure l’endroit concerné ; le trait et son fond partent ensemble."
+          },
+          {
+            "image": "cas-signature.jpeg",
+            "legende": "La signature n’a qu’un geste : on efface et on recommence."
+          }
+        ]
       },
       {
-        "titre": "Demande interne",
-        "texte": "un formulaire qui reconnaît la personne connectée et lui épargne les questions qui ne la concernent pas."
+        "role": "Pour qui compose",
+        "titre": "Composer, puis dépouiller",
+        "texte": "Trois colonnes : les étapes à gauche, ce que le public verra au milieu, les réglages de ce qu’on travaille à droite. Et un cinquième écran qui relit les réponses avec la définition qui les a produites.",
+        "pourquoi": "Une table de réponses ne se lit pas seule : une échelle y écrit « 4 », un classement est éclaté en trois colonnes.",
+        "exemple": "ce qui est demandé, ce qui va bien, ce qui est préféré — l’effectif toujours écrit à côté du pourcentage.",
+        "utilise": [
+          "Aperçu en direct",
+          "Mise en ligne figée",
+          "Synthèse"
+        ],
+        "images": [
+          {
+            "image": "cas-compositeur.jpeg",
+            "legende": "À gauche le parcours, au milieu ce que le public lira, à droite les réglages."
+          },
+          {
+            "image": "cas-synthese.jpeg",
+            "legende": "La synthèse sur vingt-cinq réponses : les chiffres de tête, puis ce qui ressort."
+          }
+        ]
       }
-    ]
+    ],
+    "apercu": {
+      "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/?cas=consultation",
+      "mention": "L’aperçu est la démonstration elle-même : quatre formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé."
+    },
+    "demonstration": {
+      "titre": "Quatre formulaires, à remplir pour de vrai",
+      "texte": "Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions. Rien n’est enregistré : il n’y a pas de document derrière.",
+      "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/",
+      "image": "apercu.jpeg",
+      "alt": "La démonstration : quatre cas au choix, et le formulaire à côté",
+      "libelle": "Ouvrir la démonstration",
+      "mention": "Les cartes viennent des fonds IGN, le dessin produit un vrai PNG. Le bouton d’envoi affiche ce qui serait écrit dans la table."
+    }
   },
   "journal": [
     {

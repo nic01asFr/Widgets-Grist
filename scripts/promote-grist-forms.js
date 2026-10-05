@@ -10,7 +10,7 @@ const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'projects', 'grist_forms');
 const DEST = path.join(ROOT, 'published', 'grist_forms');
 
-const COPY_DIRS = ['shared', 'runtime'];
+const COPY_DIRS = ['shared', 'runtime', 'demo'];
 const COPY_FILES = ['builder.html', 'README.md'];
 
 // Ce qui vit dans published/ et ne vient PAS des sources : la fiche de vitrine

@@ -642,6 +642,7 @@
 
   function renderRadio(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
+    var etiquettes = etiquettesDesReperes(field);
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = sameValue(value, o.value) ? ' checked' : '';
@@ -650,9 +651,9 @@
       // > marge, l'espace a droite du mot — ne repond pas, et sur un telephone
       // > on vise une cible de quelques millimetres. En enveloppant la coche
       // > et le texte dans le `<label>`, tout l'interieur de la carte coche.
-      return '<label class="fr-radio-group" for="' + oid + '">' +
+      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
-        '<span class="fr-label">' + escapeHtml(o.label) + '</span>' +
+        '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
     return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
@@ -662,12 +663,13 @@
   function renderMultiselect(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
     var selected = Array.isArray(value) ? value.map(String) : [];
+    var etiquettes = etiquettesDesReperes(field);
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = selected.indexOf(String(o.value)) !== -1 ? ' checked' : '';
-      return '<label class="fr-checkbox-group" for="' + oid + '">' +
+      return '<label class="fr-checkbox-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
         '<input type="checkbox" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
-        '<span class="fr-label">' + escapeHtml(o.label) + '</span>' +
+        '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
     // Un plafond annonce avant de choisir, pas un refus apres coup.
@@ -973,6 +975,40 @@
    * les deux regles se tiennent a la saisie. Recliquer une case la libere,
    * puisqu'un bouton radio ne se decoche pas tout seul.
    */
+  /**
+   * L'etiquette qu'une carte d'illustration donne a une option.
+   *
+   * > **Un « A » sur la carte doit se retrouver dans la question.** Sans cela,
+   * > le repere ne designe rien : on regarde une carte qui pointe cinq
+   * > endroits, puis une liste de cinq propositions, et c'est a soi de deviner
+   * > laquelle est laquelle. La correspondance existe pourtant deja dans la
+   * > definition — `reperes[].option` nomme l'option — elle n'etait simplement
+   * > pas montree.
+   */
+  function etiquettesDesReperes(field) {
+    var ill = field && field.options && field.options.illustration;
+    if (!ill || ill.type !== 'carte') return null;
+    var liste = ill.reperes || [];
+    var table = {};
+    var trouve = false;
+    for (var i = 0; i < liste.length; i++) {
+      var r = liste[i];
+      if (r && r.option != null && r.etiquette != null && r.etiquette !== '') {
+        table[String(r.option)] = String(r.etiquette);
+        trouve = true;
+      }
+    }
+    return trouve ? table : null;
+  }
+
+  /** Le libelle d'une option, precede de son repere quand il y en a un. */
+  function libelleRepere(etiquettes, o) {
+    var e = etiquettes && etiquettes[String(o.value)];
+    return e
+      ? '<span class="fr-repere-lie" aria-hidden="true">' + escapeHtml(e) + '</span> ' + escapeHtml(o.label)
+      : escapeHtml(o.label);
+  }
+
   function renderClassement(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
     var rangs = (field.options && field.options.rangs) || Math.min(3, options.length);
@@ -983,6 +1019,7 @@
     for (var r = 0; r < rangs; r++) {
       entetes += '<th scope="col">' + rangLibelle(r) + '</th>';
     }
+    var etiquettes = etiquettesDesReperes(field);
     var lignes = options.map(function (o, i) {
       var cases = '';
       for (var r2 = 0; r2 < rangs; r2++) {
@@ -992,12 +1029,14 @@
         // grille de cinq lignes sur trois colonnes, demande une precision que
         // personne n'a en marchant.
         cases += '<td class="fr-rangs__case">' +
-          '<label class="fr-rangs__cible" for="' + cid + '">' +
+          '<label class="fr-rangs__cible" for="' + cid + '" data-rang="' + (r2 + 1) + '">' +
           '<input type="radio" id="' + cid + '" name="' + escapeHtml(field.colId) + '__rang' + r2 + '" ' +
           'value="' + escapeHtml(o.value) + '"' + coche + ' />' +
           '<span class="fr-rangs__lu">' + rangLibelle(r2) + ' : ' + escapeHtml(o.label) + '</span></label></td>';
       }
-      return '<tr><th scope="row" class="fr-rangs__intitule">' + escapeHtml(o.label) + '</th>' + cases + '</tr>';
+      return '<tr data-option="' + escapeHtml(o.value) + '">' +
+        '<th scope="row" class="fr-rangs__intitule">' + libelleRepere(etiquettes, o) + '</th>' +
+        cases + '</tr>';
     }).join('');
 
     return '<fieldset class="fr-fieldset fr-classement" data-colid="' + escapeHtml(field.colId) + '" ' +
@@ -2022,6 +2061,29 @@
     }
 
     /**
+     * Montrer, dans la question, la proposition qu'un repere designe.
+     *
+     * On ne coche pas a sa place : un repere situe, il ne decide pas. La ligne
+     * se signale le temps qu'on la trouve, et defile dans l'ecran si elle en
+     * etait sortie — une liste de cinq propositions sous une carte ne tient pas
+     * toujours dans un telephone.
+     */
+    function montrerOption(hoteCarte, option) {
+      var groupe = hoteCarte.closest ? hoteCarte.closest('.fr-input-group, .fr-fieldset') : null;
+      var portee = groupe && groupe.parentNode ? groupe.parentNode : rootEl;
+      var cibles = portee.querySelectorAll('[data-option]');
+      var vise = null;
+      for (var i = 0; i < cibles.length; i++) {
+        var est = cibles[i].getAttribute('data-option') === String(option);
+        cibles[i].classList.toggle('est-designe', est);
+        if (est) vise = cibles[i];
+      }
+      if (vise && typeof vise.scrollIntoView === 'function') {
+        vise.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    /**
      * Les cartes qui illustrent, et ou l'on ne repond pas.
      *
      * Meme carte, meme fond, memes reperes qu'Atlas — mais aucun clic n'y
@@ -2043,7 +2105,11 @@
           centre: centre || undefined,
           zoom: Number.isFinite(zoom) ? zoom : undefined,
           fond: hote.getAttribute('data-fond'),
-          reperes: reperes
+          reperes: reperes,
+          // Toucher un repere montre la proposition qu'il designe : sans cela,
+          // on a une carte d'un cote, une liste de l'autre, et c'est au
+          // repondant de faire le lien.
+          onRepere: function (option) { montrerOption(hote, option); }
         }).then(function (vue) {
           var attente = hote.querySelector('.fr-carte__attente');
           if (attente) attente.remove();
