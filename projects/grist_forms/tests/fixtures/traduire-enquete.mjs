@@ -174,9 +174,9 @@ const sections = [
 const formDef = {
   manifest_version: '1.0.0',
   id: 'enquete-espaces-publics-4e',
-  title: 'Espaces publics du 4ᵉ — Chartreux / La Blancarde',
-  description: 'Traduction en FormDef du questionnaire écrit à la main (document e1j5ym1Bd5ec). Branché sur les colonnes existantes : aucune création, aucun retypage.',
-  classification: 'cerema_internal',
+  title: 'Espaces publics — quartiers Gare et Parc',
+  description: 'Enquête de référence du projet : 61 questions, toutes les formes de saisie. Branchée sur des colonnes existantes — aucune création, aucun retypage.',
+  classification: 'interne',
   successMessage: 'Merci pour votre contribution !',
   tableId: 'Reponses',
   composeMode: 'bind',

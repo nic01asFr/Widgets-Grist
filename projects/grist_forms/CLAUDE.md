@@ -44,7 +44,7 @@ projects/grist_forms/
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
-L'enquête du 4ᵉ arrondissement — 61 questions, prise comme pierre de touche —
+L'enquête du secteur nord — 61 questions, prise comme pierre de touche —
 en demandait quatre que le moteur ne savait pas rendre. Elles ne sont pas des
 variantes d'affichage : chacune **range sa réponse ailleurs que dans la colonne
 qui porte son nom**, et c'est `options.colonnes` qui le dit.
@@ -175,7 +175,7 @@ section parmi d'autres.
   s'arreter au titre poussait hors de l'ecran l'enseigne et l'avancement. La
   barre de progression est `sticky`.
 
-Repris du questionnaire ecrit a la main (document `e1j5ym1Bd5ec`, widget
+Repris du questionnaire ecrit a la main (document `(document de travail)`, widget
 *Custom widget builder*). Eprouve en Grist reel le 05/10/2026 : accueil,
 « Commencer », etape 1 avec bandeau et avancement, retour a l'accueil.
 
@@ -293,7 +293,7 @@ Widget catalogue : `grist_forms/builder.html` (accès **full**).
 - Promote `published/` : sur demande
 
 ### Piste future (étude séparée)
-Binding BlockNote formulaires (offre de service) : **cadré** — voir `docs/superpowers/specs/2026-07-29-form-binding-blocknote-cerema-design.md` et `.wikichat/knowledge/grist-forms-blocknote-binding-axis.md`. Ce projet = référence technique (`FormDef`, `ensureSchema`, publish, survey-project.js) ; blocs BlockNote dans cerema-offre-de-service / qgis-sspcloud.
+Binding BlockNote formulaires (offre de service) : **cadré** — voir les spécifications du projet et `.wikichat/knowledge/grist-forms-blocknote-binding-axis.md`. Ce projet = référence technique (`FormDef`, `ensureSchema`, publish, survey-project.js).
 
 ### Attachments depuis une vue custom — ça passe (18/09/2026)
 

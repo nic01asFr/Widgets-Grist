@@ -33,12 +33,12 @@ const def = {
 };
 
 const lignes = [
-  { Agreable: 5, Places: 2, P1: 'Sébastopol', P2: 'Audran', P3: 'Blancarde',
+  { Agreable: 5, Places: 2, P1: 'Marché', P2: 'Tilleuls', P3: 'Gare',
     Amel: ['L', 'Bancs', 'Arbres'], Amel_Autre: '', Remarque: 'Trop de voitures.',
     Lieu: 'POINT (5.4 43.3)', Duree: 300 },
-  { Agreable: 3, Places: 5, P1: 'Audran', P2: 'Sébastopol', P3: null,
+  { Agreable: 3, Places: 5, P1: 'Tilleuls', P2: 'Marché', P3: null,
     Amel: ['L', 'Arbres'], Amel_Autre: 'Des fontaines', Remarque: '', Lieu: '', Duree: 600 },
-  { Agreable: 1, Places: 5, P1: 'Sébastopol', P2: null, P3: null,
+  { Agreable: 1, Places: 5, P1: 'Marché', P2: null, P3: null,
     Amel: ['L', 'Arbres', 'Bancs'], Amel_Autre: '', Remarque: 'Rien à signaler.',
     Lieu: 'POINT (5.41 43.31)', Duree: 420 },
 ];
@@ -67,9 +67,9 @@ describe('ce qu’une échelle dit', () => {
 describe('un classement se ramène à un score', () => {
   it('pondère les rangs de façon décroissante', () => {
     const sc = S.scoresClassement(lignes, def.sections[0].fields[2]);
-    assert.deepEqual(sc[0], { option: 'Sébastopol', points: 3 + 2 + 3, premier: 2, citations: 3 });
-    assert.deepEqual(sc[1], { option: 'Audran', points: 2 + 3, premier: 1, citations: 2 });
-    assert.deepEqual(sc[2], { option: 'Blancarde', points: 1, premier: 0, citations: 1 });
+    assert.deepEqual(sc[0], { option: 'Marché', points: 3 + 2 + 3, premier: 2, citations: 3 });
+    assert.deepEqual(sc[1], { option: 'Tilleuls', points: 2 + 3, premier: 1, citations: 2 });
+    assert.deepEqual(sc[2], { option: 'Gare', points: 1, premier: 0, citations: 1 });
   });
 });
 

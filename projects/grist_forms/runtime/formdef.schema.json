@@ -62,11 +62,11 @@
         },
         "organisation": {
           "type": "string",
-          "description": "Qui publie le questionnaire, dans le bandeau (ex. « CEREMA »)"
+          "description": "Qui publie le questionnaire, dans le bandeau (ex. « Service d’études »)"
         },
         "organisationDetail": {
           "type": "string",
-          "description": "Second rang du bandeau, sous l'organisation (ex. « Ville de Marseille »)"
+          "description": "Second rang du bandeau, sous l'organisation (ex. « Commune d’Exemple »)"
         }
       }
     },

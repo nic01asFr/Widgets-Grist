@@ -17,10 +17,10 @@ const base = {
 };
 
 const avecAccueil = Object.assign({}, base, {
-  branding: { organisation: 'CEREMA', organisationDetail: 'Ville de Marseille' },
+  branding: { organisation: 'Service d’études', organisationDetail: 'Commune d’Exemple' },
   accueil: {
     titre: 'Votre avis sur les espaces publics du quartier',
-    texte: 'Une étude sur les quartiers **Chartreux** et **La Blancarde**.',
+    texte: 'Une étude sur les quartiers **Gare** et **Parc**.',
     dureeMinutes: 8,
     dureeTexte: 'Le questionnaire s’adapte à vos réponses.',
     encarts: [{ ton: 'discret', titre: 'Anonymat & données (RGPD).', texte: 'Ce questionnaire est **anonyme**.' }],
@@ -30,8 +30,8 @@ const avecAccueil = Object.assign({}, base, {
 describe('le bandeau', () => {
   it('dit qui demande et sur quoi', () => {
     const html = Engine.renderBandeauHtml(avecAccueil);
-    assert.ok(html.includes('CEREMA'));
-    assert.ok(html.includes('Ville de Marseille'));
+    assert.ok(html.includes('Service d’études'));
+    assert.ok(html.includes('Commune d’Exemple'));
     assert.ok(html.includes('Espaces publics du 4ᵉ'));
   });
 
@@ -44,7 +44,7 @@ describe('la page d’accueil', () => {
   it('porte son titre, son texte, sa durée et ses mentions', () => {
     const html = Engine.renderAccueilHtml(avecAccueil);
     assert.ok(html.includes('Votre avis sur les espaces publics'));
-    assert.ok(html.includes('<strong>Chartreux</strong>'), 'le gras se lit');
+    assert.ok(html.includes('<strong>Gare</strong>'), 'le gras se lit');
     assert.ok(html.includes('Environ 8 minutes'));
     assert.ok(html.includes('fr-encart--attention'), 'la durée se voit');
     assert.ok(html.includes('Anonymat'));

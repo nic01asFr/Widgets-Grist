@@ -12,7 +12,7 @@ const schemaFormDef = require('../runtime/formdef.schema.json');
  * rend pas entièrement, le catalogue est incomplet.
  *
  * Le schéma à côté (`enquete-4e.schema.json`) est relevé sur le document réel
- * (`e1j5ym1Bd5ec`, 04/10/2026). La traduction se branche dessus : aucune
+ * (`(document de travail)`, 04/10/2026). La traduction se branche dessus : aucune
  * colonne créée, aucune retypée — les deux réponses déjà saisies doivent rester
  * lisibles.
  */

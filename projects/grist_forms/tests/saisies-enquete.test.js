@@ -80,7 +80,7 @@ describe('classement — les rangs vont chacun dans leur colonne', () => {
     colId: 'E_Lieux_prioritaires', label: 'Vos trois lieux prioritaires',
     type: 'Choice', widget: 'classement', kind: 'classement',
     options: {
-      choices: ['Sébastopol', 'Audran', 'Longchamp', 'Blancarde', 'Autre'],
+      choices: ['Marché', 'Tilleuls', 'Parc', 'Gare', 'Autre'],
       colonnes: { rangs: ['E1_Prio1', 'E2_Prio2', 'E3_Prio3'], autre: 'E4_Autre' },
       rangs: 3, valeurAutre: 'Autre',
     },
@@ -90,7 +90,7 @@ describe('classement — les rangs vont chacun dans leur colonne', () => {
     const html = Engine.renderFieldHtml(champ, {}, null, def);
     assert.ok(html.includes('data-rangs="3"'));
     assert.ok(html.includes('1<sup>re</sup> place') && html.includes('3<sup>e</sup> place'));
-    assert.ok(html.includes('Sébastopol') && html.includes('Longchamp'));
+    assert.ok(html.includes('Marché') && html.includes('Parc'));
     // Une place par colonne : les boutons d’un même rang partagent leur nom.
     assert.ok(html.includes('name="E_Lieux_prioritaires__rang0"'));
     assert.ok(html.includes('name="E_Lieux_prioritaires__rang2"'));
@@ -98,25 +98,25 @@ describe('classement — les rangs vont chacun dans leur colonne', () => {
   });
 
   it('montre les places déjà attribuées', () => {
-    const html = Engine.renderFieldHtml(champ, { E_Lieux_prioritaires: ['Longchamp', null, 'Audran'] }, null, def);
-    assert.ok(/name="E_Lieux_prioritaires__rang0" value="Longchamp" checked/.test(html));
-    assert.ok(/name="E_Lieux_prioritaires__rang2" value="Audran" checked/.test(html));
+    const html = Engine.renderFieldHtml(champ, { E_Lieux_prioritaires: ['Parc', null, 'Tilleuls'] }, null, def);
+    assert.ok(/name="E_Lieux_prioritaires__rang0" value="Parc" checked/.test(html));
+    assert.ok(/name="E_Lieux_prioritaires__rang2" value="Tilleuls" checked/.test(html));
     assert.ok(!/rang1[^>]*checked/.test(html), 'la 2ᵉ place reste libre');
   });
 
   it('les trois premiers partent dans E1, E2, E3 — et la question n’écrit pas sous son nom', () => {
     const out = Engine.collectSubmitData(formulaire([champ]), {
-      E_Lieux_prioritaires: ['Longchamp', 'Sébastopol', 'Audran', 'Blancarde'],
+      E_Lieux_prioritaires: ['Parc', 'Marché', 'Tilleuls', 'Gare'],
     }, {}, { creation: true });
-    assert.equal(out.E1_Prio1, 'Longchamp');
-    assert.equal(out.E2_Prio2, 'Sébastopol');
-    assert.equal(out.E3_Prio3, 'Audran');
+    assert.equal(out.E1_Prio1, 'Parc');
+    assert.equal(out.E2_Prio2, 'Marché');
+    assert.equal(out.E3_Prio3, 'Tilleuls');
     assert.ok(!('E_Lieux_prioritaires' in out), 'cette colonne n’existe pas dans la table');
   });
 
   it('deux lieux classés ne font pas apparaître un troisième choix', () => {
     const out = Engine.collectSubmitData(formulaire([champ]), {
-      E_Lieux_prioritaires: ['Longchamp', 'Sébastopol'],
+      E_Lieux_prioritaires: ['Parc', 'Marché'],
     }, {}, { creation: true });
     assert.equal(out.E3_Prio3, null);
   });

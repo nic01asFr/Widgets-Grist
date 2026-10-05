@@ -1249,7 +1249,7 @@ function newFormDef() {
     id: 'form-' + Date.now().toString(36),
     title: '',
     description: '',
-    classification: 'cerema_internal',
+    classification: 'interne',
     successMessage: 'Merci !',
     // Une vue « Remplir » ajoute une ligne : c'est ce qu'on attend d'un
     // formulaire. Corriger la ligne du curseur se demande.
@@ -3165,12 +3165,12 @@ function renderZoneQuestion(def) {
       <div class="bloc__duo">
         <div class="fr-input-group">
           <label class="fr-label" for="acc-orga">Qui publie ${hintIcon('Le nom court, à gauche du bandeau. Une personne arrivée par un lien partagé ne sait pas qui l’interroge.')}</label>
-          <input class="fr-input" id="acc-orga" value="${esc(brand.organisation || '')}" placeholder="CEREMA"
+          <input class="fr-input" id="acc-orga" value="${esc(brand.organisation || '')}" placeholder="Service d’études"
             oninput="App.onBrandingInput('organisation', this.value)">
         </div>
         <div class="fr-input-group">
           <label class="fr-label" for="acc-orga2">Pour qui</label>
-          <input class="fr-input" id="acc-orga2" value="${esc(brand.organisationDetail || '')}" placeholder="Ville de Marseille"
+          <input class="fr-input" id="acc-orga2" value="${esc(brand.organisationDetail || '')}" placeholder="Commune d’Exemple"
             oninput="App.onBrandingInput('organisationDetail', this.value)">
         </div>
       </div>
@@ -3189,7 +3189,7 @@ function renderZoneQuestion(def) {
       </div>
       <div class="fr-input-group">
         <label class="fr-label" for="acc-texte">Présentation ${hintIcon('Pourquoi cette enquête, et par qui. Le gras s’écrit **entre deux astérisques** ; une ligne vide sépare deux paragraphes.')}</label>
-        <textarea class="fr-input" id="acc-texte" rows="5" placeholder="Le Cerema réalise, pour…"
+        <textarea class="fr-input" id="acc-texte" rows="5" placeholder="Le service d’études réalise, pour…"
           oninput="App.onAccueil('texte', this.value)">${esc(acc.texte || def.description || '')}</textarea>
       </div>
       <div class="bloc__duo">

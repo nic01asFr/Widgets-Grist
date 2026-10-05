@@ -179,6 +179,6 @@ Guide opérateur : `docs/PUBLICATION.md`.
 
 ## 9. Prochaine étude (hors ce repo — cadré)
 
-Spec **binding BlockNote formulaires** : `docs/superpowers/specs/2026-07-29-form-binding-blocknote-cerema-design.md`  
-Parallèle carto (Scene Manifest) ; blocs BlockNote dans **cerema-offre-de-service** / qgis-sspcloud.  
+Spec **binding BlockNote formulaires** : voir les spécifications du projet.  
+Parallèle carto (Scene Manifest) ; blocs BlockNote côté offre de service.  
 Référence technique ici : FormDef, ensureSchema, engine, publish, survey-project.js, pont QGIS.

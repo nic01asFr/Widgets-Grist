@@ -542,7 +542,19 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   max-width: 48rem;
   margin: 0 auto;
 }
-.fr-bandeau__logo { max-height: 2.5rem; width: auto; }
+/* > **Une image fournie par quelqu'un d'autre n'a pas de taille.**
+   Le logo d'un bandeau arrive en 2000 px de large s'il vient d'une recherche
+   d'images : non contraint, il recouvre le titre, la presentation et le bouton.
+   La contrainte porte sur l'`img`, pas sur le cadre qui l'entoure — un cadre a
+   beau etre limite, l'image a l'interieur deborde. */
+.fr-bandeau__logo { flex: 0 0 auto; }
+.fr-bandeau__logo img {
+  display: block;
+  max-height: 2.5rem;
+  max-width: 10rem;
+  width: auto;
+  object-fit: contain;
+}
 .fr-bandeau__orga {
   margin: 0;
   font-weight: 700;
@@ -711,3 +723,29 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 .fr-synthese__source { margin: 0.75rem 0 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--encre-douce); }
 .fr-synthese__autres { margin-top: 0.75rem; }
+
+
+/* ---------------------------------------------------------------
+   Garde-fou : aucune image ne deborde de son cadre.
+
+   Les images viennent de ceux qui composent — une adresse collee, un
+   fichier depose. On ne sait rien de leurs dimensions, et une seule
+   image trop grande suffit a rendre un formulaire illisible. La regle
+   vaut partout : formulaire, accueil, synthese, apercu.
+   --------------------------------------------------------------- */
+.fr-form img,
+.fr-accueil img,
+.fr-bandeau img,
+.fr-synthese img,
+.champ-bloc__rendu img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Une illustration ne prend jamais plus que la moitie d'un ecran de
+   telephone : elle accompagne la question, elle ne la remplace pas. */
+.fr-form .fr-illustration__image img,
+.champ-bloc__rendu .fr-illustration__image img {
+  max-height: 60vh;
+  object-fit: contain;
+}

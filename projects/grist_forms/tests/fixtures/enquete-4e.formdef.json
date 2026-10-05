@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0.0",
   "id": "enquete-espaces-publics-4e",
-  "title": "Espaces publics du 4ᵉ — Chartreux / La Blancarde",
-  "description": "Traduction en FormDef du questionnaire écrit à la main (document e1j5ym1Bd5ec). Branché sur les colonnes existantes : aucune création, aucun retypage.",
-  "classification": "cerema_internal",
+  "title": "Espaces publics — quartiers Gare et Parc",
+  "description": "Enquête de référence du projet : 61 questions, toutes les formes de saisie. Branchée sur des colonnes existantes — aucune création, aucun retypage.",
+  "classification": "interne",
   "successMessage": "Merci pour votre contribution !",
   "tableId": "Reponses",
   "composeMode": "bind",
@@ -408,11 +408,11 @@
           "required": false,
           "options": {
             "choices": [
-              "Place Sébastopol",
-              "Place Edmond Audran",
-              "Entrée parc Longchamp / métro Cinq Avenues",
-              "Abords gare de La Blancarde",
-              "Square Sidi Brahim (mairie 4e / pétanque)",
+              "Place du Marché",
+              "Place des Tilleuls",
+              "Entrée du parc / station de métro",
+              "Abords de la gare",
+              "Square de la Mairie",
               "Autre"
             ],
             "colonnes": {
@@ -1092,19 +1092,19 @@
   ],
   "choices": {},
   "branding": {
-    "organisation": "CEREMA",
-    "organisationDetail": "Ville de Marseille"
+    "organisation": "Service d’études",
+    "organisationDetail": "Commune d’Exemple"
   },
   "accueil": {
     "titre": "Votre avis sur les espaces publics du quartier",
-    "texte": "Le Cerema réalise, pour la Ville de Marseille, une étude sur la voirie, les espaces publics, le stationnement et les mobilités dans les quartiers **Chartreux** et **La Blancarde** (4ᵉ arrondissement). Ce questionnaire recueille votre **perception** pour affiner le diagnostic et nourrir les propositions d’aménagement.",
+    "texte": "Le service d’études réalise, pour la commune, une étude sur la voirie, les espaces publics, le stationnement et les mobilités dans les quartiers **Gare** et **Parc**. Ce questionnaire recueille votre **perception** pour affiner le diagnostic et nourrir les propositions d’aménagement.",
     "dureeMinutes": 8,
     "dureeTexte": "Le questionnaire s’adapte à vos réponses : selon votre profil, certaines sections vous seront épargnées. Il n’y a pas de bonne ou de mauvaise réponse.",
     "encarts": [
       {
         "ton": "discret",
         "titre": "Anonymat & données (RGPD).",
-        "texte": "Ce questionnaire est **anonyme** : aucune donnée permettant de vous identifier n’est demandée. Les réponses sont traitées par le Cerema pour le seul besoin de l’étude commandée par la Ville de Marseille, conservées pour la durée de l’étude, et exploitées de manière agrégée. Contact délégué à la protection des données : [à compléter par le Cerema]."
+        "texte": "Ce questionnaire est **anonyme** : aucune donnée permettant de vous identifier n’est demandée. Les réponses sont traitées par le service d’études pour le seul besoin de l’étude commandée par la commune, conservées pour la durée de l’étude, et exploitées de manière agrégée. Contact délégué à la protection des données : [à compléter]."
       }
     ],
     "bouton": "Commencer"

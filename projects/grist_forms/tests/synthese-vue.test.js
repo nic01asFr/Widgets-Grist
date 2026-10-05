@@ -29,7 +29,7 @@ describe('une barre dit toujours son effectif', () => {
 
 describe('un classement se lit en points, pas en pourcentage', () => {
   it('écrit le score, et compte les citations sous le libellé', () => {
-    const html = Vue.barre('Sébastopol', 1, 'preference', null, '3 citations, 2 fois en tête', '8 pts');
+    const html = Vue.barre('Place du Marché', 1, 'preference', null, '3 citations, 2 fois en tête', '8 pts');
     assert.ok(html.includes('8 pts'));
     assert.ok(!html.includes('100 %'), 'un score pondéré n’est pas une part');
     assert.ok(!html.includes('n = '), 'l’effectif ne s’invente pas ici');

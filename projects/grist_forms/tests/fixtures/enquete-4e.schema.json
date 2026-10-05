@@ -1,6 +1,6 @@
 {
   "tableId": "Reponses",
-  "document": "e1j5ym1Bd5ec",
+  "document": "(document de travail)",
   "releveLe": "2026-10-04",
   "colonnes": [
     {
@@ -186,11 +186,11 @@
       "type": "Choice",
       "label": "Lieu prioritaire — 1re place",
       "choix": [
-        "Place Sébastopol",
-        "Place Edmond Audran",
-        "Entrée parc Longchamp / métro Cinq Avenues",
-        "Abords gare de La Blancarde",
-        "Square Sidi Brahim (mairie 4e / pétanque)",
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
         "Autre"
       ]
     },
@@ -199,11 +199,11 @@
       "type": "Choice",
       "label": "Lieu prioritaire — 2e place",
       "choix": [
-        "Place Sébastopol",
-        "Place Edmond Audran",
-        "Entrée parc Longchamp / métro Cinq Avenues",
-        "Abords gare de La Blancarde",
-        "Square Sidi Brahim (mairie 4e / pétanque)",
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
         "Autre"
       ]
     },
@@ -212,11 +212,11 @@
       "type": "Choice",
       "label": "Lieu prioritaire — 3e place",
       "choix": [
-        "Place Sébastopol",
-        "Place Edmond Audran",
-        "Entrée parc Longchamp / métro Cinq Avenues",
-        "Abords gare de La Blancarde",
-        "Square Sidi Brahim (mairie 4e / pétanque)",
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
         "Autre"
       ]
     },
