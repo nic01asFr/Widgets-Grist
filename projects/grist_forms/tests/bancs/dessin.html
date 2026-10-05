@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banc — le canevas qu'on compose</title>
+<link rel="stylesheet" href="../../shared/dsfr-like.css">
+<style>
+  body { margin: 0; padding: 16px; }
+  .banc__note { max-width: 38rem; margin: 0 auto 1rem; color: #555; font-size: 14px; }
+  .banc__lu { max-width: 38rem; margin: 1rem auto; background: #f0f0f0; padding: 8px;
+    border-radius: 4px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+  .banc__apercu { max-width: 38rem; margin: 0 auto; }
+  .banc__apercu img { max-width: 100%; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+<p class="banc__note">
+  Trois canevas : un croquis libre, une annotation sur fond, une signature.
+  Ce qui est déposé dans les champs fichier s’affiche en bas — c’est ce qui
+  partira en pièce jointe.
+</p>
+<div id="form"></div>
+<pre class="banc__lu" id="lu">(rien)</pre>
+<div class="banc__apercu" id="apercu"></div>
+
+<script src="../../shared/attachments.js"></script>
+<script src="../../shared/types.js"></script>
+<script src="../../shared/dessin.js"></script>
+<script src="../../runtime/engine.js"></script>
+<script>
+  // Un fond d'essai, fabriqué sur place : le banc ne dépend d'aucun réseau.
+  function fondEssai() {
+    var c = document.createElement('canvas');
+    c.width = 600; c.height = 300;
+    var x = c.getContext('2d');
+    x.fillStyle = '#e8eef4'; x.fillRect(0, 0, 600, 300);
+    x.strokeStyle = '#8aa'; x.lineWidth = 6;
+    x.beginPath(); x.moveTo(0, 150); x.lineTo(600, 150); x.stroke();
+    x.beginPath(); x.moveTo(300, 0); x.lineTo(300, 300); x.stroke();
+    x.fillStyle = '#456'; x.font = '20px sans-serif';
+    x.fillText('carrefour (fond d\u2019essai)', 20, 36);
+    return c.toDataURL('image/png');
+  }
+
+  var DEF = {
+    manifest_version: '1.0.0', id: 'banc-dessin', title: 'Canevas',
+    tableId: 'T', composeMode: 'bind', choices: {},
+    sections: [{ id: 's1', label: 'Trois canevas', fields: [
+      { colId: 'Croquis', label: 'Croquez l\u2019implantation', type: 'Attachments', widget: 'dessin',
+        options: { dessin: { usage: 'croquis' } } },
+      { colId: 'Annote', label: 'Entourez ce dont vous parlez', type: 'Attachments', widget: 'dessin',
+        options: { dessin: { usage: 'croquis', fond: fondEssai(), hauteur: 260 } } },
+      { colId: 'Signature', label: 'Votre signature', type: 'Attachments', widget: 'dessin',
+        options: { dessin: { usage: 'signature' } } }
+    ] }]
+  };
+
+  FormEngine.mount(document.getElementById('form'), DEF, {
+    submit: function () { return Promise.resolve(); },
+    skipProbe: true
+  });
+
+  // Ce que les champs fichier portent, et à quoi ressemble ce qui partirait.
+  setInterval(function () {
+    var vals = {};
+    ['Croquis', 'Annote', 'Signature'].forEach(function (c) {
+      var el = document.querySelector('input[type="file"][name="' + c + '"]');
+      var f = el && el.files && el.files[0];
+      vals[c] = f ? { nom: f.name, type: f.type, octets: f.size } : null;
+    });
+    var txt = JSON.stringify(vals, null, 2);
+    var lu = document.getElementById('lu');
+    if (lu.textContent !== txt) lu.textContent = txt;
+  }, 500);
+
+  // Pour piloter le banc : tracer un trait sur un canevas donné.
+  window.bancTrait = function (colId, points) {
+    var cv = document.querySelector('.fr-dessin-hote[data-dessin-de="' + colId + '"] canvas');
+    if (!cv) return 'pas de canevas';
+    var r = cv.getBoundingClientRect();
+    function ev(nom, p, btn) {
+      return new PointerEvent(nom, { bubbles: true, cancelable: true,
+        clientX: r.left + p[0] * r.width, clientY: r.top + p[1] * r.height,
+        pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: btn });
+    }
+    cv.dispatchEvent(ev('pointerdown', points[0], 1));
+    for (var i = 1; i < points.length; i++) cv.dispatchEvent(ev('pointermove', points[i], 1));
+    cv.dispatchEvent(ev('pointerup', points[points.length - 1], 0));
+    return 'trait de ' + points.length + ' points';
+  };
+
+  // Montrer l'image produite, pour la regarder.
+  window.bancMontrer = function (colId) {
+    var el = document.querySelector('input[type="file"][name="' + colId + '"]');
+    var f = el && el.files && el.files[0];
+    if (!f) return 'rien';
+    var url = URL.createObjectURL(f);
+    document.getElementById('apercu').innerHTML =
+      '<p>Image produite pour <strong>' + colId + '</strong> :</p><img src="' + url + '" alt="">';
+    return f.name + ' — ' + f.size + ' octets';
+  };
+</script>
+</body>
+</html>

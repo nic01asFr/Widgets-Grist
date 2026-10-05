@@ -132,6 +132,13 @@ body {
   border-color: var(--blue-france);
 }
 .fr-btn--secondary:hover { background: #f0f0ff; }
+.fr-btn--tertiary {
+  background: transparent;
+  color: var(--blue-france);
+  border: 1px solid var(--bord);
+}
+.fr-btn--tertiary:hover { background: var(--grey-950); }
+.fr-btn--sm { min-height: 2rem; padding: 0.25rem 0.75rem; font-size: 0.875rem; }
 .fr-btn--tertiary-no-outline {
   color: var(--blue-france);
   background: transparent;
@@ -203,3 +210,589 @@ body {
 }
 .fr-form__brand--success img { max-height: 140px; }
 .fr-form__success { max-width: 40rem; }
+
+/* ── Échelles et matrices ─────────────────────────────────────────────────
+   Une échelle se lit d'un coup d'œil : les crans alignés, et ce que valent
+   ses extrémités écrit dessous. En matrice, l'échelle n'est annoncée qu'une
+   fois ; sur un écran étroit, chaque ligne redevient un bloc. */
+.fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fr-echelle__cran, .fr-echelle__nsp { display: flex; align-items: center; gap: 4px; margin: 0; }
+.fr-echelle__cran label, .fr-echelle__nsp label { margin: 0; font-weight: 400; }
+/* « Non concerné » n'est pas un degré : il se pose sous l'échelle, pour que
+   les crans tombent sous les mots qui les nomment. */
+.fr-echelle__nsp { margin-top: 0.5rem; }
+.fr-echelle__ancres {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 0.78rem; color: #666; margin-top: 4px;
+}
+.fr-matrice { padding: 0; border: none; }
+.fr-matrice__ligne {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  padding: 10px 0; border-top: 1px solid #eee;
+}
+.fr-matrice__ligne:first-child { border-top: none; }
+.fr-matrice__intitule { flex: 1 1 14rem; min-width: 0; }
+@media (max-width: 36rem) {
+  .fr-matrice__ligne { flex-direction: column; align-items: flex-start; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOCLE DE LISIBILITÉ (04/10/2026)
+
+   Le formulaire s'adresse au grand public, souvent debout, sur un téléphone.
+   Trois règles chiffrées, et une quatrième qui n'est pas une mesure :
+
+     se lit     corps 17 px, question 18 px, consigne 15 px ; contraste ≥ 4,5:1
+     se touche  44 px de côté par cible, 8 px entre deux
+     se repère  progression visible, action sous les yeux
+     se dit     des phrases, jamais des noms de colonnes
+
+   Le thème suit celui de Grist, qui l'impose en style EN LIGNE sur <html> :
+   on s'y accorde au lieu de lutter (leçon payée dans Atlas).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --texte: 1.0625rem;        /* 17 px */
+  --texte-question: 1.125rem;
+  --texte-consigne: 0.9375rem;
+  --cible: 2.75rem;          /* 44 px */
+  --ecart: 0.5rem;
+  --fond-page: var(--grey-975);
+  --fond-carte: var(--grey-1000);
+  --encre: var(--grey-200);
+  --encre-douce: var(--grey-625);
+  --bord: var(--grey-900);
+}
+
+/* Grist impose son thème ; on l'épouse. */
+:root[data-grist-theme="dark"],
+:root[data-grist-appearance="dark"] {
+  --fond-page: #1a1d1b;
+  --fond-carte: #22262400;
+  --fond-carte: #222624;
+  --encre: #edf1ec;
+  --encre-douce: #a7b0a9;
+  --bord: #39423c;
+  --grey-975: #1f2320;
+  --grey-950: #2a2f2b;
+  --grey-925: #39423c;
+  --blue-france: #9aa2ff;
+  --encart-attention: #3a3220;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) {
+    --fond-page: #1a1d1b;
+    --fond-carte: #222624;
+    --encre: #edf1ec;
+    --encre-douce: #a7b0a9;
+    --bord: #39423c;
+    --grey-975: #1f2320;
+    --grey-950: #2a2f2b;
+    --grey-925: #39423c;
+    --blue-france: #9aa2ff;
+    --encart-attention: #3a3220;
+    color-scheme: dark;
+  }
+}
+
+body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); color: var(--encre); }
+
+/* Un formulaire se lit en colonne étroite : au-delà, l'œil perd sa ligne. */
+.fr-form { max-width: 38rem; margin-inline: auto; }
+.fr-form .fr-label { font-size: var(--texte); font-weight: 600; color: var(--encre); }
+.fr-form .fr-hint-text { font-size: var(--texte-consigne); color: var(--encre-douce); }
+.fr-form .fr-fieldset__legend { font-size: var(--texte-question); font-weight: 600; line-height: 1.35; }
+
+/* Ce qui se touche : 44 px, et de l'air entre deux cibles. */
+.fr-form .fr-input, .fr-form .fr-select, .fr-form textarea.fr-input { min-height: var(--cible); font-size: var(--texte); }
+.fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
+.fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
+.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--blue-france); }
+.fr-radio-group .fr-label, .fr-checkbox-group .fr-label { font-weight: 400; }
+
+/* Progression : où j'en suis, combien il reste. */
+.fr-progression { margin-bottom: 1.25rem; }
+.fr-progression__piste { height: 6px; border-radius: 6px; background: var(--grey-950); overflow: hidden; }
+.fr-progression__piste span { display: block; height: 100%; background: var(--blue-france); transition: width .25s ease; }
+.fr-progression__etat {
+  display: flex; justify-content: space-between; margin: 0.35rem 0 0.75rem;
+  font-size: 0.82rem; color: var(--encre-douce); font-variant-numeric: tabular-nums;
+}
+.fr-progression__titre { font-size: 1.25rem; margin: 0; line-height: 1.3; }
+
+/* L'action reste sous les yeux. */
+.fr-form__actions {
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--ecart);
+  margin-top: 1.5rem; padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--fond-page) 35%);
+}
+
+/* Échelle : des crans qu'un doigt atteint. */
+.fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.fr-echelle__cran { flex: 1 1 var(--cible); }
+.fr-echelle__cran label {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--cible); min-width: var(--cible); padding: 0 0.5rem;
+  border: 1px solid var(--bord); border-radius: 6px; cursor: pointer; background: var(--fond-carte);
+}
+.fr-echelle__cran input { position: absolute; opacity: 0; width: 0; height: 0; }
+.fr-echelle__cran input:checked + label { background: var(--blue-france); border-color: var(--blue-france); color: #fff; }
+.fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+.fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
+.fr-echelle__ancres { font-size: 0.86rem; color: var(--encre-douce); }
+
+/* Matrice : un tableau sur grand écran, des cartes sur téléphone. */
+.fr-matrice__question { margin-bottom: 0.25rem; }
+.fr-matrice__ligne { border-top: 1px solid var(--grey-950); padding: 0.85rem 0; }
+.fr-matrice__intitule { font-size: var(--texte); }
+@media (max-width: 36rem) {
+  .fr-matrice__ligne {
+    border: 1px solid var(--bord); border-radius: 8px; padding: 0.85rem;
+    margin-bottom: 0.6rem; background: var(--fond-carte);
+  }
+  .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
+}
+
+/* Une consigne se lit sous son libellé, pas dans son prolongement. */
+.fr-label .fr-hint-text, .fr-fieldset__legend .fr-hint-text {
+  display: block; font-weight: 400; margin-top: 0.15rem;
+}
+
+/* ── Les champs tels qu'on les remplit ────────────────────────────────────
+   Une option n'est pas un bouton radio posé à côté d'un mot : c'est une ligne
+   entière qu'on touche. Au doigt, viser un disque de 20 px est un échec ;
+   viser une rangée de 44 px ne l'est pas. */
+.fr-form .fr-fieldset__content,
+.champ-bloc__rendu .fr-fieldset__content { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.fr-form .fr-radio-group, .fr-form .fr-checkbox-group,
+.champ-bloc__rendu .fr-radio-group, .champ-bloc__rendu .fr-checkbox-group {
+  border: 1px solid var(--bord); border-radius: 8px; padding: 0 0.8rem;
+  background: var(--fond-carte); cursor: pointer; transition: border-color .12s ease;
+}
+.fr-form .fr-radio-group:hover, .fr-form .fr-checkbox-group:hover { border-color: var(--blue-france); }
+.fr-form .fr-radio-group .fr-label, .fr-form .fr-checkbox-group .fr-label,
+.champ-bloc__rendu .fr-radio-group .fr-label, .champ-bloc__rendu .fr-checkbox-group .fr-label {
+  flex: 1 1 auto; padding: 0.65rem 0; cursor: pointer; font-weight: 400;
+}
+.fr-form .fr-radio-group:has(input:checked),
+.fr-form .fr-checkbox-group:has(input:checked),
+.champ-bloc__rendu .fr-radio-group:has(input:checked),
+.champ-bloc__rendu .fr-checkbox-group:has(input:checked) {
+  border-color: var(--blue-france); background: color-mix(in srgb, var(--blue-france) 6%, var(--fond-carte));
+}
+.fr-form .fr-radio-group:focus-within, .fr-form .fr-checkbox-group:focus-within {
+  outline: 2px solid var(--blue-france); outline-offset: 1px;
+}
+
+/* Les crans d'une échelle restent en ligne : ce sont des degrés, pas des options. */
+.fr-form .fr-echelle__crans .fr-radio-group,
+.champ-bloc__rendu .fr-echelle__crans .fr-radio-group { border: none; padding: 0; background: none; }
+
+/* Obligatoire : une asterisque rouge dans la ligne du libelle. Le mot,
+   repete sur chaque question, devenait du bruit ; la marque se retrouve
+   d'un coup d'oeil quand l'envoi est refuse. */
+.fr-obligatoire {
+  color: var(--error, #ce0500);
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+/* Lu par les lecteurs d'ecran, invisible a l'ecran. */
+.fr-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Les champs libres : même hauteur, même repère au focus. */
+.fr-form .fr-input:focus-visible, .fr-form .fr-select:focus-visible {
+  outline: 2px solid var(--blue-france); outline-offset: 1px;
+}
+.fr-form textarea.fr-input { min-height: 5.5rem; }
+.fr-form .fr-input-group, .fr-form .fr-select-group, .fr-form .fr-fieldset,
+.champ-bloc__rendu .fr-input-group, .champ-bloc__rendu .fr-select-group, .champ-bloc__rendu .fr-fieldset {
+  margin-bottom: 1.1rem;
+}
+
+/* ── Les saisies de l'enquête ───────────────────────────────────────────────
+   Oui / Non côte à côte, « Autre » qui se déplie, cases plafonnées,
+   classement au doigt, position relevée. Tout reste à 44 px de cible et
+   lisible sur un téléphone tenu à une main. */
+
+/* Oui / Non : deux boutons de même largeur, dans la même ligne. */
+.fr-form .fr-fieldset__content--ligne, .champ-bloc__rendu .fr-fieldset__content--ligne {
+  flex-direction: row; flex-wrap: wrap; gap: 0.6rem;
+}
+.fr-form .fr-fieldset__content--ligne .fr-radio-group, .champ-bloc__rendu .fr-fieldset__content--ligne .fr-radio-group { flex: 1 1 8rem; justify-content: center; }
+
+/* « Autre : … » — révélé seulement quand on l'a choisi, y compris dans
+   l'aperçu du compositeur : il montre ce que le public verra. */
+.fr-form .fr-autre, .champ-bloc__rendu .fr-autre {
+  margin: 0.3rem 0 0 1.6rem; padding-left: 0.8rem;
+  border-left: 3px solid var(--blue-france);
+}
+.fr-form .fr-autre--repliee, .champ-bloc__rendu .fr-autre--repliee { display: none; }
+
+/* Le plafond se lit avant de cocher, et se tient. */
+.fr-form .fr-plafond, .champ-bloc__rendu .fr-plafond {
+  margin: -0.2rem 0 0.4rem; font-variant-numeric: tabular-nums;
+}
+.fr-form .fr-checkbox-group input:disabled + .fr-label, .champ-bloc__rendu .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
+
+/* Classer : une grille, une ligne par proposition, une colonne par place.
+   C'est la forme du questionnaire papier, et celle des colonnes qui recoivent
+   la reponse. Sur telephone, le tableau defile de lui-meme. */
+.fr-form .fr-rangs__cadre, .champ-bloc__rendu .fr-rangs__cadre { overflow-x: auto; }
+.fr-form .fr-rangs, .champ-bloc__rendu .fr-rangs {
+  width: 100%; border-collapse: collapse; font-size: 0.95rem;
+}
+.fr-form .fr-rangs th, .fr-form .fr-rangs td,
+.champ-bloc__rendu .fr-rangs th, .champ-bloc__rendu .fr-rangs td {
+  border-bottom: 1px solid var(--bordure, #ddd); padding: 0.35rem 0.5rem; text-align: center;
+}
+.fr-form .fr-rangs thead th, .champ-bloc__rendu .fr-rangs thead th {
+  font-size: 0.82rem; font-weight: 600; color: var(--encre-douce, #666); white-space: nowrap;
+}
+.fr-form .fr-rangs__intitule, .champ-bloc__rendu .fr-rangs__intitule {
+  text-align: left; font-weight: 400; min-width: 12rem;
+}
+.fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 5.5rem; }
+/* La case entiere est la cible : 44 px, au doigt. */
+.fr-form .fr-rangs__case label, .champ-bloc__rendu .fr-rangs__case label {
+  display: block; margin: 0 auto; width: 2.4rem; height: 2.4rem; border-radius: 999px;
+  border: 2px solid var(--bordure, #ddd); cursor: pointer;
+}
+.fr-form .fr-rangs__case input, .champ-bloc__rendu .fr-rangs__case input {
+  position: absolute; opacity: 0; width: 0; height: 0;
+}
+.fr-form .fr-rangs__case input:checked + label, .champ-bloc__rendu .fr-rangs__case input:checked + label {
+  background: var(--blue-france); border-color: var(--blue-france);
+}
+.fr-form .fr-rangs__case input:focus-visible + label, .champ-bloc__rendu .fr-rangs__case input:focus-visible + label {
+  outline: 2px solid var(--blue-france); outline-offset: 2px;
+}
+/* Ce que lit un lecteur d'ecran, et que l'oeil n'a pas besoin de voir. */
+.fr-rangs__lu {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* Relever sa position : le bouton tient dans la ligne, et passe dessous
+   quand l'écran est étroit. */
+.fr-form .fr-geo__ligne, .champ-bloc__rendu .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.fr-form .fr-geo__ligne .fr-input, .champ-bloc__rendu .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
+.fr-form .fr-geo__etat:empty, .champ-bloc__rendu .fr-geo__etat:empty { display: none; }
+
+/* ── La carte d'une question de lieu ────────────────────────────────────────
+   Assez grande pour viser au doigt, pas au point d'occuper l'écran : on doit
+   voir la question au-dessus et le bouton en dessous sans défiler deux fois. */
+.fr-form .fr-carte, .champ-bloc__rendu .fr-carte {
+  height: 16rem; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--bordure, #ddd); background: var(--grey-975, #f6f6f6);
+  display: flex; align-items: center; justify-content: center;
+}
+.fr-form .fr-carte__attente, .champ-bloc__rendu .fr-carte__attente {
+  margin: 0; padding: 0 1rem; text-align: center;
+}
+.fr-form .fr-carte__mode, .champ-bloc__rendu .fr-carte__mode { margin: 0.4rem 0 0.6rem; }
+/* Un point pose : assez gros pour qu'on puisse le reprendre au doigt. */
+.fr-carte__point {
+  width: 1.5rem; height: 1.5rem; border-radius: 999px; cursor: pointer;
+  border: 2px solid #fff; background: var(--error, #ce0500);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.fr-carte__point:focus-visible { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+@media (max-width: 30rem) {
+  .fr-form .fr-carte { height: 13rem; }
+}
+
+/* Illustrer une question : l'image ou la carte vient avant la saisie, parce
+   qu'on regarde avant de répondre. */
+.fr-form .fr-illustration, .champ-bloc__rendu .fr-illustration { margin: 0 0 0.8rem; }
+.fr-form .fr-illustration__image img, .champ-bloc__rendu .fr-illustration__image img {
+  max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--bordure, #ddd);
+}
+.fr-form .fr-illustration__legende, .champ-bloc__rendu .fr-illustration__legende { margin-top: 0.3rem; }
+/* Une carte qui montre : on peut la déplacer, mais y cliquer n'écrit rien. */
+.fr-carte--montre { cursor: grab; }
+.fr-carte__repere {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.7rem; height: 1.7rem; border-radius: 999px;
+  background: var(--blue-france); color: #fff; font-size: 0.8rem; font-weight: 600;
+  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+/* Une page intégrée : elle occupe la largeur de la question, et sa hauteur
+   est celle qu'on lui a donnée — on ne devine pas le contenu d'autrui. */
+.fr-form .fr-illustration__cadre, .champ-bloc__rendu .fr-illustration__cadre {
+  width: 100%; border: 1px solid var(--bordure, #ddd); border-radius: 8px; background: #fff;
+}
+/* La carte du compositeur, où l'on pose les repères. */
+.fr-carte--composer { height: 14rem; margin-bottom: 0.5rem; cursor: crosshair; }
+
+/* ---------------------------------------------------------------
+   Le bandeau et la page d'accueil.
+
+   Le bandeau reste a l'ecran du debut a la fin : qui demande, et sur
+   quoi. La page d'accueil, elle, se franchit une fois — c'est ce
+   qu'on lit pour decider de repondre.
+   --------------------------------------------------------------- */
+.fr-bandeau {
+  background: var(--fond-carte, #fff);
+  border-bottom: 2px solid var(--blue-france);
+  padding: 0.875rem 1rem;
+  margin: -1rem -1rem 0;
+}
+.fr-bandeau__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+/* > **Une image fournie par quelqu'un d'autre n'a pas de taille.**
+   Le logo d'un bandeau arrive en 2000 px de large s'il vient d'une recherche
+   d'images : non contraint, il recouvre le titre, la presentation et le bouton.
+   La contrainte porte sur l'`img`, pas sur le cadre qui l'entoure — un cadre a
+   beau etre limite, l'image a l'interieur deborde. */
+.fr-bandeau__logo { flex: 0 0 auto; }
+.fr-bandeau__logo img {
+  display: block;
+  max-height: 2.5rem;
+  max-width: 10rem;
+  width: auto;
+  object-fit: contain;
+}
+.fr-bandeau__orga {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1.1;
+  color: var(--blue-france);
+  border-right: 1px solid var(--grey-900);
+  padding-right: 0.875rem;
+}
+.fr-bandeau__orga small { display: block; font-weight: 400; color: var(--encre-douce); }
+.fr-bandeau__titre { font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--encre); }
+
+/* L'avancement suit : en bas d'une etape longue, savoir ou l'on en est
+   vaut mieux que de devoir remonter pour le lire. */
+.fr-form .fr-progression {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--fond-page);
+  padding-top: 0.5rem;
+}
+
+.fr-accueil { padding-top: 1.5rem; }
+.fr-accueil__titre {
+  font-size: 1.375rem;
+  margin: 0 0 0.75rem;
+  color: var(--blue-france);
+}
+.fr-accueil__titre:focus { outline: none; }
+.fr-accueil p { margin: 0 0 0.75rem; }
+
+.fr-encart {
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius);
+  margin: 0.875rem 0;
+  font-size: 0.875rem;
+}
+.fr-encart--attention {
+  background: var(--encart-attention, #fef6e3);
+  border-left: 4px solid #ffca00;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.fr-encart--discret {
+  background: var(--grey-975);
+  color: var(--encre-douce);
+  font-size: 0.78125rem;
+}
+.fr-form__actions--fin { justify-content: flex-end; }
+
+/* Les memes regles dans l'apercu du compositeur. */
+.champ-bloc__rendu .fr-bandeau { margin: 0 0 0.75rem; }
+.champ-bloc__rendu .fr-accueil { padding-top: 0; }
+
+/* ---------------------------------------------------------------
+   Le canevas qu'on compose.
+
+   Ce n'est pas une illustration : la personne produit quelque chose,
+   et ce quelque chose part en piece jointe.
+   --------------------------------------------------------------- */
+.fr-dessin__planche {
+  position: relative;
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  background: var(--fond-carte);
+  overflow: hidden;
+}
+.fr-dessin__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Sans cela, le doigt fait defiler la page au lieu de tracer. */
+  touch-action: none;
+  cursor: crosshair;
+}
+.fr-dessin--signature .fr-dessin__planche { background: #fff; }
+.fr-dessin--signature .fr-dessin__toile { cursor: cell; }
+
+.fr-dessin__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.fr-dessin__palette { display: flex; gap: 0.35rem; }
+.fr-dessin__couleur {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--bord);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+.fr-dessin__couleur[aria-checked="true"] {
+  border-color: var(--encre);
+  box-shadow: 0 0 0 2px var(--fond-carte), 0 0 0 4px var(--encre);
+}
+.fr-dessin__barre .fr-btn[disabled] { opacity: 0.45; cursor: default; }
+.fr-dessin__etat { margin-top: 0.35rem; }
+
+/* Les mêmes règles dans l'aperçu du compositeur. */
+.champ-bloc__rendu .fr-dessin__planche { background: #fff; }
+.champ-bloc__rendu .fr-dessin__toile { touch-action: none; }
+
+/* ---------------------------------------------------------------
+   La synthèse : la table relue par le FormDef.
+
+   Mêmes classes, même air que le formulaire — une enquête et sa
+   restitution ne viennent pas de deux maisons différentes.
+   --------------------------------------------------------------- */
+.fr-synthese { max-width: 56rem; margin-inline: auto; padding: 1rem; }
+.fr-synthese__h1 { font-size: 1.5rem; color: var(--blue-france); margin: 0 0 1rem; }
+
+.fr-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.fr-chiffre {
+  background: var(--fond-carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+}
+.fr-chiffre__libelle {
+  margin: 0; font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--encre-douce);
+}
+.fr-chiffre__valeur { margin: 0.15rem 0 0; font-size: 1.6rem; font-weight: 700; color: var(--blue-france); }
+.fr-chiffre__precision { margin: 0; font-size: 0.78rem; color: var(--encre-douce); }
+
+.fr-synthese__bloc {
+  background: var(--fond-carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--radius);
+  padding: 1rem 1.125rem;
+  margin-bottom: 1rem;
+}
+.fr-synthese__titre { font-size: 1.125rem; margin: 0 0 0.25rem; }
+.fr-synthese__h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+.fr-synthese__vide { font-style: italic; }
+
+.fr-ressort { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+.fr-ressort__h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+.fr-ressort__h3--besoin { color: #b34000; }
+.fr-ressort__h3--satisfaction { color: #18753c; }
+.fr-ressort__h3--preference { color: var(--blue-france); }
+
+.fr-barre { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; }
+.fr-barre__corps { flex: 1; min-width: 0; }
+.fr-barre__libelle { margin: 0 0 0.2rem; font-size: 0.875rem; }
+.fr-barre__note { color: var(--encre-douce); font-size: 0.8rem; }
+.fr-barre__piste { height: 0.5rem; background: var(--grey-950); border-radius: 0.5rem; overflow: hidden; }
+.fr-barre__piste span { display: block; height: 100%; background: var(--encre-douce); }
+.fr-barre__piste--besoin span { background: #b34000; }
+.fr-barre__piste--satisfaction span { background: #18753c; }
+.fr-barre__piste--preference span { background: var(--blue-france); }
+.fr-barre__n { margin: 0.15rem 0 0; font-size: 0.72rem; color: var(--encre-douce); }
+.fr-barre__valeur { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3rem; text-align: right; }
+
+.fr-verbatim {
+  margin: 0.35rem 0; padding: 0.5rem 0.75rem;
+  background: var(--grey-975); border-left: 3px solid var(--bord);
+  border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.875rem;
+}
+.fr-synthese__source { margin: 0.75rem 0 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--encre-douce); }
+.fr-synthese__autres { margin-top: 0.75rem; }
+
+
+/* ---------------------------------------------------------------
+   Garde-fou : aucune image ne deborde de son cadre.
+
+   Les images viennent de ceux qui composent — une adresse collee, un
+   fichier depose. On ne sait rien de leurs dimensions, et une seule
+   image trop grande suffit a rendre un formulaire illisible. La regle
+   vaut partout : formulaire, accueil, synthese, apercu.
+   --------------------------------------------------------------- */
+.fr-form img,
+.fr-accueil img,
+.fr-bandeau img,
+.fr-synthese img,
+.champ-bloc__rendu img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Une illustration ne prend jamais plus que la moitie d'un ecran de
+   telephone : elle accompagne la question, elle ne la remplace pas. */
+.fr-form .fr-illustration__image img,
+.champ-bloc__rendu .fr-illustration__image img {
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+
+/* ---------------------------------------------------------------
+   Toute la carte coche, pas seulement la coche.
+
+   Un `<label for>` pose a cote du rond ne rend cliquable que le
+   texte : la marge et l'espace a droite du mot ne repondent pas. La
+   carte est donc elle-meme le `<label>` — tout son interieur coche.
+   --------------------------------------------------------------- */
+label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
+
+/* La case d'une grille de classement : la cible est la cellule, pas le
+   rond de 20 px qu'il faudrait viser au doigt. */
+.fr-rangs__cible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--cible);
+  cursor: pointer;
+  margin: 0;
+}
+.fr-rangs__case { padding: 0; }
+
+
+/* Une question en defaut : le message tient a elle, pas a la suivante. */
+.fr-champ--erreur {
+  border-left: 3px solid var(--error, #ce0500);
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.fr-champ--erreur > .fr-error-text { margin: 0.35rem 0 0; }
+.fr-champ--erreur .fr-fieldset, .fr-champ--erreur .fr-input-group { margin-bottom: 0; }

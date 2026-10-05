@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Banc d'essai — intégrer une page du même document</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 16px; background: #f6f6f6; }
+  h1 { font-size: 18px; }
+  p.note { max-width: 60em; color: #444; }
+  .bancs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .banc { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px; }
+  .banc h2 { font-size: 14px; margin: 0 0 4px; }
+  .banc code { font-size: 11px; color: #666; display: block; margin-bottom: 6px; word-break: break-all; }
+  iframe { width: 100%; height: 420px; border: 1px solid #ccc; background: #fff; }
+</style>
+</head>
+<body>
+<h1>Intégrer une page du même document Grist, depuis une autre origine</h1>
+<p class="note">
+  Cette page est servie par <code>localhost:8443</code> — comme le widget du formulaire.
+  Elle intègre une page de <code>grist.numerique.gouv.fr</code> : origine différente, donc
+  contexte tiers. La question est de savoir si la session de la personne y survit.
+</p>
+<div class="bancs">
+  <div class="banc">
+    <h2>1. Bac à sable actuel</h2>
+    <code>sandbox="allow-scripts allow-popups allow-forms"</code>
+    <iframe id="f1" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
+      referrerpolicy="no-referrer"></iframe>
+  </div>
+  <div class="banc">
+    <h2>2. + allow-same-origin</h2>
+    <code>sandbox="… allow-same-origin"</code>
+    <iframe id="f2" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-same-origin"></iframe>
+  </div>
+  <div class="banc">
+    <h2>3. Sans bac à sable</h2>
+    <code>(aucun attribut sandbox)</code>
+    <iframe id="f3"></iframe>
+  </div>
+</div>
+
+<h1 style="margin-top:24px">Le bac à sable laisse-t-il passer un message ?</h1>
+<p class="note">Une page locale, dans le même bac à sable que l'illustration du formulaire,
+  tente <code>parent.postMessage</code>. Si le message arrive, alors ce qui manque au
+  formulaire est le canal, pas la permission.</p>
+<div class="bancs">
+  <div class="banc">
+    <h2>4. Émetteur, bac à sable du formulaire</h2>
+    <code>sandbox="allow-scripts allow-popups allow-forms"</code>
+    <iframe id="f4" style="height:180px"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
+      src="emetteur.html"></iframe>
+  </div>
+  <div class="banc" style="grid-column: span 2">
+    <h2>Ce que le parent reçoit</h2>
+    <code>window.addEventListener('message', …)</code>
+    <pre id="recu" style="margin:0;font-size:13px;background:#f0f0f0;padding:8px;border-radius:4px;min-height:160px">(rien pour l'instant)</pre>
+  </div>
+</div>
+
+<script>
+  var recu = document.getElementById('recu');
+  var lignes = [];
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.source !== 'essai-inclusion') return;
+    lignes.push(
+      'message reçu : ' + JSON.stringify(e.data),
+      'event.origin : ' + e.origin,
+      'event.source === iframe.contentWindow : ' +
+        (e.source === document.getElementById('f4').contentWindow)
+    );
+    recu.textContent = lignes.join(String.fromCharCode(10));
+  });
+</script>
+<script>
+  // L'adresse se passe en ?doc= pour ne rien figer dans le banc.
+  var p = new URLSearchParams(location.search);
+  var url = p.get('doc') || '';
+  if (url) {
+    ['f1', 'f2', 'f3'].forEach(function (id) {
+      document.getElementById(id).src = url;
+      document.querySelector('#' + id).previousElementSibling.textContent += ' → ' + url;
+    });
+  } else {
+    document.body.insertAdjacentHTML('beforeend',
+      '<p class="note"><strong>Donnez l\u2019adresse :</strong> ?doc=https://…</p>');
+  }
+</script>
+</body>
+</html>

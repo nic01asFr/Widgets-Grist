@@ -3,7 +3,7 @@
   "id": "demo-contact",
   "title": "Contact",
   "description": "",
-  "classification": "cerema_internal",
+  "classification": "interne",
   "successMessage": "Merci !",
   "tableId": "Contacts",
   "composeMode": "bind",

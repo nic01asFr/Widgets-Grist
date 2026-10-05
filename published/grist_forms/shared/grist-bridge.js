@@ -12,8 +12,8 @@
  * Les deux exposent window.grist.docApi.{fetchTable, applyUserActions}; ce module
  * construit les helpers par-dessus ce plus petit dénominateur commun.
  *
- * C'est la brique « couche read/write Grist standard » de l'écosystème CEREMA :
- * c'est ce que <cerema-survey-form> (et tout widget Grist) embarque pour lire/écrire.
+ * C'est la brique « couche read/write Grist standard » : ce que tout widget
+ * de ce dépôt embarque pour lire et écrire dans un document.
  * L'échappement WAF (<script> -> \\u003c) et le découpage des gros lots (BatchSync)
  * vivent CÔTÉ SERVEUR (grist_coder.py) car les écritures navigateur passent en direct
  * par Grist (hors WAF) ; ce module ne porte donc que la DX client.

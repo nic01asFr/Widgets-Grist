@@ -1,0 +1,633 @@
+<title>Types Grist et saisies FormDef</title>
+<style>
+  /* Trois étages empilés : la forme de la question, le geste qui produit la valeur,
+     le gabarit de colonnes Grist où elle se range. Colonne unique, tableaux larges
+     en défilement propre. Vert = l'étage de stockage, bleu = l'étage de saisie. */
+  :root {
+    --fond: #f7f8f6;
+    --surface: #ffffff;
+    --encre: #16201c;
+    --encre-douce: #5a6660;
+    --trait: #dde3df;
+    --stock: #197a55;
+    --stock-fond: #e8f4ee;
+    --saisie: #1b1b8f;
+    --saisie-fond: #e9e9f7;
+    --alerte: #b03a1a;
+    --alerte-fond: #fcefe9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+      --trait: #2e3730; --stock: #5cc795; --stock-fond: #163024;
+      --saisie: #9aa2ff; --saisie-fond: #1d2040; --alerte: #ff9470; --alerte-fond: #33180f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+    --trait: #2e3730; --stock: #5cc795; --stock-fond: #163024;
+    --saisie: #9aa2ff; --saisie-fond: #1d2040; --alerte: #ff9470; --alerte-fond: #33180f;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--fond);
+    color: var(--encre);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 1100px; margin: 0 auto;
+    padding-inline: 16px; padding-block: 40px 72px;
+    display: flex; flex-direction: column; gap: 44px;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(1.7rem, 4.4vw, 2.5rem); line-height: 1.12; }
+  h2 { font-size: 1.22rem; }
+  h3 { font-size: 0.95rem; }
+  p { margin: 0; max-width: 72ch; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 0.86em; }
+
+  header .intro { color: var(--encre-douce); margin-top: 12px; }
+  .daté { font-size: 0.78rem; color: var(--encre-douce); margin-top: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .chapeau { color: var(--encre-douce); }
+
+  .etages { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .etage {
+    background: var(--surface); border: 1px solid var(--trait); border-radius: 10px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  }
+  .etage .rang { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--encre-douce); }
+  .etage strong { font-size: 1rem; }
+  .etage.question { border-left: 3px solid var(--saisie); }
+  .etage.geste { border-left: 3px solid var(--encre-douce); }
+  .etage.gabarit { border-left: 3px solid var(--stock); }
+  .etage p { font-size: 0.88rem; color: var(--encre-douce); }
+
+  .tableau { overflow-x: auto; border: 1px solid var(--trait); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); vertical-align: top; font-size: 0.86rem; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface);
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--encre-douce);
+    font-weight: 600; border-bottom: 1px solid var(--trait);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  th[scope="row"] { font-weight: 600; }
+  td.carto { color: var(--saisie); }
+
+  .jeton {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.78rem;
+    padding: 2px 7px; border-radius: 5px; background: var(--stock-fond); color: var(--stock);
+    white-space: nowrap; display: inline-block;
+  }
+  .jeton.geste { background: var(--saisie-fond); color: var(--saisie); }
+  .jeton.lien { border: 1px solid transparent; cursor: pointer; font-family: inherit; }
+  .jeton.lien:hover { border-color: currentColor; }
+  .jeton.lien[aria-pressed="true"] { background: var(--stock); color: var(--surface); }
+  .jeton.lien:focus-visible { outline: 2px solid var(--saisie); outline-offset: 2px; }
+
+  .alerte { color: var(--alerte); background: var(--alerte-fond); padding: 1px 6px; border-radius: 4px; display: inline-block; }
+
+  .etat { font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+  .etat.existe { color: var(--stock); }
+  .etat.partiel { color: var(--encre-douce); }
+  .etat.ailleurs { color: var(--saisie); }
+  .etat.propose { color: var(--encre-douce); opacity: 0.85; }
+
+  .oui { color: var(--stock); font-weight: 600; }
+  .non { color: var(--alerte); font-weight: 600; }
+  .doute { color: var(--encre-douce); font-style: italic; }
+  .source { display: block; font-size: 0.74rem; color: var(--encre-douce); margin-top: 2px; }
+
+  tr.eteint { opacity: 0.28; }
+  tr.vive th[scope="row"] { box-shadow: inset 3px 0 0 var(--saisie); }
+
+  .barre { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .barre .note { font-size: 0.82rem; color: var(--encre-douce); }
+  button.raz {
+    font: inherit; font-size: 0.82rem; padding: 3px 10px; border-radius: 5px;
+    border: 1px solid var(--trait); background: var(--surface); color: var(--encre-douce); cursor: pointer;
+  }
+  button.raz:hover { border-color: var(--encre-douce); }
+  button.raz:focus-visible { outline: 2px solid var(--saisie); outline-offset: 2px; }
+
+  .regles { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .regle {
+    background: var(--surface); border: 1px solid var(--trait); border-radius: 10px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .regle .num { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--saisie); }
+  .regle p { font-size: 0.88rem; color: var(--encre-douce); }
+
+  .duo { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fiche {
+    background: var(--surface); border: 1px solid var(--trait); border-radius: 10px;
+    border-left: 3px solid var(--saisie); padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .fiche p { font-size: 0.88rem; color: var(--encre-douce); }
+
+  ul.liste { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 6px; }
+  ul.liste li { font-size: 0.9rem; }
+  ul.liste li .mono { color: var(--saisie); }
+
+  footer { border-top: 1px solid var(--trait); padding-top: 18px; color: var(--encre-douce); font-size: 0.84rem; display: flex; flex-direction: column; gap: 8px; }
+
+  @media (max-width: 820px) {
+    .etages, .regles, .duo { grid-template-columns: 1fr; }
+    thead th { position: static; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<div class="page">
+
+  <header>
+    <h1>Types Grist et saisies FormDef</h1>
+    <p class="intro">Grist pose le plancher : une douzaine de types et leur façon de ranger une valeur. Au-dessus, trois choses se décident séparément — la forme de la question, le geste qui produit la valeur, et les colonnes où elle se range. Cette page cale chaque besoin connu dans ces trois cases.</p>
+    <p class="daté">Grist 1.7.18 · besoins tirés de l'enquête « Espaces publics du 4ᵉ », d'Atlas et de l'application de terrain · 4 octobre 2026</p>
+  </header>
+
+  <section>
+    <h2>La chaîne</h2>
+    <p class="chapeau">Un même instrument d'enquête peut se remplir au clavier, sur la carte ou avec l'appareil, et se ranger de plusieurs façons. Mélanger ces trois questions est ce qui a produit les cas particuliers.</p>
+    <div class="etages">
+      <div class="etage question">
+        <span class="rang">1 · ce qu'on demande</span>
+        <strong>La forme de la question</strong>
+        <p>Choix unique, choix multiple, échelle, classement, texte libre. Le répertoire des enquêtes.</p>
+      </div>
+      <div class="etage geste">
+        <span class="rang">2 · comment on répond</span>
+        <strong>Le geste</strong>
+        <p>Au clavier, dans une liste, sur la carte, avec l'appareil photo, le micro, la position.</p>
+      </div>
+      <div class="etage gabarit">
+        <span class="rang">3 · où ça se range</span>
+        <strong>Le gabarit de colonnes</strong>
+        <p>Une ou plusieurs colonnes Grist natives. Jamais un format que Grist ne sait pas montrer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Les formes de question, et leur version sur la carte</h2>
+    <p class="chapeau">Le répertoire vient de l'enquête du 4ᵉ, qui les met toutes en œuvre à la main. La colonne de droite dit ce que la même question devient quand son sujet est géographique — c'est là que l'enquête et le relevé de terrain se rejoignent.</p>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Forme de question</th>
+            <th scope="col">Ce qu'elle demande</th>
+            <th scope="col">Gabarit</th>
+            <th scope="col">Sur la carte</th>
+            <th scope="col">État</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Choix unique</th>
+            <td>une valeur parmi quelques-unes</td>
+            <td><span class="jeton">Choice</span>, ou <span class="jeton">Ref:Table</span> si le domaine est une table</td>
+            <td class="carto">le domaine est une couche : on désigne l'objet au doigt au lieu de le chercher dans la liste</td>
+            <td class="etat existe">livré (liste, radio)</td>
+          </tr>
+          <tr>
+            <th scope="row">Choix multiple</th>
+            <td>plusieurs valeurs, avec plafond</td>
+            <td><span class="jeton">ChoiceList</span>, <span class="jeton">RefList:Table</span></td>
+            <td class="carto">plusieurs objets désignés sur la carte</td>
+            <td class="etat partiel">livré sans le plafond</td>
+          </tr>
+          <tr>
+            <th scope="row">Échelle</th>
+            <td>une note ordonnée, libellée aux deux bouts, avec « non concerné »</td>
+            <td><span class="jeton">Int</span></td>
+            <td class="carto">noter un objet désigné ; une rangée par objet de la couche</td>
+            <td class="etat partiel">échelle figée 1–5, sans ancrages ni « non concerné »</td>
+          </tr>
+          <tr>
+            <th scope="row">Matrice d'échelles</th>
+            <td>plusieurs affirmations qui partagent une échelle</td>
+            <td>une <span class="jeton">Int</span> par ligne</td>
+            <td class="carto">les lignes viennent d'une couche : noter chacun des lieux proposés</td>
+            <td class="etat propose">proposé — c'est une mise en page, pas un type</td>
+          </tr>
+          <tr>
+            <th scope="row">Classement</th>
+            <td>un ordre sur quelques options</td>
+            <td><span class="jeton">ChoiceList</span> ordonnée, ou N × <span class="jeton">Choice</span></td>
+            <td class="carto">classer des lieux, la carte servant de légende numérotée</td>
+            <td class="etat propose">proposé — fait à la main dans l'enquête</td>
+          </tr>
+          <tr>
+            <th scope="row">Choix avec « autre »</th>
+            <td>une option libre à côté des options prévues</td>
+            <td><span class="jeton">Choice</span> ou <span class="jeton">ChoiceList</span> + <span class="jeton">Text</span></td>
+            <td class="carto">« un autre lieu » : on le pose sur la carte au lieu de le nommer</td>
+            <td class="etat propose">proposé — trois câblages à la main dans l'enquête</td>
+          </tr>
+          <tr>
+            <th scope="row">Question filtre</th>
+            <td>ouvre ou ferme tout un thème</td>
+            <td><span class="jeton">Bool</span>, ou <span class="jeton">Choice</span> si « non posé » doit se distinguer</td>
+            <td class="carto">le filtre peut venir du lieu : être ou non dans le secteur</td>
+            <td class="etat existe">livré (<code>gate</code>, conditions d'étape)</td>
+          </tr>
+          <tr>
+            <th scope="row">Texte libre</th>
+            <td>une précision, une remarque</td>
+            <td><span class="jeton">Text</span></td>
+            <td class="carto">rattaché au point posé plutôt qu'à la réponse entière</td>
+            <td class="etat existe">livré</td>
+          </tr>
+          <tr>
+            <th scope="row">Nombre, durée</th>
+            <td>une quantité</td>
+            <td><span class="jeton">Int</span>, <span class="jeton">Numeric</span></td>
+            <td class="carto">—</td>
+            <td class="etat existe">livré (durée à nommer)</td>
+          </tr>
+          <tr>
+            <th scope="row">Répétition</th>
+            <td>autant de réponses qu'il y a de cas</td>
+            <td>une table liée par <span class="jeton">Ref:Table</span></td>
+            <td class="carto"><strong>une ligne par géométrie posée</strong> : la table liée est une couche</td>
+            <td class="etat ailleurs">Atlas le fait ; absent du moteur</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="duo">
+      <div class="fiche">
+        <h3>La carte comme sélecteur</h3>
+        <p>Toute question dont le domaine est une table peut prendre la carte pour sélecteur : liste, carte, ou les deux côte à côte. L'enquête du 4ᵉ le fait déjà à moitié — ses cinq lieux sont épinglés sur un fond IGN, mais le choix se fait dans la grille.</p>
+      </div>
+      <div class="fiche">
+        <h3>La géométrie comme répétition</h3>
+        <p>Poser trois points, c'est créer trois réponses. Chacune peut porter ses propres questions. C'est le « formulaire qui ajoute une ligne » d'Atlas, dont la table est aussi une couche — et c'est ce qui manque à l'enquête, dont les points dessinés ne portent rien.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>L'étage Grist : ce que le moteur écrit et relit</h2>
+    <p class="chapeau">Les types natifs, avec la valeur exacte qui passe dans la cellule. <code>coerceForWrite</code> va vers Grist, <code>valuesFromRecord</code> en revient.</p>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Type Grist</th>
+            <th scope="col">La cellule contient</th>
+            <th scope="col">Le formulaire écrit</th>
+            <th scope="col">Le formulaire relit</th>
+            <th scope="col">Sans réponse</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><span class="jeton">Text</span></th>
+            <td>une chaîne</td><td>la chaîne</td><td>la chaîne</td><td><code>""</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Int</span></th>
+            <td>un entier</td><td><code>Number(v)</code></td><td>le nombre</td>
+            <td><span class="alerte">colonne omise → 0</span> · <code>null</code> explicite → vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Numeric</span></th>
+            <td>un décimal</td><td><code>Number(v)</code></td><td>le nombre</td>
+            <td><span class="alerte">colonne omise → 0</span> · <code>null</code> explicite → vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Bool</span></th>
+            <td>vrai ou faux</td><td><code>true</code>/<code>false</code> (accepte oui, non, 1, 0)</td><td>le booléen</td>
+            <td><span class="alerte">toujours faux</span> — Grist refuse le vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Date</span></th>
+            <td>des secondes, à minuit UTC</td><td>secondes</td><td><code>AAAA-MM-JJ</code> en UTC</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">DateTime:fuseau</span></th>
+            <td>des secondes — un instant</td><td>secondes</td><td><code>AAAA-MM-JJTHH:MM</code> à l'heure de la personne</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Choice</span></th>
+            <td>une chaîne de la liste déclarée</td><td>la chaîne</td><td>la chaîne</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">ChoiceList</span></th>
+            <td><code>['L', …]</code> — <strong>l'ordre est conservé</strong></td><td><code>['L', …]</code></td><td>un tableau</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Ref:Table</span></th>
+            <td>l'identifiant d'une ligne</td><td>le nombre</td><td>l'identifiant s'il est non nul</td><td><code>0</code> — ce n'est pas une ligne</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">RefList:Table</span></th>
+            <td><code>['L', identifiants]</code></td><td><code>['L', identifiants]</code></td><td>un tableau</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Attachments</span></th>
+            <td><code>['L', identifiants]</code></td><td><code>['L', identifiants]</code> après envoi des fichiers</td><td>tel quel</td><td>vide</td>
+          </tr>
+          <tr>
+            <th scope="row"><span class="jeton">Any — formule</span></th>
+            <td>une valeur calculée</td><td colspan="2">rien : Grist l'écraserait</td><td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chapeau"><strong>Le piège des zéros.</strong> Omettre une colonne numérique revient à y écrire 0, et la moyenne native de Grist ignore le vide mais compte les zéros : sur <code>0, vide, 4, 2</code> elle rend 2 au lieu de 3. Une question masquée ou non posée doit donc s'écrire <code>null</code> explicitement.</p>
+  </section>
+
+  <section>
+    <h2>Les saisies dérivées</h2>
+    <div class="barre">
+      <span class="note">Filtrer par type de rangement :</span>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Int">Int</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Numeric">Numeric</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Text">Text</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Choice">Choice</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="ChoiceList">ChoiceList</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Ref">Ref</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Date">Date</button>
+      <button class="jeton lien" type="button" aria-pressed="false" data-filtre="Attachments">Attachments</button>
+      <button class="raz" type="button" id="raz">Tout voir</button>
+    </div>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Saisie</th>
+            <th scope="col">Gabarit</th>
+            <th scope="col">Geste</th>
+            <th scope="col">Ce qu'elle évite</th>
+            <th scope="col">État</th>
+          </tr>
+        </thead>
+        <tbody id="corps-derives">
+          <tr data-types="Int">
+            <th scope="row">Échelle</th>
+            <td><span class="jeton">Int</span> bornée</td>
+            <td>liste de boutons, ancrages, « non concerné »</td>
+            <td>le zéro qui fausse les moyennes ; « non posé » confondu avec « non concerné »</td>
+            <td class="etat partiel">partiel</td>
+          </tr>
+          <tr data-types="Choice ChoiceList Text">
+            <th scope="row">Choix avec « autre »</th>
+            <td><span class="jeton">Choice</span>/<span class="jeton">ChoiceList</span> + <span class="jeton">Text</span></td>
+            <td>un champ qui s'ouvre sous la case</td>
+            <td>trois câblages à la main dans la seule enquête du 4ᵉ</td>
+            <td class="etat propose">proposé</td>
+          </tr>
+          <tr data-types="ChoiceList Choice">
+            <th scope="row">Classement</th>
+            <td><span class="jeton">ChoiceList</span> ordonnée, ou N × <span class="jeton">Choice</span></td>
+            <td>une grille de places</td>
+            <td>la grille des trois places, recodée à la main</td>
+            <td class="etat propose">proposé</td>
+          </tr>
+          <tr data-types="ChoiceList">
+            <th scope="row">Cases plafonnées</th>
+            <td><span class="jeton">ChoiceList</span></td>
+            <td>compteur « 3/5 » et blocage</td>
+            <td>une consigne « au plus cinq » que rien ne fait respecter</td>
+            <td class="etat propose">proposé</td>
+          </tr>
+          <tr data-types="Ref">
+            <th scope="row">Objet désigné sur la carte</th>
+            <td><span class="jeton">Ref:Table</span></td>
+            <td><span class="jeton geste">objet.carte</span> <span class="jeton geste">le plus proche</span></td>
+            <td>chercher un ouvrage parmi deux mille dans une liste déroulante</td>
+            <td class="etat ailleurs">Atlas sait désigner ; le lien au champ reste à faire</td>
+          </tr>
+          <tr data-types="Numeric">
+            <th scope="row">Géométrie — un point</th>
+            <td>2 × <span class="jeton">Numeric</span> <code>latitude</code>, <code>longitude</code></td>
+            <td><span class="jeton geste">carte</span> <span class="jeton geste">ma position</span> <span class="jeton geste">centre de l'objet</span></td>
+            <td>une position tapée à la main dans un champ texte</td>
+            <td class="etat ailleurs">hors moteur — Atlas le fait</td>
+          </tr>
+          <tr data-types="Text">
+            <th scope="row">Géométrie — une forme</th>
+            <td><span class="jeton">Text</span> <code>geometry_json</code></td>
+            <td><span class="jeton geste">tracer</span> <span class="jeton geste">forme de l'objet</span></td>
+            <td>un format que les autres outils ne savent pas relire</td>
+            <td class="etat ailleurs">hors moteur — Atlas le fait</td>
+          </tr>
+          <tr data-types="Date">
+            <th scope="row">Intervalle</th>
+            <td>2 × <span class="jeton">Date</span> ou <span class="jeton">DateTime</span></td>
+            <td><span class="jeton geste">aujourd'hui</span></td>
+            <td>deux questions séparées qu'aucune règle ne relie</td>
+            <td class="etat propose">proposé — premier cobaye du gabarit à deux colonnes</td>
+          </tr>
+          <tr data-types="Int">
+            <th scope="row">Durée</th>
+            <td><span class="jeton">Int</span> en secondes</td>
+            <td><span class="jeton geste">chronomètre</span></td>
+            <td>des minutes dans une colonne, des heures dans une autre</td>
+            <td class="etat propose">proposé</td>
+          </tr>
+          <tr data-types="Attachments">
+            <th scope="row">Photo</th>
+            <td><span class="jeton">Attachments</span></td>
+            <td><span class="jeton geste">appareil photo</span></td>
+            <td>photographier ailleurs puis retrouver le fichier</td>
+            <td class="etat existe">livré</td>
+          </tr>
+          <tr data-types="Attachments Int">
+            <th scope="row">Enregistrement vocal</th>
+            <td><span class="jeton">Attachments</span> (+ <span class="jeton">Int</span> durée)</td>
+            <td><span class="jeton geste">micro</span></td>
+            <td>écrire sous la pluie ce qu'on peut dire</td>
+            <td class="etat propose">proposé — aucun gabarit nouveau, premier geste à livrer</td>
+          </tr>
+          <tr data-types="Ref Text">
+            <th scope="row">Étiquette scannée</th>
+            <td><span class="jeton">Ref:Table</span> ou <span class="jeton">Text</span></td>
+            <td><span class="jeton geste">code</span></td>
+            <td>recopier un numéro de série à la main</td>
+            <td class="etat propose">candidat</td>
+          </tr>
+          <tr data-types="Attachments Text">
+            <th scope="row">Signature, croquis</th>
+            <td><span class="jeton">Attachments</span></td>
+            <td><span class="jeton geste">canevas</span></td>
+            <td>imprimer pour faire signer</td>
+            <td class="etat propose">candidat — même contrat qu'une géométrie, autre canevas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chapeau">Les gestes ne sont pas des types : ce sont des boutons attachés à un champ, que l'hôte fournit. Le même formulaire montre « ma position » dans l'application et ne la montre pas dans un widget, sans qu'aucune condition ne l'écrive.</p>
+  </section>
+
+  <section>
+    <h2>Les gestes, et ce que chaque hôte peut réellement</h2>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Geste</th>
+            <th scope="col">Widget Grist (iframe)</th>
+            <th scope="col">Application Atlas</th>
+            <th scope="col">Enquête autonome</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Photo par sélecteur, avec prise de vue</th>
+            <td><span class="oui">oui</span><span class="source">livré, bouton « Prendre une photo »</span></td>
+            <td><span class="oui">oui</span><span class="source">natif</span></td>
+            <td><span class="oui">oui</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Audio par sélecteur</th>
+            <td><span class="doute">à mesurer</span><span class="source">même mécanique que la photo</span></td>
+            <td><span class="oui">oui</span><span class="source">micro déclaré par l'application</span></td>
+            <td><span class="doute">à mesurer</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Caméra ou micro en direct</th>
+            <td><span class="non">non</span><span class="source">l'iframe n'a pas l'autorisation</span></td>
+            <td><span class="oui">oui</span></td>
+            <td><span class="oui">oui</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Position de l'appareil</th>
+            <td><span class="non">non</span><span class="source">mesuré par Atlas : le bouton disparaît</span></td>
+            <td><span class="oui">oui</span><span class="source">position déclarée</span></td>
+            <td><span class="oui">oui</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Carte : poser, tracer, désigner</th>
+            <td><span class="doute">par l'hôte</span><span class="source">Atlas en widget sait le faire</span></td>
+            <td><span class="oui">oui</span><span class="source">outils de tracé d'Atlas</span></td>
+            <td><span class="non">non</span><span class="source">sauf éditeur minimal embarqué</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Envoi du fichier</th>
+            <td><span class="oui">oui</span><span class="source">avec l'en-tête <code>X-Requested-With</code></span></td>
+            <td><span class="oui">oui</span><span class="source">client natif, multipart construit à la main</span></td>
+            <td><span class="doute">selon l'origine</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chapeau"><strong>Deux leçons déjà payées.</strong> La capture par fichier est le socle : elle ouvre l'appareil photo ou le magnétophone du téléphone et retombe sur un sélecteur partout ailleurs, là où le flux en direct échoue sans bruit dans une iframe. Et on n'interroge pas les autorisations au chargement : on tente au moment du geste, et on nomme le refus.</p>
+  </section>
+
+  <section>
+    <h2>Les tables liées, et ce que Grist accepte</h2>
+    <p class="chapeau">« Ajouter une ligne rattachée » est le motif derrière la répétition d'enquête, le relevé daté, la ligne de bordereau et la géométrie par ligne. Quatre faits mesurés dans un document réel en fixent les règles.</p>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Ce que Grist fait</th>
+            <th scope="col">Mesure</th>
+            <th scope="col">Ce qu'on en tire</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Un lot d'actions est atomique</th>
+            <td>la seconde action échoue, la première est annulée</td>
+            <td>la table et sa colonne inverse partent dans le même envoi</td>
+          </tr>
+          <tr>
+            <th scope="row">Une ligne créée dans un lot n'y est pas désignable</th>
+            <td>son identifiant n'est rendu qu'au retour</td>
+            <td>le parent s'écrit avant ses enfants, en deux envois — jamais l'inverse, qui ferait des orphelins</td>
+          </tr>
+          <tr>
+            <th scope="row">Écrire groupé coûte bien moins cher</th>
+            <td><strong>105 ms</strong> pour cinq lignes d'un coup, <strong>535 ms</strong> une par une</td>
+            <td>une seule action <code>BulkAddRecord</code> par saisie</td>
+          </tr>
+          <tr>
+            <th scope="row">La colonne inverse garde l'intégrité</th>
+            <td>sans elle, un rattachement vers la ligne 999 est <span class="alerte">accepté</span> ; avec elle, <span class="oui">refusé</span></td>
+            <td>on la crée systématiquement : le parent liste ses enfants sans formule, et un lien mort ne passe plus</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chapeau">Un rattachement vide (<code>0</code>) reste accepté. C'est donc au formulaire de refuser : le lien est un fait du contexte — l'objet ouvert, la ligne du curseur — et jamais une question posée à la personne.</p>
+  </section>
+
+  <section>
+    <h2>Les trois règles</h2>
+    <div class="regles">
+      <div class="regle">
+        <span class="num">01</span>
+        <h3>Rien d'illisible sans le formulaire</h3>
+        <p>Si Grist sait porter la donnée nativement, on l'y met. Un intervalle en deux colonnes de dates se trie, se filtre et se calcule ; le même en JSON ne sert plus à rien dès qu'on ferme le widget.</p>
+      </div>
+      <div class="regle">
+        <span class="num">02</span>
+        <h3>Un dérivé se mérite</h3>
+        <p>Il est admis s'il supprime un câblage à la main déjà vu deux fois, ou s'il empêche une erreur de donnée constatée. Sinon c'est une option de contrôle, pas un type.</p>
+      </div>
+      <div class="regle">
+        <span class="num">03</span>
+        <h3>Le moteur ne possède pas la surface</h3>
+        <p>Il ne contient ni carte, ni caméra, ni éditeur. Il demande une valeur, l'hôte la produit. Un geste que l'hôte ne sait pas faire ne s'affiche pas, et un type qu'un lecteur ignore se dégrade en colonnes normales.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ce qui reste à trancher</h2>
+    <ul class="liste">
+      <li><strong>Le hors-ligne.</strong> Le moteur résout les pièces jointes <em>avant</em> d'écrire la ligne. Sans réseau, soit l'hôte tient une file et remplace la pièce jointe plus tard, soit la saisie attend. À décider avant d'écrire du code.</li>
+      <li><strong>Les conditions voient quoi ?</strong> Les colonnes du gabarit (<code>Debut</code>, <code>Fin</code>) ou le dérivé lui-même.</li>
+      <li><strong>Qui nomme les colonnes d'un gabarit ?</strong> Un nom dérivé automatiquement est plus simple ; sur une table existante, il faut pouvoir pointer deux colonnes déjà nommées autrement.</li>
+      <li><strong>Le consentement</strong>, pour la voix et la position : une enquête qui enregistre ne se publie pas sans le dire.</li>
+      <li><strong>Jusqu'où aller face aux formulaires natifs de Grist</strong>, que le moteur sait désormais relire.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Les valeurs vides, l'ordre des listes et le refus de la position en widget ont été mesurés dans un Grist réel, pas déduits. Le reste s'appuie sur le moteur <code>grist_forms</code>, sur l'enquête « Espaces publics du 4ᵉ » et sur ce qu'Atlas met en œuvre.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var lignes = Array.prototype.slice.call(document.querySelectorAll('#corps-derives tr'));
+    var boutons = Array.prototype.slice.call(document.querySelectorAll('[data-filtre]'));
+    var actif = null;
+
+    function appliquer() {
+      lignes.forEach(function (tr) {
+        var types = (tr.getAttribute('data-types') || '').split(' ');
+        var vise = !actif || types.indexOf(actif) !== -1;
+        tr.classList.toggle('eteint', !vise);
+        tr.classList.toggle('vive', !!actif && vise);
+      });
+      boutons.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-filtre') === actif));
+      });
+    }
+
+    boutons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = b.getAttribute('data-filtre');
+        actif = (actif === t) ? null : t;
+        appliquer();
+      });
+    });
+    document.getElementById('raz').addEventListener('click', function () { actif = null; appliquer(); });
+  }());
+</script>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banc — tracer un point, un trajet, un contour</title>
+<link rel="stylesheet" href="../../shared/dsfr-like.css">
+<style>
+  body { margin: 0; padding: 16px; }
+  .banc__note { max-width: 38rem; margin: 0 auto 1rem; color: #555; font-size: 14px; }
+  .banc__lu { max-width: 38rem; margin: 1rem auto; background: #f0f0f0; padding: 8px; border-radius: 4px;
+    font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<p class="banc__note">
+  Les trois saisies géométriques, hors Grist, pour éprouver le geste : un point
+  au clic, un trajet et un contour par terra-draw. Ce qui est écrit dans les
+  colonnes s’affiche en bas.
+</p>
+<div id="form"></div>
+<pre class="banc__lu" id="lu">(rien)</pre>
+
+<script src="../../shared/carte-geometrie.js"></script>
+<script src="../../runtime/engine.js"></script>
+<script>
+  // Le banc garde la main sur les cartes montees : pour eprouver un trace, il
+  // faut deplacer la carte entre deux clics — un outil clique au centre.
+  window.__cartes = {};
+  (function (vrai) {
+    FormCarte.monter = function (hote, opts) {
+      return vrai.call(FormCarte, hote, opts).then(function (vue) {
+        window.__cartes[hote.getAttribute('data-carte-de')] = vue;
+        return vue;
+      });
+    };
+  }(FormCarte.monter));
+
+  var DEF = {
+    manifest_version: '1.0.0', id: 'banc-traces', title: 'Tracés',
+    tableId: 'T', composeMode: 'bind', choices: {},
+    sections: [{ id: 's1', label: 'Les trois tracés', fields: [
+      { colId: 'Point', label: 'Un point', type: 'Text', widget: 'geo', kind: 'geometrie',
+        options: { geometrie: 'Point', carte: { centre: [5.3985, 43.3035], zoom: 14, fond: 'plan' } } },
+      { colId: 'Trajet', label: 'Un trajet', type: 'Text', widget: 'geo', kind: 'geometrie',
+        options: { geometrie: 'LineString', carte: { centre: [5.3985, 43.3035], zoom: 14, fond: 'plan' } } },
+      { colId: 'Contour', label: 'Un contour', type: 'Text', widget: 'geo', kind: 'geometrie',
+        options: { geometrie: 'Polygon', carte: { centre: [5.3985, 43.3035], zoom: 14, fond: 'plan' } } }
+    ] }]
+  };
+
+  var vue = FormEngine.mount(document.getElementById('form'), DEF, {
+    submit: function (data) {
+      document.getElementById('lu').textContent = JSON.stringify(data, null, 2);
+      return Promise.resolve();
+    },
+    skipProbe: true
+  });
+
+  // Ce que les colonnes portent, à tout instant : le banc se lit sans envoyer.
+  setInterval(function () {
+    var vals = {};
+    ['Point', 'Trajet', 'Contour'].forEach(function (c) {
+      var el = document.querySelector('[name="' + c + '"]');
+      vals[c] = el ? el.value : null;
+    });
+    var lu = document.getElementById('lu');
+    var txt = JSON.stringify(vals, null, 2);
+    if (lu.textContent !== txt) lu.textContent = txt;
+  }, 400);
+
+  // Pour piloter le banc depuis un outil : poser un clic sur une carte.
+  window.bancClic = function (colId, dx, dy, double) {
+    var hote = document.querySelector('.fr-carte[data-carte-de="' + colId + '"]');
+    var cv = hote && hote.querySelector('canvas');
+    if (!cv) return 'pas de carte';
+    var r = cv.getBoundingClientRect();
+    var x = r.left + r.width / 2 + (dx || 0);
+    var y = r.top + r.height / 2 + (dy || 0);
+    var commun = { bubbles: true, cancelable: true, clientX: x, clientY: y,
+      pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: 1 };
+    cv.dispatchEvent(new PointerEvent('pointerdown', commun));
+    cv.dispatchEvent(new MouseEvent('mousedown', commun));
+    cv.dispatchEvent(new PointerEvent('pointermove', commun));
+    cv.dispatchEvent(new MouseEvent('mousemove', commun));
+    cv.dispatchEvent(new PointerEvent('pointerup', Object.assign({}, commun, { buttons: 0 })));
+    cv.dispatchEvent(new MouseEvent('mouseup', Object.assign({}, commun, { buttons: 0 })));
+    cv.dispatchEvent(new MouseEvent('click', Object.assign({}, commun, { buttons: 0 })));
+    if (double) cv.dispatchEvent(new MouseEvent('dblclick', Object.assign({}, commun, { buttons: 0 })));
+    return 'clic en ' + Math.round(x) + ',' + Math.round(y);
+  };
+</script>
+</body>
+</html>

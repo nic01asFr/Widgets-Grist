@@ -1,0 +1,374 @@
+<title>Saisie d'un intervalle</title>
+<style>
+  /* Une maquette, donc deux langages à l'écran : la page qui commente (sobre,
+     IBM Plex, comme la matrice des types) et les écrans maquettés, qui portent
+     le bleu des formulaires et les contrôles réels. Colonne unique. */
+  :root {
+    --fond: #f7f8f6;
+    --surface: #ffffff;
+    --encre: #16201c;
+    --encre-douce: #5a6660;
+    --trait: #dde3df;
+    --stock: #197a55;
+    --stock-fond: #e8f4ee;
+    --saisie: #1b1b8f;
+    --saisie-douce: #5a5ad6;
+    --saisie-fond: #e9e9f7;
+    --alerte: #b03a1a;
+    --alerte-fond: #fcefe9;
+    --ecran: #ffffff;
+    --ecran-trait: #cbd2cd;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+      --trait: #2e3730; --stock: #5cc795; --stock-fond: #163024;
+      --saisie: #9aa2ff; --saisie-douce: #8f97f0; --saisie-fond: #1d2040;
+      --alerte: #ff9470; --alerte-fond: #33180f;
+      --ecran: #20261f; --ecran-trait: #39423a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+    --trait: #2e3730; --stock: #5cc795; --stock-fond: #163024;
+    --saisie: #9aa2ff; --saisie-douce: #8f97f0; --saisie-fond: #1d2040;
+    --alerte: #ff9470; --alerte-fond: #33180f;
+    --ecran: #20261f; --ecran-trait: #39423a;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--fond); color: var(--encre);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.55;
+  }
+  .page {
+    max-width: 1000px; margin: 0 auto;
+    padding-inline: 16px; padding-block: 40px 72px;
+    display: flex; flex-direction: column; gap: 46px;
+  }
+  h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(1.7rem, 4.4vw, 2.4rem); line-height: 1.12; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 0.95rem; }
+  p { margin: 0; max-width: 70ch; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 0.86em; }
+  .chapeau { color: var(--encre-douce); }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .etape { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--saisie); }
+
+  /* ——— les écrans maquettés ——— */
+  .ecran {
+    background: var(--ecran); border: 1px solid var(--ecran-trait); border-radius: 10px;
+    padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  }
+  .ecran .barre-titre {
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--encre-douce); border-bottom: 1px solid var(--ecran-trait); padding-bottom: 8px;
+  }
+  .champ { display: flex; flex-direction: column; gap: 5px; }
+  .champ > label, .legende { font-weight: 600; font-size: 0.92rem; }
+  .obligatoire { color: var(--alerte); }
+  .aide { font-size: 0.82rem; color: var(--encre-douce); }
+  input[type="date"], input[type="text"], select {
+    font: inherit; font-size: 0.92rem; padding: 7px 10px;
+    border: 1px solid var(--ecran-trait); border-bottom-width: 2px; border-radius: 5px 5px 0 0;
+    background: var(--surface); color: var(--encre); min-width: 0; width: 100%;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--saisie); outline-offset: 2px; }
+  .paire { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+  .paire .lien { align-self: center; color: var(--encre-douce); font-size: 0.8rem; }
+  .geste {
+    font: inherit; font-size: 0.78rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--saisie-douce); background: var(--saisie-fond); color: var(--saisie);
+  }
+  .gestes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bouton {
+    font: inherit; font-weight: 600; padding: 9px 18px; border-radius: 5px; cursor: pointer;
+    background: var(--saisie); color: #fff; border: 1px solid var(--saisie);
+  }
+  .erreur { color: var(--alerte); font-size: 0.84rem; }
+  .en-erreur input[type="date"] { border-color: var(--alerte); }
+
+  .commutateur { display: flex; gap: 6px; flex-wrap: wrap; }
+  .commutateur button {
+    font: inherit; font-size: 0.82rem; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--trait); background: var(--surface); color: var(--encre-douce);
+  }
+  .commutateur button[aria-pressed="true"] { background: var(--saisie); border-color: var(--saisie); color: #fff; }
+
+  /* ——— la table Grist maquettée ——— */
+  .grille { overflow-x: auto; border: 1px solid var(--ecran-trait); border-radius: 8px; background: var(--ecran); }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--ecran-trait); font-size: 0.85rem; white-space: nowrap; }
+  thead th { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--encre-douce); font-weight: 600; }
+  thead th .type { display: block; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--stock); font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.calculee { color: var(--stock); }
+
+  pre {
+    margin: 0; overflow-x: auto; background: var(--surface); border: 1px solid var(--trait);
+    border-radius: 8px; padding: 14px 16px; font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; line-height: 1.6;
+  }
+  pre .cle { color: var(--saisie); }
+  pre .txt { color: var(--stock); }
+  pre .note { color: var(--encre-douce); }
+
+  .duo { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fiche {
+    background: var(--surface); border: 1px solid var(--trait); border-left: 3px solid var(--saisie);
+    border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .fiche p { font-size: 0.88rem; color: var(--encre-douce); }
+  ul.liste { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 6px; }
+  ul.liste li { font-size: 0.9rem; }
+  .jeton {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; padding: 2px 7px; border-radius: 5px;
+    background: var(--stock-fond); color: var(--stock); white-space: nowrap; display: inline-block;
+  }
+  footer { border-top: 1px solid var(--trait); padding-top: 18px; color: var(--encre-douce); font-size: 0.84rem; }
+
+  @media (max-width: 760px) {
+    .duo { grid-template-columns: 1fr; }
+    .paire { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<div class="page">
+
+  <header>
+    <h1>Saisie d'un intervalle</h1>
+    <p class="chapeau">Le premier type dérivé, vu de ses trois côtés : ce qu'on compose, ce que la personne remplit, ce que Grist range. Une seule question à l'écran, deux colonnes natives en base.</p>
+  </header>
+
+  <section>
+    <span class="etape">1 — Dans le compositeur</span>
+    <h2>Une question, un type, deux colonnes annoncées</h2>
+    <p class="chapeau">Le type dit son gabarit. Les noms de colonnes se dérivent du libellé, et restent repris à la main quand la table existe déjà.</p>
+    <div class="ecran">
+      <div class="barre-titre">Question 3</div>
+      <div class="champ">
+        <label for="m-libelle">Libellé</label>
+        <input id="m-libelle" type="text" value="Période du séjour">
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="m-type">Type</label>
+          <select id="m-type">
+            <option>Texte</option>
+            <option>Date</option>
+            <option selected>Intervalle de dates</option>
+            <option>Échelle</option>
+            <option>Un choix dans une liste</option>
+          </select>
+        </div>
+        <div class="champ">
+          <label for="m-exige">Réponse</label>
+          <select id="m-exige"><option selected>Obligatoire</option><option>Facultative</option></select>
+        </div>
+      </div>
+      <div class="champ">
+        <span class="legende">Colonnes Grist</span>
+        <p class="aide">Deux colonnes <span class="jeton">Date</span>, créées à l'enregistrement. Elles se trient, se filtrent et se calculent comme n'importe quelle date.</p>
+        <div class="paire">
+          <div class="champ">
+            <label class="aide" for="m-debut">Début</label>
+            <input id="m-debut" type="text" value="Periode_du_sejour_debut">
+          </div>
+          <div class="champ">
+            <label class="aide" for="m-fin">Fin</label>
+            <input id="m-fin" type="text" value="Periode_du_sejour_fin">
+          </div>
+        </div>
+        <p class="aide">Sur une table qui existe déjà, ces deux champs proposent ses colonnes de date au lieu d'en créer.</p>
+      </div>
+      <div class="champ">
+        <span class="legende">Aide à la saisie</span>
+        <div class="gestes">
+          <button class="geste" type="button" aria-pressed="true">Aujourd'hui</button>
+          <button class="geste" type="button" aria-pressed="false">Dernière saisie</button>
+        </div>
+        <p class="aide">Les gestes que l'hôte ne sait pas faire ne s'affichent pas à la personne.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="etape">2 — Dans le formulaire</span>
+    <h2>Une seule question posée</h2>
+    <div class="commutateur" role="group" aria-label="État du contrôle">
+      <button type="button" data-etat="vide" aria-pressed="true">Vide</button>
+      <button type="button" data-etat="rempli" aria-pressed="false">Rempli</button>
+      <button type="button" data-etat="erreur" aria-pressed="false">Fin avant début</button>
+    </div>
+    <div class="ecran" id="ecran-saisie">
+      <div class="barre-titre">Demande d'hébergement — étape 2 sur 3</div>
+      <div class="champ" id="bloc-intervalle">
+        <span class="legende">Période du séjour <span class="obligatoire" aria-hidden="true">*</span></span>
+        <div class="paire">
+          <div class="champ">
+            <label class="aide" for="s-debut">Du</label>
+            <input id="s-debut" type="date">
+          </div>
+          <div class="champ">
+            <label class="aide" for="s-fin">Au</label>
+            <input id="s-fin" type="date">
+          </div>
+        </div>
+        <p class="erreur" id="msg-erreur" hidden>La fin doit venir après le début.</p>
+        <p class="aide" id="msg-duree" hidden>5 nuits</p>
+        <div class="gestes"><button class="geste" type="button" id="geste-aujourdhui">Aujourd'hui</button></div>
+      </div>
+      <div><button class="bouton" type="button">Suivant</button></div>
+    </div>
+    <div class="duo">
+      <div class="fiche">
+        <h3>Ce que le contrôle garantit</h3>
+        <p>Une seule question, un seul libellé, une seule règle d'obligation. L'ordre des deux bornes est tenu à la saisie, pas découvert au dépouillement.</p>
+      </div>
+      <div class="fiche">
+        <h3>Ce qu'il ne fait pas</h3>
+        <p>Il ne calcule rien qu'il faudrait stocker. La durée se lit, elle ne s'écrit pas : Grist la calcule mieux, et sans risque de désaccord.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="etape">3 — Dans Grist</span>
+    <h2>Deux colonnes ordinaires</h2>
+    <p class="chapeau">C'est la première règle à l'œuvre : ce que le formulaire range doit rester lisible sans lui. La colonne calculée n'est pas de nous — elle montre ce que les deux dates rendent possible.</p>
+    <div class="grille">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom <span class="type">Text</span></th>
+            <th>Periode_du_sejour_debut <span class="type">Date</span></th>
+            <th>Periode_du_sejour_fin <span class="type">Date</span></th>
+            <th>Nuits <span class="type">formule</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Dupont</td><td>2026-10-12</td><td>2026-10-17</td><td class="calculee">5</td></tr>
+          <tr><td>Martin</td><td>2026-10-14</td><td>2026-10-15</td><td class="calculee">1</td></tr>
+          <tr><td>Nguyen</td><td>2026-11-02</td><td>2026-11-09</td><td class="calculee">7</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <span class="etape">4 — Le contrat</span>
+    <h2>Ce que la définition porte</h2>
+    <pre><span class="note">// la question, dans le FormDef</span>
+{
+  <span class="cle">"colId"</span>: <span class="txt">"Periode_du_sejour"</span>,        <span class="note">// le nom de la question, pas d'une colonne</span>
+  <span class="cle">"label"</span>: <span class="txt">"Période du séjour"</span>,
+  <span class="cle">"kind"</span>: <span class="txt">"intervalle"</span>,                <span class="note">// le type dérivé</span>
+  <span class="cle">"type"</span>: <span class="txt">"Date"</span>,                      <span class="note">// ce que Grist range</span>
+  <span class="cle">"widget"</span>: <span class="txt">"intervalle"</span>,
+  <span class="cle">"required"</span>: true,
+  <span class="cle">"options"</span>: {
+    <span class="cle">"colonnes"</span>: { <span class="cle">"debut"</span>: <span class="txt">"Periode_du_sejour_debut"</span>, <span class="cle">"fin"</span>: <span class="txt">"Periode_du_sejour_fin"</span> },
+    <span class="cle">"saisies"</span>: [<span class="txt">"aujourdhui"</span>]
+  }
+}</pre>
+    <ul class="liste">
+      <li><strong>Les conditions voient les colonnes</strong>, pas la question : une règle porte sur <code>Periode_du_sejour_debut</code>. C'est ce que Grist détient, et ça évite d'inventer un langage de chemins.</li>
+      <li><strong>Les valeurs aussi</strong> : le moteur garde les deux bornes séparément, le contrôle lit et écrit les deux.</li>
+      <li><strong>Un lecteur qui ignore <code>kind</code></strong> voit un champ date et deux colonnes nommées. Il rend une question incomplète, jamais une erreur — c'est la troisième règle.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="etape">5 — Si on l'ignore</span>
+    <h2>La dégradation, telle quelle</h2>
+    <p class="chapeau">Ce que donne la même définition chez un hôte qui ne connaît pas le type — la copie figée du moteur embarquée dans une application, par exemple.</p>
+    <div class="ecran">
+      <div class="barre-titre">Lecteur sans le type « intervalle »</div>
+      <div class="champ">
+        <label class="aide" for="d-debut">Periode du sejour debut</label>
+        <input id="d-debut" type="date" value="2026-10-12">
+      </div>
+      <div class="champ">
+        <label class="aide" for="d-fin">Periode du sejour fin</label>
+        <input id="d-fin" type="date" value="2026-10-17">
+      </div>
+      <p class="aide">Deux questions au lieu d'une, l'ordre non vérifié — mais les mêmes colonnes, et une saisie qui aboutit.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ce que cette maquette tranche, et ce qu'elle laisse ouvert</h2>
+    <div class="duo">
+      <div class="fiche">
+        <h3>Tranché</h3>
+        <p>Les colonnes sont nommées d'après le libellé, et reprenables sur une table existante. Les conditions portent sur les colonnes. Une répétition se rendra intégrée ou en onglet, selon la disposition, avec un seul contrat.</p>
+      </div>
+      <div class="fiche">
+        <h3>Ouvert</h3>
+        <p>Comment un intervalle se projette en Survey Manifest — deux questions de date, ou un type à ajouter. Et s'il faut permettre un intervalle borné d'un seul côté, qui est une autre question que celle-ci.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Maquette, pas implémentation : les écrans ci-dessus sont dessinés pour décider, les contrôles n'écrivent nulle part. Les types et le vocabulaire viennent de la matrice des types et des saisies.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var debut = document.getElementById('s-debut');
+    var fin = document.getElementById('s-fin');
+    var bloc = document.getElementById('bloc-intervalle');
+    var erreur = document.getElementById('msg-erreur');
+    var duree = document.getElementById('msg-duree');
+    var boutons = Array.prototype.slice.call(document.querySelectorAll('[data-etat]'));
+
+    var etats = {
+      vide: { debut: '', fin: '' },
+      rempli: { debut: '2026-10-12', fin: '2026-10-17' },
+      erreur: { debut: '2026-10-17', fin: '2026-10-12' }
+    };
+
+    function nuits() {
+      if (!debut.value || !fin.value) return null;
+      var d = new Date(debut.value), f = new Date(fin.value);
+      if (isNaN(d) || isNaN(f)) return null;
+      return Math.round((f - d) / 86400000);
+    }
+
+    function rafraichir() {
+      var n = nuits();
+      var mauvais = n !== null && n < 0;
+      bloc.classList.toggle('en-erreur', mauvais);
+      erreur.hidden = !mauvais;
+      duree.hidden = !(n !== null && n >= 0);
+      if (n !== null && n >= 0) duree.textContent = n + (n > 1 ? ' nuits' : ' nuit');
+    }
+
+    function poser(etat) {
+      debut.value = etats[etat].debut;
+      fin.value = etats[etat].fin;
+      boutons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-etat') === etat)); });
+      rafraichir();
+    }
+
+    boutons.forEach(function (b) {
+      b.addEventListener('click', function () { poser(b.getAttribute('data-etat')); });
+    });
+    debut.addEventListener('change', rafraichir);
+    fin.addEventListener('change', rafraichir);
+    document.getElementById('geste-aujourdhui').addEventListener('click', function () {
+      var d = new Date();
+      var p = function (n) { return (n < 10 ? '0' : '') + n; };
+      debut.value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+      rafraichir();
+    });
+    rafraichir();
+  }());
+</script>

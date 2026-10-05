@@ -1,5 +1,5 @@
 /*
- * session-context.js — Probe standard Grist (widget Chartreux + audience table).
+ * session-context.js — Reconnaître le contexte : widget Grist, personne connectée, audience.
  * Expose window.SessionContext / module.exports.
  */
 (function (root, factory) {
@@ -21,7 +21,7 @@
     };
   }
 
-  /** Heuristique Chartreux : API plugin dans une iframe widget. */
+  /** On est dans un widget Grist si l’API plugin répond dans une iframe. */
   function detectInGristWidget() {
     try {
       if (typeof window === 'undefined') return false;

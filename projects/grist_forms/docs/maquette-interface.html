@@ -1,0 +1,416 @@
+<title>Composer et répondre</title>
+<style>
+  /* Deux publics, deux disciplines : la page commente en IBM Plex sobre, les
+     écrans maquettés portent leur propre langage — bleu République, cibles
+     larges côté public, trois zones côté composition. */
+  :root {
+    --fond: #f7f8f6;
+    --surface: #ffffff;
+    --encre: #16201c;
+    --encre-douce: #5a6660;
+    --trait: #dde3df;
+    --stock: #197a55;
+    --saisie: #1b1b8f;
+    --saisie-fond: #e9e9f7;
+    --alerte: #b03a1a;
+    --alerte-fond: #fcefe9;
+    --ecran: #ffffff;
+    --ecran-trait: #cbd2cd;
+    --ecran-encre: #161616;
+    --ecran-douce: #666666;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+      --trait: #2e3730; --stock: #5cc795; --saisie: #9aa2ff; --saisie-fond: #1d2040;
+      --alerte: #ff9470; --alerte-fond: #33180f;
+      --ecran: #20261f; --ecran-trait: #39423a; --ecran-encre: #edf1ec; --ecran-douce: #9aa79f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fond: #11150f; --surface: #1a1f1b; --encre: #edf1ec; --encre-douce: #9aa79f;
+    --trait: #2e3730; --stock: #5cc795; --saisie: #9aa2ff; --saisie-fond: #1d2040;
+    --alerte: #ff9470; --alerte-fond: #33180f;
+    --ecran: #20261f; --ecran-trait: #39423a; --ecran-encre: #edf1ec; --ecran-douce: #9aa79f;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--fond); color: var(--encre);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.55;
+  }
+  .page { max-width: 1140px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 72px;
+          display: flex; flex-direction: column; gap: 46px; }
+  h1, h2, h3, h4 { margin: 0; font-weight: 600; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(1.7rem, 4.4vw, 2.4rem); line-height: 1.12; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 0.95rem; }
+  p { margin: 0; max-width: 72ch; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 0.86em; }
+  .chapeau { color: var(--encre-douce); }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .etape { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--saisie); }
+
+  .mesures { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mesure { background: var(--surface); border: 1px solid var(--trait); border-left: 3px solid var(--alerte);
+            border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .mesure strong { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .mesure span { font-size: 0.84rem; color: var(--encre-douce); }
+
+  .avant-apres { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .volet { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .volet > h3 { display: flex; align-items: baseline; gap: 8px; }
+  .etiquette { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px;
+               border-radius: 999px; }
+  .etiquette.avant { background: var(--alerte-fond); color: var(--alerte); }
+  .etiquette.apres { background: var(--saisie-fond); color: var(--saisie); }
+
+  /* ——— écrans maquettés ——— */
+  .ecran { background: var(--ecran); color: var(--ecran-encre); border: 1px solid var(--ecran-trait);
+           border-radius: 10px; padding: 16px; min-width: 0; }
+  .ecran.etroit { max-width: 24rem; margin-inline: auto; }
+
+  .progres { height: 6px; background: #e5e5f0; border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+  .progres span { display: block; height: 100%; width: 38%; background: var(--saisie); }
+  .progres-info { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--ecran-douce); margin-bottom: 14px; }
+
+  /* avant : dense, petites cibles, libellés de base de données */
+  .av-question { font-size: 0.86rem; font-weight: 600; margin-bottom: 2px; }
+  .av-ligne { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 0.8rem; }
+  .av-ligne .intitule { flex: 1 1 11rem; min-width: 0; }
+  .av-crans { display: flex; gap: 5px; align-items: center; font-size: 0.75rem; }
+  .av-crans label { display: inline-flex; align-items: center; gap: 2px; }
+  .av-ancres { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--ecran-douce); margin-top: 2px; }
+
+  /* après : une question posée, des cibles qu'on touche */
+  .ap-question { font-size: 1.12rem; font-weight: 600; line-height: 1.35; margin-bottom: 4px; }
+  .ap-consigne { font-size: 0.95rem; color: var(--ecran-douce); margin-bottom: 14px; }
+  .ap-carte { border: 1px solid var(--ecran-trait); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .ap-intitule { font-size: 1rem; font-weight: 500; margin-bottom: 10px; }
+  .ap-crans { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ap-cran { flex: 1 1 2.6rem; min-width: 2.75rem; min-height: 2.75rem; display: flex; align-items: center;
+             justify-content: center; border: 1px solid var(--ecran-trait); border-radius: 8px;
+             font-size: 1rem; cursor: pointer; background: var(--ecran); color: inherit; }
+  .ap-cran:hover { border-color: var(--saisie); }
+  .ap-cran[aria-pressed="true"] { background: var(--saisie); border-color: var(--saisie); color: #fff; }
+  .ap-nsp { margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; min-height: 2.75rem;
+            font-size: 0.95rem; color: var(--ecran-douce); background: none; border: none; cursor: pointer; }
+  .ap-nsp::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--ecran-trait); border-radius: 50%; }
+  .ap-nsp[aria-pressed="true"]::before { border-color: var(--saisie); background: radial-gradient(circle, var(--saisie) 45%, transparent 47%); }
+  .ap-ancres { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--ecran-douce); margin-top: 8px; }
+  .barre-action { display: flex; align-items: center; gap: 12px; justify-content: space-between;
+                  border-top: 1px solid var(--ecran-trait); margin-top: 14px; padding-top: 12px; }
+  .bouton { font: inherit; font-size: 1rem; font-weight: 600; padding: 12px 22px; border-radius: 6px;
+            background: var(--saisie); color: #fff; border: 1px solid var(--saisie); cursor: pointer; min-height: 2.75rem; }
+  .bouton.secondaire { background: transparent; color: var(--saisie); }
+
+  .commutateur { display: flex; gap: 6px; flex-wrap: wrap; }
+  .commutateur button { font: inherit; font-size: 0.82rem; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+                        border: 1px solid var(--trait); background: var(--surface); color: var(--encre-douce); }
+  .commutateur button[aria-pressed="true"] { background: var(--saisie); border-color: var(--saisie); color: #fff; }
+
+  /* ——— composition en trois zones ——— */
+  .atelier { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 17rem; gap: 1px;
+             background: var(--ecran-trait); border: 1px solid var(--ecran-trait); border-radius: 10px; overflow: hidden; }
+  .zone { background: var(--ecran); color: var(--ecran-encre); padding: 12px 14px; min-width: 0; }
+  .zone h4 { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ecran-douce); margin-bottom: 8px; }
+  .arbre { display: flex; flex-direction: column; gap: 2px; font-size: 0.86rem; }
+  .arbre .etape-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 7px; border-radius: 5px; font-weight: 500; }
+  .arbre .etape-ligne .compte { color: var(--ecran-douce); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+  .arbre .question-ligne { padding: 4px 7px 4px 20px; border-radius: 5px; color: var(--ecran-douce); font-size: 0.82rem;
+                           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .arbre .question-ligne.active { background: var(--saisie); color: #fff; }
+  .arbre .etape-ligne.ouverte { background: var(--saisie-fond); color: var(--saisie); }
+  .palette { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .palette button { font: inherit; font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+                    border: 1px dashed var(--ecran-trait); background: transparent; color: var(--ecran-douce); }
+  .palette button:hover { border-style: solid; border-color: var(--saisie); color: var(--saisie); }
+  .champ-edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .champ-edit label { font-size: 0.82rem; font-weight: 600; }
+  .champ-edit input, .champ-edit select {
+    font: inherit; font-size: 0.9rem; padding: 7px 10px; border: 1px solid var(--ecran-trait);
+    border-bottom-width: 2px; border-radius: 5px 5px 0 0; background: var(--surface); color: var(--encre); width: 100%;
+  }
+  .champ-edit .note { font-size: 0.78rem; color: var(--ecran-douce); }
+  .pastille { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 3px 10px;
+              border-radius: 999px; background: var(--saisie-fond); color: var(--saisie); cursor: pointer; border: none; font: inherit; }
+  .duo-champs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .apercu-mini { border: 1px solid var(--ecran-trait); border-radius: 8px; padding: 10px; font-size: 0.82rem; }
+  .apercu-mini .ap-cran { min-height: 2rem; min-width: 2rem; font-size: 0.82rem; flex: 1 1 2rem; }
+  .barre-enreg { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+                 background: var(--ecran); border-top: 1px solid var(--ecran-trait); padding: 10px 14px;
+                 font-size: 0.84rem; color: var(--ecran-douce); }
+
+  .regles { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .regle { background: var(--surface); border: 1px solid var(--trait); border-left: 3px solid var(--saisie);
+           border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .regle p { font-size: 0.88rem; color: var(--encre-douce); }
+  ul.liste { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 6px; }
+  ul.liste li { font-size: 0.9rem; }
+  footer { border-top: 1px solid var(--trait); padding-top: 18px; color: var(--encre-douce); font-size: 0.84rem; }
+
+  @media (max-width: 900px) {
+    .avant-apres, .mesures, .regles { grid-template-columns: 1fr; }
+    .atelier { grid-template-columns: 1fr; }
+    .duo-champs { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<div class="page">
+
+  <header>
+    <h1>Composer et répondre</h1>
+    <p class="chapeau">Deux écrans, deux publics, deux disciplines. Celui qui répond est un passant : tout doit se lire sans effort. Celui qui compose est un agent : il lui faut voir la forme de son questionnaire et travailler une question à la fois.</p>
+  </header>
+
+  <section>
+    <h2>Ce que mesure l’écran d’aujourd’hui</h2>
+    <p class="chapeau">L’enquête du 4ᵉ chargée dans l’écran des questions, mesurée dans le navigateur.</p>
+    <div class="mesures">
+      <div class="mesure"><strong>34 357 px</strong><span>de hauteur, soit 45 écrans de défilement</span></div>
+      <div class="mesure"><strong>709</strong><span>contrôles affichés d’un coup, tous dépliés</span></div>
+      <div class="mesure"><strong>0</strong><span>vue d’ensemble : ni plan, ni repli, ni réordonnancement</span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="etape">1 — côté personne qui répond</span>
+    <h2>La même question, avant et après</h2>
+    <p class="chapeau">Les cinq perceptions des espaces publics, sur un téléphone, au bord d’une rue.</p>
+    <div class="avant-apres">
+      <div class="volet">
+        <h3><span class="etiquette avant">Avant</span> ce que le moteur rend aujourd’hui</h3>
+        <div class="ecran">
+          <p class="av-question">Espaces publics agréables (1–5)</p>
+          <div class="av-ancres"><span>1 · Pas du tout d’accord</span><span>Tout à fait d’accord · 5</span></div>
+          <div class="av-ligne"><span class="intitule">Espaces publics agréables (1–5)</span>
+            <span class="av-crans"><label><input type="radio" name="av1">1</label><label><input type="radio" name="av1">2</label><label><input type="radio" name="av1">3</label><label><input type="radio" name="av1">4</label><label><input type="radio" name="av1">5</label><label><input type="radio" name="av1">Non concerné</label></span>
+          </div>
+          <div class="av-ligne"><span class="intitule">Espaces publics adaptés à mes besoins (1–5)</span>
+            <span class="av-crans"><label><input type="radio" name="av2">1</label><label><input type="radio" name="av2">2</label><label><input type="radio" name="av2">3</label><label><input type="radio" name="av2">4</label><label><input type="radio" name="av2">5</label><label><input type="radio" name="av2">Non concerné</label></span>
+          </div>
+          <div class="av-ligne"><span class="intitule">Espaces publics accessibles PMR/poussettes (1–5)</span>
+            <span class="av-crans"><label><input type="radio" name="av3">1</label><label><input type="radio" name="av3">2</label><label><input type="radio" name="av3">3</label><label><input type="radio" name="av3">4</label><label><input type="radio" name="av3">5</label><label><input type="radio" name="av3">Non concerné</label></span>
+          </div>
+          <p class="av-ancres" style="margin-top:10px">Pas de progression · pas de question posée · libellés de colonnes</p>
+        </div>
+      </div>
+
+      <div class="volet">
+        <h3><span class="etiquette apres">Après</span> ce que je propose</h3>
+        <div class="commutateur" role="group" aria-label="Largeur d’écran">
+          <button type="button" data-largeur="telephone" aria-pressed="true">Téléphone</button>
+          <button type="button" data-largeur="bureau" aria-pressed="false">Bureau</button>
+        </div>
+        <div class="ecran etroit" id="ecran-apres">
+          <div class="progres"><span></span></div>
+          <div class="progres-info"><span>Étape 3 sur 14</span><span>⏱ 2′10″</span></div>
+          <p class="ap-question">Que pensez-vous des espaces publics du quartier ?</p>
+          <p class="ap-consigne">Pour chaque affirmation, dites à quel point vous êtes d’accord.</p>
+
+          <div class="ap-carte">
+            <p class="ap-intitule">Les espaces publics sont agréables</p>
+            <div class="ap-crans">
+              <button type="button" class="ap-cran" aria-pressed="false">1</button>
+              <button type="button" class="ap-cran" aria-pressed="false">2</button>
+              <button type="button" class="ap-cran" aria-pressed="false">3</button>
+              <button type="button" class="ap-cran" aria-pressed="true">4</button>
+              <button type="button" class="ap-cran" aria-pressed="false">5</button>
+            </div>
+            <div class="ap-ancres"><span>Pas du tout d’accord</span><span>Tout à fait d’accord</span></div>
+            <button type="button" class="ap-nsp" aria-pressed="false">Non concerné</button>
+          </div>
+
+          <div class="ap-carte">
+            <p class="ap-intitule">Ils sont adaptés à mes besoins</p>
+            <div class="ap-crans">
+              <button type="button" class="ap-cran" aria-pressed="false">1</button>
+              <button type="button" class="ap-cran" aria-pressed="false">2</button>
+              <button type="button" class="ap-cran" aria-pressed="false">3</button>
+              <button type="button" class="ap-cran" aria-pressed="false">4</button>
+              <button type="button" class="ap-cran" aria-pressed="false">5</button>
+            </div>
+            <div class="ap-ancres"><span>Pas du tout d’accord</span><span>Tout à fait d’accord</span></div>
+            <button type="button" class="ap-nsp" aria-pressed="true">Non concerné</button>
+          </div>
+
+          <div class="barre-action">
+            <button type="button" class="bouton secondaire">Précédent</button>
+            <button type="button" class="bouton">Suivant</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="liste">
+      <li><strong>Une question est posée</strong>, puis déclinée en affirmations. Aujourd’hui le nom de la colonne tient lieu de question : « Espaces publics agréables (1–5) ». Personne ne parle comme ça.</li>
+      <li><strong>Le « (1–5) » disparaît</strong> : l’échelle le montre déjà.</li>
+      <li><strong>Les crans se touchent</strong> — 44 px, c’est la taille d’un doigt. Sur téléphone, la matrice devient des cartes ; sur grand écran, elle reprend sa forme de tableau.</li>
+      <li><strong>On sait où on en est</strong> : progression, numéro d’étape, temps écoulé — et il faut dire qu’une étape peut disparaître selon les réponses, ce qui arrive quatre fois dans cette enquête.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="etape">2 — côté personne qui compose</span>
+    <h2>Trois zones au lieu d’une colonne de 45 écrans</h2>
+    <div class="atelier">
+      <div class="zone">
+        <h4>Structure</h4>
+        <div class="arbre">
+          <div class="etape-ligne"><span>A · Vous et le quartier</span><span class="compte">4</span></div>
+          <div class="etape-ligne"><span>B · Vos déplacements</span><span class="compte">6</span></div>
+          <div class="etape-ligne ouverte"><span>C · Les espaces publics</span><span class="compte">6</span></div>
+          <div class="question-ligne">Les espaces sont agréables</div>
+          <div class="question-ligne active">Ils sont adaptés à mes besoins</div>
+          <div class="question-ligne">Ils sont accessibles</div>
+          <div class="question-ligne">Ils sont bien entretenus</div>
+          <div class="question-ligne">Je m’y sens en sécurité</div>
+          <div class="question-ligne">Sources d’insatisfaction</div>
+          <div class="etape-ligne"><span>D · Vos priorités</span><span class="compte">2</span></div>
+          <div class="etape-ligne"><span>E · Les lieux</span><span class="compte">1</span></div>
+          <div class="etape-ligne"><span>F · Le stationnement</span><span class="compte">8</span></div>
+        </div>
+        <div class="palette">
+          <button type="button">+ Texte</button>
+          <button type="button">+ Choix</button>
+          <button type="button">+ Échelle</button>
+          <button type="button">+ Date</button>
+          <button type="button">+ Photo</button>
+        </div>
+      </div>
+
+      <div class="zone">
+        <h4>La question</h4>
+        <div class="champ-edit">
+          <label for="q-libelle">Question posée</label>
+          <input id="q-libelle" type="text" value="Ils sont adaptés à mes besoins">
+          <span class="note">C’est cette phrase que le public lit.</span>
+        </div>
+        <div class="duo-champs">
+          <div class="champ-edit">
+            <label for="q-type">Type</label>
+            <select id="q-type"><option selected>Échelle</option><option>Texte</option><option>Choix</option><option>Date</option></select>
+          </div>
+          <div class="champ-edit">
+            <label for="q-colonne">Colonne Grist</label>
+            <select id="q-colonne"><option selected>C2_EP_Adaptes · Int</option><option>C3_EP_Accessibles · Int</option></select>
+            <span class="note">La colonne fixe le type.</span>
+          </div>
+        </div>
+        <div class="duo-champs">
+          <div class="champ-edit">
+            <label for="q-echelle">Échelle</label>
+            <select id="q-echelle"><option selected>Accord · 1 à 5 · Non concerné</option><option>Priorité · 1 à 5</option></select>
+          </div>
+          <div class="champ-edit">
+            <label for="q-matrice">Regroupée avec</label>
+            <select id="q-matrice"><option selected>Perception des espaces publics (5)</option><option>Aucune</option></select>
+          </div>
+        </div>
+        <div class="champ-edit">
+          <label>Conditions</label>
+          <div><button type="button" class="pastille">Si Habitant du quartier ✎</button></div>
+          <span class="note">Les réglages affichés sont ceux que ce type déclare : rien à coder pour en ajouter un.</span>
+        </div>
+      </div>
+
+      <div class="zone">
+        <h4>Aperçu</h4>
+        <div class="commutateur" style="margin-bottom:8px">
+          <button type="button" aria-pressed="true">Téléphone</button>
+          <button type="button" aria-pressed="false">Bureau</button>
+        </div>
+        <div class="apercu-mini">
+          <p style="font-weight:600; margin-bottom:8px">Ils sont adaptés à mes besoins</p>
+          <div class="ap-crans">
+            <button type="button" class="ap-cran">1</button>
+            <button type="button" class="ap-cran">2</button>
+            <button type="button" class="ap-cran">3</button>
+            <button type="button" class="ap-cran">4</button>
+            <button type="button" class="ap-cran">5</button>
+          </div>
+          <div class="ap-ancres" style="font-size:0.72rem"><span>Pas du tout</span><span>Tout à fait</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="barre-enreg">
+      <span>Modifications non enregistrées</span>
+      <span><button type="button" class="bouton" style="padding:8px 16px; font-size:0.9rem">Enregistrer</button></span>
+    </div>
+    <ul class="liste">
+      <li><strong>La structure</strong> montre la forme du questionnaire — 14 étapes, leur nombre de questions — et se replie. On y glisse pour réordonner.</li>
+      <li><strong>Une question à la fois</strong> au centre, et son éditeur <em>se génère depuis le registre</em> : un type déclare ses réglages, l’écran les affiche. Ajouter un type n’ajoutera plus un bloc de code dans l’écran.</li>
+      <li><strong>L’aperçu répond pendant qu’on écrit</strong>, au lieu d’attendre dans l’onglet voisin.</li>
+      <li><strong>Enregistrer ne se cherche plus</strong> : barre fixe, et l’état à côté du bouton — pas un message en haut d’un écran de 45 écrans de long.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Les règles de lisibilité, chiffrées</h2>
+    <div class="regles">
+      <div class="regle">
+        <h3>Ce qui se lit</h3>
+        <p>Corps à 17 px, question à 18 px, consigne à 15 px. Contraste minimal 4,5:1 — 7:1 pour le texte des questions. Jamais la couleur seule pour dire une erreur.</p>
+      </div>
+      <div class="regle">
+        <h3>Ce qui se touche</h3>
+        <p>44 px de côté pour un cran, une option, un bouton. Entre deux cibles, 8 px au moins. Le doigt n’est pas une souris.</p>
+      </div>
+      <div class="regle">
+        <h3>Ce qui se dit</h3>
+        <p>Des phrases, pas des noms de colonnes. « Non concerné », pas « NSP ». Aucun mot de notre cuisine — définition, manifeste, gabarit — devant le public.</p>
+      </div>
+      <div class="regle">
+        <h3>Ce qui se voit en premier</h3>
+        <p>Où j’en suis, combien il reste, et ce que je viens de faire. Le retour d’action apparaît là où est l’œil, c’est-à-dire près du bouton.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ce que ça demande de décider</h2>
+    <ul class="liste">
+      <li><strong>L’accent</strong> : le bleu République, qui convient à une enquête publique — ou un accent neutre si le widget doit servir hors sphère publique.</li>
+      <li><strong>La typographie</strong> : pile système, légère et sobre — Marianne seulement si la page peut la charger, jamais embarquée dans la vue publiée, où chaque octet part dans le document.</li>
+      <li><strong>Le DSFR</strong> : compatible, pas conforme. Être conforme imposerait d’embarquer leur feuille entière dans un widget qui vit déjà dans le cadre de Grist.</li>
+      <li><strong>Le libellé double</strong> : une question a désormais deux noms — celui de la colonne, pour Grist, et la phrase posée au public. C’est le changement de fond de cette maquette.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Maquette, pas implémentation : les écrans sont dessinés pour décider, rien n’écrit nulle part. Les mesures viennent du navigateur, sur l’enquête du 4ᵉ réellement chargée dans le compositeur.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    // Bascule téléphone / bureau du volet « après ».
+    var ecran = document.getElementById('ecran-apres');
+    document.querySelectorAll('[data-largeur]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var large = b.getAttribute('data-largeur') === 'bureau';
+        ecran.classList.toggle('etroit', !large);
+        document.querySelectorAll('[data-largeur]').forEach(function (x) {
+          x.setAttribute('aria-pressed', String(x === b));
+        });
+      });
+    });
+    // Les crans se cochent, pour qu'on juge la cible et non le dessin.
+    document.querySelectorAll('.ap-carte').forEach(function (carte) {
+      var crans = carte.querySelectorAll('.ap-cran');
+      var nsp = carte.querySelector('.ap-nsp');
+      function vider() {
+        crans.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        if (nsp) nsp.setAttribute('aria-pressed', 'false');
+      }
+      crans.forEach(function (c) {
+        c.addEventListener('click', function () { vider(); c.setAttribute('aria-pressed', 'true'); });
+      });
+      if (nsp) nsp.addEventListener('click', function () { vider(); nsp.setAttribute('aria-pressed', 'true'); });
+    });
+  }());
+</script>

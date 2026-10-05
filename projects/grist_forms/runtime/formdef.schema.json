@@ -39,6 +39,10 @@
       "type": "string",
       "description": "Message affiché après soumission réussie"
     },
+    "editerLigneSelectionnee": {
+      "type": "boolean",
+      "description": "La vue publiée corrige la ligne sous le curseur (préremplie) au lieu d'en ajouter une. Défaut : faux."
+    },
     "branding": {
       "type": "object",
       "description": "Logo / images Accueil et Fin",
@@ -55,6 +59,14 @@
         },
         "successImageAlt": {
           "type": "string"
+        },
+        "organisation": {
+          "type": "string",
+          "description": "Qui publie le questionnaire, dans le bandeau (ex. « Service d’études »)"
+        },
+        "organisationDetail": {
+          "type": "string",
+          "description": "Second rang du bandeau, sous l'organisation (ex. « Commune d’Exemple »)"
         }
       }
     },
@@ -113,6 +125,122 @@
           "type": "string"
         }
       }
+    },
+    "echelles": {
+      "type": "object",
+      "description": "Échelles partagées, indexées par clé : min, max, libelles des deux extrémités, nonConcerne",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "libelles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "nonConcerne": {
+            "type": "boolean",
+            "description": "Offrir « Non concerné », qui vaut réponse et s'écrit vide"
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Colonnes remplies sans question : horodatage, durée de remplissage, « non concerné »",
+      "additionalProperties": false,
+      "properties": {
+        "timestampCol": {
+          "type": "string"
+        },
+        "durationCol": {
+          "type": "string"
+        },
+        "nspCol": {
+          "type": "string",
+          "description": "ChoiceList où consigner les questions répondues « Non concerné »"
+        },
+        "emailCol": {
+          "type": "string"
+        }
+      }
+    },
+    "matrices": {
+      "type": "object",
+      "description": "Matrices : la question posée une fois pour plusieurs échelles qui la déclinent",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titre": {
+            "type": "string",
+            "description": "La question, telle que le public la lit"
+          },
+          "consigne": {
+            "type": "string",
+            "description": "Comment y répondre"
+          }
+        }
+      }
+    },
+    "accueil": {
+      "type": "object",
+      "description": "La page d'accueil : ce qu'on lit avant de decider de repondre",
+      "additionalProperties": false,
+      "properties": {
+        "titre": {
+          "type": "string",
+          "description": "Le titre de la page d'accueil, qui n'est pas celui du bandeau"
+        },
+        "texte": {
+          "type": "string",
+          "description": "Presentation. Gras avec **…**, paragraphes separes par une ligne vide"
+        },
+        "dureeMinutes": {
+          "type": "number",
+          "description": "Duree estimee : annoncee en premier encart, et mesuree a l'envoi"
+        },
+        "dureeTexte": {
+          "type": "string",
+          "description": "La suite de l'encart de duree (ce que le questionnaire epargne, par exemple)"
+        },
+        "encarts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ton": {
+                "enum": [
+                  "attention",
+                  "discret"
+                ],
+                "description": "« attention » se voit (fond jaune, filet) ; « discret » se lit si on le cherche (mentions, RGPD)"
+              },
+              "titre": {
+                "type": "string"
+              },
+              "texte": {
+                "type": "string",
+                "description": "Gras avec **…**"
+              }
+            }
+          }
+        },
+        "bouton": {
+          "type": "string",
+          "description": "Libelle du bouton de depart (defaut : « Commencer »)"
+        }
+      }
     }
   },
   "definitions": {
@@ -161,6 +289,10 @@
           "items": {
             "$ref": "#/definitions/field"
           }
+        },
+        "description": {
+          "type": "string",
+          "description": "Consigne de l'étape"
         }
       }
     },
@@ -188,7 +320,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Widget de rendu (text, textarea, select, checkbox, etc.)"
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -196,8 +328,18 @@
         },
         "options": {
           "type": "object",
-          "description": "Options widget / type (placeholder, refTable, visibleCol, step, etc.)",
-          "additionalProperties": true
+          "description": "Options de la saisie. Outre placeholder / refTable / visibleCol / step : `choices` (liste proposée), `maxSelected` (plafond de cases cochées), `libelleOui` et `libelleNon` (oui/non), `valeurAutre` et `consigneAutre` (réponse libre), `rangs` (nombre de rangs retenus d'un classement), et `colonnes`, qui dit où la réponse se range quand ce n'est pas dans la colonne du `colId` : { valeur, autre, rangs: [colonne par rang], geometrie }.",
+          "additionalProperties": true,
+          "properties": {
+            "polarite": {
+              "enum": [
+                "satisfaction",
+                "besoin",
+                "preference"
+              ],
+              "description": "Sur une echelle : ce que « haut » veut dire. Sans elle, « Les espaces sont agreables » et « Il faudrait ajouter des places » se rangent ensemble, alors qu'un 5 est une bonne nouvelle dans un cas et une demande dans l'autre."
+            }
+          }
         },
         "condition": {
           "description": "Condition d'affichage { field, operator, value }",
@@ -257,6 +399,14 @@
         "polarity": {
           "type": "string",
           "description": "Méta polarité survey (peut être vide)"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Une couche posée sur la saisie, pas un widget de plus. Reconnues : echelle (crans et ancrages déclarés dans `echelles`), choix_autre (une réponse libre à côté de la liste), classement (des rangs, chacun dans sa colonne), geometrie (un lieu)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Consigne affichée sous le libellé"
         }
       }
     },

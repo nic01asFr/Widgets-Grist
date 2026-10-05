@@ -1,0 +1,1112 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "enquete-espaces-publics-4e",
+  "title": "Espaces publics — quartiers Gare et Parc",
+  "description": "Enquête de référence du projet : 61 questions, toutes les formes de saisie. Branchée sur des colonnes existantes — aucune création, aucun retypage.",
+  "classification": "interne",
+  "successMessage": "Merci pour votre contribution !",
+  "tableId": "Reponses",
+  "composeMode": "bind",
+  "meta": {
+    "timestampCol": "Horodatage",
+    "durationCol": "DureeSecondes"
+  },
+  "matrices": {
+    "c_perception": {
+      "titre": "Que pensez-vous des espaces publics du quartier ?",
+      "consigne": "Pour chaque affirmation, dites à quel point vous êtes d’accord."
+    },
+    "f_stationnement": {
+      "titre": "Qu’attendez-vous du stationnement des voitures ?",
+      "consigne": "Pour chaque proposition, dites à quel point vous êtes d’accord."
+    },
+    "f_moto": {
+      "titre": "Et pour les deux-roues motorisés ?"
+    },
+    "g_vitesses": {
+      "titre": "Comment jugez-vous la circulation dans le quartier ?"
+    },
+    "h_bus": {
+      "titre": "Que pensez-vous du bus dans le quartier ?"
+    },
+    "i_arceaux": {
+      "titre": "Y a-t-il assez d’arceaux pour attacher les vélos ?"
+    },
+    "i_cohabitation": {
+      "titre": "Et la cohabitation sur les trottoirs ?"
+    },
+    "j_ecoles": {
+      "titre": "Que pensez-vous des abords d’école ?"
+    },
+    "k_chaleur": {
+      "titre": "Ressentez-vous la chaleur dans le quartier ?"
+    },
+    "l_vegetalisation": {
+      "titre": "Que pensez-vous de la végétalisation ?"
+    },
+    "m_modes": {
+      "titre": "Quels modes de déplacement faudrait-il privilégier ?",
+      "consigne": "En aménageant la voirie du quartier."
+    }
+  },
+  "echelles": {
+    "accord": {
+      "min": 1,
+      "max": 5,
+      "libelles": [
+        "Pas du tout d’accord",
+        "Tout à fait d’accord"
+      ],
+      "nonConcerne": true
+    },
+    "arceaux": {
+      "min": 1,
+      "max": 5,
+      "libelles": [
+        "Très insuffisant",
+        "Très suffisant"
+      ],
+      "nonConcerne": true
+    },
+    "priorite": {
+      "min": 1,
+      "max": 5,
+      "libelles": [
+        "Surtout pas",
+        "En priorité"
+      ],
+      "nonConcerne": false
+    }
+  },
+  "sections": [
+    {
+      "id": "A",
+      "label": "Vous et le quartier",
+      "fields": [
+        {
+          "colId": "A1_Sexe",
+          "label": "Genre",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Une femme",
+              "Un homme",
+              "Autre / non-binaire",
+              "Je préfère ne pas répondre"
+            ]
+          }
+        },
+        {
+          "colId": "A2_Age",
+          "label": "Tranche d’âge",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Moins de 18 ans",
+              "18–24 ans",
+              "25–39 ans",
+              "40–59 ans",
+              "60–74 ans",
+              "75 ans et plus"
+            ]
+          }
+        },
+        {
+          "colId": "A3_Position",
+          "label": "Lien avec le quartier",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "required": true,
+          "options": {
+            "choices": [
+              "Habitant du quartier",
+              "Commerçant du quartier",
+              "Je travaille dans le quartier",
+              "Visiteur occasionnel / touriste"
+            ]
+          },
+          "description": "Plusieurs réponses possibles"
+        },
+        {
+          "colId": "A4_Anciennete",
+          "label": "Ancienneté dans le quartier",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Moins d'un an",
+              "1 à 5 ans",
+              "5 à 10 ans",
+              "Plus de 10 ans"
+            ]
+          },
+          "condition": {
+            "field": "A3_Position",
+            "operator": "contains",
+            "value": "Habitant du quartier"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "label": "Vos déplacements",
+      "condition": {
+        "field": "A3_Position",
+        "operator": "contains",
+        "value": "Habitant du quartier"
+      },
+      "fields": [
+        {
+          "colId": "B1_NbVoitures",
+          "label": "Nombre de voitures du ménage",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Pas de voiture",
+              "1 voiture",
+              "2 voitures ou plus"
+            ]
+          }
+        },
+        {
+          "colId": "B2_LieuStationnement",
+          "label": "Lieu de stationnement habituel",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Sur voirie",
+              "Parking public",
+              "Parking privé / garage"
+            ]
+          },
+          "condition": {
+            "op": "and",
+            "rules": [
+              {
+                "field": "B1_NbVoitures",
+                "operator": "truthy"
+              },
+              {
+                "field": "B1_NbVoitures",
+                "operator": "!=",
+                "value": "Pas de voiture"
+              }
+            ]
+          }
+        },
+        {
+          "colId": "B3_Velo",
+          "label": "Possède un vélo",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": true
+        },
+        {
+          "colId": "B4_MotoScooter",
+          "label": "Possède une moto ou un scooter",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": true
+        },
+        {
+          "colId": "B5_ModeTravail",
+          "label": "Mode(s) de déplacement domicile-travail",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "required": false,
+          "options": {
+            "choices": [
+              "Voiture (conducteur)",
+              "Voiture (passager/covoituré)",
+              "Deux-roues motorisé (moto/scooter)",
+              "Transports en commun",
+              "Vélo",
+              "Trottinette",
+              "Marche à pied",
+              "Pas de déplacement (télétravail)"
+            ]
+          }
+        },
+        {
+          "colId": "B6_ModeAutres",
+          "label": "Mode(s) de déplacement autres trajets",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "required": false,
+          "options": {
+            "choices": [
+              "Voiture (conducteur)",
+              "Voiture (passager/covoituré)",
+              "Deux-roues motorisé (moto/scooter)",
+              "Transports en commun",
+              "Vélo",
+              "Trottinette",
+              "Marche à pied",
+              "Aucun déplacement"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "label": "Les espaces publics du quartier",
+      "fields": [
+        {
+          "colId": "C1_EP_Agreables",
+          "label": "Espaces publics agréables",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "C2_EP_Adaptes",
+          "label": "Espaces publics adaptés à mes besoins",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "C3_EP_Accessibles",
+          "label": "Espaces publics accessibles PMR/poussettes",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "C4_EP_Entretenus",
+          "label": "Espaces publics bien entretenus",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "C5_EP_Securite",
+          "label": "Sentiment de sécurité pour se déplacer",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "c_perception",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "C7_MoinsSatisfaction",
+          "label": "Sources d’insatisfaction",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "required": false,
+          "options": {
+            "choices": [
+              "Bruit",
+              "Propreté",
+              "Insécurité",
+              "Chaleur / manque d’ombre",
+              "Circulation des vélos",
+              "Circulation des trottinettes",
+              "Stationnement des voitures",
+              "Dégradations",
+              "Autre"
+            ],
+            "colonnes": {
+              "valeur": "C7_MoinsSatisfaction",
+              "autre": "C7_Autre"
+            },
+            "valeurAutre": "Autre"
+          },
+          "kind": "choix_autre"
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "label": "Vos priorités d’amélioration",
+      "fields": [
+        {
+          "colId": "D1_Ameliorations",
+          "label": "Améliorations prioritaires (max. 5)",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "required": false,
+          "options": {
+            "choices": [
+              "Plus de places avec activités et services",
+              "Plus de places de stationnement",
+              "Plus de places de livraison",
+              "Petits espaces conviviaux plus proches (<300 m)",
+              "Plus de végétation",
+              "Plus de mobilier d’assise",
+              "Plus d’ombre",
+              "Espaces publics plus propres",
+              "Plus d’animations événementielles occasionnelles",
+              "Plus de terrasses de café/restaurant",
+              "Plus de sûreté et de sécurité",
+              "Plus d’aménagements pour les vélos",
+              "Moins de voitures (circulation, stationnement)",
+              "Moins de nuisances sonores"
+            ],
+            "maxSelected": 5
+          },
+          "description": "Choisissez jusqu’à 5 propositions"
+        },
+        {
+          "colId": "D2_Autre",
+          "label": "Amélioration — autre suggestion",
+          "type": "Text",
+          "widget": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "label": "Les lieux à traiter en priorité",
+      "fields": [
+        {
+          "colId": "E_Lieux_prioritaires",
+          "label": "Vos trois lieux prioritaires",
+          "kind": "classement",
+          "type": "Choice",
+          "widget": "classement",
+          "required": false,
+          "options": {
+            "choices": [
+              "Place du Marché",
+              "Place des Tilleuls",
+              "Entrée du parc / station de métro",
+              "Abords de la gare",
+              "Square de la Mairie",
+              "Autre"
+            ],
+            "colonnes": {
+              "rangs": [
+                "E1_Prio1",
+                "E2_Prio2",
+                "E3_Prio3"
+              ],
+              "autre": "E4_Autre"
+            },
+            "rangs": 3,
+            "valeurAutre": "Autre"
+          }
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "label": "Le stationnement",
+      "condition": {
+        "field": "A3_Position",
+        "operator": "contains",
+        "value": "Habitant du quartier"
+      },
+      "fields": [
+        {
+          "colId": "F1_Pratiques",
+          "label": "Pratiques de stationnement",
+          "type": "Choice",
+          "widget": "radio",
+          "required": false,
+          "options": {
+            "choices": [
+              "Je n'ai pas de voiture",
+              "J’ai une place en parking (pas besoin de voirie)",
+              "Je trouve facilement une place sur voirie",
+              "Je tourne longtemps / dois m’éloigner",
+              "Je me gare parfois sur un espace non autorisé",
+              "J’ai renoncé à me garer dans la rue"
+            ]
+          }
+        },
+        {
+          "colId": "F2a_AjouterPlaces",
+          "label": "Stationnement : ajouter des places sur voirie",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F2b_LimiterDuree",
+          "label": "Stationnement : limiter la durée / payant non-résidents",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F2c_PasDePotentiel",
+          "label": "Stationnement : aucun potentiel de places supplémentaires",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F2d_ReserverResidents",
+          "label": "Stationnement : réserver aux résidents",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F2e_SupprimerPlaces",
+          "label": "Stationnement : supprimer des places",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F2f_MieuxSanctionner",
+          "label": "Stationnement : mieux surveiller/sanctionner",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_stationnement",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "F4_Moto_Facile",
+          "label": "Stationnement moto/scooter sans difficulté",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "f_moto",
+            "polarite": "satisfaction"
+          },
+          "condition": {
+            "field": "B4_MotoScooter",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "G",
+      "label": "La circulation",
+      "fields": [
+        {
+          "colId": "G1_VitessesConvenables",
+          "label": "Vitesses de circulation convenables",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "g_vitesses",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "G2_VitessesExcessives",
+          "label": "Vitesses excessives de certains automobilistes",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "g_vitesses",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "G3_TraverseesSures",
+          "label": "Traversées piétonnes sûres",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "g_vitesses",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "G_Geometries",
+          "label": "Les endroits concernés",
+          "type": "Text",
+          "widget": "geo",
+          "required": false,
+          "kind": "geometrie",
+          "options": {
+            "geometrie": "MultiPoint",
+            "colonnes": {
+              "geometrie": "G_Geometries"
+            },
+            "saisies": [
+              "carte"
+            ],
+            "carte": {
+              "centre": [
+                5.4,
+                43.303
+              ],
+              "zoom": 14,
+              "fond": "plan"
+            }
+          },
+          "description": "Facultatif. Un point par endroit : vitesse excessive, traversée dangereuse, carrefour accidentogène… Inutile d’être précis au mètre, c’est la zone qui compte."
+        },
+        {
+          "colId": "G2_RuesConcernees",
+          "label": "Rues concernées / commentaire circulation",
+          "type": "Text",
+          "widget": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "H",
+      "label": "Les transports en commun",
+      "fields": [
+        {
+          "colId": "H0_ConcerneTC",
+          "label": "Avez-vous un avis sur les transports en commun du quartier ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false
+        },
+        {
+          "colId": "H1_ConnaitOffre",
+          "label": "Connaît l’offre de transports en commun",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false,
+          "condition": {
+            "field": "H0_ConcerneTC",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "H2_ConnaitParkingRelais",
+          "label": "Connaît des parkings relais",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false,
+          "condition": {
+            "field": "H0_ConcerneTC",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "H3_AccesArrets",
+          "label": "Accès/attente aux arrêts de bus satisfaisants",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "h_bus",
+            "polarite": "satisfaction"
+          },
+          "condition": {
+            "field": "H0_ConcerneTC",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "H4_Horaires",
+          "label": "Horaires de bus respectés",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "h_bus",
+            "polarite": "satisfaction"
+          },
+          "condition": {
+            "field": "H0_ConcerneTC",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "I",
+      "label": "Le vélo",
+      "fields": [
+        {
+          "colId": "I0_ConcerneVelo",
+          "label": "Avez-vous un avis sur le vélo dans le quartier ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false
+        },
+        {
+          "colId": "I1_ArceauxSuffisance",
+          "label": "Nombre d’arceaux vélos sur voirie",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "arceaux",
+            "matrice": "i_arceaux",
+            "polarite": "satisfaction"
+          },
+          "condition": {
+            "field": "I0_ConcerneVelo",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "I4_VelosMalGares",
+          "label": "Vélos/trottinettes mal garés gênants à pied",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "i_cohabitation",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "I0_ConcerneVelo",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "I5_RapportVelo",
+          "label": "Rapport au vélo",
+          "type": "Choice",
+          "widget": "radio",
+          "required": false,
+          "options": {
+            "choices": [
+              "J’en fais déjà",
+              "Je n’en fais pas mais j’aimerais essayer",
+              "Je n’en fais pas et cela ne m’intéresse pas"
+            ]
+          },
+          "condition": {
+            "field": "I0_ConcerneVelo",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "J",
+      "label": "Les abords d’école",
+      "fields": [
+        {
+          "colId": "J0_ConcerneEcoles",
+          "label": "Êtes-vous concerné(e) par les abords d’école ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false
+        },
+        {
+          "colId": "J1_AccesConflictuels",
+          "label": "Abords d’école dangereux/tendus entre modes",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "j_ecoles",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "J0_ConcerneEcoles",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "J2_PrioriteEcoles",
+          "label": "Sécuriser les abords d’école = priorité",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "j_ecoles",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "J0_ConcerneEcoles",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "K",
+      "label": "La chaleur",
+      "fields": [
+        {
+          "colId": "K0_ConcerneChaleur",
+          "label": "Avez-vous un avis sur la chaleur dans l’espace public ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false
+        },
+        {
+          "colId": "K1_TropChaud",
+          "label": "Trop chaud dans les espaces publics empruntés",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "K0_ConcerneChaleur",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "K2_ManqueOmbrage",
+          "label": "Manque d’ombrage dans le quartier",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "K0_ConcerneChaleur",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "K3_EspacesFrais",
+          "label": "Souhait d’accès à des espaces frais proches",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "k_chaleur",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "K0_ConcerneChaleur",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "L",
+      "label": "La végétalisation",
+      "fields": [
+        {
+          "colId": "L0_ConcerneVegetal",
+          "label": "Avez-vous un avis sur la végétalisation du quartier ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "required": false
+        },
+        {
+          "colId": "L1_Satisfait",
+          "label": "Satisfait de la végétalisation actuelle",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "l_vegetalisation",
+            "polarite": "satisfaction"
+          },
+          "condition": {
+            "field": "L0_ConcerneVegetal",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "L2_PlusArbres",
+          "label": "Plus d’arbres dans les rues",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "L0_ConcerneVegetal",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "L3_SupprStatPourArbres",
+          "label": "Supprimer du stationnement pour planter",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "L0_ConcerneVegetal",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "L4_ArbustesPlantes",
+          "label": "Plus d’arbustes/plantes au sol",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "L0_ConcerneVegetal",
+            "operator": "==",
+            "value": true
+          }
+        },
+        {
+          "colId": "L5_PlusParcs",
+          "label": "Plus d’espaces verts/parcs",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "l_vegetalisation",
+            "polarite": "besoin"
+          },
+          "condition": {
+            "field": "L0_ConcerneVegetal",
+            "operator": "==",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "M",
+      "label": "Quels modes privilégier ?",
+      "fields": [
+        {
+          "colId": "M1_Mode_Voiture",
+          "label": "Prioriser la voiture",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        },
+        {
+          "colId": "M2_Mode_Bus",
+          "label": "Prioriser le bus",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        },
+        {
+          "colId": "M3_Mode_Velo",
+          "label": "Prioriser le vélo",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        },
+        {
+          "colId": "M4_Mode_Trottinette",
+          "label": "Prioriser la trottinette",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        },
+        {
+          "colId": "M5_Mode_Pieton",
+          "label": "Prioriser la marche à pied",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        },
+        {
+          "colId": "M6_Mode_2RM",
+          "label": "Prioriser les deux-roues motorisés",
+          "type": "Int",
+          "widget": "echelle",
+          "required": false,
+          "kind": "echelle",
+          "options": {
+            "echelle": "priorite",
+            "matrice": "m_modes",
+            "polarite": "preference"
+          }
+        }
+      ]
+    },
+    {
+      "id": "N",
+      "label": "Pour finir",
+      "fields": [
+        {
+          "colId": "N1_Remarques",
+          "label": "Remarques libres",
+          "type": "Text",
+          "widget": "textarea",
+          "required": false,
+          "description": "Champ libre — facultatif"
+        }
+      ]
+    }
+  ],
+  "choices": {},
+  "branding": {
+    "organisation": "Service d’études",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Votre avis sur les espaces publics du quartier",
+    "texte": "Le service d’études réalise, pour la commune, une étude sur la voirie, les espaces publics, le stationnement et les mobilités dans les quartiers **Gare** et **Parc**. Ce questionnaire recueille votre **perception** pour affiner le diagnostic et nourrir les propositions d’aménagement.",
+    "dureeMinutes": 8,
+    "dureeTexte": "Le questionnaire s’adapte à vos réponses : selon votre profil, certaines sections vous seront épargnées. Il n’y a pas de bonne ou de mauvaise réponse.",
+    "encarts": [
+      {
+        "ton": "discret",
+        "titre": "Anonymat & données (RGPD).",
+        "texte": "Ce questionnaire est **anonyme** : aucune donnée permettant de vous identifier n’est demandée. Les réponses sont traitées par le service d’études pour le seul besoin de l’étude commandée par la commune, conservées pour la durée de l’étude, et exploitées de manière agrégée. Contact délégué à la protection des données : [à compléter]."
+      }
+    ],
+    "bouton": "Commencer"
+  }
+}

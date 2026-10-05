@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Émetteur</title>
+<style>body{font:14px system-ui;margin:12px}</style></head>
+<body>
+<p>Page intégrée. Elle tente de parler au formulaire qui la contient.</p>
+<p id="etat">…</p>
+<script>
+  var essais = [];
+  try {
+    window.parent.postMessage({ source: 'essai-inclusion', dit: 'bonjour' }, '*');
+    essais.push('postMessage : envoyé');
+  } catch (e) { essais.push('postMessage : refusé (' + e.name + ')'); }
+  try { localStorage.setItem('x', '1'); essais.push('localStorage : accessible'); }
+  catch (e) { essais.push('localStorage : refusé (' + e.name + ')'); }
+  try { essais.push('origine : ' + (location.origin === 'null' ? 'opaque' : location.origin)); }
+  catch (e) { essais.push('origine : illisible'); }
+  essais.push('cookies : ' + (document.cookie ? 'visibles' : 'aucun'));
+  document.getElementById('etat').innerHTML = essais.join('<br>');
+</script>
+</body>
+</html>

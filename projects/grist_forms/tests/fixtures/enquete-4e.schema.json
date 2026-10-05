@@ -1,0 +1,462 @@
+{
+  "tableId": "Reponses",
+  "document": "(document de travail)",
+  "releveLe": "2026-10-04",
+  "colonnes": [
+    {
+      "colId": "A1_Sexe",
+      "type": "Choice",
+      "label": "Genre",
+      "choix": [
+        "Une femme",
+        "Un homme",
+        "Autre / non-binaire",
+        "Je préfère ne pas répondre"
+      ]
+    },
+    {
+      "colId": "A2_Age",
+      "type": "Choice",
+      "label": "Tranche d’âge",
+      "choix": [
+        "Moins de 18 ans",
+        "18–24 ans",
+        "25–39 ans",
+        "40–59 ans",
+        "60–74 ans",
+        "75 ans et plus"
+      ]
+    },
+    {
+      "colId": "A3_Position",
+      "type": "ChoiceList",
+      "label": "Lien avec le quartier",
+      "choix": [
+        "Habitant du quartier",
+        "Commerçant du quartier",
+        "Je travaille dans le quartier",
+        "Visiteur occasionnel / touriste"
+      ]
+    },
+    {
+      "colId": "A4_Anciennete",
+      "type": "Choice",
+      "label": "Ancienneté dans le quartier",
+      "choix": [
+        "Moins d'un an",
+        "1 à 5 ans",
+        "5 à 10 ans",
+        "Plus de 10 ans"
+      ]
+    },
+    {
+      "colId": "B1_NbVoitures",
+      "type": "Choice",
+      "label": "Nombre de voitures du ménage",
+      "choix": [
+        "Pas de voiture",
+        "1 voiture",
+        "2 voitures ou plus"
+      ]
+    },
+    {
+      "colId": "B2_LieuStationnement",
+      "type": "Choice",
+      "label": "Lieu de stationnement habituel",
+      "choix": [
+        "Sur voirie",
+        "Parking public",
+        "Parking privé / garage"
+      ]
+    },
+    {
+      "colId": "B3_Velo",
+      "type": "Bool",
+      "label": "Possède un vélo"
+    },
+    {
+      "colId": "B4_MotoScooter",
+      "type": "Bool",
+      "label": "Possède une moto ou un scooter"
+    },
+    {
+      "colId": "B5_ModeTravail",
+      "type": "ChoiceList",
+      "label": "Mode(s) de déplacement domicile-travail",
+      "choix": [
+        "Voiture (conducteur)",
+        "Voiture (passager/covoituré)",
+        "Deux-roues motorisé (moto/scooter)",
+        "Transports en commun",
+        "Vélo",
+        "Trottinette",
+        "Marche à pied",
+        "Pas de déplacement (télétravail)"
+      ]
+    },
+    {
+      "colId": "B6_ModeAutres",
+      "type": "ChoiceList",
+      "label": "Mode(s) de déplacement autres trajets",
+      "choix": [
+        "Voiture (conducteur)",
+        "Voiture (passager/covoituré)",
+        "Deux-roues motorisé (moto/scooter)",
+        "Transports en commun",
+        "Vélo",
+        "Trottinette",
+        "Marche à pied",
+        "Aucun déplacement"
+      ]
+    },
+    {
+      "colId": "C1_EP_Agreables",
+      "type": "Int",
+      "label": "Espaces publics agréables (1–5)"
+    },
+    {
+      "colId": "C2_EP_Adaptes",
+      "type": "Int",
+      "label": "Espaces publics adaptés à mes besoins (1–5)"
+    },
+    {
+      "colId": "C3_EP_Accessibles",
+      "type": "Int",
+      "label": "Espaces publics accessibles PMR/poussettes (1–5)"
+    },
+    {
+      "colId": "C4_EP_Entretenus",
+      "type": "Int",
+      "label": "Espaces publics bien entretenus (1–5)"
+    },
+    {
+      "colId": "C5_EP_Securite",
+      "type": "Int",
+      "label": "Sentiment de sécurité pour se déplacer (1–5)"
+    },
+    {
+      "colId": "C7_MoinsSatisfaction",
+      "type": "ChoiceList",
+      "label": "Sources d’insatisfaction",
+      "choix": [
+        "Bruit",
+        "Propreté",
+        "Insécurité",
+        "Chaleur / manque d’ombre",
+        "Circulation des vélos",
+        "Circulation des trottinettes",
+        "Stationnement des voitures",
+        "Dégradations",
+        "Autre"
+      ]
+    },
+    {
+      "colId": "C7_Autre",
+      "type": "Text",
+      "label": "Insatisfaction — autre (précision)"
+    },
+    {
+      "colId": "D1_Ameliorations",
+      "type": "ChoiceList",
+      "label": "Améliorations prioritaires (max. 5)",
+      "choix": [
+        "Plus de places avec activités et services",
+        "Plus de places de stationnement",
+        "Plus de places de livraison",
+        "Petits espaces conviviaux plus proches (<300 m)",
+        "Plus de végétation",
+        "Plus de mobilier d’assise",
+        "Plus d’ombre",
+        "Espaces publics plus propres",
+        "Plus d’animations événementielles occasionnelles",
+        "Plus de terrasses de café/restaurant",
+        "Plus de sûreté et de sécurité",
+        "Plus d’aménagements pour les vélos",
+        "Moins de voitures (circulation, stationnement)",
+        "Moins de nuisances sonores"
+      ]
+    },
+    {
+      "colId": "D2_Autre",
+      "type": "Text",
+      "label": "Amélioration — autre suggestion"
+    },
+    {
+      "colId": "E1_Prio1",
+      "type": "Choice",
+      "label": "Lieu prioritaire — 1re place",
+      "choix": [
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
+        "Autre"
+      ]
+    },
+    {
+      "colId": "E2_Prio2",
+      "type": "Choice",
+      "label": "Lieu prioritaire — 2e place",
+      "choix": [
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
+        "Autre"
+      ]
+    },
+    {
+      "colId": "E3_Prio3",
+      "type": "Choice",
+      "label": "Lieu prioritaire — 3e place",
+      "choix": [
+        "Place du Marché",
+        "Place des Tilleuls",
+        "Entrée du parc / station de métro",
+        "Abords de la gare",
+        "Square de la Mairie",
+        "Autre"
+      ]
+    },
+    {
+      "colId": "E4_Autre",
+      "type": "Text",
+      "label": "Lieu prioritaire — autre (précision)"
+    },
+    {
+      "colId": "F1_Pratiques",
+      "type": "Choice",
+      "label": "Pratiques de stationnement",
+      "choix": [
+        "Je n'ai pas de voiture",
+        "J’ai une place en parking (pas besoin de voirie)",
+        "Je trouve facilement une place sur voirie",
+        "Je tourne longtemps / dois m’éloigner",
+        "Je me gare parfois sur un espace non autorisé",
+        "J’ai renoncé à me garer dans la rue"
+      ]
+    },
+    {
+      "colId": "F2a_AjouterPlaces",
+      "type": "Int",
+      "label": "Stationnement : ajouter des places sur voirie (1–5)"
+    },
+    {
+      "colId": "F2b_LimiterDuree",
+      "type": "Int",
+      "label": "Stationnement : limiter la durée / payant non-résidents (1–5)"
+    },
+    {
+      "colId": "F2c_PasDePotentiel",
+      "type": "Int",
+      "label": "Stationnement : aucun potentiel de places supplémentaires (1–5)"
+    },
+    {
+      "colId": "F2d_ReserverResidents",
+      "type": "Int",
+      "label": "Stationnement : réserver aux résidents (1–5)"
+    },
+    {
+      "colId": "F2e_SupprimerPlaces",
+      "type": "Int",
+      "label": "Stationnement : supprimer des places (1–5)"
+    },
+    {
+      "colId": "F2f_MieuxSanctionner",
+      "type": "Int",
+      "label": "Stationnement : mieux surveiller/sanctionner (1–5)"
+    },
+    {
+      "colId": "F4_Moto_Facile",
+      "type": "Int",
+      "label": "Stationnement moto/scooter sans difficulté (1–5)"
+    },
+    {
+      "colId": "G1_VitessesConvenables",
+      "type": "Int",
+      "label": "Vitesses de circulation convenables (1–5)"
+    },
+    {
+      "colId": "G2_VitessesExcessives",
+      "type": "Int",
+      "label": "Vitesses excessives de certains automobilistes (1–5)"
+    },
+    {
+      "colId": "G3_TraverseesSures",
+      "type": "Int",
+      "label": "Traversées piétonnes sûres (1–5)"
+    },
+    {
+      "colId": "G_Geometries",
+      "type": "Text",
+      "label": "Localisations dessinées (GeoJSON : points/tronçons/aires)"
+    },
+    {
+      "colId": "G2_RuesConcernees",
+      "type": "Text",
+      "label": "Rues concernées / commentaire circulation"
+    },
+    {
+      "colId": "H0_ConcerneTC",
+      "type": "Bool",
+      "label": "Concerné par les transports en commun"
+    },
+    {
+      "colId": "H1_ConnaitOffre",
+      "type": "Bool",
+      "label": "Connaît l’offre de transports en commun"
+    },
+    {
+      "colId": "H2_ConnaitParkingRelais",
+      "type": "Bool",
+      "label": "Connaît des parkings relais"
+    },
+    {
+      "colId": "H3_AccesArrets",
+      "type": "Int",
+      "label": "Accès/attente aux arrêts de bus satisfaisants (1–5)"
+    },
+    {
+      "colId": "H4_Horaires",
+      "type": "Int",
+      "label": "Horaires de bus respectés (1–5)"
+    },
+    {
+      "colId": "I0_ConcerneVelo",
+      "type": "Bool",
+      "label": "Concerné par le vélo"
+    },
+    {
+      "colId": "I1_ArceauxSuffisance",
+      "type": "Int",
+      "label": "Nombre d’arceaux vélos sur voirie (1 insuffisant → 5 suffisant)"
+    },
+    {
+      "colId": "I4_VelosMalGares",
+      "type": "Int",
+      "label": "Vélos/trottinettes mal garés gênants à pied (1–5)"
+    },
+    {
+      "colId": "I5_RapportVelo",
+      "type": "Choice",
+      "label": "Rapport au vélo",
+      "choix": [
+        "J’en fais déjà",
+        "Je n’en fais pas mais j’aimerais essayer",
+        "Je n’en fais pas et cela ne m’intéresse pas"
+      ]
+    },
+    {
+      "colId": "J0_ConcerneEcoles",
+      "type": "Bool",
+      "label": "Concerné par les abords d’école"
+    },
+    {
+      "colId": "J1_AccesConflictuels",
+      "type": "Int",
+      "label": "Abords d’école dangereux/tendus entre modes (1–5)"
+    },
+    {
+      "colId": "J2_PrioriteEcoles",
+      "type": "Int",
+      "label": "Sécuriser les abords d’école = priorité (1–5)"
+    },
+    {
+      "colId": "K0_ConcerneChaleur",
+      "type": "Bool",
+      "label": "A un avis sur la chaleur dans l’espace public"
+    },
+    {
+      "colId": "K1_TropChaud",
+      "type": "Int",
+      "label": "Trop chaud dans les espaces publics empruntés (1–5)"
+    },
+    {
+      "colId": "K2_ManqueOmbrage",
+      "type": "Int",
+      "label": "Manque d’ombrage dans le quartier (1–5)"
+    },
+    {
+      "colId": "K3_EspacesFrais",
+      "type": "Int",
+      "label": "Souhait d’accès à des espaces frais proches (1–5)"
+    },
+    {
+      "colId": "L0_ConcerneVegetal",
+      "type": "Bool",
+      "label": "A un avis sur la végétalisation"
+    },
+    {
+      "colId": "L1_Satisfait",
+      "type": "Int",
+      "label": "Satisfait de la végétalisation actuelle (1–5)"
+    },
+    {
+      "colId": "L2_PlusArbres",
+      "type": "Int",
+      "label": "Plus d’arbres dans les rues (1–5)"
+    },
+    {
+      "colId": "L3_SupprStatPourArbres",
+      "type": "Int",
+      "label": "Supprimer du stationnement pour planter (1–5)"
+    },
+    {
+      "colId": "L4_ArbustesPlantes",
+      "type": "Int",
+      "label": "Plus d’arbustes/plantes au sol (1–5)"
+    },
+    {
+      "colId": "L5_PlusParcs",
+      "type": "Int",
+      "label": "Plus d’espaces verts/parcs (1–5)"
+    },
+    {
+      "colId": "M1_Mode_Voiture",
+      "type": "Int",
+      "label": "Prioriser la voiture (1 surtout pas → 5 en priorité)"
+    },
+    {
+      "colId": "M2_Mode_Bus",
+      "type": "Int",
+      "label": "Prioriser le bus (1–5)"
+    },
+    {
+      "colId": "M3_Mode_Velo",
+      "type": "Int",
+      "label": "Prioriser le vélo (1–5)"
+    },
+    {
+      "colId": "M4_Mode_Trottinette",
+      "type": "Int",
+      "label": "Prioriser la trottinette (1–5)"
+    },
+    {
+      "colId": "M5_Mode_Pieton",
+      "type": "Int",
+      "label": "Prioriser la marche à pied (1–5)"
+    },
+    {
+      "colId": "M6_Mode_2RM",
+      "type": "Int",
+      "label": "Prioriser les deux-roues motorisés (1–5)"
+    },
+    {
+      "colId": "N1_Remarques",
+      "type": "Text",
+      "label": "Remarques libres"
+    },
+    {
+      "colId": "Horodatage",
+      "type": "DateTime",
+      "label": "Horodatage de la réponse"
+    },
+    {
+      "colId": "DureeSecondes",
+      "type": "Int",
+      "label": "Durée de remplissage (secondes)"
+    }
+  ]
+}

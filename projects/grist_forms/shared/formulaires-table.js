@@ -46,6 +46,31 @@
     return isFinite(n) ? Math.trunc(n) : (fallback == null ? null : fallback);
   }
 
+  /**
+   * La définition débarrassée de ce qui n'appartient qu'au compositeur.
+   *
+   * L'écran garde des marques de travail sur ses champs (`_colIdLocked` dit
+   * que l'identifiant de colonne a été choisi à la main). Elles partaient dans
+   * `Def` et faisaient mentir le contrat : `formdef.schema.json` interdit toute
+   * clé qu'il ne déclare pas. Un lecteur strict rejetait donc des formulaires
+   * que ce dépôt avait lui-même écrits.
+   */
+  function defPropre(def) {
+    if (!def || typeof def !== 'object') return def;
+    var sansMarques = function (o) {
+      var out = {};
+      Object.keys(o).forEach(function (k) { if (k.charAt(0) !== '_') out[k] = o[k]; });
+      return out;
+    };
+    var copie = sansMarques(def);
+    copie.sections = (def.sections || []).map(function (s) {
+      var sec = sansMarques(s);
+      sec.fields = (s.fields || []).map(sansMarques);
+      return sec;
+    });
+    return copie;
+  }
+
   function rowFromFormDef(def, meta) {
     meta = meta || {};
     var fields = {
@@ -54,7 +79,7 @@
       Titre: def.title || '',
       TableCible: def.tableId || '',
       Version: asInt(meta.version, 0),
-      Def: JSON.stringify(def),
+      Def: JSON.stringify(defPropre(def)),
       Statut: meta.statut || 'brouillon'
     };
     if (meta.publishedSectionRef != null) {
@@ -70,6 +95,7 @@
     TABLE_NAME: TABLE_NAME,
     FORMULAIRES_SCHEMA: FORMULAIRES_SCHEMA,
     planCreateFormulairesTable: planCreateFormulairesTable,
+    defPropre: defPropre,
     rowFromFormDef: rowFromFormDef
   };
 }));
