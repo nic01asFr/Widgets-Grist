@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Form Builder — widget Grist</title>
-<meta name="description" content="Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s&#39;adapte à qui le remplit.">
+<meta name="description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
 <link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgets Grist">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/">
 <meta property="og:title" content="Form Builder — widget Grist">
-<meta property="og:description" content="Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s&#39;adapte à qui le remplit.">
+<meta property="og:description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
 <meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/apercu.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Form Builder — widget Grist">
-<meta name="twitter:description" content="Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s&#39;adapte à qui le remplit.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Form Builder","description":"Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s'adapte à qui le remplit.","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms","dateModified":"2026-08-22"}</script>
+<meta name="twitter:description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Form Builder","description":"Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms","dateModified":"2026-10-05"}</script>
 <style>
 :root { --papier: #F6F6F6; --surface: #FFFFFF; --encre: #161616; --plume: #666666; --filet: #DDDDDD; --accent: #000091; }
 
@@ -99,6 +99,70 @@ section { margin: 0 0 3rem; }
   box-shadow: 0 6px 24px rgba(0,0,0,.28); }
 .lancer:hover { filter: brightness(1.08); }
 .mention { font-size: .85rem; margin-top: .7rem; }
+
+.chiffres { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  padding: 1.6rem 0; border-top: 1px solid var(--filet); border-bottom: 1px solid var(--filet); }
+.chiffres b { display: block; font-family: var(--display-f, inherit); font-size: 2rem;
+  line-height: 1; color: var(--accent); font-weight: 500; }
+.chiffres span { font-size: .88rem; color: var(--plume); }
+.contexte { display: grid; gap: 1.4rem; margin-bottom: 2.8rem;
+  grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .contexte { grid-template-columns: 17rem minmax(0, 1fr); gap: 2.2rem; } }
+.contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.contexte p { font-size: .94rem; margin: 0 0 .7rem; }
+.contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .exemple { font-size: .86rem; color: var(--plume); margin: .9rem 0 0; padding: .6rem .8rem; background: var(--filet); border-radius: 8px; }
+.contexte .exemple b { color: var(--encre); font-weight: 600; margin-right: .3rem; }
+.contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
+.contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
+/* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
+   raison de montrer une capture de plus. */
+.contexte .pourquoi { font-size: .88rem; padding-left: .85rem;
+  border-left: 2px solid var(--accent); margin-bottom: 0; }
+.contexte figure { margin: 0 0 1rem; }
+.contexte .large img { width: 100%; height: auto; display: block; border-radius: 12px;
+  border: 1px solid var(--filet); }
+.contexte figcaption { font-size: .85rem; color: var(--plume); margin-top: .6rem; }
+.telephones { display: grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+/* Un cadre : sans lui, une capture verticale se lit comme une image mal recadree. */
+/* Un téléphone n'est pas plus large qu'un téléphone : seul dans sa colonne, il ne s'étire pas. */
+.telephone { max-width: 17rem; }
+.telephone .ecran { border: 8px solid var(--encre); border-radius: 26px; overflow: hidden;
+  background: var(--encre); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+/* Le cadre suit l image, au lieu de lui imposer un rapport : une capture prise
+   sur un autre appareil se trouvait rognee, et c est le haut de l ecran — la
+   barre du produit — qui disparaissait. */
+.telephone .ecran img { width: 100%; height: auto; display: block; }
+.telephone figcaption { text-align: center; }
+.sequence ol { list-style: none; counter-reset: pas; padding: 0; margin: 0;
+  display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.sequence li { counter-increment: pas; padding-top: 2.6rem; position: relative; }
+.sequence li::before { content: counter(pas); position: absolute; top: 0; left: 0;
+  width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center;
+  font-size: .85rem; font-weight: 600; color: #fff; background: var(--accent); }
+.sequence li b { display: block; margin-bottom: .3rem; }
+.sequence li p { font-size: .93rem; margin: 0; }
+.facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.groupe-points { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--plume); font-weight: 600; }
+.facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
+.facons ul { list-style: none; padding: 0; margin: 0; }
+.facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
+.facons li p { font-size: .9rem; margin: .25rem 0 0; }
+.facons .porte { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+/* Ou la porte tourne : c'est ce qui decide laquelle choisir. */
+.facons .ou { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: .05rem .5rem; }
+.contexte code, .sequence code, .facons code, .journal code, .mention code { font-size: .88em; padding: .05em .3em;
+  border-radius: 4px; background: var(--filet); overflow-wrap: anywhere; }
+/* La revelation accompagne le defilement ; elle ne le commande pas. */
+.reveler { opacity: 0; transform: translateY(14px);
+  transition: opacity .5s ease, transform .5s ease; }
+.reveler.vu { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveler { opacity: 1; transform: none; transition: none; }
+}
 </style>
 </head>
 <body>
@@ -106,13 +170,13 @@ section { margin: 0 0 3rem; }
   <a class="retour" href="../../">← Tous les widgets</a>
   <p class="eyebrow">Widget Grist</p>
   <h1>Form Builder</h1>
-  <p class="chapeau">Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s&#39;adapte à qui le remplit.</p>
-  
-  <div class="tags"><span class="tag">Formulaires</span><span class="tag">Collecte</span><span class="tag">Publication</span></div>
+  <p class="chapeau">Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.</p>
+  <p class="accroche">Composer, mettre en ligne, dépouiller : trois écrans du même outil, sur la même table. Rien ne transite ailleurs, et la synthèse ne demande aucun travail de remise en forme.</p>
+  <div class="tags"><span class="tag">Formulaires</span><span class="tag">Collecte</span><span class="tag">Enquête</span><span class="tag">Terrain</span><span class="tag">Carte</span><span class="tag">Dessin</span><span class="tag">Synthèse</span></div>
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span>Mis à jour il y a 1 mois</span>
+    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/grist_forms/builder.html" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -127,15 +191,115 @@ section { margin: 0 0 3rem; }
     </div>
     <p class="mention">L’aperçu s’exécute dans votre navigateur, sans document Grist : les données y sont fictives.</p>
   </section>
+  <section class="chiffres reveler">
+    <div><b>0</b><span>service tiers entre la réponse et votre table</span></div>
+    <div><b>0</b><span>recopie entre la collecte et le dépouillement</span></div>
+    <div><b>15</b><span>formes de question, du texte libre au tracé sur carte</span></div>
+  </section>
+  <section class="contextes reveler">
+    <h2>À quoi ça sert</h2>
+    <article class="contexte">
+      <div class="dit">
+        
+        <h3>Consultation du public</h3>
+        <p>une enquête de perception, avec les lieux signalés sur la carte et la restitution qui se remplit au fil des réponses.</p>
+        
+        
+        
+      </div>
+      <div class="montre">
+
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        
+        <h3>Relevé de terrain</h3>
+        <p>une fiche remplie sur le téléphone : photo prise sur place, position du point, croquis de l&#39;implantation.</p>
+        
+        
+        
+      </div>
+      <div class="montre">
+
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        
+        <h3>Constat et accord</h3>
+        <p>une annotation sur la photo du désordre, une signature dans le cadre, et la pièce jointe arrive dans la ligne.</p>
+        
+        
+        
+      </div>
+      <div class="montre">
+
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
+        
+        <h3>Demande interne</h3>
+        <p>un formulaire qui reconnaît la personne connectée et lui épargne les questions qui ne la concernent pas.</p>
+        
+        
+        
+      </div>
+      <div class="montre">
+
+      </div>
+    </article>
+  </section>
   <section>
     <h2>Ce qu’il fait</h2>
     <ul class="points">
-      <li><b>Lié aux tables</b> — chaque champ vise une colonne : les réponses n&#39;ont pas à être recopiées ailleurs.</li>
-      <li><b>Conditions et chemins</b> — une question peut n&#39;apparaître qu&#39;en fonction d&#39;une réponse précédente.</li>
-      <li><b>Audience</b> — le formulaire se présente différemment selon la personne qui l&#39;ouvre.</li>
-      <li><b>Publication figée</b> — une version publiée reste stable pendant que l&#39;édition continue à côté.</li>
+      <li><b>Lié aux colonnes</b> — chaque question vise une colonne de votre table : il n&#39;y a pas de base intermédiaire, rien à recopier, rien à exporter.</li>
+      <li><b>Un parcours, pas une liste</b> — les questions se regroupent en étapes, une étape entière peut être épargnée à qui n&#39;est pas concerné, et l&#39;avancement reste sous les yeux.</li>
+      <li><b>Une page d&#39;accueil</b> — qui publie, pourquoi, pour combien de temps, ce qu&#39;il advient des réponses : ce qu&#39;on lit pour décider de répondre.</li>
+      <li><b>Toutes les formes de saisie</b> — listes plafonnées, « Autre : … » dans sa propre colonne, échelles en matrice, classement en grille, pièces jointes et photo prise sur place.</li>
+      <li><b>Un lieu sur une carte</b> — un point se pose au doigt, un trajet ou un contour se trace sommet par sommet. Fonds IGN, et chaque sommet posé est enregistré.</li>
+      <li><b>Un canevas qu&#39;on compose</b> — entourer un désordre sur une photo, croquer une implantation, signer un constat : le dessin part en pièce jointe, avec son fond.</li>
+      <li><b>Illustrer n&#39;importe quelle question</b> — une image, une carte à repères, ou une page entière intégrée — une vue publiée, un tableau de bord, un autre widget.</li>
+      <li><b>Mise en ligne qui fige</b> — la version publiée reste stable pendant que l&#39;édition continue à côté. Le formulaire vit dans le document, avec ses droits.</li>
+      <li><b>Une synthèse qui a du sens</b> — une table de réponses ne se lit pas seule : une échelle y écrit « 4 », un classement est éclaté en trois colonnes. La synthèse remet ce que la définition sait.</li>
     </ul>
 
+  </section>
+  <section class="sequence reveler">
+    <h2>De la question à la synthèse</h2>
+    <ol>
+      <li>
+        <b>On compose</b>
+        <p>Les questions se posent par étapes, chacune visant une colonne. L&#39;aperçu, à côté, montre ce que le public verra — en téléphone, puisque c&#39;est là qu&#39;on répondra.</p>
+      </li>
+      <li>
+        <b>On met en ligne</b>
+        <p>Une page dédiée apparaît dans le document, avec une copie figée du formulaire. La version suivante se prépare pendant que le public répond à celle d&#39;avant.</p>
+      </li>
+      <li>
+        <b>On répond</b>
+        <p>Une page d&#39;accueil annonce la durée et ce qu&#39;il advient des réponses. Les étapes s&#39;enchaînent, certaines sont épargnées selon le profil, et le chrono ne part qu&#39;au moment où l&#39;on commence vraiment.</p>
+      </li>
+      <li>
+        <b>On dépouille</b>
+        <p>Ce qui est demandé, ce qui va bien, ce qui est préféré. Les classements en points, les listes en citations, les réponses libres telles quelles — et l&#39;effectif à côté de chaque pourcentage.</p>
+      </li>
+    </ol>
+  </section>
+  <section>
+    <div class="encart">
+      <h2>Tout reste dans votre document</h2>
+      <p>Aucun service tiers, aucun compte à créer, aucune donnée qui sort. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n&#39;importe quelle page, avec les droits que vous choisissez. Les conditions d&#39;affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls.</p>
+      
+    </div>
+  </section>
+  <section>
+    <h2>Journal</h2>
+    <div class="journal">
+      <div><b>v1.1.0</b><p>Un questionnaire ne commence plus par sa première question : une page d&#39;accueil annonce qui publie, pourquoi et pour combien de temps, et un bandeau reste à l&#39;écran du début à la fin. N&#39;importe quelle question peut porter une illustration — une image, une carte à repères, ou une page entière intégrée. Un lieu se saisit sur une carte : point au doigt, trajet et contour au tracé. Un canevas permet d&#39;annoter une photo, de croquer ou de signer, et part en pièce jointe avec son fond. Quatre saisies qui manquaient aux enquêtes réelles sont là : oui/non en deux mots, « Autre : … » dans sa propre colonne, cases plafonnées, classement en grille. Enfin une synthèse relit les réponses avec la définition qui les a produites — ce qui est demandé, ce qui va bien, ce qui est préféré, l&#39;effectif toujours écrit à côté du pourcentage.</p></div>
+      <div><b>v1.0.0</b><p>Composer un formulaire branché sur les colonnes d&#39;une table, le prévisualiser, le mettre en ligne sur une page du document. Étapes, conditions par champ et par section, chemins selon les réponses, reconnaissance de la personne connectée et réserve de questions par audience.</p></div>
+    </div>
   </section>
 </main>
 <script>
@@ -153,6 +317,21 @@ section { margin: 0 0 3rem; }
       cadre.classList.add('vivant');
     });
   });
+</script>
+<script>
+  (function () {
+    var blocs = document.querySelectorAll('.reveler');
+    if (!('IntersectionObserver' in window)) {
+      blocs.forEach(function (b) { b.classList.add('vu'); });
+      return;
+    }
+    var o = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('vu'); o.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    blocs.forEach(function (b) { o.observe(b); });
+  })();
 </script>
 <footer class="pied">
   <p>Dans Grist : <em>Ajouter un widget</em> → <em>Custom</em> → collez l’adresse

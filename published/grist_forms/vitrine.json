@@ -1,29 +1,122 @@
 {
   "nom": "Form Builder",
-  "pitch": "Des questionnaires branchés sur vos tables : ce qui est répondu atterrit directement dans le document, et le formulaire s'adapte à qui le remplit.",
+  "pitch": "Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.",
   "couleur": "#000091",
   "tags": [
     "Formulaires",
     "Collecte",
-    "Publication"
+    "Enquête",
+    "Terrain",
+    "Carte",
+    "Dessin",
+    "Synthèse"
   ],
   "depot": "https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms",
   "points": [
     {
-      "titre": "Lié aux tables",
-      "texte": "chaque champ vise une colonne : les réponses n'ont pas à être recopiées ailleurs."
+      "titre": "Lié aux colonnes",
+      "texte": "chaque question vise une colonne de votre table : il n'y a pas de base intermédiaire, rien à recopier, rien à exporter."
     },
     {
-      "titre": "Conditions et chemins",
-      "texte": "une question peut n'apparaître qu'en fonction d'une réponse précédente."
+      "titre": "Un parcours, pas une liste",
+      "texte": "les questions se regroupent en étapes, une étape entière peut être épargnée à qui n'est pas concerné, et l'avancement reste sous les yeux."
     },
     {
-      "titre": "Audience",
-      "texte": "le formulaire se présente différemment selon la personne qui l'ouvre."
+      "titre": "Une page d'accueil",
+      "texte": "qui publie, pourquoi, pour combien de temps, ce qu'il advient des réponses : ce qu'on lit pour décider de répondre."
     },
     {
-      "titre": "Publication figée",
-      "texte": "une version publiée reste stable pendant que l'édition continue à côté."
+      "titre": "Toutes les formes de saisie",
+      "texte": "listes plafonnées, « Autre : … » dans sa propre colonne, échelles en matrice, classement en grille, pièces jointes et photo prise sur place."
+    },
+    {
+      "titre": "Un lieu sur une carte",
+      "texte": "un point se pose au doigt, un trajet ou un contour se trace sommet par sommet. Fonds IGN, et chaque sommet posé est enregistré."
+    },
+    {
+      "titre": "Un canevas qu'on compose",
+      "texte": "entourer un désordre sur une photo, croquer une implantation, signer un constat : le dessin part en pièce jointe, avec son fond."
+    },
+    {
+      "titre": "Illustrer n'importe quelle question",
+      "texte": "une image, une carte à repères, ou une page entière intégrée — une vue publiée, un tableau de bord, un autre widget."
+    },
+    {
+      "titre": "Mise en ligne qui fige",
+      "texte": "la version publiée reste stable pendant que l'édition continue à côté. Le formulaire vit dans le document, avec ses droits."
+    },
+    {
+      "titre": "Une synthèse qui a du sens",
+      "texte": "une table de réponses ne se lit pas seule : une échelle y écrit « 4 », un classement est éclaté en trois colonnes. La synthèse remet ce que la définition sait."
+    }
+  ],
+  "encart": {
+    "titre": "Tout reste dans votre document",
+    "texte": "Aucun service tiers, aucun compte à créer, aucune donnée qui sort. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n'importe quelle page, avec les droits que vous choisissez. Les conditions d'affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls."
+  },
+  "produit": {
+    "accroche": "Composer, mettre en ligne, dépouiller : trois écrans du même outil, sur la même table. Rien ne transite ailleurs, et la synthèse ne demande aucun travail de remise en forme.",
+    "chiffres": [
+      {
+        "valeur": "0",
+        "libelle": "service tiers entre la réponse et votre table"
+      },
+      {
+        "valeur": "0",
+        "libelle": "recopie entre la collecte et le dépouillement"
+      },
+      {
+        "valeur": "15",
+        "libelle": "formes de question, du texte libre au tracé sur carte"
+      }
+    ],
+    "titreSequence": "De la question à la synthèse",
+    "sequence": [
+      {
+        "titre": "On compose",
+        "texte": "Les questions se posent par étapes, chacune visant une colonne. L'aperçu, à côté, montre ce que le public verra — en téléphone, puisque c'est là qu'on répondra."
+      },
+      {
+        "titre": "On met en ligne",
+        "texte": "Une page dédiée apparaît dans le document, avec une copie figée du formulaire. La version suivante se prépare pendant que le public répond à celle d'avant."
+      },
+      {
+        "titre": "On répond",
+        "texte": "Une page d'accueil annonce la durée et ce qu'il advient des réponses. Les étapes s'enchaînent, certaines sont épargnées selon le profil, et le chrono ne part qu'au moment où l'on commence vraiment."
+      },
+      {
+        "titre": "On dépouille",
+        "texte": "Ce qui est demandé, ce qui va bien, ce qui est préféré. Les classements en points, les listes en citations, les réponses libres telles quelles — et l'effectif à côté de chaque pourcentage."
+      }
+    ],
+    "titreContextes": "À quoi ça sert",
+    "contextes": [
+      {
+        "titre": "Consultation du public",
+        "texte": "une enquête de perception, avec les lieux signalés sur la carte et la restitution qui se remplit au fil des réponses."
+      },
+      {
+        "titre": "Relevé de terrain",
+        "texte": "une fiche remplie sur le téléphone : photo prise sur place, position du point, croquis de l'implantation."
+      },
+      {
+        "titre": "Constat et accord",
+        "texte": "une annotation sur la photo du désordre, une signature dans le cadre, et la pièce jointe arrive dans la ligne."
+      },
+      {
+        "titre": "Demande interne",
+        "texte": "un formulaire qui reconnaît la personne connectée et lui épargne les questions qui ne la concernent pas."
+      }
+    ]
+  },
+  "journal": [
+    {
+      "version": "v1.1.0",
+      "texte": "Un questionnaire ne commence plus par sa première question : une page d'accueil annonce qui publie, pourquoi et pour combien de temps, et un bandeau reste à l'écran du début à la fin. N'importe quelle question peut porter une illustration — une image, une carte à repères, ou une page entière intégrée. Un lieu se saisit sur une carte : point au doigt, trajet et contour au tracé. Un canevas permet d'annoter une photo, de croquer ou de signer, et part en pièce jointe avec son fond. Quatre saisies qui manquaient aux enquêtes réelles sont là : oui/non en deux mots, « Autre : … » dans sa propre colonne, cases plafonnées, classement en grille. Enfin une synthèse relit les réponses avec la définition qui les a produites — ce qui est demandé, ce qui va bien, ce qui est préféré, l'effectif toujours écrit à côté du pourcentage."
+    },
+    {
+      "version": "v1.0.0",
+      "texte": "Composer un formulaire branché sur les colonnes d'une table, le prévisualiser, le mettre en ligne sur une page du document. Étapes, conditions par champ et par section, chemins selon les réponses, reconnaissance de la personne connectée et réserve de questions par audience."
     }
   ],
   "peau": {

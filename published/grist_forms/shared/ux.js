@@ -10,11 +10,14 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Ce qu'une question peut etre, dans les mots de celle ou celui qui compose.
+  // Le `widget` dit comment elle se pose, le `type` ou la reponse se range, et
+  // le `kind` la couche qu'on pose par-dessus (un classement reste un choix).
   var SIMPLE_TYPES = [
     { key: 'text', type: 'Text', widget: 'text', label: 'Texte' },
     { key: 'textarea', type: 'Text', widget: 'textarea', label: 'Paragraphe' },
     { key: 'number', type: 'Int', widget: 'number', label: 'Nombre' },
-    { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Oui / Non' },
+    { key: 'ouinon', type: 'Bool', widget: 'ouinon', label: 'Oui / Non' },
     { key: 'choice', type: 'Choice', widget: 'select', label: 'Liste de choix' },
     { key: 'choicelist', type: 'ChoiceList', widget: 'multiselect', label: 'Cases multiples' },
     { key: 'date', type: 'Date', widget: 'date', label: 'Date' },
@@ -26,7 +29,16 @@
     { key: 'numeric', type: 'Numeric', widget: 'number', label: 'Nombre décimal' },
     { key: 'ref', type: 'Ref', widget: 'select', label: 'Référence (table liée)' },
     { key: 'reflist', type: 'RefList', widget: 'multiselect', label: 'Références multiples' },
-    { key: 'likert', type: 'Int', widget: 'likert', label: 'Échelle 1–5' }
+    { key: 'likert', type: 'Int', widget: 'likert', label: 'Échelle 1–5' },
+    { key: 'radio', type: 'Choice', widget: 'radio', label: 'Choix en boutons' },
+    { key: 'classement', type: 'Choice', widget: 'classement', kind: 'classement', label: 'Classement' },
+    { key: 'geo', type: 'Text', widget: 'geo', kind: 'geometrie', label: 'Lieu (position)' },
+    // Un dessin arrive dans la base comme une photo : en piece jointe.
+    { key: 'dessin', type: 'Attachments', widget: 'dessin', label: 'Dessin / annotation' },
+    { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
+    // La case a cocher reste disponible : une acceptation de conditions n'est
+    // pas une question a deux reponses, c'est un accord qu'on donne ou non.
+    { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Case à cocher' }
   ];
 
   function slugify(text) {
@@ -56,11 +68,17 @@
     if (field.widget === 'likert') return 'likert';
     if (field.widget === 'file' || field.type === 'Attachments') return 'file';
     var all = SIMPLE_TYPES.concat(ADVANCED_TYPES);
-    for (var i = 0; i < all.length; i++) {
+    var i;
+    // Le widget d'abord : « oui/non » et « case a cocher » ont le meme type
+    // Grist, et c'est la maniere de poser la question qui les distingue.
+    for (i = 0; i < all.length; i++) {
       if (all[i].type === field.type && all[i].widget === field.widget) return all[i].key;
     }
-    for (var j = 0; j < all.length; j++) {
-      if (all[j].type === field.type) return all[j].key;
+    for (i = 0; i < all.length; i++) {
+      if (all[i].widget === field.widget) return all[i].key;
+    }
+    for (i = 0; i < all.length; i++) {
+      if (all[i].type === field.type) return all[i].key;
     }
     return 'text';
   }
@@ -74,6 +92,10 @@
     if (!found) found = SIMPLE_TYPES[0];
     field.type = found.type;
     field.widget = found.widget;
+    // Le `kind` suit le choix : il n'est pas un reglage de plus a trouver.
+    // Celui qu'on quitte s'en va, sauf l'echelle, qui se choisit ailleurs.
+    if (found.kind) field.kind = found.kind;
+    else if (field.kind && field.kind !== 'echelle') delete field.kind;
     return field;
   }
 

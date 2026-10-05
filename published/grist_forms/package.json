@@ -1,7 +1,7 @@
 {
   "name": "grist-forms",
-  "version": "1.0.0",
-  "description": "Form Builder Grist — composer, prévisualiser et publier des formulaires intra-doc",
+  "version": "1.1.0",
+  "description": "Form Builder Grist — composer, remplir et dépouiller des formulaires dans un document",
   "authors": [
     {
       "name": "nic01asfr",
@@ -10,9 +10,9 @@
   ],
   "grist": {
     "widgetId": "grist-forms-builder",
-    "name": "Form Builder — essence formulaires Grist",
+    "name": "Form Builder — formulaires Grist",
     "url": "builder.html",
     "accessLevel": "full",
-    "description": "Questionnaires liés aux tables Grist : conditions, audience, chemins, publication figée intra-doc"
+    "description": "Questionnaires liés aux tables : étapes, conditions, audience, carte, dessin, synthèse"
   }
 }

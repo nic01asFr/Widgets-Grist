@@ -72,72 +72,122 @@
 
   /**
    * @param {File[]|Blob[]} files
-   * @param {{ getAccessToken: Function, fetch?: Function }} deps
+   * @param {{ getAccessToken: Function, fetch?: Function, uploadFile?: Function }} deps
+   *
+   * `uploadFile` — l'hôte envoie lui-même, et rend le ou les ids obtenus.
+   *
+   * > **Pourquoi laisser l'hôte envoyer.** L'envoi d'ici suppose un jeton de
+   * > document et une requête que l'origine du widget laisse passer. Hors du
+   * > navigateur — une application empaquetée, dont le client HTTP est natif —
+   * > ni l'un ni l'autre ne tient : il n'y a pas de jeton signé, et l'adresse
+   * > se présente avec une clé d'API. L'hôte, lui, sait où il tourne. Sans ce
+   * > point d'entrée, il faudrait dupliquer le moteur pour l'application.
    */
   function uploadFiles(files, deps) {
     deps = deps || {};
     var fetchFn = deps.fetch || (typeof fetch !== 'undefined' ? fetch.bind(typeof window !== 'undefined' ? window : globalThis) : null);
     var getToken = deps.getAccessToken;
     if (!files || !files.length) return Promise.resolve([]);
+
+    if (typeof deps.uploadFile === 'function') {
+      var suite = Promise.resolve([]);
+      files.forEach(function (file) {
+        suite = suite.then(function (acc) {
+          return Promise.resolve(deps.uploadFile(file)).then(function (rendu) {
+            var ids = normalizeUploadResponse(rendu);
+            if (!ids.length) {
+              throw new Error('Réponse upload inattendue pour « ' + (file.name || 'fichier') + ' ».');
+            }
+            return acc.concat(ids);
+          });
+        });
+      });
+      return suite;
+    }
+
     if (typeof getToken !== 'function') {
       return Promise.reject(new Error('Upload de fichiers impossible : pas de jeton Grist (getAccessToken).'));
     }
 
-    function postOne(tokenInfo, file) {
-      var url = tokenInfo.baseUrl.replace(/\/$/, '') + '/attachments?auth=' + encodeURIComponent(tokenInfo.token);
-      var formData = new FormData();
-      formData.append('upload', file, file.name || 'fichier');
-
-      // XHR d’abord (recommandé Grist / CORS custom widgets)
-      if (typeof XMLHttpRequest !== 'undefined' && !deps.fetch) {
-        return new Promise(function (resolve, reject) {
-          var req = new XMLHttpRequest();
-          req.open('POST', url, true);
-          req.setRequestHeader('accept', 'application/json');
+    function xhrPost(url, formData, file, withXRequestedWith) {
+      return new Promise(function (resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.open('POST', url, true);
+        req.setRequestHeader('accept', 'application/json');
+        if (withXRequestedWith) {
           req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-          req.onload = function () {
-            if (req.status < 200 || req.status >= 300) {
-              reject(new Error('Échec upload (« ' + (file.name || 'fichier') + ' ») : HTTP ' + req.status));
+        }
+        req.onload = function () {
+          if (req.status < 200 || req.status >= 300) {
+            reject(new Error('Échec upload (« ' + (file.name || 'fichier') + ' ») : HTTP ' + req.status +
+              (withXRequestedWith ? '' : ' [sans X-Requested-With]')));
+            return;
+          }
+          try {
+            var body = JSON.parse(req.responseText);
+            var ids = normalizeUploadResponse(body);
+            if (!ids.length) {
+              reject(new Error('Réponse upload inattendue pour « ' + (file.name || 'fichier') + ' ».'));
               return;
             }
-            try {
-              var body = JSON.parse(req.responseText);
-              var ids = normalizeUploadResponse(body);
-              if (!ids.length) {
-                reject(new Error('Réponse upload inattendue pour « ' + (file.name || 'fichier') + ' ».'));
-                return;
-              }
-              resolve(ids);
-            } catch (e) {
-              reject(e);
-            }
-          };
-          req.onerror = function () {
-            reject(new Error('Échec réseau upload (« ' + (file.name || 'fichier') + ' »).'));
-          };
-          req.send(formData);
-        });
-      }
+            resolve({ ids: ids, withXRequestedWith: withXRequestedWith });
+          } catch (e) {
+            reject(e);
+          }
+        };
+        req.onerror = function () {
+          reject(new Error('Échec réseau upload (« ' + (file.name || 'fichier') + ' »)' +
+            (withXRequestedWith ? '' : ' [sans X-Requested-With]')));
+        };
+        req.send(formData);
+      });
+    }
 
-      if (!fetchFn) {
-        return Promise.reject(new Error('Upload de fichiers impossible : fetch/XHR indisponible.'));
-      }
+    function fetchPost(url, formData, file, withXRequestedWith) {
+      var headers = { accept: 'application/json' };
+      if (withXRequestedWith) headers['X-Requested-With'] = 'XMLHttpRequest';
       return fetchFn(url, {
         method: 'POST',
         body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        headers: headers
       }).then(function (res) {
         if (!res.ok) {
-          return Promise.reject(new Error('Échec upload (« ' + (file.name || 'fichier') + ' ») : HTTP ' + res.status));
+          return Promise.reject(new Error('Échec upload (« ' + (file.name || 'fichier') + ' ») : HTTP ' + res.status +
+            (withXRequestedWith ? '' : ' [sans X-Requested-With]')));
         }
         return res.json().then(function (body) {
           var ids = normalizeUploadResponse(body);
           if (!ids.length) {
             throw new Error('Réponse upload inattendue pour « ' + (file.name || 'fichier') + ' ».');
           }
-          return ids;
+          return { ids: ids, withXRequestedWith: withXRequestedWith };
         });
       });
+    }
+
+    function postOne(tokenInfo, file) {
+      var url = tokenInfo.baseUrl.replace(/\/$/, '') + '/attachments?auth=' + encodeURIComponent(tokenInfo.token);
+      var formData = new FormData();
+      formData.append('upload', file, file.name || 'fichier');
+      var useXhr = typeof XMLHttpRequest !== 'undefined' && !deps.fetch;
+      var postFn = useXhr ? xhrPost : fetchPost;
+
+      // Option H : simpleUpload = POST sans X-Requested-With (évite preflight CORS)
+      if (deps.simpleUpload === true) {
+        return postFn(url, formData, file, false).then(function (r) { return r.ids; });
+      }
+      if (deps.simpleUpload === false) {
+        return postFn(url, formData, file, true).then(function (r) { return r.ids; });
+      }
+
+      // Défaut : X-Requested-With (CSRF Grist)
+      if (useXhr) {
+        return xhrPost(url, formData, file, true).then(function (r) { return r.ids; });
+      }
+      if (!fetchFn) {
+        return Promise.reject(new Error('Upload de fichiers impossible : fetch/XHR indisponible.'));
+      }
+      return fetchPost(url, formData, file, true).then(function (r) { return r.ids; });
     }
 
     return Promise.resolve(getToken({ readOnly: false })).then(function (tokenInfo) {
@@ -165,9 +215,16 @@
     (formDef.sections || []).forEach(function (section) {
       (section.fields || []).forEach(function (field) {
         if (normalizeGristType(field.type) !== 'Attachments') return;
-        var files = filesFromValue(values[field.colId]);
-        var existing = idsFromValue(values[field.colId]);
+        var brut = values[field.colId];
+        var files = filesFromValue(brut);
+        var existing = idsFromValue(brut);
         if (!files.length) {
+          // Rien de choisi : on ne touche pas à ce qui est déjà là. Une valeur
+          // qu'on ne sait pas lire — le chemin d'une photo prise sur le terrain,
+          // par exemple, quand la colonne est restée du texte — est LAISSÉE
+          // telle quelle. La vider serait effacer, sur un simple enregistrement,
+          // une donnée que personne n'a demandé à changer.
+          if (!existing.length && typeof brut === 'string' && brut !== '') return;
           values[field.colId] = existing.length ? existing : null;
           return;
         }

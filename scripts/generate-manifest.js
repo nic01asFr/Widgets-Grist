@@ -35,6 +35,48 @@ function origineGit() {
   }
 }
 
+/**
+ * Quand ce widget a-t-il bouge ?
+ *
+ * > **Pas « maintenant ».** Le manifeste posait `new Date()` sur les quinze
+ * > widgets a chaque generation : republier l'un faisait bouger la date de tous
+ * > les autres, et le diff d'une publication touchait des widgets auxquels
+ * > personne n'avait touche. Au push, chacun se mettait a impacter les voisins.
+ *
+ * La verite est dans l'historique : la date du dernier commit qui touche le
+ * dossier du widget. Elle est stable, elle ne change que quand le widget
+ * change, et deux generations successives sans modification donnent le meme
+ * fichier.
+ *
+ * Trois replis, du plus vrai au moins faux : l'historique, la date deja
+ * inscrite au manifeste (un checkout superficiel de CI n'a pas les dates —
+ * `fetch-depth: 0` les ramene), et enfin maintenant.
+ */
+const datesConnues = (function () {
+    try {
+        const ancien = JSON.parse(fs.readFileSync(
+            path.join(__dirname, '..', 'published', 'manifest.json'), 'utf8'));
+        const m = {};
+        (Array.isArray(ancien) ? ancien : []).forEach(function (w) {
+            if (w && w.widgetId && w.lastUpdatedAt) m[w.widgetId] = w.lastUpdatedAt;
+        });
+        return m;
+    } catch (_) { return {}; }
+}());
+
+const dateParDossier = {};
+function dateDuWidget(dossier, widgetId) {
+    if (!(dossier in dateParDossier)) {
+        let d = '';
+        try {
+            d = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'published/' + dossier],
+                { cwd: path.join(__dirname, '..'), encoding: 'utf8' }).trim();
+        } catch (_) { d = ''; }
+        dateParDossier[dossier] = d;
+    }
+    return dateParDossier[dossier] || datesConnues[widgetId] || new Date().toISOString();
+}
+
 const origine = origineGit();
 const GITHUB_USER = process.env.GITHUB_USER || origine?.user;
 const REPO_NAME = process.env.REPO_NAME || origine?.repo || 'Widgets-Grist';
@@ -122,7 +164,7 @@ for (const entry of entries) {
                 accessLevel: config.accessLevel || 'none',
                 renderAfterReady: config.renderAfterReady !== false,
                 description: config.description || pkg.description || '',
-                lastUpdatedAt: new Date().toISOString(),
+                lastUpdatedAt: dateDuWidget(entry.name, config.widgetId || pkg.name),
                 ...(config.authors && { authors: config.authors }),
                 ...(pkg.authors && !config.authors && { authors: pkg.authors }),
             };
