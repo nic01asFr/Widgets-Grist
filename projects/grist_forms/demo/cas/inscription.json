@@ -1,0 +1,104 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-inscription",
+  "title": "Atelier « Jardiner en ville »",
+  "tableId": "Inscriptions",
+  "composeMode": "ensureSchema",
+  "successMessage": "Inscription enregistrée. Un courriel de confirmation suivra.",
+  "branding": {
+    "organisation": "Service animation",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "S’inscrire à l’atelier",
+    "texte": "Trois séances, le samedi matin, au jardin partagé. **Vingt places**, inscription à la séance.",
+    "dureeMinutes": 2,
+    "encarts": [
+      {
+        "ton": "attention",
+        "titre": "Places limitées.",
+        "texte": "L’inscription vaut pour une personne. Prévenez-nous si vous ne pouvez plus venir."
+      }
+    ],
+    "bouton": "M’inscrire"
+  },
+  "choices": {},
+  "meta": {
+    "timestampCol": "Horodatage"
+  },
+  "sections": [
+    {
+      "id": "qui",
+      "label": "Vous",
+      "fields": [
+        {
+          "colId": "Nom",
+          "label": "Nom et prénom",
+          "type": "Text",
+          "widget": "text",
+          "required": true
+        },
+        {
+          "colId": "Courriel",
+          "label": "Courriel",
+          "type": "Text",
+          "widget": "text",
+          "required": true,
+          "options": {
+            "placeholder": "prenom.nom@exemple.fr"
+          }
+        },
+        {
+          "colId": "Seance",
+          "label": "Quelle séance ?",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Samedi 7 — Semer",
+              "Samedi 14 — Composter",
+              "Samedi 21 — Tailler"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "label": "Précisions",
+      "fields": [
+        {
+          "colId": "Debutant",
+          "label": "Est-ce votre premier atelier ?",
+          "type": "Bool",
+          "widget": "ouinon",
+          "options": {
+            "libelleOui": "Oui",
+            "libelleNon": "Non, j’en ai déjà suivi"
+          }
+        },
+        {
+          "colId": "Besoins",
+          "label": "Un besoin particulier ?",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "options": {
+            "choices": [
+              "Accès en fauteuil",
+              "Prêt d’outils",
+              "Garde d’enfants",
+              "Traduction"
+            ]
+          }
+        },
+        {
+          "colId": "Message",
+          "label": "Un mot pour l’animateur",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    }
+  ]
+}

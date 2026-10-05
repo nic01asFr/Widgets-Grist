@@ -1,0 +1,282 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-consultation",
+  "title": "Réaménagement de la place du Marché",
+  "tableId": "Avis",
+  "composeMode": "ensureSchema",
+  "successMessage": "Merci pour votre contribution !",
+  "branding": {
+    "organisation": "Service d’études",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Votre avis sur le réaménagement de la place",
+    "texte": "La commune prépare le réaménagement de la **place du Marché**. Avant de dessiner quoi que ce soit, elle recueille votre **usage** et votre **perception** du lieu.",
+    "dureeMinutes": 4,
+    "dureeTexte": "Le questionnaire s’adapte à vos réponses : certaines sections vous seront épargnées.",
+    "encarts": [
+      {
+        "ton": "discret",
+        "titre": "Anonymat & données (RGPD).",
+        "texte": "Ce questionnaire est **anonyme** : aucune donnée permettant de vous identifier n’est demandée. Les réponses sont exploitées de manière agrégée."
+      }
+    ],
+    "bouton": "Donner mon avis"
+  },
+  "echelles": {
+    "accord": {
+      "min": 1,
+      "max": 5,
+      "libelles": [
+        "Pas du tout d’accord",
+        "Tout à fait d’accord"
+      ]
+    }
+  },
+  "matrices": {
+    "usage": {
+      "titre": "Comment jugez-vous la place aujourd’hui ?",
+      "consigne": "Pour chaque affirmation, dites à quel point vous êtes d’accord."
+    }
+  },
+  "choices": {},
+  "meta": {
+    "timestampCol": "Horodatage",
+    "durationCol": "DureeSecondes"
+  },
+  "sections": [
+    {
+      "id": "profil",
+      "label": "Vous et la place",
+      "fields": [
+        {
+          "colId": "Lien",
+          "label": "Votre lien avec le quartier",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "J’y habite",
+              "J’y travaille",
+              "J’y fais mes courses",
+              "J’y passe",
+              "Je n’y viens jamais"
+            ]
+          }
+        },
+        {
+          "colId": "Frequence",
+          "label": "À quelle fréquence y venez-vous ?",
+          "type": "Choice",
+          "widget": "select",
+          "options": {
+            "choices": [
+              "Tous les jours",
+              "Plusieurs fois par semaine",
+              "Une fois par semaine",
+              "Plus rarement"
+            ]
+          },
+          "visibleIf": {
+            "all": [
+              {
+                "field": "Lien",
+                "op": "!=",
+                "value": "Je n’y viens jamais"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "perception",
+      "label": "Ce que vous en pensez",
+      "fields": [
+        {
+          "colId": "Agreable",
+          "label": "La place est agréable",
+          "type": "Int",
+          "widget": "echelle",
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "usage",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "Ombre",
+          "label": "On y trouve de l’ombre en été",
+          "type": "Int",
+          "widget": "echelle",
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "usage",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "Traverser",
+          "label": "On la traverse en sécurité à pied",
+          "type": "Int",
+          "widget": "echelle",
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "usage",
+            "polarite": "satisfaction"
+          }
+        },
+        {
+          "colId": "PlusArbres",
+          "label": "Il faudrait y planter des arbres",
+          "type": "Int",
+          "widget": "echelle",
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "usage",
+            "polarite": "besoin"
+          }
+        },
+        {
+          "colId": "MoinsVoitures",
+          "label": "Il faudrait y réduire la place de la voiture",
+          "type": "Int",
+          "widget": "echelle",
+          "kind": "echelle",
+          "options": {
+            "echelle": "accord",
+            "matrice": "usage",
+            "polarite": "besoin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "priorites",
+      "label": "Ce qui compte le plus",
+      "fields": [
+        {
+          "colId": "Attentes",
+          "label": "Qu’attendez-vous de la future place ?",
+          "type": "ChoiceList",
+          "widget": "multiselect",
+          "help": "Trois réponses au maximum.",
+          "options": {
+            "choices": [
+              "De l’ombre",
+              "Des bancs",
+              "Un espace de jeux",
+              "Le marché conservé",
+              "Moins de bruit",
+              "Des commerces",
+              "Du stationnement"
+            ],
+            "maxSelected": 3
+          }
+        },
+        {
+          "colId": "Rang",
+          "label": "Classez vos trois priorités",
+          "type": "Choice",
+          "widget": "classement",
+          "kind": "classement",
+          "options": {
+            "choices": [
+              "Planter des arbres",
+              "Élargir les trottoirs",
+              "Créer une aire de jeux",
+              "Garder le stationnement",
+              "Installer des bancs"
+            ],
+            "rangs": 3,
+            "colonnes": {
+              "rangs": [
+                "Rang1",
+                "Rang2",
+                "Rang3"
+              ]
+            },
+            "illustration": {
+              "type": "carte",
+              "centre": [
+                2.7336,
+                47.9986
+              ],
+              "zoom": 15.5,
+              "fond": "plan",
+              "legende": "Les cinq aménagements proposés, situés sur la place.",
+              "reperes": [
+                {
+                  "option": "Planter des arbres",
+                  "etiquette": "A",
+                  "lon": 2.7318,
+                  "lat": 47.9996
+                },
+                {
+                  "option": "Élargir les trottoirs",
+                  "etiquette": "B",
+                  "lon": 2.7355,
+                  "lat": 47.9991
+                },
+                {
+                  "option": "Créer une aire de jeux",
+                  "etiquette": "C",
+                  "lon": 2.7344,
+                  "lat": 47.9972
+                },
+                {
+                  "option": "Garder le stationnement",
+                  "etiquette": "D",
+                  "lon": 2.731,
+                  "lat": 47.997
+                },
+                {
+                  "option": "Installer des bancs",
+                  "etiquette": "E",
+                  "lon": 2.7331,
+                  "lat": 47.9983
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "lieu",
+      "label": "Un endroit qui vous gêne",
+      "fields": [
+        {
+          "colId": "Point",
+          "label": "Montrez-le sur la carte",
+          "type": "Text",
+          "widget": "geo",
+          "kind": "geometrie",
+          "help": "Touchez la carte à l’endroit concerné.",
+          "options": {
+            "geometrie": "Point",
+            "carte": {
+              "centre": [
+                2.7336,
+                47.9986
+              ],
+              "zoom": 16,
+              "fond": "plan"
+            }
+          }
+        },
+        {
+          "colId": "Pourquoi",
+          "label": "Pourquoi cet endroit ?",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    }
+  ]
+}

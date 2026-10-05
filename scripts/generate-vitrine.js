@@ -876,7 +876,9 @@ section { margin: 0 0 3rem; }
  * difference invisible a l'oeil.
  */
 function apercuDe(id) {
-  for (const ext of ['png', 'jpg']) {
+  // `jpeg` en dernier : un widget qui a deja un png ou un jpg garde le sien,
+  // et une capture enregistree en .jpeg cesse d'etre ignoree en silence.
+  for (const ext of ['png', 'jpg', 'jpeg']) {
     if (fs.existsSync(path.join(PUBLIE, 'w', id, `apercu.${ext}`))) return `apercu.${ext}`;
   }
   return '';

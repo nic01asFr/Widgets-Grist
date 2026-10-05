@@ -433,10 +433,25 @@
         reperes.forEach(function (r) {
           var lon = Number(r.lon), lat = Number(r.lat);
           if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
-          var el = document.createElement('span');
-          el.className = 'fr-carte__repere';
+          // > **Un repere sans correspondance ne sert a rien.** Un « A » pose
+          // > sur une carte, au-dessus d'une liste ou aucun « A » n'apparait,
+          // > laisse chercher ce qu'il designe. Quand le repere nomme une
+          // > option (`option`), il devient un bouton : on le touche, et la
+          // > proposition correspondante se montre dans la question.
+          var cliquable = r.option != null && typeof opts.onRepere === 'function';
+          var el = document.createElement(cliquable ? 'button' : 'span');
+          el.className = 'fr-carte__repere' + (cliquable ? ' fr-carte__repere--bouton' : '');
           el.textContent = r.etiquette == null ? '' : String(r.etiquette);
-          if (r.titre) el.title = String(r.titre);
+          var dit = r.titre || (r.option != null ? String(r.option) : '');
+          if (dit) el.title = dit;
+          if (cliquable) {
+            el.type = 'button';
+            el.setAttribute('aria-label', (r.etiquette ? r.etiquette + ' : ' : '') + dit);
+            el.addEventListener('click', function (ev) {
+              ev.stopPropagation();
+              opts.onRepere(r.option, r);
+            });
+          }
           new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(carte);
         });
       });

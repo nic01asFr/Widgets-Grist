@@ -93,3 +93,49 @@ describe('illustration — toute question peut en porter une', () => {
     assert.ok(html.includes('fr-echelle'));
   });
 });
+
+describe('un repère de carte désigne une proposition', () => {
+  const avecCarte = {
+    colId: 'Prio', label: 'Classez', type: 'Choice', widget: 'classement', kind: 'classement',
+    options: {
+      choices: ['Les arbres', 'Les bancs'], rangs: 2,
+      colonnes: { rangs: ['R1', 'R2'] },
+      illustration: { type: 'carte', reperes: [
+        { option: 'Les arbres', etiquette: 'A', lon: 2.7, lat: 48 },
+        { option: 'Les bancs', etiquette: 'B', lon: 2.71, lat: 48.01 },
+      ] },
+    },
+  };
+
+  it('la lettre de la carte se retrouve dans la question', () => {
+    const html = Engine.renderFieldHtml(avecCarte, {}, null, def);
+    assert.ok(html.includes('fr-repere-lie'), 'la pastille existe');
+    assert.ok(/>A<\/span> Les arbres/.test(html), 'A va aux arbres');
+    assert.ok(/>B<\/span> Les bancs/.test(html), 'B va aux bancs');
+  });
+
+  it('chaque ligne se laisse retrouver par son option', () => {
+    const html = Engine.renderFieldHtml(avecCarte, {}, null, def);
+    assert.ok(html.includes('data-option="Les arbres"'));
+  });
+
+  it('sans repère nommé, rien n’est ajouté', () => {
+    const sans = JSON.parse(JSON.stringify(avecCarte));
+    sans.options.illustration.reperes = [{ etiquette: 'A', lon: 2.7, lat: 48 }];
+    const html = Engine.renderFieldHtml(sans, {}, null, def);
+    assert.ok(!html.includes('fr-repere-lie'), 'un repère anonyme ne décore rien');
+  });
+
+  it('une liste de choix porte aussi les repères', () => {
+    const liste = {
+      colId: 'L', label: 'Lequel ?', type: 'Choice', widget: 'radio',
+      options: {
+        choices: ['Le parc', 'La gare'],
+        illustration: { type: 'carte', reperes: [{ option: 'La gare', etiquette: 'B', lon: 2, lat: 48 }] },
+      },
+    };
+    const html = Engine.renderFieldHtml(liste, {}, null, def);
+    assert.ok(/>B<\/span> La gare/.test(html));
+    assert.ok(!/>.<\/span> Le parc/.test(html), 'une option sans repère reste nue');
+  });
+});

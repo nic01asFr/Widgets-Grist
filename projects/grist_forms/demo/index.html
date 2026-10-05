@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Builder — quatre formulaires à essayer</title>
+<meta name="description" content="Quatre formulaires Grist à remplir pour de vrai : consultation, relevé de terrain, constat signé, inscription. Rien n'est enregistré.">
+<link rel="stylesheet" href="../shared/dsfr-like.css">
+<style>
+  :root { --demo-rail: 19rem; }
+  body { margin: 0; background: var(--fond-page); color: var(--encre); }
+
+  .demo { display: grid; grid-template-columns: var(--demo-rail) 1fr; min-height: 100vh; }
+  @media (max-width: 52rem) { .demo { grid-template-columns: 1fr; } }
+
+  .demo__rail {
+    background: var(--fond-carte);
+    border-right: 1px solid var(--bord);
+    padding: 1.25rem 1rem;
+  }
+  .demo__titre { font-size: 1.0625rem; margin: 0 0 0.25rem; color: var(--blue-france); }
+  .demo__sous { font-size: 0.8125rem; color: var(--encre-douce); margin: 0 0 1.25rem; }
+
+  .demo__cas {
+    display: block; width: 100%; text-align: left;
+    background: none; border: 1px solid var(--bord); border-radius: 6px;
+    padding: 0.7rem 0.85rem; margin-bottom: 0.5rem; cursor: pointer;
+    font: inherit; color: inherit;
+  }
+  .demo__cas:hover { border-color: var(--blue-france); }
+  .demo__cas[aria-current="true"] {
+    border-color: var(--blue-france);
+    background: color-mix(in srgb, var(--blue-france) 7%, var(--fond-carte));
+  }
+  .demo__cas b { display: block; font-size: 0.9375rem; }
+  .demo__cas span { display: block; font-size: 0.8125rem; color: var(--encre-douce); margin-top: 0.15rem; }
+  .demo__cas em { font-style: normal; font-size: 0.72rem; color: var(--blue-france); }
+
+  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; }
+  .demo__barre { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .demo__note {
+    font-size: 0.8125rem; color: var(--encre-douce);
+    background: var(--grey-975); border-radius: 4px; padding: 0.5rem 0.75rem; margin: 0;
+  }
+
+  /* Le cadre de téléphone : une saisie de terrain ne se juge pas sur un écran large. */
+  .demo__cadre { margin-inline: auto; width: 100%; max-width: 46rem; transition: max-width .15s ease; }
+  .demo__cadre--tel { max-width: 23rem; }
+  .demo__cadre--tel .fr-form {
+    border: 1px solid var(--bord); border-radius: 18px;
+    padding: 0.75rem; background: var(--fond-carte);
+  }
+
+  .demo__lien { font-size: 0.8125rem; }
+</style>
+</head>
+<body>
+<div class="demo">
+  <nav class="demo__rail" aria-label="Les cas de démonstration">
+    <h1 class="demo__titre">Form Builder</h1>
+    <p class="demo__sous">Quatre formulaires à remplir pour de vrai. Rien n’est enregistré.</p>
+    <div id="cas"></div>
+    <p class="demo__lien">
+      <a href="../../w/grist_forms/">← La fiche du widget</a>
+    </p>
+  </nav>
+
+  <main class="demo__scene">
+    <div class="demo__barre">
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" id="tel">Téléphone</button>
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" id="ordi">Ordinateur</button>
+      <button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" id="rejouer">Recommencer</button>
+    </div>
+    <p class="demo__note" id="note">Choisissez un cas à gauche.</p>
+    <div class="demo__cadre" id="cadre"><div id="form"></div></div>
+  </main>
+</div>
+
+<script src="../shared/types.js"></script>
+<script src="../shared/attachments.js"></script>
+<script src="../shared/session-context.js"></script>
+<script src="../shared/carte-geometrie.js"></script>
+<script src="../shared/dessin.js"></script>
+<script src="../runtime/engine.js"></script>
+<script>
+/**
+ * La démonstration : le moteur, sans Grist.
+ *
+ * > **Une capture ne prouve rien.** Montrer une image d'un formulaire, c'est
+ * > demander de croire ; le laisser remplir, c'est laisser vérifier. Les cartes
+ * > se chargent vraiment, le dessin produit vraiment une image, les conditions
+ * > cachent vraiment des questions. Seul l'envoi est simulé — il n'y a pas de
+ * > document derrière, et c'est annoncé.
+ */
+var CAS = [
+  { id: 'consultation', nom: 'Consultation du public',
+    quoi: 'Étapes, échelles en matrice, classement sur carte, un lieu à pointer.',
+    quoiVoir: 'carte à repères · classement · échelles', vue: 'ordi' },
+  { id: 'terrain', nom: 'Relevé de terrain',
+    quoi: 'Une fiche par équipement : nature, état, position, photo.',
+    quoiVoir: 'carte · photo · conditions', vue: 'tel' },
+  { id: 'constat', nom: 'Constat signé',
+    quoi: 'On entoure le désordre sur l’image, et l’on signe dans le cadre.',
+    quoiVoir: 'annotation · signature', vue: 'ordi' },
+  { id: 'inscription', nom: 'Inscription',
+    quoi: 'Le cas le plus simple : trois questions, et c’est envoyé.',
+    quoiVoir: 'oui/non · cases · encart', vue: 'ordi' }
+];
+
+var S = { cas: null, def: null, vue: 'ordi' };
+
+function elt(id) { return document.getElementById(id); }
+
+function listerCas() {
+  elt('cas').innerHTML = CAS.map(function (c) {
+    return '<button type="button" class="demo__cas" data-cas="' + c.id + '"' +
+      (S.cas === c.id ? ' aria-current="true"' : '') + '>' +
+      '<b>' + c.nom + '</b><span>' + c.quoi + '</span>' +
+      '<em>' + c.quoiVoir + '</em></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cas]'), function (b) {
+    b.addEventListener('click', function () { charger(b.getAttribute('data-cas')); });
+  });
+}
+
+function cadrer() {
+  elt('cadre').className = 'demo__cadre' + (S.vue === 'tel' ? ' demo__cadre--tel' : '');
+}
+
+function charger(id) {
+  var c = CAS.filter(function (x) { return x.id === id; })[0];
+  if (!c) return;
+  S.cas = id;
+  S.vue = c.vue;
+  listerCas();
+  cadrer();
+  elt('note').textContent = 'Les réponses ne sont pas enregistrées : il n’y a pas de document derrière.';
+  elt('form').innerHTML = '<p class="fr-hint-text">Chargement…</p>';
+  fetch('cas/' + id + '.json')
+    .then(function (r) { if (!r.ok) throw new Error('cas introuvable'); return r.json(); })
+    .then(function (def) { S.def = def; monter(); })
+    .catch(function (e) {
+      elt('form').innerHTML = '<div class="fr-alert fr-alert--error"><p>' + e.message + '</p></div>';
+    });
+  try { history.replaceState(null, '', '?cas=' + id); } catch (e) { /* page ouverte en fichier */ }
+}
+
+function monter() {
+  if (!S.def) return;
+  FormEngine.mount(elt('form'), S.def, {
+    skipProbe: true,
+    submit: function (donnees) {
+      elt('note').textContent = 'Envoi simulé — voici ce qui serait écrit dans la table « ' +
+        S.def.tableId + ' » : ' + Object.keys(donnees).filter(function (k) {
+          return donnees[k] !== null && donnees[k] !== '' &&
+            !(Array.isArray(donnees[k]) && !donnees[k].length);
+        }).join(', ');
+      return Promise.resolve();
+    }
+  });
+}
+
+elt('tel').addEventListener('click', function () { S.vue = 'tel'; cadrer(); });
+elt('ordi').addEventListener('click', function () { S.vue = 'ordi'; cadrer(); });
+elt('rejouer').addEventListener('click', function () { monter(); });
+
+var demande = (new URLSearchParams(location.search)).get('cas');
+charger(CAS.some(function (c) { return c.id === demande; }) ? demande : 'consultation');
+</script>
+</body>
+</html>

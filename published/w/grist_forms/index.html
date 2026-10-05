@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/">
 <meta property="og:title" content="Form Builder — widget Grist">
 <meta property="og:description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
-<meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/apercu.png">
+<meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/apercu.jpeg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Form Builder — widget Grist">
 <meta name="twitter:description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
@@ -185,11 +185,11 @@ section { margin: 0 0 3rem; }
        title="FormSeeder — le fil d&#39;origine du projet, sous son premier nom">En discuter</a>
   </div>
   <section class="apercu">
-    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/grist_forms/builder.html?vitrine=1">
-      <img src="apercu.png" alt="Aperçu du widget Form Builder" loading="lazy">
+    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/?cas=consultation">
+      <img src="apercu.jpeg" alt="Aperçu du widget Form Builder" loading="lazy">
       <button type="button" class="lancer">Lancer l’aperçu</button>
     </div>
-    <p class="mention">L’aperçu s’exécute dans votre navigateur, sans document Grist : les données y sont fictives.</p>
+    <p class="mention">L’aperçu est la démonstration elle-même : quatre formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé.</p>
   </section>
   <section class="chiffres reveler">
     <div><b>0</b><span>service tiers entre la réponse et votre table</span></div>
@@ -197,59 +197,92 @@ section { margin: 0 0 3rem; }
     <div><b>15</b><span>formes de question, du texte libre au tracé sur carte</span></div>
   </section>
   <section class="contextes reveler">
-    <h2>À quoi ça sert</h2>
+    <h2>Quatre façons de s’en servir</h2>
     <article class="contexte">
       <div class="dit">
-        
-        <h3>Consultation du public</h3>
-        <p>une enquête de perception, avec les lieux signalés sur la carte et la restitution qui se remplit au fil des réponses.</p>
-        
-        
-        
+        <p class="role">Pour une collectivité</p>
+        <h3>Consulter le public</h3>
+        <p>Un questionnaire qui s’adapte : une étape entière est épargnée à qui n’est pas concerné, les échelles se regroupent en matrice pour tenir sur un écran, et le classement se pose en grille plutôt qu’en liste à faire glisser.</p>
+        <p class="pourquoi">Les réponses arrivent dans la table du document, pas chez un prestataire.</p>
+        <p class="exemple"><b>Dans l’exemple</b> le réaménagement d’une place : usage, perception, priorités, et un endroit à pointer sur la carte.</p>
+        <ul class="utilise"><li>Étapes et conditions</li><li>Échelles en matrice</li><li>Classement</li><li>Carte à repères</li></ul>
       </div>
       <div class="montre">
-
+        <figure class="large">
+          <img src="cas-matrice.jpeg" alt="Cinq affirmations, une seule échelle annoncée : la matrice tient sur un écran." loading="lazy">
+          <figcaption>Cinq affirmations, une seule échelle annoncée : la matrice tient sur un écran.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-classement.jpeg" alt="La carte situe les propositions, et chaque lettre se retrouve dans la grille. Toucher un repère désigne sa ligne ; le rang choisi s’écrit dans le rond." loading="lazy">
+          <figcaption>La carte situe les propositions, et chaque lettre se retrouve dans la grille. Toucher un repère désigne sa ligne ; le rang choisi s’écrit dans le rond.</figcaption>
+        </figure>
       </div>
     </article>
     <article class="contexte">
       <div class="dit">
-        
-        <h3>Relevé de terrain</h3>
-        <p>une fiche remplie sur le téléphone : photo prise sur place, position du point, croquis de l&#39;implantation.</p>
-        
-        
-        
+        <p class="role">Pour un agent de terrain</p>
+        <h3>Relever sur place</h3>
+        <p>Une fiche par équipement, remplie debout devant l’objet : sa nature, son état, sa position touchée sur la carte, et la photo prise à l’instant.</p>
+        <p class="pourquoi">Pas d’application à installer : une page, un lien, et la ligne est dans la table.</p>
+        <p class="exemple"><b>Dans l’exemple</b> le mobilier urbain d’un quartier — banc, corbeille, arceau — avec son état et sa position.</p>
+        <ul class="utilise"><li>Carte et position</li><li>Photo prise sur place</li><li>Conditions</li></ul>
       </div>
-      <div class="montre">
-
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        
-        <h3>Constat et accord</h3>
-        <p>une annotation sur la photo du désordre, une signature dans le cadre, et la pièce jointe arrive dans la ligne.</p>
-        
-        
-        
-      </div>
-      <div class="montre">
-
+      <div class="montre telephones">
+        <figure class="telephone">
+          <div class="ecran"><img src="cas-terrain.jpeg" alt="Le fond photographique de l’IGN, le point au doigt, et la photo dans la foulée." loading="lazy"></div>
+          <figcaption>Le fond photographique de l’IGN, le point au doigt, et la photo dans la foulée.</figcaption>
+        </figure>
       </div>
     </article>
     <article class="contexte">
       <div class="dit">
-        
-        <h3>Demande interne</h3>
-        <p>un formulaire qui reconnaît la personne connectée et lui épargne les questions qui ne la concernent pas.</p>
-        
-        
-        
+        <p class="role">Pour un constat</p>
+        <h3>Montrer, et signer</h3>
+        <p>Le désordre se montre sur l’image plutôt que de se décrire en mots. La signature se trace dans son cadre, et part en pièce jointe comme le reste.</p>
+        <p class="pourquoi">Ce qui arrive dans la base est ce que la personne a vu : le fond fait partie de l’image produite.</p>
+        <p class="exemple"><b>Dans l’exemple</b> un revêtement dégradé, entouré sur le plan du secteur, puis signé.</p>
+        <ul class="utilise"><li>Annotation sur fond</li><li>Signature</li><li>Pièces jointes</li></ul>
       </div>
       <div class="montre">
-
+        <figure class="large">
+          <img src="cas-annotation.jpeg" alt="On entoure l’endroit concerné ; le trait et son fond partent ensemble." loading="lazy">
+          <figcaption>On entoure l’endroit concerné ; le trait et son fond partent ensemble.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-signature.jpeg" alt="La signature n’a qu’un geste : on efface et on recommence." loading="lazy">
+          <figcaption>La signature n’a qu’un geste : on efface et on recommence.</figcaption>
+        </figure>
       </div>
     </article>
+    <article class="contexte">
+      <div class="dit">
+        <p class="role">Pour qui compose</p>
+        <h3>Composer, puis dépouiller</h3>
+        <p>Trois colonnes : les étapes à gauche, ce que le public verra au milieu, les réglages de ce qu’on travaille à droite. Et un cinquième écran qui relit les réponses avec la définition qui les a produites.</p>
+        <p class="pourquoi">Une table de réponses ne se lit pas seule : une échelle y écrit « 4 », un classement est éclaté en trois colonnes.</p>
+        <p class="exemple"><b>Dans l’exemple</b> ce qui est demandé, ce qui va bien, ce qui est préféré — l’effectif toujours écrit à côté du pourcentage.</p>
+        <ul class="utilise"><li>Aperçu en direct</li><li>Mise en ligne figée</li><li>Synthèse</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-compositeur.jpeg" alt="À gauche le parcours, au milieu ce que le public lira, à droite les réglages." loading="lazy">
+          <figcaption>À gauche le parcours, au milieu ce que le public lira, à droite les réglages.</figcaption>
+        </figure>
+        <figure class="large">
+          <img src="cas-synthese.jpeg" alt="La synthèse sur vingt-cinq réponses : les chiffres de tête, puis ce qui ressort." loading="lazy">
+          <figcaption>La synthèse sur vingt-cinq réponses : les chiffres de tête, puis ce qui ressort.</figcaption>
+        </figure>
+      </div>
+    </article>
+  </section>
+  <section class="demo">
+    <h2>Quatre formulaires, à remplir pour de vrai</h2>
+    <p>Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions. Rien n’est enregistré : il n’y a pas de document derrière.</p>
+    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/">
+      <img src="apercu.jpeg" alt="La démonstration : quatre cas au choix, et le formulaire à côté" loading="lazy">
+      <button type="button" class="lancer">Ouvrir la démonstration</button>
+    </div>
+    <p class="mention">Les cartes viennent des fonds IGN, le dessin produit un vrai PNG. Le bouton d’envoi affiche ce qui serait écrit dans la table.</p>
   </section>
   <section>
     <h2>Ce qu’il fait</h2>
