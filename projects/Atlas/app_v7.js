@@ -259,6 +259,7 @@ import {
 } from './lib/scene-prefs.js?v=20261002f';
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
+import { exposerCarte, signalerCartePrete } from './lib/acces-carte.js?v=20261009a';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3167,6 +3168,8 @@ function initMap() {
     });
     // Accès debug (couche custom / matrices MapLibre 5).
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
+    // Point d'accès officiel (lib/acces-carte.js) : `window.__atlasCarte` + événement `atlas:carte-prete`.
+    try { exposerCarte(window, map); } catch (_) { /* hors navigateur */ }
 
     map.on('load', onStyleReady);
     // Le style de base illisible (réseau coupé, instance injoignable) : un aplat, et les données s'affichent quand même.
@@ -3346,6 +3349,8 @@ function onStyleReady() {
             _alerteTimer = setTimeout(majAlerteTrajet, 200);
         });
     }
+    // Style en place, couche three.js posée : les modules externes peuvent s'attacher (lib/acces-carte.js).
+    try { signalerCartePrete(window, map); } catch (_) { /* hors navigateur */ }
 }
 
 function saveMapCamera() {
