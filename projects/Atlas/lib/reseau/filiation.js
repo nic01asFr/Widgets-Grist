@@ -38,12 +38,21 @@
  * ## Ce qui est mesuré, et ce qui ne l'est pas
  *
  * Testé sur des cas synthétiques (scission, fusion, remplacement, suppression, création, croisement, chaussées
- * parallèles) et rejoué sur un extrait réel du Différentiel BD TOPO (deux emprises, 71 tronçons détruits du dernier trimestre :
- * voir `docs/DONNEES-IGN.md`). **Non validé** : il n'existe aucune vérité de
- * filiation, donc aucun seuil n'est calibré. On sait que deux chaussées à moins de `tol` m l'une de l'autre sont
- * confondues, que l'ancienne géométrie d'un objet MODIFIÉ n'est dans aucun service (le Différentiel ne la porte pas :
- * il faut avoir conservé l'état précédent, ou télécharger l'édition précédente), et que 41 à 57 % des tronçons
- * détruits n'ont aucun successeur géométrique (suppression, ou remplacement par un objet que le Différentiel ne montre pas).
+ * parallèles), rejoué sur un extrait réel du Différentiel BD TOPO, et **validé sur deux éditions complètes** d'un
+ * département (`tools/valider-filiation.mjs`, détail dans `docs/DONNEES-IGN.md` § 6) :
+ *
+ * - vérité SYNTHÉTIQUE (identités masquées, scissions et fusions fabriquées sur les tronçons conservés) : sur des fenêtres de
+ *   test distinctes de celles de réglage, 96 à 99 % des liens vrais retrouvés sans bruit, 83 % avec 4 m de bruit de
+ *   numérisation ; les seuils par défaut sont à 1,4 point de F1 de l'optimum, ils sont conservés ;
+ * - sur les vrais tronçons détruits, 62 % ont un successeur ; les liens proposés ont la même importance (90 % contre 67 % au
+ *   hasard entre voisins), la même nature (86 contre 70 %), le même nom (100 contre 55 %) ;
+ * - **aucune table de correspondance officielle n'existe** (cherchée dans le GeoPackage, les attributs et les métadonnées) :
+ *   la filiation réelle n'a donc pas de vérité, seulement des indices.
+ *
+ * On sait aussi que deux chaussées à moins de `tol` m l'une de l'autre sont confondues, que l'ancienne géométrie d'un objet
+ * MODIFIÉ n'est dans aucun service (il faut avoir conservé l'état précédent, ou télécharger l'édition précédente), et que
+ * 38 % des tronçons détruits n'ont aucun successeur géométrique (dont 32 routes à 1 chaussée sur 49 : suppression, ou
+ * remplacement qui ne recoupe pas, on ne sait pas).
  */
 
 import { creerRepere, lignesDe, cumul, pointA, projLigne, cap, ecartCap } from './geo.js';
