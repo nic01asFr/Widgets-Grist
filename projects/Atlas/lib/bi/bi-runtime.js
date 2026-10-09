@@ -18,7 +18,7 @@ import { creerFond } from './fond.js';
 import { planMonochrome } from './fond-plan.js';
 import { ajouterIcones } from './icones-etats.js';
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
-import { creerAdmin } from './admin-absent.js';
+import { creerAdmin } from './admin-runtime.js';
 import { creerSurveillance, fondPourConnexion } from './repli.js';
 
 export const VERSION = '0.3';
@@ -62,7 +62,7 @@ export function attacher(map, opts = {}) {
   function monter(c) {
     const decl = declaratifResolu(c.def.style?.declarative) || { kind: 'single', color: theme.categories[0] };
     const couleur = expressionCouleurDeclarative(decl, '#9a9a9a') || '#9a9a9a';
-    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6 } : {}) });
+    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: c.admin.meta.attribution } : {}) } : {}) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));

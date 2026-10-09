@@ -143,4 +143,5 @@ test('index_v7.html : tout le habillage du mode BI est sous body.mode-bi (sans l
 test('promotion : scripts/promote-atlas.js copie lib/bi', () => {
   const promo = lire(path.join(racine, '..', '..', 'scripts', 'promote-atlas.js'));
   assert.match(promo, /lib', 'bi'|lib\/bi|'bi'/);
+  assert.match(promo, /'donnees'/, 'les jeux embarqués (json) de lib/bi/donnees sont copiés aussi');
 });

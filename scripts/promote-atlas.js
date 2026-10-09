@@ -64,6 +64,14 @@ if (fs.existsSync(biSrc)) {
     fs.writeFileSync(path.join(biPub, f), normaliserVersions(fs.readFileSync(path.join(biSrc, f), 'utf8')));
     modulesBi++;
   }
+  // Jeux embarques (contours administratifs de repli hors ligne, references de population) : servis tels quels.
+  const donSrc = path.join(biSrc, 'donnees'), donPub = path.join(biPub, 'donnees');
+  if (fs.existsSync(donSrc)) {
+    fs.mkdirSync(donPub, { recursive: true });
+    for (const f of fs.readdirSync(donSrc)) {
+      if (f.endsWith('.json')) { fs.copyFileSync(path.join(donSrc, f), path.join(donPub, f)); modulesBi++; }
+    }
+  }
   for (const f of fs.readdirSync(biPub)) {
     for (const m of fs.readFileSync(path.join(biPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
       if (!fs.existsSync(path.join(biPub, m[1]))) {
@@ -228,7 +236,7 @@ if (absents.length) {
   process.exit(1);
 }
 
-console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} lib/bi), ${requis.length} importes par app.js, `
+console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} fichiers lib/bi), ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
   + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes), `
   + `${fichiersObjets} modeles au catalogue d'objets`);

@@ -17736,6 +17736,9 @@ async function demarrer() {
 async function demarrerBi() {
     document.body.classList.add('mode-bi');
     CONFIG.viewMode = true;
+    // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
+    CONFIG.defaultPitch = 0;
+    Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
     const chargement = import('./lib/bi/montage.js?v=20261009a');
     chargement.catch(() => {});
     try {
