@@ -3146,8 +3146,11 @@ Des **bibliothèques** (modules ES purs, `fetch` injectable, tests sans réseau)
 - `wfs-bdtopo.js` lit la BD TOPO par le WFS de la Géoplateforme (sans clé). **`BBOX` et non `CQL_FILTER=BBOX(…)`** (zéro objet, sans erreur) ; **`SORTBY` toujours** (sans tri, la pagination n'est pas fiable) ;
   filtres **côté client** ; les erreurs du service sont du XML ; les positions portent une altitude.
 - `graphe-routier.js` : une arête par tronçon (`cleabs`, sens, voies, importance, niveau, numéro et noms de route), mètres dans un repère local. On ne se connecte qu'aux **extrémités** : un pont ne rejoint pas la route qu'il enjambe.
-- `calage.js` : calage d'une ligne sur le graphe (HMM, rayon 30 m) et plus court chemin ; rend des **portions de tronçon** (`cleabs`, `s0`, `s1`), pas des tronçons entiers. Il rend toujours un chemin plausible, y compris faux,
-  et n'a **aucune vérité terrain** : ne jamais présenter ses mesures comme une exactitude. Une ligne décimée qui sort du rayon est perdue.
+- `calage.js` : calage d'une ligne sur le graphe (HMM, rayon 30 m) et plus court chemin ; rend des **portions de tronçon** (`cleabs`, `s0`, `s1`), pas des tronçons entiers. Il rend toujours un chemin plausible, y compris faux.
+  **Mesuré contre une vérité de routage** (250 trajets du service d'itinéraire, 30 départements — pas un relevé terrain : jamais présenter ses mesures comme une exactitude terrain) : F1 0,90 en moyenne, 0,86 en ville dense.
+  `orientee: true` honore les sens uniques (+2 points, +4 en ville dense) **mais suppose la ligne ordonnée dans le sens de la marche** (à l'envers : 0,81 au lieu de 0,90, `contreSens` le trahit).
+  Une ligne décimée qui sort du rayon est perdue.
+- `confiance.js` : chaque tronçon retenu a un score calibré et une classe haute / moyenne / faible (précision mesurée sur 10 départements jamais vus : 98,5 % / 88,4 % / 64,1 %). Modèle appris par `tools/calibrer-confiance.mjs` : ne pas éditer `confiance-modele.js` à la main, recalibrer si le calage change.
 - `itineraire-geoplateforme.js` : facultatif. Le service accroche un point hors réseau **en silence** (une mer à ~27 km) : le client refuse au-delà de 500 m. Seule `bdtopo-pgr` rend les `cleabs`.
-- `filiation.js` : qui descend de qui entre deux éditions (aucune table n'est publiée). Ne contient **aucun code d'ancrage** ; `cleabsOrigine` en est l'entrée.
+- `filiation.js` : qui descend de qui entre deux éditions (aucune table n'est publiée : cherchée, non trouvée). Validée sur deux éditions complètes d'un département (F1 des liens 0,94 à 2 m de bruit ; 62 % des détruits ont un successeur). Ne contient **aucun code d'ancrage** ; `cleabsOrigine` en est l'entrée.
 - Rien de propre à une application métier ici : pas de logique de réglementation, pas de rapprochement de textes. Les applications métier se branchent via ces modules.
