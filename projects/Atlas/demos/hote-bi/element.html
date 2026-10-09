@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Élément atlas-bi - exemple minimal</title>
+<style>body{margin:0;font:14px system-ui,sans-serif}atlas-bi{display:block;height:420px;border-bottom:1px solid #cbd2d9}p{margin:8px 12px}</style>
+</head>
+<body>
+<p>Exemple minimal de l'élément <code>&lt;atlas-bi&gt;</code>. Données <strong>synthétiques</strong>. Dernier événement : <output id="dernier">aucun</output></p>
+<atlas-bi id="carte" src="../../index.html"></atlas-bi>
+<script type="module">
+import '../../lib/bi/atlas-bi-element.js';
+const carte = document.getElementById('carte');
+// En développement, l'entrée d'Atlas est index_v7.html : ?atlas=../../index_v7.html
+const atlas = new URLSearchParams(location.search).get('atlas'); if (atlas) carte.setAttribute('src', atlas);
+carte.addEventListener('atlas-bi-select', (e) => { document.getElementById('dernier').textContent = 'select ' + JSON.stringify(e.detail.charge); });
+carte.addEventListener('atlas-bi-erreur', (e) => { document.getElementById('dernier').textContent = 'erreur ' + e.detail.erreur.code; });
+const points = Array.from({ length: 40 }, (_, i) => ({ type: 'Feature', id: i + 1, geometry: { type: 'Point', coordinates: [5.3 + ((i * 37) % 100) / 400, 43.25 + ((i * 53) % 100) / 500] }, properties: { ref: 'P' + (i + 1), categorie: ['x', 'y'][i % 2] } }));
+await carte.setScene({ layers: [{ id: 'points', name: 'Points', geometry_type: 'point', cle: 'ref', style: { declarative: { kind: 'categorized', field: 'categorie', stops: [{ value: 'x', color: '#0072b2' }, { value: 'y', color: '#e69f00' }] } } }] }, { points });
+await carte.fitTo('points');
+</script>
+</body>
+</html>

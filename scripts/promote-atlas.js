@@ -184,6 +184,22 @@ for (const d of DEMOS) {
 }
 
 /**
+ * La page hote de demonstration du composant carte BI (`demos/hote-bi/`) : ses deux pages et rien d'autre. Elle importe
+ * `../../lib/bi/client.js` et ouvre `../../index.html` : relatifs a `published/atlas/demos/hote-bi/`.
+ */
+const hoteSrc = path.join(src, 'demos', 'hote-bi');
+const hotePub = path.join(pub, 'demos', 'hote-bi');
+let fichiersHote = 0;
+if (fs.existsSync(hoteSrc)) {
+  fs.mkdirSync(hotePub, { recursive: true });
+  for (const f of fs.readdirSync(hoteSrc)) {
+    if (!f.endsWith('.html')) continue;
+    fs.copyFileSync(path.join(hoteSrc, f), path.join(hotePub, f));
+    fichiersHote++;
+  }
+}
+
+/**
  * Le catalogue d'objets livre avec Atlas (`objets/`) : Atlas le charge quand
  * aucun autre n'est pointe (`choisirCatalogue`). Seuls `catalog.json` et les
  * fichiers qu'il declare sont copies — et chacun doit exister : un luminaire
@@ -238,5 +254,5 @@ if (absents.length) {
 
 console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} fichiers lib/bi), ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
-  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes), `
+  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes, ${fichiersHote} pages hote BI), `
   + `${fichiersObjets} modeles au catalogue d'objets`);
