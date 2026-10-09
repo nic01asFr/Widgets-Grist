@@ -11,7 +11,7 @@
  *                                     Candidats à moins de `rayon` m ; coût = écart de position + écart de cap +
  *                                     continuité (distance par la route comparée à la distance sur la ligne).
  *   plusCourtChemin(G, A, B, opts)    Dijkstra entre deux positions, borné aux tronçons du numéro ou du nom connu ;
- *                                     `oriente: true` honore les sens uniques.
+ *                                     `orientee: true` honore les sens uniques.
  *   calerPuisLisser(G, ligne, opts)   extrémités du calage, puis Dijkstra pondéré par l'écart à la ligne.
  *   tracer(G, geometrie, methode)     applique une méthode à une géométrie GeoJSON (plusieurs lignes : une par une)
  *                                     et rend les tronçons parcourus avec leurs abscisses.
@@ -39,8 +39,12 @@
  *   bascule sur la voisine sans rupture ni avertissement. Seul l'écart médian (`mesures-trace.js`) ou l'accord avec
  *   un numéro ou un nom connu (`ref`) peut le trahir.
  * - Une ligne à plus de `rayon` de tout tronçon n'est pas tracée : l'échec est déclaré, rien n'est inventé.
- * - Le calage ignore les sens uniques (le graphe y est parcouru dans les deux sens). Le plus court chemin, lui, peut
- *   les honorer. Les interdictions de mouvement ne sont pas prises en compte.
+ * - Les sens uniques ne sont honorés que sur demande (`orientee: true`) : la ligne doit alors être ORDONNÉE dans le sens
+ *   de la marche (un tracé dessiné ou une trace dans le mauvais ordre serait faussé). Un état calé à contre-sens d'un
+ *   sens unique coûte `penaliteContreSens` (40, soit bien plus que 30 m d'écart) ; `Infinity` l'interdit. Le nombre
+ *   d'observations calées à contre-sens est rendu (`contreSens`) : s'il n'est pas nul, soit le réseau ne permet pas le
+ *   trajet dans ce sens, soit la ligne est à l'envers. Sans l'option, comportement inchangé (graphe non orienté).
+ *   Les interdictions de mouvement ne sont pas prises en compte.
  * - Le plus court chemin est un plus court chemin : il ne sait pas qu'on préférerait un autre.
  * - Le repère local est équirectangulaire : prévu pour des couloirs de quelques dizaines de kilomètres.
  */
@@ -57,6 +61,7 @@ export const DEFAUTS = Object.freeze({
   beta: 10, // m : tolérance sur |distance par la route - distance sur la ligne|
   penaliteNom: 3, // coût ajouté à un tronçon qui contredit le nom ou le numéro connu
   penaliteDemiTour: 12,
+  penaliteContreSens: 40, // coût ajouté à une observation calée à contre-sens d'un sens unique (option `orientee`) ; Infinity = interdit
   elagage: 10, // m : un tronçon d'extrémité parcouru sur moins que cela est écarté (faux positif de carrefour)
 });
 
@@ -215,20 +220,32 @@ export function caler(Gr, lignePts, opts) {
   const o = { ...DEFAUTS, ...(opts || {}) };
   const conc = concordance(o.ref);
   const { obs, L } = observations(lignePts, o.pas);
+  const orientee = !!(o.orientee ?? o.oriente);
+  const coutRoute = orientee ? coutOriente : coutLongueur;
+  const cleRoute = orientee ? 'O' : 'L';
   const couches = [];
   for (const ob of obs) {
     const etats = [];
     for (const c of candidats(Gr, ob.p, o)) {
       for (const dir of [1, -1]) {
         let cout = 0.5 * (c.d / o.sigmaD) ** 2;
+        let contre = false;
+        if (orientee) {
+          const autorise = sensAutorises(Gr.aretes[c.e]);
+          contre = !(dir > 0 ? autorise.direct : autorise.inverse);
+          if (contre) {
+            if (!(o.penaliteContreSens < Infinity)) continue; // interdit : l'état n'existe pas
+            cout += o.penaliteContreSens;
+          }
+        }
         if (ob.cap !== null) cout += 0.5 * (ecartCap(ob.cap, capSens(c.cap, dir)) / o.sigmaCap) ** 2;
         if (conc(Gr.aretes[c.e]) === 'ko') cout += o.penaliteNom;
-        etats.push({ e: c.e, s: c.s, d: c.d, dir, cout, ob });
+        etats.push({ e: c.e, s: c.s, d: c.d, dir, cout, ob, contre });
       }
     }
     if (etats.length) couches.push(etats);
   }
-  if (!couches.length) return { ok: false, raison: 'aucun_candidat', passages: [], ruptures: 0, couvertureObs: 0, nbObs: obs.length, perdus: obs.length, L };
+  if (!couches.length) return { ok: false, raison: 'aucun_candidat', passages: [], ruptures: 0, contreSens: 0, couvertureObs: 0, nbObs: obs.length, perdus: obs.length, L };
   const perdus = obs.length - couches.length;
 
   // Distance par la route entre deux états (orientée), bornée : au-delà de `limite`, la transition est de toute façon refusée.
@@ -243,7 +260,7 @@ export function caler(Gr, lignePts, opts) {
     const reste = x.dir > 0 ? e1.L - x.s : x.s;
     const entree = y.dir > 0 ? e2.a : e2.b;
     const avant = y.dir > 0 ? y.s : e2.L - y.s;
-    const ligne = ligneDist(Gr, sortie, coutLongueur, 'L', Math.max(0, limite - reste - avant));
+    const ligne = ligneDist(Gr, sortie, coutRoute, cleRoute, Math.max(0, limite - reste - avant));
     const dn = ligne.dist[entree];
     if (!(dn < Infinity)) return { r: Infinity };
     return { r: reste + dn + avant, noeuds: [sortie, entree], demiTour: x.e === y.e && x.dir !== y.dir };
@@ -320,7 +337,7 @@ export function caler(Gr, lignePts, opts) {
         const E1 = Gr.aretes[prev.e];
         const E2 = Gr.aretes[st.e];
         pousse(prev.e, prev.s, prev.dir > 0 ? E1.L : 0);
-        const ligne = ligneDist(Gr, rd.noeuds[0], coutLongueur, 'L', borne(delta));
+        const ligne = ligneDist(Gr, rd.noeuds[0], coutRoute, cleRoute, borne(delta));
         for (const ei of cheminNoeuds(ligne, rd.noeuds[1])) pousse(ei, 0, Gr.aretes[ei].L);
         pousse(st.e, st.dir > 0 ? 0 : E2.L, st.s);
       } else pousse(st.e, st.s, st.s);
@@ -328,8 +345,9 @@ export function caler(Gr, lignePts, opts) {
     }
   }
   const derniereSuite = suites[suites.length - 1];
+  const contreSens = suites.reduce((n, seq) => n + seq.filter((st) => st.contre).length, 0);
   return {
-    ok: true, passages, ruptures, nbObs: obs.length, perdus, couvertureObs: couches.length / obs.length, L,
+    ok: true, passages, ruptures, contreSens, nbObs: obs.length, perdus, couvertureObs: couches.length / obs.length, L,
     premier: suites[0][0], dernier: derniereSuite[derniereSuite.length - 1], couloir: new Set(couches.flat().map((s) => s.e)),
   };
 }
@@ -410,7 +428,7 @@ function versPassages(segs) {
  * `rayon` ; plusieurs accroches sont essayées. Avec `ref` (numéro ou nom), le chemin est d'abord cherché sur les seuls
  * tronçons concordants ; s'il n'en existe aucun, un repli est signalé (`repli: 'hors_nom_numero'`) et les autres
  * tronçons coûtent le quadruple.
- * @param {{oriente?: boolean, ref?: {nom?: string, numero?: string}}} [opts] `oriente` : ne pas remonter un sens unique
+ * @param {{orientee?: boolean, oriente?: boolean, ref?: {nom?: string, numero?: string}}} [opts] `orientee` (alias `oriente`) : ne pas remonter un sens unique
  * @returns {{ok: boolean, raison?: string, passages: object[], repli?: string|null, ecartA?: number, ecartB?: number, cout?: number}}
  */
 export function plusCourtChemin(Gr, A, B, opts) {
@@ -420,7 +438,8 @@ export function plusCourtChemin(Gr, A, B, opts) {
   const ancA = accrocher(Gr, A, o, 4);
   const ancB = accrocher(Gr, B, o, 4);
   if (!ancA.length || !ancB.length) return { ok: false, raison: 'extremite_hors_reseau', passages: [] };
-  const base = o.oriente ? coutOriente : coutLongueur;
+  const orientee = !!(o.orientee ?? o.oriente);
+  const base = orientee ? coutOriente : coutLongueur;
   const essaie = (cout, cleCout) => {
     let best = null;
     for (const a of ancA) {
@@ -433,7 +452,7 @@ export function plusCourtChemin(Gr, A, B, opts) {
     }
     return best;
   };
-  const cle = `${o.oriente ? 'o' : 'n'}${JSON.stringify(o.ref || {})}`;
+  const cle = `${orientee ? 'o' : 'n'}${JSON.stringify(o.ref || {})}`;
   const strict = (e, sens) => (contraint && conc(e) === 'ko' ? Infinity : base(e, sens));
   const souple = (e, sens) => (contraint && conc(e) === 'ko' ? 4 * base(e, sens) : base(e, sens));
   let repli = null;
@@ -465,15 +484,17 @@ export function calerPuisLisser(Gr, lignePts, opts) {
     const pts = echantillonner(Gr.aretes[ei].pts, 5);
     ecarts.set(ei, pts.reduce((t, p) => t + Math.min(distPtLignes(p, [lignePts]), 4 * o.rayon), 0) / pts.length);
   }
-  const cout = (e) => {
+  const orientee = !!(o.orientee ?? o.oriente);
+  const cout = (e, sens) => {
     if (!ecarts.has(e.id)) return Infinity;
+    if (orientee && !(coutOriente(e, sens) < Infinity)) return Infinity;
     return e.L * (1 + (ecarts.get(e.id) / o.sigmaD) ** 2) * (conc(e) === 'ko' ? 3 : 1);
   };
   const cleCout = `lisse${++compteurLissage}`;
   const r = entrePositions(Gr, { e: h.premier.e, s: h.premier.s }, { e: h.dernier.e, s: h.dernier.s }, cout, cleCout);
   for (const k of [...Gr.cache.keys()]) if (k.startsWith(`${cleCout}#`)) Gr.cache.delete(k);
   if (!r) return { methode: 'hmm+pcc', repli: 'hmm_seul', ...h };
-  return { ok: true, methode: 'hmm+pcc', passages: versPassages(r.segs), ruptures: h.ruptures, couvertureObs: h.couvertureObs, L: h.L, nbObs: h.nbObs };
+  return { ok: true, methode: 'hmm+pcc', passages: versPassages(r.segs), ruptures: h.ruptures, contreSens: 0, couvertureObs: h.couvertureObs, L: h.L, nbObs: h.nbObs };
 }
 
 // ---------------------------------------------------------------------------------------------- pipeline
@@ -538,7 +559,8 @@ export const METHODES = Object.freeze(['hmm', 'pcc-ligne', 'hmm+pcc', 'pcc-ext']
  *   `hmm` : calage ; `pcc-ligne` : plus court chemin entre les extrémités de chaque ligne ; `hmm+pcc` : calage puis
  *   lissage ; `pcc-ext` : plus court chemin entre les deux positions `opts.extremites` (deux repères connus, par
  *   exemple), la géométrie n'étant alors pas lue
- * @param {object} [opts] `DEFAUTS`, plus `ref: {nom?, numero?}`, `extremites: [[lng, lat], [lng, lat]]`, `oriente`
+ * @param {object} [opts] `DEFAUTS`, plus `ref: {nom?, numero?}`, `extremites: [[lng, lat], [lng, lat]]`, `orientee`
+ *   (la ligne est ordonnée dans le sens de la marche : un sens unique ne se remonte pas, ou à `penaliteContreSens`)
  * @returns {{methode: string, ok: boolean, echecs: number, raisons: string[], nbLignes: number, ruptures: number,
  *   repli: string|null, troncons: object[], passages: object[], geometrieM: number[][][], geometrie: object|null,
  *   composantes: number, couvertureObs: number}}
@@ -557,6 +579,7 @@ export function tracer(Gr, geometrie, methode, opts) {
   let passages = [];
   let echecs = 0;
   let ruptures = 0;
+  let contreSens = 0;
   let obsTot = 0;
   let obsOk = 0;
   let repli = null;
@@ -571,6 +594,7 @@ export function tracer(Gr, geometrie, methode, opts) {
     if (!r.ok) { echecs++; raisons.push(r.raison); parLigne.push({ ok: false, raison: r.raison }); continue; }
     if (r.repli) repli = r.repli;
     ruptures += r.ruptures || 0;
+    contreSens += r.contreSens || 0;
     if (r.nbObs) { obsTot += r.nbObs; obsOk += r.nbObs * (r.couvertureObs || 0); }
     const ps = elaguer(r.passages, Math.max(o.elagage, 0.5)); // une extrémité parcourue sur moins de 0,5 m n'est jamais un tronçon
     parLigne.push({ ok: true, passages: ps });
@@ -588,7 +612,7 @@ export function tracer(Gr, geometrie, methode, opts) {
     return pts;
   });
   return {
-    methode, ok: troncons.length > 0 && echecs < unites.length, echecs, raisons, nbLignes: unites.length, ruptures, repli, troncons, passages,
+    methode, ok: troncons.length > 0 && echecs < unites.length, echecs, raisons, nbLignes: unites.length, ruptures, contreSens, repli, troncons, passages,
     geometrieM: geo,
     geometrie: geo.length ? { type: 'MultiLineString', coordinates: geo.map((l) => l.map((p) => Gr.repere.depuis(p[0], p[1]))) } : null,
     composantes: composantes(Gr, passages.map((p) => p.arete)),

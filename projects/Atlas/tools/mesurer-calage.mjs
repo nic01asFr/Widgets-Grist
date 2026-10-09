@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { construireGraphe, composantesConnexes } from '../lib/reseau/graphe-routier.js';
 import { tracer, entrePositions, sousLigne } from '../lib/reseau/calage.js';
+import { sensAutorises } from '../lib/reseau/graphe-routier.js';
 import { echantillonner, longueur, pointA, cumul } from '../lib/reseau/geo.js';
 import { f1Troncons } from '../lib/reseau/mesures-trace.js';
 
@@ -66,7 +67,7 @@ export const DEGRADATIONS = {
 };
 
 /** La vérité d'un graphe : plus court chemin de la tête de la plus grande composante au nœud le plus éloigné à moins de 3 km. */
-function veriteDe(Gr) {
+export function veriteDe(Gr, orientee = false) {
   const plusGrande = composantesConnexes(Gr)[0];
   const depart = Gr.aretes[plusGrande[0]];
   // Dijkstra sur les nœuds, par balayage (graphes de quelques centaines d'arêtes)
@@ -74,6 +75,11 @@ function veriteDe(Gr) {
   const d = new Float64Array(n).fill(Infinity);
   const fait = new Uint8Array(n);
   d[depart.a] = 0;
+  const coutVerite = (e, sens) => {
+    if (!orientee) return e.L;
+    const a = sensAutorises(e);
+    return (sens > 0 ? a.direct : a.inverse) ? e.L : Infinity;
+  };
   for (;;) {
     let u = -1;
     let best = Infinity;
@@ -83,21 +89,20 @@ function veriteDe(Gr) {
     for (const ei of Gr.noeuds[u].inc) {
       const e = Gr.aretes[ei];
       const v = e.a === u ? e.b : e.a;
-      if (d[u] + e.L < d[v]) d[v] = d[u] + e.L;
+      const w = coutVerite(e, e.a === u ? 1 : -1);
+      if (d[u] + w < d[v]) d[v] = d[u] + w;
     }
   }
-  let cible = -1;
-  let loin = 0;
-  for (let i = 0; i < n; i++) if (d[i] < Infinity && d[i] <= 3000 && d[i] > loin) { loin = d[i]; cible = i; }
-  if (cible < 0 || loin < 500) return null;
-  const Ec = Gr.aretes.find((e) => e.a === cible || e.b === cible);
-  const r = entrePositions(
-    Gr,
-    { e: depart.id, s: 0 },
-    { e: Ec.id, s: Ec.a === cible ? 0 : Ec.L },
-    (e) => e.L,
-    'verite',
-  );
+  // les nœuds atteignables entre 500 m et 3 km, du plus éloigné au plus proche : le premier qui donne un chemin est la cible
+  const cibles = [];
+  for (let i = 0; i < n; i++) if (d[i] < Infinity && d[i] <= 3000 && d[i] >= 500) cibles.push(i);
+  cibles.sort((x, y) => d[y] - d[x]);
+  let r = null;
+  for (const cible of cibles) {
+    const Ec = Gr.aretes.find((e) => e.a === cible || e.b === cible);
+    r = entrePositions(Gr, { e: depart.id, s: 0 }, { e: Ec.id, s: Ec.a === cible ? 0 : Ec.L }, coutVerite, orientee ? 'verite-o' : 'verite');
+    if (r) break;
+  }
   if (!r) return null;
   const pts = [];
   for (const sg of r.segs) {
@@ -162,6 +167,70 @@ export function lancer({ graines = [1, 2, 3], fixture } = {}) {
   return { cas, graines, resume };
 }
 
+/** Longueur (m) d'un tracé parcourue à contre-sens d'un sens unique, et sa part. */
+export function contreSensDuTrace(Gr, passages) {
+  let contre = 0;
+  let total = 0;
+  for (const p of passages) {
+    const e = Gr.aretes[p.arete];
+    const l = Math.abs(p.s1 - p.s0);
+    total += l;
+    const a = sensAutorises(e);
+    if (p.s1 >= p.s0 ? !a.direct : !a.inverse) contre += l;
+  }
+  return { contre, total };
+}
+
+const VARIANTES_SENS = [
+  ['hmm', 'hmm', false], ['hmm orientée', 'hmm', true],
+  ['hmm+pcc', 'hmm+pcc', false], ['hmm+pcc orientée', 'hmm+pcc', true],
+  ['pcc-ligne', 'pcc-ligne', false], ['pcc-ligne orientée', 'pcc-ligne', true],
+];
+
+/**
+ * Même banc, avec une vérité qui respecte les sens uniques (plus court chemin orienté) et une ligne ordonnée dans le
+ * sens de la marche ; chaque méthode est lancée sans, puis avec `orientee`. Mesure le F1 et la part du tracé parcourue
+ * à contre-sens d'un sens unique. Variante « ordre inversé » : la même ligne donnée à l'envers (erreur d'utilisation).
+ */
+export function lancerSensUniques({ graines = [1, 2, 3], fixture } = {}) {
+  const data = fixture || JSON.parse(readFileSync(fileURLToPath(new URL('../tests/fixtures/reseau/troncons-mesure.json', import.meta.url)), 'utf8'));
+  const acc = {};
+  const cas = [];
+  for (const [id, feats] of Object.entries(data.cas)) {
+    const Gr = construireGraphe(feats);
+    const v = veriteDe(Gr, true);
+    if (!v) { cas.push({ id, retenu: false }); continue; }
+    const sensUniquesVerite = v.portions.filter((p) => Gr.parCleabs.get(p.cleabs).sens === 'direct' || Gr.parCleabs.get(p.cleabs).sens === 'inverse').length;
+    cas.push({ id, retenu: true, longueurM: Math.round(longueur(v.pts)), troncons: v.portions.length, sensUniquesVerite, sensUniquesCorridor: Gr.aretes.filter((e) => e.sens === 'direct' || e.sens === 'inverse').length });
+    for (const ordre of ['sens de la marche', 'ordre inversé']) {
+      for (const [dn, degrader] of Object.entries(DEGRADATIONS)) {
+        for (const g of graines) {
+          let ligne = degrader(v.pts, rng(g * 1000 + id.length));
+          if (ordre === 'ordre inversé') ligne = ligne.slice().reverse();
+          const geo = { type: 'LineString', coordinates: ligne.map((p) => Gr.repere.depuis(p[0], p[1])) };
+          for (const [nom, methode, orientee] of VARIANTES_SENS) {
+            const r = tracer(Gr, geo, methode, { elagage: 0, orientee });
+            const s = f1Troncons(v.portions, r.troncons.map((t) => ({ cleabs: t.cleabs, s0: t.s0, s1: t.s1 })));
+            const cs = contreSensDuTrace(Gr, r.passages);
+            const a = ((acc[ordre] ||= {})[nom] ||= { f1: [], contre: 0, total: 0, contreObs: 0 });
+            a.f1.push(s.f1);
+            a.contre += cs.contre;
+            a.total += cs.total;
+            a.contreObs += r.contreSens || 0;
+          }
+        }
+      }
+    }
+  }
+  const moy = (x) => x.reduce((a, b) => a + b, 0) / (x.length || 1);
+  const resume = {};
+  for (const [ordre, parNom] of Object.entries(acc)) {
+    resume[ordre] = {};
+    for (const [nom, a] of Object.entries(parNom)) resume[ordre][nom] = { f1: moy(a.f1), partContreSens: a.total ? a.contre / a.total : 0, essais: a.f1.length, observationsContreSens: a.contreObs };
+  }
+  return { cas, graines, resume };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const r = lancer();
   console.log('cas retenus :', r.cas.filter((c) => c.retenu).map((c) => `${c.id} (${c.longueurM} m, ${c.troncons} tronçons)`).join(' ; '), '| graines', r.graines.length);
@@ -170,5 +239,11 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     for (const [m, s] of Object.entries(parMethode)) {
       console.log(dn.padEnd(40), m.padEnd(10), s.f1.toFixed(2).padStart(4), s.precision.toFixed(2).padStart(9), s.rappel.toFixed(2).padStart(6), `${s.sansResultat}/${s.essais}`.padStart(8));
     }
+  }
+  const su = lancerSensUniques();
+  console.log('\nSens uniques — vérité orientée :', su.cas.filter((c) => c.retenu).map((c) => `${c.id} (${c.longueurM} m, ${c.sensUniquesVerite} sens uniques dans la vérité, ${c.sensUniquesCorridor} dans le couloir)`).join(' ; '));
+  console.log('ordre de la ligne'.padEnd(20), 'méthode'.padEnd(20), 'F1', ' part à contre-sens', 'obs. à contre-sens');
+  for (const [ordre, parNom] of Object.entries(su.resume)) {
+    for (const [nom, s] of Object.entries(parNom)) console.log(ordre.padEnd(20), nom.padEnd(20), s.f1.toFixed(2).padStart(4), `${(100 * s.partContreSens).toFixed(1)} %`.padStart(10), String(s.observationsContreSens).padStart(14));
   }
 }

@@ -95,11 +95,18 @@ Une ligne (itinéraire approximatif, trace GPS, géométrie d'un objet linéaire
 - **Mesures du prototype d'origine**, sur 50 lignes publiées par un tiers et 40 localisations en route départementale (non versées ici, donc **non rejouables dans ce dépôt**) : 50 lignes tracées sur 50 contre 44 pour un tampon de 8 m ; tronçons entiers de moins de 15 m : 11 % contre 19 % ; écart de Hausdorff médian à la ligne : 5,0 m contre 11,7 m ; 1 échec déclaré contre 10. Un seul morceau continu pour 34 des 35 lignes simples.
 - **Limite connue, testée** : si la route manque dans le graphe et qu'une chaussée voisine à moins de 30 m la double, le calage bascule sur la voisine sans rupture ni avertissement. Une ligne à plus de 30 m de tout tronçon n'est pas tracée (échec déclaré, rien d'inventé).
 
+### Sens uniques (option `orientee`)
+
+Avec `orientee: true`, la ligne est supposée ordonnée dans le sens de la marche : un état calé à contre-sens d'un sens unique coûte `penaliteContreSens` (40, à comparer aux ~7 d'un écart de 30 m), `Infinity` l'interdit, et les transitions entre états (plus court chemin entre deux observations) et le lissage ne remontent pas non plus un sens unique. `contreSens` compte les observations malgré tout calées à contre-sens (le réseau ne permet pas le trajet dans ce sens, ou la ligne est à l'envers). Sans l'option, comportement inchangé.
+
+- **Cas synthétiques testés** : rue à sens unique à 3 m de la ligne et rue à double sens à 11 m (la ligne ordonnée à contre-sens bascule sur la seconde avec l'option, pas sans) ; giratoire parcouru dans son sens (aucun contre-sens) et à l'envers (contre-sens déclaré, ou ruptures si interdit) ; sens uniques réels de la BD TOPO figés (quartier urbain : 10 tronçons à sens unique sur 100).
+- **Banc** (`node tools/mesurer-calage.mjs`, vérité = plus court chemin orienté, 5 voisinages, 3 graines) : les cinq voisinages contiennent très peu de sens uniques sur la vérité (3 tronçons au total), l'effet y est donc **marginal** : F1 de `hmm` 0,92 avec et sans l'option, part du tracé à contre-sens 0,1 % dans les deux cas. Le banc ne prouve ni gain ni perte sensible ; l'effet est mesuré sur un jeu plus riche en sens uniques au § « Vérité de routage ».
+
 ### Non mesuré
 
 - **L'exactitude.** Il n'existe pas de vérité terrain : les mesures disent la fidélité à la ligne donnée et la forme du résultat (nombre de tronçons, tronçons courts, continuité), pas que les bons tronçons sont retenus.
 - **Une confiance calibrée** : rien n'est calibré, le calage rend toujours un chemin plausible, y compris faux, et n'en donne aucune. Les indices disponibles (écart médian, rappel, part de tronçons courts, accord avec un numéro ou un nom connu) sont dans `mesures-trace.js`.
-- Sens uniques dans le **calage** (le graphe y est parcouru dans les deux sens ; seul le plus court chemin honore `oriente: true`, **non mesuré sur données réelles**, testé sur cas synthétiques), interdictions de mouvement, grands volumes (le calage est prévu pour des couloirs de quelques centaines de tronçons), repère local au-delà de quelques dizaines de kilomètres.
+- Interdictions de mouvement, grands volumes (le calage est prévu pour des couloirs de quelques centaines de tronçons), repère local au-delà de quelques dizaines de kilomètres.
 
 ## 5. Données IGN utiles à Atlas
 
