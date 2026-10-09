@@ -47,7 +47,7 @@ export function negocierVersion(versionsClient, versionsComposant) {
  * @param {{fenetre:Window, cadre:{contentWindow:Window}, origineComposant:string, surRejet?:(raison:string, e:object)=>void}} o
  */
 export function transportFenetre({ fenetre, cadre, origineComposant, surRejet = () => {} }) {
-  if (!origineComposant || origineComposant === '*') throw new ErreurBi('origine', 'origineComposant exacte requise (pas de joker) : « https://atlas.example »');
+  if (!origineComposant || origineComposant === '*' || origineComposant === 'null') throw new ErreurBi('origine', 'origineComposant exacte requise (ni joker, ni origine opaque « null ») : « https://atlas.example »');
   return {
     envoyer(msg) { const w = cadre.contentWindow; if (!w) throw new ErreurBi('deconnecte', "l'iframe n'est pas chargée"); w.postMessage(msg, origineComposant); },
     ecouter(rappel) {

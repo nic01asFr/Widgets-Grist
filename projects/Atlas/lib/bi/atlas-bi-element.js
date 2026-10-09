@@ -26,6 +26,8 @@ import { COMMANDES, EVENEMENTS } from './pont.js';
 /** URL de l'iframe : paramètres du mode composant ajoutés sans écraser ceux de l'hôte. Pure, testable. */
 export function urlComposant(src, hote, base) {
   const u = new URL(src, base);
+  // `javascript:` s'exécuterait dans la page hôte, `data:` / `blob:` / `file:` donnent une origine opaque (« null ») : http(s) seulement
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new ErreurBi('commande', '<atlas-bi> : src doit être une adresse http(s) (reçu ' + u.protocol + ')');
   if (!u.searchParams.has('bi')) u.searchParams.set('bi', '1');
   if (!u.searchParams.has('navbar')) u.searchParams.set('navbar', 'false');
   if (!u.searchParams.has('mode')) u.searchParams.set('mode', 'view');
@@ -58,7 +60,9 @@ export class AtlasBi extends Base {
     if (!src) { this._pret = Promise.reject(new ErreurBi('commande', '<atlas-bi> : attribut src manquant')); this._pret.catch(() => {}); return; }
     const hote = this.getAttribute('hote') || (typeof location !== 'undefined' ? location.origin : '');
     if (!hote || hote === 'null') { this._pret = Promise.reject(new ErreurBi('origine', "<atlas-bi> : l'origine de la page est opaque (file://) ; héberger la page ou fournir l'attribut hote")); this._pret.catch(() => {}); return; }
-    const url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined);
+    let url;
+    try { url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined); }
+    catch (e) { this._pret = Promise.reject(e instanceof ErreurBi ? e : new ErreurBi('commande', '<atlas-bi> : src illisible')); this._pret.catch(() => {}); return; }
     const cadre = document.createElement('iframe');
     cadre.title = this.getAttribute('title') || 'Carte';
     cadre.setAttribute('allow', 'fullscreen');
