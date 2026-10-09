@@ -51,11 +51,14 @@ export const COMMANDES = Object.freeze({
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne']);
 export const BATCH_MAX = 100;
 
+/** Une commande du contrat, en propriété PROPRE : `constructor`, `__proto__`, `toString`... hérités d'Object.prototype ne sont pas des commandes. */
+export const estCommande = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, c);
+
 export const EVENEMENTS = Object.freeze(['ready', 'error', 'select', 'hover', 'filter', 'camera', 'time', 'legend', 'edit', 'layer', 'progress', 'drill', 'statistique', 'connexion']);
 
 /** Les versions sont compatibles si majeure et mineure sont égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
-  const p = (v) => String(v || '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);
+  const p = (v) => (typeof v === 'string' ? v : '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);
   return Number.isFinite(a1) && Number.isFinite(a2) && a1 === b1 && a2 === b2;
 }
 
@@ -93,7 +96,7 @@ export async function executerBatch(api, ordres, o = {}) {
     let err = null;
     if (!ordre || typeof ordre !== 'object' || typeof ordre.cmd !== 'string') err = 'ordre ' + i + ' : forme invalide';
     else if (ordre.cmd === 'batch') err = 'ordre ' + i + " : batch ne s'imbrique pas";
-    else if (!(ordre.cmd in COMMANDES) || typeof api[ordre.cmd] !== 'function') err = 'ordre ' + i + ' : commande inconnue : ' + ordre.cmd;
+    else if (!estCommande(ordre.cmd) || typeof api[ordre.cmd] !== 'function') err = 'ordre ' + i + ' : commande inconnue : ' + ordre.cmd;
     else err = validerArguments(ordre.cmd, Array.isArray(ordre.args) ? ordre.args : []);
     if (!err) {
       try { const valeur = await api[ordre.cmd](...(ordre.args || [])); resultats.push({ i, cmd: ordre.cmd, ok: true, valeur: valeur === undefined ? null : valeur }); ok++; continue; }
@@ -115,8 +118,8 @@ export function validerCommande(msg, { origine = '', autorisees = [] } = {}) {
   if (msg.source !== SOURCE_HOTE) return { ok: false, code: 'source', erreur: 'source inconnue', ignorer: true };
   const ok = typeof origine === 'string' && origine !== '' && origine !== '*' && origine !== 'null' && autorisees.includes(origine);
   if (!ok) return { ok: false, code: 'origine', erreur: 'origine non autorisée : ' + origine };
-  if (!VERSIONS_ACCEPTEES.some((v) => versionsCompatibles(msg.version, v))) return { ok: false, code: 'version', erreur: 'version ' + msg.version + ' incompatible avec ' + VERSION };
-  if (typeof msg.cmd !== 'string' || !(msg.cmd in COMMANDES)) return { ok: false, code: 'commande', erreur: 'commande inconnue : ' + msg.cmd };
+  if (!VERSIONS_ACCEPTEES.some((v) => versionsCompatibles(msg.version, v))) return { ok: false, code: 'version', erreur: 'version ' + (typeof msg.version === 'string' ? msg.version.slice(0, 32) : typeof msg.version) + ' incompatible avec ' + VERSION };
+  if (!estCommande(msg.cmd)) return { ok: false, code: 'commande', erreur: 'commande inconnue : ' + (typeof msg.cmd === 'string' ? msg.cmd.slice(0, 64) : typeof msg.cmd) };
   if (msg.version !== VERSION && COMMANDES_0_3.includes(msg.cmd)) return { ok: false, code: 'version', erreur: msg.cmd + ' demande la version ' + VERSION + ' (reçu ' + msg.version + ')' };
   const args = Array.isArray(msg.args) ? msg.args : [];
   const e = validerArguments(msg.cmd, args); if (e) return { ok: false, code: 'argument', erreur: e };

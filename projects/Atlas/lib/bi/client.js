@@ -18,7 +18,7 @@
  *  - la version du contrat se négocie (0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
-import { COMMANDES, COMMANDES_0_3, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles } from './pont.js';
+import { COMMANDES, COMMANDES_0_3, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande } from './pont.js';
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
@@ -146,7 +146,7 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
 
     /** Envoie une commande ; promesse de sa valeur. Avant `connecter()`, la version la plus récente du client est utilisée. */
     appeler(cmd, ...args) {
-      if (!(cmd in COMMANDES)) return Promise.reject(new ErreurBi('commande', 'commande inconnue : ' + cmd, { cmd }));
+      if (!estCommande(cmd)) return Promise.reject(new ErreurBi('commande', 'commande inconnue : ' + cmd, { cmd }));
       const v = version || versions[0];
       if (COMMANDES_0_3.includes(cmd) && v !== '0.3') return Promise.reject(new ErreurBi('version', cmd + ' demande la version 0.3 (négociée : ' + v + ')', { cmd }));
       if (!desinscrire) return Promise.reject(new ErreurBi('deconnecte', 'client déconnecté ou non connecté : appeler connecter()', { cmd }));

@@ -72,7 +72,8 @@ export function installerPont(rt, { cible, fenetre, autorisees = [], journal = n
   const ecouteur = (e) => {
     if (!e || e.source !== cible) return;           // seul le parent est écouté
     if (liste.includes(e.origin)) origineHote = e.origin;   // les réponses suivent l'origine qui vient de parler
-    pont.recevoir(e.data, e.origin);
+    // une charge hostile ne doit pas laisser de promesse rejetée non gérée : le pont répond ou se tait, il ne plante pas
+    Promise.resolve().then(() => pont.recevoir(e.data, e.origin)).catch((err) => { if (journal && journal.warn) journal.warn('[Atlas BI] message ignoré : ' + (err && err.message)); });
   };
   fenetre.addEventListener('message', ecouteur);
   return {
