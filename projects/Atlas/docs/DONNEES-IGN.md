@@ -13,6 +13,7 @@ Modules ES purs, sans dépendance à l'application, sans état global. Le résea
 | `calage.js` | Caler une polyligne sur le graphe (HMM / Viterbi), plus court chemin entre deux points ou deux repères, combinaison des deux |
 | `mesures-trace.js` | Mesures d'un tracé (rappel et précision à 15 m, Hausdorff, Fréchet, F1 en longueur) |
 | `confiance.js`, `confiance-modele.js` | Confiance par tronçon retenu : score calibré et classe haute / moyenne / faible (modèle appris, ne pas éditer) |
+| `reperes.js` | Repères routiers (PR) : « route + PR + abscisse » ↔ position, repère le plus proche |
 | `itineraire-geoplateforme.js` | Client **facultatif** du calcul d'itinéraire de la Géoplateforme, avec garde-fous |
 | `filiation.js` | Filiation de tronçons d'une édition à la suivante, par recouvrement |
 | `geo.js` | Plan local en mètres, projection, abscisses, Hausdorff, Fréchet |
@@ -176,7 +177,7 @@ Sans la confiance, la précision d'un tronçon retenu est de 92,9 % ; avec elle,
 |---|---|---|---|
 | `troncon_de_route` | `cleabs`, `sens_de_circulation` (Double sens / Sens direct / Sens inverse / Sans objet), `nombre_de_voies`, `largeur_de_chaussee` (renseignée sur 74 à 81 % des tronçons échantillonnés), `importance` (1-6), `nature` (dont Rond-point : 382 862 en France), `acces_vehicule_leger`, `position_par_rapport_au_sol` (0, 1, -1, -2 : ponts et tunnels), `vitesse_moyenne_vl`, `cpx_numero` (renseigné sur 14 % d'un échantillon urbain, 39 % des routes départementales), `cpx_classement_administratif`, `periode_de_fermeture`, `restriction_de_hauteur`, `reserve_aux_bus`, dates de création et de modification | réseau navigable : graphe, itinéraire, rond-points, ponts | `vitesse_moyenne_vl` est une **moyenne, pas une limite réglementaire** ; pas de nombre de voies par sens ; `nom_collaboratif_*` absent sur 36 % de l'échantillon urbain |
 | `non_communication` | tronçon d'entrée, tronçon(s) de sortie | mouvements interdits | **19 478 objets en France** : la plupart des interdictions de tourner n'y sont pas |
-| `point_de_repere`, `section_de_points_de_repere` | route, numéro, abscisse, côté, type | repérage « route + PR + abscisse » | 0 objet en zone urbaine dense (routes départementales seulement). Avec `BBOX`, filtrer la route côté client |
+| `point_de_repere`, `section_de_points_de_repere` | route, numéro, abscisse, côté, type | repérage « route + PR + abscisse » (voir § 7) | 651 618 repères et 125 400 sections en France ; autoroutes, nationales et départementales, pas de voies communales ; 0 objet dans un quartier urbain dense échantillonné. Avec `BBOX`, filtrer la route côté client (le CQL BBOX rend 0) |
 | `route_numerotee_ou_nommee`, `voie_nommee` | numéro, toponyme, gestionnaire ; nom normalisé, identifiant BAN | préférence de route (numéro, nom) | |
 | `equipement_de_transport` | Carrefour (dont Rond-point, Échangeur), Parking, stations, Borne de rechargement | carrefours, rond-points (point) | « Arrêt voyageurs » : **8 objets** dans 20 × 20 km autour de Marseille |
 | `point_du_reseau` | Barrière, Passage à niveau, Obstacle infranchissable | barrières, passages à niveau | |
@@ -258,7 +259,42 @@ Une autre source est nécessaire (hors IGN). L'import OpenStreetMap d'Atlas (Ove
 
 **Articulation avec l'ancrage.** Une migration d'ancrage déplace un repère linéaire (tronçon + abscisse) d'une édition à la suivante : elle a besoin, pour chaque nouveau tronçon, des anciens `cleabs` dont il descend. C'est `cleabsOrigine` / `nouvellesAvecOrigine` (`{ cleabs, geometry, cleabs_origine }`). `filiation.js` ne contient **aucun code d'ancrage** (ni contrat de repère, ni côté, ni décalage, ni confiance) ; le module d'ancrage est étudié dans une autre branche et consommera cette sortie. Le tracé de `calage.js` (`troncon`, `s0`, `s1`) est, lui, l'entrée naturelle d'un repère linéaire à deux ancrages d'axe par tronçon.
 
-## 7. Risques et limites d'usage
+## 7. Les repères routiers (PR) : `lib/reseau/reperes.js`
+
+**À quoi ça sert.** Localiser un constat ou un relevé de terrain (« D13 PR 17+955 »), afficher le PR dans une bulle, chercher par PR, relier des données externes qui ne portent qu'un PR. `resoudre({ route, pr, abscisse, cote, departement })` donne une position ; `localiser([lng, lat])` rend la route, le PR derrière le point, l'abscisse en mètres, la distance à la route, le côté et les autres routes portées par le même tronçon ; `plusProches(point, n, { route })` liste les repères les plus proches ; `intervalle` donne la ligne entre deux repères ; `lirePR` / `formater` lisent et écrivent « D13 PR 17+955 » ; `chargerReperes` / `chargerAutour` lisent les deux couches par le WFS (`BBOX`, route filtrée côté client). Aucune logique propre à une application.
+
+**Principe.** Chaque repère (`point_de_repere`) porte l'identifiant de sa section (`section_de_points_de_repere`). On le projette sur la ligne de la section : abscisse curviligne en mètres. Une position `PR n + a m` avance de `a` mètres le long de la ligne dans le sens des PR croissants (sens déduit de la corrélation numéro/abscisse, sinon des bornes de section). Le résultat reste sur la ligne. Repris et généralisé d'un prototype qui donnait 0 m d'écart médian face au géocodeur d'une application sur 40 cas : **cette concordance n'est pas une preuve d'exactitude**, les deux méthodes projettent sur la même ligne.
+
+**Cas rencontrés dans les données** (mesurés sur le département 90, jeu de test sur 11 routes versé au dépôt) :
+
+- les PR **ne sont pas espacés de 1 000 m** (de 900 m à plus de 4 000 m selon les routes) : l'abscisse est une distance depuis le PR, pas une fraction de kilomètre ; une abscisse supérieure à 1 000 est valide ;
+- les bornes `DS` et `FS` de section reprennent un numéro de PR sans en être un : écartées. `PR0` est le début, `PRF` le dernier point ; `999+0` désigne la fin de la route (le point `PRF`, sinon la fin de la dernière section, signalée) ;
+- une route a **plusieurs sections**, chaînées à 30 m près ; en dehors, chaque chaîne est une composante (84 couples route-côté sur 176 routes en ont plusieurs dans le département 90, jusqu'à 9) ;
+- **plusieurs côtés** (`U`, `G`, `D`) : `U` est le défaut ; sinon erreur `cote_ambigu` ;
+- **le même numéro de route et de PR existe dans plusieurs départements** (D463 : 25, 68, 90) et la numérotation des nationales repart à chaque département : erreur `pr_ambigu` plutôt qu'un choix silencieux, levée par `departement` ou `pres` ; deux PR de même numéro peuvent exister dans un même département et un même côté (D463, côté D) ;
+- **PR manquant** : erreur `pr_inconnu` avec ses voisins, ou estimation signalée (`interpoler`) ;
+- **abscisse hors section** : on repart du repère d'abscisse cumulée la plus proche ; si la position tombe encore hors de la ligne, erreur `abscisse_hors_section`, jamais d'extrapolation ;
+- **plusieurs numéros sur le même tronçon** (route nationale et départementale confondues) : `localiser` rend la plus proche et les autres en `alternatives` (à 5 m près).
+
+**Couverture réelle** (département 90 complet, `node tools/mesurer-reperes.mjs`) : 526 sections, 2 070 points dont 1 202 vrais PR (`PR`, `PR0`, `PRF`) sur 176 routes ; 7 points sans section et 12 à plus de 50 m de leur section sont écartés et comptés. Part de la longueur des tronçons numérotés qui a des repères :
+
+| Classe (`cpx_classement_administratif`) | tronçons | longueur | sur une route avec PR | sur une section (à 30 m) |
+|---|---|---|---|---|
+| Départementale | 10 791 | 1 063,5 km | **99,3 %** | 99,9 % |
+| Nationale | 278 | 62,2 km | 92,3 % | 91,8 % |
+| Autoroute | 30 | 10,8 km | **0 %** (A16) | 0 % |
+| Autoroute / route nommée (A36) | 183 | 74,5 km | 100 % | 100 % |
+
+26 routes numérotées n'ont aucun repère : l'A16 (10,8 km), des départementales courtes (D9H, D127A, D34C, D218A : 0,8 à 2,5 km) et des tronçons annexes de la N19 (`N19_96C`, `N19_93A`… : 0,4 à 0,9 km). **Ce département-ci est le seul mesuré** : la couche compte 651 618 repères et 125 400 sections en France (compte du service, non analysé) ; nationales, départementales et autoroutes y sont présentes, mais la part des routes sans repère ailleurs, et les routes communales, ne sont pas mesurées.
+
+**Cohérence interne** (`tools/mesurer-reperes.mjs` sur les 1 202 PR) :
+
+- **Aller-retour** `resoudre` (abscisses 0 et 250 m) → `localiser` → `resoudre` : 2 309 essais aboutis sur 2 404 (96 %) ; les 95 autres sortent de la ligne (250 m après un PR proche de la fin d'une section : erreur explicite, pas d'extrapolation) ; **écart du retour : médiane 0 m, 99e centile 0 m, maximum 21 m** ; le PR de départ est retrouvé à 1,5 m près dans 99,8 % des cas. C'est un contrôle de cohérence, non d'exactitude.
+- **Abscisses publiées contre longueurs de ligne** (871 paires de PR consécutifs de même département, 100 à 6 000 m) : rapport (longueur de ligne / abscisse publiée) médian 1,0006, 90e centile 1,018, 99e centile 1,197 ; écart médian 4,1 m, 90e centile 31 m, 99e centile 198 m, maximum 2,2 km. Les deux jeux viennent du même producteur ; c'est la seule seconde mesure disponible.
+
+**Ce qui n'est pas vérifié.** L'écart avec la **position du PR physique** posé par le gestionnaire (la borne sur le bord de la route) : la BD TOPO donne la position de chaque PR et la ligne de la section ; entre deux PR, la position est interpolée à la distance de la ligne, qui peut s'écarter de la distance publiée (ci-dessus : jusqu'à quelques dizaines de mètres au 90e centile). Aucune comparaison avec un relevé de bornes n'a été faite. Les côtés `G` / `D` de routes à chaussées séparées ne sont testés que sur D463, D419, N19 et A36 de ce département. **Marge de chargement** : un repère hors de l'emprise lue n'est pas chargé, alors que le « dernier repère derrière » un point peut être à plus de 4 km : élargir de 8 km au moins (`chargerAutour`).
+
+## 8. Risques et limites d'usage
 
 - **Disponibilité** : services publics sans garantie annoncée ; quotas contradictoires ; une erreur 500 observée sur une requête à paramètre répété. Le WFS retarde d'un trimestre sur le téléchargement. Prévoir l'échec : toutes les erreurs du client ont un `code`.
 - **Volumes** : 1 000 objets par page ; un couloir de 150 m autour d'un tracé de quelques kilomètres = quelques centaines de tronçons (quelques centaines de Ko). Un département compressé pèse 68 à 245 Mo.
@@ -266,14 +302,15 @@ Une autre source est nécessaire (hors IGN). L'import OpenStreetMap d'Atlas (Ove
 - **Mentions** : « Source : IGN, BD TOPO® » avec la licence (Licence Ouverte 2.0) partout où un tronçon, un attribut ou un tracé en dérivé est affiché ou exporté.
 - **Application mobile** : les requêtes sortent par le client natif de Capacitor, qui n'envoie pas de `Referer` ; le WFS et l'itinéraire de la Géoplateforme n'ont pas montré d'exigence d'en-tête (contrairement à Overpass, voir `lib/osm-requete.js`), mais **cela n'a pas été vérifié depuis l'application**.
 
-## 8. Points de branchement possibles dans l'application (non codés)
+## 9. Points de branchement possibles dans l'application (non codés)
 
 - *Importer la BD TOPO comme couche* : `lireTroncons` donne des entités GeoJSON que `entableLayer` pourrait écrire dans une table (clé `cleabs`, mise à jour par `date_modification`) ; aujourd'hui `scene-loader.js` déclare le WFS comme échec.
 - *Tracer un trajet de tournée sur le réseau* : `tracer` sur la ligne d'un contexte donne les tronçons parcourus et leurs abscisses (comparer à `lib/trajet.js` / `lib/tournee.js`).
 - *Afficher la confiance du tracé* : `troncon.confiance.classe` colore ou signale les tronçons « faible » d'un tracé calé ; `resultat.confiance.parClasse` dit quelle part du tracé est sûre.
+- *Localiser un objet par son PR* : `chargerAutour` puis `localiser` / `resoudre` pour une bulle (« D13 PR 17+955 »), une recherche par PR ou le rattachement de données externes qui ne portent qu'un PR.
 - *Détecter les tronçons qui ont changé* : `filiationDifferentiel` sur les objets d'une couche importée, pour signaler ceux dont l'identifiant a disparu.
 
-## 9. Reproduire
+## 10. Reproduire
 
 Tests (hors réseau) et mesures :
 
@@ -291,10 +328,11 @@ node tools/mesurer-verite-routage.mjs <cache> --sortie <res>      # tableaux par
 node tools/calibrer-confiance.mjs <res> --ecrire                  # apprend, évalue sur les départements de test, écrit confiance-modele.js
 ```
 
-Filiation sur deux éditions complètes d'un département (fichiers extraits du GeoPackage officiel, hors dépôt) :
+Filiation sur deux éditions complètes et repères d'un département (fichiers extraits du GeoPackage officiel, hors dépôt) :
 
 ```
 node tools/valider-filiation.mjs ancienne.json nouvelle.json --sortie <res>
+node tools/mesurer-reperes.mjs pr.json troncons.json --sortie <res>
 ```
 
-Les extraits réels figés (`tests/fixtures/reseau/*.json`) viennent du WFS, du service d'itinéraire de la Géoplateforme et du GeoPackage de la BD TOPO du département 90, relevés le 09/10/2026, en Licence Ouverte 2.0 (IGN) : troncons-reels-p02, troncons-mesure, itineraire-reponses, diff-troncons-extrait, routage-extrait.
+Les extraits réels figés (`tests/fixtures/reseau/*.json`) viennent du WFS, du service d'itinéraire de la Géoplateforme et du GeoPackage de la BD TOPO du département 90, relevés le 09/10/2026, en Licence Ouverte 2.0 (IGN) : troncons-reels-p02, troncons-mesure, itineraire-reponses, diff-troncons-extrait, routage-extrait, reperes-d90.
