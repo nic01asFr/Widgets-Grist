@@ -17,6 +17,10 @@ const SOURCES = [
   ...fs.readdirSync(path.join(racine, 'lib'))
     .filter((f) => f.endsWith('.js'))
     .map((f) => path.join(racine, 'lib', f)),
+  // Le composant carte BI (lib/bi/) importe des modules de lib/ : ils doivent l'être sous le même jeton qu'app_v7.js.
+  ...fs.readdirSync(path.join(racine, 'lib', 'bi'))
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => path.join(racine, 'lib', 'bi', f)),
 ];
 
 /** Chaque import (statique ou dynamique) d'un module de `lib/`, avec son jeton. */

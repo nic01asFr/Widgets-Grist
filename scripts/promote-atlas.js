@@ -50,6 +50,31 @@ for (const f of fs.readdirSync(libSrc)) {
 }
 
 /**
+ * Le composant carte BI (`lib/bi/`, sous-dossier de `lib/`) : charge a la demande avec `?bi=1`, donc invisible au
+ * controle des imports de `app.js` ci-dessous — qui ne lit que `./lib/<nom>.js`. Le copier ici, et exiger que chaque
+ * module qu'il importe en relatif existe dans la copie.
+ */
+const biSrc = path.join(libSrc, 'bi');
+const biPub = path.join(libPub, 'bi');
+let modulesBi = 0;
+if (fs.existsSync(biSrc)) {
+  fs.mkdirSync(biPub, { recursive: true });
+  for (const f of fs.readdirSync(biSrc)) {
+    if (!f.endsWith('.js')) continue;
+    fs.writeFileSync(path.join(biPub, f), normaliserVersions(fs.readFileSync(path.join(biSrc, f), 'utf8')));
+    modulesBi++;
+  }
+  for (const f of fs.readdirSync(biPub)) {
+    for (const m of fs.readFileSync(path.join(biPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
+      if (!fs.existsSync(path.join(biPub, m[1]))) {
+        console.error(`Echec : lib/bi/${f} importe ${m[1]}, absent de la copie publiee`);
+        process.exit(1);
+      }
+    }
+  }
+}
+
+/**
  * La peau du formulaire, qui n'est pas un module.
  *
  * La boucle ci-dessus ne copie que les `.js` : `formulaire-atlas.css` y serait
@@ -203,7 +228,7 @@ if (absents.length) {
   process.exit(1);
 }
 
-console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js, `
+console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} lib/bi), ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
   + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes), `
   + `${fichiersObjets} modeles au catalogue d'objets`);
