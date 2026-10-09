@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { chargerCache, construireCas, evaluer, METHODES } from './verite-routage.mjs';
 import { tirage, degrader, ecartMoyen } from './degradations-trace.mjs';
 import { rng } from './mesurer-calage.mjs';
+import { vecteur } from '../lib/reseau/confiance.js';
 
 /** Niveau de sévérité réel : écart moyen entre la ligne dégradée et la route. */
 export const niveauEcart = (m) => (m < 5 ? 'écart < 5 m' : m < 10 ? 'écart 5-10 m' : 'écart ≥ 10 m');
@@ -29,6 +30,7 @@ export function departementsDeTest(depts) {
 /** Lance la mesure sur des cas déjà construits. */
 export function mesurer(cas, { degradations = 4, graine = 424242 } = {}) {
   const lignes = [];
+  const echantillons = [];
   cas.forEach((c, ic) => {
     for (let k = 0; k < degradations; k++) {
       const r = rng(graine + ic * 101 + k * 7919);
@@ -42,10 +44,19 @@ export function mesurer(cas, { degradations = 4, graine = 424242 } = {}) {
           methode: nom, f1L: e.longueur.f1, precL: e.longueur.precision, rappL: e.longueur.rappel, f1C: e.compte.f1, precC: e.compte.precision, rappC: e.compte.rappel,
           ruptures: e.r.ruptures, contreSens: e.r.contreSens || 0, ok: e.r.ok,
         });
+        if (nom !== 'pcc-ligne') {
+          e.r.troncons.forEach((t, i) => {
+            if (!t.caracteristiques || !e.etiquettes[i].connu) return;
+            echantillons.push({
+              cas: c.id, dept: c.dept, densite: c.contexte.densite, tags: c.contexte.tags, methode: nom, niveau: niveauEcart(ecart),
+              x: vecteur(t.caracteristiques), parcouru: t.parcouru, juste: e.etiquettes[i].juste,
+            });
+          });
+        }
       }
     }
   });
-  return { lignes };
+  return { lignes, echantillons };
 }
 
 const moy = (v) => (v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN);
@@ -96,8 +107,8 @@ async function main() {
   for (const c of cas) for (const t of c.contexte.tags) tags[t] = (tags[t] || 0) + 1;
   console.log('densité :', JSON.stringify(dens), '| étiquettes :', JSON.stringify(tags), '| départements :', new Set(cas.map((c) => c.dept)).size);
   const t0 = Date.now();
-  const { lignes } = mesurer(cas, { degradations: Number(reste[reste.indexOf('--degradations') + 1]) || 4 });
-  console.log(`${lignes.length} évaluations, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  const { lignes, echantillons } = mesurer(cas, { degradations: Number(reste[reste.indexOf('--degradations') + 1]) || 4 });
+  console.log(`${lignes.length} évaluations, ${echantillons.length} tronçons retenus, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
   afficher('Par méthode (tous contextes)', agreger(lignes, () => ['tous']));
   afficher('Par densité', agreger(lignes, (l) => [l.densite]));
   afficher('Par étiquette (un trajet peut en porter plusieurs)', agreger(lignes, (l) => l.tags));
@@ -105,6 +116,7 @@ async function main() {
   if (sortie) {
     mkdirSync(sortie, { recursive: true });
     writeFileSync(join(sortie, 'lignes.json'), JSON.stringify(lignes));
+    writeFileSync(join(sortie, 'echantillons.json'), JSON.stringify(echantillons));
     writeFileSync(join(sortie, 'cas.json'), JSON.stringify(cas.map((c) => ({ id: c.id, famille: c.famille, zone: c.zone, dept: c.dept, distanceM: c.distanceM, couverture: c.couverture, troncons: c.verite.length, contexte: c.contexte }))));
   }
 }

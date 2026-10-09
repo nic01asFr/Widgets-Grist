@@ -150,6 +150,13 @@ describe('verité de routage — mesure par méthode et par contexte (extrait)',
     assert.ok(parMethode['mixte orientée'].f1L >= parMethode['mixte (hmm+pcc)'].f1L - 0.03);
   });
 
+  it('chaque tronçon retenu produit un échantillon étiqueté (caractéristiques, juste ou faux)', () => {
+    assert.ok(m.echantillons.length > 300);
+    assert.ok(m.echantillons.every((e) => e.x.length === 12 && (e.juste === 0 || e.juste === 1)));
+    const part = m.echantillons.reduce((a, e) => a + e.juste, 0) / m.echantillons.length;
+    assert.ok(part > 0.6 && part < 1);
+  });
+
   it('les départements de test sont fixés une fois pour toutes, un sur trois', () => {
     const t = departementsDeTest(['07', '15', '24', '32', '35', '44']);
     assert.deepEqual([...t].sort(), ['24', '44']);

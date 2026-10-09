@@ -51,6 +51,7 @@
 
 import { cumul, pointA, projLigne, cap as capDe, ecartCap, echantillonner, distPtLignes, lignesDe, dist } from './geo.js';
 import { normaliserNom, sensAutorises } from './graphe-routier.js';
+import { annoter } from './confiance.js';
 
 export const DEFAUTS = Object.freeze({
   rayon: 30, // m : distance maximale d'un candidat à la ligne
@@ -209,6 +210,49 @@ function observations(ln, pas) {
 }
 const capSens = (c, dir) => (dir > 0 ? c : (c + 180) % 360);
 
+const lse = (xs) => {
+  let m = -Infinity;
+  for (const x of xs) if (x > m) m = x;
+  if (m === -Infinity) return -Infinity;
+  let s = 0;
+  for (const x of xs) s += Math.exp(x - m);
+  return m + Math.log(s);
+};
+
+/**
+ * Probabilités a posteriori de chaque état (algorithme avant-arrière, mêmes coûts que Viterbi lus comme des
+ * log-vraisemblances négatives). Pose `post` sur chaque état : la probabilité que l'observation soit sur cette arête,
+ * dans ce sens, sachant TOUTE la ligne. C'est une probabilité DU MODÈLE, pas une probabilité d'être exact : voir
+ * `confiance.js` pour la calibration.
+ */
+function posterieurs(couches, trans, debutChaine) {
+  const T = couches.length;
+  const alpha = new Array(T);
+  const beta = new Array(T);
+  for (let t = 0; t < T; t++) {
+    alpha[t] = couches[t].map((s, j) => {
+      if (debutChaine[t]) return -s.cout;
+      const xs = [];
+      for (let i = 0; i < alpha[t - 1].length; i++) if (trans[t][j][i] < Infinity) xs.push(alpha[t - 1][i] - trans[t][j][i]);
+      return -s.cout + lse(xs);
+    });
+  }
+  beta[T - 1] = couches[T - 1].map(() => 0);
+  for (let t = T - 2; t >= 0; t--) {
+    beta[t] = couches[t].map((_, i) => {
+      if (debutChaine[t + 1]) return 0;
+      const xs = [];
+      for (let j = 0; j < couches[t + 1].length; j++) if (trans[t + 1][j][i] < Infinity) xs.push(-trans[t + 1][j][i] - couches[t + 1][j].cout + beta[t + 1][j]);
+      return lse(xs);
+    });
+  }
+  for (let t = 0; t < T; t++) {
+    const lp = couches[t].map((_, i) => alpha[t][i] + beta[t][i]);
+    const z = lse(lp);
+    couches[t].forEach((s, i) => { s.post = z === -Infinity ? 1 / lp.length : Math.exp(lp[i] - z); });
+  }
+}
+
 /**
  * Cale une ligne (en mètres, dans le repère du graphe) sur le réseau.
  * @returns {{ok: boolean, raison?: string, passages: object[], ruptures: number, nbObs: number, perdus: number,
@@ -273,22 +317,31 @@ export function caler(Gr, lignePts, opts) {
   const histo = [prec];
   let ruptures = 0;
   let dernierObs = couches[0][0].ob;
+  // pour les postérieurs (option `confiance`) : coûts de transition de chaque pas et début de chaque chaîne
+  const trans = o.confiance ? [null] : null;
+  const debutChaine = o.confiance ? [true] : null;
   for (let t = 1; t < couches.length; t++) {
     const ob = couches[t][0].ob;
     const delta = Math.max(0.1, ob.s - dernierObs.s);
+    const lignesTrans = trans ? [] : null;
     const cur = couches[t].map((s) => {
       let best = Infinity;
       let bi = -1;
+      const ligneTr = trans ? new Float64Array(prec.length).fill(Infinity) : null;
       prec.forEach((q, i) => {
         const rd = routeDist(q.s, s, borne(delta));
         if (!(rd.r < Infinity) || rd.r > borne(delta)) return;
         const tr = Math.abs(rd.r - delta) / o.beta + (rd.demiTour ? o.penaliteDemiTour : 0);
+        if (ligneTr) ligneTr[i] = tr;
         const v = q.c + tr;
         if (v < best) { best = v; bi = i; }
       });
+      if (lignesTrans) lignesTrans.push(ligneTr);
       return { s, c: best < Infinity ? best + s.cout : Infinity, back: bi };
     });
+    if (trans) { trans.push(lignesTrans); debutChaine.push(false); }
     if (cur.every((x) => x.c === Infinity)) {
+      if (debutChaine) debutChaine[t] = true;
       ruptures++;
       chaines.push(histo.slice());
       histo.length = 0;
@@ -301,6 +354,7 @@ export function caler(Gr, lignePts, opts) {
     dernierObs = ob;
   }
   chaines.push(histo.slice());
+  if (trans) posterieurs(couches, trans, debutChaine);
 
   const suites = chaines.map((h) => {
     let bi = 0;
@@ -349,6 +403,7 @@ export function caler(Gr, lignePts, opts) {
   return {
     ok: true, passages, ruptures, contreSens, nbObs: obs.length, perdus, couvertureObs: couches.length / obs.length, L,
     premier: suites[0][0], dernier: derniereSuite[derniereSuite.length - 1], couloir: new Set(couches.flat().map((s) => s.e)),
+    ...(trans ? { diagnostic: { couches, suites } } : {}),
   };
 }
 
@@ -494,7 +549,7 @@ export function calerPuisLisser(Gr, lignePts, opts) {
   const r = entrePositions(Gr, { e: h.premier.e, s: h.premier.s }, { e: h.dernier.e, s: h.dernier.s }, cout, cleCout);
   for (const k of [...Gr.cache.keys()]) if (k.startsWith(`${cleCout}#`)) Gr.cache.delete(k);
   if (!r) return { methode: 'hmm+pcc', repli: 'hmm_seul', ...h };
-  return { ok: true, methode: 'hmm+pcc', passages: versPassages(r.segs), ruptures: h.ruptures, contreSens: 0, couvertureObs: h.couvertureObs, L: h.L, nbObs: h.nbObs };
+  return { ok: true, methode: 'hmm+pcc', passages: versPassages(r.segs), ruptures: h.ruptures, contreSens: 0, couvertureObs: h.couvertureObs, L: h.L, nbObs: h.nbObs, diagnostic: h.diagnostic };
 }
 
 // ---------------------------------------------------------------------------------------------- pipeline
@@ -561,6 +616,8 @@ export const METHODES = Object.freeze(['hmm', 'pcc-ligne', 'hmm+pcc', 'pcc-ext']
  *   exemple), la géométrie n'étant alors pas lue
  * @param {object} [opts] `DEFAUTS`, plus `ref: {nom?, numero?}`, `extremites: [[lng, lat], [lng, lat]]`, `orientee`
  *   (la ligne est ordonnée dans le sens de la marche : un sens unique ne se remonte pas, ou à `penaliteContreSens`)
+ * `opts.confiance` (vrai par défaut pour `hmm` et `hmm+pcc`) : chaque tronçon reçoit `caracteristiques` et, si un modèle est
+ * calibré (`confiance-modele.js`), `confiance: { score, classe }` ; `resultat.confiance` résume le tracé.
  * @returns {{methode: string, ok: boolean, echecs: number, raisons: string[], nbLignes: number, ruptures: number,
  *   repli: string|null, troncons: object[], passages: object[], geometrieM: number[][][], geometrie: object|null,
  *   composantes: number, couvertureObs: number}}
@@ -584,6 +641,8 @@ export function tracer(Gr, geometrie, methode, opts) {
   let obsOk = 0;
   let repli = null;
   const parLigne = [];
+  const diagnostics = [];
+  o.confiance = o.confiance !== false && (methode === 'hmm' || methode === 'hmm+pcc');
   const unites = methode === 'pcc-ext' ? [null] : lignes;
   for (const ln of unites) {
     let r;
@@ -595,6 +654,7 @@ export function tracer(Gr, geometrie, methode, opts) {
     if (r.repli) repli = r.repli;
     ruptures += r.ruptures || 0;
     contreSens += r.contreSens || 0;
+    if (r.diagnostic) diagnostics.push(r.diagnostic);
     if (r.nbObs) { obsTot += r.nbObs; obsOk += r.nbObs * (r.couvertureObs || 0); }
     const ps = elaguer(r.passages, Math.max(o.elagage, 0.5)); // une extrémité parcourue sur moins de 0,5 m n'est jamais un tronçon
     parLigne.push({ ok: true, passages: ps });
@@ -611,11 +671,14 @@ export function tracer(Gr, geometrie, methode, opts) {
     }
     return pts;
   });
-  return {
+  const resultat = {
     methode, ok: troncons.length > 0 && echecs < unites.length, echecs, raisons, nbLignes: unites.length, ruptures, contreSens, repli, troncons, passages,
     geometrieM: geo,
     geometrie: geo.length ? { type: 'MultiLineString', coordinates: geo.map((l) => l.map((p) => Gr.repere.depuis(p[0], p[1]))) } : null,
     composantes: composantes(Gr, passages.map((p) => p.arete)),
     couvertureObs: obsTot ? obsOk / obsTot : 0,
+    confiance: null,
   };
+  if (o.confiance && diagnostics.length) resultat.confiance = annoter(Gr, resultat, diagnostics);
+  return resultat;
 }
