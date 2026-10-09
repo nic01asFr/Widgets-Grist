@@ -15,9 +15,10 @@ Atlas/
 ├── index_v7.html          # Entrée courante (v7) — source de publication
 ├── app_v7.js              # Logique v7 (ES module)
 ├── lib/                   # 67 modules ES, sans dépendance à app_v7.js (voir familles ci-dessous)
+│   └── reseau/            # réseau routier IGN : client WFS BD TOPO, graphe, calage, itinéraire IGN, filiation (bibliothèques, pas encore branchées)
 ├── docs/                  # cadrages (CADRAGE-*.md), BINDING-*, CARTE-DES-EXPOSITIONS, BILAN-*, études-*
 ├── tests/                 # node --test (88 fichiers, 1241 tests au 02/10/2026)
-├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs
+├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs, mesurer-calage.mjs
 └── CLAUDE.md
 ```
 
@@ -3136,3 +3137,17 @@ l'auteur), `recit.json` (12 étapes dont 5 contextes), `fabriquer-scene.py` (sc�
 Page d'essai : `essais-controles/index-vitrine-bulle.html?longchamp=1&liste=1[&config=1][&neuf=1]`. Leçons : une scène ouverte par adresse rend `popup_template` comme du **texte** (déclarer des `fields` aux libellés) ;
 deux objets au même point se masquent (décaler) ; en exploitation la maquette gêne (ronds 2D lisibles, 3D réservée au récit) ; le libellé d'une catégorie venant d'une table de référence se perdait à la réouverture
 (`declarativeFromAtlasLayer`, corrigé, testé). Les agrégats en volume passent par des formules Grist : l'agrégat natif d'Atlas est reporté (voir la mémoire du projet).
+
+## Données IGN et tracé calé sur le réseau : `lib/reseau/` (09/10/2026)
+
+Des **bibliothèques** (modules ES purs, `fetch` injectable, tests sans réseau), **pas branchées dans `app_v7.js`**. Tout est dans `docs/DONNEES-IGN.md`
+(inventaire des données, limites, licences, ce qui est mesuré et ce qui ne l'est pas). L'essentiel pour qui y touche :
+
+- `wfs-bdtopo.js` lit la BD TOPO par le WFS de la Géoplateforme (sans clé). **`BBOX` et non `CQL_FILTER=BBOX(…)`** (zéro objet, sans erreur) ; **`SORTBY` toujours** (sans tri, la pagination n'est pas fiable) ;
+  filtres **côté client** ; les erreurs du service sont du XML ; les positions portent une altitude.
+- `graphe-routier.js` : une arête par tronçon (`cleabs`, sens, voies, importance, niveau, numéro et noms de route), mètres dans un repère local. On ne se connecte qu'aux **extrémités** : un pont ne rejoint pas la route qu'il enjambe.
+- `calage.js` : calage d'une ligne sur le graphe (HMM, rayon 30 m) et plus court chemin ; rend des **portions de tronçon** (`cleabs`, `s0`, `s1`), pas des tronçons entiers. Il rend toujours un chemin plausible, y compris faux,
+  et n'a **aucune vérité terrain** : ne jamais présenter ses mesures comme une exactitude. Une ligne décimée qui sort du rayon est perdue.
+- `itineraire-geoplateforme.js` : facultatif. Le service accroche un point hors réseau **en silence** (une mer à ~27 km) : le client refuse au-delà de 500 m. Seule `bdtopo-pgr` rend les `cleabs`.
+- `filiation.js` : qui descend de qui entre deux éditions (aucune table n'est publiée). Ne contient **aucun code d'ancrage** ; `cleabsOrigine` en est l'entrée.
+- Rien de propre à une application métier ici : pas de logique de réglementation, pas de rapprochement de textes. Les applications métier se branchent via ces modules.

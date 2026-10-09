@@ -23,10 +23,11 @@
  * ## Mesuré (09/10/2026) et non mesuré
  *
  * Mesuré, sur des tronçons réels de la BD TOPO et des lignes dégradées de façon contrôlée (`tools/mesurer-calage.mjs`,
- * chiffres dans `docs/DONNEES-IGN.md`) : le calage retrouve le chemin d'origine après un bruit de 6 m, une décimation
- * à 6 sommets, un décalage latéral de 12 m. Sur le prototype d'origine, avec 50 lignes de contrôle d'une application
- * métier et 40 localisations en route départementale : 50 lignes tracées sur 50 (44 pour un tampon de 8 m), tronçons
- * de moins de 15 m 11 % au lieu de 19 %, écart de Hausdorff médian à la ligne 5,0 m au lieu de 11,7 m.
+ * chiffres dans `docs/DONNEES-IGN.md`) : F1 en longueur de 0,99 après un bruit de 6 m ou un décalage latéral de 12 m,
+ * mais 0,83 pour une ligne décimée à 6 sommets sur des routes sinueuses (elle sort du rayon de 30 m). Le portage
+ * depuis le prototype est identique sur 270 tracés réels. Le prototype avait été mesuré sur 50 lignes publiées par un
+ * tiers (non versées ici) : 50 tracées contre 44 pour un tampon de 8 m, tronçons de moins de 15 m 11 % au lieu de
+ * 19 %, écart de Hausdorff médian à la ligne 5,0 m au lieu de 11,7 m.
  *
  * **Non mesuré : l'exactitude.** Il n'existe pas de vérité terrain. Ces mesures disent la fidélité du tracé à la
  * ligne donnée et la forme du résultat, pas qu'il emprunte les bons tronçons. Rien n'est calibré : le calage rend
