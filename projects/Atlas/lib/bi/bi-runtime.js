@@ -30,6 +30,12 @@ const THEME_DEFAUT = Object.freeze({
 });
 const nombre = (v) => { const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
 const copie = (o) => JSON.parse(JSON.stringify(o));
+/**
+ * Une attribution est du TEXTE : MapLibre l'écrit dans le DOM avec `innerHTML` et son assainissement laisse passer `<iframe srcdoc>`
+ * (script exécuté dans l'origine d'Atlas, mesuré le 10/10/2026 avec maplibre-gl 5.6.1). Ce qui vient de l'hôte ou des données est
+ * donc échappé : il s'affiche tel quel, il ne s'interprète jamais.
+ */
+export const attributionTexte = (a) => String(a ?? '').slice(0, 300).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 
 export function attacher(map, opts = {}) {
   let theme = { ...THEME_DEFAUT, ...(opts.theme || {}) };
@@ -62,7 +68,7 @@ export function attacher(map, opts = {}) {
   function monter(c) {
     const decl = declaratifResolu(c.def.style?.declarative) || { kind: 'single', color: theme.categories[0] };
     const couleur = expressionCouleurDeclarative(decl, '#9a9a9a') || '#9a9a9a';
-    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: c.admin.meta.attribution } : {}) } : {}) });
+    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionTexte(c.admin.meta.attribution) } : {}) } : {}) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));
