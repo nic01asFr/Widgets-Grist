@@ -92,8 +92,8 @@
         "libelle": "système de droits en plus de celui de Grist"
       },
       {
-        "valeur": "4",
-        "libelle": "façons de montrer la scène : document, page intégrée, scène publiée, application"
+        "valeur": "5",
+        "libelle": "façons de montrer la scène : document, page intégrée, scène publiée, application externe, application Android"
       }
     ],
     "titreSequence": "Le parcours",
@@ -542,6 +542,11 @@
             "titre": "Une scène publiée",
             "etiquette": "Sans document",
             "texte": "Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par `?scene=<adresse>`. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut."
+          },
+          {
+            "titre": "Une application externe",
+            "etiquette": "Sans document",
+            "texte": "Atlas peut être exploité depuis une application web : elle embarque la carte dans une iframe (`?bi=1`) et la pilote par messages — scène, filtres, temps, sélection, légende, unités administratives colorées par un tableau qu’elle fournit. Seules les origines déclarées une à une obtiennent une réponse ; les données, les palettes et la légende restent à l’application. Une page de démonstration à données synthétiques (`demos/hote-bi/index.html`) accompagne le composant."
           },
           {
             "titre": "L’application Android",
