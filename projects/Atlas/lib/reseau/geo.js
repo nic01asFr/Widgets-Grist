@@ -119,3 +119,39 @@ export function distPtLignes(p, lns) {
   }
   return d;
 }
+
+/** Distance de Hausdorff dirigée de A vers B : le plus grand écart d'un point de A (échantillonné tous les `pas` m) à B. */
+export function hausdorffDirige(A, B, pas = 5) {
+  let m = 0;
+  for (const ln of A) for (const p of echantillonner(ln, pas)) m = Math.max(m, distPtLignes(p, B));
+  return m;
+}
+
+/** Distance de Hausdorff symétrique entre deux ensembles de lignes (en mètres). */
+export function hausdorff(A, B, pas = 5) {
+  return Math.max(hausdorffDirige(A, B, pas), hausdorffDirige(B, A, pas));
+}
+
+/** Fréchet discret entre deux suites de points. */
+export function frechetDiscret(P, Q) {
+  const n = P.length;
+  const m = Q.length;
+  const ca = Array.from({ length: n }, () => new Float64Array(m));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const d = dist(P[i], Q[j]);
+      if (i === 0 && j === 0) ca[i][j] = d;
+      else if (i === 0) ca[i][j] = Math.max(ca[0][j - 1], d);
+      else if (j === 0) ca[i][j] = Math.max(ca[i - 1][0], d);
+      else ca[i][j] = Math.max(Math.min(ca[i - 1][j], ca[i - 1][j - 1], ca[i][j - 1]), d);
+    }
+  }
+  return ca[n - 1][m - 1];
+}
+
+/** Fréchet entre deux polylignes, le sens de la seconde étant libre (le meilleur des deux). */
+export function frechet(lnA, lnB, pas = 10) {
+  const P = echantillonner(lnA, pas);
+  const Q = echantillonner(lnB, pas);
+  return Math.min(frechetDiscret(P, Q), frechetDiscret(P, Q.slice().reverse()));
+}
