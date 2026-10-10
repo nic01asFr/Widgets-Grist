@@ -9,7 +9,7 @@
  *  - 'carto': ADMINEXPRESS-COG-CARTO.LATEST : généralisé « cartographique » mais 15 fois plus lourd en régions/départements ;
  *  - 'cog'  : ADMINEXPRESS-COG.LATEST : géométrie complète, hors de portée d'un client (118 Mo pour 101 départements).
  */
-import { attributionSure } from '../attribution.js?v=1.16.0';
+import { attributionSure } from '../attribution.js?v=1.16.1';
 import { aireGeodesiqueKm2, lireValeur } from './admin.js';
 
 export const VERSION = '1.0.0';

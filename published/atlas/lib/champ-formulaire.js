@@ -29,7 +29,7 @@
  *   masque (module Formulaires), il ne s'efface pas d'ici.
  * - **Colonnes à formule** : une scène sur l'appareil ne sait pas les calculer.
  */
-import { planNomDeTable, natureRefus } from './nouvelle-couche.js?v=1.16.0';
+import { planNomDeTable, natureRefus } from './nouvelle-couche.js?v=1.16.1';
 
 export const VERSION = '1.0.0';
 

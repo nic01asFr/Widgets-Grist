@@ -2,7 +2,7 @@
  * Point d'entrée du mode composant carte BI, chargé À LA DEMANDE par `app_v7.js` (import dynamique, seulement avec `?bi=1`).
  * Sans ce paramètre, ce module et tout ce qu'il importe ne sont jamais téléchargés.
  */
-import { attendreCarte } from '../acces-carte.js?v=1.16.0';
+import { attendreCarte } from '../acces-carte.js?v=1.16.1';
 import { monter } from './liaison.js';
 
 export { biDemande, lireHotes, normaliserOrigine } from './liaison.js';
