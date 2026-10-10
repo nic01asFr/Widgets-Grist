@@ -58,7 +58,7 @@ Couche administrative :
   visuel: { type:'choroplethe', niveau, source:'agregat'|'hote', champ?, metrique?, rapport?, classes?, methode?, bornes?, palette?, centre?, valeurSansDonnee?, ... } }
 ```
 
-Si `donnees[id]` est fourni dans `setScene`, ces entités (Feature GeoJSON avec `properties.code`, `nom`) remplacent le chargement : l'hôte garde la main sur la source des contours. Une couche qui ne se charge pas n'empêche pas le reste de la scène : l'erreur est dans `ready.erreurs`. [testé]
+Si `donnees[id]` est fourni dans `setScene`, ces entités (Feature GeoJSON avec `properties.code`, `nom`) remplacent le chargement : l'hôte garde la main sur la source des contours. Une couche qui ne se charge pas n'empêche pas le reste de la scène : l'erreur est dans `ready.erreurs` (et `_erreurs` du résultat de `setScene`), y compris une couche de polygones de l'hôte qui déclare `visuel.type: 'choroplethe'` sans `admin` (« un choroplèthe se peint sur des unités administratives »). [testé]
 
 `visuel` du choroplèthe :
 

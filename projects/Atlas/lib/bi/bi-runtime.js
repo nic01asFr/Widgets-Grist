@@ -290,7 +290,10 @@ export function attacher(map, opts = {}) {
           catch (e) { erreurs[def.id] = String(e && e.message || e); }
           continue;
         }
-        const c = creerCouche(def, donnees[def.id] || def.geojson?.features || []); couches.set(def.id, c); monter(c);
+        // un choroplèthe se peint sur des unités administratives : sans `admin` il n'a pas de jointure, la couche est refusée seule et lisiblement
+        if (def.visuel && def.visuel.type === 'choroplethe') { erreurs[def.id] = 'choroplethe : la couche « ' + def.id + ' » doit déclarer `admin` (un choroplèthe se peint sur des unités administratives)'; continue; }
+        try { const c = creerCouche(def, donnees[def.id] || def.geojson?.features || []); couches.set(def.id, c); monter(c); }
+        catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
       configurerTemps(manifest); poserLavis();
       const compte = Object.fromEntries([...couches].map(([id, c]) => [id, c.features.length]));
