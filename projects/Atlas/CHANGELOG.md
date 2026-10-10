@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.6 — les véhicules ne grossissent plus quand on dézoome
+
+- **Corrigé** : en mode « Modèles 3D seulement », les véhicules étaient grossis dès le zoom 17 (×2 par zoom perdu), si bien qu'ils gardaient la même taille à l'écran pendant que la carte rapetissait : ils semblaient grossir. Ils sont maintenant à leur taille réelle et rapetissent avec la carte ; ils ne sont grossis que lorsqu'ils feraient moins de 5 pixels de long (plafond ×8), pour rester visibles.
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.5 — des phares plus discrets
 
 - **Corrigé** : les halos des phares et des feux étaient démesurés (une tache blanche de la taille de trois véhicules, qui les masquait et se recouvrait en un disque saturé). Un halo mesure maintenant 1,6 m (proportionné au véhicule à tous les zooms, et non plus un nombre de pixels), son bord s'éteint plus vite et sa force est ramenée ; le faisceau sur la chaussée est plus étroit et plus pâle.
