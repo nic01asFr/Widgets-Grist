@@ -310,6 +310,22 @@ section { margin: 0 0 3rem; }
     </article>
     <article class="contexte">
       <div class="dit">
+        <p class="role">Représenter</p>
+        <h3>Du trafic sur vos routes, pour une maquette vivante</h3>
+        <p>Une fois les routes importées — celles de l’IGN avec leur sens de circulation et leur nombre de voies, ou celles d’OpenStreetMap —, l’entrée « Animer le trafic (simulé) » de la palette fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. La densité se règle (véhicules par km), la même simulation se rejoue à l’identique, et un clic l’arrête.</p>
+        <p class="pourquoi">Une maquette qui bouge se lit mieux qu’une maquette figée, sans refaire une simulation dans un autre outil. Atlas dit qu’elle est simulée : la densité, les destinations et les feux sont des hypothèses, jamais une mesure du trafic réel.</p>
+        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 115 tronçons, 66 carrefours, 2 giratoires, une cinquantaine de véhicules en temps réel.</p>
+        <ul class="utilise"><li>Trafic simulé</li><li>Sens uniques</li><li>Voies par sens</li><li>Giratoires</li><li>Routes IGN ou OSM</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-trafic.jpg" alt="Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé." loading="lazy">
+          <figcaption>Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
         <p class="role">Éditer</p>
         <h3>L’objet cliqué est la ligne</h3>
         <p>Cliquer un objet ouvre sa fiche : c’est la ligne de la table, avec ses champs typés, ses listes de choix et ses références. Ce qu’on y écrit va dans le document. Plusieurs objets se sélectionnent ensemble et se parcourent avec ◀ ▶, en sautant ceux que les filtres masquent.</p>
@@ -631,6 +647,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.16.0</b><p>Les routes importées de l’IGN ou d’OpenStreetMap peuvent s’animer : une entrée de la palette, « Animer le trafic (simulé) », fait rouler des voitures et des poids lourds qui suivent les sens uniques, s’arrêtent dans les files et passent les carrefours et les giratoires. C’est une maquette de trafic, pas une mesure : la densité, les destinations et les feux sont des hypothèses, et Atlas le dit.</p></div>
       <div><b>v1.15.0</b><p>Un bouton IGN, à côté d’OSM dans le panneau Couches, importe les données de l’IGN de la zone visible : routes (avec leur sens de circulation et leur nombre de voies), bâtiments extrudés par leur hauteur, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes et départements. L’import annonce d’abord combien d’objets il va lire, avance page par page, s’annule et se reprend là où il s’était arrêté ; la couche arrive avec sa provenance, sa licence et la mention de source sur la carte. Les routes importées servent tout de suite aux itinéraires qui respectent les sens uniques.</p></div>
       <div><b>v1.14.2</b><p>Les routes importées d’OpenStreetMap portent leurs sens uniques : un itinéraire tracé dessus ne remonte plus une rue à sens unique, ni un rond-point à contresens (le sens de la BD TOPO de l’IGN passe avant celui d’OpenStreetMap quand les deux existent). Pour les applications qui affichent la carte : la sortie du pointeur est annoncée, « automatique » rend la main à la détection du réseau au lieu de garder un hors ligne forcé, et la mention de source donnée par l’application s’affiche en bas de la carte.</p></div>
       <div><b>v1.14.1</b><p>Quand une application affiche la carte d’Atlas, la carte n’apparaît plus avec le fond par défaut avant d’être configurée : un écran neutre « Chargement de la carte… » reste en place jusqu’à ce que l’application ait posé sa scène, puis laisse la place à la carte telle qu’elle l’a voulue. L’application peut aussi demander dès l’ouverture un fond et une charte de couleurs (plan, photographie aérienne, contraste élevé), ou se passer de l’écran d’attente.</p></div>

@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.16.0",
+      "texte": "Les routes importées de l’IGN ou d’OpenStreetMap peuvent s’animer : une entrée de la palette, « Animer le trafic (simulé) », fait rouler des voitures et des poids lourds qui suivent les sens uniques, s’arrêtent dans les files et passent les carrefours et les giratoires. C’est une maquette de trafic, pas une mesure : la densité, les destinations et les feux sont des hypothèses, et Atlas le dit."
+    },
+    {
       "version": "v1.15.0",
       "texte": "Un bouton IGN, à côté d’OSM dans le panneau Couches, importe les données de l’IGN de la zone visible : routes (avec leur sens de circulation et leur nombre de voies), bâtiments extrudés par leur hauteur, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes et départements. L’import annonce d’abord combien d’objets il va lire, avance page par page, s’annule et se reprend là où il s’était arrêté ; la couche arrive avec sa provenance, sa licence et la mention de source sur la carte. Les routes importées servent tout de suite aux itinéraires qui respectent les sens uniques."
     },
@@ -289,6 +293,27 @@
           {
             "image": "cas-grille.jpg",
             "legende": "Mailles de 50 m : hauteur selon le flux installé, couleur selon la température moyenne."
+          }
+        ]
+      },
+      {
+        "role": "Représenter",
+        "titre": "Du trafic sur vos routes, pour une maquette vivante",
+        "format": "large",
+        "texte": "Une fois les routes importées — celles de l’IGN avec leur sens de circulation et leur nombre de voies, ou celles d’OpenStreetMap —, l’entrée « Animer le trafic (simulé) » de la palette fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. La densité se règle (véhicules par km), la même simulation se rejoue à l’identique, et un clic l’arrête.",
+        "pourquoi": "Une maquette qui bouge se lit mieux qu’une maquette figée, sans refaire une simulation dans un autre outil. Atlas dit qu’elle est simulée : la densité, les destinations et les feux sont des hypothèses, jamais une mesure du trafic réel.",
+        "exemple": "les routes de la BD TOPO autour du Palais Longchamp : 115 tronçons, 66 carrefours, 2 giratoires, une cinquantaine de véhicules en temps réel.",
+        "utilise": [
+          "Trafic simulé",
+          "Sens uniques",
+          "Voies par sens",
+          "Giratoires",
+          "Routes IGN ou OSM"
+        ],
+        "images": [
+          {
+            "image": "cas-trafic.jpg",
+            "legende": "Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé."
           }
         ]
       },
@@ -652,7 +677,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.15.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.16.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [
