@@ -20,3 +20,7 @@ projects/Atlas/lib/bi/client-hote.js -text
 
 # Copie publiee du client de l hote : memes octets, meme empreinte (promotion Atlas).
 published/atlas/lib/bi/client-hote.js -text
+
+# Dependances externes embarquees (tools/vendoriser-web.mjs) : octets EXACTS, jamais de conversion de fins de ligne,
+# sinon les empreintes du verrou (vendor/verrou-externe.json) ne correspondent plus apres une extraction sous Windows.
+published/atlas/vendor/** -text
