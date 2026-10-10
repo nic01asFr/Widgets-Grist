@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.14.1",
+      "texte": "Quand une application affiche la carte d’Atlas, la carte n’apparaît plus avec le fond par défaut avant d’être configurée : un écran neutre « Chargement de la carte… » reste en place jusqu’à ce que l’application ait posé sa scène, puis laisse la place à la carte telle qu’elle l’a voulue. L’application peut aussi demander dès l’ouverture un fond et une charte de couleurs (plan, photographie aérienne, contraste élevé), ou se passer de l’écran d’attente."
+    },
+    {
       "version": "v1.14.0",
       "texte": "Quand les tronçons portent leur sens de circulation, comme ceux de la BD TOPO de l’IGN, un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne."
     },
@@ -486,7 +490,7 @@
         "role": "Partager",
         "titre": "La carte dans l’application de votre équipe",
         "format": "large",
-        "texte": "Un tableau de bord ou un outil de suivi que votre équipe a déjà peut afficher la carte d’Atlas dans ses pages. L’application garde ses données : elle les envoie à la carte, qui les montre en points, en surfaces, ou colorées par commune, département ou région à partir de son propre tableau. Elle filtre, avance dans le temps, et sa liste et la carte se suivent : toucher un site dans l’une le sélectionne dans l’autre. Les couleurs et la légende restent celles de l’application, et seules les applications que vous avez déclarées peuvent piloter la carte.",
+        "texte": "Un tableau de bord ou un outil de suivi que votre équipe a déjà peut afficher la carte d’Atlas dans ses pages. L’application garde ses données : elle les envoie à la carte, qui les montre en points, en surfaces, ou colorées par commune, département ou région à partir de son propre tableau. Elle filtre, avance dans le temps, et sa liste et la carte se suivent : toucher un site dans l’une le sélectionne dans l’autre. Les couleurs et la légende restent celles de l’application, et seules les applications que vous avez déclarées peuvent piloter la carte. Pendant le chargement, un écran neutre tient la place : on ne voit jamais la carte avant que l’application l’ait réglée.",
         "pourquoi": "Pas de carte à refaire dans chaque application, et pas de données à recopier dans Grist pour les voir sur une carte.",
         "exemple": "une page de démonstration à données fictives : un tableau par département, coloré en cinq classes sur les contours de l’IGN, avec une liste de sites qui suit la carte.",
         "utilise": [

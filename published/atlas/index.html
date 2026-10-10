@@ -149,6 +149,17 @@
         body.mode-bi #loading, body.mode-bi #story-present,
         body.mode-bi .maplibregl-ctrl-top-left, body.mode-bi .maplibregl-ctrl-top-right, body.mode-bi .maplibregl-ctrl-bottom-left { display: none !important; }
         /*
+         * Premier rendu du composant (`?bi=1`, sauf `?voile=0`) : un voile neutre cache la carte jusqu'à ce que l'hôte ait posé sa scène (lib/bi/voile.js
+         * le lève), pour qu'aucun fond ni style par défaut d'Atlas ne se voie avant sa configuration. Hors de ce mode, l'élément n'existe pas à l'écran.
+         */
+        #bi-voile { display: none; }
+        body.voile-bi #bi-voile {
+            display: grid; place-items: center; position: fixed; inset: 0; z-index: 2147483000;
+            background: #F6F6F4; color: #5D5D58;
+            font: 500 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) { body.voile-bi #bi-voile { background: #1D1D1B; color: #A9A9A2; } }
+        /*
          * Dans l'application, en lecture, la barre est retiree et ses commandes
          * passent sur la carte : le menu principal (qui offre aussi le retour a
          * l'edition) et la recherche. Elles s'effacent quand le dock de
@@ -1881,13 +1892,14 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.14.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.14.1" />
 </head>
 <body>
     <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
          pendant que app_v7.js se charge (300 a 900 ms, davantage sur un reseau lent), puis disparait. Meme regle que `biDemande` (lib/bi/liaison.js),
          gardee par tests/bi-premier-affichage.test.js. -->
-    <script>try { var biv = new URLSearchParams(location.search).get('bi'); if (biv === '1' || biv === 'true') document.body.classList.add('mode-bi'); } catch (e) { /* sans classe : comportement d'avant */ }</script>
+    <script>try { var sp = new URLSearchParams(location.search), biv = sp.get('bi'); if (biv === '1' || biv === 'true') { document.body.classList.add('mode-bi'); var vv = sp.get('voile'); if (!(vv === '0' || vv === 'false' || vv === 'non')) { document.body.classList.add('voile-bi'); document.body.setAttribute('aria-busy', 'true'); } } } catch (e) { /* sans classe : comportement d'avant */ }</script>
+    <div id="bi-voile" role="status" aria-live="polite">Chargement de la carte…</div>
     <div class="app">
         <!-- HEADER -->
         <header class="app-header" id="app-header">
@@ -2138,6 +2150,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.14.0"></script>
+    <script type="module" src="./app.js?v=1.14.1"></script>
 </body>
 </html>
