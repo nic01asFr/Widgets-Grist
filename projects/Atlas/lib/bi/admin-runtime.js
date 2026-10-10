@@ -12,10 +12,12 @@
  */
 import { chargerAvecRepli, ErreurSource, ATTRIBUTION_IGN } from './admin-sources.js';
 import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, ancetre, estCommunePLM, fusionnerArrondissements } from './admin.js';
-import { luminance } from './echelles.js';
+import { luminance, estPale } from './echelles.js';
 import { modeleChoroplethe, lignesChoroplethe, lignesClassement, resumeChoroplethe, motifHachure, classesTropClaires } from './choroplethe.js';
 
 const IMG_HACHURE = 'bi-hachure';
+/** Opacité des aplats du choroplèthe (calque `fill`) : c'est elle qui décide si une classe se détache du fond, la charte la juge donc sur la couleur vue. */
+export const OPACITE_REMPLISSAGE = 0.88;
 export const ORDRE_NIVEAUX = Object.freeze(['pays', 'region', 'departement', 'commune']);
 const enfantDe = (n) => ORDRE_NIVEAUX[ORDRE_NIVEAUX.indexOf(n) + 1] || null;
 const tick = () => (typeof performance !== 'undefined' ? performance : Date).now();
@@ -175,9 +177,11 @@ export function creerAdmin(ctx) {
   function poserEtats(c) {
     const A = c.admin, m = A.modele; if (!m || !map.getSource(ctx.idSrc(c))) return;
     const src = ctx.idSrc(c); let n = 0;
+    // « pâle » : la couleur VUE (à l'opacité de remplissage) ne se détache pas du fond d'au moins le contraste minimal de la charte (3:1)
+    const fondCarte = th().fondCarte, seuil = (th().exigences && th().exigences.contrasteMinimal) || 3;
     for (const [code, u] of m.parUnite) {
-      const nouveau = { couleur: u.couleur || null, sans: u.classe < 0, petit: !!u.petit, sombre: u.couleur ? (luminance(u.couleur) ?? 1) < 0.12 : false }; const ancien = A.etatPose.get(code);
-      if (ancien && ancien.couleur === nouveau.couleur && ancien.sans === nouveau.sans && ancien.petit === nouveau.petit) continue;
+      const nouveau = { couleur: u.couleur || null, sans: u.classe < 0, petit: !!u.petit, sombre: u.couleur ? (luminance(u.couleur) ?? 1) < 0.12 : false, pale: !!u.couleur && estPale(u.couleur, fondCarte, { opacite: OPACITE_REMPLISSAGE, seuil }) }; const ancien = A.etatPose.get(code);
+      if (ancien && ancien.couleur === nouveau.couleur && ancien.sans === nouveau.sans && ancien.petit === nouveau.petit && ancien.pale === nouveau.pale) continue;
       map.setFeatureState({ source: src, id: code }, nouveau); A.etatPose.set(code, nouveau); n++;
     }
     A.derniersEtats = n;
@@ -209,6 +213,9 @@ export function creerAdmin(ctx) {
       try { if (map.hasImage(IMG_HACHURE)) map.removeImage(IMG_HACHURE); map.addImage(IMG_HACHURE, motif, { pixelRatio: 1 }); } catch (e) { /* image déjà posée */ }
       ajouter({ id: PREF + 'hach-' + c.id, type: 'fill', source: src, paint: { 'fill-pattern': IMG_HACHURE, 'fill-opacity': ['case', sans, 1, 0] } });
     }
+    // Les classes PÂLES (qui se confondent avec le fond) n'ont pas de bord visible : un trait de l'encre de la charte (clair sur un fond sombre) les cerne, comme
+    // l'annonce l'avertissement `contraste-classe-fond`. Sous le halo et le trait de sélection.
+    ajouter({ id: PREF + 'pale-' + c.id, type: 'line', source: src, paint: { 'line-color': ctx.resoudre(th_.selection || '#111111'), 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.5, 8, 0.9, 12, 1.5], 'line-opacity': ['case', ['boolean', ['feature-state', 'pale'], false], 0.85, 0] } });
     ajouter({ id: PREF + 'petit-' + c.id, type: 'line', source: src, paint: { 'line-color': ctx.resoudre(th_.selection || '#111111'), 'line-width': 1.6, 'line-dasharray': [2, 2], 'line-opacity': ['case', petit, 0.9, 0] } });
     // halo clair sous le trait de sélection : le trait sombre seul est invisible sur la classe la plus sombre (contraste 1:1)
     ajouter({ id: PREF + 'halo-' + c.id, type: 'line', source: src, paint: { 'line-color': ctx.resoudre(th_.halo || '#ffffff'), 'line-width': ['case', sel, 8, hov, 5, 0], 'line-opacity': 0.95 } });

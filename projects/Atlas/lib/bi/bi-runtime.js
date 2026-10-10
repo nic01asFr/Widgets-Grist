@@ -11,7 +11,7 @@
 import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=20261002a';
 import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001a';
 import { agreger } from './agregats.js';
-import { rampe, seuilsQuantiles, classeDe } from './echelles.js';
+import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
 import { executerBatch } from './pont.js';
 import { creerFond } from './fond.js';
@@ -83,6 +83,13 @@ export function attacher(map, opts = {}) {
     const T = themeDe(c);
     const decl = declaratifResolu(c.def.style?.declarative, T) || { kind: 'single', color: T.categories[0] };
     const couleur = expressionCouleurDeclarative(decl, '#9a9a9a') || '#9a9a9a';
+    // Contour des marques : celui de la charte, SAUF sur une couleur pâle (qui ne se détache pas du fond, vue à l'opacité de la couche) où l'encre tranche,
+    // comme l'annonce l'avertissement `contraste-classe-fond`. Même structure d'expression que la couleur : une couleur de contour par classe.
+    const contourMarque = (opacite) => {
+      const seuil = (T.exigences && T.exigences.contrasteMinimal) || 3, pour = (col) => (estPale(col, T.fondCarte, { opacite, seuil }) ? T.selection : T.contour);
+      const d2 = copie(decl); if (d2.color) d2.color = pour(d2.color); for (const st of d2.stops || []) st.color = pour(st.color);
+      return expressionCouleurDeclarative(d2, T.contour) || T.contour;
+    };
     map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionTexte(c.admin.meta.attribution) } : {}) } : {}) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
@@ -92,7 +99,7 @@ export function attacher(map, opts = {}) {
       const poids = v.poids ? ['interpolate', ['linear'], ['to-number', ['get', v.poids], 0], 0, 0, v.poidsMax || 1, 1] : 1, rampeC = rampe(T.sequentielle);
       ajouterCalque(c, { id: PREF + 'heat-' + c.id, type: 'heatmap', source: idSrc(c), paint: { 'heatmap-weight': poids, 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 15, 1.6], 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 8 * (v.rayon || 1), 16, 38 * (v.rayon || 1)],
         'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.15, rampeC(0.25), 0.4, rampeC(0.5), 0.7, rampeC(0.8), 1, rampeC(1)], 'heatmap-opacity': v.opacite ?? 0.85 } });
-      if (v.points) ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), minzoom: v.points, paint: { 'circle-radius': 4, 'circle-color': couleur, 'circle-stroke-width': ['case', sel, 3, 1], 'circle-stroke-color': ['case', sel, T.selection, T.contour] } });
+      if (v.points) ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), minzoom: v.points, paint: { 'circle-radius': 4, 'circle-color': couleur, 'circle-stroke-width': ['case', sel, 3, 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(1)] } });
     } else if (g === 'point' && (v.type === 'hex' || v.type === 'grille')) {
       map.addSource(idAgg(c), { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       const ext = !!v.extrusion;
@@ -106,10 +113,10 @@ export function attacher(map, opts = {}) {
       ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], '–']] : '', 'text-font': police, 'text-size': T.tailles.etiquette, 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': '#000000', 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
     } else if (g === 'point') {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
-      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, T.contour] } });
+      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(0.9)] } });
     } else if (g === 'polygon') {
       ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': ['case', sel, 0.95, 0.72] } });
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': ['case', sel, T.selection, T.contour], 'line-width': ['case', sel, 3, 1] } });
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': ['case', sel, T.selection, contourMarque(0.72)], 'line-width': ['case', sel, 3, 1] } });
     } else {
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, 3] } });
     }

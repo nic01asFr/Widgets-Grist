@@ -49,3 +49,16 @@ export function stopsGradues(seuils, couleurs) {
   const n = seuils.length + 1; const cols = couleurs.length === n ? couleurs : echantillonner(couleurs, n);
   return cols.map((color, i) => ({ lower: i === 0 ? undefined : seuils[i - 1], upper: i === n - 1 ? undefined : seuils[i], color }));
 }
+
+/** La couleur d'un aplat telle qu'on la VOIT : mélangée au fond selon l'opacité de remplissage (un aplat à 88 % est plus proche du fond que sa couleur pleine). */
+export function couleurVue(couleur, fond, opacite = 1) { return melanger(fond, couleur, opacite); }
+
+/**
+ * Une couleur est « pâle » quand, vue sur le fond, elle tombe sous le contraste minimal d'un élément graphique (3:1 par défaut, WCAG 1.4.11) : son bord
+ * ne se distingue plus du fond, il faut un trait qui tranche. Une couleur ou un fond illisibles ne sont jamais pâles (rien à comparer).
+ */
+export function estPale(couleur, fond, { opacite = 1, seuil = 3 } = {}) {
+  if (!hexVersRgb(couleur) || !hexVersRgb(fond)) return false;
+  const r = contraste(couleurVue(couleur, fond, opacite), fond);
+  return r !== null && r < seuil;
+}
