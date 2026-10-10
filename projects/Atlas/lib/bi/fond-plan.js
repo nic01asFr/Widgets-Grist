@@ -10,7 +10,7 @@
  *  - le « Plan IGN » vectoriel (Géoplateforme) : on DÉRIVE un style depuis le style officiel (on garde ses sources de données et ses
  *    filtres, on remplace la peinture).
  */
-import { melanger } from './echelles.js';
+import { planMonochrome } from '../charte/derivation.js';
 export const VERSION = '1.1.0';
 
 /** Jetons du plan : des gris neutres, à remplacer par ceux de la charte graphique de l'hôte (`setTheme({ plan })`). */
@@ -19,18 +19,8 @@ export const PLAN_DEFAUT = Object.freeze({
   texte: '#3C3C3C', texte2: '#5F5F5F', halo: '#F5F5F5', limite: '#BDBDBD', info: '#6F7F8F',
 });
 
-/**
- * Plan MONOCHROME : une couleur principale et des intensités, comme le recommandent les chartes graphiques pour un fond de carte
- * (« utiliser une couleur principale et si besoin d'en varier l'intensité »). Chaque jeton est la couleur principale
- * mélangée au fond dans une proportion fixe : plus l'élément est structurant, plus il est intense.
- * Résultat : un fond sobre sur lequel les couleurs d'état de la donnée ressortent seules.
- */
-export function planMonochrome(principal, { fond = '#FFFFFF', encre = '#222222', intensites = {} } = {}) {
-  const k = { vert: 0.07, bati: 0.13, eau: 0.30, filet: 0.38, limite: 0.60, ...intensites };
-  const m = (t) => melanger(fond, principal, t);
-  // le texte ne prend jamais la couleur principale (un orange ou un violet clair ne se lit pas) : il garde l'encre de la charte
-  return { fond, vert: m(k.vert), bati: m(k.bati), eau: m(k.eau), route: fond, filet: m(k.filet), limite: m(k.limite), halo: fond, texte: encre, texte2: melanger(fond, encre, 0.82), info: principal === encre ? encre : melanger(principal, encre, 0.5) };
-}
+// Le plan monochrome (une couleur principale, des intensités fixes) est une règle de dérivation de la charte : définie dans lib/charte/derivation.js.
+export { planMonochrome };
 
 /** Rôles de couche, communs aux deux schémas. */
 export const ROLES = Object.freeze(['fond', 'vert', 'eau', 'eau-ligne', 'bati', 'route', 'filet', 'rail', 'limite', 'lieu', 'voie', 'eau-nom', 'masquer']);

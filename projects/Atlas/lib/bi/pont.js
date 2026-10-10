@@ -8,6 +8,8 @@
  * `origine` d'un événement vaut 'utilisateur' (geste dans la carte) ou 'api' (effet d'une commande de l'hôte) : l'hôte
  * ignore les 'api' qu'il a lui-même provoqués, ce qui supprime les boucles.
  */
+import { verifierTaille } from '../charte/schema.js';
+
 export const VERSION = '0.3';
 /** Versions d'hôte acceptées : la 0.3 n'ajoute que des commandes et des événements, une 0.2 reste servie pour ses 19 commandes. */
 export const VERSIONS_ACCEPTEES = Object.freeze(['0.2', '0.3']);
@@ -27,7 +29,7 @@ export const COMMANDES = Object.freeze({
   highlight: [['array', true]],
   flyTo: [['object', true]],
   fitTo: [['any', false]],
-  setTheme: [['object', true]],
+  setTheme: [['object', true], ['object', false]],
   setVisual: [['string', true], ['object', true]],
   updateFeature: [['string', true], ['any', true], ['object', true]],
   setEdition: [['string', true], ['boolean', true]],
@@ -46,15 +48,16 @@ export const COMMANDES = Object.freeze({
   setUnitFilter: [['string', true], ['string', true], ['any', true]],
   batch: [['array', true], ['object', false]],
   setHorsLigne: [['any', true]],
+  getTheme: [],
 });
 /** Commandes ajoutées par la 0.3 (une commande 0.3 envoyée avec la version 0.2 est refusée). */
-export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne']);
+export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
 export const BATCH_MAX = 100;
 
 /** Une commande du contrat, en propriété PROPRE : `constructor`, `__proto__`, `toString`... hérités d'Object.prototype ne sont pas des commandes. */
 export const estCommande = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, c);
 
-export const EVENEMENTS = Object.freeze(['ready', 'error', 'select', 'hover', 'filter', 'camera', 'time', 'legend', 'edit', 'layer', 'progress', 'drill', 'statistique', 'connexion']);
+export const EVENEMENTS = Object.freeze(['ready', 'error', 'select', 'hover', 'filter', 'camera', 'time', 'legend', 'edit', 'layer', 'progress', 'drill', 'statistique', 'connexion', 'theme']);
 
 /** Les versions sont compatibles si majeure et mineure sont égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
@@ -74,6 +77,9 @@ export function validerArguments(cmd, args) {
     if (!typeOk(type, args[i])) return cmd + ' : argument ' + (i + 1) + ' attendu ' + type + ', reçu ' + typeDe(args[i]);
   }
   if (args.length > schema.length) return cmd + " : trop d'arguments";
+  // une charte ou des jetons de fond viennent de l'extérieur : leur taille est bornée avant tout traitement (voir `verifierTaille`)
+  const taille = cmd === 'setTheme' ? verifierTaille(args[0]) : cmd === 'setFond' && args[1] !== undefined ? verifierTaille(args[1]) : null;
+  if (taille) return cmd + ' : ' + taille;
   return null;
 }
 

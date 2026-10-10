@@ -5,7 +5,7 @@
  * (contrôles/filtres, expressions de couleur) pour que « filtrer » et « classer » veuillent dire la même chose ici et dans Atlas.
  *
  * API (contrat 0.3) : setScene, setLayerVisibility, setFilter, setTime, play, pause, select, highlight, flyTo, fitTo,
- * setTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
+ * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
 import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=20261002a';
@@ -15,19 +15,18 @@ import { rampe, seuilsQuantiles, classeDe } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
 import { executerBatch } from './pont.js';
 import { creerFond } from './fond.js';
-import { planMonochrome } from './fond-plan.js';
 import { ajouterIcones } from './icones-etats.js';
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
 import { creerSurveillance, fondPourConnexion } from './repli.js';
+import { creerGestionnaire, preferencesDepuisFenetre } from './theme-charte.js';
+import { resoudreJeton, avertissementIgnore } from '../charte/resolution.js';
+import { assainirJetonsFond } from '../charte/schema.js';
+import { planDepuis } from '../charte/derivation.js';
+import { verifierPlan } from '../charte/verification.js';
 
 export const VERSION = '0.3';
 const PREF = 'bi-';
-const THEME_DEFAUT = Object.freeze({
-  jetons: {}, categories: ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948', '#b07aa1', '#ff9da7'],
-  sequentielle: ['#f7fbff', '#9ecae1', '#3182bd', '#08306b'], divergente: ['#b2182b', '#f7f7f7', '#2166ac'],
-  selection: '#111111', survol: '#ffffff', contour: '#ffffff', lavis: null, texte: '#1f1f1f', police: 'system-ui, sans-serif',
-});
 const nombre = (v) => { const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
 const copie = (o) => JSON.parse(JSON.stringify(o));
 /**
@@ -38,19 +37,34 @@ const copie = (o) => JSON.parse(JSON.stringify(o));
 export const attributionTexte = (a) => String(a ?? '').slice(0, 300).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 
 export function attacher(map, opts = {}) {
-  let theme = { ...THEME_DEFAUT, ...(opts.theme || {}) };
+  // le thème est la charte résolue (lib/charte/) : défauts d'Atlas, charte de l'hôte, préférence de la personne
+  const themes = creerGestionnaire({ theme: opts.theme || null, preferences: opts.preferences !== undefined ? opts.preferences : preferencesDepuisFenetre() });
+  let theme = themes.theme;
   const couches = new Map();         // id -> couche
   let selection = null, survol = null, emetteur = () => {}, camApi = false;
   const ecouteurs = new Map();       // type -> Set(cb)
   const fond = creerFond(map); let modeFond = 'atlas';
+  let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
+  // thème d'exécution = charte résolue + ce qui dépend du fond choisi (police des symboles du Plan IGN, voile)
+  const poserTheme = () => {
+    generation++; theme = { ...themes.theme, policeSymboles: modeFond === 'plan-ign' ? ['Source Sans Pro Bold'] : null };
+    if (modeFond === 'voile' && !theme.lavis) theme.lavis = { couleur: theme.plan.fond || '#F7F7F7', opacite: 0.62 };
+  };
+  poserTheme();
+  // Thème d'une couche : celui du composant, ou — si la couche porte sa surcharge (`style.charte`, niveau « couche » de la résolution) — le sien.
+  const themeDe = (c) => {
+    const surcharge = c.def.style && c.def.style.charte; if (!surcharge || typeof surcharge !== 'object') return theme;
+    if (!c.themeCouche || c.themeCouche.generation !== generation || c.themeCouche.surcharge !== surcharge) c.themeCouche = { generation, surcharge, theme: { ...themes.pourCouche(surcharge), policeSymboles: theme.policeSymboles } };
+    return c.themeCouche.theme;
+  };
   const emettre = (type, charge, origine) => { try { emetteur(type, charge, origine); } catch (e) { /* le transport ne doit pas casser la carte */ } for (const cb of ecouteurs.get(type) || []) cb(charge); };
 
   // ---------- jetons ----------
-  const resoudre = (c) => { if (typeof c !== 'string') return c; const m = /^jeton:(.+)$/.exec(c); return m ? (theme.jetons[m[1]] || '#808080') : c; };
-  function declaratifResolu(decl) {
+  const resoudre = (c, T = theme) => resoudreJeton(c, T.jetons);
+  function declaratifResolu(decl, T = theme) {
     if (!decl) return null; const d = copie(decl);
-    if (d.color) d.color = resoudre(d.color);
-    for (const s of d.stops || []) s.color = resoudre(s.color);
+    if (d.color) d.color = resoudre(d.color, T);
+    for (const s of d.stops || []) s.color = resoudre(s.color, T);
     return d;
   }
 
@@ -66,7 +80,8 @@ export function attacher(map, opts = {}) {
   const ajouterCalque = (c, spec, avant) => { map.addLayer(spec, avant && map.getLayer(avant) ? avant : undefined); c.ids.push(spec.id); };
 
   function monter(c) {
-    const decl = declaratifResolu(c.def.style?.declarative) || { kind: 'single', color: theme.categories[0] };
+    const T = themeDe(c);
+    const decl = declaratifResolu(c.def.style?.declarative, T) || { kind: 'single', color: T.categories[0] };
     const couleur = expressionCouleurDeclarative(decl, '#9a9a9a') || '#9a9a9a';
     map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionTexte(c.admin.meta.attribution) } : {}) } : {}) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
@@ -74,27 +89,27 @@ export function attacher(map, opts = {}) {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));
       admin.monter(c, avant);
     } else if (g === 'point' && v.type === 'heat') {
-      const poids = v.poids ? ['interpolate', ['linear'], ['to-number', ['get', v.poids], 0], 0, 0, v.poidsMax || 1, 1] : 1, rampeC = rampe(theme.sequentielle);
+      const poids = v.poids ? ['interpolate', ['linear'], ['to-number', ['get', v.poids], 0], 0, 0, v.poidsMax || 1, 1] : 1, rampeC = rampe(T.sequentielle);
       ajouterCalque(c, { id: PREF + 'heat-' + c.id, type: 'heatmap', source: idSrc(c), paint: { 'heatmap-weight': poids, 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 15, 1.6], 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 8 * (v.rayon || 1), 16, 38 * (v.rayon || 1)],
         'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.15, rampeC(0.25), 0.4, rampeC(0.5), 0.7, rampeC(0.8), 1, rampeC(1)], 'heatmap-opacity': v.opacite ?? 0.85 } });
-      if (v.points) ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), minzoom: v.points, paint: { 'circle-radius': 4, 'circle-color': couleur, 'circle-stroke-width': ['case', sel, 3, 1], 'circle-stroke-color': ['case', sel, theme.selection, theme.contour] } });
+      if (v.points) ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), minzoom: v.points, paint: { 'circle-radius': 4, 'circle-color': couleur, 'circle-stroke-width': ['case', sel, 3, 1], 'circle-stroke-color': ['case', sel, T.selection, T.contour] } });
     } else if (g === 'point' && (v.type === 'hex' || v.type === 'grille')) {
       map.addSource(idAgg(c), { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       const ext = !!v.extrusion;
       ajouterCalque(c, ext ? { id: PREF + 'agg-' + c.id, type: 'fill-extrusion', source: idAgg(c), paint: { 'fill-extrusion-color': ['coalesce', ['get', '_couleur'], '#cccccc'], 'fill-extrusion-height': ['*', ['coalesce', ['get', '_h'], 0], v.hauteurMax || 400], 'fill-extrusion-opacity': 0.88 } }
-        : { id: PREF + 'agg-' + c.id, type: 'fill', source: idAgg(c), paint: { 'fill-color': ['coalesce', ['get', '_couleur'], '#cccccc'], 'fill-opacity': v.opacite ?? 0.8, 'fill-outline-color': theme.contour } });
+        : { id: PREF + 'agg-' + c.id, type: 'fill', source: idAgg(c), paint: { 'fill-color': ['coalesce', ['get', '_couleur'], '#cccccc'], 'fill-opacity': v.opacite ?? 0.8, 'fill-outline-color': T.contour } });
     } else if (g === 'point' && v.type === 'etats') {
-      const ids = ajouterIcones(map, v.etats || {}, { resoudre: (cc) => resoudre(cc) }); const cles = Object.keys(ids);
+      const ids = ajouterIcones(map, v.etats || {}, { resoudre: (cc) => resoudre(cc, T) }); const cles = Object.keys(ids);
       const icone = cles.length ? ['match', ['get', v.champEtat || 'etat'], ...cles.flatMap((k) => [k, ids[k]]), ids[cles[0]]] : '';
-      const police = theme.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
-      ajouterCalque(c, { id: PREF + 'anneau-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', sel, 24, 0], 'circle-color': 'rgba(255,255,255,0.75)', 'circle-stroke-width': ['case', sel, 3, 0], 'circle-stroke-color': theme.selection } });
-      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], '–']] : '', 'text-font': police, 'text-size': 12, 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': '#000000', 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
+      const police = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+      ajouterCalque(c, { id: PREF + 'anneau-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', sel, 24, 0], 'circle-color': 'rgba(255,255,255,0.75)', 'circle-stroke-width': ['case', sel, 3, 0], 'circle-stroke-color': T.selection } });
+      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], '–']] : '', 'text-font': police, 'text-size': T.tailles.etiquette, 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': '#000000', 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
     } else if (g === 'point') {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
-      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, theme.selection, theme.contour] } });
+      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, T.contour] } });
     } else if (g === 'polygon') {
       ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': ['case', sel, 0.95, 0.72] } });
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': ['case', sel, theme.selection, theme.contour], 'line-width': ['case', sel, 3, 1] } });
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': ['case', sel, T.selection, T.contour], 'line-width': ['case', sel, 3, 1] } });
     } else {
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, 3] } });
     }
@@ -123,7 +138,7 @@ export function attacher(map, opts = {}) {
     const v = c.visuel, forme = v.type === 'hex' ? 'hexagone' : 'carre';
     const gj = agreger(c.vue, { taille: v.taille || 600, champ: v.champ || null, forme });
     const metrique = (p) => (v.metrique === 'moyenne' ? p.moyenne : v.metrique === 'somme' ? p.somme : p.n);
-    const vals = gj.features.map((f) => metrique(f.properties)).filter(Number.isFinite), seuils = seuilsQuantiles(vals, 5), rp = rampe(theme.sequentielle), max = Math.max(1, ...vals);
+    const vals = gj.features.map((f) => metrique(f.properties)).filter(Number.isFinite), seuils = seuilsQuantiles(vals, 5), rp = rampe(themeDe(c).sequentielle), max = Math.max(1, ...vals);
     for (const f of gj.features) { const m = metrique(f.properties), k = classeDe(m, seuils); f.properties._couleur = rp(seuils.length ? (k + 1) / (seuils.length + 1) : 0.6); f.properties._h = Number.isFinite(m) ? m / max : 0; f.properties._m = m; }
     c.agg = { ...gj.stats, seuils, metrique: v.metrique || 'n' };
     const src = map.getSource(idAgg(c)); if (src) src.setData(gj);
@@ -230,6 +245,27 @@ export function attacher(map, opts = {}) {
     window.addEventListener('online', () => { if (horsLigne.auto && horsLigne.actif && horsLigne.cause !== 'hote') basculerHorsLigne(false, 'navigateur', true); });
   }
 
+  // ---------- thème : tout redessiner avec la charte résolue ----------
+  function remonterTheme() {
+    poserTheme();
+    const sauve = selection;
+    for (const c of couches.values()) {
+      if (c.admin) { c.admin.sale = true; c.admin.modele = null; }
+      demonter(c); monter(c);
+      if (!c.visible) for (const l of c.ids) map.setLayoutProperty(l, 'visibility', 'none');
+    }
+    poserLavis(); selection = null; if (sauve) poserSelection(sauve.c, sauve.id);
+    for (const c of couches.values()) if (c.admin) admin.assurer(c);
+  }
+  // la personne change sa préférence de contraste pendant la session : la charte est résolue de nouveau, l'hôte est prévenu (événement `theme`)
+  if (opts.preferences === undefined && typeof window !== 'undefined' && window.matchMedia) {
+    try {
+      const mq = window.matchMedia('(prefers-contrast: more)');
+      const surChangement = (e) => { themes.definirPreferences({ contrasteEleve: !!e.matches }); remonterTheme(); emettre('theme', themes.lire(), 'utilisateur'); };
+      if (mq.addEventListener) mq.addEventListener('change', surChangement);
+    } catch (e) { /* pas de requête média : la préférence lue au démarrage reste */ }
+  }
+
   // ---------- API ----------
   const api = {
     ping: () => ({ version: VERSION, couches: [...couches.keys()] }),
@@ -261,11 +297,22 @@ export function attacher(map, opts = {}) {
       const col = (g) => { if (!g) return; const t = g.type; if (t === 'Point') vu(g.coordinates); else if (t === 'MultiPoint' || t === 'LineString') g.coordinates.forEach(vu); else if (t === 'Polygon' || t === 'MultiLineString') g.coordinates.forEach((r) => r.forEach(vu)); else if (t === 'MultiPolygon') g.coordinates.forEach((p) => p.forEach((r) => r.forEach(vu))); };
       for (const f of feats) col(f.geometry);
       if (x0 === Infinity) return false; camApi = true; map.fitBounds([[x0, y0], [x1, y1]], { padding: 60, duration: 600, maxZoom: 16 }); return true; },
-    setTheme(t) { theme = { ...theme, ...t, jetons: { ...theme.jetons, ...(t.jetons || {}) } }; const sauve = selection; for (const c of couches.values()) { if (c.admin) { c.admin.sale = true; c.admin.modele = null; } demonter(c); monter(c); if (!c.visible) for (const l of c.ids) map.setLayoutProperty(l, 'visibility', 'none'); } poserLavis(); selection = null; if (sauve) poserSelection(sauve.c, sauve.id); for (const c of couches.values()) if (c.admin) admin.assurer(c); return true; },
+    /**
+     * Applique une charte (docs/CONTRAT-CHARTE-ATLAS.md) ou un thème du contrat 0.3 ; s'ajoute à ce que l'hôte a déjà donné, sauf `{ remplacer: true }`.
+     * Renvoie { version, entree, applique, derive, ignore, avertissements, a11y } et émet l'événement `theme`.
+     */
+    setTheme(t, options = {}) {
+      const retour = themes.appliquer(t, { remplacer: !!(options && options.remplacer) });
+      remonterTheme();
+      emettre('theme', retour, 'api');
+      return retour;
+    },
+    /** La charte résolue, ce que l'hôte a donné, ce qui a été dérivé ou écarté, les avertissements chiffrés et l'état d'accessibilité. */
+    getTheme() { return themes.lire(); },
     setVisual(id, v) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); const { style, ...vis } = v; if (style) c.def.style = style; demonter(c); c.visuel = { ...c.visuel, ...vis }; monter(c); if (!c.visible) api.setLayerVisibility(id, false); return c.visuel; },
     updateFeature(layer, id, patch) { const c = couches.get(layer); const f = c && c.parId.get(id); if (!f) throw new Error('entité inconnue : ' + layer + '/' + id); if (patch.geometry) f.geometry = patch.geometry; if (patch.properties) f.properties = { ...f.properties, ...patch.properties }; map.getSource(idSrc(c)).setData({ type: 'FeatureCollection', features: c.features }); appliquerVue(c); return true; },
     setEdition(layer, actif) { opts.edition = { couche: layer, actif }; return actif; },
-    getLegend(layer) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.legende(c); const m = modeleLegende(declaratifResolu(c.def.style?.declarative), c.vue, { cle: c.def.name }); const et = c.visuel.etats; if (et) for (const cl of m.classes) { const e = et[cl.cle]; if (e) cl.forme = e.forme; } return { layer: c.id, titre: c.def.name, ...m, agregat: c.agg || null }; },
+    getLegend(layer) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.legende(c); const m = modeleLegende(declaratifResolu(c.def.style?.declarative, themeDe(c)), c.vue, { cle: c.def.name }); const et = c.visuel.etats; if (et) for (const cl of m.classes) { const e = et[cl.cle]; if (e) cl.forme = e.forme; } return { layer: c.id, titre: c.def.name, ...m, agregat: c.agg || null }; },
     getRows(layer, o = {}) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.lignes(c, o); return { layer: c.id, lignes: c.vue.map((f) => ({ id: f.id, ...f.properties })), legende: lignesLegende(api.getLegend(c.id)) }; },
     resize() { map.resize(); return true; },
     ...admin.api,
@@ -275,7 +322,21 @@ export function attacher(map, opts = {}) {
       return basculerHorsLigne(!!v, 'hote', false);
     },
     batch: (ordres, o) => executerBatch(api, ordres, o),
-    async setFond(mode, jetons = {}) { const { principal, fondUni, ...autres } = jetons; const J = principal ? { ...planMonochrome(principal, fondUni ? { fond: fondUni } : {}), ...autres } : { ...(theme.plan || {}), ...autres }; const r = await fond.appliquer(mode, J); modeFond = mode; theme = { ...theme, policeSymboles: mode === 'plan-ign' ? ['Source Sans Pro Bold'] : null }; for (const c of couches.values()) if (c.visuel.type === 'etats') { const sel = selection; demonter(c); monter(c); if (sel && sel.c === c) poserSelection(c, sel.id); } if (mode === 'voile' && !theme.lavis) theme = { ...theme, lavis: { couleur: (theme.plan || {}).fond || '#F7F7F7', opacite: 0.62 } }; poserLavis(); return r; },
+    /**
+     * Fond de plan. `jetons` : `principal` (couleur principale du plan monochrome), `fondUni` (son fond) et les jetons du plan ; une couleur invalide est
+     * ignorée et signalée. Renvoie { mode, …, ignore, avertissements } : les champs ajoutés ne gênent pas l'hôte qui lit seulement `mode`.
+     */
+    async setFond(mode, jetons = {}) {
+      const { jetons: j, ignore } = assainirJetonsFond(jetons), { principal, fondUni, ...autres } = j, charte = themes.charte;
+      const plan = principal ? planDepuis({ principal, fond: fondUni || charte.graines.fond, encre: charte.graines.encre, intensites: charte.fond.intensites, vegetation: charte.fond.vegetation }) : (theme.plan || {});
+      const J = { ...plan, ...autres };
+      const r = await fond.appliquer(mode, J);
+      modeFond = mode; poserTheme();
+      for (const c of couches.values()) if (c.visuel.type === 'etats') { const sel = selection; demonter(c); monter(c); if (sel && sel.c === c) poserSelection(c, sel.id); }
+      poserLavis();
+      const mesure = verifierPlan({ ...theme.plan, ...J }, charte.exigences, 'jetons');
+      return { ...r, ignore, avertissements: [...ignore.map(avertissementIgnore), ...mesure.avertissements] };
+    },
   };
   const interne = { emettre, poserSelection, infos: (c, id) => admin.infosUnite(c, id) };
   return { api, _interne: interne, on: (t, cb) => { if (!ecouteurs.has(t)) ecouteurs.set(t, new Set()); ecouteurs.get(t).add(cb); }, off: (t, cb) => ecouteurs.get(t)?.delete(cb), brancherEmetteur: (fn) => { emetteur = fn; }, _couches: couches, _map: map };
