@@ -94,3 +94,16 @@ test('batch par le pont : un seul résultat, les événements du lot sont marqu�
   const res = sortie.filter((m) => m.type === 'resultat'); const ev = sortie.filter((m) => m.type === 'select');
   assert.equal(res.length, 1, 'un seul accusé pour le lot'); assert.equal(res[0].valeur.ok, 2); assert.equal(ev.length, 2); assert.ok(ev.every((m) => m.origine === 'api'));
 });
+
+test('divergente : un jeu de n couleurs est employé tel quel, un jeu de 3 ancres reste interpolé', () => {
+  const sept = ['#A8421F', '#E26D4C', '#F4AF9B', '#F1F1EF', '#B3BEDD', '#768EC8', '#4F5EA4'];
+  const seuils = [-71.4, -42.9, -14.3, 14.3, 42.9, 71.4];
+  const exact = couleursClasses('divergente', seuils, [-100, 0, 100], { divergente: sept }, 0);
+  assert.deepEqual(exact, sept, 'les 7 couleurs de l\'hôte sont celles des 7 classes');
+  const ancres = couleursClasses('divergente', seuils, [-100, 0, 100], { divergente: ['#A8421F', '#F1F1EF', '#4F5EA4'] }, 0);
+  assert.equal(ancres.length, 7);
+  assert.notEqual(ancres[0].toLowerCase(), '#a8421f', 'avec 3 ancres la classe extrême est interpolée, donc plus claire');
+  // un jeu dont la longueur ne correspond pas au nombre de classes, ou invalide, retombe sur le défaut interpolé
+  assert.equal(couleursClasses('divergente', seuils, [-100, 0, 100], { divergente: sept.slice(0, 5) }, 0).length, 7);
+  assert.equal(couleursClasses('divergente', seuils, [-100, 0, 100], { divergente: [...sept.slice(0, 6), 'pas une couleur'] }, 0).length, 7);
+});

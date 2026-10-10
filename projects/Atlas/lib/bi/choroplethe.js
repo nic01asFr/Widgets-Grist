@@ -8,7 +8,9 @@
  *  - la légende donne, pour chaque classe, l'intervalle ET l'effectif (nombre d'unités) ; le tableau équivalent redonne tout ;
  *  - les petits effectifs sont comptés à part (la valeur existe mais elle est fragile).
  */
-import { rampe, divergente, seuilsQuantiles, seuilsEgaux, classeDe, contraste, echantillonner, formaterNombre } from './echelles.js';
+import { rampe, divergente, seuilsQuantiles, seuilsEgaux, classeDe, contraste, echantillonner, formaterNombre, hexVersRgb } from './echelles.js';
+/** Une couleur « #rrggbb » lisible (les jeux d'hôte invalides retombent sur l'interpolation). */
+const couleurValide = (c) => typeof c === 'string' && !!hexVersRgb(c);
 
 export { formaterNombre };   // défini dans echelles.js (le clavier s'en sert sans charger le choroplèthe)
 
@@ -42,11 +44,15 @@ export function calculerClasses(valeurs, o = {}) {
 /**
  * Couleurs des classes à partir du thème.
  * séquentielle : n couleurs régulièrement prises sur theme.sequentielle ;
- * divergente : la couleur dépend de la position du milieu de la classe par rapport au centre (valeur neutre).
+ * divergente : `theme.divergente` de n couleurs (une par classe) = employé tel quel ; de 3 couleurs (bas, neutre, haut) = interpolé, la couleur dépend
+ * de la position du milieu de la classe par rapport au centre (valeur neutre).
  */
 export function couleursClasses(palette, seuils, valeurs, theme = {}, centre = 0) {
   const n = seuils.length + 1;
   if (palette === 'divergente') {
+    // Une couleur par classe : l'hote a deja choisi les n couleurs (un jeu par nombre de classes), elles sont employees telles quelles.
+    // Interpolees depuis 3 ancres, les classes extremes seraient plus claires que dessinees (ecart mesure : DE2000 7 a 11 pour 7 classes).
+    if (n >= 3 && Array.isArray(theme.divergente) && theme.divergente.length === n && theme.divergente.every(couleurValide)) return theme.divergente.slice();
     const [bas, neutre, haut] = theme.divergente && theme.divergente.length === 3 ? theme.divergente : ['#b2182b', '#f7f7f7', '#2166ac'];
     const f = divergente(bas, neutre, haut); const v = (valeurs || []).filter(Number.isFinite);
     const min = v.length ? Math.min(...v) : centre - 1, max = v.length ? Math.max(...v) : centre + 1;
