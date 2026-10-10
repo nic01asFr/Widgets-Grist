@@ -176,7 +176,12 @@
       if (m0) for (const li of voiesEntree(nlOf(ei), m0.signe)) for (const lo of voiesSortie(li, nlOf(ei), nlOf(eo), m0.signe)) { const m = mvt(ei, eo, li, lo); if (m) out.push(m); }
       varCache.set(k, out); return out;
     }
-    const zoneCache = new Map(), zpts = new Map();
+    const zoneCache = new Map(), zpts = new Map(), zgrille = new Map(), CASE_Z = 2.6;
+    function gridZ(m) { // les points de ptsZ(m) rangés par case de CASE_Z mètres
+      const k = m.key; if (zgrille.has(k)) return zgrille.get(k); const g = new Map();
+      for (const q of ptsZ(m)) { const c = Math.floor(q[0] / CASE_Z) * 100003 + Math.floor(q[1] / CASE_Z); const l = g.get(c); if (l) l.push(q); else g.set(c, [q]); }
+      zgrille.set(k, g); return g;
+    }
     function ptsZ(m) { // points [x, y, s] ; s = distance depuis l'entree du carrefour (negatif sur la voie d'approche)
       const k = m.key; if (zpts.has(k)) return zpts.get(k); const l = [];
       for (let q = 12; q >= 1; q -= 1) { const p = lanePt(m.ei, m.ei.L - m.r - q, m.li); l.push([p[0], p[1], -q]); }
@@ -188,7 +193,15 @@
       // meme approche : meme voie = divergence (pas de conflit) ; voies voisines = conflit seulement si les trajectoires se rejoignent (meme voie de sortie, liaison interne etroite)
       if (a.ei === b.ei && a.li === b.li) return null; const k = a.key + '|' + b.key; if (zoneCache.has(k)) return zoneCache.get(k);
       const pa = ptsZ(a), pb = ptsZ(b), seuilD = a.ei === b.ei ? 2.4 : 2.6; let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
-      for (const p of pa) for (const q of pb) if (Math.hypot(p[0] - q[0], p[1] - q[1]) < seuilD) { a0 = Math.min(a0, p[2]); a1 = Math.max(a1, p[2]); b0 = Math.min(b0, q[2]); b1 = Math.max(b1, q[2]); }
+      // les points de b sont rangés dans une grille (case = le plus grand seuil) : on ne mesure que les points des 9 cases voisines, pas les deux listes en entier
+      const gb = gridZ(b);
+      for (const p of pa) {
+        const cx = Math.floor(p[0] / CASE_Z), cy = Math.floor(p[1] / CASE_Z);
+        for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+          const l = gb.get((cx + i) * 100003 + (cy + j)); if (!l) continue;
+          for (const q of l) if (Math.hypot(p[0] - q[0], p[1] - q[1]) < seuilD) { a0 = Math.min(a0, p[2]); a1 = Math.max(a1, p[2]); b0 = Math.min(b0, q[2]); b1 = Math.max(b1, q[2]); }
+        }
+      }
       let res = null;
       if (a0 !== Infinity) {
         const ha = C.pointA(a.pts, a.cum, clamp((a0 + a1) / 2, 0, a.L))[2], hb = C.pointA(b.pts, b.cum, clamp((b0 + b1) / 2, 0, b.L))[2];

@@ -13,9 +13,9 @@
  * Ce module ne touche à la carte que par l'objet passé (`addSource`, `addLayer`, `getSource().setData`, `removeLayer`, `removeSource`) :
  * il se teste sans navigateur.
  */
-import { Trafic } from './trafic/index.js?v=1.16.1';
-import { sensOsm } from './itineraire.js?v=1.16.1';
-import { classerTroncon } from './modes-voie.js?v=1.16.1';
+import { Trafic } from './trafic/index.js?v=1.16.2';
+import { sensOsm } from './itineraire.js?v=1.16.2';
+import { classerTroncon } from './modes-voie.js?v=1.16.2';
 
 /** Véhicules par km de route : un trafic ambiant lisible, pas un embouteillage. */
 export const DENSITE_DEFAUT = 8;
@@ -125,12 +125,13 @@ export function instantane(sim, centre) {
 /**
  * Lance un trafic simulé sur des entités de routes.
  * @param {{ carte: object, entites: object[], densite?: number, graine?: number, vitesse?: number, idSource?: string,
- *   acces?: 'libre'|'tous', planifier?: Function, annuler?: Function, moteur?: object }} o
+ *   acces?: 'libre'|'tous', planifier?: Function, annuler?: Function, moteur?: object, surErreur?: Function }} o
+ *   `surErreur(erreur)` : appelée une fois quand le moteur échoue trois images de suite ; le trafic est alors arrêté (une exception à chaque image figerait la carte)
  *   `acces` : `libre` (défaut) ne fait rouler que les routes ouvertes à la circulation ; `tous` ajoute les routes à accès restreint
  *   `vitesse` : 1 = temps réel ; 4 = quatre pas du moteur par image (un trafic accéléré, plus coûteux)
  * @returns {{ demarrer: Function, arreter: Function, pause: Function, reprendre: Function, etat: Function }}
  */
-export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic } = {}) {
+export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic, surErreur = null } = {}) {
   const { troncons, ecartes, motifs } = adapterTroncons(entites, { acces });
   if (!troncons.length) throw new Error('aucune route ouverte à la circulation dans cette couche' + (ecartes ? ` (${ecartes} tronçons écartés : ${Object.entries(motifs).map(([m, n]) => `${n} ${m.replace('_', ' ')}`).join(', ')})` : ' (il faut des lignes : BD TOPO, routes OpenStreetMap)'));
   const centre = centreDe(troncons);
@@ -153,10 +154,18 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     } });
     pose = true;
   }
+  let echecs = 0, derniereErreur = null;
   function image() {
-    for (let i = 0; i < pas; i++) sim.pas();
-    const s = carte.getSource && carte.getSource(idSource);
-    if (s && s.setData) s.setData(instantane(sim, centre));
+    try {
+      for (let i = 0; i < pas; i++) sim.pas();
+      const s = carte.getSource && carte.getSource(idSource);
+      if (s && s.setData) s.setData(instantane(sim, centre));
+      echecs = 0;
+    } catch (e) {
+      // une exception à chaque image (cinq par seconde) saturerait la console et la page : au troisième échec de suite, on arrête et on le dit
+      derniereErreur = e; echecs++;
+      if (echecs >= 3) { api.arreter(); if (surErreur) surErreur(e); }
+    }
   }
   const api = {
     demarrer() { if (actif) return api.etat(); poser(); actif = true; image(); minuterie = planifier(image, CADENCE_MS); return api.etat(); },
@@ -170,7 +179,7 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     },
     etat() {
       const r = graphe.resume || {};
-      return { actif, simule: true, vehicules: sim.agents.length, temps: Math.round(sim.t), densite, acces, ecartes, motifs, ecartesTexte: libelleMotifs(motifs),
+      return { actif, simule: true, erreur: derniereErreur ? String(derniereErreur.message || derniereErreur) : null, vehicules: sim.agents.length, temps: Math.round(sim.t), densite, acces, ecartes, motifs, ecartesTexte: libelleMotifs(motifs),
         reseau: { troncons: troncons.length, carrefours: r.carrefours ?? null, giratoires: r.anneaux ?? null, kmVoie: r.kmVoie != null ? +r.kmVoie.toFixed(1) : null } };
     },
     /** Pour les tests et la mesure : le moteur et son centre. */

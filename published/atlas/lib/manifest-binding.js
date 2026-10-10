@@ -5,17 +5,17 @@
 import {
   applyDeclarativeToLayer,
   resolveGristFieldName,
-} from './declarative-style.js?v=1.16.1';
+} from './declarative-style.js?v=1.16.2';
 import {
   applyControlDeclarativesToLayer,
   applyControlsFromPrefs,
   controlDeclarativesFromAtlasLayer,
   controlsPrefsPayload,
-} from './controls.js?v=1.16.1';
+} from './controls.js?v=1.16.2';
 import { parseGristBool } from './grist-bool.js';
-import { genreDeModele } from './modele-id.js?v=1.16.1';
-import { parametresDeCoucheValides } from './parametres-objet.js?v=1.16.1';
-import { departsValides } from './fiche-formulaire.js?v=1.16.1';
+import { genreDeModele } from './modele-id.js?v=1.16.2';
+import { parametresDeCoucheValides } from './parametres-objet.js?v=1.16.2';
+import { departsValides } from './fiche-formulaire.js?v=1.16.2';
 
 /** StyleDeclarative ← symbolisation Atlas courante. */
 export function declarativeFromAtlasLayer(layer) {

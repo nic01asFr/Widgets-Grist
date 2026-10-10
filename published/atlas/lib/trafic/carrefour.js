@@ -26,6 +26,7 @@
   }
   // point a l'abscisse s sur une polyligne (avec cumul) -> [x, y, cap]
   function pointA(pts, cum, s) {
+    if (pts.length < 2) return [pts[0][0], pts[0][1], 0]; // trajectoire de longueur nulle (tronçons confondus) : un point, sans cap
     const L = cum[cum.length - 1];
     s = clamp(s, 0, L);
     let k = 1;
