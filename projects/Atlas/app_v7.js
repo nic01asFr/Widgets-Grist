@@ -1501,13 +1501,20 @@ function computeAmbient(altDeg, moon) {
 // dans un pool de Web Workers (hors thread principal). Pool créé à la
 // première utilisation (évite le coût si le relief IGN n'est pas activé).
 // ============================================================
+/** geotiff pour le worker de lecture des MNT : le CDN, sauf si la page publiée l'embarque (`window.__ATLAS_VENDOR__`, posé par la promotion). */
+const GEOTIFF_CDN = 'https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js';
+function urlGeotiff() {
+    const v = typeof window !== 'undefined' && window.__ATLAS_VENDOR__;
+    // Le worker part d'un Blob : son importScripts exige une adresse ABSOLUE.
+    return v ? new URL(String(v).replace(/\/+$/, '') + '/geotiff/geotiff.js', location.href).href : GEOTIFF_CDN;
+}
 let _ignDemPool = null;
 /** Dernière altitude moyenne décodée — repli d'une tuile MNT en échec. */
 let _altitudeRepli = null;
 function ignDemPool() {
     if (_ignDemPool) return _ignDemPool;
     const src = `
-        self.importScripts('https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js');
+        self.importScripts(${JSON.stringify(urlGeotiff())});
         self.onmessage = async (e) => {
             const { id, buffer } = e.data;
             try {
