@@ -15,7 +15,7 @@ import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
-import { ajouterIcones } from './icones-etats.js';
+import { ajouterIcones, couleurTexteEtats, tailleTexte } from './icones-etats.js';
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
 import { creerSurveillance, fondPourConnexion } from './repli.js';
@@ -112,7 +112,7 @@ export function attacher(map, opts = {}) {
       const icone = cles.length ? ['match', ['get', v.champEtat || 'etat'], ...cles.flatMap((k) => [k, ids[k]]), ids[cles[0]]] : '';
       const police = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
       ajouterCalque(c, { id: PREF + 'anneau-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', sel, 24, 0], 'circle-color': 'rgba(255,255,255,0.75)', 'circle-stroke-width': ['case', sel, 3, 0], 'circle-stroke-color': T.selection } });
-      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], '–']] : '', 'text-font': police, 'text-size': T.tailles.etiquette, 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': '#000000', 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
+      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], '–']] : '', 'text-font': police, 'text-size': tailleTexte(v.texte, v.texteTaille, T.tailles.etiquette), 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': couleurTexteEtats(v.champEtat, v.etats, (cc) => resoudre(cc, T), '#000000'), 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
     } else if (g === 'point') {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
       ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(0.9)] } });

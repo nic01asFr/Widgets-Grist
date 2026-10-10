@@ -24,6 +24,29 @@ export function creerIcone({ forme, fill, stroke = '#ffffff', largeurTrait = 2.5
 }
 
 /**
+ * La couleur du chiffre : un état peut déclarer la sienne (`texteCouleur`, jeton de charte accepté) ; sans aucune, une couleur unique.
+ * @returns {string|Array} une couleur, ou une expression MapLibre `match` sur le champ d'état
+ */
+export function couleurTexteEtats(champEtat, etats, resoudre = (c) => c, defaut = '#000000') {
+  const paires = Object.entries(etats || {}).filter(([, e]) => e && e.texteCouleur).flatMap(([cle, e]) => [cle, resoudre(e.texteCouleur)]);
+  return paires.length ? ['match', ['get', champEtat || 'etat'], ...paires, defaut] : defaut;
+}
+
+/**
+ * La taille du chiffre : celle de la charte par défaut ; un nombre ; ou une règle `{ normal, long, seuil = 2 }` : `long` au-delà de `seuil`
+ * caractères (un pourcentage à trois chiffres tient moins bien dans la forme). Une règle illisible retombe sur la charte.
+ * @returns {number|Array}
+ */
+export function tailleTexte(champTexte, reglage, defaut) {
+  if (typeof reglage === 'number' && Number.isFinite(reglage)) return reglage;
+  if (reglage && typeof reglage === 'object' && Number.isFinite(reglage.normal) && Number.isFinite(reglage.long)) {
+    const seuil = Number.isFinite(reglage.seuil) ? reglage.seuil : 2;
+    return ['case', ['>', ['length', ['to-string', ['coalesce', ['get', champTexte], '–']]], seuil], reglage.long, reglage.normal];
+  }
+  return defaut;
+}
+
+/**
  * Ajoute à la carte une image par état. Renvoie la table état -> identifiant d'image.
  * `contourDefaut` : le trait des marqueurs qui n'en déclarent pas (la charte : `marqueurs.contour`, l'encre) ; à défaut, blanc comme avant.
  */
