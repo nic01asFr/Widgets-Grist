@@ -208,9 +208,14 @@ export function garderDemAuRechargement(source) {
  */
 export const SOURCE_GEOJSON_MAXZOOM = 22;
 
-/** Options d'une source GeoJSON d'Atlas. */
-export function optionsSourceGeojson(data) {
-  return { type: 'geojson', data, maxzoom: SOURCE_GEOJSON_MAXZOOM };
+/**
+ * Options d'une source GeoJSON d'Atlas.
+ *
+ * `attribution` : la mention de source que la carte affiche tant que la couche est montée. Du texte seul, MapLibre
+ * l'écrivant avec `innerHTML` (voir `lib/provenance-couche.js`). Absente, la source n'en déclare aucune.
+ */
+export function optionsSourceGeojson(data, attribution = null) {
+  return { type: 'geojson', data, maxzoom: SOURCE_GEOJSON_MAXZOOM, ...(attribution ? { attribution } : {}) };
 }
 
 /**
