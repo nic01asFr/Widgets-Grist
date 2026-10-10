@@ -73,6 +73,7 @@ import {
 } from './lib/bulle-objet.js?v=20261001a';
 import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261010a';
 import { attributionSure } from './lib/attribution.js?v=20261010a';
+import { creerToast } from './lib/toast.js?v=20261010a';
 import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=20261003c';
 import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=20261004a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
@@ -14569,9 +14570,7 @@ function randomColor() { const c = ['#C44536', '#2E4E54', '#5B7A4F', '#E8A234', 
 function showLoading(t) { $('loading-text').textContent = t || 'Chargement…'; $('loading').classList.add('show'); }
 function hideLoading() { $('loading').classList.remove('show'); }
 function showToast(msg, type = 'success') {
-    const ic = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
-    const el = document.createElement('div'); el.className = 'toast ' + type;
-    el.innerHTML = `<span>${ic[type] || ''}</span><span>${msg}</span>`;
+    const el = creerToast(document, msg, type);
     $('toasts').appendChild(el); setTimeout(() => el.remove(), 4000);
 }
 function updateRailBadge() {
