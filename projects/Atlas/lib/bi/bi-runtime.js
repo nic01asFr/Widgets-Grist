@@ -193,7 +193,7 @@ export function attacher(map, opts = {}) {
       const c = f && [...couches.values()].find((q) => f.source === idSrc(q));
       survol = f ? { layer: f.layer.id, id: f.id, admin: !!(c && c.admin), source: f.source } : null;
       if (survol && survol.admin) map.setFeatureState({ source: survol.source, id: survol.id }, { hover: true });
-      emettre('hover', { layer: c ? c.id : null, featureId: k, ...(c && c.admin ? admin.infosUnite(c, k) : {}) }, 'utilisateur'); });
+      emettre('hover', { layer: c ? c.id : null, featureId: k, ...(c ? { key: c.admin ? k : cle(c, f) } : {}), ...(c && c.admin ? admin.infosUnite(c, k) : {}) }, 'utilisateur'); });
   }
   let tmCam = 0;
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
