@@ -84,9 +84,11 @@ function lireAttributs(source) {
  * (aucun `on…`, aucun `style`, aucune adresse qui exécute).
  *
  * @param {string} html
+ * @param {{ balises?: string[]|null }} [options] `balises` : sous-ensemble de la liste blanche ; une
+ *   balise qui n'en fait pas partie disparaît (son contenu reste). `null` : toute la liste.
  * @returns {string} du HTML sûr
  */
-export function assainirTexte(html) {
+export function assainirTexte(html, { balises = null } = {}) {
   let s = String(html ?? '');
   // Commentaires et blocs actifs : retirés avec leur contenu.
   s = s.replace(/<!--[\s\S]*?(?:-->|$)/g, '');
@@ -124,7 +126,7 @@ export function assainirTexte(html) {
     }
     if (!ouvre) { out += echapper(`<${interieur}>`); continue; }
     const nom = ouvre[1].toLowerCase();
-    if (!(nom in BALISES)) continue;   // balise inconnue : on garde son contenu, pas la balise
+    if (!(nom in BALISES) || (balises && !balises.includes(nom))) continue;   // balise inconnue ou non retenue : on garde son contenu, pas la balise
     const attrs = lireAttributs(ouvre[2]);
     let rendu = `<${nom}`;
     for (const permis of BALISES[nom]) {
@@ -149,6 +151,6 @@ export function assainirTexte(html) {
 
 /** Du texte entre deux balises : les `&` déjà écrits comme entités restent lisibles, le reste est échappé. */
 function texteSimple(texte) {
-  return echapper(texte).replace(/&amp;(lt|gt|quot|amp|nbsp|eacute|egrave|agrave|ecirc|ccedil|laquo|raquo|hellip|ndash|mdash|#\d+|#x[0-9a-f]+);/gi, '&$1;');
+  return echapper(texte).replace(/&amp;(lt|gt|quot|amp|nbsp|eacute|egrave|agrave|ecirc|ccedil|laquo|raquo|hellip|ndash|mdash|copy|reg|trade|middot|deg|#\d+|#x[0-9a-f]+);/gi, '&$1;');
 }
 

@@ -36,7 +36,7 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=20261003g';
+} from './lib/scene-loader.js?v=20261010a';
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20261001a';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
@@ -71,7 +71,8 @@ import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
 } from './lib/bulle-objet.js?v=20261001a';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261002c';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=20261010a';
+import { attributionSure } from './lib/attribution.js?v=20261010a';
 import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=20261003c';
 import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=20261004a';
 import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=20261002f';
@@ -3527,7 +3528,7 @@ function addTerrainSource() {
     const cfg = TERRAIN_SOURCES[STATE.settings.terrainSource] || TERRAIN_SOURCES.terrarium;
     if (!map.getSource('terrain-dem')) {
         try {
-            map.addSource('terrain-dem', { type: 'raster-dem', tiles: cfg.tiles, encoding: cfg.encoding, tileSize: cfg.tileSize, maxzoom: cfg.maxzoom, attribution: cfg.attribution });
+            map.addSource('terrain-dem', { type: 'raster-dem', tiles: cfg.tiles, encoding: cfg.encoding, tileSize: cfg.tileSize, maxzoom: cfg.maxzoom, attribution: attributionSure(cfg.attribution) });
         } catch (e) { /* ignore */ }
     }
     // MapLibre 5.6.1 laisse « reloading » à jamais une tuile MNT rechargée
@@ -3759,7 +3760,7 @@ function addRasterLayerToMap(layer) {
         // renvoie des erreurs en boucle et la carte n'atteint jamais `idle` :
         // tout ce qui attend cet etat reste suspendu.
         maxzoom: layer._zoom?.maxzoom ?? 19,
-        ...(layer._attribution ? { attribution: layer._attribution } : {}),
+        ...(layer._attribution ? { attribution: attributionSure(layer._attribution) } : {}),
     });
     map.addLayer(poserBornesZoom({
         id: layer.id, type: 'raster', source: layer.id,

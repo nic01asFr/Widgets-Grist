@@ -18,6 +18,7 @@ import {
 } from './declarative-style.js?v=20261001a';
 import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=20261003g';
 import { applyManifestControlsToLayer } from './manifest-binding.js?v=20261003g';
+import { attributionSure } from './attribution.js?v=20261010a';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
@@ -191,7 +192,7 @@ export function coucheTuilesRaster(ml, origine) {
     _distant: true,
     _tiles: [String(origine.valeur)],
     _tileSize: Number.isFinite(ml?.tile_size) ? ml.tile_size : 256,
-    _attribution: ml.attribution || ml.credits || null,
+    _attribution: attributionSure(ml.attribution || ml.credits),
     _zoom: { minzoom: z.minzoom, maxzoom: Number.isFinite(z.maxzoom) ? z.maxzoom : 19 },
     _manifestLayer: ml,
     _bboxDeclaree: boundsDuManifest(ml),
