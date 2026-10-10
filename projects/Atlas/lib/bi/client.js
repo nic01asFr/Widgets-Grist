@@ -98,7 +98,11 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
   function envoyerCommande(cmd, args, v, d = delai, ids = null) {
     return new Promise((resolve, reject) => {
       const id = nouvelId(); if (ids) ids.add(id);
-      const minuteur = minuterie.setTimeout(() => { attente.delete(id); reject(new ErreurBi('delai', cmd + ' : pas de réponse du composant après ' + d + ' ms', { cmd })); }, d);
+      // Le rejet est différé d'un tour : si le fil de l'hôte a été bloqué plus longtemps que le délai, le résultat déjà arrivé et
+      // la minuterie échue sont prêts en même temps, et la minuterie passerait la première (faux « délai » sur une commande réussie).
+      const minuteur = minuterie.setTimeout(() => {
+        minuterie.setTimeout(() => { if (!attente.has(id)) return; attente.delete(id); reject(new ErreurBi('delai', cmd + ' : pas de réponse du composant après ' + d + ' ms', { cmd })); }, 0);
+      }, d);
       attente.set(id, { resolve, reject, minuteur, cmd });
       try { transport.envoyer({ source: SOURCE_HOTE, version: v, id, cmd, args }); }
       catch (e) { attente.delete(id); minuterie.clearTimeout(minuteur); reject(e instanceof ErreurBi ? e : new ErreurBi('deconnecte', String((e && e.message) || e), { cmd })); }
