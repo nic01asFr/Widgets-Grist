@@ -148,7 +148,7 @@ Le canevas reçoit le focus (Tab) ; flèches, `+`, `-` restent à MapLibre. `n`/
 |---|---|---|
 | Régions, départements, EPCI, communes, arrondissements municipaux | IGN Géoplateforme, WFS, produit « ADMIN EXPRESS COG CARTO PE » (petite échelle), édition 2026 ; sans clé, CORS ouvert ; 5 000 entités par page, tri `SORTBY=cleabs` imposé | Licence Ouverte (Etalab), attribution IGN ; population : INSEE (populations légales 2023) |
 | Population des régions, départements, EPCI | somme des communes, jeu embarqué `lib/bi/donnees/references-population.json` | idem, IGN et INSEE |
-| Pays | Natural Earth 110 m (`ISO_A3_EH` pour le code), jeu embarqué | domaine public |
+| Pays | Natural Earth 110 m (`ISO_A3_EH` pour le code ; `XKX` Kosovo, `SOL` Somaliland, `CYN` Chypre du Nord pour les trois entités que Natural Earth laisse à « -99 »), jeu embarqué | domaine public |
 | Repli sans réseau | jeux embarqués généralisés (régions 35 Ko, départements 138 Ko, pays 122 Ko ; 388 Ko avec les références) | idem |
 
 Volumes mesurés (réponses compressées) : régions 0,3 Mo, départements 0,7 Mo, communes d'un département 0,05 à 0,3 Mo, **communes de France entière 10 Mo (34 877, 7 pages), 150 Mo de tas JavaScript** : le forage région -> département -> commune est le chemin conseillé. L'attribution est portée par la source de chaque couche (affichée dans le contrôle d'attribution de la carte) et renvoyée par `addAdminLayer` et `getLegend().source.attribution`. Les contours sont généralisés pour l'affichage, **pas pour la mesure**. Tuiles vectorielles IGN (`ADMIN_EXPRESS`) : utilisables à partir d'environ z9, plus lourdes que le WFS à l'échelle nationale, **non branchées**.

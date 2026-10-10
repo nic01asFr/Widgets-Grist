@@ -98,7 +98,7 @@ describe('acces-carte — câblage dans app_v7.js (source-scan)', () => {
   const src = fs.readFileSync(path.join(racine, 'app_v7.js'), 'utf8');
 
   it('importe le module et pose le point d\'accès à côté du handle de débogage', () => {
-    assert.match(src, /import \{ exposerCarte, signalerCartePrete \} from '\.\/lib\/acces-carte\.js\?v=[^']+';/);
+    assert.match(src, /import \{ exposerCarte, signalerCartePrete(?:, styleDeBaseIllisible)? \} from '\.\/lib\/acces-carte\.js\?v=[^']+';/);
     assert.match(src, /window\.__atlasMap = map;[^\n]*\n[^\n]*\n\s*try \{ exposerCarte\(window, map\);/, 'exposerCarte suit la pose de __atlasMap');
   });
 
@@ -112,5 +112,40 @@ describe('acces-carte — câblage dans app_v7.js (source-scan)', () => {
     const fin = src.indexOf('function saveMapCamera()');
     assert.ok(debut > 0 && fin > debut);
     assert.ok(src.slice(debut, fin).includes('signalerCartePrete(window, map)'), 'dans onStyleReady');
+  });
+});
+
+describe('acces-carte — style de base illisible (fond de secours)', async () => {
+  const { styleDeBaseIllisible } = await import('../lib/acces-carte.js');
+  const URL_STYLE = 'https://tiles.example/styles/liberty';
+  const err = (message, extra = {}) => ({ error: { message, ...(extra.error || {}) }, ...Object.fromEntries(Object.entries(extra).filter(([k]) => k !== 'error')) });
+
+  it('le reseau manque : oui (comme avant)', () => {
+    assert.equal(styleDeBaseIllisible(err('Failed to fetch'), URL_STYLE), true);
+    assert.equal(styleDeBaseIllisible(err('NetworkError when attempting to fetch resource'), URL_STYLE), true);
+    assert.equal(styleDeBaseIllisible({ error: { message: '', status: 0 } }, URL_STYLE), true);
+  });
+  it('le serveur du style repond une erreur HTTP (404, 503) : oui — sinon la carte n\'est jamais prete et le composant BI reste muet', () => {
+    assert.equal(styleDeBaseIllisible({ error: { message: 'AJAXError: Not Found (404): ' + URL_STYLE, status: 404, url: URL_STYLE } }, URL_STYLE), true);
+    assert.equal(styleDeBaseIllisible({ error: { message: 'AJAXError: Service Unavailable (503): ' + URL_STYLE, status: 503, url: URL_STYLE } }, URL_STYLE), true);
+  });
+  it('le TileJSON d\'une source repond une erreur HTTP : oui', () => {
+    assert.equal(styleDeBaseIllisible({ sourceId: 'openmaptiles', error: { message: 'AJAXError: Not Found (404): https://tiles.example/planet', status: 404, url: 'https://tiles.example/planet' } }, URL_STYLE), true);
+  });
+  it('une tuile, un sprite ou une police manquants : non (la carte se charge sans)', () => {
+    assert.equal(styleDeBaseIllisible({ sourceId: 'openmaptiles', tile: { z: 5 }, error: { message: 'AJAXError: Service Unavailable (503): t.pbf', status: 503, url: 'https://tiles.example/planet/5/1/1.pbf' } }, URL_STYLE), false);
+    assert.equal(styleDeBaseIllisible({ error: { message: 'AJAXError: Not Found (404): sprite', status: 404, url: 'https://tiles.example/sprites/ofm.json' } }, URL_STYLE), false);
+    assert.equal(styleDeBaseIllisible({ error: { message: 'AJAXError: Not Found (404): glyphes', status: 404, url: 'https://tiles.example/fonts/Noto/0-255.pbf' } }, URL_STYLE), false);
+  });
+  it('sans adresse de style connue, une erreur HTTP du style (sans source) n\'est pas presumee fatale', () => {
+    assert.equal(styleDeBaseIllisible({ error: { message: 'AJAXError: Not Found (404)', status: 404, url: 'https://x/y' } }, null), false);
+  });
+  it('entrees degenerees : jamais d\'exception', () => {
+    for (const e of [undefined, null, {}, { error: null }, { error: {} }, { error: { message: 5 } }]) assert.equal(styleDeBaseIllisible(e, URL_STYLE), false);
+  });
+  it('app_v7.js s\'en sert avant de basculer sur l\'aplat, et un style sans adresse (IGN raster) reste couvert', () => {
+    const src = fs.readFileSync(path.join(racine, 'app_v7.js'), 'utf8');
+    assert.match(src, /import \{[^}]*styleDeBaseIllisible[^}]*\} from '\.\/lib\/acces-carte\.js\?v=/);
+    assert.match(src, /map\.on\('error', \(e\) => \{\s*if \(_fondDeRepli \|\| _styleUsable\) return;\s*if \(!styleDeBaseIllisible\(e, _bm\.url \|\| null\)\) return;/);
   });
 });

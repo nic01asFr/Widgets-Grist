@@ -262,7 +262,7 @@ import {
 } from './lib/scene-prefs.js?v=20261002f';
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
-import { exposerCarte, signalerCartePrete } from './lib/acces-carte.js?v=20261009a';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=20261010b';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3180,8 +3180,7 @@ function initMap() {
     // Le style de base illisible (réseau coupé, instance injoignable) : un aplat, et les données s'affichent quand même.
     map.on('error', (e) => {
         if (_fondDeRepli || _styleUsable) return;
-        const msg = String(e?.error?.message || '');
-        if (!/fetch|network|load failed|failed to|timeout|offline|impossible/i.test(msg) && e?.error?.status !== 0) return;
+        if (!styleDeBaseIllisible(e, _bm.url || null)) return;
         _fondDeRepli = true;
         try { map.setStyle(STYLE_HORS_RESEAU); } catch (_) { /* la carte reprendra au prochain essai */ }
         showToast('Fond de carte indisponible sans réseau — vos données restent affichées', 'info');
@@ -17782,7 +17781,7 @@ async function demarrerBi() {
     // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
     CONFIG.defaultPitch = 0;
     Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
-    const chargement = import('./lib/bi/montage.js?v=20261009a');
+    const chargement = import('./lib/bi/montage.js?v=20261010b');
     chargement.catch(() => {});
     try {
         await init();

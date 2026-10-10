@@ -172,6 +172,10 @@ export function attacher(map, opts = {}) {
   // le temps : un contrôle `range` interne par couche portant un champ temporel
   const temps = { champ: null, min: null, max: null, valeur: null, mode: 'instant', lecture: null, raf: null, dernier: 0, largeur: 1 };
   function configurerTemps(m) {
+    // La dimension temporelle appartient à la scène : en poser une autre l'arrête (lecture, champ, bornes), qu'elle en ait une ou non. Sinon la lecture
+    // continuait, le champ de l'ancienne scène filtrait la nouvelle et `setTime` y était accepté.
+    if (temps.lecture) temps.lecture.arreter();
+    Object.assign(temps, { champ: null, min: null, max: null, valeur: null, mode: 'instant', lecture: null, dernier: 0, largeur: 1, pas: 1 });
     const t = m.temps || null; if (!t) return;
     temps.champ = t.champ; temps.mode = t.mode || 'instant'; temps.largeur = t.largeur || 1;
     const vals = []; for (const c of couches.values()) if (c.def.temps !== false) for (const f of c.features) { const n = nombre(f.properties?.[t.champ]); if (Number.isFinite(n)) vals.push(n); }
