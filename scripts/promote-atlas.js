@@ -51,11 +51,11 @@ for (const f of fs.readdirSync(libSrc)) {
 
 /**
  * Les sous-dossiers de `lib/` qui ne sont ni `bi/` ni importés à plat par `app.js` : `charte/` (le composant BI en importe le schema et la resolution, `../charte/…`) et
- * `reseau/` (le client WFS de la BD TOPO, importe par l'import IGN). Invisibles au controle des imports de `app.js` : sans leur copie, les modules qui
+ * `reseau/` (le client WFS de la BD TOPO, importe par l'import IGN) et `trafic/` (le moteur de trafic, importe par lib/trafic-couche.js). Invisibles au controle des imports de `app.js` : sans leur copie, les modules qui
  * les importent tombent en 404 une fois publies. Le schema JSON de la charte est son contrat publie : il part avec les modules.
  * Un nouveau sous-dossier s'ajoute ici ; le controle final (`verifierImportsEnSousDossier`) echoue de toute facon si un module de `lib/` en importe un absent.
  */
-const SOUS_DOSSIERS_LIB = ['charte', 'reseau'];
+const SOUS_DOSSIERS_LIB = ['charte', 'reseau', 'trafic'];
 let modulesCharte = 0;
 for (const nom of SOUS_DOSSIERS_LIB) {
   const dossierSrc = path.join(libSrc, nom);

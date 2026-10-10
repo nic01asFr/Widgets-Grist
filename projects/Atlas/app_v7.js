@@ -14233,6 +14233,30 @@ function openCmd() {
     $('cmd-input').value = ''; $('cmd-input').focus();
     buildCmdItems('');
 }
+/**
+ * Le trafic SIMULÉ (lib/trafic-couche.js, chargé à la demande) : des véhicules qui roulent sur les routes d'une couche de lignes. Les routes importées de
+ * l'IGN (BD TOPO) ou d'OpenStreetMap suffisent ; les débits, les destinations et les feux sont des hypothèses, et le message le dit.
+ */
+let _trafic = null;   // { instance, layerId, nom } pendant que le trafic tourne
+
+/** La couche de routes à animer : celle qu'on demande, sinon la première couche de lignes visible qui ressemble à des routes (sens BD TOPO ou classe OSM). */
+function coucheDeRoutes(id = null) {
+    for (const l of STATE.layers) {
+        if (id && l.id !== id) continue;
+        if (l.visible === false || l._distant || l._raster) continue;
+        if (l.geometryType !== 'LineString' && l.geometryType !== 'MultiLineString') continue;
+        if (id) return l;
+        if ((filteredGeoJSON(l)?.features || []).some((f) => f.properties && (f.properties.sens_de_circulation != null || f.properties.highway))) return l;
+    }
+    return null;
+}
+
+function entreesTrafic() {
+    if (_trafic) return [{ label: 'Arrêter le trafic simulé', kind: 'action', run: () => A.traficArreter(), ic: icTrait(IC.cube) }];
+    const l = coucheDeRoutes();
+    return l ? [{ label: `Animer le trafic (simulé) sur « ${l.name} »`, kind: 'action', run: () => A.traficDemarrer(l.id), ic: icTrait(IC.cube) }] : [];
+}
+
 function closeCmd() { $('cmd-overlay').classList.remove('open'); }
 function buildCmdItems(q) {
     let base = [
@@ -14251,6 +14275,7 @@ function buildCmdItems(q) {
         { label: 'Ouvrir un projet ou un GeoJSON', kind: 'action', run: loadProject, ic: icTrait(IC.dossier) },
         { label: 'Exporter en GeoJSON', kind: 'action', run: exportProject, ic: icTrait(IC.exporter) },
         { label: 'Réinitialiser la vue', kind: 'action', run: () => A.resetView(), ic: icTrait(IC.rafraichir) },
+        ...entreesTrafic(),
     ];
     if (CONFIG.viewMode) {
         const hasStory = (STATE.story?.length || 0) > 0;
@@ -14261,6 +14286,7 @@ function buildCmdItems(q) {
             ] : []),
             { label: 'Exporter en GeoJSON', kind: 'action', run: exportProject, ic: icTrait(IC.exporter) },
             { label: 'Réinitialiser la vue', kind: 'action', run: () => A.resetView(), ic: icTrait(IC.rafraichir) },
+            ...entreesTrafic(),
         ];
         STATE.layers.filter((l) => l.visible !== false).forEach((l) => base.push({
             label: `Cibler « ${l.name} »`,
@@ -16172,6 +16198,29 @@ const A = {
         renderRecit();
         showToast('Tournée retirée', 'info');
     },
+    /**
+     * Le trafic simulé sur une couche de routes (la première qui y ressemble sans identifiant). `opts` : { densite (véhicules par km), vitesse (1 = temps réel), graine }.
+     * Renvoie l'état, ou null quand aucune couche ne convient (un message le dit).
+     */
+    async traficDemarrer(layerId = null, opts = {}) {
+        if (_trafic) A.traficArreter();
+        const layer = coucheDeRoutes(layerId);
+        if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
+        try {
+            const m = await import('./lib/trafic-couche.js?v=20261011a');
+            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], ...opts });
+            const etat = instance.demarrer();
+            _trafic = { instance, layerId: layer.id, nom: layer.name };
+            showToast(`Trafic simulé sur « ${layer.name} » : ${etat.vehicules} véhicules ; débits, destinations et feux sont des hypothèses`, 'info');
+            return etat;
+        } catch (e) {
+            console.warn('[Atlas] trafic :', e);
+            showToast(`Trafic impossible : ${e && e.message ? e.message : e}`, 'warning');
+            return null;
+        }
+    },
+    traficArreter() { if (!_trafic) return null; const e = _trafic.instance.arreter(); _trafic = null; return e; },
+    traficEtat() { return _trafic ? { ..._trafic.instance.etat(), layerId: _trafic.layerId } : { actif: false, simule: true }; },
     tourneeDemarrer() { demarrerTournee(); },
     tourneeArreter() { arreterTournee(); },
     tourneePas(dir) { pasTournee(dir < 0 ? -1 : 1); },
