@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.3 — un trafic fluide, orienté, en 3D de près
+
+- **Ajouté** : `lib/trafic-rendu.js`. Les véhicules ne sautent plus cinq fois par seconde : la carte dessine, 30 fois par seconde, une position entre le pas précédent et le pas courant du moteur (position et cap interpolés ; un saut de plus de 12 m n'est pas lissé). Le calcul du moteur ne change pas.
+- **Ajouté** : fondu à l'apparition (0,6 s) et à l'arrêt (0,4 s, `arreter({ doucement: true })`).
+- **Ajouté** : niveau de détail selon le zoom (rien sous le zoom 13, des points ensuite, des modèles 3D du catalogue — `car` et `bus` — à partir du zoom 16), et seuls les véhicules de la fenêtre visible sont dessinés.
+- **Ajouté** : `Models3D.vehiculesPreparer/Maj/Effacer` : les véhicules 3D sont des instances de la scène d'Atlas, orientées selon leur cap, posées sur le sol ; réglage « Véhicules en 3D (de près) » dans la section « Trafic simulé » de « Vue & rendu ».
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.2 — le trafic simulé ne fige plus la carte
 
 - **Corrigé** : sur un réseau de quelques centaines de tronçons, les premières images du trafic prenaient de 1 à 5 secondes (le calcul des zones de conflit entre trajectoires comparait tous les points deux à deux) : les points sont maintenant rangés dans une grille de proximité, le même calcul passe sous 0,3 s au pire, et sous 5 ms par image ensuite.

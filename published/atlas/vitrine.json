@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.16.3",
+      "texte": "Le trafic simulé devient fluide et lisible : les véhicules glissent d’un point à l’autre au lieu de sauter cinq fois par seconde, apparaissent et s’effacent en fondu, et de près (à partir de l’échelle de la rue) ce sont de vraies voitures et de vrais bus en 3D, orientés dans le sens de la marche. De loin, de simples points ; plus loin encore, rien — et seuls les véhicules à l’écran sont dessinés. Un réglage permet de garder les points si la machine est modeste."
+    },
+    {
       "version": "v1.16.2",
       "texte": "Le trafic simulé ne fige plus la carte sur un grand réseau : le calcul des croisements de trajectoires, qui prenait plusieurs secondes sur un quartier entier, prend une fraction de seconde ; un tronçon dégénéré ne fait plus échouer le moteur à chaque image, et si le moteur échoue, le trafic s’arrête en le disant au lieu de saturer la page. À l’ouverture d’un projet, une erreur de restauration du bâti 3D du fond de carte ne l’interrompt plus."
     },
@@ -318,7 +322,8 @@
           "Sens uniques",
           "Voies par sens",
           "Giratoires",
-          "Routes IGN ou OSM"
+          "Routes IGN ou OSM",
+          "Véhicules en 3D"
         ],
         "images": [
           {
@@ -687,7 +692,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.16.2 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.16.3 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

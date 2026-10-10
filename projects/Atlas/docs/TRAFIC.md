@@ -60,7 +60,21 @@ Aucun saut de position, état reproductible à graine égale. Coût du moteur : 
 - **Contacts résiduels** à forte densité (143 sur 20 véh/km pour le réseau de 34 km) : le moteur n'est pas un outil de dimensionnement.
 - **Un seul trafic à la fois**, sur le fil principal (non vérifié au-delà de 600 véhicules ni sur plusieurs dizaines de km), sans piétons, cyclistes, transports en commun ni stationnement.
 - **Les premières images coûtent plus que les suivantes** : les zones de conflit entre trajectoires d'un carrefour se calculent à la demande, quand un véhicule s'en approche. Sur un réseau aléatoire de 400 tronçons et 150 carrefours, le pas le plus long est d'environ 0,25 s (il dépassait 5 s avant la 1.16.2), puis 3 à 5 ms par image. Le calcul reste sur le fil principal : au-delà de quelques centaines de tronçons, un à-coup au démarrage est possible (le travail en worker est l'étape T2).
-- Les véhicules sont dessinés comme des points (blanc : voiture, orange : poids lourd) ; le cap est calculé mais pas encore dessiné.
+- Le moteur reste sur le fil principal (voir ci-dessus) : le calcul n'est pas encore dans un worker.
+
+## Le rendu : fluide, orienté, selon le zoom
+
+Le moteur avance par pas de 0,2 s. Dessiner ses positions telles quelles les ferait sauter cinq fois par seconde ; `lib/trafic-rendu.js` garde donc la position du pas précédent et celle du pas courant, et la carte montre, à chaque image (30 par seconde), une position entre les deux. Le mouvement est continu sans calcul de plus ; l'image montrée a un pas de retard (0,2 s).
+
+| À savoir | Comportement |
+|---|---|
+| **Lissage** | position et cap sont interpolés entre deux pas (le cap par le plus court chemin) ; un saut de plus de 12 m entre deux pas (demi-tour de tronçon, recalage) n'est pas interpolé, le véhicule est posé |
+| **Fondu** | un véhicule qui apparaît monte de 0 à 1 d'opacité en 0,6 s ; à l'arrêt (bouton ou `A.traficArreter()`), les véhicules s'effacent en 0,4 s avant que la couche soit retirée |
+| **Niveau de détail** | sous le zoom 13 : rien n'est dessiné (le trafic continue de se calculer) ; du zoom 13 à 16 : des points (blanc : voiture, orange : poids lourd) ; **à partir du zoom 16 : des modèles 3D** du catalogue d'objets (`car` pour les voitures, `bus` pour les poids lourds), mis à l'échelle d'un vrai véhicule (4,4 m et 10,5 m), posés sur le sol et orientés selon leur cap |
+| **Seulement ce qui se voit** | les véhicules hors de la fenêtre visible (plus une marge de 40 m) ne sont envoyés ni à la carte ni au rendu 3D |
+| **Repli** | pas de modèle 3D (téléphone en lecture, `?no3d=1`, fichier introuvable) ou réglage « Véhicules en 3D » désactivé : des points à tous les zooms ≥ 13 |
+
+Les véhicules 3D sont des instances (`InstancedMesh`) de la scène d'Atlas (`Models3D.vehicules*` dans `app_v7.js`), recalculées à chaque image ; ils ne sont pas des entités d'une couche. Le bus tient lieu de poids lourd faute de camion dans le catalogue ; les véhicules ne projettent pas d'ombre.
 
 ## Distinguer les routes, les chemins, les pistes cyclables, les voies ferrées
 
@@ -91,7 +105,8 @@ Les modules non branchés sont publiés avec le reste de `lib/reseau/` mais jama
 | T0 | le moteur dans Atlas, versionné, avec ses 36 tests | **fait** (`lib/trafic/`, `tests/trafic-*.test.js`) |
 | T1 | un trafic ambiant sur les routes d'une couche, à la demande | **fait** (`lib/trafic-couche.js`) |
 | — | distinguer les types de voie et ne rouler que sur les routes ouvertes ; section de réglage dans « Vue & rendu » | **fait** (1.16.1) |
-| T2 | véhicules orientés (cap dessiné) et en 3D à partir du catalogue d'objets ; calcul dans un worker | à faire |
+| — | rendu lissé entre deux pas, fondu, niveau de détail selon le zoom, véhicules orientés et en 3D à partir du catalogue d'objets (voiture, bus) | **fait** (1.16.3) |
+| T2 | calcul du moteur dans un worker (plus d'à-coup au démarrage d'un grand réseau) | à faire |
 | T5 | d'autres modes : trains (cantons, signalisation), vélos, piétons | à décider |
 | T3 | feux : un plan par carrefour désigné, **déclaré comme hypothèse** à l'écran | à faire |
 | T4 | règles de circulation (arrêtés) et « et si », après calibrage sur des mesures | à décider |
@@ -105,5 +120,6 @@ Le moteur est du code **écrit pour Atlas** à partir de principes publiés de s
 ```bash
 node --test projects/Atlas/tests/trafic-*.test.js        # le moteur : 36 tests, environ 30 s
 node --test projects/Atlas/tests/trafic-couche.test.js   # l'intégration : adaptation, comptes, cycle de vie
+node --test projects/Atlas/tests/trafic-rendu.test.js       # le rendu : lissage, fondu, niveau de détail, boucle de dessin, arrêt en douceur
 node --test projects/Atlas/tests/trafic-robustesse.test.js # réseaux connexes aléatoires : pas d'exception, durée d'un pas, arrêt d'un moteur en échec
 ```
