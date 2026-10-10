@@ -76,7 +76,14 @@ export function indexerSources(sources, rayon) {
     const k = cle(Math.floor(s.x / taille), Math.floor(s.z / taille));
     let l = cases.get(k); if (!l) cases.set(k, l = []); l.push(s);
   }
-  const index = { comparaisons: 0, proche(p, q) {
+  const index = { comparaisons: 0,
+    /** Les sources des cases voisines d'un point (au moins toutes celles à moins de `rayon`) : un superset, jamais un oubli. */
+    autour(x, z) {
+      const i = Math.floor(x / taille), j = Math.floor(z / taille); const sortie = [];
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const l = cases.get(cle(i + di, j + dj)); if (l) for (const s of l) sortie.push(s); }
+      return sortie;
+    },
+    proche(p, q) {
     if (!cases.size) return false;
     const i0 = Math.floor((Math.min(p.x, q.x) - rayon) / taille), i1 = Math.floor((Math.max(p.x, q.x) + rayon) / taille);
     const j0 = Math.floor((Math.min(p.z, q.z) - rayon) / taille), j1 = Math.floor((Math.max(p.z, q.z) + rayon) / taille);
@@ -140,7 +147,7 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
  */
 export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, pres = null) {
   const indexPres = pres ? indexerSources(pres.sources, pres.rayon) : null;
-  const ombres = pres && pres.ombres ? { sources: pres.sources, rayon: pres.rayon, hauteurFeu: pres.ombres.hauteurFeu, pas: pres.ombres.pas, bande: pres.ombres.bande, index: indexerAretes(batiments) } : null;
+  const ombres = pres && pres.ombres ? { sources: pres.sources, autour: indexPres.autour, rayon: pres.rayon, hauteurFeu: pres.ombres.hauteurFeu, pas: pres.ombres.pas, bande: pres.ombres.bande, index: indexerAretes(batiments) } : null;
   const assezPres = (p, q) => (indexPres ? indexPres.proche(p, q) : true);
   const pos = [];
   const nor = [];

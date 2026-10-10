@@ -90,11 +90,12 @@ export function rayonCoupe(source, cible, index, exclure = []) {
  * @param {number} base  hauteur du pied du mur
  * @param {number} haut  hauteur du haut du mur
  * @param {{x:number,z:number}} normale  normale extérieure (unitaire, horizontale)
- * @param {{ sources: {x:number,z:number}[], hauteurFeu: number, rayon: number, index: object, pas?: number, bande?: number }} ctx
+ * @param {{ sources: {x:number,z:number}[], autour?: (x:number,z:number) => {x:number,z:number}[], hauteurFeu: number, rayon: number, index: object, pas?: number, bande?: number }} ctx
+ *   `autour` : les sources voisines d'un point (un index en grille, voir `indexerSources`) ; sans lui, toutes les sources sont essayées
  * @returns {{ t0: number, t1: number, y0: number, y1: number }[]}  rectangles éclairés : t le long du mur (0 en p, 1 en q), y hauteurs absolues
  */
 export function cellulesEclairees(p, q, base, haut, normale, ctx) {
-  const { sources, hauteurFeu, rayon, index, pas = PAS_M, bande = BANDE_M } = ctx;
+  const { sources, autour, hauteurFeu, rayon, index, pas = PAS_M, bande = BANDE_M } = ctx;
   const dx = q.x - p.x, dz = q.z - p.z, L = Math.hypot(dx, dz);
   const propre = index.arete ? index.arete(p, q) : undefined;
   const exclure = propre ? [propre] : [];
@@ -102,7 +103,7 @@ export function cellulesEclairees(p, q, base, haut, normale, ctx) {
   const eclaire = (t, y) => {
     // le point visé est décollé du mur vers l'extérieur, pour ne pas buter sur le mur lui-même
     const cible = { x: p.x + dx * t + normale.x * 0.15, z: p.z + dz * t + normale.z * 0.15, y };
-    for (const s of sources) {
+    for (const s of autour ? autour(cible.x, cible.z) : sources) {
       const vx = s.x - cible.x, vz = s.z - cible.z;
       if (vx * vx + vz * vz > r2) continue;
       if (vx * normale.x + vz * normale.z <= 0) continue;               // le mur tourne le dos à cette source
