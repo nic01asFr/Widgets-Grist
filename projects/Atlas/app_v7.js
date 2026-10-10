@@ -7642,7 +7642,7 @@ function itineraireEnCoursHtml() {
         : n === 1 ? 'Touchez le point suivant (arrivée, ou point de passage).'
         : ok ? `${Math.round(s.calcul.longueurM)} m · ${n} points — touchez pour ajouter un point de passage ou une arrivée.`
             : 'Le chemin ne se trace pas : voir le message, ou retirez le dernier point.';
-    // Les sens uniques ne se lisent que si la couche les porte (`sens_de_circulation`, BD TOPO) ; sinon l'itinéraire vaut à pied.
+    // Les sens uniques ne se lisent que si la couche les porte (`sens_de_circulation` de la BD TOPO, ou `oneway` d'OpenStreetMap) ; sinon l'itinéraire vaut à pied.
     const sens = s.reseau.oriente
         ? `<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${s.respecterSens !== false ? 'checked' : ''} onchange="A.itineraireSens(this.checked)"> Respecter les sens de circulation</label>`
         : '<div class="hint" style="margin-top:8px">Cette couche ne porte pas de sens de circulation : le tracé vaut à pied.</div>';
