@@ -37,6 +37,7 @@
  */
 
 import { compterHits, lirePages, ErreurWfs, URL_WFS } from './reseau/wfs-bdtopo.js';
+import { TYPES, typeDeVoie } from './modes-voie.js?v=20261011b';
 
 export { URL_WFS };
 
@@ -72,12 +73,8 @@ export const PRODUITS = Object.freeze({
   }),
 });
 
-const COULEURS_IMPORTANCE = Object.freeze({
-  1: '#b71c1c', 2: '#e65100', 3: '#f9a825', 4: '#2e7d32', 5: '#1565c0', 6: '#757575',
-});
-const categoriesImportance = () => Object.entries(COULEURS_IMPORTANCE).map(([valeur, couleur]) => ({
-  valeur, couleur, libelle: `Importance ${valeur}${valeur === '1' ? ' (la plus forte)' : valeur === '6' ? ' (la plus faible)' : ''}`,
-}));
+/** Les types de voie (route, chemin, sentier, escalier, piste cyclable, voie ferrée) : une couleur chacun, pour ne pas confondre une allée de parc et une route. */
+const categoriesTypeDeVoie = () => TYPES.map((t) => ({ valeur: t.libelle, couleur: t.couleur, libelle: t.libelle }));
 
 /**
  * Le catalogue.
@@ -94,13 +91,15 @@ const categoriesImportance = () => Object.entries(COULEURS_IMPORTANCE).map(([val
 export const PRESETS = Object.freeze({
   routes: {
     id: 'routes', libelle: 'Routes', icone: 'route', groupe: 'Réseaux', produit: 'bdtopo',
-    description: 'Tronçons de route : importance, sens de circulation, nombre de voies.',
+    description: 'Tronçons de route : type de voie (route, chemin, sentier, escalier, piste cyclable), importance, sens de circulation, nombre de voies.',
     couche: 'BDTOPO_V3:troncon_de_route', famille: 'LineString', nomCouche: 'Routes IGN',
     attributs: ['cleabs', 'nature', 'nom_collaboratif_gauche', 'nom_collaboratif_droite', 'nom_voie_ban_gauche', 'importance',
       'sens_de_circulation', 'nombre_de_voies', 'largeur_de_chaussee', 'vitesse_moyenne_vl', 'position_par_rapport_au_sol',
       'acces_vehicule_leger', 'urbain', 'cpx_numero', 'cpx_classement_administratif', 'etat_de_l_objet', 'date_modification'],
     page: 2000, coteMaxDeg: 0.5,
-    style: { couleur: { champ: 'importance', categories: categoriesImportance(), defaut: '#757575' }, largeur: { champ: 'importance', plage: [7, 1.5] } },
+    // `type_de_voie` n'est pas un attribut de la BD TOPO : il est DÉRIVÉ de `nature` et de `acces_vehicule_leger` (lib/modes-voie.js). La largeur garde l'importance.
+    derives: { type_de_voie: typeDeVoie },
+    style: { couleur: { champ: 'type_de_voie', categories: categoriesTypeDeVoie(), defaut: '#757575' }, largeur: { champ: 'importance', plage: [7, 1.5] } },
     ordreDeGrandeur: 'Environ 700 tronçons au km² en ville (459 sur 0,6 km² à Marseille).',
     avertissements: [],
   },
@@ -373,6 +372,11 @@ export function normaliserEntite(preset, feature) {
     const v = props[nom];
     if (v === null || v === undefined || v === '') continue;
     proprietes[nom] = v;
+  }
+  // Les attributs dérivés (ex. le type de voie d'un tronçon), calculés sur les propriétés d'origine.
+  for (const [nom, calculer] of Object.entries(preset.derives || {})) {
+    const v = calculer(props);
+    if (v !== null && v !== undefined && v !== '') proprietes[nom] = v;
   }
   return { entite: { type: 'Feature', geometry: g.geometry, properties: proprietes } };
 }

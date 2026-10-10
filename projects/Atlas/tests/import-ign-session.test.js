@@ -362,12 +362,12 @@ describe('import-ign-couche — le style posé sur la couche d’Atlas', () => {
     { type: 'Feature', geometry: route.geometry, properties: { cleabs: 'B', importance: '6' } },
   ];
 
-  it('routes : catégories de couleur par importance, largeur graduée à l’envers (la plus forte est la plus large)', () => {
+  it('routes : couleur par type de voie (route, chemin, sentier…), largeur graduée à l’envers (la plus forte importance est la plus large)', () => {
     const c = creerCoucheIgn({ preset: PRESETS.routes, entites, emprise: EMPRISE, creerCouche: creerCoucheFactice });
     const sym = c.style.symbolization;
     assert.equal(sym.color.mode, 'categorized');
-    assert.equal(sym.color.field, 'importance');
-    assert.equal(sym.color.categories.length, 6);
+    assert.equal(sym.color.field, 'type_de_voie');
+    assert.equal(sym.color.categories.length, 8);
     assert.deepEqual(sym.size, { mode: 'graduated', field: 'importance', value: 12, outputRange: [7, 1.5], method: 'linear' });
     assert.equal(c.geometryType, 'LineString');
     assert.equal(c.style.polygonMode, undefined);

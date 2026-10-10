@@ -184,7 +184,8 @@ describe('import-ign — les objets, sur les extraits réels', () => {
         assert.equal(r.entite.type, 'Feature');
         assert.equal(r.entite.properties.cleabs, f.properties.cleabs);
         assert.equal(r.entite.id, undefined, 'l’identifiant du service ne doit pas être repris');
-        for (const k of Object.keys(r.entite.properties)) assert.ok(p.attributs.includes(k), k);
+        // les attributs du jeu, et ceux que le jeu DÉRIVE (ex. le type de voie d'une route)
+        for (const k of Object.keys(r.entite.properties)) assert.ok(p.attributs.includes(k) || Object.keys(p.derives || {}).includes(k), k);
         for (const v of Object.values(r.entite.properties)) assert.ok(v !== null && v !== '');
         // aucune altitude
         const aplatir = (c) => (typeof c[0] === 'number' ? [c] : c.flatMap(aplatir));
@@ -293,13 +294,13 @@ describe('import-ign — la provenance', () => {
 describe('import-ign — le style par défaut', () => {
   const routes = fixture('troncon_de_route').features.map((f) => normaliserEntite(PRESETS.routes, f).entite);
 
-  it('routes : couleur par importance, six catégories ordonnées ; largeur graduée s’il y a plusieurs importances', () => {
+  it('routes : couleur par type de voie (une couleur chacun) ; largeur graduée par importance s’il y en a plusieurs', () => {
     const avec = [{ properties: { importance: '3' } }, { properties: { importance: '6' } }];
     const s = styleDeCouche(PRESETS.routes, avec);
     assert.equal(s.couleur.mode, 'categorized');
-    assert.equal(s.couleur.champ, 'importance');
-    assert.deepEqual(s.couleur.categories.map((c) => c.value), ['1', '2', '3', '4', '5', '6']);
-    assert.equal(new Set(s.couleur.categories.map((c) => c.color)).size, 6);
+    assert.equal(s.couleur.champ, 'type_de_voie');
+    assert.deepEqual(s.couleur.categories.map((c) => c.value), ['Route', 'Route à accès restreint', 'Chemin', 'Sentier', 'Escalier', 'Piste cyclable', 'Voie ferrée', 'Autre']);
+    assert.equal(new Set(s.couleur.categories.map((c) => c.color)).size, 8);
     assert.deepEqual(s.taille, { mode: 'graduated', champ: 'importance', plage: [7, 1.5] });
     assert.equal(s.polygonMode, null);
     // la plus forte importance est la plus large
@@ -434,5 +435,31 @@ describe('import-ign — la couleur par catégorie se peint (app_v7.js)', () => 
     assert.ok(m, 'fieldExpr introuvable');
     assert.doesNotMatch(m[1], /\['coalesce', \['at', 0/);
     assert.match(m[1], /\['case', \['==', \['typeof'/);
+  });
+});
+
+describe('routes : le type de voie est dérivé, pas lu', () => {
+  it('chaque tronçon réel de l\'extrait reçoit un type de voie qui vient de sa nature et de son accès', () => {
+    const f = JSON.parse(readFileSync(new URL('./fixtures/import-ign/troncon_de_route.json', import.meta.url), 'utf8'));
+    let routes = 0, autres = 0;
+    for (const feat of f.features) {
+      const r = normaliserEntite(PRESETS.routes, feat);
+      assert.ok(r.entite.properties.type_de_voie, 'type de voie absent pour ' + feat.properties.cleabs);
+      if (r.entite.properties.type_de_voie === 'Route') routes++; else autres++;
+    }
+    assert.ok(routes > 0, 'des routes dans l\'extrait');
+    assert.equal(routes + autres, f.features.length);
+  });
+  it('une allée de parc, un escalier, un sentier et une piste cyclable ne sont pas des routes', () => {
+    const t = (props) => normaliserEntite(PRESETS.routes, { type: 'Feature', geometry: { type: 'LineString', coordinates: [[5, 43], [5.001, 43]] }, properties: { cleabs: 'X', ...props } }).entite.properties.type_de_voie;
+    assert.equal(t({ nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Libre' }), 'Route');
+    assert.equal(t({ nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit' }), 'Route à accès restreint', 'l\'allée d\'un parc se distingue de la voirie ouverte');
+    assert.equal(t({ nature: 'Chemin' }), 'Chemin');
+    assert.equal(t({ nature: 'Sentier' }), 'Sentier');
+    assert.equal(t({ nature: 'Escalier' }), 'Escalier');
+    assert.equal(t({ nature: 'Piste cyclable' }), 'Piste cyclable');
+  });
+  it('un jeu sans attribut dérivé ne change pas (bâtiments, eau, communes…)', () => {
+    for (const [id, p] of Object.entries(PRESETS)) if (id !== 'routes') assert.equal(p.derives, undefined, id);
   });
 });
