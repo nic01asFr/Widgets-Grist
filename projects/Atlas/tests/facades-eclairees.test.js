@@ -115,3 +115,43 @@ test('batimentsProches et geometrieMurs donnent la même chose avec l\'index que
   assert.ok(g.triangles > 0);
   assert.equal(g.positions.length, g.triangles * 9);
 });
+
+/* ---- le bâti des couches Atlas (bâtis importés, maquette) ---- */
+import { batisDeCoucheAtlas } from '../lib/facades-eclairees.js';
+
+const surface = (props, id) => ({ id, type: 'Feature', properties: props, geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] } });
+
+test('batisDeCoucheAtlas : la hauteur vient d\'un champ, sinon d\'une valeur fixe, et se lit comme un bâtiment du fond', () => {
+  const champ = batisDeCoucheAtlas([surface({ hauteur: 12 }, 1), surface({ hauteur: '8.5' }, 2)], { champ: 'hauteur', idCouche: 'bdtopo' });
+  assert.deepEqual(champ.map((b) => b.properties), [{ render_height: 12, render_min_height: 0 }, { render_height: 8.5, render_min_height: 0 }]);
+  assert.deepEqual(champ.map((b) => b.id), ['bdtopo:1', 'bdtopo:2']);
+  const fixe = batisDeCoucheAtlas([surface({}, 1)], { fixe: 15, idCouche: 'maq' });
+  assert.deepEqual(fixe[0].properties, { render_height: 15, render_min_height: 0 });
+  assert.deepEqual(hauteursBatiment(fixe[0].properties), { base: 0, haut: 15 });
+});
+
+test('batisDeCoucheAtlas : la base décale le toit ; sans hauteur lisible, pas de mur ; seules les surfaces comptent', () => {
+  const sureleve = batisDeCoucheAtlas([surface({ h: 6 }, 1)], { champ: 'h', base: 4 });
+  assert.deepEqual(sureleve[0].properties, { render_height: 10, render_min_height: 4 });
+  const sans = batisDeCoucheAtlas([surface({ h: null }, 1), surface({ h: '' }, 2), surface({}, 3), surface({ h: 'x' }, 4), surface({ h: 0 }, 5), surface({ h: -3 }, 6)], { champ: 'h' });
+  assert.deepEqual(sans, []);
+  const point = { type: 'Feature', properties: { h: 9 }, geometry: { type: 'Point', coordinates: [0, 0] } };
+  assert.deepEqual(batisDeCoucheAtlas([point], { champ: 'h' }), []);
+  assert.deepEqual(batisDeCoucheAtlas(undefined), []);
+  assert.deepEqual(batisDeCoucheAtlas([surface({}, 1)], { fixe: 0 }), [], 'une épaisseur nulle n\'est pas un bâtiment');
+});
+
+test('batisDeCoucheAtlas : l\'identifiant évite les doublons entre couches et entités sans id', () => {
+  const a = batisDeCoucheAtlas([surface({ h: 5 }), surface({ h: 5 })], { champ: 'h', idCouche: 'A' });
+  assert.deepEqual(a.map((b) => b.id), ['A:0', 'A:1']);
+  const b = batisDeCoucheAtlas([surface({ h: 5 }, 1)], { champ: 'h', idCouche: 'B' });
+  assert.notEqual(a[0].id, b[0].id);
+});
+
+test('un bâti de couche Atlas reçoit ses façades comme celui du fond', () => {
+  const batis = batisDeCoucheAtlas([carre(1, 0, 0, 10, 1)].map((c) => ({ ...c, properties: { h: 10 } })), { champ: 'h', idCouche: 'imp' });
+  const proches = batimentsProches(batis, [{ x: -6, z: 5 }], 12, identite);
+  assert.equal(proches.length, 1);
+  const g = geometrieMurs(proches, DECALAGE_M, () => 0, { sources: [{ x: -6, z: 5 }], rayon: 12, ombres: { hauteurFeu: 6 } });
+  assert.equal(g.triangles, 2, 'le mur qui regarde la lampe, entier');
+});

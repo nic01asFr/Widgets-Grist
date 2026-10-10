@@ -49,6 +49,28 @@ export function hauteursBatiment(props) {
 }
 
 /**
+ * Le bâti d'une COUCHE ATLAS (bâtis importés d'une source ouverte, maquette, saisie) : des surfaces extrudées dont la hauteur vient d'un champ ou
+ * d'une valeur fixe, au format que `batimentsProches` lit (`render_height`, `render_min_height`). Une entité sans hauteur lisible n'a pas de mur.
+ * @param {object[]} entites  les entités GeoJSON de la couche (déjà filtrées)
+ * @param {{ champ?: string|null, fixe?: number|null, base?: number, idCouche?: string }} [o]
+ *   `champ` : propriété qui porte l'épaisseur de l'extrusion ; `fixe` : épaisseur commune quand il n'y a pas de champ ; `base` : hauteur du dessous
+ * @returns {object[]}
+ */
+export function batisDeCoucheAtlas(entites, { champ = null, fixe = null, base = 0, idCouche = 'couche' } = {}) {
+  const sortie = [];
+  const dessous = Number.isFinite(base) && base > 0 ? base : 0;
+  (entites || []).forEach((f, i) => {
+    const t = f?.geometry?.type;
+    if (t !== 'Polygon' && t !== 'MultiPolygon') return;
+    const v = champ ? f.properties?.[champ] : fixe;
+    const h = v === null || v === undefined || v === '' ? NaN : Number(v);
+    if (!Number.isFinite(h) || h <= 0) return;
+    sortie.push({ id: `${idCouche}:${f.id ?? i}`, geometry: f.geometry, properties: { render_height: dessous + h, render_min_height: dessous } });
+  });
+  return sortie;
+}
+
+/**
  * Les anneaux extérieurs d'une géométrie GeoJSON (Polygon, MultiPolygon), en
  * [lng, lat]. Les trous ne portent pas de façade visible de la rue.
  */
