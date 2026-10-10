@@ -39,7 +39,7 @@ Chaque couche et chaque attribut ont été relevés par requête réelle le 10/1
 
 | Jeu | Couche du service | Forme | Attributs principaux | Style par défaut |
 |---|---|---|---|---|
-| Routes | `BDTOPO_V3:troncon_de_route` | ligne | `importance`, `nature`, `sens_de_circulation`, `nombre_de_voies`, `largeur_de_chaussee`, noms, `cpx_numero` | couleur par importance (6 classes), largeur graduée (inversée) |
+| Routes | `BDTOPO_V3:troncon_de_route` | ligne | `importance`, `nature`, `sens_de_circulation`, `nombre_de_voies`, `largeur_de_chaussee`, noms, `cpx_numero`, et **`type_de_voie`** (dérivé) | couleur par **type de voie** (route, route à accès restreint, chemin, sentier, escalier, piste cyclable, voie ferrée, autre), largeur graduée par importance (inversée) |
 | Bâtiments | `BDTOPO_V3:batiment` | surface | `hauteur`, `nombre_d_etages`, `usage_1`, `materiaux_*`, `identifiants_rnb` | volumes extrudés par `hauteur` |
 | Cours d'eau | `BDTOPO_V3:cours_d_eau` | ligne | `toponyme`, `importance`, `code_hydrographique` | bleu, nom en étiquette |
 | Plans d'eau | `BDTOPO_V3:plan_d_eau` | surface | `nature`, `toponyme`, `importance` | à plat, nom en étiquette |

@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.16.1",
+      "texte": "Les routes importées de l’IGN se distinguent par type de voie : routes, routes à accès restreint (allées d’un parc, voies privées), chemins, sentiers, escaliers, pistes cyclables, voies ferrées — une couleur chacun dans la légende, au lieu d’un seul bleu pour tout. Le trafic simulé ne roule plus que sur les routes ouvertes à la circulation : les allées de parc, les sentiers, les escaliers et les pistes cyclables restent vides, et Atlas dit ce qu’il a écarté. Il se règle (couche, densité, routes à accès restreint) et s’anime dans « Vue & rendu »."
+    },
+    {
       "version": "v1.16.0",
       "texte": "Les routes importées de l’IGN ou d’OpenStreetMap peuvent s’animer : une entrée de la palette, « Animer le trafic (simulé) », fait rouler des voitures et des poids lourds qui suivent les sens uniques, s’arrêtent dans les files et passent les carrefours et les giratoires. C’est une maquette de trafic, pas une mesure : la densité, les destinations et les feux sont des hypothèses, et Atlas le dit."
     },
@@ -187,11 +191,12 @@
         "role": "Charger",
         "titre": "Les routes, bâtiments et eau de l’IGN, dans la zone visible",
         "format": "large",
-        "texte": "Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par importance, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.",
-        "pourquoi": "Les routes importées portent leur sens de circulation et leur nombre de voies : un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.",
-        "exemple": "les 112 tronçons de routes autour du Palais Longchamp, importés en une seconde, avec leur sens de circulation.",
+        "texte": "Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par type de voie — route, route à accès restreint, chemin, sentier, escalier, piste cyclable —, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.",
+        "pourquoi": "Les routes importées portent leur sens de circulation, leur nombre de voies et leur type de voie : une allée de parc ne se confond pas avec une rue, et un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.",
+        "exemple": "les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue, 51 allées du parc à accès restreint, 7 sentiers, 6 escaliers, chacun sa couleur.",
         "utilise": [
           "Import IGN",
+          "Type de voie",
           "Estimation avant import",
           "Annuler et reprendre",
           "Provenance et licence",
@@ -200,7 +205,7 @@
         "images": [
           {
             "image": "cas-ign.jpg",
-            "legende": "Les routes de la BD TOPO autour du Palais Longchamp, importées dans la zone visible et colorées par importance ; la mention de source figure en bas à droite."
+            "legende": "Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : les rues en bleu, les allées du parc à accès restreint en violet, les sentiers en vert, les escaliers en gris ; la mention de source figure en bas à droite."
           }
         ]
       },
@@ -300,11 +305,12 @@
         "role": "Représenter",
         "titre": "Du trafic sur vos routes, pour une maquette vivante",
         "format": "large",
-        "texte": "Une fois les routes importées — celles de l’IGN avec leur sens de circulation et leur nombre de voies, ou celles d’OpenStreetMap —, l’entrée « Animer le trafic (simulé) » de la palette fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. La densité se règle (véhicules par km), la même simulation se rejoue à l’identique, et un clic l’arrête.",
+        "texte": "Une fois les routes importées — celles de l’IGN avec leur sens de circulation, leur nombre de voies et leur type de voie, ou celles d’OpenStreetMap —, « Animer le trafic » (dans « Vue & rendu », ou par la palette) fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. Seules les routes ouvertes à la circulation roulent : les allées d’un parc, les chemins, les sentiers, les escaliers et les pistes cyclables restent vides, et Atlas dit ce qu’il a écarté. On règle la couche, la densité (véhicules par km) et l’accès restreint ; la même simulation se rejoue à l’identique, et un clic l’arrête.",
         "pourquoi": "Une maquette qui bouge se lit mieux qu’une maquette figée, sans refaire une simulation dans un autre outil. Atlas dit qu’elle est simulée : la densité, les destinations et les feux sont des hypothèses, jamais une mesure du trafic réel.",
-        "exemple": "les routes de la BD TOPO autour du Palais Longchamp : 115 tronçons, 66 carrefours, 2 giratoires, une cinquantaine de véhicules en temps réel.",
+        "exemple": "les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue roulés, 64 écartés (50 allées à accès restreint, 7 sentiers, 6 escaliers), une quarantaine de véhicules en temps réel.",
         "utilise": [
           "Trafic simulé",
+          "Type de voie",
           "Sens uniques",
           "Voies par sens",
           "Giratoires",
@@ -313,7 +319,7 @@
         "images": [
           {
             "image": "cas-trafic.jpg",
-            "legende": "Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé."
+            "legende": "Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN autour du Palais Longchamp ; les allées du parc, à droite, restent vides. Trafic simulé."
           }
         ]
       },
@@ -677,7 +683,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.16.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.16.1 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

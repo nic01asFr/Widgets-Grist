@@ -224,15 +224,15 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Charger</p>
         <h3>Les routes, bâtiments et eau de l’IGN, dans la zone visible</h3>
-        <p>Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par importance, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.</p>
-        <p class="pourquoi">Les routes importées portent leur sens de circulation et leur nombre de voies : un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les 112 tronçons de routes autour du Palais Longchamp, importés en une seconde, avec leur sens de circulation.</p>
-        <ul class="utilise"><li>Import IGN</li><li>Estimation avant import</li><li>Annuler et reprendre</li><li>Provenance et licence</li><li>Sens de circulation</li></ul>
+        <p>Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par type de voie — route, route à accès restreint, chemin, sentier, escalier, piste cyclable —, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.</p>
+        <p class="pourquoi">Les routes importées portent leur sens de circulation, leur nombre de voies et leur type de voie : une allée de parc ne se confond pas avec une rue, et un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.</p>
+        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue, 51 allées du parc à accès restreint, 7 sentiers, 6 escaliers, chacun sa couleur.</p>
+        <ul class="utilise"><li>Import IGN</li><li>Type de voie</li><li>Estimation avant import</li><li>Annuler et reprendre</li><li>Provenance et licence</li><li>Sens de circulation</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="cas-ign.jpg" alt="Les routes de la BD TOPO autour du Palais Longchamp, importées dans la zone visible et colorées par importance ; la mention de source figure en bas à droite." loading="lazy">
-          <figcaption>Les routes de la BD TOPO autour du Palais Longchamp, importées dans la zone visible et colorées par importance ; la mention de source figure en bas à droite.</figcaption>
+          <img src="cas-ign.jpg" alt="Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : les rues en bleu, les allées du parc à accès restreint en violet, les sentiers en vert, les escaliers en gris ; la mention de source figure en bas à droite." loading="lazy">
+          <figcaption>Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : les rues en bleu, les allées du parc à accès restreint en violet, les sentiers en vert, les escaliers en gris ; la mention de source figure en bas à droite.</figcaption>
         </figure>
       </div>
     </article>
@@ -312,15 +312,15 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Représenter</p>
         <h3>Du trafic sur vos routes, pour une maquette vivante</h3>
-        <p>Une fois les routes importées — celles de l’IGN avec leur sens de circulation et leur nombre de voies, ou celles d’OpenStreetMap —, l’entrée « Animer le trafic (simulé) » de la palette fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. La densité se règle (véhicules par km), la même simulation se rejoue à l’identique, et un clic l’arrête.</p>
+        <p>Une fois les routes importées — celles de l’IGN avec leur sens de circulation, leur nombre de voies et leur type de voie, ou celles d’OpenStreetMap —, « Animer le trafic » (dans « Vue &amp; rendu », ou par la palette) fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. Seules les routes ouvertes à la circulation roulent : les allées d’un parc, les chemins, les sentiers, les escaliers et les pistes cyclables restent vides, et Atlas dit ce qu’il a écarté. On règle la couche, la densité (véhicules par km) et l’accès restreint ; la même simulation se rejoue à l’identique, et un clic l’arrête.</p>
         <p class="pourquoi">Une maquette qui bouge se lit mieux qu’une maquette figée, sans refaire une simulation dans un autre outil. Atlas dit qu’elle est simulée : la densité, les destinations et les feux sont des hypothèses, jamais une mesure du trafic réel.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 115 tronçons, 66 carrefours, 2 giratoires, une cinquantaine de véhicules en temps réel.</p>
-        <ul class="utilise"><li>Trafic simulé</li><li>Sens uniques</li><li>Voies par sens</li><li>Giratoires</li><li>Routes IGN ou OSM</li></ul>
+        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue roulés, 64 écartés (50 allées à accès restreint, 7 sentiers, 6 escaliers), une quarantaine de véhicules en temps réel.</p>
+        <ul class="utilise"><li>Trafic simulé</li><li>Type de voie</li><li>Sens uniques</li><li>Voies par sens</li><li>Giratoires</li><li>Routes IGN ou OSM</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
-          <img src="cas-trafic.jpg" alt="Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé." loading="lazy">
-          <figcaption>Des véhicules (bleu : voitures, orange : poids lourds) sur les routes importées de l’IGN autour du Palais Longchamp. Trafic simulé.</figcaption>
+          <img src="cas-trafic.jpg" alt="Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN autour du Palais Longchamp ; les allées du parc, à droite, restent vides. Trafic simulé." loading="lazy">
+          <figcaption>Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN autour du Palais Longchamp ; les allées du parc, à droite, restent vides. Trafic simulé.</figcaption>
         </figure>
       </div>
     </article>
@@ -647,6 +647,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.16.1</b><p>Les routes importées de l’IGN se distinguent par type de voie : routes, routes à accès restreint (allées d’un parc, voies privées), chemins, sentiers, escaliers, pistes cyclables, voies ferrées — une couleur chacun dans la légende, au lieu d’un seul bleu pour tout. Le trafic simulé ne roule plus que sur les routes ouvertes à la circulation : les allées de parc, les sentiers, les escaliers et les pistes cyclables restent vides, et Atlas dit ce qu’il a écarté. Il se règle (couche, densité, routes à accès restreint) et s’anime dans « Vue &amp; rendu ».</p></div>
       <div><b>v1.16.0</b><p>Les routes importées de l’IGN ou d’OpenStreetMap peuvent s’animer : une entrée de la palette, « Animer le trafic (simulé) », fait rouler des voitures et des poids lourds qui suivent les sens uniques, s’arrêtent dans les files et passent les carrefours et les giratoires. C’est une maquette de trafic, pas une mesure : la densité, les destinations et les feux sont des hypothèses, et Atlas le dit.</p></div>
       <div><b>v1.15.0</b><p>Un bouton IGN, à côté d’OSM dans le panneau Couches, importe les données de l’IGN de la zone visible : routes (avec leur sens de circulation et leur nombre de voies), bâtiments extrudés par leur hauteur, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes et départements. L’import annonce d’abord combien d’objets il va lire, avance page par page, s’annule et se reprend là où il s’était arrêté ; la couche arrive avec sa provenance, sa licence et la mention de source sur la carte. Les routes importées servent tout de suite aux itinéraires qui respectent les sens uniques.</p></div>
       <div><b>v1.14.2</b><p>Les routes importées d’OpenStreetMap portent leurs sens uniques : un itinéraire tracé dessus ne remonte plus une rue à sens unique, ni un rond-point à contresens (le sens de la BD TOPO de l’IGN passe avant celui d’OpenStreetMap quand les deux existent). Pour les applications qui affichent la carte : la sortie du pointeur est annoncée, « automatique » rend la main à la détection du réseau au lieu de garder un hors ligne forcé, et la mention de source donnée par l’application s’affiche en bas de la carte.</p></div>

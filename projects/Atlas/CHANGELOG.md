@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.1 — distinguer les routes, les chemins, les pistes cyclables
+
+- **Ajouté** : `lib/modes-voie.js` distingue route, route à accès restreint, chemin, sentier, escalier, piste cyclable et voie ferrée (BD TOPO et OpenStreetMap). L'import des routes de l'IGN porte un attribut dérivé **`type_de_voie`** et colore par type de voie (au lieu de l'importance, qui reste la largeur).
+- **Trafic** : ne roule plus que sur les routes ouvertes à la circulation (allées de parc, chemins, sentiers, escaliers, pistes cyclables, voies ferrées, accès restreint ou impossible, projets sont écartés, chacun pour son motif, dit à l'écran) ; l'option `acces: 'tous'` rend les routes à accès restreint. Section **Trafic simulé** du module « Vue & rendu » (couche, densité, accès restreint, animer ou arrêter) ; véhicules dessinés en blanc (voitures) et orange (poids lourds).
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.0 — un trafic simulé sur les routes d'une couche
 
 - **Ajouté** : `A.traficDemarrer(layerId?, { densite, vitesse, graine })`, `A.traficArreter()`, `A.traficEtat()` et l'entrée de palette « Animer le trafic (simulé) ». Des véhicules roulent sur les routes d'une couche de lignes (BD TOPO importée, routes OSM) : sens uniques, voies par sens, carrefours, giratoires, files. **Simulation, pas mesure** : densité, destinations et feux sont des hypothèses. Documentation : `docs/TRAFIC.md`.
