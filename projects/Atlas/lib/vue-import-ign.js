@@ -21,7 +21,7 @@
  */
 
 import { mettreAPlat } from './vue-import.js?v=20260911a';
-import { echapper } from './html.js?v=20261002c';
+import { echapper } from './html.js?v=20261010a';
 import { presetsParGroupe, empriseDepuisBornes, libelleEmprise, phraseProvenance, LICENCE } from './import-ign.js?v=20261010a';
 import { formaterDuree } from './import-lots.js?v=20261010a';
 import { creerSession } from './import-ign-session.js?v=20261010a';
