@@ -1,0 +1,3 @@
+# Client de l hote en un seul fichier (genere par tools/generer-client-hote.mjs) : octets EXACTS, jamais de conversion de
+# fins de ligne ; un hote le copie tel quel et verifie son empreinte.
+projects/Atlas/lib/bi/client-hote.js -text
