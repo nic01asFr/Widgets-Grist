@@ -24,6 +24,26 @@
   },
   "journal": [
     {
+      "version": "v1.14.0",
+      "texte": "Les itinéraires respectent les sens uniques de la BD TOPO : une case « Respecter les sens de circulation », cochée par défaut, dans le tracé : le chemin le plus court tient alors compte des sens. En déplacement, une flèche de cap entoure le point bleu. Atlas peut aussi s’exploiter comme composant de carte dans une application externe : un client JavaScript d’un seul fichier, des capacités annoncées à l’application hôte, des couches administratives colorées par un tableau qu’elle fournit, un style de polygones (opacité, contour) et un paquet de contours à mettre en cache pour travailler hors ligne. Le composant ne dessine plus d’interface d’Atlas pendant son chargement et reste connectable quand le fond de carte est en panne."
+    },
+    {
+      "version": "v1.13.2",
+      "texte": "Correctif de sécurité : un nom, une étiquette ou une attribution venus d’une scène, d’un catalogue ou d’une adresse s’affichent toujours comme du texte, jamais comme du code. Les messages éphémères et les panneaux sont concernés, et la page refuse désormais les formulaires vers l’extérieur et les objets embarqués."
+    },
+    {
+      "version": "v1.13.1",
+      "texte": "Le téléphone, sans barre de navigation. Une vue composée sur un grand écran se rejoue à la taille du petit : l’ouverture recule pour que les entités restent dans le cadre. Choisir un contexte replie le panneau, et l’objet touché avec sa bulle se centre dans ce qui reste visible. Les boutons de la carte sont tous ronds et de même taille, et la rangée de pastilles qui défile se fond avec un flou progressif sur son bord."
+    },
+    {
+      "version": "v1.13.0",
+      "texte": "Une pastille « Tournée » : elle démarre la tournée du contexte par l’objet le plus proche devant soi, affiche son avancement et sa longueur, et propose « Précédent », « Suivant » et « Arrêter ». La bulle d’objet a sa fermeture ronde et des flèches ‹ n / N › vers l’objet voisin, le long de la tournée ou de la liste. En Lecture, et pendant une tournée, un objet s’ouvre par sa bulle. Le panneau Contexte devient compact (consigne repliable, pictogramme et longueur des tournées). La légende se pose sur la ligne de l’attribution et cible aussi en Préparer ; la barre de sélection se compacte selon la largeur de la carte ; « Me localiser » n’apparaît que si la localisation est utilisable."
+    },
+    {
+      "version": "v1.12",
+      "texte": "Le module Formulaires est refondu : un champ ou un formulaire se crée depuis Atlas, un formulaire peut modifier l’objet ou ajouter une ligne, une géométrie se dessine pour chaque ligne ajoutée, la Fiche d’un objet se modifie, et « Date et heure » devient un type de champ. La pastille « Relevé » ne s’affiche plus quand il n’y a rien à relever ; la couche des lignes d’un formulaire naît colorée par son champ à choix ; les objets 3D se sélectionnent au toucher avec une zone de tolérance."
+    },
+    {
       "version": "v1.11.0",
       "texte": "Des scènes qui se retrouvent, des relevés qui se font sans réseau, des tournées qui se suivent. Contextes à tournée (ligne posée ou tracée sur un réseau de routes et de sentiers, objets choisis dans l’ordre du parcours, pastilles propres à chaque étape) ; liste des scènes avec rôle, miniature choisie par l’auteur et recherche ; scènes disponibles hors ligne, file d’envoi des relevés saisis sans réseau ; nouvelle scène dans un document Grist neuf ou sur l’appareil seul ; import GPX, KML et CSV ; export GeoJSON, CSV, KML, GPX, image ou projet ; panneau Couches compact, onglets regroupés, Lieu qui ouvre la carte sur les données ; regroupement de points, classes à seuils, contour selon un champ, ajout d’objet en Exploiter, « Moi » comme valeur de départ d’un formulaire ; étapes créées d’un coup le long d’un trajet ; enregistrement automatique de l’apparence avec annuler et rétablir. La page présente désormais Atlas fonction par fonction, avec un exemple qui les relie : l’éclairage public du Palais Longchamp et son effet sur la faune nocturne, sur des positions réelles et des comptages fictifs déclarés. La démonstration des Aygalades laisse la place à la scène de cet exemple."
     },
@@ -324,7 +344,7 @@
         "role": "Exploiter",
         "titre": "Formulaires, relevés et ajouts sur le terrain",
         "format": "mobile",
-        "texte": "Atlas réutilise les formulaires natifs de Grist, et c’est en exploitation qu’ils servent. L’agent choisit un objet dans une liste, prend « le plus proche de moi » ou le touche : un formulaire que l’équipe a proposé s’ouvre en onglet sur lui, champs obligatoires signalés, valeurs de départ (la date du jour, la personne connectée). Un envoi écrit la ligne dans la table. Si l’auteur le propose, l’agent peut aussi ajouter un objet qui n’existe pas encore. Cela marche dans le navigateur d’un téléphone comme dans l’application.",
+        "texte": "Atlas réutilise les formulaires natifs de Grist, et c’est en exploitation qu’ils servent. L’auteur peut aussi créer un champ ou un formulaire depuis Atlas, sans quitter la carte. L’agent choisit un objet dans une liste, prend « le plus proche de moi » ou le touche : un formulaire que l’équipe a proposé s’ouvre en onglet sur lui, champs obligatoires signalés, valeurs de départ (la date du jour, la personne connectée). Un envoi écrit la ligne dans la table. Si l’auteur le propose, l’agent peut aussi ajouter un objet qui n’existe pas encore. Cela marche dans le navigateur d’un téléphone comme dans l’application.",
         "pourquoi": "Pas d’outil de collecte à côté, ni d’export à réimporter.",
         "exemple": "le « Relevé de nuit » s’ouvre sur le piège touché, date préremplie.",
         "utilise": [
@@ -345,7 +365,7 @@
         "role": "Exploiter",
         "titre": "Contextes et tournées",
         "format": "large",
-        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. « Choisir un objet » suit la même ligne. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
+        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
         "exemple": "le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.",
         "utilise": [
           "Contextes",
@@ -570,7 +590,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.11.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, contextes à tournée et pastilles par étape, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, récit avec trajet optionnel, scènes externes et couches distantes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.14.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [
