@@ -25,7 +25,7 @@
   "journal": [
     {
       "version": "v1.16.2",
-      "texte": "Le trafic simulé ne fige plus la carte sur un grand réseau : le calcul des croisements de trajectoires, qui prenait plusieurs secondes sur un quartier entier, prend une fraction de seconde ; un tronçon dégénéré ne fait plus échouer le moteur à chaque image, et si le moteur échoue, le trafic s’arrête en le disant au lieu de saturer la page."
+      "texte": "Le trafic simulé ne fige plus la carte sur un grand réseau : le calcul des croisements de trajectoires, qui prenait plusieurs secondes sur un quartier entier, prend une fraction de seconde ; un tronçon dégénéré ne fait plus échouer le moteur à chaque image, et si le moteur échoue, le trafic s’arrête en le disant au lieu de saturer la page. À l’ouverture d’un projet, une erreur de restauration du bâti 3D du fond de carte ne l’interrompt plus."
     },
     {
       "version": "v1.16.1",

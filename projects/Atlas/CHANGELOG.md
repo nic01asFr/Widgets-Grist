@@ -18,6 +18,7 @@ Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, a
 - **Corrigé** : sur un réseau de quelques centaines de tronçons, les premières images du trafic prenaient de 1 à 5 secondes (le calcul des zones de conflit entre trajectoires comparait tous les points deux à deux) : les points sont maintenant rangés dans une grille de proximité, le même calcul passe sous 0,3 s au pire, et sous 5 ms par image ensuite.
 - **Corrigé** : une trajectoire de longueur nulle (tronçons confondus ou de longueur nulle dans un carrefour) levait une exception à chaque image ; elle donne désormais son point, sans cap.
 - **Ajouté** : un moteur qui échoue trois images de suite est arrêté, `etat().erreur` dit pourquoi et l'interface prévient, au lieu de lever cinq exceptions par seconde.
+- **Corrigé** : à l'ouverture d'un projet, une erreur « Cannot read properties of undefined (reading 'layers') » interrompait la restauration quand le style de la carte n'était pas encore chargé (bâti 3D du fond) ; la visibilité est réappliquée au chargement du style.
 - **Composant BI** : inchangé (contrat 0.3, même client).
 
 ## 1.16.1 — distinguer les routes, les chemins, les pistes cyclables
