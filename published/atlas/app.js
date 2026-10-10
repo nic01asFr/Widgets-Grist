@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.13.1';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.13.2';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.13.1';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.13.1';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.13.1';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.13.2';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.13.2';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.13.2';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.13.1';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.13.1';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.13.1';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.13.1';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.13.1';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.13.1';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.13.1';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.13.1';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.13.1';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.13.1';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.13.1';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.13.1';
+} from './lib/parametres-objet.js?v=1.13.2';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.13.2';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.13.2';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.13.2';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.13.2';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.13.2';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.13.2';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.13.2';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.13.2';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.13.2';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.13.2';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.13.2';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,8 +36,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.13.1';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.13.1';
+} from './lib/scene-loader.js?v=1.13.2';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.13.2';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -46,51 +46,53 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.13.1';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.13.1';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.13.1';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.13.1';
+} from './lib/fiche-formulaire.js?v=1.13.2';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.13.2';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.13.2';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.13.2';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.13.1';
+} from './lib/classes.js?v=1.13.2';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.13.1';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.13.1';
+} from './lib/grappes.js?v=1.13.2';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.13.2';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.13.1';
+} from './lib/layer-order.js?v=1.13.2';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.13.1';
+} from './lib/table-reference.js?v=1.13.2';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.13.1';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.13.1';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.13.1';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.13.1';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.13.1';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.13.1';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.13.1';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.13.1';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.13.1';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.13.1';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.13.1';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.13.1';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.13.1';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.13.1';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.13.1';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.13.1';
+} from './lib/bulle-objet.js?v=1.13.2';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.13.2';
+import { attributionSure } from './lib/attribution.js?v=1.13.2';
+import { creerToast } from './lib/toast.js?v=1.13.2';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.13.2';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.13.2';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.13.2';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.13.2';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.13.2';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.13.2';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.13.2';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.13.2';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.13.2';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.13.2';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.13.2';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.13.2';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.13.2';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.13.2';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.13.1';
+} from './lib/terrain-base.js?v=1.13.2';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -108,20 +110,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.13.1';
+} from './lib/grist-sync.js?v=1.13.2';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.13.1';
+} from './lib/nouvelle-couche.js?v=1.13.2';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.13.1';
+} from './lib/champ-formulaire.js?v=1.13.2';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.13.1';
+} from './lib/saisie-objet.js?v=1.13.2';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -129,7 +131,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.13.1';
+} from './lib/geometrie-saisie.js?v=1.13.2';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -141,14 +143,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.13.1';
+} from './lib/declarative-style.js?v=1.13.2';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.13.1';
+} from './lib/geo-tables.js?v=1.13.2';
 import {
   layerFieldNames,
   controlFieldType,
@@ -173,14 +175,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.13.1';
+} from './lib/controls.js?v=1.13.2';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.13.1';
+} from './lib/story.js?v=1.13.2';
 import {
   copieLineaire,
   estLineaire,
@@ -202,11 +204,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.13.1';
+} from './lib/trajet.js?v=1.13.2';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.13.1';
+} from './lib/manifest-binding.js?v=1.13.2';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -219,7 +221,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.13.1';
+} from './lib/viewport.js?v=1.13.2';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -234,31 +236,31 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.13.1';
-import { mettreAPlat } from './lib/vue-import.js?v=1.13.1';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.13.1';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.13.1';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.13.1';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.13.1';
+} from './lib/view-mode.js?v=1.13.2';
+import { mettreAPlat } from './lib/vue-import.js?v=1.13.2';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.13.2';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.13.2';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.13.2';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.13.2';
 import {
   etageCoteACote,
   legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.13.1';
+} from './lib/habillage-carte.js?v=1.13.2';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.13.1';
+} from './lib/viewer-controls.js?v=1.13.2';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.13.1';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.13.1';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.13.1';
+} from './lib/scene-prefs.js?v=1.13.2';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.13.2';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.13.2';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -1076,7 +1078,7 @@ function libelleModele(id) {
 }
 /** Les <option> d'un choix de modele : la bibliotheque, puis les objets realistes. */
 function optionsModeles(selId, { objets = true } = {}) {
-    const ligne = (mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`;
+    const ligne = (mm) => `<option value="${echapper(mm.id)}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${echapper(mm.name)}</option>`;
     const objs = objets ? modelesObjets() : [];
     if (!objs.length) return allModels().map(ligne).join('');
     return `<optgroup label="Bibliothèque">${allModels().map(ligne).join('')}</optgroup><optgroup label="Objets réalistes">${objs.map(ligne).join('')}</optgroup>`;
@@ -3527,7 +3529,7 @@ function addTerrainSource() {
     const cfg = TERRAIN_SOURCES[STATE.settings.terrainSource] || TERRAIN_SOURCES.terrarium;
     if (!map.getSource('terrain-dem')) {
         try {
-            map.addSource('terrain-dem', { type: 'raster-dem', tiles: cfg.tiles, encoding: cfg.encoding, tileSize: cfg.tileSize, maxzoom: cfg.maxzoom, attribution: cfg.attribution });
+            map.addSource('terrain-dem', { type: 'raster-dem', tiles: cfg.tiles, encoding: cfg.encoding, tileSize: cfg.tileSize, maxzoom: cfg.maxzoom, attribution: attributionSure(cfg.attribution) });
         } catch (e) { /* ignore */ }
     }
     // MapLibre 5.6.1 laisse « reloading » à jamais une tuile MNT rechargée
@@ -3759,7 +3761,7 @@ function addRasterLayerToMap(layer) {
         // renvoie des erreurs en boucle et la carte n'atteint jamais `idle` :
         // tout ce qui attend cet etat reste suspendu.
         maxzoom: layer._zoom?.maxzoom ?? 19,
-        ...(layer._attribution ? { attribution: layer._attribution } : {}),
+        ...(layer._attribution ? { attribution: attributionSure(layer._attribution) } : {}),
     });
     map.addLayer(poserBornesZoom({
         id: layer.id, type: 'raster', source: layer.id,
@@ -5732,7 +5734,7 @@ function renderLieu() {
     $('module-body').innerHTML = `
         <div class="section loc-identite">
             <div class="section-title">Nom du projet</div>
-            <input class="input" id="proj-name" placeholder="Ma maquette…" value="${STATE.projectName}" onchange="A.setProjectName(this.value)">
+            <input class="input" id="proj-name" placeholder="Ma maquette…" value="${echapper(STATE.projectName)}" onchange="A.setProjectName(this.value)">
         </div>
         ${htmlCadrage()}
         ${htmlMiniature()}
@@ -5741,7 +5743,7 @@ function renderLieu() {
             <div class="loc-badge">
                 <span class="ic">${icTrait(IC.epingle)}</span>
                 <div class="loc-texte">
-                    <div class="nm">${L.name || 'Non défini'}</div>
+                    <div class="nm">${echapper(L.name || 'Non défini')}</div>
                     <div class="co">${(L.lat ?? 0).toFixed(4)}°N · ${(L.lng ?? 0).toFixed(4)}°E</div>
                 </div>
             </div>
@@ -6849,8 +6851,8 @@ function renderEnvControlsSection() {
         }
         return `<div class="section">
             <div class="toggle-row">
-                <span class="tlabel">${vc.label}</span>
-                <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${vc.id}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${vc.label || vc.id} en lecture" title="Visible en lecture"></div>
+                <span class="tlabel">${echapper(vc.label)}</span>
+                <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${chaineJs(vc.id)}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${echapper(vc.label || vc.id)} en lecture" title="Visible en lecture"></div>
             </div>
             ${sub}
         </div>`;
@@ -8269,8 +8271,8 @@ function renderModelsPanel() {
         </div>
         <div class="section">
             <div class="section-title">Source des modèles (GLB)${infoBulle('Doit contenir les dossiers colored et mono, et le catalogue (catalog, au format JSON). En local : sers la racine du repo et ouvre /projects/Atlas/index.html.')}</div>
-            <div class="range-info" id="model-src-info" style="word-break:break-all">${MODEL_LIBRARY.baseUrl}</div>
-            <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${MODEL_LIBRARY.baseRoot}" placeholder="https://…/models/">
+            <div class="range-info" id="model-src-info" style="word-break:break-all">${echapper(MODEL_LIBRARY.baseUrl)}</div>
+            <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${echapper(MODEL_LIBRARY.baseRoot)}" placeholder="https://…/models/">
             <div style="display:flex;gap:6px;margin-top:6px">
                 <button class="btn btn-soft" style="flex:1" onclick="A.testModelBase()">Tester</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setModelBase(document.getElementById('model-src-input').value)">Appliquer</button>
@@ -8802,8 +8804,8 @@ function renderSymbologyInspector(layer) {
     if (is3D) {
         const mm = sym.model || {};
         let label, icon = '📦';
-        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${mm.field} »`; }
-        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = layer.style.custom.filename; }
+        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${echapper(mm.field)} »`; }
+        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = echapper(layer.style.custom.filename); }
         else { const l = libelleModele(layer.style?.library?.modelId); icon = l.icon; label = echapper(l.label); }
         modelChip = `<div style="margin-top:8px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid rgba(196,69,54,0.2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink)"><span style="font-size:15px">${icon}</span>${label}</span>
@@ -8841,7 +8843,7 @@ function fieldSelect(layer, param, current, type) {
     const fields = getLayerFields(layer).filter((f) => !type || f.type === type);
     return `<select class="input" onchange="A.setSymField('${layer.id}','${param}', this.value)">
         <option value="">— Champ —</option>
-        ${fields.map((f) => `<option value="${f.id}" ${current === f.id ? 'selected' : ''}>${f.id} (${typeAffiche(layer, f)})</option>`).join('')}
+        ${fields.map((f) => `<option value="${echapper(f.id)}" ${current === f.id ? 'selected' : ''}>${echapper(f.id)} (${typeAffiche(layer, f)})</option>`).join('')}
     </select>`;
 }
 function modeSeg(layer, param, mode, modes) {
@@ -8925,8 +8927,8 @@ function symColorPanel(layer, sym) {
     if (c.mode === 'single') {
         inner = `<div class="section"><div class="section-title">Couleur</div>
             <div style="display:flex;gap:8px;align-items:center">
-                <input type="color" value="${c.value || layer.color}" style="width:40px;height:34px;border:none;cursor:pointer" onchange="A.setSymColorValue('${layer.id}', this.value)">
-                <input class="input" style="flex:1;font-family:var(--mono)" value="${c.value || layer.color}" onchange="A.setSymColorValue('${layer.id}', this.value)">
+                <input type="color" value="${echapper(c.value || layer.color)}" style="width:40px;height:34px;border:none;cursor:pointer" onchange="A.setSymColorValue('${layer.id}', this.value)">
+                <input class="input" style="flex:1;font-family:var(--mono)" value="${echapper(c.value || layer.color)}" onchange="A.setSymColorValue('${layer.id}', this.value)">
             </div></div>`;
     } else if (c.mode === 'categorized') {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, null)}</div>
@@ -9199,7 +9201,7 @@ function categoriesPreview(layer, c) {
         const cat = c.categories.find((x) => String(x.value) === String(v.value));
         const col = cat?.color || paletteColor(c.palette, i, vals.length, c.inverse);
         const lib = escapeHtml(libelleCategorie(c, v.value));
-        return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
+        return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${chaineJs(v.value)}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
     }).join('')}${vals.length > 30 ? `<div class="range-info" style="margin-top:6px">+ ${vals.length - 30} autres</div>` : ''}</div>`;
 }
 /** Bornes qu'un contrôle du manifeste déclare pour un champ, s'il y en a un. */
@@ -9649,14 +9651,14 @@ function symModelPanel(layer, sym) {
         inner = `<div class="section"><div class="section-title">Catégorie</div>
             <select class="input" onchange="A.setModelCat('${layer.id}', this.value)">${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `<option value="${k}" ${cat === k ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
             <div class="section"><div class="section-title">Modèle de la couche</div>
-            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${mm.name}</div></div>`).join('')}</div></div>
+            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${chaineJs(mm.id)}')"><div class="mi">${mm.icon}</div><div class="mn">${echapper(mm.name)}</div></div>`).join('')}</div></div>
             ${sectionObjetsRealistes(layer, selId)}`;
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'model', m.field, 'text')}</div>
             ${m.field ? `<div class="section"><div class="section-title">Modèle par valeur</div><div class="cats">${getUniqueValues(layer, m.field, 20).map((v) => {
                 const c2 = m.categories.find((c) => String(c.value) === String(v.value));
-                return `<div class="cat-row"><span class="cat-icon">${findModel(c2?.modelId)?.icon || '❓'}</span><span class="cat-value" title="${v.value}">${v.value}</span>
-                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this.value)"><option value="">—</option>${optionsModeles(c2?.modelId)}</select>
+                return `<div class="cat-row"><span class="cat-icon">${findModel(c2?.modelId)?.icon || '❓'}</span><span class="cat-value" title="${echapper(v.value)}">${echapper(v.value)}</span>
+                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${chaineJs(v.value)}', this.value)"><option value="">—</option>${optionsModeles(c2?.modelId)}</select>
                     <span class="cat-count">${v.count}</span></div>`;
             }).join('')}</div></div>
             <div class="section"><div class="section-title">Modèle par défaut</div><select class="input" onchange="A.setDefaultModel('${layer.id}', this.value)"><option value="">— Aucun —</option>${optionsModeles(m.defaultModelId)}</select></div>` : ''}`;
@@ -9691,7 +9693,7 @@ function sectionObjetsRealistes(layer, selId) {
         <div class="model-grid">${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : null].filter(Boolean).join(' · ');
-            return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
+            return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${chaineJs(mm.id)}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
         }).join('')}</div>${inconnu}</div>`;
 }
 function panneauCatalogueCouche(layer, selId) {
@@ -9721,7 +9723,7 @@ function panneauCatalogueCouche(layer, selId) {
         ${c.cat ? `<div class="hint" style="margin-top:6px">${reconnus} objet(s) sur ${n} reconnu(s) par un type du catalogue. Les autres gardent le modèle de repli ci-dessous.</div>` : ''}
         ${refus}</div>
         <div class="section"><div class="section-title">Repli (objets non reconnus)</div>
-        <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>`;
+        <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${echapper(mm.id)}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${echapper(mm.name)}</option>`).join('')}</select></div>`;
 }
 function commonTransform(layer) {
     const c = layer.style.common = layer.style.common || { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 };
@@ -9758,18 +9760,18 @@ function renderAttrFields(layer, props, opts = {}) {
     if (!fields.length) return '<div class="hint">Aucun attribut.</div>';
     return fields.map((f) => {
         const val = props[f.id] ?? '';
-        const esc = String(val).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const esc = echapper(val);
         const inputType = f.type === 'numeric' ? 'number' : 'text';
         if (readOnly) {
             return `<div class="section" style="margin-bottom:8px">
-                <label class="input-label">${f.label || f.id}</label>
+                <label class="input-label">${echapper(f.label || f.id)}</label>
                 <div class="input" style="opacity:.85;background:var(--surface-muted)">${esc || '—'}</div>
             </div>`;
         }
         return `<div class="section" style="margin-bottom:8px">
-            <label class="input-label">${f.label || f.id}</label>
+            <label class="input-label">${echapper(f.label || f.id)}</label>
             <input class="input" type="${inputType}" value="${esc}"
-                onchange="A.setFeatureAttr('${layer.id}', '${f.id.replace(/'/g, "\\'")}', this.value)">
+                onchange="A.setFeatureAttr('${layer.id}', '${chaineJs(f.id)}', this.value)">
         </div>`;
     }).join('');
 }
@@ -10874,8 +10876,8 @@ function renderObjectInspector() {
     const attrsReadOnly = (view && !saisieTerrain) || !isQgis;
 
     $('insp-head').innerHTML = `
-        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
-        <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : echapper(layer.name)}</div>
+        <div class="insp-title">${count > 1 ? 'Sélection multiple' : echapper(label)}</div>
         <div class="insp-sub">${count > 1 ? `${echapper(layer.name)}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>
         ${count === 1 && coucheEclairage(layer) ? `<div id="insp-etat-eclairage" class="etat-eclairage">${Eclairage.htmlEtat(layer, idx)}</div>` : ''}
         ${count === 1 && !view ? rappelCreation(layer, props) + boutonModifierForme(layer, f) : ''}`;
@@ -12956,7 +12958,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.13.1');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.13.2');
     return Feuille;
 }
 
@@ -13177,10 +13179,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.13.1'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.13.2'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.13.1');
+        const dc = await import('./lib/data-client.js?v=1.13.2');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -14568,9 +14570,7 @@ function randomColor() { const c = ['#C44536', '#2E4E54', '#5B7A4F', '#E8A234', 
 function showLoading(t) { $('loading-text').textContent = t || 'Chargement…'; $('loading').classList.add('show'); }
 function hideLoading() { $('loading').classList.remove('show'); }
 function showToast(msg, type = 'success') {
-    const ic = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
-    const el = document.createElement('div'); el.className = 'toast ' + type;
-    el.innerHTML = `<span>${ic[type] || ''}</span><span>${msg}</span>`;
+    const el = creerToast(document, msg, type);
     $('toasts').appendChild(el); setTimeout(() => el.remove(), 4000);
 }
 function updateRailBadge() {
@@ -16072,7 +16072,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.13.1')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.13.2')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -17696,9 +17696,9 @@ async function demarrer() {
         }
     }
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.13.1');
+        const { capacites } = await import('./lib/data-client.js?v=1.13.2');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.13.1');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.13.2');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {

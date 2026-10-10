@@ -1,6 +1,6 @@
 {
   "name": "atlas",
-  "version": "1.13.1",
+  "version": "1.13.2",
   "description": "Atlas — maquette 3D territoriale MapLibre + Scene Manifest (qgis2grist)",
   "authors": [
     {
@@ -13,6 +13,6 @@
     "name": "Atlas — Maquette 3D",
     "accessLevel": "full",
     "description": "Maquette territoriale 3D : couches Grist, Scene Manifest, symbolisation, contrôles, récit, trajet, soleil",
-    "version": "1.13.1"
+    "version": "1.13.2"
   }
 }

@@ -7,7 +7,7 @@ import {
   boundsFromGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.13.1';
+} from './grist-rows.js?v=1.13.2';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
@@ -15,9 +15,10 @@ import {
   colorFnFromDeclarative,
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
-} from './declarative-style.js?v=1.13.1';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.13.1';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.13.1';
+} from './declarative-style.js?v=1.13.2';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.13.2';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.13.2';
+import { attributionSure } from './attribution.js?v=1.13.2';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 
@@ -191,7 +192,7 @@ export function coucheTuilesRaster(ml, origine) {
     _distant: true,
     _tiles: [String(origine.valeur)],
     _tileSize: Number.isFinite(ml?.tile_size) ? ml.tile_size : 256,
-    _attribution: ml.attribution || ml.credits || null,
+    _attribution: attributionSure(ml.attribution || ml.credits),
     _zoom: { minzoom: z.minzoom, maxzoom: Number.isFinite(z.maxzoom) ? z.maxzoom : 19 },
     _manifestLayer: ml,
     _bboxDeclaree: boundsDuManifest(ml),

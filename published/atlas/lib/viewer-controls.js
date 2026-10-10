@@ -5,7 +5,7 @@
 
 const CATALOG_IDS = ['sun', 'view3d', 'basemap'];
 
-/** @returns {import('./viewer-controls.js?v=1.13.1').ViewerControl[]} */
+/** @returns {import('./viewer-controls.js?v=1.13.2').ViewerControl[]} */
 export function createDefaultViewerControls() {
   return [
     { id: 'sun', type: 'sun', label: 'Soleil & date', exposed: false, config: { shadows: true } },
@@ -14,7 +14,7 @@ export function createDefaultViewerControls() {
   ];
 }
 
-/** @param {import('./viewer-controls.js?v=1.13.1').ViewerControl[]|null|undefined} list @param {string} id */
+/** @param {import('./viewer-controls.js?v=1.13.2').ViewerControl[]|null|undefined} list @param {string} id */
 export function getViewerControl(list, id) {
   return (list || []).find((c) => c.id === id);
 }
@@ -26,7 +26,7 @@ function readExposed(decl) {
   return null;
 }
 
-/** @param {import('./viewer-controls.js?v=1.13.1').ViewerControl[]} list @param {string} id @param {boolean} exposed */
+/** @param {import('./viewer-controls.js?v=1.13.2').ViewerControl[]} list @param {string} id @param {boolean} exposed */
 export function setViewerExposed(list, id, exposed) {
   const c = getViewerControl(list, id);
   if (c) c.exposed = !!exposed;
@@ -38,7 +38,7 @@ export function listExposedViewerControls(list) {
   return (list || []).filter((c) => c.exposed);
 }
 
-/** @param {import('./viewer-controls.js?v=1.13.1').ViewerControl[]} list */
+/** @param {import('./viewer-controls.js?v=1.13.2').ViewerControl[]} list */
 export function serializeViewerControls(list) {
   return (list || []).map((c) => ({
     id: c.id,

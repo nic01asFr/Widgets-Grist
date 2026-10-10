@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Durcissement : GitHub Pages n'envoie aucun en-tete CSP. Ces trois directives (honorees par une balise meta,
+         contrairement a frame-ancestors) interdisent a du HTML injecte de reecrire les adresses relatives (<base>),
+         de charger un plugin (<object>, <embed>) ou de poster un formulaire hors d'Atlas. Aucun script-src : les
+         gestionnaires onclick="A.…" et l'import map en ligne en ont besoin. Atlas n'emploie aucun de ces elements
+         vers l'exterieur (tests/csp-meta.test.js le verifie). -->
+    <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
     <title>Atlas — Maquette 3D Territoriale</title>
 
     <!-- MapLibre GL JS (remplace Mapbox) -->
@@ -1864,7 +1870,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.13.1" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.13.2" />
 </head>
 <body>
     <div class="app">
@@ -2117,6 +2123,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.13.1"></script>
+    <script type="module" src="./app.js?v=1.13.2"></script>
 </body>
 </html>
