@@ -50,6 +50,40 @@ for (const f of fs.readdirSync(libSrc)) {
 }
 
 /**
+ * Le composant carte BI (`lib/bi/`, sous-dossier de `lib/`) : charge a la demande avec `?bi=1`, donc invisible au
+ * controle des imports de `app.js` ci-dessous — qui ne lit que `./lib/<nom>.js`. Le copier ici, et exiger que chaque
+ * module qu'il importe en relatif existe dans la copie.
+ */
+const biSrc = path.join(libSrc, 'bi');
+const biPub = path.join(libPub, 'bi');
+let modulesBi = 0;
+if (fs.existsSync(biSrc)) {
+  fs.mkdirSync(biPub, { recursive: true });
+  for (const f of fs.readdirSync(biSrc)) {
+    if (!f.endsWith('.js')) continue;
+    fs.writeFileSync(path.join(biPub, f), normaliserVersions(fs.readFileSync(path.join(biSrc, f), 'utf8')));
+    modulesBi++;
+  }
+  // Jeux embarques (contours administratifs de repli hors ligne, references de population) : servis tels quels.
+  const donSrc = path.join(biSrc, 'donnees'), donPub = path.join(biPub, 'donnees');
+  if (fs.existsSync(donSrc)) {
+    fs.mkdirSync(donPub, { recursive: true });
+    for (const f of fs.readdirSync(donSrc)) {
+      if (f.endsWith('.json')) { fs.copyFileSync(path.join(donSrc, f), path.join(donPub, f)); modulesBi++; }
+    }
+  }
+  for (const f of fs.readdirSync(biPub)) {
+    if (!f.endsWith('.js')) continue;      // `donnees/` est un dossier : on ne lit que les modules
+    for (const m of fs.readFileSync(path.join(biPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
+      if (!fs.existsSync(path.join(biPub, m[1]))) {
+        console.error(`Echec : lib/bi/${f} importe ${m[1]}, absent de la copie publiee`);
+        process.exit(1);
+      }
+    }
+  }
+}
+
+/**
  * La peau du formulaire, qui n'est pas un module.
  *
  * La boucle ci-dessus ne copie que les `.js` : `formulaire-atlas.css` y serait
@@ -151,6 +185,22 @@ for (const d of DEMOS) {
 }
 
 /**
+ * La page hote de demonstration du composant carte BI (`demos/hote-bi/`) : ses deux pages et rien d'autre. Elle importe
+ * `../../lib/bi/client.js` et ouvre `../../index.html` : relatifs a `published/atlas/demos/hote-bi/`.
+ */
+const hoteSrc = path.join(src, 'demos', 'hote-bi');
+const hotePub = path.join(pub, 'demos', 'hote-bi');
+let fichiersHote = 0;
+if (fs.existsSync(hoteSrc)) {
+  fs.mkdirSync(hotePub, { recursive: true });
+  for (const f of fs.readdirSync(hoteSrc)) {
+    if (!f.endsWith('.html')) continue;
+    fs.copyFileSync(path.join(hoteSrc, f), path.join(hotePub, f));
+    fichiersHote++;
+  }
+}
+
+/**
  * Le catalogue d'objets livre avec Atlas (`objets/`) : Atlas le charge quand
  * aucun autre n'est pointe (`choisirCatalogue`). Seuls `catalog.json` et les
  * fichiers qu'il declare sont copies — et chacun doit exister : un luminaire
@@ -203,7 +253,7 @@ if (absents.length) {
   process.exit(1);
 }
 
-console.log(`published/atlas pret — ${modules} modules lib/, ${requis.length} importes par app.js, `
+console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} fichiers lib/bi), ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
-  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes), `
+  + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes, ${fichiersHote} pages hote BI), `
   + `${fichiersObjets} modeles au catalogue d'objets`);

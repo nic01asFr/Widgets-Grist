@@ -261,6 +261,7 @@ import {
 } from './lib/scene-prefs.js?v=20261002f';
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
+import { exposerCarte, signalerCartePrete } from './lib/acces-carte.js?v=20261009a';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3169,6 +3170,8 @@ function initMap() {
     });
     // Accès debug (couche custom / matrices MapLibre 5).
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
+    // Point d'accès officiel (lib/acces-carte.js) : `window.__atlasCarte` + événement `atlas:carte-prete`.
+    try { exposerCarte(window, map); } catch (_) { /* hors navigateur */ }
 
     map.on('load', onStyleReady);
     // Le style de base illisible (réseau coupé, instance injoignable) : un aplat, et les données s'affichent quand même.
@@ -3348,6 +3351,8 @@ function onStyleReady() {
             _alerteTimer = setTimeout(majAlerteTrajet, 200);
         });
     }
+    // Style en place, couche three.js posée : les modules externes peuvent s'attacher (lib/acces-carte.js).
+    try { signalerCartePrete(window, map); } catch (_) { /* hors navigateur */ }
 }
 
 function saveMapCamera() {
@@ -12844,6 +12849,16 @@ function setUserIdentity(u) {
 }
 
 /**
+ * `?bi=1` : Atlas comme composant carte d'une application hôte (voir `lib/bi/`).
+ *
+ * Même règle que les autres paramètres d'URL : posé une fois, au chargement, et qui ne change rien quand il est absent.
+ * Le mode est un `?navbar=false&mode=view` complété — page réduite à la carte, aucun accueil, aucune restauration locale —
+ * puis le runtime est chargé À LA DEMANDE (`demarrerBi`) : sans ce paramètre, rien de `lib/bi/` n'est téléchargé.
+ * Le motif est celui de `biDemande` (`lib/bi/liaison.js`), recopié ici pour ne rien importer ; un test les garde égaux.
+ */
+const MODE_BI = typeof location !== 'undefined' && /(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search);
+
+/**
  * `?navbar=false` retire la barre du haut.
  *
  * Pour une integration en cadre — une page qui porte deja son titre et sa
@@ -12857,7 +12872,7 @@ function setUserIdentity(u) {
  * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
  * > dont le nom promet autre chose.
  */
-const NAVBAR_DEMANDEE = parseNavbarParam(typeof location !== 'undefined' ? location.search : '');
+const NAVBAR_DEMANDEE = parseNavbarParam(typeof location !== 'undefined' ? location.search : '') && !MODE_BI;
 
 /**
  * Retire la barre du haut quand `barreRetiree` le dit : sur demande de la page,
@@ -13334,6 +13349,9 @@ async function initGrist() {
         console.info('[Atlas] scène externe — le document n’est pas ouvert');
         return;
     }
+    // Composant carte BI (`?bi=1`) : aucun document, et surtout pas de `grist.ready()` — l'API de plugin parlerait à la page
+    // hôte (RPC « Ready », demande de jeton) alors que les données viennent d'elle par `postMessage`, en liste blanche.
+    if (MODE_BI) return;
     if (typeof grist === 'undefined') { console.log('Grist indisponible — mode standalone'); return; }
     const search = typeof location !== 'undefined' ? location.search : '';
     // Les droits transmis par Grist font autorité ; ?mode= ne peut que restreindre.
@@ -17628,7 +17646,7 @@ async function init() {
     updateMobileLayout();
     wireEvents();
     initMap();
-    probeLocalModels();
+    if (!MODE_BI) probeLocalModels();   // le composant BI n'affiche aucun modèle 3D du catalogue
     await initGrist();
     if (CONFIG.sceneExterne) await monterSceneExterne(CONFIG.sceneExterne);
     applyViewModeChrome();
@@ -17644,14 +17662,14 @@ async function init() {
         // point. Quelqu'un qui suit un lien vers un guide se voyait proposer
         // d'écraser ce qu'il venait d'ouvrir.
         const sceneDemandee = new URLSearchParams(location.search).get('scene');
-        if (auto && !sceneDemandee && !CONFIG.grist.ready && STATE.layers.length === 0) {
+        if (auto && !sceneDemandee && !MODE_BI && !CONFIG.grist.ready && STATE.layers.length === 0) {
             const p = JSON.parse(auto);
             if (p.layers?.length && confirm(`Restaurer la sauvegarde locale (${p.layers.length} couches) ?`)) {
                 restoreProject(p);
             }
         }
     } catch (e) {}
-    setInterval(() => {
+    if (!MODE_BI) setInterval(() => {
         if (CONFIG.grist.ready || !STATE.layers.length) return;
         try { localStorage.setItem('atlas_autosave', JSON.stringify(buildProject())); } catch (e) {}
     }, 120000);
@@ -17692,9 +17710,10 @@ async function demarrer() {
         } else {
             CONFIG.sceneExterne = manifest;
             CONFIG.viewMode = true;   // rien à écrire : il n'y a pas de document
-            return init();
+            return MODE_BI ? demarrerBi() : init();
         }
     }
+    if (MODE_BI) return demarrerBi();   // ni accueil ni document : les données viennent de l'hôte
     try {
         const { capacites } = await import('./lib/data-client.js?v=20261001a');
         if (capacites().mode === 'grist') return init();
@@ -17707,6 +17726,28 @@ async function demarrer() {
         console.error('[Atlas] accueil :', e);
     }
     return init();
+}
+
+/**
+ * Démarrage du composant carte BI (`?bi=1`) : Atlas s'ouvre en lecture, sans accueil, la page ne montre que la carte
+ * (`body.mode-bi`, voir index_v7.html), puis le runtime de `lib/bi/` s'attache à la carte par son point d'accès officiel.
+ * Le module est importé pendant que la carte se construit : le téléchargement ne retarde pas `init()`.
+ */
+async function demarrerBi() {
+    document.body.classList.add('mode-bi');
+    CONFIG.viewMode = true;
+    // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
+    CONFIG.defaultPitch = 0;
+    Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
+    const chargement = import('./lib/bi/montage.js?v=20261009a');
+    chargement.catch(() => {});
+    try {
+        await init();
+        const bi = await chargement;
+        await bi.demarrer(window);
+    } catch (e) {
+        console.error('[Atlas BI]', e);
+    }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer);

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hôte de démonstration - carte BI d'Atlas</title>
+<style>
+  :root { --fond: #ffffff; --texte: #1f2933; --texte-2: #52606d; --trait: #cbd2d9; --accent: #1f4e79; --surface: #f5f7fa; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; color: var(--texte); background: var(--fond); }
+  header { padding: 10px 16px; border-bottom: 1px solid var(--trait); }
+  h1 { margin: 0; font-size: 17px; }
+  header p { margin: 2px 0 0; color: var(--texte-2); font-size: 12.5px; }
+  main { display: grid; grid-template-columns: 330px 1fr; height: calc(100vh - 62px); min-height: 560px; }
+  aside { border-right: 1px solid var(--trait); overflow: auto; padding: 12px 16px; background: var(--surface); }
+  aside h2 { margin: 14px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--texte-2); }
+  aside h2:first-child { margin-top: 0; }
+  #carte { position: relative; min-width: 0; }
+  iframe { border: 0; width: 100%; height: 100%; display: block; }
+  label { display: block; margin: 3px 0; }
+  select, button, input[type=range] { font: inherit; }
+  button { padding: 4px 10px; border: 1px solid var(--accent); background: #fff; color: var(--accent); border-radius: 4px; cursor: pointer; }
+  button:hover { background: #e8f0f8; }
+  .leg { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+  .leg i { width: 14px; height: 14px; border: 1px solid #0006; border-radius: 3px; flex: none; }
+  .leg .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--texte-2); }
+  #liste { max-height: 170px; overflow: auto; border: 1px solid var(--trait); background: #fff; }
+  #liste div { padding: 3px 8px; cursor: pointer; }
+  #liste div:hover { background: #e8f0f8; }
+  #liste div.sel { background: var(--accent); color: #fff; }
+  #journal { margin: 0; max-height: 150px; overflow: auto; font: 11.5px/1.35 ui-monospace, monospace; background: #fff; border: 1px solid var(--trait); padding: 4px 6px; white-space: pre-wrap; }
+  #etat { font-weight: 600; }
+  .ko { color: #b3261e; }
+  .note { color: var(--texte-2); font-size: 12px; }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; grid-template-rows: auto 60vh; height: auto; } aside { border-right: 0; border-bottom: 1px solid var(--trait); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hôte de démonstration : la carte d'Atlas dans une application externe</h1>
+  <p>Toutes les données de cette page sont <strong>synthétiques</strong> (générées ici, sans lien avec des données réelles) ; seuls les contours administratifs sont réels. Les couleurs sont des exemples : elles viennent de l'hôte, ici une palette neutre.</p>
+</header>
+<main>
+<aside>
+  <h2>Liaison</h2>
+  <div>État : <span id="etat">connexion…</span></div>
+  <div class="note" id="info"></div>
+
+  <h2>Sites (points)</h2>
+  <div id="types"></div>
+  <label>Année <output id="annee-v">2024</output> <input id="annee" type="range" min="2019" max="2024" step="1" value="2024" style="width:100%"></label>
+  <button id="lecture" type="button">Lecture</button> <button id="cadre-btn" type="button">Cadrer</button>
+  <div id="legende" style="margin-top:8px"></div>
+
+  <h2>Liste liée à la carte</h2>
+  <div id="liste" role="listbox" aria-label="Sites"></div>
+  <div class="note">Cliquer un site (liste ou carte) le sélectionne des deux côtés. Au clavier : cliquer la carte, puis <kbd>n</kbd> / <kbd>p</kbd>, <kbd>Entrée</kbd>, <kbd>?</kbd>.</div>
+
+  <h2>Départements</h2>
+  <label><input id="dep" type="checkbox"> Afficher la statistique par département (tableau de l'hôte joint par code)</label>
+  <div id="legende-dep" style="margin-top:6px"></div>
+
+  <h2>Fond et hors ligne</h2>
+  <label>Fond <select id="fond"><option value="atlas">Atlas</option><option value="plan">Plan en aplats</option><option value="uni">Uni</option></select></label>
+  <label><input id="hl" type="checkbox"> Forcer le mode hors ligne</label>
+
+  <h2>Sécurité</h2>
+  <button id="refus" type="button">Tester un hôte non déclaré</button>
+  <div class="note" id="refus-r"></div>
+
+  <h2>Journal</h2>
+  <pre id="journal"></pre>
+</aside>
+<div id="carte"><iframe id="cadre" title="Carte"></iframe></div>
+</main>
+
+<script type="module">
+import { creerClient, transportFenetre } from '../../lib/bi/client.js';
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const journal = (t) => { const j = $('journal'); j.textContent = (new Date().toLocaleTimeString('fr-FR') + ' ' + t + '\n' + j.textContent).slice(0, 4000); };
+
+// ---- Palette de l'hôte (exemple neutre : à remplacer par la charte de l'application) ----
+const THEME = {
+  jetons: { 'type-a': '#0072b2', 'type-b': '#e69f00', 'type-c': '#009e73', 'type-d': '#cc79a7' },
+  sequentielle: ['#f7fbff', '#9ecae1', '#3182bd', '#08306b'], divergente: ['#b2182b', '#f7f7f7', '#2166ac'],
+  selection: '#111111', contour: '#ffffff', sansDonnee: '#8a8a8a', fondCarte: '#ffffff', halo: '#ffffff',
+};
+
+// ---- Données synthétiques (graine fixe : la page se rejoue à l'identique) ----
+const alea = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const r = alea(2026);
+const TYPES = { a: 'Type A', b: 'Type B', c: 'Type C', d: 'Type D' };
+const sites = Array.from({ length: 160 }, (_, i) => ({
+  type: 'Feature', id: i + 1,
+  geometry: { type: 'Point', coordinates: [5.2 + (r() - 0.5) * 0.7, 43.3 + (r() - 0.5) * 0.4] },
+  properties: { ref: 'S' + String(i + 1).padStart(3, '0'), nom: 'Site ' + String(i + 1).padStart(3, '0'), type: Object.keys(TYPES)[Math.floor(r() * 4)], annee: 2019 + Math.floor(r() * 6) },
+}));
+const codesDep = [...Array.from({ length: 95 }, (_, i) => String(i + 1).padStart(2, '0')).filter((c) => c !== '20'), '2A', '2B'];
+const tableDep = Object.fromEntries(codesDep.map((c) => [c, Math.round(r() * 1000) / 10]));
+
+const manifeste = {
+  title: 'Démonstration', temps: { champ: 'annee', mode: 'cumul', pas: 1, valeur: 2024 },
+  layers: [{
+    id: 'sites', name: 'Sites', geometry_type: 'point', cle: 'ref', visuel: { type: 'cercles', rayon: 6 },
+    style: { declarative: { kind: 'categorized', field: 'type', stops: Object.keys(TYPES).map((k) => ({ value: k, label: TYPES[k], color: 'jeton:type-' + k })) } },
+    controls: [{ id: 'f-type', field: 'type', type: 'select' }],
+  }],
+};
+
+// ---- Liaison : l'URL du composant, déclarée avec l'origine de CETTE page ----
+async function urlAtlas() {
+  if (params.get('atlas')) return new URL(params.get('atlas'), location.href);
+  // En développement l'entrée d'Atlas est index_v7.html (index.html y est l'ancienne entrée) ; en ligne, index.html seul existe.
+  for (const rel of ['../../index_v7.html', '../../index.html']) { try { if ((await fetch(rel, { method: 'HEAD' })).ok) return new URL(rel, location.href); } catch (e) { /* suivant */ } }
+  return new URL('../../index.html', location.href);
+}
+const base = await urlAtlas();
+const composant = new URL(base); composant.searchParams.set('bi', '1'); composant.searchParams.set('navbar', 'false'); composant.searchParams.set('mode', 'view'); composant.searchParams.append('hote', location.origin);
+const cadre = $('cadre');
+const client = creerClient({ delai: 15000, delaiConnexion: 30000, transport: transportFenetre({ fenetre: window, cadre, origineComposant: composant.origin, surRejet: (raison) => journal('message écarté (' + raison + ')') }) });
+
+// Événements : par défaut, seulement les gestes de l'utilisateur dans la carte (anti-boucle).
+let selection = null;
+client.on('select', (c) => { selection = c.featureId ?? null; majListe(); journal('select ' + JSON.stringify({ layer: c.layer, id: c.featureId, key: c.key ?? c.code ?? null })); });
+client.on('hover', (c) => { if (c.clavier) journal('hover clavier ' + (c.featureId ?? '-')); });
+client.on('drill', (c) => journal('drill ' + c.sens + ' ' + (c.niveau || '')));
+client.on('error', (c) => journal('erreur composant : ' + (c.message || c.code)), { origine: 'tout' });
+client.on('connexion', (c) => journal('connexion ' + c.etat + ' (' + c.cause + ')'), { origine: 'tout' });
+
+// ---- Légende : rendue par l'hôte, à partir de getLegend ----
+function dessinerLegende(cible, lg) {
+  cible.textContent = '';
+  const titre = document.createElement('div'); titre.style.fontWeight = '600'; titre.textContent = lg.titre || lg.layer; cible.append(titre);
+  for (const c of lg.classes || []) {
+    const l = document.createElement('div'); l.className = 'leg';
+    const i = document.createElement('i'); i.style.background = c.couleur || c.color || '#999';
+    const t = document.createElement('span'); t.textContent = c.libelle;
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = c.compte;
+    l.append(i, t, n); cible.append(l);
+  }
+  if (lg.sansDonnee && lg.sansDonnee.compte) { const l = document.createElement('div'); l.className = 'leg'; l.innerHTML = '<i style="background:repeating-linear-gradient(45deg,#8a8a8a,#8a8a8a 2px,#fff 2px,#fff 4px)"></i><span>Sans donnée</span><span class="n"></span>'; l.lastChild.textContent = lg.sansDonnee.compte; cible.append(l); }
+  if (lg.source && lg.source.attribution) { const a = document.createElement('div'); a.className = 'note'; a.textContent = lg.source.attribution; cible.append(a); }
+}
+async function majLegende() { dessinerLegende($('legende'), await client.getLegend('sites')); }
+async function majListe() {
+  const rows = await client.getRows('sites');
+  const liste = $('liste'); liste.textContent = '';
+  for (const l of rows.lignes.slice(0, 60)) {
+    const d = document.createElement('div'); d.textContent = l.nom + ' (' + (TYPES[l.type] || l.type) + ', ' + l.annee + ')'; if (l.id === selection) d.className = 'sel';
+    d.setAttribute('role', 'option'); d.onclick = async () => { selection = l.id; await client.select(l.id); majListe(); journal('select (hôte) ' + l.id); };
+    liste.append(d);
+  }
+}
+
+// ---- Commandes ----
+function typesCoches() { return [...document.querySelectorAll('#types input')].filter((x) => x.checked).map((x) => x.value); }
+for (const [k, lib] of Object.entries(TYPES)) {
+  const lab = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.value = k;
+  cb.onchange = async () => { const v = typesCoches(); const res = await client.setFilter('f-type', v.length === 4 ? null : v); await majLegende(); await majListe(); journal('setFilter -> ' + res.compte + ' / ' + res.total); };
+  lab.append(cb, ' ' + lib); $('types').append(lab);
+}
+$('annee').oninput = async (e) => { $('annee-v').textContent = e.target.value; await client.setTime(Number(e.target.value)); await majLegende(); await majListe(); };
+let enLecture = false;
+$('lecture').onclick = async () => { enLecture = !enLecture; $('lecture').textContent = enLecture ? 'Pause' : 'Lecture'; if (enLecture) await client.play({ parSeconde: 1 }); else await client.pause(); };
+client.on('time', (c) => { $('annee').value = c.valeur; $('annee-v').textContent = c.valeur; majLegende(); majListe(); });
+$('cadre-btn').onclick = () => client.fitTo('sites');
+$('dep').onchange = async (e) => {
+  if (!e.target.checked) { await client.removeLayer('dep'); $('legende-dep').textContent = ''; return; }
+  const res = await client.addAdminLayer('departement', { id: 'dep', source: 'auto', cadrer: false, visuel: { source: 'hote', table: tableDep, niveauTable: 'departement', classes: 5, palette: 'sequentielle', titre: 'Valeur synthétique par département' } });
+  journal('addAdminLayer -> ' + res.n + ' unités, source ' + res.source + (res.repli ? ' (repli : ' + res.cause + ')' : ''));
+  dessinerLegende($('legende-dep'), await client.getLegend('dep'));
+};
+$('fond').onchange = (e) => client.setFond(e.target.value, e.target.value === 'plan' ? { principal: '#1f4e79' } : {});
+$('hl').onchange = (e) => client.setHorsLigne(e.target.checked ? true : 'auto');
+$('refus').onclick = async () => {
+  // Un second composant à qui l'on déclare une AUTRE origine d'hôte : il ne doit répondre à personne.
+  const autre = new URL(composant); autre.searchParams.delete('hote'); autre.searchParams.append('hote', 'https://hote-non-declare.invalid');
+  const f = document.createElement('iframe'); f.hidden = true; document.body.append(f); f.src = autre.href;
+  const c2 = creerClient({ delaiConnexion: 4000, transport: transportFenetre({ fenetre: window, cadre: f, origineComposant: autre.origin }) });
+  $('refus-r').textContent = 'essai en cours (4 s)…';
+  try { await c2.connecter(); $('refus-r').textContent = 'ANORMAL : le composant a répondu à un hôte non déclaré.'; $('refus-r').className = 'note ko'; }
+  catch (e) { $('refus-r').textContent = 'Refus constaté : ' + e.code + '. Le composant n\'a répondu ni accusé ni erreur à une origine qu\'on ne lui a pas déclarée.'; $('refus-r').className = 'note'; }
+  c2.deconnecter(); f.remove();
+};
+
+// ---- Démarrage ----
+cadre.src = composant.href;
+try {
+  const info = await client.connecter();
+  $('etat').textContent = 'connecté (contrat ' + info.version + ')'; $('info').textContent = 'Composant : ' + composant.origin + ' · hôte déclaré : ' + location.origin;
+  await client.setTheme(THEME);
+  const compte = await client.setScene(manifeste, { sites });
+  await client.fitTo('sites'); await client.setTime(2024);
+  journal('setScene -> ' + JSON.stringify(compte));
+  await majLegende(); await majListe();
+} catch (e) {
+  $('etat').textContent = 'échec : ' + e.code; $('etat').className = 'ko'; $('info').textContent = e.message; journal('échec connexion : ' + e.message);
+}
+window.__demo = { client, manifeste, sites, tableDep };
+</script>
+</body>
+</html>

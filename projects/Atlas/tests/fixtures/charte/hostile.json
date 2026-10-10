@@ -1,0 +1,55 @@
+{
+  "version": "atlas-charte/0.1",
+  "nom": "<img src=x onerror=alert(1)>Charte piégée",
+  "__proto__": { "polluee": true },
+  "constructor": { "prototype": { "polluee": true } },
+  "graines": {
+    "principal": "url(https://evil.example/x.png)",
+    "secondaire": "var(--accent)",
+    "encre": "expression(alert(1))",
+    "fond": "#ffffff",
+    "succes": "red",
+    "alerte": "#fff; background: url(x)",
+    "erreur": "<script>alert(1)</script>",
+    "information": "rgb(1,2,3);x",
+    "extra": "#000000"
+  },
+  "jetons": {
+    "__proto__": "#000000",
+    "constructor": "#000000",
+    "prototype": "#000000",
+    "bon": "#336699",
+    "mauvais nom": "#336699",
+    "javascript": "javascript:alert(1)",
+    "image": "url(data:image/svg+xml;base64,PHN2Zz4=)"
+  },
+  "donnees": {
+    "sequentielles": { "ok": ["#fff", "#000"], "casse": ["#fff", "url(x)"], "__proto__": ["#fff", "#000"], "trop-courte": ["#fff"] },
+    "sequentielleDefaut": "../../etc/passwd",
+    "divergente": ["#000", "#fff"],
+    "qualitative": ["#111", "#222", "#333", "pas une couleur"],
+    "sansDonnee": "#12345",
+    "selection": "rgba(0,0,0,0.5)",
+    "survol": "hsl(0 0% 0% / 40%)"
+  },
+  "fond": {
+    "mode": "javascript",
+    "principal": "#1b6b7a",
+    "intensites": { "vert": 5, "bati": -1, "eau": "0.3", "filet": 0.4 },
+    "vegetation": "url(x)",
+    "lavis": { "couleur": "red", "opacite": 2 },
+    "plan": { "eau": "#cfe0ea", "inconnu": "#000000", "texte": "var(--x)" }
+  },
+  "marqueurs": { "formes": { "succes": "<svg onload=alert(1)>", "alerte": "triangle", "danger": "cercle" }, "contour": "currentColor" },
+  "texte": { "famille": "Comic Sans MS, url(https://evil.example/f.woff)", "tailles": { "legende": 4000, "etiquette": 12 } },
+  "exigences": { "contrasteMinimal": 0, "contrasteTexte": "4.5", "ecartMinimal": 6, "classesMax": 3.5 },
+  "palettes": [
+    { "id": "../x", "type": "sequential", "couleurs": ["#fff", "#000"] },
+    { "id": "ok-1", "type": "sequential", "couleurs": ["#fff", "#000"], "usages": ["<b>gras</b>"] },
+    { "id": "ok-1", "type": "sequential", "couleurs": ["#eee", "#111"] },
+    { "id": "mauvais-type", "type": "arc-en-ciel", "couleurs": ["#fff", "#000"] },
+    { "id": "mauvaise-couleur", "type": "qualitative", "couleurs": ["#fff", "calc(1px)"] },
+    { "id": "__proto__", "type": "qualitative", "couleurs": ["#fff", "#000"] }
+  ],
+  "surcharge": "x"
+}

@@ -138,6 +138,17 @@
          */
         body.sans-navbar .app-header { display: none; }
         /*
+         * `?bi=1` — Atlas comme composant carte d'une application hote (lib/bi/). La classe n'est posee que par ce
+         * parametre ; sans elle, aucune de ces regles ne s'applique. La page ne garde que la carte et son
+         * attribution (obligatoire) : l'hote porte son propre habillage, sa legende et ses controles.
+         */
+        body.mode-bi .app-header, body.mode-bi .rail, body.mode-bi .module-panel, body.mode-bi .inspector,
+        body.mode-bi #mobile-nav, body.mode-bi #mobile-plus, body.mode-bi #cmd-overlay, body.mode-bi #commandes-hote,
+        body.mode-bi #viewer-controls, body.mode-bi #map-hud, body.mode-bi #legend, body.mode-bi #dock-epingle,
+        body.mode-bi #map-controls-dock, body.mode-bi #selection-bar, body.mode-bi #compass, body.mode-bi #toasts,
+        body.mode-bi #loading, body.mode-bi #story-present,
+        body.mode-bi .maplibregl-ctrl-top-left, body.mode-bi .maplibregl-ctrl-top-right, body.mode-bi .maplibregl-ctrl-bottom-left { display: none !important; }
+        /*
          * Dans l'application, en lecture, la barre est retiree et ses commandes
          * passent sur la carte : le menu principal (qui offre aussi le retour a
          * l'edition) et la recherche. Elles s'effacent quand le dock de

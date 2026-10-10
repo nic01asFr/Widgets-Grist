@@ -1,0 +1,20 @@
+{
+  "nom": "Thème 0.3 fictif",
+  "version": "0.3",
+  "statut": "exemple",
+  "jetons": { "alerte": "#a8421f", "fond-site": "#f4f7fc" },
+  "categories": ["#264653", "#2a9d8f", "#e9c46a", "#f4a261", "#e76f51"],
+  "sequentielle": ["#f4f7fc", "#a9c3e8", "#3b6fb6", "#16325c"],
+  "divergente": ["#a8421f", "#f1f1ef", "#3b6fb6"],
+  "selection": "#111111",
+  "survol": "#ffffff",
+  "contour": "#ffffff",
+  "sansDonnee": "#8a8f94",
+  "fondCarte": "#f4f7fc",
+  "lavis": { "couleur": "#f7f7f7", "opacite": 0.62 },
+  "plan": { "fond": "#f4f7fc", "eau": "#d8e3f3", "texte": "#222222" },
+  "texte": "#1f1f1f",
+  "police": "Georgia, 'Times New Roman', serif",
+  "avertissements": ["ancien commentaire"],
+  "variantes": { "x": 1 }
+}

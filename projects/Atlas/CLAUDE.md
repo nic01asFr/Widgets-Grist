@@ -32,6 +32,7 @@ Familles de `lib/` (état du 02/10/2026) :
 | Objets 3D et catalogue | `model-layer`, `catalogue-objets`, `modele-id`, `palette-objets`, `gltf-chargeur`, `parametres-objet`, `parametres-figer` |
 | Éclairage et soleil | `eclairage-profil`, `eclairage-rendu`, `luminaires-three`, `facades-eclairees`, `nuit-rendu`, `qualite-eclairage`, `soleil`, `arc-solaire`, `horloge-scene` |
 | Hôte, interface, import | `hote`, `hote-ui`, `habillage-carte`, `feuille-mobile`, `edge-scroll`, `layer-order`, `ouvrir-fichier`, `osm-requete`, `vue-import`, `basemap-layers`, `decouverte`, `graine`, `html` |
+| Composant carte BI (sous-dossier `lib/bi/`) | `acces-carte` (point d'accès à la carte, dans `lib/`) ; dans `lib/bi/` : `bi-runtime`, `pont`, `liaison`, `montage`, `client`, `atlas-bi-element`, `agregats`, `echelles`, `legende`, `lecture-temps`, `fond`, `fond-plan`, `clavier`, `clavier-runtime`, `repli`, `icones-etats`, `admin*`, `choroplethe`, `donnees/` |
 
 > **`projects/Atlas/app.js` sur `origin/main` — ne pas écraser.**
 > Cette entrée pré-v7 (3 110 lignes) porte des fonctionnalités **absentes de la
@@ -1403,6 +1404,7 @@ Lus par `lib/view-mode.js`.
 | `?no3d` | `app_v7.js` | coupe les modèles 3D (appareil modeste) |
 | `?models=…` | `app_v7.js` | source du catalogue 3D |
 | `?navbar=false` | `lib/view-mode.js` | **retire la barre du haut** — intégration en cadre, où la page hôte porte déjà son titre |
+| `?bi=1` + `?hote=<origine>` | `app_v7.js` (`MODE_BI`), `lib/bi/` | **composant carte d'une application externe** : lecture, carte seule, à plat, pas de `grist.ready()` ; l'hôte doit être déclaré (liste blanche, voir la section « Composant carte BI ») |
 
 > **`?nav` n'a jamais existé.** Ce tableau l'a longtemps annoncé — « barre de
 > navigation inter-vues » — alors qu'**aucun code ne le lit** : vérifié le
@@ -3160,3 +3162,21 @@ exécutait un script dans l'origine d'Atlas, et dans l'APK ce script lisait la c
 **À ne pas faire** : écrire une chaîne de scène, de document ou d'adresse dans `innerHTML`, `insertAdjacentHTML` ou un attribut sans `echapper` ; ajouter un `script-src` à la balise CSP
 sans avoir retiré les gestionnaires en ligne ; supposer que MapLibre assainit l'attribution (il laisse passer `<iframe srcdoc>`, `<form>`, `<base>`, `<link>`, `<meta refresh>`, `<object>`).
 Contrôle en navigateur de la 1.13.2 : scène hostile servie par un autre port, aucun script exécuté, attribution nettoyée, lien légitime conservé, nom hostile en texte littéral.
+
+## Composant carte BI — Atlas exploité depuis une application externe (09/10/2026)
+
+`?bi=1` fait d'Atlas un composant de carte : une application hôte l'embarque en iframe, envoie des commandes (`setScene`, `setFilter`, `addAdminLayer`, `batch`…) et reçoit des événements (`select`, `filter`, `drill`…) par `postMessage`. Contrat : `docs/CONTRAT-CARTE-BI.md` (0.3). Guide du développeur de l'hôte : `docs/EXPLOITATION-EXTERNE-BI.md`. Démonstration : `demos/hote-bi/` (données synthétiques).
+
+- **Ce qui change avec `?bi=1`, et rien d'autre** : `MODE_BI` dans `app_v7.js` (une constante, huit gardes, relues par `tests/bi-liaison.test.js`). Sans le paramètre le comportement est strictement l'ancien. Le runtime est chargé **à la demande** (`import('./lib/bi/montage.js')` dans `demarrerBi`) ; aucun import statique de `lib/bi/` dans `app_v7.js`. L'habillage est un bloc CSS sous `body.mode-bi` dans `index_v7.html` ; l'attribution de la carte reste affichée.
+- **Point d'accès à la carte** : `window.__atlasCarte` + événement `atlas:carte-prete` (`lib/acces-carte.js`). `__atlasMap` reste, c'est un handle de débogage.
+- **Sécurité, à ne pas affaiblir** : liste blanche d'origines (`?hote=` répétable ou `<meta name="atlas-bi-hotes">` / `window.ATLAS_BI`, la configuration l'emportant), aucun joker, défaut fermé, jamais d'émission en `targetOrigin '*'`, pas de réponse à une origine refusée. `lib/bi/pont.js` ne reconnaît plus `'*'` : un test le garde.
+- **`grist.ready()` n'est pas appelé** en mode composant (`initGrist` rend la main) : l'API de plugin parlerait à la page hôte.
+- **Générique** : aucune palette ni charte dans le code (valeurs par défaut neutres, `setTheme` par jetons), aucun nom de structure ; les palettes viennent de l'hôte.
+- **Jeux embarqués** (`lib/bi/donnees/`, 388 Ko : contours généralisés, références de population) : Licence Ouverte (IGN, INSEE) et domaine public (Natural Earth) ; régénérés par `tools/generer-donnees-bi.mjs` à partir de fichiers téléchargés par l'opérateur, à ne pas éditer à la main. `scripts/promote-atlas.js` copie `lib/bi/` (js et json) et les deux pages de `demos/hote-bi/`.
+- **Pas fait** : édition de polygones, tuiles vectorielles / PMTiles, hors ligne avec réseau coupé, dépendances externes de la page (CDN, polices) à rapatrier pour un hébergement fermé, essai tactile.
+- **Deux usages, un seul composant (10/10/2026)** : BI et territoires (unités administratives colorées, `territoires`), et carte de travail (sites en marqueurs à états, polygones du site choisi, position côté hôte). Atlas ne connaît pas le métier de l'hôte : seuils, états et droits restent chez lui.
+- **Capacités** (extension additive du contrat 0.3, `lib/bi/pont.js`) : `ready` et `ping` annoncent `capacites` (`edition`, `points`, `socle`, `temps`, `territoires`) et `paquet` ; une commande dont la brique manque répond `capacite_absente` (`ErreurCapacite`, `garderApi`). `attacher(carte, { capacites })` restreint les briques ; l'hôte ne peut pas les élargir.
+- **Identifiants** : `featureId` entier unique et stable fourni par l'hôte (jamais un rang trié), `select(id | null)` à un seul argument, `key` seulement en sortie. Le niveau d'une couche est imposé aux entités que l'hôte fournit ; commune et arrondissements de Paris, Lyon, Marseille se recouvrent : une couche par niveau.
+- **L'hôte renvoie sa scène à chaque `ready` d'amorçage** (`runtime: true`) ; le client connecte et relaie, il ne rejoue rien. `setScene` ne rejette pas une scène dont une couche est refusée : `_erreurs` et `ready.erreurs`.
+- **Paquet de données hors ligne** (`tools/construire-paquet.mjs`, `tools/verifier-paquet.mjs`, format `atlas-bi-paquet/1`) : contours régénérés, jamais versionnés dans un dépôt hôte ; le composant ne lit pas encore de manifeste (`paquet` annonce `null`).
+- **Documentation à jour de ce volet** : `docs/EXPLOITATION-EXTERNE-BI.md` (guide de l'hôte : usages, cycle de vie, dépannage, liste de contrôle), `docs/CONTRAT-CARTE-BI.md` (commandes, événements, capacités, statuts testé / prototype), `docs/CONTRAT-CHARTE-ATLAS.md`, `docs/PAQUET-HORS-LIGNE.md`.
