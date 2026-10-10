@@ -45,6 +45,11 @@ test('promotion : lib/bi et ses jeux embarques sont copies, et le controle des i
     const pub = join(racine, 'published', 'atlas', 'lib', 'bi');
     for (const f of readdirSync(join(ICI, '..', 'lib', 'bi')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(pub, f)), f);
     for (const f of readdirSync(join(ICI, '..', 'lib', 'bi', 'donnees')).filter((n) => n.endsWith('.json'))) assert.ok(existsSync(join(pub, 'donnees', f)), 'donnees/' + f);
+    // La charte est importee par lib/bi (../charte/…) : sans sa copie, ?bi=1 tombe en 404 une fois publie.
+    const charte = join(racine, 'published', 'atlas', 'lib', 'charte');
+    for (const f of readdirSync(join(ICI, '..', 'lib', 'charte')).filter((n) => n.endsWith('.js') || n.endsWith('.json'))) assert.ok(existsSync(join(charte, f)), 'charte/' + f);
+    // Le client de l'hote en un seul fichier part avec le composant.
+    assert.ok(existsSync(join(pub, 'client-hote.js')));
     assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-bi', 'index.html')));
   } finally { rmSync(racine, { recursive: true, force: true }); }
 });
@@ -55,5 +60,14 @@ test('promotion : un module de lib/bi qui en importe un absent fait echouer la p
     const r = promouvoir(racine);
     assert.equal(r.code, 1);
     assert.match(r.erreur, /client\.js importe \.\/inexistant\.js/);
+  } finally { rmSync(racine, { recursive: true, force: true }); }
+});
+
+test('promotion : un module de lib/charte qui en importe un absent fait echouer la promotion', () => {
+  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/charte/schema.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
+  try {
+    const r = promouvoir(racine);
+    assert.equal(r.code, 1);
+    assert.match(r.erreur, /charte\/schema\.js importe \.\/inexistant\.js/);
   } finally { rmSync(racine, { recursive: true, force: true }); }
 });

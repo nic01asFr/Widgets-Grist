@@ -50,6 +50,33 @@ for (const f of fs.readdirSync(libSrc)) {
 }
 
 /**
+ * La charte graphique (`lib/charte/`, sous-dossier de `lib/`) : le composant carte BI en importe le schema et la resolution
+ * (`../charte/…`). Invisible au controle des imports de `app.js`, comme `lib/bi/` : sans cette copie, `?bi=1` tombe en 404 sur ses modules.
+ * Le schema JSON est le contrat publie de la charte : il part avec les modules.
+ */
+const charteSrc = path.join(libSrc, 'charte');
+const chartePub = path.join(libPub, 'charte');
+let modulesCharte = 0;
+if (fs.existsSync(charteSrc)) {
+  fs.mkdirSync(chartePub, { recursive: true });
+  for (const f of fs.readdirSync(charteSrc)) {
+    if (f.endsWith('.js')) fs.writeFileSync(path.join(chartePub, f), normaliserVersions(fs.readFileSync(path.join(charteSrc, f), 'utf8')));
+    else if (f.endsWith('.json')) fs.copyFileSync(path.join(charteSrc, f), path.join(chartePub, f));
+    else continue;
+    modulesCharte++;
+  }
+  for (const f of fs.readdirSync(chartePub)) {
+    if (!f.endsWith('.js')) continue;
+    for (const m of fs.readFileSync(path.join(chartePub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
+      if (!fs.existsSync(path.join(chartePub, m[1]))) {
+        console.error(`Echec : lib/charte/${f} importe ${m[1]}, absent de la copie publiee`);
+        process.exit(1);
+      }
+    }
+  }
+}
+
+/**
  * Le composant carte BI (`lib/bi/`, sous-dossier de `lib/`) : charge a la demande avec `?bi=1`, donc invisible au
  * controle des imports de `app.js` ci-dessous — qui ne lit que `./lib/<nom>.js`. Le copier ici, et exiger que chaque
  * module qu'il importe en relatif existe dans la copie.
@@ -253,7 +280,7 @@ if (absents.length) {
   process.exit(1);
 }
 
-console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} fichiers lib/bi), ${requis.length} importes par app.js, `
+console.log(`published/atlas pret — ${modules} modules lib/ (+ ${modulesBi} fichiers lib/bi, ${modulesCharte} lib/charte), ${requis.length} importes par app.js, `
   + `${VENDOR.length} scripts embarques, ${reclames.length} ressources de page verifiees, `
   + `${fichiersDemo} fichiers de demo (${DEMOS.length} scenes, ${fichiersHote} pages hote BI), `
   + `${fichiersObjets} modeles au catalogue d'objets`);
