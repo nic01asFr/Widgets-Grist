@@ -46,10 +46,15 @@ const ecrire = (f, o) => { fs.mkdirSync(path.dirname(f), { recursive: true }); f
 const reg = lire(fReg), dep = lire(fDep), pays = lire(fPays);
 const regions = reg.features.map((f) => ({ type: 'Feature', properties: { code: f.properties.code_insee, nom: f.properties.nom_officiel, niveau: 'region' }, geometry: simplifierGeom(f.geometry, 0.02, 2, 0.0004) }));
 const deps = dep.features.map((f) => ({ type: 'Feature', properties: { code: f.properties.code_insee, nom: f.properties.nom_officiel, region: f.properties.code_insee_de_la_region, niveau: 'departement' }, geometry: simplifierGeom(f.geometry, 0.012, 2, 0.0002) }));
-const nations = pays.features.map((f) => ({ type: 'Feature', properties: { code: f.properties.ISO_A3_EH, nom: f.properties.NAME_FR || f.properties.NAME, nom_en: f.properties.NAME, population: f.properties.POP_EST, continent: f.properties.CONTINENT, niveau: 'pays' }, geometry: simplifierGeom(f.geometry, 0.15, 1, 0.05) }));
+// Natural Earth met « -99 » sur les entites sans code ISO officiel (trois dans le jeu 110 m) : trois pays sous le meme code casseraient la jointure, la legende et
+// l'etat de rendu. Elles recoivent le code d'usage courant ; une entite inconnue fait echouer le generateur plutot que d'emettre un doublon.
+const CODES_SANS_ISO = { Kosovo: 'XKX', Somaliland: 'SOL', 'N. Cyprus': 'CYN' };
+const codePays = (p) => { const c = p.ISO_A3_EH; if (c && c !== '-99') return c; const propre = CODES_SANS_ISO[p.NAME]; if (propre) return propre; throw new Error('code de pays absent pour « ' + p.NAME + ' » (ISO_A3_EH = ' + c + ') : a ajouter a CODES_SANS_ISO'); };
+const nations = pays.features.map((f) => ({ type: 'Feature', properties: { code: codePays(f.properties), nom: f.properties.NAME_FR || f.properties.NAME, nom_en: f.properties.NAME, population: f.properties.POP_EST, continent: f.properties.CONTINENT, niveau: 'pays' }, geometry: simplifierGeom(f.geometry, 0.15, 1, 0.05) }));
 // Ordre deterministe : le WFS ne garantit pas l'ordre entre deux appels, une regeneration ne doit pas changer l'ordre des fichiers.
 const parCode = (a, b) => (a.properties.code < b.properties.code ? -1 : a.properties.code > b.properties.code ? 1 : 0);
 regions.sort(parCode); deps.sort(parCode); nations.sort(parCode);
+for (const [nom, liste] of [['regions', regions], ['departements', deps], ['pays', nations]]) { const vus = new Set(); for (const f of liste) { if (vus.has(f.properties.code)) throw new Error('code de ' + nom + ' en double : ' + f.properties.code); vus.add(f.properties.code); } }
 const meta = (source, licence) => ({ source, licence });
 const t1 = ecrire(path.join(sortie, 'donnees/regions-leger.json'), { type: 'FeatureCollection', meta: meta('IGN, ADMIN EXPRESS COG CARTO PE, edition 2026, simplifie', 'Licence Ouverte (Etalab) - attribution IGN'), features: regions });
 const t2 = ecrire(path.join(sortie, 'donnees/departements-leger.json'), { type: 'FeatureCollection', meta: meta('IGN, ADMIN EXPRESS COG CARTO PE, edition 2026, simplifie', 'Licence Ouverte (Etalab) - attribution IGN'), features: deps });
