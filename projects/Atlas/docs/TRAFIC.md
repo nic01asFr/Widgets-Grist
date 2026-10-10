@@ -59,6 +59,7 @@ Aucun saut de position, état reproductible à graine égale. Coût du moteur : 
 - **Écart de capacité** : le retard d'un giratoire reste 2 à 4 fois celui d'un modèle de capacité de référence ; le giratoire à 6 branches se dégrade vite (retard moyen 16,6 s à 300 véh/h par entrée).
 - **Contacts résiduels** à forte densité (143 sur 20 véh/km pour le réseau de 34 km) : le moteur n'est pas un outil de dimensionnement.
 - **Un seul trafic à la fois**, sur le fil principal (non vérifié au-delà de 600 véhicules ni sur plusieurs dizaines de km), sans piétons, cyclistes, transports en commun ni stationnement.
+- **Les premières images coûtent plus que les suivantes** : les zones de conflit entre trajectoires d'un carrefour se calculent à la demande, quand un véhicule s'en approche. Sur un réseau aléatoire de 400 tronçons et 150 carrefours, le pas le plus long est d'environ 0,25 s (il dépassait 5 s avant la 1.16.2), puis 3 à 5 ms par image. Le calcul reste sur le fil principal : au-delà de quelques centaines de tronçons, un à-coup au démarrage est possible (le travail en worker est l'étape T2).
 - Les véhicules sont dessinés comme des points (blanc : voiture, orange : poids lourd) ; le cap est calculé mais pas encore dessiné.
 
 ## Distinguer les routes, les chemins, les pistes cyclables, les voies ferrées
@@ -104,4 +105,5 @@ Le moteur est du code **écrit pour Atlas** à partir de principes publiés de s
 ```bash
 node --test projects/Atlas/tests/trafic-*.test.js        # le moteur : 36 tests, environ 30 s
 node --test projects/Atlas/tests/trafic-couche.test.js   # l'intégration : adaptation, comptes, cycle de vie
+node --test projects/Atlas/tests/trafic-robustesse.test.js # réseaux connexes aléatoires : pas d'exception, durée d'un pas, arrêt d'un moteur en échec
 ```

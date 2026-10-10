@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.2 — le trafic simulé ne fige plus la carte
+
+- **Corrigé** : sur un réseau de quelques centaines de tronçons, les premières images du trafic prenaient de 1 à 5 secondes (le calcul des zones de conflit entre trajectoires comparait tous les points deux à deux) : les points sont maintenant rangés dans une grille de proximité, le même calcul passe sous 0,3 s au pire, et sous 5 ms par image ensuite.
+- **Corrigé** : une trajectoire de longueur nulle (tronçons confondus ou de longueur nulle dans un carrefour) levait une exception à chaque image ; elle donne désormais son point, sans cap.
+- **Ajouté** : un moteur qui échoue trois images de suite est arrêté, `etat().erreur` dit pourquoi et l'interface prévient, au lieu de lever cinq exceptions par seconde.
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.1 — distinguer les routes, les chemins, les pistes cyclables
 
 - **Ajouté** : `lib/modes-voie.js` distingue route, route à accès restreint, chemin, sentier, escalier, piste cyclable et voie ferrée (BD TOPO et OpenStreetMap). L'import des routes de l'IGN porte un attribut dérivé **`type_de_voie`** et colore par type de voie (au lieu de l'importance, qui reste la largeur).
