@@ -208,6 +208,37 @@ test('arreter() sans douceur retire tout sur-le-champ et efface la 3D', () => {
   assert.equal(b.fins(), 1);
 });
 
+test('changement de fond de carte : la source et la couche emportées par setStyle sont reposées au chargement du nouveau style', () => {
+  const b = banc();
+  b.trafic.demarrer(); b.avancer(700);
+  assert.equal(b.carte.sources.size, 1);
+  b.carte.removeLayer('atlas-trafic'); b.carte.removeSource('atlas-trafic');   // ce que fait setStyle
+  assert.equal(b.carte.sources.size, 0);
+  b.carte.emit('style.load', {});
+  assert.equal(b.carte.sources.size, 1, 'source reposée');
+  assert.ok(b.carte.calques.some((l) => l.id === 'atlas-trafic'), 'couche reposée');
+  b.avancer(100);
+  assert.ok(b.source().data.features.length > 0, 'et les véhicules y sont dessinés');
+});
+
+test('changement de fond de carte sans évènement : le prochain dessin repose la couche', () => {
+  const b = banc();
+  b.trafic.demarrer(); b.avancer(700);
+  b.carte.removeLayer('atlas-trafic'); b.carte.removeSource('atlas-trafic');
+  b.avancer(100);
+  assert.equal(b.carte.sources.size, 1);
+  b.avancer(100);
+  assert.ok(b.source().data.features.length > 0);
+});
+
+test('un trafic arrêté ne se repose pas au chargement d’un style', () => {
+  const b = banc();
+  b.trafic.demarrer(); b.avancer(700);
+  b.trafic.arreter();
+  b.carte.emit('style.load', {});
+  assert.equal(b.carte.sources.size, 0);
+});
+
 test('positions : un véhicule sans position est ignoré, les autres gardent leur identifiant et leur classe', () => {
   const sim = { agents: [{ id: 3, pl: true }, { id: 4 }, { id: 5 }], position: (a) => (a.id === 4 ? null : [1, 2, 45]) };
   assert.deepEqual(positions(sim), [{ id: 3, x: 1, y: 2, cap: 45, pl: true }, { id: 5, x: 1, y: 2, cap: 45, pl: false }]);

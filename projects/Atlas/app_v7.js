@@ -16316,8 +16316,19 @@ const A = {
         try {
             const m = await import('./lib/trafic-couche.js?v=20261012a');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
-            const en3d = _traficReglages.vehicules3d && await Models3D.vehiculesPreparer().catch(() => false);
-            const rendu3d = en3d ? { disponible: () => !!Models3D.vehicules && _traficReglages.vehicules3d, maj: (l) => Models3D.vehiculesMaj(l), effacer: () => Models3D.vehiculesEffacer() } : null;
+            await (_traficReglages.vehicules3d ? Models3D.vehiculesPreparer().catch(() => false) : null);
+            // `disponible` reprépare les véhicules quand la scène 3D a été refaite (changement de fond de carte) : les points tiennent la place en attendant
+            let dernierEssai3d = 0;
+            const rendu3d = {
+                disponible: () => {
+                    if (!_traficReglages.vehicules3d) return false;
+                    if (Models3D.vehicules) return true;
+                    const t = performance.now();
+                    if (!Models3D._vehiculesEnCours && t - dernierEssai3d > 2000) { dernierEssai3d = t; Models3D.vehiculesPreparer().catch(() => false); }
+                    return false;
+                },
+                maj: (l) => Models3D.vehiculesMaj(l), effacer: () => Models3D.vehiculesEffacer(),
+            };
             const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, rendu3d, ...opts,
                 surFin: () => { if (_traficSortant === instance) _traficSortant = null; },
                 surErreur: (err) => { console.warn('[Atlas] trafic arrêté :', err); showToast('Le trafic simulé s’est arrêté : le moteur a échoué sur ce réseau', 'warning'); A.traficArreter(); } });

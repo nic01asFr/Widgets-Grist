@@ -166,7 +166,7 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
   const pas = Math.max(1, Math.min(8, Math.round(vitesse)));
   const lisse = typeof planifierImage === 'function';   // dessin lissé entre deux pas, à chaque image de la carte
   const interp = creerInterpolateur();
-  let minuterie = null, actif = false, pose = false, boucle = null, sortie = false, niveau = null, tDessin = -Infinity, images = 0;
+  let minuterie = null, actif = false, pose = false, boucle = null, sortie = false, niveau = null, tDessin = -Infinity, images = 0, ecoute = false;
 
   function poser() {
     if (pose) return;
@@ -180,6 +180,14 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
       'circle-pitch-alignment': 'map',
     } });
     pose = true;
+    // un changement de fond de carte (`setStyle`) emporte la source et la couche : on les repose dès que le nouveau style est chargé
+    if (!ecoute && carte.on) { carte.on('style.load', reposer); ecoute = true; }
+  }
+  function reposer() {
+    if (!actif && !sortie) return;
+    if (carte.getSource && carte.getSource(idSource)) return;
+    pose = false; niveau = null;
+    try { poser(); } catch (e) { pose = false; }   // style pas tout à fait prêt : le prochain `style.load` ou la prochaine image recommence
   }
   function pointsDe(liste) {
     return { type: 'FeatureCollection', features: liste.map((v) => ({ type: 'Feature', properties: { pl: v.pl, cap: Math.round(v.cap), o: +v.o.toFixed(2) }, geometry: { type: 'Point', coordinates: versLngLat(centre, v.x, v.y) } })) };
@@ -194,7 +202,8 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
   }
   function ecrire(liste) {
     const s = carte.getSource && carte.getSource(idSource);
-    if (s && s.setData) s.setData(pointsDe(liste));
+    if (!s) { reposer(); return; }
+    if (s.setData) s.setData(pointsDe(liste));
   }
   /** Ce que montre la carte à cet instant : le niveau de détail dépend du zoom, et seuls les véhicules visibles sont envoyés. */
   function dessiner(t, direct) {
@@ -245,6 +254,7 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
   }
   function retirer() {
     arretBoucle(); sortie = false; interp.vider(); niveau = null;
+    if (ecoute && carte.off) { carte.off('style.load', reposer); ecoute = false; }
     if (rendu3d) { try { rendu3d.effacer(); } catch (e) { /* rendu 3D déjà libéré */ } }
     if (pose) { try { if (carte.getLayer && carte.getLayer(idSource)) carte.removeLayer(idSource); if (carte.getSource && carte.getSource(idSource)) carte.removeSource(idSource); } catch (e) { /* carte déjà retirée */ } pose = false; }
     if (surFin) surFin();
