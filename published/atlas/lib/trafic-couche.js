@@ -13,10 +13,10 @@
  * Ce module ne touche à la carte que par l'objet passé (`addSource`, `addLayer`, `getSource().setData`, `removeLayer`, `removeSource`) :
  * il se teste sans navigateur.
  */
-import { Trafic } from './trafic/index.js?v=1.16.3';
-import { sensOsm } from './itineraire.js?v=1.16.3';
-import { classerTroncon } from './modes-voie.js?v=1.16.3';
-import { creerInterpolateur, niveauDeDetail, visibles } from './trafic-rendu.js?v=1.16.3';
+import { Trafic } from './trafic/index.js?v=1.16.4';
+import { sensOsm } from './itineraire.js?v=1.16.4';
+import { classerTroncon } from './modes-voie.js?v=1.16.4';
+import { creerInterpolateur, niveauDeDetail, visibles, echelleDeLisibilite } from './trafic-rendu.js?v=1.16.4';
 
 /** Véhicules par km de route : un trafic ambiant lisible, pas un embouteillage. */
 export const DENSITE_DEFAUT = 8;
@@ -149,13 +149,14 @@ export function instantane(sim, centre) {
  *   `vitesse` : 1 = temps réel ; 4 = quatre pas du moteur par image (un trafic accéléré, plus coûteux)
  *   `planifier` / `annuler` : la minuterie du MOTEUR (un pas toutes les `CADENCE_MS`) ; `planifierImage` / `annulerImage` : la boucle de DESSIN
  *   (`requestAnimationFrame` par défaut), qui montre une position entre deux pas du moteur ; sans elle (tests, Node), le dessin suit chaque pas, sans lissage
- *   `rendu3d` : { disponible(): boolean, maj(vehicules), effacer() } ; dessine des modèles 3D à partir du zoom `ZOOM_3D` quand il est disponible
+ *   `rendu3d` : { disponible(): boolean, maj(vehicules, { echelle }), effacer() } ; dessine des modèles 3D à partir du zoom `ZOOM_3D` quand il est disponible
+ *   `modeRendu` : `auto` (points de loin, 3D de près), `3d` (3D seulement, jamais de points) ou `points` ; une chaîne, ou une fonction qui la rend (le réglage peut changer en route)
  *   `surFin()` : appelée quand le dessin est entièrement retiré (après un arrêt en douceur)
  * @returns {{ demarrer: Function, arreter: Function, pause: Function, reprendre: Function, etat: Function }}
  */
 export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic, surErreur = null,
   planifierImage = typeof requestAnimationFrame === 'function' ? (f) => requestAnimationFrame(f) : null, annulerImage = typeof cancelAnimationFrame === 'function' ? (i) => cancelAnimationFrame(i) : () => {},
-  maintenant = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()), rendu3d = null, surFin = null } = {}) {
+  maintenant = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()), rendu3d = null, surFin = null, modeRendu = 'auto' } = {}) {
   const { troncons, ecartes, motifs } = adapterTroncons(entites, { acces });
   if (!troncons.length) throw new Error('aucune route ouverte à la circulation dans cette couche' + (ecartes ? ` (${ecartes} tronçons écartés : ${Object.entries(motifs).map(([m, n]) => `${n} ${m.replace('_', ' ')}`).join(', ')})` : ' (il faut des lignes : BD TOPO, routes OpenStreetMap)'));
   const centre = centreDe(troncons);
@@ -209,7 +210,8 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
   function dessiner(t, direct) {
     const zoom = carte.getZoom ? carte.getZoom() : NaN;
     const avec3d = !!(rendu3d && rendu3d.disponible && rendu3d.disponible());
-    const n = direct ? 'points' : niveauDeDetail(zoom, { avec3d });
+    const mode = typeof modeRendu === 'function' ? modeRendu() : modeRendu;
+    const n = direct ? 'points' : niveauDeDetail(zoom, { avec3d, mode });
     if (n !== niveau) {   // un changement de niveau vide ce qui n'est plus montré
       if (n !== '3d' && rendu3d && niveau === '3d') rendu3d.effacer();
       if (n !== 'points') ecrire([]);
@@ -218,7 +220,8 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     if (n === 'aucun') return;
     const liste = direct ? positions(sim).map((v) => ({ ...v, o: 1 })) : visibles(interp.echantillonner(t), boiteVisible());
     if (n === '3d') {
-      rendu3d.maj(liste.map((v) => ({ ...v, lnglat: versLngLat(centre, v.x, v.y) })));
+      // en mode « 3D seulement », les modèles sont grossis quand on est trop loin pour les voir à leur taille réelle
+      rendu3d.maj(liste.map((v) => ({ ...v, lnglat: versLngLat(centre, v.x, v.y) })), { echelle: mode === '3d' ? echelleDeLisibilite(zoom) : 1 });
       if (carte.triggerRepaint) carte.triggerRepaint();
     } else ecrire(liste);
     images++;
