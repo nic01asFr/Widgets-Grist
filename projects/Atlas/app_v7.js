@@ -8381,6 +8381,30 @@ function renderSoleil() {
 }
 
 // ---- Vue & rendu ----
+/** La section « Trafic simulé » du module « Vue & rendu » : choisir la couche de routes, la densité, l'accès, puis animer ou arrêter. */
+function htmlTraficVues() {
+    const couches = couchesDeRoutes();
+    const aide = infoBulle('Des véhicules roulent sur les routes d’une couche : une maquette, pas une mesure. La densité, les destinations et les feux sont des hypothèses ; seules les routes ouvertes à la circulation roulent (ni chemins, ni sentiers, ni escaliers, ni pistes cyclables).');
+    if (!couches.length) {
+        return `<div class="section"><div class="section-title">Trafic simulé${aide}</div>
+            <div class="hint">Importez des routes (bouton IGN ou OSM du panneau Couches) : des véhicules pourront y rouler.</div></div>`;
+    }
+    const courante = _trafic ? _trafic.layerId : (couches.find((l) => l.id === _traficReglages.layerId) || couches[0]).id;
+    const etat = _trafic ? _trafic.instance.etat() : null;
+    const motifs = etat && etat.ecartesTexte ? `<div class="hint" style="margin-top:6px">${echapper(etat.ecartesTexte)}</div>` : '';
+    return `<div class="section"><div class="section-title">Trafic simulé${aide}</div>
+        <label class="input-label">Couche de routes</label>
+        <select class="input" onchange="A.traficReglage('layerId', this.value)" ${_trafic ? 'disabled' : ''}>
+            ${couches.map((l) => `<option value="${echapper(l.id)}" ${l.id === courante ? 'selected' : ''}>${echapper(l.name)}</option>`).join('')}
+        </select>
+        <div class="slider-head" style="margin-top:10px"><span class="lbl">Densité</span><span class="val" id="v-trafic-densite">${_traficReglages.densite} véh/km</span></div>
+        <input type="range" class="rng" min="2" max="30" step="1" value="${_traficReglages.densite}" oninput="A.traficReglage('densite', this.value)" ${_trafic ? 'disabled' : ''}>
+        <div class="toggle-row"><span class="tlabel">Routes à accès restreint</span><div class="toggle ${_traficReglages.acces === 'tous' ? 'on' : ''}" onclick="A.traficReglage('acces', '${_traficReglages.acces === 'tous' ? 'libre' : 'tous'}')" role="switch" tabindex="0" aria-checked="${_traficReglages.acces === 'tous'}"></div></div>
+        <button class="btn ${_trafic ? 'btn-soft' : 'btn-dark'} btn-full" style="margin-top:8px" onclick="A.traficBasculer()">${_trafic ? '■ Arrêter le trafic' : '▶ Animer le trafic'}</button>
+        ${etat ? `<div class="hint" style="margin-top:6px">${etat.vehicules} véhicules sur ${etat.reseau.troncons} tronçons · trafic <b>simulé</b></div>` : ''}${motifs}
+    </div>`;
+}
+
 function renderVues() {
     $('module-title').textContent = 'Vue & rendu';
     const s = STATE.settings;
@@ -8425,6 +8449,7 @@ function renderVues() {
             <div class="toggle-row"><span class="tlabel">🏷️ Libellés du fond</span><div class="toggle ${s.labels ? 'on' : ''}" onclick="A.toggleSetting('labels')" role="switch" tabindex="0" aria-checked="${!!s.labels}" aria-label="Libellés du fond"></div></div>
             <div class="toggle-row"><span class="tlabel">🌫️ Ciel / atmosphère</span><div class="toggle ${s.sky ? 'on' : ''}" onclick="A.toggleSetting('sky')" role="switch" tabindex="0" aria-checked="${!!s.sky}" aria-label="Ciel et atmosphère"></div></div>
         </div>
+        ${htmlTraficVues()}
         <button class="btn btn-soft btn-full" onclick="A.resetView()">🔄 Réinitialiser la vue</button>`;
 }
 
@@ -14238,6 +14263,14 @@ function openCmd() {
  * l'IGN (BD TOPO) ou d'OpenStreetMap suffisent ; les débits, les destinations et les feux sont des hypothèses, et le message le dit.
  */
 let _trafic = null;   // { instance, layerId, nom } pendant que le trafic tourne
+/** Les réglages du trafic, gardés d'une mise en route à l'autre (module « Vue & rendu »). */
+const _traficReglages = { densite: 8, acces: 'libre', layerId: null };
+
+/** Toutes les couches de lignes visibles qui ressemblent à des routes (sens BD TOPO ou classe OSM) : de quoi choisir celle à animer. */
+function couchesDeRoutes() {
+    return STATE.layers.filter((l) => l.visible !== false && !l._distant && !l._raster && (l.geometryType === 'LineString' || l.geometryType === 'MultiLineString')
+        && (filteredGeoJSON(l)?.features || []).some((f) => f.properties && (f.properties.sens_de_circulation != null || f.properties.highway)));
+}
 
 /** La couche de routes à animer : celle qu'on demande, sinon la première couche de lignes visible qui ressemble à des routes (sens BD TOPO ou classe OSM). */
 function coucheDeRoutes(id = null) {
@@ -16204,13 +16237,14 @@ const A = {
      */
     async traficDemarrer(layerId = null, opts = {}) {
         if (_trafic) A.traficArreter();
-        const layer = coucheDeRoutes(layerId);
+        const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
             const m = await import('./lib/trafic-couche.js?v=20261011a');
-            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], ...opts });
+            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, ...opts });
             const etat = instance.demarrer();
             _trafic = { instance, layerId: layer.id, nom: layer.name };
+            if (STATE.currentModule === 'vues') renderVues();
             showToast(`Trafic simulé sur « ${layer.name} » : ${etat.vehicules} véhicules ; débits, destinations et feux sont des hypothèses`, 'info');
             return etat;
         } catch (e) {
@@ -16219,7 +16253,16 @@ const A = {
             return null;
         }
     },
-    traficArreter() { if (!_trafic) return null; const e = _trafic.instance.arreter(); _trafic = null; return e; },
+    traficArreter() { if (!_trafic) return null; const e = _trafic.instance.arreter(); _trafic = null; if (STATE.currentModule === 'vues') renderVues(); return e; },
+    /** Un réglage du trafic (`densite`, `acces`, `layerId`) ; sans trafic en cours, le curseur de densité se met à jour sans redessiner le module. */
+    traficReglage(cle, valeur) {
+        if (cle === 'densite') { _traficReglages.densite = Math.max(2, Math.min(30, Math.round(+valeur) || 8)); const v = $('v-trafic-densite'); if (v) v.textContent = `${_traficReglages.densite} véh/km`; return; }
+        if (cle === 'acces') _traficReglages.acces = valeur === 'tous' ? 'tous' : 'libre';
+        if (cle === 'layerId') _traficReglages.layerId = valeur || null;
+        if (STATE.currentModule === 'vues') renderVues();
+    },
+    /** Animer ou arrêter, selon l'état : le bouton de la section « Trafic simulé » de « Vue & rendu ». */
+    traficBasculer() { return _trafic ? A.traficArreter() : A.traficDemarrer(); },
     traficEtat() { return _trafic ? { ..._trafic.instance.etat(), layerId: _trafic.layerId } : { actif: false, simule: true }; },
     tourneeDemarrer() { demarrerTournee(); },
     tourneeArreter() { arreterTournee(); },
