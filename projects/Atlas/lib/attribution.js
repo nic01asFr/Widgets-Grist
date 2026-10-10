@@ -38,6 +38,12 @@ const BALISES_ATTRIBUTION = Object.freeze(['a', 'b', 'strong', 'i', 'em']);
  * @param {unknown} valeur ce que la scène ou le manifeste déclare
  * @returns {string|null} du HTML sûr, ou null s'il n'y a rien à afficher
  */
+/**
+ * Une attribution fournie par l'hote avec ses donnees est du TEXTE : tout caractere actif est echappe, la taille est bornee
+ * (300 caracteres). Elle s'affiche telle quelle et ne s'interprete jamais. Le resultat passe ensuite par `attributionSure`.
+ */
+export const attributionTexte = (a) => String(a ?? '').slice(0, 300).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
+
 export function attributionSure(valeur) {
   if (valeur == null || typeof valeur === 'object') return null;
   const brut = String(valeur).slice(0, ATTRIBUTION_MAX).trim();

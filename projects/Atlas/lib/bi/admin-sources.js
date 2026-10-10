@@ -9,6 +9,7 @@
  *  - 'carto': ADMINEXPRESS-COG-CARTO.LATEST : généralisé « cartographique » mais 15 fois plus lourd en régions/départements ;
  *  - 'cog'  : ADMINEXPRESS-COG.LATEST : géométrie complète, hors de portée d'un client (118 Mo pour 101 départements).
  */
+import { attributionSure } from '../attribution.js?v=20261010a';
 import { aireGeodesiqueKm2, lireValeur } from './admin.js';
 
 export const VERSION = '1.0.0';
@@ -119,7 +120,7 @@ export async function chargerCouche(niveau, o = {}) {
     }
   }
   const features = enrichir(niveau, brutes.map((x) => normaliser(niveau, x)), refs);
-  return { features, meta: { source: 'ign-wfs', produit, niveau, filtre, millesime: '2026', attribution: ATTRIBUTION_IGN, nRequetes: requetes, octets, ms: Math.round(maintenant() - t0), total: total ?? features.length, partiel: total !== null && features.length < total } };
+  return { features, meta: { source: 'ign-wfs', produit, niveau, filtre, millesime: '2026', attribution: attributionSure(ATTRIBUTION_IGN), nRequetes: requetes, octets, ms: Math.round(maintenant() - t0), total: total ?? features.length, partiel: total !== null && features.length < total } };
 }
 
 /** Jeu embarqué léger (régions, départements, pays). `base` : dossier des fichiers (par défaut `lib/bi/donnees/`). */
@@ -134,7 +135,7 @@ export async function chargerEmbarque(niveau, o = {}) {
   let feats = json.features.map((x) => ({ type: 'Feature', properties: { ...x.properties }, geometry: x.geometry }));
   if (filtre && filtre.region) feats = feats.filter((x) => x.properties.region === filtre.region);
   enrichir(niveau, feats, refs);
-  return { features: feats, meta: { source: 'embarque', niveau, millesime: niveau === 'pays' ? 'Natural Earth 110m' : '2026', licence: json.meta?.licence, attribution: niveau === 'pays' ? ATTRIBUTION_NE : ATTRIBUTION_IGN, nRequetes: 1, octets: texte.length, ms: Math.round(maintenant() - t0), total: feats.length, simplifie: true } };
+  return { features: feats, meta: { source: 'embarque', niveau, millesime: niveau === 'pays' ? 'Natural Earth 110m' : '2026', licence: json.meta?.licence, attribution: attributionSure(niveau === 'pays' ? ATTRIBUTION_NE : ATTRIBUTION_IGN), nRequetes: 1, octets: texte.length, ms: Math.round(maintenant() - t0), total: feats.length, simplifie: true } };
 }
 
 /**

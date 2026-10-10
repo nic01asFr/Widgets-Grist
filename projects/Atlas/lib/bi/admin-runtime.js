@@ -10,6 +10,7 @@
  * (pas de reconstruction de la source quand la statistique change). Les unités sans donnée portent l'état « sans » : motif
  * hachuré (ou gris, ou masquées) ; les petits effectifs portent l'état « petit » : contour en tirets.
  */
+import { attributionSure, attributionTexte } from '../attribution.js?v=20261010a';
 import { chargerAvecRepli, ErreurSource, ATTRIBUTION_IGN } from './admin-sources.js';
 import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, ancetre, estCommunePLM, fusionnerArrondissements } from './admin.js';
 import { luminance, estPale } from './echelles.js';
@@ -38,7 +39,7 @@ export function creerAdmin(ctx) {
   async function chargerNiveau(niveau, o = {}) {
     const filtre = o.filtre && Object.keys(o.filtre).length ? o.filtre : null;
     const cle = niveau + '|' + (o.source || 'auto') + '|' + JSON.stringify(filtre) + '|' + (o.arrondissements || '') + '|' + (o.produit || '');
-    if (o.donnees) { const feats = o.donnees.map((f) => ({ ...f, properties: { ...f.properties, niveau } })); return { features: feats, meta: { source: 'hote', niveau, nRequetes: 0, octets: 0, ms: 0, total: feats.length, attribution: o.attribution || '' } }; }
+    if (o.donnees) { const feats = o.donnees.map((f) => ({ ...f, properties: { ...f.properties, niveau } })); return { features: feats, meta: { source: 'hote', niveau, nRequetes: 0, octets: 0, ms: 0, total: feats.length, attribution: attributionSure(attributionTexte(o.attribution)) || '' } }; }
     if (cache.has(cle)) { const r = cache.get(cle); return { features: r.features.map((f) => ({ ...f, properties: { ...f.properties } })), meta: { ...r.meta, cache: true } }; }
     const refs = await chargerRefs();
     const opts = { fetch: fetchFn(), base: base(), refs, produit: o.produit || config.produit || 'pe', filtre, timeoutMs: o.timeoutMs || config.timeoutMs || 30000, surProgres: (p) => ctx.emettre('progress', { niveau, ...p }, 'api') };
@@ -78,7 +79,7 @@ export function creerAdmin(ctx) {
     const c = enregistrer(def, r.features, r.meta, await chargerRefs());
     if (o.visible === false) ctx.api().setLayerVisibility(id, false);
     if (visuel.source === 'agregat' || visuel.table || visuel.donnees) assurer(c, true);
-    const resume = { layer: id, niveau, n: r.features.length, source: r.meta.source, repli: !!r.meta.repli, cause: r.meta.cause || null, cache: !!r.meta.cache, ms: Math.round(tick() - t0), octets: r.meta.octets, nRequetes: r.meta.nRequetes, attribution: r.meta.attribution || ATTRIBUTION_IGN, simplifie: !!r.meta.simplifie, millesime: r.meta.millesime || null };
+    const resume = { layer: id, niveau, n: r.features.length, source: r.meta.source, repli: !!r.meta.repli, cause: r.meta.cause || null, cache: !!r.meta.cache, ms: Math.round(tick() - t0), octets: r.meta.octets, nRequetes: r.meta.nRequetes, attribution: attributionSure(r.meta.attribution) || ATTRIBUTION_IGN, simplifie: !!r.meta.simplifie, millesime: r.meta.millesime || null };
     ctx.emettre('layer', resume, 'api');
     if (o.cadrer !== false) cadrer(c);
     return resume;
@@ -314,7 +315,7 @@ export function creerAdmin(ctx) {
     const m = assurer(c); const A = c.admin;
     return { layer: c.id, titre: m.titre, type: 'choroplethe', niveau: A.niveau, unite: m.unite, methode: m.methode, palette: m.palette, centre: m.centre, seuils: m.seuils, min: m.min, max: m.max, total: m.total, renseignees: m.renseignees, sansValeur: m.sansValeur, petitsEffectifs: m.petitsEffectifs, seuilPetit: c.visuel.seuilPetit || null,
       classes: m.classes.map((k) => ({ ...k })), sansDonnee: { ...m.sansDonnee, traitement: c.visuel.valeurSansDonnee || 'hachure' }, classesDemandees: m.classesDemandees, classesEffectives: m.classesEffectives, avertissement: m.avertissement || null,
-      classesTropClaires: th().fondCarte ? classesTropClaires(m, th().fondCarte) : [], diag: A.diag, source: A.meta ? { type: A.meta.source, repli: !!A.meta.repli, simplifie: !!A.meta.simplifie, millesime: A.meta.millesime || null, attribution: A.meta.attribution || '' } : null, lignes: lignesChoroplethe(m), resume: resumeChoroplethe(m) };
+      classesTropClaires: th().fondCarte ? classesTropClaires(m, th().fondCarte) : [], diag: A.diag, source: A.meta ? { type: A.meta.source, repli: !!A.meta.repli, simplifie: !!A.meta.simplifie, millesime: A.meta.millesime || null, attribution: attributionSure(A.meta.attribution) || '' } : null, lignes: lignesChoroplethe(m), resume: resumeChoroplethe(m) };
   }
   function lignes(c, o = {}) {
     const m = assurer(c); const v = c.visuel;

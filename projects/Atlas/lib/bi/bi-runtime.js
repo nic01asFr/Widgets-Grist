@@ -8,6 +8,7 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
+import { attributionSure, attributionTexte } from '../attribution.js?v=20261010a';
 import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=20261002a';
 import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001a';
 import { agreger } from './agregats.js';
@@ -35,7 +36,7 @@ const copie = (o) => JSON.parse(JSON.stringify(o));
  * (script exécuté dans l'origine d'Atlas, mesuré le 10/10/2026 avec maplibre-gl 5.6.1). Ce qui vient de l'hôte ou des données est
  * donc échappé : il s'affiche tel quel, il ne s'interprète jamais.
  */
-export const attributionTexte = (a) => String(a ?? '').slice(0, 300).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
+export { attributionTexte };
 
 export function attacher(map, opts = {}) {
   // briques présentes dans ce chargement (voir CAPACITES dans pont.js) ; `paquet` : manifeste de données hors ligne lu, ou null
@@ -93,7 +94,7 @@ export function attacher(map, opts = {}) {
       const d2 = copie(decl); if (d2.color) d2.color = pour(d2.color); for (const st of d2.stops || []) st.color = pour(st.color);
       return expressionCouleurDeclarative(d2, T.contour) || T.contour;
     };
-    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionTexte(c.admin.meta.attribution) } : {}) } : {}) });
+    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionSure(c.admin.meta.attribution) } : {}) } : {}) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));
