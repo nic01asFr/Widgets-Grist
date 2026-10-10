@@ -71,3 +71,32 @@ test('promotion : un module de lib/charte qui en importe un absent fait echouer 
     assert.match(r.erreur, /charte\/schema\.js importe \.\/inexistant\.js/);
   } finally { rmSync(racine, { recursive: true, force: true }); }
 });
+
+test('promotion : lib/reseau (client WFS de l\'import IGN) est copie, comme lib/charte', () => {
+  const racine = bac();
+  try {
+    const r = promouvoir(racine);
+    assert.equal(r.code, 0, r.erreur);
+    const reseau = join(racine, 'published', 'atlas', 'lib', 'reseau');
+    for (const f of readdirSync(join(ICI, '..', 'lib', 'reseau')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(reseau, f)), 'reseau/' + f);
+    assert.ok(existsSync(join(racine, 'published', 'atlas', 'lib', 'import-ign.js')));
+  } finally { rmSync(racine, { recursive: true, force: true }); }
+});
+
+test('promotion : un module de lib/ qui importe un fichier d\'un sous-dossier absent fait echouer la promotion (piege de lib/charte)', () => {
+  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/mini.js'), "import { y } from './nouveau-dossier/absent.js';\nexport const x = 1;\n"));
+  try {
+    const r = promouvoir(racine);
+    assert.equal(r.code, 1);
+    assert.match(r.erreur, /lib\/mini\.js importe \.\/nouveau-dossier\/absent\.js/);
+  } finally { rmSync(racine, { recursive: true, force: true }); }
+});
+
+test('promotion : un module de lib/reseau qui en importe un absent fait echouer la promotion', () => {
+  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/reseau/geo.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
+  try {
+    const r = promouvoir(racine);
+    assert.equal(r.code, 1);
+    assert.match(r.erreur, /reseau\/geo\.js importe \.\/inexistant\.js/);
+  } finally { rmSync(racine, { recursive: true, force: true }); }
+});

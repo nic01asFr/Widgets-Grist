@@ -50,32 +50,50 @@ for (const f of fs.readdirSync(libSrc)) {
 }
 
 /**
- * La charte graphique (`lib/charte/`, sous-dossier de `lib/`) : le composant carte BI en importe le schema et la resolution
- * (`../charte/…`). Invisible au controle des imports de `app.js`, comme `lib/bi/` : sans cette copie, `?bi=1` tombe en 404 sur ses modules.
- * Le schema JSON est le contrat publie de la charte : il part avec les modules.
+ * Les sous-dossiers de `lib/` qui ne sont ni `bi/` ni importés à plat par `app.js` : `charte/` (le composant BI en importe le schema et la resolution, `../charte/…`) et
+ * `reseau/` (le client WFS de la BD TOPO, importe par l'import IGN). Invisibles au controle des imports de `app.js` : sans leur copie, les modules qui
+ * les importent tombent en 404 une fois publies. Le schema JSON de la charte est son contrat publie : il part avec les modules.
+ * Un nouveau sous-dossier s'ajoute ici ; le controle final (`verifierImportsEnSousDossier`) echoue de toute facon si un module de `lib/` en importe un absent.
  */
-const charteSrc = path.join(libSrc, 'charte');
-const chartePub = path.join(libPub, 'charte');
+const SOUS_DOSSIERS_LIB = ['charte', 'reseau'];
 let modulesCharte = 0;
-if (fs.existsSync(charteSrc)) {
-  fs.mkdirSync(chartePub, { recursive: true });
-  for (const f of fs.readdirSync(charteSrc)) {
-    if (f.endsWith('.js')) fs.writeFileSync(path.join(chartePub, f), normaliserVersions(fs.readFileSync(path.join(charteSrc, f), 'utf8')));
-    else if (f.endsWith('.json')) fs.copyFileSync(path.join(charteSrc, f), path.join(chartePub, f));
+for (const nom of SOUS_DOSSIERS_LIB) {
+  const dossierSrc = path.join(libSrc, nom);
+  const dossierPub = path.join(libPub, nom);
+  if (!fs.existsSync(dossierSrc)) continue;
+  fs.mkdirSync(dossierPub, { recursive: true });
+  for (const f of fs.readdirSync(dossierSrc)) {
+    if (f.endsWith('.js')) fs.writeFileSync(path.join(dossierPub, f), normaliserVersions(fs.readFileSync(path.join(dossierSrc, f), 'utf8')));
+    else if (f.endsWith('.json')) fs.copyFileSync(path.join(dossierSrc, f), path.join(dossierPub, f));
     else continue;
     modulesCharte++;
   }
-  for (const f of fs.readdirSync(chartePub)) {
+  for (const f of fs.readdirSync(dossierPub)) {
     if (!f.endsWith('.js')) continue;
-    for (const m of fs.readFileSync(path.join(chartePub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
-      if (!fs.existsSync(path.join(chartePub, m[1]))) {
-        console.error(`Echec : lib/charte/${f} importe ${m[1]}, absent de la copie publiee`);
+    for (const m of fs.readFileSync(path.join(dossierPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
+      if (!fs.existsSync(path.join(dossierPub, m[1]))) {
+        console.error(`Echec : lib/${nom}/${f} importe ${m[1]}, absent de la copie publiee`);
         process.exit(1);
       }
     }
   }
 }
 
+/**
+ * Garde-fou : un module de `lib/` (a plat) qui importe un fichier de sous-dossier (`./reseau/x.js`) doit le trouver dans la copie publiee. C'est le piege de
+ * `lib/charte/` (1.14.0) : un sous-dossier non copie ne casse rien au build et tombe en 404 en ligne.
+ */
+function verifierImportsEnSousDossier() {
+  for (const f of fs.readdirSync(libPub)) {
+    if (!f.endsWith('.js')) continue;
+    for (const m of fs.readFileSync(path.join(libPub, f), 'utf8').matchAll(/from\s+'(\.\/[^'/]+\/[^']+?\.js)(?:\?[^']*)?'/g)) {
+      if (!fs.existsSync(path.join(libPub, m[1]))) {
+        console.error(`Echec : lib/${f} importe ${m[1]}, absent de la copie publiee (sous-dossier non copie ?)`);
+        process.exit(1);
+      }
+    }
+  }
+}
 /**
  * Le composant carte BI (`lib/bi/`, sous-dossier de `lib/`) : charge a la demande avec `?bi=1`, donc invisible au
  * controle des imports de `app.js` ci-dessous — qui ne lit que `./lib/<nom>.js`. Le copier ici, et exiger que chaque
@@ -109,6 +127,9 @@ if (fs.existsSync(biSrc)) {
     }
   }
 }
+
+// Tous les sous-dossiers de lib/ (bi, charte, reseau) sont en place : un module a plat qui en importe un fichier absent arrete la promotion.
+verifierImportsEnSousDossier();
 
 /**
  * La peau du formulaire, qui n'est pas un module.
