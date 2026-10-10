@@ -203,6 +203,9 @@ export function creerAdmin(ctx) {
     const gris = v.valeurSansDonnee === 'gris', masque = v.valeurSansDonnee === 'masque';
     const couleurSans = ctx.resoudre(v.couleurSansDonnee || th_.sansDonnee || '#8a8f94');
     const ajouter = (spec) => ctx.ajouterCalque(c, spec, avant);
+    // MapLibre n'accepte `['zoom']` qu'en entrée d'un `interpolate` ou d'un `step` DE TÊTE : le choix sélection / survol se fait donc dans chaque palier
+    // (un `case` au-dessus de l'interpolation faisait refuser le calque, sans bruit : le contour des unités n'existait pas).
+    const largeurContour = (sel_, hov_) => ['interpolate', ['linear'], ['zoom'], ...[[3, 0.4], [8, 0.9], [12, 1.5]].flat().map((x, i) => (i % 2 ? ['case', sel_, 3.5, hov_, 2.2, x] : x))];
     ajouter({ id: PREF + 'fill-' + c.id, type: 'fill', source: src, paint: { 'fill-color': ['coalesce', ['feature-state', 'couleur'], gris ? couleurSans : 'rgba(0,0,0,0)'], 'fill-opacity': masque ? ['case', sans, 0, sel, 1, hov, 0.95, 0.88] : ['case', sel, 1, hov, 0.95, 0.88] } });
     if (!gris && !masque) {
       const motif = motifHachure(couleurSans, 8, 2, 0.85);
@@ -212,7 +215,7 @@ export function creerAdmin(ctx) {
     ajouter({ id: PREF + 'petit-' + c.id, type: 'line', source: src, paint: { 'line-color': ctx.resoudre(th_.selection || '#111111'), 'line-width': 1.6, 'line-dasharray': [2, 2], 'line-opacity': ['case', petit, 0.9, 0] } });
     // halo clair sous le trait de sélection : le trait sombre seul est invisible sur la classe la plus sombre (contraste 1:1)
     ajouter({ id: PREF + 'halo-' + c.id, type: 'line', source: src, paint: { 'line-color': ctx.resoudre(th_.halo || '#ffffff'), 'line-width': ['case', sel, 8, hov, 5, 0], 'line-opacity': 0.95 } });
-    ajouter({ id: PREF + 'line-' + c.id, type: 'line', source: src, paint: { 'line-color': ['case', sel, ctx.resoudre(th_.selection || '#111111'), ['boolean', ['feature-state', 'sombre'], false], ctx.resoudre(th_.halo || '#ffffff'), ctx.resoudre(th_.contour || '#ffffff')], 'line-width': ['case', sel, 3.5, hov, 2.2, ['interpolate', ['linear'], ['zoom'], 3, 0.4, 8, 0.9, 12, 1.5]] } });
+    ajouter({ id: PREF + 'line-' + c.id, type: 'line', source: src, paint: { 'line-color': ['case', sel, ctx.resoudre(th_.selection || '#111111'), ['boolean', ['feature-state', 'sombre'], false], ctx.resoudre(th_.halo || '#ffffff'), ctx.resoudre(th_.contour || '#ffffff')], 'line-width': largeurContour(sel, hov) } });
     c.admin.etatPose = new Map(); // les états de rendu sont perdus avec la source : à reposer
     if (c.admin.modele) poserEtats(c);
   }
