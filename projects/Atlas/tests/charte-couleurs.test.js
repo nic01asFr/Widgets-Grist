@@ -148,3 +148,9 @@ test('encre lisible : la plus contrastée parmi les candidates', () => {
   assert.equal(C.encreSur('#808080', ['#ffffff', '#000000']).ok45, true);
   assert.equal(C.encreSur('#ffffff', ['#fefefe']).ok3, false);
 });
+
+test('rampes : échantillonnage linéaire entre ancres, identique à celui du composant BI', async () => {
+  const E = await import('../lib/bi/echelles.js');
+  for (const ancres of [['#000000', '#ffffff'], ['#f8e9e7', '#c44536', '#692e23'], ['#fff', 'zzz', '#000']]) for (const n of [1, 2, 3, 5, 9]) assert.deepEqual(C.echantillonner(ancres, n), E.echantillonner(ancres, n), JSON.stringify(ancres) + ' n=' + n);
+  assert.equal(C.rampe([])(0.5), '#808080'); assert.equal(C.rampe(['#123456'])(0.9), '#123456'); assert.equal(C.rampe(['#000000', '#ffffff'])(NaN), '#000000');
+});

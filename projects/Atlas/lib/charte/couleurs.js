@@ -29,6 +29,17 @@ export function melanger(a, b, t) {
   return rgbVersHex(A.map((v, i) => v + (B[i] - v) * t));
 }
 
+// ---------------------------------------------------------------------------------------------------------------- rampes
+/** Une rampe continue : t dans [0,1] -> couleur, par interpolation linéaire (sRGB) entre les couleurs données ; les couleurs illisibles sont écartées. */
+export function rampe(couleurs) {
+  const c = (couleurs || []).filter((x) => hexVersRgb(x));
+  if (!c.length) return () => '#808080';
+  if (c.length === 1) return () => c[0];
+  return (t) => { const x = Math.max(0, Math.min(1, Number.isFinite(t) ? t : 0)) * (c.length - 1), i = Math.min(c.length - 2, Math.floor(x)); return melanger(c[i], c[i + 1], x - i); };
+}
+/** n couleurs régulièrement prises sur une rampe : exactement ce que le composant BI emploie pour colorer n classes. */
+export function echantillonner(couleurs, n) { const f = rampe(couleurs); return Array.from({ length: n }, (_, i) => f(n === 1 ? 0.5 : i / (n - 1))); }
+
 // ---------------------------------------------------------------------------------------------------------------- analyse stricte
 /**
  * Syntaxes admises pour une couleur venue de l'extérieur, et celles-là seulement :
@@ -49,7 +60,7 @@ const alphaDe = (s) => (s === undefined ? 1 : s.endsWith('%') ? Number(s.slice(0
 export function hslVersRgb(h, s, l) {
   const S = s / 100, L = l / 100, k = (n) => (n + h / 30) % 12, a = S * Math.min(L, 1 - L);
   const f = (n) => L - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
-  return [f(0) * 255, f(8) * 255, f(4) * 255];
+  return [f(0) * 255 + 1e-9, f(8) * 255 + 1e-9, f(4) * 255 + 1e-9];
 }
 
 /**

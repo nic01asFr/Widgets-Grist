@@ -1,0 +1,8 @@
+{
+  "version": "atlas-charte/0.1",
+  "nom": "Exemple neutre",
+  "graines": { "principal": "#1b6b7a", "secondaire": "#e07b00", "encre": "#1a1a1a", "fond": "#ffffff" },
+  "jetons": { "reperage": "#1b6b7a", "alerte-site": "rgb(224, 123, 0)" },
+  "texte": { "famille": "sans" },
+  "exigences": { "classesMax": 5 }
+}

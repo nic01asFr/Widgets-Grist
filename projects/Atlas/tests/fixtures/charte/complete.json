@@ -1,0 +1,36 @@
+{
+  "version": "atlas-charte/0.1",
+  "nom": "Exemple complet",
+  "base": "atlas",
+  "graines": { "principal": "#7a3e9d", "secondaire": "#d9a21b", "encre": "#201a26", "fond": "#fdfcff", "succes": "#1d6b3f", "alerte": "#7a5200", "erreur": "#a8201a", "information": "#1c5a99" },
+  "jetons": { "titre": "#7a3e9d", "surbrillance": "hsl(45, 80%, 50%)", "voile": "rgba(32, 26, 38, 0.5)" },
+  "donnees": {
+    "sequentielles": {
+      "prune": ["#f5eefa", "#d9c1ea", "#b88ad6", "#8f52b4", "#5e2c80"],
+      "or": ["#fbf3dc", "#f0d684", "#d9a21b", "#8d6400"]
+    },
+    "sequentielleDefaut": "prune",
+    "divergente": ["#8d6400", "#d9a21b", "#f3e3b0", "#f2f2f4", "#cdb6e3", "#9a63c1", "#5e2c80"],
+    "qualitative": ["#5e2c80", "#d9a21b", "#1c7a8a", "#a8201a", "#4a4a55"],
+    "sansDonnee": "#8a8794",
+    "selection": "#201a26",
+    "halo": "#fdfcff",
+    "survol": "#4d4656",
+    "contour": "#ffffffcc"
+  },
+  "fond": {
+    "mode": "plan",
+    "principal": "#5e2c80",
+    "intensites": { "vert": 0.06, "bati": 0.12, "eau": 0.28, "filet": 0.36, "limite": 0.62 },
+    "vegetation": "#4f8a4b",
+    "lavis": { "couleur": "#f7f4fa", "opacite": 0.6 },
+    "plan": { "eau": "#cfe0ea" }
+  },
+  "marqueurs": { "formes": { "succes": "cercle", "alerte": "triangle", "erreur": "losange", "information": "carre" }, "contour": "#201a26" },
+  "texte": { "famille": "serif", "tailles": { "legende": 14, "etiquette": 12 } },
+  "exigences": { "contrasteMinimal": 3, "contrasteTexte": 4.5, "ecartMinimal": 6, "classesMax": 5 },
+  "palettes": [
+    { "id": "prune-perso", "nom": "Prune personnalisée", "type": "sequential", "couleurs": ["#f5eefa", "#8f52b4", "#3d1a55"], "usages": ["mesure"] },
+    { "id": "equipe-cat", "type": "qualitative", "couleurs": ["#1c7a8a", "#d9a21b", "#7a3e9d"] }
+  ]
+}

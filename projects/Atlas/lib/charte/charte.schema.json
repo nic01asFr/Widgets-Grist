@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Charte graphique Atlas",
+  "description": "Version atlas-charte/0.1. Voir docs/CONTRAT-CHARTE-ATLAS.md. Écrit à partir de la table de règles de lib/charte/schema.js, que les tests comparent.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "atlas-charte/0.1"
+    },
+    "nom": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "base": {
+      "enum": [
+        "atlas",
+        "contraste-eleve"
+      ]
+    },
+    "graines": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "principal": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "secondaire": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "encre": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "fond": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "succes": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "alerte": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "erreur": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "information": {
+          "$ref": "#/$defs/couleurOpaque"
+        }
+      }
+    },
+    "jetons": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "$ref": "#/$defs/nomLibre"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/couleur"
+      }
+    },
+    "donnees": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sequentielles": {
+          "type": "object",
+          "maxProperties": 16,
+          "propertyNames": {
+            "$ref": "#/$defs/nomLibre"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 24,
+            "items": {
+              "$ref": "#/$defs/couleurOpaque"
+            }
+          }
+        },
+        "sequentielleDefaut": {
+          "$ref": "#/$defs/nomLibre"
+        },
+        "divergente": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 25,
+          "items": {
+            "$ref": "#/$defs/couleurOpaque"
+          }
+        },
+        "qualitative": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 24,
+          "items": {
+            "$ref": "#/$defs/couleurOpaque"
+          }
+        },
+        "sansDonnee": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "selection": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "halo": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "survol": {
+          "$ref": "#/$defs/couleur"
+        },
+        "contour": {
+          "$ref": "#/$defs/couleur"
+        }
+      }
+    },
+    "fond": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "atlas",
+            "voile",
+            "plan",
+            "plan-ign",
+            "photo",
+            "uni"
+          ]
+        },
+        "principal": {
+          "$ref": "#/$defs/couleurOpaque"
+        },
+        "intensites": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vert": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bati": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "eau": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "filet": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "limite": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "vegetation": {
+          "anyOf": [
+            {
+              "const": "monochrome"
+            },
+            {
+              "$ref": "#/$defs/couleurOpaque"
+            }
+          ]
+        },
+        "lavis": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "couleur": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "opacite": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fond": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "vert": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "eau": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "bati": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "route": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "filet": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "texte": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "texte2": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "halo": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "limite": {
+              "$ref": "#/$defs/couleurOpaque"
+            },
+            "info": {
+              "$ref": "#/$defs/couleurOpaque"
+            }
+          }
+        }
+      }
+    },
+    "marqueurs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "formes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "succes": {
+              "enum": [
+                "cercle",
+                "carre",
+                "losange",
+                "triangle"
+              ]
+            },
+            "alerte": {
+              "enum": [
+                "cercle",
+                "carre",
+                "losange",
+                "triangle"
+              ]
+            },
+            "erreur": {
+              "enum": [
+                "cercle",
+                "carre",
+                "losange",
+                "triangle"
+              ]
+            },
+            "information": {
+              "enum": [
+                "cercle",
+                "carre",
+                "losange",
+                "triangle"
+              ]
+            }
+          }
+        },
+        "contour": {
+          "$ref": "#/$defs/couleurOpaque"
+        }
+      }
+    },
+    "texte": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "famille": {
+          "enum": [
+            "systeme",
+            "sans",
+            "serif",
+            "mono",
+            "lisible"
+          ]
+        },
+        "tailles": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "legende": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 32
+            },
+            "etiquette": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 32
+            }
+          }
+        }
+      }
+    },
+    "exigences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contrasteMinimal": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21
+        },
+        "contrasteTexte": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21
+        },
+        "ecartMinimal": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "classesMax": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 12
+        }
+      }
+    },
+    "palettes": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "couleurs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$"
+          },
+          "nom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "type": {
+            "enum": [
+              "qualitative",
+              "sequential",
+              "divergent"
+            ]
+          },
+          "couleurs": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 25,
+            "items": {
+              "$ref": "#/$defs/couleurOpaque"
+            }
+          },
+          "usages": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "couleur": {
+      "type": "string",
+      "maxLength": 48,
+      "pattern": "^(?:#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[rR][gG][bB][aA]?\\(\\s{0,3}\\d{1,3}(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\s{0,3}[,/]\\s{0,3}(?:0|1|0?\\.\\d{1,3}|\\d{1,3}%))?\\s{0,3}\\)|[hH][sS][lL][aA]?\\(\\s{0,3}\\d{1,3}(?:\\.\\d{1,2})?(?:deg)?(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\.\\d{1,2})?%(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\.\\d{1,2})?%(?:\\s{0,3}[,/]\\s{0,3}(?:0|1|0?\\.\\d{1,3}|\\d{1,3}%))?\\s{0,3}\\))$",
+      "description": "Couleur admise : #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), hsla(). Jamais url(), var(), nom de couleur ni HTML."
+    },
+    "couleurOpaque": {
+      "type": "string",
+      "maxLength": 48,
+      "pattern": "^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})|[rR][gG][bB]\\(\\s{0,3}\\d{1,3}(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}\\s{0,3}\\)|[hH][sS][lL]\\(\\s{0,3}\\d{1,3}(?:\\.\\d{1,2})?(?:deg)?(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\.\\d{1,2})?%(?:\\s{0,3},\\s{0,3}|\\s{1,3})\\d{1,3}(?:\\.\\d{1,2})?%\\s{0,3}\\))$",
+      "description": "Couleur opaque (graines, rampes, aplats) : #rgb, #rrggbb, rgb(), hsl() sans alpha. L'assainissement refuse aussi les formes translucides."
+    },
+    "nomLibre": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,40}$",
+      "not": {
+        "enum": [
+          "__proto__",
+          "constructor",
+          "prototype"
+        ]
+      }
+    }
+  }
+}

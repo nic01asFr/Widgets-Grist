@@ -1,0 +1,7 @@
+{
+  "version": "atlas-charte/0.1",
+  "nom": "Exemple sombre fictif",
+  "graines": { "principal": "#5aa9e6", "secondaire": "#f4a259", "encre": "#eef1f5", "fond": "#12161c", "succes": "#6fcf97", "alerte": "#f2c94c", "erreur": "#ff7b7b", "information": "#7fb6ff" },
+  "fond": { "mode": "uni" },
+  "texte": { "famille": "systeme" }
+}
