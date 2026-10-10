@@ -35,7 +35,9 @@ export function signalerCartePrete(cible, carte) {
 
 /**
  * Promesse de la carte prête (style chargé). Résout tout de suite si l'événement a déjà eu lieu.
- * @param {{delai?: number}} [opts] délai maximal en ms (défaut 20 000) ; au-delà, la promesse est rejetée
+ * @param {{delai?: number}} [opts] délai maximal en ms (défaut 20 000) ; au-delà, la promesse est rejetée. `Infinity` (ou 0) : attente
+ * sans limite. Une carte dans un cadre non rendu (sous la ligne de flottaison, onglet masqué) n'émet son premier rendu qu'une fois
+ * visible : le composant BI attend donc sans limite.
  */
 export function attendreCarte(cible, { delai = 20000 } = {}) {
   return new Promise((resolve, reject) => {
@@ -47,6 +49,7 @@ export function attendreCarte(cible, { delai = 20000 } = {}) {
       resolve((e && e.detail && e.detail.carte) || cible.__atlasCarte);
     };
     cible.addEventListener(EVENEMENT_CARTE_PRETE, fin);
+    if (!Number.isFinite(delai) || delai <= 0) return;
     minuterie = setTimeout(() => {
       cible.removeEventListener(EVENEMENT_CARTE_PRETE, fin);
       reject(new Error('carte Atlas indisponible après ' + delai + ' ms'));

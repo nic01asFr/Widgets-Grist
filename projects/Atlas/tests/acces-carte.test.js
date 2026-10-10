@@ -75,6 +75,25 @@ describe('acces-carte — attendreCarte', () => {
   });
 });
 
+describe('acces-carte — attente sans limite (cadre non rendu)', () => {
+  it('delai: Infinity ou 0 : ne rejette jamais, résout quand la carte devient prête', async () => {
+    for (const delai of [Infinity, 0]) {
+      const w = fausseFenetre(); const carte = {}; exposerCarte(w, carte);
+      let fini = false;
+      const p = attendreCarte(w, { delai }).then((c) => { fini = true; return c; });
+      await new Promise((r) => setTimeout(r, 60));
+      assert.equal(fini, false, "pas de rejet ni de résolution tant que la carte n'est pas prête (delai " + delai + ')');
+      signalerCartePrete(w, carte);
+      assert.equal(await p, carte);
+    }
+  });
+
+  it("le point d'entrée du composant BI attend la carte sans limite", () => {
+    const src = fs.readFileSync(path.join(racine, 'lib', 'bi', 'montage.js'), 'utf8');
+    assert.match(src, /attendreCarte\(fenetre, \{ delai: Infinity \}\)/);
+  });
+});
+
 describe('acces-carte — câblage dans app_v7.js (source-scan)', () => {
   const src = fs.readFileSync(path.join(racine, 'app_v7.js'), 'utf8');
 
