@@ -1,7 +1,7 @@
 // Vérifie un dossier de paquet hors ligne, SANS rien importer d'Atlas (script autonome : l'hôte peut le copier et l'exécuter).
 //   node verifier-paquet.mjs <dossier>
 // Contrôles : manifeste lisible, chemins relatifs sans « .. » ni lettre de lecteur ni « \ », fichier présent, taille exacte
-// (une copie tronquée se voit avant le calcul), empreinte SHA-384, aucun fichier non listé, cache.txt cohérent.
+// (une copie tronquée se voit avant le calcul), empreinte SHA-384, aucun fichier non listé, cache.txt et cache-socle.txt cohérents.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -37,11 +37,13 @@ export function verifierPaquet(dossier) {
     const attendu = 'sha384-' + crypto.createHash('sha384').update(octets).digest('base64');
     if (attendu !== x.integrite) erreurs.push('empreinte différente pour ' + x.chemin);
   }
-  for (const rel of lister(racine)) if (!listes.has(rel) && rel !== 'manifeste.json' && rel !== 'cache.txt') erreurs.push('fichier non listé au manifeste : ' + rel);
-  try {
-    const cache = fs.readFileSync(path.join(racine, 'cache.txt'), 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
-    for (const c of cache) if (!listes.has(c)) erreurs.push('cache.txt cite un fichier absent du manifeste : ' + c);
-  } catch { erreurs.push('cache.txt absent'); }
+  for (const rel of lister(racine)) if (!listes.has(rel) && rel !== 'manifeste.json' && rel !== 'cache.txt' && rel !== 'cache-socle.txt') erreurs.push('fichier non listé au manifeste : ' + rel);
+  for (const nom of ['cache.txt', 'cache-socle.txt']) {
+    try {
+      const cache = fs.readFileSync(path.join(racine, nom), 'utf8').split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+      for (const c of cache) if (!listes.has(c)) erreurs.push(nom + ' cite un fichier absent du manifeste : ' + c);
+    } catch { erreurs.push(nom + ' absent'); }
+  }
   return { erreurs, fichiers: manifeste.fichiers.length, manifeste };
 }
 

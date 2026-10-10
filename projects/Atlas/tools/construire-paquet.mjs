@@ -202,6 +202,10 @@ export async function construirePaquet(o = {}) {
       '# Le socle (portee france) suffit aux niveaux pays, regions, departements ; un fichier communes/<departement>.json par territoire utilise.',
       ...fichiers.map((x) => x.chemin)].join('\n') + '\n';
     ecrire(montage, 'cache.txt', Buffer.from(cache, 'utf8'));
+    const cacheSocle = ['# Minimum a mettre en cache pour demarrer hors ligne : le socle (portee france) et les licences.',
+      '# Les fichiers communes/<departement>.json se mettent en cache a la demande, selon les territoires utilises.',
+      ...fichiers.filter((x) => x.portee === 'france').map((x) => x.chemin)].join('\n') + '\n';
+    ecrire(montage, 'cache-socle.txt', Buffer.from(cacheSocle, 'utf8'));
 
     fs.rmSync(racine, { recursive: true, force: true });
     fs.renameSync(montage, racine);

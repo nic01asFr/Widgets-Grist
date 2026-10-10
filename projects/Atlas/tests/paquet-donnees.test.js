@@ -156,6 +156,9 @@ test('construirePaquet : dossier complet, manifeste exact, chemins relatifs, lic
   assert.match(fs.readFileSync(path.join(sortie, 'LICENCES.txt'), 'utf8'), /Licence Ouverte[\s\S]*IGN[\s\S]*INSEE[\s\S]*Natural Earth/);
   const cache = fs.readFileSync(path.join(sortie, 'cache.txt'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'));
   assert.deepEqual(cache.sort(), chemins.slice().sort());
+  const socle = fs.readFileSync(path.join(sortie, 'cache-socle.txt'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'));
+  assert.deepEqual(socle.sort(), m.fichiers.filter((x) => x.portee === 'france').map((x) => x.chemin).sort());
+  assert.ok(socle.length >= 5 && !socle.some((c) => c.includes('communes/')), 'socle et licences, aucun département');
   assert.ok(fs.existsSync(path.join(sortie, 'manifeste.json')));
   const v = verifierPaquet(sortie); assert.deepEqual(v.erreurs, []); assert.equal(v.fichiers, chemins.length);
 });
