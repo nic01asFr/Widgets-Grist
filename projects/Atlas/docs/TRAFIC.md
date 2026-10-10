@@ -72,6 +72,7 @@ Le moteur avance par pas de 0,2 s. Dessiner ses positions telles quelles les fer
 | **Fondu** | un véhicule qui apparaît monte de 0 à 1 d'opacité en 0,6 s ; à l'arrêt (bouton ou `A.traficArreter()`), les véhicules s'effacent en 0,4 s avant que la couche soit retirée |
 | **Niveau de détail** | sous le zoom 13 : rien n'est dessiné (le trafic continue de se calculer) ; du zoom 13 à 16 : des points (blanc : voiture, orange : poids lourd) ; **à partir du zoom 16 : des modèles 3D** du catalogue d'objets (`car` pour les voitures, `bus` pour les poids lourds), mis à l'échelle d'un vrai véhicule (4,4 m et 10,5 m), posés sur le sol et orientés selon leur cap |
 | **Seulement ce qui se voit** | les véhicules hors de la fenêtre visible (plus une marge de 40 m) ne sont envoyés ni à la carte ni au rendu 3D |
+| **Fond de carte** | changer de fond pendant que le trafic roule ne l'efface pas : la couche est reposée au chargement du nouveau style et les véhicules 3D sont repréparés (les points tiennent la place un instant) |
 | **Repli** | pas de modèle 3D (téléphone en lecture, `?no3d=1`, fichier introuvable) ou réglage « Véhicules en 3D » désactivé : des points à tous les zooms ≥ 13 |
 
 Les véhicules 3D sont des instances (`InstancedMesh`) de la scène d'Atlas (`Models3D.vehicules*` dans `app_v7.js`), recalculées à chaque image ; ils ne sont pas des entités d'une couche. Le bus tient lieu de poids lourd faute de camion dans le catalogue ; les véhicules ne projettent pas d'ombre.

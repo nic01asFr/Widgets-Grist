@@ -19,6 +19,7 @@ Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, a
 - **Ajouté** : fondu à l'apparition (0,6 s) et à l'arrêt (0,4 s, `arreter({ doucement: true })`).
 - **Ajouté** : niveau de détail selon le zoom (rien sous le zoom 13, des points ensuite, des modèles 3D du catalogue — `car` et `bus` — à partir du zoom 16), et seuls les véhicules de la fenêtre visible sont dessinés.
 - **Ajouté** : `Models3D.vehiculesPreparer/Maj/Effacer` : les véhicules 3D sont des instances de la scène d'Atlas, orientées selon leur cap, posées sur le sol ; réglage « Véhicules en 3D (de près) » dans la section « Trafic simulé » de « Vue & rendu ».
+- **Corrigé** : changer le fond de carte pendant que le trafic roule le faisait disparaître définitivement (le changement de style emporte la source et la couche, et la scène 3D est refaite) : la couche est reposée au chargement du nouveau style (ou au dessin suivant si aucun évènement n'est émis), et les véhicules 3D sont repréparés.
 - **Composant BI** : inchangé (contrat 0.3, même client).
 
 ## 1.16.2 — le trafic simulé ne fige plus la carte
