@@ -238,6 +238,8 @@ import {
   isWriteAclError,
 } from './lib/view-mode.js?v=20260926a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
+import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=20261010a';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=20261010a';
 import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=20260926a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
@@ -1339,7 +1341,7 @@ function paletteColor(name, i, total, inverse = false) {
     return p[clamp(idx, 0, p.length - 1)];
 }
 function fieldExpr(field) {
-  return ['to-string', ['coalesce', ['at', 0, ['get', field]], ['get', field]]];
+  return ['to-string', ['case', ['==', ['typeof', ['get', field]], 'array'], ['at', 0, ['get', field]], ['get', field]]];
 }
 function buildColorMatch(field, categories, def) {
     const expr = ['match', fieldExpr(field)];
@@ -2981,8 +2983,9 @@ function featureCentroidLngLat(feature) {
 
 function featureExtrusionHeightM(feature, layer) {
     const p = feature?.properties || {};
-    if (layer?.heightField != null && p[layer.heightField] != null && p[layer.heightField] !== '') {
-        const h = Number(p[layer.heightField]);
+    const champ = layer?.heightField ?? layer?.style?.heightField;
+    if (champ != null && p[champ] != null && p[champ] !== '') {
+        const h = Number(p[champ]);
         if (Number.isFinite(h) && h > 0) return Math.min(h, 120);
     }
     for (const k of ['height_m', 'height', 'building:levels']) {
@@ -3806,7 +3809,7 @@ function addLayerToMap(layer) {
         layer._sourceGroupee = !!(groupe && estPointG);
         layer._grappeZoom = groupe && !estPointG ? zoomFormes(cfgG) : null;
         map.addSource(layer.id, {
-            ...optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }),
+            ...optionsSourceGeojson(data || { type: 'FeatureCollection', features: [] }, attributionDe(layer)),
             ...(layer._sourceGroupee ? optionsGrappes(cfgG, symG) : {}),
         });
         if (layer._grappeZoom != null) {
@@ -4078,7 +4081,7 @@ function applyPolygonStyle(layer) {
         if (sym.size.mode === 'graduated' && sym.size.field) {
             const r = getNumericRange(layer, sym.size.field);
             if (r.count) height = buildNumGraduated(sym.size.field, [r.min, r.max], sym.size.outputRange, sym.size.method);
-        } else if (layer.heightField) height = ['to-number', ['get', layer.heightField]];
+        } else if (layer.heightField || s.heightField) height = ['to-number', ['get', layer.heightField || s.heightField]];
         const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
         // Rien a poser : MapLibre drape lui-meme l'extrusion sur le relief.
         const ext = extrusionExpressions(base, height);
@@ -5796,7 +5799,7 @@ function availableTablesSection() {
             <div class="actions-grille">
                 ${CONFIG.grist.ready && canWrite(CONFIG.viewMode) ? `<button class="btn btn-soft" onclick="A.openNouvelleCouche()" title="Créer une couche vide, portée par une nouvelle table Grist">${icTrait(IC.plus)} Nouvelle</button>` : ''}
                 <button class="btn btn-soft" onclick="document.getElementById('file-input').click()" title="Ouvrir un fichier GeoJSON">${icTrait(IC.fichier)} Fichier</button>
-                <button class="btn btn-soft" onclick="A.openOSM()" title="Importer depuis OpenStreetMap">${icTrait(IC.globe)} OSM</button>
+                ${boutonsSourcesImport((n) => icTrait(IC[n]), echapper)}
                 ${CONFIG.grist.ready ? `<button class="btn btn-soft" onclick="A.openLinkTable()" title="Lier une autre table du document">${icTrait(IC.lien)} Autre table…</button>` : ''}
             </div>
         </div>`;
@@ -8855,7 +8858,7 @@ function renderSymbologyInspector(layer) {
     $('insp-head').innerHTML = `
         <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>Symboliser${is3D ? ' · <span style="color:var(--accent2)">3D</span>' : ''}</div>
         <div class="insp-title">${echapper(layer.name)}</div>
-        <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>
+        <div class="insp-sub">${formatLayerCount(layer)} objets · ${layer.geometryType}</div>${htmlProvenance(layer, echapper)}
         ${modelChip}
         ${actionsEntete(layer)}`;
     $('insp-tabs').innerHTML = tabs.map((t) => `<button class="insp-tab ${inspSymTab === t ? 'active' : ''}" onclick="A.setSymTab('${t}')">${t}</button>`).join('');
@@ -14241,7 +14244,7 @@ function buildCmdItems(q) {
         { label: 'Catalogue 3D / Réglages', kind: 'module', run: () => openModule('reglages'), ic: icTrait(IC.reglages) },
         { label: 'Soleil', kind: 'module', run: () => openModule('soleil'), ic: icTrait(IC.soleil) },
         { label: 'Vue & rendu', kind: 'module', run: () => openModule('vues'), ic: icTrait(IC.cube) },
-        { label: 'Importer depuis OSM', kind: 'action', run: () => { openModule('couches'); openOSM(); }, ic: icTrait(IC.globe) },
+        ...entreesPaletteSources({ icone: (n) => icTrait(IC[n]), lancer: (src) => { openModule('couches'); A[src.ouvrir](); } }),
         { label: 'Importer un fichier', kind: 'action', run: () => $('file-input').click(), ic: icTrait(IC.fichier) },
         { label: 'Télécharger le projet (.json)', kind: 'action', run: saveProject, ic: icTrait(IC.enregistrer) },
         { label: 'Exporter… (GeoJSON, CSV, KML, GPX, image)', kind: 'action', run: () => ouvrirMenuExport(), ic: icTrait(IC.exporter) },
@@ -15281,6 +15284,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
+    openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
             A.zoomLayer(id);

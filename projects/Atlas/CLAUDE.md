@@ -15,9 +15,10 @@ Atlas/
 ├── index_v7.html          # Entrée courante (v7) — source de publication
 ├── app_v7.js              # Logique v7 (ES module)
 ├── lib/                   # 67 modules ES, sans dépendance à app_v7.js (voir familles ci-dessous)
+│   └── reseau/            # réseau routier IGN : client WFS BD TOPO, graphe, calage, itinéraire IGN, filiation (bibliothèques, pas encore branchées)
 ├── docs/                  # cadrages (CADRAGE-*.md), BINDING-*, CARTE-DES-EXPOSITIONS, BILAN-*, études-*
 ├── tests/                 # node --test (88 fichiers, 1241 tests au 02/10/2026)
-├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs
+├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs, mesurer-calage.mjs
 └── CLAUDE.md
 ```
 
@@ -31,7 +32,7 @@ Familles de `lib/` (état du 02/10/2026) :
 | Géométrie et dessin | `geometrie-saisie`, `nouvelle-couche`, `wkt`, `point-fallback`, `volume-relief`, `terrain-base`, `viewport` |
 | Objets 3D et catalogue | `model-layer`, `catalogue-objets`, `modele-id`, `palette-objets`, `gltf-chargeur`, `parametres-objet`, `parametres-figer` |
 | Éclairage et soleil | `eclairage-profil`, `eclairage-rendu`, `luminaires-three`, `facades-eclairees`, `nuit-rendu`, `qualite-eclairage`, `soleil`, `arc-solaire`, `horloge-scene` |
-| Hôte, interface, import | `hote`, `hote-ui`, `habillage-carte`, `feuille-mobile`, `edge-scroll`, `layer-order`, `ouvrir-fichier`, `osm-requete`, `vue-import`, `basemap-layers`, `decouverte`, `graine`, `html` |
+| Hôte, interface, import | `hote`, `hote-ui`, `habillage-carte`, `feuille-mobile`, `edge-scroll`, `layer-order`, `ouvrir-fichier`, `osm-requete`, `vue-import`, `sources-import`, `import-lots`, `import-ign`, `import-ign-session`, `import-ign-couche`, `vue-import-ign`, `provenance-couche`, `basemap-layers`, `decouverte`, `graine`, `html` |
 | Composant carte BI (sous-dossier `lib/bi/`) | `acces-carte` (point d'accès à la carte, dans `lib/`) ; dans `lib/bi/` : `bi-runtime`, `pont`, `liaison`, `montage`, `client`, `atlas-bi-element`, `agregats`, `echelles`, `legende`, `lecture-temps`, `fond`, `fond-plan`, `clavier`, `clavier-runtime`, `repli`, `icones-etats`, `admin*`, `choroplethe`, `donnees/` |
 
 > **`projects/Atlas/app.js` sur `origin/main` — ne pas écraser.**
@@ -3185,3 +3186,33 @@ Contrôle en navigateur de la 1.13.2 : scène hostile servie par un autre port, 
 ## Itinéraire orienté : BD TOPO et OpenStreetMap (10/10/2026)
 
 Le tracé sur un réseau (`lib/itineraire.js`) respecte les sens uniques quand les tronçons les portent : colonne `sens_de_circulation` de la BD TOPO (« Sens direct », « Sens inverse », « Double sens ») ou étiquettes OpenStreetMap que l'import garde dans les propriétés (`oneway` yes/-1/no, puis `junction=roundabout` et `highway=motorway` quand `oneway` est absent). La BD TOPO l'emporte quand elle est renseignée. Un réseau dont aucun tronçon ne porte de sens n'est pas orienté et se comporte comme avant (le panneau le dit : « le tracé vaut à pied »). Tests : `tests/itineraire-sens.test.js`, `tests/itineraire-sens-osm.test.js`, `tests/itineraire-sens-ui.test.js`.
+
+## Données IGN et tracé calé sur le réseau : `lib/reseau/` (09/10/2026)
+
+Des **bibliothèques** (modules ES purs, `fetch` injectable, tests sans réseau), **pas branchées dans `app_v7.js`**. Tout est dans `docs/DONNEES-IGN.md`
+(inventaire des données, limites, licences, ce qui est mesuré et ce qui ne l'est pas). L'essentiel pour qui y touche :
+
+- `wfs-bdtopo.js` lit la BD TOPO par le WFS de la Géoplateforme (sans clé). **`BBOX` et non `CQL_FILTER=BBOX(…)`** (zéro objet, sans erreur) ; **`SORTBY` toujours** (sans tri, la pagination n'est pas fiable) ;
+  filtres **côté client** ; les erreurs du service sont du XML ; les positions portent une altitude.
+- `graphe-routier.js` : une arête par tronçon (`cleabs`, sens, voies, importance, niveau, numéro et noms de route), mètres dans un repère local. On ne se connecte qu'aux **extrémités** : un pont ne rejoint pas la route qu'il enjambe.
+- `calage.js` : calage d'une ligne sur le graphe (HMM, rayon 30 m) et plus court chemin ; rend des **portions de tronçon** (`cleabs`, `s0`, `s1`), pas des tronçons entiers. Il rend toujours un chemin plausible, y compris faux.
+  **Mesuré contre une vérité de routage** (250 trajets du service d'itinéraire, 30 départements — pas un relevé terrain : jamais présenter ses mesures comme une exactitude terrain) : F1 0,90 en moyenne, 0,86 en ville dense.
+  `orientee: true` honore les sens uniques (+2 points, +4 en ville dense) **mais suppose la ligne ordonnée dans le sens de la marche** (à l'envers : 0,81 au lieu de 0,90, `contreSens` le trahit).
+  Une ligne décimée qui sort du rayon est perdue.
+- `confiance.js` : chaque tronçon retenu a un score calibré et une classe haute / moyenne / faible (précision mesurée sur 10 départements jamais vus : 98,5 % / 88,4 % / 64,1 %). Modèle appris par `tools/calibrer-confiance.mjs` : ne pas éditer `confiance-modele.js` à la main, recalibrer si le calage change.
+- `itineraire-geoplateforme.js` : facultatif. Le service accroche un point hors réseau **en silence** (une mer à ~27 km) : le client refuse au-delà de 500 m. Seule `bdtopo-pgr` rend les `cleabs`.
+- `filiation.js` : qui descend de qui entre deux éditions (aucune table n'est publiée : cherchée, non trouvée). Validée sur deux éditions complètes d'un département (F1 des liens 0,94 à 2 m de bruit ; 62 % des détruits ont un successeur). Ne contient **aucun code d'ancrage** ; `cleabsOrigine` en est l'entrée.
+- `reperes.js` : repères routiers (PR). `resoudre({route, pr, abscisse})` ↔ `localiser(point)` ↔ `plusProches`. L'abscisse est des **mètres depuis le PR** (les PR ne sont pas à 1 km), un même numéro de PR existe dans plusieurs départements (erreur `pr_ambigu`, jamais un choix silencieux), un repère hors de l'emprise lue n'est pas chargé (marge de 8 km : `chargerAutour`). Cohérence interne mesurée, **pas l'écart avec les PR physiques**.
+- Rien de propre à une application métier ici : pas de logique de réglementation, pas de rapprochement de textes. Les applications métier se branchent via ces modules.
+
+## Import de données de l'IGN : bouton « IGN » (10/10/2026)
+
+Un bouton **IGN** à côté d'**OSM** (panneau Couches, et la palette de commandes) importe la BD TOPO et Admin Express par le WFS de la Géoplateforme, sur l'emprise visible. Tout est dans `docs/IMPORT-IGN.md` (utilisation, jeux, mesures, limites, licence, comment ajouter un jeu). L'essentiel pour qui y touche :
+
+- **Chargé à la demande** : `A.openIGN` fait un `import()` de `lib/vue-import-ign.js`. `app_v7.js` ne porte que la délégation, le registre des sources et trois branchements d'une ligne (attribution de la source GeoJSON, provenance dans l'inspecteur, lecture de `style.heightField`). Ne pas y ajouter de logique d'import.
+- **Découpage** : `import-ign.js` (catalogue des jeux, requêtes, normalisation, provenance, messages ; pur) · `import-lots.js` (seuils, suivi, rapport des refus, importer par pages ; **commun à toute source volumineuse**, pas propre à l'IGN) · `import-ign-session.js` (la conduite, avec réseau, carte et couche injectés ; testée de bout en bout contre un faux service) · `import-ign-couche.js` (style par défaut posé sur la symbolisation) · `vue-import-ign.js` (DOM) · `provenance-couche.js` · `sources-import.js` (registre OSM / IGN). Le client est `reseau/wfs-bdtopo.js` (`lirePages`, `compterHits`).
+- **Seuils** : avertir au-dessus de 5 000 objets, **refuser au-dessus de 50 000** (« zoomez »), **jamais de requête sans emprise** ; côté d'emprise limité par jeu. L'estimation est un `resultType=hits` (XML, `numberMatched`), mesuré identique à l'import sur 18 imports réels.
+- **Chaque couche et attribut d'un jeu est vérifié contre une réponse réelle** (`tests/fixtures/import-ign/`) : un test refuse un attribut inconnu du service. Ne reprendre aucun nom de couche ou d'attribut sans l'avoir relevé.
+- **Une ligne par `cleabs`** : un `Multi…` de plusieurs parties reste un objet, d'une seule partie il devient simple ; l'altitude est retirée ; `cleabs` et `date_modification` sont gardés (mise à jour future). Pas de `hauteur` sur 0,1 à 4 % des bâtiments : ils restent importés, à plat.
+- **La provenance est dans `couche.style.provenance`** (source, jeu, licence, attribution, édition, emprise) : c'est ce qu'Atlas enregistre avec le projet et l'apparence. L'attribution de la carte est du **texte seul** (MapLibre l'écrit avec `innerHTML`, une provenance vient d'un fichier). L'édition annoncée par le service (`EDITION_ANNONCEE`) est une constante datée à relever de nouveau ; le WFS a un trimestre de retard sur le jeu téléchargeable.
+- **Fusion avec `atlas/securite-attribution`** : elle impose `attributionSure()` à toute attribution passée à MapLibre. `optionsSourceGeojson(data, attribution)` (`lib/terrain-base.js`) reçoit un texte déjà réduit par `attributionDe`, et le balayage de ses tests ne le voit pas (forme abrégée) ; à la fusion, y envelopper la valeur dans `attributionSure`.
