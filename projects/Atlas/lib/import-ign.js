@@ -63,11 +63,11 @@ const MENTION_RETARD = 'Le WFS de la Géoplateforme sert l’édition trimestrie
 /** Les produits : de quoi composer la mention de source et l'avertissement. */
 export const PRODUITS = Object.freeze({
   bdtopo: Object.freeze({
-    id: 'bdtopo', nom: 'BD TOPO®', producteur: 'IGN', attribution: '© IGN — BD TOPO® (Licence Ouverte 2.0)',
+    id: 'bdtopo', nom: 'BD TOPO®', producteur: 'IGN', mention: '© IGN — BD TOPO® (Licence Ouverte 2.0)',
     avertissementEdition: MENTION_RETARD,
   }),
   admin: Object.freeze({
-    id: 'admin', nom: 'ADMIN EXPRESS', producteur: 'IGN', attribution: '© IGN — ADMIN EXPRESS (Licence Ouverte 2.0)',
+    id: 'admin', nom: 'ADMIN EXPRESS', producteur: 'IGN', mention: '© IGN — ADMIN EXPRESS (Licence Ouverte 2.0)',
     avertissementEdition: 'Dernière édition publiée sur la Géoplateforme au moment de l’import ; la population est celle du recensement indiqué sur chaque commune.',
   }),
 });
@@ -411,7 +411,7 @@ export function metadonneesCouche(preset, { emprise, importes, estimes = null, e
     couche: preset.couche,
     service: URL_WFS,
     licence: { nom: LICENCE.nom, url: LICENCE.url, conditions: LICENCE.conditions },
-    attribution: produit.attribution,
+    mention: produit.mention,
     edition: {
       annoncee: annoncee.edition,
       releveeLe: annoncee.relevee,

@@ -254,8 +254,8 @@ describe('import-ign — la provenance', () => {
     assert.equal(m.jeu, 'BD TOPO®');
     assert.equal(m.licence.nom, 'Licence Ouverte 2.0');
     assert.match(m.licence.url, /^https:\/\//);
-    assert.match(m.attribution, /IGN/);
-    assert.match(m.attribution, /Licence Ouverte 2\.0/);
+    assert.match(m.mention, /IGN/);
+    assert.match(m.mention, /Licence Ouverte 2\.0/);
     assert.equal(m.cle, 'cleabs');
     assert.equal(m.champDateModification, 'date_modification');
     assert.equal(m.importeLe, '2026-10-10T12:00:00.000Z');
@@ -281,7 +281,7 @@ describe('import-ign — la provenance', () => {
   });
 
   it('l’attribution est du texte : aucune balise, aucun guillemet, aucune esperluette (elle part dans innerHTML)', () => {
-    for (const prod of Object.values(PRODUITS)) assert.doesNotMatch(prod.attribution, /[<>&"'`]/);
+    for (const prod of Object.values(PRODUITS)) assert.doesNotMatch(prod.mention, /[<>&"'`]/);
     assert.ok(LICENCE.conditions.startsWith('https://'));
   });
 

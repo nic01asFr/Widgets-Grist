@@ -29,8 +29,8 @@ describe('provenance-couche — l’attribution de la carte', () => {
   it('rien sans provenance', () => {
     assert.equal(attributionDe({}), null);
     assert.equal(attributionDe(couche({})), null);
-    assert.equal(attributionDe(couche({ attribution: 12 })), null);
-    assert.equal(attributionDe(couche({ attribution: '   ' })), null);
+    assert.equal(attributionDe(couche({ mention: 12 })), null);
+    assert.equal(attributionDe(couche({ mention: '   ' })), null);
   });
 
   it('une provenance venue d’un fichier ne peut pas écrire du HTML dans la carte (MapLibre passe par innerHTML)', () => {
@@ -41,13 +41,13 @@ describe('provenance-couche — l’attribution de la carte', () => {
       'IGN &lt;b&gt; `x` \\u003c',
     ];
     for (const a of pieges) {
-      const sortie = attributionDe(couche({ attribution: a }));
+      const sortie = attributionDe(couche({ mention: a }));
       assert.doesNotMatch(sortie ?? '', /[<>&"'`\\]/, a);
     }
   });
 
   it('coupe ce qui n’est plus une mention', () => {
-    assert.equal(attributionDe(couche({ attribution: 'x'.repeat(5000) })).length, 200);
+    assert.equal(attributionDe(couche({ mention: 'x'.repeat(5000) })).length, 200);
   });
 
   it('ne lit pas `_attribution` : ce champ vient des scènes et reste hors de ce chemin', () => {

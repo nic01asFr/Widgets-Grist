@@ -40,7 +40,7 @@ function texteSur(valeur) {
  * @param {object|null} couche
  */
 export function attributionDe(couche) {
-  return texteSur(provenanceDe(couche)?.attribution);
+  return texteSur(provenanceDe(couche)?.mention);
 }
 
 const estHttps = (u) => typeof u === 'string' && /^https:\/\/[^\s"'<>`]+$/.test(u);
