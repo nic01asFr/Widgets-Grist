@@ -3136,3 +3136,27 @@ l'auteur), `recit.json` (12 étapes dont 5 contextes), `fabriquer-scene.py` (sc�
 Page d'essai : `essais-controles/index-vitrine-bulle.html?longchamp=1&liste=1[&config=1][&neuf=1]`. Leçons : une scène ouverte par adresse rend `popup_template` comme du **texte** (déclarer des `fields` aux libellés) ;
 deux objets au même point se masquent (décaler) ; en exploitation la maquette gêne (ronds 2D lisibles, 3D réservée au récit) ; le libellé d'une catégorie venant d'une table de référence se perdait à la réouverture
 (`declarativeFromAtlasLayer`, corrigé, testé). Les agrégats en volume passent par des formules Grist : l'agrégat natif d'Atlas est reporté (voir la mémoire du projet).
+
+
+## Sécurité : un texte venu d'ailleurs s'écrit comme texte, jamais comme HTML (10/10/2026, 1.13.2)
+
+Audit des 9 et 10/10/2026 : une scène ouverte par `?scene=`, un catalogue de modèles (`?models=`) ou l'adresse elle-même apportent des chaînes
+(nom de couche, étiquette de contrôle, attribution) écrites dans l'interface par `innerHTML`. Un `<iframe srcdoc>` dans l'attribution d'une couche de tuiles
+exécutait un script dans l'origine d'Atlas, et dans l'APK ce script lisait la clé d'API gardée sur l'appareil (défaut D1).
+
+**Règles à tenir** (chacune a un test qui échoue si elle est violée) :
+- **Attribution** : toute chaîne passée à MapLibre dans `attribution` passe par `attributionSure` (`lib/attribution.js`) : des liens `http(s)` et une mise en forme minimale,
+  reconstruits balise par balise (`lib/html.js`, `assainirTexte`), avec `rel="noopener noreferrer"` et `target="_blank"` ; tout le reste est écrit comme du texte.
+  `tests/attribution.test.js` balaie les sources.
+- **Messages éphémères** : `showToast` pose le message par `textContent` (`lib/toast.js`, `creerToast`), jamais par `innerHTML`. `tests/toast.test.js`.
+- **Panneaux** : un nom, une étiquette, un texte de scène, de catalogue ou d'adresse passe par `echapper` (`lib/html.js`) avant d'entrer dans un gabarit HTML.
+  `tests/securite-interface.test.js` vérifie chaque site corrigé puis balaie `app_v7.js` : une de ces expressions brutes dans un gabarit fait échouer le test.
+- **Balise CSP** (`index_v7.html`) : `base-uri 'self'; object-src 'none'; form-action 'self'`. GitHub Pages n'envoie aucun en-tête de sécurité et une balise `meta` ne
+  honore ni `frame-ancestors` ni `sandbox`. Pas de `script-src` : les gestionnaires `onclick="A.…"` et l'import map en ligne en ont besoin. `tests/csp-meta.test.js` vérifie la balise
+  et que la page n'emploie aucun élément qu'elle interdit.
+- **Workflows** : une saisie libre d'un `workflow_dispatch` (la raison de `forum.yml`) passe par une variable d'environnement, jamais interpolée dans un script (défaut D9).
+  `scripts/workflows-injection.test.js`.
+
+**À ne pas faire** : écrire une chaîne de scène, de document ou d'adresse dans `innerHTML`, `insertAdjacentHTML` ou un attribut sans `echapper` ; ajouter un `script-src` à la balise CSP
+sans avoir retiré les gestionnaires en ligne ; supposer que MapLibre assainit l'attribution (il laisse passer `<iframe srcdoc>`, `<form>`, `<base>`, `<link>`, `<meta refresh>`, `<object>`).
+Contrôle en navigateur de la 1.13.2 : scène hostile servie par un autre port, aucun script exécuté, attribution nettoyée, lien légitime conservé, nom hostile en texte littéral.
