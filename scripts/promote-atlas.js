@@ -73,6 +73,7 @@ if (fs.existsSync(biSrc)) {
     }
   }
   for (const f of fs.readdirSync(biPub)) {
+    if (!f.endsWith('.js')) continue;      // `donnees/` est un dossier : on ne lit que les modules
     for (const m of fs.readFileSync(path.join(biPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
       if (!fs.existsSync(path.join(biPub, m[1]))) {
         console.error(`Echec : lib/bi/${f} importe ${m[1]}, absent de la copie publiee`);
