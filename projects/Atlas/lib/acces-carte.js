@@ -56,3 +56,24 @@ export function attendreCarte(cible, { delai = 20000 } = {}) {
     }, delai);
   });
 }
+
+/**
+ * Une erreur de la carte rend-elle le style de base INUTILISABLE (la carte ne sera alors jamais « prête ») ? Si oui, Atlas bascule sur un aplat.
+ *
+ * Deux familles : le réseau manque (échec de `fetch`, délai, hors ligne : `status` 0 ou message), ou le serveur du style (ou du document
+ * TileJSON d'une source) répond une erreur HTTP — 404, 503 : service arrêté, quota, panne. Seule la première bascule avant ; la seconde laissait
+ * la carte sans « load », donc le composant BI muet pour toujours (l'hôte ne voyait qu'un `delai`).
+ *
+ * Ne sont PAS fatales : une tuile (`e.tile`), un sprite, une police — la carte se charge sans eux.
+ * @param {{error?:{message?:string, status?:number, url?:string}, sourceId?:string, tile?:object}} e  évènement `error` de MapLibre
+ * @param {string|null} urlStyle  adresse du style de base, quand il en a une (les fonds IGN en raster n'en ont pas)
+ */
+export function styleDeBaseIllisible(e, urlStyle = null) {
+  const err = e && e.error; if (!err || typeof err !== 'object') return false;
+  const message = String(err.message || '');
+  if (/fetch|network|load failed|failed to|timeout|offline|impossible/i.test(message) || err.status === 0) return true;
+  if (typeof err.status !== 'number' || err.status < 400) return false;
+  if (e.tile) return false;                          // une tuile manquante n'empêche pas le style de se charger
+  if (e.sourceId) return true;                       // le document TileJSON d'une source
+  return !!urlStyle && err.url === urlStyle;         // le document de style lui-même
+}
