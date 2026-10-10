@@ -14,6 +14,7 @@
 import { attacher } from './bi-runtime.js';
 import { installerClavier } from './clavier-runtime.js';
 import { creerPont, VERSION, VERSIONS_ACCEPTEES } from './pont.js';
+import { creerVoile, parametresInitiaux, voileDemande } from './voile.js';
 
 /** Vrai quand l'URL demande le mode composant : `?bi=1` (ou `true`). */
 export function biDemande(search = '') {
@@ -105,6 +106,16 @@ export function monter({ carte, fenetre, document: doc = fenetre.document, searc
   fenetre.__bi = rt;
   const clavier = installerClavier(rt, { conteneur: carte.getCanvasContainer(), document: doc });
   fenetre.__clavier = clavier;
+  // Premier rendu (voir voile.js) : la carte reste sous un voile neutre jusqu'à la scène de l'hôte ; le fond et la charte nommés de l'adresse
+  // (`?fond=`, `?theme=`) sont posés avant, pour que le premier rendu visible soit le bon. `?voile=0` rend le comportement d'avant.
+  const initiaux = parametresInitiaux(search);
+  for (const i of initiaux.ignorees) journal.warn('[Atlas BI] paramètre d\'adresse ignoré (valeur hors liste) : ' + i);
+  const reglages = (async () => {
+    try { if (initiaux.theme) rt.api.setTheme({ base: initiaux.theme }); if (initiaux.fond) await rt.api.setFond(initiaux.fond); }
+    catch (e) { journal.warn('[Atlas BI] réglage initial de l\'adresse refusé : ' + (e && e.message)); }
+  })();
+  const voile = voileDemande(search) ? creerVoile({ document: doc, carte }) : null;
+  if (voile) { const apresScene = () => { reglages.then(() => voile.lever('scene')); }; rt.on('ready', apresScene); rt.on('layer', apresScene); }
   liaison.annoncer({ hotes: source });
-  return { rt, liaison, clavier, hotes, source };
+  return { rt, liaison, clavier, hotes, source, voile, reglages };
 }
