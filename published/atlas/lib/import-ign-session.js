@@ -25,9 +25,9 @@
  * arrivée trop tard (jeton périmé) est ignorée.
  */
 
-import { presetDe, estimer, pagesDe, normaliserEntite, cleDeEntite, decisionImport, estimerDuree, messageErreurImport, verifierEmprise } from './import-ign.js?v=1.16.2';
-import { evaluerVolume, importerParPages, nouvelEtatImport } from './import-lots.js?v=1.16.2';
-import { creerCoucheIgn } from './import-ign-couche.js?v=1.16.2';
+import { presetDe, estimer, pagesDe, normaliserEntite, cleDeEntite, decisionImport, estimerDuree, messageErreurImport, verifierEmprise } from './import-ign.js?v=1.16.3';
+import { evaluerVolume, importerParPages, nouvelEtatImport } from './import-lots.js?v=1.16.3';
+import { creerCoucheIgn } from './import-ign-couche.js?v=1.16.3';
 
 const memeEmprise = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === 4 && a.every((v, i) => Math.abs(v - b[i]) < 1e-6);
 

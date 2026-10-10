@@ -25,7 +25,7 @@
  *
  * Ce module ne touche ni au DOM, ni à Grist.
  */
-import { TABLES_CONFIGURATION, TABLES_INVENTAIRE } from './atlas-tables.js?v=1.16.2';
+import { TABLES_CONFIGURATION, TABLES_INVENTAIRE } from './atlas-tables.js?v=1.16.3';
 
 export const POSTURES = Object.freeze(['preparer', 'exploiter', 'lecture']);
 

@@ -8,7 +8,7 @@
  * cercle 2D. Ce critère décide où ces réglages ont le droit d'apparaître, et où
  * ils ont le droit d'être écrits.
  */
-import { libelleFormulaire } from './fiche-formulaire.js?v=1.16.2';
+import { libelleFormulaire } from './fiche-formulaire.js?v=1.16.3';
 
 /** La couche est-elle rendue par des modèles 3D instanciés sur des points ? */
 export function isModelLayer(layer) {
