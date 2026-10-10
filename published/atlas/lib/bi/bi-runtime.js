@@ -8,9 +8,9 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.14.1';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.14.1';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.14.1';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.14.2';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.14.2';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.14.2';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
@@ -45,7 +45,7 @@ export function attacher(map, opts = {}) {
   const themes = creerGestionnaire({ theme: opts.theme || null, preferences: opts.preferences !== undefined ? opts.preferences : preferencesDepuisFenetre() });
   let theme = themes.theme;
   const couches = new Map();         // id -> couche
-  let selection = null, survol = null, emetteur = () => {}, camApi = false;
+  let selection = null, survol = null, emetteur = () => {}, camApi = false, attributionScene = null;   // `manifest.attribution` de la scène en cours (mention de l'hôte, du texte et des liens sûrs)
   const ecouteurs = new Map();       // type -> Set(cb)
   const fond = creerFond(map); let modeFond = 'atlas';
   let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
@@ -94,7 +94,7 @@ export function attacher(map, opts = {}) {
       const d2 = copie(decl); if (d2.color) d2.color = pour(d2.color); for (const st of d2.stops || []) st.color = pour(st.color);
       return expressionCouleurDeclarative(d2, T.contour) || T.contour;
     };
-    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionSure(c.admin.meta.attribution) } : {}) } : {}) });
+    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionSure(c.admin.meta.attribution) } : {}) } : (attributionScene && attributionSure(attributionScene) ? { attribution: attributionSure(attributionScene) } : {})) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));
@@ -230,9 +230,19 @@ export function attacher(map, opts = {}) {
       if (survol && survol.admin) map.setFeatureState({ source: survol.source, id: survol.id }, { hover: true });
       emettre('hover', { layer: c ? c.id : null, featureId: k, ...(c ? { key: c.admin ? k : cle(c, f) } : {}), ...(c && c.admin ? admin.infosUnite(c, k) : {}) }, 'utilisateur'); });
   }
+  // Le pointeur quitte la carte (l'iframe) : seul `mousemove` était écouté, l'hôte gardait donc le dernier survol. Même charge que « plus rien sous le pointeur ».
+  function surSortie() {
+    if (rafSurvol) { if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafSurvol); rafSurvol = 0; }
+    if (!survol) return;
+    if (survol.admin) { try { map.setFeatureState({ source: survol.source, id: survol.id }, { hover: false }); } catch (e) { /* source retirée */ } }
+    survol = null; try { map.getCanvas().style.cursor = ''; } catch (e) { /* carte retirée */ }
+    emettre('hover', { layer: null, featureId: null }, 'utilisateur');
+  }
   let tmCam = 0;
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
+  const conteneurCarte = typeof map.getCanvasContainer === 'function' ? map.getCanvasContainer() : null;
+  if (conteneurCarte && conteneurCarte.addEventListener) conteneurCarte.addEventListener('mouseleave', surSortie);
 
   // ---------- édition (déplacement d'un point ; l'hôte persiste) ----------
   let glisse = null;
@@ -291,6 +301,7 @@ export function attacher(map, opts = {}) {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
       for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {};
+      attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
@@ -345,7 +356,12 @@ export function attacher(map, opts = {}) {
     ...admin.api,
     /** Repli hors ligne : true (forcé), false (retour au fond précédent), 'auto' (détection : événement navigateur et échecs de tuiles). */
     async setHorsLigne(v) {
-      if (v === 'auto') { horsLigne.auto = true; return { actif: horsLigne.actif, auto: true }; }
+      if (v === 'auto') {
+        horsLigne.auto = true;
+        // « auto » rend la main à la détection : un hors ligne FORCÉ par l'hôte ne reste pas vrai, sauf si le navigateur est réellement hors réseau.
+        if (horsLigne.actif && horsLigne.cause === 'hote' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) return basculerHorsLigne(false, 'hote', true);
+        return { actif: horsLigne.actif, auto: true };
+      }
       return basculerHorsLigne(!!v, 'hote', false);
     },
     batch: (ordres, o) => executerBatch(apiGardee, ordres, o),

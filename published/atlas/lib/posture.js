@@ -17,7 +17,7 @@
  * il nomme, et choisit parmi ce que `posturesOffertes` (lib/droits-tables.js)
  * propose. Grist refuse ce qui n'est pas permis, et Atlas l'apprend.
  */
-import { POSTURES } from './droits-tables.js?v=1.14.1';
+import { POSTURES } from './droits-tables.js?v=1.14.2';
 
 export { POSTURES };
 

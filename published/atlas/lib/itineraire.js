@@ -17,7 +17,7 @@
  * Module pur : des coordonnées en entrée, des coordonnées en sortie.
  */
 
-import { distanceMetres } from './releve.js?v=1.14.1';
+import { distanceMetres } from './releve.js?v=1.14.2';
 
 export const VERSION = '1.0.0';
 
@@ -35,7 +35,33 @@ export function sensBdTopo(valeur) {
   if (valeur === 'Sens inverse') return 'inverse';
   return 'double';
 }
-const sensDeEntite = (e) => sensBdTopo(e?.properties?.sens_de_circulation);
+/**
+ * Le sens de circulation d'OpenStreetMap, lu dans les étiquettes que l'import garde telles quelles : `oneway=yes|true|1` -> « direct », `oneway=-1|reverse` ->
+ * « inverse », `oneway=no` -> double sens. Sans étiquette `oneway`, un rond-point (`junction=roundabout|circular`) et une autoroute (`highway=motorway`,
+ * `motorway_link`) sont à sens unique, comme le dit le modèle d'OSM ; tout le reste est à double sens.
+ */
+export function sensOsm(proprietes) {
+  const p = proprietes || {};
+  const o = String(p.oneway ?? '').trim().toLowerCase();
+  if (o === 'yes' || o === 'true' || o === '1') return 'direct';
+  if (o === '-1' || o === 'reverse') return 'inverse';
+  if (o === 'no' || o === 'false' || o === '0') return 'double';
+  const jonction = String(p.junction ?? '').toLowerCase();
+  if (jonction === 'roundabout' || jonction === 'circular') return 'direct';
+  const route = String(p.highway ?? '').toLowerCase();
+  if (route === 'motorway' || route === 'motorway_link') return 'direct';
+  return 'double';
+}
+
+/**
+ * Le sens d'une entité : la colonne `sens_de_circulation` de la BD TOPO quand elle est là, sinon les étiquettes d'OpenStreetMap. Une entité qui ne porte ni
+ * l'une ni l'autre est à double sens.
+ */
+const sensDeEntite = (e) => {
+  const p = e?.properties;
+  if (p && p.sens_de_circulation != null && p.sens_de_circulation !== '') return sensBdTopo(p.sens_de_circulation);
+  return sensOsm(p);
+};
 
 const CLE = (p) => `${Math.round(p[0] * 1e5)}_${Math.round(p[1] * 1e5)}`;
 

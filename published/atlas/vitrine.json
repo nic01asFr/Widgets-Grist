@@ -24,12 +24,16 @@
   },
   "journal": [
     {
+      "version": "v1.14.2",
+      "texte": "Les routes importées d’OpenStreetMap portent leurs sens uniques : un itinéraire tracé dessus ne remonte plus une rue à sens unique, ni un rond-point à contresens (le sens de la BD TOPO de l’IGN passe avant celui d’OpenStreetMap quand les deux existent). Pour les applications qui affichent la carte : la sortie du pointeur est annoncée, « automatique » rend la main à la détection du réseau au lieu de garder un hors ligne forcé, et la mention de source donnée par l’application s’affiche en bas de la carte."
+    },
+    {
       "version": "v1.14.1",
       "texte": "Quand une application affiche la carte d’Atlas, la carte n’apparaît plus avec le fond par défaut avant d’être configurée : un écran neutre « Chargement de la carte… » reste en place jusqu’à ce que l’application ait posé sa scène, puis laisse la place à la carte telle qu’elle l’a voulue. L’application peut aussi demander dès l’ouverture un fond et une charte de couleurs (plan, photographie aérienne, contraste élevé), ou se passer de l’écran d’attente."
     },
     {
       "version": "v1.14.0",
-      "texte": "Quand les tronçons portent leur sens de circulation, comme ceux de la BD TOPO de l’IGN, un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne."
+      "texte": "Quand les tronçons portent leur sens de circulation, comme ceux de la BD TOPO de l’IGN ou d’OpenStreetMap, un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne."
     },
     {
       "version": "v1.13.2",
@@ -369,7 +373,7 @@
         "role": "Exploiter",
         "titre": "Contextes et tournées",
         "format": "mobile",
-        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau dont les tronçons portent leur sens de circulation (comme la BD TOPO de l’IGN), la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
+        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau dont les tronçons portent leur sens de circulation (BD TOPO de l’IGN, ou routes importées d’OpenStreetMap), la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
         "exemple": "le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.",
         "utilise": [
           "Contextes",
