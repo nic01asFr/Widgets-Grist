@@ -25,11 +25,11 @@
   "journal": [
     {
       "version": "v1.14.0",
-      "texte": "Les itinéraires respectent les sens uniques de la BD TOPO : une case « Respecter les sens de circulation », cochée par défaut, dans le tracé : le chemin le plus court tient alors compte des sens. En déplacement, une flèche de cap entoure le point bleu. Atlas peut aussi s’exploiter comme composant de carte dans une application externe : un client JavaScript d’un seul fichier, des capacités annoncées à l’application hôte, des couches administratives colorées par un tableau qu’elle fournit, un style de polygones (opacité, contour) et un paquet de contours à mettre en cache pour travailler hors ligne. Le composant ne dessine plus d’interface d’Atlas pendant son chargement et reste connectable quand le fond de carte est en panne."
+      "texte": "Un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne."
     },
     {
       "version": "v1.13.2",
-      "texte": "Correctif de sécurité : un nom, une étiquette ou une attribution venus d’une scène, d’un catalogue ou d’une adresse s’affichent toujours comme du texte, jamais comme du code. Les messages éphémères et les panneaux sont concernés, et la page refuse désormais les formulaires vers l’extérieur et les objets embarqués."
+      "texte": "Ouvrir une scène reçue d’ailleurs — un lien, un catalogue partagé — est sans danger : un nom de couche, une étiquette ou une mention de source s’affichent toujours comme du texte et ne peuvent plus agir sur la page ni sur les clés gardées sur l’appareil."
     },
     {
       "version": "v1.13.1",
@@ -365,14 +365,15 @@
         "role": "Exploiter",
         "titre": "Contextes et tournées",
         "format": "large",
-        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
+        "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau, la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
         "exemple": "le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.",
         "utilise": [
           "Contextes",
           "Tournée",
           "Tracer sur un réseau",
           "Choisir un objet",
-          "Pastilles par étape"
+          "Pastilles par étape",
+          "Sens de circulation"
         ],
         "images": [
           {
@@ -546,7 +547,7 @@
       },
       {
         "titre": "Diffuser Atlas",
-        "texte": "Quatre façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.",
+        "texte": "Cinq façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.",
         "items": [
           {
             "titre": "Le document lui-même",
@@ -564,9 +565,9 @@
             "texte": "Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par `?scene=<adresse>`. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut."
           },
           {
-            "titre": "Une application externe",
+            "titre": "Dans une application de votre organisation",
             "etiquette": "Sans document",
-            "texte": "Atlas peut être exploité depuis une application web : elle embarque la carte dans une iframe (`?bi=1`) et la pilote par messages — scène, filtres, temps, sélection, légende, unités administratives colorées par un tableau qu’elle fournit. Seules les origines déclarées une à une obtiennent une réponse ; les données, les palettes et la légende restent à l’application. Une page de démonstration à données synthétiques (`demos/hote-bi/index.html`) accompagne le composant."
+            "texte": "Atlas peut être la carte d’un tableau de bord ou d’un outil de suivi que votre équipe a déjà : l’application affiche la carte dans ses pages, la colore par commune, par département ou par région à partir de son propre tableau, la filtre, et réagit à l’objet que la personne touche. Les données, les couleurs et la légende restent à l’application ; seules les applications que vous avez déclarées une à une peuvent piloter la carte. Une page de démonstration à données fictives montre le résultat."
           },
           {
             "titre": "L’application Android",

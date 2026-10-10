@@ -380,10 +380,10 @@ section { margin: 0 0 3rem; }
       <div class="dit">
         <p class="role">Exploiter</p>
         <h3>Contextes et tournées</h3>
-        <p>Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.</p>
+        <p>Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau, la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.</p>
         
         <p class="exemple"><b>Dans l’exemple</b> le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.</p>
-        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Tracer sur un réseau</li><li>Choisir un objet</li><li>Pastilles par étape</li></ul>
+        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Tracer sur un réseau</li><li>Choisir un objet</li><li>Pastilles par étape</li><li>Sens de circulation</li></ul>
       </div>
       <div class="montre">
         <figure class="large">
@@ -555,7 +555,7 @@ section { margin: 0 0 3rem; }
     </div>
     <div class="groupe">
       <h3>Diffuser Atlas</h3>
-      <p class="intro">Quatre façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.</p>
+      <p class="intro">Cinq façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.</p>
       <ul>
         <li>
           <div class="porte"><b>Le document lui-même</b><span class="ou">Dans le document</span></div>
@@ -570,8 +570,8 @@ section { margin: 0 0 3rem; }
           <p>Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par <code>?scene=&lt;adresse&gt;</code>. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut.</p>
         </li>
         <li>
-          <div class="porte"><b>Une application externe</b><span class="ou">Sans document</span></div>
-          <p>Atlas peut être exploité depuis une application web : elle embarque la carte dans une iframe (<code>?bi=1</code>) et la pilote par messages — scène, filtres, temps, sélection, légende, unités administratives colorées par un tableau qu’elle fournit. Seules les origines déclarées une à une obtiennent une réponse ; les données, les palettes et la légende restent à l’application. Une page de démonstration à données synthétiques (<code>demos/hote-bi/index.html</code>) accompagne le composant.</p>
+          <div class="porte"><b>Dans une application de votre organisation</b><span class="ou">Sans document</span></div>
+          <p>Atlas peut être la carte d’un tableau de bord ou d’un outil de suivi que votre équipe a déjà : l’application affiche la carte dans ses pages, la colore par commune, par département ou par région à partir de son propre tableau, la filtre, et réagit à l’objet que la personne touche. Les données, les couleurs et la légende restent à l’application ; seules les applications que vous avez déclarées une à une peuvent piloter la carte. Une page de démonstration à données fictives montre le résultat.</p>
         </li>
         <li>
           <div class="porte"><b>L’application Android</b><span class="ou">Terrain</span></div>
@@ -591,8 +591,8 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
-      <div><b>v1.14.0</b><p>Les itinéraires respectent les sens uniques de la BD TOPO : une case « Respecter les sens de circulation », cochée par défaut, dans le tracé : le chemin le plus court tient alors compte des sens. En déplacement, une flèche de cap entoure le point bleu. Atlas peut aussi s’exploiter comme composant de carte dans une application externe : un client JavaScript d’un seul fichier, des capacités annoncées à l’application hôte, des couches administratives colorées par un tableau qu’elle fournit, un style de polygones (opacité, contour) et un paquet de contours à mettre en cache pour travailler hors ligne. Le composant ne dessine plus d’interface d’Atlas pendant son chargement et reste connectable quand le fond de carte est en panne.</p></div>
-      <div><b>v1.13.2</b><p>Correctif de sécurité : un nom, une étiquette ou une attribution venus d’une scène, d’un catalogue ou d’une adresse s’affichent toujours comme du texte, jamais comme du code. Les messages éphémères et les panneaux sont concernés, et la page refuse désormais les formulaires vers l’extérieur et les objets embarqués.</p></div>
+      <div><b>v1.14.0</b><p>Un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne.</p></div>
+      <div><b>v1.13.2</b><p>Ouvrir une scène reçue d’ailleurs — un lien, un catalogue partagé — est sans danger : un nom de couche, une étiquette ou une mention de source s’affichent toujours comme du texte et ne peuvent plus agir sur la page ni sur les clés gardées sur l’appareil.</p></div>
       <div><b>v1.13.1</b><p>Le téléphone, sans barre de navigation. Une vue composée sur un grand écran se rejoue à la taille du petit : l’ouverture recule pour que les entités restent dans le cadre. Choisir un contexte replie le panneau, et l’objet touché avec sa bulle se centre dans ce qui reste visible. Les boutons de la carte sont tous ronds et de même taille, et la rangée de pastilles qui défile se fond avec un flou progressif sur son bord.</p></div>
       <div><b>v1.13.0</b><p>Une pastille « Tournée » : elle démarre la tournée du contexte par l’objet le plus proche devant soi, affiche son avancement et sa longueur, et propose « Précédent », « Suivant » et « Arrêter ». La bulle d’objet a sa fermeture ronde et des flèches ‹ n / N › vers l’objet voisin, le long de la tournée ou de la liste. En Lecture, et pendant une tournée, un objet s’ouvre par sa bulle. Le panneau Contexte devient compact (consigne repliable, pictogramme et longueur des tournées). La légende se pose sur la ligne de l’attribution et cible aussi en Préparer ; la barre de sélection se compacte selon la largeur de la carte ; « Me localiser » n’apparaît que si la localisation est utilisable.</p></div>
       <div><b>v1.12</b><p>Le module Formulaires est refondu : un champ ou un formulaire se crée depuis Atlas, un formulaire peut modifier l’objet ou ajouter une ligne, une géométrie se dessine pour chaque ligne ajoutée, la Fiche d’un objet se modifie, et « Date et heure » devient un type de champ. La pastille « Relevé » ne s’affiche plus quand il n’y a rien à relever ; la couche des lignes d’un formulaire naît colorée par son champ à choix ; les objets 3D se sélectionnent au toucher avec une zone de tolérance.</p></div>
