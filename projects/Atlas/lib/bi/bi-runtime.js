@@ -230,9 +230,19 @@ export function attacher(map, opts = {}) {
       if (survol && survol.admin) map.setFeatureState({ source: survol.source, id: survol.id }, { hover: true });
       emettre('hover', { layer: c ? c.id : null, featureId: k, ...(c ? { key: c.admin ? k : cle(c, f) } : {}), ...(c && c.admin ? admin.infosUnite(c, k) : {}) }, 'utilisateur'); });
   }
+  // Le pointeur quitte la carte (l'iframe) : seul `mousemove` était écouté, l'hôte gardait donc le dernier survol. Même charge que « plus rien sous le pointeur ».
+  function surSortie() {
+    if (rafSurvol) { if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafSurvol); rafSurvol = 0; }
+    if (!survol) return;
+    if (survol.admin) { try { map.setFeatureState({ source: survol.source, id: survol.id }, { hover: false }); } catch (e) { /* source retirée */ } }
+    survol = null; try { map.getCanvas().style.cursor = ''; } catch (e) { /* carte retirée */ }
+    emettre('hover', { layer: null, featureId: null }, 'utilisateur');
+  }
   let tmCam = 0;
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
+  const conteneurCarte = typeof map.getCanvasContainer === 'function' ? map.getCanvasContainer() : null;
+  if (conteneurCarte && conteneurCarte.addEventListener) conteneurCarte.addEventListener('mouseleave', surSortie);
 
   // ---------- édition (déplacement d'un point ; l'hôte persiste) ----------
   let glisse = null;
@@ -345,7 +355,12 @@ export function attacher(map, opts = {}) {
     ...admin.api,
     /** Repli hors ligne : true (forcé), false (retour au fond précédent), 'auto' (détection : événement navigateur et échecs de tuiles). */
     async setHorsLigne(v) {
-      if (v === 'auto') { horsLigne.auto = true; return { actif: horsLigne.actif, auto: true }; }
+      if (v === 'auto') {
+        horsLigne.auto = true;
+        // « auto » rend la main à la détection : un hors ligne FORCÉ par l'hôte ne reste pas vrai, sauf si le navigateur est réellement hors réseau.
+        if (horsLigne.actif && horsLigne.cause === 'hote' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) return basculerHorsLigne(false, 'hote', true);
+        return { actif: horsLigne.actif, auto: true };
+      }
       return basculerHorsLigne(!!v, 'hote', false);
     },
     batch: (ordres, o) => executerBatch(apiGardee, ordres, o),
