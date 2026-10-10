@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
-  creerInterpolateur, angleInterpole, niveauDeDetail, visibles, echelleDeLisibilite, MODES_RENDU, ZOOM_LISIBLE, ECHELLE_MAX,
+  creerInterpolateur, angleInterpole, niveauDeDetail, visibles, echelleDeLisibilite, MODES_RENDU, PX_MIN_VEHICULE, LONGUEUR_REFERENCE_M, ECHELLE_MAX,
   DUREE_PAS_MS, DUREE_ENTREE_MS, DUREE_SORTIE_MS, SAUT_MAX_M, ZOOM_MIN, ZOOM_3D,
 } from '../lib/trafic-rendu.js';
 import { creerTrafic, versMetres, versLngLat, positions } from '../lib/trafic-couche.js';
@@ -101,12 +101,19 @@ test('niveauDeDetail : le mode « points » ne montre jamais de 3D, le mode « 3
   assert.equal(niveauDeDetail(ZOOM_MIN + 1, { avec3d: true, mode: 'auto' }), 'points', 'en auto, des points de loin');
 });
 
-test('echelleDeLisibilite : 1 de près, doublée à chaque zoom perdu, plafonnée', () => {
-  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE), 1);
-  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE + 3), 1);
-  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 1), 2);
-  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 2), 4);
-  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 9), ECHELLE_MAX);
+test('echelleDeLisibilite : 1 tant que le véhicule fait assez de pixels à sa taille réelle, puis juste ce qu’il faut pour garder la taille minimale', () => {
+  const lat = 43.3;
+  const pxm = (z) => 512 * 2 ** z / (40075016.686 * Math.cos(lat * Math.PI / 180));
+  assert.equal(echelleDeLisibilite(18, lat), 1, 'de près : taille réelle');
+  assert.equal(echelleDeLisibilite(16.5, lat), 1, 'une voiture fait encore plus de ' + PX_MIN_VEHICULE + ' px');
+  // plus loin : le véhicule grossi garde exactement la taille minimale (tant que le plafond n'est pas atteint)
+  const z = 14.5, e = echelleDeLisibilite(z, lat);
+  assert.ok(e > 1 && e < ECHELLE_MAX);
+  assert.ok(Math.abs(LONGUEUR_REFERENCE_M * pxm(z) * e - PX_MIN_VEHICULE) < 1e-6, 'taille à l’écran = minimum');
+  assert.equal(echelleDeLisibilite(10, lat), ECHELLE_MAX, 'plafonné');
+  // et surtout : à l'écran, un véhicule ne grossit JAMAIS quand on dézoome (il rapetisse puis se stabilise à la taille minimale)
+  let precedent = Infinity;
+  for (let zz = 19; zz >= 13; zz -= 0.5) { const px = LONGUEUR_REFERENCE_M * pxm(zz) * echelleDeLisibilite(zz, lat); assert.ok(px <= precedent + 1e-9, 'zoom ' + zz); precedent = px; }
   assert.equal(echelleDeLisibilite(NaN), 1);
 });
 
@@ -192,7 +199,7 @@ test('boucle de dessin : en mode « 3d », des modèles dès le zoom minimal (gr
   assert.equal(b.trafic.etat().rendu, '3d');
   assert.equal(b.source().data.features.length, 0, 'aucun point');
   assert.ok(b.dessins.some((d) => Array.isArray(d) && d.length > 0));
-  assert.equal(b.echelles[b.echelles.length - 1], 8, 'modèles grossis au zoom 14');
+  assert.ok(b.echelles[b.echelles.length - 1] > 1, 'modèles grossis au zoom 14 pour rester visibles');
 });
 
 test('boucle de dessin : en mode « 3d » sans modèles prêts, rien (pas de points)', () => {

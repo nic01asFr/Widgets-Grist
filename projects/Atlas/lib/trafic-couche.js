@@ -221,7 +221,7 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     const liste = direct ? positions(sim).map((v) => ({ ...v, o: 1 })) : visibles(interp.echantillonner(t), boiteVisible());
     if (n === '3d') {
       // en mode « 3D seulement », les modèles sont grossis quand on est trop loin pour les voir à leur taille réelle
-      rendu3d.maj(liste.map((v) => ({ ...v, lnglat: versLngLat(centre, v.x, v.y) })), { echelle: mode === '3d' ? echelleDeLisibilite(zoom) : 1 });
+      rendu3d.maj(liste.map((v) => ({ ...v, lnglat: versLngLat(centre, v.x, v.y) })), { echelle: mode === '3d' ? echelleDeLisibilite(zoom, carte.getCenter ? carte.getCenter().lat : centre[1]) : 1 });
       if (carte.triggerRepaint) carte.triggerRepaint();
     } else ecrire(liste);
     images++;
