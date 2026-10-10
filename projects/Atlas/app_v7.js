@@ -1635,11 +1635,12 @@ const VEHICULE_AVANT_X = (cap) => Math.PI / 2 - cap;
 // Phares et feux des véhicules, de nuit : par classe, la longueur, l'écart latéral des lampes à l'axe et leur hauteur (mètres).
 const FEUX_VEHICULES = { vl: { longueur: 4.4, ecart: 0.62, hauteur: 0.62 }, pl: { longueur: 10.5, ecart: 0.95, hauteur: 0.85 } };
 const COULEUR_PHARE = [1, 0.93, 0.74], COULEUR_FEU = [1, 0.1, 0.06];
+const HALO_FEUX_M = 1.6, INTENSITE_HALO_PHARE = 0.65, INTENSITE_HALO_FEU = 0.5;   // diamètre d'un halo en mètres, et sa force (additif : plusieurs halos qui se recouvrent s'ajoutent)
 /** La tache ronde d'un halo (blanc, qui s'éteint sur les bords) : la couleur vient du sommet. */
 function textureHaloFeux() {
     const c = document.createElement('canvas'); c.width = c.height = 64;
     const g = c.getContext('2d'), d = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    d.addColorStop(0, 'rgba(255,255,255,1)'); d.addColorStop(0.22, 'rgba(255,255,255,0.6)'); d.addColorStop(1, 'rgba(255,255,255,0)');
+    d.addColorStop(0, 'rgba(255,255,255,0.9)'); d.addColorStop(0.18, 'rgba(255,255,255,0.35)'); d.addColorStop(0.5, 'rgba(255,255,255,0.08)'); d.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = d; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
 }
@@ -2180,16 +2181,17 @@ const Models3D = {
                 const x = lm.x + fx * moitie * sens + rx * ecart * cote, z = -lm.y + fz * moitie * sens + rz * ecart * cote, y = sol + h;
                 p3.set(x, y, z); m4.compose(p3, q, s3);
                 im.setMatrixAt(im === f.phares ? nl++ : nf++, m4);   // chaque InstancedMesh a son propre compte
-                const c = couleur, k = niveau * (sens > 0 ? 1 : 0.85);
+                const c = couleur, k = niveau * (sens > 0 ? INTENSITE_HALO_PHARE : INTENSITE_HALO_FEU);
                 f.col[nh * 3] = c[0] * k; f.col[nh * 3 + 1] = c[1] * k; f.col[nh * 3 + 2] = c[2] * k;
                 f.pos[nh * 3] = x; f.pos[nh * 3 + 1] = y + 0.03; f.pos[nh * 3 + 2] = z; nh++;
             }
         }
         f.phares.count = nl; f.feux.count = nf; f.phares.instanceMatrix.needsUpdate = true; f.feux.instanceMatrix.needsUpdate = true;
         f.geo.setDrawRange(0, nh); f.geo.attributes.position.needsUpdate = true; f.geo.attributes.color.needsUpdate = true;
-        // taille des halos en pixels de l'écran : ~12 px à 18, qui suit le zoom
+        // taille des halos : un diamètre en MÈTRES (le halo reste proportionné au véhicule à tous les zooms), convertie en pixels de l'écran
         const ratio = map.getPixelRatio?.() || window.devicePixelRatio || 1;
-        f.matHalo.size = Math.max(3, Math.min(40, 12 * Math.pow(2, map.getZoom() - 18))) * ratio * (echelle > 1 ? Math.min(2, Math.sqrt(echelle)) : 1);
+        const pxParMetre = 512 * Math.pow(2, map.getZoom()) / (40075016.686 * Math.cos(deg2rad(map.getCenter().lat)));
+        f.matHalo.size = Math.max(2, Math.min(24, HALO_FEUX_M * echelle * pxParMetre)) * ratio;
         // faisceaux : devant chaque véhicule, posés sur la chaussée
         let nb = 0;
         for (const veh of liste) {
@@ -2197,11 +2199,11 @@ const Models3D = {
             const d = FEUX_VEHICULES[veh.pl ? 'pl' : 'vl'], lm = this.localMeters(veh.lnglat[0], veh.lnglat[1]);
             const sol = ecartAuSol(this.elevRaw(veh.lnglat[0], veh.lnglat[1]), this.originElev);
             const cap = veh.cap * D, dist = (d.longueur / 2 + 3.4) * echelle;
-            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(3.6 * echelle, 1, 6.8 * echelle);
+            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(3.0 * echelle, 1, 6.2 * echelle);
             p3.set(lm.x + Math.sin(cap) * dist, sol + 0.06, -lm.y - Math.cos(cap) * dist);
             m4.compose(p3, q, s3); f.faisceaux.setMatrixAt(nb++, m4);
         }
-        f.faisceaux.count = nb; f.faisceaux.instanceMatrix.needsUpdate = true; f.matFaisceau.opacity = 0.5 * niveau;
+        f.faisceaux.count = nb; f.faisceaux.instanceMatrix.needsUpdate = true; f.matFaisceau.opacity = 0.32 * niveau;
     },
     vehiculesEffacer() {
         if (!this.vehicules) return;
