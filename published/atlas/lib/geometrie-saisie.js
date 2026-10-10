@@ -11,7 +11,7 @@
  * Rien ici ne touche la carte, Grist ni le DOM. Cadrage :
  * `docs/CADRAGE-EDITION-GEOMETRIES.md`, lot 0.
  */
-import { distanceMetres } from './releve.js?v=1.16.4';
+import { distanceMetres } from './releve.js?v=1.16.5';
 import { lireWkt, ecrireWkt } from './wkt.js';
 
 export const VERSION = '1.0.0';

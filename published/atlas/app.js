@@ -4,31 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.16.4';
+import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=1.16.5';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.16.4';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.16.4';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.16.4';
+import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.16.5';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.16.5';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.16.5';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.16.4';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.16.4';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.16.4';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.16.4';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.16.4';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.16.4';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.16.4';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.16.4';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.16.4';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.16.4';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.16.4';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.16.4';
+} from './lib/parametres-objet.js?v=1.16.5';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.16.5';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.16.5';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.16.5';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.16.5';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.16.5';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.16.5';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.16.5';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.16.5';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.16.5';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.16.5';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.16.5';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -36,8 +36,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.16.4';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.16.4';
+} from './lib/scene-loader.js?v=1.16.5';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.16.5';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -46,53 +46,53 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.16.4';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.16.4';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.16.4';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.16.4';
+} from './lib/fiche-formulaire.js?v=1.16.5';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.16.5';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.16.5';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.16.5';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.16.4';
+} from './lib/classes.js?v=1.16.5';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.16.4';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.16.4';
+} from './lib/grappes.js?v=1.16.5';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.16.5';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.16.4';
+} from './lib/layer-order.js?v=1.16.5';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.16.4';
+} from './lib/table-reference.js?v=1.16.5';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.16.4';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.16.4';
-import { attributionSure } from './lib/attribution.js?v=1.16.4';
-import { creerToast } from './lib/toast.js?v=1.16.4';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.16.4';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.16.4';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.16.4';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.16.4';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.16.4';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.16.4';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.16.4';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.16.4';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.16.4';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.16.4';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.16.4';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.16.4';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.16.4';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.16.4';
+} from './lib/bulle-objet.js?v=1.16.5';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.16.5';
+import { attributionSure } from './lib/attribution.js?v=1.16.5';
+import { creerToast } from './lib/toast.js?v=1.16.5';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.16.5';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.16.5';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.16.5';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.16.5';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.16.5';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.16.5';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.16.5';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.16.5';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.16.5';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.16.5';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.16.5';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.16.5';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.16.5';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.16.5';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.16.4';
+} from './lib/terrain-base.js?v=1.16.5';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -110,20 +110,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.16.4';
+} from './lib/grist-sync.js?v=1.16.5';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.16.4';
+} from './lib/nouvelle-couche.js?v=1.16.5';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.16.4';
+} from './lib/champ-formulaire.js?v=1.16.5';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.16.4';
+} from './lib/saisie-objet.js?v=1.16.5';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -131,7 +131,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.16.4';
+} from './lib/geometrie-saisie.js?v=1.16.5';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -143,14 +143,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.16.4';
+} from './lib/declarative-style.js?v=1.16.5';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.16.4';
+} from './lib/geo-tables.js?v=1.16.5';
 import {
   layerFieldNames,
   controlFieldType,
@@ -175,14 +175,14 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.16.4';
+} from './lib/controls.js?v=1.16.5';
 import {
   captureStoryState,
   saveStoryToGrist,
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
-} from './lib/story.js?v=1.16.4';
+} from './lib/story.js?v=1.16.5';
 import {
   copieLineaire,
   estLineaire,
@@ -204,11 +204,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.16.4';
+} from './lib/trajet.js?v=1.16.5';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.16.4';
+} from './lib/manifest-binding.js?v=1.16.5';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -221,7 +221,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.16.4';
+} from './lib/viewport.js?v=1.16.5';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -236,35 +236,35 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.16.4';
-import { mettreAPlat } from './lib/vue-import.js?v=1.16.4';
-import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.16.4';
-import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.16.4';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.16.4';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.16.4';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.16.4';
-import { capUtilisable } from './lib/cap-position.js?v=1.16.4';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.16.4';
+} from './lib/view-mode.js?v=1.16.5';
+import { mettreAPlat } from './lib/vue-import.js?v=1.16.5';
+import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.16.5';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.16.5';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.16.5';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.16.5';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.16.5';
+import { capUtilisable } from './lib/cap-position.js?v=1.16.5';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.16.5';
 import {
   etageCoteACote,
   legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.16.4';
+} from './lib/habillage-carte.js?v=1.16.5';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.16.4';
+} from './lib/viewer-controls.js?v=1.16.5';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.16.4';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.16.4';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.16.4';
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.16.4';
+} from './lib/scene-prefs.js?v=1.16.5';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.16.5';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.16.5';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.16.5';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -1635,11 +1635,12 @@ const VEHICULE_AVANT_X = (cap) => Math.PI / 2 - cap;
 // Phares et feux des véhicules, de nuit : par classe, la longueur, l'écart latéral des lampes à l'axe et leur hauteur (mètres).
 const FEUX_VEHICULES = { vl: { longueur: 4.4, ecart: 0.62, hauteur: 0.62 }, pl: { longueur: 10.5, ecart: 0.95, hauteur: 0.85 } };
 const COULEUR_PHARE = [1, 0.93, 0.74], COULEUR_FEU = [1, 0.1, 0.06];
+const HALO_FEUX_M = 1.6, INTENSITE_HALO_PHARE = 0.65, INTENSITE_HALO_FEU = 0.5;   // diamètre d'un halo en mètres, et sa force (additif : plusieurs halos qui se recouvrent s'ajoutent)
 /** La tache ronde d'un halo (blanc, qui s'éteint sur les bords) : la couleur vient du sommet. */
 function textureHaloFeux() {
     const c = document.createElement('canvas'); c.width = c.height = 64;
     const g = c.getContext('2d'), d = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    d.addColorStop(0, 'rgba(255,255,255,1)'); d.addColorStop(0.22, 'rgba(255,255,255,0.6)'); d.addColorStop(1, 'rgba(255,255,255,0)');
+    d.addColorStop(0, 'rgba(255,255,255,0.9)'); d.addColorStop(0.18, 'rgba(255,255,255,0.35)'); d.addColorStop(0.5, 'rgba(255,255,255,0.08)'); d.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = d; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
 }
@@ -2180,16 +2181,17 @@ const Models3D = {
                 const x = lm.x + fx * moitie * sens + rx * ecart * cote, z = -lm.y + fz * moitie * sens + rz * ecart * cote, y = sol + h;
                 p3.set(x, y, z); m4.compose(p3, q, s3);
                 im.setMatrixAt(im === f.phares ? nl++ : nf++, m4);   // chaque InstancedMesh a son propre compte
-                const c = couleur, k = niveau * (sens > 0 ? 1 : 0.85);
+                const c = couleur, k = niveau * (sens > 0 ? INTENSITE_HALO_PHARE : INTENSITE_HALO_FEU);
                 f.col[nh * 3] = c[0] * k; f.col[nh * 3 + 1] = c[1] * k; f.col[nh * 3 + 2] = c[2] * k;
                 f.pos[nh * 3] = x; f.pos[nh * 3 + 1] = y + 0.03; f.pos[nh * 3 + 2] = z; nh++;
             }
         }
         f.phares.count = nl; f.feux.count = nf; f.phares.instanceMatrix.needsUpdate = true; f.feux.instanceMatrix.needsUpdate = true;
         f.geo.setDrawRange(0, nh); f.geo.attributes.position.needsUpdate = true; f.geo.attributes.color.needsUpdate = true;
-        // taille des halos en pixels de l'écran : ~12 px à 18, qui suit le zoom
+        // taille des halos : un diamètre en MÈTRES (le halo reste proportionné au véhicule à tous les zooms), convertie en pixels de l'écran
         const ratio = map.getPixelRatio?.() || window.devicePixelRatio || 1;
-        f.matHalo.size = Math.max(3, Math.min(40, 12 * Math.pow(2, map.getZoom() - 18))) * ratio * (echelle > 1 ? Math.min(2, Math.sqrt(echelle)) : 1);
+        const pxParMetre = 512 * Math.pow(2, map.getZoom()) / (40075016.686 * Math.cos(deg2rad(map.getCenter().lat)));
+        f.matHalo.size = Math.max(2, Math.min(24, HALO_FEUX_M * echelle * pxParMetre)) * ratio;
         // faisceaux : devant chaque véhicule, posés sur la chaussée
         let nb = 0;
         for (const veh of liste) {
@@ -2197,11 +2199,11 @@ const Models3D = {
             const d = FEUX_VEHICULES[veh.pl ? 'pl' : 'vl'], lm = this.localMeters(veh.lnglat[0], veh.lnglat[1]);
             const sol = ecartAuSol(this.elevRaw(veh.lnglat[0], veh.lnglat[1]), this.originElev);
             const cap = veh.cap * D, dist = (d.longueur / 2 + 3.4) * echelle;
-            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(3.6 * echelle, 1, 6.8 * echelle);
+            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(3.0 * echelle, 1, 6.2 * echelle);
             p3.set(lm.x + Math.sin(cap) * dist, sol + 0.06, -lm.y - Math.cos(cap) * dist);
             m4.compose(p3, q, s3); f.faisceaux.setMatrixAt(nb++, m4);
         }
-        f.faisceaux.count = nb; f.faisceaux.instanceMatrix.needsUpdate = true; f.matFaisceau.opacity = 0.5 * niveau;
+        f.faisceaux.count = nb; f.faisceaux.instanceMatrix.needsUpdate = true; f.matFaisceau.opacity = 0.32 * niveau;
     },
     vehiculesEffacer() {
         if (!this.vehicules) return;
@@ -13221,7 +13223,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.16.4');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.16.5');
     return Feuille;
 }
 
@@ -13442,10 +13444,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.16.4'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.16.5'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.16.4');
+        const dc = await import('./lib/data-client.js?v=1.16.5');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -15530,7 +15532,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openIGN: () => import('./lib/vue-import-ign.js?v=1.16.4').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
+    openIGN: () => import('./lib/vue-import-ign.js?v=1.16.5').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
             A.zoomLayer(id);
@@ -16382,7 +16384,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.16.4')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.16.5')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -16428,7 +16430,7 @@ const A = {
         const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
-            const m = await import('./lib/trafic-couche.js?v=1.16.4');
+            const m = await import('./lib/trafic-couche.js?v=1.16.5');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
             _traficRepli3d = false;
             if (_traficReglages.rendu !== 'points') {
@@ -18071,9 +18073,9 @@ async function demarrer() {
     }
     if (MODE_BI) return demarrerBi();   // ni accueil ni document : les données viennent de l'hôte
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.16.4');
+        const { capacites } = await import('./lib/data-client.js?v=1.16.5');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.16.4');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.16.5');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
@@ -18095,7 +18097,7 @@ async function demarrerBi() {
     // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
     CONFIG.defaultPitch = 0;
     Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
-    const chargement = import('./lib/bi/montage.js?v=1.16.4');
+    const chargement = import('./lib/bi/montage.js?v=1.16.5');
     chargement.catch(() => {});
     try {
         await init();

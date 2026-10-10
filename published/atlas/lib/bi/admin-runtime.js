@@ -10,7 +10,7 @@
  * (pas de reconstruction de la source quand la statistique change). Les unités sans donnée portent l'état « sans » : motif
  * hachuré (ou gris, ou masquées) ; les petits effectifs portent l'état « petit » : contour en tirets.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.16.4';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.16.5';
 import { chargerAvecRepli, ErreurSource, ATTRIBUTION_IGN } from './admin-sources.js';
 import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, ancetre, estCommunePLM, fusionnerArrondissements } from './admin.js';
 import { luminance, estPale } from './echelles.js';

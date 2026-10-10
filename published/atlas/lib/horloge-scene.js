@@ -17,7 +17,7 @@
  *
  * Rien ici ne touche la carte : tout se vérifie en test.
  */
-import { instantLocal, heureLocale } from './eclairage-profil.js?v=1.16.4';
+import { instantLocal, heureLocale } from './eclairage-profil.js?v=1.16.5';
 
 export const VERSION = '0.1.0';
 

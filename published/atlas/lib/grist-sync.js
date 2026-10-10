@@ -6,23 +6,23 @@ import {
   rowsToGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.16.4';
+} from './grist-rows.js?v=1.16.5';
 import {
   layerPrefsPayload,
   applyLayerPrefsBinding,
-} from './manifest-binding.js?v=1.16.4';
+} from './manifest-binding.js?v=1.16.5';
 import { parseGristBool } from './grist-bool.js';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.16.4';
-import { isModelLayer } from './model-layer.js?v=1.16.4';
-import { parametresDObjetValides } from './parametres-objet.js?v=1.16.4';
-import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.16.4';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.16.5';
+import { isModelLayer } from './model-layer.js?v=1.16.5';
+import { parametresDObjetValides } from './parametres-objet.js?v=1.16.5';
+import { colonnesGeometrie, nomsColonnesGeometrie, cellulesGeometrie } from './geometrie-saisie.js?v=1.16.5';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
   primaryColorFromDeclarative,
   colorFnFromDeclarative,
   syncFeatureColorsFromSymbolization,
-} from './declarative-style.js?v=1.16.4';
+} from './declarative-style.js?v=1.16.5';
 
 export const ATLAS_PREFS_TABLE = 'Atlas_LayerPrefs';
 

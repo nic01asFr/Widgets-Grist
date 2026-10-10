@@ -1,12 +1,12 @@
 /**
  * Détection et lecture de tables géo Grist (scan document).
  */
-import { normalizePropertyValue } from './declarative-style.js?v=1.16.4';
-import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.16.4';
-import { chargerSchema, estTableSysteme } from './schema-grist.js?v=1.16.4';
-import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=1.16.4';
+import { normalizePropertyValue } from './declarative-style.js?v=1.16.5';
+import { COLONNES_INTERNES_GRIST } from './grist-rows.js?v=1.16.5';
+import { chargerSchema, estTableSysteme } from './schema-grist.js?v=1.16.5';
+import { lireCoordonnee, coordonneesUtilisables } from './geometrie-saisie.js?v=1.16.5';
 import { lireWkt, estWkt } from './wkt.js';
-import { TABLES_ATLAS, estTableAtlas } from './atlas-tables.js?v=1.16.4';
+import { TABLES_ATLAS, estTableAtlas } from './atlas-tables.js?v=1.16.5';
 
 /** Les tables d'Atlas ne sont jamais des couches (liste : `lib/atlas-tables.js`). */
 export const GEO_SKIP_TABLES = new Set(TABLES_ATLAS);
