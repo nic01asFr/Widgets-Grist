@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.16.5",
+      "texte": "Les phares et les feux des véhicules de nuit sont plus discrets : leurs halos gardent la taille du véhicule au lieu de former de grosses taches blanches qui le masquaient, et le faisceau sur la chaussée est plus fin."
+    },
+    {
       "version": "v1.16.4",
       "texte": "Le trafic simulé se montre comme on le veut : des points de loin et des voitures en 3D de près, des modèles 3D seulement (sans aucun point, grossis de loin pour rester visibles), ou de simples points. Le choix se change en cours de route. De nuit, les véhicules en 3D allument leurs phares (avec leur faisceau sur la chaussée) et leurs feux rouges, au rythme du soleil de la scène : ils s’allument au coucher et s’éteignent au lever, comme les lampadaires."
     },
@@ -696,7 +700,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.16.4 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.16.5 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

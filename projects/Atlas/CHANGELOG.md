@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.5 — des phares plus discrets
+
+- **Corrigé** : les halos des phares et des feux étaient démesurés (une tache blanche de la taille de trois véhicules, qui les masquait et se recouvrait en un disque saturé). Un halo mesure maintenant 1,6 m (proportionné au véhicule à tous les zooms, et non plus un nombre de pixels), son bord s'éteint plus vite et sa force est ramenée ; le faisceau sur la chaussée est plus étroit et plus pâle.
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.4 — le rendu des véhicules au choix
 
 - **Ajouté** : réglage « Rendu des véhicules » dans la section « Trafic simulé » de « Vue & rendu » : points de loin et 3D de près (défaut, comme en 1.16.3), **modèles 3D seulement** (jamais de points, dès le zoom 13, grossis de loin pour rester visibles) ou points seulement. Modifiable pendant que le trafic roule. Remplace l'interrupteur « Véhicules en 3D » de la 1.16.3 (`traficReglage('vehicules3d', bool)` reste accepté).
