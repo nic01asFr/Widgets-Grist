@@ -1,0 +1,130 @@
+{
+  "format": "atlas-vendor-verrou/1",
+  "fichiers": {
+    "maplibre-gl/maplibre-gl.js": {
+      "taille": 939308,
+      "integrite": "sha384-/L1njH4bbgNt9Uk3HwJ272N9fxJzRBQCxhtwGkZiqgl+Nxpq2ETUNZhNMNV1RgyW",
+      "origine": "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"
+    },
+    "maplibre-gl/maplibre-gl.css": {
+      "taille": 69422,
+      "integrite": "sha384-Nq6PQ+9vJPvw7U/VfDELyrWoGQMsy0gi6QShhaSrGzkpF5KkM40csg2leky+YMTd",
+      "origine": "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    },
+    "suncalc/suncalc.js": {
+      "taille": 8867,
+      "integrite": "sha384-tl3ZmrxbIoCVQz3RDzphPFHmCRFg0/JkX0AY9grk1ftU1dqxEuoPRQuhir4wMEAp",
+      "origine": "https://unpkg.com/suncalc@1.8.0/suncalc.js"
+    },
+    "three/three.module.js": {
+      "taille": 1272972,
+      "integrite": "sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    },
+    "three/addons/loaders/GLTFLoader.js": {
+      "taille": 108522,
+      "integrite": "sha384-oxY9vSeh7Mrt5WmhN8xfWoDRnmoW9krEiRBY7vJKaK90jMUidM0fhbUwcblpBgTu",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js"
+    },
+    "three/addons/utils/BufferGeometryUtils.js": {
+      "taille": 31906,
+      "integrite": "sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js"
+    },
+    "three/addons/loaders/KTX2Loader.js": {
+      "taille": 22589,
+      "integrite": "sha384-fcpYqdC/0ZgL++Y3C+WJKYG1be/uEW0zHv0paWBujLsLsJEbaJ90bWUhJJn+BeSj",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/KTX2Loader.js"
+    },
+    "three/addons/utils/WorkerPool.js": {
+      "taille": 1712,
+      "integrite": "sha384-dpVYez3pwkZf3FpZI4goSJ8QLiN+RyuxThqg/OHZfMUj9mlvk2GCZi0fRc0oOWkI",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/WorkerPool.js"
+    },
+    "three/addons/libs/ktx-parse.module.js": {
+      "taille": 18676,
+      "integrite": "sha384-xnDl8egYq7Tb5YJWxpnRFg2S4mrfUGkNWXntO679kBDnBT7DGYIJt92t4w88QeMu",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/ktx-parse.module.js"
+    },
+    "three/addons/libs/zstddec.module.js": {
+      "taille": 39754,
+      "integrite": "sha384-Gu4Mx/pYVmWBZMVwDY5BUwCcce9/vk1tOB8q9ICyxJY/230xvK3ZcfGiHz3ExsdM",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/zstddec.module.js"
+    },
+    "three/addons/libs/meshopt_decoder.module.js": {
+      "taille": 24850,
+      "integrite": "sha384-zhZjnxc+3j2IeX2itXt+5CnnC0YleVRvu5EOaj733tRp38E9hBPnZjweEWX2kN7y",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js"
+    },
+    "three/addons/libs/basis/basis_transcoder.js": {
+      "taille": 62337,
+      "integrite": "sha384-+HVwcKS+KxiFvM8L/5uF8ao5eOF3XKCNjgmgsDaBHRHNUhSQ+bDYb8M4TwHu+uUh",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js"
+    },
+    "three/addons/libs/basis/basis_transcoder.wasm": {
+      "taille": 499935,
+      "integrite": "sha384-IepP9ATxmX8VViM/sMCldlp27yXZkp+o43K4Td38/HXAefQFz1IrmPBo12JEYG2t",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/basis_transcoder.wasm"
+    },
+    "terra-draw/terra-draw.module.js": {
+      "taille": 267077,
+      "integrite": "sha384-6/wgsO1VzuUUf/5WWGef4KjT8qBThb0OtKT9nA5vFc/aEnmCQDEqlyxLexGlrB3b",
+      "origine": "https://cdn.jsdelivr.net/npm/terra-draw@1.35.0/dist/terra-draw.module.js"
+    },
+    "terra-draw-maplibre-gl-adapter/terra-draw-maplibre-gl-adapter.module.js": {
+      "taille": 8643,
+      "integrite": "sha384-sWD98+3fbZ03eLK0UmqaQBayBUETl5inR0Z07PbAzMsezg9phxkkxUMgo8uJnXol",
+      "origine": "https://cdn.jsdelivr.net/npm/terra-draw-maplibre-gl-adapter@1.4.1/dist/terra-draw-maplibre-gl-adapter.module.js"
+    },
+    "geotiff/geotiff.js": {
+      "taille": 317520,
+      "integrite": "sha384-m5adk5PRgt3JjiYbYoG8oXxc3EgRFKc1aCBgKzyxqxnbYpdiAMlHkR0gVDp03Q/H",
+      "origine": "https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"
+    },
+    "polices/ieVn2YZDLWuGJpnzaiwFXS9tYtpT59CjCQ.woff2": {
+      "taille": 19588,
+      "integrite": "sha384-P7a3EI/Rmm2Ophep/glXb/xfIOainWzGkK1P2tSQWvcTpeXJ0WjIbj2qqjKZW3k0",
+      "origine": "https://fonts.gstatic.com/s/hankengrotesk/v12/ieVn2YZDLWuGJpnzaiwFXS9tYtpT59CjCQ.woff2"
+    },
+    "polices/ieVn2YZDLWuGJpnzaiwFXS9tYtpd59A.woff2": {
+      "taille": 34704,
+      "integrite": "sha384-tngDj7Lr+r8DK9l7kfx97wxuPIN73KLe8tkthwr7yrLYgQhOoNWvqYcRdIxb+goH",
+      "origine": "https://fonts.gstatic.com/s/hankengrotesk/v12/ieVn2YZDLWuGJpnzaiwFXS9tYtpd59A.woff2"
+    },
+    "polices/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2": {
+      "taille": 11624,
+      "integrite": "sha384-md7lI+WpzcaSgfuu+hCajR6cBH9KQiGR2BEnokGhah1MOLT+PY8Tb5r5PUYGeiuQ",
+      "origine": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2"
+    },
+    "polices/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2": {
+      "taille": 31432,
+      "integrite": "sha384-9wWypBPwJyfsOnJFplExHD+Wz+6/I6+rtL7ITgA/6wSPgpj+tnQovOLWM9j2rhOF",
+      "origine": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2"
+    },
+    "polices/cY9XfjOCX1hbuyalUrK439vogqCz_goCYw7oRd6JFYgzbBZD.woff2": {
+      "taille": 38820,
+      "integrite": "sha384-0MK3OFFw4v/Gvf1QTp/zuQyPqNvUpawd0hxjbi8noLV1ZUbSXybkgrIJSJ9RGLrV",
+      "origine": "https://fonts.gstatic.com/s/newsreader/v26/cY9XfjOCX1hbuyalUrK439vogqCz_goCYw7oRd6JFYgzbBZD.woff2"
+    },
+    "polices/cY9XfjOCX1hbuyalUrK439vogqCz_goCYw7oRd6JFYYzbA.woff2": {
+      "taille": 63292,
+      "integrite": "sha384-NIkI1/BjDDT2w43BuJRu5j405Z8u8wvUcf6XRL2gHbDDk5sf74z1/ZmpfZXH6KMl",
+      "origine": "https://fonts.gstatic.com/s/newsreader/v26/cY9XfjOCX1hbuyalUrK439vogqCz_goCYw7oRd6JFYYzbA.woff2"
+    },
+    "polices/cY9AfjOCX1hbuyalUrK439DyjJBG.woff2": {
+      "taille": 86608,
+      "integrite": "sha384-clObKlwdpqd84FIYGEJbNr3TQH7qjO/3uLxigWNzE+LV4cs3/pYQWqyS7XNVVDhU",
+      "origine": "https://fonts.gstatic.com/s/newsreader/v26/cY9AfjOCX1hbuyalUrK439DyjJBG.woff2"
+    },
+    "polices/cY9AfjOCX1hbuyalUrK4397yjA.woff2": {
+      "taille": 132000,
+      "integrite": "sha384-5TsIb3Y92/m28WF/gV7mdSO1juW62ueaN4e5hRZ4uC6CQV5Igadd+oBHDfLDyCX3",
+      "origine": "https://fonts.gstatic.com/s/newsreader/v26/cY9AfjOCX1hbuyalUrK4397yjA.woff2"
+    },
+    "polices/polices.css": {
+      "taille": 7618,
+      "integrite": "sha384-7tFI5fBYia/eXTRXxCj5h/i1azptAnJ1O05GaBTJecTROXR88euyeGhfxLqmzhZ/",
+      "origine": "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    }
+  }
+}
