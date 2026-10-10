@@ -86,6 +86,8 @@ Chaque constat est `{ code, niveau, chemin, valeur, mesure, conseil }`. `niveau`
 | Code | Mesure | Conseil type |
 |---|---|---|
 | `contraste-classe-fond` (info) | rapport WCAG de chaque classe pâle contre le fond, seuil `contrasteMinimal` | « Contour sombre requis sur les classes 1, 2 (moins de 3:1 contre le fond) ; ce contour atteint 14,53:1 contre la classe. » |
+
+**Le contour annoncé est posé à l'affichage.** Une unité de choroplèthe, un cercle ou un polygone dont la couleur, VUE sur le fond à l'opacité de la couche (88 % pour un choroplèthe, 90 % pour des cercles, 72 % pour un polygone déclaratif), tombe sous `contrasteMinimal` reçoit un trait de l'encre de la charte (clair sur un fond sombre) ; les autres gardent le contour de la charte. L'avertissement mesure la couleur pleine, l'affichage la couleur vue : une classe à 3,17:1 pleine (5e couleur de la rampe d'Atlas) s'affiche à 2,72:1, elle est donc cernée sans être annoncée. Le contour des marqueurs à formes (`etats`) est `marqueurs.contour`, sauf si l'état déclare le sien.
 | `ecart-classes-voisines` | écart CIEDE2000 minimal entre voisines, pire des quatre visions, seuil `ecartMinimal` | écarter les extrémités ou réduire le nombre de classes |
 | `nombre-classes` | `classesMax`, pire écart à ce nombre, `nMaxAdmis`, `nMaxNet` | « Réduire à 5 classes (4 pour des classes nettes) » |
 | `ordre-clartes` | visions où la clarté ne va plus dans un seul sens | choisir une rampe sans retour en arrière |
