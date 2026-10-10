@@ -35,8 +35,8 @@
  *
  * Tout ici est pur : ni DOM, ni MapLibre, ni réseau.
  */
-import { lireHeureEclext } from './eclairage-profil.js?v=1.15.0';
-import { lireLongueurOsm } from './catalogue-objets.js?v=1.15.0';
+import { lireHeureEclext } from './eclairage-profil.js?v=1.16.0';
+import { lireLongueurOsm } from './catalogue-objets.js?v=1.16.0';
 
 /** Les origines d'une valeur, de la plus précise à la plus générale. */
 export const ORIGINES = Object.freeze(['objet', 'champ', 'couche', 'catalogue', 'regle']);

@@ -20,11 +20,11 @@
  * des données. Elles sont testées sans navigateur.
  */
 
-import { mettreAPlat } from './vue-import.js?v=1.15.0';
-import { echapper } from './html.js?v=1.15.0';
-import { presetsParGroupe, empriseDepuisBornes, libelleEmprise, phraseProvenance, LICENCE } from './import-ign.js?v=1.15.0';
-import { formaterDuree } from './import-lots.js?v=1.15.0';
-import { creerSession } from './import-ign-session.js?v=1.15.0';
+import { mettreAPlat } from './vue-import.js?v=1.16.0';
+import { echapper } from './html.js?v=1.16.0';
+import { presetsParGroupe, empriseDepuisBornes, libelleEmprise, phraseProvenance, LICENCE } from './import-ign.js?v=1.16.0';
+import { formaterDuree } from './import-lots.js?v=1.16.0';
+import { creerSession } from './import-ign-session.js?v=1.16.0';
 
 /** Les pictogrammes des cartes : tracés 24 × 24 au trait, qui suivent la couleur du texte (comme ceux d'Atlas). */
 export const ICONES = Object.freeze({

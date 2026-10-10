@@ -22,9 +22,9 @@
  *   s'explique ;
  * - **une référence se cherche par son libellé**, jamais par son numéro.
  */
-import { normaliser } from './palette-objets.js?v=1.15.0';
-import { distanceMetres } from './releve.js?v=1.15.0';
-import { dateCourte } from './bulle-objet.js?v=1.15.0';
+import { normaliser } from './palette-objets.js?v=1.16.0';
+import { distanceMetres } from './releve.js?v=1.16.0';
+import { dateCourte } from './bulle-objet.js?v=1.16.0';
 
 /** Au-delà, un texte de champ n'est plus une valeur à retrouver mais un paragraphe. */
 export const LONGUEUR_MAX_CHAMP = 160;
