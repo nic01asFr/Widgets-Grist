@@ -521,7 +521,7 @@ export function decisionImport(evaluation) {
  * Une durée d'import attendue, d'après le nombre d'objets et la taille de page. Valeurs mesurées en navigateur (voir
  * `docs/IMPORT-IGN.md`) : une pause entre deux pages, un temps par page, un temps par objet.
  */
-export function estimerDuree(n, page, { msParPage = 450, msParObjet = 0.35, pauseMs = 200 } = {}) {
+export function estimerDuree(n, page, { msParPage = 200, msParObjet = 0.2, pauseMs = 200 } = {}) {
   if (!Number.isFinite(n) || n <= 0) return 0;
   const pages = Math.ceil(n / Math.max(1, page));
   return (pages * (msParPage + pauseMs) + n * msParObjet) / 1000;
