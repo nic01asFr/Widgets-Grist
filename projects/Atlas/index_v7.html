@@ -1878,6 +1878,10 @@
     <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20261003h" />
 </head>
 <body>
+    <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
+         pendant que app_v7.js se charge (300 a 900 ms, davantage sur un reseau lent), puis disparait. Meme regle que `biDemande` (lib/bi/liaison.js),
+         gardee par tests/bi-premier-affichage.test.js. -->
+    <script>try { var biv = new URLSearchParams(location.search).get('bi'); if (biv === '1' || biv === 'true') document.body.classList.add('mode-bi'); } catch (e) { /* sans classe : comportement d'avant */ }</script>
     <div class="app">
         <!-- HEADER -->
         <header class="app-header" id="app-header">
