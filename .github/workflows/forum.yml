@@ -51,7 +51,9 @@ jobs:
           DISCOURSE_URL: https://forum.grist.libre.sh
           DISCOURSE_API_KEY: ${{ secrets.DISCOURSE_API_KEY }}
           DISCOURSE_API_USERNAME: ${{ secrets.DISCOURSE_API_USERNAME }}
+          # Texte libre : lu par le shell dans une variable, jamais recopié dans le script.
+          RAISON: ${{ inputs.raison }}
         run: |
           node scripts/publish-post.js "${{ inputs.projet }}" \
-            --raison="${{ inputs.raison }}" \
+            --raison="$RAISON" \
             ${{ inputs.simulation == false && '--publier' || '' }}
