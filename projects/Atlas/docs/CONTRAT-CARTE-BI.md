@@ -78,7 +78,7 @@ Si `donnees[id]` est fourni dans `setScene`, ces entités (Feature GeoJSON avec 
 
 Valeur de `setFilter(controlId, valeur)` selon le type du contrôle : `select` = liste de valeurs retenues (liste vide : rien ne passe) ; `range` et `time` = `{ min, max }` (l'un des deux peut manquer) ; `text` = `{ texte }` ou une chaîne (recherche sans casse ni accents, sur le champ du contrôle) ; `null` = retire le filtre. Retour : `{ layer, compte, total }`.
 
-Contrat 0.2 [testé, navigateur] : `ping`, `setScene(manifeste, donnees)`, `setLayerVisibility`, `setFilter(controlId, valeur|null)`, `setTime`, `play`, `pause`, `select(id|null)`, `highlight(ids)`, `flyTo`, `fitTo(couche|ids)`, `setTheme`, `setVisual`, `updateFeature`, `setEdition`, `setFond(mode, jetons)`, `getLegend`, `getRows`, `resize`. Le clavier réel, le filtre, le temps, `setFond` (`atlas`, `plan`, `uni`) et `setVisual` ont été exécutés dans le navigateur ; `setFond('photo')`, `setFond('plan-ign')` et `setFond('voile')` sont **[prototype]** (le plan IGN dérivé demande les polices du serveur de glyphes IGN).
+Contrat 0.2 [testé, navigateur] : `ping`, `setScene(manifeste, donnees)`, `setLayerVisibility`, `setFilter(controlId, valeur|null)`, `setTime`, `play`, `pause`, `select(id|null)`, `highlight(ids)`, `flyTo`, `fitTo(couche|ids)`, `setTheme`, `setVisual`, `updateFeature`, `setEdition`, `setFond(mode, jetons)`, `getLegend`, `getRows`, `resize`. Le clavier réel, le filtre, le temps, `setFond` (`atlas`, `plan`, `uni`) et `setVisual` ont été exécutés dans le navigateur ; `setFond('photo')`, `setFond('plan-ign')` (polices du serveur de glyphes IGN) et `setFond('voile')` ont été exécutés et contrôlés à l'écran dans le navigateur le 10/10/2026.
 
 Contrat 0.3 [testé] : `addAdminLayer(niveau, options)` -> `{ layer, niveau, n, source, repli, cause, cache, ms, octets, nRequetes, attribution, millesime }` (échec : exception explicite + événement `error`, aucune couche créée ; régions, départements et pays passent au jeu embarqué si le service manque, `repli:true` ; les communes n'ont pas de repli) ; `removeLayer(id)` ; `setStatistique(couche, spec)` ; `setChoropleth(couche, style)` ; `drillDown(couche, code)`, `drillUp()`, `setDrillAuto({actif, seuils})` ; `setUnitFilter(couchePoints, coucheUnites, code|null)` ; `batch(ordres, {arret:'erreur'|'continuer'})` -> `{ ok, ko, nonExecutes, resultats }` (100 ordres au plus, pas d'imbrication, un seul aller-retour) ; `setHorsLigne(true|false|'auto')` ; `getRows(couche, {tri, ordre, limite})` pour un choroplèthe (**les unités sans donnée sont toujours en fin de liste**). Le choroplèthe administratif avec jointure, le forage département -> commune (service IGN réel), `batch`, `select` et `getRows` ont aussi été exécutés dans le navigateur.
 
@@ -112,7 +112,7 @@ Le canevas reçoit le focus (Tab) ; flèches, `+`, `-` restent à MapLibre. `n`/
 
 ## 10. Hors ligne [testé simulé]
 
-`setHorsLigne(true)` : fond **uni** (seul fond sans réseau), jeux embarqués pour pays, régions et départements, erreur explicite pour les communes. `'auto'` (défaut) : bascule sur l'événement `offline` du navigateur ou après 4 échecs de tuiles en 8 s, retour automatique au fond précédent si la bascule était automatique. Jamais de bascule silencieuse : événement `connexion`. La commande a été exécutée dans le navigateur ; **un réseau réellement coupé n'a pas été essayé**.
+`setHorsLigne(true)` : fond **uni** (seul fond sans réseau), jeux embarqués pour pays, régions et départements, erreur explicite pour les communes. `'auto'` (défaut) : bascule sur l'événement `offline` du navigateur ou après 4 échecs de tuiles en 8 s, retour automatique au fond précédent si la bascule était automatique. Jamais de bascule silencieuse : événement `connexion`. La commande a été exécutée dans le navigateur, et **un réseau réellement coupé a été essayé le 10/10/2026** (émulation hors ligne) : bascule `hors_ligne` en moins de 3 s, fond uni, couches de l'hôte conservées, reprise `en_ligne` ; les jeux embarqués étant des fichiers servis par Atlas, ils ne se chargent hors ligne que si la page d'Atlas est elle-même en cache.
 
 ## 11. Données administratives : sources, licences, volumes
 
@@ -139,6 +139,17 @@ Mesures du prototype, relevées avant l'intégration sur un poste de développem
 | Lot de 5 ordres contre 5 allers-retours | 48 ms contre 180 ms |
 | 10 000 / 50 000 points, rendu | 77-123 / 52-75 images/s |
 | 100 000 / 400 000 points, filtre | 0,36-0,45 s / 1,4-1,8 s |
+
+Mesures du 10/10/2026 **sur le code intégré, par `postMessage` entre deux origines** (Chromium 154, poste portable avec GPU dédié, entités ponctuelles de 6 propriétés, un seul contrôle de liste) :
+
+| Entités | Message JSON | `setScene` (envoi, clonage, montage) | premier `idle` | `setFilter` (liste) | tas JavaScript en plus |
+|---|---|---|---|---|---|
+| 1 000 | 0,2 Mo | 54 ms | 0,28 s | 26 ms | 13 Mo |
+| 10 000 | 2,0 Mo | 337 ms | 0,27 s | 130 ms | 42 Mo |
+| 50 000 | 9,9 Mo | 1,4 s | 0,28 s | 482 ms | 89 Mo |
+| 100 000 | 19,8 Mo | 2,9 s | 0,62 s | 895 ms | 171 Mo |
+
+Le clonage structuré d'un message pèse peu devant le montage (mesuré sous Node : 175 ms pour 50 000 entités, 1,1 s pour 400 000, soit 82 Mo de JSON) ; la limite pratique est le temps de `setScene` et la latence des filtres, pas la taille du message. Les images par seconde (rendus MapLibre pendant un panoramique piloté) restent au-dessus de 190 par seconde jusqu'à 100 000 points sur ce poste, **sans plafond de synchronisation verticale** : le chiffre ne dit pas ce que donnera un poste sans carte graphique dédiée. `getRows(couche, { limite })` ne limite pas les lignes d'une couche de points (toutes sont renvoyées : 100 000 lignes en 144 ms).
 
 Au-delà de 100 000 entités par couche, la latence des filtres et le tas limitent : agréger avant d'envoyer, ou tuiles statiques (PMTiles) **[à créer]**. Le plafond de 2 500 objets déclarés du chargeur de scène d'Atlas ne s'applique pas aux couches du composant, qui ne passent pas par lui (non mesuré au-delà des volumes ci-dessus).
 
