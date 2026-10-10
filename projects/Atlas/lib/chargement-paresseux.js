@@ -74,3 +74,24 @@ export function chargerScript(url, { document: doc = globalThis.document } = {})
 export async function chargerScriptsEnOrdre(urls, { document: doc = globalThis.document, charger = chargerScript } = {}) {
   for (const url of urls) await charger(url, { document: doc });
 }
+
+/**
+ * Charge UNE feuille de style et rend la main quand elle est appliquee.
+ *
+ * On attend le `load` : une fiche montee avant sa feuille s'afficherait nue
+ * l'espace d'une image — le sursaut que la feuille, chargee d'avance, evitait.
+ *
+ * @param {string} url
+ * @param {{document?: Document}} [o]
+ * @returns {Promise<void>}
+ */
+export function chargerFeuille(url, { document: doc = globalThis.document } = {}) {
+  return new Promise((resolve, reject) => {
+    const l = doc.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = url;
+    l.onload = () => resolve();
+    l.onerror = () => reject(new Error(`feuille de style introuvable : ${url}`));
+    doc.head.appendChild(l);
+  });
+}

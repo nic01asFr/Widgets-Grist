@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unSeulChargement, chargerScript, chargerScriptsEnOrdre } from '../lib/chargement-paresseux.js';
+import { unSeulChargement, chargerScript, chargerScriptsEnOrdre, chargerFeuille } from '../lib/chargement-paresseux.js';
 import {
-  FICHIERS_MOTEUR, NOM_META, moteurPresent, baseDuMoteur, adressesDuMoteur, creerChargeurMoteur,
+  FICHIERS_MOTEUR, NOM_META, URL_FEUILLE, moteurPresent, baseDuMoteur, adressesDuMoteur, creerChargeurMoteur,
 } from '../lib/moteur-formulaire.js';
 
 const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,9 +23,10 @@ function faussePage({ echecs = [], meta = null, base = 'http://page.test/Atlas/i
     createElement: (tag) => ({ tag }),
     head: {
       appendChild(s) {
-        inseres.push(s.src);
+        const adresse = s.src ?? s.href;
+        inseres.push(adresse);
         onInsere(s);
-        setImmediate(() => (echecs.includes(s.src) ? s.onerror() : s.onload()));
+        setImmediate(() => (echecs.includes(adresse) ? s.onerror() : s.onload()));
       },
     },
     querySelector: (sel) => (sel === `meta[name="${NOM_META}"]` && meta !== null
@@ -158,28 +159,30 @@ function chargeurDeTest({ echecs = [], meta = '../grist_forms/', portee = {} } =
     await chargerScriptsEnOrdre(urls, { document: o.document });
     portee.FormEngine = {}; portee.FormTypes = {};
   };
-  const assurer = creerChargeurMoteur({ document: doc, portee, charger, avertir: (...a) => avertis.push(a.join(' ')) });
+  const assurer = creerChargeurMoteur({
+    document: doc, portee, charger, urlFeuille: 'http://page.test/lib/peau.css', avertir: (...a) => avertis.push(a.join(' ')),
+  });
   return { assurer, inseres, avertis, portee };
 }
 
 test('assurerMoteur : charge les sept scripts dans l ordre, depuis le dossier declare', async () => {
   const { assurer, inseres } = chargeurDeTest();
   assert.equal(await assurer(), true);
-  assert.deepEqual(inseres, FICHIERS_MOTEUR.map((f) => 'http://page.test/grist_forms/' + f));
+  assert.deepEqual(inseres.filter((u) => !u.endsWith('.css')), FICHIERS_MOTEUR.map((f) => 'http://page.test/grist_forms/' + f));
 });
 
 test('assurerMoteur : deux appels simultanes, un seul chargement', async () => {
   const { assurer, inseres } = chargeurDeTest();
   const rs = await Promise.all([assurer(), assurer(), assurer()]);
   assert.deepEqual(rs, [true, true, true]);
-  assert.equal(inseres.length, 7);
+  assert.equal(inseres.filter((u) => !u.endsWith('.css')).length, 7);
 });
 
 test('assurerMoteur : apres un succes, un nouvel appel ne recharge rien', async () => {
   const { assurer, inseres } = chargeurDeTest();
   await assurer();
   assert.equal(await assurer(), true);
-  assert.equal(inseres.length, 7);
+  assert.equal(inseres.filter((u) => !u.endsWith('.css')).length, 7);
 });
 
 test('assurerMoteur : un moteur deja present (page ancienne) n insere rien', async () => {
@@ -200,7 +203,7 @@ test('assurerMoteur : apres un echec, l appel suivant retente (coupure passagere
   assert.equal(await assurer(), false);
   echecs.length = 0;                    // le reseau revient
   assert.equal(await assurer(), true);
-  assert.ok(inseres.length > 7);        // 1 tentative (echec) + 7 scripts
+  assert.ok(inseres.filter((u) => !u.endsWith('.css')).length > 7);        // 1 tentative (echec) + 7 scripts
 });
 
 test('assurerMoteur : sans meta dans la page, false et un avertissement clair', async () => {
@@ -218,4 +221,49 @@ test('assurerMoteur : des scripts charges qui ne posent pas FormEngine sont sign
   });
   assert.equal(await assurer(), false);
   assert.match(avertis[0], /FormEngine reste absent/);
+});
+
+/* ---------- la feuille de style du moteur ---------- */
+
+test('chargerFeuille : une balise link stylesheet, resolue au load', async () => {
+  const { doc, inseres } = faussePage();
+  const ajoutes = [];
+  const ouvre = doc.createElement;
+  doc.createElement = (tag) => { const e = ouvre(tag); ajoutes.push(e); return e; };
+  await chargerFeuille('http://x.test/a.css', { document: doc });
+  assert.deepEqual(inseres, ['http://x.test/a.css']);
+  assert.equal(ajoutes[0].tag, 'link');
+  assert.equal(ajoutes[0].rel, 'stylesheet');
+});
+
+test('chargerFeuille : introuvable -> rejet qui nomme l adresse', async () => {
+  const { doc } = faussePage({ echecs: ['http://x.test/a.css'] });
+  await assert.rejects(chargerFeuille('http://x.test/a.css', { document: doc }), (e) => e.message === 'feuille de style introuvable : http://x.test/a.css');
+});
+
+test('URL_FEUILLE : a cote du module, dans lib/, avec son jeton de version', () => {
+  const u = new URL(URL_FEUILLE);
+  assert.ok(u.pathname.endsWith('/lib/formulaire-atlas.css'), u.pathname);
+  assert.match(u.search, /^\?v=[0-9a-z]+$/);
+});
+
+test('assurerMoteur : la feuille de style est chargee avec les scripts, une seule fois', async () => {
+  const { assurer, inseres } = chargeurDeTest();
+  await Promise.all([assurer(), assurer()]);
+  assert.equal(inseres.filter((u) => u === 'http://page.test/lib/peau.css').length, 1);
+});
+
+test('assurerMoteur : une feuille introuvable n empeche pas le moteur, elle est signalee', async () => {
+  const { assurer, avertis } = chargeurDeTest({ echecs: ['http://page.test/lib/peau.css'] });
+  assert.equal(await assurer(), true);
+  assert.match(avertis.join(' '), /feuille du formulaire : feuille de style introuvable/);
+});
+
+test('index_v7.html : la feuille du formulaire n est plus liee dans <head>', () => {
+  assert.doesNotMatch(lire('index_v7.html'), /<link[^>]+formulaire-atlas[.]css/);
+});
+
+test('promote-atlas.js copie toujours les feuilles de lib/ (la peau n est plus reclamee par la page)', () => {
+  const src = readFileSync(resolve(RACINE, '../../scripts/promote-atlas.js'), 'utf8');
+  assert.ok(src.includes("f.endsWith('.css')) fs.copyFileSync"));
 });

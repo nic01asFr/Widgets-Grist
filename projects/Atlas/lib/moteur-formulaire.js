@@ -28,7 +28,7 @@
  * nommee `VENDOR`, dont `tests/moteur-formulaire.test.js` verifie l'egalite avec
  * `FICHIERS_MOTEUR`).
  */
-import { unSeulChargement, chargerScriptsEnOrdre } from './chargement-paresseux.js';
+import { unSeulChargement, chargerScriptsEnOrdre, chargerFeuille } from './chargement-paresseux.js';
 
 /** Les sept scripts, DANS L'ORDRE : chacun lit ce que les precedents ont pose. */
 export const FICHIERS_MOTEUR = Object.freeze([
@@ -42,6 +42,14 @@ export const FICHIERS_MOTEUR = Object.freeze([
 ]);
 
 export const NOM_META = 'atlas-moteur-formulaire';
+
+/**
+ * La peau du moteur : `lib/formulaire-atlas.css`, a cote de ce module. Elle habille les
+ * classes `fr-*` du moteur et le module Formulaires (`.fm-*`), qui n'existent tous deux
+ * que dans un document Grist : elle se charge avec le moteur, plus en <head>, ou elle
+ * bloquait l'affichage de toutes les pages.
+ */
+export const URL_FEUILLE = new URL('./formulaire-atlas.css?v=20261003h', import.meta.url).href;
 
 /** Le moteur est-il deja la ? Meme critere que `moteurDisponible()` de `fiche-formulaire.js`. */
 export function moteurPresent(portee = globalThis) {
@@ -74,13 +82,20 @@ export function creerChargeurMoteur({
   document: doc = globalThis.document,
   portee = globalThis,
   charger = chargerScriptsEnOrdre,
+  chargerStyle = chargerFeuille,
+  urlFeuille = URL_FEUILLE,
   avertir = (...a) => console.warn(...a),
 } = {}) {
   const unSeul = unSeulChargement(async () => {
     if (moteurPresent(portee)) return;
     const base = baseDuMoteur(doc);
     if (!base) throw new Error(`<meta name="${NOM_META}"> absente de la page`);
+    // La feuille se charge EN PARALLELE des scripts, et sa perte n'est pas fatale :
+    // une fiche sans peau reste utilisable, un moteur sans scripts ne l'est pas.
+    const feuille = chargerStyle(urlFeuille, { document: doc })
+      .catch((e) => avertir('[Atlas] feuille du formulaire :', e.message));
     await charger(adressesDuMoteur(base, doc.baseURI), { document: doc });
+    await feuille;
     if (!moteurPresent(portee)) throw new Error('les scripts sont charges mais FormEngine reste absent');
   });
   return async function assurer() {

@@ -146,7 +146,8 @@
          le demande à la demande (lib/moteur-formulaire.js) à partir de ce dossier.
          `dsfr-like.css` n'est PAS chargé non plus — `lib/formulaire-atlas.css`
          habille les mêmes classes avec les jetons d'Atlas, et reste confiné au
-         panneau. Chemin relatif au dépôt : valable sur le serveur de dev ;
+         panneau ; elle se charge avec le moteur, et non plus ici. Chemin relatif au
+         dépôt : valable sur le serveur de dev ;
          scripts/promote-atlas.js le réécrit vers vendor/grist_forms/ dans
          published/atlas/, où les fichiers sont embarqués. -->
     <meta name="atlas-moteur-formulaire" content="../grist_forms/" />
@@ -2027,7 +2028,6 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=20261003h" />
 </head>
 <body>
     <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
