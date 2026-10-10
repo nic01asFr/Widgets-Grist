@@ -1078,7 +1078,7 @@ function libelleModele(id) {
 }
 /** Les <option> d'un choix de modele : la bibliotheque, puis les objets realistes. */
 function optionsModeles(selId, { objets = true } = {}) {
-    const ligne = (mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`;
+    const ligne = (mm) => `<option value="${echapper(mm.id)}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${echapper(mm.name)}</option>`;
     const objs = objets ? modelesObjets() : [];
     if (!objs.length) return allModels().map(ligne).join('');
     return `<optgroup label="Bibliothèque">${allModels().map(ligne).join('')}</optgroup><optgroup label="Objets réalistes">${objs.map(ligne).join('')}</optgroup>`;
@@ -5734,7 +5734,7 @@ function renderLieu() {
     $('module-body').innerHTML = `
         <div class="section loc-identite">
             <div class="section-title">Nom du projet</div>
-            <input class="input" id="proj-name" placeholder="Ma maquette…" value="${STATE.projectName}" onchange="A.setProjectName(this.value)">
+            <input class="input" id="proj-name" placeholder="Ma maquette…" value="${echapper(STATE.projectName)}" onchange="A.setProjectName(this.value)">
         </div>
         ${htmlCadrage()}
         ${htmlMiniature()}
@@ -5743,7 +5743,7 @@ function renderLieu() {
             <div class="loc-badge">
                 <span class="ic">${icTrait(IC.epingle)}</span>
                 <div class="loc-texte">
-                    <div class="nm">${L.name || 'Non défini'}</div>
+                    <div class="nm">${echapper(L.name || 'Non défini')}</div>
                     <div class="co">${(L.lat ?? 0).toFixed(4)}°N · ${(L.lng ?? 0).toFixed(4)}°E</div>
                 </div>
             </div>
@@ -6851,8 +6851,8 @@ function renderEnvControlsSection() {
         }
         return `<div class="section">
             <div class="toggle-row">
-                <span class="tlabel">${vc.label}</span>
-                <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${vc.id}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${vc.label || vc.id} en lecture" title="Visible en lecture"></div>
+                <span class="tlabel">${echapper(vc.label)}</span>
+                <div class="toggle ${on ? 'on' : ''}" onclick="A.setViewerExposed('${chaineJs(vc.id)}', ${!on})" role="switch" tabindex="0" aria-checked="${on}" aria-label="Exposer ${echapper(vc.label || vc.id)} en lecture" title="Visible en lecture"></div>
             </div>
             ${sub}
         </div>`;
@@ -8271,8 +8271,8 @@ function renderModelsPanel() {
         </div>
         <div class="section">
             <div class="section-title">Source des modèles (GLB)${infoBulle('Doit contenir les dossiers colored et mono, et le catalogue (catalog, au format JSON). En local : sers la racine du repo et ouvre /projects/Atlas/index.html.')}</div>
-            <div class="range-info" id="model-src-info" style="word-break:break-all">${MODEL_LIBRARY.baseUrl}</div>
-            <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${MODEL_LIBRARY.baseRoot}" placeholder="https://…/models/">
+            <div class="range-info" id="model-src-info" style="word-break:break-all">${echapper(MODEL_LIBRARY.baseUrl)}</div>
+            <input class="input" id="model-src-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${echapper(MODEL_LIBRARY.baseRoot)}" placeholder="https://…/models/">
             <div style="display:flex;gap:6px;margin-top:6px">
                 <button class="btn btn-soft" style="flex:1" onclick="A.testModelBase()">Tester</button>
                 <button class="btn btn-primary" style="flex:1" onclick="A.setModelBase(document.getElementById('model-src-input').value)">Appliquer</button>
@@ -8804,8 +8804,8 @@ function renderSymbologyInspector(layer) {
     if (is3D) {
         const mm = sym.model || {};
         let label, icon = '📦';
-        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${mm.field} »`; }
-        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = layer.style.custom.filename; }
+        if (mm.mode === 'categorized' && mm.field) { label = `par champ « ${echapper(mm.field)} »`; }
+        else if (layer.style?.mode === 'custom' && layer.style.custom?.filename) { label = echapper(layer.style.custom.filename); }
         else { const l = libelleModele(layer.style?.library?.modelId); icon = l.icon; label = echapper(l.label); }
         modelChip = `<div style="margin-top:8px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid rgba(196,69,54,0.2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink)"><span style="font-size:15px">${icon}</span>${label}</span>
@@ -8843,7 +8843,7 @@ function fieldSelect(layer, param, current, type) {
     const fields = getLayerFields(layer).filter((f) => !type || f.type === type);
     return `<select class="input" onchange="A.setSymField('${layer.id}','${param}', this.value)">
         <option value="">— Champ —</option>
-        ${fields.map((f) => `<option value="${f.id}" ${current === f.id ? 'selected' : ''}>${f.id} (${typeAffiche(layer, f)})</option>`).join('')}
+        ${fields.map((f) => `<option value="${echapper(f.id)}" ${current === f.id ? 'selected' : ''}>${echapper(f.id)} (${typeAffiche(layer, f)})</option>`).join('')}
     </select>`;
 }
 function modeSeg(layer, param, mode, modes) {
@@ -8927,8 +8927,8 @@ function symColorPanel(layer, sym) {
     if (c.mode === 'single') {
         inner = `<div class="section"><div class="section-title">Couleur</div>
             <div style="display:flex;gap:8px;align-items:center">
-                <input type="color" value="${c.value || layer.color}" style="width:40px;height:34px;border:none;cursor:pointer" onchange="A.setSymColorValue('${layer.id}', this.value)">
-                <input class="input" style="flex:1;font-family:var(--mono)" value="${c.value || layer.color}" onchange="A.setSymColorValue('${layer.id}', this.value)">
+                <input type="color" value="${echapper(c.value || layer.color)}" style="width:40px;height:34px;border:none;cursor:pointer" onchange="A.setSymColorValue('${layer.id}', this.value)">
+                <input class="input" style="flex:1;font-family:var(--mono)" value="${echapper(c.value || layer.color)}" onchange="A.setSymColorValue('${layer.id}', this.value)">
             </div></div>`;
     } else if (c.mode === 'categorized') {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'color', c.field, null)}</div>
@@ -9201,7 +9201,7 @@ function categoriesPreview(layer, c) {
         const cat = c.categories.find((x) => String(x.value) === String(v.value));
         const col = cat?.color || paletteColor(c.palette, i, vals.length, c.inverse);
         const lib = escapeHtml(libelleCategorie(c, v.value));
-        return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
+        return `<div class="cat-row"><span class="cat-swatch" style="background:${col}" onclick="A.pickCatColor('${layer.id}','${chaineJs(v.value)}', this)"></span><span class="cat-value" title="${lib}">${lib}</span><span class="cat-count">${v.count}</span></div>`;
     }).join('')}${vals.length > 30 ? `<div class="range-info" style="margin-top:6px">+ ${vals.length - 30} autres</div>` : ''}</div>`;
 }
 /** Bornes qu'un contrôle du manifeste déclare pour un champ, s'il y en a un. */
@@ -9651,14 +9651,14 @@ function symModelPanel(layer, sym) {
         inner = `<div class="section"><div class="section-title">Catégorie</div>
             <select class="input" onchange="A.setModelCat('${layer.id}', this.value)">${Object.entries(MODEL_LIBRARY.categories).map(([k, c]) => `<option value="${k}" ${cat === k ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
             <div class="section"><div class="section-title">Modèle de la couche</div>
-            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${mm.name}</div></div>`).join('')}</div></div>
+            <div class="model-grid">${grid.map((mm) => `<div class="model-card ${selId === mm.id ? 'active' : ''}" onclick="A.pickModel('${layer.id}','${chaineJs(mm.id)}')"><div class="mi">${mm.icon}</div><div class="mn">${echapper(mm.name)}</div></div>`).join('')}</div></div>
             ${sectionObjetsRealistes(layer, selId)}`;
     } else {
         inner = `<div class="section"><div class="section-title">Champ source</div>${fieldSelect(layer, 'model', m.field, 'text')}</div>
             ${m.field ? `<div class="section"><div class="section-title">Modèle par valeur</div><div class="cats">${getUniqueValues(layer, m.field, 20).map((v) => {
                 const c2 = m.categories.find((c) => String(c.value) === String(v.value));
-                return `<div class="cat-row"><span class="cat-icon">${findModel(c2?.modelId)?.icon || '❓'}</span><span class="cat-value" title="${v.value}">${v.value}</span>
-                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${String(v.value).replace(/'/g, "\\'")}', this.value)"><option value="">—</option>${optionsModeles(c2?.modelId)}</select>
+                return `<div class="cat-row"><span class="cat-icon">${findModel(c2?.modelId)?.icon || '❓'}</span><span class="cat-value" title="${echapper(v.value)}">${echapper(v.value)}</span>
+                    <select class="cat-select" onchange="A.setModelCategory('${layer.id}','${chaineJs(v.value)}', this.value)"><option value="">—</option>${optionsModeles(c2?.modelId)}</select>
                     <span class="cat-count">${v.count}</span></div>`;
             }).join('')}</div></div>
             <div class="section"><div class="section-title">Modèle par défaut</div><select class="input" onchange="A.setDefaultModel('${layer.id}', this.value)"><option value="">— Aucun —</option>${optionsModeles(m.defaultModelId)}</select></div>` : ''}`;
@@ -9693,7 +9693,7 @@ function sectionObjetsRealistes(layer, selId) {
         <div class="model-grid">${objs.map((mm) => {
             const f = mm.fiche;
             const infos = [f.famille, f.variantes > 1 ? `${f.variantes} variantes` : null, `${f.fichiers} fichier${f.fichiers > 1 ? 's' : ''}`, f.interne ? 'usage interne' : null].filter(Boolean).join(' · ');
-            return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${mm.id}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
+            return `<div class="model-card ${selId === mm.id ? 'active' : ''}" title="${escapeHtml(mm.name + ' — ' + infos + ' — ' + mm.id)}" onclick="A.pickModel('${layer.id}','${chaineJs(mm.id)}')"><div class="mi">${mm.icon}</div><div class="mn">${escapeHtml(mm.name)}</div></div>`;
         }).join('')}</div>${inconnu}</div>`;
 }
 function panneauCatalogueCouche(layer, selId) {
@@ -9723,7 +9723,7 @@ function panneauCatalogueCouche(layer, selId) {
         ${c.cat ? `<div class="hint" style="margin-top:6px">${reconnus} objet(s) sur ${n} reconnu(s) par un type du catalogue. Les autres gardent le modèle de repli ci-dessous.</div>` : ''}
         ${refus}</div>
         <div class="section"><div class="section-title">Repli (objets non reconnus)</div>
-        <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${mm.id}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${mm.name}</option>`).join('')}</select></div>`;
+        <select class="input" onchange="A.pickModel('${layer.id}', this.value, true)">${allModels().map((mm) => `<option value="${echapper(mm.id)}" ${selId === mm.id ? 'selected' : ''}>${mm.icon} ${echapper(mm.name)}</option>`).join('')}</select></div>`;
 }
 function commonTransform(layer) {
     const c = layer.style.common = layer.style.common || { scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0, offsetX: 0, offsetY: 0, offsetZ: 0 };
@@ -9760,18 +9760,18 @@ function renderAttrFields(layer, props, opts = {}) {
     if (!fields.length) return '<div class="hint">Aucun attribut.</div>';
     return fields.map((f) => {
         const val = props[f.id] ?? '';
-        const esc = String(val).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const esc = echapper(val);
         const inputType = f.type === 'numeric' ? 'number' : 'text';
         if (readOnly) {
             return `<div class="section" style="margin-bottom:8px">
-                <label class="input-label">${f.label || f.id}</label>
+                <label class="input-label">${echapper(f.label || f.id)}</label>
                 <div class="input" style="opacity:.85;background:var(--surface-muted)">${esc || '—'}</div>
             </div>`;
         }
         return `<div class="section" style="margin-bottom:8px">
-            <label class="input-label">${f.label || f.id}</label>
+            <label class="input-label">${echapper(f.label || f.id)}</label>
             <input class="input" type="${inputType}" value="${esc}"
-                onchange="A.setFeatureAttr('${layer.id}', '${f.id.replace(/'/g, "\\'")}', this.value)">
+                onchange="A.setFeatureAttr('${layer.id}', '${chaineJs(f.id)}', this.value)">
         </div>`;
     }).join('');
 }
@@ -10876,8 +10876,8 @@ function renderObjectInspector() {
     const attrsReadOnly = (view && !saisieTerrain) || !isQgis;
 
     $('insp-head').innerHTML = `
-        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : layer.name}</div>
-        <div class="insp-title">${count > 1 ? 'Sélection multiple' : label}</div>
+        <div class="insp-eyebrow"><span class="layer-swatch" style="background:${fondPastilleCouche(layer)}"></span>${count > 1 ? `${count} objets` : echapper(layer.name)}</div>
+        <div class="insp-title">${count > 1 ? 'Sélection multiple' : echapper(label)}</div>
         <div class="insp-sub">${count > 1 ? `${echapper(layer.name)}` : `${layer.geometryType}${isQgis ? ' · table' : ''}${view ? (saisieTerrain ? ' · saisie' : ' · lecture') : ''}`}</div>
         ${count === 1 && coucheEclairage(layer) ? `<div id="insp-etat-eclairage" class="etat-eclairage">${Eclairage.htmlEtat(layer, idx)}</div>` : ''}
         ${count === 1 && !view ? rappelCreation(layer, props) + boutonModifierForme(layer, f) : ''}`;
