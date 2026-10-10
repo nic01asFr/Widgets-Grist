@@ -135,7 +135,7 @@ export function attacher(map, opts = {}) {
     if (valeur === null) { x.active = false; delete x.values; delete x.min; delete x.max; x.texte = ''; }
     else if (x.type === 'select') { x.active = true; x.values = Array.isArray(valeur) ? valeur.map(String) : [String(valeur)]; }
     else if (x.type === 'range' || x.type === 'time') { x.active = true; x.min = valeur.min ?? undefined; x.max = valeur.max ?? undefined; x.variant = x.min !== undefined && x.max !== undefined ? 'range_between' : x.min !== undefined ? 'range_min' : 'range_max'; }
-    else if (x.type === 'text') { x.active = true; x.texte = String(valeur); }
+    else if (x.type === 'text') { x.active = true; x.texte = String(valeur !== null && typeof valeur === 'object' ? (valeur.texte ?? '') : valeur); }   // { texte } (forme du contrat de l'hôte) ou chaîne
     appliquerVue(c);
     return { layer: c.id, compte: c.vue.length, total: c.features.length };
   }
