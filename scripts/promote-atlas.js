@@ -32,6 +32,21 @@ html = html.replace(/\.\/app_v7\.js\?v=[^"]+/, `./app.js?v=${VERSION}`);
 // `projects/` est servi. La page publiee lit sa copie embarquee.
 html = html.replace(/\.\.\/grist_forms\//g, './vendor/grist_forms/');
 html = normaliserVersions(html);
+
+// Dependances externes EMBARQUEES (tools/vendoriser-web.mjs) : si le verrou est la, la page vise vendor/ au lieu des CDN (MapLibre, SunCalc, three.js,
+// terra-draw, polices). Sans verrou, la page garde ses CDN comme avant. Une adresse de CDN restante, ou un fichier vise absent, arrete la promotion.
+const verrouExterne = path.join(pub, 'vendor', 'verrou-externe.json');
+const manifesteExterne = path.join(src, 'vendor-externe.json');
+if (fs.existsSync(verrouExterne) && fs.existsSync(manifesteExterne)) {
+  const vendorHtml = require(path.join(src, 'tools', 'vendor-web-html.cjs'));
+  const manifeste = JSON.parse(fs.readFileSync(manifesteExterne, 'utf8'));
+  html = vendorHtml.reecrireHtml(html, manifeste);
+  const reste = vendorHtml.resteExterne(html);
+  if (reste.length) { console.error('Echec : dependances encore en ligne dans la page : ' + reste.join(', ')); process.exit(1); }
+  const manquants = (manifeste.reecritures || []).filter((r) => r.de).map((r) => r.vers.replace(/^\.\//, '')).filter((rel) => !fs.existsSync(path.join(pub, rel)));
+  if (manquants.length) { console.error('Echec : fichiers embarques absents de ' + pub + ' : ' + manquants.join(', ')); process.exit(1); }
+  console.log('dependances externes embarquees : la page vise vendor/ (' + Object.keys(JSON.parse(fs.readFileSync(verrouExterne, 'utf8')).fichiers).length + ' fichiers verrouilles)');
+}
 fs.writeFileSync(path.join(pub, 'index.html'), html);
 
 fs.writeFileSync(
