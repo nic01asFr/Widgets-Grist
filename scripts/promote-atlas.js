@@ -353,6 +353,21 @@ if (absentsPage.length) {
   process.exit(1);
 }
 
+/**
+ * Le moteur de formulaire n'est plus un `<script src>` de la page : il se charge a la demande
+ * (`lib/moteur-formulaire.js`), depuis le dossier que la page declare dans
+ * `<meta name="atlas-moteur-formulaire">`. Le controle ci-dessus ne le voit donc plus — or un dossier
+ * mal reecrit ne se verrait que chez l'utilisateur, par une fiche aux champs devines.
+ */
+const metaMoteur = pageHtml.match(/<meta name="atlas-moteur-formulaire" content="([^"]+)"/);
+const absentsMoteur = metaMoteur ? VENDOR.filter((rel) => !fs.existsSync(path.join(pub, metaMoteur[1], rel))) : VENDOR;
+if (!metaMoteur || absentsMoteur.length) {
+  console.error(metaMoteur
+    ? `Echec : le dossier du moteur de formulaire (${metaMoteur[1]}) n'a pas ${absentsMoteur.join(', ')}`
+    : 'Echec : la page ne declare pas <meta name="atlas-moteur-formulaire">');
+  process.exit(1);
+}
+
 // Controle : tout module importe doit exister dans la copie publiee.
 const publie = fs.readFileSync(path.join(pub, 'app.js'), 'utf8');
 const requis = [...new Set([...publie.matchAll(/\.\/lib\/([a-z0-9-]+\.js)/g)].map((m) => m[1]))];
