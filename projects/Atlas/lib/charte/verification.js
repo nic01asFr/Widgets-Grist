@@ -139,6 +139,18 @@ export function verifierPalette(palette, ctx) {
   return { avertissements: av, mesures };
 }
 
+/**
+ * Vérifie les jetons d'un plan de fond : les limites doivent se voir (info), les noms de lieux se lire (attention).
+ * @param {object} plan  jetons du plan (au moins `fond`, `limite`, `texte`)
+ */
+export function verifierPlan(plan, exigences, chemin = 'fond.plan') {
+  const ex = lire(exigences), av = [];
+  const rLimite = contraste(plan.limite, plan.fond), rTexte = contraste(plan.texte, plan.fond);
+  if (rLimite < ex.contrasteMinimal) av.push(avertissement('contraste-plan', 'info', chemin + '.limite', plan.limite, { rapport: arr(rLimite), seuil: ex.contrasteMinimal }, 'Les limites du plan sont discrètes (' + arr(rLimite) + ':1) : relever l\'intensité « limite » du fond si elles doivent se lire.'));
+  if (rTexte < ex.contrasteTexte) av.push(avertissement('contraste-texte', 'attention', chemin + '.texte', plan.texte, { rapport: arr(rTexte), seuil: ex.contrasteTexte, fond: plan.fond }, 'Les noms de lieux du plan doivent atteindre ' + ex.contrasteTexte + ':1.'));
+  return { avertissements: av, mesures: { limite: arr(rLimite), texte: arr(rTexte) } };
+}
+
 // ---------------------------------------------------------------------------------------------------------------- une charte complète
 /**
  * Vérifie une charte RÉSOLUE (toutes les sections présentes, voir resolution.js).
@@ -159,10 +171,7 @@ export function verifierCharte(charte) {
     const r = contraste(couleur, fondRef);
     if (r < ex.contrasteMinimal) av.push(avertissement('contraste-trait', 'attention', chemin, couleur, { rapport: arr(r), seuil: ex.contrasteMinimal, fond: fondRef }, 'Assombrir ce trait : un trait ou un aplat doit atteindre ' + ex.contrasteMinimal + ':1 contre le fond.'));
   }
-  const rPlan = contraste(charte.fond.plan.limite, fondRef); mesures.limitePlan = arr(rPlan);
-  if (rPlan < ex.contrasteMinimal) av.push(avertissement('contraste-plan', 'info', 'fond.plan.limite', charte.fond.plan.limite, { rapport: arr(rPlan), seuil: ex.contrasteMinimal }, 'Les limites du plan sont discrètes (' + arr(rPlan) + ':1) : relever l\'intensité « limite » du fond si elles doivent se lire.'));
-  const rTextePlan = contraste(charte.fond.plan.texte, fondRef);
-  if (rTextePlan < ex.contrasteTexte) av.push(avertissement('contraste-texte', 'attention', 'fond.plan.texte', charte.fond.plan.texte, { rapport: arr(rTextePlan), seuil: ex.contrasteTexte, fond: fondRef }, 'Les noms de lieux du plan doivent atteindre ' + ex.contrasteTexte + ':1.'));
+  const vp = verifierPlan(charte.fond.plan, ex); av.push(...vp.avertissements); mesures.limitePlan = vp.mesures.limite;
 
   // marqueurs : deux états de même forme et de couleurs qui se confondent
   const etats = ['succes', 'alerte', 'erreur', 'information'], confondus = [];

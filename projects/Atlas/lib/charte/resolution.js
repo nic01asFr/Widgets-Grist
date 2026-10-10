@@ -40,10 +40,13 @@ export function jetonsDe(charte) {
   for (const [k, v] of Object.entries(charte.jetons || {})) sortie[k] = v;
   return sortie;
 }
-/** « jeton:<nom> » -> la couleur du jeton ; une autre valeur est rendue telle quelle ; un jeton inconnu donne `repli`. */
+/**
+ * « jeton:<nom> » -> la couleur du jeton ; une autre valeur est rendue telle quelle. Un jeton inconnu, ou dont le nom n'est pas admis, donne `repli` :
+ * une référence de jeton ne parvient jamais à la carte sous forme de texte.
+ */
 export function resoudreJeton(valeur, jetons, repli = '#808080') {
-  if (typeof valeur !== 'string') return valeur;
-  const m = JETON.exec(valeur); if (!m) return valeur;
+  if (typeof valeur !== 'string' || !valeur.startsWith('jeton:')) return valeur;
+  const m = JETON.exec(valeur); if (!m) return repli;
   return Object.prototype.hasOwnProperty.call(jetons, m[1]) ? jetons[m[1]] : repli;
 }
 
@@ -62,9 +65,10 @@ const CONSEIL_IGNORE = {
   'alpha-non-admis': 'Cette couleur doit être opaque : la translucidité se règle par l\'opacité de la couche.',
   'cle-inconnue': 'Clé inconnue de la charte : ignorée.',
   type: 'Type de valeur inattendu : ignoré.', taille: 'Taille hors limites : ignoré.', 'hors-bornes': 'Nombre hors bornes : ignoré.', 'entier-attendu': 'Un entier est attendu.',
-  'valeur-inconnue': 'Valeur hors de la liste admise : ignorée.', 'nom-invalide': 'Nom limité à lettres, chiffres, tiret et tiret bas (40 caractères au plus).',
+  'valeur-inconnue': 'Valeur hors de la liste admise : ignorée.', 'police-non-listee': 'Choisir une famille de la liste (systeme, sans, serif, mono, lisible) : ni pile libre ni police distante.',
+  doublon: 'Identifiant déjà employé dans la liste : la première palette est gardée.', 'id-invalide': 'Identifiant : lettres, chiffres, tiret et tiret bas, 40 caractères au plus.', vide: 'Valeur vide : ignorée.', 'nom-invalide': 'Nom limité à lettres, chiffres, tiret et tiret bas (40 caractères au plus).',
 };
-const enAvertissement = (i) => avertissement(i.code === 'cle-inconnue' ? 'cle-inconnue' : 'valeur-ignoree', i.code === 'cle-inconnue' ? 'info' : 'attention', i.chemin, i.valeur, i.code === 'cle-inconnue' ? null : { raison: i.code }, CONSEIL_IGNORE[i.code] || 'Valeur invalide : ignorée.');
+export const avertissementIgnore = (i) => avertissement(i.code === 'cle-inconnue' ? 'cle-inconnue' : 'valeur-ignoree', i.code === 'cle-inconnue' ? 'info' : 'attention', i.chemin, i.valeur, i.code === 'cle-inconnue' ? null : { raison: i.code }, CONSEIL_IGNORE[i.code] || 'Valeur invalide : ignorée.');
 
 // ---------------------------------------------------------------------------------------------------------------- résolution
 /**
@@ -132,7 +136,7 @@ export function resoudre({ hote = null, couche = null, preferences = {}, verifie
   const applique = fourni.filter((f) => !apresPref(f));
   const deriveFinal = derive.filter((d) => !apresPref(d) || d === 'fond.plan');
   const mesure = verifier ? verifierCharte(c) : null;
-  const avertissements = [...ignore.map(enAvertissement), ...pre, ...(mesure ? mesure.avertissements : [])];
+  const avertissements = [...ignore.map(avertissementIgnore), ...pre, ...(mesure ? mesure.avertissements : [])];
   return {
     charte: c, applique, derive: deriveFinal, ignore, avertissements, mesures: mesure ? mesure.mesures : null,
     a11y: { preference: pref, ...(mesure ? mesure.a11y : {}) },

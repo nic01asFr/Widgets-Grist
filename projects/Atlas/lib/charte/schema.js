@@ -22,7 +22,7 @@ export const FORMES = Object.freeze(['cercle', 'carre', 'losange', 'triangle']);
 export const MODES_FOND = Object.freeze(['atlas', 'voile', 'plan', 'plan-ign', 'photo', 'uni']);
 export const TYPES_PALETTE = Object.freeze(['qualitative', 'sequential', 'divergent']);
 export const JETONS_PLAN = Object.freeze(['fond', 'vert', 'eau', 'bati', 'route', 'filet', 'texte', 'texte2', 'halo', 'limite', 'info']);
-export const INTENSITES_PLAN = Object.freeze(['vert', 'bati', 'eau', 'filet', 'limite']);
+export const CLES_INTENSITES = Object.freeze(['vert', 'bati', 'eau', 'filet', 'limite']);
 export const GRAINES = Object.freeze(['principal', 'secondaire', 'encre', 'fond', ...ETATS]);
 
 /** Familles de police : une liste SÛRE de piles système. Aucune police distante, aucune pile libre. */
@@ -163,7 +163,7 @@ export const REGLES = Object.freeze({
     fond: cles({
       mode: { t: 'enum', valeurs: MODES_FOND },
       principal: R.couleur,
-      intensites: cles(parCle(INTENSITES_PLAN, R.nombre(0, 1))),
+      intensites: cles(parCle(CLES_INTENSITES, R.nombre(0, 1))),
       vegetation: { t: 'vegetation' },
       lavis: cles({ couleur: R.couleur, opacite: R.nombre(0, 1) }),
       plan: cles(parCle(JETONS_PLAN, R.couleur)),

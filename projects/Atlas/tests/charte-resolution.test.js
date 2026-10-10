@@ -171,5 +171,6 @@ test('jetons : les graines (jeton:principal, jeton:fond, jeton:succes…) puis c
 test('jetons : un nom hérité d\'Object.prototype ou un format voisin ne résout rien', () => {
   const j = { a: '#111111' };
   for (const v of ['jeton:constructor', 'jeton:__proto__', 'jeton:toString', 'jeton:hasOwnProperty']) assert.equal(R.resoudreJeton(v, j), '#808080', v);
-  for (const v of ['jeton:', 'jeton:a b', 'JETON:a', ' jeton:a', 'jeton:a;x', 'jeton:' + 'a'.repeat(41)]) assert.equal(R.resoudreJeton(v, j), v, v);
+  for (const v of ['jeton:', 'jeton:a b', 'jeton:a;x', 'jeton:' + 'a'.repeat(41), 'jeton:<b>']) assert.equal(R.resoudreJeton(v, j), '#808080', 'référence mal formée : jamais rendue comme du texte : ' + v);
+  for (const v of ['JETON:a', ' jeton:a', 'xjeton:a']) assert.equal(R.resoudreJeton(v, j), v, v);
 });

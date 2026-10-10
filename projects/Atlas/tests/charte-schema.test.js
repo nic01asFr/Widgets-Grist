@@ -22,7 +22,7 @@ test('listes sûres : modes de fond, jetons du plan et formes sont ceux du compo
   assert.deepEqual([...S.MODES_FOND].sort(), Object.keys(FONDS).sort());
   assert.deepEqual([...S.JETONS_PLAN].sort(), Object.keys(PLAN_DEFAUT).sort());
   assert.deepEqual([...S.FORMES], [...FORMES_BI]);
-  assert.deepEqual([...S.INTENSITES_PLAN].sort(), Object.keys(INTENSITES_PLAN).sort());
+  assert.deepEqual([...S.CLES_INTENSITES].sort(), Object.keys(INTENSITES_PLAN).sort());
   assert.equal(S.VERSION_CHARTE, 'atlas-charte/0.1');
 });
 
