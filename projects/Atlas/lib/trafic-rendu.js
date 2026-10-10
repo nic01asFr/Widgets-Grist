@@ -21,10 +21,31 @@ export const SAUT_MAX_M = 12;
 export const ZOOM_MIN = 13;
 export const ZOOM_3D = 16;
 
-/** Ce qu'on dessine à un zoom donné : `aucun`, `points` ou `3d` (seulement si `avec3d`). */
-export function niveauDeDetail(zoom, { avec3d = false } = {}) {
-  if (!Number.isFinite(zoom) || zoom < ZOOM_MIN) return Number.isFinite(zoom) ? 'aucun' : 'points';
+/** Les façons de montrer les véhicules : des points de loin et de la 3D de près (`auto`), de la 3D seulement, des points seulement. */
+export const MODES_RENDU = Object.freeze(['auto', '3d', 'points']);
+
+/**
+ * Ce qu'on dessine à un zoom donné : `aucun`, `points` ou `3d`.
+ * `avec3d` : les modèles 3D sont prêts. En mode `3d`, tant qu'ils ne le sont pas, rien n'est dessiné (jamais de points : c'est ce qu'on a demandé) ;
+ * dès le zoom `ZOOM_MIN`, les véhicules sont alors des modèles, si petits soient-ils.
+ */
+export function niveauDeDetail(zoom, { avec3d = false, mode = 'auto' } = {}) {
+  if (!Number.isFinite(zoom)) return mode === '3d' && avec3d ? '3d' : 'points';
+  if (zoom < ZOOM_MIN) return 'aucun';
+  if (mode === 'points') return 'points';
+  if (mode === '3d') return avec3d ? '3d' : 'aucun';
   return avec3d && zoom >= ZOOM_3D ? '3d' : 'points';
+}
+
+/**
+ * Le grossissement des modèles 3D quand on ne montre QUE de la 3D (mode `3d`) et qu'on est trop loin pour les voir à leur taille réelle : une voiture de 4,4 m
+ * ne fait pas un pixel au zoom 14. Il double à chaque zoom perdu sous `ZOOM_LISIBLE`, plafonné à `ECHELLE_MAX` ; 1 à partir de `ZOOM_LISIBLE`.
+ */
+export const ZOOM_LISIBLE = 17;
+export const ECHELLE_MAX = 8;
+export function echelleDeLisibilite(zoom) {
+  if (!Number.isFinite(zoom) || zoom >= ZOOM_LISIBLE) return 1;
+  return Math.min(ECHELLE_MAX, 2 ** (ZOOM_LISIBLE - zoom));
 }
 
 const borne = (v, a, b) => (v < a ? a : v > b ? b : v);

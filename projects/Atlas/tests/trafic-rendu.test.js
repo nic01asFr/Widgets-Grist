@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
-  creerInterpolateur, angleInterpole, niveauDeDetail, visibles,
+  creerInterpolateur, angleInterpole, niveauDeDetail, visibles, echelleDeLisibilite, MODES_RENDU, ZOOM_LISIBLE, ECHELLE_MAX,
   DUREE_PAS_MS, DUREE_ENTREE_MS, DUREE_SORTIE_MS, SAUT_MAX_M, ZOOM_MIN, ZOOM_3D,
 } from '../lib/trafic-rendu.js';
 import { creerTrafic, versMetres, versLngLat, positions } from '../lib/trafic-couche.js';
@@ -91,6 +91,25 @@ test('niveauDeDetail : rien en dessous du zoom minimal, des points ensuite, de l
   assert.equal(niveauDeDetail(NaN), 'points', 'un zoom inconnu ne cache pas le trafic');
 });
 
+test('niveauDeDetail : le mode « points » ne montre jamais de 3D, le mode « 3d » jamais de points', () => {
+  assert.deepEqual(MODES_RENDU, ['auto', '3d', 'points']);
+  assert.equal(niveauDeDetail(ZOOM_3D + 2, { avec3d: true, mode: 'points' }), 'points');
+  assert.equal(niveauDeDetail(ZOOM_3D + 2, { avec3d: true, mode: '3d' }), '3d');
+  assert.equal(niveauDeDetail(ZOOM_MIN, { avec3d: true, mode: '3d' }), '3d', 'la 3D dès le zoom minimal, même de loin');
+  assert.equal(niveauDeDetail(ZOOM_MIN + 1, { avec3d: false, mode: '3d' }), 'aucun', 'modèles pas prêts : rien, pas de points');
+  assert.equal(niveauDeDetail(ZOOM_MIN - 1, { avec3d: true, mode: '3d' }), 'aucun');
+  assert.equal(niveauDeDetail(ZOOM_MIN + 1, { avec3d: true, mode: 'auto' }), 'points', 'en auto, des points de loin');
+});
+
+test('echelleDeLisibilite : 1 de près, doublée à chaque zoom perdu, plafonnée', () => {
+  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE), 1);
+  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE + 3), 1);
+  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 1), 2);
+  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 2), 4);
+  assert.equal(echelleDeLisibilite(ZOOM_LISIBLE - 9), ECHELLE_MAX);
+  assert.equal(echelleDeLisibilite(NaN), 1);
+});
+
 test('visibles : seuls les véhicules de la boîte (et de sa marge) restent', () => {
   const v = [{ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 1000, y: 0 }, { x: -30, y: 50 }];
   const r = visibles(v, { x0: -10, y0: -10, x1: 120, y1: 120 }, 40);
@@ -106,18 +125,19 @@ test('versMetres est l\'inverse de versLngLat', () => {
 
 // ---- la boucle de dessin de creerTrafic ----
 
-function banc({ zoom = 15, avec3d = false } = {}) {
+function banc({ zoom = 15, avec3d = false, mode = 'auto' } = {}) {
   const carte = carteSimulee();
   carte.getZoom = () => zoom;
   let repeints = 0; carte.triggerRepaint = () => { repeints++; };
   let t = 0, nImages = 0; const dessins = [];
-  const rendu3d = { disponible: () => avec3d, maj: (l) => dessins.push(l), effacer: () => dessins.push('efface') };
+  const echelles = [];
+  const rendu3d = { disponible: () => avec3d, maj: (l, o) => { dessins.push(l); echelles.push(o && o.echelle); }, effacer: () => dessins.push('efface') };
   let pasMoteur = null, image = null, fins = 0;
-  const trafic = creerTrafic({ carte, entites: S.grille({ nv: 2 }), densite: 8, graine: 5, rendu3d, surFin: () => { fins++; },
+  const trafic = creerTrafic({ carte, entites: S.grille({ nv: 2 }), densite: 8, graine: 5, rendu3d, modeRendu: () => mode, surFin: () => { fins++; },
     planifier: (f) => { pasMoteur = f; return 1; }, annuler: () => { pasMoteur = null; },
     planifierImage: (f) => { image = f; nImages++; return nImages; }, annulerImage: () => { image = null; }, maintenant: () => t });
   const avancer = (ms) => { t += ms; if (image) { const f = image; image = null; f(); } };
-  return { carte, trafic, rendu3d, dessins, avancer, pas: () => pasMoteur && pasMoteur(), horloge: () => t, repeints: () => repeints, fins: () => fins,
+  return { carte, trafic, rendu3d, dessins, echelles, avancer, pas: () => pasMoteur && pasMoteur(), horloge: () => t, repeints: () => repeints, fins: () => fins,
     source: () => carte.sources.get('atlas-trafic') };
 }
 
@@ -164,6 +184,29 @@ test('boucle de dessin : de près, les véhicules passent au rendu 3D et les poi
   assert.ok(liste[0].lnglat.every(Number.isFinite) && Number.isFinite(liste[0].cap) && liste[0].o > 0);
   assert.equal(b.source().data.features.length, 0, 'plus de points quand la 3D est montrée');
   assert.ok(b.repeints() > 0, 'la carte est redessinée à chaque image 3D');
+});
+
+test('boucle de dessin : en mode « 3d », des modèles dès le zoom minimal (grossis), jamais de points', () => {
+  const b = banc({ zoom: 14, avec3d: true, mode: '3d' });
+  b.trafic.demarrer(); b.avancer(700);
+  assert.equal(b.trafic.etat().rendu, '3d');
+  assert.equal(b.source().data.features.length, 0, 'aucun point');
+  assert.ok(b.dessins.some((d) => Array.isArray(d) && d.length > 0));
+  assert.equal(b.echelles[b.echelles.length - 1], 8, 'modèles grossis au zoom 14');
+});
+
+test('boucle de dessin : en mode « 3d » sans modèles prêts, rien (pas de points)', () => {
+  const b = banc({ zoom: 17, avec3d: false, mode: '3d' });
+  b.trafic.demarrer(); b.avancer(700);
+  assert.equal(b.trafic.etat().rendu, 'aucun');
+  assert.equal(b.source().data.features.length, 0);
+});
+
+test('boucle de dessin : en mode « points », des points à tous les zooms, même si la 3D est prête', () => {
+  const b = banc({ zoom: 19, avec3d: true, mode: 'points' });
+  b.trafic.demarrer(); b.avancer(700);
+  assert.equal(b.trafic.etat().rendu, 'points');
+  assert.ok(b.source().data.features.length > 0);
 });
 
 test('boucle de dessin : la 3D indisponible garde les points, même de près', () => {
