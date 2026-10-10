@@ -48,13 +48,19 @@ export function lireHotes(search = '', config = null) {
   return { hotes: deUrl, source: deUrl.length ? 'url' : 'aucune', rejetees };
 }
 
-/** Configuration posée par la page : `window.ATLAS_BI.hotes` ou `<meta name="atlas-bi-hotes" content="https://a.example https://b.example">`. */
+/**
+ * Configuration posée par la page : `window.ATLAS_BI.hotes` ou `<meta name="atlas-bi-hotes" content="https://a.example https://b.example">`, et
+ * `window.ATLAS_BI.charte` (une charte graphique, voir docs/CONTRAT-CHARTE-ATLAS.md). La page de configuration est celle de l'hébergeur d'Atlas, la même
+ * qui fait autorité sur la liste d'origines du pont : la charte y est lue de la même façon, puis assainie comme toute charte. Elle ne se charge JAMAIS
+ * par adresse.
+ */
 export function configurationPage(fenetre = globalThis.window, doc = globalThis.document) {
   const hotes = [];
   if (fenetre && fenetre.ATLAS_BI && Array.isArray(fenetre.ATLAS_BI.hotes)) hotes.push(...fenetre.ATLAS_BI.hotes);
   const meta = doc && doc.querySelector && doc.querySelector('meta[name="atlas-bi-hotes"]');
   if (meta && meta.content) hotes.push(...meta.content.split(/[\s,]+/).filter(Boolean));
-  return { hotes };
+  const charte = fenetre && fenetre.ATLAS_BI && fenetre.ATLAS_BI.charte && typeof fenetre.ATLAS_BI.charte === 'object' ? fenetre.ATLAS_BI.charte : null;
+  return { hotes, charte };
 }
 
 /**
@@ -90,10 +96,11 @@ export function installerPont(rt, { cible, fenetre, autorisees = [], journal = n
  * @param {{carte:object, fenetre:Window, document?:Document, search?:string, journal?:Console}} o
  */
 export function monter({ carte, fenetre, document: doc = fenetre.document, search = fenetre.location.search, journal = console }) {
-  const { hotes, source, rejetees } = lireHotes(search, configurationPage(fenetre, doc));
+  const config = configurationPage(fenetre, doc);
+  const { hotes, source, rejetees } = lireHotes(search, config);
   for (const r of rejetees) journal.warn('[Atlas BI] origine d\'hôte refusée (http(s)://hôte[:port] exact attendu, pas de joker) : ' + r);
   if (!hotes.length) journal.warn('[Atlas BI] aucun hôte déclaré : le composant ne répondra à personne. Ajouter ?hote=<origine de la page hôte>.');
-  const rt = attacher(carte);
+  const rt = attacher(carte, config.charte ? { theme: config.charte } : {});   // la charte de la page, puis celles de l'hôte par `setTheme`
   const liaison = installerPont(rt, { cible: fenetre.parent, fenetre, autorisees: hotes, journal });
   fenetre.__bi = rt;
   const clavier = installerClavier(rt, { conteneur: carte.getCanvasContainer(), document: doc });

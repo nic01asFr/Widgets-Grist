@@ -57,7 +57,7 @@ test('contraste d\'une classe sur le fond : contour sombre requis ; avec un fond
   const clair = code(pal('sequential', ATLAS.donnees.sequentielles.principale), 'contraste-classe-fond')[0];
   assert.equal(clair.niveau, 'info'); assert.match(clair.conseil, /Contour sombre requis/); assert.equal(clair.mesure.contour, 'sombre');
   const sombre = code(pal('sequential', ['#1b2834', '#58a6e1', '#abd1ee'], { fond: '#12161c', encre: '#eef1f5' }), 'contraste-classe-fond')[0];
-  assert.equal(sombre.mesure.contour, 'clair'); assert.ok(sombre.mesure.rapports[1] < 3);
+  assert.equal(sombre.mesure.contour, 'clair'); assert.ok(sombre.mesure.rapports[1] < 3); assert.match(sombre.conseil, /^Contour clair requis sur la classe 1/);
 });
 
 test('texte lisible sur une classe : l\'encre et le fond ne suffisent pas sur un ton moyen, et le conseil le dit', () => {

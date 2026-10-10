@@ -251,3 +251,24 @@ test('choroplèthe : une liste impaire de 5 couleurs est parcourue de bout en bo
   for (const mauvaise of [['#a8421f', '#f1f1ef', '#4f5ea4', '#000000'], ['#a8421f', 'x', '#4f5ea4'], undefined]) { const d = couleursClasses('divergente', [-50, 0, 50], [-100, 0, 100], { divergente: mauvaise }, 0); assert.equal(d.length, 4); }
   assert.equal(echantillonner(ATLAS.donnees.sequentielles.principale, 5)[0], ATLAS.donnees.sequentielles.principale[0]);
 });
+
+// ---------------------------------------------------------------------------------------------------------------- configuration de page
+test('configuration de page : window.ATLAS_BI.charte est lue, assainie, et passe avant les chartes de l\'hôte ; jamais d\'adresse', async () => {
+  const { configurationPage, monter } = await import('../lib/bi/liaison.js');
+  const charte = { graines: { principal: '#1b6b7a', fond: 'url(x)' }, jetons: { a: '#111111' } };
+  assert.deepEqual(configurationPage({ ATLAS_BI: { hotes: ['https://h.example'], charte } }, { querySelector: () => null }), { hotes: ['https://h.example'], charte });
+  assert.equal(configurationPage({}, { querySelector: () => null }).charte, null);
+  for (const mauvais of ['https://evil.example/charte.json', 12, true]) assert.equal(configurationPage({ ATLAS_BI: { charte: mauvais } }, { querySelector: () => null }).charte, null, 'une adresse ou un type inattendu n\'est pas une charte');
+  const { reseau } = await import('./aide-carte-bi.js'); const r = reseau(); r.atlas.ATLAS_BI = { hotes: ['https://hote.test'], charte };
+  const m = monter({ carte: carteSimulee(), fenetre: r.atlas, document: null, search: '?bi=1', journal: { warn() {} } });
+  const t = m.rt.api.getTheme(); assert.equal(t.charte.graines.principal, '#1b6b7a'); assert.equal(t.charte.graines.fond, '#ffffff'); assert.equal(t.ignore[0].chemin, 'graines.fond');
+  m.rt.api.setTheme({ jetons: { b: '#222222' } }); assert.equal(m.rt.api.getTheme().charte.graines.principal, '#1b6b7a', 'la charte de la page reste, l\'hôte s\'y ajoute');
+});
+
+test('manifeste de scène : sa charte s\'ajoute à celle de l\'hôte (niveau « hôte »), assainie, avec l\'événement `theme`', async () => {
+  const { carte, rt } = nu(), recus = []; rt.on('theme', (c) => recus.push(c));
+  await rt.api.setScene({ ...MANIFESTE('jeton:marque'), charte: { jetons: { marque: '#336699', pirate: 'url(x)' }, palettes: [{ id: 'cat-equipe', type: 'qualitative', couleurs: ['#111', '#eee'] }] } }, DONNEES());
+  assert.equal(couleurDe(carte), '#336699'); assert.equal(recus.length, 1); assert.equal(recus[0].ignore[0].chemin, 'jetons.pirate');
+  assert.deepEqual(rt.api.getTheme().charte.palettes, [{ id: 'cat-equipe', nom: 'cat-equipe', type: 'qualitative', couleurs: ['#111111', '#eeeeee'] }], 'palette personnalisée conservée par valeur');
+  await rt.api.setScene(MANIFESTE('jeton:marque'), DONNEES()); assert.equal(couleurDe(carte), '#336699', 'une scène sans charte garde ce que l\'hôte a donné');
+});

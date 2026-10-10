@@ -129,7 +129,7 @@ export function verifierPalette(palette, ctx) {
   if (palette.type === 'divergent') { const milieu = cs.length % 2 ? (cs.length + 1) / 2 : null; const idx = pales.indexOf(milieu); if (idx >= 0) pales.splice(idx, 1); }
   if (pales.length) {
     const sombre = contourPour(aff[pales[0] - 1], encre, fond);
-    av.push(avertissement('contraste-classe-fond', 'info', chemin, nomRang(pales), { rapports: Object.fromEntries(pales.map((r) => [r, rapports[r - 1]])), seuil: ex.contrasteMinimal, classesEvaluees: aff.length, contour: sombre.nature }, 'Contour sombre requis sur ' + laRang(pales) + ' (moins de ' + ex.contrasteMinimal + ':1 contre le fond) ; contour ' + sombre.nature + ' à ' + sombre.rapport + ':1.'));
+    av.push(avertissement('contraste-classe-fond', 'info', chemin, nomRang(pales), { rapports: Object.fromEntries(pales.map((r) => [r, rapports[r - 1]])), seuil: ex.contrasteMinimal, classesEvaluees: aff.length, contour: sombre.nature }, 'Contour ' + sombre.nature + ' requis sur ' + laRang(pales) + ' (moins de ' + ex.contrasteMinimal + ':1 contre le fond) ; ce contour atteint ' + sombre.rapport + ':1 contre la classe.'));
   }
   // un libellé sur une classe : 4,5:1 au plus (le noir ou le blanc atteignent toujours 4,58:1, rien de plus n'est exigible d'une classe de ton moyen)
   const seuilEtiquette = Math.min(ex.contrasteTexte, SEUILS.texte);

@@ -271,6 +271,8 @@ export function attacher(map, opts = {}) {
     ping: () => ({ version: VERSION, couches: [...couches.keys()] }),
     async setScene(manifest, donnees = {}) {
       for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {};
+      // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
+      if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
           try { await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible }); }
