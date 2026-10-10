@@ -13,7 +13,7 @@ Trois différences avec OSM, voulues : l'import est **précédé d'une estimatio
 3. **Importer N objets**. Une barre d'avancement, le reste estimé, le nombre d'objets refusés ; **Annuler** à tout moment.
 4. Le résumé dit le nombre importé, refusé, la durée, les motifs des refus (avec le rang des objets dans la source), la provenance et le lien vers la licence.
 
-La couche arrive avec un **style par défaut** et l'**attribution** « © IGN — BD TOPO® (Licence Ouverte 2.0) » affichée en bas de la carte tant qu'elle est montée. Dans l'inspecteur de la couche, sous le titre : la source, le jeu, la licence (lien), l'édition et l'avertissement sur le retard.
+La caméra **reste où la personne l'a mise** (l'application cadre d'ordinaire sur la couche ajoutée ; pour un import par zone, une commune ou un département l'emmènerait très loin). La couche arrive avec un **style par défaut** et l'**attribution** « © IGN — BD TOPO® (Licence Ouverte 2.0) » affichée en bas de la carte tant qu'elle est montée. Dans l'inspecteur de la couche, sous le titre : la source, le jeu, la licence (lien), l'édition et l'avertissement sur le retard.
 
 ### Les seuils
 
@@ -118,9 +118,23 @@ Dans `app_v7.js` : le bouton et l'entrée de palette viennent du registre, `A.op
 3. Mettre un extrait réel (3 objets au plus, géométries rognées) dans `tests/fixtures/import-ign/<couche>.json` et l'ajouter à `FIXTURES` dans `tests/import-ign.test.js` : le test refuse un attribut que le service ne connaît pas.
 4. Un jeu d'un autre producteur (hors IGN) demande son propre module, sur le modèle de `import-ign.js`, et une entrée dans `sources-import.js`.
 
+## Vérifié dans un navigateur (10/10/2026)
+
+Atlas servi depuis le dépôt, Chrome 154 isolé (profil et port de débogage à part), service réel de l'IGN en lecture :
+
+- les **onze jeux** importés sur deux zones (centre de Marseille, Ardèche), estimation = import à l'objet près (aucune ligne « le service en annonçait » dans les résumés), attribution « © IGN — BD TOPO® (Licence Ouverte 2.0) » ou « … ADMIN EXPRESS … » en bas de la carte (les deux ensemble quand les deux jeux sont là) ;
+- **bâtiments extrudés par `hauteur`**, routes colorées par importance avec une largeur graduée (légende exacte), équipements colorés par catégorie ;
+- **annulation** en cours d'import (aucune couche créée, objets lus gardés), **reprise** jusqu'à 15 384 bâtiments sans doublon (9 pages) ;
+- **zone trop grande** (« Zone trop grande pour « Bâtiments » (plus de 0,5° de côté) : zoomez. »), **trop d'objets** (321 375 bâtiments : refus, bouton inactif), **erreur XML du service** et **indisponibilité (503)** simulées, avec « Réessayer » ;
+- la couche **se comporte comme une couche OSM** : sélection d'objets (mode « Éditer », ◀ ▶), filtre (un contrôle par `nature` : décocher « Sentier » les retire de la carte), export GeoJSON (310 objets, `cleabs` et `date_modification` présents, coordonnées sans altitude), enregistrement du projet (la provenance, `heightField` et le mode d'extrusion y sont), inspecteur avec la source et le lien vers la licence ;
+- au clavier : Tab entre les cartes, Entrée choisit, le focus passe sur « Annuler » pendant l'import puis sur le titre du résumé ; en téléphone (390 px), pas de défilement horizontal.
+
+Un défaut trouvé au passage, **qui n'était pas propre à l'IGN** : une couche catégorisée par un champ **texte** (les routes par importance, les équipements par catégorie) se peignait **en noir**, alors que la légende annonçait les bonnes couleurs. L'expression du champ (`fieldExpr`) lisait `at 0` sur toute valeur, ce qui lève sur un texte. Corrigé (`at` n'est évalué que sur une liste) et gardé par un test.
+
 ## Ce qui n'est pas fait, ou pas vérifié
 
-- **Écrire la couche dans une table Grist** : le bouton « Enregistrer dans une table » d'Atlas (`entableLayer`) fonctionne sur la couche importée comme sur une couche OSM (lots de 200 lignes) ; au-delà de quelques milliers d'objets, le chantier des lots par budget d'octets reste à faire.
+- **Écrire la couche dans une table Grist** (`entableLayer`, lots de 200 lignes, comme pour OSM) : **non essayé** (pas de document Grist dans cette session). La couche est de la même forme qu'une couche OSM, mais au-delà de quelques milliers d'objets le chantier des lots par budget d'octets reste à faire.
+- **La bulle d'un objet isolé** : non vérifiée (la sélection d'objets l'est).
 - **Mettre à jour** une couche déjà importée (clés et `date_modification` sont là, la comparaison ne l'est pas).
 - **Zone plus grande que l'écran**, import par tuiles de plus de 50 000 objets : non.
 - Le comportement **dans l'application mobile** (client natif de Capacitor, pas de `Referer`) : le WFS n'a pas montré d'exigence d'en-tête, mais l'import n'a pas été essayé depuis l'application.
