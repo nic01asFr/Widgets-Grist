@@ -58,6 +58,36 @@ export function anneauxExterieurs(geometrie) {
 }
 
 /**
+ * Un index en grille des sources : pour un segment, on ne mesure que les sources des cases que sa boîte, élargie de `rayon`, touche. Avant, chaque arête
+ * était comparée à TOUTES les sources (arêtes × sources) : au Jarret, un îlot fusionné compte 32 000 arêtes. Le résultat est identique à la comparaison
+ * exhaustive (même test de distance, seuls les candidats changent).
+ * @param {{ x: number, z: number }[]} sources
+ * @param {number} rayon  mètres, repère local
+ * @returns {{ proche: (p: {x:number,z:number}, q: {x:number,z:number}) => boolean, comparaisons: number }}
+ */
+export function indexerSources(sources, rayon) {
+  const taille = Math.max(rayon, 1);
+  const r2 = rayon * rayon;
+  const cases = new Map();
+  const cle = (i, j) => i * 73856093 ^ j * 19349663;
+  for (const s of sources || []) {
+    const k = cle(Math.floor(s.x / taille), Math.floor(s.z / taille));
+    let l = cases.get(k); if (!l) cases.set(k, l = []); l.push(s);
+  }
+  const index = { comparaisons: 0, proche(p, q) {
+    if (!cases.size) return false;
+    const i0 = Math.floor((Math.min(p.x, q.x) - rayon) / taille), i1 = Math.floor((Math.max(p.x, q.x) + rayon) / taille);
+    const j0 = Math.floor((Math.min(p.z, q.z) - rayon) / taille), j1 = Math.floor((Math.max(p.z, q.z) + rayon) / taille);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const l = cases.get(cle(i, j)); if (!l) continue;
+      for (const s of l) { index.comparaisons++; if (distance2Segment(s, p, q) <= r2) return true; }
+    }
+    return false;
+  } };
+  return index;
+}
+
+/**
  * Les bâtiments dont un mur est à moins de `rayon` mètres (à plat) d'une
  * des `sources` (repère local : x est, z sud). `versLocal(lng, lat)` → {x, z}.
  * Dédoublonnés par identifiant (une même entité revient dans plusieurs tuiles).
@@ -71,7 +101,7 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
   const out = [];
   if (!sources?.length) return out;
   const vus = new Set();
-  const r2 = rayon * rayon;
+  const index = indexerSources(sources, rayon);
   for (const f of batiments || []) {
     const h = hauteursBatiment(f?.properties);
     if (!h) continue;
@@ -84,9 +114,7 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
       for (let i = 0; i < a.length && !proche; i++) {
         const p = a[i];
         const q = a[(i + 1) % a.length];
-        for (const s of sources) {
-          if (distance2Segment(s, p, q) <= r2) { proche = true; break; }
-        }
+        if (index.proche(p, q)) proche = true;
       }
       if (proche) break;
     }
@@ -108,12 +136,8 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
  * @returns {{ positions: Float32Array, normales: Float32Array, triangles: number }}
  */
 export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, pres = null) {
-  const r2 = pres ? pres.rayon * pres.rayon : 0;
-  const assezPres = (p, q) => {
-    if (!pres) return true;
-    for (const s of pres.sources) if (distance2Segment(s, p, q) <= r2) return true;
-    return false;
-  };
+  const indexPres = pres ? indexerSources(pres.sources, pres.rayon) : null;
+  const assezPres = (p, q) => (indexPres ? indexPres.proche(p, q) : true);
   const pos = [];
   const nor = [];
   for (const b of batiments) {
