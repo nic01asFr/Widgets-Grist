@@ -20,7 +20,9 @@
  *   pas de 12 m inventés pour un bâtiment sans hauteur).
  */
 
-export const VERSION = '0.1.0';
+import { indexerAretes, cellulesEclairees } from './ombres-facades.js';
+
+export const VERSION = '0.2.0';
 
 /** Décalage des murs recopiés vers l'extérieur, en mètres. */
 export const DECALAGE_M = 0.1;
@@ -132,11 +134,13 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
  * `pres` : ne garder que les murs dont l'arête passe à moins de `rayon` d'une
  * des `sources` — un îlot fusionné du fond peut compter des milliers d'arêtes
  * (mesuré au Jarret : un seul bâtiment « proche », 32 000 arêtes).
- * @param {{ sources: {x:number,z:number}[], rayon: number }} [pres]
+ * @param {{ sources: {x:number,z:number}[], rayon: number, ombres?: { hauteurFeu: number, pas?: number, bande?: number } }} [pres]
+ *   `ombres` : l'ombre portée des bâtiments (E7, `lib/ombres-facades.js`) ; sans elle, tout mur proche est recopié entier, comme avant.
  * @returns {{ positions: Float32Array, normales: Float32Array, triangles: number }}
  */
 export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, pres = null) {
   const indexPres = pres ? indexerSources(pres.sources, pres.rayon) : null;
+  const ombres = pres && pres.ombres ? { sources: pres.sources, rayon: pres.rayon, hauteurFeu: pres.ombres.hauteurFeu, pas: pres.ombres.pas, bande: pres.ombres.bande, index: indexerAretes(batiments) } : null;
   const assezPres = (p, q) => (indexPres ? indexPres.proche(p, q) : true);
   const pos = [];
   const nor = [];
@@ -168,6 +172,16 @@ export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, p
         const oz = nz * decalage;
         const s0 = sol(p.x, p.z);
         const s1 = sol(q.x, q.z);
+        if (ombres) {
+          // seules les cellules qu'une source voit sont recopiées ; un mur entièrement éclairé reste un seul rectangle
+          for (const c of cellulesEclairees(p, q, b.base, b.haut, { x: nx, z: nz }, ombres)) {
+            const xa = p.x + dx * c.t0 + ox, za = p.z + dz * c.t0 + oz, xb = p.x + dx * c.t1 + ox, zb = p.z + dz * c.t1 + oz;
+            const sa = s0 + (s1 - s0) * c.t0, sb = s0 + (s1 - s0) * c.t1;
+            const c0 = [xa, sa + c.y0, za], c1 = [xb, sb + c.y0, zb], c2 = [xb, sb + c.y1, zb], c3 = [xa, sa + c.y1, za];
+            for (const v of [c0, c1, c2, c0, c2, c3]) { pos.push(v[0], v[1], v[2]); nor.push(nx, 0, nz); }
+          }
+          continue;
+        }
         const p0 = [p.x + ox, s0 + b.base, p.z + oz];
         const p1 = [q.x + ox, s1 + b.base, q.z + oz];
         const p2 = [q.x + ox, s1 + b.haut, q.z + oz];
