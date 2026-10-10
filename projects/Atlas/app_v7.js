@@ -1335,7 +1335,7 @@ function paletteColor(name, i, total, inverse = false) {
     return p[clamp(idx, 0, p.length - 1)];
 }
 function fieldExpr(field) {
-  return ['to-string', ['coalesce', ['at', 0, ['get', field]], ['get', field]]];
+  return ['to-string', ['case', ['==', ['typeof', ['get', field]], 'array'], ['at', 0, ['get', field]], ['get', field]]];
 }
 function buildColorMatch(field, categories, def) {
     const expr = ['match', fieldExpr(field)];

@@ -330,11 +330,21 @@ describe('import-ign — le style par défaut', () => {
     assert.equal(c.etiquette, 'nom_officiel');
   });
 
-  it('équipements : couleur par catégorie, sans valeur écrite en dur (Atlas les tire des données)', () => {
-    const s = styleDeCouche(PRESETS.equipements_services, []);
+  it('équipements : couleur par catégorie, tirée des données (rien d’écrit en dur), la plus fréquente d’abord', () => {
+    const es = ['Santé', 'Culte', 'Santé', 'Sport', 'Santé', 'Culte'].map((categorie) => ({ properties: { categorie } }));
+    const s = styleDeCouche(PRESETS.equipements_services, es);
     assert.equal(s.couleur.mode, 'categorized');
     assert.equal(s.couleur.champ, 'categorie');
-    assert.deepEqual(s.couleur.categories, []);
+    assert.deepEqual(s.couleur.categories.map((c) => c.value), ['Santé', 'Culte', 'Sport']);
+    assert.equal(new Set(s.couleur.categories.map((c) => c.color)).size, 3);
+    assert.deepEqual(styleDeCouche(PRESETS.equipements_services, []).couleur.categories, []);
+  });
+
+  it('plus de valeurs que de couleurs : la palette tourne, aucune valeur sans couleur', () => {
+    const es = Array.from({ length: 25 }, (_, i) => ({ properties: { categorie: 'c' + i } }));
+    const s = styleDeCouche(PRESETS.equipements_services, es);
+    assert.equal(s.couleur.categories.length, 25);
+    assert.ok(s.couleur.categories.every((c) => /^#[0-9a-f]{6}$/.test(c.color)));
   });
 
   it('points et lignes fixes : une taille, jamais de mode surfacique', () => {
@@ -412,5 +422,17 @@ describe('import-ign — les pages', () => {
     assert.equal(u.searchParams.get('COUNT'), String(PRESETS.routes.page));
     assert.equal(u.searchParams.get('SORTBY'), 'cleabs');
     assert.equal(u.searchParams.get('BBOX'), '5.37,43.293,5.38,43.3,EPSG:4326');
+  });
+});
+
+describe('import-ign — la couleur par catégorie se peint (app_v7.js)', () => {
+  it('l’expression d’un champ catégorisé ne lève pas sur un texte', () => {
+    // `['at', 0, …]` sur une valeur qui n'est pas une liste lève à l'évaluation : MapLibre peint alors la couche de la
+    // couleur par défaut, noire, alors que la légende annonce les bonnes couleurs (constaté sur les routes IGN, par importance).
+    const app = readFileSync(fileURLToPath(new URL('../app_v7.js', import.meta.url)), 'utf8');
+    const m = /function fieldExpr\(field\) \{([\s\S]*?)\n\}/.exec(app);
+    assert.ok(m, 'fieldExpr introuvable');
+    assert.doesNotMatch(m[1], /\['coalesce', \['at', 0/);
+    assert.match(m[1], /\['case', \['==', \['typeof'/);
   });
 });

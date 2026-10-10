@@ -279,7 +279,7 @@ export function verifierEmprise(preset, emprise) {
   const [x0, y0, x1, y1] = emprise;
   const max = preset.coteMaxDeg;
   if (Number.isFinite(max) && (x1 - x0 > max || y1 - y0 > max)) {
-    throw new ErreurWfs('emprise_trop_grande', `Zone trop grande pour « ${preset.libelle} » (plus de ${max}° de côté) : zoomez.`, { coteMaxDeg: max });
+    throw new ErreurWfs('emprise_trop_grande', `Zone trop grande pour « ${preset.libelle} » (plus de ${String(max).replace('.', ',')}° de côté) : zoomez.`, { coteMaxDeg: max });
   }
   return emprise;
 }
@@ -439,6 +439,20 @@ export function phraseProvenance(m) {
   return `Source : ${m.source}, ${m.jeu} — ${m.licence.nom} — ${edition}${vue}.`;
 }
 
+/** Les couleurs d'une couche catégorisée dont les valeurs ne sont pas connues d'avance : distinctes, lisibles sur fond clair. */
+export const PALETTE_CATEGORIES = Object.freeze(['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac']);
+
+/** Les valeurs d'un champ, de la plus fréquente à la plus rare (à égalité, l'ordre alphabétique). */
+function valeursParFrequence(entites, champ) {
+  const n = new Map();
+  for (const e of entites) {
+    const v = e.properties?.[champ];
+    if (v === null || v === undefined || v === '') continue;
+    n.set(String(v), (n.get(String(v)) || 0) + 1);
+  }
+  return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'fr')).map(([v]) => v);
+}
+
 const distinctesNumeriques = (entites, champ) => {
   const vus = new Set();
   for (const e of entites) {
@@ -464,7 +478,11 @@ export function styleDeCouche(preset, entites = []) {
   const s = preset.style || {};
   const c = s.couleur || {};
   const couleur = c.champ
-    ? { mode: 'categorized', champ: c.champ, defaut: c.defaut || '#999999', categories: (c.categories || []).map((x) => ({ value: x.valeur, color: x.couleur, label: x.libelle })) }
+    ? { mode: 'categorized', champ: c.champ, defaut: c.defaut || '#999999', categories: c.categories?.length
+        ? c.categories.map((x) => ({ value: x.valeur, color: x.couleur, label: x.libelle }))
+        // Valeurs inconnues d'avance (la catégorie d'un équipement) : tirées des données, une couleur chacune. Atlas ne le
+        // ferait pas à la pose du style et peindrait tout du ton par défaut.
+        : valeursParFrequence(entites, c.champ).map((v, i) => ({ value: v, color: PALETTE_CATEGORIES[i % PALETTE_CATEGORIES.length] })) }
     : { mode: 'single', valeur: c.valeur || '#808080' };
   let taille = null;
   if (s.largeur?.champ) {

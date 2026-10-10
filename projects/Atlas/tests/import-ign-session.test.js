@@ -388,11 +388,12 @@ describe('import-ign-couche — le style posé sur la couche d’Atlas', () => {
     assert.equal(c.color, '#e07a5f');
   });
 
-  it('équipements : couleur par catégorie sans catégories écrites (Atlas les tire des données)', () => {
-    const c = creerCoucheIgn({ preset: PRESETS.equipements_services, entites: [], emprise: EMPRISE, creerCouche: creerCoucheFactice });
+  it('équipements : une couleur par catégorie présente dans les objets', () => {
+    const es = [{ type: 'Feature', geometry: route.geometry, properties: { cleabs: 'A', categorie: 'Santé' } }, { type: 'Feature', geometry: route.geometry, properties: { cleabs: 'B', categorie: 'Culte' } }];
+    const c = creerCoucheIgn({ preset: PRESETS.equipements_services, entites: es, emprise: EMPRISE, creerCouche: creerCoucheFactice });
     assert.equal(c.style.symbolization.color.mode, 'categorized');
     assert.equal(c.style.symbolization.color.field, 'categorie');
-    assert.deepEqual(c.style.symbolization.color.categories, []);
+    assert.deepEqual(c.style.symbolization.color.categories.map((x) => x.value).sort(), ['Culte', 'Santé']);
   });
 
   it('la provenance voyage avec le style : elle survit à une copie JSON', () => {

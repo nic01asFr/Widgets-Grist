@@ -44,8 +44,14 @@ export const ICONES = Object.freeze({
 const svg = (d, taille = 26) => `<svg class="ic-trait" width="${taille}" height="${taille}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
 const nombre = (n) => Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
-const secondes = (ms) => `${(ms / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s`;
+const secondes = (ms) => (ms < 100 ? 'moins de 0,1 s' : `${(ms / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s`);
 const pluriel = (n, un, plusieurs) => (n > 1 ? plusieurs : un);
+
+/** « moins de 5 s », « environ 40 s » : une durée estimée, dite sans « environ moins de ». */
+export function dureeDite(s) {
+  const d = formaterDuree(s);
+  return /^(moins|estimation)/.test(d) ? d : `environ ${d}`;
+}
 
 /** Les cartes des jeux, par groupe. `jeuId` : le jeu choisi, marqué `aria-pressed`. */
 export function htmlGrille(groupes, jeuId) {
@@ -80,7 +86,7 @@ export function htmlProgression(etat) {
 /** « 1 200 sur 2 178 · reste environ 4 s · 0 refusé ». */
 export function texteProgression(p) {
   const sur = p.total ? ` sur ${nombre(p.total)}` : '';
-  const reste = p.resteS != null ? ` · reste environ ${echapper(formaterDuree(p.resteS))}` : '';
+  const reste = p.resteS != null ? ` · reste ${echapper(dureeDite(p.resteS))}` : '';
   const refus = p.refuses ? ` · ${nombre(p.refuses)} refusé${pluriel(p.refuses, '', 's')}` : '';
   return `<strong>${nombre(p.fait)}</strong>${sur} objets lus${reste}${refus}`;
 }
@@ -116,7 +122,7 @@ export function htmlDetail(etat) {
       return `${tete}<div class="range-info" role="status" aria-live="polite">Estimation du nombre d’objets…</div>`;
     case 'pret': {
       const est = etat.estimation;
-      return `${tete}<div class="range-info" role="status" aria-live="polite"><strong>${echapper(est.evaluation.message)}</strong> Durée attendue : environ ${echapper(formaterDuree(est.dureeEstimeeS))}.</div>
+      return `${tete}<div class="range-info" role="status" aria-live="polite"><strong>${echapper(est.evaluation.message)}</strong> Durée attendue : ${echapper(dureeDite(est.dureeEstimeeS))}.</div>
         ${est.evaluation.niveau === 'avertir' ? `<div class="ign-alerte" role="alert">${echapper(est.evaluation.message)}</div>` : ''}
         ${bouton('importer', `Importer ${nombre(est.n)} objet${pluriel(est.n, '', 's')}`, 'btn-primary')}`;
     }
@@ -188,34 +194,54 @@ let nettoyageCourant = null;
  */
 export async function ouvrirImportIgn(hote) {
   if (nettoyageCourant) nettoyageCourant();
-  const doc = hote.corps.ownerDocument;
-  installerStyle(doc);
-  hote.titre('Import IGN', 'Zone importée = emprise visible, vue à plat. Zoomez pour réduire.');
+  installerStyle(hote.corps.ownerDocument);
   const groupes = presetsParGroupe();
-  hote.corps.innerHTML = `<div id="ign-racine">
+  const zone = () => empriseDepuisBornes(hote.carte.getBounds());
+
+  let racine = null;
+  let phasePrecedente = null;
+  let derniereEtat = null;
+  let reprendreLaMain = false;
+  const vivant = () => !!racine && racine.isConnected && hote.corps.contains(racine);
+
+  /** Pose le panneau dans le corps du module (et le repose, quand l'application l'a remplacé). */
+  function monter() {
+    hote.titre('Import IGN', 'Zone importée = emprise visible, vue à plat. Zoomez pour réduire.');
+    hote.corps.innerHTML = `<div id="ign-racine">
       <div class="range-info" id="ign-emprise" style="margin-bottom:12px">…</div>
       ${htmlGrille(groupes, null)}
       <div class="ign-detail" id="ign-detail" aria-live="polite"></div>
       <div class="section"><button type="button" class="btn btn-soft btn-full" data-act="retour">← Retour</button></div>
     </div>`;
-  const racine = hote.corps.querySelector('#ign-racine');
-  const vivant = () => racine.isConnected && hote.corps.contains(racine);
-  const zone = () => empriseDepuisBornes(hote.carte.getBounds());
-
-  let phasePrecedente = null;
-  let derniereEtat = null;
+    racine = hote.corps.querySelector('#ign-racine');
+    racine.addEventListener('click', surClic);
+    phasePrecedente = null;
+  }
 
   const session = creerSession({
     fetch: (...a) => globalThis.fetch(...a),
     emprise: zone,
     emprisePourImport: async () => { await mettreAPlat(hote.carte); return zone(); },
     creerCouche: hote.creerCouche,
-    ajouterCouche: hote.ajouterCouche,
+    // Ajouter une couche fait redessiner le panneau Couches, donc remplace le nôtre : on le repose avec le résumé,
+    // qui est justement ce que la personne attend de voir. Si elle est partie ailleurs de son propre chef, on ne la suit pas.
+    // L'application cadre la caméra sur la couche ajoutée : pour un import par zone, on garde la zone que la personne a
+    // choisie (sans quoi les communes ou les départements, qui dépassent l'écran, l'emmèneraient très loin).
+    ajouterCouche: (couche) => {
+      const vue = { center: hote.carte.getCenter(), zoom: hote.carte.getZoom(), bearing: hote.carte.getBearing(), pitch: hote.carte.getPitch() };
+      hote.ajouterCouche(couche);
+      hote.carte.jumpTo(vue);
+      reprendreLaMain = !vivant();
+    },
     surChangement: (etat) => {
       if (!vivant()) {
-        if (etat.phase === 'termine') hote.annoncer(`${nombre(etat.resultat.importes)} objets importés (IGN)`, etat.resultat.importes ? 'success' : 'warning');
-        return;
+        if (!(reprendreLaMain && etat.phase === 'termine')) {
+          if (etat.phase === 'termine') hote.annoncer(`${nombre(etat.resultat.importes)} objets importés (IGN)`, etat.resultat.importes ? 'success' : 'warning');
+          return;
+        }
+        monter();
       }
+      reprendreLaMain = false;
       dessiner(etat);
     },
   });
@@ -254,6 +280,8 @@ export async function ouvrirImportIgn(hote) {
       const cible = etat.phase === 'import' ? '[data-act="annuler"]'
         : (etat.phase === 'termine' ? '#ign-resume' : (etat.phase === 'annule' || etat.phase === 'erreur' ? '[data-act="reprendre"], [data-act="reessayer"]' : null));
       if (cible) detail.querySelector(cible)?.focus();
+      // Les jeux sont nombreux : le bas du panneau, où l'estimation et le bouton apparaissent, doit rester à l'écran.
+      detail.scrollIntoView?.({ block: 'nearest' });
     }
     if (etat.phase === 'termine' && etat.phase !== phasePrecedente) {
       hote.annoncer(`${nombre(etat.resultat.importes)} objet${pluriel(etat.resultat.importes, '', 's')} importé${pluriel(etat.resultat.importes, '', 's')} (IGN)`, etat.resultat.importes ? 'success' : 'warning');
@@ -270,12 +298,12 @@ export async function ouvrirImportIgn(hote) {
     encore: () => session.reinitialiser(),
     retour: () => { fermer(); hote.retour(); },
   };
-  racine.addEventListener('click', (ev) => {
+  function surClic(ev) {
     const carte = ev.target.closest('[data-jeu]');
     if (carte) { session.choisir(carte.dataset.jeu); return; }
     const bouton = ev.target.closest('[data-act]');
     if (bouton && !bouton.disabled && actions[bouton.dataset.act]) actions[bouton.dataset.act]();
-  });
+  }
 
   let minuterie = null;
   const surDeplacement = () => {
@@ -294,6 +322,7 @@ export async function ouvrirImportIgn(hote) {
   }
   nettoyageCourant = fermer;
 
+  monter();
   dessiner(session.etat());
   // Inclinée, la vue court jusqu'à l'horizon, et l'emprise importée avec elle : on importe ce qui est à l'écran, à plat.
   if (await mettreAPlat(hote.carte)) montrerEmprise(derniereEtat);

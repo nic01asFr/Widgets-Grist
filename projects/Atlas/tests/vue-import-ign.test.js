@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { ICONES, htmlGrille, htmlDetail, htmlProgression, texteProgression } from '../lib/vue-import-ign.js';
+import { ICONES, htmlGrille, htmlDetail, htmlProgression, texteProgression, dureeDite } from '../lib/vue-import-ign.js';
 import { PRESETS, presetsParGroupe, listerPresets, metadonneesCouche } from '../lib/import-ign.js';
 import { evaluerVolume } from '../lib/import-lots.js';
 import { decisionImport } from '../lib/import-ign.js';
@@ -57,7 +57,7 @@ describe('vue-import-ign — le bas du panneau, phase par phase', () => {
   it('prêt : le nombre d’objets, la durée attendue, le bouton Importer qui dit combien', () => {
     const h = htmlDetail(etat({ phase: 'pret', jeu, estimation: estimation(2178) }));
     assert.match(h, /2 178 objets/);
-    assert.match(h, /Durée attendue : environ/);
+    assert.match(h, /Durée attendue : (?:environ|moins)/);
     assert.match(h, /data-act="importer"[^>]*>Importer 2 178 objets</);
     assert.doesNotMatch(h, /disabled/);
     assert.doesNotMatch(h, /role="alert"/);
@@ -95,7 +95,7 @@ describe('vue-import-ign — le bas du panneau, phase par phase', () => {
     assert.match(h, /aria-valuenow="55"/);
     assert.match(h, /width:55%/);
     assert.match(h, /1 200<\/strong> sur 2 178 objets lus/);
-    assert.match(h, /reste environ/);
+    assert.match(h, /reste moins de 5 s/);
     assert.match(h, /data-act="annuler"/);
   });
 
@@ -103,6 +103,13 @@ describe('vue-import-ign — le bas du panneau, phase par phase', () => {
     const h = htmlProgression(etat({ progression: { fait: 10, total: null, pct: null, resteS: null, refuses: 0 } }));
     assert.doesNotMatch(h, /aria-valuenow/);
     assert.match(h, /width:0%/);
+  });
+
+  it('dureeDite : jamais « environ moins de »', () => {
+    assert.equal(dureeDite(2), 'moins de 5 s');
+    assert.equal(dureeDite(42), 'environ 40 s');
+    assert.equal(dureeDite(150), 'environ 2 min 30 s');
+    assert.equal(dureeDite(null), 'estimation en cours');
   });
 
   it('texteProgression : accorde les refus', () => {
