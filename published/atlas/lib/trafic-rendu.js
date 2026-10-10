@@ -38,14 +38,20 @@ export function niveauDeDetail(zoom, { avec3d = false, mode = 'auto' } = {}) {
 }
 
 /**
- * Le grossissement des modèles 3D quand on ne montre QUE de la 3D (mode `3d`) et qu'on est trop loin pour les voir à leur taille réelle : une voiture de 4,4 m
- * ne fait pas un pixel au zoom 14. Il double à chaque zoom perdu sous `ZOOM_LISIBLE`, plafonné à `ECHELLE_MAX` ; 1 à partir de `ZOOM_LISIBLE`.
+ * Le grossissement des modèles 3D quand on ne montre QUE de la 3D (mode `3d`) et qu'on est si loin qu'un véhicule à sa taille réelle ferait moins de `PX_MIN_VEHICULE`
+ * pixels de long : il est alors grossi juste assez pour garder cette taille, plafonné à `ECHELLE_MAX`. Tant que le véhicule fait plus que cela à sa taille réelle,
+ * il n'est PAS grossi (1) : on voit les véhicules rapetisser quand on dézoome, et ils ne se mettent à grossir, relativement à la carte, qu'à l'extrême.
+ * @param {number} zoom
+ * @param {number} lat  latitude du centre de la vue (les mètres par pixel en dépendent)
  */
-export const ZOOM_LISIBLE = 17;
+export const PX_MIN_VEHICULE = 5;
+export const LONGUEUR_REFERENCE_M = 4.4;
 export const ECHELLE_MAX = 8;
-export function echelleDeLisibilite(zoom) {
-  if (!Number.isFinite(zoom) || zoom >= ZOOM_LISIBLE) return 1;
-  return Math.min(ECHELLE_MAX, 2 ** (ZOOM_LISIBLE - zoom));
+export function echelleDeLisibilite(zoom, lat = 45) {
+  if (!Number.isFinite(zoom)) return 1;
+  const pxParMetre = 512 * 2 ** zoom / (40075016.686 * Math.cos(((Number.isFinite(lat) ? lat : 45) * Math.PI) / 180));
+  const px = LONGUEUR_REFERENCE_M * pxParMetre;
+  return px >= PX_MIN_VEHICULE ? 1 : Math.min(ECHELLE_MAX, PX_MIN_VEHICULE / px);
 }
 
 const borne = (v, a, b) => (v < a ? a : v > b ? b : v);
