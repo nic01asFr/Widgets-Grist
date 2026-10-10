@@ -484,6 +484,26 @@
       },
       {
         "role": "Partager",
+        "titre": "La carte dans l’application de votre équipe",
+        "format": "large",
+        "texte": "Un tableau de bord ou un outil de suivi que votre équipe a déjà peut afficher la carte d’Atlas dans ses pages. L’application garde ses données : elle les envoie à la carte, qui les montre en points, en surfaces, ou colorées par commune, département ou région à partir de son propre tableau. Elle filtre, avance dans le temps, et sa liste et la carte se suivent : toucher un site dans l’une le sélectionne dans l’autre. Les couleurs et la légende restent celles de l’application, et seules les applications que vous avez déclarées peuvent piloter la carte.",
+        "pourquoi": "Pas de carte à refaire dans chaque application, et pas de données à recopier dans Grist pour les voir sur une carte.",
+        "exemple": "une page de démonstration à données fictives : un tableau par département, coloré en cinq classes sur les contours de l’IGN, avec une liste de sites qui suit la carte.",
+        "utilise": [
+          "Application de l’équipe",
+          "Couleur par territoire",
+          "Filtres et temps",
+          "Sélection partagée avec la liste"
+        ],
+        "images": [
+          {
+            "image": "cas-application.jpg",
+            "legende": "La page de démonstration : la carte d’Atlas dans une application, colorée par département à partir du tableau de l’application. Données fictives ; contours de l’IGN."
+          }
+        ]
+      },
+      {
+        "role": "Partager",
         "titre": "Une scène qui se partage",
         "format": "large",
         "texte": "Dans Grist, on partage le document : la carte suit, avec les droits du document. Pour une page, l’intégration en iframe prend deux formes : `?embed=true`, page minimale en lecture forcée, et `?style=singlePage`, où les droits de la personne connectée s’appliquent ; `?navbar=false` retire la barre. Une scène peut aussi se publier seule, sous forme de manifeste, et s’ouvrir par son adresse (`?scene=`), sans document Grist.",
