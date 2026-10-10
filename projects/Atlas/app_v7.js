@@ -239,6 +239,7 @@ import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=20260926a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
+import { capUtilisable } from './lib/cap-position.js?v=20261010a';
 import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
@@ -423,6 +424,8 @@ let _geoloc = null;
 /** Derniere position `[lng, lat]` donnee par la geolocalisation — pour « le plus proche ». */
 let _dernierePosition = null;
 let _suiviPosition = false;
+let _capFleche = null;   // marqueur du cap, posé tant que la personne avance
+let _capDelai = null;    // le retire si la position n'est plus mise à jour
 let _sunArcDragging = false;
 let _preStorySnapshot = null;
 let _preStoryOrder = null;
@@ -3256,6 +3259,7 @@ function initMap() {
         // calcule depuis la ou l'on se tient, pas depuis le centre de la carte.
         _geoloc.on('geolocate', (p) => {
             _dernierePosition = [p.coords.longitude, p.coords.latitude];
+            poserCapPosition(p.coords);
             if (_openDockPill === 'releve') renderDockSlotHost();
             if (_liste && $('liste-lignes')) renderListeLignes();
             if (_storyPresenting && _trajetSuivi && !_trajetPause && !$('inspector')?.classList.contains('open')) {
@@ -3277,6 +3281,7 @@ function initMap() {
         });
         _geoloc.on('error', (err) => {
             suivre(false);
+            retirerCapPosition();
             showToast(err?.code === 1
                 ? 'Localisation refusée par le navigateur'
                 : 'Position introuvable pour le moment', 'warning');
@@ -6138,6 +6143,33 @@ function relevesDuContexte() {
 function localisationDisponible() {
     const b = _geoloc?._geolocateButton;
     return !!b && !b.disabled && typeof navigator !== 'undefined' && !!navigator.geolocation;
+}
+
+/**
+ * La flèche de cap : MapLibre n'en dessine pas (pas d'option `showUserHeading`). On la pose autour du point bleu tant que le GPS donne un
+ * cap fiable, c'est-à-dire en mouvement (`lib/cap-position.js`), et on la retire à l'arrêt ou si la position n'est plus mise à jour.
+ */
+function poserCapPosition(coords) {
+    const cap = capUtilisable(coords);
+    if (cap === null || !map) { retirerCapPosition(); return; }
+    const lngLat = [coords.longitude, coords.latitude];
+    if (!_capFleche) {
+        const el = document.createElement('div');
+        el.className = 'cap-position';
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText = 'width:44px;height:44px;pointer-events:none';
+        el.innerHTML = '<svg viewBox="0 0 44 44" width="44" height="44"><path d="M22 2 L31 15 L22 11 L13 15 Z" fill="#1a73e8" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+        _capFleche = new maplibregl.Marker({ element: el, rotationAlignment: 'map', pitchAlignment: 'map', anchor: 'center' }).setLngLat(lngLat).addTo(map);
+    }
+    _capFleche.setLngLat(lngLat).setRotation(cap);
+    clearTimeout(_capDelai);
+    _capDelai = setTimeout(retirerCapPosition, 15000);
+}
+
+function retirerCapPosition() {
+    clearTimeout(_capDelai);
+    _capDelai = null;
+    if (_capFleche) { _capFleche.remove(); _capFleche = null; }
 }
 
 /* ------------------------------------------------------------------ */
