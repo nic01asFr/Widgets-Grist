@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
-  adapterTroncons, centreDe, longueurKm, nombreDeVehicules, versLngLat, instantane, creerTrafic,
+  adapterTroncons, centreDe, longueurKm, nombreDeVehicules, versLngLat, instantane, creerTrafic, libelleMotifs,
   DENSITE_DEFAUT, VEHICULES_MIN, VEHICULES_MAX, ID_SOURCE, CADENCE_MS,
 } from '../lib/trafic-couche.js';
 import { Trafic } from '../lib/trafic/index.js';
@@ -48,17 +48,18 @@ test('adapterTroncons : le sens vient de la BD TOPO, sinon d\'OpenStreetMap ; l\
     ligne({ oneway: '-1', highway: 'tertiary' }, B, C),
     ligne({ junction: 'roundabout', highway: 'residential' }, B, C),
     ligne({ highway: 'residential' }, B, C),
-    ligne({ sens_de_circulation: '', oneway: 'yes' }, B, C),
+    ligne({ sens_de_circulation: '', oneway: 'yes', highway: 'residential' }, B, C),
     ligne({ importance: '2', highway: 'service' }, A, B),
     ligne({ highway: 'motorway' }, A, B),
     ligne({ highway: 'invention' }, A, B),
   ]);
-  assert.deepEqual(troncons.map((t) => t.properties.sens_de_circulation), ['Sens inverse', 'Sens direct', 'Sens inverse', 'Sens direct', 'Double sens', 'Sens direct', 'Double sens', 'Sens direct', 'Double sens']);
-  assert.deepEqual(troncons.map((t) => t.properties.importance), ['2', '3', '4', '5', '5', '5', '2', '1', '5']);
+  assert.deepEqual(troncons.map((t) => t.properties.sens_de_circulation), ['Sens inverse', 'Sens direct', 'Sens inverse', 'Sens direct', 'Double sens', 'Sens direct', 'Double sens', 'Sens direct']);   // la route de classe inconnue (« invention ») est écartée : les autres se déclarent
+  assert.deepEqual(troncons.map((t) => t.properties.importance), ['2', '3', '4', '5', '5', '5', '2', '1']);
 });
 
 test('adapterTroncons : identifiants, valeurs par défaut du moteur, MultiLineString lue par sa première ligne, entrée non modifiée', () => {
   const brut = [ligne({ highway: 'residential' }, A, B), { type: 'Feature', id: 7, properties: {}, geometry: { type: 'MultiLineString', coordinates: [[A, C], [B, C]] } }];
+  brut[1].properties = { highway: 'residential' };
   const copie = JSON.stringify(brut);
   const { troncons } = adapterTroncons(brut);
   assert.equal(JSON.stringify(brut), copie, 'les entités de la couche ne sont pas modifiées');
@@ -70,7 +71,7 @@ test('adapterTroncons : identifiants, valeurs par défaut du moteur, MultiLineSt
     assert.equal(t.properties.etat_de_l_objet, 'En service');
     assert.equal(t.properties.acces_vehicule_leger, 'Libre');
   }
-  assert.deepEqual(adapterTroncons(undefined), { troncons: [], ecartes: 0 });
+  assert.deepEqual(adapterTroncons(undefined), { troncons: [], ecartes: 0, motifs: {} });
 });
 
 test('centre, longueur et nombre de véhicules : bornés et sensés', () => {
@@ -99,8 +100,8 @@ test('versLngLat : le repère du moteur (mètres autour du centre) et la carte (
 
 test('creerTrafic : refuse une couche sans route, et dit pourquoi', () => {
   const carte = carteSimulee();
-  assert.throws(() => creerTrafic({ carte, entites: [] }), /aucune route exploitable/);
-  assert.throws(() => creerTrafic({ carte, entites: [ligne({ highway: 'footway' }, A, B)] }), /aucune route exploitable/);
+  assert.throws(() => creerTrafic({ carte, entites: [] }), /aucune route ouverte à la circulation/);
+  assert.throws(() => creerTrafic({ carte, entites: [ligne({ highway: 'footway' }, A, B)] }), /aucune route ouverte à la circulation/);
   assert.equal(carte.sources.size, 0, 'rien n\'est posé sur la carte tant que le trafic n\'est pas démarré');
 });
 
@@ -157,4 +158,79 @@ test('instantane : un point par véhicule, cap en degrés entiers, classe poids 
   assert.equal(fc.features[1].properties.cap, 0, 'un cap illisible devient 0');
   const horsChamp = instantane({ agents: [{}], position: () => null }, [5, 43]);
   assert.equal(horsChamp.features.length, 0, 'un véhicule sans position est ignoré');
+});
+
+/* ---- distinguer les routes, les chemins, les sentiers, les pistes cyclables, les voies ferrées ---- */
+
+test('adapterTroncons : les routes seules roulent ; chaque écart a son motif', () => {
+  const route = { nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Libre' };
+  const { troncons, ecartes, motifs } = adapterTroncons([
+    ligne({ ...route, cleabs: 'R1' }, A, B),
+    ligne({ nature: 'Rond-point', acces_vehicule_leger: 'Libre', cleabs: 'R2' }, B, C),
+    ligne({ nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit' }, A, B),
+    ligne({ nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit' }, A, C),
+    ligne({ nature: 'Chemin' }, A, B),
+    ligne({ nature: 'Sentier', acces_vehicule_leger: 'Physiquement impossible' }, A, B),
+    ligne({ nature: 'Escalier' }, A, B),
+    ligne({ nature: 'Piste cyclable' }, A, B),
+    ligne({ highway: 'cycleway' }, A, B),
+    ligne({ railway: 'rail' }, A, B),
+    ligne({ nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Physiquement impossible' }, A, B),
+    ligne({ nature: 'Route à 1 chaussée', etat_de_l_objet: 'Projet' }, A, B),
+    { type: 'Feature', properties: route, geometry: null },
+    ligne({ sens_de_circulation: 'Double sens' }, A, B),   // une ligne qui ne dit pas ce qu'elle est, au milieu de lignes qui le disent
+  ]);
+  assert.deepEqual(troncons.map((t) => t.properties.cleabs), ['R1', 'R2']);
+  assert.equal(ecartes, 12);
+  assert.deepEqual(motifs, { acces_restreint: 2, chemin: 1, sentier: 1, escalier: 1, cyclable: 2, ferre: 1, acces_impossible: 1, projet: 1, geometrie: 1, autre: 1 });
+});
+
+test('adapterTroncons : les routes à accès restreint roulent sur demande, jamais les impossibles', () => {
+  const entites = [
+    ligne({ nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Libre' }, A, B),
+    ligne({ nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit' }, B, C),
+    ligne({ nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Physiquement impossible' }, A, C),
+  ];
+  assert.equal(adapterTroncons(entites).troncons.length, 1);
+  const tous = adapterTroncons(entites, { acces: 'tous' });
+  assert.equal(tous.troncons.length, 2);
+  assert.ok(tous.troncons.every((t) => t.properties.acces_vehicule_leger !== 'Restreint aux ayants droit'), "le moteur reçoit un accès qu'il ne refuse pas");
+  assert.deepEqual(tous.motifs, { acces_impossible: 1 });
+});
+
+test('adapterTroncons : des lignes tracées à la main, sans aucun attribut, sont prises pour un réseau routier', () => {
+  const { troncons, ecartes } = adapterTroncons([ligne({}, A, B), ligne({}, B, C)]);
+  assert.equal(troncons.length, 2); assert.equal(ecartes, 0);
+});
+
+test('creerTrafic : sur une couche qui ne contient que des chemins, le message dit ce qui a été écarté', () => {
+  const carte = carteSimulee();
+  const entites = [ligne({ nature: 'Chemin' }, A, B), ligne({ nature: 'Sentier' }, B, C), ligne({ nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit' }, A, C)];
+  assert.throws(() => creerTrafic({ carte, entites }), /aucune route ouverte à la circulation dans cette couche \(3 tronçons écartés : .*chemin.*sentier.*acces restreint/);
+});
+
+test('creerTrafic : aucun véhicule ne roule sur une allée à accès restreint (le moteur ne la voit pas)', () => {
+  const carte = carteSimulee();
+  const rue = (id, pts) => ({ type: 'Feature', properties: { cleabs: id, nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Libre', sens_de_circulation: 'Double sens', importance: '3' }, geometry: { type: 'LineString', coordinates: pts } });
+  const allee = { type: 'Feature', properties: { cleabs: 'ALLEE', nature: 'Route empierrée', acces_vehicule_leger: 'Restreint aux ayants droit', sens_de_circulation: 'Double sens', importance: '5' }, geometry: { type: 'LineString', coordinates: [[5.0, 43.0012], [5.003, 43.0012]] } };
+  const t = creerTrafic({ carte, entites: [rue('R-O', [[5.0, 43.0], [5.003, 43.0]]), rue('R-E', [[5.003, 43.0], [5.006, 43.0]]), allee], planifier: () => 1, annuler: () => {} });
+  const cles = new Set(); for (const a of t._sim.G.aretes) for (const c of a.cl) cles.add(c);
+  assert.ok(cles.has('R-O') && cles.has('R-E'));
+  assert.ok(!cles.has('ALLEE'), "l'allée n'est pas dans le réseau du moteur");
+  assert.equal(t.etat().motifs.acces_restreint, 1);
+});
+
+test('libelleMotifs : une phrase française pour ce qui a été écarté, le plus fréquent d\'abord', () => {
+  assert.equal(libelleMotifs({}), '');
+  assert.equal(libelleMotifs(undefined), '');
+  assert.equal(libelleMotifs({ chemin: 1 }), '1 tronçon écarté : 1 chemins');
+  assert.equal(libelleMotifs({ sentier: 2, acces_restreint: 38, escalier: 5 }), '45 tronçons écartés : 38 à accès restreint, 5 escaliers, 2 sentiers');
+  assert.equal(libelleMotifs({ cyclable: 3, ferre: 1, geometrie: 2, projet: 1, inconnu: 1 }), '8 tronçons écartés : 3 pistes cyclables, 2 sans géométrie lisible, 1 voies ferrées, 1 en projet, 1 inconnu');
+});
+
+test('creerTrafic : l\'état porte la phrase des écarts, pour l\'interface', () => {
+  const carte = carteSimulee();
+  const rue = (id, pts) => ({ type: 'Feature', properties: { cleabs: id, nature: 'Route à 1 chaussée', acces_vehicule_leger: 'Libre', sens_de_circulation: 'Double sens', importance: '3' }, geometry: { type: 'LineString', coordinates: pts } });
+  const t = creerTrafic({ carte, entites: [rue('A', [[5.0, 43.0], [5.003, 43.0]]), rue('B', [[5.003, 43.0], [5.006, 43.0]]), { type: 'Feature', properties: { nature: 'Sentier' }, geometry: { type: 'LineString', coordinates: [[5, 43.001], [5.001, 43.001]] } }], planifier: () => 1, annuler: () => {} });
+  assert.equal(t.etat().ecartesTexte, '1 tronçon écarté : 1 sentiers');
 });

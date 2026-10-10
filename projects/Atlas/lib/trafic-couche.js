@@ -15,6 +15,7 @@
  */
 import { Trafic } from './trafic/index.js?v=20261011a';
 import { sensOsm } from './itineraire.js?v=20261002a';
+import { classerTroncon } from './modes-voie.js?v=20261011b';
 
 /** Véhicules par km de route : un trafic ambiant lisible, pas un embouteillage. */
 export const DENSITE_DEFAUT = 8;
@@ -29,10 +30,6 @@ export const IMPORTANCE_OSM = Object.freeze({
   motorway: 1, trunk: 1, primary: 2, secondary: 3, tertiary: 4, motorway_link: 3, trunk_link: 3, primary_link: 3, secondary_link: 4, tertiary_link: 5,
   unclassified: 5, residential: 5, living_street: 6, service: 6,
 });
-/** Ce qu'un véhicule léger ne parcourt pas. */
-const NATURES_EXCLUES = new Set(['Sentier', 'Escalier', 'Piste cyclable']);
-const HIGHWAY_EXCLUS = new Set(['footway', 'path', 'cycleway', 'steps', 'pedestrian', 'bridleway', 'track', 'corridor', 'proposed', 'construction']);
-
 const SENS_BDTOPO = Object.freeze({ direct: 'Sens direct', inverse: 'Sens inverse', double: 'Double sens' });
 
 /** Les premières coordonnées d'une ligne, ou null (une `MultiLineString` n'est lue que par sa première ligne, comme le moteur). */
@@ -43,27 +40,50 @@ function ligneDe(geometrie) {
 }
 
 /**
- * Les entités d'une couche, au format que le moteur lit (tronçons BD TOPO). Une entité qui n'est pas une route carrossable est écartée ; le
- * sens vient de `sens_de_circulation` quand il est renseigné, sinon d'OpenStreetMap (`oneway`, `junction`, `highway`) ; l'importance, à défaut,
- * de la classe OpenStreetMap.
+ * Les entités d'une couche, au format que le moteur lit (tronçons BD TOPO). **Seules les routes ouvertes à la circulation roulent** : une allée de parc
+ * (« route empierrée » à accès restreint aux ayants droit), un chemin, un sentier, un escalier, une piste cyclable, une voie ferrée, un tronçon à l'état
+ * de projet ou physiquement impossible sont écartés, chacun pour son motif (`lib/modes-voie.js`). Le sens vient de `sens_de_circulation` quand il est
+ * renseigné, sinon d'OpenStreetMap (`oneway`, `junction`, `highway`) ; l'importance, à défaut, de la classe OpenStreetMap.
+ *
+ * Une couche dont AUCUN tronçon ne dit ce qu'il est (ni `nature`, ni `highway`) — des lignes tracées à la main — est prise pour un réseau routier.
+ * Dès qu'un tronçon se déclare, ceux qui ne le font pas sont écartés (`autre`).
  * @param {object[]} entites  entités GeoJSON de la couche
- * @returns {{ troncons: object[], ecartes: number }}
+ * @param {{ acces?: 'libre'|'tous' }} [o]  `tous` : garde aussi les routes à accès restreint (voies privées, desserte) ; jamais les impossibles
+ * @returns {{ troncons: object[], ecartes: number, motifs: Record<string, number> }}
  */
-export function adapterTroncons(entites) {
-  const troncons = []; let ecartes = 0;
-  (entites || []).forEach((f, i) => {
-    const ligne = ligneDe(f && f.geometry);
-    const p = (f && f.properties) || {};
-    if (!ligne || NATURES_EXCLUES.has(p.nature) || HIGHWAY_EXCLUS.has(String(p.highway || '').toLowerCase()) || p.acces_vehicule_leger === 'Physiquement impossible' || p.etat_de_l_objet === 'Projet') { ecartes++; return; }
+export function adapterTroncons(entites, { acces = 'libre' } = {}) {
+  const troncons = []; const motifs = {};
+  const ecarte = (m) => { motifs[m] = (motifs[m] || 0) + 1; };
+  const liste = (entites || []).map((f, i) => ({ f, i, ligne: ligneDe(f && f.geometry), p: (f && f.properties) || {} }));
+  const classes = liste.map((x) => classerTroncon(x.p));
+  const aucuneClassee = classes.every((c) => c.mode === 'autre');
+  liste.forEach(({ f, i, ligne, p }, k) => {
+    if (!ligne) { ecarte('geometrie'); return; }
+    const c = classes[k];
+    let motif = c.motif;
+    if (motif === 'autre' && aucuneClassee) motif = null;                       // des lignes sans attributs : un réseau tracé à la main
+    if (motif === 'acces_restreint' && acces === 'tous') motif = null;
+    if (motif) { ecarte(motif); return; }
     const sens = p.sens_de_circulation != null && p.sens_de_circulation !== '' ? p.sens_de_circulation : SENS_BDTOPO[sensOsm(p)];
     const importance = Number.isFinite(Number(p.importance)) && String(p.importance).trim() !== '' ? String(p.importance) : String(IMPORTANCE_OSM[String(p.highway || '').toLowerCase()] ?? 5);
     troncons.push({
       type: 'Feature',
-      properties: { ...p, cleabs: p.cleabs || `atlas:${f.id ?? i}`, sens_de_circulation: sens, importance, position_par_rapport_au_sol: p.position_par_rapport_au_sol ?? '0', etat_de_l_objet: p.etat_de_l_objet || 'En service', acces_vehicule_leger: p.acces_vehicule_leger || 'Libre' },
+      properties: { ...p, cleabs: p.cleabs || `atlas:${f.id ?? i}`, sens_de_circulation: sens, importance, position_par_rapport_au_sol: p.position_par_rapport_au_sol ?? '0', etat_de_l_objet: p.etat_de_l_objet || 'En service', acces_vehicule_leger: p.acces_vehicule_leger && p.acces_vehicule_leger !== 'Restreint aux ayants droit' ? p.acces_vehicule_leger : 'Libre' },
       geometry: { type: 'LineString', coordinates: ligne },
     });
   });
-  return { troncons, ecartes };
+  const ecartes = Object.values(motifs).reduce((a, b) => a + b, 0);
+  return { troncons, ecartes, motifs };
+}
+
+/** Ce que dit l'interface quand des tronçons sont écartés : « 12 écartés : 7 chemins, 5 accès restreint ». */
+const LIBELLES_MOTIFS = Object.freeze({ chemin: 'chemins', sentier: 'sentiers', escalier: 'escaliers', cyclable: 'pistes cyclables', ferre: 'voies ferrées',
+  acces_restreint: 'à accès restreint', acces_impossible: 'à accès impossible', projet: 'en projet', autre: 'non classés', geometrie: 'sans géométrie lisible' });
+export function libelleMotifs(motifs) {
+  const e = Object.entries(motifs || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (!e.length) return '';
+  const total = e.reduce((s, [, n]) => s + n, 0);
+  return `${total} tronçon${total > 1 ? 's' : ''} écarté${total > 1 ? 's' : ''} : ${e.map(([m, n]) => `${n} ${LIBELLES_MOTIFS[m] || m}`).join(', ')}`;
 }
 
 /** Le centre de la boîte englobante des tronçons, [lng, lat]. */
@@ -105,13 +125,14 @@ export function instantane(sim, centre) {
 /**
  * Lance un trafic simulé sur des entités de routes.
  * @param {{ carte: object, entites: object[], densite?: number, graine?: number, vitesse?: number, idSource?: string,
- *   planifier?: Function, annuler?: Function, moteur?: object }} o
+ *   acces?: 'libre'|'tous', planifier?: Function, annuler?: Function, moteur?: object }} o
+ *   `acces` : `libre` (défaut) ne fait rouler que les routes ouvertes à la circulation ; `tous` ajoute les routes à accès restreint
  *   `vitesse` : 1 = temps réel ; 4 = quatre pas du moteur par image (un trafic accéléré, plus coûteux)
  * @returns {{ demarrer: Function, arreter: Function, pause: Function, reprendre: Function, etat: Function }}
  */
-export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic } = {}) {
-  const { troncons, ecartes } = adapterTroncons(entites);
-  if (!troncons.length) throw new Error('aucune route exploitable dans cette couche (il faut des lignes : BD TOPO, routes OpenStreetMap)');
+export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic } = {}) {
+  const { troncons, ecartes, motifs } = adapterTroncons(entites, { acces });
+  if (!troncons.length) throw new Error('aucune route ouverte à la circulation dans cette couche' + (ecartes ? ` (${ecartes} tronçons écartés : ${Object.entries(motifs).map(([m, n]) => `${n} ${m.replace('_', ' ')}`).join(', ')})` : ' (il faut des lignes : BD TOPO, routes OpenStreetMap)'));
   const centre = centreDe(troncons);
   const graphe = moteur.construire(troncons, centre, {});
   if (!graphe.externes || !graphe.externes.length) throw new Error('le réseau de cette couche ne donne aucun tronçon roulant');
@@ -125,8 +146,9 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     carte.addSource(idSource, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     carte.addLayer({ id: idSource, type: 'circle', source: idSource, paint: {
       'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 1.6, 16, 3.5, 19, 7],
-      'circle-color': ['case', ['get', 'pl'], '#e07b00', '#1f5fd6'],
-      'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 0.4, 18, 1.2],
+      // une voiture blanche cerclée de sombre, un poids lourd orange : lisibles sur une route bleue comme sur un fond clair
+      'circle-color': ['case', ['get', 'pl'], '#e07b00', '#ffffff'],
+      'circle-stroke-color': '#16233b', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 0.6, 18, 1.4],
       'circle-pitch-alignment': 'map',
     } });
     pose = true;
@@ -148,7 +170,7 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
     },
     etat() {
       const r = graphe.resume || {};
-      return { actif, simule: true, vehicules: sim.agents.length, temps: Math.round(sim.t), densite, ecartes,
+      return { actif, simule: true, vehicules: sim.agents.length, temps: Math.round(sim.t), densite, acces, ecartes, motifs, ecartesTexte: libelleMotifs(motifs),
         reseau: { troncons: troncons.length, carrefours: r.carrefours ?? null, giratoires: r.anneaux ?? null, kmVoie: r.kmVoie != null ? +r.kmVoie.toFixed(1) : null } };
     },
     /** Pour les tests et la mesure : le moteur et son centre. */
