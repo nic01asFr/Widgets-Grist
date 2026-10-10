@@ -1,0 +1,116 @@
+{
+  "commentaire": "Valeurs de référence de la dérivation (tests/charte-derivation.test.js). Mêmes graines, mêmes valeurs : toute différence est un changement de règle, à décider.",
+  "neutre": {
+    "graines": {
+      "principal": "#1b6b7a",
+      "secondaire": "#e07b00",
+      "encre": "#1a1a1a",
+      "fond": "#ffffff"
+    },
+    "sequentielles": {
+      "principale": [
+        "#e4edef",
+        "#c4d6db",
+        "#a4bfc6",
+        "#85aab2",
+        "#66949f",
+        "#457f8d",
+        "#1b6a79",
+        "#1c535e",
+        "#1a3e45"
+      ]
+    },
+    "divergente": [
+      "#1b6b7a",
+      "#6b96a0",
+      "#adc1c7",
+      "#efefef",
+      "#f1b07b",
+      "#d67602",
+      "#90540c"
+    ],
+    "qualitative": [
+      "#1b6b7a",
+      "#e07b00",
+      "#009e73",
+      "#cc79a7",
+      "#56b4e9",
+      "#000000"
+    ],
+    "sansDonnee": "#8f8f8f",
+    "selection": "#1a1a1a",
+    "halo": "#ffffff",
+    "survol": "#535353",
+    "contour": "#ffffff",
+    "plan": {
+      "fond": "#ffffff",
+      "vert": "#eff5f6",
+      "bati": "#e1ecee",
+      "eau": "#bbd3d7",
+      "route": "#ffffff",
+      "filet": "#a8c7cc",
+      "limite": "#76a6af",
+      "halo": "#ffffff",
+      "texte": "#1a1a1a",
+      "texte2": "#434343",
+      "info": "#1b434a"
+    }
+  },
+  "sombre": {
+    "graines": {
+      "principal": "#5aa9e6",
+      "secondaire": "#f4a259",
+      "encre": "#eef1f5",
+      "fond": "#12161c"
+    },
+    "sequentielles": {
+      "principale": [
+        "#1b2834",
+        "#253b4d",
+        "#2f4f69",
+        "#3a6385",
+        "#4479a3",
+        "#4e8ec1",
+        "#58a6e1",
+        "#84bbea",
+        "#abd1ee"
+      ]
+    },
+    "divergente": [
+      "#7ebbea",
+      "#4e85b3",
+      "#39536b",
+      "#21252b",
+      "#644b3b",
+      "#aa754b",
+      "#f3a259"
+    ],
+    "qualitative": [
+      "#5aa9e6",
+      "#f4a259",
+      "#0072b2",
+      "#009e73",
+      "#cc79a7",
+      "#d55e00",
+      "#f0e442"
+    ],
+    "sansDonnee": "#66696e",
+    "selection": "#eef1f5",
+    "halo": "#12161c",
+    "survol": "#b7babf",
+    "contour": "#12161c",
+    "plan": {
+      "fond": "#12161c",
+      "vert": "#17202a",
+      "bati": "#1b2936",
+      "eau": "#284259",
+      "route": "#12161c",
+      "filet": "#2d4e69",
+      "limite": "#3d6e95",
+      "halo": "#12161c",
+      "texte": "#eef1f5",
+      "texte2": "#c6cace",
+      "info": "#a4cdee"
+    }
+  }
+}

@@ -8,7 +8,7 @@
  *  - divergente : une teinte de chaque côté d'un neutre (le fond mélangé à 7 % d'encre), chaque côté régulièrement espacé en L*, les deux
  *    extrêmes à la MÊME clarté (même poids visuel) ;
  *  - qualitative : principal, secondaire, puis des candidates qui restent distinctes (CIEDE2000 >= 10, pire cas sur la vision normale et
- *    les trois daltonismes) de tout ce qui précède ;
+ *    les trois daltonismes) de tout ce qui précède et qui se détachent du fond (2:1 au moins) ;
  *  - plan de fond : la couleur principale mélangée au fond à intensités FIXES (une couleur et des intensités, jamais un arc-en-ciel) ;
  *  - sans donnée, sélection, survol, contour, halo : de l'encre et du fond.
  * Module pur : aucune palette n'est écrite ici, les candidates de la qualitative sont fournies par l'appelant.
@@ -23,6 +23,8 @@ export const INTENSITES_PLAN = Object.freeze({ vert: 0.07, bati: 0.13, eau: 0.30
 export const INTENSITE_VEGETATION = 0.2;
 /** Écart CIEDE2000 minimal, au pire des quatre visions, entre deux couleurs qualitatives. */
 export const ECART_QUALITATIVE = 10;
+/** Contraste minimal d'une candidate qualitative contre le fond : en dessous, la catégorie disparaît (le noir sur un fond sombre, le jaune pâle sur du blanc). */
+export const CONTRASTE_QUALITATIVE = 2;
 
 const sens = (fond, encre) => Math.sign(clarte(encre) - clarte(fond));
 
@@ -127,14 +129,16 @@ export function ecartPireCas(a, b) {
 }
 
 /**
- * Qualitative de `n` couleurs : les graines (principal puis secondaire), complétées par des candidates qui s'en distinguent assez.
- * @param {{principal?:string, secondaire?:string}} graines
+ * Qualitative de `n` couleurs : les graines (principal puis secondaire), complétées par des candidates qui s'en distinguent assez et qui se
+ * détachent du fond (`CONTRASTE_QUALITATIVE`).
+ * @param {{principal?:string, secondaire?:string, fond?:string}} graines
  * @param {string[]} candidates  couleurs proposées, dans l'ordre de préférence
  */
-export function qualitativeDepuis({ principal, secondaire }, candidates, n = 8) {
+export function qualitativeDepuis({ principal, secondaire, fond }, candidates, n = 8) {
   const choisies = [principal, secondaire].filter(Boolean);
   for (const c of candidates) {
     if (choisies.length >= n) break;
+    if (fond && contraste(c, fond) < CONTRASTE_QUALITATIVE) continue;
     if (choisies.every((x) => ecartPireCas(c, x) >= ECART_QUALITATIVE)) choisies.push(c);
   }
   return choisies;
