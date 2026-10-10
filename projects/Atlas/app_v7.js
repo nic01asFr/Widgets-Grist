@@ -5026,7 +5026,7 @@ function itineraireClic(e) {
 function recalculerItineraire() {
     const s = _itineraire;
     if (!s) return;
-    s.calcul = s.points.length >= 2 ? calculerItineraire(s.reseau, s.points) : null;
+    s.calcul = s.points.length >= 2 ? calculerItineraire(s.reseau, s.points, { oriente: s.respecterSens !== false }) : null;
     dessinerApercuItineraire(s.calcul?.ok ? s.calcul.coordonnees : []);
     if (s.calcul && !s.calcul.ok) showToast(s.calcul.raison, 'warning');
 }
@@ -7604,7 +7604,11 @@ function itineraireEnCoursHtml() {
         : n === 1 ? 'Touchez le point suivant (arrivée, ou point de passage).'
         : ok ? `${Math.round(s.calcul.longueurM)} m · ${n} points — touchez pour ajouter un point de passage ou une arrivée.`
             : 'Le chemin ne se trace pas : voir le message, ou retirez le dernier point.';
-    return `<div class="section"><div class="hint">Tracé · ${escapeHtml(etat)}</div>
+    // Les sens uniques ne se lisent que si la couche les porte (`sens_de_circulation`, BD TOPO) ; sinon l'itinéraire vaut à pied.
+    const sens = s.reseau.oriente
+        ? `<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${s.respecterSens !== false ? 'checked' : ''} onchange="A.itineraireSens(this.checked)"> Respecter les sens de circulation</label>`
+        : '<div class="hint" style="margin-top:8px">Cette couche ne porte pas de sens de circulation : le tracé vaut à pied.</div>';
+    return `<div class="section"><div class="hint">Tracé · ${escapeHtml(etat)}</div>${sens}
         <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn btn-soft" style="flex:1" ${n ? '' : 'disabled'} onclick="A.itineraireRetirerDernier()">Retirer le dernier</button>
             <button class="btn btn-soft" style="flex:1" onclick="A.itineraireAnnuler()">Annuler</button>
@@ -16008,7 +16012,7 @@ const A = {
             try {
                 const reseau = construireReseau(couche.geojson.features);
                 terminerItineraire();
-                _itineraire = { layerId: couche.id, reseau, points: [], marqueurs: [], calcul: null };
+                _itineraire = { layerId: couche.id, reseau, points: [], marqueurs: [], calcul: null, respecterSens: true };
                 if (map) map.getCanvas().style.cursor = 'crosshair';
                 showToast('Touchez le départ sur la carte', 'info');
             } catch (e) {
@@ -16027,6 +16031,13 @@ const A = {
         if (STATE.currentModule === 'recit') renderRecit();
     },
     itineraireAnnuler() { terminerItineraire(); _cibleTournee = null; if (STATE.currentModule === 'recit') renderRecit(); },
+    /** Respecter ou non les sens uniques : le tracé se recalcule, le réseau reste le même. */
+    itineraireSens(oui) {
+        const s = _itineraire; if (!s) return;
+        s.respecterSens = !!oui;
+        recalculerItineraire();
+        if (STATE.currentModule === 'recit') renderRecit();
+    },
     itineraireTerminer() {
         const s = _itineraire;
         if (!s?.calcul?.ok) return;
