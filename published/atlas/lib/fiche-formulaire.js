@@ -28,10 +28,10 @@
  * > n'a pas le droit d'écrire. Le dépôt a déjà payé une fois pour ce défaut.
  */
 
-import { tablesReferencant } from './schema-grist.js?v=1.13.2';
-import { colonneDate } from './bulle-objet.js?v=1.13.2';
-import { detectGeometryColumn } from './geo-tables.js?v=1.13.2';
-import { televerserPieceJointe } from './data-client.js?v=1.13.2';
+import { tablesReferencant } from './schema-grist.js?v=1.14.0';
+import { colonneDate } from './bulle-objet.js?v=1.14.0';
+import { detectGeometryColumn } from './geo-tables.js?v=1.14.0';
+import { televerserPieceJointe } from './data-client.js?v=1.14.0';
 
 /** Le moteur est chargé en `<script>` classique (UMD) — il n'est pas en module ES. */
 export function moteurDisponible() {

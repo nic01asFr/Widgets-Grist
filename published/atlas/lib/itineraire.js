@@ -17,7 +17,7 @@
  * Module pur : des coordonnées en entrée, des coordonnées en sortie.
  */
 
-import { distanceMetres } from './releve.js?v=1.13.2';
+import { distanceMetres } from './releve.js?v=1.14.0';
 
 export const VERSION = '1.0.0';
 
@@ -25,6 +25,17 @@ export const VERSION = '1.0.0';
 export const RACCORD_M = 3;
 /** Au-delà, un point n'est « sur » aucune ligne : on le dit plutôt que de tracer depuis loin. */
 export const ECART_MAX_M = 250;
+
+/**
+ * Le sens de circulation de la BD TOPO (`sens_de_circulation`), en trois valeurs. « Sens direct » : du premier au dernier point de la
+ * géométrie ; « Sens inverse » : l'inverse ; « Double sens », « Sans objet » et toute autre valeur n'interdisent rien.
+ */
+export function sensBdTopo(valeur) {
+  if (valeur === 'Sens direct') return 'direct';
+  if (valeur === 'Sens inverse') return 'inverse';
+  return 'double';
+}
+const sensDeEntite = (e) => sensBdTopo(e?.properties?.sens_de_circulation);
 
 const CLE = (p) => `${Math.round(p[0] * 1e5)}_${Math.round(p[1] * 1e5)}`;
 
@@ -39,11 +50,14 @@ function lignesDe(geometrie) {
 /**
  * Le réseau d'un ensemble d'entités linéaires.
  *
+ * Chaque segment porte le sens de son entité (`sens(entite)` : 'double', 'direct' ou 'inverse' ; par défaut, la BD TOPO). Le réseau est
+ * `oriente` dès qu'un segment n'est pas à double sens. Les raccords entre bouts de lignes voisins ne portent aucun sens.
+ *
  * @param {Array<{geometry: object}>} entites
- * @param {{ raccordM?: number }} [o]
- * @returns {{ noeuds: number[][], voisins: Array<Array<{vers: number, poids: number}>>, segments: Array<{a: number, b: number}> }}
+ * @param {{ raccordM?: number, sens?: (entite: object) => 'double'|'direct'|'inverse' }} [o]
+ * @returns {{ noeuds: number[][], voisins: Array<Array<{vers: number, poids: number, seg: number}>>, segments: Array<{a: number, b: number, sens: string}>, oriente: boolean }}
  */
-export function construireReseau(entites, { raccordM = RACCORD_M } = {}) {
+export function construireReseau(entites, { raccordM = RACCORD_M, sens = sensDeEntite } = {}) {
   const noeuds = [];
   const voisins = [];
   const segments = [];
@@ -56,13 +70,15 @@ export function construireReseau(entites, { raccordM = RACCORD_M } = {}) {
     if (i === undefined) { i = noeuds.length; parCle.set(k, i); noeuds.push([p[0], p[1]]); voisins.push([]); }
     return i;
   };
-  const relier = (a, b, poids) => {
+  const relier = (a, b, poids, seg = -1) => {
     if (a === b) return;
-    voisins[a].push({ vers: b, poids });
-    voisins[b].push({ vers: a, poids });
+    voisins[a].push({ vers: b, poids, seg });
+    voisins[b].push({ vers: a, poids, seg });
   };
 
+  let oriente = false;
   for (const e of entites || []) {
+    const sensEntite = sens(e) || 'double';
     for (const ligne of lignesDe(e?.geometry)) {
       const pts = (ligne || []).filter((p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]));
       if (pts.length < 2) continue;
@@ -71,8 +87,9 @@ export function construireReseau(entites, { raccordM = RACCORD_M } = {}) {
       for (let i = 1; i < pts.length; i++) {
         const cour = noeud(pts[i]);
         if (cour !== prec) {
-          relier(prec, cour, distanceMetres(noeuds[prec], noeuds[cour]));
-          segments.push({ a: prec, b: cour });
+          relier(prec, cour, distanceMetres(noeuds[prec], noeuds[cour]), segments.length);
+          segments.push({ a: prec, b: cour, sens: sensEntite });
+          if (sensEntite !== 'double') oriente = true;
         }
         prec = cour;
       }
@@ -107,7 +124,7 @@ export function construireReseau(entites, { raccordM = RACCORD_M } = {}) {
       grille.get(k).push(n);
     }
   }
-  return { noeuds, voisins, segments };
+  return { noeuds, voisins, segments, oriente };
 }
 
 /** Le point d'un segment le plus proche de `p`, et sa distance (mètres), en repère local plat. */
@@ -165,7 +182,17 @@ class Tas {
  * Le chemin le plus court entre deux points posés sur le réseau.
  * @returns {{ ok: true, coordonnees: number[][], longueurM: number } | { ok: false, raison: string }}
  */
-export function cheminEntre(reseau, depart, arrivee, { ecartMaxM = ECART_MAX_M } = {}) {
+export function cheminEntre(reseau, depart, arrivee, { ecartMaxM = ECART_MAX_M, oriente } = {}) {
+  const orienter = oriente === undefined ? !!reseau?.oriente : !!oriente && !!reseau?.oriente;
+  const r = chercher(reseau, depart, arrivee, ecartMaxM, orienter);
+  // Sans chemin dans le sens permis : dire si un chemin existe sans le respecter, plutôt que de laisser croire à un réseau coupé.
+  if (!r.ok && orienter && r.coupe && chercher(reseau, depart, arrivee, ecartMaxM, false).ok) {
+    return { ok: false, raison: 'Aucun chemin ne respecte les sens de circulation entre ces deux points (un chemin existe sans les respecter).' };
+  }
+  return r.ok ? { ok: true, coordonnees: r.coordonnees, longueurM: r.longueurM, oriente: orienter } : { ok: false, raison: r.raison };
+}
+
+function chercher(reseau, depart, arrivee, ecartMaxM, orienter) {
   if (!reseau?.segments?.length) return { ok: false, raison: 'Aucune ligne dans le réseau choisi.' };
   const d = segmentLePlusProche(reseau, depart);
   const a = segmentLePlusProche(reseau, arrivee);
@@ -176,19 +203,24 @@ export function cheminEntre(reseau, depart, arrivee, { ecartMaxM = ECART_MAX_M }
   const N = reseau.noeuds.length;
   const virtuel = [d.point, a.point];
   const extra = new Map();
-  const ajouter = (u, v, poids) => {
+  const ajouter = (u, v, poids) => {   // sens u -> v seulement
     if (!extra.has(u)) extra.set(u, []);
-    if (!extra.has(v)) extra.set(v, []);
     extra.get(u).push({ vers: v, poids });
-    extra.get(v).push({ vers: u, poids });
   };
   const sD = reseau.segments[d.segment];
   const sA = reseau.segments[a.segment];
-  ajouter(N, sD.a, distanceMetres(d.point, reseau.noeuds[sD.a]));
-  ajouter(N, sD.b, distanceMetres(d.point, reseau.noeuds[sD.b]));
-  ajouter(N + 1, sA.a, distanceMetres(a.point, reseau.noeuds[sA.a]));
-  ajouter(N + 1, sA.b, distanceMetres(a.point, reseau.noeuds[sA.b]));
-  if (d.segment === a.segment) ajouter(N, N + 1, distanceMetres(d.point, a.point));
+  // Se déplacer de a vers b sur un segment est permis sauf en « sens inverse » ; de b vers a, sauf en « sens direct ».
+  const avantOk = (s) => !orienter || s.sens !== 'inverse';
+  const arriereOk = (s) => !orienter || s.sens !== 'direct';
+  // Le départ part vers le bout b (déplacement a -> b) ou vers le bout a (b -> a) ; l'arrivée est atteinte depuis a (a -> b) ou depuis b (b -> a).
+  if (avantOk(sD)) ajouter(N, sD.b, distanceMetres(d.point, reseau.noeuds[sD.b]));
+  if (arriereOk(sD)) ajouter(N, sD.a, distanceMetres(d.point, reseau.noeuds[sD.a]));
+  if (avantOk(sA)) ajouter(sA.a, N + 1, distanceMetres(a.point, reseau.noeuds[sA.a]));
+  if (arriereOk(sA)) ajouter(sA.b, N + 1, distanceMetres(a.point, reseau.noeuds[sA.b]));
+  if (d.segment === a.segment) {
+    const enAvant = distanceMetres(reseau.noeuds[sD.a], a.point) >= distanceMetres(reseau.noeuds[sD.a], d.point);
+    if (enAvant ? avantOk(sD) : arriereOk(sD)) ajouter(N, N + 1, distanceMetres(d.point, a.point));
+  }
 
   const position = (i) => (i >= N ? virtuel[i - N] : reseau.noeuds[i]);
   const dist = new Map([[N, 0]]);
@@ -200,13 +232,17 @@ export function cheminEntre(reseau, depart, arrivee, { ecartMaxM = ECART_MAX_M }
     if (c > (dist.get(u) ?? Infinity)) continue;
     if (u === N + 1) break;
     const voisinsDe = [...(u < N ? reseau.voisins[u] : []), ...(extra.get(u) || [])];
-    for (const { vers, poids } of voisinsDe) {
+    for (const { vers, poids, seg } of voisinsDe) {
+      if (orienter && seg >= 0) { // un tronçon ne se prend que dans son sens
+        const s = reseau.segments[seg];
+        if (u === s.a ? s.sens === 'inverse' : s.sens === 'direct') continue;
+      }
       const nc = c + poids;
       if (nc < (dist.get(vers) ?? Infinity)) { dist.set(vers, nc); prec.set(vers, u); tas.pousser(nc, vers); }
     }
   }
   if (!dist.has(N + 1)) {
-    return { ok: false, raison: 'Aucun chemin entre ces deux points : le réseau est coupé entre eux (un tronçon manque, ou deux lignes ne se touchent pas).' };
+    return { ok: false, coupe: true, raison: 'Aucun chemin entre ces deux points : le réseau est coupé entre eux (un tronçon manque, ou deux lignes ne se touchent pas).' };
   }
   const chemin = [];
   for (let u = N + 1; u !== undefined; u = prec.get(u)) chemin.push(u);

@@ -138,6 +138,17 @@
          */
         body.sans-navbar .app-header { display: none; }
         /*
+         * `?bi=1` — Atlas comme composant carte d'une application hote (lib/bi/). La classe n'est posee que par ce
+         * parametre ; sans elle, aucune de ces regles ne s'applique. La page ne garde que la carte et son
+         * attribution (obligatoire) : l'hote porte son propre habillage, sa legende et ses controles.
+         */
+        body.mode-bi .app-header, body.mode-bi .rail, body.mode-bi .module-panel, body.mode-bi .inspector,
+        body.mode-bi #mobile-nav, body.mode-bi #mobile-plus, body.mode-bi #cmd-overlay, body.mode-bi #commandes-hote,
+        body.mode-bi #viewer-controls, body.mode-bi #map-hud, body.mode-bi #legend, body.mode-bi #dock-epingle,
+        body.mode-bi #map-controls-dock, body.mode-bi #selection-bar, body.mode-bi #compass, body.mode-bi #toasts,
+        body.mode-bi #loading, body.mode-bi #story-present,
+        body.mode-bi .maplibregl-ctrl-top-left, body.mode-bi .maplibregl-ctrl-top-right, body.mode-bi .maplibregl-ctrl-bottom-left { display: none !important; }
+        /*
          * Dans l'application, en lecture, la barre est retiree et ses commandes
          * passent sur la carte : le menu principal (qui offre aussi le retour a
          * l'edition) et la recherche. Elles s'effacent quand le dock de
@@ -1870,9 +1881,13 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.13.2" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.14.0" />
 </head>
 <body>
+    <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
+         pendant que app_v7.js se charge (300 a 900 ms, davantage sur un reseau lent), puis disparait. Meme regle que `biDemande` (lib/bi/liaison.js),
+         gardee par tests/bi-premier-affichage.test.js. -->
+    <script>try { var biv = new URLSearchParams(location.search).get('bi'); if (biv === '1' || biv === 'true') document.body.classList.add('mode-bi'); } catch (e) { /* sans classe : comportement d'avant */ }</script>
     <div class="app">
         <!-- HEADER -->
         <header class="app-header" id="app-header">
@@ -2123,6 +2138,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.13.2"></script>
+    <script type="module" src="./app.js?v=1.14.0"></script>
 </body>
 </html>
