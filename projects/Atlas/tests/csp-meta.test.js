@@ -67,7 +67,7 @@ describe('balise meta Content-Security-Policy de index_v7.html', () => {
 /** Les scripts de la page : app_v7.js, lib/ et le moteur de formulaire de grist_forms. */
 function sourcesChargees() {
   const fichiers = [path.join(RACINE, 'app_v7.js')];
-  for (const f of fs.readdirSync(path.join(RACINE, 'lib'))) if (f.endsWith('.js')) fichiers.push(path.join(RACINE, 'lib', f));
+  for (const f of fs.readdirSync(path.join(RACINE, 'lib'), { recursive: true })) if (String(f).endsWith('.js')) fichiers.push(path.join(RACINE, 'lib', String(f)));
   for (const rel of [...HTML.matchAll(/<script[^>]+src="(\.\.\/grist_forms\/[^"?]+)/g)].map((m) => m[1])) {
     fichiers.push(path.join(RACINE, rel));
   }

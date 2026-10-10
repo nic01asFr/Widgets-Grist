@@ -139,7 +139,8 @@ describe('site 1 — scene-loader : l’attribution d’une couche raster d’un
 function sources() {
   const fichiers = [path.join(RACINE, 'app_v7.js')];
   const lib = path.join(RACINE, 'lib');
-  for (const f of fs.readdirSync(lib)) if (f.endsWith('.js')) fichiers.push(path.join(lib, f));
+  // Récursif : un sous-dossier de lib/ (composants ajoutés plus tard) est balayé comme le reste.
+  for (const f of fs.readdirSync(lib, { recursive: true })) if (String(f).endsWith('.js')) fichiers.push(path.join(lib, String(f)));
   return fichiers.map((f) => ({ f: path.relative(RACINE, f).replace(/\\/g, '/'), src: sansCommentaires(fs.readFileSync(f, 'utf8')) }));
 }
 
