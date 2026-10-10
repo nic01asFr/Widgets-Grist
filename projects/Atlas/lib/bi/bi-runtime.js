@@ -13,7 +13,7 @@ import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
-import { executerBatch } from './pont.js';
+import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones } from './icones-etats.js';
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
@@ -37,6 +37,8 @@ const copie = (o) => JSON.parse(JSON.stringify(o));
 export const attributionTexte = (a) => String(a ?? '').slice(0, 300).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 
 export function attacher(map, opts = {}) {
+  // briques présentes dans ce chargement (voir CAPACITES dans pont.js) ; `paquet` : manifeste de données hors ligne lu, ou null
+  const capacites = normaliserCapacites(opts.capacites); const paquet = opts.paquet || null;
   // le thème est la charte résolue (lib/charte/) : défauts d'Atlas, charte de l'hôte, préférence de la personne
   const themes = creerGestionnaire({ theme: opts.theme || null, preferences: opts.preferences !== undefined ? opts.preferences : preferencesDepuisFenetre() });
   let theme = themes.theme;
@@ -275,12 +277,14 @@ export function attacher(map, opts = {}) {
 
   // ---------- API ----------
   const api = {
-    ping: () => ({ version: VERSION, couches: [...couches.keys()] }),
+    ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
       for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {};
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
+        const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
+        if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
           try { await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible }); }
           catch (e) { erreurs[def.id] = String(e && e.message || e); }
@@ -330,7 +334,7 @@ export function attacher(map, opts = {}) {
       if (v === 'auto') { horsLigne.auto = true; return { actif: horsLigne.actif, auto: true }; }
       return basculerHorsLigne(!!v, 'hote', false);
     },
-    batch: (ordres, o) => executerBatch(api, ordres, o),
+    batch: (ordres, o) => executerBatch(apiGardee, ordres, o),
     /**
      * Fond de plan. `jetons` : `principal` (couleur principale du plan monochrome), `fondUni` (son fond) et les jetons du plan ; une couleur invalide est
      * ignorée et signalée. Renvoie { mode, …, ignore, avertissements } : les champs ajoutés ne gênent pas l'hôte qui lit seulement `mode`.
@@ -348,5 +352,6 @@ export function attacher(map, opts = {}) {
     },
   };
   const interne = { emettre, poserSelection, infos: (c, id) => admin.infosUnite(c, id) };
-  return { api, _interne: interne, on: (t, cb) => { if (!ecouteurs.has(t)) ecouteurs.set(t, new Set()); ecouteurs.get(t).add(cb); }, off: (t, cb) => ecouteurs.get(t)?.delete(cb), brancherEmetteur: (fn) => { emetteur = fn; }, _couches: couches, _map: map };
+  const apiGardee = garderApi(api, capacites);
+  return { api: apiGardee, capacites, paquet, _interne: interne, on: (t, cb) => { if (!ecouteurs.has(t)) ecouteurs.set(t, new Set()); ecouteurs.get(t).add(cb); }, off: (t, cb) => ecouteurs.get(t)?.delete(cb), brancherEmetteur: (fn) => { emetteur = fn; }, _couches: couches, _map: map };
 }

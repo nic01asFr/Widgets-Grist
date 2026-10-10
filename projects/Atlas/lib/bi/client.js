@@ -20,15 +20,18 @@
  */
 import { COMMANDES, COMMANDES_0_3, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande } from './pont.js';
 
+/** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
+export const VERSION_CLIENT = 1;
+
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
 
-/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, api. */
+/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, capacite_absente (avec `capacite`), api. */
 export class ErreurBi extends Error {
   constructor(code, message, details) { super(message); this.name = 'ErreurBi'; this.code = code; if (details !== undefined) this.details = details; }
 }
 
-const CODES_PONT = ['forme', 'source', 'origine', 'version', 'commande', 'argument'];
+const CODES_PONT = ['forme', 'source', 'origine', 'version', 'commande', 'argument', 'capacite_absente'];
 /** « version : 0.9 incompatible » -> { code:'version', message:'0.9 incompatible' } ; toute autre erreur est celle de l'API (code 'api'). */
 export function analyserErreur(texte) {
   const m = /^(\w+) : ([\s\S]*)$/.exec(String(texte));
@@ -93,7 +96,11 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
       const a = attente.get(msg.id); if (!a) return;
       attente.delete(msg.id); minuterie.clearTimeout(a.minuteur);
       if (msg.ok) a.resolve(msg.valeur);
-      else { const { code, message } = analyserErreur(msg.erreur); a.reject(new ErreurBi(code, message, { cmd: a.cmd })); }
+      else {
+        const { code, message } = analyserErreur(msg.erreur); const err = new ErreurBi(code, message, { cmd: a.cmd });
+        if (code === 'capacite_absente' && typeof msg.capacite === 'string') err.capacite = msg.capacite.slice(0, 40);
+        a.reject(err);
+      }
       return;
     }
     if (msg.type === 'ready' && msg.charge && msg.charge.runtime === true && signalPret) signalPret(msg.charge);

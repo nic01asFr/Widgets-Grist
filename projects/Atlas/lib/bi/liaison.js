@@ -85,7 +85,7 @@ export function installerPont(rt, { cible, fenetre, autorisees = [], journal = n
   return {
     pont, hotes: liste, refus,
     /** Annonce le composant prêt aux seules origines déclarées (rien n'est envoyé si la liste est vide). */
-    annoncer: (charge = {}) => pont.emettre('ready', { runtime: true, version: VERSION, versions: [...VERSIONS_ACCEPTEES], ...charge }, 'api'),
+    annoncer: (charge = {}) => pont.emettre('ready', { runtime: true, version: VERSION, versions: [...VERSIONS_ACCEPTEES], ...(rt.capacites ? { capacites: [...rt.capacites], paquet: rt.paquet ?? null } : {}), ...charge }, 'api'),
     desinstaller: () => { if (fenetre.removeEventListener) fenetre.removeEventListener('message', ecouteur); rt.brancherEmetteur(() => {}); },
   };
 }

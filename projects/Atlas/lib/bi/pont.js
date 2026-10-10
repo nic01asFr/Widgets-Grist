@@ -54,6 +54,55 @@ export const COMMANDES = Object.freeze({
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
 export const BATCH_MAX = 100;
 
+/**
+ * Capacités d'un chargement du composant (extension additive du contrat 0.3). Une capacité est une brique d'usage ; un chargement
+ * peut n'en contenir que certaines. `ready` les annonce (`capacites`, triées), une commande qui relève d'une brique absente répond
+ * `capacite_absente`. Les autres briques d'Atlas (reseau, 3d, terrain, donnees-ouvertes) n'ont aucune commande dans ce contrat : elles
+ * ne sont pas annoncées, le nom reste réservé.
+ */
+export const CAPACITES = Object.freeze(['edition', 'points', 'socle', 'temps', 'territoires']);
+/** Brique dont dépend chaque commande. `socle` : ce qui vaut pour toute scène (carte, thème, fond, cadrage, couches, filtres, sélection). */
+export const CAPACITE_DE_COMMANDE = Object.freeze({
+  ping: 'socle', setScene: 'socle', setLayerVisibility: 'socle', setFilter: 'socle', select: 'socle', highlight: 'socle', flyTo: 'socle', fitTo: 'socle',
+  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle',
+  setVisual: 'points',
+  setTime: 'temps', play: 'temps', pause: 'temps',
+  setEdition: 'edition', updateFeature: 'edition',
+  addAdminLayer: 'territoires', removeLayer: 'territoires', setChoropleth: 'territoires', setStatistique: 'territoires', drillDown: 'territoires', drillUp: 'territoires', setDrillAuto: 'territoires', setUnitFilter: 'territoires',
+});
+
+/** Erreur d'une commande ou d'un type de couche dont la brique n'est pas dans ce chargement. */
+export class ErreurCapacite extends Error {
+  constructor(capacite, cible) {
+    super('capacite_absente : ' + cible + ' demande la capacité « ' + capacite + ' », absente de ce chargement du composant');
+    this.name = 'ErreurCapacite'; this.code = 'capacite_absente'; this.capacite = capacite;
+  }
+}
+
+/** Liste de capacités valide : sous-ensemble de `CAPACITES`, sans doublon, trié. Une valeur absente donne toutes les capacités ; un nom inconnu lève. */
+export function normaliserCapacites(liste) {
+  if (liste === undefined || liste === null) return [...CAPACITES];
+  if (!Array.isArray(liste)) throw new Error('capacites : tableau attendu');
+  for (const c of liste) if (!CAPACITES.includes(c)) throw new Error('capacite inconnue : ' + String(c).slice(0, 40));
+  return [...new Set(liste)].sort();
+}
+
+/**
+ * Enveloppe une API : une fonction dont la brique est absente lève `ErreurCapacite` AVANT de s'exécuter. Les noms hors `CAPACITE_DE_COMMANDE` passent tels quels.
+ * @param {object} api
+ * @param {string[]} capacites  liste normalisée
+ */
+export function garderApi(api, capacites) {
+  const presentes = new Set(capacites); const garde = {};
+  for (const nom of Object.keys(api)) {
+    const cap = CAPACITE_DE_COMMANDE[nom];
+    garde[nom] = typeof api[nom] === 'function' && cap && !presentes.has(cap)
+      ? () => { throw new ErreurCapacite(cap, nom); }
+      : api[nom];
+  }
+  return garde;
+}
+
 /** Une commande du contrat, en propriété PROPRE : `constructor`, `__proto__`, `toString`... hérités d'Object.prototype ne sont pas des commandes. */
 export const estCommande = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, c);
 
@@ -99,16 +148,16 @@ export async function executerBatch(api, ordres, o = {}) {
   for (let i = 0; i < ordres.length; i++) {
     const ordre = ordres[i];
     if (stop) { resultats.push({ i, ok: false, nonExecute: true }); continue; }
-    let err = null;
+    let err = null, errCapacite = null;
     if (!ordre || typeof ordre !== 'object' || typeof ordre.cmd !== 'string') err = 'ordre ' + i + ' : forme invalide';
     else if (ordre.cmd === 'batch') err = 'ordre ' + i + " : batch ne s'imbrique pas";
     else if (!estCommande(ordre.cmd) || typeof api[ordre.cmd] !== 'function') err = 'ordre ' + i + ' : commande inconnue : ' + ordre.cmd;
     else err = validerArguments(ordre.cmd, Array.isArray(ordre.args) ? ordre.args : []);
     if (!err) {
       try { const valeur = await api[ordre.cmd](...(ordre.args || [])); resultats.push({ i, cmd: ordre.cmd, ok: true, valeur: valeur === undefined ? null : valeur }); ok++; continue; }
-      catch (e) { err = e && e.message ? e.message : String(e); }
+      catch (e) { err = e && e.message ? e.message : String(e); if (e instanceof ErreurCapacite) errCapacite = e; }
     }
-    resultats.push({ i, cmd: ordre && ordre.cmd, ok: false, erreur: err }); ko++; if (arret === 'erreur') stop = true;
+    resultats.push({ i, cmd: ordre && ordre.cmd, ok: false, erreur: err, ...(errCapacite ? { code: 'capacite_absente', capacite: errCapacite.capacite } : {}) }); ko++; if (arret === 'erreur') stop = true;
   }
   return { ok, ko, nonExecutes: resultats.filter((r) => r.nonExecute).length, resultats };
 }
@@ -133,7 +182,7 @@ export function validerCommande(msg, { origine = '', autorisees = [] } = {}) {
 }
 
 export function evenement(type, charge = {}, origine = 'utilisateur') { return { source: SOURCE_RUNTIME, version: VERSION, type, charge, origine }; }
-export function resultat(id, ok, valeurOuErreur) { return ok ? { source: SOURCE_RUNTIME, version: VERSION, type: 'resultat', id, ok: true, valeur: valeurOuErreur } : { source: SOURCE_RUNTIME, version: VERSION, type: 'resultat', id, ok: false, erreur: String(valeurOuErreur) }; }
+export function resultat(id, ok, valeurOuErreur, extra = null) { return ok ? { source: SOURCE_RUNTIME, version: VERSION, type: 'resultat', id, ok: true, valeur: valeurOuErreur } : { source: SOURCE_RUNTIME, version: VERSION, type: 'resultat', id, ok: false, erreur: String(valeurOuErreur), ...(extra || {}) }; }
 export function commande(cmd, args = [], id = null) { return { source: SOURCE_HOTE, version: VERSION, id: id ?? Math.random().toString(36).slice(2, 10), cmd, args }; }
 
 /**
@@ -153,7 +202,7 @@ export function creerPont({ api, envoyer, autorisees = [], surRefus = () => {} }
       if (!v.ok) { envoyer(resultat(msg && msg.id, false, v.code + ' : ' + v.erreur)); return null; }
       depuisApi++;
       try { const valeur = await api[v.cmd](...v.args); const r = resultat(v.id, true, valeur === undefined ? null : valeur); envoyer(r); return r; }
-      catch (e) { const r = resultat(v.id, false, e && e.message ? e.message : e); envoyer(r); return r; }
+      catch (e) { const r = resultat(v.id, false, e && e.message ? e.message : e, e instanceof ErreurCapacite ? { code: e.code, capacite: e.capacite } : null); envoyer(r); return r; }
       finally { depuisApi--; }
     },
     emettre(type, charge = {}, origine) { envoyer(evenement(type, charge, origine ?? (depuisApi > 0 ? 'api' : 'utilisateur'))); },

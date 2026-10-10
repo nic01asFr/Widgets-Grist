@@ -159,5 +159,5 @@ test("runtime : lot d'ordres, écart de version et couches de la 0.2 inchangées
   const r = await api.batch([{ cmd: 'addAdminLayer', args: ['region', { id: 'r', visuel: { source: 'hote', table: { 93: 1 }, niveauTable: 'region' } }] }, { cmd: 'setChoropleth', args: ['r', { classes: 2 }] }, { cmd: 'getLegend', args: ['r'] }]);
   assert.deepEqual([r.ok, r.ko], [3, 0]); assert.equal(r.resultats[2].valeur.classes.length, 1); // une seule valeur : une seule classe
   const e = await api.batch([{ cmd: 'setChoropleth', args: ['inconnue', {}] }, { cmd: 'ping' }]); assert.deepEqual([e.ok, e.ko, e.nonExecutes], [0, 1, 1]);
-  assert.deepEqual(Object.keys(api.ping()), ['version', 'couches']); assert.equal(api.ping().version, '0.3');
+  assert.deepEqual(Object.keys(api.ping()), ['version', 'couches', 'capacites', 'paquet']); assert.equal(api.ping().version, '0.3');
 });
