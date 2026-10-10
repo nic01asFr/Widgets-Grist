@@ -37,6 +37,8 @@ export function installerClavier(rt, { conteneur, document: doc = globalThis.doc
     }
     return c;
   }
+  // La clé métier d'une entité : le code d'une unité administrative, ou la propriété que la couche déclare par `cle`.
+  const cleDe = (c, id) => (c.admin ? id : (c.def.cle ? c.parId.get(id)?.properties?.[c.def.cle] : undefined));
   const poserFocus = (c, id, actif) => { try { rt._map.setFeatureState({ source: 'bi-src-' + c.id, id }, c.admin ? { hover: actif } : { highlight: actif }); } catch (err) { /* source absente */ } };
   function aller(action) {
     const c = charger(); if (!c) return annoncer('Aucune couche à parcourir.');
@@ -46,13 +48,13 @@ export function installerClavier(rt, { conteneur, document: doc = globalThis.doc
     const r = e.rows[e.index]; let texte;
     if (c.admin) { const m = c.admin.modele; const u = m && m.parUnite.get(id); texte = phraseUnite(r, { rang: r.rang, total: m ? m.renseignees : null, classe: u ? u.classe : null, nClasses: m ? m.classes.length : null, unite: m ? m.unite : '', fmt: (v) => formaterNombre(v) }); }
     else texte = phrasePoint(r.props, { rang: e.index + 1, total: e.codes.length });
-    annoncer(texte); interne.emettre('hover', c.admin ? { layer: c.id, featureId: id, ...interne.infos(c, id), clavier: true } : { layer: c.id, featureId: id, clavier: true }, 'utilisateur');
+    annoncer(texte); interne.emettre('hover', { layer: c.id, featureId: id, key: cleDe(c, id), ...(c.admin ? interne.infos(c, id) : {}), clavier: true }, 'utilisateur');
     return texte;
   }
   function selectionner() {
     const c = e.couche; if (!c || e.index < 0) return annoncer('Aucun élément en focus : n pour commencer.');
     const id = e.codes[e.index]; interne.poserSelection(c, id);
-    interne.emettre('select', { layer: c.id, featureId: id, key: c.admin ? id : (c.def.cle ? c.parId.get(id)?.properties?.[c.def.cle] : undefined), ...(c.admin ? interne.infos(c, id) : {}), clavier: true }, 'utilisateur');
+    interne.emettre('select', { layer: c.id, featureId: id, key: cleDe(c, id), ...(c.admin ? interne.infos(c, id) : {}), clavier: true }, 'utilisateur');
     return annoncer('Sélectionné : ' + (c.admin ? (c.parId.get(id)?.properties?.nom || id) : id) + '.');
   }
   function agir(action) {

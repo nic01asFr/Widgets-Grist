@@ -57,6 +57,7 @@ test('clavier : parcours des points d\'une couche, annonce, sélection et évén
   touche('n'); assert.equal(clav.etat().courante, 2); assert.equal(map.etats.get('1').highlight, false, 'le focus quitte le précédent');
   touche('Enter'); const sel = evts.filter((e) => e.type === 'select').at(-1); assert.equal(sel.origine, 'utilisateur'); assert.equal(sel.charge.featureId, 2); assert.equal(sel.charge.key, 'B'); assert.equal(sel.charge.clavier, true);
   assert.ok(evts.some((e) => e.type === 'hover' && e.charge.clavier && e.origine === 'utilisateur'));
+  assert.equal(evts.filter((e) => e.type === 'hover' && e.charge.clavier).at(-1).charge.key, 'B', 'le survol au clavier porte la clé comme la sélection');
   touche('Escape'); assert.equal(evts.filter((e) => e.type === 'select').at(-1).charge.layer, null);
   touche('?'); assert.match(clav.etat().derniere, /Navigation de la carte/);
   const avant = evts.length; touche('x'); touche('N'); assert.ok(evts.length > avant, 'N majuscule accepté'); clav.desinstaller();
