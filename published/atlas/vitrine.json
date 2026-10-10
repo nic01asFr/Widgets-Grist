@@ -378,7 +378,11 @@
         "images": [
           {
             "image": "cas-tournee.jpg",
-            "legende": "Le contexte « Luminaires à remplacer » : la ligne de la tournée et la liste des objets dans l’ordre du parcours."
+            "legende": "Sur téléphone, le contexte « Luminaires à remplacer » : la ligne de la tournée de 1,8 km, et la pastille qui la démarre."
+          },
+          {
+            "image": "cas-tournee-bulle.jpg",
+            "legende": "Après « Démarrer la tournée » : le premier des 24 ouvrages, avec ses flèches ‹ 1 / 24 › vers le suivant."
           }
         ]
       },
