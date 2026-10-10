@@ -28,12 +28,16 @@ Familles de `lib/` (état du 02/10/2026) :
 |---|---|
 | Scène et manifeste | `scene-loader`, `scene-externe`, `scene-prefs`, `manifest-binding`, `declarative-style`, `controls`, `viewer-controls`, `story`, `recit-cles`, `contextes`, `trajet` |
 | Grist (lecture, écriture, droits) | `grist-adapter`, `grist-sync`, `grist-rows`, `grist-bool`, `geo-tables`, `schema-grist`, `atlas-tables`, `table-reference`, `droits-tables`, `data-client`, `view-mode`, `posture`, `exposition` |
-| Fiche, formulaires, relevé | `fiche-formulaire`, `formulaire-atlas.css`, `saisie-objet`, `releve`, `ouvrir-objet`, `objets-liste`, `bulle-objet` |
+| Fiche, formulaires, relevé | `fiche-formulaire`, `champ-formulaire`, `formulaire-atlas.css`, `saisie-objet`, `releve`, `ouvrir-objet`, `objets-liste`, `bulle-objet` |
 | Géométrie et dessin | `geometrie-saisie`, `nouvelle-couche`, `wkt`, `point-fallback`, `volume-relief`, `terrain-base`, `viewport` |
 | Objets 3D et catalogue | `model-layer`, `catalogue-objets`, `modele-id`, `palette-objets`, `gltf-chargeur`, `parametres-objet`, `parametres-figer` |
 | Éclairage et soleil | `eclairage-profil`, `eclairage-rendu`, `luminaires-three`, `facades-eclairees`, `nuit-rendu`, `qualite-eclairage`, `soleil`, `arc-solaire`, `horloge-scene` |
 | Hôte, interface, import | `hote`, `hote-ui`, `habillage-carte`, `feuille-mobile`, `edge-scroll`, `layer-order`, `ouvrir-fichier`, `osm-requete`, `vue-import`, `sources-import`, `import-lots`, `import-ign`, `import-ign-session`, `import-ign-couche`, `vue-import-ign`, `provenance-couche`, `basemap-layers`, `decouverte`, `graine`, `html` |
 | Composant carte BI (sous-dossier `lib/bi/`) | `acces-carte` (point d'accès à la carte, dans `lib/`) ; dans `lib/bi/` : `bi-runtime`, `pont`, `liaison`, `montage`, `client`, `atlas-bi-element`, `agregats`, `echelles`, `legende`, `lecture-temps`, `fond`, `fond-plan`, `clavier`, `clavier-runtime`, `repli`, `icones-etats`, `admin*`, `choroplethe`, `donnees/` |
+| Itinéraire et réseau | `itineraire`, `cap-position`, `tournee` (tracé sur un réseau, sens uniques BD TOPO et OSM, plus court chemin, cap du point bleu, tournée d'un contexte) ; dans `lib/reseau/` (bibliothèques BD TOPO, pures, seul `wfs-bdtopo` est branché, à l'import IGN) : `wfs-bdtopo`, `graphe-routier`, `calage`, `confiance`, `confiance-modele`, `filiation`, `reperes`, `geo`, `itineraire-geoplateforme`, `mesures-trace` |
+| Charte graphique (sous-dossier `lib/charte/`) | `schema`, `couleurs`, `defauts`, `derivation`, `heritage`, `registre`, `resolution`, `verification`, `compat` |
+| Composant BI, compléments (sous-dossier `lib/bi/`) | `client-hote`, `style-polygone`, `theme-charte`, `voile`, `admin`, `admin-runtime`, `admin-sources`, `admin-referentiel` (`client-hote` est GÉNÉRÉ par `tools/generer-client-hote.mjs` : ne pas l'éditer) |
+| Autres | `classes`, `creer-document`, `export-formats`, `import-formats`, `grappes`, `historique-apparence`, `hors-ligne`, `revue-selection`, `scene-locale`, `toast` |
 
 > **`projects/Atlas/app.js` sur `origin/main` — ne pas écraser.**
 > Cette entrée pré-v7 (3 110 lignes) porte des fonctionnalités **absentes de la
@@ -3164,6 +3168,18 @@ exécutait un script dans l'origine d'Atlas, et dans l'APK ce script lisait la c
 sans avoir retiré les gestionnaires en ligne ; supposer que MapLibre assainit l'attribution (il laisse passer `<iframe srcdoc>`, `<form>`, `<base>`, `<link>`, `<meta refresh>`, `<object>`).
 Contrôle en navigateur de la 1.13.2 : scène hostile servie par un autre port, aucun script exécuté, attribution nettoyée, lien légitime conservé, nom hostile en texte littéral.
 
+## Une fonctionnalité n'est finie que documentée, présentée et testée (règle du 10/10/2026)
+
+Chaque fonctionnalité ou correctif qui se voit d'une personne (utilisateur, auteur de scène, application hôte) ne se commite pas seule. Liste à parcourir **avant** de promouvoir :
+
+1. **Test** : un test qui échoue sans le changement (`node --test projects/Atlas/tests/*.test.js`) ; pour la publication, le rejeu navigateur `node projects/Atlas/essais-integration/validation/scripts/rejouer.mjs pub publication` sur la publication simulée.
+2. **Documentation technique** : le module dans la carte des modules ci-dessus (un test échoue sinon), le guide de l'hôte (`docs/EXPLOITATION-EXTERNE-BI.md`) et le contrat (`docs/CONTRAT-CARTE-BI.md`) pour tout ce qui touche le composant, un document dédié pour une famille de fonctions (`docs/IMPORT-IGN.md` en est le modèle).
+3. **Vitrine** (`published/atlas/vitrine.json`, jamais `published/w/atlas/` à la main) : une entrée du `journal`, le résumé `statut.texte` (« Version X : … ») et, si la fonction est nouvelle pour l'usage, une carte avec capture. Écrite **par ce que la personne fait**, pas comme une fonctionnalité technique. Ensuite `node scripts/generate-vitrine.js`.
+4. **Journal des versions** : `CHANGELOG.md` (versions, contrat, empreinte du client en un fichier).
+5. **Promotion** : `node scripts/promote-atlas.js` après avoir monté la version dans `published/atlas/package.json` ; remettre `published/atlas/vendor/grist_forms` tel quel (le moteur de formulaires vendorisé ne bouge pas avec une publication d'Atlas) ; ne garder du régénéré que la page d'Atlas.
+
+Le test `tests/doc-a-jour.test.js` garde l'essentiel : version, entrée de journal, résumé de statut, journal des versions, images de la vitrine, page générée et carte des modules vont ensemble.
+
 ## Composant carte BI — Atlas exploité depuis une application externe (09/10/2026)
 
 `?bi=1` fait d'Atlas un composant de carte : une application hôte l'embarque en iframe, envoie des commandes (`setScene`, `setFilter`, `addAdminLayer`, `batch`…) et reçoit des événements (`select`, `filter`, `drill`…) par `postMessage`. Contrat : `docs/CONTRAT-CARTE-BI.md` (0.3). Guide du développeur de l'hôte : `docs/EXPLOITATION-EXTERNE-BI.md`. Démonstration : `demos/hote-bi/` (données synthétiques).
@@ -3217,6 +3233,3 @@ Un bouton **IGN** à côté d'**OSM** (panneau Couches, et la palette de command
 - **La provenance est dans `couche.style.provenance`** (source, jeu, licence, attribution, édition, emprise) : c'est ce qu'Atlas enregistre avec le projet et l'apparence. L'attribution de la carte est du **texte seul** (MapLibre l'écrit avec `innerHTML`, une provenance vient d'un fichier). L'édition annoncée par le service (`EDITION_ANNONCEE`) est une constante datée à relever de nouveau ; le WFS a un trimestre de retard sur le jeu téléchargeable.
 - **Fusion avec `atlas/securite-attribution`** : elle impose `attributionSure()` à toute attribution passée à MapLibre. `optionsSourceGeojson(data, attribution)` (`lib/terrain-base.js`) reçoit un texte déjà réduit par `attributionDe`, et le balayage de ses tests ne le voit pas (forme abrégée) ; à la fusion, y envelopper la valeur dans `attributionSure`.
 
-## Tunnels et ponts : suivre le tracé, se joindre aux portails, ne rien raccorder en passant dessous (10/10/2026)
-
-Exigence posée par Nicolas : **un tunnel suit son tracé et rejoint la route de surface à ses entrées et sorties**. Les deux constructeurs de réseau la tiennent, verrouillée par `tests/reseau-tunnels.test.js` : (1) la longueur d'une arête est celle de sa géométrie, pas de la corde ; (2) on ne se connecte qu'aux **extrémités** (exactes à 1e-7 degré dans `lib/reseau/graphe-routier.js`, à 3 m dans `lib/itineraire.js` pour un tracé retouché), donc un tunnel se joint à ses portails ; (3) un tronçon qui en croise un autre sans extrémité commune n'y est **jamais raccordé** (le tunnel passe dessous, un pont dessus). Le niveau (`position_par_rapport_au_sol`) est conservé sur l'arête, pas interprété pour couper le graphe. Le moteur de trafic de `essais-trafic/` fait de même (`tests/tunnel.test.js` : 97 véhicules traversent le tunnel de portail à portail sur 900 s, aucun ne passe à la route croisée, 0 contact). **À ne pas faire** : raccorder des bouts à moins de quelques mètres sans exiger qu'ils soient des extrémités, ou fondre un tronçon de tunnel avec un tronçon de surface. **Pas encore fait** : le dessin 3D d'un tunnel (tracé souterrain, portails visibles) ; aujourd'hui un tunnel s'affiche comme une route.
