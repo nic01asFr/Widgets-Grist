@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.4 — le rendu des véhicules au choix
+
+- **Ajouté** : réglage « Rendu des véhicules » dans la section « Trafic simulé » de « Vue & rendu » : points de loin et 3D de près (défaut, comme en 1.16.3), **modèles 3D seulement** (jamais de points, dès le zoom 13, grossis de loin pour rester visibles) ou points seulement. Modifiable pendant que le trafic roule. Remplace l'interrupteur « Véhicules en 3D » de la 1.16.3 (`traficReglage('vehicules3d', bool)` reste accepté).
+- **Ajouté** : sans modèles 3D disponibles (téléphone en lecture, fichier introuvable), le mode « 3D seulement » montre des points et le dit, au lieu de ne rien montrer.
+- **Ajouté** : phares et feux des véhicules 3D de nuit — deux phares blancs et leur faisceau sur la chaussée, deux feux rouges, avec leurs halos. Ils suivent le soleil de la scène d'Atlas (même règle que les luminaires : du coucher au lever, d'après la date, l'heure, le fuseau et le lieu du module « Soleil »), en fondu de 1,5 s.
+- **Composant BI** : inchangé (contrat 0.3, même client).
+
 ## 1.16.3 — un trafic fluide, orienté, en 3D de près
 
 - **Ajouté** : `lib/trafic-rendu.js`. Les véhicules ne sautent plus cinq fois par seconde : la carte dessine, 30 fois par seconde, une position entre le pas précédent et le pas courant du moteur (position et cap interpolés ; un saut de plus de 12 m n'est pas lissé). Le calcul du moteur ne change pas.
