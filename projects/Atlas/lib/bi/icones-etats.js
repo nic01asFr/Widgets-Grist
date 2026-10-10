@@ -23,11 +23,14 @@ export function creerIcone({ forme, fill, stroke = '#ffffff', largeurTrait = 2.5
   return ctx.getImageData(0, 0, px, px);
 }
 
-/** Ajoute à la carte une image par état. Renvoie la table état -> identifiant d'image. */
-export function ajouterIcones(map, etats, { prefixe = 'bi-ic-', resoudre = (c) => c } = {}) {
+/**
+ * Ajoute à la carte une image par état. Renvoie la table état -> identifiant d'image.
+ * `contourDefaut` : le trait des marqueurs qui n'en déclarent pas (la charte : `marqueurs.contour`, l'encre) ; à défaut, blanc comme avant.
+ */
+export function ajouterIcones(map, etats, { prefixe = 'bi-ic-', resoudre = (c) => c, contourDefaut = null } = {}) {
   const ids = {};
   for (const [cle, e] of Object.entries(etats)) {
-    const id = prefixe + cle; ids[cle] = id; const img = creerIcone({ forme: e.forme, fill: resoudre(e.fill), stroke: resoudre(e.stroke || '#ffffff'), largeurTrait: e.largeurTrait || 2.5 });
+    const id = prefixe + cle; ids[cle] = id; const img = creerIcone({ forme: e.forme, fill: resoudre(e.fill), stroke: resoudre(e.stroke || contourDefaut || '#ffffff'), largeurTrait: e.largeurTrait || 2.5 });
     if (map.hasImage(id)) map.removeImage(id); map.addImage(id, img, { pixelRatio: 2 });
   }
   return ids;
