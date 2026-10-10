@@ -41,7 +41,8 @@ export function creerFond(map, { fetchStyle = (u) => fetch(u).then((r) => r.json
         if (!styleIGN) styleIGN = await fetchStyle(URL_STYLE_IGN);
         const derive = deriverStyleIGN(styleIGN, J); const avant = ancre();
         masquerBase((l) => l.type === 'background' && l.id === 'background'); const bg = base().find((l) => l.type === 'background'); if (bg) peindre(bg, { visibility: 'visible', paint: { 'background-color': J.fond } });
-        for (const [id, s] of Object.entries(derive.sources)) { map.addSource(id, s); ajouts.sources.push(id); }
+        // L'attribution de la source est une mention LITTERALE : le style IGN n'en porte pas, et sans elle la carte n'affichait que « MapLibre ».
+        for (const [id, s] of Object.entries(derive.sources)) { map.addSource(id, { ...s, attribution: '© IGN – Géoplateforme' }); ajouts.sources.push(id); }
         glyphsOrigine = map.getStyle().glyphs; try { map.setGlyphs(derive.glyphs); } catch (e) { /* ancien MapLibre */ }
         for (const c of derive.layers) { map.addLayer(c, avant); ajouts.couches.push(c.id); }
         return { mode: m, couches: derive.layers.length };
