@@ -1632,6 +1632,30 @@ const MAX_3D_INSTANCES = 20000;       // plafond élevé grâce à l'instancing
 const MAX_VEHICULES_3D = 700;
 const VEHICULE_AVANT_Z = (cap) => Math.PI - cap;
 const VEHICULE_AVANT_X = (cap) => Math.PI / 2 - cap;
+// Phares et feux des véhicules, de nuit : par classe, la longueur, l'écart latéral des lampes à l'axe et leur hauteur (mètres).
+const FEUX_VEHICULES = { vl: { longueur: 4.4, ecart: 0.62, hauteur: 0.62 }, pl: { longueur: 10.5, ecart: 0.95, hauteur: 0.85 } };
+const COULEUR_PHARE = [1, 0.93, 0.74], COULEUR_FEU = [1, 0.1, 0.06];
+/** La tache ronde d'un halo (blanc, qui s'éteint sur les bords) : la couleur vient du sommet. */
+function textureHaloFeux() {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), d = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    d.addColorStop(0, 'rgba(255,255,255,1)'); d.addColorStop(0.22, 'rgba(255,255,255,0.6)'); d.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = d; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+}
+/** Le faisceau d'un phare posé sur la chaussée : étroit et lumineux près du véhicule, large et pâle devant ; le haut du canevas est le loin. */
+function textureFaisceauFeux() {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 128;
+    const g = c.getContext('2d');
+    for (let y = 0; y < 128; y++) {
+        const t = y / 127;                                  // 0 loin, 1 près
+        const demi = 7 + (1 - t) * 25, a = Math.pow(t, 1.4) * 0.9;
+        const gr = g.createLinearGradient(32 - demi, 0, 32 + demi, 0);
+        gr.addColorStop(0, 'rgba(255,244,214,0)'); gr.addColorStop(0.5, `rgba(255,244,214,${a})`); gr.addColorStop(1, 'rgba(255,244,214,0)');
+        g.fillStyle = gr; g.fillRect(32 - demi, y, demi * 2, 1);
+    }
+    return new THREE.CanvasTexture(c);
+}
 const MODEL3D_ZOOM_GATE = 11;          // sous ce zoom on cache la 3D si beaucoup d'objets
 /** Zoom auquel MapLibre a fini de passer du globe au plan (mesure : 0 px d'ecart des z12). */
 const GLOBE_MERCATOR_ZOOM = 12;
@@ -2067,13 +2091,51 @@ const Models3D = {
                 const pied = new THREE.Matrix4().makeTranslation(-centre.x, -boite.min.y, -centre.z);
                 classes[k] = { meshes, echelle: d.longueur / long, pied, avant: axeX ? VEHICULE_AVANT_X : VEHICULE_AVANT_Z };
             }
-            this.vehicules = { classes };
+            this.vehicules = { classes, feux: this.vehiculesPreparerFeux(), niveauFeux: 0, tFeux: 0, allumes: null };
             return true;
         })().finally(() => { this._vehiculesEnCours = null; });
         return this._vehiculesEnCours;
     },
+    /**
+     * Les phares (blancs, devant) et les feux (rouges, derrière) des véhicules : des boîtes lumineuses (matériau sans éclairage, elles échappent à la nuit comme
+     * les lampes), un halo par lampe (points qui font toujours face à l'écran, mélange additif), et un faisceau posé sur la chaussée devant chaque véhicule.
+     * Tout est invisible de jour (0 instance).
+     */
+    vehiculesPreparerFeux() {
+        const N = MAX_VEHICULES_3D;
+        const boite = new THREE.BoxGeometry(0.34, 0.16, 0.08);
+        const lampe = (couleur) => { const im = new THREE.InstancedMesh(boite, new THREE.MeshBasicMaterial({ color: new THREE.Color(...couleur), toneMapped: false }), N * 2 * 2); im.count = 0; im.frustumCulled = false; this.scene.add(im); return im; };
+        const phares = lampe(COULEUR_PHARE), feux = lampe(COULEUR_FEU);
+        // halos : 4 lampes par véhicule (2 phares, 2 feux)
+        const pos = new Float32Array(N * 4 * 3), col = new Float32Array(N * 4 * 3);
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage));
+        geo.setDrawRange(0, 0);
+        const matHalo = new THREE.PointsMaterial({ size: 12, sizeAttenuation: false, map: textureHaloFeux(), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+        const halos = new THREE.Points(geo, matHalo); halos.frustumCulled = false; this.scene.add(halos);
+        // faisceaux : un quadrilatère à plat par véhicule (le haut de la texture, le loin, vers -z du plan)
+        const plan = new THREE.PlaneGeometry(1, 1); plan.rotateX(-Math.PI / 2);
+        const matFaisceau = new THREE.MeshBasicMaterial({ map: textureFaisceauFeux(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0 });
+        const faisceaux = new THREE.InstancedMesh(plan, matFaisceau, N); faisceaux.count = 0; faisceaux.frustumCulled = false; faisceaux.renderOrder = 1; this.scene.add(faisceaux);
+        return { phares, feux, halos, matHalo, geo, pos, col, faisceaux, matFaisceau };
+    },
+    /**
+     * Les véhicules ont-ils leurs feux allumés ? **La même règle que les luminaires** (`Eclairage`) : entre le coucher et le lever du soleil de la scène — sa date, son heure,
+     * son fuseau, son lieu (module « Soleil ») — sans profil particulier. Calculé à la minute près et mémorisé : on ne le recalcule pas à chaque image.
+     */
+    vehiculesAllumes() {
+        const t = instantScene(STATE.settings), ctx = { lat: STATE.location.lat, lon: STATE.location.lng, fuseau: fuseauScene(STATE.settings), soleil: Eclairage.soleil };
+        const cle = `${Math.floor(t / 60000)}|${ctx.lat}|${ctx.lon}|${ctx.fuseau}`;
+        const v = this.vehicules;
+        if (v.allumes && v.allumes.cle === cle) return v.allumes.valeur;
+        let valeur = false;
+        try { valeur = !!etatPointLumineux({}, null, [], t, ctx).allume; } catch (e) { valeur = false; }
+        v.allumes = { cle, valeur };
+        return valeur;
+    },
     /** @param {{ lnglat: number[], cap: number, pl: boolean, o: number }[]} liste  véhicules visibles, cap en degrés (0 = nord, sens horaire), o = opacité de fondu */
-    vehiculesMaj(liste) {
+    vehiculesMaj(liste, { echelle = 1 } = {}) {
         if (!this.vehicules || !map || !this.scene) return;
         if (!this.origin) { const c = map.getCenter(); this.setOrigin(c.lng, c.lat); }
         const n = { vl: 0, pl: 0 }, o3 = this._obj, M = this._m4;
@@ -2085,17 +2147,65 @@ const Models3D = {
             const sol = ecartAuSol(this.elevRaw(v.lnglat[0], v.lnglat[1]), this.originElev);
             o3.position.set(lm.x, sol, -lm.y);
             o3.rotation.set(0, c.avant(deg2rad(v.cap)), 0);
-            o3.scale.setScalar(c.echelle * Math.sqrt(v.o));   // un véhicule qui apparaît ou disparaît grandit ou rétrécit
+            o3.scale.setScalar(c.echelle * echelle * Math.sqrt(v.o));   // un véhicule qui apparaît ou disparaît grandit ou rétrécit
             o3.updateMatrix();
             const place = o3.matrix.clone().multiply(c.pied);
             for (const { im, mat } of c.meshes) { M.multiplyMatrices(place, mat); im.setMatrixAt(n[k], M); }
             n[k]++;
         }
         for (const k of Object.keys(this.vehicules.classes)) for (const { im } of this.vehicules.classes[k].meshes) { im.count = n[k]; im.instanceMatrix.needsUpdate = true; }
+        this.vehiculesMajFeux(liste, echelle);
         map.triggerRepaint();
+    },
+    /** Les lampes, halos et faisceaux de cette image : allumés de nuit (règle du soleil d'Atlas), avec un fondu à l'allumage et à l'extinction. */
+    vehiculesMajFeux(liste, echelle) {
+        const v = this.vehicules, f = v.feux; if (!f) return;
+        const maintenant = performance.now(), dt = Math.min(0.25, Math.max(0, (maintenant - (v.tFeux || maintenant)) / 1000)); v.tFeux = maintenant;
+        const cible = this.vehiculesAllumes() ? 1 : 0;
+        v.niveauFeux += Math.sign(cible - v.niveauFeux) * Math.min(Math.abs(cible - v.niveauFeux), dt / 1.5);   // 1,5 s de fondu
+        const niveau = v.niveauFeux;
+        if (niveau < 0.01) { f.phares.count = 0; f.feux.count = 0; f.faisceaux.count = 0; f.geo.setDrawRange(0, 0); return; }
+        const D = Math.PI / 180;
+        let nl = 0, nh = 0, nf = 0;
+        const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), s3 = new THREE.Vector3(), p3 = new THREE.Vector3();
+        for (const veh of liste) {
+            if (!(veh.o > 0.02)) continue;
+            const d = FEUX_VEHICULES[veh.pl ? 'pl' : 'vl'], lm = this.localMeters(veh.lnglat[0], veh.lnglat[1]);
+            const sol = ecartAuSol(this.elevRaw(veh.lnglat[0], veh.lnglat[1]), this.originElev);
+            const cap = veh.cap * D, fx = Math.sin(cap), fz = -Math.cos(cap), rx = Math.cos(cap), rz = Math.sin(cap);
+            const moitie = d.longueur * echelle / 2 - 0.1 * echelle, ecart = d.ecart * echelle, h = d.hauteur * echelle, g = Math.sqrt(veh.o) * echelle;
+            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(g, g, g);
+            // 2 phares devant, 2 feux derrière
+            for (const [sens, cote, couleur, im] of [[1, -1, COULEUR_PHARE, f.phares], [1, 1, COULEUR_PHARE, f.phares], [-1, -1, COULEUR_FEU, f.feux], [-1, 1, COULEUR_FEU, f.feux]]) {
+                const x = lm.x + fx * moitie * sens + rx * ecart * cote, z = -lm.y + fz * moitie * sens + rz * ecart * cote, y = sol + h;
+                p3.set(x, y, z); m4.compose(p3, q, s3);
+                im.setMatrixAt(im === f.phares ? nl++ : nf++, m4);   // chaque InstancedMesh a son propre compte
+                const c = couleur, k = niveau * (sens > 0 ? 1 : 0.85);
+                f.col[nh * 3] = c[0] * k; f.col[nh * 3 + 1] = c[1] * k; f.col[nh * 3 + 2] = c[2] * k;
+                f.pos[nh * 3] = x; f.pos[nh * 3 + 1] = y + 0.03; f.pos[nh * 3 + 2] = z; nh++;
+            }
+        }
+        f.phares.count = nl; f.feux.count = nf; f.phares.instanceMatrix.needsUpdate = true; f.feux.instanceMatrix.needsUpdate = true;
+        f.geo.setDrawRange(0, nh); f.geo.attributes.position.needsUpdate = true; f.geo.attributes.color.needsUpdate = true;
+        // taille des halos en pixels de l'écran : ~12 px à 18, qui suit le zoom
+        const ratio = map.getPixelRatio?.() || window.devicePixelRatio || 1;
+        f.matHalo.size = Math.max(3, Math.min(40, 12 * Math.pow(2, map.getZoom() - 18))) * ratio * (echelle > 1 ? Math.min(2, Math.sqrt(echelle)) : 1);
+        // faisceaux : devant chaque véhicule, posés sur la chaussée
+        let nb = 0;
+        for (const veh of liste) {
+            if (!(veh.o > 0.02)) continue;
+            const d = FEUX_VEHICULES[veh.pl ? 'pl' : 'vl'], lm = this.localMeters(veh.lnglat[0], veh.lnglat[1]);
+            const sol = ecartAuSol(this.elevRaw(veh.lnglat[0], veh.lnglat[1]), this.originElev);
+            const cap = veh.cap * D, dist = (d.longueur / 2 + 3.4) * echelle;
+            e.set(0, -cap, 0); q.setFromEuler(e); s3.set(3.6 * echelle, 1, 6.8 * echelle);
+            p3.set(lm.x + Math.sin(cap) * dist, sol + 0.06, -lm.y - Math.cos(cap) * dist);
+            m4.compose(p3, q, s3); f.faisceaux.setMatrixAt(nb++, m4);
+        }
+        f.faisceaux.count = nb; f.faisceaux.instanceMatrix.needsUpdate = true; f.matFaisceau.opacity = 0.5 * niveau;
     },
     vehiculesEffacer() {
         if (!this.vehicules) return;
+        const f = this.vehicules.feux; if (f) { f.phares.count = 0; f.feux.count = 0; f.faisceaux.count = 0; f.geo.setDrawRange(0, 0); }
         for (const c of Object.values(this.vehicules.classes)) for (const { im } of c.meshes) { im.count = 0; im.instanceMatrix.needsUpdate = true; }
         map?.triggerRepaint();
     },
@@ -8471,7 +8581,10 @@ function htmlTraficVues() {
         <div class="slider-head" style="margin-top:10px"><span class="lbl">Densité</span><span class="val" id="v-trafic-densite">${_traficReglages.densite} véh/km</span></div>
         <input type="range" class="rng" min="2" max="30" step="1" value="${_traficReglages.densite}" oninput="A.traficReglage('densite', this.value)" ${_trafic ? 'disabled' : ''}>
         <div class="toggle-row"><span class="tlabel">Routes à accès restreint</span><div class="toggle ${_traficReglages.acces === 'tous' ? 'on' : ''}" onclick="A.traficReglage('acces', '${_traficReglages.acces === 'tous' ? 'libre' : 'tous'}')" role="switch" tabindex="0" aria-checked="${_traficReglages.acces === 'tous'}"></div></div>
-        <div class="toggle-row"><span class="tlabel">Véhicules en 3D (de près)</span><div class="toggle ${_traficReglages.vehicules3d ? 'on' : ''}" onclick="A.traficReglage('vehicules3d', ${!_traficReglages.vehicules3d})" role="switch" tabindex="0" aria-checked="${_traficReglages.vehicules3d}"></div></div>
+        <label class="input-label" style="margin-top:10px">Rendu des véhicules</label>
+        <select class="input" onchange="A.traficReglage('rendu', this.value)">
+            ${[['auto', 'Points de loin, 3D de près'], ['3d', 'Modèles 3D seulement'], ['points', 'Points seulement']].map(([k, l]) => `<option value="${k}" ${_traficReglages.rendu === k ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
         <button class="btn ${_trafic ? 'btn-soft' : 'btn-dark'} btn-full" style="margin-top:8px" onclick="A.traficBasculer()">${_trafic ? '■ Arrêter le trafic' : '▶ Animer le trafic'}</button>
         ${etat ? `<div class="hint" style="margin-top:6px">${etat.vehicules} véhicules sur ${etat.reseau.troncons} tronçons · trafic <b>simulé</b></div>` : ''}${motifs}
     </div>`;
@@ -14336,7 +14449,8 @@ function openCmd() {
  */
 let _trafic = null;   // { instance, layerId, nom } pendant que le trafic tourne
 /** Les réglages du trafic, gardés d'une mise en route à l'autre (module « Vue & rendu »). */
-const _traficReglages = { densite: 8, acces: 'libre', layerId: null, vehicules3d: true };
+const _traficReglages = { densite: 8, acces: 'libre', layerId: null, rendu: 'auto' };   // rendu : 'auto' | '3d' | 'points'
+let _traficRepli3d = false;   // les modèles 3D n'ont pas pu être chargés : des points, même en mode « 3D seulement »
 let _traficSortant = null;   // l'instance en train de s'effacer en fondu : retirée tout de suite si on relance le trafic
 
 /** Toutes les couches de lignes visibles qui ressemblent à des routes (sens BD TOPO ou classe OSM) : de quoi choisir celle à animer. */
@@ -16316,20 +16430,25 @@ const A = {
         try {
             const m = await import('./lib/trafic-couche.js?v=20261012a');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
-            await (_traficReglages.vehicules3d ? Models3D.vehiculesPreparer().catch(() => false) : null);
+            _traficRepli3d = false;
+            if (_traficReglages.rendu !== 'points') {
+                const pret = await Models3D.vehiculesPreparer().catch(() => false);
+                if (!pret && _traficReglages.rendu === '3d') { _traficRepli3d = true; showToast('Les modèles 3D ne sont pas disponibles ici : le trafic est montré en points', 'warning'); }
+            }
             // `disponible` reprépare les véhicules quand la scène 3D a été refaite (changement de fond de carte) : les points tiennent la place en attendant
             let dernierEssai3d = 0;
             const rendu3d = {
                 disponible: () => {
-                    if (!_traficReglages.vehicules3d) return false;
+                    if (_traficReglages.rendu === 'points' || _traficRepli3d) return false;
                     if (Models3D.vehicules) return true;
                     const t = performance.now();
                     if (!Models3D._vehiculesEnCours && t - dernierEssai3d > 2000) { dernierEssai3d = t; Models3D.vehiculesPreparer().catch(() => false); }
                     return false;
                 },
-                maj: (l) => Models3D.vehiculesMaj(l), effacer: () => Models3D.vehiculesEffacer(),
+                maj: (l, o) => Models3D.vehiculesMaj(l, o), effacer: () => Models3D.vehiculesEffacer(),
             };
-            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, rendu3d, ...opts,
+            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, rendu3d,
+                modeRendu: () => (_traficRepli3d || Models3D._disabled || CONFIG.light3d ? 'points' : _traficReglages.rendu), ...opts,
                 surFin: () => { if (_traficSortant === instance) _traficSortant = null; },
                 surErreur: (err) => { console.warn('[Atlas] trafic arrêté :', err); showToast('Le trafic simulé s’est arrêté : le moteur a échoué sur ce réseau', 'warning'); A.traficArreter(); } });
             const etat = instance.demarrer();
@@ -16355,7 +16474,8 @@ const A = {
     traficReglage(cle, valeur) {
         if (cle === 'densite') { _traficReglages.densite = Math.max(2, Math.min(30, Math.round(+valeur) || 8)); const v = $('v-trafic-densite'); if (v) v.textContent = `${_traficReglages.densite} véh/km`; return; }
         if (cle === 'acces') _traficReglages.acces = valeur === 'tous' ? 'tous' : 'libre';
-        if (cle === 'vehicules3d') _traficReglages.vehicules3d = valeur === true || valeur === 'true';
+        if (cle === 'rendu') { _traficReglages.rendu = ['auto', '3d', 'points'].includes(valeur) ? valeur : 'auto'; _traficRepli3d = false; }
+        if (cle === 'vehicules3d') _traficReglages.rendu = valeur === true || valeur === 'true' ? 'auto' : 'points';   // l'ancien interrupteur de la 1.16.3
         if (cle === 'layerId') _traficReglages.layerId = valeur || null;
         if (STATE.currentModule === 'vues') renderVues();
     },
