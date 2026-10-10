@@ -41,13 +41,19 @@ export function negocierVersion(versionsClient, versionsComposant) {
   return null;
 }
 
+/** Vrai si `o` est exactement l'origine qu'un navigateur fournit dans `event.origin` (schéma http(s), minuscules, sans chemin ni port par défaut). */
+function origineCanonique(o) {
+  if (typeof o !== 'string' || !/^https?:\/\//.test(o)) return false;
+  try { return new URL(o).origin === o; } catch { return false; }
+}
+
 /**
  * Transport pour une iframe : écoute `fenetre`, n'accepte que les messages dont la source est la fenêtre de l'iframe ET
  * dont l'origine est exactement `origineComposant`, et n'envoie qu'à cette origine.
  * @param {{fenetre:Window, cadre:{contentWindow:Window}, origineComposant:string, surRejet?:(raison:string, e:object)=>void}} o
  */
 export function transportFenetre({ fenetre, cadre, origineComposant, surRejet = () => {} }) {
-  if (!origineComposant || origineComposant === '*' || origineComposant === 'null') throw new ErreurBi('origine', 'origineComposant exacte requise (ni joker, ni origine opaque « null ») : « https://atlas.example »');
+  if (!origineCanonique(origineComposant)) throw new ErreurBi('origine', 'origineComposant exacte requise : une origine http(s) sans chemin, en minuscules, ni joker ni « null » (par exemple « https://atlas.example »)');
   return {
     envoyer(msg) { const w = cadre.contentWindow; if (!w) throw new ErreurBi('deconnecte', "l'iframe n'est pas chargée"); w.postMessage(msg, origineComposant); },
     ecouter(rappel) {

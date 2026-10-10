@@ -157,3 +157,13 @@ test('client : fonctions pures de négociation et d\'analyse d\'erreur', () => {
   assert.deepEqual(analyserErreur('couche inconnue : a'), { code: 'api', message: 'couche inconnue : a' });
   assert.deepEqual(VERSIONS_CLIENT, ['0.3', '0.2']);
 });
+
+test('transportFenetre : refuse une origine qui n\'est pas une origine canonique http(s) (chemin, schema, casse, port par defaut)', () => {
+  for (const mauvaise of ['https://x/chemin', 'https://x/', 'ftp://x', 'HTTPS://X', 'https://x:443', 'https://x?q=1', 'https://x#f', 'https://', 'x', 'javascript:alert(1)', 'https://x y', ' https://x', 'data:text/html,a']) {
+    assert.throws(() => transportFenetre({ fenetre: {}, cadre: {}, origineComposant: mauvaise }), (e) => e instanceof ErreurBi && e.code === 'origine', mauvaise);
+  }
+  for (const bonne of ['https://atlas.example', 'http://localhost:3002', 'https://x:8443', 'https://nic01asfr.github.io']) {
+    assert.doesNotThrow(() => transportFenetre({ fenetre: {}, cadre: {}, origineComposant: bonne }), bonne);
+  }
+  assert.throws(() => transportFenetre({ fenetre: {}, cadre: {}, origineComposant: 42 }), (e) => e.code === 'origine');
+});
