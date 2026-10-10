@@ -3516,7 +3516,9 @@ function applyInitialViewport(bounds) {
 
 /** Applique une visibilité aux couches du fond d'un type donné. */
 function setBasemapLayersVisibility(type, vis) {
-    for (const id of basemapLayerIds(map.getStyle().layers, type)) {
+    const couches = map?.getStyle()?.layers; // le style n'est pas toujours chargé quand le projet se restaure : on n'interrompt pas la restauration
+    if (!couches) return;
+    for (const id of basemapLayerIds(couches, type)) {
         try { map.setLayoutProperty(id, 'visibility', vis); } catch (e) { /* couche retirée */ }
     }
 }
