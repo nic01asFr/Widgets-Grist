@@ -32,7 +32,7 @@ export function fusionner(base, ajout) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------- jetons
-const JETON = /^jeton:([A-Za-z0-9_-]{1,40})$/;
+const JETON = /^jeton:([A-Za-z0-9_][A-Za-z0-9_.-]{0,39})$/;
 /** Jetons d'une charte : les graines (`jeton:principal`, `jeton:fond`, `jeton:succes`…) puis les jetons propres de la charte. */
 export function jetonsDe(charte) {
   const g = charte.graines || {}, sortie = {};

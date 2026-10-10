@@ -21,7 +21,7 @@ Une charte est un objet JSON. Tout est facultatif : ce qui manque est **dérivé
 | `nom` | texte | 60 caractères, `<` et `>` retirés |
 | `base` | `"atlas"` ou `"contraste-eleve"` : charte nommée de départ | défaut `atlas` |
 | `graines` | `principal`, `secondaire`, `encre`, `fond`, `succes`, `alerte`, `erreur`, `information` | couleurs **opaques** |
-| `jetons` | `{ nom: couleur }`, référencés par `jeton:<nom>` dans un style | 64 jetons, nom `[A-Za-z0-9_-]{1,40}` |
+| `jetons` | `{ nom: couleur }`, référencés par `jeton:<nom>` dans un style | 64 jetons, nom `[A-Za-z0-9_][A-Za-z0-9_.-]{0,39}` (les points sont admis : `etat.ok`) |
 | `donnees` | `sequentielles` (rampes nommées, 2 à 24 couleurs, 16 rampes), `sequentielleDefaut`, `divergente` (3 à 25 couleurs, nombre impair conseillé), `qualitative` (2 à 24), `sansDonnee`, `selection`, `halo`, `survol`, `contour` | rampes et aplats opaques ; `survol` et `contour` admettent la transparence |
 | `fond` | `mode` (`atlas`, `voile`, `plan`, `plan-ign`, `photo`, `uni`), `principal`, `intensites` (`vert`, `bati`, `eau`, `filet`, `limite`, de 0 à 1), `vegetation` (`"monochrome"` ou une couleur), `lavis` (`couleur`, `opacite`), `plan` (jetons du plan : `fond`, `vert`, `eau`, `bati`, `route`, `filet`, `texte`, `texte2`, `halo`, `limite`, `info`) | |
 | `marqueurs` | `formes` (`cercle`, `carre`, `losange`, `triangle` par état), `contour` | |
@@ -164,7 +164,7 @@ Les valeurs de couleur d'une scène ou d'un hôte sont un **vecteur d'injection*
 1. **Liste blanche stricte** (`analyserCouleur`) : `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `hsl()`, `hsla()` ; expressions régulières sans quantificateur illimité ni alternance imbriquée, longueur bornée à 48 caractères **avant** toute expression régulière. Jamais `url()`, `var()`, `expression`, `calc()`, `color-mix()`, nom de couleur, HTML.
 2. **Reconstruction champ par champ** : la charte est reconstruite à partir d'une table de règles ; seules les clés connues survivent ; la sortie ne contient que chaînes, nombres et objets simples.
 3. **Tailles bornées** : couleurs par liste (24), rampes (16), divergente (25), jetons (64), palettes (32), noms (40), chaînes (2 048), éléments de l'arbre reçu (4 000), profondeur (10), clés d'un objet (200). `verifierTaille` borne l'arbre **sans le sérialiser** (un graphe circulaire ne fait pas échouer) ; `lib/bi/pont.js` l'applique à `setTheme` et aux jetons de `setFond` avant tout traitement.
-4. **Noms libres sûrs** : `[A-Za-z0-9_-]`, jamais `__proto__`, `constructor`, `prototype` ; un jeton est cherché dans une propriété PROPRE (`jeton:constructor` donne un gris).
+4. **Noms libres sûrs** : `[A-Za-z0-9_.-]` (ni point ni tiret en première position), jamais `__proto__`, `constructor`, `prototype` ; un jeton est cherché dans une propriété PROPRE (`jeton:constructor` donne un gris).
 5. **Une valeur invalide est ignorée et signalée**, jamais corrigée ni appliquée ; la charte reste utilisable. Une référence `jeton:…` inconnue ou mal formée donne un gris et ne parvient jamais à la carte comme texte.
 6. **Polices** : une liste sûre de piles système ; aucune pile libre, aucune police distante.
 7. **Pas de chargement par adresse** : une charte ne se charge ni par URL ni par `fetch`.

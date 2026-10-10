@@ -8,7 +8,7 @@
  *    ni HTML ; les rampes et les graines sont OPAQUES (la translucidité d'une couche est son `opacite`) ;
  *  - toute liste, tout dictionnaire et toute chaîne est borné (voir `LIMITES`) ;
  *  - une valeur invalide est IGNORÉE et signalée (`{ chemin, code, valeur }`) ; le reste de la charte reste utilisable ;
- *  - les noms libres (jetons, rampes) sont limités à `[A-Za-z0-9_-]` et ne peuvent pas être `__proto__`, `constructor` ni `prototype`.
+ *  - les noms libres (jetons, rampes) sont limités à `[A-Za-z0-9_.-]` (un point ou un tiret n'est pas un premier caractère) et ne peuvent pas être `__proto__`, `constructor` ni `prototype`.
  * La sortie ne contient que des chaînes, des nombres et des objets simples : elle se sérialise sans perte.
  *
  * Le schéma JSON équivalent est `charte.schema.json` (testé contre les exemples et contre ce module).
@@ -40,7 +40,8 @@ export const LIMITES = Object.freeze({
   noeuds: 4000, profondeur: 10, chaine: 2048, liste: 1000, cles: 200,
 });
 
-const NOM_LIBRE = /^[A-Za-z0-9_-]{1,40}$/;
+// Un nom libre peut porter des points (`etat.ok`, `carte.fond`) : c'est la forme des jetons de conception (DTCG) et celle que le thème 0.3 admettait.
+const NOM_LIBRE = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,39}$/;
 const RESERVES = new Set(['__proto__', 'constructor', 'prototype']);
 const ID_PALETTE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null);
