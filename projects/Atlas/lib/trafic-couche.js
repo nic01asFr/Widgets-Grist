@@ -16,6 +16,7 @@
 import { Trafic } from './trafic/index.js?v=20261011a';
 import { sensOsm } from './itineraire.js?v=20261002a';
 import { classerTroncon } from './modes-voie.js?v=20261011b';
+import { creerInterpolateur, niveauDeDetail, visibles } from './trafic-rendu.js?v=20261011c';
 
 /** Véhicules par km de route : un trafic ambiant lisible, pas un embouteillage. */
 export const DENSITE_DEFAUT = 8;
@@ -111,6 +112,22 @@ export function versLngLat(centre, x, y) {
   return [centre[0] + x / (111320 * Math.cos((centre[1] * Math.PI) / 180)), centre[1] + y / 111320];
 }
 
+/** Des [lng, lat] vers les mètres du repère local du moteur (l'inverse de `versLngLat`). */
+export function versMetres(centre, lng, lat) {
+  return [(lng - centre[0]) * 111320 * Math.cos((centre[1] * Math.PI) / 180), (lat - centre[1]) * 111320];
+}
+
+/** Les véhicules du moteur, en mètres locaux : { id, x, y, cap, pl }. */
+export function positions(sim) {
+  const out = [];
+  for (const a of sim.agents) {
+    const p = sim.position(a);
+    if (!p || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) continue;
+    out.push({ id: a.id, x: p[0], y: p[1], cap: Number.isFinite(p[2]) ? p[2] : 0, pl: !!a.pl });
+  }
+  return out;
+}
+
 /** L'état instantané du moteur en points GeoJSON : un par véhicule, avec sa classe (`pl`) et son cap en degrés. */
 export function instantane(sim, centre) {
   const features = [];
@@ -125,13 +142,20 @@ export function instantane(sim, centre) {
 /**
  * Lance un trafic simulé sur des entités de routes.
  * @param {{ carte: object, entites: object[], densite?: number, graine?: number, vitesse?: number, idSource?: string,
- *   acces?: 'libre'|'tous', planifier?: Function, annuler?: Function, moteur?: object, surErreur?: Function }} o
+ *   acces?: 'libre'|'tous', planifier?: Function, annuler?: Function, moteur?: object, surErreur?: Function,
+ *   planifierImage?: Function|null, annulerImage?: Function, maintenant?: Function, rendu3d?: object|null, surFin?: Function }} o
  *   `surErreur(erreur)` : appelée une fois quand le moteur échoue trois images de suite ; le trafic est alors arrêté (une exception à chaque image figerait la carte)
  *   `acces` : `libre` (défaut) ne fait rouler que les routes ouvertes à la circulation ; `tous` ajoute les routes à accès restreint
  *   `vitesse` : 1 = temps réel ; 4 = quatre pas du moteur par image (un trafic accéléré, plus coûteux)
+ *   `planifier` / `annuler` : la minuterie du MOTEUR (un pas toutes les `CADENCE_MS`) ; `planifierImage` / `annulerImage` : la boucle de DESSIN
+ *   (`requestAnimationFrame` par défaut), qui montre une position entre deux pas du moteur ; sans elle (tests, Node), le dessin suit chaque pas, sans lissage
+ *   `rendu3d` : { disponible(): boolean, maj(vehicules), effacer() } ; dessine des modèles 3D à partir du zoom `ZOOM_3D` quand il est disponible
+ *   `surFin()` : appelée quand le dessin est entièrement retiré (après un arrêt en douceur)
  * @returns {{ demarrer: Function, arreter: Function, pause: Function, reprendre: Function, etat: Function }}
  */
-export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic, surErreur = null } = {}) {
+export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine = 1, vitesse = 1, acces = 'libre', idSource = ID_SOURCE, planifier = setInterval, annuler = clearInterval, moteur = Trafic, surErreur = null,
+  planifierImage = typeof requestAnimationFrame === 'function' ? (f) => requestAnimationFrame(f) : null, annulerImage = typeof cancelAnimationFrame === 'function' ? (i) => cancelAnimationFrame(i) : () => {},
+  maintenant = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()), rendu3d = null, surFin = null } = {}) {
   const { troncons, ecartes, motifs } = adapterTroncons(entites, { acces });
   if (!troncons.length) throw new Error('aucune route ouverte à la circulation dans cette couche' + (ecartes ? ` (${ecartes} tronçons écartés : ${Object.entries(motifs).map(([m, n]) => `${n} ${m.replace('_', ' ')}`).join(', ')})` : ' (il faut des lignes : BD TOPO, routes OpenStreetMap)'));
   const centre = centreDe(troncons);
@@ -140,7 +164,9 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
   const N = nombreDeVehicules(longueurKm(troncons, centre), densite);
   const sim = moteur.creer(graphe, { graine, N });
   const pas = Math.max(1, Math.min(8, Math.round(vitesse)));
-  let minuterie = null, actif = false, pose = false;
+  const lisse = typeof planifierImage === 'function';   // dessin lissé entre deux pas, à chaque image de la carte
+  const interp = creerInterpolateur();
+  let minuterie = null, actif = false, pose = false, boucle = null, sortie = false, niveau = null, tDessin = -Infinity, images = 0;
 
   function poser() {
     if (pose) return;
@@ -149,17 +175,67 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
       'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 1.6, 16, 3.5, 19, 7],
       // une voiture blanche cerclée de sombre, un poids lourd orange : lisibles sur une route bleue comme sur un fond clair
       'circle-color': ['case', ['get', 'pl'], '#e07b00', '#ffffff'],
+      'circle-opacity': ['get', 'o'], 'circle-stroke-opacity': ['get', 'o'],
       'circle-stroke-color': '#16233b', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 0.6, 18, 1.4],
       'circle-pitch-alignment': 'map',
     } });
     pose = true;
   }
+  function pointsDe(liste) {
+    return { type: 'FeatureCollection', features: liste.map((v) => ({ type: 'Feature', properties: { pl: v.pl, cap: Math.round(v.cap), o: +v.o.toFixed(2) }, geometry: { type: 'Point', coordinates: versLngLat(centre, v.x, v.y) } })) };
+  }
+  /** La boîte visible de la carte, en mètres locaux (null quand la carte ne la donne pas). */
+  function boiteVisible() {
+    try {
+      const b = carte.getBounds && carte.getBounds(); if (!b) return null;
+      const [x0, y0] = versMetres(centre, b.getWest(), b.getSouth()), [x1, y1] = versMetres(centre, b.getEast(), b.getNorth());
+      return Number.isFinite(x0 + y0 + x1 + y1) ? { x0, y0, x1, y1 } : null;
+    } catch (e) { return null; }
+  }
+  function ecrire(liste) {
+    const s = carte.getSource && carte.getSource(idSource);
+    if (s && s.setData) s.setData(pointsDe(liste));
+  }
+  /** Ce que montre la carte à cet instant : le niveau de détail dépend du zoom, et seuls les véhicules visibles sont envoyés. */
+  function dessiner(t, direct) {
+    const zoom = carte.getZoom ? carte.getZoom() : NaN;
+    const avec3d = !!(rendu3d && rendu3d.disponible && rendu3d.disponible());
+    const n = direct ? 'points' : niveauDeDetail(zoom, { avec3d });
+    if (n !== niveau) {   // un changement de niveau vide ce qui n'est plus montré
+      if (n !== '3d' && rendu3d && niveau === '3d') rendu3d.effacer();
+      if (n !== 'points') ecrire([]);
+      niveau = n;
+    }
+    if (n === 'aucun') return;
+    const liste = direct ? positions(sim).map((v) => ({ ...v, o: 1 })) : visibles(interp.echantillonner(t), boiteVisible());
+    if (n === '3d') {
+      rendu3d.maj(liste.map((v) => ({ ...v, lnglat: versLngLat(centre, v.x, v.y) })));
+      if (carte.triggerRepaint) carte.triggerRepaint();
+    } else ecrire(liste);
+    images++;
+  }
+  function pasMoteur() {
+    for (let i = 0; i < pas; i++) sim.pas();
+    interp.pousser(maintenant(), positions(sim));
+  }
+  function boucleDessin() {
+    boucle = null;
+    if (!actif && !sortie) return;
+    const t = maintenant();
+    // 30 images par seconde suffisent à un mouvement fluide et laissent à la carte le temps de ses propres rendus
+    if (t - tDessin >= 30) { tDessin = t; try { dessiner(t, false); } catch (e) { fin(e); return; } }
+    if (sortie && interp.taille === 0) { retirer(); return; }
+    boucle = planifierImage(boucleDessin);
+  }
+  function lancerBoucle() { if (lisse && boucle == null) boucle = planifierImage(boucleDessin); }
+  function arretBoucle() { if (boucle != null) { annulerImage(boucle); boucle = null; } }
+
   let echecs = 0, derniereErreur = null;
+  function fin(e) { derniereErreur = e; api.arreter(); if (surErreur) surErreur(e); }
   function image() {
     try {
-      for (let i = 0; i < pas; i++) sim.pas();
-      const s = carte.getSource && carte.getSource(idSource);
-      if (s && s.setData) s.setData(instantane(sim, centre));
+      pasMoteur();
+      if (!lisse) dessiner(maintenant(), true);
       echecs = 0;
     } catch (e) {
       // une exception à chaque image (cinq par seconde) saturerait la console et la page : au troisième échec de suite, on arrête et on le dit
@@ -167,19 +243,28 @@ export function creerTrafic({ carte, entites, densite = DENSITE_DEFAUT, graine =
       if (echecs >= 3) { api.arreter(); if (surErreur) surErreur(e); }
     }
   }
+  function retirer() {
+    arretBoucle(); sortie = false; interp.vider(); niveau = null;
+    if (rendu3d) { try { rendu3d.effacer(); } catch (e) { /* rendu 3D déjà libéré */ } }
+    if (pose) { try { if (carte.getLayer && carte.getLayer(idSource)) carte.removeLayer(idSource); if (carte.getSource && carte.getSource(idSource)) carte.removeSource(idSource); } catch (e) { /* carte déjà retirée */ } pose = false; }
+    if (surFin) surFin();
+  }
   const api = {
-    demarrer() { if (actif) return api.etat(); poser(); actif = true; image(); minuterie = planifier(image, CADENCE_MS); return api.etat(); },
-    pause() { if (minuterie != null) { annuler(minuterie); minuterie = null; } actif = false; return api.etat(); },
-    reprendre() { if (actif) return api.etat(); poser(); actif = true; minuterie = planifier(image, CADENCE_MS); return api.etat(); },
-    arreter() {
+    demarrer() { if (actif) return api.etat(); poser(); actif = true; sortie = false; image(); lancerBoucle(); minuterie = planifier(image, CADENCE_MS); return api.etat(); },
+    pause() { if (minuterie != null) { annuler(minuterie); minuterie = null; } actif = false; arretBoucle(); return api.etat(); },
+    reprendre() { if (actif) return api.etat(); poser(); actif = true; lancerBoucle(); minuterie = planifier(image, CADENCE_MS); return api.etat(); },
+    /** @param {{ doucement?: boolean }} [o]  `doucement` : les véhicules s'effacent en fondu avant que la couche soit retirée */
+    arreter({ doucement = false } = {}) {
       if (minuterie != null) { annuler(minuterie); minuterie = null; }
-      actif = false;
-      if (pose) { try { if (carte.getLayer && carte.getLayer(idSource)) carte.removeLayer(idSource); if (carte.getSource && carte.getSource(idSource)) carte.removeSource(idSource); } catch (e) { /* carte déjà retirée */ } pose = false; }
+      const etaitActif = actif; actif = false;
+      if (doucement && lisse && pose && etaitActif && niveau !== 'aucun') { sortie = true; interp.tousSortent(maintenant()); lancerBoucle(); return api.etat(); }
+      retirer();
       return api.etat();
     },
     etat() {
       const r = graphe.resume || {};
       return { actif, simule: true, erreur: derniereErreur ? String(derniereErreur.message || derniereErreur) : null, vehicules: sim.agents.length, temps: Math.round(sim.t), densite, acces, ecartes, motifs, ecartesTexte: libelleMotifs(motifs),
+        rendu: niveau, images,
         reseau: { troncons: troncons.length, carrefours: r.carrefours ?? null, giratoires: r.anneaux ?? null, kmVoie: r.kmVoie != null ? +r.kmVoie.toFixed(1) : null } };
     },
     /** Pour les tests et la mesure : le moteur et son centre. */

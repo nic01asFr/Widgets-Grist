@@ -122,7 +122,8 @@ test('creerTrafic : démarrer pose une source et une couche, chaque image dépla
   assert.notEqual(apres, avant, 'les véhicules ont roulé');
   assert.ok(t.etat().temps >= 5, 'le temps simulé avance (' + t.etat().temps + ' s)');
   const f = carte.sources.get(ID_SOURCE).data.features[0];
-  assert.deepEqual(Object.keys(f.properties).sort(), ['cap', 'pl']);
+  assert.deepEqual(Object.keys(f.properties).sort(), ['cap', 'o', 'pl']);
+  assert.equal(f.properties.o, 1, 'sans lissage, un véhicule est pleinement opaque');
   assert.ok(f.geometry.coordinates.every(Number.isFinite));
   assert.ok(Math.abs(f.geometry.coordinates[0] - 5) < 0.02 && Math.abs(f.geometry.coordinates[1] - 43) < 0.02, 'autour du réseau de l\'essai');
   t.arreter();
