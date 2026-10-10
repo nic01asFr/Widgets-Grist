@@ -1627,6 +1627,11 @@ async function tuilePlate(alt) {
 //  d'édition, culling viewport, placement sur le relief)
 // ============================================================
 const MAX_3D_INSTANCES = 20000;       // plafond élevé grâce à l'instancing
+// Véhicules du trafic simulé en 3D : au plus ce nombre par classe ; l'angle de rotation (autour de y) qui tourne l'avant du modèle vers le cap
+// (0 = nord, sens horaire ; le nord est -z dans la scène). Le glb est orienté selon son axe long : z ou x.
+const MAX_VEHICULES_3D = 700;
+const VEHICULE_AVANT_Z = (cap) => Math.PI - cap;
+const VEHICULE_AVANT_X = (cap) => Math.PI / 2 - cap;
 const MODEL3D_ZOOM_GATE = 11;          // sous ce zoom on cache la 3D si beaucoup d'objets
 /** Zoom auquel MapLibre a fini de passer du globe au plan (mesure : 0 px d'ecart des z12). */
 const GLOBE_MERCATOR_ZOOM = 12;
@@ -1909,6 +1914,7 @@ const Models3D = {
             onRemove() {
                 Eclairage.oublier();
                 self.disposeInstances(); self.renderer?.dispose?.(); self.renderer = null; self.scene = null;
+                self.vehicules = null;   // ses InstancedMesh étaient dans la scène qui s'en va
                 // Le KTX2 est lie au renderer qui s'en va (et tient des workers).
                 self._ktx2?.dispose?.(); self._ktx2 = null; self._chargeurGltf = null;
             },
@@ -2030,6 +2036,69 @@ const Models3D = {
     },
     setOrigin(lng, lat) { this.origin = [lng, lat]; this.originMC = maplibregl.MercatorCoordinate.fromLngLat([lng, lat], 0); this.originScale = this.originMC.meterInMercatorCoordinateUnits(); },
     localMeters(lng, lat) { const mc = maplibregl.MercatorCoordinate.fromLngLat([lng, lat], 0), s = this.originScale; return { x: (mc.x - this.originMC.x) / s, y: -(mc.y - this.originMC.y) / s }; },
+
+    /**
+     * Les VÉHICULES du trafic simulé (`lib/trafic-couche.js`), en modèles 3D du catalogue (`car`, `bus`) : une instance par véhicule, repositionnée à
+     * chaque image par le trafic (les matrices sont recalculées ici, pas par `build()` : les véhicules ne sont pas des entités d'une couche).
+     * Les modèles sont mis à l'échelle d'un vrai véhicule d'après leur boîte englobante, posés sur le sol, orientés selon le cap.
+     */
+    vehicules: null,
+    async vehiculesPreparer() {
+        if (this._disabled || CONFIG.light3d || !this.scene) return false;
+        if (this.vehicules) return true;
+        if (this._vehiculesEnCours) return this._vehiculesEnCours;
+        this._vehiculesEnCours = (async () => {
+            const defs = { vl: { id: 'car', longueur: 4.4 }, pl: { id: 'bus', longueur: 10.5 } };
+            const classes = {};
+            for (const [k, d] of Object.entries(defs)) {
+                const url = findModel(d.id)?.url; if (!url) return false;
+                const proto = await this.ensureProto(url); if (!proto || !this.scene) return false;
+                const boite = new THREE.Box3();
+                for (const part of proto) { part.geometry.computeBoundingBox(); boite.union(part.geometry.boundingBox.clone().applyMatrix4(part.mat)); }
+                const taille = boite.getSize(new THREE.Vector3()), centre = boite.getCenter(new THREE.Vector3());
+                const axeX = taille.x > taille.z, long = Math.max(taille.x, taille.z) || 1;
+                const meshes = proto.map((part) => {
+                    const im = new THREE.InstancedMesh(part.geometry, part.material, MAX_VEHICULES_3D);
+                    im.count = 0; im.frustumCulled = false; im.castShadow = false; im.receiveShadow = false;
+                    this.scene.add(im);
+                    return { im, mat: part.mat };
+                });
+                // le repère du modèle : posé au sol (y minimal à 0), centré sur x et z
+                const pied = new THREE.Matrix4().makeTranslation(-centre.x, -boite.min.y, -centre.z);
+                classes[k] = { meshes, echelle: d.longueur / long, pied, avant: axeX ? VEHICULE_AVANT_X : VEHICULE_AVANT_Z };
+            }
+            this.vehicules = { classes };
+            return true;
+        })().finally(() => { this._vehiculesEnCours = null; });
+        return this._vehiculesEnCours;
+    },
+    /** @param {{ lnglat: number[], cap: number, pl: boolean, o: number }[]} liste  véhicules visibles, cap en degrés (0 = nord, sens horaire), o = opacité de fondu */
+    vehiculesMaj(liste) {
+        if (!this.vehicules || !map || !this.scene) return;
+        if (!this.origin) { const c = map.getCenter(); this.setOrigin(c.lng, c.lat); }
+        const n = { vl: 0, pl: 0 }, o3 = this._obj, M = this._m4;
+        this._vehiculesDerniers = liste;   // pour les contrôles en navigateur
+        for (const v of liste) {
+            const k = v.pl ? 'pl' : 'vl', c = this.vehicules.classes[k];
+            if (!c || n[k] >= MAX_VEHICULES_3D || !(v.o > 0.02)) continue;
+            const lm = this.localMeters(v.lnglat[0], v.lnglat[1]);
+            const sol = ecartAuSol(this.elevRaw(v.lnglat[0], v.lnglat[1]), this.originElev);
+            o3.position.set(lm.x, sol, -lm.y);
+            o3.rotation.set(0, c.avant(deg2rad(v.cap)), 0);
+            o3.scale.setScalar(c.echelle * Math.sqrt(v.o));   // un véhicule qui apparaît ou disparaît grandit ou rétrécit
+            o3.updateMatrix();
+            const place = o3.matrix.clone().multiply(c.pied);
+            for (const { im, mat } of c.meshes) { M.multiplyMatrices(place, mat); im.setMatrixAt(n[k], M); }
+            n[k]++;
+        }
+        for (const k of Object.keys(this.vehicules.classes)) for (const { im } of this.vehicules.classes[k].meshes) { im.count = n[k]; im.instanceMatrix.needsUpdate = true; }
+        map.triggerRepaint();
+    },
+    vehiculesEffacer() {
+        if (!this.vehicules) return;
+        for (const c of Object.values(this.vehicules.classes)) for (const { im } of c.meshes) { im.count = 0; im.instanceMatrix.needsUpdate = true; }
+        map?.triggerRepaint();
+    },
     /**
      * Altitude du sol, ou `null` si la tuile MNT n'est pas encore chargee.
      * La distinction compte : `0` est une altitude valide en bord de mer, et
@@ -8402,6 +8471,7 @@ function htmlTraficVues() {
         <div class="slider-head" style="margin-top:10px"><span class="lbl">Densité</span><span class="val" id="v-trafic-densite">${_traficReglages.densite} véh/km</span></div>
         <input type="range" class="rng" min="2" max="30" step="1" value="${_traficReglages.densite}" oninput="A.traficReglage('densite', this.value)" ${_trafic ? 'disabled' : ''}>
         <div class="toggle-row"><span class="tlabel">Routes à accès restreint</span><div class="toggle ${_traficReglages.acces === 'tous' ? 'on' : ''}" onclick="A.traficReglage('acces', '${_traficReglages.acces === 'tous' ? 'libre' : 'tous'}')" role="switch" tabindex="0" aria-checked="${_traficReglages.acces === 'tous'}"></div></div>
+        <div class="toggle-row"><span class="tlabel">Véhicules en 3D (de près)</span><div class="toggle ${_traficReglages.vehicules3d ? 'on' : ''}" onclick="A.traficReglage('vehicules3d', ${!_traficReglages.vehicules3d})" role="switch" tabindex="0" aria-checked="${_traficReglages.vehicules3d}"></div></div>
         <button class="btn ${_trafic ? 'btn-soft' : 'btn-dark'} btn-full" style="margin-top:8px" onclick="A.traficBasculer()">${_trafic ? '■ Arrêter le trafic' : '▶ Animer le trafic'}</button>
         ${etat ? `<div class="hint" style="margin-top:6px">${etat.vehicules} véhicules sur ${etat.reseau.troncons} tronçons · trafic <b>simulé</b></div>` : ''}${motifs}
     </div>`;
@@ -14266,7 +14336,8 @@ function openCmd() {
  */
 let _trafic = null;   // { instance, layerId, nom } pendant que le trafic tourne
 /** Les réglages du trafic, gardés d'une mise en route à l'autre (module « Vue & rendu »). */
-const _traficReglages = { densite: 8, acces: 'libre', layerId: null };
+const _traficReglages = { densite: 8, acces: 'libre', layerId: null, vehicules3d: true };
+let _traficSortant = null;   // l'instance en train de s'effacer en fondu : retirée tout de suite si on relance le trafic
 
 /** Toutes les couches de lignes visibles qui ressemblent à des routes (sens BD TOPO ou classe OSM) : de quoi choisir celle à animer. */
 function couchesDeRoutes() {
@@ -16238,12 +16309,17 @@ const A = {
      * Renvoie l'état, ou null quand aucune couche ne convient (un message le dit).
      */
     async traficDemarrer(layerId = null, opts = {}) {
-        if (_trafic) A.traficArreter();
+        if (_trafic) { _trafic.instance.arreter(); _trafic = null; }
+        if (_traficSortant) { _traficSortant.arreter(); _traficSortant = null; }
         const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
-            const m = await import('./lib/trafic-couche.js?v=20261011a');
-            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, ...opts,
+            const m = await import('./lib/trafic-couche.js?v=20261012a');
+            // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
+            const en3d = _traficReglages.vehicules3d && await Models3D.vehiculesPreparer().catch(() => false);
+            const rendu3d = en3d ? { disponible: () => !!Models3D.vehicules && _traficReglages.vehicules3d, maj: (l) => Models3D.vehiculesMaj(l), effacer: () => Models3D.vehiculesEffacer() } : null;
+            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, rendu3d, ...opts,
+                surFin: () => { if (_traficSortant === instance) _traficSortant = null; },
                 surErreur: (err) => { console.warn('[Atlas] trafic arrêté :', err); showToast('Le trafic simulé s’est arrêté : le moteur a échoué sur ce réseau', 'warning'); A.traficArreter(); } });
             const etat = instance.demarrer();
             _trafic = { instance, layerId: layer.id, nom: layer.name };
@@ -16256,11 +16332,19 @@ const A = {
             return null;
         }
     },
-    traficArreter() { if (!_trafic) return null; const e = _trafic.instance.arreter(); _trafic = null; if (STATE.currentModule === 'vues') renderVues(); return e; },
+    traficArreter() {
+        if (!_trafic) return null;
+        const instance = _trafic.instance; _trafic = null;
+        _traficSortant = instance;
+        const e = instance.arreter({ doucement: true });   // les véhicules s'effacent en fondu ; `surFin` libère la couche
+        if (STATE.currentModule === 'vues') renderVues();
+        return e;
+    },
     /** Un réglage du trafic (`densite`, `acces`, `layerId`) ; sans trafic en cours, le curseur de densité se met à jour sans redessiner le module. */
     traficReglage(cle, valeur) {
         if (cle === 'densite') { _traficReglages.densite = Math.max(2, Math.min(30, Math.round(+valeur) || 8)); const v = $('v-trafic-densite'); if (v) v.textContent = `${_traficReglages.densite} véh/km`; return; }
         if (cle === 'acces') _traficReglages.acces = valeur === 'tous' ? 'tous' : 'libre';
+        if (cle === 'vehicules3d') _traficReglages.vehicules3d = valeur === true || valeur === 'true';
         if (cle === 'layerId') _traficReglages.layerId = valeur || null;
         if (STATE.currentModule === 'vues') renderVues();
     },
