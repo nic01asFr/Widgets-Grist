@@ -45,7 +45,7 @@ export function attacher(map, opts = {}) {
   const themes = creerGestionnaire({ theme: opts.theme || null, preferences: opts.preferences !== undefined ? opts.preferences : preferencesDepuisFenetre() });
   let theme = themes.theme;
   const couches = new Map();         // id -> couche
-  let selection = null, survol = null, emetteur = () => {}, camApi = false;
+  let selection = null, survol = null, emetteur = () => {}, camApi = false, attributionScene = null;   // `manifest.attribution` de la scène en cours (mention de l'hôte, du texte et des liens sûrs)
   const ecouteurs = new Map();       // type -> Set(cb)
   const fond = creerFond(map); let modeFond = 'atlas';
   let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
@@ -94,7 +94,7 @@ export function attacher(map, opts = {}) {
       const d2 = copie(decl); if (d2.color) d2.color = pour(d2.color); for (const st of d2.stops || []) st.color = pour(st.color);
       return expressionCouleurDeclarative(d2, T.contour) || T.contour;
     };
-    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionSure(c.admin.meta.attribution) } : {}) } : {}) });
+    map.addSource(idSrc(c), { type: 'geojson', data: { type: 'FeatureCollection', features: c.features }, ...(c.admin ? { promoteId: 'code', tolerance: 0.6, ...(c.admin.meta && c.admin.meta.attribution ? { attribution: attributionSure(c.admin.meta.attribution) } : {}) } : (attributionScene && attributionSure(attributionScene) ? { attribution: attributionSure(attributionScene) } : {})) });
     const v = c.visuel, g = geom(c), sel = ['boolean', ['feature-state', 'selected'], false], hl = ['boolean', ['feature-state', 'highlight'], false];
     if (g === 'polygon' && v.type === 'choroplethe') {
       const avant = [...couches.values()].filter((k) => !k.admin).map((k) => k.ids[0]).find((id) => id && map.getLayer(id));
@@ -301,6 +301,7 @@ export function attacher(map, opts = {}) {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
       for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {};
+      attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
