@@ -45,14 +45,15 @@ import {
 import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=20261001a';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
-  lireFormulaires, reglagesFormulaire, libelleFormulaire,
+  reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
   raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
 } from './lib/fiche-formulaire.js?v=20261003g';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
+import { chargerSchema, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=20261002b';
+import { lireFormulairesDuDocument } from './lib/formulaires-document.js?v=20261010a';
 import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=20260802a';
 import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=20261002a';
 import {
@@ -7953,6 +7954,7 @@ async function creerCoucheLiee(plan, tables) {
  * obligatoires). Proposé, il rejoint aussi les formulaires que la couche offre, comme `exposerFormulaire` le fait.
  */
 async function enregistrerNouveauFormulaire(couche, plan, tables, { expose = false } = {}) {
+    await assurerMoteurFormulaire();
     const T = window.FormulairesTable;
     const D = window.FormDefFromTable;
     if (!T || !D) throw new Error('Module formulaires indisponible');
@@ -13026,39 +13028,30 @@ async function appliquerThemeInstance() {
 }
 
 async function chargerFormulaires() {
-    // La pastille « Releve » depend des formulaires, qui arrivent APRES la
-    // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
-    // geste qui redessine le dock — c'est-a-dire, pour un lecteur, jamais.
-    try { await lireFormulairesDuDocument(); } finally { refreshControlsDock(); }
-}
-
-async function lireFormulairesDuDocument() {
     STATE.formulaires = [];
     STATE.formulairesGrist = [];
     STATE.formulairesTable = false;
-    // Le schema porte les types des colonnes, donc les `Ref:` qui disent quelles
-    // tables referencent une couche, et de quoi deduire un formulaire de celles
-    // qui n'en ont pas. Sans lui il ne reste que l'enregistre.
-    //
-    // Les memes metadonnees portent les formulaires natifs de Grist : ceux que
-    // l'equipe a deja soignes (questions, ordre, obligatoires) servent tels
-    // quels, sans rien recomposer ici.
-    const meta = CONFIG.grist.ready ? await chargerMeta(grist.docApi, { vues: true }) : null;
-    STATE.schema = meta ? schemaDepuisMeta(meta.tables, meta.colonnes) : {};
-    if (meta?.sections && window.FormDefFromGristForm) {
-        try { STATE.formulairesGrist = window.FormDefFromGristForm.formulairesGrist(meta); } catch (e) {
-            console.warn('[Atlas formulaire] formulaires Grist', e.message);
-        }
-    }
-    if (!CONFIG.grist.ready) return;
+    // La pastille « Releve » depend des formulaires, qui arrivent APRES la
+    // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
+    // geste qui redessine le dock — c'est-a-dire, pour un lecteur, jamais.
     try {
-        const tables = await grist.docApi.listTables();
-        if (!tables.includes('Formulaires')) return;
-        STATE.formulairesTable = true;
-        STATE.formulaires = lireFormulaires(await grist.docApi.fetchTable('Formulaires'));
-    } catch (e) {
-        console.warn('[Atlas formulaire] chargement', e.message);
-    }
+        Object.assign(STATE, await lireFormulairesDuDocument({
+            docApi: CONFIG.grist.ready ? grist.docApi : null,
+            assurerMoteur: assurerMoteurFormulaire,
+            portee: window,
+        }));
+    } finally { refreshControlsDock(); }
+}
+
+/**
+ * Le moteur de formulaire est charge A LA DEMANDE (lib/moteur-formulaire.js) :
+ * jamais en import statique, ni en <script> de la page. Rend true s'il est la ;
+ * sinon la fiche de repli (champs devines) reste le comportement.
+ */
+function assurerMoteurFormulaire() {
+    return import('./lib/moteur-formulaire.js?v=20261010a')
+        .then((m) => m.assurerMoteurFormulaire())
+        .catch((e) => { console.warn('[Atlas] moteur de formulaire :', e.message); return false; });
 }
 
 /**
@@ -15707,6 +15700,7 @@ const A = {
             // Un formulaire enregistré fige sa définition : le champ doit y entrer, sinon la colonne existerait sans
             // jamais se saisir par ce formulaire.
             const ligne = f.derive ? null : STATE.formulaires.find((e) => e.formId === f.id);
+            await assurerMoteurFormulaire();
             const T = window.FormulairesTable;
             if (ligne?.rowId && T) {
                 const champ = champDepuisPlan(plan.colonne, window.FormDefFromTable, { requis: plan.requis });
@@ -15918,6 +15912,7 @@ const A = {
         const couche = STATE.layers.find((l) => l.id === layerId);
         const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
         if (!f || !f.derive || !f.def) return;
+        await assurerMoteurFormulaire();
         const T = window.FormulairesTable;
         if (!T) { showToast('Module formulaires indisponible', 'error'); return; }
         try {
@@ -15962,6 +15957,7 @@ const A = {
         const geste = gesteDEnregistrement(f, STATE.formulaires);
         if (!geste) return;
 
+        await assurerMoteurFormulaire();
         const T = window.FormulairesTable;
         if (!T || !f.def) { showToast('Module formulaires indisponible', 'error'); return; }
         try {

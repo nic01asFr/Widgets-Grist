@@ -141,17 +141,15 @@
 
     <!-- Moteur de formulaire de grist_forms : la fiche d'entité, quand la table
          est décrite par un FormDef. Voir docs/CADRAGE-FICHE-ENTITE.md.
-         `dsfr-like.css` n'est PAS chargé — `lib/formulaire-atlas.css` habille
-         les mêmes classes avec les jetons d'Atlas, et reste confiné au panneau.
-         Chemins relatifs au dépôt : valables sur le serveur de dev, PAS dans
-         published/atlas/, où ces fichiers devront être embarqués. -->
-    <script src="../grist_forms/shared/types.js"></script>
-    <script src="../grist_forms/shared/attachments.js"></script>
-    <script src="../grist_forms/shared/session-context.js"></script>
-    <script src="../grist_forms/shared/formulaires-table.js"></script>
-    <script src="../grist_forms/shared/formdef-from-table.js"></script>
-    <script src="../grist_forms/shared/formdef-from-grist-form.js"></script>
-    <script src="../grist_forms/runtime/engine.js"></script>
+         Il n'est PAS chargé ici : ses sept scripts (166 Ko) bloquaient la page de
+         tous les modes, et seul un document Grist ouvert s'en sert. `app_v7.js`
+         le demande à la demande (lib/moteur-formulaire.js) à partir de ce dossier.
+         `dsfr-like.css` n'est PAS chargé non plus — `lib/formulaire-atlas.css`
+         habille les mêmes classes avec les jetons d'Atlas, et reste confiné au
+         panneau. Chemin relatif au dépôt : valable sur le serveur de dev ;
+         scripts/promote-atlas.js le réécrit vers vendor/grist_forms/ dans
+         published/atlas/, où les fichiers sont embarqués. -->
+    <meta name="atlas-moteur-formulaire" content="../grist_forms/" />
 
     <style>
         /* ============================================
