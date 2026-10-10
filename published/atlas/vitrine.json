@@ -364,7 +364,7 @@
       {
         "role": "Exploiter",
         "titre": "Contextes et tournées",
-        "format": "large",
+        "format": "mobile",
         "texte": "Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau, la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.",
         "exemple": "le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.",
         "utilise": [
