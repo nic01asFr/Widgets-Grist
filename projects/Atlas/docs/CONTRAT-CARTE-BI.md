@@ -86,6 +86,30 @@ Contrat 0.3 [testé] : `addAdminLayer(niveau, options)` -> `{ layer, niveau, n, 
 
 `ready` (+ `erreurs`), `error {code, message, niveau}`, `select {layer, featureId, key, code, nom, niveau, valeur, classe, petit, population, sansDonnee, clavier?}`, `hover` (mêmes champs ; `featureId: null` à la sortie), `filter`, `camera` (en fin de mouvement), `time`, `legend`, `edit`, `layer`, `progress {pages, chargees, total}`, `statistique`, `drill {sens, niveau, parent, layer, fil}`, `connexion {etat:'hors_ligne'|'en_ligne', cause, automatique, fond}`, `theme {version, entree, applique, derive, ignore, avertissements, a11y}` (retour de `setTheme`, ou nouvelle résolution quand la personne change sa préférence de contraste). [testé ; `select`, `hover`, `filter`, `drill` et `connexion` aussi dans le navigateur]
 
+## 6 bis. Capacités d'un chargement [testé] (extension additive de la 0.3)
+
+Un chargement du composant peut ne contenir que certaines briques d'usage (profil allégé d'un hôte, paquet hors ligne). Le contrat reste **0.3** : un hôte qui ignore cette section n'est pas affecté.
+
+**Annonce.** L'événement `ready` d'amorçage (celui dont la charge porte `runtime: true`) et le résultat de `ping` gagnent deux champs :
+- `capacites` : tableau **trié** de noms parmi `edition`, `points`, `socle`, `temps`, `territoires`. Sans option, toutes les briques sont présentes. Un hôte ignore un nom qu'il ne connaît pas. Les briques `reseau`, `3d`, `terrain` et `donnees-ouvertes` n'ont aucune commande dans ce contrat : elles ne sont pas annoncées (le nom reste réservé).
+- `paquet` : `null` si le composant n'a lu aucun manifeste de données hors ligne, sinon `{ version_paquet, edition_admin_express, recensement }` : à afficher à côté d'une population (le millésime est celui du manifeste). Aujourd'hui aucun chargement ne lit de manifeste : la valeur est `null`.
+
+**Sémantique.** `capacites` décrit **ce chargement** du composant. Une iframe rechargée peut en annoncer d'autres : l'hôte relit `ready` à chaque annonce, comme il renvoie sa scène à chaque `ready`. Un hôte arrivé après l'annonce les retrouve par `ping`.
+
+**Refus.** Une commande qui relève d'une brique absente n'est pas exécutée. Le résultat est `{ ok: false, erreur, code: 'capacite_absente', capacite: '<nom>' }` ; `erreur` reste un texte lisible (`capacite_absente : <commande> demande la capacité « <nom> », absente de ce chargement du composant`). Ce n'est ni une erreur de forme ni de version. Dans un `batch`, l'ordre refusé porte les mêmes champs `code` et `capacite` ; `arret` s'applique comme pour toute erreur. Dans `setScene`, une couche dont la brique manque (`points` pour une couche de données, `territoires` pour une couche administrative) est refusée seule, avec la même formule dans `erreurs[<id de couche>]` ; les autres se montent.
+
+| Brique | Commandes |
+|---|---|
+| `socle` | ping, setScene, setLayerVisibility, setFilter, select, highlight, flyTo, fitTo, setTheme, setFond, getTheme, getLegend, getRows, resize, setHorsLigne, batch |
+| `points` | setVisual (et les couches de données de `setScene`) |
+| `temps` | setTime, play, pause |
+| `edition` | setEdition, updateFeature |
+| `territoires` | addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter (et les couches administratives de `setScene`) |
+
+**Côté hôte (`lib/bi/client.js`).** La commande refusée rejette `ErreurBi` avec `code === 'capacite_absente'` et `capacite` renseigné : aucun texte à analyser. `client.composant.capacites` et `client.composant.paquet` portent l'annonce. `VERSION_CLIENT` (entier croissant) identifie la révision d'un client copié ; les vecteurs de conformité portent `version_vecteurs` (entier, 1 aujourd'hui).
+
+**Choisir les briques.** `attacher(carte, { capacites: ['socle', 'points'] })` : un nom inconnu lève une erreur à la construction ; l'hôte ne peut pas élargir la liste par une commande (les options d'un `batch` sont sans effet sur elle).
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
