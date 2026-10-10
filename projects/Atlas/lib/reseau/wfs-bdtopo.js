@@ -135,32 +135,50 @@ function texteException(texte) {
 }
 
 /**
- * Une requête, relue en JSON, avec reprise sur les pannes qui passent (réseau, 429, 5xx). Les erreurs de requête
- * (400, 404) ne sont pas rejouées : elles reviendraient à l'identique.
+ * Une requête, relue en JSON (ou en XML pour un décompte `resultType=hits`), avec reprise sur les pannes qui passent
+ * (réseau, 429, 5xx). Les erreurs de requête (400, 404) ne sont pas rejouées : elles reviendraient à l'identique.
+ *
+ * `delaiMs` borne UNE tentative : une page qui n'arrive pas dans ce temps échoue en `delai` et n'est pas rejouée à
+ * l'identique (elle expirerait de nouveau) ; c'est à l'appelant de demander moins d'objets (voir `lirePages`).
  */
-async function demanderJson(adresse, { fetch: f = globalThis.fetch, attendre = attenteParDefaut, essais = 3, signal } = {}) {
+async function demanderJson(adresse, { fetch: f = globalThis.fetch, attendre = attenteParDefaut, essais = 3, signal, delaiMs = null, xml = false } = {}) {
   if (typeof f !== 'function') throw new ErreurWfs('reseau', 'Aucun fetch disponible.');
   let derniere = null;
   for (let n = 0; n < essais; n++) {
     if (signal?.aborted) throw new ErreurWfs('annule', 'Lecture annulée.');
+    const ctl = delaiMs ? new AbortController() : null;
+    let delaiAtteint = false;
+    const minuteur = ctl ? setTimeout(() => { delaiAtteint = true; ctl.abort(); }, delaiMs) : null;
+    const relayer = () => ctl?.abort();
+    if (ctl && signal) signal.addEventListener('abort', relayer, { once: true });
+    const nettoyer = () => { if (minuteur) clearTimeout(minuteur); if (ctl && signal) signal.removeEventListener('abort', relayer); };
     let reponse;
+    let texte;
     try {
-      reponse = await f(adresse, { headers: { Accept: 'application/json' }, signal });
+      reponse = await f(adresse, { headers: { Accept: xml ? 'application/xml' : 'application/json' }, signal: ctl ? ctl.signal : signal });
+      texte = await reponse.text();
     } catch (e) {
-      if (signal?.aborted || e?.name === 'AbortError') throw new ErreurWfs('annule', 'Lecture annulée.');
+      nettoyer();
+      if (signal?.aborted) throw new ErreurWfs('annule', 'Lecture annulée.');
+      if (delaiAtteint) throw new ErreurWfs('delai', `Le service WFS n'a pas répondu en ${Math.round(delaiMs / 1000)} s.`);
+      if (e?.name === 'AbortError') throw new ErreurWfs('annule', 'Lecture annulée.');
       derniere = new ErreurWfs('reseau', `Le service WFS est injoignable : ${e?.message || e}.`);
       if (n < essais - 1) await attendre(1000 * (n + 1));
       continue;
     }
-    const texte = await reponse.text();
+    nettoyer();
     if (reponse.status === 429 || reponse.status >= 500) {
       const reprise = Number(reponse.headers?.get?.('retry-after'));
       derniere = new ErreurWfs('http', `Le service WFS a répondu ${reponse.status}.`, { status: reponse.status, extrait: texte.slice(0, 200) });
       if (n < essais - 1) await attendre(Number.isFinite(reprise) && reprise > 0 ? reprise * 1000 : 1000 * (n + 1));
       continue;
     }
-    if (texte.trimStart().startsWith('<')) {
+    if (xml ? /<ows:ExceptionReport/.test(texte) : texte.trimStart().startsWith('<')) {
       throw new ErreurWfs('exception_ogc', `Le service WFS refuse la requête (${reponse.status}) : ${texteException(texte)}`, { status: reponse.status });
+    }
+    if (xml) {
+      if (!reponse.ok) throw new ErreurWfs('http', `Le service WFS a répondu ${reponse.status}.`, { status: reponse.status, extrait: texte.slice(0, 200) });
+      return texte;
     }
     let json;
     try {
@@ -285,6 +303,80 @@ export async function lireCouche(couche, emprise, o = {}) {
   if (garde) features = features.filter(garde);
   if (o.echantillon) features = echantillonner(features, o.echantillon);
   return { features, numberMatched: correspondants, lus: recus.length, pages, tronque };
+}
+
+/**
+ * L'adresse d'un décompte `resultType=hits` : le service répond tout de suite le nombre d'objets de l'emprise
+ * (`numberMatched`), sans en envoyer un seul. Mesuré le 10/10/2026 : 0,14 s sur 2 178 bâtiments, 3,5 s sur 577 215
+ * (0,5° de côté). Sans emprise ce décompte est lent (10 à 23 s sur une couche entière) : l'emprise est obligatoire.
+ */
+export function urlHits({ couche, emprise, url = URL_WFS }) {
+  if (!couche || typeof couche !== 'string') throw new ErreurWfs('parametre_invalide', 'Nom de couche manquant.');
+  if (!emprise) throw new ErreurWfs('emprise_invalide', 'Une emprise est obligatoire pour un décompte.');
+  const params = [
+    ['SERVICE', 'WFS'], ['VERSION', '2.0.0'], ['REQUEST', 'GetFeature'], ['TYPENAMES', couche], ['RESULTTYPE', 'hits'],
+    ['BBOX', `${validerEmprise(emprise).join(',')},EPSG:4326`],
+  ];
+  return `${url}?${params.map(([k, v]) => `${k}=${encoder(v)}`).join('&')}`;
+}
+
+/**
+ * Combien d'objets dans l'emprise, par `resultType=hits` (réponse XML, `numberMatched`). Plus léger que `compter`
+ * (qui télécharge un objet) : c'est l'estimation avant un import.
+ */
+export async function compterHits(couche, emprise, options = {}) {
+  const texte = await demanderJson(urlHits({ couche, emprise, url: options.url }), { ...options, xml: true });
+  const m = /numberMatched="(\d+)"/.exec(texte);
+  if (!m) throw new ErreurWfs('reponse_illisible', 'Le service n’a pas indiqué le nombre d’objets.');
+  return Number(m[1]);
+}
+
+/**
+ * Lit une couche page après page, en rendant chaque page à l'appelant au lieu de tout garder : c'est ce qui permet une
+ * progression, une annulation entre deux pages et une reprise (`debut`).
+ *
+ * Une page qui expire (`delai`) est redemandée avec la moitié des objets (jusqu'à `tailleMin`) ; le rang de départ de
+ * la page suivante suit toujours ce qui a été reçu, jamais la taille demandée.
+ *
+ * @param {string} couche
+ * @param {number[]} emprise
+ * @param {object} [o]
+ * @param {number} [o.taille] objets par page (1 000)
+ * @param {number} [o.tailleMin] plancher en cas de page qui expire (100)
+ * @param {number} [o.debut] rang de départ (reprise)
+ * @param {number} [o.delaiMs] durée maximale d'une page (60 000)
+ * @param {number} [o.pauseMs] pause entre deux pages (200)
+ * @param {string} [o.tri] `cleabs`
+ * @param {number} [o.coteMax] côté maximal de l'emprise, en degrés
+ * @yields {{features: object[], debut: number, numberMatched: number|null, taille: number}}
+ */
+export async function* lirePages(couche, emprise, o = {}) {
+  validerEmprise(emprise, o.coteMax ? { coteMax: o.coteMax } : {});
+  const attendre = o.attendre || attenteParDefaut;
+  const pauseMs = o.pauseMs ?? 200;
+  const tailleMin = o.tailleMin ?? 100;
+  const options = { ...o, delaiMs: o.delaiMs ?? 60000 };
+  let taille = o.taille ?? TAILLE_PAGE;
+  let debut = o.debut ?? 0;
+  let correspondants = null;
+  for (;;) {
+    let json;
+    try {
+      json = await demanderJson(urlGetFeature({ couche, emprise, count: taille, debut, tri: o.tri, url: o.url }), options);
+    } catch (e) {
+      if (e?.code === 'delai' && taille > tailleMin) { taille = Math.max(tailleMin, taille >> 1); continue; }
+      throw e;
+    }
+    if (json?.type !== 'FeatureCollection' || !Array.isArray(json.features)) {
+      throw new ErreurWfs('reponse_illisible', 'La réponse du service n’est pas une collection d’objets.');
+    }
+    if (Number.isInteger(json.numberMatched)) correspondants = json.numberMatched;
+    if (json.features.length) yield { features: json.features, debut, numberMatched: correspondants, taille };
+    debut += json.features.length;
+    const fini = json.features.length === 0 || (correspondants !== null ? debut >= correspondants : json.features.length < taille);
+    if (fini) return;
+    await attendre(pauseMs);
+  }
 }
 
 /** Les tronçons de route d'une emprise (`BDTOPO_V3:troncon_de_route`). */
