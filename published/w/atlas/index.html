@@ -222,6 +222,22 @@ section { margin: 0 0 3rem; }
     </article>
     <article class="contexte">
       <div class="dit">
+        <p class="role">Charger</p>
+        <h3>Les routes, bâtiments et eau de l’IGN, dans la zone visible</h3>
+        <p>Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par importance, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.</p>
+        <p class="pourquoi">Les routes importées portent leur sens de circulation et leur nombre de voies : un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.</p>
+        <p class="exemple"><b>Dans l’exemple</b> les 112 tronçons de routes autour du Palais Longchamp, importés en une seconde, avec leur sens de circulation.</p>
+        <ul class="utilise"><li>Import IGN</li><li>Estimation avant import</li><li>Annuler et reprendre</li><li>Provenance et licence</li><li>Sens de circulation</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large">
+          <img src="cas-ign.jpg" alt="Les routes de la BD TOPO autour du Palais Longchamp, importées dans la zone visible et colorées par importance ; la mention de source figure en bas à droite." loading="lazy">
+          <figcaption>Les routes de la BD TOPO autour du Palais Longchamp, importées dans la zone visible et colorées par importance ; la mention de source figure en bas à droite.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
         <p class="role">Représenter</p>
         <h3>Colorer, dimensionner, étiqueter par la donnée</h3>
         <p>Une couche se colore d’une couleur fixe, par catégorie ou en classes graduées, se dimensionne et s’étiquette d’après un champ, et sa légende se construit seule. Quand le champ renvoie à une autre table, Atlas reprend les couleurs et l’ordre de gravité de cette table plutôt que d’inventer une palette. Une couche dense se regroupe en ronds chiffrés qui se défont au zoom ; une couleur graduée se découpe en classes aux seuils choisis, et une image tirée d’une table peut tenir lieu d’icône.</p>
@@ -560,6 +576,10 @@ section { margin: 0 0 3rem; }
           <p>Bâtiments, voirie, arbres, mobilier, importés autour de la vue, puis enregistrés en table Grist pour être édités comme le reste.</p>
         </li>
         <li>
+          <div class="porte"><b>Les données de l’IGN</b></div>
+          <p>Le bouton IGN du panneau Couches importe, dans la zone visible, les routes, les bâtiments, l’eau, la végétation, les voies ferrées, les repères routiers, les équipements, les communes et les départements de la BD TOPO et d’Admin Express (Licence Ouverte). Atlas compte d’abord les objets, refuse une zone trop vaste, importe par pages et garde la provenance de la couche.</p>
+        </li>
+        <li>
           <div class="porte"><b>Un fichier GeoJSON</b></div>
           <p>Ouvert depuis le poste, il devient une couche, qu’on peut à son tour enregistrer en table.</p>
         </li>
@@ -611,6 +631,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
+      <div><b>v1.15.0</b><p>Un bouton IGN, à côté d’OSM dans le panneau Couches, importe les données de l’IGN de la zone visible : routes (avec leur sens de circulation et leur nombre de voies), bâtiments extrudés par leur hauteur, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes et départements. L’import annonce d’abord combien d’objets il va lire, avance page par page, s’annule et se reprend là où il s’était arrêté ; la couche arrive avec sa provenance, sa licence et la mention de source sur la carte. Les routes importées servent tout de suite aux itinéraires qui respectent les sens uniques.</p></div>
       <div><b>v1.14.2</b><p>Les routes importées d’OpenStreetMap portent leurs sens uniques : un itinéraire tracé dessus ne remonte plus une rue à sens unique, ni un rond-point à contresens (le sens de la BD TOPO de l’IGN passe avant celui d’OpenStreetMap quand les deux existent). Pour les applications qui affichent la carte : la sortie du pointeur est annoncée, « automatique » rend la main à la détection du réseau au lieu de garder un hors ligne forcé, et la mention de source donnée par l’application s’affiche en bas de la carte.</p></div>
       <div><b>v1.14.1</b><p>Quand une application affiche la carte d’Atlas, la carte n’apparaît plus avec le fond par défaut avant d’être configurée : un écran neutre « Chargement de la carte… » reste en place jusqu’à ce que l’application ait posé sa scène, puis laisse la place à la carte telle qu’elle l’a voulue. L’application peut aussi demander dès l’ouverture un fond et une charte de couleurs (plan, photographie aérienne, contraste élevé), ou se passer de l’écran d’attente.</p></div>
       <div><b>v1.14.0</b><p>Quand les tronçons portent leur sens de circulation, comme ceux de la BD TOPO de l’IGN ou d’OpenStreetMap, un itinéraire suit le sens des rues : le chemin proposé ne remonte plus une rue à sens unique, et une case « Respecter les sens de circulation », cochée par défaut, laisse décider quand on veut l’ignorer. Sur le terrain, une flèche autour du point bleu montre la direction dans laquelle on avance. Une application web de votre organisation peut aussi afficher la carte d’Atlas dans ses pages — un tableau de bord, un outil de suivi — et la piloter, sans que vos données quittent l’application. La carte reste utilisable quand le fond de plan est en panne.</p></div>
