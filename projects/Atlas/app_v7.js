@@ -16241,7 +16241,8 @@ const A = {
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
             const m = await import('./lib/trafic-couche.js?v=20261011a');
-            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, ...opts });
+            const instance = m.creerTrafic({ carte: map, entites: filteredGeoJSON(layer)?.features || [], densite: _traficReglages.densite, acces: _traficReglages.acces, ...opts,
+                surErreur: (err) => { console.warn('[Atlas] trafic arrêté :', err); showToast('Le trafic simulé s’est arrêté : le moteur a échoué sur ce réseau', 'warning'); A.traficArreter(); } });
             const etat = instance.demarrer();
             _trafic = { instance, layerId: layer.id, nom: layer.name };
             if (STATE.currentModule === 'vues') renderVues();
