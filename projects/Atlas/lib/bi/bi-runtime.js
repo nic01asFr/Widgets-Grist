@@ -16,6 +16,7 @@ import { modeleLegende, lignesLegende } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, tailleTexte } from './icones-etats.js';
+import { opaciteDeclaree, contourPolygone } from './style-polygone.js';
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
 import { creerSurveillance, fondPourConnexion } from './repli.js';
@@ -117,8 +118,13 @@ export function attacher(map, opts = {}) {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
       ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(0.9)] } });
     } else if (g === 'polygon') {
-      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': ['case', sel, 0.95, 0.72] } });
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': ['case', sel, T.selection, contourMarque(0.72)], 'line-width': ['case', sel, 3, 1] } });
+      // Réglages de l'hôte, facultatifs (lib/bi/style-polygone.js) : opacité du remplissage, contour (couleur, largeur, tirets). Sans eux : le rendu d'avant.
+      const opacite = opaciteDeclaree(decl), ct = contourPolygone(v.contour, (cc) => resoudre(cc, T));
+      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, 0.72] } });
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: {
+        'line-color': ['case', sel, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],
+        'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), ct ? ct.largeur : 1],
+        ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}) } });
     } else {
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, 3] } });
     }
