@@ -139,3 +139,12 @@ test('monter : une valeur d\'adresse hors liste est signalee et ignoree', async 
   await r.reglages;
   assert.ok(avertissements.filter((m) => /ignor/.test(m)).length >= 2, avertissements.join(' | '));
 });
+
+test('le voile levé vide la région « status » (elle ne reste pas sur « Chargement de la carte… » pour les lecteurs d\'écran)', async () => {
+  const b = corps(); b.classes.add('voile-bi');
+  const zone = { textContent: 'Chargement de la carte…' };
+  const carte = { loaded: () => true, areTilesLoaded: () => true };
+  const v = creerVoile({ document: { body: b, getElementById: (id) => (id === 'bi-voile' ? zone : null) }, carte, planifier: () => null });
+  await v.lever('scene');
+  assert.equal(zone.textContent, '');
+});

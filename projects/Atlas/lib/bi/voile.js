@@ -52,6 +52,8 @@ export function creerVoile({ document: doc, carte, delaiMax = DELAI_VOILE_MS, de
     if (leve) return false;
     leve = true; raison = r; if (minuterie != null) annuler(minuterie);
     const b = corps(); if (b) { b.classList.remove('voile-bi'); if (b.removeAttribute) b.removeAttribute('aria-busy'); }
+    // la région « status » du voile ne doit pas rester sur « Chargement de la carte… » une fois la carte posée (lecteurs d'écran)
+    const v = doc && typeof doc.getElementById === 'function' ? doc.getElementById('bi-voile') : null; if (v) v.textContent = '';
     return true;
   };
   minuterie = planifier(() => retirer('delai'), delaiMax);

@@ -3347,6 +3347,7 @@ function initMap() {
     _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
     map = new maplibregl.Map({
         container: 'map',
+        locale: LOCALE_CARTE,
         style: _fondDeRepli ? STYLE_HORS_RESEAU : (_bm.style ? _bm.style() : _bm.url),
         center: [STATE.location.lng, STATE.location.lat],
         zoom: CONFIG.defaultZoom,
@@ -13106,6 +13107,20 @@ function setUserIdentity(u) {
  * puis le runtime est chargé À LA DEMANDE (`demarrerBi`) : sans ce paramètre, rien de `lib/bi/` n'est téléchargé.
  * Le motif est celui de `biDemande` (`lib/bi/liaison.js`), recopié ici pour ne rien importer ; un test les garde égaux.
  */
+// Libellés accessibles de MapLibre (étiquettes ARIA, infobulles des contrôles) : en français, comme le reste d'Atlas ; MapLibre ignore une clé qu'il ne connaît pas.
+const LOCALE_CARTE = Object.freeze({
+    'Map.Title': 'Carte',
+    'AttributionControl.ToggleAttribution': 'Afficher ou masquer les crédits',
+    'AttributionControl.MapFeedback': 'Signaler un problème de carte',
+    'LogoControl.Title': 'Logo MapLibre',
+    'NavigationControl.ZoomIn': 'Zoom avant',
+    'NavigationControl.ZoomOut': 'Zoom arrière',
+    'NavigationControl.ResetBearing': 'Orienter la carte vers le nord',
+    'GeolocateControl.FindMyLocation': 'Afficher ma position',
+    'GeolocateControl.LocationNotAvailable': 'Position indisponible',
+    'FullscreenControl.Enter': 'Passer en plein écran',
+    'FullscreenControl.Exit': 'Quitter le plein écran',
+});
 const MODE_BI = typeof location !== 'undefined' && /(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search);
 
 /**

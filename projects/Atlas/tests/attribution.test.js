@@ -213,9 +213,20 @@ describe('balayage de source : attribution vers MapLibre', () => {
     const interdits = /\b(customAttribution|setAttribution|AttributionControl|attributionControl\s*:\s*(?!false))/;
     const fautes = [];
     for (const { f, src } of sources()) {
-      src.split('\n').forEach((l, i) => { if (interdits.test(l) && !/^\s*(\/\/|\*)/.test(l)) fautes.push(`${f}:${i + 1} ${l.trim()}`); });
+      // Seule exception : les LIBELLÉS accessibles de la locale française (`'AttributionControl.ToggleAttribution': 'Afficher ou masquer les crédits'`) :
+      // ils changent le texte du bouton des crédits, jamais leur contenu ni leur présence.
+      const LIBELLE_DE_LOCALE = /^\s*'AttributionControl\.(ToggleAttribution|MapFeedback)': '[^'\n]*',\s*$/;
+      src.split('\n').forEach((l, i) => { if (interdits.test(l) && !/^\s*(\/\/|\*)/.test(l) && !LIBELLE_DE_LOCALE.test(l)) fautes.push(`${f}:${i + 1} ${l.trim()}`); });
     }
     assert.deepEqual(fautes, [], fautes.join('\n'));
+  });
+
+  it('l’exception des libellés de locale est étroite : une autre porte vers le contrôle reste interdite', () => {
+    const LIBELLE_DE_LOCALE = /^\s*'AttributionControl\.(ToggleAttribution|MapFeedback)': '[^'\n]*',\s*$/;
+    assert.ok(LIBELLE_DE_LOCALE.test("    'AttributionControl.ToggleAttribution': 'Afficher ou masquer les crédits',"));
+    for (const l of ['new maplibregl.AttributionControl({ customAttribution: "x" })', "'AttributionControl.ToggleAttribution': ''.concat(x),", 'map.addControl(new AttributionControl())', "'AttributionControl.Autre': 'x',"]) {
+      assert.ok(!LIBELLE_DE_LOCALE.test(l), l);
+    }
   });
 
   it('app_v7.js importe attributionSure et l’emploie à la pose des sources', () => {
