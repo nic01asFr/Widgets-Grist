@@ -16,6 +16,8 @@
  *  - `manifeste`, `donnees`, `charte`, `fond` : configuration DÉCLARATIVE, sans code. `manifeste`, `donnees` et `charte` sont l'adresse d'un fichier JSON lu par
  *    votre page (ou un bloc `<script type="application/json" data-atlas="manifeste|donnees|charte">` dans l'élément) ; `fond` vaut `atlas`, `voile`, `uni`,
  *    `plan`, `plan-ign` ou `photo`. Appliqués à la connexion (charte, fond, puis scène) et à chaque changement de l'attribut ; voir `lib/bi/declaratif.js` ;
+ *    `charte="herite"` (au lieu d'une adresse) : la charte est LUE dans la page hôte (couleurs, famille de police, mode sombre ; voir `lib/bi/herite.js`) et relue
+ *    quand le thème de la page change (événement `atlas-bi-herite`). Convention sûre : poser `--atlas-principal`, `--atlas-fond`, `--atlas-encre`, `--atlas-police` en CSS ;
  *  - `delai`: délai maximal d'une commande, en millisecondes (défaut 10 000) ;
  *  - `delai-connexion` : attente du composant à la connexion, en millisecondes (défaut 30 000 : un démarrage à froid prend 15 à 45 s sur un réseau lent ;
  *    le défaut du client en un fichier, 8 000, est trop court pour cela : passez `delaiConnexion: 30000` à `creerClient`) ;
@@ -50,7 +52,7 @@ const Base = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
 export class AtlasBi extends Base {
   static get observedAttributes() { return ['src', 'hote', 'delai', 'delai-connexion', ...ATTRIBUTS_DECLARATIFS]; }
 
-  constructor() { super(); this._client = null; this._cadre = null; this._pret = null; this._retraits = []; this._generation = 0; this._configure = null; }
+  constructor() { super(); this._client = null; this._cadre = null; this._pret = null; this._retraits = []; this._generation = 0; this._configure = null; this._veille = null; this._dernierHerite = null; }
 
   connectedCallback() { this._monter(); }
   disconnectedCallback() { this._demonter(); }
@@ -87,6 +89,7 @@ export class AtlasBi extends Base {
       if (estVide(config)) return null;
       if (generation !== this._generation) return null;   // une configuration plus récente a pris la suite
       const resultat = await appliquerConfiguration((cmd, ...args) => this._client.appeler(cmd, ...args), config);
+      this._veillerHerite(!!config.herite, config);
       if (generation === this._generation) this._emettre('configure', { charge: resultat });
       return resultat;
     });
@@ -124,7 +127,44 @@ export class AtlasBi extends Base {
     this._pret.then(() => this.reconfigurer(), () => {}).catch(() => {});
   }
 
+  /**
+   * `charte="herite"` : tant que la charte vient de la page, on la relit quand le thème de la page change (classe ou attribut de `<html>` / `<body>`, préférence de
+   * couleur du système) et on ne renvoie au composant que ce qui a vraiment changé.
+   */
+  _veillerHerite(actif, config) {
+    if (this._veille) { this._veille(); this._veille = null; }
+    this._dernierHerite = actif ? JSON.stringify(config.charte) : null;
+    if (!actif || typeof document === 'undefined') return;
+    let minuteur = null;
+    const relire = async () => {
+      if (!this._client) return;
+      try {
+        const { lireStyleHote, charteDepuisStyle } = await import('./herite.js');
+        const lu = lireStyleHote(this), charte = charteDepuisStyle(lu), cle = JSON.stringify(charte);
+        if (cle === this._dernierHerite) return;
+        this._dernierHerite = cle;
+        const retour = await this._client.appeler('setTheme', charte, { remplacer: true });
+        const fond = this.getAttribute('fond');
+        if (fond) await this._client.appeler('setFond', fond);   // le fond de plan déclaré suit la nouvelle charte (fond uni, plan monochrome…)
+        this._emettre('herite', { charge: { charte: retour, herite: { notes: lu.notes, ignore: lu.ignore, sombre: lu.sombre } } });
+      } catch (e) { this._emettre('erreur', { erreur: e, etape: 'herite' }); }
+    };
+    const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(relire, 200); };
+    const retraits = [];
+    if (typeof MutationObserver === 'function') {
+      const o = new MutationObserver(planifier);
+      for (const cible of [document.documentElement, document.body, this]) if (cible) o.observe(cible, { attributes: true });
+      retraits.push(() => o.disconnect());
+    }
+    if (typeof matchMedia === 'function') {
+      const m = matchMedia('(prefers-color-scheme: dark)');
+      if (m && m.addEventListener) { m.addEventListener('change', planifier); retraits.push(() => m.removeEventListener('change', planifier)); }
+    }
+    this._veille = () => { clearTimeout(minuteur); for (const r of retraits) r(); };
+  }
+
   _demonter() {
+    if (this._veille) { this._veille(); this._veille = null; }
     for (const r of this._retraits) r(); this._retraits = [];
     if (this._client) this._client.deconnecter();
     if (this._cadre) this._cadre.remove();

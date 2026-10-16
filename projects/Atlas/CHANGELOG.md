@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.20.0 — la carte prend le style de la page
+
+- **Composant** : `<atlas-bi charte="herite">` lit le style de la page hôte (variables `--atlas-principal`, `--atlas-secondaire`, `--atlas-fond`, `--atlas-encre`, `--atlas-police`, puis variables usuelles des systèmes de design pour la couleur principale, couleur de texte et fond calculés, famille de police ramenée à la liste admise) et l'applique comme une charte ordinaire (contrastes mesurés et dits). Relue quand la page change de thème (événement `atlas-bi-herite`). `lib/bi/herite.js` pour les hôtes sans l'élément. Rien n'est deviné : sans couleur principale trouvée, celle d'Atlas reste.
+- **Composant BI** : aucune commande ajoutée, contrat 0.3, même client, même empreinte.
+
 ## 1.19.0 — la bulle d'objet, ses actions et les marges, à l'aspect de l'hôte
 
 - **Composant** : bulle d'objet déclarée par couche (`layers[].bulle` : titre, champs, actions ; texte seul), ouverte par la sélection (clic ou `select(id)`), fermée avec elle ; événements `action { layer, featureId, key, actionId }` (l'hôte route) et `bulle { etat, … }`. Marges persistantes (`manifeste.marges`, `flyTo({ marges })`, méthode `setMarges` de l'élément) : `flyTo` et `fitTo` cadrent dans la zone utile. L'interface suit la charte de l'hôte (`lib/charte/interface.js`, variables `--atlas-*`).

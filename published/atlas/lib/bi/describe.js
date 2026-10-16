@@ -102,6 +102,7 @@ export const EXEMPLES = Object.freeze({
 export const GUIDE = Object.freeze([
   'Commencez par <atlas-bi src="https://nic01asfr.github.io/Widgets-Grist/atlas/"> : l\'élément ajoute lui-même bi=1, navbar=false, mode=view et l\'origine de votre page.',
   'Une ligne : `donnees="sites.geojson"` suffit, le manifeste est inféré (géométrie, identifiants, clé, couleurs par classe, filtre) et ce qui a été décidé est dit dans `inference` de atlas-bi-configure ; un manifeste explicite prime.',
+  'Aux couleurs de votre page : `charte="herite"` lit couleurs et police de la page (ou les variables `--atlas-principal`, `--atlas-fond`, `--atlas-encre`, `--atlas-police`) et suit le mode sombre.',
   'Sans code : donnez manifeste (et donnees, charte, fond) en attributs ou en blocs <script type="application/json" data-atlas="…"> ; la carte se monte à la connexion et se cadre sur ses entités (cadrage="aucun" pour garder la caméra).',
   'Avec du code : attendez `await carte.pret`, puis `await carte.setScene(manifeste, donnees)` ; chaque commande du contrat est une méthode de l\'élément.',
   'Données : un tableau de Features GeoJSON par couche, avec un `id` ENTIER stable et unique dans toute la scène ; ordre des coordonnées [longitude, latitude].',
@@ -132,7 +133,7 @@ export function decrire() {
       attributs: [...DECLARATIFS],
       autres: ['src', 'hote', 'delai', 'delai-connexion', 'ratio-max', 'evenements-api', 'title'],
       blocs: DECLARATIFS.filter((n) => n !== 'fond' && n !== 'cadrage').map((n) => `<script type="application/json" data-atlas="${n}">`),
-      evenementsDom: ['atlas-bi-pret', 'atlas-bi-configure', 'atlas-bi-erreur', ...EVENEMENTS.map((e) => 'atlas-bi-' + e)],
+      evenementsDom: ['atlas-bi-pret', 'atlas-bi-configure', 'atlas-bi-herite', 'atlas-bi-erreur', ...EVENEMENTS.map((e) => 'atlas-bi-' + e)],
     },
     limites: {
       ordresParBatch: BATCH_MAX,

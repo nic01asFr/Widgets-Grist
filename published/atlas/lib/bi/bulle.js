@@ -123,27 +123,28 @@ export function pointAncrage(geometrie) {
   return x0 === Infinity ? null : [(x0 + x1) / 2, (y0 + y1) / 2];
 }
 
-const STYLE_ID = 'atlas-bulle-style';
+/** Préfixe `atlas-bi-bulle` : l'application a déjà ses propres `.atlas-bulle*` (lib/bulle-objet.js), chargées dans la même page. */
+const STYLE_ID = 'atlas-bi-bulle-style';
 /** Feuille de style de la bulle : tout en variables `--atlas-*` (la charte de l'hôte), rien de figé. */
 export const FEUILLE = `
-.atlas-bulle-popup { z-index: 5; }
-.atlas-bulle-popup .maplibregl-popup-content { padding: 0; background: var(--atlas-fond, #fff); color: var(--atlas-encre, #1f1b14); border: 1px solid var(--atlas-bord, #d8d6d2); border-radius: 10px; box-shadow: 0 6px 22px rgba(0, 0, 0, .18); font-family: var(--atlas-police, system-ui, sans-serif); font-size: var(--atlas-taille-texte, 13px); line-height: 1.35; min-width: 190px; max-width: 320px; }
-.atlas-bulle-popup .maplibregl-popup-tip { display: none; }
-.atlas-bulle { padding: 10px 12px 12px; }
-.atlas-bulle-tete { display: flex; align-items: flex-start; gap: 8px; }
-.atlas-bulle-titre { flex: 1; font-weight: 600; font-size: calc(var(--atlas-taille-texte, 13px) + 1px); overflow-wrap: anywhere; }
-.atlas-bulle-fermer { flex: none; border: 0; background: transparent; color: var(--atlas-discret, #6b6760); font: inherit; font-size: 18px; line-height: 1; padding: 0 2px; cursor: pointer; border-radius: 4px; }
-.atlas-bulle-fermer:hover { background: var(--atlas-survol, #efede9); }
-.atlas-bulle-champs { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
-.atlas-bulle-champs dt { color: var(--atlas-discret, #6b6760); font-size: var(--atlas-taille-petit, 12px); }
-.atlas-bulle-champs dd { margin: 0; overflow-wrap: anywhere; }
-.atlas-bulle-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.atlas-bulle-action { font: inherit; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--atlas-accent-lisible, #c44536); background: transparent; color: var(--atlas-accent-lisible, #c44536); }
-.atlas-bulle-action.principale { background: var(--atlas-accent, #c44536); color: var(--atlas-sur-accent, #fff); }
-.atlas-bulle-action:hover { filter: brightness(.94); }
-.atlas-bulle button:focus-visible { outline: 2px solid var(--atlas-selection, #1f1b14); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) { .atlas-bulle-popup { animation: atlas-bulle-entree .12s ease-out; } }
-@keyframes atlas-bulle-entree { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.atlas-bi-bulle-popup { z-index: 5; }
+.atlas-bi-bulle-popup .maplibregl-popup-content { padding: 0; background: var(--atlas-fond, #fff); color: var(--atlas-encre, #1f1b14); border: 1px solid var(--atlas-bord, #d8d6d2); border-radius: 10px; box-shadow: 0 6px 22px rgba(0, 0, 0, .18); font-family: var(--atlas-police, system-ui, sans-serif); font-size: var(--atlas-taille-texte, 13px); line-height: 1.35; min-width: 190px; max-width: 320px; }
+.atlas-bi-bulle-popup .maplibregl-popup-tip { display: none; }
+.atlas-bi-bulle { padding: 10px 12px 12px; }
+.atlas-bi-bulle-tete { display: flex; align-items: flex-start; gap: 8px; }
+.atlas-bi-bulle-titre { flex: 1; font-weight: 600; font-size: calc(var(--atlas-taille-texte, 13px) + 1px); overflow-wrap: anywhere; }
+.atlas-bi-bulle-fermer { flex: none; border: 0; background: transparent; color: var(--atlas-discret, #6b6760); font: inherit; font-size: 18px; line-height: 1; padding: 0 2px; cursor: pointer; border-radius: 4px; }
+.atlas-bi-bulle-fermer:hover { background: var(--atlas-survol, #efede9); }
+.atlas-bi-bulle-champs { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
+.atlas-bi-bulle-champs dt { color: var(--atlas-discret, #6b6760); font-size: var(--atlas-taille-petit, 12px); }
+.atlas-bi-bulle-champs dd { margin: 0; overflow-wrap: anywhere; }
+.atlas-bi-bulle-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.atlas-bi-bulle-action { font: inherit; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--atlas-accent-lisible, #c44536); background: transparent; color: var(--atlas-accent-lisible, #c44536); }
+.atlas-bi-bulle-action.principale { background: var(--atlas-accent, #c44536); color: var(--atlas-sur-accent, #fff); }
+.atlas-bi-bulle-action:hover { filter: brightness(.94); }
+.atlas-bi-bulle button:focus-visible { outline: 2px solid var(--atlas-selection, #1f1b14); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .atlas-bi-bulle-popup { animation: atlas-bi-bulle-entree .12s ease-out; } }
+@keyframes atlas-bi-bulle-entree { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 `;
 
 /**
@@ -160,20 +161,20 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
     const s = doc.createElement('style'); s.id = STYLE_ID; s.textContent = FEUILLE; doc.head.appendChild(s);
   }
   function construire(contenu, c, f) {
-    const racine = doc.createElement('div'); racine.className = 'atlas-bulle'; racine.setAttribute('role', 'dialog'); racine.setAttribute('aria-label', contenu.titre || 'Objet');
-    const tete = doc.createElement('div'); tete.className = 'atlas-bulle-tete';
-    const t = doc.createElement('div'); t.className = 'atlas-bulle-titre'; t.textContent = contenu.titre; tete.appendChild(t);
-    const x = doc.createElement('button'); x.type = 'button'; x.className = 'atlas-bulle-fermer'; x.setAttribute('aria-label', 'Fermer'); x.textContent = '×';
+    const racine = doc.createElement('div'); racine.className = 'atlas-bi-bulle'; racine.setAttribute('role', 'dialog'); racine.setAttribute('aria-label', contenu.titre || 'Objet');
+    const tete = doc.createElement('div'); tete.className = 'atlas-bi-bulle-tete';
+    const t = doc.createElement('div'); t.className = 'atlas-bi-bulle-titre'; t.textContent = contenu.titre; tete.appendChild(t);
+    const x = doc.createElement('button'); x.type = 'button'; x.className = 'atlas-bi-bulle-fermer'; x.setAttribute('aria-label', 'Fermer'); x.textContent = '×';
     x.addEventListener('click', () => { fermer(); quandFermee(); }); tete.appendChild(x); racine.appendChild(tete);
     if (contenu.lignes.length) {
-      const dl = doc.createElement('dl'); dl.className = 'atlas-bulle-champs';
+      const dl = doc.createElement('dl'); dl.className = 'atlas-bi-bulle-champs';
       for (const l of contenu.lignes) { const dt = doc.createElement('dt'); dt.textContent = l.libelle; const dd = doc.createElement('dd'); dd.textContent = l.valeur; dl.appendChild(dt); dl.appendChild(dd); }
       racine.appendChild(dl);
     }
     if (contenu.actions.length) {
-      const bloc = doc.createElement('div'); bloc.className = 'atlas-bulle-actions';
+      const bloc = doc.createElement('div'); bloc.className = 'atlas-bi-bulle-actions';
       for (const a of contenu.actions) {
-        const b = doc.createElement('button'); b.type = 'button'; b.className = 'atlas-bulle-action ' + a.style; b.textContent = a.libelle;
+        const b = doc.createElement('button'); b.type = 'button'; b.className = 'atlas-bi-bulle-action ' + a.style; b.textContent = a.libelle;
         b.addEventListener('click', () => emettre('action', { layer: c.id, featureId: f.id, key: c.def.cle ? (f.properties || {})[c.def.cle] : undefined, actionId: a.id }, 'utilisateur'));
         bloc.appendChild(b);
       }

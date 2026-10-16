@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.19.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.19.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.20.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.20.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.19.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.20.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
@@ -73,7 +73,7 @@ export function attacher(map, opts = {}) {
   // La bulle d'un objet, déclarée par couche (`bulle` du manifeste) : ouverte par la sélection, fermée avec elle ; ses boutons reviennent à l'hôte (événement `action`).
   bulleCtl = creerBulle({
     map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
-    creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bulle-popup', focusAfterOpen: false })),
+    creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bi-bulle-popup', focusAfterOpen: false })),
     variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables,
     quandFermee: () => { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } },
   });

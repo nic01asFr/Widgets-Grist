@@ -13,10 +13,10 @@
  * Ce module ne touche à la carte que par l'objet passé (`addSource`, `addLayer`, `getSource().setData`, `removeLayer`, `removeSource`) :
  * il se teste sans navigateur.
  */
-import { Trafic } from './trafic/index.js?v=1.19.0';
-import { sensOsm } from './itineraire.js?v=1.19.0';
-import { classerTroncon } from './modes-voie.js?v=1.19.0';
-import { creerInterpolateur, niveauDeDetail, visibles, echelleDeLisibilite } from './trafic-rendu.js?v=1.19.0';
+import { Trafic } from './trafic/index.js?v=1.20.0';
+import { sensOsm } from './itineraire.js?v=1.20.0';
+import { classerTroncon } from './modes-voie.js?v=1.20.0';
+import { creerInterpolateur, niveauDeDetail, visibles, echelleDeLisibilite } from './trafic-rendu.js?v=1.20.0';
 
 /** Véhicules par km de route : un trafic ambiant lisible, pas un embouteillage. */
 export const DENSITE_DEFAUT = 8;
