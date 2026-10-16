@@ -203,5 +203,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.16.7 | 0.3 | un démarrage qui échoue le dit (cause dans le voile, événement `error` vers l'hôte) ; `delai-connexion` de `<atlas-bi>` (30 s par défaut) ; la page ne charge plus l'API de plugin de Grist en mode composant |
 | 1.16.8 | 0.3 | données de `setScene` vérifiées avant le montage : forme refusée en clair par couche (`_erreurs`), constats non bloquants dans `_avertissements` du résultat et `avertissements` de `ready` ; plus aucun CDN au démarrage |
 | 1.16.9 | 0.3 | plafond du ratio de pixels : `?ratio=` ou attribut `ratio-max` de `<atlas-bi>` ; avertissement au-delà de 50 000 entités dans une couche |
+| 1.17.0 | 0.3 | `<atlas-bi>` se configure sans code : attributs `manifeste`, `donnees`, `charte`, `fond` ou blocs `<script type="application/json" data-atlas>` ; événement DOM `atlas-bi-configure`, méthode `reconfigurer()`, propriété `configure` ; `await AtlasBi.decrire()` (description lue dans le pont, chargée à la demande). Aucune commande ajoutée : le client en un fichier est inchangé. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

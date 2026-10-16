@@ -53,8 +53,8 @@ const BUDGETS = [
   ['page (index.html)', ['index.html'], 165_000, 35_000],                                                // 156 478 / 33 196
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 15_500, 5_800],                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
   ['composant : fermeture de montage.js (mode ?bi=1)', fermeture('lib/bi/montage.js'), 390_000, 137_000],   // 369 157 / 129 856 (34 fichiers)
-  ['élément <atlas-bi> et son client', fermeture('lib/bi/atlas-bi-element.js'), 65_000, 23_500],       // 61 351 / 22 344 (5 fichiers)
-  ['lib/bi (tous les modules)', dossierJs('lib/bi'), 255_000, 92_000],                                  // 242 342 / 87 479
+  ['élément <atlas-bi> et son client', fermeture('lib/bi/atlas-bi-element.js'), 85_000, 32_500],       // 81 824 / 30 716 au 16/10/2026 (7 fichiers) ; 1.17.0 : declaratif.js 6,7 Ko et describe.js 10,8 Ko (ce dernier chargé À LA DEMANDE, mais la fermeture compte aussi les imports dynamiques)
+  ['lib/bi (tous les modules)', dossierJs('lib/bi'), 275_000, 102_000],                                 // 265 896 / 97 881 au 16/10/2026 (1.17.0 : declaratif.js 6,7 Ko et describe.js 10,7 Ko, ce dernier chargé à la demande hors de la fermeture de l'élément)
   ['lib/charte (tous les modules)', dossierJs('lib/charte'), 93_000, 33_500],                           // 88 047 / 31 820
 ];
 
