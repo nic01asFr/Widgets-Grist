@@ -28,7 +28,6 @@
  * Module sans dépendance vers le DOM : l'élément lui passe ce qu'il sait lire.
  */
 import { ErreurBi } from './client.js';
-import { inferer } from './inference.js';
 
 /** Taille maximale lue pour un fichier déclaré (octets) : au-delà, l'hôte a une donnée trop lourde pour un fichier de configuration. */
 export const LIMITE_OCTETS = 16 * 1024 * 1024;
@@ -99,7 +98,7 @@ export async function lireConfiguration(element, { base, lecteur }) {
   }
   if (config.donnees && !config.manifeste) {
     // une ligne : des données seules -> manifeste inféré
-    try { const r = inferer(config.donnees); config.manifeste = r.manifeste; config.donnees = r.donnees; config.notes = r.notes; }
+    try { const { inferer } = await import('./inference.js'); const r = inferer(config.donnees); config.manifeste = r.manifeste; config.donnees = r.donnees; config.notes = r.notes; }
     catch (e) { throw new ErreurBi('commande', '<atlas-bi> : ' + String(e && e.message || e)); }
   } else if (config.donnees && (Array.isArray(config.donnees) || config.donnees.type === 'FeatureCollection')) {
     // un manifeste explicite à une seule couche et des données sans nom de couche : on les rattache à cette couche

@@ -46,6 +46,12 @@ test('identifiants uniques dans TOUTE la scène : deux couches qui se recouvrent
   assert.equal(new Set(tous).size, 4);
 });
 
+test("une propriété d'identifiant de l'hôte l'emporte sur id_origine comme clé", () => {
+  const r = inferer([pt('a', { ref: 'R1' }), pt('b', { ref: 'R2' })]);
+  assert.equal(r.manifeste.layers[0].cle, 'ref');
+  assert.deepEqual(r.donnees.donnees.map((f) => f.id), [1, 2]);
+});
+
 test('géométries mêlées : une couche par type', () => {
   const r = inferer(fc([pt(1, {}), ligne(2), surface(3), pt(4, {})]));
   assert.deepEqual(r.manifeste.layers.map((l) => [l.id, l.geometry_type]), [['donnees-points', 'point'], ['donnees-lignes', 'line'], ['donnees-surfaces', 'polygon']]);

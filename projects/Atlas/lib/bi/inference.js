@@ -8,8 +8,9 @@
  *  - le type de géométrie (point, ligne, surface). Des géométries mêlées dans une couche donnent une couche par type, nommées `<id>-points`, `<id>-lignes`,
  *    `<id>-surfaces` : un style de cercle sur une surface ne veut rien dire ;
  *  - des identifiants ENTIERS, uniques dans toute la scène (le contrat l'exige). Ceux de l'hôte sont gardés quand ils conviennent ; sinon ils sont
- *    numérotés et l'ancien identifiant est conservé dans la propriété `id_origine`, qui devient la clé métier (`cle`) renvoyée dans `select.key` ;
- *  - une clé métier : une propriété d'identifiant (`ref`, `code`, `identifiant`, `id`…) dont les valeurs sont toutes présentes et distinctes ;
+ *    numérotés et l'ancien identifiant est conservé dans la propriété `id_origine` ;
+ *  - une clé métier (renvoyée dans `select.key`) : une propriété d'identifiant (`ref`, `code`, `identifiant`, `id`…) dont les valeurs sont toutes présentes et
+ *    distinctes ; à défaut, l'ancien identifiant conservé dans `id_origine` ;
  *  - une classification de couleur : la première propriété texte qui n'a que 2 à 8 valeurs différentes, partagées par plusieurs entités, sur au moins
  *    80 % des entités. Sans couleur dans le style : le composant les prend dans la palette qualitative de la CHARTE de l'hôte ;
  *  - un contrôle de sélection sur cette même propriété (`setFilter` fonctionne sans que l'hôte écrive le manifeste).
@@ -138,7 +139,8 @@ export function inferer(donnees) {
       });
       if (renumerote) notes.push(`« ${idCouche} » : identifiants numérotés de 1 à N (l'identifiant d'origine, s'il existait, est dans la propriété id_origine)`);
       const def = { id: idCouche, name: idCouche === 'donnees' ? 'Données' : idCouche, geometry_type: genre };
-      const cle = (renumerote && copies.some((f) => f.properties.id_origine !== undefined)) ? 'id_origine' : trouverCle(copies);
+      // la clé la plus parlante : une propriété d'identifiant de l'hôte, à défaut l'ancien identifiant conservé
+      const cle = trouverCle(copies) || ((renumerote && copies.some((f) => f.properties.id_origine !== undefined)) ? 'id_origine' : null);
       if (cle) { def.cle = cle; notes.push(`« ${idCouche} » : clé métier « ${cle} »`); }
       const classes = trouverClasses(copies, cle);
       if (classes) {
