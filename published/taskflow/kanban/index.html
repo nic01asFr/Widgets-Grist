@@ -3055,8 +3055,8 @@
                     <div class="prop-row">
                         <span class="prop-label">Date${data.type === 'jalon' ? '' : 's'}</span>
                         <div class="prop-value">${data.type === 'jalon'
-                            ? `<div class="dates-inline"><input type="date" value="${formatDateInput(s)}" onchange="updateField('dateDebut', this.value); updateField('dateEcheance', this.value)"><button class="today-btn" onclick="setTodayDate()">Auj.</button></div>`
-                            : `<div class="dates-inline"><input type="date" value="${formatDateInput(s)}" onchange="updateField('dateDebut', this.value)"><span class="dates-arrow">→</span><input type="date" value="${formatDateInput(e)}" onchange="updateField('dateEcheance', this.value)"><button class="today-btn" onclick="setTodayDate()">Auj.</button></div>`
+                            ? `<div class="dates-inline"><input type="date" value="${escapeHtml(formatDateInput(s))}" onchange="updateField('dateDebut', this.value); updateField('dateEcheance', this.value)"><button class="today-btn" onclick="setTodayDate()">Auj.</button></div>`
+                            : `<div class="dates-inline"><input type="date" value="${escapeHtml(formatDateInput(s))}" onchange="updateField('dateDebut', this.value)"><span class="dates-arrow">→</span><input type="date" value="${escapeHtml(formatDateInput(e))}" onchange="updateField('dateEcheance', this.value)"><button class="today-btn" onclick="setTodayDate()">Auj.</button></div>`
                         }</div>
                     </div>
                     <div class="prop-row">
