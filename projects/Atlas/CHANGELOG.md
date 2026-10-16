@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.23.0 — le canevas piloté par la page : une scène Atlas par `setScene`
+
+- **Profil complet** : `setScene` accepte aussi une scène Atlas (Scene Manifest 0.2.x, reconnue à sa `version`). L'application la monte comme une scène externe : relief, 3D, éclairage, récit, couches d'objets. Une scène en remplace une autre, sans toucher aux couches de la personne qui regarde. `ready` annonce `canevas: true` ; `ping`, `setLayerVisibility` et `fitTo` reconnaissent ses couches ; le retour de `setScene` donne un compte par couche (`null` pour une couche distante) avec `_erreurs` et `_avertissements`.
+- **Sécurité** : la scène vient de la page hôte, donc traitée comme toute scène externe (aucun accès au document) ; adresses absolues en https seulement (http sur localhost), jamais `data:`/`blob:`/`file:` ni relative ; plafonds de 4 Mo et 64 couches.
+- **Composant nu inchangé** : le module `lib/bi/canevas.js` n'est chargé que si l'application a posé sa façade (profil complet). Contrat 0.3, même client, même empreinte.
+
 ## 1.22.0 — le canevas comme composant : le profil complet
 
 - **Composant** : `?bi=1&profil=complet` (ou `<atlas-bi profil="complet" src=".../index.html">`) charge l'application complète d'Atlas (interface, relief, 3D, éclairage, modèles du catalogue) ET le pont du composant : l'hôte pilote ses couches par les commandes habituelles et reçoit les événements. Sans le paramètre, `?bi=1` reste la carte nue (page maigre `bi.html`, redirection inchangée). Pas de voile en profil complet.

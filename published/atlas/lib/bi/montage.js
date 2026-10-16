@@ -2,7 +2,7 @@
  * Point d'entrée du mode composant carte BI, chargé À LA DEMANDE par `app_v7.js` (import dynamique, seulement avec `?bi=1`).
  * Sans ce paramètre, ce module et tout ce qu'il importe ne sont jamais téléchargés.
  */
-import { attendreCarte } from '../acces-carte.js?v=1.22.0';
+import { attendreCarte } from '../acces-carte.js?v=1.23.0';
 import { monter } from './liaison.js';
 
 export { biDemande, lireHotes, normaliserOrigine } from './liaison.js';
@@ -14,7 +14,9 @@ export { biDemande, lireHotes, normaliserOrigine } from './liaison.js';
  */
 export async function demarrer(fenetre = window) {
   const carte = await attendreCarte(fenetre, { delai: Infinity });
-  const montage = await monter({ carte, fenetre });
+  // Profil complet : `app_v7.js` a posé la façade du canevas ; son module n'est téléchargé que dans ce cas (jamais par le composant nu).
+  const canevas = fenetre.__atlasCanevas ? await import('./canevas.js') : null;
+  const montage = await monter({ carte, fenetre, ...(canevas ? { extension: (rt) => canevas.brancher(rt, fenetre.__atlasCanevas) } : {}) });
   fenetre.__biPret = true;   // le composant tourne : le garde d'amorçage de la page (index_v7.html) cesse de surveiller
   return montage;
 }
