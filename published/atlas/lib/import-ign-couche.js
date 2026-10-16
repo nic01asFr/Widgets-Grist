@@ -13,7 +13,7 @@
  *   (`heightField`) pour le rendu courant ; le style, lui, survit à un rechargement.
  */
 
-import { metadonneesCouche, styleDeCouche } from './import-ign.js?v=1.16.6';
+import { metadonneesCouche, styleDeCouche } from './import-ign.js?v=1.16.7';
 
 /**
  * Pose un style par défaut sur la symbolisation de `couche`.
