@@ -23,8 +23,9 @@ export const FONDS_INITIAUX = Object.freeze(['atlas', 'voile', 'uni', 'plan', 'p
 
 const params = (search) => new URLSearchParams(String(search || '').replace(/^\?/, ''));
 
-/** Vrai sauf `?voile=0` (ou `false`, `non`). Même règle que le script en ligne de la page, gardée par un test. */
+/** Vrai sauf `?voile=0` (ou `false`, `non`) et sauf `?profil=complet`. Même règle que le script en ligne de la page, gardée par un test. */
 export function voileDemande(search = '') {
+  if (params(search).get('profil') === 'complet') return false;   // le profil complet garde son interface visible : rien à voiler
   const v = params(search).get('voile');
   return !(v === '0' || v === 'false' || v === 'non');
 }

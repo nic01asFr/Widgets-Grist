@@ -11,6 +11,7 @@
  * Attributs :
  *  - `src`  : adresse d'Atlas (obligatoire). `bi=1`, `navbar=false`, `mode=view` et `hote` y sont ajoutés s'ils manquent ;
  *  - `hote` : origine de la page hôte, déclarée au composant (défaut : l'origine de la page). Elle doit être EXACTE ;
+ *  - `profil="complet"` : le CANEVAS comme composant : l'application complète d'Atlas (interface, 3D, modèles) avec le pont des commandes et des événements ; `src` vise `index.html` (pas `bi.html`) ;
  *  - `ratio-max` : plafond du ratio de pixels de la carte (1 à 4, ajouté à l'adresse comme `ratio=`) ; sur un écran à fort ratio, `1` ou `2` rend la carte
  *    plusieurs fois plus fluide pour une netteté peu différente. Absent : le ratio de l'appareil ;
  *  - `manifeste`, `donnees`, `charte`, `fond` : configuration DÉCLARATIVE, sans code. `manifeste`, `donnees` et `charte` sont l'adresse d'un fichier JSON lu par
@@ -35,7 +36,7 @@ import { TOUS_LES_EVENEMENTS as EVENEMENTS } from './evenements-ext.js';
 import { ATTRIBUTS_DECLARATIFS, lireConfiguration, estVide, appliquerConfiguration } from './declaratif.js';
 
 /** URL de l'iframe : paramètres du mode composant ajoutés sans écraser ceux de l'hôte. Pure, testable. */
-export function urlComposant(src, hote, base, ratioMax) {
+export function urlComposant(src, hote, base, ratioMax, profil) {
   const u = new URL(src, base);
   // `javascript:` s'exécuterait dans la page hôte, `data:` / `blob:` / `file:` donnent une origine opaque (« null ») : http(s) seulement
   if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new ErreurBi('commande', '<atlas-bi> : src doit être une adresse http(s) (reçu ' + u.protocol + ')');
@@ -43,6 +44,7 @@ export function urlComposant(src, hote, base, ratioMax) {
   if (!u.searchParams.has('navbar')) u.searchParams.set('navbar', 'false');
   if (!u.searchParams.has('mode')) u.searchParams.set('mode', 'view');
   if (ratioMax && !u.searchParams.has('ratio')) u.searchParams.set('ratio', String(ratioMax));
+  if (profil === 'complet' && !u.searchParams.has('profil')) u.searchParams.set('profil', 'complet');   // le canevas : l'application complète et le pont (src = index.html)
   if (hote && !u.searchParams.getAll('hote').includes(hote)) u.searchParams.append('hote', hote);
   return u;
 }
@@ -107,7 +109,7 @@ export class AtlasBi extends Base {
     const hote = this.getAttribute('hote') || (typeof location !== 'undefined' ? location.origin : '');
     if (!hote || hote === 'null') { this._pret = Promise.reject(new ErreurBi('origine', "<atlas-bi> : l'origine de la page est opaque (file://) ; héberger la page ou fournir l'attribut hote")); this._pret.catch(() => {}); return; }
     let url;
-    try { url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined, this.getAttribute('ratio-max')); }
+    try { url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined, this.getAttribute('ratio-max'), this.getAttribute('profil')); }
     catch (e) { this._pret = Promise.reject(e instanceof ErreurBi ? e : new ErreurBi('commande', '<atlas-bi> : src illisible')); this._pret.catch(() => {}); return; }
     const cadre = document.createElement('iframe');
     cadre.title = this.getAttribute('title') || 'Carte';

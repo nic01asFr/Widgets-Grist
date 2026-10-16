@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.22.0 — le canevas comme composant : le profil complet
+
+- **Composant** : `?bi=1&profil=complet` (ou `<atlas-bi profil="complet" src=".../index.html">`) charge l'application complète d'Atlas (interface, relief, 3D, éclairage, modèles du catalogue) ET le pont du composant : l'hôte pilote ses couches par les commandes habituelles et reçoit les événements. Sans le paramètre, `?bi=1` reste la carte nue (page maigre `bi.html`, redirection inchangée). Pas de voile en profil complet.
+- **Limite connue** : les couches propres de l'application (scènes externes, imports, modèles 3D) ne sont pas pilotées par ces commandes et leurs clics ne remontent pas à l'hôte ; ce sont les lots suivants (scène 0.2.2 envoyée par l'hôte, remontée des clics, modèles par dalle).
+- **Composant BI** : aucune commande ajoutée, contrat 0.3, même client, même empreinte.
+
 ## 1.21.1 — marqueurs d'état : légende, couleurs dites, fond qui suit la charte
 
 - **Composant** : retours d'appkit sur la 1.20. `getLegend` d'un visuel `etats` rend une classe par état (couleur, forme, libellé, compte) au lieu de « Sites : N ». Une couleur de marqueur illisible (`etat-ok` sans `jeton:`, `var(--x)`) ou un jeton absent de la charte donne un marqueur gris et une explication dans `_avertissements` (avant : un marqueur noir sans un mot). Un fond `uni` ou `plan` posé par `setFond` est recalculé quand `setTheme` change la charte après lui (il restait blanc en thème sombre).

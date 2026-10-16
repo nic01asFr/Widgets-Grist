@@ -3,7 +3,7 @@
  * `index.html?bi=1` y mène (redirection de la page de l'application), pour qu'aucun hôte n'ait à changer d'adresse.
  */
 import { creerCarteNue } from './carte-nue.js';
-import { demarrer } from './montage.js?v=1.21.1';
+import { demarrer } from './montage.js?v=1.22.0';
 
 /** Crée la carte, puis attend qu'elle soit prête et monte le composant. Rend le montage (`{ runtime, … }`, voir `lib/bi/liaison.js`). */
 export async function lancer(fenetre = window) {
