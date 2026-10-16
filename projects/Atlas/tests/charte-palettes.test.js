@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as C from '../lib/charte/couleurs.js';
 import * as V from '../lib/charte/verification.js';
-import { CHARTE_ATLAS as ATLAS, CHARTE_CONTRASTE_ELEVE as ELEVE, OKABE_ITO, VIRIDIS, QUALITATIVE_ATLAS } from '../lib/charte/defauts.js';
+import { CHARTE_ATLAS as ATLAS, CHARTE_CONTRASTE_ELEVE as ELEVE, OKABE_ITO, VIRIDIS, QUALITATIVE_ATLAS, QUALITATIVE_PAR_DEFAUT } from '../lib/charte/defauts.js';
 
 const HEX = /^#[0-9a-f]{6}$/;
 const A = ATLAS.donnees, E = ELEVE.donnees, BLANC = '#ffffff';
@@ -13,12 +13,13 @@ const A = ATLAS.donnees, E = ELEVE.donnees, BLANC = '#ffffff';
 test('qualitative d\'Atlas : les 8 couleurs publiées d\'Okabe et Ito (2008), dans un ordre où chaque préfixe reste distinct', () => {
   assert.deepEqual(OKABE_ITO, { noir: '#000000', orange: '#e69f00', cielBleu: '#56b4e9', vertBleute: '#009e73', jaune: '#f0e442', bleu: '#0072b2', vermillon: '#d55e00', pourpreRouge: '#cc79a7' });
   assert.equal(A.qualitative.length, 8); assert.deepEqual([...A.qualitative].sort(), Object.values(OKABE_ITO).sort(), 'un ordre des huit couleurs, rien d\'autre');
-  assert.deepEqual(A.qualitative, QUALITATIVE_ATLAS); assert.equal(A.qualitative[7], OKABE_ITO.noir, 'le noir en dernier');
+  assert.deepEqual(A.qualitative, QUALITATIVE_PAR_DEFAUT); assert.equal(A.qualitative[7], OKABE_ITO.noir, 'le noir en dernier');
+  assert.deepEqual([...QUALITATIVE_ATLAS].sort(), [...QUALITATIVE_PAR_DEFAUT].sort(), 'les candidates de dérivation sont les mêmes huit couleurs (leur ordre, lui, ne change pas : les palettes dérivées des hôtes en dépendent)');
 });
 
 test('qualitative d\'Atlas : écart minimal annoncé par préfixe, pire cas sur vision normale + 3 daltonismes', () => {
   const pires = [2, 3, 4, 5, 6, 7, 8].map((k) => V.ecartsTousPairs(A.qualitative, k).pire);
-  assert.deepEqual(pires, [51.4, 12.1, 11.1, 11.1, 11.1, 11.1, 11.1]);
+  assert.deepEqual(pires, [49.6, 12.1, 12.1, 11.1, 11.1, 11.1, 11.1]);
   for (const p of pires) assert.ok(p >= V.SEUILS.deltaNet, 'toutes les paires >= 10 : ' + p);
   const m = V.verifierPalette({ type: 'qualitative', couleurs: A.qualitative }, { fond: BLANC, encre: ATLAS.graines.encre });
   assert.deepEqual(m.mesures.classes, { n: 8, kMaxNet: 8, kMaxAdmis: 8, pire: 11.1, vision: m.mesures.classes.vision, paire: m.mesures.classes.paire });
@@ -28,8 +29,10 @@ test('qualitative d\'Atlas : écart minimal annoncé par préfixe, pire cas sur 
 test('qualitative d\'Atlas : les couleurs claires l\'annoncent (contour sombre requis), chiffres à l\'appui', () => {
   const r = V.verifierPalette({ type: 'qualitative', couleurs: A.qualitative }, { fond: BLANC, encre: ATLAS.graines.encre, chemin: 'donnees.qualitative' });
   const a = r.avertissements.find((x) => x.code === 'contraste-classe-fond');
-  assert.deepEqual(Object.keys(a.mesure.rapports), ['2', '5', '7'], 'orange, ciel, jaune');
-  assert.deepEqual(a.mesure.rapports, { 2: 2.25, 5: 2.31, 7: 1.32 }); assert.match(a.conseil, /Contour sombre requis sur les classes 2, 5, 7/);
+  assert.deepEqual(Object.keys(a.mesure.rapports), ['5', '6', '7'], 'orange, ciel, jaune : après les quatre classes qui tiennent 3:1');
+  assert.deepEqual(a.mesure.rapports, { 5: 2.25, 6: 2.31, 7: 1.32 }); assert.match(a.conseil, /Contour sombre requis sur les classes 5, 6, 7/);
+  const quatre = A.qualitative.slice(0, 4).map((c) => C.contraste(c, BLANC));
+  assert.ok(quatre.every((x) => x >= 3), 'les quatre premières classes tiennent 3:1 sur blanc : ' + quatre.map((x) => x.toFixed(2)).join(', '));
 });
 
 // ---------------------------------------------------------------------------------------------------------------- séquentielle de l'accent

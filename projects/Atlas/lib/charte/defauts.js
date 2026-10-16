@@ -21,8 +21,14 @@ export const VERSION = '1.0.0';
 export const OKABE_ITO = Object.freeze({
   noir: '#000000', orange: '#e69f00', cielBleu: '#56b4e9', vertBleute: '#009e73', jaune: '#f0e442', bleu: '#0072b2', vermillon: '#d55e00', pourpreRouge: '#cc79a7',
 });
-/** Okabe-Ito dans l'ordre d'Atlas : bleu, orange, vert, pourpre, ciel, vermillon, jaune, noir. */
+/** Okabe-Ito dans l'ordre d'Atlas : bleu, orange, vert, pourpre, ciel, vermillon, jaune, noir. Sert de candidates à la dérivation depuis les graines d'un hôte : NE PAS réordonner (les palettes dérivées des hôtes changeraient). */
 export const QUALITATIVE_ATLAS = Object.freeze([OKABE_ITO.bleu, OKABE_ITO.orange, OKABE_ITO.vertBleute, OKABE_ITO.pourpreRouge, OKABE_ITO.cielBleu, OKABE_ITO.vermillon, OKABE_ITO.jaune, OKABE_ITO.noir]);
+/**
+ * Qualitative de la charte « atlas » par défaut (celle d'une carte dont l'hôte n'a rien dit) : les quatre premières classes tiennent 3:1 sur fond blanc
+ * (bleu 5,19 ; vermillon 3,87 ; vert 3,42 ; pourpre 3,06). L'orange (2,25:1), le ciel (2,31:1) et le jaune (1,32:1) viennent après, là où le contour sombre
+ * automatique des marques pâles les rend lisibles. Avant la 1.19.0, l'orange était la deuxième classe.
+ */
+export const QUALITATIVE_PAR_DEFAUT = Object.freeze([OKABE_ITO.bleu, OKABE_ITO.vermillon, OKABE_ITO.vertBleute, OKABE_ITO.pourpreRouge, OKABE_ITO.orange, OKABE_ITO.cielBleu, OKABE_ITO.jaune, OKABE_ITO.noir]);
 /** Viridis (van der Walt et Smith), 7 échantillons : valeur faible = sombre, valeur forte = clair. Identique à la palette « Viridis » historique d'Atlas. */
 export const VIRIDIS = Object.freeze(['#440154', '#3e4a89', '#26828e', '#35b779', '#6ece58', '#b5de2b', '#fde725']);
 
@@ -39,7 +45,7 @@ export const CHARTE_ATLAS = fige({
     },
     sequentielleDefaut: 'principale',
     divergente: ['#b15104', '#e17b3c', '#f0b594', '#efefef', '#b2c4db', '#7199c7', '#0072b2'],
-    qualitative: [...QUALITATIVE_ATLAS],
+    qualitative: [...QUALITATIVE_PAR_DEFAUT],
     sansDonnee: '#918f8c', selection: '#1f1b14', halo: '#ffffff', survol: '#57544f', contour: '#ffffff',
   },
   fond: { mode: 'atlas', principal: '#2e4e54', intensites: { ...INTENSITES_PLAN }, vegetation: 'monochrome' },

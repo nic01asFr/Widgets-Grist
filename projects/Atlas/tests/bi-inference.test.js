@@ -100,6 +100,6 @@ test('bout en bout : le manifeste inféré se monte sur le runtime et le filtre 
   const res = await rt.api.setScene(r.manifeste, r.donnees);
   assert.deepEqual(res, { donnees: 6 });
   const leg = rt.api.getLegend('donnees');
-  assert.deepEqual(leg.classes.map((c) => c.couleur), ['#0072b2', '#e69f00', '#009e73'], 'classes sans couleur : palette qualitative de la charte');
+  assert.deepEqual(leg.classes.map((c) => c.couleur), ['#0072b2', '#d55e00', '#009e73'], 'classes sans couleur : palette qualitative de la charte');
   assert.deepEqual(await rt.api.setFilter('f-genre', ['école']), { layer: 'donnees', compte: 3, total: 6 });
 });

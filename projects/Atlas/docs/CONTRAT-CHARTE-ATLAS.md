@@ -125,7 +125,7 @@ Mesures sur fond blanc, écart CIEDE2000 au **pire** de la vision normale, de la
 | Encre `#1f1b14` sur fond `#ffffff` | 17,14:1 |
 | États `succes` `#1e6b3e`, `alerte` `#8a5a00`, `erreur` `#b3261e`, `information` `#1f5f99` | 6,51 / 5,93 / 6,54 / 6,66:1 (tous ≥ 4,5:1) ; forme distincte par état |
 | Sans donnée `#918f8c`, sélection `#1f1b14`, survol `#57544f` | 3,23 / 17,14 / 7,54:1 |
-| **Qualitative** (Okabe-Ito, ordre bleu, orange, vert, pourpre, ciel, vermillon, jaune, noir) | écart minimal des k premières : k = 2 : 51,4 ; k = 3 : 12,1 ; k = 4 à 8 : **11,1** (toutes les paires, jusqu'à 8, restent « nettes ») |
+| **Qualitative** (Okabe-Ito, ordre bleu, vermillon, vert, pourpre, orange, ciel, jaune, noir ; depuis la 1.19.0, les quatre premières classes tiennent 3:1 sur blanc, l'orange était la deuxième avant) | écart minimal des k premières : k = 2 : 49,6 ; k = 3 et 4 : 12,1 ; k = 5 à 8 : **11,1** (toutes les paires, jusqu'à 8, restent « nettes ») |
 | Contraste de chaque qualitative contre le fond | bleu 5,19 ; orange **2,25** ; vert 3,42 ; pourpre 3,06 ; ciel **2,31** ; vermillon 3,87 ; jaune **1,32** ; noir 21,0 : les trois en gras exigent un contour (annoncé) |
 | **Séquentielle** `principale` (accent `#c44536`) | écart minimal à 3, 4, 5, 6, 7, 8, 9 classes : 26,8 / 16,3 / **11,6** / 9,4 / 7,9 / 6,7 / 5,6 ; 5 classes nettes, 7 admises, 9 déconseillées |
 | Séquentielle `principale`, contraste au fond (9 couleurs) | 1,18 ; 1,47 ; 1,86 ; 2,40 ; 3,17 ; 4,21 ; 5,65 ; 7,73 ; 10,42 : les deux classes les plus claires à 5 classes demandent un contour sombre (14,53:1) |
