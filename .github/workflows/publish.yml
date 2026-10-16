@@ -19,7 +19,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Les tests et les gardes d'Atlas passent AVANT tout deploiement (voir ci.yml) : un etat casse ne se publie plus.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
