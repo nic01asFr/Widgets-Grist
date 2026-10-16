@@ -24,6 +24,7 @@ import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-pr
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
 import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
+import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=20261016a';
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
 import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
@@ -2806,7 +2807,7 @@ const Eclairage = {
     /** Plafonne le ratio de pixels de la carte (le calque three.js partage son canvas). */
     poserRatio(ratioMax) {
         if (!map || typeof map.setPixelRatio !== 'function') return;
-        const r = ratioApplique(window.devicePixelRatio || 1, ratioMax);
+        const r = ratioApplique(window.devicePixelRatio || 1, plafondLePlusStrict(ratioMax, RATIO_HOTE));
         if (r === this.ratioApplique) return;
         this.ratioApplique = r;
         try { map.setPixelRatio(r); } catch (_) { /* carte en cours de remplacement */ }
@@ -3348,6 +3349,9 @@ const STYLE_HORS_RESEAU = {
 };
 let _fondDeRepli = false;
 
+/** Plafond du ratio de pixels demandé par l'hôte (`?ratio=`), lu une fois. */
+const RATIO_HOTE = (() => { try { return ratioMaxDemande(location.search); } catch (_) { return null; } })();
+
 function initMap() {
     const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.liberty;
     // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
@@ -3362,6 +3366,7 @@ function initMap() {
         bearing: CONFIG.defaultBearing,
         antialias: true,
         maxPitch: 80,
+        ...(RATIO_HOTE ? { pixelRatio: ratioApplique(window.devicePixelRatio || 1, RATIO_HOTE) } : {}),
     });
     // Accès debug (couche custom / matrices MapLibre 5).
     try { window.__atlasMap = map; window.__Models3D = Models3D; } catch (_) {}
