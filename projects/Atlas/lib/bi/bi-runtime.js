@@ -14,7 +14,7 @@ import { diagnostiquerCouche } from './diagnostic-donnees.js';
 import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001a';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
-import { modeleLegende, lignesLegende } from './legende.js';
+import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, tailleTexte } from './icones-etats.js';
@@ -51,7 +51,7 @@ export function attacher(map, opts = {}) {
   const couches = new Map();         // id -> couche
   let selection = null, survol = null, emetteur = () => {}, camApi = false, attributionScene = null;   // `manifest.attribution` de la scène en cours (mention de l'hôte, du texte et des liens sûrs)
   const ecouteurs = new Map();       // type -> Set(cb)
-  const fond = creerFond(map); let modeFond = 'atlas';
+  const fond = creerFond(map); let modeFond = 'atlas', dernierFond = null;   // `dernierFond` : le fond demandé par l'hôte et ses jetons, rejoué quand la charte change (le fond uni et le plan en dépendent)
   let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
   let marges = null;                 // zone utile : ce que l'hôte a posé sur les côtés de la carte (lib/bi/marges.js), persistant
   // Les marges sont passées en `padding` à CHAQUE déplacement (flyTo, fitBounds), jamais par `map.setPadding` : mesuré en navigateur le 16/10/2026 (MapLibre 5.6.1), `setPadding`
@@ -129,7 +129,8 @@ export function attacher(map, opts = {}) {
       ajouterCalque(c, ext ? { id: PREF + 'agg-' + c.id, type: 'fill-extrusion', source: idAgg(c), paint: { 'fill-extrusion-color': ['coalesce', ['get', '_couleur'], '#cccccc'], 'fill-extrusion-height': ['*', ['coalesce', ['get', '_h'], 0], v.hauteurMax || 400], 'fill-extrusion-opacity': 0.88 } }
         : { id: PREF + 'agg-' + c.id, type: 'fill', source: idAgg(c), paint: { 'fill-color': ['coalesce', ['get', '_couleur'], '#cccccc'], 'fill-opacity': v.opacite ?? 0.8, 'fill-outline-color': T.contour } });
     } else if (g === 'point' && v.type === 'etats') {
-      const ids = ajouterIcones(map, v.etats || {}, { resoudre: (cc) => resoudre(cc, T), contourDefaut: T.marqueurs && T.marqueurs.contour }); const cles = Object.keys(ids);
+      c.avertVisuel = [];   // ce que le visuel a refusé (couleur illisible, jeton inconnu), dit à l'hôte par `setScene`
+      const ids = ajouterIcones(map, v.etats || {}, { resoudre: (cc) => resoudre(cc, T), contourDefaut: T.marqueurs && T.marqueurs.contour, jetons: T.jetons, noter: (m) => c.avertVisuel.push(m) }); const cles = Object.keys(ids);
       const icone = cles.length ? ['match', ['get', v.champEtat || 'etat'], ...cles.flatMap((k) => [k, ids[k]]), ids[cles[0]]] : '';
       const police = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
       ajouterCalque(c, { id: PREF + 'anneau-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', sel, 24, 0], 'circle-color': 'rgba(255,255,255,0.75)', 'circle-stroke-width': ['case', sel, 3, 0], 'circle-stroke-color': T.selection } });
@@ -344,6 +345,7 @@ export function attacher(map, opts = {}) {
           const nb = normaliserBulle(def.bulle); c.bulle = nb.bulle;   // la bulle déclarée ; ce qui n'est pas valide est écarté et dit
           if (nb.avertissements.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...nb.avertissements];
           couches.set(def.id, c); monter(c);
+          if (c.avertVisuel && c.avertVisuel.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...c.avertVisuel];
         }
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
@@ -378,6 +380,8 @@ export function attacher(map, opts = {}) {
     setTheme(t, options = {}) {
       const retour = themes.appliquer(t, { remplacer: !!(options && options.remplacer) });
       remonterTheme();
+      // un fond uni ou un plan monochrome est calculé depuis la charte : il la suit (sinon il restait blanc après un passage au thème sombre)
+      if (dernierFond && (dernierFond.mode === 'uni' || dernierFond.mode === 'plan')) api.setFond(dernierFond.mode, dernierFond.jetons).catch(() => { /* le fond précédent reste */ });
       emettre('theme', retour, 'api');
       return retour;
     },
@@ -386,7 +390,8 @@ export function attacher(map, opts = {}) {
     setVisual(id, v) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); const { style, ...vis } = v; if (style) c.def.style = style; demonter(c); c.visuel = { ...c.visuel, ...vis }; monter(c); if (!c.visible) api.setLayerVisibility(id, false); return c.visuel; },
     updateFeature(layer, id, patch) { const c = couches.get(layer); const f = c && c.parId.get(id); if (!f) throw new Error('entité inconnue : ' + layer + '/' + id); if (patch.geometry) f.geometry = patch.geometry; if (patch.properties) f.properties = { ...f.properties, ...patch.properties }; map.getSource(idSrc(c)).setData({ type: 'FeatureCollection', features: c.features }); appliquerVue(c); return true; },
     setEdition(layer, actif) { opts.edition = { couche: layer, actif }; return actif; },
-    getLegend(layer) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.legende(c); const m = modeleLegende(declaratifResolu(c.def.style?.declarative, themeDe(c)), c.vue, { cle: c.def.name }); const et = c.visuel.etats; if (et) for (const cl of m.classes) { const e = et[cl.cle]; if (e) cl.forme = e.forme; } return { layer: c.id, titre: c.def.name, ...m, agregat: c.agg || null }; },
+    getLegend(layer) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.legende(c);
+      if (c.visuel.type === 'etats' && c.visuel.etats) { const T = themeDe(c); return { layer: c.id, titre: c.def.name, ...legendeEtats(c.visuel, c.vue, (cc) => resoudre(cc, T)), agregat: c.agg || null }; } const m = modeleLegende(declaratifResolu(c.def.style?.declarative, themeDe(c)), c.vue, { cle: c.def.name }); const et = c.visuel.etats; if (et) for (const cl of m.classes) { const e = et[cl.cle]; if (e) cl.forme = e.forme; } return { layer: c.id, titre: c.def.name, ...m, agregat: c.agg || null }; },
     getRows(layer, o = {}) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.lignes(c, o); return { layer: c.id, lignes: c.vue.map((f) => ({ id: f.id, ...f.properties })), legende: lignesLegende(api.getLegend(c.id)) }; },
     resize() { map.resize(); return true; },
     ...admin.api,
@@ -410,7 +415,7 @@ export function attacher(map, opts = {}) {
       const plan = principal ? planDepuis({ principal, fond: fondUni || charte.graines.fond, encre: charte.graines.encre, intensites: charte.fond.intensites, vegetation: charte.fond.vegetation }) : (theme.plan || {});
       const J = { ...plan, ...autres };
       const r = await fond.appliquer(mode, J);
-      modeFond = mode; poserTheme();
+      modeFond = mode; dernierFond = { mode, jetons }; poserTheme();
       for (const c of couches.values()) if (c.visuel.type === 'etats') { const sel = selection; demonter(c); monter(c); if (sel && sel.c === c) poserSelection(c, sel.id); }
       poserLavis();
       const mesure = verifierPlan({ ...theme.plan, ...J }, charte.exigences, 'jetons');
