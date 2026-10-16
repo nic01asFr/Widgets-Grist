@@ -21,7 +21,7 @@
  * sinon.
  */
 
-import { assainirTexte } from './html.js?v=1.16.7';
+import { assainirTexte } from './html.js?v=1.16.8';
 
 /** Au-delà, ce n'est plus une mention de source : on coupe avant d'analyser. */
 export const ATTRIBUTION_MAX = 500;

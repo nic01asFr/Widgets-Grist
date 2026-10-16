@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.16.8",
+      "texte": "Atlas ne dépend plus d’aucun site externe pour démarrer : la carte, le soleil, la 3D et les polices sont embarquées, ce qui le rend plus rapide, utilisable derrière un pare-feu et sans pistage tiers. Les filtres des contrôles sont près de quarante fois plus rapides sur de grandes couches, et une donnée mal formée passée à la carte est signalée en clair (coordonnées hors plage, entités sans géométrie, identifiants en double) au lieu d’un message technique ou d’une carte vide."
+    },
+    {
       "version": "v1.16.7",
       "texte": "La carte intégrée dans une application se charge plus vite (près d’un mégaoctet en moins à télécharger) et, quand elle ne peut pas démarrer, elle dit pourquoi — une dépendance bloquée, un réseau trop lent — au lieu de rester sur un écran de chargement sans fin. L’application qui l’héberge en est aussi prévenue."
     },
@@ -708,7 +712,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.16.7 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.16.8 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

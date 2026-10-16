@@ -51,11 +51,11 @@
 
     <!-- MapLibre GL JS (remplace Mapbox) -->
     <!-- MapLibre GL JS v5 (projection globe native) -->
-    <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
-    <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="./vendor/maplibre-gl/maplibre-gl.js"></script>
+    <link href="./vendor/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
 
     <!-- SunCalc : position solaire réaliste -->
-    <script src="https://unpkg.com/suncalc@1.8.0/suncalc.js"></script>
+    <script src="./vendor/suncalc/suncalc.js"></script>
 
     <!-- Grist Plugin API : chargee des l'analyse de la page (meme moment qu'avant), SAUF en mode composant (parametre bi=1), ou elle ne sert a rien :
          967 Ko non compresses, jamais appelee, et c'est la que l'hote embarque Atlas. app_v7.js attend `window.__gristApi` avant de demarrer. -->
@@ -72,18 +72,16 @@
     </script>
 
     <!-- Fonts Atlas : Newsreader (serif éditorial) + Hanken Grotesk + JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="./vendor/polices/polices.css" rel="stylesheet" />
 
     <!-- three.js : custom layer pour modèles 3D GLTF sur MapLibre -->
     <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-        "terra-draw": "https://cdn.jsdelivr.net/npm/terra-draw@1.35.0/dist/terra-draw.module.js",
-        "terra-draw-maplibre-gl-adapter": "https://cdn.jsdelivr.net/npm/terra-draw-maplibre-gl-adapter@1.4.1/dist/terra-draw-maplibre-gl-adapter.module.js"
+        "three": "./vendor/three/three.module.js",
+        "three/addons/": "./vendor/three/addons/",
+        "terra-draw": "./vendor/terra-draw/terra-draw.module.js",
+        "terra-draw-maplibre-gl-adapter": "./vendor/terra-draw-maplibre-gl-adapter/terra-draw-maplibre-gl-adapter.module.js"
       }
     }
     </script>
@@ -1941,7 +1939,8 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.16.7" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.16.8" />
+    <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
     <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
@@ -2199,6 +2198,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.16.7"></script>
+    <script type="module" src="./app.js?v=1.16.8"></script>
 </body>
 </html>

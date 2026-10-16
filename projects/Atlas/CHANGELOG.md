@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.8 — plus aucune dépendance externe au démarrage
+
+- **Dépendances embarquées** : MapLibre GL 5.6.1, SunCalc, three.js et ses extensions, terra-draw, geotiff et les polices sont servis depuis `vendor/` (25 fichiers, 3,9 Mo, verrou `verrou-externe.json` et licences). La page ne contacte plus unpkg, cdnjs, jsdelivr ni Google Fonts ; restent l'API de plugin de Grist (application) et les tuiles de fond de carte (données). Manifeste : `vendor-externe.json` ; outil d'embarquement et garde de promotion.
+- **Contrôles** : le prédicat de filtre calcule une fois par contrôle ce qui ne dépend pas de l'entité (100 000 entités, trois contrôles : de 808 ms à ~23 ms), avec un test d'équivalence à l'ancienne implémentation sur 400 scénarios aléatoires.
+- **Diagnostic des données** (`lib/bi/diagnostic-donnees.js`) : une `FeatureCollection` passée à la place d'un tableau est refusée en clair ; coordonnées hors plage, entités sans géométrie et identifiants en double sont rapportés dans `_avertissements` du résultat de `setScene` et `avertissements` de l'événement `ready`.
+- **Accessibilité** : libellés de locale de la carte en français, voile de chargement nettoyé à la levée.
+- **Composant BI** : inchangé (contrat 0.3, même client, même empreinte).
+
 ## 1.16.7 — un composant plus léger, qui dit pourquoi il ne démarre pas
 
 - **Allégé** : en mode composant (`bi=1`), la page ne charge plus l'API de plugin de Grist (967 Ko, jamais appelée par le composant). L'application Atlas la charge comme avant, au même moment, et l'attend avant de démarrer. Mesuré : plus aucune requête vers `docs.getgrist.com` en mode composant, même démarrage et même rendu.
