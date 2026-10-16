@@ -8,6 +8,9 @@
  *     <script type="application/json" data-atlas="donnees">{ "sites": [ … ] }</script>
  *   </atlas-bi>
  *
+ * Sans `manifeste`, des `donnees` suffisent : le manifeste est INFÉRÉ (`lib/bi/inference.js` : géométrie, identifiants, clé métier, couleurs par classe, filtre)
+ * et ce qui a été décidé est dit dans `notes`. Un manifeste explicite prime toujours.
+ *
  * Ce que l'hôte déclare : `manifeste` (manifeste de scène), `donnees` (`{ idCouche: [Features] }`, facultatif : une couche peut aussi porter
  * `geojson.features`), `charte` (charte graphique), `fond` (`atlas`, `voile`, `uni`, `plan`, `plan-ign`, `photo`). Chacun s'écrit en attribut
  * (adresse d'un fichier JSON) OU en bloc `<script type="application/json" data-atlas="…">` dans l'élément, jamais les deux.
@@ -77,7 +80,9 @@ export async function lireConfiguration(element, { base, lecteur }) {
     if (adresse && inline !== null) throw new ErreurBi('commande', `<atlas-bi> : ${nom} est déclaré deux fois (attribut et bloc data-atlas) ; gardez l'un des deux`);
     if (adresse) config[nom] = await lireAdresse(adresse, nom, { base, lecteur });
     else if (inline !== null) config[nom] = analyserJson(inline, `le bloc data-atlas="${nom}"`);
-    if (config[nom] !== undefined && (config[nom] === null || typeof config[nom] !== 'object' || Array.isArray(config[nom]))) {
+    // `donnees` peut aussi être un tableau de Features (ou une FeatureCollection) ; le manifeste et la charte sont des objets
+    const tableauOk = nom === 'donnees' && Array.isArray(config[nom]);
+    if (config[nom] !== undefined && !tableauOk && (config[nom] === null || typeof config[nom] !== 'object' || Array.isArray(config[nom]))) {
       throw new ErreurBi('commande', `<atlas-bi> : ${nom} doit être un objet JSON`);
     }
   }
@@ -91,7 +96,16 @@ export async function lireConfiguration(element, { base, lecteur }) {
     if (cadrage !== 'auto' && cadrage !== 'aucun') throw new ErreurBi('commande', `<atlas-bi> : cadrage « ${cadrage} » inconnu (auto, aucun)`);
     config.cadrage = cadrage;
   }
-  if (config.donnees && !config.manifeste) throw new ErreurBi('commande', '<atlas-bi> : `donnees` sans `manifeste` : rien à quoi les rattacher');
+  if (config.donnees && !config.manifeste) {
+    // une ligne : des données seules -> manifeste inféré
+    try { const { inferer } = await import('./inference.js'); const r = inferer(config.donnees); config.manifeste = r.manifeste; config.donnees = r.donnees; config.notes = r.notes; }
+    catch (e) { throw new ErreurBi('commande', '<atlas-bi> : ' + String(e && e.message || e)); }
+  } else if (config.donnees && (Array.isArray(config.donnees) || config.donnees.type === 'FeatureCollection')) {
+    // un manifeste explicite à une seule couche et des données sans nom de couche : on les rattache à cette couche
+    const couches = Array.isArray(config.manifeste.layers) ? config.manifeste.layers : [];
+    if (couches.length !== 1) throw new ErreurBi('commande', '<atlas-bi> : `donnees` est une liste de Features mais le manifeste a ' + couches.length + ' couches : donnez { idCouche: Features }');
+    config.donnees = { [couches[0].id]: Array.isArray(config.donnees) ? config.donnees : config.donnees.features };
+  }
   return config;
 }
 
@@ -121,6 +135,7 @@ export async function appliquerConfiguration(appeler, config) {
   if (config.charte) await etape('charte', 'setTheme', config.charte);
   if (config.fond) await etape('fond', 'setFond', config.fond);
   if (config.manifeste) await etape('scene', 'setScene', config.manifeste, config.donnees || {});
+  if (config.notes && config.notes.length) resultat.inference = config.notes;
   if (cadrerApres(config)) await etape('cadrage', 'fitTo');
   return resultat;
 }

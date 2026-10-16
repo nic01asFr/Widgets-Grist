@@ -79,15 +79,20 @@ export const EXEMPLES = Object.freeze({
     manifeste: { layers: [{ id: 'dep', name: 'Départements', geometry_type: 'polygon', admin: { niveau: 'departement' }, visuel: { type: 'choroplethe', niveau: 'departement', source: 'hote', champ: 'valeur', table: { '13': 12, '83': 7 } } }] },
     sequence: ['setScene(manifeste)'],
   },
+  donnees: {
+    titre: 'Une ligne : des données GeoJSON, le manifeste est inféré',
+    html: '<atlas-bi src="https://nic01asfr.github.io/Widgets-Grist/atlas/" donnees="/carte/sites.geojson"></atlas-bi>',
+  },
   declaratif: {
     titre: 'Sans code : tout en attributs',
     html: '<atlas-bi src="https://nic01asfr.github.io/Widgets-Grist/atlas/" manifeste="/carte/manifeste.json" charte="/carte/charte.json" fond="plan"></atlas-bi>',
   },
 });
 
-/** Dix lignes pour une personne ou un agent qui découvre Atlas. */
+/** Un guide court pour une personne ou un agent qui découvre Atlas. */
 export const GUIDE = Object.freeze([
   'Commencez par <atlas-bi src="https://nic01asfr.github.io/Widgets-Grist/atlas/"> : l\'élément ajoute lui-même bi=1, navbar=false, mode=view et l\'origine de votre page.',
+  'Une ligne : `donnees="sites.geojson"` suffit, le manifeste est inféré (géométrie, identifiants, clé, couleurs par classe, filtre) et ce qui a été décidé est dit dans `inference` de atlas-bi-configure ; un manifeste explicite prime.',
   'Sans code : donnez manifeste (et donnees, charte, fond) en attributs ou en blocs <script type="application/json" data-atlas="…"> ; la carte se monte à la connexion et se cadre sur ses entités (cadrage="aucun" pour garder la caméra).',
   'Avec du code : attendez `await carte.pret`, puis `await carte.setScene(manifeste, donnees)` ; chaque commande du contrat est une méthode de l\'élément.',
   'Données : un tableau de Features GeoJSON par couche, avec un `id` ENTIER stable et unique dans toute la scène ; ordre des coordonnées [longitude, latitude].',

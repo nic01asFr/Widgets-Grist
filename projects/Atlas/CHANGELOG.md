@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.18.0 — des données seules suffisent
+
+- **Composant** : `<atlas-bi donnees="/carte/sites.geojson">` sans `manifeste` : le manifeste est déduit (`lib/bi/inference.js`) et ce qui a été décidé est dit (`inference` dans `atlas-bi-configure`). Couches (une par entrée, une par type de géométrie), identifiants entiers uniques dans toute la scène (l'ancien dans `id_origine`, qui devient la clé), clé métier, couleurs par classe (2 à 8 valeurs partagées), contrôle de filtre. Un manifeste explicite prime toujours ; les données de l'hôte ne sont jamais modifiées.
+- **Charte** : une classe de style sans couleur prend la suivante de la palette qualitative de la charte (utile aussi à un manifeste écrit à la main).
+- **Composant BI** : aucune commande ajoutée, contrat 0.3 inchangé, même client, même empreinte.
+
 ## 1.17.0 — une carte en une balise, qui se décrit elle-même
 
 - **Composant** : `<atlas-bi>` se configure sans code. Attributs `manifeste`, `donnees`, `charte` (adresses de fichiers JSON lues par la page hôte, ou blocs `<script type="application/json" data-atlas="…">`) et `fond` ; appliqués dans l'ordre charte, fond, scène à la connexion et à chaque changement d'attribut, sans recharger l'iframe. Événement DOM `atlas-bi-configure`, méthode `reconfigurer()`, propriété `configure`. Adresses http(s) seulement, 16 Mo au plus, jamais de HTML interprété ; Atlas ne charge toujours aucune charte ni donnée par adresse.
