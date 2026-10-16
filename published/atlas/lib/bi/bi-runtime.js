@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.20.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.20.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.21.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.21.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.20.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.21.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';
@@ -54,7 +54,9 @@ export function attacher(map, opts = {}) {
   const fond = creerFond(map); let modeFond = 'atlas';
   let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
   let marges = null;                 // zone utile : ce que l'hôte a posé sur les côtés de la carte (lib/bi/marges.js), persistant
-  const poserMarges = (m) => { marges = normaliserMarges(m); if (typeof map.setPadding === 'function') map.setPadding(marges || { top: 0, right: 0, bottom: 0, left: 0 }); return marges; };
+  // Les marges sont passées en `padding` à CHAQUE déplacement (flyTo, fitBounds), jamais par `map.setPadding` : mesuré en navigateur le 16/10/2026 (MapLibre 5.6.1), `setPadding`
+  // combiné à un `padding` de `fitBounds` compte la marge deux fois (une marge de 300 px retirait ~600 px : « Map cannot fit within canvas », la carte restait blanche).
+  const poserMarges = (m) => { marges = normaliserMarges(m); return marges; };
   let bulleCtl = null, dernierClic = null;   // la bulle d'objet déclarée par l'hôte (lib/bi/bulle.js) ; `dernierClic` : le point cliqué, pour ancrer la bulle d'une ligne ou d'une surface
   // thème d'exécution = charte résolue + ce qui dépend du fond choisi (police des symboles du Plan IGN, voile)
   const poserTheme = () => {
@@ -74,7 +76,7 @@ export function attacher(map, opts = {}) {
   bulleCtl = creerBulle({
     map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
     creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bi-bulle-popup', focusAfterOpen: false })),
-    variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables,
+    variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables, marges: () => marges,
     quandFermee: () => { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } },
   });
 

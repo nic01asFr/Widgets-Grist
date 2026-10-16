@@ -19,6 +19,8 @@
  * Module sans dépendance : le DOM et la fabrique de bulle de carte (MapLibre `Popup`) sont injectés.
  */
 
+import { decalageDansZone } from './marges.js';
+
 export const CHAMPS_MAX = 4;
 export const ACTIONS_MAX = 3;
 export const LONGUEUR_LIBELLE = 80;
@@ -144,16 +146,18 @@ export const FEUILLE = `
 .atlas-bi-bulle-action:hover { filter: brightness(.94); }
 .atlas-bi-bulle button:focus-visible { outline: 2px solid var(--atlas-selection, #1f1b14); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { .atlas-bi-bulle-popup { animation: atlas-bi-bulle-entree .12s ease-out; } }
-@keyframes atlas-bi-bulle-entree { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* l'entrée n'anime QUE l'opacité : MapLibre positionne la bulle par transform sur ce même élément, une animation de transform la ramenait à l'origine de la carte le temps de l'animation */
+@keyframes atlas-bi-bulle-entree { from { opacity: 0; } to { opacity: 1; } }
 `;
 
 /**
  * Le contrôleur de la bulle d'une carte.
  * @param {{ map: object, document?: Document, creerPopup: () => object, emettre: Function, variables: () => Record<string,string>, appliquer?: Function, quandFermee?: Function }} o
  *   `creerPopup()` rend un objet de type MapLibre `Popup` (`setLngLat`, `setDOMContent`, `addTo`, `remove`, `getElement`, `isOpen`) ;
- *   `variables()` rend les variables CSS de la charte ; `appliquer(element, variables)` les écrit ; `quandFermee()` est appelée quand la PERSONNE ferme la bulle.
+ *   `variables()` rend les variables CSS de la charte ; `appliquer(element, variables)` les écrit ; `marges()` rend les marges de l'hôte (zone utile) ;
+ *   `quandFermee()` est appelée quand la PERSONNE ferme la bulle.
  */
-export function creerBulle({ map, document: doc = globalThis.document, creerPopup, emettre, variables, appliquer, quandFermee = () => {} }) {
+export function creerBulle({ map, document: doc = globalThis.document, creerPopup, emettre, variables, appliquer, marges = () => null, quandFermee = () => {} }) {
   let popup = null, courante = null, contenuRacine = null;
   const ecrire = (el) => { if (!el || !appliquer) return; try { appliquer(el, variables()); } catch (_) { /* variables illisibles : les valeurs de repli de la feuille s'appliquent */ } };
   function feuille() {
@@ -197,6 +201,7 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
     if (!popup.isOpen || !popup.isOpen()) popup.addTo(map);
     ecrire(popup.getElement && popup.getElement());
     courante = { layer: c.id, featureId: f.id };
+    planifierAjustement();
     const autre = !ancienne || ancienne.layer !== courante.layer || ancienne.featureId !== courante.featureId;
     if (autre && ancienne) emettre('bulle', { etat: 'fermee', ...ancienne }, 'utilisateur');   // des paires ouverte/fermee, même quand la bulle passe d'un objet à l'autre
     if (autre) emettre('bulle', { etat: 'ouverte', ...courante }, 'utilisateur');
@@ -209,7 +214,29 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
     emettre('bulle', { etat: 'fermee', ...c }, 'utilisateur');
     return true;
   }
+  /**
+   * La bulle reste dans la zone utile (la carte moins les marges de l'hôte) : sans cela, elle s'ouvrait sous le panneau de l'hôte quand l'objet est près de son bord.
+   * Un simple décalage visuel du contenu (le positionnement de MapLibre n'est pas touché) ; recalculé quand la carte s'arrête de bouger.
+   */
+  function ajuster() {
+    const el = popup && courante && popup.getElement && popup.getElement(); const contenu = el && el.querySelector && el.querySelector('.maplibregl-popup-content');
+    const conteneur = map && map.getContainer && map.getContainer();
+    if (!contenu || !conteneur || !contenu.getBoundingClientRect) return;
+    contenu.style.transform = '';
+    const r = contenu.getBoundingClientRect(), c = conteneur.getBoundingClientRect();
+    const { dx, dy } = decalageDansZone({ left: r.left - c.left, right: r.right - c.left, top: r.top - c.top, bottom: r.bottom - c.top }, { largeur: c.width, hauteur: c.height }, marges());
+    if (dx || dy) contenu.style.transform = `translate(${dx}px, ${dy}px)`;
+  }
+  // MapLibre place la bulle au rendu suivant : mesurée tout de suite, elle est encore à l'origine du conteneur (constaté en navigateur). On recalcule donc après la mise en page.
+  function planifierAjustement() {
+    ajuster();
+    const raf = (doc && doc.defaultView && doc.defaultView.requestAnimationFrame) || (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null);
+    if (raf) raf(() => raf(ajuster));
+    setTimeout(ajuster, 120);
+  }
+  if (map && typeof map.on === 'function') map.on('moveend', ajuster);
+
   /** La charte a changé : les variables sont réécrites sur la bulle ouverte. */
   function actualiser() { if (popup && courante) ecrire(popup.getElement && popup.getElement()); }
-  return { ouvrir, fermer, actualiser, ouverte: () => (courante ? { ...courante } : null) };
+  return { ouvrir, fermer, actualiser, ajuster, ouverte: () => (courante ? { ...courante } : null) };
 }

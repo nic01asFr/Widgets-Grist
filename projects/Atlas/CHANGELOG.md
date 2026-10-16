@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.21.0 — un composant trois fois plus léger : la page maigre
+
+- **Composant** : `?bi=1` ne charge plus l'application complète (interface, three.js, import, formulaires : ~4,9 Mo non compressés, 146 requêtes) pour n'en garder que la carte. La page `bi.html` charge MapLibre et le composant (~1,4 Mo non compressés, 45 à 50 requêtes). Mesuré le 16/10/2026 : `app.js` (0,98 Mo), 86 modules d'application (0,94 Mo) et three.js (1,5 Mo) n'y sont plus. La carte est créée par `lib/bi/carte-nue.js`, avec le même style de base, le même fond de repli hors réseau, les mêmes libellés français, le même plafond de ratio (`?ratio=`) et la même vue d'ouverture qu'avant ; `lib/fonds-base.js` partage ces constantes avec l'application.
+- **Marges** : corrigé à l'essai en navigateur : les marges étaient comptées deux fois par MapLibre (`setPadding` combiné au `padding` de `fitBounds` : une marge de 300 px retirait ~600 px, la carte restait blanche avec un grand panneau) ; elles passent maintenant en `padding` de chaque déplacement ; la bulle d'objet reste maintenant dans la zone utile au lieu de s'ouvrir sous le panneau de l'hôte.
+- **Compatibilité** : `index.html?bi=1&…` continue de fonctionner : la page de l'application mène à `bi.html` par une redirection qui garde tous les paramètres (un aller-retour de plus ; les nouveaux hôtes visent `bi.html`). `?scene=` + `bi=1` reste dans l'application, qui charge des couches d'application.
+- **Gardes** : la fermeture de `entree.js` ne doit contenir aucun module de l'application ; budgets de poids de la page maigre ; la redirection et le garde d'amorçage sont testés dans les deux pages.
+- **Composant BI** : aucune commande ajoutée, contrat 0.3, même client, même empreinte.
+
 ## 1.20.0 — la carte prend le style de la page
 
 - **Composant** : `<atlas-bi charte="herite">` lit le style de la page hôte (variables `--atlas-principal`, `--atlas-secondaire`, `--atlas-fond`, `--atlas-encre`, `--atlas-police`, puis variables usuelles des systèmes de design pour la couleur principale, couleur de texte et fond calculés, famille de police ramenée à la liste admise) et l'applique comme une charte ordinaire (contrastes mesurés et dits). Relue quand la page change de thème (événement `atlas-bi-herite`). `lib/bi/herite.js` pour les hôtes sans l'élément. Rien n'est deviné : sans couleur principale trouvée, celle d'Atlas reste.

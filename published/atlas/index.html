@@ -12,6 +12,11 @@
     <link rel="icon" href="data:," />
     <title>Atlas — Maquette 3D Territoriale</title>
 
+    <!-- Le composant carte BI (paramètre bi=1) n'a pas besoin de l'application : ce script, le PREMIER de la page, mène à la page maigre (index_bi.html, publiée sous
+         le nom bi.html) avec les mêmes paramètres, et la page de l'application s'arrête là. Aucun hôte ne change d'adresse. Une scène externe
+         (`?scene=`) reste dans l'application : elle charge des couches d'application. Gardé par tests/bi-page-maigre.test.js. -->
+    <script>try { var spb = new URLSearchParams(location.search), bib = spb.get('bi'); if ((bib === '1' || bib === 'true') && !spb.has('scene')) location.replace('./bi.html' + location.search + location.hash); } catch (e) { /* page de l'application */ }</script>
+
     <!-- Garde d'amorçage du mode composant : si la carte ne démarre pas (dépendance bloquée, réseau lent), le voile le DIT au lieu de rester sur « Chargement… »,
          et l'hôte en est averti (événement `error`, aux seules origines déclarées par `hote=`). Sans ce garde, un CDN bloqué laissait un écran vide sans cause.
          Place EN TETE de la page : il doit ecouter avant les scripts du head (MapLibre, SunCalc), dont l'echec survient avant que le voile existe.
@@ -1940,7 +1945,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.20.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.21.0" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2199,6 +2204,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.20.0"></script>
+    <script type="module" src="./app.js?v=1.21.0"></script>
 </body>
 </html>

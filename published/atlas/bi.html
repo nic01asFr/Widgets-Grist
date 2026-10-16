@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Page MAIGRE du composant carte BI : la carte et son voile, rien de l'application. `index.html?bi=1` y mène (redirection), pour qu'aucun hôte ne change d'adresse.
+         Elle charge MapLibre, `lib/bi/entree.js` et ce que le runtime importe : ni l'interface d'Atlas, ni three.js, ni l'import, ni les formulaires. -->
+    <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
+    <link rel="icon" href="data:," />
+    <title>Atlas — Carte</title>
+
+    <!-- Garde d'amorçage du mode composant : si la carte ne démarre pas (dépendance bloquée, réseau lent), le voile le DIT au lieu de rester sur « Chargement… »,
+         et l'hôte en est averti (événement `error`, aux seules origines déclarées par `hote=`). Sans ce garde, un CDN bloqué laissait un écran vide sans cause.
+         Place EN TETE de la page (même garde que index_v7.html, sans le test de ?bi=1 : cette page est toujours le composant) : il doit ecouter avant les scripts du head (MapLibre, SunCalc), dont l'echec survient avant que le voile existe.
+         Gardé par tests/amorcage-garde.test.js ; `window.__biPret` est posé par lib/bi/montage.js. -->
+    <script>
+        (function () {
+            var sp; try { sp = new URLSearchParams(location.search); } catch (e) { return; }
+            /* cette page est TOUJOURS le composant : pas de test de ?bi=1 */
+            var causes = [], alerte = false;
+            function voile(t) { var v = document.getElementById('bi-voile'); if (v) v.textContent = t; }
+            function hote(u) { try { return new URL(u, location.href).host; } catch (e) { return String(u).slice(0, 60); } }
+            function prevenir(code, message) {
+                if (alerte) return; alerte = true;
+                console.error('[Atlas BI] ' + message);
+                try {
+                    if (window.parent && window.parent !== window) sp.getAll('hote').forEach(function (o) {
+                        try { window.parent.postMessage({ source: 'atlas-bi', version: '0.3', type: 'error', charge: { code: code, message: message, niveau: 'fatal' }, origine: 'utilisateur' }, o); } catch (e) { /* origine invalide */ }
+                    });
+                } catch (e) { /* pas d'hote */ }
+            }
+            addEventListener('error', function (e) {
+                var t = e && e.target;
+                if (!t || t.tagName !== 'SCRIPT' || window.__biPret) return;
+                causes.push(hote(t.src));
+                montrer();
+            }, true);
+            function montrer() { if (causes.length) voile('Une dépendance de la carte ne se charge pas : ' + causes.join(', ') + ' (réseau ou accès bloqué).'); }
+            setTimeout(function () { if (!window.__biPret) montrer(); }, 1500);   // le voile n'existait pas encore au moment d'une erreur du head
+            setTimeout(function () { if (!window.__biPret && !causes.length) voile('Chargement lent… (réseau ou dépendance)'); }, 6000);
+            setTimeout(function () {
+                if (window.__biPret) return;
+                var m = causes.length ? 'La carte n’a pas démarré : ' + causes.join(', ') + ' ne se charge pas.' : 'La carte n’a pas démarré après 20 s (réseau lent ou dépendance bloquée).';
+                voile(m); prevenir(causes.length ? 'dependance' : 'delai', m);
+            }, 20000);
+        })();
+    </script>
+
+    <script src="./vendor/maplibre-gl/maplibre-gl.js"></script>
+    <link href="./vendor/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; overflow: hidden; background: #F6F6F4; color-scheme: light; }
+        #map { position: absolute; inset: 0; }
+        #map .maplibregl-ctrl-attrib { background: rgba(255,255,255,0.7); font-size: 10px; }
+        /* La page ne garde que la carte et son attribution (obligatoire) : l'hôte porte son habillage, sa légende et ses contrôles. */
+        .maplibregl-ctrl-top-left, .maplibregl-ctrl-top-right, .maplibregl-ctrl-bottom-left { display: none !important; }
+        /* Premier rendu : un voile neutre cache la carte jusqu'à ce que l'hôte ait posé sa scène (lib/bi/voile.js le lève) ; `?voile=0` le retire. */
+        #bi-voile { display: none; }
+        body.voile-bi #bi-voile {
+            display: grid; place-items: center; position: fixed; inset: 0; z-index: 2147483000;
+            background: #F6F6F4; color: #5D5D58;
+            font: 500 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) { body.voile-bi #bi-voile { background: #1D1D1B; color: #A9A9A2; } }
+    </style>
+    <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
+</head>
+<body class="mode-bi">
+    <!-- La classe du voile est posée AVANT le premier affichage. Même règle que `voileDemande` (lib/bi/voile.js), gardée par tests/bi-premier-affichage.test.js. -->
+    <script>try { var sp = new URLSearchParams(location.search), vv = sp.get('voile'); if (!(vv === '0' || vv === 'false' || vv === 'non')) { document.body.classList.add('voile-bi'); document.body.setAttribute('aria-busy', 'true'); } } catch (e) { /* sans classe : pas de voile */ }</script>
+    <div id="bi-voile" role="status" aria-live="polite">Chargement de la carte…</div>
+    <div id="map"></div>
+    <script type="module">
+        import { lancer } from './lib/bi/entree.js?v=1.21.0';
+        lancer().catch((e) => console.error('[Atlas BI]', e));
+    </script>
+</body>
+</html>
