@@ -2,7 +2,11 @@
  * Marqueurs à formes : l'état d'une entité se lit par la FORME, la COULEUR et un TEXTE (pas par la couleur seule).
  * Formes : cercle, carre (aux coins arrondis), losange, triangle. Dessinées sur un canevas, ajoutées comme images à la carte.
  */
+import { analyserCouleur } from '../charte/couleurs.js';
+
 export const FORMES = Object.freeze(['cercle', 'carre', 'losange', 'triangle']);
+/** La couleur d'un marqueur dont la couleur déclarée n'est pas lisible : un gris, et la raison est DITE (`noter`), jamais un marqueur noir sans explication. */
+export const GRIS_REPLI = '#808080';
 
 /** Trace une forme dans un contexte 2D, centrée dans un carré de 36 unités mis à l'échelle `k`. */
 export function tracer(ctx, forme, k = 1) {
@@ -50,10 +54,18 @@ export function tailleTexte(champTexte, reglage, defaut) {
  * Ajoute à la carte une image par état. Renvoie la table état -> identifiant d'image.
  * `contourDefaut` : le trait des marqueurs qui n'en déclarent pas (la charte : `marqueurs.contour`, l'encre) ; à défaut, blanc comme avant.
  */
-export function ajouterIcones(map, etats, { prefixe = 'bi-ic-', resoudre = (c) => c, contourDefaut = null } = {}) {
+export function ajouterIcones(map, etats, { prefixe = 'bi-ic-', resoudre = (c) => c, contourDefaut = null, jetons = null, noter = () => {} } = {}) {
   const ids = {};
+  /** Une couleur de marqueur lisible, ou le gris de repli (et une explication). */
+  const sure = (brut, ou) => {
+    if (typeof brut === 'string' && brut.startsWith('jeton:') && jetons && !Object.prototype.hasOwnProperty.call(jetons, brut.slice(6))) { noter(`${ou} : le jeton « ${brut.slice(6, 46)} » n'existe pas dans la charte ; gris utilisé`); return GRIS_REPLI; }
+    const r = resoudre(brut);
+    if (typeof r === 'string' && analyserCouleur(r)) return r;
+    noter(`${ou} : « ${String(brut).slice(0, 40)} » n'est pas une couleur lisible (#rrggbb, rgb(), hsl() ou jeton:<nom>) ; gris utilisé`);
+    return GRIS_REPLI;
+  };
   for (const [cle, e] of Object.entries(etats)) {
-    const id = prefixe + cle; ids[cle] = id; const img = creerIcone({ forme: e.forme, fill: resoudre(e.fill), stroke: resoudre(e.stroke || contourDefaut || '#ffffff'), largeurTrait: e.largeurTrait || 2.5 });
+    const id = prefixe + cle; ids[cle] = id; const img = creerIcone({ forme: e.forme, fill: sure(e.fill, `visuel.etats.${cle}.fill`), stroke: e.stroke ? sure(e.stroke, `visuel.etats.${cle}.stroke`) : resoudre(contourDefaut || '#ffffff'), largeurTrait: e.largeurTrait || 2.5 });
     if (map.hasImage(id)) map.removeImage(id); map.addImage(id, img, { pixelRatio: 2 });
   }
   return ids;

@@ -48,3 +48,20 @@ export function resumeTexte(modele, titre = '') {
   const l = modele.classes.filter((c) => c.compte > 0).map((c) => c.libelle + ' : ' + c.compte).join(' ; ');
   return (titre ? titre + ' — ' : '') + modele.total + ' éléments' + (l ? ' (' + l + ')' : '') + '.';
 }
+
+/**
+ * Légende d'un visuel `etats` : une classe par état déclaré (dans l'ordre de la déclaration), avec sa couleur, sa forme et le nombre d'entités qui le portent ;
+ * les entités dont l'état n'est pas déclaré sont comptées à part. Même rapprochement que l'icône (valeur EXACTE de `champEtat`).
+ * @param {{ champEtat?: string, etats?: Record<string, { forme?: string, fill?: string, libelle?: string }> }} visuel
+ * @param {object[]} features entités à compter
+ * @param {(couleur: string) => string} resoudre rend la couleur affichable d'une couleur ou d'un jeton de charte
+ */
+export function legendeEtats(visuel, features = [], resoudre = (c) => c, { libelleSans = '(sans état)', couleurSans = '#9a9a9a' } = {}) {
+  const champ = (visuel && visuel.champEtat) || 'etat', etats = (visuel && visuel.etats) || {};
+  const classes = Object.entries(etats).map(([cle, e]) => ({ cle, libelle: (e && e.libelle) || cle, couleur: resoudre(e && e.fill), forme: e && e.forme, compte: 0 }));
+  const index = new Map(classes.map((c, i) => [c.cle, i]));
+  let sansValeur = 0;
+  for (const f of features) { const v = texte(f.properties?.[champ]); if (index.has(v)) classes[index.get(v)].compte++; else sansValeur++; }
+  if (sansValeur) classes.push({ cle: '__sans__', libelle: libelleSans, couleur: couleurSans, compte: sansValeur });
+  return { type: 'etats', champ, total: features.length, classes, sansValeur };
+}

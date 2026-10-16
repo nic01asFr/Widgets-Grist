@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.21.1 — marqueurs d'état : légende, couleurs dites, fond qui suit la charte
+
+- **Composant** : retours d'appkit sur la 1.20. `getLegend` d'un visuel `etats` rend une classe par état (couleur, forme, libellé, compte) au lieu de « Sites : N ». Une couleur de marqueur illisible (`etat-ok` sans `jeton:`, `var(--x)`) ou un jeton absent de la charte donne un marqueur gris et une explication dans `_avertissements` (avant : un marqueur noir sans un mot). Un fond `uni` ou `plan` posé par `setFond` est recalculé quand `setTheme` change la charte après lui (il restait blanc en thème sombre).
+- **Composant BI** : aucune commande ajoutée, contrat 0.3, même client, même empreinte.
+
 ## 1.21.0 — un composant trois fois plus léger : la page maigre
 
 - **Composant** : `?bi=1` ne charge plus l'application complète (interface, three.js, import, formulaires : ~4,9 Mo non compressés, 146 requêtes) pour n'en garder que la carte. La page `bi.html` charge MapLibre et le composant (~1,4 Mo non compressés, 45 à 50 requêtes). Mesuré le 16/10/2026 : `app.js` (0,98 Mo), 86 modules d'application (0,94 Mo) et three.js (1,5 Mo) n'y sont plus. La carte est créée par `lib/bi/carte-nue.js`, avec le même style de base, le même fond de repli hors réseau, les mêmes libellés français, le même plafond de ratio (`?ratio=`) et la même vue d'ouverture qu'avant ; `lib/fonds-base.js` partage ces constantes avec l'application.
