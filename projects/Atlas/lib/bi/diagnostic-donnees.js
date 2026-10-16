@@ -13,6 +13,9 @@
 /** Combien d'exemples un avertissement cite au plus. */
 const EXEMPLES = 3;
 
+/** Au-delà, la carte reste utilisable mais l'envoi et le montage pèsent (mesuré : 0,36 s à 50 000 entités, 0,96 s à 100 000, filtre et rendu moins fluides) : on conseille d'agréger. */
+export const SEUIL_VOLUME = 50000;
+
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /** Les paires [lng, lat] d'une géométrie (tous types), à plat. */
@@ -56,6 +59,7 @@ export function diagnostiquerCouche(def, source) {
     }
   });
   if (nonFeature) return { erreur: `donnees["${id}"] contient ${nonFeature} élément(s) qui ne sont pas des Features (objets GeoJSON attendus)`, avertissements };
+  if (source.length > SEUIL_VOLUME) avertissements.push(`${source.length} entités dans une seule couche (au-delà de ${SEUIL_VOLUME}) : la scène se monte, mais agrégez avant d'envoyer (hexagones, grille ou unités administratives) pour un montage et des filtres plus fluides`);
   if (sansGeometrie) avertissements.push(`${sansGeometrie} entité(s) sans géométrie lisible : elles ne seront pas dessinées`);
   if (horsPlage) avertissements.push(`${horsPlage} entité(s) avec des coordonnées hors plage (longitude entre -180 et 180, latitude entre -90 et 90) : ${exemplesHors.join(' ; ')} ; ordre [longitude, latitude] respecté ?`);
   if (doublons) avertissements.push(`${doublons} identifiant(s) en double : \`select\` et \`updateFeature\` n'atteindront que la dernière entité de chaque identifiant`);

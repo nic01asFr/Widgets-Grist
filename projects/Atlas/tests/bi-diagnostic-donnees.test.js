@@ -76,3 +76,13 @@ test('setScene : des données conformes ne portent ni _avertissements ni _erreur
   assert.equal(r._avertissements, undefined);
   assert.equal(r._erreurs, undefined);
 });
+
+test('plus de 50 000 entités dans une couche : la couche se monte, avec le conseil d\'agréger', () => {
+  const pt = (i) => ({ type: 'Feature', id: i, properties: {}, geometry: { type: 'Point', coordinates: [2, 48] } });
+  const grosse = Array.from({ length: 50001 }, (_, i) => pt(i + 1));
+  const r = diagnostiquerCouche({ id: 'g' }, grosse);
+  assert.equal(r.erreur, null);
+  assert.equal(r.avertissements.length, 1);
+  assert.match(r.avertissements[0], /50001 entités.*agrégez/);
+  assert.deepEqual(diagnostiquerCouche({ id: 'g' }, grosse.slice(0, 50000)).avertissements, []);
+});
