@@ -266,6 +266,7 @@ import {
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
 import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=20261010b';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=20261016a';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -304,7 +305,7 @@ function ignRasterStyle(tiles) {
         layers: [{ id: 'ign-base', type: 'raster', source: 'ign' }] };
 }
 const BASEMAPS = {
-    liberty:  { url: 'https://tiles.openfreemap.org/styles/liberty',  label: 'Liberty 3D', icon: '✨' },
+    liberty:  { url: STYLE_BASE_URL,  label: 'Liberty 3D', icon: '✨' },
     bright:   { url: 'https://tiles.openfreemap.org/styles/bright',   label: 'Plan',       icon: '🗺️' },
     positron: { url: 'https://tiles.openfreemap.org/styles/positron', label: 'Clair',      icon: '⬜' },
     'plan-ign':  { style: () => ignRasterStyle(IGN.plan),  label: 'Plan IGN',  icon: '🇫🇷' },
@@ -3336,17 +3337,7 @@ function resolveFeatureProps(feature, layer) {
 // ============================================================
 // MAP (MapLibre)
 // ============================================================
-/**
- * Le fond quand le réseau manque : un aplat. Sans lui, le style de base ne se lit jamais, la carte ne déclare jamais être
- * chargée, et les couches — qui sont sur l'appareil — ne se montent pas : une scène préparée pour le terrain s'ouvrirait sur
- * du blanc. Les glyphes restent ceux du réseau (les étiquettes manqueront, pas les données).
- */
-const STYLE_HORS_RESEAU = {
-    version: 8, name: 'Hors réseau',
-    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-    sources: {},
-    layers: [{ id: 'fond-hors-reseau', type: 'background', paint: { 'background-color': '#ece7da' } }],
-};
+
 let _fondDeRepli = false;
 
 /** Plafond du ratio de pixels demandé par l'hôte (`?ratio=`), lu une fois. */
@@ -13124,20 +13115,7 @@ function setUserIdentity(u) {
  * puis le runtime est chargé À LA DEMANDE (`demarrerBi`) : sans ce paramètre, rien de `lib/bi/` n'est téléchargé.
  * Le motif est celui de `biDemande` (`lib/bi/liaison.js`), recopié ici pour ne rien importer ; un test les garde égaux.
  */
-// Libellés accessibles de MapLibre (étiquettes ARIA, infobulles des contrôles) : en français, comme le reste d'Atlas ; MapLibre ignore une clé qu'il ne connaît pas.
-const LOCALE_CARTE = Object.freeze({
-    'Map.Title': 'Carte',
-    'AttributionControl.ToggleAttribution': 'Afficher ou masquer les crédits',
-    'AttributionControl.MapFeedback': 'Signaler un problème de carte',
-    'LogoControl.Title': 'Logo MapLibre',
-    'NavigationControl.ZoomIn': 'Zoom avant',
-    'NavigationControl.ZoomOut': 'Zoom arrière',
-    'NavigationControl.ResetBearing': 'Orienter la carte vers le nord',
-    'GeolocateControl.FindMyLocation': 'Afficher ma position',
-    'GeolocateControl.LocationNotAvailable': 'Position indisponible',
-    'FullscreenControl.Enter': 'Passer en plein écran',
-    'FullscreenControl.Exit': 'Quitter le plein écran',
-});
+
 const MODE_BI = typeof location !== 'undefined' && /(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search);
 
 /**

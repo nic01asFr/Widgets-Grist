@@ -14,6 +14,8 @@ import { carteSimulee, point } from './aide-carte-bi.js';
 
 // ---- DOM et popup minimaux ----
 class Noeud {
+  getBoundingClientRect() { return this.rect || { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 }; }
+  querySelector(sel) { return sel === '.maplibregl-popup-content' ? (this.contenuPopup || null) : null; }
   constructor(tag) { this.tag = tag; this.enfants = []; this.attrs = {}; this.style = { props: {}, setProperty(k, v) { this.props[k] = v; } }; this.ecouteurs = {}; this.className = ''; this._texte = ''; this.type = ''; }
   appendChild(c) { this.enfants.push(c); return c; }
   setAttribute(k, v) { this.attrs[k] = v; }
@@ -143,6 +145,19 @@ test('fermer : par l\'API, par le bouton (la sélection suit) et par Échap', ()
   ctl.ouvrir(c, f); popup.contenu.declencher('keydown', { key: 'a' }); assert.equal(popup.ouvert, true, 'une autre touche ne ferme pas');
 });
 
+test("la bulle reste dans la zone utile : décalée vers la gauche quand elle s'ouvre sous le panneau de l'hôte, remise à zéro quand elle n'en a plus besoin", () => {
+  const doc = docAvecStyle(), popup = popupFactice(), evts = [];
+  const contenu = new Noeud('div'); contenu.rect = { left: 600, right: 800, top: 100, bottom: 200 }; popup.element.contenuPopup = contenu;
+  const conteneur = new Noeud('div'); conteneur.rect = { left: 0, top: 0, right: 900, bottom: 460, width: 900, height: 460 };
+  let marges = { top: 0, right: 380, bottom: 0, left: 0 };
+  const ctl = creerBulle({ map: { getContainer: () => conteneur, on() {} }, document: doc, creerPopup: () => popup, emettre: (t, c) => evts.push([t, c]), variables: () => ({}), appliquer: appliquerVariables, marges: () => marges });
+  const c = { id: 'sites', def: { name: 'Sites', cle: 'ref' }, bulle: normaliserBulle({ titre: 'nom' }).bulle };
+  ctl.ouvrir(c, { id: 7, properties: { nom: 'A', ref: 'A' }, geometry: { type: 'Point', coordinates: [5, 43] } });
+  assert.equal(contenu.style.transform, 'translate(-288px, 0px)', 'bord droit à 800, zone utile jusqu\'à 520 - 8');
+  marges = null; contenu.style.transform = 'translate(-288px, 0px)'; ctl.ajuster();
+  assert.equal(contenu.style.transform, '', 'plus de panneau : plus de décalage');
+});
+
 test('ouverture « aucune », couche sans bulle, géométrie illisible : rien ne s\'ouvre', () => {
   const a = banc({ titre: 'nom', ouverture: 'aucune' }); assert.equal(a.ctl.ouvrir(a.c, a.f), false); assert.equal(a.popup.ouvert, false);
   const b = banc(); b.c.bulle = null; assert.equal(b.ctl.ouvrir(b.c, b.f), false);
@@ -207,4 +222,10 @@ test("aucune classe de la bulle du composant n'est aussi un sélecteur de la pag
   assert.ok(classes.length >= 8, 'la feuille de la bulle déclare ses classes');
   for (const c of classes) assert.ok(!new RegExp('\.' + c + '(?![a-z0-9-])').test(page), `la classe .${c} est déjà un sélecteur de index_v7.html`);
   assert.ok(classes.every((c) => c.startsWith('atlas-bi-bulle')), 'toutes préfixées atlas-bi-bulle : ' + classes.join(', '));
+});
+
+test("l'animation d'entrée n'anime pas `transform` (MapLibre positionne la bulle par transform : une animation la ramenait à l'origine de la carte)", () => {
+  const anim = /@keyframes atlas-bi-bulle-entree \{([\s\S]*?)\}\s*\}/.exec(FEUILLE);
+  assert.ok(anim, 'animation déclarée');
+  assert.ok(!/transform/.test(anim[0]), anim[0]);
 });

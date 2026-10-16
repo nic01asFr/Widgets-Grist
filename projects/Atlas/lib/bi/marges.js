@@ -39,3 +39,21 @@ export function avecConfort(marges, confort) {
   const m = marges || { top: 0, right: 0, bottom: 0, left: 0 };
   return { top: m.top + confort, right: m.right + confort, bottom: m.bottom + confort, left: m.left + confort };
 }
+
+/**
+ * Le décalage (dx, dy), en pixels, à donner à un rectangle (la bulle d'un objet) pour qu'il tienne dans la zone utile : le conteneur moins les marges de l'hôte,
+ * moins un peu d'air. Si la zone utile est plus petite que le rectangle, le bord haut-gauche prime (le titre et la fermeture restent visibles).
+ * @param {{ left: number, top: number, right: number, bottom: number }} rect       le rectangle, dans le même repère que `conteneur`
+ * @param {{ largeur: number, hauteur: number }} conteneur
+ * @param {{ top: number, right: number, bottom: number, left: number } | null} marges
+ */
+export function decalageDansZone(rect, conteneur, marges, air = 8) {
+  const m = marges || { top: 0, right: 0, bottom: 0, left: 0 };
+  const minX = m.left + air, maxX = conteneur.largeur - m.right - air, minY = m.top + air, maxY = conteneur.hauteur - m.bottom - air;
+  let dx = 0, dy = 0;
+  if (rect.right > maxX) dx = maxX - rect.right;
+  if (rect.left + dx < minX) dx = minX - rect.left;
+  if (rect.bottom > maxY) dy = maxY - rect.bottom;
+  if (rect.top + dy < minY) dy = minY - rect.top;
+  return { dx: Math.round(dx), dy: Math.round(dy) };
+}

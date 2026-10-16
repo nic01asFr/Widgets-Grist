@@ -47,7 +47,20 @@ if (fs.existsSync(verrouExterne) && fs.existsSync(manifesteExterne)) {
   if (manquants.length) { console.error('Echec : fichiers embarques absents de ' + pub + ' : ' + manquants.join(', ')); process.exit(1); }
   console.log('dependances externes embarquees : la page vise vendor/ (' + Object.keys(JSON.parse(fs.readFileSync(verrouExterne, 'utf8')).fichiers).length + ' fichiers verrouilles)');
 }
+html = html.replace("location.replace('./index_bi.html'", "location.replace('./bi.html'");
 fs.writeFileSync(path.join(pub, 'index.html'), html);
+
+// La page maigre du composant BI (index_bi.html -> bi.html) : meme traitement que la page de l'application (versions, dependances embarquees), sans formulaires.
+let pageBi = fs.readFileSync(path.join(src, 'index_bi.html'), 'utf8');
+pageBi = pageBi.replace('<title>Atlas v7 — Carte</title>', '<title>Atlas — Carte</title>');
+pageBi = normaliserVersions(pageBi);
+if (fs.existsSync(verrouExterne) && fs.existsSync(manifesteExterne)) {
+  const vendorHtml = require(path.join(src, 'tools', 'vendor-web-html.cjs'));
+  pageBi = vendorHtml.reecrireHtml(pageBi, JSON.parse(fs.readFileSync(manifesteExterne, 'utf8')));
+  const resteBi = vendorHtml.resteExterne(pageBi);
+  if (resteBi.length) { console.error('Echec : dependances encore en ligne dans bi.html : ' + resteBi.join(', ')); process.exit(1); }
+}
+fs.writeFileSync(path.join(pub, 'bi.html'), pageBi);
 
 fs.writeFileSync(
   path.join(pub, 'app.js'),
@@ -306,7 +319,7 @@ for (const a of catObjets.parametric?.assets || []) {
  * sans que rien ne le signale — et un 404 de script ne casse pas la page : elle
  * s'affiche, amputee, et le defaut se decouvre chez l'utilisateur.
  */
-const pageHtml = fs.readFileSync(path.join(pub, 'index.html'), 'utf8');
+const pageHtml = fs.readFileSync(path.join(pub, 'index.html'), 'utf8') + fs.readFileSync(path.join(pub, 'bi.html'), 'utf8');
 const reclames = [...pageHtml.matchAll(/(?:src|href)="(\.[^"]+)"/g)]
   .map((m) => m[1].split('?')[0])
   .filter((u) => !u.startsWith('./demos/'));

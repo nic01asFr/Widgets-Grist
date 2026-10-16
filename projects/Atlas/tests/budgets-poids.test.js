@@ -52,6 +52,8 @@ const BUDGETS = [
   ['application complète (app.js)', ['app.js'], 1_040_000, 300_000],                                  // 992 153 / 284 850
   ['page (index.html)', ['index.html'], 165_000, 35_000],                                                // 156 478 / 33 196
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 15_500, 5_800],                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
+  ['page maigre du composant (bi.html)', ['bi.html'], 8_000, 3_200],                                    // 5 759 octets : la page de l'application en fait 157 909
+  ['page maigre : fermeture de lib/bi/entree.js (tout ce que `?bi=1` charge en plus de MapLibre)', fermeture('lib/bi/entree.js'), 420_000, 152_000],   // 403 907 / 145 934 (42 fichiers) ; avant 1.21.0, `?bi=1` chargeait AUSSI app.js, 86 modules d'application et three.js (~3,4 Mo de plus)
   ['composant : fermeture de montage.js (mode ?bi=1)', fermeture('lib/bi/montage.js'), 410_000, 148_000],   // 395 356 / 141 528 au 16/10/2026 (38 fichiers ; 1.19.0 : bulle, marges, interface de la charte, inférence et description chargées à la demande comprises)
   ['élément <atlas-bi> et son client', fermeture('lib/bi/atlas-bi-element.js'), 115_000, 43_500],      // 109 102 / 40 995 au 16/10/2026 (10 fichiers) ; describe.js, inference.js et herite.js sont chargés À LA DEMANDE (la fermeture compte aussi les imports dynamiques)
   ['lib/bi (tous les modules)', dossierJs('lib/bi'), 330_000, 122_000],                                 // 314 205 / 115 839 au 16/10/2026 (1.20.0 : herite.js)

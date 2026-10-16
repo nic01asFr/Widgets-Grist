@@ -8,14 +8,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const src = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'app_v7.js'), 'utf8');
+const ici = path.dirname(fileURLToPath(import.meta.url));
+const src = fs.readFileSync(path.join(ici, '..', 'app_v7.js'), 'utf8');
+// la locale vit dans lib/fonds-base.js, commune à l'application et au composant BI
+const fonds = fs.readFileSync(path.join(ici, '..', 'lib', 'fonds-base.js'), 'utf8');
 
 test('la carte est créée avec la locale française', () => {
   assert.match(src, /map = new maplibregl\.Map\(\{\s*container: 'map',\s*locale: LOCALE_CARTE,/);
 });
 
 test('la locale couvre le titre de la carte et les crédits (les deux libellés relevés en anglais)', () => {
-  const bloc = /const LOCALE_CARTE = Object\.freeze\(\{([\s\S]*?)\}\);/.exec(src);
+  const bloc = /export const LOCALE_CARTE = Object\.freeze\(\{([\s\S]*?)\}\);/.exec(fonds);
   assert.ok(bloc, 'LOCALE_CARTE introuvable');
   assert.match(bloc[1], /'Map\.Title': 'Carte'/);
   assert.match(bloc[1], /'AttributionControl\.ToggleAttribution': 'Afficher ou masquer les crédits'/);

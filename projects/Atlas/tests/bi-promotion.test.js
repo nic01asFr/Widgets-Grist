@@ -25,6 +25,7 @@ function bac(modifier = () => {}) {
   copyFileSync(SCRIPT, join(racine, 'scripts', 'promote-atlas.js'));
   ecrire('published/atlas/package.json', JSON.stringify({ version: '9.9.9' }));
   ecrire('projects/Atlas/index_v7.html', '<!DOCTYPE html><html><head><title>Atlas v7 — Maquette 3D Territoriale</title><meta name="atlas-moteur-formulaire" content="../grist_forms/" /><script type="module" src="./app_v7.js?v=20261010a"></script></head><body></body></html>');
+  ecrire('projects/Atlas/index_bi.html', `<!DOCTYPE html><html><head><title>Atlas v7 — Carte</title></head><body class="mode-bi"><div id="map"></div><script type="module">import { lancer } from './lib/bi/entree.js?v=20261016a';</script></body></html>`);
   ecrire('projects/Atlas/app_v7.js', "import { x } from './lib/html.js';\n");
   ecrire('projects/Atlas/lib/mini.js', 'export const x = 1;\n');
   ecrire('projects/Atlas/demos/osm-marseille-vieux-port/scene.json', JSON.stringify({ layers: [] }));
