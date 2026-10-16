@@ -110,7 +110,7 @@ test('ouvrir : contenu en texte seul, ancré au point, charte appliquée, évén
   const textes = popup.contenu.trouver((n) => n.tag === 'button').map((b) => b.textContent);
   assert.deepEqual(textes, ['×', 'Ouvrir la fiche', 'Itinéraire']);
   assert.equal(popup.element.style.props['--atlas-fond'], '#fff');
-  assert.ok(doc.getElementById('atlas-bulle-style'), 'feuille posée une fois'); ctl.ouvrir(c, f); assert.equal(doc.head.enfants.length, 1);
+  assert.ok(doc.getElementById('atlas-bi-bulle-style'), 'feuille posée une fois'); ctl.ouvrir(c, f); assert.equal(doc.head.enfants.length, 1);
   assert.deepEqual(evts.filter((e) => e[0] === 'bulle').map((e) => e[1]), [{ etat: 'ouverte', layer: 'sites', featureId: 7 }], 'rouvrir la même bulle n\'émet rien de plus');
 });
 
@@ -138,7 +138,7 @@ test('fermer : par l\'API, par le bouton (la sélection suit) et par Échap', ()
   ctl.ouvrir(c, f); assert.equal(ctl.fermer(), true); assert.equal(popup.ouvert, false); assert.equal(ctl.fermer(), false, 'déjà fermée');
   assert.deepEqual(evts.filter((e) => e[0] === 'bulle').map((e) => e[1].etat), ['ouverte', 'fermee']);
   assert.equal(fermees.length, 0, 'fermer par l\'API ne signale pas une fermeture de la personne');
-  ctl.ouvrir(c, f); popup.contenu.trouver((n) => n.className === 'atlas-bulle-fermer')[0].declencher('click'); assert.equal(fermees.length, 1); assert.equal(popup.ouvert, false);
+  ctl.ouvrir(c, f); popup.contenu.trouver((n) => n.className === 'atlas-bi-bulle-fermer')[0].declencher('click'); assert.equal(fermees.length, 1); assert.equal(popup.ouvert, false);
   ctl.ouvrir(c, f); popup.contenu.declencher('keydown', { key: 'Escape' }); assert.equal(fermees.length, 2);
   ctl.ouvrir(c, f); popup.contenu.declencher('keydown', { key: 'a' }); assert.equal(popup.ouvert, true, 'une autre touche ne ferme pas');
 });
@@ -176,9 +176,9 @@ test('runtime : select(id) ouvre la bulle déclarée, select(null) la ferme, une
 test('runtime : un clic d\'action revient à l\'hôte avec la clé métier ; le bouton fermer efface aussi la sélection', async () => {
   const { rt, popup, vus } = runtimeAvecBulle();
   await rt.api.setScene(MANIFESTE, DONNEES); rt.api.select(2);
-  popup.contenu.trouver((n) => n.tag === 'button' && n.className.split(' ').includes('atlas-bulle-action'))[0].declencher('click');
+  popup.contenu.trouver((n) => n.tag === 'button' && n.className.split(' ').includes('atlas-bi-bulle-action'))[0].declencher('click');
   assert.deepEqual(vus.find((v) => v[0] === 'action')[1], { layer: 'sites', featureId: 2, key: 'B', actionId: 'fiche' });
-  popup.contenu.trouver((n) => n.className === 'atlas-bulle-fermer')[0].declencher('click');
+  popup.contenu.trouver((n) => n.className === 'atlas-bi-bulle-fermer')[0].declencher('click');
   assert.equal(popup.ouvert, false);
   assert.deepEqual(vus.filter((v) => v[0] === 'select').pop()[1], { layer: null, featureId: null }, 'la sélection suit la fermeture');
 });
@@ -198,4 +198,13 @@ test('runtime : une nouvelle scène ferme la bulle ouverte ; une charte d\'hôte
   rt.api.setTheme({ version: 'atlas-charte/0.1', graines: { principal: '#0b6e4f' } });
   assert.equal(popup.element.style.props['--atlas-accent'], '#0b6e4f', 'l\'interface suit la charte de l\'hôte');
   await rt.api.setScene(MANIFESTE, DONNEES); assert.equal(popup.ouvert, false);
+});
+
+test("aucune classe de la bulle du composant n'est aussi un sélecteur de la page d'Atlas (collision de styles constatée au premier essai en mode sombre)", async () => {
+  const { readFileSync } = await import('node:fs');
+  const page = readFileSync(new URL('../index_v7.html', import.meta.url), 'utf8');
+  const classes = [...new Set([...FEUILLE.matchAll(/\.(atlas-[a-z0-9-]+)/g)].map((m) => m[1]))];
+  assert.ok(classes.length >= 8, 'la feuille de la bulle déclare ses classes');
+  for (const c of classes) assert.ok(!new RegExp('\.' + c + '(?![a-z0-9-])').test(page), `la classe .${c} est déjà un sélecteur de index_v7.html`);
+  assert.ok(classes.every((c) => c.startsWith('atlas-bi-bulle')), 'toutes préfixées atlas-bi-bulle : ' + classes.join(', '));
 });

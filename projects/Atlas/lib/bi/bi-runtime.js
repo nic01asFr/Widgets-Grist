@@ -73,7 +73,7 @@ export function attacher(map, opts = {}) {
   // La bulle d'un objet, déclarée par couche (`bulle` du manifeste) : ouverte par la sélection, fermée avec elle ; ses boutons reviennent à l'hôte (événement `action`).
   bulleCtl = creerBulle({
     map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
-    creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bulle-popup', focusAfterOpen: false })),
+    creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bi-bulle-popup', focusAfterOpen: false })),
     variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables,
     quandFermee: () => { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } },
   });

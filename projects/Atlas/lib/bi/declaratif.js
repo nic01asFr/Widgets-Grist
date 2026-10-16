@@ -8,6 +8,9 @@
  *     <script type="application/json" data-atlas="donnees">{ "sites": [ … ] }</script>
  *   </atlas-bi>
  *
+ * `charte="herite"` : la charte est LUE dans la page hôte (couleurs, famille de police, mode sombre : `lib/bi/herite.js`) puis appliquée comme toute charte ;
+ * l'élément la relit quand le thème de la page change.
+ *
  * Sans `manifeste`, des `donnees` suffisent : le manifeste est INFÉRÉ (`lib/bi/inference.js` : géométrie, identifiants, clé métier, couleurs par classe, filtre)
  * et ce qui a été décidé est dit dans `notes`. Un manifeste explicite prime toujours.
  *
@@ -72,10 +75,18 @@ export async function lireAdresse(adresse, nom, { base, lecteur }) {
  * @param {{ getAttribute(n: string): string|null, querySelectorAll?: Function }} element
  * @returns {Promise<{ manifeste?: object, donnees?: object, charte?: object, fond?: string }>}
  */
-export async function lireConfiguration(element, { base, lecteur }) {
+export async function lireConfiguration(element, { base, lecteur, fenetre }) {
   const config = {};
   for (const nom of ['manifeste', 'donnees', 'charte']) {
     const adresse = element.getAttribute(nom);
+    if (nom === 'charte' && adresse === 'herite') {
+      // la charte est celle de la page : lue maintenant, relue par l'élément quand le thème de la page change ; ni fichier ni bloc à côté
+      if (blocInline(element, 'charte') !== null) throw new ErreurBi('commande', "<atlas-bi> : charte=\"herite\" et un bloc data-atlas=\"charte\" : gardez l'un des deux");
+      const { lireStyleHote, charteDepuisStyle } = await import('./herite.js');
+      const lu = lireStyleHote(element, { fenetre });
+      config.charte = charteDepuisStyle(lu); config.herite = { notes: lu.notes, ignore: lu.ignore, sombre: lu.sombre };
+      continue;
+    }
     const inline = blocInline(element, nom);
     if (adresse && inline !== null) throw new ErreurBi('commande', `<atlas-bi> : ${nom} est déclaré deux fois (attribut et bloc data-atlas) ; gardez l'un des deux`);
     if (adresse) config[nom] = await lireAdresse(adresse, nom, { base, lecteur });
@@ -132,10 +143,11 @@ export async function appliquerConfiguration(appeler, config) {
       throw err;
     }
   };
-  if (config.charte) await etape('charte', 'setTheme', config.charte);
+  if (config.charte) await (config.herite ? etape('charte', 'setTheme', config.charte, { remplacer: true }) : etape('charte', 'setTheme', config.charte));   // une charte lue dans la page REMPLACE la précédente (elle change avec la page)
   if (config.fond) await etape('fond', 'setFond', config.fond);
   if (config.manifeste) await etape('scene', 'setScene', config.manifeste, config.donnees || {});
   if (config.notes && config.notes.length) resultat.inference = config.notes;
+  if (config.herite) resultat.herite = config.herite;
   if (cadrerApres(config)) await etape('cadrage', 'fitTo');
   return resultat;
 }
