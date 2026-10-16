@@ -9,6 +9,7 @@
          gestionnaires onclick="A.…" et l'import map en ligne en ont besoin. Atlas n'emploie aucun de ces elements
          vers l'exterieur (tests/csp-meta.test.js le verifie). -->
     <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
+    <link rel="icon" href="data:," />
     <title>Atlas — Maquette 3D Territoriale</title>
 
     <!-- Garde d'amorçage du mode composant : si la carte ne démarre pas (dépendance bloquée, réseau lent), le voile le DIT au lieu de rester sur « Chargement… »,
@@ -1939,7 +1940,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.18.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.19.0" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2198,6 +2199,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.18.0"></script>
+    <script type="module" src="./app.js?v=1.19.0"></script>
 </body>
 </html>

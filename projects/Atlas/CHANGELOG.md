@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.19.0 — la bulle d'objet, ses actions et les marges, à l'aspect de l'hôte
+
+- **Composant** : bulle d'objet déclarée par couche (`layers[].bulle` : titre, champs, actions ; texte seul), ouverte par la sélection (clic ou `select(id)`), fermée avec elle ; événements `action { layer, featureId, key, actionId }` (l'hôte route) et `bulle { etat, … }`. Marges persistantes (`manifeste.marges`, `flyTo({ marges })`, méthode `setMarges` de l'élément) : `flyTo` et `fitTo` cadrent dans la zone utile. L'interface suit la charte de l'hôte (`lib/charte/interface.js`, variables `--atlas-*`).
+- **Palette par défaut** : les quatre premières classes d'une carte sans charte tiennent 3:1 sur fond blanc (bleu, vermillon, vert, pourpre ; l'orange passe en cinquième). **La deuxième classe d'une carte sans charte change donc de couleur** (orange -> vermillon) ; les palettes dérivées des graines d'un hôte ne changent pas.
+- **Console** : les icônes que le fond de plan réclame sans les fournir deviennent des images vides (un avertissement par icône en moins) ; la page déclare une icône vide (plus de 404 de favicon).
+- **Qualité** : tests de promotion en parallèle (18 s -> 4 s), contacts du trafic en trois fichiers, bornes de temps robustes à la CI, l'outil de couverture dit quels tests échouent.
+- **Composant BI** : **aucune commande ajoutée**, contrat 0.3, même client, même empreinte ; les nouveaux événements atteignent aussi les hôtes qui gardent l'ancien client.
+
 ## 1.18.0 — des données seules suffisent
 
 - **Composant** : `<atlas-bi donnees="/carte/sites.geojson">` sans `manifeste` : le manifeste est déduit (`lib/bi/inference.js`) et ce qui a été décidé est dit (`inference` dans `atlas-bi-configure`). Couches (une par entrée, une par type de géométrie), identifiants entiers uniques dans toute la scène (l'ancien dans `id_origine`, qui devient la clé), clé métier, couleurs par classe (2 à 8 valeurs partagées), contrôle de filtre. Un manifeste explicite prime toujours ; les données de l'hôte ne sont jamais modifiées.

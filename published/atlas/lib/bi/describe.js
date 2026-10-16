@@ -8,7 +8,8 @@
  * Aucune commande n'est ajoutée au contrat pour cela (le client en un fichier reste identique) : on lit la description par
  * `import { decrire } from '.../lib/bi/describe.js'` ou par `await AtlasBi.decrire()` (l'élément `<atlas-bi>`, qui ne charge ce module qu'à la demande), sans iframe ni connexion.
  */
-import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, COMMANDES_0_3, EVENEMENTS, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
+import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, COMMANDES_0_3, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
+import { TOUS_LES_EVENEMENTS as EVENEMENTS } from './evenements-ext.js';
 import { LIMITE_OCTETS, DECLARATIFS } from './declaratif.js';
 
 /** Ce que fait chaque commande, et ce qu'elle rend. */
@@ -61,6 +62,8 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   drill: ['Descente ou remontée administrative.', '{ sens, niveau, parent, layer, fil }'],
   statistique: ['La mesure d\'une couche administrative a changé.', 'objet'],
   connexion: ['Passage en ligne ou hors ligne.', '{ etat, cause, automatique, fond }'],
+  action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
+  bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
   theme: ['La charte résolue a changé.', '{ version, entree, applique, derive, ignore, avertissements, a11y }'],
 });
 
@@ -82,6 +85,12 @@ export const EXEMPLES = Object.freeze({
   donnees: {
     titre: 'Une ligne : des données GeoJSON, le manifeste est inféré',
     html: '<atlas-bi src="https://nic01asfr.github.io/Widgets-Grist/atlas/" donnees="/carte/sites.geojson"></atlas-bi>',
+  },
+  bulle: {
+    titre: "Une bulle d'objet avec des actions qui reviennent à l'hôte",
+    manifeste: { layers: [{ id: 'sites', name: 'Sites', geometry_type: 'point', cle: 'ref', bulle: { titre: 'Site {nom}', champs: [{ champ: 'commune', libelle: 'Commune' }, { champ: 'effectif', libelle: 'Effectif', format: 'nombre' }], actions: [{ id: 'ouvrir-fiche', libelle: 'Ouvrir la fiche' }] } }] },
+    donnees: { sites: [{ type: 'Feature', id: 1, properties: { nom: 'Alpha', ref: 'A', commune: 'Aix', effectif: 1200 }, geometry: { type: 'Point', coordinates: [5.1, 43.2] } }] },
+    sequence: ['setScene(manifeste, donnees)', 'écouter atlas-bi-action : { layer, featureId, key, actionId }', 'select(1) ouvre la bulle, select(null) la ferme'],
   },
   declaratif: {
     titre: 'Sans code : tout en attributs',
