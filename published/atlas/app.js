@@ -18047,6 +18047,8 @@ async function init() {
  * eprouve reste rigoureusement inchange.
  */
 async function demarrer() {
+    // L'API de plugin de Grist se charge désormais à la demande (index_v7.html) : hors mode composant, on l'attend avant de décider du régime.
+    if (window.__gristApi) await window.__gristApi;
     // La scène externe se décide avant tout le reste : elle change le régime
     // d'Atlas, pas seulement ce qu'il affiche. Ni accueil (il n'y a rien à
     // demander, la scène est nommée) ni document (elle n'est pas de confiance).

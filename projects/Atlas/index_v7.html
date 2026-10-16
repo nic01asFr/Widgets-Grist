@@ -19,8 +19,19 @@
     <!-- SunCalc : position solaire réaliste -->
     <script src="https://unpkg.com/suncalc@1.8.0/suncalc.js"></script>
 
-    <!-- Grist Plugin API -->
-    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <!-- Grist Plugin API : chargee des l'analyse de la page (meme moment qu'avant), SAUF en mode composant (parametre bi=1), ou elle ne sert a rien :
+         967 Ko non compresses, jamais appelee, et c'est la que l'hote embarque Atlas. app_v7.js attend `window.__gristApi` avant de demarrer. -->
+    <script>
+        (function () {
+            if (/(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search)) { window.__gristApi = null; return; }
+            window.__gristApi = new Promise(function (fini) {
+                var s = document.createElement('script');
+                s.src = 'https://docs.getgrist.com/grist-plugin-api.js';
+                s.onload = s.onerror = function () { fini(); };   // une erreur de chargement n'empeche pas Atlas de demarrer (hors Grist)
+                document.head.appendChild(s);
+            });
+        })();
+    </script>
 
     <!-- Fonts Atlas : Newsreader (serif éditorial) + Hanken Grotesk + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
