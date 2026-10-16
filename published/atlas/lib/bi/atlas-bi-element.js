@@ -12,6 +12,8 @@
  *  - `src`  : adresse d'Atlas (obligatoire). `bi=1`, `navbar=false`, `mode=view` et `hote` y sont ajoutés s'ils manquent ;
  *  - `hote` : origine de la page hôte, déclarée au composant (défaut : l'origine de la page). Elle doit être EXACTE ;
  *  - `delai`: délai maximal d'une commande, en millisecondes (défaut 10 000) ;
+ *  - `delai-connexion` : attente du composant à la connexion, en millisecondes (défaut 30 000 : un démarrage à froid prend 15 à 45 s sur un réseau lent ;
+ *    le défaut du client en un fichier, 8 000, est trop court pour cela : passez `delaiConnexion: 30000` à `creerClient`) ;
  *  - `evenements-api` : présent -> reçoit aussi les événements provoqués par vos propres commandes (défaut : gestes de
  *    l'utilisateur seulement, ce qui évite les boucles).
  *
@@ -38,7 +40,7 @@ export function urlComposant(src, hote, base) {
 const Base = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
 
 export class AtlasBi extends Base {
-  static get observedAttributes() { return ['src', 'hote', 'delai']; }
+  static get observedAttributes() { return ['src', 'hote', 'delai', 'delai-connexion']; }
 
   constructor() { super(); this._client = null; this._cadre = null; this._pret = null; this._retraits = []; }
 
@@ -70,7 +72,8 @@ export class AtlasBi extends Base {
     this.style.display = this.style.display || 'block';
     this.appendChild(cadre); this._cadre = cadre;
     const delai = Number(this.getAttribute('delai')) || 10000;
-    const client = creerClient({ delai, transport: transportFenetre({ fenetre: window, cadre, origineComposant: url.origin }) });
+    const delaiConnexion = Number(this.getAttribute('delai-connexion')) || 30000;
+    const client = creerClient({ delai, delaiConnexion, transport: transportFenetre({ fenetre: window, cadre, origineComposant: url.origin }) });
     this._client = client;
     const tout = this.hasAttribute('evenements-api') ? 'tout' : 'utilisateur';
     for (const type of EVENEMENTS) this._retraits.push(client.on(type, (charge, meta) => this._emettre(type, { charge, ...meta }), { origine: tout }));

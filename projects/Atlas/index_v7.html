@@ -11,6 +11,44 @@
     <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
     <title>Atlas v7 — Maquette 3D Territoriale</title>
 
+    <!-- Garde d'amorçage du mode composant : si la carte ne démarre pas (dépendance bloquée, réseau lent), le voile le DIT au lieu de rester sur « Chargement… »,
+         et l'hôte en est averti (événement `error`, aux seules origines déclarées par `hote=`). Sans ce garde, un CDN bloqué laissait un écran vide sans cause.
+         Place EN TETE de la page : il doit ecouter avant les scripts du head (MapLibre, SunCalc), dont l'echec survient avant que le voile existe.
+         Gardé par tests/amorcage-garde.test.js ; `window.__biPret` est posé par lib/bi/montage.js. -->
+    <script>
+        (function () {
+            var sp; try { sp = new URLSearchParams(location.search); } catch (e) { return; }
+            var biv = sp.get('bi'); if (biv !== '1' && biv !== 'true') return;
+            var causes = [], alerte = false;
+            function voile(t) { var v = document.getElementById('bi-voile'); if (v) v.textContent = t; }
+            function hote(u) { try { return new URL(u, location.href).host; } catch (e) { return String(u).slice(0, 60); } }
+            function prevenir(code, message) {
+                if (alerte) return; alerte = true;
+                console.error('[Atlas BI] ' + message);
+                try {
+                    if (window.parent && window.parent !== window) sp.getAll('hote').forEach(function (o) {
+                        try { window.parent.postMessage({ source: 'atlas-bi', version: '0.3', type: 'error', charge: { code: code, message: message, niveau: 'fatal' }, origine: 'utilisateur' }, o); } catch (e) { /* origine invalide */ }
+                    });
+                } catch (e) { /* pas d'hote */ }
+            }
+            addEventListener('error', function (e) {
+                var t = e && e.target;
+                if (!t || t.tagName !== 'SCRIPT' || window.__biPret) return;
+                causes.push(hote(t.src));
+                montrer();
+            }, true);
+            function montrer() { if (causes.length) voile('Une dépendance de la carte ne se charge pas : ' + causes.join(', ') + ' (réseau ou accès bloqué).'); }
+            setTimeout(function () { if (!window.__biPret) montrer(); }, 1500);   // le voile n'existait pas encore au moment d'une erreur du head
+            setTimeout(function () { if (!window.__biPret && !causes.length) voile('Chargement lent… (réseau ou dépendance)'); }, 6000);
+            setTimeout(function () {
+                if (window.__biPret) return;
+                var m = causes.length ? 'La carte n’a pas démarré : ' + causes.join(', ') + ' ne se charge pas.' : 'La carte n’a pas démarré après 20 s (réseau lent ou dépendance bloquée).';
+                voile(m); prevenir(causes.length ? 'dependance' : 'delai', m);
+            }, 20000);
+        })();
+    </script>
+
+
     <!-- MapLibre GL JS (remplace Mapbox) -->
     <!-- MapLibre GL JS v5 (projection globe native) -->
     <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>

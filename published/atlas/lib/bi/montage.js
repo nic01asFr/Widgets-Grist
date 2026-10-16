@@ -14,5 +14,7 @@ export { biDemande, lireHotes, normaliserOrigine } from './liaison.js';
  */
 export async function demarrer(fenetre = window) {
   const carte = await attendreCarte(fenetre, { delai: Infinity });
-  return monter({ carte, fenetre });
+  const montage = await monter({ carte, fenetre });
+  fenetre.__biPret = true;   // le composant tourne : le garde d'amorçage de la page (index_v7.html) cesse de surveiller
+  return montage;
 }
