@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.7 — un composant plus léger, qui dit pourquoi il ne démarre pas
+
+- **Allégé** : en mode composant (`bi=1`), la page ne charge plus l'API de plugin de Grist (967 Ko, jamais appelée par le composant). L'application Atlas la charge comme avant, au même moment, et l'attend avant de démarrer. Mesuré : plus aucune requête vers `docs.getgrist.com` en mode composant, même démarrage et même rendu.
+- **Un démarrage qui échoue le dit** : un CDN bloqué ou un réseau lent laissaient « Chargement de la carte… » sans fin. Le voile nomme maintenant la dépendance en échec, dit « Chargement lent… » après 6 s, et après 20 s l'hôte reçoit un événement `error` (`code` : `dependance` ou `delai`, `niveau` : `fatal`) aux seules origines déclarées par `hote=`. Le client en un fichier est inchangé.
+- **`<atlas-bi>`** : attend le composant 30 s par défaut (attribut `delai-connexion`, en millisecondes) au lieu de 8 s.
+- **Qualité** : analyseur de références sans faux positif (`check:atlas` vert), CI qui lance les tests et les gardes (le déploiement des Pages en dépendra après un premier passage vert), ESLint à zéro sur la surface publique, planchers de couverture, budgets de poids, fins de ligne LF (`.gitattributes`, `.editorconfig`), promotion qui ne réécrit plus le moteur de formulaires embarqué.
+- **Composant BI** : inchangé (contrat 0.3, même client, même empreinte).
+
 ## 1.16.6 — les véhicules ne grossissent plus quand on dézoome
 
 - **Corrigé** : en mode « Modèles 3D seulement », les véhicules étaient grossis dès le zoom 17 (×2 par zoom perdu), si bien qu'ils gardaient la même taille à l'écran pendant que la carte rapetissait : ils semblaient grossir. Ils sont maintenant à leur taille réelle et rapetissent avec la carte ; ils ne sont grossis que lorsqu'ils feraient moins de 5 pixels de long (plafond ×8), pour rester visibles.

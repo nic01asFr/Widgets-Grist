@@ -1360,6 +1360,20 @@ sur une session qui enchaînerait des dizaines de modèles distincts.
 - Tests : `node --test projects/Atlas/tests/*.test.js` (chemins quotés sous PowerShell).
 - Spec lecture/mobile : `docs/superpowers/specs/2026-07-30-atlas-view-mobile-design.md`
 
+## Qualité : ce qui garde le code (CI, lint, couverture, poids)
+
+Depuis la 1.16.7, une poussée est contrôlée par `.github/workflows/ci.yml` (tests, planchers de couverture, `check:atlas`, ESLint, empreinte du client hôte, garde de promotion). Les mêmes contrôles en local :
+
+| Quoi | Commande | Ce que ça garde |
+|---|---|---|
+| Tests et gardes | `node --test "projects/Atlas/tests/*.test.js"` | comportement, documentation à jour, promotion, poids (`budgets-poids.test.js`) |
+| Imports et références | `npm run check:atlas` | aucun appel à une fonction qui n'existe plus (`tools/verifier-references.mjs`, testé par `verifier-references.test.js`) |
+| Lint | `npm run lint:atlas:installer` (une fois) puis `npm run lint:atlas` | zéro erreur et zéro avertissement sur `lib/bi`, `lib/charte`, `lib/trafic*` (outillage isolé dans `tools/lint`) |
+| Couverture | `npm run couverture:atlas` | planchers par dossier et par fichier de la surface publique (`tools/couverture.mjs`) ; `app_v7.js` n'est pas couvert par les tests Node |
+| Poids | `budgets-poids.test.js` | plafonds de non-régression (app.js, page, client hôte, noyau du composant) : un gain abaisse le plafond dans le même commit |
+
+Règles : `lib/bi/pont.js` et `lib/bi/client.js` ne se modifient pas pour une règle de style (ils alimentent le client hôte en un fichier, dont l'empreinte est épinglée par les hôtes) ; la promotion ne réécrit pas le moteur de formulaires embarqué (`--maj-moteur-formulaires` pour le faire exprès) ; un tag `atlas-v*` lance la construction de l'APK (les repères de retour portent le préfixe `ref-`). Mesures et plan d'action : `projects/Atlas/essais-bi/mesures-base/PLAN-D-ACTION.md` (non versionné).
+
 ## Publication
 
 ```bash
