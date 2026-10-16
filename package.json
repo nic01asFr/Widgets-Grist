@@ -21,7 +21,8 @@
     "vitrine": "node scripts/generate-vitrine.js",
     "post": "node scripts/generate-post.js",
     "lint:atlas": "cd projects/Atlas && node tools/lint/node_modules/eslint/bin/eslint.js -c tools/lint/eslint.config.js lib/bi lib/charte \"lib/trafic*\"",
-    "lint:atlas:installer": "npm ci --prefix projects/Atlas/tools/lint"
+    "lint:atlas:installer": "npm ci --prefix projects/Atlas/tools/lint",
+    "couverture:atlas": "node projects/Atlas/tools/couverture.mjs"
   },
   "repository": {
     "type": "git",

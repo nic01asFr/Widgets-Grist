@@ -50,6 +50,10 @@ jobs:
       - name: Tests unitaires et gardes
         run: node --test "projects/Atlas/tests/*.test.js"
 
+      # 1 bis. Planchers de couverture de la surface publique (lib/bi, lib/charte, lib/trafic*) : la couverture ne recule plus sans qu'on le voie.
+      - name: Planchers de couverture
+        run: npm run couverture:atlas
+
       # 2. Gardes d'imports et de references.       #    commande etait en code 1 (6 faux positifs de l'analyseur, corriges le 15/10/2026) ; elle est maintenant bloquante.
       - name: check:atlas (imports et references)
         run: npm run check:atlas
