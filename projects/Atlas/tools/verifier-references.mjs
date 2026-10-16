@@ -67,7 +67,7 @@ const GLOBAUX = new Set([
   'ResizeObserver', 'IntersectionObserver', 'MutationObserver', 'DOMParser',
   'TextEncoder', 'TextDecoder', 'Worker', 'localStorage', 'sessionStorage',
   'Node', 'Element', 'HTMLElement', 'XMLHttpRequest', 'CSS', 'AudioContext',
-  'OffscreenCanvas', 'ImageData', 'Path2D', 'WebGLRenderingContext',
+  'OffscreenCanvas', 'ImageData', 'Path2D', 'WebGLRenderingContext', 'performance',
   // Fournis par la page
   'maplibregl', 'grist', 'THREE', 'FormEngine', 'GristForms', 'SunCalc',
 ]);
@@ -91,8 +91,26 @@ function sansCommentaires(source) {
   // plus cher que de ne rien signaler du tout.
   const vider = (bloc) => bloc.replace(/[^\n]/g, ' ');
   return source
-    .replace(/\/\*[\s\S]*?\*\//g, vider)
+    // `(?<!\)` : le `/*` d'une expression reguliere comme /\/*$/ n'ouvre pas un commentaire (il en avalait la moitie du fichier)
+    .replace(/(?<!\\)\/\*[\s\S]*?\*\//g, vider)
     .replace(/(^|[^:\\])\/\/[^\n]*/g, (tout, avant) => avant + ' '.repeat(tout.length - avant.length));
+}
+
+/**
+ * L'index de l'accolade qui ferme une interpolation `${ ... }` ouverte juste avant `debut`.
+ * Comptage d'accolades simple, comme avant : un comptage qui lit les chaines et les expressions regulieres
+ * se trompait sur des litteraux comme `/'/g` et avalait des fonctions entieres (essaye le 15/10/2026 : 103 faux positifs).
+ */
+function finInterpolation(source, debut) {
+  const n = source.length;
+  let profondeur = 1;
+  let i = debut;
+  while (i < n) {
+    if (source[i] === '{') profondeur++;
+    else if (source[i] === '}') { profondeur--; if (profondeur === 0) return i; }
+    i++;
+  }
+  return n;
 }
 
 /**
@@ -164,18 +182,11 @@ function sansChaines(source) {
         if (source[i] === '`') { out += '`'; i++; break; }
         if (source[i] === '$' && source[i + 1] === '{') {
           // Une interpolation : on recopie le code jusqu'à son accolade jumelle.
-          out += '${';
-          i += 2;
-          profondeur = 1;
-          while (i < n && profondeur > 0) {
-            if (source[i] === '{') profondeur++;
-            else if (source[i] === '}') profondeur--;
-            if (profondeur === 0) break;
-            out += source[i];
-            i++;
-          }
-          out += '}';
-          i++;
+          // Le code de l'interpolation est lui-même passé à `sansChaines` : un gabarit imbriqué, ou une chaîne, y
+          // contient du texte (« 3 type(s) ») qui ressemblerait sinon à des appels (faux positifs constatés le 15/10/2026).
+          const fin = finInterpolation(source, i + 2);
+          out += '${' + sansChaines(source.slice(i + 2, fin)) + '}';
+          i = fin + 1;
           continue;
         }
         out += source[i] === '\n' ? '\n' : ' ';
@@ -225,8 +236,9 @@ function declarations(source) {
   }
   // Paramètres de fonction, y compris les flèches
   for (const m of source.matchAll(/\(([^()]*)\)\s*(?:=>|\{)/g)) {
-    for (const brut of m[1].split(',')) {
-      const nom = brut.trim().split(/[:=]/)[0].trim().replace(/^\.\.\./, '');
+    // `([td, ad]) =>` et `({ a, b: c }) =>` : les noms d'une déstructuration de paramètre comptent aussi
+    for (const brut of m[1].replace(/[[\]{}]/g, ',').split(',')) {
+      const nom = brut.split('=')[0].split(':').pop().trim().replace(/^\.\.\./, '');
       if (/^[A-Za-z_$][\w$]*$/.test(nom)) noms.add(nom);
     }
   }
