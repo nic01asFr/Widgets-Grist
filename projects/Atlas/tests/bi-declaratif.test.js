@@ -70,7 +70,8 @@ test('refus : déclaré deux fois, bloc en double, JSON invalide, non objet, fon
   await echoue(el({}, [bloc('manifeste', '[1,2]')]), /objet JSON/);
   await echoue(el({}, [bloc('manifeste', 'null')]), /objet JSON/);
   await echoue(el({ fond: 'degrade' }), /fond « degrade » inconnu/);
-  await echoue(el({}, [bloc('donnees', DONNEES)]), /sans `manifeste`/);
+  await echoue(el({}, [bloc('donnees', { sites: 'pas des features' })]), /pas une FeatureCollection/);
+  await echoue(el({}, [bloc('manifeste', { layers: [{ id: 'a' }, { id: 'b' }] }), bloc('donnees', '[]')]), /2 couches/);
 });
 
 test('adresses : seulement http(s), réponse en échec dite, taille bornée', async () => {
@@ -124,6 +125,16 @@ test('élément : sans configuration déclarative, rien n\'est posé et aucun é
   const { e, vus, fin } = await elementConnecte({}, [], async () => { throw new Error('ne doit pas lire'); });
   await new Promise((r) => setTimeout(r, 20));
   assert.equal(await e.configure, null); assert.deepEqual(vus, []); fin();
+});
+
+test('élément : des données seules suffisent, le manifeste est inféré et dit', async () => {
+  const feats = ['école', 'école', 'mairie', 'école', 'mairie', 'parc'].map((g, i) => ({ type: 'Feature', id: i + 1, properties: { ref: 'R' + i, genre: g }, geometry: { type: 'Point', coordinates: [5.3 + i / 100, 43.3] } }));
+  const { e, rt, fin } = await elementConnecte({ donnees: '/sites.geojson' }, [], async () => reponse({ type: 'FeatureCollection', features: feats }));
+  const r = await e.configure;
+  assert.deepEqual(r.scene, { donnees: 6 });
+  assert.ok(r.inference.some((n) => /couleurs par « genre »/.test(n)), 'ce qui a été décidé est dit');
+  assert.deepEqual(rt.api.ping().couches, ['donnees']);
+  fin();
 });
 
 test('élément : manifeste et données en blocs -> la scène est montée sans une ligne de code', async () => {

@@ -69,7 +69,9 @@ export function attacher(map, opts = {}) {
   function declaratifResolu(decl, T = theme) {
     if (!decl) return null; const d = copie(decl);
     if (d.color) d.color = resoudre(d.color, T);
-    for (const s of d.stops || []) s.color = resoudre(s.color, T);
+    // Une classe sans couleur prend la suivante de la palette qualitative de la charte (un manifeste inféré n'écrit aucune couleur).
+    const palette = Array.isArray(T.categories) && T.categories.length ? T.categories : null;
+    (d.stops || []).forEach((s, i) => { s.color = s.color ? resoudre(s.color, T) : (palette ? palette[i % palette.length] : undefined); });
     return d;
   }
 

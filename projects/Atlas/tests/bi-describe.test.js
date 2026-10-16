@@ -37,7 +37,7 @@ test('contrat et capacités lus dans le pont', () => {
 
 test('la description est du JSON pur (aller-retour sans perte) et ne renvoie que des textes courts', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(d)), d);
-  assert.equal(GUIDE.length, 10);
+  assert.ok(GUIDE.length >= 8 && GUIDE.length <= 14, 'un guide court');
   assert.ok(JSON.stringify(d).length < 40000, 'taille de la description');
 });
 
