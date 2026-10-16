@@ -10,6 +10,7 @@
  */
 import { attributionSure, attributionTexte } from '../attribution.js?v=20261010a';
 import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=20261002a';
+import { diagnostiquerCouche } from './diagnostic-donnees.js';
 import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001a';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
@@ -299,7 +300,7 @@ export function attacher(map, opts = {}) {
   const api = {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
-      for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {};
+      for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {}, avertissements = {};
       attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
@@ -313,12 +314,17 @@ export function attacher(map, opts = {}) {
         }
         // un choroplèthe se peint sur des unités administratives : sans `admin` il n'a pas de jointure, la couche est refusée seule et lisiblement
         if (def.visuel && def.visuel.type === 'choroplethe') { erreurs[def.id] = 'choroplethe : la couche « ' + def.id + ' » doit déclarer `admin` (un choroplèthe se peint sur des unités administratives)'; continue; }
-        try { const c = creerCouche(def, donnees[def.id] || def.geojson?.features || []); couches.set(def.id, c); monter(c); }
+        const source = donnees[def.id] || def.geojson?.features || [];
+        const diag = diagnostiquerCouche(def, source);   // une erreur de forme se dit en clair, avant le montage
+        if (diag.erreur) { erreurs[def.id] = diag.erreur; continue; }
+        if (diag.avertissements.length) avertissements[def.id] = diag.avertissements;
+        try { const c = creerCouche(def, source); couches.set(def.id, c); monter(c); }
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
       configurerTemps(manifest); poserLavis();
       const compte = Object.fromEntries([...couches].map(([id, c]) => [id, c.features.length]));
-      emettre('ready', { layers: compte, temps: temps.champ ? { champ: temps.champ, min: temps.min, max: temps.max, valeur: temps.valeur } : null, ...(Object.keys(erreurs).length ? { erreurs } : {}) }, 'api'); return erreurs && Object.keys(erreurs).length ? { ...compte, _erreurs: erreurs } : compte;
+      emettre('ready', { layers: compte, temps: temps.champ ? { champ: temps.champ, min: temps.min, max: temps.max, valeur: temps.valeur } : null, ...(Object.keys(erreurs).length ? { erreurs } : {}), ...(Object.keys(avertissements).length ? { avertissements } : {}) }, 'api');
+      return { ...compte, ...(Object.keys(erreurs).length ? { _erreurs: erreurs } : {}), ...(Object.keys(avertissements).length ? { _avertissements: avertissements } : {}) };
     },
     setLayerVisibility(id, visible) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); c.visible = !!visible; for (const l of c.ids) map.setLayoutProperty(l, 'visibility', visible ? 'visible' : 'none'); return visible; },
     setFilter(controlId, valeur) { const r = majFiltre(controlId, valeur); emettre('filter', { controlId, value: valeur, ...r }, 'api'); return r; },
