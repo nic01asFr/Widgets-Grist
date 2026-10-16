@@ -52,9 +52,9 @@ const BUDGETS = [
   ['application complète (app.js)', ['app.js'], 1_040_000, 300_000],                                  // 992 153 / 284 850
   ['page (index.html)', ['index.html'], 165_000, 35_000],                                                // 156 478 / 33 196
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 15_500, 5_800],                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
-  ['composant : fermeture de montage.js (mode ?bi=1)', fermeture('lib/bi/montage.js'), 390_000, 137_000],   // 369 157 / 129 856 (34 fichiers)
+  ['composant : fermeture de montage.js (mode ?bi=1)', fermeture('lib/bi/montage.js'), 410_000, 148_000],   // 395 356 / 141 528 au 16/10/2026 (38 fichiers ; 1.19.0 : bulle, marges, interface de la charte, inférence et description chargées à la demande comprises)
   ['élément <atlas-bi> et son client', fermeture('lib/bi/atlas-bi-element.js'), 100_000, 38_000],      // 94 190 / 35 201 au 16/10/2026 (9 fichiers) ; 1.18.0 : inference.js 12,6 Ko, comme describe.js, chargés À LA DEMANDE (la fermeture compte aussi les imports dynamiques : le poids au premier chargement est celui de l'élément, du client, du pont, de la charte et de declaratif.js)
-  ['lib/bi (tous les modules)', dossierJs('lib/bi'), 292_000, 109_000],                                 // 278 656 / 102 519 au 16/10/2026 (1.18.0 : inference.js)
+  ['lib/bi (tous les modules)', dossierJs('lib/bi'), 315_000, 116_000],                                 // 301 802 / 111 065 au 16/10/2026 (1.19.0 : bulle.js, marges.js, evenements-ext.js)
   ['lib/charte (tous les modules)', dossierJs('lib/charte'), 93_000, 33_500],                           // 88 047 / 31 820
 ];
 

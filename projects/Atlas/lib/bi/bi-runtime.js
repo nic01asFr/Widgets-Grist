@@ -27,6 +27,9 @@ import { resoudreJeton, avertissementIgnore } from '../charte/resolution.js';
 import { assainirJetonsFond } from '../charte/schema.js';
 import { planDepuis } from '../charte/derivation.js';
 import { verifierPlan } from '../charte/verification.js';
+import { variablesInterface, appliquerVariables } from '../charte/interface.js';
+import { creerBulle, normaliserBulle } from './bulle.js';
+import { normaliserMarges, avecConfort } from './marges.js';
 
 export const VERSION = '0.3';
 const PREF = 'bi-';
@@ -50,10 +53,14 @@ export function attacher(map, opts = {}) {
   const ecouteurs = new Map();       // type -> Set(cb)
   const fond = creerFond(map); let modeFond = 'atlas';
   let generation = 0;                // change à chaque thème posé : invalide les thèmes de couche déjà calculés
+  let marges = null;                 // zone utile : ce que l'hôte a posé sur les côtés de la carte (lib/bi/marges.js), persistant
+  const poserMarges = (m) => { marges = normaliserMarges(m); if (typeof map.setPadding === 'function') map.setPadding(marges || { top: 0, right: 0, bottom: 0, left: 0 }); return marges; };
+  let bulleCtl = null, dernierClic = null;   // la bulle d'objet déclarée par l'hôte (lib/bi/bulle.js) ; `dernierClic` : le point cliqué, pour ancrer la bulle d'une ligne ou d'une surface
   // thème d'exécution = charte résolue + ce qui dépend du fond choisi (police des symboles du Plan IGN, voile)
   const poserTheme = () => {
     generation++; theme = { ...themes.theme, policeSymboles: modeFond === 'plan-ign' ? ['Source Sans Pro Bold'] : null };
     if (modeFond === 'voile' && !theme.lavis) theme.lavis = { couleur: theme.plan.fond || '#F7F7F7', opacite: 0.62 };
+    if (bulleCtl) bulleCtl.actualiser();   // l'interface suit la charte
   };
   poserTheme();
   // Thème d'une couche : celui du composant, ou — si la couche porte sa surcharge (`style.charte`, niveau « couche » de la résolution) — le sien.
@@ -63,6 +70,13 @@ export function attacher(map, opts = {}) {
     return c.themeCouche.theme;
   };
   const emettre = (type, charge, origine) => { try { emetteur(type, charge, origine); } catch (e) { /* le transport ne doit pas casser la carte */ } for (const cb of ecouteurs.get(type) || []) cb(charge); };
+  // La bulle d'un objet, déclarée par couche (`bulle` du manifeste) : ouverte par la sélection, fermée avec elle ; ses boutons reviennent à l'hôte (événement `action`).
+  bulleCtl = creerBulle({
+    map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
+    creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bulle-popup', focusAfterOpen: false })),
+    variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables,
+    quandFermee: () => { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } },
+  });
 
   // ---------- jetons ----------
   const resoudre = (c, T = theme) => resoudreJeton(c, T.jetons);
@@ -210,6 +224,7 @@ export function attacher(map, opts = {}) {
     if (selection) etat(selection.c, selection.id, { selected: false });
     selection = c && id !== null ? { c, id } : null;
     if (selection) etat(c, id, { selected: true });
+    if (selection && selection.c.bulle) bulleCtl.ouvrir(selection.c, selection.c.parId.get(selection.id), dernierClic); else bulleCtl.fermer();
   }
   const cle = (c, f) => (c.def.cle ? f.properties?.[c.def.cle] : undefined);
   function surClic(e) {
@@ -218,7 +233,7 @@ export function attacher(map, opts = {}) {
     if (opts.edition && opts.edition.actif && !fs.length) { emettre('edit', { op: 'add', layer: opts.edition.couche, geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] } }, 'utilisateur'); return; }
     if (!fs.length) { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } return; }
     const f = fs[0], c = [...couches.values()].find((k) => f.layer.id.endsWith(k.id) && f.source === idSrc(k)); if (!c) return;
-    poserSelection(c, f.id); emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
+    dernierClic = e.lngLat; poserSelection(c, f.id); dernierClic = null; emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
   }
   let rafSurvol = 0;
   function surSurvol(e) {
@@ -302,7 +317,9 @@ export function attacher(map, opts = {}) {
   const api = {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
-      for (const c of couches.values()) demonter(c); couches.clear(); selection = null; admin.pile.length = 0; const erreurs = {}, avertissements = {};
+      bulleCtl.fermer(); for (const c of couches.values()) demonter(c); couches.clear(); selection = null;
+      admin.pile.length = 0; const erreurs = {}, avertissements = {};
+      if (manifest.marges !== undefined) { try { poserMarges(manifest.marges); } catch (e) { avertissements._scene = [String(e.message || e)]; } }
       attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
@@ -320,7 +337,12 @@ export function attacher(map, opts = {}) {
         const diag = diagnostiquerCouche(def, source);   // une erreur de forme se dit en clair, avant le montage
         if (diag.erreur) { erreurs[def.id] = diag.erreur; continue; }
         if (diag.avertissements.length) avertissements[def.id] = diag.avertissements;
-        try { const c = creerCouche(def, source); couches.set(def.id, c); monter(c); }
+        try {
+          const c = creerCouche(def, source);
+          const nb = normaliserBulle(def.bulle); c.bulle = nb.bulle;   // la bulle déclarée ; ce qui n'est pas valide est écarté et dit
+          if (nb.avertissements.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...nb.avertissements];
+          couches.set(def.id, c); monter(c);
+        }
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
       configurerTemps(manifest); poserLavis();
@@ -336,12 +358,17 @@ export function attacher(map, opts = {}) {
     pause() { if (temps.lecture) temps.lecture.arreter(); return true; },
     select(id) { if (id === null) { poserSelection(null, null); return null; } for (const c of couches.values()) if (c.parId.has(id)) { poserSelection(c, id); return id; } throw new Error('entité inconnue : ' + id); },
     highlight(ids) { for (const c of couches.values()) for (const f of c.features) if (c.ids.length && (c.visuel.type === 'cercles' || c.visuel.type === 'proportionnel')) etat(c, f.id, { highlight: ids.includes(f.id) }); return ids.length; },
-    flyTo(cam) { camApi = true; map.flyTo({ duration: 600, ...cam }); return true; },
+    flyTo(cam) {
+      // `marges` : zone utile persistante (voir lib/bi/marges.js) ; seule, elle ne déplace rien
+      const { marges: m, ...reste } = cam; if (m !== undefined) poserMarges(m);
+      if (m !== undefined && !Object.keys(reste).length) return true;
+      camApi = true; map.flyTo({ duration: 600, ...(marges ? { padding: marges } : {}), ...reste }); return true;
+    },
     fitTo(arg) { const feats = typeof arg === 'string' ? (couches.get(arg)?.vue || []) : [...couches.values()].flatMap((c) => (Array.isArray(arg) ? c.features.filter((f) => arg.includes(f.id)) : c.vue));
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; const vu = (p) => { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1]; };
       const col = (g) => { if (!g) return; const t = g.type; if (t === 'Point') vu(g.coordinates); else if (t === 'MultiPoint' || t === 'LineString') g.coordinates.forEach(vu); else if (t === 'Polygon' || t === 'MultiLineString') g.coordinates.forEach((r) => r.forEach(vu)); else if (t === 'MultiPolygon') g.coordinates.forEach((p) => p.forEach((r) => r.forEach(vu))); };
       for (const f of feats) col(f.geometry);
-      if (x0 === Infinity) return false; camApi = true; map.fitBounds([[x0, y0], [x1, y1]], { padding: 60, duration: 600, maxZoom: 16 }); return true; },
+      if (x0 === Infinity) return false; camApi = true; map.fitBounds([[x0, y0], [x1, y1]], { padding: marges ? avecConfort(marges, 60) : 60, duration: 600, maxZoom: 16 }); return true; },
     /**
      * Applique une charte (docs/CONTRAT-CHARTE-ATLAS.md) ou un thème du contrat 0.3 ; s'ajoute à ce que l'hôte a déjà donné, sauf `{ remplacer: true }`.
      * Renvoie { version, entree, applique, derive, ignore, avertissements, a11y } et émet l'événement `theme`.

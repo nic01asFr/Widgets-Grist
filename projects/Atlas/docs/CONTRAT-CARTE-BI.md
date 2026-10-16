@@ -112,6 +112,26 @@ Un chargement du composant peut ne contenir que certaines briques d'usage (profi
 
 **Choisir les briques.** `attacher(carte, { capacites: ['socle', 'points'] })` : un nom inconnu lève une erreur à la construction ; l'hôte ne peut pas élargir la liste par une commande (les options d'un `batch` sont sans effet sur elle).
 
+## 6 ter. Bulle d'objet, actions, marges (ajouts additifs de la 1.19.0, sans nouvelle commande)
+
+Le client en un fichier ne change pas : ces ajouts passent par le manifeste, par des commandes existantes (`select`, `flyTo`) et par des événements, que le client livre quel que soit son âge.
+
+**Bulle déclarée par couche** [testé] : `layers[].bulle = { titre?, champs?, actions?, ouverture? }`.
+
+| Clé | Forme | Défaut |
+|---|---|---|
+| `titre` | une propriété (`"nom"`) ou un modèle (`"Site {nom} ({commune})"`) | le nom de la couche |
+| `champs` | `[{ champ, libelle?, format? }]`, 4 au plus ; `format` : `texte`, `nombre`, `date` (secondes Grist, millisecondes ou texte ISO), `pourcent` (une part de 0 à 1 affichée en %) | aucun |
+| `actions` | `[{ id, libelle, style? }]`, 3 au plus ; `id` : lettres, chiffres, `_ . : -` ; `style` : `principale` (la première) ou `secondaire` | aucune |
+| `ouverture` | `clic` ou `aucune` (la carte n'ouvre jamais la bulle) | `clic` |
+
+- **Ouverture** : la bulle suit la **sélection**. Un clic sur un objet, ou `select(id)` de l'hôte, l'ouvre ; `select(null)`, un clic dans le vide, le bouton de fermeture ou la touche Échap la ferment (la sélection s'efface avec elle). Une couche sans `bulle` n'en ouvre pas.
+- **Événements** : `action { layer, featureId, key, actionId }` au clic d'un bouton (le composant n'ouvre, n'écrit ni ne navigue rien : l'hôte route) ; `bulle { etat: 'ouverte' | 'fermee', layer, featureId }`, en paires, même quand la bulle passe d'un objet à l'autre.
+- **Sécurité** : tout est du texte (`textContent`), jamais du HTML ; pas d'image ni de lien dans cette version ; longueurs bornées ; une entrée invalide est **écartée et dite** dans `_avertissements[couche]` du résultat de `setScene` et `avertissements` de `ready`.
+- **Habillage** : l'interface suit la **charte** (`lib/charte/interface.js` : `--atlas-fond`, `--atlas-encre`, `--atlas-accent`, `--atlas-police`…). Une charte d'organisation donnée par `setTheme` change la bulle sans feuille de style ; elle suit aussi un changement de charte à chaud.
+
+**Marges (zone utile)** [testé] : quand l'hôte pose un panneau sur un côté, `manifeste.marges = { top?, right?, bottom?, left? }` (pixels, 0 à 2000), `flyTo({ marges })` ou, sur l'élément, `setMarges({ right: 380 })` règlent la zone utile. Elles **persistent** : `flyTo` et `fitTo` cadrent dans la zone utile (un `padding` explicite d'un `flyTo` l'emporte pour ce seul déplacement). `flyTo({ marges })` seul ne déplace rien ; `null` les retire. Une forme invalide est une erreur franche par `flyTo`, un avertissement (`_avertissements._scene`) par le manifeste.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -205,5 +225,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.16.9 | 0.3 | plafond du ratio de pixels : `?ratio=` ou attribut `ratio-max` de `<atlas-bi>` ; avertissement au-delà de 50 000 entités dans une couche |
 | 1.17.0 | 0.3 | `<atlas-bi>` se configure sans code : attributs `manifeste`, `donnees`, `charte`, `fond` ou blocs `<script type="application/json" data-atlas>` ; événement DOM `atlas-bi-configure`, méthode `reconfigurer()`, propriété `configure` ; `await AtlasBi.decrire()` (description lue dans le pont, chargée à la demande). Aucune commande ajoutée : le client en un fichier est inchangé. |
 | 1.18.0 | 0.3 | `<atlas-bi donnees="…">` sans `manifeste` : le manifeste est déduit des données (`lib/bi/inference.js`) et dit dans `atlas-bi-configure.detail.charge.inference` ; une classe de style sans couleur prend la palette qualitative de la charte. Aucune commande ajoutée. |
+| 1.19.0 | 0.3 | bulle d'objet déclarée (`layers[].bulle`), événements `action` et `bulle`, marges (`manifeste.marges`, `flyTo({ marges })`, `setMarges`), interface habillée par la charte ; palette qualitative par défaut réordonnée (quatre premières classes à 3:1). Aucune commande ajoutée : le client en un fichier est inchangé (§ 6 ter). |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

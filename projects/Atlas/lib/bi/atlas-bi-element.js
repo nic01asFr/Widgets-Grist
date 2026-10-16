@@ -28,7 +28,8 @@
  * rejettent avec une `ErreurBi` (propriété `code`) et l'événement `atlas-bi-erreur` est émis.
  */
 import { creerClient, transportFenetre, ErreurBi } from './client.js';
-import { COMMANDES, EVENEMENTS } from './pont.js';
+import { COMMANDES } from './pont.js';
+import { TOUS_LES_EVENEMENTS as EVENEMENTS } from './evenements-ext.js';
 import { ATTRIBUTS_DECLARATIFS, lireConfiguration, estVide, appliquerConfiguration } from './declaratif.js';
 
 /** URL de l'iframe : paramètres du mode composant ajoutés sans écraser ceux de l'hôte. Pure, testable. */
@@ -64,6 +65,9 @@ export class AtlasBi extends Base {
 
   /** Description complète du composant (commandes, événements, limites, exemples, guide), lisible sans iframe ni connexion. Chargée à la demande : ne pèse rien tant qu'on ne la lit pas. Voir `lib/bi/describe.js`. */
   static async decrire() { return (await import('./describe.js')).decrire(); }
+
+  /** Pose (ou retire, avec `null`) la zone utile de la carte : les côtés que l'hôte occupe avec un panneau, en pixels. Persistant : la caméra et les cadrages la respectent. */
+  setMarges(marges) { return this.flyTo({ marges }); }
 
   /** Promesse de la connexion établie (version négociée). */
   get pret() { return this._pret || Promise.reject(new ErreurBi('deconnecte', "l'élément n'est pas dans la page")); }

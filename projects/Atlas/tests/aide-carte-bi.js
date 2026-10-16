@@ -14,7 +14,7 @@ export function carteSimulee() {
     hasImage: (i) => images.has(i), addImage: (i) => images.add(i), removeImage: (i) => images.delete(i),
     on: (t, f) => { if (!ecouteurs.has(t)) ecouteurs.set(t, []); ecouteurs.get(t).push(f); }, emit: (t, e) => (ecouteurs.get(t) || []).forEach((f) => f(e)), once() {}, off() {},
     getCanvas: () => ({ style: {} }), getCanvasContainer: () => new EventTarget(), queryRenderedFeatures: () => [],
-    fitBounds(b) { m.dernierCadre = b; }, flyTo() {}, jumpTo() {}, resize() {}, project: () => ({ x: 0, y: 0 }),
+    fitBounds(b, o) { m.dernierCadre = b; m.optionsCadre = o; }, flyTo(o) { m.dernierVol = o; }, setPadding(p) { m.padding = p; }, jumpTo() {}, resize() {}, project: () => ({ x: 0, y: 0 }),
     getCenter: () => ({ lng: 2.4, lat: 46.6 }), getZoom: () => 5, getPitch: () => 0, getBearing: () => 0, isStyleLoaded: () => true, dragPan: { enable() {}, disable() {} }, setGlyphs() {},
   };
   return m;

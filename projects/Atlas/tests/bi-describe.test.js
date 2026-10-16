@@ -6,7 +6,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { attacher } from '../lib/bi/bi-runtime.js';
-import { COMMANDES, EVENEMENTS, CAPACITES, VERSION, validerArguments } from '../lib/bi/pont.js';
+import { COMMANDES, CAPACITES, VERSION, validerArguments } from '../lib/bi/pont.js';
+import { TOUS_LES_EVENEMENTS as EVENEMENTS } from '../lib/bi/evenements-ext.js';
 import { decrire, TEXTES_COMMANDES, TEXTES_EVENEMENTS, EXEMPLES, GUIDE } from '../lib/bi/describe.js';
 import { carteSimulee } from './aide-carte-bi.js';
 
@@ -23,7 +24,7 @@ test('chaque commande du pont est décrite, et seulement elles', () => {
   }
 });
 
-test('chaque événement du pont est décrit, et seulement eux', () => {
+test("chaque événement du composant (ceux du pont et ceux qui s'y sont ajoutés) est décrit, et seulement eux", () => {
   assert.deepEqual(d.evenements.map((e) => e.nom), [...EVENEMENTS]);
   assert.deepEqual(Object.keys(TEXTES_EVENEMENTS).sort(), [...EVENEMENTS].sort());
   for (const e of d.evenements) assert.ok(e.description && e.charge, e.nom);
@@ -49,6 +50,8 @@ test('les exemples sont acceptés par le contrat et le manifeste de points se mo
   const rt = attacher(carteSimulee());
   const r = await rt.api.setScene(EXEMPLES.points.manifeste, EXEMPLES.points.donnees);
   assert.deepEqual(r, { sites: 1 });
+  const b = EXEMPLES.bulle; const r2 = await attacher(carteSimulee()).api.setScene(b.manifeste, b.donnees);
+  assert.deepEqual(r2, { sites: 1 }); assert.equal(r2._avertissements, undefined, "l'exemple de bulle est une bulle valide");
   assert.equal(r._erreurs, undefined);
 });
 
