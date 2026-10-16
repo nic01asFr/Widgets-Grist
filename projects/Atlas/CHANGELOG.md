@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.17.0 — une carte en une balise, qui se décrit elle-même
+
+- **Composant** : `<atlas-bi>` se configure sans code. Attributs `manifeste`, `donnees`, `charte` (adresses de fichiers JSON lues par la page hôte, ou blocs `<script type="application/json" data-atlas="…">`) et `fond` ; appliqués dans l'ordre charte, fond, scène à la connexion et à chaque changement d'attribut, sans recharger l'iframe. Événement DOM `atlas-bi-configure`, méthode `reconfigurer()`, propriété `configure`. Adresses http(s) seulement, 16 Mo au plus, jamais de HTML interprété ; Atlas ne charge toujours aucune charte ni donnée par adresse.
+- **Auto-description** : `await AtlasBi.decrire()` (et `lib/bi/describe.js`) rend commandes, arguments, événements, limites, exemples et guide de dix lignes, lus dans le pont : un test échoue si la description diverge du contrat.
+- **Composant BI** : aucune commande ajoutée, contrat 0.3 inchangé, même client, même empreinte. `setMarges` et la bulle déclarée demandent une nouvelle commande, donc un nouveau client : ils sont reportés au contrat 0.4.
+
 ## 1.16.9 — plafond du ratio de pixels, volumes signalés, inventaire des dépendances
 
 - **Composant** : `?ratio=` (ou l'attribut `ratio-max` de `<atlas-bi>`, 1 à 4) plafonne le ratio de pixels de la carte : à CPU ralenti 4x et ratio 3, 43 images/s sans plafond contre 238 avec un plafond à 1. Sans paramètre, rien ne change. Une couche de plus de 50 000 entités se monte avec un avertissement (`_avertissements`, `ready.avertissements`) qui conseille d'agréger.

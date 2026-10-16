@@ -24,6 +24,10 @@
   },
   "journal": [
     {
+      "version": "v1.17.0",
+      "texte": "Une carte Atlas s’intègre dans une page web en une seule balise, sans écrire de code : on indique le fichier de la scène, la charte graphique et le fond de plan, ou on les place directement dans la page, et la carte se monte et se met à jour d’elle-même. Atlas sait aussi se décrire — ses commandes, ses événements, ses limites, des exemples et un guide de dix lignes — pour qu’une personne ou un assistant l’intègre sans lire le code."
+    },
+    {
       "version": "v1.16.9",
       "texte": "Une application qui intègre la carte peut plafonner la finesse du dessin sur les écrans à très haute résolution pour qu’elle reste fluide sur téléphone, et la carte prévient quand une seule couche dépasse 50 000 objets, avec le conseil de les regrouper. Le journal du contrat et l’inventaire des dépendances sont publiés pour les équipes qui intègrent ou auditent Atlas."
     },
@@ -716,7 +720,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.16.9 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.17.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [
