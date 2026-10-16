@@ -1,3 +1,19 @@
+# Fins de ligne : LF dans le depot ET dans la copie de travail, quel que soit core.autocrlf du poste
+# (le melange CRLF/LF venait uniquement de autocrlf sous Windows : l'index est deja 100 % LF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.glb binary
+*.wasm binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+
 # Client de l hote en un seul fichier (genere par tools/generer-client-hote.mjs) : octets EXACTS, jamais de conversion de
 # fins de ligne ; un hote le copie tel quel et verifie son empreinte.
 projects/Atlas/lib/bi/client-hote.js -text
