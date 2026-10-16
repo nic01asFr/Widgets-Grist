@@ -164,16 +164,25 @@ const VENDOR = [
 ];
 const formsSrc = path.join(root, 'projects', 'grist_forms');
 const vendorPub = path.join(pub, 'vendor', 'grist_forms');
+/**
+ * Le moteur embarque est FIGE a la version publiee (1.13.1) : la promotion d'Atlas ne le reecrit pas. Sans cette regle, chaque promotion
+ * recopiait la version de developpement de `projects/grist_forms` (en avance, non validee avec Atlas), et il fallait la defaire a la main
+ * (`git checkout -- published/atlas/vendor/grist_forms`). Pour le mettre a jour, volontairement : `node scripts/promote-atlas.js --maj-moteur-formulaires`.
+ */
+const MAJ_MOTEUR = process.argv.includes('--maj-moteur-formulaires');
+let moteurGarde = 0;
 for (const rel of VENDOR) {
   const from = path.join(formsSrc, rel);
+  const to = path.join(vendorPub, rel);
+  if (!MAJ_MOTEUR && fs.existsSync(to)) { moteurGarde++; continue; }
   if (!fs.existsSync(from)) {
     console.error(`Echec : ${rel} introuvable dans projects/grist_forms`);
     process.exit(1);
   }
-  const to = path.join(vendorPub, rel);
   fs.mkdirSync(path.dirname(to), { recursive: true });
   fs.copyFileSync(from, to);
 }
+if (moteurGarde) console.log(`moteur de formulaires : ${moteurGarde} fichier(s) laisse(s) tel(s) quel(s) (fige ; --maj-moteur-formulaires pour le mettre a jour)`);
 
 /**
  * Les scenes de demonstration.

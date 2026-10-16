@@ -68,16 +68,15 @@ jobs:
           echo "taille : $(wc -c < "$pub" | tr -d ' ') octets"
 
       # 4. Garde de promotion : published/atlas doit etre EXACTEMENT ce que produit
-      #    scripts/promote-atlas.js a partir des sources (mesure : vrai a la 1.16.6 hors
-      #    vendor/grist_forms, qui est volontairement fige a la 1.13.1 et que promote-atlas
-      #    reecrit : d'ou l'exclusion).
+      #    scripts/promote-atlas.js a partir des sources (le moteur de formulaires embarque,
+      #    vendor/grist_forms, est fige : la promotion ne le reecrit que sur --maj-moteur-formulaires).
       - name: Garde de promotion (published = promotion des sources)
         continue-on-error: true   # verifie en local sous Windows seulement : a rendre bloquant apres un premier passage vert sur GitHub
         run: |
           set -eu
           node scripts/promote-atlas.js
-          git diff --exit-code --stat -- published/atlas ':(exclude)published/atlas/vendor'
-          test -z "$(git status --porcelain -- published/atlas ':(exclude)published/atlas/vendor')" \
+          git diff --exit-code --stat -- published/atlas
+          test -z "$(git status --porcelain -- published/atlas)" \
             || { echo "fichiers non suivis apres promotion :"; git status --porcelain -- published/atlas; exit 1; }
 
       # 5. Coherence de version : package.json publie, premiere entree du CHANGELOG, tete du journal
