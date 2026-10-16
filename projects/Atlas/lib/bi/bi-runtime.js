@@ -141,7 +141,6 @@ export function attacher(map, opts = {}) {
     map.addLayer({ id: PREF + 'lavis', type: 'background', paint: { 'background-color': theme.lavis.couleur, 'background-opacity': theme.lavis.opacite ?? 0.6 } }, premier);
   }
   // ---------- filtres et temps ----------
-  function controlesActifs(c) { return c.controles.filter((x) => x.active); }
   function appliquerVue(c) {
     const pred = buildControlPredicate(c.layerLike);
     c.vue = pred ? c.features.filter(pred) : c.features;

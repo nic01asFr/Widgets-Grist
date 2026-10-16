@@ -1,0 +1,15 @@
+{
+  "name": "atlas-lint",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Outils de controle du code d'Atlas (isole du reste du depot : ni build ni dependance d'execution)",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint --config eslint.config.js ../../lib/bi ../../lib/charte \"../../lib/trafic*\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.0.0",
+    "globals": "^16.0.0"
+  }
+}

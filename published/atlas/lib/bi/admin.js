@@ -100,7 +100,7 @@ export function lireValeur(v) {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
   if (typeof v !== 'string') return null;
   const t = v.trim().toLowerCase(); if (MANQUANTS.has(t)) return null;
-  const n = Number(t.replace(/[\s  ]/g, '').replace('%', '').replace(',', '.'));
+  const n = Number(t.replace(/[\s\u00a0\u202f]/g, '').replace('%', '').replace(',', '.'));
   return Number.isFinite(n) ? n : null;
 }
 

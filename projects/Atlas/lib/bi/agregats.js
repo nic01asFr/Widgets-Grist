@@ -64,7 +64,7 @@ export function agreger(features, opts = {}) {
       const q = ((Math.sqrt(3) / 3) * x - (1 / 3) * y) / t, r = ((2 / 3) * y) / t;
       let cx = q, cz = r, cy = -cx - cz; let rx = Math.round(cx), ry = Math.round(cy), rz = Math.round(cz);
       const dx = Math.abs(rx - cx), dy = Math.abs(ry - cy), dz = Math.abs(rz - cz);
-      if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+      if (dx > dy && dx > dz) rx = -ry - rz; else if (!(dy > dz)) rz = -rx - ry;   // (la troisième coordonnée cubique, ry, se déduit : elle ne sert plus après)
       ajoute(rx + ':' + rz, rx, rz, v, f.id);
     } else {
       const i = Math.floor(x / t), j = Math.floor(y / t);

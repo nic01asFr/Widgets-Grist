@@ -49,6 +49,7 @@ const nomValide = (n) => NOM_LIBRE.test(n) && !RESERVES.has(n);
 
 /** Une valeur reçue, abrégée et sans caractère de contrôle, pour un compte rendu : jamais la valeur brute. */
 export function valeurAffichee(v) {
+// eslint-disable-next-line no-control-regex -- l'assainissement retire VOLONTAIREMENT les caractères de contrôle des textes de l'hôte
   if (typeof v === 'string') return v.slice(0, LIMITES.valeurAffichee).replace(/[\u0000-\u001f\u007f-\u009f]/g, '?');
   if (v === null || v === undefined || typeof v === 'number' || typeof v === 'boolean') return String(v);
   return Array.isArray(v) ? '[liste de ' + v.length + ']' : '[objet]';
@@ -85,6 +86,7 @@ function contexte() {
 const regles = {
   couleur(v, ch, c) { const a = analyserCouleur(v); if (!a) return c.ignorer(ch, 'couleur-invalide', v); if (a.alpha < 1) return c.ignorer(ch, 'alpha-non-admis', v); return a.hex; },
   couleurAlpha(v, ch, c) { const n = normaliserCouleur(v); return n === null ? c.ignorer(ch, 'couleur-invalide', v) : n; },
+// eslint-disable-next-line no-control-regex -- l'assainissement retire VOLONTAIREMENT les caractères de contrôle des textes de l'hôte
   texte(v, ch, c, r) { if (typeof v !== 'string') return c.ignorer(ch, 'type', v); const s = v.trim().replace(/[\u0000-\u001f\u007f-\u009f<>]/g, ''); return s ? s.slice(0, r.max) : c.ignorer(ch, 'vide', v); },
   nombre(v, ch, c, r) {
     if (typeof v !== 'number' || !Number.isFinite(v)) return c.ignorer(ch, 'type', v);

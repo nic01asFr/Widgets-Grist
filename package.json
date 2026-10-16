@@ -14,12 +14,14 @@
     "build:taskflow": "node scripts/build-taskflow.js",
     "check:taskflow": "node scripts/build-taskflow.js --check",
     "test:taskflow": "node --test \"projects/tasks_app/tests/*.test.js\"",
-  "check:atlas": "node projects/Atlas/tools/verifier-imports.mjs && node projects/Atlas/tools/verifier-references.mjs",
+    "check:atlas": "node projects/Atlas/tools/verifier-imports.mjs && node projects/Atlas/tools/verifier-references.mjs",
     "serve:dev": "node scripts/serve-dev.js",
     "serve": "npx serve published -p 3000 --cors",
     "promote:qgis2grist": "node scripts/promote-qgis2grist.js",
     "vitrine": "node scripts/generate-vitrine.js",
-    "post": "node scripts/generate-post.js"
+    "post": "node scripts/generate-post.js",
+    "lint:atlas": "cd projects/Atlas && node tools/lint/node_modules/eslint/bin/eslint.js -c tools/lint/eslint.config.js lib/bi lib/charte \"lib/trafic*\"",
+    "lint:atlas:installer": "npm ci --prefix projects/Atlas/tools/lint"
   },
   "repository": {
     "type": "git",

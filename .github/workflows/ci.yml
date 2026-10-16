@@ -54,6 +54,13 @@ jobs:
       - name: check:atlas (imports et references)
         run: npm run check:atlas
 
+      # 2 bis. Lint de la surface publique (lib/bi, lib/charte, lib/trafic*) : zero erreur et zero avertissement.
+      #    Outillage isole dans projects/Atlas/tools/lint (rien n'est ajoute aux dependances du depot).
+      - name: ESLint (surface publique)
+        run: |
+          npm ci --prefix projects/Atlas/tools/lint --no-audit --no-fund
+          npm run lint:atlas -- --max-warnings 0
+
       # 3. Empreinte du client hote : le fichier publie, celui des sources et l'empreinte annoncee
       #    dans le CHANGELOG doivent etre identiques (les hotes epinglent cette empreinte).
       - name: Empreinte du client hote

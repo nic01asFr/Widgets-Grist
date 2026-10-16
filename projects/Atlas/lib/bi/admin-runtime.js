@@ -12,7 +12,7 @@
  */
 import { attributionSure, attributionTexte } from '../attribution.js?v=20261010a';
 import { chargerAvecRepli, ErreurSource, ATTRIBUTION_IGN } from './admin-sources.js';
-import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, ancetre, estCommunePLM, fusionnerArrondissements } from './admin.js';
+import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, estCommunePLM, fusionnerArrondissements } from './admin.js';
 import { luminance, estPale } from './echelles.js';
 import { modeleChoroplethe, lignesChoroplethe, lignesClassement, resumeChoroplethe, motifHachure, classesTropClaires } from './choroplethe.js';
 
@@ -70,7 +70,7 @@ export function creerAdmin(ctx) {
     try { r = await chargerNiveau(niveau, o); }
     catch (e) {
       const msg = e instanceof ErreurSource ? e.message : 'Chargement impossible : ' + (e && e.message);
-      ctx.emettre('error', { code: e && e.code || 'chargement', message: msg, niveau }, 'api'); throw new Error(msg);
+      ctx.emettre('error', { code: e && e.code || 'chargement', message: msg, niveau }, 'api'); throw new Error(msg, { cause: e });
     }
     const id = o.id || 'admin-' + niveau;
     const visuel = { type: 'choroplethe', niveau, source: 'hote', methode: 'quantiles', classes: 5, palette: 'sequentielle', valeurSansDonnee: 'hachure', ...(o.visuel || {}) };

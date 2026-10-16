@@ -30,7 +30,7 @@ export const PALETTES = Object.freeze(['sequentielle', 'divergente']);
 export function calculerClasses(valeurs, o = {}) {
   const { methode = 'quantiles', classes = 5, bornes = null } = o;
   const v = (valeurs || []).filter((x) => typeof x === 'number' && Number.isFinite(x));
-  let seuils = [], avertissement;
+  let seuils, avertissement;
   if (methode === 'manuelle') {
     seuils = [...new Set((bornes || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
     if (!seuils.length) avertissement = 'bornes manuelles absentes';
