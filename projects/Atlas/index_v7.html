@@ -15,7 +15,7 @@
     <!-- Le composant carte BI (paramètre bi=1) n'a pas besoin de l'application : ce script, le PREMIER de la page, mène à la page maigre (index_bi.html, publiée sous
          le nom bi.html) avec les mêmes paramètres, et la page de l'application s'arrête là. Aucun hôte ne change d'adresse. Une scène externe
          (`?scene=`) reste dans l'application : elle charge des couches d'application. Gardé par tests/bi-page-maigre.test.js. -->
-    <script>try { var spb = new URLSearchParams(location.search), bib = spb.get('bi'); if ((bib === '1' || bib === 'true') && !spb.has('scene')) location.replace('./index_bi.html' + location.search + location.hash); } catch (e) { /* page de l'application */ }</script>
+    <script>try { var spb = new URLSearchParams(location.search), bib = spb.get('bi'); if ((bib === '1' || bib === 'true') && !spb.has('scene') && spb.get('profil') !== 'complet') location.replace('./index_bi.html' + location.search + location.hash); } catch (e) { /* page de l'application */ }</script>
 
     <!-- Garde d'amorçage du mode composant : si la carte ne démarre pas (dépendance bloquée, réseau lent), le voile le DIT au lieu de rester sur « Chargement… »,
          et l'hôte en est averti (événement `error`, aux seules origines déclarées par `hote=`). Sans ce garde, un CDN bloqué laissait un écran vide sans cause.
@@ -1953,7 +1953,7 @@
     <!-- Mode composant (?bi=1) : la classe est posee AVANT le premier affichage. Sans ce script, l'interface complete d'Atlas se voit dans l'iframe de l'hote
          pendant que app_v7.js se charge (300 a 900 ms, davantage sur un reseau lent), puis disparait. Meme regle que `biDemande` (lib/bi/liaison.js),
          gardee par tests/bi-premier-affichage.test.js. -->
-    <script>try { var sp = new URLSearchParams(location.search), biv = sp.get('bi'); if (biv === '1' || biv === 'true') { document.body.classList.add('mode-bi'); var vv = sp.get('voile'); if (!(vv === '0' || vv === 'false' || vv === 'non')) { document.body.classList.add('voile-bi'); document.body.setAttribute('aria-busy', 'true'); } } } catch (e) { /* sans classe : comportement d'avant */ }</script>
+    <script>try { var sp = new URLSearchParams(location.search), biv = sp.get('bi'); if ((biv === '1' || biv === 'true') && sp.get('profil') !== 'complet') { document.body.classList.add('mode-bi'); var vv = sp.get('voile'); if (!(vv === '0' || vv === 'false' || vv === 'non')) { document.body.classList.add('voile-bi'); document.body.setAttribute('aria-busy', 'true'); } } } catch (e) { /* sans classe : comportement d'avant */ }</script>
     <div id="bi-voile" role="status" aria-live="polite">Chargement de la carte…</div>
     <div class="app">
         <!-- HEADER -->

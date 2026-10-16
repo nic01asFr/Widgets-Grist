@@ -37,6 +37,13 @@ test('urlComposant : ajoute bi, navbar, mode et hote sans écraser ce que l\'hô
   assert.equal(v.origin, 'https://atlas.test'); assert.equal(v.searchParams.get('navbar'), 'true'); assert.deepEqual(v.searchParams.getAll('hote'), ['https://hote.test']); assert.equal(v.searchParams.get('x'), '2');
 });
 
+test("urlComposant : profil=\"complet\" est ajouté à l'adresse (le canevas), jamais un autre profil, sans écraser celui de l'hôte", () => {
+  assert.equal(urlComposant('https://atlas.test/index.html', 'https://hote.test', undefined, null, 'complet').searchParams.get('profil'), 'complet');
+  assert.equal(urlComposant('https://atlas.test/index.html', 'https://hote.test', undefined, null, 'autre').searchParams.has('profil'), false);
+  assert.equal(urlComposant('https://atlas.test/index.html', 'https://hote.test', undefined, null, null).searchParams.has('profil'), false);
+  assert.equal(urlComposant('https://atlas.test/index.html?profil=complet', 'https://hote.test', undefined, null, 'complet').searchParams.getAll('profil').length, 1);
+});
+
 test('l\'élément est enregistré sous <atlas-bi> et expose une méthode par commande', () => {
   assert.equal(definis.get('atlas-bi'), AtlasBi);
   for (const cmd of Object.keys(COMMANDES)) assert.equal(typeof AtlasBi.prototype[cmd], 'function', cmd);

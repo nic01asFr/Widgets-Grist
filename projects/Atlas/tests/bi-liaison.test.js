@@ -105,12 +105,13 @@ test('app_v7.js : aucun import statique de lib/bi ; le seul chargement est un im
   assert.ok(corps && corps[1].includes(dyn[0][0]), 'l\'import dynamique est dans demarrerBi');
 });
 
+// (les gardes `MODE_BI_NU` — barre du haut, catalogue de modèles — ne portent pas le nom MODE_BI : elles ne comptent pas ici, le profil complet les ouvre)
 test('app_v7.js : chaque usage de MODE_BI est une garde — ses branches sont les seules qui diffèrent', () => {
   const lignes = appSource.split('\n').map((t, i) => ({ t, n: i + 1 })).filter((x) => /\bMODE_BI\b/.test(x.t) && !/^\s*(\/\/|\*|\/\*)/.test(x.t));
   const attendues = [
     /^const MODE_BI = typeof location/,
-    /parseNavbarParam\(typeof location !== 'undefined' \? location\.search : ''\) && !MODE_BI;$/,
-    /if \(!MODE_BI\) probeLocalModels\(\);/,
+    /^const PROFIL_COMPLET = MODE_BI && /,
+    /^const MODE_BI_NU = MODE_BI && !PROFIL_COMPLET;$/,
     /!sceneDemandee && !MODE_BI && !CONFIG\.grist\.ready/,
     /if \(!MODE_BI\) setInterval\(\(\) => \{/,
     /return MODE_BI \? demarrerBi\(\) : init\(\);/,

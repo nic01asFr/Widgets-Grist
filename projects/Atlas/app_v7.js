@@ -13117,6 +13117,13 @@ function setUserIdentity(u) {
  */
 
 const MODE_BI = typeof location !== 'undefined' && /(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search);
+/**
+ * `?bi=1&profil=complet` : le CANEVAS comme composant. L'application garde son interface (rail, panneaux, 3D, modèles) ET le pont du composant s'y attache : l'hôte pilote
+ * les couches qu'il envoie (`setScene`, `setFilter`, `select`…) et reçoit les événements, comme avec `bi.html`, mais dans l'application complète. Sans ce paramètre,
+ * `?bi=1` reste le composant nu (page maigre `bi.html`). Un test garde cette règle égale à celle de `index_v7.html` (redirection) et de `lib/bi/voile.js`.
+ */
+const PROFIL_COMPLET = MODE_BI && /(?:^|[?&])profil=complet(?:&|$)/.test(location.search);
+const MODE_BI_NU = MODE_BI && !PROFIL_COMPLET;
 
 /**
  * `?navbar=false` retire la barre du haut.
@@ -13132,7 +13139,7 @@ const MODE_BI = typeof location !== 'undefined' && /(?:^|[?&])bi=(?:1|true)(?:&|
  * > ne varie pas se prend au demarrage, pas dans une fonction de disposition
  * > dont le nom promet autre chose.
  */
-const NAVBAR_DEMANDEE = parseNavbarParam(typeof location !== 'undefined' ? location.search : '') && !MODE_BI;
+const NAVBAR_DEMANDEE = parseNavbarParam(typeof location !== 'undefined' ? location.search : '') && !MODE_BI_NU;
 
 /**
  * Retire la barre du haut quand `barreRetiree` le dit : sur demande de la page,
@@ -18014,7 +18021,7 @@ async function init() {
     updateMobileLayout();
     wireEvents();
     initMap();
-    if (!MODE_BI) probeLocalModels();   // le composant BI n'affiche aucun modèle 3D du catalogue
+    if (!MODE_BI_NU) probeLocalModels();   // le composant BI nu n'affiche aucun modèle 3D du catalogue ; le profil complet, si
     await initGrist();
     if (CONFIG.sceneExterne) await monterSceneExterne(CONFIG.sceneExterne);
     applyViewModeChrome();
@@ -18104,11 +18111,14 @@ async function demarrer() {
  * Le module est importé pendant que la carte se construit : le téléchargement ne retarde pas `init()`.
  */
 async function demarrerBi() {
-    document.body.classList.add('mode-bi');
     CONFIG.viewMode = true;
-    // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
-    CONFIG.defaultPitch = 0;
-    Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
+    // Profil complet : l'interface et la 3D de l'application restent (le pont s'y attache) ; le composant nu masque l'interface et passe à plat.
+    if (!PROFIL_COMPLET) {
+        document.body.classList.add('mode-bi');
+        // Carte à plat par défaut (les données BI se lisent de dessus) : l'hôte garde la main par `flyTo` / `setFond`.
+        CONFIG.defaultPitch = 0;
+        Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
+    }
     const chargement = import('./lib/bi/montage.js?v=20261010b');
     chargement.catch(() => {});
     try {
