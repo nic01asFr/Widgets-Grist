@@ -2,21 +2,21 @@
  * Récit / storymaps — étapes caméra + état scène, persistance Atlas_Story.
  * Binding : caméra, visibilité, contrôles, symbolisation (interop interactive_map).
  */
-import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.16.8';
+import { declarativeFromAtlasLayer } from './manifest-binding.js?v=1.16.9';
 import {
   captureSelectControlValues,
   controlDeclarativesFromAtlasLayer,
   markStoryCaptureControls,
   shouldCaptureControl,
-} from './controls.js?v=1.16.8';
+} from './controls.js?v=1.16.9';
 import {
   assurerCles,
   baseDepuisLignes,
   lireLignesRecit,
   planifierEcritureRecit,
-} from './recit-cles.js?v=1.16.8';
+} from './recit-cles.js?v=1.16.9';
 
-export { assurerCles } from './recit-cles.js?v=1.16.8';
+export { assurerCles } from './recit-cles.js?v=1.16.9';
 
 export const STORY_SCHEMA = [
   // La clé stable de l'étape (lib/recit-cles.js) : on la désigne par elle, jamais par son rang.

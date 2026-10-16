@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.16.8';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.16.8';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.16.9';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.16.9';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.16.8';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.16.9';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende } from './legende.js';

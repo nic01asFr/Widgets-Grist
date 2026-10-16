@@ -37,7 +37,7 @@
  */
 
 import { compterHits, lirePages, ErreurWfs, URL_WFS } from './reseau/wfs-bdtopo.js';
-import { TYPES, typeDeVoie } from './modes-voie.js?v=1.16.8';
+import { TYPES, typeDeVoie } from './modes-voie.js?v=1.16.9';
 
 export { URL_WFS };
 

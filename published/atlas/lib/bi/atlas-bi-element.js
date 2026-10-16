@@ -11,6 +11,8 @@
  * Attributs :
  *  - `src`  : adresse d'Atlas (obligatoire). `bi=1`, `navbar=false`, `mode=view` et `hote` y sont ajoutés s'ils manquent ;
  *  - `hote` : origine de la page hôte, déclarée au composant (défaut : l'origine de la page). Elle doit être EXACTE ;
+ *  - `ratio-max` : plafond du ratio de pixels de la carte (1 à 4, ajouté à l'adresse comme `ratio=`) ; sur un écran à fort ratio, `1` ou `2` rend la carte
+ *    plusieurs fois plus fluide pour une netteté peu différente. Absent : le ratio de l'appareil ;
  *  - `delai`: délai maximal d'une commande, en millisecondes (défaut 10 000) ;
  *  - `delai-connexion` : attente du composant à la connexion, en millisecondes (défaut 30 000 : un démarrage à froid prend 15 à 45 s sur un réseau lent ;
  *    le défaut du client en un fichier, 8 000, est trop court pour cela : passez `delaiConnexion: 30000` à `creerClient`) ;
@@ -26,13 +28,14 @@ import { creerClient, transportFenetre, ErreurBi } from './client.js';
 import { COMMANDES, EVENEMENTS } from './pont.js';
 
 /** URL de l'iframe : paramètres du mode composant ajoutés sans écraser ceux de l'hôte. Pure, testable. */
-export function urlComposant(src, hote, base) {
+export function urlComposant(src, hote, base, ratioMax) {
   const u = new URL(src, base);
   // `javascript:` s'exécuterait dans la page hôte, `data:` / `blob:` / `file:` donnent une origine opaque (« null ») : http(s) seulement
   if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new ErreurBi('commande', '<atlas-bi> : src doit être une adresse http(s) (reçu ' + u.protocol + ')');
   if (!u.searchParams.has('bi')) u.searchParams.set('bi', '1');
   if (!u.searchParams.has('navbar')) u.searchParams.set('navbar', 'false');
   if (!u.searchParams.has('mode')) u.searchParams.set('mode', 'view');
+  if (ratioMax && !u.searchParams.has('ratio')) u.searchParams.set('ratio', String(ratioMax));
   if (hote && !u.searchParams.getAll('hote').includes(hote)) u.searchParams.append('hote', hote);
   return u;
 }
@@ -63,7 +66,7 @@ export class AtlasBi extends Base {
     const hote = this.getAttribute('hote') || (typeof location !== 'undefined' ? location.origin : '');
     if (!hote || hote === 'null') { this._pret = Promise.reject(new ErreurBi('origine', "<atlas-bi> : l'origine de la page est opaque (file://) ; héberger la page ou fournir l'attribut hote")); this._pret.catch(() => {}); return; }
     let url;
-    try { url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined); }
+    try { url = urlComposant(src, hote, typeof location !== 'undefined' ? location.href : undefined, this.getAttribute('ratio-max')); }
     catch (e) { this._pret = Promise.reject(e instanceof ErreurBi ? e : new ErreurBi('commande', '<atlas-bi> : src illisible')); this._pret.catch(() => {}); return; }
     const cadre = document.createElement('iframe');
     cadre.title = this.getAttribute('title') || 'Carte';

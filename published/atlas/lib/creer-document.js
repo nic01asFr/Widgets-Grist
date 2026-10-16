@@ -20,8 +20,8 @@
  */
 import {
   creerScene, appliquerActions, colonnesReference,
-} from './scene-locale.js?v=1.16.8';
-import { SCENE_PREFS_SCHEMA, ATLAS_SCENE_PREFS_TABLE } from './scene-prefs.js?v=1.16.8';
+} from './scene-locale.js?v=1.16.9';
+import { SCENE_PREFS_SCHEMA, ATLAS_SCENE_PREFS_TABLE } from './scene-prefs.js?v=1.16.9';
 
 export const VERSION = '1.0.0';
 

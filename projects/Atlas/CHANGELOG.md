@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.16.9 — plafond du ratio de pixels, volumes signalés, inventaire des dépendances
+
+- **Composant** : `?ratio=` (ou l'attribut `ratio-max` de `<atlas-bi>`, 1 à 4) plafonne le ratio de pixels de la carte : à CPU ralenti 4x et ratio 3, 43 images/s sans plafond contre 238 avec un plafond à 1. Sans paramètre, rien ne change. Une couche de plus de 50 000 entités se monte avec un avertissement (`_avertissements`, `ready.avertissements`) qui conseille d'agréger.
+- **Documentation** : journal du contrat BI (`docs/CONTRAT-CARTE-BI.md` §14) et inventaire des dépendances et des services contactés (`docs/INVENTAIRE-DEPENDANCES.md`, gardé par un test).
+- **Composant BI** : contrat 0.3 inchangé, même client, même empreinte.
+
 ## 1.16.8 — plus aucune dépendance externe au démarrage
 
 - **Dépendances embarquées** : MapLibre GL 5.6.1, SunCalc, three.js et ses extensions, terra-draw, geotiff et les polices sont servis depuis `vendor/` (25 fichiers, 3,9 Mo, verrou `verrou-externe.json` et licences). La page ne contacte plus unpkg, cdnjs, jsdelivr ni Google Fonts ; restent l'API de plugin de Grist (application) et les tuiles de fond de carte (données). Manifeste : `vendor-externe.json` ; outil d'embarquement et garde de promotion.

@@ -190,3 +190,18 @@ Au-delà de 100 000 entités par couche, la latence des filtres et le tas limite
 5. Les communes de France entière sont possibles mais lourdes (voir 11).
 6. EPCI : chargeables, hors forage (un EPCI n'a pas de parent unique).
 7. L'écart de 92 communes entre l'IGN (34 877) et un autre référentiel public (34 969) n'est pas élucidé.
+
+## 14. Journal du contrat
+
+Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tout ce qui suit est **additif** (un hôte qui l'ignore n'est pas affecté) ; le client en un fichier (`lib/bi/client-hote.js`, `VERSION_CLIENT` 1) n'a pas changé depuis la 1.14.0. Le détail par version d'Atlas est dans `CHANGELOG.md`.
+
+| Atlas | Contrat | Ce qui s'ajoute pour l'hôte |
+|---|---|---|
+| 1.14.0 | 0.2 -> 0.3 | 0.3 : `addAdminLayer` et couches administratives, charte (`setTheme`, `getTheme`, `setFond`), style des polygones, `etats`, identifiants entiers stables ; extension additive : capacités annoncées (`ready.capacites`, `capacite_absente`), paquet hors ligne, élément `<atlas-bi>`. La 0.2 reste servie. |
+| 1.14.1 | 0.3 | voile de premier rendu ; paramètres `?voile=0`, `?fond=`, `?theme=` |
+| 1.14.2 | 0.3 | `hover` à `null` quand le pointeur sort ; `setHorsLigne('auto')` ; `manifeste.attribution` |
+| 1.16.7 | 0.3 | un démarrage qui échoue le dit (cause dans le voile, événement `error` vers l'hôte) ; `delai-connexion` de `<atlas-bi>` (30 s par défaut) ; la page ne charge plus l'API de plugin de Grist en mode composant |
+| 1.16.8 | 0.3 | données de `setScene` vérifiées avant le montage : forme refusée en clair par couche (`_erreurs`), constats non bloquants dans `_avertissements` du résultat et `avertissements` de `ready` ; plus aucun CDN au démarrage |
+| 1.16.9 | 0.3 | plafond du ratio de pixels : `?ratio=` ou attribut `ratio-max` de `<atlas-bi>` ; avertissement au-delà de 50 000 entités dans une couche |
+
+**Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
