@@ -94,14 +94,15 @@ export function installerPont(rt, { cible, fenetre, autorisees = [], journal = n
 /**
  * Monte le composant : attache le runtime à la carte d'Atlas, installe le clavier et le pont, annonce `ready`.
  * Appelée par `app_v7.js` quand `?bi=1` est présent (import dynamique de ce module : rien n'est chargé sans ce paramètre).
- * @param {{carte:object, fenetre:Window, document?:Document, search?:string, journal?:Console}} o
+ * @param {{carte:object, fenetre:Window, document?:Document, search?:string, journal?:Console, extension?:(rt:object)=>void}} o   `extension` : profil complet seulement
  */
-export function monter({ carte, fenetre, document: doc = fenetre.document, search = fenetre.location.search, journal = console }) {
+export function monter({ carte, fenetre, document: doc = fenetre.document, search = fenetre.location.search, journal = console, extension = null }) {
   const config = configurationPage(fenetre, doc);
   const { hotes, source, rejetees } = lireHotes(search, config);
   for (const r of rejetees) journal.warn('[Atlas BI] origine d\'hôte refusée (http(s)://hôte[:port] exact attendu, pas de joker) : ' + r);
   if (!hotes.length) journal.warn('[Atlas BI] aucun hôte déclaré : le composant ne répondra à personne. Ajouter ?hote=<origine de la page hôte>.');
   const rt = attacher(carte, config.charte ? { theme: config.charte } : {});   // la charte de la page, puis celles de l'hôte par `setTheme`
+  if (typeof extension === 'function') extension(rt);   // le profil complet branche ici les scènes Atlas (canevas.js) avant que le pont ne lise l'API
   const liaison = installerPont(rt, { cible: fenetre.parent, fenetre, autorisees: hotes, journal });
   fenetre.__bi = rt;
   const clavier = installerClavier(rt, { conteneur: carte.getCanvasContainer(), document: doc });
@@ -116,6 +117,6 @@ export function monter({ carte, fenetre, document: doc = fenetre.document, searc
   })();
   const voile = voileDemande(search) ? creerVoile({ document: doc, carte }) : null;
   if (voile) { const apresScene = () => { reglages.then(() => voile.lever('scene')); }; rt.on('ready', apresScene); rt.on('layer', apresScene); }
-  liaison.annoncer({ hotes: source });
+  liaison.annoncer({ hotes: source, ...(typeof extension === 'function' ? { canevas: true } : {}) });
   return { rt, liaison, clavier, hotes, source, voile, reglages };
 }

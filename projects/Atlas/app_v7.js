@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne } from './lib/scene-externe.js?v=20260827a';
+import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene } from './lib/scene-externe.js?v=20260827a';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
@@ -14005,10 +14005,62 @@ async function monterSceneExterne(manifest) {
         // `node scripts/valider-schema.js <schema> <scene>` — et du schéma
         // publié à une adresse stable. Les échecs par couche, eux, sont
         // déclarés ci-dessus : c'est ce qui manquait vraiment.
+        return { echecs: echecs || [] };   // lu par la façade du profil complet ; les autres appelants l'ignorent
     } catch (e) {
         console.warn('monterSceneExterne:', e);
         showToast('Scène externe : ' + e.message, 'error');
+        return { echecs: [], erreur: e.message };
     }
+}
+
+/**
+ * Façade du canevas pour la page hôte (profil `complet` du composant, voir lib/bi/canevas.js).
+ *
+ * L'hôte envoie une scène Atlas par `setScene` : l'application la monte comme toute scène externe, et ne retire au `setScene` suivant que
+ * les couches qu'elle a posées elle-même (jamais celles de la personne qui regarde). Posée seulement dans ce profil : le composant nu n'a rien
+ * de tout cela.
+ */
+const _sceneHote = { ids: [] };
+
+function retirerSceneHote() {
+    if (!_sceneHote.ids.length) return 0;
+    const ids = new Set(_sceneHote.ids); _sceneHote.ids = [];
+    STATE.layers.filter((l) => ids.has(l.id)).forEach(removeLayerGfx);
+    STATE.layers = STATE.layers.filter((l) => !ids.has(l.id));
+    if (ids.has(STATE.selectedLayer)) STATE.selectedLayer = null;
+    updateRailBadge(); Models3D.rebuildScene(); renderLayersPanel(STATE.currentModule); renderInspector(); updateLegend();
+    return ids.size;
+}
+
+async function monterSceneHote(scene) {
+    retirerSceneHote();
+    const avant = new Set(STATE.layers.map((l) => l.id));
+    const r = await monterSceneExterne(scene);
+    const nouvelles = STATE.layers.filter((l) => !avant.has(l.id));
+    _sceneHote.ids = nouvelles.map((l) => l.id);
+    return {
+        couches: nouvelles.map((l) => ({ id: l.id, n: layerVisibleCount(l) })),
+        echecs: (r && r.echecs) || [],
+        erreur: (r && r.erreur) || null,
+    };
+}
+
+function visibiliteCoucheHote(id, visible) {
+    const l = _sceneHote.ids.includes(id) ? STATE.layers.find((x) => x.id === id) : null;
+    if (!l) throw new Error('couche inconnue : ' + id);
+    setLayerVisibility(l, !!visible); updateLegend(); renderLayersPanel(STATE.currentModule);
+    return !!visible;
+}
+
+function cadrerCouchesHote(ids) {
+    let b = null;
+    for (const l of STATE.layers.filter((x) => ids.includes(x.id))) {
+        const c = boundsFromGeoJSON(l.geojson) || l._bboxDeclaree; if (!c) continue;   // une couche distante n'a que l'emprise déclarée
+        b = b ? [[Math.min(b[0][0], c[0][0]), Math.min(b[0][1], c[0][1])], [Math.max(b[1][0], c[1][0]), Math.max(b[1][1], c[1][1])]] : c;
+    }
+    if (!b || !map) return false;
+    map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 600 });
+    return true;
 }
 
 function startSceneManifestPolling() {
@@ -18123,6 +18175,13 @@ async function demarrerBi() {
     chargement.catch(() => {});
     try {
         await init();
+        // Profil complet : la page hôte pilote aussi les scènes Atlas (lib/bi/canevas.js, chargé par montage.js à cause de cette façade).
+        if (PROFIL_COMPLET) {
+            window.__atlasCanevas = Object.freeze({
+                monterScene: monterSceneHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
+                outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene }),
+            });
+        }
         const bi = await chargement;
         await bi.demarrer(window);
     } catch (e) {
