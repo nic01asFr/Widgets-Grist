@@ -436,48 +436,78 @@ export function repairSelectControlFromManifest(layer, c) {
   }
 }
 
+/**
+ * Ce qui ne dépend pas de l'entité est calculé UNE fois par contrôle, pas une fois par entité.
+ *
+ * Mesuré le 15/10/2026 (100 000 entités, trois contrôles) : le filtre coûtait ~800 ms parce que, pour chaque entité et chaque contrôle, il refaisait
+ * `resolveFeaturePropertyKey` (qui parcourt les clés de 100 entités), reconstruisait l'ensemble des valeurs retenues et renormalisait le texte cherché.
+ * La sémantique est celle d'avant, ligne à ligne ; ce qui est calculé d'avance est RECALCULÉ dès que ce dont il dépend change (les valeurs du
+ * contrôle, sa variante, ses bornes, son texte, ou les entités de la couche) : un prédicat gardé en cache voit donc les mêmes changements qu'avant.
+ */
+function compilerControle(layer, c) {
+  const g = layer.geojson;
+  const feats = g && g.features;
+  const m = {
+    feats, n: feats ? feats.length : -1, type: c.type, variant: c.variant, field: c.field,
+    values: c.values, nv: Array.isArray(c.values) ? c.values.length : -1,
+    v0: Array.isArray(c.values) ? c.values[0] : undefined, v1: Array.isArray(c.values) ? c.values[c.values.length - 1] : undefined,
+    texte: c.texte, min: c.min, max: c.max, req: c.requireValue, unite: c.unite, test: null,
+  };
+  const propKey = resolveFeaturePropertyKey(layer, c.field);
+  if (c.type === 'select') {
+    // Actif sans sélection posée : pas de restriction. Sélection vide posée : rien ne passe — c'est ce qu'on a demandé.
+    if (!Array.isArray(c.values)) return m;
+    if (!c.values.length) { m.test = () => false; return m; }
+    const choix = c.variant === 'select_single' ? c.values.slice(0, 1) : c.values;
+    const retenus = new Set(choix.map((v) => String(v ?? '').toLowerCase()));
+    // Une liste Grist passe si l'un de ses choix est retenu ; un objet sans valeur passe si « (sans valeur) » — `''` — l'est.
+    m.test = (p) => { const vals = valeursDeCellule(p, propKey); return (vals.length ? vals : ['']).some((v) => retenus.has(v.toLowerCase())); };
+    return m;
+  }
+  if (c.type === 'text') {
+    const q = normaliserTexte(c.texte).trim();
+    if (!q) return m;
+    m.test = (p) => normaliserTexte(valeursDeCellule(p, propKey).join(' ')).includes(q);
+    return m;
+  }
+  const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
+  const avecMin = variant !== 'time_lte' && variant !== 'range_max';
+  const avecMax = variant !== 'range_min';
+  const max = c.max, min = c.min, bornerMax = avecMax && Number.isFinite(max), bornerMin = avecMin && Number.isFinite(min);
+  const temporel = c.type === 'time', unite = c.unite, exiger = c.requireValue;
+  m.test = (p) => {
+    const raw = p[propKey];
+    // `requireValue` : une entité dépourvue de la donnée filtrée est écartée au lieu d'être laissée passer. Indispensable quand l'attribut n'est
+    // renseigné que sur une partie des objets — sinon les entités muettes dominent la carte thématique. Absent par défaut : tolérance.
+    const n = temporel ? valeurTemporelle(raw, unite) : nombreDe(raw);
+    if (Number.isNaN(n)) return !exiger;
+    if (bornerMax && n > max) return false;
+    if (bornerMin && n < min) return false;
+    return true;
+  };
+  return m;
+}
+
+/** Le calcul d'avance de ce contrôle est-il encore valable ? (comparaisons en O(1) : rien ne parcourt les entités) */
+function perime(m, layer, c) {
+  if (!m) return true;
+  const g = layer.geojson, feats = g && g.features, vs = c.values, tab = Array.isArray(vs);
+  return m.feats !== feats || m.n !== (feats ? feats.length : -1) || m.type !== c.type || m.variant !== c.variant || m.field !== c.field
+    || m.values !== vs || m.nv !== (tab ? vs.length : -1) || m.v0 !== (tab ? vs[0] : undefined) || m.v1 !== (tab ? vs[vs.length - 1] : undefined)
+    || m.texte !== c.texte || m.min !== c.min || m.max !== c.max || m.req !== c.requireValue || m.unite !== c.unite;
+}
+
 export function buildControlPredicate(layer) {
   const ctrls = (layer.controls || []).filter((c) => c.active);
   if (!ctrls.length) return null;
+  const memos = new Array(ctrls.length).fill(null);
   return (f) => {
     const p = f.properties || {};
-    for (const c of ctrls) {
-      const propKey = resolveFeaturePropertyKey(layer, c.field);
-      if (c.type === 'select') {
-        // Actif sans sélection posée : pas de restriction. Sélection vide
-        // posée : rien ne passe — c'est ce qu'on a demandé.
-        if (!Array.isArray(c.values)) continue;
-        if (!c.values.length) return false;
-        const choix = c.variant === 'select_single' ? c.values.slice(0, 1) : c.values;
-        const retenus = new Set(choix.map((v) => String(v ?? '').toLowerCase()));
-        // Une liste Grist passe si l'un de ses choix est retenu ; un objet sans
-        // valeur passe si « (sans valeur) » — `''` — l'est.
-        const vals = valeursDeCellule(p, propKey);
-        if (!(vals.length ? vals : ['']).some((v) => retenus.has(v.toLowerCase()))) return false;
-        continue;
-      }
-      if (c.type === 'text') {
-        const q = normaliserTexte(c.texte).trim();
-        if (!q) continue;
-        if (!normaliserTexte(valeursDeCellule(p, propKey).join(' ')).includes(q)) return false;
-        continue;
-      }
-      const raw = p[propKey];
-      // `requireValue` : une entité dépourvue de la donnée filtrée est écartée
-      // au lieu d'être laissée passer. Indispensable quand l'attribut n'est
-      // renseigné que sur une partie des objets — sinon les entités muettes
-      // dominent la carte thématique. Absent par défaut : les filtres
-      // existants gardent leur tolérance.
-      const n = c.type === 'time' ? valeurTemporelle(raw, c.unite) : nombreDe(raw);
-      if (Number.isNaN(n)) {
-        if (c.requireValue) return false;
-        continue;
-      }
-      const variant = c.variant || (c.type === 'time' ? 'time_lte' : 'range_between');
-      const avecMin = variant !== 'time_lte' && variant !== 'range_max';
-      const avecMax = variant !== 'range_min';
-      if (avecMax && Number.isFinite(c.max) && n > c.max) return false;
-      if (avecMin && Number.isFinite(c.min) && n < c.min) return false;
+    for (let i = 0; i < ctrls.length; i++) {
+      const c = ctrls[i];
+      let m = memos[i];
+      if (perime(m, layer, c)) m = memos[i] = compilerControle(layer, c);
+      if (m.test && !m.test(p)) return false;
     }
     return true;
   };
