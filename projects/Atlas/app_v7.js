@@ -3384,7 +3384,12 @@ function initMap() {
     });
     // Les icônes de catégorie se chargent quand la carte les réclame — y compris
     // après un changement de fond, qui vide les images du style.
-    map.on('styleimagemissing', (e) => { if (e.id?.startsWith('atlas-ico-')) chargerIcone(e.id); });
+    // Une icône que le fond de plan réclame sans la fournir (le style OpenFreeMap en cite des dizaines absentes de son sprite) devient une image vide :
+    // la carte se dessine pareil, la console n'affiche plus un avertissement par icône.
+    map.on('styleimagemissing', (e) => {
+        if (e.id?.startsWith('atlas-ico-')) chargerIcone(e.id);
+        else if (e.id && !map.hasImage(e.id)) { try { map.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) }); } catch (_) { /* style en cours de remplacement */ } }
+    });
     // Zone visible et visée : voir « Visée de caméra » plus bas.
     map.on('resize', suivreTailleCarte);
     // Sur téléphone, la barre du bas recouvre la carte dès l'ouverture.

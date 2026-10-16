@@ -1,15 +1,7 @@
 // node --test essais-trafic/tests/*.test.js   (aucun acces reseau)
 // Contacts residuels : les corrections ciblees (file d'attente, suivi de securite, raccord lisse, impatience, ilot) sont mesurees contre l'ancien reglage.
 const test = require('node:test'), assert = require('node:assert/strict');
-const T = require('../lib/trafic/trafic.js'), S = require('./aide-trafic-reseau.js');
-const G = T.construire(S.reseau(), S.centre, { seuil: 20 });
-const pas = (sim, s, f) => { while (sim.t < s) { sim.pas(); if (f) f(sim); } return sim; };
-const moy = (a) => a.reduce((x, y) => x + y, 0) / Math.max(1, a.length);
-// reglage d'origine du moteur (une voie par sens, meneur le plus proche seul, suivi simple, raccords suivant les liaisons internes, pas d'impatience, pas de file d'attente)
-const ANCIEN = { voies: 1, file: false, suivi: 'simple', raccord: 'chaine', patience: 0, suiviChemin: false, meneurs: 'plus-proche', sortiePlace: false, margeAnneau: 2.5, insertionSure: false };
-const mesure = (o, N = 100) => { const co = [], fo = [], v = []; for (const g of [1, 2, 3, 4]) { const sim = T.creer(G, Object.assign({ graine: g, N }, o)); let s = 0, n = 0;
-  pas(sim, 400, (x) => { if (x.t > 40 && Math.abs(x.t % 5) < 0.1) { s += moy(x.agents.map((a) => a.v)) * 3.6; n++; } }); co.push(sim.stats.contacts.size); fo.push(sim.stats.forces); v.push(s / n); }
-  return { contacts: co.reduce((a, b) => a + b, 0), forces: fo.reduce((a, b) => a + b, 0), vitesse: moy(v) }; };
+const { T, G, pas, moy, ANCIEN, mesure } = require('./aide-trafic-contacts.js');
 
 test('le reglage actuel divise les arbitrages forces (impasses) et les contacts, et accelere le trafic', () => {
   const a = mesure(ANCIEN), n = mesure({});
@@ -19,12 +11,6 @@ test('le reglage actuel divise les arbitrages forces (impasses) et les contacts,
   assert.ok(n.vitesse > a.vitesse * 1.05, 'vitesse ' + n.vitesse.toFixed(1) + ' contre ' + a.vitesse.toFixed(1) + ' km/h');
 });
 
-test('file d attente par voie (premier arrive, premier servi) : sans elle, les vehicules de queue bloquent ceux de tete (impasses, contacts)', () => {
-  const avec = mesure({}), sans = mesure({ file: false });
-  assert.ok(sans.forces >= avec.forces * 3, 'arbitrages forces ' + sans.forces + ' sans file contre ' + avec.forces + ' avec');
-  assert.ok(sans.contacts >= avec.contacts * 1.8, 'contacts ' + sans.contacts + ' sans file contre ' + avec.contacts + ' avec');
-  assert.ok(avec.vitesse > sans.vitesse * 1.1, 'vitesse ' + avec.vitesse.toFixed(1) + ' contre ' + sans.vitesse.toFixed(1) + ' km/h');
-});
 
 test('suivi de securite : deux vehicules de la meme voie ne se chevauchent jamais sur un troncon', () => {
   let chevauchements = 0, plusProche = Infinity;
@@ -41,13 +27,6 @@ test('raccord lisse : hors giratoire, un mouvement est un seul raccord entre la 
   assert.ok(verifies >= 8, 'mouvements verifies : ' + verifies);
 });
 
-test('impatience : plus on attend, plus le creneau accepte est court (jusqu\'a la marge minimale)', () => {
-  const sim = T.creer(G, { graine: 1, N: 10, patience: 25, marge: 2.5, margeMin: 1 }), c = sim.c;
-  const marge = (att) => Math.max(c.margeMin, c.marge - att * (c.marge - c.margeMin) / c.patience);
-  assert.equal(marge(0), 2.5); assert.ok(Math.abs(marge(12.5) - 1.75) < 1e-9); assert.equal(marge(60), 1);
-  const avec = mesure({ patience: 25 }), sans = mesure({ patience: 0 });
-  assert.ok(avec.forces <= sans.forces + 2, 'l\'impatience ne cree pas d\'arbitrage force : ' + avec.forces + ' contre ' + sans.forces);
-});
 
 test('chaque corde de reseau : reproductible a graine egale avec tous les reglages actuels', () => {
   const trace = (g) => { const s = pas(T.creer(G, { graine: g, N: 40, feux: { auto: true } }), 150); return JSON.stringify(s.agents.map((a) => s.position(a).map((x) => Math.round(x * 10) / 10))); };

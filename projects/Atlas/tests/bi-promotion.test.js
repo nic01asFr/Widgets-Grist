@@ -3,13 +3,13 @@
  * sans planter. Rien n'est ecrit dans `published/` du depot.
  * node --test tests/bi-promotion.test.js
  */
-import test from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, cpSync, copyFileSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 
 const ICI = dirname(fileURLToPath(import.meta.url));
 const RACINE_DEPOT = resolve(ICI, '..', '..', '..');
@@ -35,68 +35,72 @@ function bac(modifier = () => {}) {
   modifier(racine);
   return racine;
 }
-const promouvoir = (racine) => { const r = spawnSync(process.execPath, [join(racine, 'scripts', 'promote-atlas.js')], { encoding: 'utf8' }); return { code: r.status, sortie: r.stdout, erreur: r.stderr }; };
+/** La promotion tourne dans un processus à part, SANS bloquer celui-ci : les scénarios s'exécutent en parallèle (chacun a son bac à sable). */
+const promouvoir = (racine) => new Promise((fin) => execFile(process.execPath, [join(racine, 'scripts', 'promote-atlas.js')], { encoding: 'utf8' }, (err, sortie, erreur) => fin({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, sortie, erreur })));
 
-test('promotion : lib/bi et ses jeux embarques sont copies, et le controle des imports ne plante pas sur le sous-dossier donnees/', () => {
-  const racine = bac();
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 0, r.erreur);
-    const pub = join(racine, 'published', 'atlas', 'lib', 'bi');
-    for (const f of readdirSync(join(ICI, '..', 'lib', 'bi')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(pub, f)), f);
-    for (const f of readdirSync(join(ICI, '..', 'lib', 'bi', 'donnees')).filter((n) => n.endsWith('.json'))) assert.ok(existsSync(join(pub, 'donnees', f)), 'donnees/' + f);
-    // La charte est importee par lib/bi (../charte/…) : sans sa copie, ?bi=1 tombe en 404 une fois publie.
-    const charte = join(racine, 'published', 'atlas', 'lib', 'charte');
-    for (const f of readdirSync(join(ICI, '..', 'lib', 'charte')).filter((n) => n.endsWith('.js') || n.endsWith('.json'))) assert.ok(existsSync(join(charte, f)), 'charte/' + f);
-    // Le client de l'hote en un seul fichier part avec le composant.
-    assert.ok(existsSync(join(pub, 'client-hote.js')));
-    assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-bi', 'index.html')));
-  } finally { rmSync(racine, { recursive: true, force: true }); }
-});
+describe('promotion dans un bac à sable', { concurrency: true }, () => {
 
-test('promotion : un module de lib/bi qui en importe un absent fait echouer la promotion', () => {
-  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/bi/client.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 1);
-    assert.match(r.erreur, /client\.js importe \.\/inexistant\.js/);
-  } finally { rmSync(racine, { recursive: true, force: true }); }
-});
+  it('promotion : lib/bi et ses jeux embarques sont copies, et le controle des imports ne plante pas sur le sous-dossier donnees/', async () => {
+    const racine = bac();
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 0, r.erreur);
+      const pub = join(racine, 'published', 'atlas', 'lib', 'bi');
+      for (const f of readdirSync(join(ICI, '..', 'lib', 'bi')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(pub, f)), f);
+      for (const f of readdirSync(join(ICI, '..', 'lib', 'bi', 'donnees')).filter((n) => n.endsWith('.json'))) assert.ok(existsSync(join(pub, 'donnees', f)), 'donnees/' + f);
+      // La charte est importee par lib/bi (../charte/…) : sans sa copie, ?bi=1 tombe en 404 une fois publie.
+      const charte = join(racine, 'published', 'atlas', 'lib', 'charte');
+      for (const f of readdirSync(join(ICI, '..', 'lib', 'charte')).filter((n) => n.endsWith('.js') || n.endsWith('.json'))) assert.ok(existsSync(join(charte, f)), 'charte/' + f);
+      // Le client de l'hote en un seul fichier part avec le composant.
+      assert.ok(existsSync(join(pub, 'client-hote.js')));
+      assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-bi', 'index.html')));
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
 
-test('promotion : un module de lib/charte qui en importe un absent fait echouer la promotion', () => {
-  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/charte/schema.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 1);
-    assert.match(r.erreur, /charte\/schema\.js importe \.\/inexistant\.js/);
-  } finally { rmSync(racine, { recursive: true, force: true }); }
-});
+  it('promotion : un module de lib/bi qui en importe un absent fait echouer la promotion', async () => {
+    const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/bi/client.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 1);
+      assert.match(r.erreur, /client\.js importe \.\/inexistant\.js/);
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
 
-test('promotion : lib/reseau (client WFS de l\'import IGN) est copie, comme lib/charte', () => {
-  const racine = bac();
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 0, r.erreur);
-    const reseau = join(racine, 'published', 'atlas', 'lib', 'reseau');
-    for (const f of readdirSync(join(ICI, '..', 'lib', 'reseau')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(reseau, f)), 'reseau/' + f);
-    assert.ok(existsSync(join(racine, 'published', 'atlas', 'lib', 'import-ign.js')));
-  } finally { rmSync(racine, { recursive: true, force: true }); }
-});
+  it('promotion : un module de lib/charte qui en importe un absent fait echouer la promotion', async () => {
+    const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/charte/schema.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 1);
+      assert.match(r.erreur, /charte\/schema\.js importe \.\/inexistant\.js/);
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
 
-test('promotion : un module de lib/ qui importe un fichier d\'un sous-dossier absent fait echouer la promotion (piege de lib/charte)', () => {
-  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/mini.js'), "import { y } from './nouveau-dossier/absent.js';\nexport const x = 1;\n"));
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 1);
-    assert.match(r.erreur, /lib\/mini\.js importe \.\/nouveau-dossier\/absent\.js/);
-  } finally { rmSync(racine, { recursive: true, force: true }); }
-});
+  it('promotion : lib/reseau (client WFS de l\'import IGN) est copie, comme lib/charte', async () => {
+    const racine = bac();
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 0, r.erreur);
+      const reseau = join(racine, 'published', 'atlas', 'lib', 'reseau');
+      for (const f of readdirSync(join(ICI, '..', 'lib', 'reseau')).filter((n) => n.endsWith('.js'))) assert.ok(existsSync(join(reseau, f)), 'reseau/' + f);
+      assert.ok(existsSync(join(racine, 'published', 'atlas', 'lib', 'import-ign.js')));
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
 
-test('promotion : un module de lib/reseau qui en importe un absent fait echouer la promotion', () => {
-  const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/reseau/geo.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
-  try {
-    const r = promouvoir(racine);
-    assert.equal(r.code, 1);
-    assert.match(r.erreur, /reseau\/geo\.js importe \.\/inexistant\.js/);
-  } finally { rmSync(racine, { recursive: true, force: true }); }
+  it('promotion : un module de lib/ qui importe un fichier d\'un sous-dossier absent fait echouer la promotion (piege de lib/charte)', async () => {
+    const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/mini.js'), "import { y } from './nouveau-dossier/absent.js';\nexport const x = 1;\n"));
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 1);
+      assert.match(r.erreur, /lib\/mini\.js importe \.\/nouveau-dossier\/absent\.js/);
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
+
+  it('promotion : un module de lib/reseau qui en importe un absent fait echouer la promotion', async () => {
+    const racine = bac((r) => writeFileSync(join(r, 'projects/Atlas/lib/reseau/geo.js'), "import { x } from './inexistant.js';\n", { flag: 'a' }));
+    try {
+      const r = await promouvoir(racine);
+      assert.equal(r.code, 1);
+      assert.match(r.erreur, /reseau\/geo\.js importe \.\/inexistant\.js/);
+    } finally { rmSync(racine, { recursive: true, force: true }); }
+  });
 });
