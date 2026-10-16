@@ -70,11 +70,19 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const dossier = mkdtempSync(join(tmpdir(), 'couverture-'));
     const sortie = join(dossier, 'couverture.lcov');
     const tests = readdirSync(join(RACINE, 'projects', 'Atlas', 'tests')).filter((f) => f.endsWith('.test.js')).map((f) => join('projects', 'Atlas', 'tests', f));
-    const r = spawnSync(process.execPath, ['--test', '--experimental-test-coverage', '--test-reporter=lcov', `--test-reporter-destination=${sortie}`, ...tests],
+    const r = spawnSync(process.execPath, ['--test', '--experimental-test-coverage', '--test-reporter=lcov', `--test-reporter-destination=${sortie}`, '--test-reporter=dot', '--test-reporter-destination=stdout', ...tests],
       { cwd: RACINE, encoding: 'utf8', maxBuffer: 1 << 28 });
     lcov = readFileSyncSafe(sortie);
     if (!lcov) { console.error(r.stderr || r.stdout || 'pas de rapport de couverture'); process.exit(2); }
-    if (r.status !== 0) { console.error('des tests échouent : la couverture n’est pas jugée'); process.exit(2); }
+    if (r.status !== 0) {
+      // dire QUELS tests échouent (le rapport lcov ne le dit pas) : sans cela, un échec de CI ne s'explique qu'en relançant tout
+      const sortieTests = String(r.stdout || '') + String(r.stderr || '');
+      const lignes = sortieTests.split('\n');
+      const echecs = lignes.filter((l) => /^\s*(✖|not ok|failing tests|Error:|AssertionError)/.test(l) || /^\s+error:/.test(l)).slice(0, 40);
+      const entete = 'des tests échouent : la couverture n’est pas jugée' + (r.error ? ' (' + r.error.code + ')' : '') + (r.signal ? ' signal ' + r.signal : '');
+      console.error(entete + '\n' + (echecs.length ? echecs : lignes.slice(-60)).join('\n'));
+      process.exit(2);
+    }
     rmSync(dossier, { recursive: true, force: true });
   }
   const manques = verifier(lire(lcov));

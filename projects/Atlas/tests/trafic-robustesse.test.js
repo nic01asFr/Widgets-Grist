@@ -54,12 +54,16 @@ for (const [nom, graine, n, etendue, biais] of [['dense', 3, 150, 600, 'long'], 
   });
 }
 
+// Sous la couverture de code (instrumentation) et sur un poste partagé (CI à 4 cœurs, trois fichiers de test en parallèle), le même code va plusieurs fois plus lentement :
+// les bornes de temps sont élargies dans ce cas seulement, pour ne pas confondre lenteur de la machine et régression (mesuré : ~3 ms le pas, bornes de 50 ms et 1,5 s).
+const PATIENCE = process.env.NODE_V8_COVERAGE || process.env.CI ? 4 : 1;
+
 test('un grand réseau (400 tronçons) : aucun pas ne dépasse 1,5 s, le pas courant reste sous 50 ms', () => {
   const t = creerTrafic({ carte: carteSimulee(), entites: reseauAleatoire(3, 400, 1500, 'long'), planifier: () => 0, annuler: () => {} });
   let pire = 0; const tard = [];
   for (let i = 0; i < 200; i++) { const s = performance.now(); t._sim.pas(); const d = performance.now() - s; pire = Math.max(pire, d); if (i >= 100) tard.push(d); }
-  assert.ok(pire < 1500, `un pas a duré ${pire.toFixed(0)} ms`);
-  assert.ok(tard.reduce((a, b) => a + b, 0) / tard.length < 50, 'le pas courant dépasse 50 ms en moyenne');
+  assert.ok(pire < 1500 * PATIENCE, `un pas a duré ${pire.toFixed(0)} ms`);
+  assert.ok(tard.reduce((a, b) => a + b, 0) / tard.length < 50 * PATIENCE, 'le pas courant dépasse 50 ms en moyenne');
 });
 
 test('un moteur qui échoue : arrêté au troisième échec de suite, l\'erreur dite une fois, le trafic rendu à la carte', () => {

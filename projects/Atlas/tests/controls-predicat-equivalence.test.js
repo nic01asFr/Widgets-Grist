@@ -144,7 +144,8 @@ test('la version rapide est nettement plus rapide que l\'ancienne (100 000 entit
     { id: 'a', type: 'select', field: 'cat', active: true, values: ['Route', 'Chemin'] },
     { id: 'b', type: 'range', field: 'valeur', active: true, min: 100, max: 800 },
     { id: 'c', type: 'text', field: 'nom', active: true, texte: 'rue' }] };
-  const temps = (f) => { const s = performance.now(); const n = feats.filter(f).length; return [performance.now() - s, n]; };
+  // meilleure de trois mesures : un à-coup du ramasse-miettes ou de la machine partagée ne fait pas échouer un test de rapport
+  const temps = (f) => { let meilleur = Infinity, n = 0; for (let i = 0; i < 3; i++) { const s = performance.now(); n = feats.filter(f).length; meilleur = Math.min(meilleur, performance.now() - s); } return [meilleur, n]; };
   const [tn, nn] = temps(buildControlPredicate(layer));
   const [ta, na] = temps(predicatAncien(layer));
   assert.equal(nn, na, 'même nombre d\'entités retenues');
