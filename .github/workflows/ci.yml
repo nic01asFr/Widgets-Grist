@@ -1,0 +1,89 @@
+# CI Atlas : .github/workflows/ci.yml
+#
+# But : qu'une poussee qui casse un test, une garde ou l'empreinte du client hote ne puisse plus
+# etre deployee (aujourd'hui publish.yml ne lance aucun test : voir RAPPORT-STATIQUE.md, point 2).
+#
+# Duree estimee (ESTIMATION, non mesuree sur un executeur GitHub) : 1,5 a 2,5 minutes.
+#   - mesure locale : 23 a 25 s pour 2 490 tests (machine multi-coeurs), 127 s de calcul cumule ;
+#     chemin critique = 2 fichiers (bi-promotion 30 s, trafic-contacts 27 s) ;
+#   - un executeur ubuntu-latest a 4 coeurs : tests ~45 a 70 s ; garde de promotion ~5 s ;
+#     empreinte ~1 s ; check:atlas ~1 s ; checkout + setup-node ~15 s.
+# Aucune installation de dependances n'est necessaire pour les tests d'Atlas (Node pur, aucun
+# module npm importe) : donc pas de `npm ci`, pas de cache a restaurer. Le cache ne sert qu'au
+# travail facultatif de qualite (eslint, tsc) via `actions/cache` sur ~/.npm.
+
+name: CI Atlas
+
+on:
+  push:
+    branches: [main]
+    paths: ['projects/Atlas/**', 'published/atlas/**', 'scripts/**', 'package.json', '.github/workflows/ci.yml']
+  pull_request:
+    paths: ['projects/Atlas/**', 'published/atlas/**', 'scripts/**', 'package.json', '.github/workflows/ci.yml']
+  # Reutilisable : publish.yml l'appelle puis fait `needs: ci` (voir fin de fichier).
+  workflow_call: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # LTS actuelle. Les workflows existants utilisent Node 20 : la compatibilite des tests avec
+      # Node 20 n'a PAS ete mesuree (developpement sous 22.16). Ajouter une matrice [20, 22] si
+      # l'on veut la garantir.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 1. Tests : 2 490 tests, 187 fichiers, dont les gardes (doc-a-jour, bi-promotion,
+      #    csp-meta, imports-versions, client-hote).
+      - name: Tests unitaires et gardes
+        run: node --test "projects/Atlas/tests/*.test.js"
+
+      # 2. Gardes d'imports et de references.       #    commande etait en code 1 (6 faux positifs de l'analyseur, corriges le 15/10/2026) ; elle est maintenant bloquante.
+      - name: check:atlas (imports et references)
+        run: npm run check:atlas
+
+      # 3. Empreinte du client hote : le fichier publie, celui des sources et l'empreinte annoncee
+      #    dans le CHANGELOG doivent etre identiques (les hotes epinglent cette empreinte).
+      - name: Empreinte du client hote
+        run: |
+          set -eu
+          src=projects/Atlas/lib/bi/client-hote.js
+          pub=published/atlas/lib/bi/client-hote.js
+          cmp "$src" "$pub"
+          h="sha384-$(openssl dgst -sha384 -binary "$pub" | openssl base64 -A)"
+          echo "empreinte calculee : $h"
+          grep -qF "$h" projects/Atlas/CHANGELOG.md || { echo "empreinte absente du CHANGELOG"; exit 1; }
+          echo "taille : $(wc -c < "$pub" | tr -d ' ') octets"
+
+      # 4. Garde de promotion : published/atlas doit etre EXACTEMENT ce que produit
+      #    scripts/promote-atlas.js a partir des sources (mesure : vrai a la 1.16.6 hors
+      #    vendor/grist_forms, qui est volontairement fige a la 1.13.1 et que promote-atlas
+      #    reecrit : d'ou l'exclusion).
+      - name: Garde de promotion (published = promotion des sources)
+        continue-on-error: true   # verifie en local sous Windows seulement : a rendre bloquant apres un premier passage vert sur GitHub
+        run: |
+          set -eu
+          node scripts/promote-atlas.js
+          git diff --exit-code --stat -- published/atlas ':(exclude)published/atlas/vendor'
+          test -z "$(git status --porcelain -- published/atlas ':(exclude)published/atlas/vendor')" \
+            || { echo "fichiers non suivis apres promotion :"; git status --porcelain -- published/atlas; exit 1; }
+
+      # 5. Coherence de version : package.json publie, premiere entree du CHANGELOG, tete du journal
+      #    de la vitrine (deja couvert par doc-a-jour.test.js) ET present dans les tags a la sortie.
+      - name: Version publiee = version du CHANGELOG
+        run: |
+          set -eu
+          v=$(node -p "require('./published/atlas/package.json').version")
+          grep -qE "^## ${v} " projects/Atlas/CHANGELOG.md
