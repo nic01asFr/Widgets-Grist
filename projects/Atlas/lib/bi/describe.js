@@ -132,7 +132,7 @@ export function decrire() {
     evenements,
     declaratif: {
       attributs: [...DECLARATIFS],
-      autres: ['src', 'hote', 'delai', 'delai-connexion', 'ratio-max', 'profil', 'evenements-api', 'title'],
+      autres: ['src', 'hote', 'delai', 'delai-connexion', 'ratio-max', 'profil', 'base', 'evenements-api', 'title'],
       blocs: DECLARATIFS.filter((n) => n !== 'fond' && n !== 'cadrage').map((n) => `<script type="application/json" data-atlas="${n}">`),
       evenementsDom: ['atlas-bi-pret', 'atlas-bi-configure', 'atlas-bi-herite', 'atlas-bi-erreur', ...EVENEMENTS.map((e) => 'atlas-bi-' + e)],
     },

@@ -44,6 +44,11 @@ test("urlComposant : profil=\"complet\" est ajouté à l'adresse (le canevas), j
   assert.equal(urlComposant('https://atlas.test/index.html?profil=complet', 'https://hote.test', undefined, null, 'complet').searchParams.getAll('profil').length, 1);
 });
 
+test("urlComposant : base=\"aucune\" est ajouté à l'adresse (la carte sans fond de plan), jamais une autre valeur", () => {
+  assert.equal(urlComposant('https://atlas.test/bi.html', 'https://hote.test', undefined, null, null, 'aucune').searchParams.get('base'), 'aucune');
+  for (const autre of ['atlas', '', null, undefined, 'x']) assert.equal(urlComposant('https://atlas.test/bi.html', 'https://hote.test', undefined, null, null, autre).searchParams.has('base'), false, String(autre));
+});
+
 test('l\'élément est enregistré sous <atlas-bi> et expose une méthode par commande', () => {
   assert.equal(definis.get('atlas-bi'), AtlasBi);
   for (const cmd of Object.keys(COMMANDES)) assert.equal(typeof AtlasBi.prototype[cmd], 'function', cmd);

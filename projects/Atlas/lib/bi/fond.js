@@ -29,6 +29,8 @@ export function creerFond(map, { fetchStyle = (u) => fetch(u).then((r) => r.json
     get mode() { return mode; }, FONDS,
     async appliquer(m, jetons = {}) {
       const J = { ...PLAN_DEFAUT, ...jetons }; if (!FONDS[m]) throw new Error('fond inconnu : ' + m);
+      // une carte créée avec `base=aucune` n'a pas le style de base : ces fonds-là le repeignent ou le rétablissent, ils n'ont donc rien à agir
+      if (map.__atlasSansBase && (m === 'atlas' || m === 'voile' || m === 'plan')) throw new Error('fond « ' + m + ' » indisponible : la carte a été créée avec base=aucune (sans fond de plan). Fonds possibles : uni, plan-ign, photo ; sinon retirer base=aucune de l’adresse');
       retablir(); mode = m;
       if (m === 'atlas' || m === 'voile') return { mode: m };
       if (m === 'uni') { masquerBase((l) => l.type === 'background' && l.id === 'background'); const bg = base().find((l) => l.type === 'background'); if (bg) peindre(bg, { visibility: 'visible', paint: { 'background-color': J.fond } }); return { mode: m }; }
