@@ -124,7 +124,8 @@ const URL_SONDE = BASE_TRAFIC + '/records?limit=1&select=datetime';
 // Les bus : seulement ceux « En ligne », et les champs utiles (460 véhicules publiés, la plupart hors service : 3 Ko au lieu de 116 Ko)
 const URL_BUS = 'https://data.explore.star.fr/api/explore/v2.1/catalog/datasets/tco-bus-vehicules-position-tr/exports/geojson?lang=fr&timezone=Europe%2FParis&select='
   + ['idbus', 'nomcourtligne', 'destination', 'ecartsecondes', 'etat', 'coordonnees'].join('%2C') + '&where=etat%3D%22En%20ligne%22';
-const PERIODE_SONDE_S = 45, PERIODE_BUS_S = 15;
+// Cadences d'un bon voisin : ces portails ont des quotas par jour, partagés par tous leurs utilisateurs.
+const PERIODE_SONDE_S = 60, PERIODE_BUS_S = 30;
 
 const STATUTS = [
   { id: 'fluide', libelle: 'Fluide', couleur: 'var(--fluide)', hex: '#2a9d6f' },
@@ -172,6 +173,17 @@ function normaliserBus(g) {
   });
 }
 
+// Un portail qui refuse (429 : quota du jour atteint) n'est pas une connexion perdue : on le dit, on attend son heure de retour.
+async function lireJson(url) {
+  const rep = await fetch(url, { cache: 'no-store' });
+  if (rep.status === 429) {
+    let reset = null; try { const c = await rep.json(); if (c && c.reset_time) reset = new Date(c.reset_time); } catch (e) { /* corps illisible */ }
+    const e = new Error('limite d’accès du portail atteinte'); e.limite = true; e.reset = reset; e.attenteS = reset ? Math.min(1800, Math.max(300, (reset - Date.now()) / 1000)) : 600; throw e;
+  }
+  if (!rep.ok) throw new Error('réponse ' + rep.status);
+  return rep.json();
+}
+
 // ---- La scène : deux couches, un style choisi par la page, des bulles en français ----
 const COUCHE_TRAFIC = {
   id: 'trafic', name: 'Circulation', geometry_type: 'line', cle: 'ref',
@@ -188,7 +200,7 @@ const COUCHE_BUS = {
 };
 
 // ---- État de la page ----
-const etat = { trafic: [], bus: [], dateTrafic: null, lectureBus: null, selection: null, filtres: { statut: new Set(STATUTS.map((s) => s.id)), ponct: new Set(PONCTUALITE.map((s) => s.id)), ligne: '' } };
+const etat = { trafic: [], bus: [], dateTrafic: null, lectureBus: null, limiteBus: null, selection: null, filtres: { statut: new Set(STATUTS.map((s) => s.id)), ponct: new Set(PONCTUALITE.map((s) => s.id)), ligne: '' } };
 carte.addEventListener('atlas-bi-select', (e) => { const c = e.detail.charge || {}; etat.selection = c.featureId == null ? null : { layer: c.layer, id: c.featureId }; });
 
 // ---- Tableau de bord : les boutons sont créés UNE fois, ensuite on ne met à jour que les textes (le focus clavier ne saute plus à chaque lecture) ----
@@ -223,7 +235,8 @@ function dessinerBus() {
   PONCTUALITE.forEach((s) => { pucesBus[s.id].n.textContent = par[s.id]; });
   const connus = n - par.inconnu;
   $('bus-n').textContent = etat.lectureBus ? n.toLocaleString('fr-FR') : '–';
-  $('bus-sous').textContent = !etat.lectureBus ? 'positions indisponibles pour le moment'
+  $('bus-sous').textContent = etat.limiteBus ? 'positions indisponibles : le portail STAR limite ses accès aujourd’hui'
+    : !etat.lectureBus ? 'positions indisponibles pour le moment'
     : !n ? 'bus en ligne : le réseau STAR ne circule pas à cette heure'
     : (n > 1 ? 'bus en ligne' : 'bus en ligne') + (connus ? ' · ' + Math.round((100 * par.heure) / connus) + ' % à l’heure (horaires connus)' : ' · horaires non communiqués');
   $('bus-total').textContent = n ? pluriel(new Set(etat.bus.map((f) => f.properties.ligne)).size, 'ligne', 'lignes') : '';
@@ -243,7 +256,8 @@ function fraicheur() {
     $('frais-trafic').textContent = 'Mesures de ' + hhmm(etat.dateTrafic) + ' · il y a ' + dureeTexte(age) + (vieux ? ' : le fournisseur n’a pas publié depuis longtemps' : '');
     $('frais-trafic').classList.toggle('vieux', vieux);
   }
-  if (etat.lectureBus) $('frais-bus').textContent = 'Positions lues à ' + etat.lectureBus.toLocaleTimeString('fr-FR', { timeZone: FUSEAU }) + ' · il y a ' + dureeTexte((maintenant - etat.lectureBus.getTime()) / 1000);
+  if (etat.limiteBus) $('frais-bus').textContent = 'Quota du portail atteint (partagé entre tous ses utilisateurs) ; nouvel essai vers ' + hhmm(new Date(Date.now() + etat.limiteBus.attenteS * 1000)) + '.';
+  else if (etat.lectureBus) $('frais-bus').textContent = 'Positions lues à ' + etat.lectureBus.toLocaleTimeString('fr-FR', { timeZone: FUSEAU }) + ' · il y a ' + dureeTexte((maintenant - etat.lectureBus.getTime()) / 1000);
 }
 setInterval(fraicheur, 1000);
 const lienOk = (ok) => { $('direct').classList.toggle('coupe', !ok); $('direct-txt').textContent = ok ? 'En direct' : 'Connexion perdue'; };
@@ -271,16 +285,16 @@ async function monterScene() {
 }
 
 async function lireTrafic(force) {
-  const sonde = await (await fetch(URL_SONDE, { cache: 'no-store' })).json(); const datetime = sonde.results && sonde.results[0] && sonde.results[0].datetime;
+  const sonde = await lireJson(URL_SONDE); const datetime = sonde.results && sonde.results[0] && sonde.results[0].datetime;
   const date = datetime ? new Date(datetime) : null;
   if (!force && date && etat.dateTrafic && date.getTime() === etat.dateTrafic.getTime()) return;
-  const g = await (await fetch(URL_TRAFIC, { cache: 'no-store' })).json();
+  const g = await lireJson(URL_TRAFIC);
   if (!g.features || !g.features.length) throw new Error('flux de circulation vide');
   etat.trafic = normaliserTrafic(g); etat.dateTrafic = date || new Date(g.features[0].properties.datetime); dessinerTrafic(); fraicheur();
   if (sceneMontee) await remplacerCouche(COUCHE_TRAFIC, etat.trafic);
 }
 async function lireBus() {
-  const g = await (await fetch(URL_BUS, { cache: 'no-store' })).json(); const nouveaux = normaliserBus(g);
+  const g = await lireJson(URL_BUS); etat.limiteBus = null; const nouveaux = normaliserBus(g);
   const memes = nouveaux.length === etat.bus.length && nouveaux.every((f, i) => String(f.id) === String(etat.bus[i].id));
   etat.bus = nouveaux; etat.lectureBus = new Date(); dessinerBus(); fraicheur();
   if (!sceneMontee) return;
@@ -297,10 +311,14 @@ function boucle(fn, periodeS, nom) {
   b.tour = async () => {
     b.minuteur = null; if (b.enCours || document.hidden) return;
     b.enCours = true;
-    try { await fn(); b.essais = 0; echecs.delete(nom); } catch (e) { b.essais++; echecs.add(nom); console.warn(nom, e); }
+    let attente = Math.min(120, periodeS * (1 + b.essais));
+    try { await fn(); b.essais = 0; echecs.delete(nom); } catch (e) {
+      if (e && e.limite) { echecs.delete(nom); attente = e.attenteS; if (nom === 'bus') { etat.limiteBus = { reset: e.reset, attenteS: e.attenteS }; dessinerBus(); fraicheur(); } console.warn(nom, e.message); }
+      else { b.essais++; echecs.add(nom); console.warn(nom, e); attente = Math.min(120, periodeS * (1 + b.essais)); }
+    }
     b.enCours = false;
     if (b.essais >= 2 || !echecs.size) lienOk(!echecs.size);
-    b.minuteur = setTimeout(b.tour, Math.min(120, periodeS * (1 + b.essais)) * 1000);
+    b.minuteur = setTimeout(b.tour, attente * 1000);
   };
   b.demarrer = () => { b.lancee = true; b.minuteur = setTimeout(b.tour, periodeS * 1000); };   // la première lecture a déjà eu lieu au démarrage
   boucles.push(b); return b;
@@ -345,8 +363,9 @@ $('poignee').addEventListener('click', () => {
 
 // ---- Démarrage : on lit les deux flux, puis on monte la carte avec ce qui est arrivé ----
 const lectures = await Promise.allSettled([lireTrafic(true), lireBus()]);
+if (lectures[1].status === 'rejected' && lectures[1].reason && lectures[1].reason.limite) etat.limiteBus = { reset: lectures[1].reason.reset, attenteS: lectures[1].reason.attenteS };
 if (lectures[0].status === 'rejected' || lectures[1].status === 'rejected') for (const l of lectures) if (l.status === 'rejected') console.warn(l.reason);
-await monterScene(); dessinerTrafic(); dessinerBus(); lienOk(lectures.every((l) => l.status === 'fulfilled'));
+await monterScene(); dessinerTrafic(); dessinerBus(); fraicheur(); lienOk(lectures.every((l) => l.status === 'fulfilled' || (l.reason && l.reason.limite)));
 boucleTrafic.demarrer(); boucleBus.demarrer();
 window.__demo = { carte, etat, lireTrafic, lireBus };
 </script>

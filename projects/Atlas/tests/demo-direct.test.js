@@ -64,3 +64,9 @@ test('les corrections de l’évaluation indépendante tiennent : bus en ligne d
   assert.match(html, /timeZone: FUSEAU/); assert.match(html, /le réseau STAR ne circule pas à cette heure/);
   assert.doesNotMatch(html, /\.innerHTML = .*(?:nom|destination|ligne)(?!Texte)/, 'aucun champ venu des flux n’entre dans du HTML');
 });
+
+test('un portail qui refuse (429, quota du jour atteint) est dit comme tel, n’éteint pas le « direct » et se réessaie tard ; cadences d’un bon voisin', () => {
+  assert.match(html, /rep\.status === 429/); assert.match(html, /e\.limite = true/); assert.match(html, /le portail STAR limite ses accès aujourd’hui/);
+  assert.match(html, /if \(e && e\.limite\) \{ echecs\.delete\(nom\)/, 'une limite n’est pas une panne : le voyant reste « en direct » pour l’autre flux');
+  assert.match(html, /PERIODE_SONDE_S = 60, PERIODE_BUS_S = 30/);
+});
