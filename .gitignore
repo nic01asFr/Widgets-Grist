@@ -74,3 +74,10 @@ projects/Atlas/demos/vieille-charite-marseille/
 # Bancs d'essai jetables des demos Atlas — le prefixe `_` est deja la
 # convention de `promote-atlas.js`, qui ne les sert jamais en ligne.
 projects/Atlas/demos/_*.json
+
+# Essais d'Atlas : dossiers de travail locaux (mesures, captures, caches de navigateur, données réelles, sorties de rejeu).
+# Ils pèsent des centaines de Mo et n'ont rien à faire sur GitHub : seule une fiche de conclusion courte entre au dépôt, sous
+# projects/Atlas/docs/. Ce qui est déjà suivi le reste. Contrôle avant commit : node scripts/hygiene-atlas.js
+projects/Atlas/essais-*/
+projects/Atlas/Retirer
+projects/Atlas/docs/captures-vitrine/
