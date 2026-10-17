@@ -404,7 +404,7 @@ export function attacher(map, opts = {}) {
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
-          try { avertAjout = []; await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible, bulle: def.bulle });
+          try { avertAjout = []; await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, arrondissements: def.admin.arrondissements, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible, bulle: def.bulle });
             if (avertAjout.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...avertAjout]; }
           catch (e) { erreurs[def.id] = String(e && e.message || e); }
           continue;

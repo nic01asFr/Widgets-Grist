@@ -79,3 +79,29 @@ test('l\'identifiant d\'une unité administrative est son code en TEXTE : select
   const { rt } = await monter(null);
   assert.equal(rt.api.select('13001'), '13001'); assert.throws(() => rt.api.select(13001), /entité inconnue : 13001/);
 });
+
+// ---- Paris, Lyon, Marseille dans le MANIFESTE de scène (retour de referentiels-2874 : `arrondissements: 'detailles'` n'y avait aucun effet, seul addAdminLayer le lisait) ----
+function fetchPlm() {
+  const base = serviceSimule(); const unite = (code, nom, extra = {}) => ({ type: 'Feature', properties: { code_insee: code, nom_officiel: nom, ...extra }, geometry: { type: 'Polygon', coordinates: [[[5.3, 43.2], [5.4, 43.2], [5.4, 43.3], [5.3, 43.2]]] } });
+  const f = async (url) => {
+    if (/^https:\/\/data\.geopf\.fr\/wfs/.test(url)) {
+      const couche = new URL(url).searchParams.get('TYPENAMES').split(':')[1];
+      const features = couche === 'commune' ? [unite('13055', 'Marseille'), unite('13001', 'Aix-en-Provence')]
+        : couche === 'arrondissement_municipal' ? Array.from({ length: 16 }, (_, i) => unite('132' + String(i + 1).padStart(2, '0'), 'Marseille ' + (i + 1) + 'e Arrondissement', { code_insee_de_la_commune_de_rattach: '13055' })) : [];   // les 16 : la fusion exige tous les arrondissements de la commune
+      return { ok: true, status: 200, text: async () => JSON.stringify({ type: 'FeatureCollection', features, numberMatched: features.length, numberReturned: features.length }) };
+    }
+    return base(url);
+  };
+  return f;
+}
+async function scenePlm(admin) {
+  const map = carteSimulee(); const rt = attacher(map, { admin: { fetch: fetchPlm(), base: '' } });
+  const r = await rt.api.setScene({ layers: [{ id: 'communes', name: 'Communes', geometry_type: 'polygon', cle: 'code', admin: { niveau: 'commune', filtre: { departement: '13' }, ...admin } }] }, {});
+  return { rt, r };
+}
+
+test("manifeste : arrondissements: 'detailles' remplace Marseille par ses 16 arrondissements (13201 à 13216), comme addAdminLayer", async () => {
+  const sans = await scenePlm({}); assert.equal(sans.r.communes, 2); assert.equal(sans.rt.api.select('13055'), '13055'); assert.throws(() => sans.rt.api.select('13201'), /entité inconnue/);
+  const avec = await scenePlm({ arrondissements: 'detailles' }); assert.equal(avec.r.communes, 17, 'Aix + les 16 arrondissements, jamais la commune en plus');
+  assert.equal(avec.rt.api.select('13201'), '13201'); assert.equal(avec.rt.api.select('13216'), '13216'); assert.throws(() => avec.rt.api.select('13055'), /entité inconnue/); assert.equal(avec.rt.api.select('13001'), '13001');
+});
