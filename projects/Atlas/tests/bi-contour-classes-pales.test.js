@@ -96,5 +96,5 @@ test('cercles d\'une couleur unique et polygones declaratifs : meme regle', asyn
   const ch = rt.api.getTheme().charte; const sel = ['boolean', ['feature-state', 'selected'], false];
   assert.deepEqual(map.getLayer('bi-pts-p').paint['circle-stroke-color'], ['case', sel, ch.donnees.selection, ch.donnees.selection]);
   assert.deepEqual(map.getLayer('bi-pts-q').paint['circle-stroke-color'], ['case', sel, ch.donnees.selection, ch.donnees.contour]);
-  assert.deepEqual(map.getLayer('bi-line-g').paint['line-color'], ['case', sel, ch.donnees.selection, ch.donnees.selection], 'contour du polygone pale : encre');
+  assert.deepEqual(map.getLayer('bi-line-g').paint['line-color'], ['case', sel, ch.donnees.selection, ['boolean', ['feature-state', 'highlight'], false], ch.donnees.selection, ch.donnees.selection], 'contour du polygone pale : encre');
 });

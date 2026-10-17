@@ -39,9 +39,9 @@ async function monter(layer) {
 test('sans réglage : le remplissage et le contour d\'avant', async () => {
   const { remplissage, contour } = await monter({ style: { declarative: { kind: 'single', color: '#5062A7' } } });
   assert.equal(remplissage.paint['fill-color'], '#5062A7');
-  assert.deepEqual(remplissage.paint['fill-opacity'], ['case', ['boolean', ['feature-state', 'selected'], false], 0.95, 0.72]);
+  assert.deepEqual(remplissage.paint['fill-opacity'], ['case', ['boolean', ['feature-state', 'selected'], false], 0.95, ['boolean', ['feature-state', 'highlight'], false], 0.88, 0.72]);
   assert.equal(contour.paint['line-dasharray'], undefined);
-  assert.equal(contour.paint['line-width'][3], 1);
+  assert.equal(contour.paint['line-width'][5], 1);
 });
 
 test('la couleur vient de `kind`, pas de `type` : `type` retombe sur la couleur par défaut de la charte', async () => {
@@ -71,15 +71,15 @@ test('contour réglé : couleur, largeur et tirets ; la sélection garde sa coul
   const { contour } = await monter({ style: { declarative: { kind: 'single', color: '#5062A7', opacity: 0.15 } }, visuel: { contour: { couleur: '#26312B', largeur: 1.5, tirets: [4, 2] } } });
   assert.deepEqual(contour.paint['line-dasharray'], [4, 2]);
   const couleur = contour.paint['line-color'];
-  assert.equal(couleur[0], 'case'); assert.equal(couleur[3], '#26312B', 'hors sélection : la couleur demandée');
+  assert.equal(couleur[0], 'case'); assert.equal(couleur[5], '#26312B', 'hors sélection : la couleur demandée');
   const largeur = contour.paint['line-width'];
-  assert.equal(largeur[3], 1.5); assert.ok(largeur[2] >= 3 && largeur[2] > largeur[3], 'sélectionné : plus épais');
+  assert.equal(largeur[5], 1.5); assert.ok(largeur[2] >= 3 && largeur[2] > largeur[5], 'sélectionné : plus épais'); assert.ok(largeur[4] > largeur[5] && largeur[4] < largeur[2], 'surligné : entre les deux');
 });
 
 test('contour plein réglé sans tirets : pas de `line-dasharray`', async () => {
   const { contour } = await monter({ visuel: { contour: { couleur: '#26312B' } } });
   assert.equal(contour.paint['line-dasharray'], undefined);
-  assert.equal(contour.paint['line-color'][3], '#26312B');
+  assert.equal(contour.paint['line-color'][5], '#26312B');
 });
 
 test('le choroplèthe sans admin reste refusé : le contour réglé n\'y change rien', async () => {

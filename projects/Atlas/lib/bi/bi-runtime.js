@@ -143,13 +143,13 @@ export function attacher(map, opts = {}) {
     } else if (g === 'polygon') {
       // Réglages de l'hôte, facultatifs (lib/bi/style-polygone.js) : opacité du remplissage, contour (couleur, largeur, tirets). Sans eux : le rendu d'avant.
       const opacite = opaciteDeclaree(decl), ct = contourPolygone(v.contour, (cc) => resoudre(cc, T));
-      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, 0.72] } });
+      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, hl, 0.88, 0.72] } });
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: {
-        'line-color': ['case', sel, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],
-        'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), ct ? ct.largeur : 1],
+        'line-color': ['case', sel, T.selection, hl, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],   // surligné (`highlight`) : le contour de la sélection, un peu moins épais
+        'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), hl, Math.max(2, (ct ? ct.largeur : 1) + 1), ct ? ct.largeur : 1],
         ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}) } });
     } else {
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, 3] } });
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, hl, 5, 3] } });
     }
     appliquerVue(c);
   }
