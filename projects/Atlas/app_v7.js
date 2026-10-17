@@ -11326,6 +11326,7 @@ function setupInteraction() {
         if (boxing || boxJustEnded || locationPickMode) return;
         const ids = hitLayerIds();
         const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : [];   // le curseur ne vise que ce qui est sous lui
+        signalerHote('hover', feats.length ? coucheDuRendu(feats[0].layer.id) : null, feats[0]);
         map.getCanvas().style.cursor = feats.length ? (STATE.selection.mode ? 'crosshair' : 'pointer') : (STATE.selection.mode ? 'crosshair' : '');
     });
 
@@ -11342,6 +11343,7 @@ function setupInteraction() {
         const ids = hitLayerIds();
         const feats = objetsSousToucher(e.point, ids);
         if (!feats.length) {
+            signalerHote('select', null, null);
             if (CONFIG.viewMode) closeViewPopup();
             return;
         }
@@ -11349,6 +11351,7 @@ function setupInteraction() {
         const layer = coucheDuRendu(f.layer.id);
         if (!layer) return;
         const idx = f.properties?._idx ?? 0;
+        signalerHote('select', layer, f);
 
         if (_storyPresenting && coucheDansSaisiesEtape(layer)) {
             ouvrirObjet(layer, idx, { lngLat: e.lngLat, feature: f });
@@ -14021,6 +14024,35 @@ async function monterSceneExterne(manifest) {
  * de tout cela.
  */
 const _sceneHote = { ids: [] };
+
+let _abonneHote = null, _survolHote = null;
+
+/** Les propriétés d'un objet cliqué, telles qu'on les rend à la page hôte : valeurs simples seulement, tronquées, sans les champs internes. */
+function proprietesPourHote(f) {
+    const sortie = {}; let n = 0;
+    for (const [k, v] of Object.entries((f && f.properties) || {})) {
+        if (k.startsWith('_') || n >= 40) continue;
+        if (typeof v === 'string') sortie[k] = v.length > 200 ? v.slice(0, 200) : v;
+        else if (typeof v === 'number' || typeof v === 'boolean') sortie[k] = v;
+        else continue;
+        n++;
+    }
+    return sortie;
+}
+
+/**
+ * Dit à la page hôte ce que la personne vise ou clique, pour les seules couches que la page a posées (profil complet). `layer` nul : rien n'est visé.
+ * Le survol ne parle qu'au changement d'objet.
+ */
+function signalerHote(type, layer, f) {
+    if (!_abonneHote) return;
+    if (layer && !_sceneHote.ids.includes(layer.id)) layer = null, f = null;   // une couche de la personne n'est pas l'affaire de la page
+    const cle = layer ? layer.id + ':' + (f.id ?? f.properties?._idx ?? '') : '';
+    if (type === 'hover') { if (cle === _survolHote) return; _survolHote = cle; }
+    _abonneHote(type, layer
+        ? { couche: layer.id, id: f.id ?? f.properties?._idx ?? null, proprietes: proprietesPourHote(f) }
+        : { couche: null, id: null });
+}
 
 const _dallesHote = new Map();   // identifiant d'application (`dalles:<id>`) -> couche de dalles 3D (lib/dalles3d-couche.js)
 
@@ -18215,7 +18247,7 @@ async function demarrerBi() {
         // Profil complet : la page hôte pilote aussi les scènes Atlas (lib/bi/canevas.js, chargé par montage.js à cause de cette façade).
         if (PROFIL_COMPLET) {
             window.__atlasCanevas = Object.freeze({
-                monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
+                monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: (fn) => { _abonneHote = fn; return () => { if (_abonneHote === fn) _abonneHote = null; }; }, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
             });
         }

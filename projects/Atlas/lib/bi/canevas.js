@@ -160,6 +160,14 @@ export function brancher(rt, canevas) {
     const cible = typeof arg === 'string' && Object.prototype.hasOwnProperty.call(correspondance, arg) ? [correspondance[arg]] : (typeof arg === 'string' ? null : ids);
     return cible ? canevas.cadrer(cible) : avant.fitTo(arg);
   };
+  // ce que la personne vise ou clique parmi les couches de la scène Atlas : mêmes événements que la carte BI, `layer` = identifiant de la scène
+  const idSceneDe = (idCouche) => Object.keys(correspondance).find((k) => correspondance[k] === idCouche) || null;
+  const desabonner = typeof canevas.abonner === 'function' ? canevas.abonner((type, c) => {
+    if (type !== 'select' && type !== 'hover') return;
+    const layer = c && c.couche ? idSceneDe(c.couche) : null;
+    if (c && c.couche && !layer) return;   // une couche qui n'est pas dans la scène de la page
+    rt._interne.emettre(type, layer ? { layer, featureId: c.id, key: c.id, ...(c.proprietes && Object.keys(c.proprietes).length ? { properties: c.proprietes } : {}) } : { layer: null, featureId: null }, 'utilisateur');
+  }) : () => {};
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
-  return { couches: () => ({ ...correspondance }) };
+  return { couches: () => ({ ...correspondance }), desabonner };
 }

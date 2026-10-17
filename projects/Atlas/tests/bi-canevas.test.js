@@ -73,6 +73,7 @@ function facade() {
   const journal = [];
   return { journal, outils: OUTILS, monterScene: async (s) => { journal.push(['monter', s]); return { couches: [{ id: 'layer-scene-bati', n: 12 }, { id: 'layer-scene-lampes', n: 0 }], echecs: [{ nom: 'Carrières', raison: 'source.table : pas de document' }], erreur: null }; },
     monterDalles: async (d) => { journal.push(['dalles', d]); if (/mauvaise/.test(d.grille)) throw new Error('manifeste de grille : schéma non lu'); return { id: 'dalles:' + d.id, n: 7 }; },
+    abonne: null, abonner(fn) { this.abonne = fn; return () => { this.abonne = null; }; },
     retirerScene: () => { journal.push(['retirer']); return 2; }, visibilite: (id, v) => { journal.push(['visibilite', id, v]); return v; }, cadrer: (ids) => { journal.push(['cadrer', ids]); return true; } };
 }
 
@@ -119,7 +120,7 @@ test('brancher : setLayerVisibility et fitTo reconnaissent les couches de la sc�
 
 test('le composant nu ne charge jamais le canevas : seul le profil complet pose la façade, seul montage.js l\'importe, et à la demande', () => {
   const app = lire('app_v7.js'), montage = lire('lib/bi/montage.js');
-  assert.match(app, /if \(PROFIL_COMPLET\) \{\s*window\.__atlasCanevas = Object\.freeze\(\{\s*monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,\s*outils: Object\.freeze\(\{ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise \}\),/);
+  assert.match(app, /if \(PROFIL_COMPLET\) \{\s*window\.__atlasCanevas = Object\.freeze\(\{\s*monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: \(fn\) => \{ _abonneHote = fn; return \(\) => \{ if \(_abonneHote === fn\) _abonneHote = null; \}; \}, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,\s*outils: Object\.freeze\(\{ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise \}\),/);
   assert.equal((app.match(/__atlasCanevas/g) || []).length, 1, 'posée une seule fois');
   assert.match(montage, /fenetre\.__atlasCanevas \? await import\('\.\/canevas\.js'\) : null/);
   for (const f of ['lib/bi/entree.js', 'lib/bi/carte-nue.js', 'lib/bi/liaison.js', 'lib/bi/bi-runtime.js', 'index_bi.html']) assert.ok(!/(?:from\s+|import\s*\(\s*)['"][^'"]*canevas\.js/.test(lire(f)), f + ' ne doit pas importer canevas.js');
@@ -160,4 +161,39 @@ test('brancher : un manifeste de grille illisible est une erreur de CETTE couche
   const seules = await rt.api.setScene({ version: '0.2.2', layers: [AVEC_DALLES.layers[0]] });
   assert.equal(seules.maquette, 7); assert.equal(f.journal.filter((j) => j[0] === 'monter').length, 0, 'aucune couche pour l application : elle n est pas appelée');
   assert.deepEqual(f.journal[0], ['retirer'], 'la scène précédente est retirée d abord');
+});
+
+test("clics et survols : les couches de la scene Atlas parlent a la page avec les identifiants DE LA SCENE, comme la carte BI ; le reste est ignore", async () => {
+  const rt = attacher(carteSimulee()); const f = facade(); brancher(rt, f);
+  const vus = []; rt.on('select', (c) => vus.push(['select', c])); rt.on('hover', (c) => vus.push(['hover', c]));
+  await rt.api.setScene(SCENE);   // bati (layer-scene-bati) et lampes
+  f.abonne('select', { couche: 'layer-scene-bati', id: 4, proprietes: { nom: 'Hotel de ville', etages: 3 } });
+  f.abonne('hover', { couche: 'layer-scene-lampes', id: 'a' });
+  f.abonne('select', { couche: null, id: null });
+  f.abonne('select', { couche: 'une-couche-de-la-personne', id: 1 });
+  f.abonne('click', { couche: 'layer-scene-bati', id: 1 });
+  assert.deepEqual(vus, [
+    ['select', { layer: 'bati', featureId: 4, key: 4, properties: { nom: 'Hotel de ville', etages: 3 } }],
+    ['hover', { layer: 'lampes', featureId: 'a', key: 'a' }],
+    ['select', { layer: null, featureId: null }],
+  ]);
+});
+
+test("clics : l evenement est celui d un geste de la personne (visible meme sans evenements-api), et un nouveau setScene remet la correspondance a jour", async () => {
+  const rt = attacher(carteSimulee()); const f = facade(); brancher(rt, f);
+  const origines = []; const vrai = rt._interne.emettre; rt._interne.emettre = (t, c, o) => { origines.push([t, o]); return vrai(t, c, o); };
+  await rt.api.setScene(SCENE); f.abonne('select', { couche: 'layer-scene-bati', id: 1 });
+  assert.deepEqual(origines.filter((o) => o[0] === 'select'), [['select', 'utilisateur']]);
+  await rt.api.setScene(MANIFESTE, DONNEES);   // la scene Atlas est remplacee : ses couches ne parlent plus
+  const avant = origines.length; f.abonne('select', { couche: 'layer-scene-bati', id: 1 });
+  assert.equal(origines.length, avant, 'plus aucune couche de scene Atlas : rien n est emis');
+});
+
+test("l application ne signale que les couches posees par la page, au clic et au survol, sans sortir de la chaine des clics", () => {
+  const app = lire('app_v7.js');
+  assert.match(app, /function signalerHote\(type, layer, f\) \{\s*if \(!_abonneHote\) return;\s*if \(layer && !_sceneHote\.ids\.includes\(layer\.id\)\)/, "seules les couches de la page");
+  assert.match(app, /signalerHote\('hover', feats\.length \? coucheDuRendu\(feats\[0\]\.layer\.id\) : null, feats\[0\]\);/);
+  assert.match(app, /signalerHote\('select', null, null\);\s*if \(CONFIG\.viewMode\) closeViewPopup\(\);/);
+  assert.match(app, /signalerHote\('select', layer, f\);/);
+  assert.match(app, /abonner: \(fn\) => \{ _abonneHote = fn;/);
 });
