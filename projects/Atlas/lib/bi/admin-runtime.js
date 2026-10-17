@@ -75,7 +75,7 @@ export function creerAdmin(ctx) {
     const id = o.id || 'admin-' + niveau;
     const visuel = { type: 'choroplethe', niveau, source: 'hote', methode: 'quantiles', classes: 5, palette: 'sequentielle', valeurSansDonnee: 'hachure', ...(o.visuel || {}) };
     verifierSpec(visuel);
-    const def = { id, name: o.nom || { pays: 'Pays', region: 'Régions', departement: 'Départements', commune: 'Communes', epci: 'EPCI', arrondissement: 'Arrondissements' }[niveau], geometry_type: 'polygon', cle: 'code', admin: { niveau, parent: o.parent || null }, visuel, style: { declarative: { kind: 'single', color: 'jeton:contour' } }, controls: o.controls || [] };
+    const def = { id, name: o.nom || { pays: 'Pays', region: 'Régions', departement: 'Départements', commune: 'Communes', epci: 'EPCI', arrondissement: 'Arrondissements' }[niveau], geometry_type: 'polygon', cle: 'code', admin: { niveau, parent: o.parent || null }, visuel, style: { declarative: { kind: 'single', color: 'jeton:contour' } }, controls: o.controls || [], bulle: o.bulle };
     const c = enregistrer(def, r.features, r.meta, await chargerRefs());
     if (o.visible === false) ctx.api().setLayerVisibility(id, false);
     if (visuel.source === 'agregat' || visuel.table || visuel.donnees) assurer(c, true);
