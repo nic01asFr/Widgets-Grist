@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.26.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.1';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.26.1';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.26.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.26.1';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -338,7 +338,12 @@ export function attacher(map, opts = {}) {
 
   // ---------- couches administratives ----------
   const retirer = (id) => { const c = couches.get(id); if (!c) return; if (selection && selection.c === c) selection = null; demonter(c); couches.delete(id); };
-  const ajouter = (def, features, init) => { const c = creerCouche(def, features); if (init) init(c); couches.set(def.id, c); monter(c); poserLavis(); return c; };
+  let avertAjout = [];   // ce que la déclaration de bulle d’une couche ajoutée par le runtime (administrative) a eu d’invalide : lu par setScene, qui le dit
+  const ajouter = (def, features, init) => {
+    const c = creerCouche(def, features); if (init) init(c);
+    const nb = normaliserBulle(def.bulle); c.bulle = nb.bulle; avertAjout = nb.avertissements;   // une couche administrative a, elle aussi, sa bulle déclarée
+    couches.set(def.id, c); monter(c); poserLavis(); return c;
+  };
   const admin = creerAdmin({ map, couches, PREF, config: opts.admin || {}, horsLigne: () => horsLigne.actif, getTheme: () => theme, resoudre, emettre, retirer, ajouter, api: () => api, ajouterCalque, idSrc, demonter, monter,
     vueSans: (c, ids) => { if (!c.controles.some((x) => x.active && ids.includes(x.id))) return c.vue; const pred = buildControlPredicate({ id: c.id, geojson: c.layerLike.geojson, controls: c.controles.filter((x) => !ids.includes(x.id)) }); return pred ? c.features.filter(pred) : c.features; },
     reappliquerVisibilite: (c) => { if (!c.visible) for (const l of c.ids) map.setLayoutProperty(l, 'visibility', 'none'); }, poserSelection, getSelection: () => selection, majFiltre, camApi: () => { camApi = true; } });
@@ -399,7 +404,8 @@ export function attacher(map, opts = {}) {
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
-          try { await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible }); }
+          try { avertAjout = []; await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible, bulle: def.bulle });
+            if (avertAjout.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...avertAjout]; }
           catch (e) { erreurs[def.id] = String(e && e.message || e); }
           continue;
         }

@@ -10,7 +10,7 @@
  * (pas de reconstruction de la source quand la statistique change). Les unités sans donnée portent l'état « sans » : motif
  * hachuré (ou gris, ou masquées) ; les petits effectifs portent l'état « petit » : contour en tirets.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.1';
 import { chargerAvecRepli, ErreurSource, ATTRIBUTION_IGN } from './admin-sources.js';
 import { enfantsAttendus, creerIndex, agregerPoints, metrique, joindre, remonter, rapporter, baseDe, signalerPetits, normaliserCode, lireValeur, estCommunePLM, fusionnerArrondissements } from './admin.js';
 import { luminance, estPale } from './echelles.js';
@@ -75,7 +75,7 @@ export function creerAdmin(ctx) {
     const id = o.id || 'admin-' + niveau;
     const visuel = { type: 'choroplethe', niveau, source: 'hote', methode: 'quantiles', classes: 5, palette: 'sequentielle', valeurSansDonnee: 'hachure', ...(o.visuel || {}) };
     verifierSpec(visuel);
-    const def = { id, name: o.nom || { pays: 'Pays', region: 'Régions', departement: 'Départements', commune: 'Communes', epci: 'EPCI', arrondissement: 'Arrondissements' }[niveau], geometry_type: 'polygon', cle: 'code', admin: { niveau, parent: o.parent || null }, visuel, style: { declarative: { kind: 'single', color: 'jeton:contour' } }, controls: o.controls || [] };
+    const def = { id, name: o.nom || { pays: 'Pays', region: 'Régions', departement: 'Départements', commune: 'Communes', epci: 'EPCI', arrondissement: 'Arrondissements' }[niveau], geometry_type: 'polygon', cle: 'code', admin: { niveau, parent: o.parent || null }, visuel, style: { declarative: { kind: 'single', color: 'jeton:contour' } }, controls: o.controls || [], bulle: o.bulle };
     const c = enregistrer(def, r.features, r.meta, await chargerRefs());
     if (o.visible === false) ctx.api().setLayerVisibility(id, false);
     if (visuel.source === 'agregat' || visuel.table || visuel.donnees) assurer(c, true);

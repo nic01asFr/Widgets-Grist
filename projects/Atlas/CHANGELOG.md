@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.26.1 — la bulle d'une couche administrative
+
+- **Correctif** : une `bulle` déclarée sur une couche administrative (`admin: { niveau: 'commune' }`) ne s'ouvrait jamais, sans événement ni avertissement ; elle s'ouvre maintenant à la sélection (clic ou `select('13047')`), et une déclaration invalide est dite dans `_avertissements`. Retour de referentiels-2874.
+- **Documentation** : l'identifiant d'une unité administrative est son code en texte (`select('13047')`, pas `select(13047)`) ; les arrondissements de Paris, Lyon et Marseille se demandent par `arrondissements: 'detailles'`.
+
 ## 1.26.0 — l'interface optionnelle de la carte : légende, curseur de temps, historique d'un objet
 
 - **Interface optionnelle** : `interface: { legende: true, temps: true }` dans le manifeste affiche une légende (d'après `getLegend`) et un curseur de temps avec lecture, dans la zone utile (jamais sous votre panneau, ni sur les crédits de la carte), aux couleurs de la charte. Modules `lib/bi/ui/`, environ 6 Ko gzip, importés à la demande : rien n'est chargé sans la déclaration. Invalide : dit dans `_avertissements._interface`.

@@ -21,7 +21,7 @@ export const TEXTES_COMMANDES = Object.freeze({
   setTime: ['Pose la valeur du temps de la scène.', '{ valeur }'],
   play: ['Lance la lecture du temps ({ parSeconde, boucle }).', 'true'],
   pause: ['Arrête la lecture du temps.', 'true'],
-  select: ['Sélectionne une entité par son identifiant entier (null : désélectionne).', 'l\'identifiant'],
+  select: ['Sélectionne une entité par son identifiant : un entier pour une couche de l\'hôte, le code en TEXTE pour une unité administrative (null : désélectionne).', 'l\'identifiant'],
   highlight: ['Met en évidence une liste d\'identifiants.', 'true'],
   flyTo: ['Déplace la caméra ({ center, zoom, pitch, bearing, padding, duration }).', 'true'],
   fitTo: ['Cadre une couche (identifiant de couche), une liste d\'identifiants d\'entités, ou tout (sans argument).', 'true si quelque chose est cadré'],
