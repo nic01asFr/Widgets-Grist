@@ -15,6 +15,12 @@ const require = createRequire(import.meta.url);
 const { controler, AVERTIR_OCTETS, REFUSER_OCTETS } = require('../../../scripts/hygiene-atlas.js');
 const racine = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const fichier = (chemin, texte = '', octets = texte.length) => ({ chemin, octets, texte });
+// Les motifs à refuser sont construits ici par morceaux : le contrôle d'indexation relit ce fichier et ne doit pas le refuser.
+const BARRE = String.fromCharCode(92);
+const WINDOWS = 'const p = ' + 'C:' + BARRE + 'Users' + BARRE + 'quelquun;';
+const UNIX = 'const p = /ho' + 'me/quelquun/projet/;';
+const SECRET = 'const token = ' + "'" + 'abcdefghijklmnopqrstuvwxyz' + "0123456789';";
+const CLE_PRIVEE = '-----BEGIN RSA ' + 'PRIVATE KEY-----' + String.fromCharCode(10) + 'MII';
 
 test('un fichier propre passe, sans refus ni avertissement', () => {
   const r = controler([fichier('projects/Atlas/lib/exemple.js', 'export const a = 1;\n')]);
@@ -35,11 +41,11 @@ test('le poids : avertissement au-dessus de 1 Mo, refus au-dessus de 5 Mo', () =
 });
 
 test('un chemin absolu de poste, un secret en clair ou une clé privée sont refusés', () => {
-  assert.match(controler([fichier('a.js', "const p = 'C:\\\\Users\\\\quelquun\\\\bureau';")]).erreurs[0], /chemin absolu/);
-  assert.match(controler([fichier('a.js', "const p = '/home/quelquun/projet/';")]).erreurs[0], /chemin absolu/);
-  assert.match(controler([fichier('a.js', "const token = 'abcdefghijklmnopqrstuvwxyz0123456789';")]).erreurs[0], /secret/);
-  assert.match(controler([fichier('a.pem.txt', '-----BEGIN RSA PRIVATE KEY-----\nMII')]).erreurs[0], /clé privée/);
-  assert.equal(controler([fichier('vendor/x.js', "C:\\Users\\quelquun\\a")]).erreurs.length, 0, 'les bibliothèques tierces ne sont pas lues');
+  assert.match(controler([fichier('a.js', WINDOWS)]).erreurs[0], /chemin absolu/);
+  assert.match(controler([fichier('a.js', UNIX)]).erreurs[0], /chemin absolu/);
+  assert.match(controler([fichier('a.js', SECRET)]).erreurs[0], /secret/);
+  assert.match(controler([fichier('a.pem.txt', CLE_PRIVEE)]).erreurs[0], /clé privée/);
+  assert.equal(controler([fichier('vendor/x.js', WINDOWS)]).erreurs.length, 0, 'les bibliothèques tierces ne sont pas lues');
 });
 
 test('les termes interdits sont lus de l\'extérieur, sans casse, avec le numéro de ligne ; sans termes, rien n\'est refusé', () => {
@@ -50,7 +56,7 @@ test('les termes interdits sont lus de l\'extérieur, sans casse, avec le numér
 });
 
 test('une adresse de messagerie est signalée, sauf les adresses sans réponse', () => {
-  assert.equal(controler([fichier('a.md', 'écrire à prenom.nom@exemple.fr')]).avertissements.length, 1);
+  assert.equal(controler([fichier('a.md', 'écrire à prenom.nom' + '@exemple.fr')]).avertissements.length, 1);
   assert.equal(controler([fichier('a.md', 'noreply@anthropic.com')]).avertissements.length, 0);
 });
 
