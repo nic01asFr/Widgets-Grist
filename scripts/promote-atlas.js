@@ -137,6 +137,16 @@ if (fs.existsSync(biSrc)) {
     fs.writeFileSync(path.join(biPub, f), normaliserVersions(fs.readFileSync(path.join(biSrc, f), 'utf8')));
     modulesBi++;
   }
+  // Modules d'interface optionnels (legende, curseur de temps : `lib/bi/ui/`), charges a la demande par `import()` depuis le runtime.
+  const uiSrc = path.join(biSrc, 'ui'), uiPub = path.join(biPub, 'ui');
+  if (fs.existsSync(uiSrc)) {
+    fs.mkdirSync(uiPub, { recursive: true });
+    for (const f of fs.readdirSync(uiSrc)) {
+      if (!f.endsWith('.js')) continue;
+      fs.writeFileSync(path.join(uiPub, f), normaliserVersions(fs.readFileSync(path.join(uiSrc, f), 'utf8')));
+      modulesBi++;
+    }
+  }
   // Jeux embarques (contours administratifs de repli hors ligne, references de population) : servis tels quels.
   const donSrc = path.join(biSrc, 'donnees'), donPub = path.join(biPub, 'donnees');
   if (fs.existsSync(donSrc)) {

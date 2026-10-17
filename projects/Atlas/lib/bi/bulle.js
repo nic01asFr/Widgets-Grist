@@ -5,7 +5,10 @@
  *     titre: 'nom' | 'Site {nom} ({commune})',      // une propriété, ou un modèle ; à défaut, le nom de la couche
  *     champs: [{ champ: 'commune', libelle: 'Commune', format: 'texte' | 'nombre' | 'date' | 'pourcent' }],   // 4 au plus
  *     actions: [{ id: 'ouvrir-fiche', libelle: 'Ouvrir la fiche', style: 'principale' | 'secondaire' }],   // 3 au plus
- *     ouverture: 'clic' | 'aucune'                     // défaut 'clic' ; 'aucune' : la carte n'ouvre jamais la bulle
+ *     ouverture: 'clic' | 'aucune',                    // défaut 'clic' ; 'aucune' : la carte n'ouvre jamais la bulle
+ *     liste: { table: 'cotations', cle: 'batiment', valeur: 'ref',      // l’historique : les lignes de la table liée `cotations` (couche `type: "table"`)
+ *              tri: 'date', ordre: 'desc', max: 5, titre: 'Cotations',  // dont `batiment` = la propriété `ref` de l’objet ; `valeur` : par défaut la clé de la couche
+ *              champs: [{ champ: 'date', libelle: 'Date', format: 'date' }, { champ: 'note', libelle: 'Note' }] }   // 4 champs au plus, 10 lignes au plus
  *   } }]
  *
  * Ce que fait le composant : il AFFICHE (texte seulement) et il RENVOIE. Au clic d'un bouton il émet `action { layer, featureId, key, actionId }` ; il
@@ -20,6 +23,7 @@
  */
 
 import { decalageDansZone } from './marges.js';
+import { lignesLiees, MAX_AFFICHE } from './tables.js';
 
 export const CHAMPS_MAX = 4;
 export const ACTIONS_MAX = 3;
@@ -41,7 +45,7 @@ export function normaliserBulle(brut) {
   const avertissements = [];
   if (brut === undefined || brut === null) return { bulle: null, avertissements };
   if (!estObjet(brut)) return { bulle: null, avertissements: ['bulle : un objet est attendu ; la couche n\'a pas de bulle'] };
-  const connus = ['titre', 'champs', 'actions', 'ouverture'];
+  const connus = ['titre', 'champs', 'actions', 'ouverture', 'liste'];
   for (const k of Object.keys(brut)) if (!connus.includes(k)) avertissements.push(`bulle : propriété « ${coupe(k, 30)} » inconnue, ignorée`);
   const bulle = { titre: typeof brut.titre === 'string' && brut.titre.trim() ? coupe(brut.titre.trim(), 160) : null, champs: [], actions: [], ouverture: 'clic' };
   if (brut.titre !== undefined && bulle.titre === null) avertissements.push('bulle.titre : une chaîne est attendue, ignoré');
@@ -78,7 +82,37 @@ export function normaliserBulle(brut) {
       });
     }
   }
+  if (brut.liste !== undefined) { const l = normaliserListe(brut.liste, avertissements); if (l) bulle.liste = l; }
   return { bulle, avertissements };
+}
+
+/** La déclaration de l’historique d’une bulle (voir l’en-tête) ; `null` et un avertissement quand elle n’est pas utilisable. */
+function normaliserListe(brut, avertissements) {
+  if (!estObjet(brut)) { avertissements.push('bulle.liste : un objet est attendu, ignorée'); return null; }
+  const motif = /^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,39}$/;
+  for (const k of Object.keys(brut)) if (!['table', 'cle', 'valeur', 'champs', 'tri', 'ordre', 'max', 'titre'].includes(k)) avertissements.push(`bulle.liste : propriété « ${coupe(k, 30)} » inconnue, ignorée`);
+  if (typeof brut.table !== 'string' || !motif.test(brut.table)) { avertissements.push('bulle.liste.table : l’identifiant de la table liée est attendu (une couche de type « table »), liste ignorée'); return null; }
+  if (typeof brut.cle !== 'string' || !brut.cle) { avertissements.push('bulle.liste.cle : le champ de la table qui porte la clé est attendu, liste ignorée'); return null; }
+  const champs = [];
+  if (Array.isArray(brut.champs)) {
+    brut.champs.forEach((c, i) => {
+      if (!estObjet(c) || typeof c.champ !== 'string' || !c.champ) { avertissements.push(`bulle.liste.champs[${i}] : { champ: « nom » } attendu, ignoré`); return; }
+      if (champs.length >= CHAMPS_MAX) { if (champs.length === CHAMPS_MAX) avertissements.push(`bulle.liste.champs : ${CHAMPS_MAX} au plus, les suivants sont ignorés`); champs.push(null); return; }
+      const format = FORMATS.includes(c.format) ? c.format : 'texte';
+      champs.push({ champ: c.champ, libelle: typeof c.libelle === 'string' && c.libelle.trim() ? coupe(c.libelle.trim(), LONGUEUR_LIBELLE) : c.champ, format });
+    });
+  }
+  const gardes = champs.filter(Boolean);
+  if (!gardes.length) { avertissements.push('bulle.liste.champs : au moins un champ est attendu, liste ignorée'); return null; }
+  const max = Number.isFinite(brut.max) ? Math.min(Math.max(1, Math.floor(brut.max)), MAX_AFFICHE) : 5;
+  if (brut.max !== undefined && max !== brut.max) avertissements.push(`bulle.liste.max : entre 1 et ${MAX_AFFICHE}, ramené à ${max}`);
+  let ordre = 'desc';
+  if (brut.ordre !== undefined) { if (brut.ordre === 'asc' || brut.ordre === 'desc') ordre = brut.ordre; else avertissements.push('bulle.liste.ordre : « asc » ou « desc » attendu, « desc » gardé'); }
+  return {
+    table: brut.table, cle: brut.cle, valeur: typeof brut.valeur === 'string' && brut.valeur ? brut.valeur : null,
+    champs: gardes, tri: typeof brut.tri === 'string' && brut.tri ? brut.tri : null, ordre, max,
+    titre: typeof brut.titre === 'string' && brut.titre.trim() ? coupe(brut.titre.trim(), LONGUEUR_LIBELLE) : 'Historique',
+  };
 }
 
 /** Une valeur lisible selon son format ; `''` quand il n'y a rien à montrer. */
@@ -104,7 +138,7 @@ function nombreFr(n) { return new Intl.NumberFormat('fr-FR', { maximumFractionDi
 const MODELE = /\{([^{}]{1,60})\}/g;
 
 /** Le contenu à afficher (tout en texte) pour un objet. */
-export function contenuBulle(bulle, proprietes, nomCouche = '') {
+export function contenuBulle(bulle, proprietes, nomCouche = '', tables = null, cleCouche = null) {
   const p = estObjet(proprietes) ? proprietes : {};
   const texte = (k) => formater(p[k], 'texte');
   let titre = '';
@@ -112,7 +146,15 @@ export function contenuBulle(bulle, proprietes, nomCouche = '') {
   if (!titre) titre = String(nomCouche || '');
   const lignes = [];
   for (const c of bulle.champs) { const v = formater(p[c.champ], c.format); if (v) lignes.push({ libelle: c.libelle, valeur: v }); }
-  return { titre: coupe(titre, 160), lignes, actions: bulle.actions.map((a) => ({ ...a })) };
+  let liste = null;
+  if (bulle.liste) {   // l’historique : les lignes de la table liée dont la clé vaut la propriété de l’objet
+    const l = bulle.liste, lignesTable = tables && (tables instanceof Map ? tables.get(l.table) : tables[l.table]);
+    if (Array.isArray(lignesTable)) {
+      const trouvees = lignesLiees(lignesTable, { cle: l.cle, valeur: p[l.valeur || cleCouche], tri: l.tri, ordre: l.ordre, max: l.max });
+      liste = { titre: l.titre, entetes: l.champs.map((c) => c.libelle), lignes: trouvees.lignes.map((r) => l.champs.map((c) => formater(r[c.champ], c.format))), total: trouvees.total };
+    }
+  }
+  return { titre: coupe(titre, 160), lignes, actions: bulle.actions.map((a) => ({ ...a })), ...(liste ? { liste } : {}) };
 }
 
 /** Le point où ancrer la bulle d'une géométrie : le point lui-même, ou le centre de l'emprise. */
@@ -140,6 +182,12 @@ export const FEUILLE = `
 .atlas-bi-bulle-champs { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
 .atlas-bi-bulle-champs dt { color: var(--atlas-discret, #6b6760); font-size: var(--atlas-taille-petit, 12px); }
 .atlas-bi-bulle-champs dd { margin: 0; overflow-wrap: anywhere; }
+.atlas-bi-bulle-liste { margin-top: 10px; }
+.atlas-bi-bulle-liste-titre { font-weight: 600; font-size: var(--atlas-taille-petit, 12px); color: var(--atlas-discret, #6b6760); margin-bottom: 3px; }
+.atlas-bi-bulle-liste table { border-collapse: collapse; width: 100%; font-size: var(--atlas-taille-petit, 12px); }
+.atlas-bi-bulle-liste th { text-align: left; font-weight: 500; color: var(--atlas-discret, #6b6760); padding: 1px 8px 2px 0; border-bottom: 1px solid var(--atlas-bord, #d8d6d2); }
+.atlas-bi-bulle-liste td { padding: 2px 8px 2px 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.atlas-bi-bulle-liste-vide, .atlas-bi-bulle-liste-reste { color: var(--atlas-discret, #6b6760); font-size: var(--atlas-taille-petit, 12px); margin-top: 3px; }
 .atlas-bi-bulle-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .atlas-bi-bulle-action { font: inherit; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--atlas-accent-lisible, #c44536); background: transparent; color: var(--atlas-accent-lisible, #c44536); }
 .atlas-bi-bulle-action.principale { background: var(--atlas-accent, #c44536); color: var(--atlas-sur-accent, #fff); }
@@ -157,8 +205,8 @@ export const FEUILLE = `
  *   `variables()` rend les variables CSS de la charte ; `appliquer(element, variables)` les écrit ; `marges()` rend les marges de l'hôte (zone utile) ;
  *   `quandFermee()` est appelée quand la PERSONNE ferme la bulle.
  */
-export function creerBulle({ map, document: doc = globalThis.document, creerPopup, emettre, variables, appliquer, marges = () => null, quandFermee = () => {} }) {
-  let popup = null, courante = null, contenuRacine = null;
+export function creerBulle({ map, document: doc = globalThis.document, creerPopup, emettre, variables, appliquer, marges = () => null, quandFermee = () => {}, tables = () => null }) {
+  let popup = null, courante = null, contenuRacine = null, derniere = null;
   const ecrire = (el) => { if (!el || !appliquer) return; try { appliquer(el, variables()); } catch (_) { /* variables illisibles : les valeurs de repli de la feuille s'appliquent */ } };
   function feuille() {
     if (!doc || !doc.head || doc.getElementById(STYLE_ID)) return;
@@ -174,6 +222,22 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
       const dl = doc.createElement('dl'); dl.className = 'atlas-bi-bulle-champs';
       for (const l of contenu.lignes) { const dt = doc.createElement('dt'); dt.textContent = l.libelle; const dd = doc.createElement('dd'); dd.textContent = l.valeur; dl.appendChild(dt); dl.appendChild(dd); }
       racine.appendChild(dl);
+    }
+    if (contenu.liste) {
+      const sec = doc.createElement('div'); sec.className = 'atlas-bi-bulle-liste';
+      const tt = doc.createElement('div'); tt.className = 'atlas-bi-bulle-liste-titre'; tt.textContent = contenu.liste.titre; sec.appendChild(tt);
+      if (!contenu.liste.lignes.length) { const v = doc.createElement('div'); v.className = 'atlas-bi-bulle-liste-vide'; v.textContent = 'Aucune ligne'; sec.appendChild(v); }
+      else {
+        const tab = doc.createElement('table'); const th = doc.createElement('thead'), tr0 = doc.createElement('tr');
+        for (const e of contenu.liste.entetes) { const c = doc.createElement('th'); c.scope = 'col'; c.textContent = e; tr0.appendChild(c); }
+        th.appendChild(tr0); tab.appendChild(th);
+        const tb = doc.createElement('tbody');
+        for (const ligne of contenu.liste.lignes) { const tr = doc.createElement('tr'); for (const v of ligne) { const td = doc.createElement('td'); td.textContent = v; tr.appendChild(td); } tb.appendChild(tr); }
+        tab.appendChild(tb); sec.appendChild(tab);
+        const reste = contenu.liste.total - contenu.liste.lignes.length;
+        if (reste > 0) { const r = doc.createElement('div'); r.className = 'atlas-bi-bulle-liste-reste'; r.textContent = '+ ' + reste + (reste > 1 ? ' autres lignes' : ' autre ligne'); sec.appendChild(r); }
+      }
+      racine.appendChild(sec);
     }
     if (contenu.actions.length) {
       const bloc = doc.createElement('div'); bloc.className = 'atlas-bi-bulle-actions';
@@ -194,8 +258,8 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
     if (!ancre) { fermer(); return false; }
     feuille();
     const ancienne = courante;
-    const contenu = contenuBulle(c.bulle, f.properties, c.def.name || c.id);
-    contenuRacine = construire(contenu, c, f);
+    const contenu = contenuBulle(c.bulle, f.properties, c.def.name || c.id, tables(), c.def.cle);
+    contenuRacine = construire(contenu, c, f); derniere = { c, f };
     if (!popup) popup = creerPopup();
     popup.setLngLat(ancre).setDOMContent(contenuRacine);
     if (!popup.isOpen || !popup.isOpen()) popup.addTo(map);
@@ -206,6 +270,13 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
     if (autre && ancienne) emettre('bulle', { etat: 'fermee', ...ancienne }, 'utilisateur');   // des paires ouverte/fermee, même quand la bulle passe d'un objet à l'autre
     if (autre) emettre('bulle', { etat: 'ouverte', ...courante }, 'utilisateur');
     return true;
+  }
+  /** Les lignes d’une table liée ont changé : le contenu de la bulle ouverte est refait, sur place (aucun événement : c’est la même bulle). */
+  function rafraichir() {
+    if (!popup || !courante || !derniere) return false;
+    const { c, f } = derniere;
+    contenuRacine = construire(contenuBulle(c.bulle, f.properties, c.def.name || c.id, tables(), c.def.cle), c, f);
+    popup.setDOMContent(contenuRacine); ecrire(popup.getElement && popup.getElement()); planifierAjustement(); return true;
   }
   function fermer() {
     if (!courante) { if (popup && popup.isOpen && popup.isOpen()) popup.remove(); return false; }
@@ -238,5 +309,5 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
 
   /** La charte a changé : les variables sont réécrites sur la bulle ouverte. */
   function actualiser() { if (popup && courante) ecrire(popup.getElement && popup.getElement()); }
-  return { ouvrir, fermer, actualiser, ajuster, ouverte: () => (courante ? { ...courante } : null) };
+  return { ouvrir, fermer, rafraichir, actualiser, ajuster, ouverte: () => (courante ? { ...courante } : null) };
 }
