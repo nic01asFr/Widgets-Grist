@@ -58,6 +58,24 @@ export function urlSceneDepuisParam(search = '') {
 }
 
 /**
+ * Une adresse de donnée est-elle admise pour une scène qui vient d'ailleurs ? `null` si oui, sinon la raison du refus, en clair.
+ * La même règle que `urlSceneDepuisParam` pour l'adresse de la scène : https, et http seulement sur localhost ; jamais `data:`, `blob:`,
+ * `file:` ni adresse relative (relative à quelle page ?). Partagée par tout ce qui lit une adresse que la page hôte désigne (couches
+ * d'une scène envoyée par `setScene`, manifeste de dalles 3D).
+ * @param {string} valeur
+ * @returns {string|null}
+ */
+export function adresseAdmise(valeur) {
+  const brut = String(valeur);
+  const abrege = brut.length > 80 ? brut.slice(0, 77) + '...' : brut;
+  let u;
+  try { u = new URL(brut); } catch { return 'adresse absolue en https attendue : « ' + abrege + ' »'; }
+  const local = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]';
+  if (u.protocol === 'https:' || (u.protocol === 'http:' && local)) return null;
+  return 'https requis (http seulement sur localhost) : « ' + abrege + ' »';
+}
+
+/**
  * Une scène peut être déjà là, sans adresse à aller chercher.
  *
  * C'est le cas d'un livrable autoportant : un seul fichier HTML qui embarque

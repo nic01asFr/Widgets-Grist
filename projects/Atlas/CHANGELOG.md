@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.24.0 — les maquettes en dalles 3D, et une carte sans fond de plan
+
+- **Maquettes en dalles 3D** (profil complet) : une couche de scène `type: "dalles3d"` désigne un manifeste de grille (`pix2hdr-atlas-grille3d/0.1`). Atlas lit les dalles livrées dans la fenêtre, choisit le niveau selon la distance (D2 près, D3 loin), charge par priorité sans jamais laisser de trou, garde un cache à budget, recharge quand la Fabrique republie, et pose chaque dalle par son ancrage (convergence des méridiens, facteur d'échelle, altitude IGN69). Vérifié en navigateur sur la dalle témoin.
+- **`base=aucune`** : `<atlas-bi base="aucune">` crée la carte sans fond de plan : aucun service tiers au démarrage (mesuré : zéro ressource hors de l'origine d'Atlas). Avant, `fond="uni"` masquait un style déjà chargé (~1 Mo d'appels à OpenFreeMap). Retour d'appkit.
+- **Clics et survols** (profil complet) : les couches de la scène Atlas posées par la page remontent `select` et `hover` avec les identifiants de la scène et les propriétés de l'objet ; les couches de la personne qui regarde ne remontent jamais.
+- **Composant nu inchangé** : le contrat reste 0.3, même client, même empreinte ; les modules de dalles ne sont chargés que par une scène de dalles.
+
 ## 1.23.0 — le canevas piloté par la page : une scène Atlas par `setScene`
 
 - **Profil complet** : `setScene` accepte aussi une scène Atlas (Scene Manifest 0.2.x, reconnue à sa `version`). L'application la monte comme une scène externe : relief, 3D, éclairage, récit, couches d'objets. Une scène en remplace une autre, sans toucher aux couches de la personne qui regarde. `ready` annonce `canevas: true` ; `ping`, `setLayerVisibility` et `fitTo` reconnaissent ses couches ; le retour de `setScene` donne un compte par couche (`null` pour une couche distante) avec `_erreurs` et `_avertissements`.

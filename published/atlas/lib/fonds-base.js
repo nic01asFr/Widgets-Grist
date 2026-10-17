@@ -18,6 +18,17 @@ export const STYLE_HORS_RESEAU = {
     layers: [{ id: 'fond-hors-reseau', type: 'background', paint: { 'background-color': '#ece7da' } }],
 };
 
+/**
+ * Un fond « aucun » : un seul aplat blanc, sans source ni service tiers. Pour un hôte qui n'affiche que ses données (`base=aucune`) : la carte ne demande
+ * rien à personne au démarrage. Le calque se nomme `background`, comme dans le style de base : le fond uni (`setFond('uni')`) le repeint.
+ */
+export const STYLE_AUCUN_FOND = {
+    version: 8, name: 'Aucun fond',
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    sources: {},
+    layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#ffffff' } }],
+};
+
 // Libellés accessibles de MapLibre (étiquettes ARIA, infobulles des contrôles) : en français, comme le reste d'Atlas ; MapLibre ignore une clé qu'il ne connaît pas.
 export const LOCALE_CARTE = Object.freeze({
     'Map.Title': 'Carte',

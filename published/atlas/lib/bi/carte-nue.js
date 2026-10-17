@@ -11,10 +11,10 @@
  *
  * Aucune dépendance au DOM de l'application : seuls MapLibre (global ou injecté), `window` et un conteneur sont requis.
  */
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from '../fonds-base.js?v=1.23.0';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, STYLE_AUCUN_FOND, LOCALE_CARTE } from '../fonds-base.js?v=1.24.0';
 // même adresse (avec sa version) que `montage.js` : une seule instance du module, sinon la carte exposée et la carte attendue seraient deux modules distincts
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from '../acces-carte.js?v=1.23.0';
-import { ratioMaxDemande } from '../ratio-hote.js?v=1.23.0';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from '../acces-carte.js?v=1.24.0';
+import { ratioMaxDemande } from '../ratio-hote.js?v=1.24.0';
 
 /** La vue d'ouverture, celle qu'avait le composant (l'hôte la remplace par `flyTo`, `fitTo` ou une scène). */
 export const VUE_PAR_DEFAUT = Object.freeze({ center: [5.3740, 43.2951], zoom: 16, pitch: 0, bearing: -18 });
@@ -30,13 +30,17 @@ export function creerCarteNue({ maplibregl = globalThis.maplibregl, container = 
   const ratioAppareil = (fenetre && fenetre.devicePixelRatio) || 1;
   // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
   let repli = !!(fenetre && fenetre.navigator && fenetre.navigator.onLine === false), utilisable = false;
+  // `?base=aucune` : l'hôte n'affiche que ses données, la carte ne demande aucun fond de plan (ni style, ni tuiles, ni sprites). Seuls les fonds qui
+  // ne reposent pas sur le style de base restent possibles (voir `lib/bi/fond.js`).
+  const sansBase = new URLSearchParams(String(recherche || '').replace(/^\?/, '')).get('base') === 'aucune';
   const carte = new maplibregl.Map({
     container, locale: LOCALE_CARTE,
-    style: repli ? STYLE_HORS_RESEAU : STYLE_BASE_URL,
+    style: sansBase ? STYLE_AUCUN_FOND : (repli ? STYLE_HORS_RESEAU : STYLE_BASE_URL),
     center: [...VUE_PAR_DEFAUT.center], zoom: VUE_PAR_DEFAUT.zoom, pitch: VUE_PAR_DEFAUT.pitch, bearing: VUE_PAR_DEFAUT.bearing,
     antialias: true, maxPitch: 80,
     ...(ratio ? { pixelRatio: Math.min(ratioAppareil, ratio) } : {}),
   });
+  if (sansBase) { carte.__atlasSansBase = true; repli = true; }   // pas de style de base à attendre ni à remplacer par un aplat
   try { fenetre.__atlasMap = carte; } catch (_) { /* poignée de mise au point : facultative */ }
   exposerCarte(fenetre, carte);
   // projection plane : les données BI se lisent de dessus (le style Liberty peut en demander une autre)

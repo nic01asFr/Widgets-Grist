@@ -20,15 +20,16 @@
  * Les trois fonctions de `lib/scene-externe.js` dont ce module a besoin ne sont PAS importées ici : la page maigre (`bi.html`) ne doit contenir aucun
  * module de l'application dans sa fermeture d'imports, et celle-ci passe par `montage.js`. `app_v7.js`, qui les importe déjà, les remet dans la
  * façade (`canevas.outils`) ; les tests passent les vraies.
- * @typedef {{VERSIONS_LUES: string[], deballerScene: Function, verifierFormeScene: Function}} OutilsScene
+ * @typedef {{VERSIONS_LUES: string[], deballerScene: Function, verifierFormeScene: Function, adresseAdmise: Function}} OutilsScene
  */
 
 export const PLAFOND_OCTETS = 4 * 1024 * 1024;
 export const PLAFOND_COUCHES = 64;
+/** Le type d'une couche qui désigne une maquette en dalles 3D servies par adresse (voir `lib/dalles3d-geo.js`). */
+export const TYPE_DALLES = 'dalles3d';
+export const PLAFOND_COUCHES_DALLES = 4;
 /** Champs d'une couche de scène qui désignent une donnée à aller chercher. */
 const CLES_ADRESSE = ['geojson', 'data_url', 'gltf_url', 'gltfUrl', 'tiles_url'];
-
-const abrege = (v) => { const s = String(v); return s.length > 80 ? s.slice(0, 77) + '...' : s; };
 
 /** Vrai quand l'objet est une scène Atlas (Scene Manifest 0.2.x) : un manifeste BI ne porte pas de `version`. */
 /** @param {OutilsScene} outils */
@@ -37,13 +38,8 @@ export function estSceneAtlas(manifest, outils) {
   return !!m && typeof m === 'object' && outils.VERSIONS_LUES.includes(String(m.version));
 }
 
-/** null si l'adresse est admise ; sinon la raison du refus, en clair. */
-export function adresseAdmise(valeur) {
-  let u; try { u = new URL(String(valeur)); } catch (e) { return 'adresse absolue en https attendue : « ' + abrege(valeur) + ' »'; }
-  const local = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]';
-  if (u.protocol === 'https:' || (u.protocol === 'http:' && local)) return null;
-  return 'https requis (http seulement sur localhost) : « ' + abrege(valeur) + ' »';
-}
+/** Vrai quand la couche désigne des dalles 3D : `{ type: 'dalles3d', dalles3d: { grille: <adresse https du manifeste grille3d.json> } }`. */
+export const estCoucheDalles = (def) => !!def && typeof def === 'object' && def.type === TYPE_DALLES;
 
 /**
  * Contrôle une scène venue de l'hôte et la rend prête à monter.
@@ -58,15 +54,22 @@ export function verifierSceneHote(manifest, outils) {
   const scene = outils.deballerScene(manifest);
   ecarts.push(...outils.verifierFormeScene(scene));
   if (Array.isArray(scene && scene.layers)) {
+    if (scene.layers.filter(estCoucheDalles).length > PLAFOND_COUCHES_DALLES) ecarts.push('trop de couches de dalles 3D (plafond ' + PLAFOND_COUCHES_DALLES + ')');
     if (scene.layers.length > PLAFOND_COUCHES) ecarts.push('trop de couches (' + scene.layers.length + ' pour un plafond de ' + PLAFOND_COUCHES + ')');
     scene.layers.forEach((def, i) => {
       if (!def || typeof def !== 'object') return;
       const nom = def.id || def.name || ('couche ' + i);
+      if (estCoucheDalles(def)) {   // des dalles 3D : une seule adresse, celle du manifeste de grille
+        const g = def.dalles3d && def.dalles3d.grille;
+        if (typeof g !== 'string' || !g) ecarts.push('couche « ' + nom + ' » : dalles3d.grille (adresse du manifeste de grille) manquante');
+        else { const refus = outils.adresseAdmise(g); if (refus) ecarts.push('couche « ' + nom + ' » : dalles3d.grille : ' + refus); }
+        return;
+      }
       const adresses = CLES_ADRESSE.map((c) => [c, def[c]]);
       adresses.push(['style.custom.url', def.style && def.style.custom && def.style.custom.url], ['source.url', def.source && def.source.url]);
       for (const [cle, valeur] of adresses) {
         if (typeof valeur !== 'string' || !valeur) continue;
-        const refus = adresseAdmise(valeur); if (refus) ecarts.push('couche « ' + nom + ' » : ' + cle + ' : ' + refus);
+        const refus = outils.adresseAdmise(valeur); if (refus) ecarts.push('couche « ' + nom + ' » : ' + cle + ' : ' + refus);
       }
     });
   }
@@ -113,7 +116,7 @@ export function classerEchecs(echecs, defs, correspondance) {
 /**
  * Branche le canevas sur le runtime du pont : `setScene`, `setLayerVisibility`, `fitTo` et `ping` reconnaissent aussi la scène Atlas.
  * @param {object} rt  retour de `attacher`
- * @param {{monterScene:Function, retirerScene:Function, visibilite:Function, cadrer:Function, outils:OutilsScene}} canevas  façade posée par `app_v7.js`
+ * @param {{monterScene:Function, monterDalles:Function, retirerScene:Function, visibilite:Function, cadrer:Function, outils:OutilsScene}} canevas  façade posée par `app_v7.js`
  * @returns {{couches: () => Record<string,string>}}
  */
 export function brancher(rt, canevas) {
@@ -128,12 +131,20 @@ export function brancher(rt, canevas) {
     const { scene, ecarts } = verifierSceneHote(manifest, canevas.outils);
     if (ecarts.length) throw new Error('scène Atlas refusée : ' + ecarts.join(' | '));
     await avant.setScene({ layers: [] });   // vide la scène BI : une scène en remplace une autre
-    const r = await canevas.monterScene(scene);
-    correspondance = correspondanceCouches(scene.layers, r.couches || []);
+    canevas.retirerScene();                  // et la scène Atlas précédente (couches de l'application et dalles 3D)
+    const dalles = scene.layers.filter(estCoucheDalles), autres = scene.layers.filter((d) => !estCoucheDalles(d));
+    const r = autres.length ? await canevas.monterScene({ ...scene, layers: autres }) : { couches: [], echecs: [], erreur: null };
+    correspondance = correspondanceCouches(autres, r.couches || []);
     // un compte inconnu (couche distante : ses entités arrivent à l'affichage) est `null`, jamais un faux zéro
-    const compte = {};
+    const compte = {}, erreursDalles = {};
     for (const [idScene, idCouche] of Object.entries(correspondance)) { const c = (r.couches || []).find((x) => x.id === idCouche); compte[idScene] = c && Number.isFinite(c.n) ? c.n : null; }
-    const { erreurs, avertissements } = classerEchecs(r.echecs, scene.layers, correspondance);
+    for (const def of dalles) {   // chaque couche de dalles 3D se monte seule : l'échec de l'une ne retire pas les autres
+      const id = String(def.id || def.name);
+      try { const d = await canevas.monterDalles({ id, nom: def.name || id, grille: def.dalles3d.grille, options: def.dalles3d }); correspondance[id] = d.id; compte[id] = Number.isFinite(d.n) ? d.n : null; }
+      catch (e) { erreursDalles[id] = String((e && e.message) || e); }
+    }
+    const { erreurs, avertissements } = classerEchecs(r.echecs, autres, correspondance);
+    Object.assign(erreurs, erreursDalles);
     if (r.erreur) erreurs._scene = String(r.erreur);
     const dites = { ...(Object.keys(erreurs).length ? { erreurs } : {}), ...(Object.keys(avertissements).length ? { avertissements } : {}) };
     rt._interne.emettre('ready', { layers: compte, canevas: true, ...dites }, 'api');
@@ -149,6 +160,14 @@ export function brancher(rt, canevas) {
     const cible = typeof arg === 'string' && Object.prototype.hasOwnProperty.call(correspondance, arg) ? [correspondance[arg]] : (typeof arg === 'string' ? null : ids);
     return cible ? canevas.cadrer(cible) : avant.fitTo(arg);
   };
+  // ce que la personne vise ou clique parmi les couches de la scène Atlas : mêmes événements que la carte BI, `layer` = identifiant de la scène
+  const idSceneDe = (idCouche) => Object.keys(correspondance).find((k) => correspondance[k] === idCouche) || null;
+  const desabonner = typeof canevas.abonner === 'function' ? canevas.abonner((type, c) => {
+    if (type !== 'select' && type !== 'hover') return;
+    const layer = c && c.couche ? idSceneDe(c.couche) : null;
+    if (c && c.couche && !layer) return;   // une couche qui n'est pas dans la scène de la page
+    rt._interne.emettre(type, layer ? { layer, featureId: c.id, key: c.id, ...(c.proprietes && Object.keys(c.proprietes).length ? { properties: c.proprietes } : {}) } : { layer: null, featureId: null }, 'utilisateur');
+  }) : () => {};
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
-  return { couches: () => ({ ...correspondance }) };
+  return { couches: () => ({ ...correspondance }), desabonner };
 }
