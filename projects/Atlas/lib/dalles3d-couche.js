@@ -169,8 +169,8 @@ export function creerCoucheDalles({
     id: idCouche, type: 'custom', renderingMode: '3d',
     onAdd(m, gl) {
       scene = new THREE.Scene(); camera = new THREE.Camera();
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f98, 1.15));
-      const soleil = new THREE.DirectionalLight(0xffffff, 1.7); soleil.position.set(0.45, 1, 0.3); scene.add(soleil);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xb4b8c0, 2.1));
+      const soleil = new THREE.DirectionalLight(0xffffff, 2.8); soleil.position.set(0.45, 1, 0.3); scene.add(soleil);
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true }); renderer.autoClear = false;
       chargeur = creerChargeur();
     },
