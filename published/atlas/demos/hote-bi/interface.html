@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interface optionnelle de la carte - légende, temps, historique d'un objet</title>
+<style>
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; color: #1f2933; }
+  header { padding: 10px 16px; border-bottom: 1px solid #cbd2d9; }
+  h1 { margin: 0; font-size: 17px; }
+  header p { margin: 2px 0 0; color: #52606d; font-size: 12.5px; }
+  atlas-bi { display: block; height: calc(100vh - 66px); min-height: 460px; }
+  output { font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Interface optionnelle : légende, curseur de temps, historique d'un objet</h1>
+  <p>Données <strong>synthétiques</strong>. Déclarées dans la scène (<code>interface: { legende: true, temps: true }</code>, une couche <code>type: "table"</code> et <code>bulle.liste</code>) : aucun code d'interface côté page. Cliquez un bâtiment : sa bulle montre ses dernières cotations. Dernier événement : <output id="dernier">aucun</output></p>
+</header>
+<atlas-bi id="carte" src="../../index.html"></atlas-bi>
+<script type="module">
+import '../../lib/bi/atlas-bi-element.js';
+const carte = document.getElementById('carte');
+// En développement, l'entrée d'Atlas est index_v7.html : ?atlas=../../index_v7.html
+const atlas = new URLSearchParams(location.search).get('atlas'); if (atlas) carte.setAttribute('src', atlas);
+const dernier = (t) => { document.getElementById('dernier').textContent = t; };
+carte.addEventListener('atlas-bi-select', (e) => dernier('select ' + JSON.stringify({ layer: e.detail.charge.layer, key: e.detail.charge.key })));
+carte.addEventListener('atlas-bi-action', (e) => dernier('action ' + e.detail.charge.actionId + ' sur ' + e.detail.charge.key));
+carte.addEventListener('atlas-bi-time', (e) => dernier('temps ' + e.detail.charge.valeur));
+carte.addEventListener('atlas-bi-erreur', (e) => dernier('erreur ' + e.detail.erreur.code));
+
+const carre = (x, y, d, id, props) => ({ type: 'Feature', id, properties: props, geometry: { type: 'Polygon', coordinates: [[[x, y], [x + d, y], [x + d, y + d], [x, y + d], [x, y]]] } });
+const batiments = [
+  carre(5.3700, 43.2960, 0.002, 1, { cle: 'B-01', nom: 'Bâtiment A', usage: 'bureau', surface: 120, annee: 2021 }),
+  carre(5.3730, 43.2960, 0.002, 2, { cle: 'B-02', nom: 'Bâtiment B', usage: 'atelier', surface: 480, annee: 2022 }),
+  carre(5.3760, 43.2960, 0.002, 3, { cle: 'B-03', nom: 'Bâtiment C', usage: 'bureau', surface: 900, annee: 2024 }),
+];
+const cotations = [
+  { id: 1, batiment: 'B-01', date: '2023-06-30', note: 8 }, { id: 2, batiment: 'B-01', date: '2024-03-10', note: 12 }, { id: 3, batiment: 'B-01', date: '2025-01-05', note: 15 },
+  { id: 4, batiment: 'B-02', date: '2025-02-01', note: 9 }, { id: 5, batiment: 'B-03', date: '2024-11-20', note: 17 },
+];
+const scene = {
+  temps: { champ: 'annee', mode: 'cumul', pas: 1, valeur: 2024 },
+  interface: { legende: true, temps: true },
+  layers: [
+    { id: 'batiments', name: 'Bâtiments', geometry_type: 'polygon', cle: 'cle',
+      style: { declarative: { kind: 'categorized', field: 'usage', stops: [{ value: 'bureau', color: '#0072b2', label: 'Bureau' }, { value: 'atelier', color: '#e69f00', label: 'Atelier' }] } },
+      bulle: { titre: '{nom}', champs: [{ champ: 'usage', libelle: 'Usage' }, { champ: 'surface', libelle: 'Surface (m²)', format: 'nombre' }],
+        actions: [{ id: 'fiche', libelle: 'Voir la fiche' }],
+        liste: { table: 'cotations', cle: 'batiment', tri: 'date', max: 3, titre: 'Cotations', champs: [{ champ: 'date', libelle: 'Date', format: 'date' }, { champ: 'note', libelle: 'Note' }] } } },
+    { id: 'cotations', name: 'Cotations', type: 'table' },
+  ],
+};
+await carte.setScene(scene, { batiments, cotations });
+await carte.fitTo('batiments');
+// Une cotation arrive : la ligne est créée, la bulle ouverte se met à jour sur place (sans rejouer la scène).
+let n = 6; window.ajouterCotation = (batiment, note) => carte.updateFeature('cotations', n++, { properties: { batiment, date: new Date().toISOString().slice(0, 10), note } });
+</script>
+</body>
+</html>

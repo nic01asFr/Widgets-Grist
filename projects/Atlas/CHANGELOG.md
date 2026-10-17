@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.26.0 — l'interface optionnelle de la carte : légende, curseur de temps, historique d'un objet
+
+- **Interface optionnelle** : `interface: { legende: true, temps: true }` dans le manifeste affiche une légende (d'après `getLegend`) et un curseur de temps avec lecture, dans la zone utile (jamais sous votre panneau, ni sur les crédits de la carte), aux couleurs de la charte. Modules `lib/bi/ui/`, environ 6 Ko gzip, importés à la demande : rien n'est chargé sans la déclaration. Invalide : dit dans `_avertissements._interface`.
+- **Légende ciblable** : `interface.legende.cible: true` fait de chaque classe un bouton à bascule dont le clic est dit à la page (événement `classe { layer, cle, libelle, active }`) ; la légende ne filtre rien. Sur une carte étroite (téléphone) elle se range en bas, repliée, comme une feuille.
+- **Tables liées** : une couche `type: "table"` (lignes sans géométrie fournies par la page) et `bulle.liste` montrent l'historique d'un objet dans sa bulle (jointure sur une clé, tri par date, jusqu'à 10 lignes). `updateFeature` sur une table corrige une ligne ou la crée, et la bulle ouverte se refait sur place. Demande de SURFAC²E.
+- **Démonstration** : `demos/hote-bi/interface.html`.
+- **Contrat 0.3, client et empreinte inchangés** : aucune commande ajoutée.
+
 ## 1.25.0 — la démonstration du canevas, un surlignage visible partout, des marges qui ne bloquent plus
 
 - **Démonstration** : `demos/hote-canevas/index.html` montre une application qui embarque le canevas d'Atlas : envoyer une scène, recevoir `select` et `hover`, masquer une couche, cadrer, saisir l'adresse d'un manifeste de dalles 3D, recharger sans fond de plan.

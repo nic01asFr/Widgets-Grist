@@ -64,6 +64,7 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   connexion: ['Passage en ligne ou hors ligne.', '{ etat, cause, automatique, fond }'],
   action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
   bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
+  classe: ["La personne a cliqué une classe de la légende optionnelle (interface.legende.cible: true) ; la légende ne filtre rien, l'hôte route.", "{ layer, cle, libelle, active }"],
   theme: ['La charte résolue a changé.', '{ version, entree, applique, derive, ignore, avertissements, a11y }'],
 });
 
@@ -104,6 +105,7 @@ export const GUIDE = Object.freeze([
   'Une ligne : `donnees="sites.geojson"` suffit, le manifeste est inféré (géométrie, identifiants, clé, couleurs par classe, filtre) et ce qui a été décidé est dit dans `inference` de atlas-bi-configure ; un manifeste explicite prime.',
   'Aux couleurs de votre page : `charte="herite"` lit couleurs et police de la page (ou les variables `--atlas-principal`, `--atlas-fond`, `--atlas-encre`, `--atlas-police`) et suit le mode sombre.',
   "Le canevas d'Atlas (interface, 3D, modèles) comme composant : `profil=\"complet\"` avec `src=\".../index.html\"` ; `setScene` y accepte aussi une scène Atlas 0.2.x (https, 4 Mo, 64 couches, `bbox` pour une couche distante) ; la carte seule (`bi.html`) reste le choix léger. Une couche `type: \"dalles3d\"` désigne une maquette en dalles 3D par l'adresse https de son manifeste de grille. `base=\"aucune\"` crée la carte sans aucun fond de plan (aucun service tiers).",
+  "Interface optionnelle : `interface: { legende: true, temps: true }` dans le manifeste affiche une légende (d'après getLegend) et un curseur de temps, thémés par la charte, sans code côté page ; une couche `type: \"table\"` et `bulle.liste` montrent l'historique d'un objet (lignes liées par clé, triées, mises à jour par updateFeature).",
   'Sans code : donnez manifeste (et donnees, charte, fond) en attributs ou en blocs <script type="application/json" data-atlas="…"> ; la carte se monte à la connexion et se cadre sur ses entités (cadrage="aucun" pour garder la caméra).',
   'Avec du code : attendez `await carte.pret`, puis `await carte.setScene(manifeste, donnees)` ; chaque commande du contrat est une méthode de l\'élément.',
   'Données : un tableau de Features GeoJSON par couche, avec un `id` ENTIER stable et unique dans toute la scène ; ordre des coordonnées [longitude, latitude].',

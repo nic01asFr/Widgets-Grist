@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.25.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.25.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.26.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.25.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.26.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -29,6 +29,7 @@ import { planDepuis } from '../charte/derivation.js';
 import { verifierPlan } from '../charte/verification.js';
 import { variablesInterface, appliquerVariables } from '../charte/interface.js';
 import { creerBulle, normaliserBulle } from './bulle.js';
+import { normaliserLignes, mettreAJour as mettreAJourLigne } from './tables.js';
 import { normaliserMarges, avecConfort, limiterPadding } from './marges.js';
 
 export const VERSION = '0.3';
@@ -56,15 +57,18 @@ export function attacher(map, opts = {}) {
   let marges = null;                 // zone utile : ce que l'hôte a posé sur les côtés de la carte (lib/bi/marges.js), persistant
   // Les marges sont passées en `padding` à CHAQUE déplacement (flyTo, fitBounds), jamais par `map.setPadding` : mesuré en navigateur le 16/10/2026 (MapLibre 5.6.1), `setPadding`
   // combiné à un `padding` de `fitBounds` compte la marge deux fois (une marge de 300 px retirait ~600 px : « Map cannot fit within canvas », la carte restait blanche).
-  const poserMarges = (m) => { marges = normaliserMarges(m); return marges; };
+  const poserMarges = (m) => { marges = normaliserMarges(m); if (uiEtat.zone) uiEtat.zone.ajuster(marges); return marges; };
   /** La taille du cadre de la carte, en pixels ; `connu` faux si la carte ne la dit pas (carte simulée). */
   const tailleCadre = () => { const c = typeof map.getContainer === 'function' ? map.getContainer() : null; return c && Number.isFinite(c.clientWidth) ? { w: c.clientWidth, h: c.clientHeight, connu: true } : { w: 0, h: 0, connu: false }; };
+  // l’interface optionnelle déclarée par la scène (`manifest.interface` : légende, curseur de temps), modules chargés À LA DEMANDE (lib/bi/ui/)
+  const uiEtat = { zone: null, legende: null, temps: null, minuterie: 0 };
   let bulleCtl = null, dernierClic = null;   // la bulle d'objet déclarée par l'hôte (lib/bi/bulle.js) ; `dernierClic` : le point cliqué, pour ancrer la bulle d'une ligne ou d'une surface
   // thème d'exécution = charte résolue + ce qui dépend du fond choisi (police des symboles du Plan IGN, voile)
   const poserTheme = () => {
     generation++; theme = { ...themes.theme, policeSymboles: modeFond === 'plan-ign' ? ['Source Sans Pro Bold'] : null };
     if (modeFond === 'voile' && !theme.lavis) theme.lavis = { couleur: theme.plan.fond || '#F7F7F7', opacite: 0.62 };
     if (bulleCtl) bulleCtl.actualiser();   // l'interface suit la charte
+    if (uiEtat.zone) uiEtat.zone.actualiser();
   };
   poserTheme();
   // Thème d'une couche : celui du composant, ou — si la couche porte sa surcharge (`style.charte`, niveau « couche » de la résolution) — le sien.
@@ -75,8 +79,9 @@ export function attacher(map, opts = {}) {
   };
   const emettre = (type, charge, origine) => { try { emetteur(type, charge, origine); } catch (e) { /* le transport ne doit pas casser la carte */ } for (const cb of ecouteurs.get(type) || []) cb(charge); };
   // La bulle d'un objet, déclarée par couche (`bulle` du manifeste) : ouverte par la sélection, fermée avec elle ; ses boutons reviennent à l'hôte (événement `action`).
+  const tables = new Map();   // id -> lignes : les tables liées de la scène (couches `type: "table"`), montrées par la bulle d’un objet
   bulleCtl = creerBulle({
-    map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
+    tables: () => tables, map, document: opts.document !== undefined ? opts.document : globalThis.document, emettre,
     creerPopup: opts.creerPopup || (() => new globalThis.maplibregl.Popup({ closeButton: false, closeOnClick: false, closeOnMove: false, maxWidth: '320px', offset: 14, className: 'atlas-bi-bulle-popup', focusAfterOpen: false })),
     variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables, marges: () => marges,
     quandFermee: () => { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } },
@@ -169,6 +174,7 @@ export function attacher(map, opts = {}) {
     const expr = expressionFiltreControles(c.layerLike);
     for (const id of c.ids) { const spec = map.getLayer(id); if (spec && spec.type !== 'fill-extrusion' && !id.startsWith(PREF + 'agg-')) map.setFilter(id, expr || null); }
     if (c.visuel.type === 'hex' || c.visuel.type === 'grille') recalculerAgregats(c);
+    planifierUi();
     admin.surVueChangee(c.id);
   }
   function recalculerAgregats(c) {
@@ -213,7 +219,63 @@ export function attacher(map, opts = {}) {
       let x = c.controles.find((k) => k.id === '__temps'); if (!x) { x = { id: '__temps', field: temps.champ, type: 'range', active: true, entier: true }; c.controles.push(x); }
       x.active = true; x.min = f.min; x.max = f.max; x.variant = 'range_between'; x.requireValue = true; appliquerVue(c);
     }
+    planifierUi();
     return { valeur: t, fenetre: f };
+  }
+  // ---------- interface optionnelle ----------
+  const etatTemps = () => ({ champ: temps.champ, min: temps.min, max: temps.max, valeur: temps.valeur, pas: temps.pas || 1, enLecture: !!(temps.lecture && temps.lecture.enCours()) });
+  function legendesVisibles() {
+    const sortie = [];
+    for (const c of couches.values()) {
+      if (c.visible === false || c.admin) continue;
+      try { sortie.push({ layer: c.id, titre: c.def.name || c.id, ...api.getLegend(c.id) }); } catch (e) { /* une couche sans légende n’en montre pas */ }
+    }
+    return sortie;
+  }
+  /** Redessine les modules d’interface (légende, temps) après un changement de vue, de visibilité, de temps ou de thème : regroupé, jamais à chaque appel. */
+  function planifierUi() {
+    if (!uiEtat.zone) return;
+    clearTimeout(uiEtat.minuterie);
+    uiEtat.minuterie = setTimeout(() => { try { if (uiEtat.legende) uiEtat.legende.rafraichir(); if (uiEtat.temps) uiEtat.temps.rafraichir(); } catch (e) { /* l’interface ne casse pas la carte */ } }, 30);
+  }
+  function detruireUi() {
+    clearTimeout(uiEtat.minuterie);
+    for (const k of ['legende', 'temps', 'zone']) { const m = uiEtat[k]; if (m && m.detruire) { try { m.detruire(); } catch (e) { /* déjà retiré */ } } uiEtat[k] = null; }
+  }
+  /** Monte les modules que la scène déclare (`interface: { legende, temps }`), à la demande ; ce qui est invalide est écarté ET dit. */
+  async function configurerUi(decl, avertissements) {
+    detruireUi();
+    if (decl === undefined || decl === null) return;
+    const dit = (m) => { avertissements._interface = [...(avertissements._interface || []), m]; };
+    if (typeof decl !== 'object' || Array.isArray(decl)) { dit('interface : un objet est attendu, ignorée'); return; }
+    const voulus = [];
+    for (const [k, v] of Object.entries(decl)) {
+      if (k !== 'legende' && k !== 'temps') { dit('interface : module « ' + String(k).slice(0, 30) + ' » inconnu (legende, temps), ignoré'); continue; }
+      if (v === false || v === undefined || v === null) continue;
+      if (v !== true && (typeof v !== 'object' || Array.isArray(v))) { dit('interface.' + k + ' : true ou un objet d’options attendu, ignoré'); continue; }
+      voulus.push(k);
+    }
+    if (!voulus.length) return;
+    const conteneur = typeof map.getContainer === 'function' ? map.getContainer() : null;
+    const doc = opts.document !== undefined ? opts.document : globalThis.document;
+    if (!conteneur || !doc) { dit('interface : la carte n’a pas de conteneur, ignorée'); return; }
+    const options = (k) => (decl[k] && typeof decl[k] === 'object' ? decl[k] : {});
+    try {
+      const { creerZone } = await import('./ui/zone.js');
+      uiEtat.zone = creerZone({ document: doc, conteneur, variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables }); uiEtat.zone.ajuster(marges);
+      if (voulus.includes('legende')) {
+        const { creerLegende } = await import('./ui/legende.js'); const o = options('legende');
+        uiEtat.legende = creerLegende({ document: doc, zone: uiEtat.zone, fournir: legendesVisibles, position: o.position, repliee: typeof o.repliee === 'boolean' ? o.repliee : undefined, cible: o.cible === true,
+          surClasse: (layer, cle, libelle, active) => emettre('classe', { layer, cle, libelle, active }, 'utilisateur') });
+      }
+      if (voulus.includes('temps')) {
+        const { creerTemps } = await import('./ui/temps.js'); const o = options('temps');
+        uiEtat.temps = creerTemps({ document: doc, zone: uiEtat.zone, etat: etatTemps, position: o.position,
+          poser: (v) => { poserTemps(v); emettre('time', { valeur: v, lecture: false }, 'utilisateur'); },
+          lire: () => api.play(), pauser: () => api.pause() });
+      }
+    } catch (e) { dit('interface : ' + String((e && e.message) || e)); detruireUi(); return; }
+    planifierUi();
   }
   function boucleLecture(ts) {
     if (!temps.lecture || !temps.lecture.enCours()) { temps.raf = null; return; }
@@ -322,13 +384,18 @@ export function attacher(map, opts = {}) {
   const api = {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
-      bulleCtl.fermer(); for (const c of couches.values()) demonter(c); couches.clear(); selection = null;
+      bulleCtl.fermer(); for (const c of couches.values()) demonter(c); couches.clear(); tables.clear(); selection = null;
       admin.pile.length = 0; const erreurs = {}, avertissements = {};
       if (manifest.marges !== undefined) { try { poserMarges(manifest.marges); } catch (e) { avertissements._scene = [String(e.message || e)]; } }
       attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
+        if (def && def.type === 'table') {   // une table liée : des lignes sans géométrie, fournies par l’hôte (`donnees.<id>`), jamais montées sur la carte
+          const r = normaliserLignes(donnees[def.id] !== undefined ? donnees[def.id] : def.lignes);
+          tables.set(def.id, r.lignes); if (r.avertissements.length) avertissements[def.id] = r.avertissements;
+          continue;
+        }
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
@@ -352,11 +419,12 @@ export function attacher(map, opts = {}) {
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
       configurerTemps(manifest); poserLavis();
-      const compte = Object.fromEntries([...couches].map(([id, c]) => [id, c.features.length]));
+      await configurerUi(manifest.interface, avertissements);
+      const compte = { ...Object.fromEntries([...couches].map(([id, c]) => [id, c.features.length])), ...Object.fromEntries([...tables].map(([id, l]) => [id, l.length])) };
       emettre('ready', { layers: compte, temps: temps.champ ? { champ: temps.champ, min: temps.min, max: temps.max, valeur: temps.valeur } : null, ...(Object.keys(erreurs).length ? { erreurs } : {}), ...(Object.keys(avertissements).length ? { avertissements } : {}) }, 'api');
       return { ...compte, ...(Object.keys(erreurs).length ? { _erreurs: erreurs } : {}), ...(Object.keys(avertissements).length ? { _avertissements: avertissements } : {}) };
     },
-    setLayerVisibility(id, visible) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); c.visible = !!visible; for (const l of c.ids) map.setLayoutProperty(l, 'visibility', visible ? 'visible' : 'none'); return visible; },
+    setLayerVisibility(id, visible) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); c.visible = !!visible; planifierUi(); for (const l of c.ids) map.setLayoutProperty(l, 'visibility', visible ? 'visible' : 'none'); return visible; },
     setFilter(controlId, valeur) { const r = majFiltre(controlId, valeur); emettre('filter', { controlId, value: valeur, ...r }, 'api'); return r; },
     setTime(v) { const r = poserTemps(v); emettre('time', { valeur: r.valeur, lecture: false }, 'api'); return r; },
     play(o = {}) { if (!temps.champ) throw new Error('aucun champ temporel'); const vals = valeursDuDomaine(temps.min, temps.max, temps.pas);
@@ -395,11 +463,13 @@ export function attacher(map, opts = {}) {
     /** La charte résolue, ce que l'hôte a donné, ce qui a été dérivé ou écarté, les avertissements chiffrés et l'état d'accessibilité. */
     getTheme() { return themes.lire(); },
     setVisual(id, v) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); const { style, ...vis } = v; if (style) c.def.style = style; demonter(c); c.visuel = { ...c.visuel, ...vis }; monter(c); if (!c.visible) api.setLayerVisibility(id, false); return c.visuel; },
-    updateFeature(layer, id, patch) { const c = couches.get(layer); const f = c && c.parId.get(id); if (!f) throw new Error('entité inconnue : ' + layer + '/' + id); if (patch.geometry) f.geometry = patch.geometry; if (patch.properties) f.properties = { ...f.properties, ...patch.properties }; map.getSource(idSrc(c)).setData({ type: 'FeatureCollection', features: c.features }); appliquerVue(c); return true; },
+    updateFeature(layer, id, patch) {
+      if (tables.has(layer)) { const { cree } = mettreAJourLigne(tables.get(layer), id, patch); bulleCtl.rafraichir(); return cree ? 'cree' : true; }   // une table liée : la ligne est corrigée, ou créée si l’identifiant est nouveau
+      const c = couches.get(layer); const f = c && c.parId.get(id); if (!f) throw new Error('entité inconnue : ' + layer + '/' + id); if (patch.geometry) f.geometry = patch.geometry; if (patch.properties) f.properties = { ...f.properties, ...patch.properties }; map.getSource(idSrc(c)).setData({ type: 'FeatureCollection', features: c.features }); appliquerVue(c); return true; },
     setEdition(layer, actif) { opts.edition = { couche: layer, actif }; return actif; },
     getLegend(layer) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.legende(c);
       if (c.visuel.type === 'etats' && c.visuel.etats) { const T = themeDe(c); return { layer: c.id, titre: c.def.name, ...legendeEtats(c.visuel, c.vue, (cc) => resoudre(cc, T)), agregat: c.agg || null }; } const m = modeleLegende(declaratifResolu(c.def.style?.declarative, themeDe(c)), c.vue, { cle: c.def.name }); const et = c.visuel.etats; if (et) for (const cl of m.classes) { const e = et[cl.cle]; if (e) cl.forme = e.forme; } return { layer: c.id, titre: c.def.name, ...m, agregat: c.agg || null }; },
-    getRows(layer, o = {}) { const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.lignes(c, o); return { layer: c.id, lignes: c.vue.map((f) => ({ id: f.id, ...f.properties })), legende: lignesLegende(api.getLegend(c.id)) }; },
+    getRows(layer, o = {}) { if (layer && tables.has(layer)) return { layer, lignes: tables.get(layer).map((l) => ({ ...l })) }; const c = layer ? couches.get(layer) : [...couches.values()][0]; if (!c) throw new Error('couche inconnue'); if (c.admin) return admin.lignes(c, o); return { layer: c.id, lignes: c.vue.map((f) => ({ id: f.id, ...f.properties })), legende: lignesLegende(api.getLegend(c.id)) }; },
     resize() { map.resize(); return true; },
     ...admin.api,
     /** Repli hors ligne : true (forcé), false (retour au fond précédent), 'auto' (détection : événement navigateur et échecs de tuiles). */
