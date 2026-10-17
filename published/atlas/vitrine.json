@@ -24,8 +24,8 @@
   },
   "journal": [
     {
-      "version": "v1.27.0",
-      "texte": "La carte sait maintenant servir de carte de sélection : une grille de cases qui suit la vue, colorée selon un taux, avec une étiquette sur chaque case, un curseur choisi par l’application et une mise à jour d’une seule couche sans tout recharger. Les arrondissements de Paris, Lyon et Marseille se demandent aussi dans la scène, et les maquettes 3D choisissent leur niveau de détail d’après la vraie position de la caméra."
+      "version": "v1.28.0",
+      "texte": "Les couches de lignes se dessinent à votre goût : largeur fixe ou qui suit un nombre (une route plus épaisse quand elle compte davantage), transparence, bouts arrondis. Une application cartographique alimentée en continu — la circulation et les bus de Rennes, lus sur les données ouvertes, en trois apparences — en est la démonstration, à ouvrir depuis la vitrine."
     },
     {
       "version": "v1.26.1",
@@ -268,6 +268,33 @@
           {
             "image": "cas-jour.jpg",
             "legende": "Le résultat sur la carte, de jour."
+          }
+        ]
+      },
+      {
+        "role": "Suivre",
+        "titre": "Une application cartographique alimentée en continu",
+        "format": "large",
+        "texte": "Rennes en direct lit deux flux de données ouvertes : l’état de la circulation (2 859 tronçons, renouvelé toutes les quelques minutes) et la position des bus du réseau STAR (toutes les 15 secondes). Rien n’est copié ni stocké : la page lit, la carte dessine. Les couleurs, l’épaisseur des routes, les bulles, les filtres et la recherche d’une voie sont ceux de l’application. Trois apparences (jour, nuit, contraste) montrent la carte reprenant le style de l’application, fond de plan compris. Une voie sélectionnée le reste quand les données se rafraîchissent, et la page se met en veille quand on change d’onglet. Côté code : une balise `<atlas-bi>`, une scène posée avec `setScene`, des filtres avec `setFilter` ; la page entière tient en 400 lignes, publiée avec Atlas (`demos/hote-direct`).",
+        "pourquoi": "Une carte vivante sans serveur à monter : les données restent chez leur producteur, à condition qu’il les publie en accès ouvert depuis une page.",
+        "exemple": "les routes de la métropole de Rennes colorées selon la circulation (fluide, dense, bloqué) et les bus en ligne selon leur ponctualité.",
+        "utilise": [
+          "Flux de données ouvertes",
+          "Couches rafraîchies en continu",
+          "Largeur des routes selon leur importance",
+          "Style repris de l’application (jour, nuit, contraste)",
+          "Filtres et recherche de l’application",
+          "Bulle d’information"
+        ],
+        "images": [
+          {
+            "image": "cas-direct.jpg",
+            "legende": "Capture du 17 octobre à 21 h 28. L’application lit les données au moment où vous l’ouvrez : vous verrez la circulation de cet instant, pas celle de la capture.",
+            "demo": {
+              "url": "../../atlas/demos/hote-direct/index.html",
+              "libelle": "Ouvrir l’application en direct",
+              "titre": "Données réelles, lues en direct à l’ouverture"
+            }
           }
         ]
       },
@@ -633,26 +660,6 @@
       },
       {
         "role": "Partager",
-        "titre": "La carte dans l’application de votre équipe",
-        "format": "large",
-        "texte": "Un tableau de bord ou un outil de suivi que votre équipe a déjà peut afficher la carte d’Atlas dans ses pages. L’application garde ses données : elle les envoie à la carte, qui les montre en points, en surfaces, ou colorées par commune, département ou région à partir de son propre tableau. Elle filtre, avance dans le temps, et sa liste et la carte se suivent : toucher un site dans l’une le sélectionne dans l’autre. Les couleurs et la légende restent celles de l’application, et seules les applications que vous avez déclarées peuvent piloter la carte. Pendant le chargement, un écran neutre tient la place : on ne voit jamais la carte avant que l’application l’ait réglée.",
-        "pourquoi": "Pas de carte à refaire dans chaque application, et pas de données à recopier dans Grist pour les voir sur une carte.",
-        "exemple": "une page de démonstration à données fictives : un tableau par département, coloré en cinq classes sur les contours de l’IGN, avec une liste de sites qui suit la carte.",
-        "utilise": [
-          "Application de l’équipe",
-          "Couleur par territoire",
-          "Filtres et temps",
-          "Sélection partagée avec la liste"
-        ],
-        "images": [
-          {
-            "image": "cas-application.jpg",
-            "legende": "La page de démonstration : la carte d’Atlas dans une application, colorée par département à partir du tableau de l’application. Données fictives ; contours de l’IGN."
-          }
-        ]
-      },
-      {
-        "role": "Partager",
         "titre": "Une scène qui se partage",
         "format": "large",
         "texte": "Dans Grist, on partage le document : la carte suit, avec les droits du document. Pour une page, l’intégration en iframe prend deux formes : `?embed=true`, page minimale en lecture forcée, et `?style=singlePage`, où les droits de la personne connectée s’appliquent ; `?navbar=false` retire la barre. Une scène peut aussi se publier seule, sous forme de manifeste, et s’ouvrir par son adresse (`?scene=`), sans document Grist.",
@@ -744,7 +751,7 @@
           {
             "titre": "Dans une application de votre organisation",
             "etiquette": "Sans document",
-            "texte": "Atlas peut être la carte d’un tableau de bord ou d’un outil de suivi que votre équipe a déjà : l’application affiche la carte dans ses pages, la colore par commune, par département ou par région à partir de son propre tableau, la filtre, et réagit à l’objet que la personne touche. Les données, les couleurs et la légende restent à l’application ; seules les applications que vous avez déclarées une à une peuvent piloter la carte. Une page de démonstration à données fictives montre le résultat."
+            "texte": "Atlas peut être la carte d’un tableau de bord ou d’un outil de suivi que votre équipe a déjà : l’application affiche la carte dans ses pages, la colore par commune, par département ou par région à partir de son propre tableau, la filtre, et réagit à l’objet que la personne touche. Les données, les couleurs et la légende restent à l’application ; seules les applications que vous avez déclarées une à une peuvent piloter la carte. Une application d’exemple, « Rennes en direct », en montre le résultat sur des données ouvertes lues en direct."
           },
           {
             "titre": "L’application Android",
@@ -768,7 +775,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.27.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.28.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

@@ -610,10 +610,26 @@ ${l.map((c) => `    <div><b>${echapper(c.valeur)}</b><span>${echapper(c.libelle)
  * Le cadre de telephone n'est pas un ornement — sans lui, une capture verticale
  * se lit comme une image mal recadree au milieu du texte.
  */
-function blocContextes(produit) {
+function blocContextes(produit, base) {
   const l = produit.contextes || [];
   if (!l.length) return '';
-  const figure = (i, mobile) => (mobile
+  // Une capture peut porter une demonstration vivante (`demo: { url, libelle }`) : la vignette tient lieu d'apercu, le clic lance la page
+  // dans un cadre, comme la demonstration de fin de page (`cadre`). Une adresse locale qui ne mene a rien est ecartee et dite : une
+  // demonstration annoncee puis vide est pire qu'une capture seule.
+  const demoValide = (d) => {
+    if (!d || !d.url) return false;
+    if (/^https?:/.test(d.url) || !base) return true;
+    const local = path.join(base, d.url.split(/[?#]/)[0]);
+    if (fs.existsSync(local)) return true;
+    console.error(`  demonstration de capture ignoree — page absente : ${d.url}`);
+    return false;
+  };
+  const figure = (i, mobile) => (demoValide(i.demo)
+    ? `        <figure class="large vivante">
+${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libelle || 'Essayer la démonstration', titre: i.demo.titre || '' })}
+          <figcaption>${enLigne(i.legende)}</figcaption>
+        </figure>`
+    : mobile
     ? `        <figure class="telephone">
           <div class="ecran"><img src="${echapper(i.image)}" alt="${echapper(i.legende)}" loading="lazy"></div>
           <figcaption>${enLigne(i.legende)}</figcaption>
@@ -856,6 +872,15 @@ section { margin: 0 0 3rem; }
 .cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cadre iframe { display: block; width: 100%; height: 100%; border: 0; }
 .cadre.vivant { aspect-ratio: auto; height: 70vh; min-height: 26rem; }
+/* Une demonstration d'application (figure vivante) a besoin de largeur : la colonne de la page la ferait tenir sur un telephone, carte
+   hors de vue. Lancee, elle passe au premier plan, presque plein ecran, et se referme (bouton ou Echap). */
+.cadre.plein { position: fixed; inset: 3vh 3vw; z-index: 60; height: auto; min-height: 0; border-radius: 10px; background: #fff; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 100vmax rgba(20, 16, 12, .62); }
+.cadre.plein iframe { flex: 1; min-height: 0; height: auto; }
+.barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .4rem .6rem .4rem .9rem; border-bottom: 1px solid #ddd5c8;
+  background: #fff; color: #1f2933; font-size: .85rem; border-radius: 10px 10px 0 0; }
+.fermer { flex: none; min-height: 44px; padding: .35rem 1rem; border: 1px solid #1f2933; border-radius: 6px; background: #fff; color: #1f2933; font: inherit; font-size: .85rem; cursor: pointer; }
+.fermer:hover { background: #eef2f6; }
 .lancer { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
   padding: .8rem 1.4rem; border-radius: 999px; border: 0; cursor: pointer;
   font: inherit; font-weight: 600; color: #fff; background: var(--accent);
@@ -892,8 +917,8 @@ function apercuDe(id) {
  * payer pour rien. L'image tient lieu d'apercu, le clic lance, a cet instant
  * seulement.
  */
-function cadre({ url, image, alt, libelle = 'Lancer l’aperçu' }) {
-  return `    <div class="cadre" data-widget="${echapper(url)}">
+function cadre({ url, image, alt, libelle = 'Lancer l’aperçu', titre = '' }) {
+  return `    <div class="cadre" data-widget="${echapper(url)}"${titre ? ` data-titre="${echapper(titre)}"` : ''}>
       <img src="${echapper(image)}" alt="${echapper(alt)}" loading="lazy">
       <button type="button" class="lancer">${echapper(libelle)}</button>
     </div>`;
@@ -908,9 +933,11 @@ function cadre({ url, image, alt, libelle = 'Lancer l’aperçu' }) {
  */
 const JS_CADRES = `
 <script>
-  document.querySelectorAll('.cadre').forEach(function (cadre) {
+  function armer(cadre) {
     var bouton = cadre.querySelector('.lancer');
     if (!bouton) return;
+    var origine = cadre.innerHTML;
+    var grand = !!cadre.closest('figure.vivante');
     bouton.addEventListener('click', function () {
       var f = document.createElement('iframe');
       f.src = cadre.dataset.widget;
@@ -920,7 +947,33 @@ const JS_CADRES = `
       cadre.innerHTML = '';
       cadre.appendChild(f);
       cadre.classList.add('vivant');
+      if (!grand) return;
+      cadre.classList.add('plein');
+      var barre = document.createElement('div'); barre.className = 'barre';
+      var libelleDemo = cadre.dataset.titre || 'Démonstration, données fictives';
+      var titre = document.createElement('span'); titre.textContent = libelleDemo; barre.appendChild(titre);
+      f.title = libelleDemo; cadre.setAttribute('role', 'dialog'); cadre.setAttribute('aria-modal', 'true'); cadre.setAttribute('aria-label', libelleDemo);
+      var garde = function (e) { if (!cadre.contains(e.target)) x.focus(); };   // tant que la démonstration est ouverte, le focus ne sort pas du cadre
+      document.addEventListener('focusin', garde);
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'fermer'; x.textContent = 'Fermer';
+      barre.appendChild(x);
+      x.addEventListener('click', function () {
+        cadre.classList.remove('vivant', 'plein');
+        cadre.removeAttribute('role'); cadre.removeAttribute('aria-modal'); cadre.removeAttribute('aria-label');
+        document.removeEventListener('focusin', garde);
+        cadre.innerHTML = origine;
+        armer(cadre);
+        var relancer = cadre.querySelector('.lancer'); if (relancer) relancer.focus();   // le focus revient au bouton qui a ouvert la démonstration
+      });
+      cadre.insertBefore(barre, f);
+      x.focus();
     });
+  }
+  document.querySelectorAll('.cadre').forEach(armer);
+  document.addEventListener('keydown', function (e) {
+    var x = e.key === 'Escape' && document.querySelector('.cadre.plein .fermer');
+    if (x) x.click();
   });
 </` + `script>`;
 
@@ -1033,7 +1086,7 @@ function rendreProjet(p, maintenant, base = '') {
 
   const ap = sectionApercu(p, image);
   if (ap) sections.push(ap);
-  for (const bloc of [blocChiffres(produit), blocContextes(produit)]) if (bloc) sections.push(bloc);
+  for (const bloc of [blocChiffres(produit), blocContextes(produit, path.join(PUBLIE, 'w', p.id))]) if (bloc) sections.push(bloc);
 
   const dm = sectionDemo(p, PUBLIE);
   if (dm) sections.push(dm);

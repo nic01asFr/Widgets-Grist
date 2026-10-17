@@ -32,7 +32,13 @@
   #etat { font-weight: 600; }
   .ko { color: #b3261e; }
   .note { color: var(--texte-2); font-size: 12px; }
-  @media (max-width: 760px) { main { grid-template-columns: 1fr; grid-template-rows: auto 60vh; height: auto; } aside { border-right: 0; border-bottom: 1px solid var(--trait); } }
+  /* Téléphone : la carte d'abord (c'est ce qu'on vient voir), les réglages dessous ; la phrase d'introduction tient sur deux lignes. */
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; min-height: 0; }
+    main > #carte, main > atlas-bi { order: -1; height: 62vh; }
+    aside { border-right: 0; border-top: 1px solid var(--trait); }
+    header { padding: 8px 12px; } header p { font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  }
 </style>
 </head>
 <body>

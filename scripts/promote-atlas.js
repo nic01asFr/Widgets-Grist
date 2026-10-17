@@ -284,7 +284,7 @@ for (const d of DEMOS) {
  * rien d'autre. Elles importent `../../lib/bi/...` et ouvrent `../../index.html` : relatifs a `published/atlas/demos/<hote>/`.
  */
 let fichiersHote = 0;
-for (const nomHote of ['hote-bi', 'hote-canevas']) {
+for (const nomHote of ['hote-bi', 'hote-canevas', 'hote-direct']) {
   const hoteSrc = path.join(src, 'demos', nomHote);
   const hotePub = path.join(pub, 'demos', nomHote);
   if (!fs.existsSync(hoteSrc)) continue;

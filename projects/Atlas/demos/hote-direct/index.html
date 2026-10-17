@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rennes en direct - une application cartographique alimentée en continu</title>
+<style>
+  :root {
+    --fond: #f6f4ef; --surface: #ffffff; --encre: #16212b; --doux: #5d6b78; --trait: #dcd8cf; --marque: #0f5c63; --marque-clair: #dff0ef;
+    --fluide: #2a9d6f; --dense: #cf7f00; --bloque: #d62839; --inconnu: #8e969f; --alerte: #8a1c28; --focus: #1d4ed8;
+    --atlas-principal: var(--marque); --atlas-secondaire: #7a4b1f; --atlas-fond: var(--surface); --atlas-encre: var(--encre); --atlas-police: sans;
+    --police: system-ui, 'Segoe UI', Roboto, sans-serif;
+  }
+  /* Trois apparences, décrites par leurs jetons : la carte (couleurs, légende, bulles) lit la page et les suit (charte="herite"). */
+  [data-ds="nuit"] { --alerte: #ff8a96; --focus: #8ab4ff; --fond: #12161f; --surface: #1b212d; --encre: #e8ecf3; --doux: #a3adbf; --trait: #323b4c; --marque: #7cc4ff; --marque-clair: #1f3a4d; --atlas-secondaire: #ffb86b; color-scheme: dark; }
+  [data-ds="contraste"] { --focus: #000000; --fond: #ffffff; --surface: #ffffff; --encre: #000000; --doux: #262626; --trait: #000000; --marque: #0027b3; --marque-clair: #dfe6ff; --atlas-secondaire: #a1002a; --police: Verdana, Tahoma, sans-serif; --atlas-police: lisible; }
+  [data-ds="nuit"] .puce, [data-ds="nuit"] select, [data-ds="nuit"] input[type=search] { background: var(--surface); color: var(--encre); }
+  [data-ds="nuit"] .puce[aria-pressed="false"] { background: #151a23; }
+  [data-ds="nuit"] .resultats button { color: var(--encre); }
+  .apparence { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; flex-wrap: wrap; }
+  .apparence > span { font-size: 12px; color: var(--doux); margin-right: 2px; }
+  .apparence button { padding: 4px 11px; border: 1.5px solid var(--trait); border-radius: 999px; background: transparent; color: var(--encre); font: inherit; font-size: 12.5px; cursor: pointer; }
+  .apparence button[aria-pressed="true"] { background: var(--marque); border-color: var(--marque); color: var(--fond); font-weight: 700; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 14px/1.45 var(--police); color: var(--encre); background: var(--fond); }
+  .app { display: grid; grid-template-columns: 372px 1fr; height: 100%; }
+  .zone-carte { position: relative; min-width: 0; height: 100%; }
+  atlas-bi { display: block; min-width: 0; height: 100%; }
+  .credit { position: absolute; left: 10px; bottom: 8px; z-index: 3; margin: 0; padding: 3px 9px; border-radius: 8px; background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--doux); font-size: 11.5px; max-width: calc(100% - 70px); }
+  .panneau { overflow: auto; padding: 18px 18px 14px; background: var(--fond); border-right: 1px solid var(--trait); }
+  .marque { display: flex; align-items: center; justify-content: space-between; gap: 6px 10px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 22px; letter-spacing: -.01em; white-space: nowrap; }
+  .direct { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--marque-clair); color: var(--marque); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .direct i { width: 8px; height: 8px; border-radius: 50%; background: var(--fluide); animation: pouls 1.6s ease-in-out infinite; }
+  .direct.coupe { background: #f6e0e0; color: #8a1c28; } .direct.coupe i { background: var(--bloque); animation: none; }
+  @keyframes pouls { 50% { transform: scale(.55); opacity: .5; } }
+  @media (prefers-reduced-motion: reduce) { .direct i { animation: none; } }
+  .sous { margin: 4px 0 14px; color: var(--doux); }
+  .bloc { margin: 0 0 12px; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--trait); }
+  .bloc h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--doux); display: flex; justify-content: space-between; align-items: baseline; }
+  .bloc h2 span { font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .barre { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: #eceff2; margin-bottom: 10px; }
+  .barre i { display: block; height: 100%; transition: width .6s ease; }
+  .puces { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .puce { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1.5px solid var(--trait); border-radius: 999px; background: #fff; color: var(--encre); font: inherit; font-size: 13px; cursor: pointer; }
+  .puce i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .puce b { font-variant-numeric: tabular-nums; }
+  .puce[aria-pressed="false"] { opacity: .45; background: #f3f3f1; }
+  .puce:focus-visible, select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .chiffre { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .chiffre b { font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .chiffre span { color: var(--doux); }
+  .frais { margin: 10px 0 0; font-size: 12.5px; color: var(--doux); }
+  .frais.vieux { color: var(--alerte); font-weight: 600; }
+  select, input[type=search] { width: 100%; padding: 8px 10px; border: 1.5px solid var(--trait); border-radius: 10px; background: #fff; font: inherit; color: var(--encre); margin-top: 10px; }
+  .resultats { margin: 8px 0 0; padding: 0; list-style: none; }
+  .resultats button { width: 100%; text-align: left; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; font: inherit; color: var(--encre); cursor: pointer; }
+  .resultats button:hover { background: var(--marque-clair); }
+  .sources { margin: 14px 2px 0; font-size: 12px; color: var(--doux); }
+  .sources a { color: inherit; }
+  .poignee { display: none; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    .panneau { order: 2; border-right: 0; border-top: 1px solid var(--trait); padding: 6px 14px 10px; }
+    .panneau.ouvert { max-height: 66vh; }
+    /* Replié : le titre, l'état de la circulation et le nombre de bus ; le reste se déplie */
+    .panneau:not(.ouvert) .apparence, .panneau:not(.ouvert) .puces, .panneau:not(.ouvert) .frais, .panneau:not(.ouvert) select, .panneau:not(.ouvert) #bloc-rue, .panneau:not(.ouvert) .sous, .panneau:not(.ouvert) .sources { display: none; }
+    .panneau:not(.ouvert) .bloc h2 { margin-bottom: 6px; } .panneau:not(.ouvert) .barre { margin-bottom: 0; } .panneau:not(.ouvert) .chiffre { margin-bottom: 0; } .chiffre b { font-size: 26px; }
+    .zone-carte { order: 1; }
+    .poignee { min-height: 44px; } .apparence button { min-height: 44px; padding-inline: 14px; } .puce { min-height: 40px; } select, input[type=search] { min-height: 44px; }
+    h1 { font-size: 18px; } .sous, .sources { display: none; } .panneau.ouvert .sous, .panneau.ouvert .sources { display: block; }
+    .poignee { display: block; width: 100%; margin: 2px 0 8px; padding: 4px; border: 0; background: transparent; color: var(--doux); font: inherit; font-size: 12px; cursor: pointer; }
+    .bloc { padding: 10px 12px; margin-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panneau" id="panneau" aria-label="Tableau de bord">
+    <button type="button" class="poignee" id="poignee" aria-expanded="false">Afficher le détail &#9650;</button>
+    <div class="marque"><h1>Rennes en direct</h1><span class="direct" id="direct" role="status"><i></i><span id="direct-txt">En direct</span></span></div>
+    <p class="sous">La circulation et les bus du réseau STAR, lus en continu sur les données ouvertes de la métropole.</p>
+    <div class="apparence" role="group" aria-label="Apparence de l’application"><span>Apparence</span><button type="button" data-apparence="" aria-pressed="true">Jour</button><button type="button" data-apparence="nuit" aria-pressed="false">Nuit</button><button type="button" data-apparence="contraste" aria-pressed="false">Contraste</button></div>
+
+    <section class="bloc" aria-labelledby="t-trafic">
+      <h2 id="t-trafic">Circulation <span id="trafic-total"></span></h2>
+      <div class="barre" id="barre" role="img" aria-label="Part de chaque état de la circulation"></div>
+      <ul class="puces" id="puces-trafic"></ul>
+      <p class="frais" id="frais-trafic">Chargement des mesures…</p>
+    </section>
+
+    <section class="bloc" aria-labelledby="t-bus">
+      <h2 id="t-bus">Bus STAR <span id="bus-total"></span></h2>
+      <div class="chiffre"><b id="bus-n">–</b><span id="bus-sous">bus en ligne</span></div>
+      <ul class="puces" id="puces-bus"></ul>
+      <select id="ligne" aria-label="Ligne de bus"><option value="">Toutes les lignes</option></select>
+      <p class="frais" id="frais-bus">Chargement des positions…</p>
+    </section>
+
+    <section class="bloc" id="bloc-rue" aria-labelledby="t-rue">
+      <h2 id="t-rue">Trouver une voie</h2>
+      <input id="rue" type="search" placeholder="Une voie du réseau principal (rocade, avenue…)" aria-label="Nom d'une voie du réseau principal" autocomplete="off">
+      <ul class="resultats" id="resultats" aria-live="polite"></ul>
+    </section>
+
+    <p class="sources">Données ouvertes en direct, rafraîchies tant que cette page est ouverte : <a href="https://data.rennesmetropole.fr/explore/dataset/etat-du-trafic-en-temps-reel/" target="_blank" rel="noopener">Rennes Métropole, état du trafic</a> et <a href="https://data.explore.star.fr/explore/dataset/tco-bus-vehicules-position-tr/" target="_blank" rel="noopener">STAR, position des bus</a> (ODbL). Fond de carte : OpenStreetMap.</p>
+  </aside>
+  <div class="zone-carte"><atlas-bi id="carte" src="../../index.html" charte="herite" fond="plan" evenements-api aria-label="Carte de Rennes en direct"></atlas-bi><p class="credit">Données : Rennes Métropole, STAR (ODbL) · © contributeurs OpenStreetMap</p></div>
+</div>
+
+<script type="module">
+import '../../lib/bi/atlas-bi-element.js';
+
+const $ = (id) => document.getElementById(id);
+const carte = $('carte');
+// En développement, l'entrée d'Atlas est index_v7.html : ?atlas=../../index_v7.html
+const atlas = new URLSearchParams(location.search).get('atlas'); if (atlas) carte.setAttribute('src', atlas);
+
+// ---- Les deux flux : des données ouvertes, lues depuis la page (CORS ouvert), rien n'est embarqué ici ----
+const BASE_TRAFIC = 'https://data.rennesmetropole.fr/api/explore/v2.1/catalog/datasets/etat-du-trafic-en-temps-reel';
+const URL_TRAFIC = BASE_TRAFIC + '/exports/geojson?select=' + ['id_rva_troncon_fcd_v1_1', 'denomination', 'trafficstatus', 'averagevehiclespeed', 'vitesse_maxi', 'vehicleprobemeasurement', 'hierarchie', 'datetime', 'geo_shape'].join('%2C');
+const URL_SONDE = BASE_TRAFIC + '/records?limit=1&select=datetime';
+// Les bus : seulement ceux « En ligne », et les champs utiles (460 véhicules publiés, la plupart hors service : 3 Ko au lieu de 116 Ko)
+const URL_BUS = 'https://data.explore.star.fr/api/explore/v2.1/catalog/datasets/tco-bus-vehicules-position-tr/exports/geojson?lang=fr&timezone=Europe%2FParis&select='
+  + ['idbus', 'nomcourtligne', 'destination', 'ecartsecondes', 'etat', 'coordonnees'].join('%2C') + '&where=etat%3D%22En%20ligne%22';
+const PERIODE_SONDE_S = 45, PERIODE_BUS_S = 15;
+
+const STATUTS = [
+  { id: 'fluide', libelle: 'Fluide', couleur: 'var(--fluide)', hex: '#2a9d6f' },
+  { id: 'dense', libelle: 'Dense', couleur: 'var(--dense)', hex: '#cf7f00' },
+  { id: 'bloque', libelle: 'Bloqué', couleur: 'var(--bloque)', hex: '#d62839' },
+  { id: 'inconnu', libelle: 'Pas de mesure', couleur: 'var(--inconnu)', hex: '#8e969f' },
+];
+const PONCTUALITE = [
+  { id: 'heure', libelle: 'À l’heure', hex: '#2563eb' },
+  { id: 'retard', libelle: 'Retard', hex: '#7c3aed' },
+  { id: 'fort', libelle: 'Gros retard', hex: '#be185d' },
+  { id: 'avance', libelle: 'En avance', hex: '#0891b2' },
+  { id: 'inconnu', libelle: 'Horaire inconnu', hex: '#8c96a3' },
+];
+const EPAISSEUR = { 'Réseau national': 1, 'Réseau d\'armature': 0.85, 'Réseau d\'appui': 0.7, 'Réseau de distribution principale': 0.5, 'Réseau de distribution secondaire': 0.3 };
+const STATUT_DE = { freeFlow: 'fluide', heavy: 'dense', congested: 'bloque', impossible: 'bloque' };
+const libelleStatut = (id) => (STATUTS.find((s) => s.id === id) || STATUTS[3]).libelle;
+
+const FUSEAU = 'Europe/Paris';   // l'heure de la ville, pas celle du navigateur de la personne
+const hhmm = (d) => d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: FUSEAU });
+const dureeTexte = (s) => (s < 90 ? Math.max(0, Math.round(s)) + ' s' : s < 5400 ? Math.round(s / 60) + ' min' : Math.round(s / 3600) + ' h');
+const pluriel = (n, un, plusieurs) => n.toLocaleString('fr-FR') + ' ' + (n > 1 ? plusieurs : un);
+const sansAccent = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function normaliserTrafic(g) {
+  return g.features.map((f) => {
+    const p = f.properties; const statut = STATUT_DE[p.trafficstatus] || 'inconnu';
+    return {
+      type: 'Feature', id: p.id_rva_troncon_fcd_v1_1, geometry: f.geometry,
+      properties: {
+        ref: p.id_rva_troncon_fcd_v1_1, nom: p.denomination || 'Voie sans nom', statut, statutLibelle: libelleStatut(statut), epaisseur: EPAISSEUR[p.hierarchie] ?? 0.5,
+        vitesseTexte: statut === 'inconnu' ? 'pas de mesure en ce moment' : Math.round(p.averagevehiclespeed) + ' km/h (limite ' + Math.round(p.vitesse_maxi) + ')',
+        sondesTexte: p.vehicleprobemeasurement > 0 ? p.vehicleprobemeasurement + ' véhicule(s) mesuré(s)' : 'aucun véhicule mesuré',
+      },
+    };
+  });
+}
+// Un seuil, partagé par le texte de la bulle et le comptage : à l'heure = moins d'une minute d'écart ; un horaire non communiqué n'est pas « à l'heure »
+function normaliserBus(g) {
+  return g.features.filter((f) => f.geometry && [].concat(f.properties.etat).includes('En ligne')).map((f) => {
+    const p = f.properties, e = p.ecartsecondes;
+    const ponct = e == null ? 'inconnu' : e < -60 ? 'avance' : e <= 60 ? 'heure' : e <= 300 ? 'retard' : 'fort';
+    const ecartTexte = e == null ? 'horaire non communiqué' : Math.abs(e) <= 60 ? 'à l’heure' : (e > 0 ? dureeTexte(e) + ' de retard' : dureeTexte(-e) + ' d’avance');
+    return { type: 'Feature', id: p.idbus, geometry: f.geometry, properties: { ref: p.idbus, ligne: p.nomcourtligne || '?', destination: p.destination || '…', ponctualite: ponct, ecartTexte } };
+  });
+}
+
+// ---- La scène : deux couches, un style choisi par la page, des bulles en français ----
+const COUCHE_TRAFIC = {
+  id: 'trafic', name: 'Circulation', geometry_type: 'line', cle: 'ref',
+  visuel: { largeur: { champ: 'epaisseur', min: 0, max: 1, lMin: 1.2, lMax: 4.4 }, opacite: 0.92 },
+  style: { declarative: { kind: 'categorized', field: 'statut', stops: STATUTS.map((s) => ({ value: s.id, label: s.libelle, color: s.hex })) } },
+  controls: [{ id: 'f-statut', field: 'statut', type: 'select' }],
+  bulle: { titre: '{nom}', champs: [{ champ: 'statutLibelle', libelle: 'Circulation' }, { champ: 'vitesseTexte', libelle: 'Vitesse moyenne' }, { champ: 'sondesTexte', libelle: 'Mesures' }] },
+};
+const COUCHE_BUS = {
+  id: 'bus', name: 'Bus STAR', geometry_type: 'point', cle: 'ref', visuel: { type: 'cercles', rayon: 8 },
+  style: { declarative: { kind: 'categorized', field: 'ponctualite', stops: PONCTUALITE.map((s) => ({ value: s.id, label: s.libelle, color: s.hex })) } },
+  controls: [{ id: 'f-ponct', field: 'ponctualite', type: 'select' }, { id: 'f-ligne', field: 'ligne', type: 'select' }],
+  bulle: { titre: 'Ligne {ligne} vers {destination}', champs: [{ champ: 'ecartTexte', libelle: 'Horaire' }] },
+};
+
+// ---- État de la page ----
+const etat = { trafic: [], bus: [], dateTrafic: null, lectureBus: null, selection: null, filtres: { statut: new Set(STATUTS.map((s) => s.id)), ponct: new Set(PONCTUALITE.map((s) => s.id)), ligne: '' } };
+carte.addEventListener('atlas-bi-select', (e) => { const c = e.detail.charge || {}; etat.selection = c.featureId == null ? null : { layer: c.layer, id: c.featureId }; });
+
+// ---- Tableau de bord : les boutons sont créés UNE fois, ensuite on ne met à jour que les textes (le focus clavier ne saute plus à chaque lecture) ----
+function construirePuces(zone, liste, ensemble, controle) {
+  const refs = {};
+  for (const s of liste) {
+    const li = document.createElement('li'), b = document.createElement('button'), puce = document.createElement('i'), nom = document.createElement('span'), n = document.createElement('b');
+    b.type = 'button'; b.className = 'puce'; b.setAttribute('aria-pressed', 'true'); puce.style.background = s.couleur || s.hex; nom.textContent = ' ' + s.libelle + ' '; n.textContent = '0';
+    b.append(puce, nom, n); li.append(b); zone.append(li); refs[s.id] = { b, n };
+    b.addEventListener('click', async () => {
+      if (ensemble.has(s.id)) ensemble.delete(s.id); else ensemble.add(s.id);
+      b.setAttribute('aria-pressed', String(ensemble.has(s.id)));
+      await carte.setFilter(controle, ensemble.size === liste.length ? null : [...ensemble]);
+    });
+  }
+  return refs;
+}
+const pucesTrafic = construirePuces($('puces-trafic'), STATUTS, etat.filtres.statut, 'f-statut');
+const pucesBus = construirePuces($('puces-bus'), PONCTUALITE, etat.filtres.ponct, 'f-ponct');
+const segments = STATUTS.map((s) => { const i = document.createElement('i'); i.style.background = s.couleur; $('barre').append(i); return i; });
+let signatureLignes = null;
+
+function dessinerTrafic() {
+  const n = etat.trafic.length, par = Object.fromEntries(STATUTS.map((s) => [s.id, 0])); for (const f of etat.trafic) par[f.properties.statut]++;
+  STATUTS.forEach((s, k) => { segments[k].style.width = (n ? (100 * par[s.id]) / n : 0) + '%'; pucesTrafic[s.id].n.textContent = par[s.id].toLocaleString('fr-FR'); });
+  $('trafic-total').textContent = n ? pluriel(n, 'tronçon', 'tronçons') : '';
+  $('barre').setAttribute('aria-label', n ? 'Circulation : ' + STATUTS.map((s) => Math.round((100 * par[s.id]) / n) + ' % ' + s.libelle.toLowerCase()).join(', ') : 'Circulation : mesures indisponibles');
+  if (!n && !etat.dateTrafic) $('frais-trafic').textContent = 'Mesures indisponibles pour le moment.';
+}
+function dessinerBus() {
+  const n = etat.bus.length, par = Object.fromEntries(PONCTUALITE.map((s) => [s.id, 0])); for (const f of etat.bus) par[f.properties.ponctualite]++;
+  PONCTUALITE.forEach((s) => { pucesBus[s.id].n.textContent = par[s.id]; });
+  const connus = n - par.inconnu;
+  $('bus-n').textContent = etat.lectureBus ? n.toLocaleString('fr-FR') : '–';
+  $('bus-sous').textContent = !etat.lectureBus ? 'positions indisponibles pour le moment'
+    : !n ? 'bus en ligne : le réseau STAR ne circule pas à cette heure'
+    : (n > 1 ? 'bus en ligne' : 'bus en ligne') + (connus ? ' · ' + Math.round((100 * par.heure) / connus) + ' % à l’heure (horaires connus)' : ' · horaires non communiqués');
+  $('bus-total').textContent = n ? pluriel(new Set(etat.bus.map((f) => f.properties.ligne)).size, 'ligne', 'lignes') : '';
+  const sel = $('ligne'), lignes = [...new Set(etat.bus.map((f) => f.properties.ligne))].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
+  const voulu = etat.filtres.ligne, signature = lignes.join('|') + '#' + voulu;
+  if (signature !== signatureLignes) {   // la liste ne se refait que si les lignes changent
+    signatureLignes = signature; sel.textContent = ''; sel.append(new Option('Toutes les lignes', ''));
+    for (const l of lignes) sel.append(new Option('Ligne ' + l, l)); if (voulu && !lignes.includes(voulu)) sel.append(new Option('Ligne ' + voulu + ' (aucun bus)', voulu)); sel.value = voulu;
+  }
+}
+$('ligne').addEventListener('change', async (e) => { etat.filtres.ligne = e.target.value; signatureLignes = null; await carte.setFilter('f-ligne', e.target.value ? [e.target.value] : null); });
+
+function fraicheur() {
+  const maintenant = Date.now();
+  if (etat.dateTrafic) {
+    const age = (maintenant - etat.dateTrafic.getTime()) / 1000, vieux = age > 20 * 60;
+    $('frais-trafic').textContent = 'Mesures de ' + hhmm(etat.dateTrafic) + ' · il y a ' + dureeTexte(age) + (vieux ? ' : le fournisseur n’a pas publié depuis longtemps' : '');
+    $('frais-trafic').classList.toggle('vieux', vieux);
+  }
+  if (etat.lectureBus) $('frais-bus').textContent = 'Positions lues à ' + etat.lectureBus.toLocaleTimeString('fr-FR', { timeZone: FUSEAU }) + ' · il y a ' + dureeTexte((maintenant - etat.lectureBus.getTime()) / 1000);
+}
+setInterval(fraicheur, 1000);
+const lienOk = (ok) => { $('direct').classList.toggle('coupe', !ok); $('direct-txt').textContent = ok ? 'En direct' : 'Connexion perdue'; };
+
+// ---- La carte : une couche est remplacée entière (setScene fusion), puis on lui rend ses filtres et sa sélection (une couche neuve repart sans filtre) ----
+const filtreOuNul = (ensemble, total) => (ensemble.size === total ? null : [...ensemble]);
+async function rejouerFiltres(id) {
+  if (id === 'trafic') { if (etat.filtres.statut.size < STATUTS.length) await carte.setFilter('f-statut', filtreOuNul(etat.filtres.statut, STATUTS.length)); return; }
+  if (etat.filtres.ponct.size < PONCTUALITE.length) await carte.setFilter('f-ponct', filtreOuNul(etat.filtres.ponct, PONCTUALITE.length));
+  if (etat.filtres.ligne) await carte.setFilter('f-ligne', [etat.filtres.ligne]);
+}
+async function remplacerCouche(def, features) {
+  await carte.setScene({ fusion: true, layers: [def] }, { [def.id]: features });
+  await rejouerFiltres(def.id);
+  const s = etat.selection;
+  if (s && s.layer === def.id) {   // la bulle d'un objet d'une AUTRE couche n'a pas bougé ; ici l'objet est refait
+    if (features.some((f) => String(f.id) === String(s.id))) { try { await carte.select(s.id); } catch (e) { etat.selection = null; } } else etat.selection = null;
+  }
+}
+let sceneMontee = false;
+async function monterScene() {
+  if (sceneMontee) return; sceneMontee = true;
+  await carte.setScene({ title: 'Rennes en direct', attribution: 'Rennes Métropole, STAR (ODbL)', layers: [COUCHE_TRAFIC, COUCHE_BUS] }, { trafic: etat.trafic, bus: etat.bus });
+  await carte.flyTo({ center: [-1.675, 48.114], zoom: 11.6, pitch: 0 });
+}
+
+async function lireTrafic(force) {
+  const sonde = await (await fetch(URL_SONDE, { cache: 'no-store' })).json(); const datetime = sonde.results && sonde.results[0] && sonde.results[0].datetime;
+  const date = datetime ? new Date(datetime) : null;
+  if (!force && date && etat.dateTrafic && date.getTime() === etat.dateTrafic.getTime()) return;
+  const g = await (await fetch(URL_TRAFIC, { cache: 'no-store' })).json();
+  if (!g.features || !g.features.length) throw new Error('flux de circulation vide');
+  etat.trafic = normaliserTrafic(g); etat.dateTrafic = date || new Date(g.features[0].properties.datetime); dessinerTrafic(); fraicheur();
+  if (sceneMontee) await remplacerCouche(COUCHE_TRAFIC, etat.trafic);
+}
+async function lireBus() {
+  const g = await (await fetch(URL_BUS, { cache: 'no-store' })).json(); const nouveaux = normaliserBus(g);
+  const memes = nouveaux.length === etat.bus.length && nouveaux.every((f, i) => String(f.id) === String(etat.bus[i].id));
+  etat.bus = nouveaux; etat.lectureBus = new Date(); dessinerBus(); fraicheur();
+  if (!sceneMontee) return;
+  if (memes && nouveaux.length) {   // les mêmes bus : on les déplace sur place (rien ne se ferme)
+    for (let i = 0; i < nouveaux.length; i += 100) await carte.batch(nouveaux.slice(i, i + 100).map((f) => ({ cmd: 'updateFeature', args: ['bus', f.id, { geometry: f.geometry, properties: f.properties }] })));
+  } else await remplacerCouche(COUCHE_BUS, nouveaux);
+}
+
+// ---- Boucles de lecture : une seule chaîne par flux ; en veille quand la page est masquée, relancées au retour ----
+const echecs = new Set();   // les flux en panne en ce moment
+const boucles = [];
+function boucle(fn, periodeS, nom) {
+  const b = { essais: 0, minuteur: null, enCours: false, lancee: false, periodeS };
+  b.tour = async () => {
+    b.minuteur = null; if (b.enCours || document.hidden) return;
+    b.enCours = true;
+    try { await fn(); b.essais = 0; echecs.delete(nom); } catch (e) { b.essais++; echecs.add(nom); console.warn(nom, e); }
+    b.enCours = false;
+    if (b.essais >= 2 || !echecs.size) lienOk(!echecs.size);
+    b.minuteur = setTimeout(b.tour, Math.min(120, periodeS * (1 + b.essais)) * 1000);
+  };
+  b.demarrer = () => { b.lancee = true; b.minuteur = setTimeout(b.tour, periodeS * 1000); };   // la première lecture a déjà eu lieu au démarrage
+  boucles.push(b); return b;
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) return; for (const b of boucles) if (b.lancee && !b.minuteur && !b.enCours) b.tour(); });
+const boucleTrafic = boucle(() => lireTrafic(false), PERIODE_SONDE_S, 'trafic'), boucleBus = boucle(lireBus, PERIODE_BUS_S, 'bus');
+
+// ---- Recherche d'une voie (le réseau principal : 156 noms de voies, pas les petites rues) ----
+$('rue').addEventListener('input', () => {
+  const q = sansAccent($('rue').value.trim()), z = $('resultats'); z.textContent = ''; if (q.length < 2) return;
+  const vus = new Map();
+  for (const f of etat.trafic) {
+    const n = f.properties.nom; if (n === 'Voie sans nom' || !sansAccent(n).includes(q)) continue;
+    const deja = vus.get(n); if (!deja) vus.set(n, f); else if (deja.properties.statut === 'inconnu' && f.properties.statut !== 'inconnu') vus.set(n, f);   // un tronçon mesuré de préférence
+  }
+  const trouvees = [...vus.entries()].sort((a, b) => (sansAccent(b[0]).startsWith(q) - sansAccent(a[0]).startsWith(q)) || a[0].localeCompare(b[0], 'fr'));
+  if (!trouvees.length) { const li = document.createElement('li'); li.textContent = 'Aucune voie du réseau principal ne porte ce nom : les petites rues ne sont pas dans ces données.'; li.className = 'frais'; z.append(li); return; }
+  for (const [nom, f] of trouvees.slice(0, 8)) {
+    const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.textContent = nom;
+    b.addEventListener('click', async () => {
+      const c = f.geometry.coordinates[Math.floor(f.geometry.coordinates.length / 2)];
+      const arrive = new Promise((ok) => { const fin = () => { carte.removeEventListener('atlas-bi-camera', fin); ok(); }; carte.addEventListener('atlas-bi-camera', fin); setTimeout(fin, 3500); });
+      await carte.flyTo({ center: c, zoom: 15.2 }); await arrive;   // la bulle s'ouvre une fois la carte arrivée, pas en plein vol
+      try { await carte.select(f.id); etat.selection = { layer: 'trafic', id: f.id }; } catch (e) { /* la voie n'est plus dans les données */ }
+    });
+    li.append(b); z.append(li);
+  }
+  if (trouvees.length > 8) { const li = document.createElement('li'); li.className = 'frais'; li.textContent = (trouvees.length - 8) + ' autres voies : précisez le nom.'; z.append(li); }
+});
+
+// ---- Apparence : un attribut sur <html> ; la carte relit la page toute seule, et son fond de plan monochrome suit les couleurs de l'application ----
+for (const b of document.querySelectorAll('.apparence button')) b.addEventListener('click', () => {
+  const ds = b.dataset.apparence; if (ds) document.documentElement.dataset.ds = ds; else delete document.documentElement.dataset.ds;
+  for (const x of document.querySelectorAll('.apparence button')) x.setAttribute('aria-pressed', String(x === b));
+});
+
+// ---- Téléphone : le détail se déplie ----
+$('poignee').addEventListener('click', () => {
+  const ouvert = $('panneau').classList.toggle('ouvert'); $('poignee').setAttribute('aria-expanded', String(ouvert)); $('poignee').innerHTML = ouvert ? 'Masquer le détail &#9660;' : 'Afficher le détail &#9650;';
+  setTimeout(() => carte.resize(), 300);
+});
+
+// ---- Démarrage : on lit les deux flux, puis on monte la carte avec ce qui est arrivé ----
+const lectures = await Promise.allSettled([lireTrafic(true), lireBus()]);
+if (lectures[0].status === 'rejected' || lectures[1].status === 'rejected') for (const l of lectures) if (l.status === 'rejected') console.warn(l.reason);
+await monterScene(); dessinerTrafic(); dessinerBus(); lienOk(lectures.every((l) => l.status === 'fulfilled'));
+boucleTrafic.demarrer(); boucleBus.demarrer();
+window.__demo = { carte, etat, lireTrafic, lireBus };
+</script>
+</body>
+</html>
