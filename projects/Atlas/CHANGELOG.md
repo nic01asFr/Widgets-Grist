@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.27.0 — une carte de sélection de cases, les arrondissements dans la scène, la caméra réelle pour les dalles 3D
+
+- **Carte de sélection** (demande de la Fabrique, qui remplace sa carte Leaflet) : l'événement `camera` porte l'emprise visible (`bounds`, ouest-sud-est-nord) pour qu'une grille suive la vue ; `setScene({ fusion: true, layers: [...] })` ne remplace QUE les couches listées (les autres couches, le temps, l'interface, les marges et la sélection restent) ; `visuel.etiquette: { champ, taille }` pose un texte permanent sur chaque surface (« 6/25 ») ; `curseur` de la scène (`crosshair`, `zoom-in`, `zoom-out`, `pointer`, `grab`, `cell`, `default`). Le style gradué, `highlight` de plusieurs cases et le clic sans bulle existaient déjà.
+- **Correctif** : `admin: { niveau: 'commune', arrondissements: 'detailles' }` dans le manifeste de scène n'avait aucun effet (seul `addAdminLayer` lisait l'option) ; il remplace maintenant Paris, Lyon et Marseille par leurs arrondissements (la commune reste entière tant qu'il en manque). Retour de referentiels-2874.
+- **Dalles 3D** : le niveau de détail suit l'ŒIL de la caméra (`transform.cameraPosition`), plus le centre de la carte au sol (MapLibre 5 n'a pas `getFreeCameraOptions`).
+- **Contrat 0.3, client et empreinte inchangés** : aucune commande ajoutée.
+
 ## 1.26.1 — la bulle d'une couche administrative
 
 - **Correctif** : une `bulle` déclarée sur une couche administrative (`admin: { niveau: 'commune' }`) ne s'ouvrait jamais, sans événement ni avertissement ; elle s'ouvre maintenant à la sélection (clic ou `select('13047')`), et une déclaration invalide est dite dans `_avertissements`. Retour de referentiels-2874.

@@ -8,17 +8,18 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.26.1';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.26.1';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.27.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.27.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.26.1';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.27.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, tailleTexte } from './icones-etats.js';
-import { opaciteDeclaree, contourPolygone } from './style-polygone.js';
+import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, CURSEURS } from './style-polygone.js';
+const CURSEURS_ADMIS = CURSEURS.join(', ');
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
 import { creerSurveillance, fondPourConnexion } from './repli.js';
@@ -153,6 +154,12 @@ export function attacher(map, opts = {}) {
         'line-color': ['case', sel, T.selection, hl, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],   // surligné (`highlight`) : le contour de la sélection, un peu moins épais
         'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), hl, Math.max(2, (ct ? ct.largeur : 1) + 1), ct ? ct.largeur : 1],
         ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}) } });
+      const et = etiquetteDeclaree(v.etiquette);   // l’étiquette permanente (« 6/25 ») : un texte par surface, jamais masqué par une collision
+      if (et) {
+        const policeEt = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+        ajouterCalque(c, { id: PREF + 'etiq-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'text-field': ['to-string', ['coalesce', ['get', et.champ], '']], 'text-size': et.taille, 'text-font': policeEt, 'text-allow-overlap': true, 'text-ignore-placement': true },
+          paint: { 'text-color': T.selection || '#111111', 'text-halo-color': T.halo || '#ffffff', 'text-halo-width': 1.4 } });
+      }
     } else {
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, hl, 5, 3] } });
     }
@@ -302,11 +309,11 @@ export function attacher(map, opts = {}) {
     const f = fs[0], c = [...couches.values()].find((k) => f.layer.id.endsWith(k.id) && f.source === idSrc(k)); if (!c) return;
     dernierClic = e.lngLat; poserSelection(c, f.id); dernierClic = null; emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
   }
-  let rafSurvol = 0;
+  let rafSurvol = 0, curseurScene = null;   // `curseurScene` : le curseur demandé par la scène (`manifest.curseur`), hors survol d’un objet
   function surSurvol(e) {
     if (rafSurvol) return; rafSurvol = requestAnimationFrame(() => { rafSurvol = 0;
       const hit = calquesInteractifs().map((h) => h.id).filter((id) => map.getLayer(id)); if (!hit.length) return;
-      const fs = map.queryRenderedFeatures(e.point, { layers: hit }); map.getCanvas().style.cursor = fs.length ? 'pointer' : '';
+      const fs = map.queryRenderedFeatures(e.point, { layers: hit }); map.getCanvas().style.cursor = fs.length ? 'pointer' : (curseurScene || '');
       const f = fs[0], k = f ? f.id : null; if ((survol && survol.id) === k) return;
       if (survol && survol.admin) { try { map.setFeatureState({ source: survol.source, id: survol.id }, { hover: false }); } catch (e) { /* source retirée */ } }
       const c = f && [...couches.values()].find((q) => f.source === idSrc(q));
@@ -323,7 +330,7 @@ export function attacher(map, opts = {}) {
     emettre('hover', { layer: null, featureId: null }, 'utilisateur');
   }
   let tmCam = 0;
-  function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
+  function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); const b = typeof map.getBounds === 'function' ? map.getBounds() : null; emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), ...(b && typeof b.getWest === 'function' ? { bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] } : {}) }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
   const conteneurCarte = typeof map.getCanvasContainer === 'function' ? map.getCanvasContainer() : null;
   if (conteneurCarte && conteneurCarte.addEventListener) conteneurCarte.addEventListener('mouseleave', surSortie);
@@ -389,10 +396,20 @@ export function attacher(map, opts = {}) {
   const api = {
     ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
     async setScene(manifest, donnees = {}) {
-      bulleCtl.fermer(); for (const c of couches.values()) demonter(c); couches.clear(); tables.clear(); selection = null;
-      admin.pile.length = 0; const erreurs = {}, avertissements = {};
+      // `fusion: true` : seules les couches listées sont remplacées (ajoutées si nouvelles) ; les autres, leur visuel, le temps et l’interface restent : mettre à jour UNE couche
+      // (une grille qui suit la vue, des cases sélectionnées) sans rejouer la scène
+      const fusion = manifest.fusion === true;
+      bulleCtl.fermer();
+      if (fusion) { for (const def of manifest.layers || []) { if (!def) continue; const e = couches.get(def.id); if (e) { if (selection && selection.c === e) selection = null; demonter(e); couches.delete(def.id); } tables.delete(def.id); } }
+      else { for (const c of couches.values()) demonter(c); couches.clear(); tables.clear(); selection = null; admin.pile.length = 0; }
+      const erreurs = {}, avertissements = {};
+      if (manifest.curseur !== undefined || !fusion) {
+        curseurScene = curseurDeclare(manifest.curseur);
+        if (manifest.curseur !== undefined && manifest.curseur !== null && curseurScene === null) avertissements._scene = [...(avertissements._scene || []), 'curseur : « ' + String(manifest.curseur).slice(0, 20) + ' » inconnu (' + CURSEURS_ADMIS + '), ignoré'];
+        try { map.getCanvas().style.cursor = curseurScene || ''; } catch (e) { /* carte sans canevas */ }
+      }
       if (manifest.marges !== undefined) { try { poserMarges(manifest.marges); } catch (e) { avertissements._scene = [String(e.message || e)]; } }
-      attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
+      if (!fusion || manifest.attribution !== undefined) attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
       for (const def of manifest.layers || []) {
@@ -404,7 +421,7 @@ export function attacher(map, opts = {}) {
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
-          try { avertAjout = []; await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible, bulle: def.bulle });
+          try { avertAjout = []; await admin.api.addAdminLayer(def.admin.niveau, { id: def.id, nom: def.name, visuel: def.visuel, filtre: def.admin.filtre, source: def.admin.source, produit: def.admin.produit, arrondissements: def.admin.arrondissements, cadrer: def.admin.cadrer, donnees: donnees[def.id], controls: def.controls, visible: def.visible, bulle: def.bulle });
             if (avertAjout.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...avertAjout]; }
           catch (e) { erreurs[def.id] = String(e && e.message || e); }
           continue;
@@ -424,8 +441,9 @@ export function attacher(map, opts = {}) {
         }
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
-      configurerTemps(manifest); poserLavis();
-      await configurerUi(manifest.interface, avertissements);
+      if (!fusion || manifest.temps !== undefined) configurerTemps(manifest);
+      poserLavis();
+      if (!fusion || manifest.interface !== undefined) await configurerUi(manifest.interface, avertissements);
       const compte = { ...Object.fromEntries([...couches].map(([id, c]) => [id, c.features.length])), ...Object.fromEntries([...tables].map(([id, l]) => [id, l.length])) };
       emettre('ready', { layers: compte, temps: temps.champ ? { champ: temps.champ, min: temps.min, max: temps.max, valeur: temps.valeur } : null, ...(Object.keys(erreurs).length ? { erreurs } : {}), ...(Object.keys(avertissements).length ? { avertissements } : {}) }, 'api');
       return { ...compte, ...(Object.keys(erreurs).length ? { _erreurs: erreurs } : {}), ...(Object.keys(avertissements).length ? { _avertissements: avertissements } : {}) };
