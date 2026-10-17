@@ -237,5 +237,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.26.1 | 0.3 | une `bulle` déclarée sur une couche administrative s'ouvre à la sélection. Aucune commande ajoutée. |
 | 1.26.2 | 0.3 | `arrondissements: 'detailles'` lu dans le manifeste de scène ; niveau de détail des dalles 3D d'après l'œil de la caméra. Aucune commande ajoutée. |
 | 1.27.0 | 0.3 | carte de sélection : `camera.bounds` (emprise visible, ouest-sud-est-nord) ; `setScene({ fusion: true })` remplace seulement les couches listées ; `visuel.etiquette` (texte permanent sur les polygones) ; `curseur` de la scène. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
+| 1.28.0 | 0.3 | couche de lignes : `visuel.largeur` (nombre, ou `{ champ, min, max, lMin, lMax }`) et `visuel.opacite`. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

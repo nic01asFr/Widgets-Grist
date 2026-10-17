@@ -8,17 +8,17 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.27.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.27.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.28.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.28.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.27.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.28.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, tailleTexte } from './icones-etats.js';
-import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, CURSEURS } from './style-polygone.js';
+import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
 const CURSEURS_ADMIS = CURSEURS.join(', ');
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
@@ -161,7 +161,10 @@ export function attacher(map, opts = {}) {
           paint: { 'text-color': T.selection || '#111111', 'text-halo-color': T.halo || '#ffffff', 'text-halo-width': 1.4 } });
       }
     } else {
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, hl, 5, 3] } });
+      // Le tracé des lignes est celui que l'hôte déclare (`visuel.largeur`, `visuel.opacite`) ; sans réglage, 3 px comme avant.
+      const tr = traceLigneDeclare(v); const base = typeof tr.largeur === 'number' ? tr.largeur : ['interpolate', ['linear'], ['to-number', ['get', tr.largeur.champ], tr.largeur.min], tr.largeur.min, tr.largeur.lMin, tr.largeur.max, tr.largeur.lMax];
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': couleur, 'line-width': ['case', sel, ['+', base, 3], hl, ['+', base, 2], base], ...(tr.opacite !== null ? { 'line-opacity': tr.opacite } : {}) } });
     }
     appliquerVue(c);
   }
@@ -399,8 +402,8 @@ export function attacher(map, opts = {}) {
       // `fusion: true` : seules les couches listées sont remplacées (ajoutées si nouvelles) ; les autres, leur visuel, le temps et l’interface restent : mettre à jour UNE couche
       // (une grille qui suit la vue, des cases sélectionnées) sans rejouer la scène
       const fusion = manifest.fusion === true;
-      bulleCtl.fermer();
-      if (fusion) { for (const def of manifest.layers || []) { if (!def) continue; const e = couches.get(def.id); if (e) { if (selection && selection.c === e) selection = null; demonter(e); couches.delete(def.id); } tables.delete(def.id); } }
+      if (!fusion) bulleCtl.fermer();   // une fusion ne ferme la bulle que si l’objet ouvert est dans une couche remplacée
+      if (fusion) { for (const def of manifest.layers || []) { if (!def) continue; const e = couches.get(def.id); if (e) { if (selection && selection.c === e) { selection = null; bulleCtl.fermer(); } demonter(e); couches.delete(def.id); } tables.delete(def.id); } }
       else { for (const c of couches.values()) demonter(c); couches.clear(); tables.clear(); selection = null; admin.pile.length = 0; }
       const erreurs = {}, avertissements = {};
       if (manifest.curseur !== undefined || !fusion) {

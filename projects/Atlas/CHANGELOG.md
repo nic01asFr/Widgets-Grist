@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.28.0 — des couches de lignes à votre goût, une application alimentée en continu
+
+- **Lignes** : `visuel: { largeur: 4, opacite: 0.8 }` sur une couche de lignes (jusqu'ici 3 px fixes). La largeur peut suivre un nombre : `largeur: { champ: 'importance', min: 0, max: 1, lMin: 1.2, lMax: 4.4 }`. Bouts arrondis. Largeur de 0,5 à 12 px, opacité de 0 à 1 ; sans réglage, le rendu d'avant. Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+- **Démonstration de la vitrine** : l'application « Rennes en direct » (circulation et bus lus en continu sur les données ouvertes, filtres, recherche d'une voie, bulles, sélection qui survit au rafraîchissement, trois apparences : jour, nuit, contraste, que la carte reprend). Elle s'ouvre en grand cadre depuis la vitrine et tient sur téléphone. Les pages d'hôte BI et canevas restent publiées pour les intégrateurs, hors vitrine.
+- **Fusion de scène** : `setScene({ fusion: true })` ne ferme plus la bulle d'un objet d'une AUTRE couche (elle se fermait à chaque mise à jour d'une couche voisine). Les filtres (`setFilter`) d'une couche remplacée sont à renvoyer : la nouvelle couche repart sans filtre.
+- **Interne** : `scripts/hygiene-atlas.js` (`npm run hygiene:atlas`) contrôle ce qui est indexé et ce qui est publié ; les dossiers d'essai restent hors dépôt.
+
 ## 1.27.0 — une carte de sélection de cases, les arrondissements dans la scène, la caméra réelle pour les dalles 3D
 
 - **Carte de sélection** (demande de la Fabrique, qui remplace sa carte Leaflet) : l'événement `camera` porte l'emprise visible (`bounds`, ouest-sud-est-nord) pour qu'une grille suive la vue ; `setScene({ fusion: true, layers: [...] })` ne remplace QUE les couches listées (les autres couches, le temps, l'interface, les marges et la sélection restent) ; `visuel.etiquette: { champ, taille }` pose un texte permanent sur chaque surface (« 6/25 ») ; `curseur` de la scène (`crosshair`, `zoom-in`, `zoom-out`, `pointer`, `grab`, `cell`, `default`). Le style gradué, `highlight` de plusieurs cases et le clic sans bulle existaient déjà.

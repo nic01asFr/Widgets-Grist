@@ -43,6 +43,22 @@ export function etiquetteDeclaree(e) {
   return { champ: e.champ.trim(), taille: Number.isFinite(t) ? Math.min(24, Math.max(8, t)) : 12 };
 }
 
+/**
+ * Le tracé d'une couche de LIGNES déclaré par l'hôte : `visuel: { largeur: 4, opacite: 0.8 }` ou une largeur qui suit un nombre,
+ * `largeur: { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 }`. Largeurs bornées de 0,5 à 12 px, opacité de 0 à 1. Sans réglage : 3 px, comme avant.
+ * @returns {{ largeur: number|{champ:string,min:number,max:number,lMin:number,lMax:number}, opacite: number|null }}
+ */
+export function traceLigneDeclare(v) {
+  const bornee = (x, mini, maxi) => Math.min(maxi, Math.max(mini, x));
+  const l = v && v.largeur; let largeur = 3;
+  if (Number.isFinite(Number(l)) && typeof l !== 'object' && l !== null && l !== '') largeur = bornee(Number(l), 0.5, 12);
+  else if (l && typeof l === 'object' && !Array.isArray(l) && typeof l.champ === 'string' && l.champ.trim() && [l.min, l.max].every((n) => Number.isFinite(Number(n))) && Number(l.max) > Number(l.min)) {
+    largeur = { champ: l.champ.trim(), min: Number(l.min), max: Number(l.max), lMin: bornee(Number.isFinite(Number(l.lMin)) ? Number(l.lMin) : 1, 0.5, 12), lMax: bornee(Number.isFinite(Number(l.lMax)) ? Number(l.lMax) : 6, 0.5, 12) };
+  }
+  const o = v && v.opacite;
+  return { largeur, opacite: typeof o === 'number' && Number.isFinite(o) ? bornee(o, 0, 1) : null };
+}
+
 /** Les curseurs que l’hôte peut demander pour la carte (hors survol d’un objet, qui garde « pointer »). */
 export const CURSEURS = Object.freeze(['crosshair', 'zoom-in', 'zoom-out', 'pointer', 'grab', 'cell', 'default']);
 /** @returns {string|null} un curseur de la liste, ou null (aucun : le curseur par défaut de la carte) */
