@@ -30,6 +30,7 @@ function bac(modifier = () => {}) {
   ecrire('projects/Atlas/lib/mini.js', 'export const x = 1;\n');
   ecrire('projects/Atlas/demos/osm-marseille-vieux-port/scene.json', JSON.stringify({ layers: [] }));
   ecrire('projects/Atlas/demos/hote-bi/index.html', '<!doctype html>');
+  ecrire('projects/Atlas/demos/hote-canevas/index.html', '<!doctype html>');
   ecrire('projects/Atlas/objets/catalog.json', JSON.stringify({ parametric: { assets: [] } }));
   for (const rel of VENDOR) ecrire(`projects/grist_forms/${rel}`, '/* x */\n');
   cpSync(join(ICI, '..', 'lib'), join(racine, 'projects', 'Atlas', 'lib'), { recursive: true });   // le vrai lib/, dont lib/bi/ importe des modules voisins
@@ -55,6 +56,7 @@ describe('promotion dans un bac à sable', { concurrency: true }, () => {
       // Le client de l'hote en un seul fichier part avec le composant.
       assert.ok(existsSync(join(pub, 'client-hote.js')));
       assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-bi', 'index.html')));
+      assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-canevas', 'index.html')), 'la démonstration du canevas part aussi');
     } finally { rmSync(racine, { recursive: true, force: true }); }
   });
 

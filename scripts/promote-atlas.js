@@ -270,13 +270,14 @@ for (const d of DEMOS) {
 }
 
 /**
- * La page hote de demonstration du composant carte BI (`demos/hote-bi/`) : ses deux pages et rien d'autre. Elle importe
- * `../../lib/bi/client.js` et ouvre `../../index.html` : relatifs a `published/atlas/demos/hote-bi/`.
+ * Les pages hotes de demonstration : `demos/hote-bi/` (la carte BI) et `demos/hote-canevas/` (le canevas, profil complet), leurs pages HTML et
+ * rien d'autre. Elles importent `../../lib/bi/...` et ouvrent `../../index.html` : relatifs a `published/atlas/demos/<hote>/`.
  */
-const hoteSrc = path.join(src, 'demos', 'hote-bi');
-const hotePub = path.join(pub, 'demos', 'hote-bi');
 let fichiersHote = 0;
-if (fs.existsSync(hoteSrc)) {
+for (const nomHote of ['hote-bi', 'hote-canevas']) {
+  const hoteSrc = path.join(src, 'demos', nomHote);
+  const hotePub = path.join(pub, 'demos', nomHote);
+  if (!fs.existsSync(hoteSrc)) continue;
   fs.mkdirSync(hotePub, { recursive: true });
   for (const f of fs.readdirSync(hoteSrc)) {
     if (!f.endsWith('.html')) continue;
