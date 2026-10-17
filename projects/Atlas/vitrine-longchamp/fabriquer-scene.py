@@ -317,7 +317,7 @@ scene = {
         'producer': 'atlas-vitrine/palais-longchamp',
         'attribution': [
             'Points lumineux (position, code, catégorie) : Ville de Marseille, Éclairage 2023, Licence Ouverte 2.0.',
-            'Maquette du Palais Longchamp, tracé de la ronde : IGN (LiDAR HD, BD TOPO, BD ORTHO, RGE ALTI) et Panoramax, Licence Ouverte / Open Licence 2.0 (Etalab) ; maquette fabriquée par pix2hdr (Cerema).',
+            'Maquette du Palais Longchamp, tracé de la ronde : IGN (LiDAR HD, BD TOPO, BD ORTHO, RGE ALTI) et Panoramax, Licence Ouverte / Open Licence 2.0 (Etalab) ; maquette fabriquée par pix2hdr.',
             'Fontaine monumentale : adaptation d’une photographie de Wikimedia Commons, CC BY-SA 4.0 ; la couche est livrée seule, sous cette licence.',
             'Textures de référence : ambientCG, CC0 1.0. Fond de carte : © les contributeurs OpenStreetMap (ODbL), OpenFreeMap, OpenMapTiles.',
             'Caractéristiques des luminaires, pièges, relevés et comptages : fictifs, produits par règles (vitrine-longchamp/fabriquer.py). Ils illustrent l’outil, pas une étude.',
