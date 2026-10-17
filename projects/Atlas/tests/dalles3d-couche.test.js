@@ -30,7 +30,8 @@ function banc({ nDalles = 3, parallelisme = 3, budget, camera = null } = {}) {
   const carte = {
     getBounds: () => ({ getWest: () => LNG0 - 0.01, getSouth: () => LAT0 - 0.01, getEast: () => LNG0 + 0.02, getNorth: () => LAT0 + 0.01 }),
     getCenter: () => ({ lng: LNG0, lat: LAT0 }),
-    getFreeCameraOptions: () => ({ position: camera || { x: mercator(LNG0, LAT0)[0], y: mercator(LNG0, LAT0)[1], z: 300 * metreEnMercator(LAT0) } }),
+    // la caméra réelle de MapLibre 5 : `transform.cameraPosition` en pixels-monde (x, y, altitude), `transform.worldSize` pour revenir en Mercator
+    transform: { worldSize: 512 * 2 ** 17, get cameraPosition() { const ws = 512 * 2 ** 17, c = camera || { x: mercator(LNG0, LAT0)[0], y: mercator(LNG0, LAT0)[1], z: 300 * metreEnMercator(LAT0) }; return [c.x * ws, c.y * ws, c.z * ws]; } },
     getCanvas: () => ({ width: 800, height: 600 }), triggerRepaint() { j.repaints = (j.repaints || 0) + 1; },
     addLayer(spec) { couches.set(spec.id, spec); spec.onAdd(carte, {}); }, getLayer: (id) => couches.get(id), removeLayer(id) { const s = couches.get(id); couches.delete(id); if (s && s.onRemove) s.onRemove(); },
     addSource(id, s) { sources.set(id, s); }, getSource: (id) => sources.get(id), removeSource(id) { sources.delete(id); },
@@ -173,4 +174,14 @@ test('un manifeste de grille illisible fait échouer charger() sans rien laisser
   const b = banc(); const orig = b.couche;
   const bad = creerCoucheDalles({ id: 'x', urlGrille: URL_GRILLE, THREE: b.THREE, creerChargeur: () => ({}), carte: b.carte, altitudeBase: () => 0, fetchJson: async () => ({ schema: 'autre' }), fetchOctets: async () => new ArrayBuffer(1), journal: { warn() {} } });
   await assert.rejects(bad.charger(), /schéma/); assert.ok(!b.couches.has('dalles3d-x')); void orig;
+});
+
+test("la distance est celle de l’ŒIL de la caméra (transform.cameraPosition), pas du point visé : une caméra haute au-dessus d’une dalle proche la voit en D3", async () => {
+  const [x, y] = mercator(LNG0, LAT0), s = metreEnMercator(LAT0);
+  const haute = banc({ nDalles: 1, camera: { x, y, z: 3000 * s } }); await haute.couche.charger(); await haute.tick();
+  assert.match(haute.attente.map((a) => a.url).join(), /D3\.glb/, 'à 3 km d’altitude au-dessus de la dalle : D3, bien que le centre de la carte soit à son aplomb');
+  const basse = banc({ nDalles: 1 }); await basse.couche.charger(); await basse.tick();
+  assert.match(basse.attente.map((a) => a.url).join(), /D2\.glb/);
+  const sans = banc({ nDalles: 1 }); sans.carte.transform = undefined; await sans.couche.charger(); await sans.tick();
+  assert.match(sans.attente.map((a) => a.url).join(), /D2\.glb/, 'sans caméra lisible : le centre au sol');
 });

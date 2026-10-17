@@ -68,8 +68,16 @@ export function creerCoucheDalles({
     for (const [i, c] of affiche) if (c === cle) affiche.delete(i);
   }
 
+  /**
+   * La position de l’œil de la caméra, en unités Mercator. MapLibre 5 n’a pas de `getFreeCameraOptions` : sa caméra est `transform.cameraPosition`, en pixels-monde
+   * (x, y et altitude), qu’on ramène en Mercator par `transform.worldSize`. Sans elle (carte simulée), le centre de la carte au sol : la distance est alors celle du point visé,
+   * pas de l’œil, et le niveau de détail choisi est un peu trop grossier de près.
+   */
   function positionCamera() {
-    try { const p = carte.getFreeCameraOptions().position; if (p && Number.isFinite(p.x)) return [p.x, p.y, p.z || 0]; } catch (e) { /* carte sans caméra libre */ }
+    try {
+      const t = carte.transform, c = t && t.cameraPosition, ws = t && t.worldSize;
+      if (c && c.length >= 3 && Number.isFinite(ws) && ws > 0 && [c[0], c[1], c[2]].every(Number.isFinite)) return [c[0] / ws, c[1] / ws, c[2] / ws];
+    } catch (e) { /* caméra illisible : repli ci-dessous */ }
     const c = carte.getCenter(); const [x, y] = mercator(c.lng, c.lat); return [x, y, 0];
   }
 
