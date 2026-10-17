@@ -10,6 +10,7 @@ import { creerLegende, couleurSure } from '../lib/bi/ui/legende.js';
 import { creerTemps } from '../lib/bi/ui/temps.js';
 import { attacher } from '../lib/bi/bi-runtime.js';
 import { carteSimulee, point } from './aide-carte-bi.js';
+import { TOUS_LES_EVENEMENTS } from '../lib/bi/evenements-ext.js';
 
 class N {
   constructor(tag) { this.tag = tag; this.enfants = []; this.attrs = {}; this.style = {}; this.className = ''; this._t = ''; this.ecouteurs = {}; this.parentNode = null; this.value = ''; }
@@ -114,4 +115,33 @@ test('runtime : une interface invalide est écartée ET dite ; sans conteneur de
   const r3 = await rt.api.setScene(MANIFESTE({ interface: { legende: false, temps: null } }), { sites: SITES }); assert.equal(r3._avertissements, undefined); assert.equal(conteneur.enfants.length, 0);
   const sans = attacher(carteSimulee(), {}); const r4 = await sans.api.setScene(MANIFESTE({ interface: { legende: true } }), { sites: SITES }); assert.match(r4._avertissements._interface[0], /pas de conteneur/);
   const nu = runtime(); const r5 = await nu.rt.api.setScene(MANIFESTE(), { sites: SITES }); assert.equal(r5._avertissements, undefined); assert.equal(nu.conteneur.enfants.length, 0);
+});
+
+test("légende cible : une classe est un bouton à bascule dont le clic est DIT à l hôte, une à la fois par couche ; sans l option, ce sont de simples lignes", () => {
+  const { doc, conteneur } = banc(); const z = creerZone({ document: doc, conteneur }); const clics = [];
+  const donnees = [{ layer: 'sites', titre: 'Sites', classes: [{ cle: 'a', libelle: 'Type A', couleur: '#0072b2', compte: 2 }, { cle: 'b', libelle: 'Type B', couleur: '#e69f00', compte: 1 }] }];
+  const l = creerLegende({ document: doc, zone: z, fournir: () => donnees, cible: true, surClasse: (...a) => clics.push(a) }); l.rafraichir();
+  let boutons = classesDe(l.racine); assert.deepEqual(boutons.map((b) => b.tag), ['button', 'button']); assert.deepEqual(boutons.map((b) => b.attrs['aria-pressed']), ['false', 'false']);
+  boutons[0].declencher('click'); assert.deepEqual(clics.pop(), ['sites', 'a', 'Type A', true]); boutons = classesDe(l.racine); assert.deepEqual(boutons.map((b) => b.attrs['aria-pressed']), ['true', 'false'], 'l état ciblé survit au redessin');
+  boutons[1].declencher('click'); assert.deepEqual(clics.pop(), ['sites', 'b', 'Type B', true]); boutons = classesDe(l.racine); assert.deepEqual(boutons.map((b) => b.attrs['aria-pressed']), ['false', 'true'], 'une seule classe ciblée par couche');
+  boutons[1].declencher('click'); assert.deepEqual(clics.pop(), ['sites', 'b', 'Type B', false], 'un second clic désélectionne'); assert.deepEqual(classesDe(l.racine).map((b) => b.attrs['aria-pressed']), ['false', 'false']);
+  const lecture = creerLegende({ document: doc, zone: z, fournir: () => donnees }); lecture.rafraichir(); assert.deepEqual(classesDe(lecture.racine).map((b) => b.tag), ['div', 'div']);
+});
+
+test("carte étroite (téléphone) : la légende se range en bas comme une feuille, repliée ; une carte large ou un repli explicite gardent le comportement d avant", () => {
+  const etroit = banc(); etroit.conteneur.clientWidth = 400; const ze = creerZone({ document: etroit.doc, conteneur: etroit.conteneur }); assert.equal(ze.etroit(), true);
+  const l = creerLegende({ document: etroit.doc, zone: ze, fournir: () => [], position: 'haut-droite' });
+  assert.ok(ze.coin('bas-centre').enfants.includes(l.racine), 'la position demandée cède la place à la feuille du bas'); assert.ok(l.racine.className.includes('feuille')); assert.equal(l.estOuverte(), false, 'repliée par défaut');
+  assert.equal(creerLegende({ document: etroit.doc, zone: ze, fournir: () => [], repliee: false }).estOuverte(), true, 'repliee: false explicite : ouverte quand même');
+  const large = banc(); large.conteneur.clientWidth = 1200; const zl = creerZone({ document: large.doc, conteneur: large.conteneur }); assert.equal(zl.etroit(), false);
+  const g = creerLegende({ document: large.doc, zone: zl, fournir: () => [], position: 'haut-droite' }); assert.ok(zl.coin('haut-droite').enfants.includes(g.racine)); assert.equal(g.estOuverte(), true); assert.ok(!g.racine.className.includes('feuille'));
+  assert.equal(creerZone({ document: banc().doc, conteneur: banc().conteneur }).etroit(), false, 'largeur inconnue : pas étroite');
+});
+
+test("runtime : interface.legende.cible emet l evenement classe avec les identifiants de la scene ; l evenement est decrit dans le contrat", async () => {
+  const { rt, conteneur } = runtime(); const vus = []; rt.on('classe', (c) => vus.push(c));
+  await rt.api.setScene(MANIFESTE({ interface: { legende: { cible: true } } }), { sites: SITES }); await sansAttente();
+  const boutons = classesDe(conteneur.enfants[0]); assert.equal(boutons.length, 2); boutons[0].declencher('click');
+  assert.deepEqual(vus, [{ layer: 'sites', cle: 'a', libelle: 'Type A', active: true }]);
+  assert.ok(TOUS_LES_EVENEMENTS.includes('classe'));
 });

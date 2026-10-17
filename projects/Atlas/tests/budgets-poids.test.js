@@ -88,5 +88,5 @@ test("poids : l'interface optionnelle (lib/bi/ui/) n'est JAMAIS chargée d'embl�
     assert.ok(fermeture(entree).filter((f) => f.startsWith('lib/bi/ui/')).length === 3, entree + ' : la zone, la légende et le temps sont atteignables par import()');
   }
   const ui = total(dossierJs('lib/bi/ui'));
-  assert.ok(ui.gz <= 6_500, 'les trois modules d\'interface pèsent ' + ko(ui.gz) + ' gzip (plafond 6,3 Ko) : une interface optionnelle reste petite');
+  assert.ok(ui.gz <= 7_500, 'les trois modules d\'interface pèsent ' + ko(ui.gz) + ' gzip (plafond 7,3 Ko ; 6,4 Ko mesurés avec la légende ciblable) : une interface optionnelle reste petite');
 });

@@ -265,7 +265,8 @@ export function attacher(map, opts = {}) {
       uiEtat.zone = creerZone({ document: doc, conteneur, variables: () => variablesInterface(themes.charte), appliquer: appliquerVariables }); uiEtat.zone.ajuster(marges);
       if (voulus.includes('legende')) {
         const { creerLegende } = await import('./ui/legende.js'); const o = options('legende');
-        uiEtat.legende = creerLegende({ document: doc, zone: uiEtat.zone, fournir: legendesVisibles, position: o.position, repliee: o.repliee === true });
+        uiEtat.legende = creerLegende({ document: doc, zone: uiEtat.zone, fournir: legendesVisibles, position: o.position, repliee: typeof o.repliee === 'boolean' ? o.repliee : undefined, cible: o.cible === true,
+          surClasse: (layer, cle, libelle, active) => emettre('classe', { layer, cle, libelle, active }, 'utilisateur') });
       }
       if (voulus.includes('temps')) {
         const { creerTemps } = await import('./ui/temps.js'); const o = options('temps');

@@ -10,6 +10,8 @@ const STYLE_ID = 'atlas-bi-ui-style';
 const ESPACE = 8;
 /** Le bas laisse la place des crédits de la carte (MapLibre les pose en bas à droite, sur ~20 px) : l’interface ne les recouvre jamais. */
 const ESPACE_BAS = 28;
+/** En dessous de cette largeur de carte (un téléphone), la légende se range en bas, repliée, comme une feuille. */
+export const LARGEUR_ETROITE = 560;
 
 export const FEUILLE = `
 .atlas-bi-ui { position: absolute; z-index: 4; pointer-events: none; font-family: var(--atlas-police, system-ui, sans-serif); font-size: var(--atlas-taille-texte, 13px); color: var(--atlas-encre, #1f1b14); }
@@ -44,6 +46,8 @@ export function creerZone({ document: doc = globalThis.document, conteneur, vari
   ajuster(null);
   return {
     racine, coin: (nom) => coins.get(COINS.includes(nom) ? nom : 'bas-gauche'), ajuster, actualiser: ecrire,
+    /** Vrai quand la carte est étroite (téléphone). La largeur est lue à la création du module. */
+    etroit: () => Number.isFinite(conteneur.clientWidth) && conteneur.clientWidth > 0 && conteneur.clientWidth < LARGEUR_ETROITE,
     detruire() { if (racine.parentNode && racine.parentNode.removeChild) racine.parentNode.removeChild(racine); else if (typeof racine.remove === 'function') racine.remove(); },
   };
 }
