@@ -42,7 +42,8 @@ function banc({ nDalles = 3, parallelisme = 3, budget, camera = null } = {}) {
     Scene: class extends Groupe { remove(o) { this.children = this.children.filter((c) => c !== o); j.libere.push(o.userData && o.userData.cle); } }, Group: Groupe,
     Camera: class { constructor() { this.projectionMatrix = new Mat(); } },
     HemisphereLight: class {}, DirectionalLight: class { constructor() { this.position = { set() {} }; } }, Matrix4: Mat,
-    WebGLRenderer: class { setViewport() {} resetState() {} render(s, c) { j.rendus = (j.rendus || 0) + 1; j.derniereProjection = c.projectionMatrix.e; } dispose() { j.rendererLibere = true; } },
+    SRGBColorSpace: 'srgb',
+    WebGLRenderer: class { constructor() { j.espaceSortie = null; j.instance = this; } setViewport() {} resetState() {} render(s, c) { j.rendus = (j.rendus || 0) + 1; j.derniereProjection = c.projectionMatrix.e; } dispose() { j.rendererLibere = true; } },
   };
   const fetchJson = async (url) => {
     j.demandes.push(url);
@@ -67,6 +68,11 @@ function banc({ nDalles = 3, parallelisme = 3, budget, camera = null } = {}) {
   const relacher = async (motif) => { const i = attente.findIndex((a) => !motif || motif.test(a.url)); if (i < 0) return false; const [a] = attente.splice(i, 1); a.fin(); await tick(); return a.url; };
   return { j, couche, carte, couches, sources, ecouteurs, attente, tick, relacher, planifie, THREE };
 }
+
+test('le rendu encode sa sortie en sRGB : les couleurs de sommet du glTF sont linéaires', async () => {
+  const b = banc({ nDalles: 1 }); await b.couche.charger();
+  assert.equal(b.j.instance.outputColorSpace, 'srgb');
+});
 
 test('charger : manifeste lu, mention de la source ajoutée, couche MapLibre ajoutée, dalles de la vue connues', async () => {
   const b = banc(); const r = await b.couche.charger(); await b.tick();

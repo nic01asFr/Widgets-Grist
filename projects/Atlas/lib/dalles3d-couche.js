@@ -172,6 +172,8 @@ export function creerCoucheDalles({
       scene.add(new THREE.HemisphereLight(0xffffff, 0xb4b8c0, 2.1));
       const soleil = new THREE.DirectionalLight(0xffffff, 2.8); soleil.position.set(0.45, 1, 0.3); scene.add(soleil);
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true }); renderer.autoClear = false;
+      // les couleurs de sommet du glTF sont LINÉAIRES : sans encodage de sortie sRGB, tout sortirait trop sombre (explicite, même si c'est le défaut de three.js)
+      if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
       chargeur = creerChargeur();
     },
     render(gl, matrice) {
