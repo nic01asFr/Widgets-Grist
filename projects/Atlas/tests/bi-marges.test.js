@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { attacher } from '../lib/bi/bi-runtime.js';
-import { normaliserMarges, avecConfort, decalageDansZone, MARGE_MAX } from '../lib/bi/marges.js';
+import { normaliserMarges, avecConfort, decalageDansZone, limiterPadding, MARGE_MAX } from '../lib/bi/marges.js';
 import { carteSimulee, MANIFESTE, DONNEES } from './aide-carte-bi.js';
 
 const A_DROITE = { top: 0, right: 380, bottom: 0, left: 0 };
@@ -64,4 +64,28 @@ test('decalageDansZone : une bulle sous le panneau est ramenée dans la zone uti
   assert.deepEqual(decalageDansZone({ left: -20, right: 150, top: -10, bottom: 80 }, cont, A_DROITE), { dx: 28, dy: 18 }, 'déborde à gauche et en haut');
   assert.deepEqual(decalageDansZone({ left: 100, right: 300, top: 400, bottom: 480 }, cont, null), { dx: 0, dy: -28 }, 'sans marges : seulement le conteneur');
   assert.deepEqual(decalageDansZone({ left: 0, right: 600, top: 0, bottom: 50 }, cont, A_DROITE), { dx: 8, dy: 8 }, 'plus large que la zone : le bord haut-gauche prime');
+});
+
+test("limiterPadding : un padding qui depasse le cadre est reduit proportionnellement, jamais laisse tel quel (MapLibre ne cadre alors rien)", () => {
+  const p = { top: 60, right: 60, bottom: 272, left: 60 };   // marge basse de 212 px + confort, dans un cadre de 300 px de haut
+  const r = limiterPadding(p, 1707, 300);
+  assert.ok(r.top + r.bottom <= 300 * 0.8 + 1e-9, 'au moins 20 % de la hauteur reste : ' + JSON.stringify(r)); assert.ok(Math.abs(r.bottom / r.top - 272 / 60) < 1e-9, 'proportions gardees');
+  assert.equal(r.left, 60); assert.equal(r.right, 60, 'la largeur suffit : intacte');
+  assert.equal(limiterPadding(p, 1707, 422), p, 'assez de place : le meme objet'); assert.equal(limiterPadding(60, 800, 600), 60);
+  assert.deepEqual(limiterPadding(60, 100, 100), { top: 40, right: 40, bottom: 40, left: 40 }, 'un nombre est un padding sur les quatre cotes');
+  assert.equal(limiterPadding(p, 0, 0), p, 'taille inconnue : inchange'); assert.equal(limiterPadding(p, 800, 0), p);
+});
+
+test("fitTo : dans un cadre trop petit pour les marges, la carte SE CADRE quand meme (padding reduit) ; cadre masque : le cadrage est rejoue a la mise a la taille", async () => {
+  const carte = carteSimulee(); let cadre = { clientWidth: 1707, clientHeight: 300 }; carte.getContainer = () => cadre;
+  const rt = attacher(carte); await rt.api.setScene({ ...MANIFESTE, marges: { bottom: 212 } }, DONNEES);
+  carte.optionsCadre = undefined; assert.equal(rt.api.fitTo(), true);
+  const p = carte.optionsCadre.padding; assert.ok(p.top + p.bottom <= 300 * 0.8 + 1e-9, 'reduit pour tenir dans 300 px : ' + JSON.stringify(p));
+  cadre = { clientWidth: 1707, clientHeight: 422 }; carte.optionsCadre = undefined; rt.api.fitTo();
+  assert.deepEqual(carte.optionsCadre.padding, { top: 60, right: 60, bottom: 272, left: 60 }, 'cadre assez haut : padding intact');
+  // cadre masque (0 px) : rien a cadrer pour l'instant ; au redimensionnement, le cadrage est rejoue
+  const rejeux = []; carte.once = (t, f) => rejeux.push([t, f]); cadre = { clientWidth: 0, clientHeight: 0 }; carte.optionsCadre = undefined;
+  assert.equal(rt.api.fitTo(), false); assert.equal(carte.optionsCadre, undefined); assert.equal(rejeux.length, 1); assert.equal(rejeux[0][0], 'resize');
+  cadre = { clientWidth: 1707, clientHeight: 422 }; rejeux[0][1]();
+  assert.ok(carte.optionsCadre, 'le cadrage differe a eu lieu au redimensionnement');
 });
