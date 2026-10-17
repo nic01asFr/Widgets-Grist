@@ -14,11 +14,10 @@ informations, ou ne pas y entrer.
 
 ## Modèles 3D
 
-### `projects/Atlas/demos/cascade-aygalades-marseille/_cascade-sketchfab.glb`
+### `projects/Atlas/demos/cascade-aygalades-marseille/_cascade-sketchfab.glb` (retiré du dépôt le 17/10/2026)
 
-> **Retiré de la scène le 17/09/2026**, et renommé avec un `_` pour rester hors
-> de la publication. Il est conservé au dépôt : l'attribution ci-dessous vaut
-> tant que le fichier y est.
+> Ce modèle n'était plus utilisé depuis le 17/09/2026 et la démo des Aygalades n'est plus publiée. Le dossier de la démo a quitté l'arbre
+> du dépôt pour ne pas l'alourdir ; il reste dans l'historique git, **d'où cette attribution, qui vaut tant qu'il y figure**.
 
 | | |
 |---|---|
@@ -26,12 +25,7 @@ informations, ou ne pas y entrer.
 | Auteur | **M.Dailly** ([sketchfab.com/m.dailly](https://sketchfab.com/m.dailly)) |
 | Source | [sketchfab.com/3d-models/la-cascade-820f7441157546949d07e3ce52b2287a](https://sketchfab.com/3d-models/la-cascade-820f7441157546949d07e3ce52b2287a) |
 | Licence | **CC BY 4.0** — [creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/) |
-| Modifications | Matériau `KHR_materials_unlit` converti en PBR (`metallic 0`, `roughness 0.95`, double face) afin que le modèle reçoive l'éclairage et projette une ombre. Géométrie et texture inchangées. |
-
-La même attribution est inscrite dans le fichier lui-même, en `asset.copyright` :
-elle voyage donc avec le modèle, y compris si quelqu'un le récupère seul. Le
-script de conversion est versionné à côté du modèle
-(`_convertir-glb.mjs`), pour que la transformation soit vérifiable et rejouable.
+| Modifications | Matériau `KHR_materials_unlit` converti en PBR (`metallic 0`, `roughness 0.95`, double face). Géométrie et texture inchangées. |
 
 ### `projects/Atlas/demos/monument-glb-marseille/`
 
@@ -76,7 +70,7 @@ Fonds de carte : [OpenFreeMap](https://openfreemap.org/) et
 | Élément | Source | Licence |
 |---|---|---|
 | Position, code et catégorie des 643 points lumineux | Ville de Marseille, *Éclairage 2023* (données ouvertes) | Licence Ouverte 2.0 |
-| Terrain, sol, voirie, toitures, façades, ouvrages, escaliers, eau, clôtures, arbres (position, hauteur, essence), tracé de la ronde | IGN (RGE ALTI, LiDAR HD, BD TOPO, BD ORTHO) et Panoramax, via la maquette v9.3 de pix2hdr (Cerema) | Licence Ouverte 2.0 |
+| Terrain, sol, voirie, toitures, façades, ouvrages, escaliers, eau, clôtures, arbres (position, hauteur, essence), tracé de la ronde | IGN (RGE ALTI, LiDAR HD, BD TOPO, BD ORTHO) et Panoramax, via la maquette v9.3 de pix2hdr | Licence Ouverte 2.0 |
 | Fontaine monumentale (`fontaine-v4.glb`, couche seule) | Adaptation d'une photographie de Wikimedia Commons | CC BY-SA 4.0 |
 | Piège lumineux (`piege-lumineux.glb`) | Création de ce dépôt (`piege-lumineux.py`) | Licence Ouverte 2.0 |
 | Caractéristiques des luminaires, pièges, relevés, comptages | **Fictifs**, produits par règles (`fabriquer.py`) | — |

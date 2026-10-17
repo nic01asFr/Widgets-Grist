@@ -236,7 +236,7 @@ if (moteurGarde) console.log(`moteur de formulaires : ${moteurGarde} fichier(s) 
  */
 // La démonstration de la vitrine, `palais-longchamp`, n'est pas copiée d'ici : elle est fabriquée directement sous
 // `published/atlas/demos/` par `projects/Atlas/vitrine-longchamp/fabriquer-scene.py`. Celle des Aygalades n'est plus publiée
-// (ses sources restent dans `projects/Atlas/demos/`).
+// (ses sources ont quitté l'arbre du dépôt le 17/10/2026 ; elles restent dans l'historique git).
 const DEMOS = ['osm-marseille-vieux-port'];
 const SERVIS = /\.(json|geojson|glb)$/;
 const demSrc = path.join(src, 'demos');

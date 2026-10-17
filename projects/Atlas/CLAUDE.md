@@ -102,7 +102,7 @@ Tests : 1241 verts.
   de récit capture la source du relief et son exagération.
 - **Scène externe** (`?scene=`) : manifeste publié, sans document ; démos
   `osm-marseille-vieux-port` publiée ; `palais-longchamp` (vitrine, 03/10/2026) est fabriquée sous `published/` ; celle des Aygalades n'est plus publiée
-  (sources dans `projects/Atlas/demos/`, les remarques qui la citent plus bas gardent leur valeur).
+  (sources retirées de l'arbre le 17/10/2026, elles restent dans l'historique git ; les remarques qui la citent plus bas gardent leur valeur).
 - Dock soleil haut-droite (repli style boussole) ; inspecteur fermable.
 - Couches fond (buildings/landscape/lines) masquées par défaut à l’import.
 - **Objets réalistes réglés comme une couche** (non publié) : panneau « Spécifications »,
