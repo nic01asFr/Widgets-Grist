@@ -249,7 +249,7 @@
         "role": "Intégrer",
         "titre": "Atlas aux couleurs de votre site",
         "format": "large",
-        "texte": "Une balise `<atlas-bi>` dans votre page, vos données en JSON, votre charte graphique : la carte, sa légende, ses bulles et son fond de plan prennent vos couleurs et votre police. Quatre couleurs suffisent : Atlas calcule les palettes de données, les contours et la sélection, puis mesure la lisibilité et vous dit ce qui ne passe pas. On peut aussi dessiner les palettes une à une. Aucune police à télécharger et, avec un fond uni, aucun service extérieur : la carte reste rapide et respecte la vie privée de vos visiteurs. L’atelier génère le code à copier au fur et à mesure que vous réglez.",
+        "texte": "Une balise `<atlas-bi>` dans votre page, vos données en JSON, votre charte graphique : la carte, sa légende, ses bulles et son fond de plan prennent vos couleurs et votre police. Quatre couleurs suffisent : Atlas calcule les palettes de données, les contours et la sélection, puis mesure la lisibilité et vous dit ce qui ne passe pas. On peut aussi dessiner les palettes une à une. Aucune police à télécharger et, avec l’option `base=\"aucune\"`, aucun service extérieur contacté au démarrage : la carte reste rapide et respecte la vie privée de vos visiteurs. L’atelier génère le code à copier au fur et à mesure que vous réglez.",
         "pourquoi": "Une carte qui a l’air de votre site, en quelques lignes, sans développer de module de cartographie.",
         "exemple": "cinq chartes fictives de départ : changez les couleurs, le fond de carte, les palettes ; le code et la mesure de lisibilité suivent.",
         "utilise": [

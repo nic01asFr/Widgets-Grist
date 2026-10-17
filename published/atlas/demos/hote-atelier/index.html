@@ -113,7 +113,7 @@
       <div class="ligne"><label for="c-veget">Végétation colorée<small>sinon, une teinte de votre marque</small></label><input type="checkbox" id="veget-coloree"><input type="color" id="c-veget" aria-label="Couleur de la végétation"></div>
     </div>
     <div id="reglage-uni" hidden><div class="ligne"><label for="c-uni">Couleur du fond</label><input type="color" id="c-uni"><input type="text" class="hex" id="h-uni" aria-label="Couleur du fond, en hexadécimal"></div></div>
-    <p class="aide" id="aide-fond">Le plan aux couleurs de la marque dessine le fond avec une seule teinte, plus ou moins intense : aucune autre couleur ne vient concurrencer vos données.</p>
+    <p class="aide" id="aide-fond">Le plan aux couleurs de la marque dessine le fond avec une seule teinte, plus ou moins intense : aucune autre couleur ne vient concurrencer vos données. Pour ne contacter AUCUN service extérieur au démarrage, choisissez « Fond uni » : le code ajoute alors <code>base="aucune"</code>.</p>
 
     <h2>Palettes de données</h2>
     <div id="palettes"></div>
@@ -220,7 +220,7 @@ function codePage() {
 
 <!-- 2. La carte, aux couleurs de votre charte -->
 <atlas-bi src="${URL_PUBLIEE}index.html"
-          fond="${etat.mode}" style="display:block; height:480px"
+          fond="${etat.mode}"${etat.mode === 'uni' ? ' base="aucune"' : ''} style="display:block; height:480px"
           aria-label="Carte de nos équipements">
 
   <!-- votre charte graphique -->
