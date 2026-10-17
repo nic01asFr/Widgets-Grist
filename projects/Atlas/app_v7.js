@@ -4,7 +4,7 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene } from './lib/scene-externe.js?v=20260827a';
+import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=20260827a';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
@@ -14022,7 +14022,44 @@ async function monterSceneExterne(manifest) {
  */
 const _sceneHote = { ids: [] };
 
+const _dallesHote = new Map();   // identifiant d'application (`dalles:<id>`) -> couche de dalles 3D (lib/dalles3d-couche.js)
+
+/** Altitude du plan `y = 0` d'une dalle : l'altitude IGN69 de l'ancrage quand le relief est le LiDAR HD IGN, le sol du relief sinon (et à plat, zéro). */
+function altitudeBaseDalle(ancrage) {
+    if (!STATE.settings.terrain3D || !map) return 0;
+    if (STATE.settings.terrainSource === 'ign') return ancrage.altitudeOrigine;
+    const e = map.queryTerrainElevation(ancrage.origine);   // relief mondial : pas en IGN69, la dalle se pose sur le sol local
+    return Number.isFinite(e) ? e : 0;
+}
+
+async function lireReponseDalles(url, maxOctets, lecture) {
+    const r = await fetch(url, { credentials: 'omit' });
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' pour ' + url);
+    const annonce = Number(r.headers.get('content-length'));
+    if (Number.isFinite(annonce) && annonce > maxOctets) throw new Error('réponse trop volumineuse (' + Math.round(annonce / 1048576) + ' Mo) : ' + url);
+    const v = await lecture(r);
+    if ((v.byteLength || JSON.stringify(v).length) > maxOctets) throw new Error('réponse trop volumineuse : ' + url);
+    return v;
+}
+
+/** Monte une maquette en dalles 3D désignée par l'adresse de son manifeste de grille. Chargé À LA DEMANDE : rien de tout cela sans une scène de dalles. */
+async function monterDallesHote({ id, grille }) {
+    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=20261017a');
+    const cle = 'dalles:' + id;
+    if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
+    const couche = creerCoucheDalles({
+        id, urlGrille: grille, THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
+        creerChargeur: () => { const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder); return l; },
+        fetchJson: (u) => lireReponseDalles(u, 2 * 1024 * 1024, (r) => r.json()),
+        fetchOctets: (u, max) => lireReponseDalles(u, max, (r) => r.arrayBuffer()),
+    });
+    try { const r = await couche.charger(); _dallesHote.set(cle, couche); return { id: cle, n: r.n, version: r.version }; }
+    catch (e) { couche.retirer(); throw e; }
+}
+
 function retirerSceneHote() {
+    for (const c of _dallesHote.values()) c.retirer();
+    _dallesHote.clear();
     if (!_sceneHote.ids.length) return 0;
     const ids = new Set(_sceneHote.ids); _sceneHote.ids = [];
     STATE.layers.filter((l) => ids.has(l.id)).forEach(removeLayerGfx);
@@ -14046,6 +14083,7 @@ async function monterSceneHote(scene) {
 }
 
 function visibiliteCoucheHote(id, visible) {
+    if (_dallesHote.has(id)) return _dallesHote.get(id).montrer(visible);
     const l = _sceneHote.ids.includes(id) ? STATE.layers.find((x) => x.id === id) : null;
     if (!l) throw new Error('couche inconnue : ' + id);
     setLayerVisibility(l, !!visible); updateLegend(); renderLayersPanel(STATE.currentModule);
@@ -14054,10 +14092,9 @@ function visibiliteCoucheHote(id, visible) {
 
 function cadrerCouchesHote(ids) {
     let b = null;
-    for (const l of STATE.layers.filter((x) => ids.includes(x.id))) {
-        const c = boundsFromGeoJSON(l.geojson) || l._bboxDeclaree; if (!c) continue;   // une couche distante n'a que l'emprise déclarée
-        b = b ? [[Math.min(b[0][0], c[0][0]), Math.min(b[0][1], c[0][1])], [Math.max(b[1][0], c[1][0]), Math.max(b[1][1], c[1][1])]] : c;
-    }
+    const fusion = (c) => { if (c) b = b ? [[Math.min(b[0][0], c[0][0]), Math.min(b[0][1], c[0][1])], [Math.max(b[1][0], c[1][0]), Math.max(b[1][1], c[1][1])]] : c; };
+    for (const l of STATE.layers.filter((x) => ids.includes(x.id))) fusion(boundsFromGeoJSON(l.geojson) || l._bboxDeclaree);   // une couche distante n'a que l'emprise déclarée
+    for (const id of ids) if (_dallesHote.has(id)) fusion(_dallesHote.get(id).bornes());
     if (!b || !map) return false;
     map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 600 });
     return true;
@@ -18178,8 +18215,8 @@ async function demarrerBi() {
         // Profil complet : la page hôte pilote aussi les scènes Atlas (lib/bi/canevas.js, chargé par montage.js à cause de cette façade).
         if (PROFIL_COMPLET) {
             window.__atlasCanevas = Object.freeze({
-                monterScene: monterSceneHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
-                outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene }),
+                monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
+                outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
             });
         }
         const bi = await chargement;

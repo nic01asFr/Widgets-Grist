@@ -8,11 +8,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { attacher } from '../lib/bi/bi-runtime.js';
-import { estSceneAtlas, adresseAdmise, verifierSceneHote, correspondanceCouches, classerEchecs, brancher, PLAFOND_OCTETS, PLAFOND_COUCHES } from '../lib/bi/canevas.js';
-import { VERSIONS_LUES, deballerScene, verifierFormeScene } from '../lib/scene-externe.js';
+import { estSceneAtlas, verifierSceneHote, correspondanceCouches, classerEchecs, brancher, PLAFOND_OCTETS, PLAFOND_COUCHES, PLAFOND_COUCHES_DALLES, estCoucheDalles } from '../lib/bi/canevas.js';
+import { VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from '../lib/scene-externe.js';
 import { carteSimulee, MANIFESTE, DONNEES } from './aide-carte-bi.js';
 
-const OUTILS = { VERSIONS_LUES, deballerScene, verifierFormeScene };
+const OUTILS = { VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise };
 
 const lire = (rel) => fs.readFileSync(new URL('../' + rel, import.meta.url), 'utf8');
 const SCENE = { version: '0.2.2', layers: [{ id: 'bati', name: 'Bâti', geojson: 'https://donnees.example/bati.geojson' }, { id: 'lampes', name: 'Lampes', geojson: { type: 'FeatureCollection', features: [] } }] };
@@ -72,6 +72,7 @@ test('classerEchecs : une couche non montée est une erreur, une couche montée 
 function facade() {
   const journal = [];
   return { journal, outils: OUTILS, monterScene: async (s) => { journal.push(['monter', s]); return { couches: [{ id: 'layer-scene-bati', n: 12 }, { id: 'layer-scene-lampes', n: 0 }], echecs: [{ nom: 'Carrières', raison: 'source.table : pas de document' }], erreur: null }; },
+    monterDalles: async (d) => { journal.push(['dalles', d]); if (/mauvaise/.test(d.grille)) throw new Error('manifeste de grille : schéma non lu'); return { id: 'dalles:' + d.id, n: 7 }; },
     retirerScene: () => { journal.push(['retirer']); return 2; }, visibilite: (id, v) => { journal.push(['visibilite', id, v]); return v; }, cadrer: (ids) => { journal.push(['cadrer', ids]); return true; } };
 }
 
@@ -118,8 +119,45 @@ test('brancher : setLayerVisibility et fitTo reconnaissent les couches de la sc�
 
 test('le composant nu ne charge jamais le canevas : seul le profil complet pose la façade, seul montage.js l\'importe, et à la demande', () => {
   const app = lire('app_v7.js'), montage = lire('lib/bi/montage.js');
-  assert.match(app, /if \(PROFIL_COMPLET\) \{\s*window\.__atlasCanevas = Object\.freeze\(\{\s*monterScene: monterSceneHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,\s*outils: Object\.freeze\(\{ VERSIONS_LUES, deballerScene, verifierFormeScene \}\),/);
+  assert.match(app, /if \(PROFIL_COMPLET\) \{\s*window\.__atlasCanevas = Object\.freeze\(\{\s*monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,\s*outils: Object\.freeze\(\{ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise \}\),/);
   assert.equal((app.match(/__atlasCanevas/g) || []).length, 1, 'posée une seule fois');
   assert.match(montage, /fenetre\.__atlasCanevas \? await import\('\.\/canevas\.js'\) : null/);
   for (const f of ['lib/bi/entree.js', 'lib/bi/carte-nue.js', 'lib/bi/liaison.js', 'lib/bi/bi-runtime.js', 'index_bi.html']) assert.ok(!/(?:from\s+|import\s*\(\s*)['"][^'"]*canevas\.js/.test(lire(f)), f + ' ne doit pas importer canevas.js');
+});
+
+const AVEC_DALLES = { version: '0.2.2', layers: [
+  { id: 'maquette', name: 'Maquette', type: 'dalles3d', dalles3d: { grille: 'https://fabrique.example/api/fabrique/atlas/grille3d.json' } },
+  { id: 'bati', name: 'Bâti', geojson: { type: 'FeatureCollection', features: [] } }] };
+
+test('estCoucheDalles et contrôle : une couche de dalles 3D porte l adresse HTTPS de son manifeste de grille, rien d autre', () => {
+  assert.equal(estCoucheDalles(AVEC_DALLES.layers[0]), true); assert.equal(estCoucheDalles(AVEC_DALLES.layers[1]), false); assert.equal(estCoucheDalles(null), false);
+  assert.deepEqual(verifierSceneHote(AVEC_DALLES, OUTILS).ecarts, []);
+  const ko = (d) => verifierSceneHote({ version: '0.2.2', layers: [{ id: 'm', type: 'dalles3d', dalles3d: d }] }, OUTILS).ecarts.join(' | ');
+  assert.match(ko(undefined), /grille/); assert.match(ko({}), /manquante/); assert.match(ko({ grille: './grille3d.json' }), /absolue/); assert.match(ko({ grille: 'http://distant.example/g.json' }), /https requis/);
+  assert.match(ko({ grille: 'data:application/json,{}' }), /https requis/); assert.equal(ko({ grille: 'http://127.0.0.1:8096/api/fabrique/atlas/grille3d.json' }), '');
+  const trop = { version: '0.2.2', layers: Array.from({ length: PLAFOND_COUCHES_DALLES + 1 }, (_, i) => ({ id: 'm' + i, type: 'dalles3d', dalles3d: { grille: 'https://f.example/g.json' } })) };
+  assert.match(verifierSceneHote(trop, OUTILS).ecarts.join(' '), /trop de couches de dalles 3D/);
+});
+
+test('brancher : une scène avec dalles 3D monte chaque couche de dalles seule, l application monte le reste, le compte et les erreurs sont par couche', async () => {
+  const rt = attacher(carteSimulee()); const f = facade(); brancher(rt, f);
+  const r = await rt.api.setScene(AVEC_DALLES);
+  assert.equal(r.maquette, 7, 'le compte d une couche de dalles : les dalles disponibles dans la vue'); assert.equal(r.bati, 12);
+  const monte = f.journal.find((j) => j[0] === 'monter')[1]; assert.deepEqual(monte.layers.map((l) => l.id), ['bati'], 'la couche de dalles n est pas passée à l application');
+  assert.deepEqual(f.journal.find((j) => j[0] === 'dalles')[1], { id: 'maquette', nom: 'Maquette', grille: 'https://fabrique.example/api/fabrique/atlas/grille3d.json', options: AVEC_DALLES.layers[0].dalles3d });
+  assert.deepEqual(rt.api.ping().couches_scene, ['bati', 'maquette']);
+  assert.equal(rt.api.setLayerVisibility('maquette', false), false); assert.deepEqual(f.journal.pop(), ['visibilite', 'dalles:maquette', false]);
+  assert.equal(rt.api.fitTo('maquette'), true); assert.deepEqual(f.journal.pop(), ['cadrer', ['dalles:maquette']]);
+  assert.equal(rt.api.fitTo(), true); assert.deepEqual(f.journal.pop(), ['cadrer', ['layer-scene-bati', 'dalles:maquette']]);
+});
+
+test('brancher : un manifeste de grille illisible est une erreur de CETTE couche, les autres se montent ; une scène de dalles seules ne monte rien dans l application', async () => {
+  const rt = attacher(carteSimulee()); const f = facade(); brancher(rt, f);
+  const mauvaise = { version: '0.2.2', layers: [{ id: 'm', name: 'M', type: 'dalles3d', dalles3d: { grille: 'https://f.example/mauvaise/grille3d.json' } }, AVEC_DALLES.layers[1]] };
+  const r = await rt.api.setScene(mauvaise);
+  assert.match(r._erreurs.m, /schéma non lu/); assert.equal(r.bati, 12); assert.equal(r.m, undefined);
+  f.journal.length = 0;
+  const seules = await rt.api.setScene({ version: '0.2.2', layers: [AVEC_DALLES.layers[0]] });
+  assert.equal(seules.maquette, 7); assert.equal(f.journal.filter((j) => j[0] === 'monter').length, 0, 'aucune couche pour l application : elle n est pas appelée');
+  assert.deepEqual(f.journal[0], ['retirer'], 'la scène précédente est retirée d abord');
 });
