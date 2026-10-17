@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas aux couleurs de votre marque - l'atelier de style</title>
+<style>
+  /* L'interface de l'atelier est volontairement NEUTRE : seule la zone « votre site » prend les couleurs choisies. */
+  :root { --ui-fond: #f5f4f1; --ui-surface: #ffffff; --ui-encre: #1c2128; --ui-doux: #5b6572; --ui-trait: #d9d6cf; --ui-accent: #1f4e79; --ui-ok: #1e7a46; --ui-alerte: #9a5b00; --ui-code: #14181d;
+    --police: system-ui, 'Segoe UI', Roboto, sans-serif; --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    /* les couleurs de la marque, reprises par l'aperçu de site */
+    --m-principal: #c44536; --m-secondaire: #2e4e54; --m-fond: #ffffff; --m-encre: #1f1b14; --m-police: var(--police); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font: 14px/1.45 var(--police); color: var(--ui-encre); background: var(--ui-fond); }
+  .entete { padding: 14px 20px 12px; border-bottom: 1px solid var(--ui-trait); background: var(--ui-surface); }
+  .entete h1 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+  .entete p { margin: 3px 0 0; color: var(--ui-doux); max-width: 100ch; }
+  .atelier { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: calc(100vh - 74px); }
+  .reglages { padding: 14px 16px 24px; border-right: 1px solid var(--ui-trait); background: var(--ui-surface); overflow: auto; max-height: calc(100vh - 74px); position: sticky; top: 0; }
+  .reglages h2 { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ui-doux); }
+  .reglages h2:first-child { margin-top: 0; }
+  .zone { display: grid; grid-template-rows: auto minmax(340px, 1fr) auto; min-width: 0; }
+  /* aperçu d'un site : ce que la marque donne à une page ordinaire */
+  .site { display: flex; align-items: center; gap: 18px; padding: 10px 18px; background: var(--m-fond); color: var(--m-encre); font-family: var(--m-police); border-bottom: 3px solid var(--m-principal); }
+  .site b { font-size: 17px; color: var(--m-principal); letter-spacing: -.01em; }
+  .site nav { display: flex; gap: 14px; color: var(--m-secondaire); font-size: 14px; }
+  .site .bouton-site { margin-left: auto; padding: 6px 14px; border-radius: 6px; background: var(--m-principal); color: var(--m-fond); font-weight: 600; font-size: 13.5px; }
+  .carte-zone { position: relative; min-height: 340px; }
+  atlas-bi { position: absolute; inset: 0; display: block; }
+  .maj { position: absolute; right: 12px; top: 10px; z-index: 5; padding: 3px 10px; border-radius: 999px; background: rgba(20, 24, 29, .78); color: #fff; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .maj.visible { opacity: 1; }
+  .bas { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0; border-top: 1px solid var(--ui-trait); background: var(--ui-surface); }
+  .code { min-width: 0; border-right: 1px solid var(--ui-trait); }
+  .onglets { display: flex; align-items: center; gap: 4px; padding: 8px 12px 0; border-bottom: 1px solid var(--ui-trait); }
+  .onglets button[role=tab] { padding: 7px 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--ui-doux); font: inherit; cursor: pointer; }
+  .onglets button[aria-selected="true"] { background: var(--ui-code); color: #e7ecf2; }
+  .onglets .actions { margin-left: auto; display: flex; gap: 6px; padding-bottom: 6px; }
+  pre { margin: 0; padding: 12px 14px; max-height: 300px; overflow: auto; background: var(--ui-code); color: #d6deea; font: 12.5px/1.5 var(--mono); tab-size: 2; font-variant-ligatures: none; }
+  .lisibilite { padding: 12px 16px 14px; min-width: 0; }
+  .lisibilite h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ui-doux); }
+  button, select, input { font: inherit; }
+  .btn { padding: 6px 12px; border: 1.5px solid var(--ui-accent); border-radius: 8px; background: var(--ui-surface); color: var(--ui-accent); cursor: pointer; font-size: 13px; }
+  .btn:hover { background: #eaf1f8; } .btn.plein { background: var(--ui-accent); color: #fff; }
+  :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .preset { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border: 1.5px solid var(--ui-trait); border-radius: 999px; background: #fff; cursor: pointer; font-size: 13px; }
+  .preset[aria-pressed="true"] { border-color: var(--ui-accent); background: #eaf1f8; font-weight: 700; }
+  .preset i { display: flex; } .preset i span { width: 11px; height: 11px; border: 1px solid rgba(0, 0, 0, .15); } .preset i span:first-child { border-radius: 50% 0 0 50%; } .preset i span:last-child { border-radius: 0 50% 50% 0; }
+  .ligne { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .ligne label { flex: 1; min-width: 0; }
+  .ligne small { display: block; color: var(--ui-doux); font-size: 12px; }
+  input[type=color] { width: 36px; height: 30px; padding: 0; border: 1.5px solid var(--ui-trait); border-radius: 6px; background: none; cursor: pointer; flex: none; }
+  input[type=text].hex { width: 84px; padding: 5px 7px; border: 1.5px solid var(--ui-trait); border-radius: 6px; font-family: var(--mono); font-size: 12.5px; }
+  input[type=text].hex[aria-invalid="true"] { border-color: #b3261e; }
+  select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--ui-trait); border-radius: 8px; background: #fff; }
+  input[type=range] { width: 100%; accent-color: var(--ui-accent); }
+  .curseur { margin: 8px 0; } .curseur label { display: flex; justify-content: space-between; font-size: 13px; } .curseur output { color: var(--ui-doux); font-variant-numeric: tabular-nums; }
+  .palette { margin: 10px 0; } .palette > div:first-child { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; } .palette small { color: var(--ui-doux); }
+  .nuancier { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; align-items: center; }
+  .nuancier input[type=color] { width: 28px; height: 28px; border-radius: 5px; }
+  .nuancier button { width: 28px; height: 28px; border: 1.5px dashed var(--ui-trait); border-radius: 5px; background: #fff; color: var(--ui-doux); cursor: pointer; line-height: 1; }
+  .lien { padding: 0; border: 0; background: none; color: var(--ui-accent); text-decoration: underline; cursor: pointer; font-size: 12px; }
+  .aide { color: var(--ui-doux); font-size: 12.5px; margin: 4px 0 0; }
+  .score { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; }
+  .score b { font-size: 26px; font-variant-numeric: tabular-nums; }
+  .score.ok b { color: var(--ui-ok); } .score.att b { color: var(--ui-alerte); }
+  .conseils { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--ui-doux); } .conseils li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 900px) {
+    .atelier { grid-template-columns: 1fr; }
+    .reglages { position: static; max-height: none; order: 2; border-right: 0; border-top: 1px solid var(--ui-trait); }
+    .zone { order: 1; grid-template-rows: auto 56vh auto; }
+    .bas { grid-template-columns: 1fr; } .code { border-right: 0; border-bottom: 1px solid var(--ui-trait); }
+    .site nav { display: none; }
+    .entete { padding: 8px 14px; } .entete h1 { font-size: 17px; } .entete p { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .onglets { flex-wrap: wrap; } .onglets .actions { margin-left: 0; width: 100%; padding-top: 6px; }
+    .btn, .preset, select, .onglets button[role=tab] { min-height: 40px; }
+    input[type=color] { width: 44px; height: 40px; }
+  }
+</style>
+</head>
+<body>
+<header class="entete">
+  <h1>Atlas aux couleurs de votre marque</h1>
+  <p>Réglez la charte : la carte, sa légende et ses bulles changent en direct. Copiez le code : quelques lignes à coller dans votre site, sans programmation. Données d'exemple <strong>fictives</strong>.</p>
+</header>
+
+<div class="atelier">
+  <aside class="reglages" aria-label="Réglages de la charte graphique">
+    <h2>Point de départ</h2>
+    <div class="presets" id="presets" role="group" aria-label="Chartes d'exemple"></div>
+    <p class="aide">Cinq chartes fictives pour démarrer. <button type="button" class="lien" id="importer">Importer ma charte (JSON)</button><input type="file" id="fichier" accept="application/json,.json" hidden></p>
+
+    <h2>Votre marque</h2>
+    <div id="marque"></div>
+    <p class="aide">Ces quatre couleurs suffisent : Atlas calcule le reste (palettes de données, contours, sélection, fond de carte) et vérifie la lisibilité.</p>
+
+    <h2>Fond de carte</h2>
+    <div class="ligne"><label for="mode-fond">Style du fond</label></div>
+    <select id="mode-fond" aria-describedby="aide-fond">
+      <option value="plan">Plan aux couleurs de la marque</option>
+      <option value="atlas">Plan Atlas (par défaut)</option>
+      <option value="voile">Plan Atlas estompé</option>
+      <option value="uni">Fond uni</option>
+    </select>
+    <div id="reglage-plan">
+      <div class="curseur"><label for="i-vert">Végétation <output id="o-vert"></output></label><input type="range" id="i-vert" min="0" max="100"></div>
+      <div class="curseur"><label for="i-bati">Bâtiments <output id="o-bati"></output></label><input type="range" id="i-bati" min="0" max="100"></div>
+      <div class="curseur"><label for="i-eau">Eau <output id="o-eau"></output></label><input type="range" id="i-eau" min="0" max="100"></div>
+      <div class="curseur"><label for="i-filet">Routes <output id="o-filet"></output></label><input type="range" id="i-filet" min="0" max="100"></div>
+      <div class="curseur"><label for="i-limite">Limites <output id="o-limite"></output></label><input type="range" id="i-limite" min="0" max="100"></div>
+      <div class="ligne"><label for="c-veget">Végétation colorée<small>sinon, une teinte de votre marque</small></label><input type="checkbox" id="veget-coloree"><input type="color" id="c-veget" aria-label="Couleur de la végétation"></div>
+    </div>
+    <div id="reglage-uni" hidden><div class="ligne"><label for="c-uni">Couleur du fond</label><input type="color" id="c-uni"><input type="text" class="hex" id="h-uni" aria-label="Couleur du fond, en hexadécimal"></div></div>
+    <p class="aide" id="aide-fond">Le plan aux couleurs de la marque dessine le fond avec une seule teinte, plus ou moins intense : aucune autre couleur ne vient concurrencer vos données.</p>
+
+    <h2>Palettes de données</h2>
+    <div id="palettes"></div>
+
+    <h2>Texte</h2>
+    <label class="sr-only" for="famille">Famille de police</label>
+    <select id="famille">
+      <option value="systeme">Système (par défaut)</option><option value="sans">Sans empattement</option><option value="serif">Avec empattement</option><option value="mono">Chasse fixe</option><option value="lisible">Très lisible (plus large)</option>
+    </select>
+    <div class="curseur"><label for="t-leg">Taille de la légende <output id="o-leg"></output></label><input type="range" id="t-leg" min="8" max="24"></div>
+    <div class="curseur"><label for="t-eti">Taille des étiquettes <output id="o-eti"></output></label><input type="range" id="t-eti" min="8" max="24"></div>
+    <p class="aide">Cinq familles sûres, sans police à télécharger : la carte reste rapide et respecte la vie privée de vos visiteurs.</p>
+  </aside>
+
+  <main class="zone">
+    <div class="site" id="site" aria-hidden="true"><b>Votre marque</b><nav><span>Accueil</span><span>Nos équipements</span><span>Contact</span></nav><span class="bouton-site">Nous écrire</span></div>
+    <div class="carte-zone">
+      <atlas-bi id="carte" src="../../index.html" fond="plan" cadrage="aucun" delai="30000" delai-connexion="45000" aria-label="Carte d'exemple aux couleurs de la marque">
+        <script type="application/json" data-atlas="charte">{}</script>
+        <script type="application/json" data-atlas="manifeste">{}</script>
+        <script type="application/json" data-atlas="donnees">{}</script>
+      </atlas-bi>
+      <div class="maj" id="maj" role="status">Mise à jour…</div>
+    </div>
+    <div class="bas">
+      <section class="code" aria-label="Code à copier">
+        <div class="onglets" role="tablist" aria-label="Code">
+          <button type="button" role="tab" id="t-page" aria-selected="true" aria-controls="code">Dans votre page</button>
+          <button type="button" role="tab" id="t-charte" aria-selected="false" aria-controls="code">charte.json</button>
+          <div class="actions"><button type="button" class="btn plein" id="copier">Copier</button><button type="button" class="btn" id="telecharger">Télécharger la charte</button></div>
+        </div>
+        <pre id="code" tabindex="0" role="tabpanel" aria-labelledby="t-page"></pre>
+        <p class="aide" style="padding: 0 14px 10px" id="etat-copie" role="status"></p>
+      </section>
+      <section class="lisibilite" aria-label="Lisibilité">
+        <h2>Lisibilité</h2>
+        <p class="score ok" id="score"><b>–</b><span>vérification en cours</span></p>
+        <div id="constats"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import '../../lib/bi/atlas-bi-element.js';
+
+const $ = (id) => document.getElementById(id);
+const carte = $('carte');
+// En développement, l'entrée d'Atlas est index_v7.html : ?atlas=../../index_v7.html
+const atlas = new URLSearchParams(location.search).get('atlas'); if (atlas) carte.setAttribute('src', atlas);
+const URL_PUBLIEE = 'https://nic01asfr.github.io/Widgets-Grist/atlas/';
+
+// ---- Des chartes d'exemple FICTIVES : aucune charte d'organisation n'est livrée avec Atlas ----
+const PRESETS = [
+  { id: 'atlas', nom: 'Atlas', graines: { principal: '#c44536', secondaire: '#2e4e54', fond: '#ffffff', encre: '#1f1b14' }, famille: 'systeme' },
+  { id: 'marine', nom: 'Marine', graines: { principal: '#0b4f8a', secondaire: '#c26a0a', fond: '#ffffff', encre: '#10243e' }, famille: 'sans' },
+  { id: 'papier', nom: 'Papier', graines: { principal: '#b4452c', secondaire: '#3d6670', fond: '#faf6ee', encre: '#2b2118' }, famille: 'serif' },
+  { id: 'foret', nom: 'Forêt', graines: { principal: '#2a7447', secondaire: '#8a5a2b', fond: '#f3f7f2', encre: '#14301f' }, famille: 'sans' },
+  { id: 'nuit', nom: 'Nuit', graines: { principal: '#7cc4ff', secondaire: '#ffb86b', fond: '#12161f', encre: '#e8ecf3' }, famille: 'sans' },
+];
+const INTENSITES_DEFAUT = { vert: 0.07, bati: 0.13, eau: 0.3, filet: 0.38, limite: 0.6 };
+const FAMILLES_CSS = { systeme: 'system-ui, sans-serif', sans: 'system-ui, "Segoe UI", Roboto, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, Consolas, monospace', lisible: 'Verdana, Tahoma, sans-serif' };
+const MARQUE = [['principal', 'Couleur principale', 'boutons, titres, première teinte des données'], ['secondaire', 'Couleur secondaire', 'accents, contraste avec la principale'], ['fond', 'Fond', 'fond de votre site'], ['encre', 'Texte', 'couleur du texte']];
+const PALETTES = [['sequentielle', 'Valeurs croissantes', 'densités, taux : du pâle au foncé', 2, 9], ['divergente', 'Écart à une référence', 'au-dessus ou au-dessous : deux teintes autour d’un centre', 3, 9], ['qualitative', 'Catégories', 'des types distincts les uns des autres', 2, 8]];
+
+const defaut = () => ({ nom: 'Ma marque', graines: { ...PRESETS[0].graines }, preset: 'atlas', mode: 'plan', intensites: { ...INTENSITES_DEFAUT }, vegColoree: false, vegetation: '#6b8f5a', fondUni: '#f2f2f0', famille: 'systeme', tailles: { legende: 12, etiquette: 11 }, palettes: { sequentielle: null, divergente: null, qualitative: null } });
+let etat = defaut(); let resolue = null;
+
+const CHEMINS_PALETTE = { sequentielle: (d) => d.sequentielles && d.sequentielles.principale, divergente: (d) => d.divergente, qualitative: (d) => d.qualitative };
+function charteDepuisEtat() {
+  const c = { version: 'atlas-charte/0.1', nom: etat.nom, graines: { ...etat.graines } };
+  const donnees = {};
+  if (etat.palettes.sequentielle) donnees.sequentielles = { principale: etat.palettes.sequentielle };
+  if (etat.palettes.divergente) donnees.divergente = etat.palettes.divergente;
+  if (etat.palettes.qualitative) donnees.qualitative = etat.palettes.qualitative;
+  if (Object.keys(donnees).length) c.donnees = donnees;
+  if (etat.mode === 'plan') {
+    const f = {}; const diff = Object.fromEntries(Object.entries(etat.intensites).filter(([k, v]) => Math.abs(v - INTENSITES_DEFAUT[k]) > 0.004));
+    if (Object.keys(diff).length) f.intensites = diff; if (etat.vegColoree) f.vegetation = etat.vegetation; if (Object.keys(f).length) c.fond = f;
+  }
+  if (etat.famille !== 'systeme' || etat.tailles.legende !== 12 || etat.tailles.etiquette !== 11) c.texte = { famille: etat.famille, ...(etat.tailles.legende !== 12 || etat.tailles.etiquette !== 11 ? { tailles: { ...etat.tailles } } : {}) };
+  return c;
+}
+
+// ---- Les données d'exemple : fictives, inventées ici ----
+const alea = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const r = alea(77);
+const CENTRES = [[-1.678, 48.113], [-1.640, 48.130], [-1.710, 48.095], [-1.650, 48.085], [-1.600, 48.115], [-1.720, 48.135], [-1.690, 48.150], [-1.620, 48.100]];
+const CATEGORIES = ['Culture', 'Santé', 'Sport', 'Éducation'];
+const sites = Array.from({ length: 150 }, (_, i) => { const c = CENTRES[Math.floor(r() * CENTRES.length)]; return { type: 'Feature', id: i + 1, geometry: { type: 'Point', coordinates: [c[0] + (r() - 0.5) * 0.045, c[1] + (r() - 0.5) * 0.03] }, properties: { ref: 'E' + (i + 1), nom: 'Équipement ' + String(i + 1).padStart(3, '0'), categorie: CATEGORIES[Math.floor(r() * 4)] } }; });
+const MANIFESTE = { title: 'Équipements', interface: { legende: true }, layers: [
+  { id: 'densite', name: 'Densité d’équipements', geometry_type: 'point', visuel: { type: 'hex', taille: 600 } },
+  { id: 'equipements', name: 'Équipements', geometry_type: 'point', cle: 'ref', visuel: { type: 'cercles', rayon: 6 },
+    style: { declarative: { kind: 'categorized', field: 'categorie', stops: CATEGORIES.map((c) => ({ value: c, label: c })) } },
+    bulle: { titre: '{nom}', champs: [{ champ: 'categorie', libelle: 'Catégorie' }] } },
+] };
+const DONNEES = { densite: sites, equipements: sites };
+
+// ---- Le code à copier : l'intégration la plus courte, déclarative ----
+function codePage() {
+  const c = JSON.stringify(charteDepuisEtat(), null, 2).split('\n').map((l) => '    ' + l).join('\n');
+  return `<!-- 1. Le composant Atlas (une ligne) -->
+<script type="module" src="${URL_PUBLIEE}lib/bi/atlas-bi-element.js"><\/script>
+
+<!-- 2. La carte, aux couleurs de votre charte -->
+<atlas-bi src="${URL_PUBLIEE}index.html"
+          fond="${etat.mode}" style="display:block; height:480px"
+          aria-label="Carte de nos équipements">
+
+  <!-- votre charte graphique -->
+  <script type="application/json" data-atlas="charte">
+${c}
+  <\/script>
+
+  <!-- vos données : des entités GeoJSON, une liste par couche -->
+  <script type="application/json" data-atlas="donnees">
+    { "equipements": [ { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-1.678, 48.113] },
+                         "properties": { "nom": "Médiathèque", "categorie": "Culture" } } ] }
+  <\/script>
+</atlas-bi>
+<!-- Sans manifeste, Atlas déduit la carte de vos données ; pour aller plus loin : un bloc data-atlas="manifeste". -->`;
+}
+const codeCharte = () => JSON.stringify(charteDepuisEtat(), null, 2);
+let onglet = 'page';
+function dessinerCode() { $('code').textContent = onglet === 'page' ? codePage() : codeCharte(); $('code').setAttribute('aria-labelledby', onglet === 'page' ? 't-page' : 't-charte'); }
+for (const [id, nom] of [['t-page', 'page'], ['t-charte', 'charte']]) $(id).addEventListener('click', () => { onglet = nom; $('t-page').setAttribute('aria-selected', String(nom === 'page')); $('t-charte').setAttribute('aria-selected', String(nom === 'charte')); dessinerCode(); });
+$('copier').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('code').textContent); $('etat-copie').textContent = 'Copié dans le presse-papiers.'; } catch (e) { const s = getSelection(), g = document.createRange(); g.selectNodeContents($('code')); s.removeAllRanges(); s.addRange(g); $('etat-copie').textContent = 'Sélectionné : faites Ctrl + C.'; } setTimeout(() => { $('etat-copie').textContent = ''; }, 3000); });
+$('telecharger').addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([codeCharte()], { type: 'application/json' })); a.download = 'charte.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); });
+
+// ---- Les réglages ----
+const hexValide = (v) => /^#[0-9a-f]{6}$/i.test(v);
+function ligneCouleur(zone, id, libelle, aide, valeur, surChange) {
+  const d = document.createElement('div'); d.className = 'ligne';
+  const lab = document.createElement('label'); lab.htmlFor = 'c-' + id; lab.innerHTML = '<span></span><small></small>'; lab.firstChild.textContent = libelle; lab.lastChild.textContent = aide;
+  const c = document.createElement('input'); c.type = 'color'; c.id = 'c-' + id; c.value = valeur;
+  const h = document.createElement('input'); h.type = 'text'; h.className = 'hex'; h.value = valeur; h.setAttribute('aria-label', libelle + ', en hexadécimal'); h.maxLength = 7;
+  c.addEventListener('input', () => { h.value = c.value; h.removeAttribute('aria-invalid'); surChange(c.value); });
+  h.addEventListener('input', () => { if (hexValide(h.value)) { c.value = h.value.toLowerCase(); h.removeAttribute('aria-invalid'); surChange(c.value); } else h.setAttribute('aria-invalid', 'true'); });
+  d.append(lab, c, h); zone.append(d); return { c, h };
+}
+const champsMarque = {};
+for (const [cle, lib, aide] of MARQUE) champsMarque[cle] = ligneCouleur($('marque'), 'm-' + cle, lib, aide, etat.graines[cle], (v) => { etat.graines[cle] = v; etat.preset = null; changer(); });
+function synchroMarque() { for (const [cle] of MARQUE) { champsMarque[cle].c.value = etat.graines[cle]; champsMarque[cle].h.value = etat.graines[cle]; champsMarque[cle].h.removeAttribute('aria-invalid'); } }
+
+function dessinerPresets() {
+  const z = $('presets'); z.textContent = '';
+  for (const p of PRESETS) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'preset'; b.setAttribute('aria-pressed', String(etat.preset === p.id));
+    b.innerHTML = '<i><span style="background:' + p.graines.principal + '"></span><span style="background:' + p.graines.secondaire + '"></span><span style="background:' + p.graines.fond + '"></span></i>'; b.append(p.nom);
+    b.addEventListener('click', () => { Object.assign(etat, { graines: { ...p.graines }, famille: p.famille, preset: p.id, nom: p.nom, palettes: { sequentielle: null, divergente: null, qualitative: null } }); synchroTout(); changer(); });
+    z.append(b);
+  }
+}
+function dessinerPalettes() {
+  const z = $('palettes'); z.textContent = '';
+  for (const [cle, lib, aide, mini, maxi] of PALETTES) {
+    const perso = etat.palettes[cle]; const liste = perso || (resolue ? CHEMINS_PALETTE[cle](resolue.charte.donnees) : null) || [];
+    const bloc = document.createElement('div'); bloc.className = 'palette';
+    const tete = document.createElement('div'); const nom = document.createElement('b'); nom.textContent = lib; const etatTxt = document.createElement('small'); etatTxt.textContent = perso ? 'personnalisée ' : 'calculée ';
+    if (perso) { const rest = document.createElement('button'); rest.type = 'button'; rest.className = 'lien'; rest.textContent = 'rétablir'; rest.addEventListener('click', () => { etat.palettes[cle] = null; changer(); }); etatTxt.append(rest); }
+    tete.append(nom, etatTxt); bloc.append(tete);
+    const p = document.createElement('small'); p.textContent = aide; bloc.append(p);
+    const n = document.createElement('div'); n.className = 'nuancier';
+    liste.forEach((couleur, i) => { const c = document.createElement('input'); c.type = 'color'; c.value = couleur.slice(0, 7); c.setAttribute('aria-label', lib + ', couleur ' + (i + 1)); c.addEventListener('change', () => { const l = [...liste]; l[i] = c.value; etat.palettes[cle] = l; changer(); }); n.append(c); });
+    if (liste.length < maxi) { const plus = document.createElement('button'); plus.type = 'button'; plus.textContent = '+'; plus.setAttribute('aria-label', 'Ajouter une couleur à ' + lib); plus.addEventListener('click', () => { etat.palettes[cle] = [...liste, liste[liste.length - 1] || '#888888']; changer(); }); n.append(plus); }
+    if (liste.length > mini) { const moins = document.createElement('button'); moins.type = 'button'; moins.textContent = '−'; moins.setAttribute('aria-label', 'Retirer une couleur de ' + lib); moins.addEventListener('click', () => { etat.palettes[cle] = liste.slice(0, -1); changer(); }); n.append(moins); }
+    bloc.append(n); z.append(bloc);
+  }
+}
+const CLES_I = ['vert', 'bati', 'eau', 'filet', 'limite'];
+for (const k of CLES_I) $('i-' + k).addEventListener('input', (e) => { etat.intensites[k] = Number(e.target.value) / 100; $('o-' + k).textContent = e.target.value + ' %'; changer(); });
+$('mode-fond').addEventListener('change', (e) => { etat.mode = e.target.value; synchroFond(); changer(); });
+$('veget-coloree').addEventListener('change', (e) => { etat.vegColoree = e.target.checked; changer(); });
+$('c-veget').addEventListener('input', (e) => { etat.vegetation = e.target.value; etat.vegColoree = true; $('veget-coloree').checked = true; changer(); });
+$('c-uni').addEventListener('input', (e) => { etat.fondUni = e.target.value; $('h-uni').value = e.target.value; changer(); });
+$('h-uni').addEventListener('input', (e) => { if (hexValide(e.target.value)) { etat.fondUni = e.target.value; $('c-uni').value = e.target.value; e.target.removeAttribute('aria-invalid'); changer(); } else e.target.setAttribute('aria-invalid', 'true'); });
+$('famille').addEventListener('change', (e) => { etat.famille = e.target.value; changer(); });
+$('t-leg').addEventListener('input', (e) => { etat.tailles.legende = Number(e.target.value); $('o-leg').textContent = e.target.value + ' px'; changer(); });
+$('t-eti').addEventListener('input', (e) => { etat.tailles.etiquette = Number(e.target.value); $('o-eti').textContent = e.target.value + ' px'; changer(); });
+function synchroFond() { $('mode-fond').value = etat.mode; $('reglage-plan').hidden = etat.mode !== 'plan'; $('reglage-uni').hidden = etat.mode !== 'uni'; for (const k of CLES_I) { $('i-' + k).value = Math.round(etat.intensites[k] * 100); $('o-' + k).textContent = Math.round(etat.intensites[k] * 100) + ' %'; } $('veget-coloree').checked = etat.vegColoree; $('c-veget').value = etat.vegetation; $('c-uni').value = etat.fondUni; $('h-uni').value = etat.fondUni; }
+function synchroTout() { synchroMarque(); synchroFond(); $('famille').value = etat.famille; $('t-leg').value = etat.tailles.legende; $('o-leg').textContent = etat.tailles.legende + ' px'; $('t-eti').value = etat.tailles.etiquette; $('o-eti').textContent = etat.tailles.etiquette + ' px'; }
+
+// ---- Import d'une charte ----
+$('importer').addEventListener('click', () => $('fichier').click());
+$('fichier').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const j = JSON.parse(await f.text()); const g = j.graines || {};
+    for (const k of ['principal', 'secondaire', 'fond', 'encre']) if (hexValide(g[k] || '')) etat.graines[k] = g[k].toLowerCase();
+    if (j.texte && j.texte.famille && FAMILLES_CSS[j.texte.famille]) etat.famille = j.texte.famille;
+    if (j.texte && j.texte.tailles) { etat.tailles.legende = j.texte.tailles.legende || 12; etat.tailles.etiquette = j.texte.tailles.etiquette || 11; }
+    const f2 = j.fond || {}; if (f2.intensites) for (const k of CLES_I) if (typeof f2.intensites[k] === 'number') etat.intensites[k] = f2.intensites[k];
+    if (hexValide(f2.vegetation || '')) { etat.vegColoree = true; etat.vegetation = f2.vegetation; }
+    const d = j.donnees || {}; etat.palettes = { sequentielle: d.sequentielles && d.sequentielles.principale || null, divergente: d.divergente || null, qualitative: d.qualitative || null };
+    etat.nom = String(j.nom || 'Ma charte').replace(/[<>]/g, '').slice(0, 40); etat.preset = null; synchroTout(); changer();
+  } catch (err) { $('constats').textContent = 'Ce fichier n’est pas une charte JSON lisible.'; }
+  e.target.value = '';
+});
+
+// ---- Application à la carte : la charte est reposée en entier, sans recharger la carte ----
+let minuteur = null, sequence = 0;
+function changer() { dessinerPresets(); dessinerCode(); majSite(); clearTimeout(minuteur); $('maj').classList.add('visible'); minuteur = setTimeout(appliquer, 180); }
+function majSite() { const g = etat.graines, s = $('site').style; document.documentElement.style.setProperty('--m-principal', g.principal); document.documentElement.style.setProperty('--m-secondaire', g.secondaire); document.documentElement.style.setProperty('--m-fond', g.fond); document.documentElement.style.setProperty('--m-encre', g.encre); document.documentElement.style.setProperty('--m-police', FAMILLES_CSS[etat.famille]); }
+async function appliquer() {
+  const moi = ++sequence;
+  try {
+    await carte.setTheme(charteDepuisEtat(), { remplacer: true });
+    const jetons = etat.mode === 'plan' ? { principal: etat.graines.principal } : etat.mode === 'uni' ? { fondUni: etat.fondUni } : {};
+    await carte.setFond(etat.mode, jetons);
+    if (moi !== sequence) return;
+    resolue = await carte.getTheme(); dessinerPalettes(); dessinerLisibilite(resolue);
+  } catch (e) { $('constats').textContent = 'Réglage refusé : ' + (e.message || e.code); }
+  if (moi === sequence) $('maj').classList.remove('visible');
+}
+// Ce que la charte ne mesure pas : vos couleurs de MARQUE sur votre fond, quand vous vous en servez pour du texte, des liens ou des boutons.
+const lum = (h) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const rapport = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const virgule = (n) => n.toFixed(1).replace('.', ',');
+function controlesMarque() {
+  const g = etat.graines, l = [];
+  for (const [cle, nom, seuil] of [['principal', 'La couleur principale', 3], ['secondaire', 'La couleur secondaire', 3], ['encre', 'Le texte', 4.5]]) {
+    const r = rapport(g[cle], g.fond);
+    if (r < seuil) l.push({ conseil: nom + ' (' + g[cle] + ') sur votre fond ne fait que ' + virgule(r) + ':1 ; il en faut au moins ' + virgule(seuil) + ':1 pour être lue' + (cle === 'encre' ? '.' : ' en bouton, en lien ou en titre.') });
+  }
+  return l;
+}
+function dessinerLisibilite(t) {
+  const att = [...controlesMarque(), ...(t.avertissements || []).filter((a) => a.niveau === 'attention')], info = (t.avertissements || []).filter((a) => a.niveau !== 'attention');
+  const texte = t.a11y && t.a11y.encreSurFond; const ok = !att.length;
+  $('score').className = 'score ' + (ok ? 'ok' : 'att');
+  $('score').innerHTML = '<b></b><span></span>'; $('score').firstChild.textContent = att.length ? att.length : '0'; $('score').lastChild.textContent = att.length ? (att.length > 1 ? ' points à corriger' : ' point à corriger') : ' point à corriger : tout est lisible';
+  const z = $('constats'); z.textContent = '';
+  const p = document.createElement('p'); p.className = 'aide'; p.textContent = 'Texte sur le fond : ' + (texte ? String(texte).replace('.', ',') + ':1' : '–') + (texte >= 4.5 ? ' (au moins 4,5:1 : bon)' : ' (il faudrait 4,5:1)'); z.append(p);
+  if (att.length) { const ul = document.createElement('ul'); ul.className = 'conseils'; for (const a of att.slice(0, 4)) { const li = document.createElement('li'); li.textContent = a.conseil; ul.append(li); } z.append(ul); }
+  if (info.length) { const d = document.createElement('details'); const s = document.createElement('summary'); s.textContent = info.length + ' remarque' + (info.length > 1 ? 's' : '') + ' (Atlas les compense à l’affichage)'; s.className = 'aide'; d.append(s); const ul = document.createElement('ul'); ul.className = 'conseils'; for (const a of info.slice(0, 6)) { const li = document.createElement('li'); li.textContent = a.conseil; ul.append(li); } d.append(ul); z.append(d); }
+}
+
+// ---- Démarrage : la carte est montée par le code qu'on affiche (mêmes blocs, même élément), puis les réglages la pilotent ----
+function ecrireBloc(nom, objet) { carte.querySelector('script[data-atlas="' + nom + '"]').textContent = JSON.stringify(objet); }
+ecrireBloc('charte', charteDepuisEtat()); ecrireBloc('manifeste', MANIFESTE); ecrireBloc('donnees', DONNEES);
+synchroTout(); dessinerPresets(); dessinerCode(); majSite();
+carte.addEventListener('atlas-bi-configure', async () => {
+  if (resolue) return;
+  await carte.flyTo({ center: [-1.67, 48.113], zoom: 11.9, pitch: 0 }).catch(() => {});
+  resolue = await carte.getTheme().catch(() => null); if (resolue) { dessinerPalettes(); dessinerLisibilite(resolue); }
+}, { once: false });
+carte.addEventListener('atlas-bi-erreur', (e) => { const code = e.detail.erreur && e.detail.erreur.code; if (!resolue && code !== 'delai') $('constats').textContent = 'La carte n’a pas pu démarrer (' + code + ').'; });
+window.__atelier = { carte, etat: () => etat, charteDepuisEtat, changer };
+</script>
+</body>
+</html>

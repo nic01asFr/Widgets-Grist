@@ -145,3 +145,10 @@ test("runtime : interface.legende.cible emet l evenement classe avec les identif
   assert.deepEqual(vus, [{ layer: 'sites', cle: 'a', libelle: 'Type A', active: true }]);
   assert.ok(TOUS_LES_EVENEMENTS.includes('classe'));
 });
+
+test('la carte de la légende ne défile pas elle-même : seul son corps défile (une carte à défilement sur la carte laissait un rectangle vide dans Chrome)', async () => {
+  const { FEUILLE } = await import('../lib/bi/ui/legende.js');
+  const carte = /\.atlas-bi-legende \{[^}]*\}/.exec(FEUILLE)[0], corps = /\.atlas-bi-legende-corps \{[^}]*\}/.exec(FEUILLE)[0];
+  assert.match(carte, /overflow: hidden/); assert.doesNotMatch(carte, /overflow: auto/); assert.match(carte, /max-height: 50vh/);
+  assert.match(corps, /overflow: auto/); assert.match(corps, /min-height: 0/);
+});

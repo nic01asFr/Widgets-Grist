@@ -8,9 +8,10 @@
  */
 const STYLE_ID = 'atlas-bi-legende-style';
 export const FEUILLE = `
-.atlas-bi-legende { min-width: 140px; max-width: 260px; max-height: 50vh; overflow: auto; }
-.atlas-bi-legende-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 0; background: transparent; padding: 0; cursor: pointer; font-weight: 600; text-align: left; }
-.atlas-bi-legende-corps { margin-top: 6px; }
+/* La carte de la légende ne défile pas elle-même : seul son corps défile. Une carte à défilement par-dessus la carte laissait, dans Chrome, un rectangle vide au-dessus d'elle. */
+.atlas-bi-legende { min-width: 140px; max-width: 260px; max-height: 50vh; display: flex; flex-direction: column; overflow: hidden; }
+.atlas-bi-legende-tete { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 0; background: transparent; padding: 0; cursor: pointer; font-weight: 600; text-align: left; }
+.atlas-bi-legende-corps { margin-top: 6px; overflow: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
 .atlas-bi-legende-couche + .atlas-bi-legende-couche { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--atlas-bord, #d8d6d2); }
 .atlas-bi-legende-titre { font-weight: 600; color: var(--atlas-discret, #6b6760); font-size: var(--atlas-taille-petit, 12px); margin-bottom: 3px; overflow-wrap: anywhere; }
 .atlas-bi-legende-classe { display: flex; align-items: center; gap: 8px; padding: 1px 0; }

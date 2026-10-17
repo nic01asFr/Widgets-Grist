@@ -11,10 +11,10 @@
  *
  * Aucune dépendance au DOM de l'application : seuls MapLibre (global ou injecté), `window` et un conteneur sont requis.
  */
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, STYLE_AUCUN_FOND, LOCALE_CARTE } from '../fonds-base.js?v=1.28.0';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, STYLE_AUCUN_FOND, LOCALE_CARTE } from '../fonds-base.js?v=1.28.1';
 // même adresse (avec sa version) que `montage.js` : une seule instance du module, sinon la carte exposée et la carte attendue seraient deux modules distincts
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from '../acces-carte.js?v=1.28.0';
-import { ratioMaxDemande } from '../ratio-hote.js?v=1.28.0';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from '../acces-carte.js?v=1.28.1';
+import { ratioMaxDemande } from '../ratio-hote.js?v=1.28.1';
 
 /** La vue d'ouverture, celle qu'avait le composant (l'hôte la remplace par `flyTo`, `fitTo` ou une scène). */
 export const VUE_PAR_DEFAUT = Object.freeze({ center: [5.3740, 43.2951], zoom: 16, pitch: 0, bearing: -18 });

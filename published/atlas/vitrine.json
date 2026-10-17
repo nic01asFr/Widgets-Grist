@@ -24,8 +24,8 @@
   },
   "journal": [
     {
-      "version": "v1.28.0",
-      "texte": "Les couches de lignes se dessinent à votre goût : largeur fixe ou qui suit un nombre (une route plus épaisse quand elle compte davantage), transparence, bouts arrondis. Une application cartographique alimentée en continu — la circulation et les bus de Rennes, lus sur les données ouvertes, en trois apparences — en est la démonstration, à ouvrir depuis la vitrine."
+      "version": "v1.28.1",
+      "texte": "Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue."
     },
     {
       "version": "v1.26.1",
@@ -245,6 +245,32 @@
     ],
     "titreContextes": "Atlas, fonction par fonction",
     "contextes": [
+      {
+        "role": "Intégrer",
+        "titre": "Atlas aux couleurs de votre site",
+        "format": "large",
+        "texte": "Une balise `<atlas-bi>` dans votre page, vos données en JSON, votre charte graphique : la carte, sa légende, ses bulles et son fond de plan prennent vos couleurs et votre police. Quatre couleurs suffisent : Atlas calcule les palettes de données, les contours et la sélection, puis mesure la lisibilité et vous dit ce qui ne passe pas. On peut aussi dessiner les palettes une à une. Aucune police à télécharger et, avec un fond uni, aucun service extérieur : la carte reste rapide et respecte la vie privée de vos visiteurs. L’atelier génère le code à copier au fur et à mesure que vous réglez.",
+        "pourquoi": "Une carte qui a l’air de votre site, en quelques lignes, sans développer de module de cartographie.",
+        "exemple": "cinq chartes fictives de départ : changez les couleurs, le fond de carte, les palettes ; le code et la mesure de lisibilité suivent.",
+        "utilise": [
+          "Balise <atlas-bi>",
+          "Charte graphique (JSON)",
+          "Fond de plan aux couleurs de la marque",
+          "Palettes calculées ou dessinées",
+          "Mesure de lisibilité"
+        ],
+        "images": [
+          {
+            "image": "cas-atelier.jpg",
+            "legende": "L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas. À essayer ici : données d’exemple fictives.",
+            "demo": {
+              "url": "../../atlas/demos/hote-atelier/index.html",
+              "libelle": "Ouvrir l’atelier de style",
+              "titre": "Atelier de style : données d’exemple fictives"
+            }
+          }
+        ]
+      },
       {
         "role": "Charger",
         "titre": "Vos tables deviennent des couches",
@@ -775,7 +801,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.28.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.28.1 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

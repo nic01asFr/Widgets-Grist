@@ -32,6 +32,7 @@ function bac(modifier = () => {}) {
   ecrire('projects/Atlas/demos/hote-bi/index.html', '<!doctype html>');
   ecrire('projects/Atlas/demos/hote-canevas/index.html', '<!doctype html>');
   ecrire('projects/Atlas/demos/hote-direct/index.html', '<!doctype html>');
+  ecrire('projects/Atlas/demos/hote-atelier/index.html', '<!doctype html>');
   ecrire('projects/Atlas/objets/catalog.json', JSON.stringify({ parametric: { assets: [] } }));
   for (const rel of VENDOR) ecrire(`projects/grist_forms/${rel}`, '/* x */\n');
   cpSync(join(ICI, '..', 'lib'), join(racine, 'projects', 'Atlas', 'lib'), { recursive: true });   // le vrai lib/, dont lib/bi/ importe des modules voisins
@@ -59,6 +60,7 @@ describe('promotion dans un bac à sable', { concurrency: true }, () => {
       assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-bi', 'index.html')));
       assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-canevas', 'index.html')), 'la démonstration du canevas part aussi');
       assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-direct', 'index.html')), 'l’application en direct part aussi');
+      assert.ok(existsSync(join(racine, 'published', 'atlas', 'demos', 'hote-atelier', 'index.html')), 'l’atelier de style part aussi');
     } finally { rmSync(racine, { recursive: true, force: true }); }
   });
 

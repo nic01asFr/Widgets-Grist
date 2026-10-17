@@ -211,6 +211,25 @@ section { margin: 0 0 3rem; }
     <h2>Atlas, fonction par fonction</h2>
     <article class="contexte">
       <div class="dit">
+        <p class="role">Intégrer</p>
+        <h3>Atlas aux couleurs de votre site</h3>
+        <p>Une balise <code>&lt;atlas-bi&gt;</code> dans votre page, vos données en JSON, votre charte graphique : la carte, sa légende, ses bulles et son fond de plan prennent vos couleurs et votre police. Quatre couleurs suffisent : Atlas calcule les palettes de données, les contours et la sélection, puis mesure la lisibilité et vous dit ce qui ne passe pas. On peut aussi dessiner les palettes une à une. Aucune police à télécharger et, avec un fond uni, aucun service extérieur : la carte reste rapide et respecte la vie privée de vos visiteurs. L’atelier génère le code à copier au fur et à mesure que vous réglez.</p>
+        <p class="pourquoi">Une carte qui a l’air de votre site, en quelques lignes, sans développer de module de cartographie.</p>
+        <p class="exemple"><b>Dans l’exemple</b> cinq chartes fictives de départ : changez les couleurs, le fond de carte, les palettes ; le code et la mesure de lisibilité suivent.</p>
+        <ul class="utilise"><li>Balise &lt;atlas-bi&gt;</li><li>Charte graphique (JSON)</li><li>Fond de plan aux couleurs de la marque</li><li>Palettes calculées ou dessinées</li><li>Mesure de lisibilité</li></ul>
+      </div>
+      <div class="montre">
+        <figure class="large vivante">
+    <div class="cadre" data-widget="../../atlas/demos/hote-atelier/index.html" data-titre="Atelier de style : données d’exemple fictives">
+      <img src="cas-atelier.jpg" alt="L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas. À essayer ici : données d’exemple fictives." loading="lazy">
+      <button type="button" class="lancer">Ouvrir l’atelier de style</button>
+    </div>
+          <figcaption>L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas. À essayer ici : données d’exemple fictives.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="contexte">
+      <div class="dit">
         <p class="role">Charger</p>
         <h3>Vos tables deviennent des couches</h3>
         <p>Atlas lit le document Grist : toute table qui porte une géométrie — des coordonnées, du WKT, une colonne de géométrie — est reconnue et proposée comme couche. On peut aussi y verser un fichier (GeoJSON, GPX, KML, CSV), importer OpenStreetMap ou créer une couche vide pour la dessiner. Une couche n’est pas une copie : modifier la table modifie la carte, et l’inverse. La palette de recherche (⌘K) retrouve un objet, une couche ou un lieu, ou ouvre la liste des objets d’une couche. Un projet QGIS s’y verse par qgis2grist.</p>
@@ -659,7 +678,7 @@ section { margin: 0 0 3rem; }
   <section>
     <h2>Journal</h2>
     <div class="journal">
-      <div><b>v1.28.0</b><p>Les couches de lignes se dessinent à votre goût : largeur fixe ou qui suit un nombre (une route plus épaisse quand elle compte davantage), transparence, bouts arrondis. Une application cartographique alimentée en continu — la circulation et les bus de Rennes, lus sur les données ouvertes, en trois apparences — en est la démonstration, à ouvrir depuis la vitrine.</p></div>
+      <div><b>v1.28.1</b><p>Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue.</p></div>
       <div><b>v1.26.1</b><p>Une bulle déclarée sur une carte de communes ou de départements s’ouvre enfin quand on en choisit une, comme sur n’importe quelle autre couche.</p></div>
       <div><b>v1.26.0</b><p>La carte peut maintenant afficher sa propre légende et son curseur de temps, aux couleurs de l’application qui l’embarque, sans que celle-ci écrive le moindre code d’interface. La bulle d’un objet montre aussi son historique : les dernières lignes d’une table liée (par exemple les cotations d’un bâtiment), mises à jour à chaud.</p></div>
       <div><b>v1.25.0</b><p>Une page de démonstration montre comment une application embarque le canevas d’Atlas : envoyer une scène, recevoir les clics, afficher une maquette 3D. Les maquettes 3D s’affichent avec un éclairage plus juste, un objet surligné se voit aussi sur une surface ou une ligne, et une carte dans un cadre trop petit pour ses marges se cadre quand même.</p></div>

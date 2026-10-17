@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.28.1 — un atelier de style, et une application en direct qui dit ses limites
+
+- **Atelier de style** (`demos/hote-atelier/`) : on règle la charte d'une organisation (quatre couleurs, fond de plan, palettes, police), la carte, sa légende et ses bulles suivent en direct, le code à copier (balise `<atlas-bi>` et blocs JSON déclaratifs) et la mesure de lisibilité se mettent à jour. Les couleurs de marque sur le fond de l'organisation sont mesurées aussi (3:1 pour un bouton, 4,5:1 pour du texte). Chartes d'exemple fictives ; import et export du JSON.
+- **Légende** (correctif du composant) : la carte de la légende ne défile plus elle-même, seul son corps défile ; sur une petite carte, Chrome laissait un rectangle vide au-dessus de la légende.
+- **« Rennes en direct »** : un portail qui répond 429 (quota du jour atteint, constaté sur les bus STAR) n'est plus dit « connexion perdue » : message précis, nouvel essai espacé ; cadences d'un bon voisin (bus 30 s, sonde 60 s).
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.28.0 — des couches de lignes à votre goût, une application alimentée en continu
 
 - **Lignes** : `visuel: { largeur: 4, opacite: 0.8 }` sur une couche de lignes (jusqu'ici 3 px fixes). La largeur peut suivre un nombre : `largeur: { champ: 'importance', min: 0, max: 1, lMin: 1.2, lMax: 4.4 }`. Bouts arrondis. Largeur de 0,5 à 12 px, opacité de 0 à 1 ; sans réglage, le rendu d'avant. Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
