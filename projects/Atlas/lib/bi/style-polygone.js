@@ -31,3 +31,19 @@ export function contourPolygone(contour, resoudre = (c) => c) {
   const tirets = Array.isArray(t) && t.length >= 2 && t.length <= 8 && t.every((x) => typeof x === 'number' && Number.isFinite(x) && x > 0 && x <= LARGEUR_MAX) ? [...t] : null;
   return { couleur, largeur, tirets };
 }
+
+/**
+ * L’étiquette permanente d’une couche de polygones : un texte lu dans une propriété, posé au centre de chaque surface, toujours affiché (jamais masqué par une collision).
+ * `visuel.etiquette: { champ: 'etiquette', taille: 12 }` ; la taille est bornée (8 à 24). `null` quand rien n’est déclaré ou que la déclaration est invalide.
+ * @returns {{ champ: string, taille: number }|null}
+ */
+export function etiquetteDeclaree(e) {
+  if (!e || typeof e !== 'object' || Array.isArray(e) || typeof e.champ !== 'string' || !e.champ.trim()) return null;
+  const t = Number(e.taille);
+  return { champ: e.champ.trim(), taille: Number.isFinite(t) ? Math.min(24, Math.max(8, t)) : 12 };
+}
+
+/** Les curseurs que l’hôte peut demander pour la carte (hors survol d’un objet, qui garde « pointer »). */
+export const CURSEURS = Object.freeze(['crosshair', 'zoom-in', 'zoom-out', 'pointer', 'grab', 'cell', 'default']);
+/** @returns {string|null} un curseur de la liste, ou null (aucun : le curseur par défaut de la carte) */
+export function curseurDeclare(v) { return typeof v === 'string' && CURSEURS.includes(v) ? v : null; }
