@@ -13,6 +13,14 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.25.0 — la démonstration du canevas, un surlignage visible partout, des marges qui ne bloquent plus
+
+- **Démonstration** : `demos/hote-canevas/index.html` montre une application qui embarque le canevas d'Atlas : envoyer une scène, recevoir `select` et `hover`, masquer une couche, cadrer, saisir l'adresse d'un manifeste de dalles 3D, recharger sans fond de plan.
+- **Dalles 3D** : l'éclairage est relevé (les couleurs de sommet de la Fabrique sont maintenant linéaires, donc plus sombres à éclairage égal) et l'encodage sRGB de la sortie est explicite.
+- **`highlight`** se voit sur les polygones (contour de la sélection, remplissage plus plein) et sur les lignes ; avant, seul un cercle changeait d'aspect. Demande de SURFAC²E.
+- **Marges** : un padding plus grand que le cadre est réduit proportionnellement (au moins 20 % libres) au lieu de laisser la carte immobile, et un cadre masqué ou à 0 px rejoue le cadrage au premier redimensionnement. Retour d'appkit.
+- **Contrat 0.3, client et empreinte inchangés.**
+
 ## 1.24.0 — les maquettes en dalles 3D, et une carte sans fond de plan
 
 - **Maquettes en dalles 3D** (profil complet) : une couche de scène `type: "dalles3d"` désigne un manifeste de grille (`pix2hdr-atlas-grille3d/0.1`). Atlas lit les dalles livrées dans la fenêtre, choisit le niveau selon la distance (D2 près, D3 loin), charge par priorité sans jamais laisser de trou, garde un cache à budget, recharge quand la Fabrique republie, et pose chaque dalle par son ancrage (convergence des méridiens, facteur d'échelle, altitude IGN69). Vérifié en navigateur sur la dalle témoin.

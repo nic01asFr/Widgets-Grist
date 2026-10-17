@@ -19,7 +19,7 @@
 import {
   lireGrille, urlGabarit, urlDisponibilite, lireDisponibilite, lireAncrage, matriceDalle, produit4, inverse4, niveauPourDistance, niveauAffiche,
   distanceM, mercator, metreEnMercator, creerCacheLRU, PLAFOND_DALLES_VUE, PLAFOND_OCTETS_GLB,
-} from './dalles3d-geo.js?v=1.24.0';
+} from './dalles3d-geo.js?v=1.25.0';
 
 export const BUDGET_OCTETS_DEFAUT = 320 * 1024 * 1024;
 export const PARALLELISME_DEFAUT = 3;
@@ -169,9 +169,11 @@ export function creerCoucheDalles({
     id: idCouche, type: 'custom', renderingMode: '3d',
     onAdd(m, gl) {
       scene = new THREE.Scene(); camera = new THREE.Camera();
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f98, 1.15));
-      const soleil = new THREE.DirectionalLight(0xffffff, 1.7); soleil.position.set(0.45, 1, 0.3); scene.add(soleil);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xb4b8c0, 2.1));
+      const soleil = new THREE.DirectionalLight(0xffffff, 2.8); soleil.position.set(0.45, 1, 0.3); scene.add(soleil);
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true }); renderer.autoClear = false;
+      // les couleurs de sommet du glTF sont LINÉAIRES : sans encodage de sortie sRGB, tout sortirait trop sombre (explicite, même si c'est le défaut de three.js)
+      if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
       chargeur = creerChargeur();
     },
     render(gl, matrice) {

@@ -34,6 +34,21 @@ export function normaliserMarges(brut) {
   return COTES.every((c) => m[c] === 0) ? null : m;
 }
 
+/**
+ * Un padding qui ne laisse jamais moins de `reste` (20 % par défaut) de la hauteur et de la largeur : MapLibre NE CADRE PAS DU TOUT quand le padding dépasse le
+ * conteneur (« Map cannot fit within canvas » : aucun mouvement, aucun événement camera, la carte reste où elle est). Réduit proportionnellement le haut et le bas,
+ * puis la gauche et la droite. Taille inconnue (conteneur masqué, carte simulée) : inchangé.
+ * @param {number|{top:number,right:number,bottom:number,left:number}} padding
+ */
+export function limiterPadding(padding, largeur, hauteur, reste = 0.2) {
+  if (!(largeur > 0) || !(hauteur > 0)) return padding;
+  const p = typeof padding === 'number' ? { top: padding, right: padding, bottom: padding, left: padding } : padding;
+  const borne = (a, b, taille) => { const total = a + b, max = taille * (1 - reste); if (total <= max) return [a, b]; const k = max / total; return [a * k, b * k]; };
+  const [top, bottom] = borne(p.top, p.bottom, hauteur), [left, right] = borne(p.left, p.right, largeur);
+  const sortie = { top, right, bottom, left };
+  return top === p.top && bottom === p.bottom && left === p.left && right === p.right ? padding : sortie;
+}
+
 /** Les marges augmentées d'une marge de confort (pour `fitBounds`). */
 export function avecConfort(marges, confort) {
   const m = marges || { top: 0, right: 0, bottom: 0, left: 0 };

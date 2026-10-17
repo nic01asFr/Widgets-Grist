@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.24.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.24.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.25.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.25.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.24.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.25.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -29,7 +29,7 @@ import { planDepuis } from '../charte/derivation.js';
 import { verifierPlan } from '../charte/verification.js';
 import { variablesInterface, appliquerVariables } from '../charte/interface.js';
 import { creerBulle, normaliserBulle } from './bulle.js';
-import { normaliserMarges, avecConfort } from './marges.js';
+import { normaliserMarges, avecConfort, limiterPadding } from './marges.js';
 
 export const VERSION = '0.3';
 const PREF = 'bi-';
@@ -57,6 +57,8 @@ export function attacher(map, opts = {}) {
   // Les marges sont passées en `padding` à CHAQUE déplacement (flyTo, fitBounds), jamais par `map.setPadding` : mesuré en navigateur le 16/10/2026 (MapLibre 5.6.1), `setPadding`
   // combiné à un `padding` de `fitBounds` compte la marge deux fois (une marge de 300 px retirait ~600 px : « Map cannot fit within canvas », la carte restait blanche).
   const poserMarges = (m) => { marges = normaliserMarges(m); return marges; };
+  /** La taille du cadre de la carte, en pixels ; `connu` faux si la carte ne la dit pas (carte simulée). */
+  const tailleCadre = () => { const c = typeof map.getContainer === 'function' ? map.getContainer() : null; return c && Number.isFinite(c.clientWidth) ? { w: c.clientWidth, h: c.clientHeight, connu: true } : { w: 0, h: 0, connu: false }; };
   let bulleCtl = null, dernierClic = null;   // la bulle d'objet déclarée par l'hôte (lib/bi/bulle.js) ; `dernierClic` : le point cliqué, pour ancrer la bulle d'une ligne ou d'une surface
   // thème d'exécution = charte résolue + ce qui dépend du fond choisi (police des symboles du Plan IGN, voile)
   const poserTheme = () => {
@@ -141,13 +143,13 @@ export function attacher(map, opts = {}) {
     } else if (g === 'polygon') {
       // Réglages de l'hôte, facultatifs (lib/bi/style-polygone.js) : opacité du remplissage, contour (couleur, largeur, tirets). Sans eux : le rendu d'avant.
       const opacite = opaciteDeclaree(decl), ct = contourPolygone(v.contour, (cc) => resoudre(cc, T));
-      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, 0.72] } });
+      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, hl, 0.88, 0.72] } });
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: {
-        'line-color': ['case', sel, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],
-        'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), ct ? ct.largeur : 1],
+        'line-color': ['case', sel, T.selection, hl, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],   // surligné (`highlight`) : le contour de la sélection, un peu moins épais
+        'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), hl, Math.max(2, (ct ? ct.largeur : 1) + 1), ct ? ct.largeur : 1],
         ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}) } });
     } else {
-      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, 3] } });
+      ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: { 'line-color': couleur, 'line-width': ['case', sel, 6, hl, 5, 3] } });
     }
     appliquerVue(c);
   }
@@ -366,13 +368,18 @@ export function attacher(map, opts = {}) {
       // `marges` : zone utile persistante (voir lib/bi/marges.js) ; seule, elle ne déplace rien
       const { marges: m, ...reste } = cam; if (m !== undefined) poserMarges(m);
       if (m !== undefined && !Object.keys(reste).length) return true;
-      camApi = true; map.flyTo({ duration: 600, ...(marges ? { padding: marges } : {}), ...reste }); return true;
+      const t = tailleCadre();
+      camApi = true; map.flyTo({ duration: 600, ...(marges ? { padding: limiterPadding(marges, t.w, t.h) } : {}), ...reste }); return true;
     },
     fitTo(arg) { const feats = typeof arg === 'string' ? (couches.get(arg)?.vue || []) : [...couches.values()].flatMap((c) => (Array.isArray(arg) ? c.features.filter((f) => arg.includes(f.id)) : c.vue));
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; const vu = (p) => { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1]; };
       const col = (g) => { if (!g) return; const t = g.type; if (t === 'Point') vu(g.coordinates); else if (t === 'MultiPoint' || t === 'LineString') g.coordinates.forEach(vu); else if (t === 'Polygon' || t === 'MultiLineString') g.coordinates.forEach((r) => r.forEach(vu)); else if (t === 'MultiPolygon') g.coordinates.forEach((p) => p.forEach((r) => r.forEach(vu))); };
       for (const f of feats) col(f.geometry);
-      if (x0 === Infinity) return false; camApi = true; map.fitBounds([[x0, y0], [x1, y1]], { padding: marges ? avecConfort(marges, 60) : 60, duration: 600, maxZoom: 16 }); return true; },
+      if (x0 === Infinity) return false;
+      const t = tailleCadre();
+      // cadre masqué ou pas encore dimensionné (0 px) : MapLibre ne peut rien cadrer ; on rejoue le cadrage à la première mise à la taille au lieu de l'abandonner en silence
+      if (t.connu && (t.w === 0 || t.h === 0)) { if (typeof map.once === 'function') map.once('resize', () => { try { api.fitTo(arg); } catch (e) { /* carte retirée entre-temps */ } }); return false; }
+      camApi = true; map.fitBounds([[x0, y0], [x1, y1]], { padding: limiterPadding(marges ? avecConfort(marges, 60) : 60, t.w, t.h), duration: 600, maxZoom: 16 }); return true; },
     /**
      * Applique une charte (docs/CONTRAT-CHARTE-ATLAS.md) ou un thème du contrat 0.3 ; s'ajoute à ce que l'hôte a déjà donné, sauf `{ remplacer: true }`.
      * Renvoie { version, entree, applique, derive, ignore, avertissements, a11y } et émet l'événement `theme`.
