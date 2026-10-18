@@ -1,6 +1,5 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://nic01asfr.github.io/Widgets-Grist/schemas/formdef-1.0.schema.json",
   "title": "FormDef",
   "description": "Contrat canonique formulaires Grist (Form Builder)",
   "type": "object",
@@ -665,47 +664,124 @@
       }
     },
     "condition": {
-      "description": "Règle { field|path, operator, value, source?, bind? } ou composé { op, rules }",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "field": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "field",
-            "context",
-            "audience"
-          ]
-        },
-        "operator": {
-          "type": "string"
-        },
-        "value": {},
-        "bind": {
+      "description": "Règle { source?, field|path, operator?, value?, bind? } ou composé { op, rules }. Une règle sans `operator` vaut `==`. Une règle dont `field` et `path` sont des chaînes vides est une règle que le compositeur n'a pas remplie : elle reste vraie. Dans un composé, `and` et `or` sans règle valent vrai ; `not` nie exactement une règle.",
+      "oneOf": [
+        {
+          "title": "regle",
           "type": "object",
-          "additionalProperties": true,
-          "description": "Audience : tableId, emailCol, groupCol, groups[]"
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": [
+                "field"
+              ]
+            },
+            {
+              "required": [
+                "path"
+              ]
+            }
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "field",
+                "context",
+                "audience"
+              ],
+              "description": "D'où vient la valeur comparée. `field` (défaut) : la réponse à une question du formulaire, ou la ligne courante. `context` : une clé de contexte fournie par l'hôte (site, rôle, appareil…). `audience` : la personne connectée (path `email`, `group`/`groups`, `member`). Le préfixe `context.` ou `audience.` dans `field`/`path` reste accepté quand `source` est absente."
+            },
+            "field": {
+              "type": "string",
+              "description": "Nom de la valeur à comparer (colId de la question). Synonyme de `path` ; `path` l'emporte s'il est renseigné."
+            },
+            "path": {
+              "type": "string",
+              "description": "Nom de la valeur à comparer, dans la source choisie (`email`, `group`, `member` pour l'audience ; une clé du contexte pour `context`)."
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "==",
+                "!=",
+                ">",
+                ">=",
+                "<",
+                "<=",
+                "contains",
+                "in",
+                "notIn",
+                "truthy",
+                "empty",
+                "notEmpty"
+              ],
+              "description": "`==` et `!=` : égalité LÂCHE de JavaScript, donc '1' == 1 et null == undefined ; piège : '' == 0, une réponse vide égale 0 (pour tester l'absence de réponse, utiliser `empty`). `>`, `>=`, `<`, `<=` : comparaison numérique (valeur non numérique = faux, réponse vide = 0, dates ISO non comparables). `contains` : élément d'une liste (égalité stricte) ou sous-chaîne. `in` / `notIn` : appartenance par comparaison de chaînes, `value` étant une liste ou une valeur seule. `truthy` : valeur « vraie » au sens JavaScript (ni null, ni chaîne vide, ni 0, ni false ; une liste vide est vraie, et la chaîne 'false' aussi). `empty` / `notEmpty` : null, undefined, chaîne vide, liste vide (dont ['L']) ; `value` ignorée. Défaut `==`."
+            },
+            "value": {
+              "description": "Valeur attendue, de n'importe quel type JSON. Ignorée par `truthy`, `empty`, `notEmpty`."
+            },
+            "bind": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true,
+              "description": "Audience : { tableId, emailCol, groupCol, groups[] }. `groups` sert de valeur attendue à `audience` + `group` quand `value` est absente."
+            }
+          }
         },
-        "op": {
-          "type": "string",
-          "enum": [
-            "and",
-            "or"
-          ]
+        {
+          "title": "compose-et-ou",
+          "type": "object",
+          "required": [
+            "op",
+            "rules"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "and",
+                "or"
+              ],
+              "description": "`and` : toutes les règles. `or` : au moins une. Sans règle : vrai."
+            },
+            "rules": {
+              "type": "array",
+              "description": "Règles ou composés imbriqués.",
+              "items": {
+                "$ref": "#/definitions/condition"
+              }
+            }
+          }
         },
-        "rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/condition"
+        {
+          "title": "compose-non",
+          "type": "object",
+          "required": [
+            "op",
+            "rules"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "not",
+              "description": "Nie la règle unique de `rules`. Pour nier plusieurs règles, les envelopper dans un `and` ou un `or`."
+            },
+            "rules": {
+              "type": "array",
+              "description": "Exactement une règle ou un composé.",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "$ref": "#/definitions/condition"
+              }
+            }
           }
         }
-      }
+      ]
     },
     "cascade": {
       "type": "object",
@@ -755,5 +831,6 @@
         }
       }
     }
-  }
+  },
+  "$id": "https://nic01asfr.github.io/Widgets-Grist/schemas/formdef-1.0.schema.json"
 }

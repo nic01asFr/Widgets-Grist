@@ -14,8 +14,25 @@
       "lu_par": [
         "grist_forms (runtime)"
       ],
-      "empreinte": "sha256:1e1d27f3c0ae27f3",
-      "octets": 27548
+      "empreinte": "sha256:939e67abea0211b5",
+      "octets": 31502
+    },
+    {
+      "nom": "Conditions",
+      "version": "1.0",
+      "schema": "https://nic01asfr.github.io/Widgets-Grist/schemas/conditions-1.0.schema.json",
+      "porte": "La grammaire qui dit quand une étape, une question, un menu, une page ou un bouton se montre : règles { source, field|path, operator, value } et composés { op: and|or|not, rules }. Fermée : un opérateur ou une source inconnus sont une faute, jamais « vrai ».",
+      "produit_par": [
+        "grist_forms (builder)",
+        "qgis2grist (depuis une couche QField)",
+        "kit d'applications (appdef, à venir)"
+      ],
+      "lu_par": [
+        "grist_forms (moteur, shared/conditions.js)",
+        "kit d'applications (menus, pages, boutons, champs, à venir)"
+      ],
+      "empreinte": "sha256:407690a665e23938",
+      "octets": 5723
     },
     {
       "nom": "Scene Manifest",
