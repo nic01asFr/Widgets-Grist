@@ -359,6 +359,30 @@
                   "description": "Quand la recherche part. `validation` (defaut) : sur Entree ou sur le bouton, rien n'est envoye au service que la personne n'ait demande — le choix le plus prudent pour les donnees personnelles. `frappe` : 500 ms apres la derniere touche, plus fluide, mais chaque pause envoie un prefixe de l'adresse."
                 }
               }
+            },
+            "prefill": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Une valeur recue par l'adresse de la page (un QR code qui designe un objet : `?objet=123`). Rien n'est repris sans cette declaration. C'est une commodite, pas une protection : l'adresse se fabrique a la main, et la table doit controler ce qu'elle recoit.",
+              "required": [
+                "param"
+              ],
+              "properties": {
+                "param": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                  "description": "Nom du parametre d'adresse."
+                },
+                "verrouille": {
+                  "type": "boolean",
+                  "description": "La personne voit la valeur sans pouvoir la changer."
+                },
+                "libelleParam": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                  "description": "Parametre d'adresse qui porte le texte a montrer a la place de la valeur (`?objet=123&objet_nom=Lampadaire%2012`)."
+                }
+              }
             }
           }
         },

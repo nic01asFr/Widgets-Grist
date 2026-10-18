@@ -1348,6 +1348,23 @@
     return html;
   }
 
+  /**
+   * Une question dont la valeur est donnée par l'adresse de la page.
+   *
+   * La personne la voit, elle ne la change pas : un QR code désigne un objet,
+   * pas une liste à choisir dedans. La valeur reste dans `values`, donc dans la
+   * ligne envoyée — ce n'est qu'un affichage, pas une protection (voir
+   * `shared/prefill.js`).
+   */
+  function renderVerrouille(field, value, libelle) {
+    var affiche = libelle ||
+      (typeof value === 'number' ? 'n° ' + value : (value === null || value === undefined ? '' : String(value)));
+    return '<div class="fr-input-group fr-verrouille" data-colid="' + escapeHtml(field.colId) +
+      '" data-verrouille="1">' +
+      '<p class="fr-label">' + escapeHtml(field.label || field.colId) + '</p>' +
+      '<p class="fr-verrouille__valeur">' + escapeHtml(affiche) + '</p></div>';
+  }
+
   // ── mount : runtime navigateur — étapes visibles, validation requise, submit ──
   function getVisibleSections(formDef, values, context) {
     var sections = (formDef && formDef.sections) || [];
@@ -1423,8 +1440,11 @@
     return el ? el.value : null;
   }
 
-  function readSectionValues(rootEl, fields, values) {
+  function readSectionValues(rootEl, fields, values, verrouilles) {
     for (var i = 0; i < fields.length; i++) {
+      // Une question verrouillée n'a pas de zone de saisie : la relire depuis
+      // l'écran effacerait la valeur que l'adresse de la page lui a donnée.
+      if (verrouilles && verrouilles.indexOf(fields[i].colId) !== -1) continue;
       values[fields[i].colId] = readFieldValue(rootEl, fields[i], values[fields[i].colId]);
       // Le texte de « Autre » vit dans sa colonne, pas dans le colId de la
       // question : sans cette lecture, il se perdait au premier re-rendu.
@@ -1701,6 +1721,9 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+    // Questions dont la valeur vient de l'adresse de la page (shared/prefill.js).
+    var verrouilles = Array.isArray(bridge.verrouilles) ? bridge.verrouilles : [];
+    var libellesVerrou = bridge.libelles || {};
     // Un changement de champ redessine le formulaire : conditions, cascades et
     // filtres dynamiques en dependent. Mais pour un champ texte, `change` part
     // quand on le quitte — c'est-a-dire a l'instant ou l'on appuie sur
@@ -1887,7 +1910,9 @@
         }
         var f = groupe.fields[0];
         var opts = resolveOptionsForField(f);
-        var html = renderFieldHtml(f, values, opts, formDef);
+        var html = verrouilles.indexOf(f.colId) !== -1
+          ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
+          : renderFieldHtml(f, values, opts, formDef);
         if (errorFields.indexOf(f.colId) !== -1) {
           // > **Le message doit tenir a sa question.** Pose seul entre deux
           // > blocs, il flotte : on le lit au-dessus de la question suivante et
@@ -1963,7 +1988,7 @@
             inputs[i].getAttribute('data-referentiel-champ') !== null) continue;
         if (typeof inputs[i].addEventListener === 'function') {
           inputs[i].addEventListener('change', function () {
-            readSectionValues(rootEl, fields, values);
+            readSectionValues(rootEl, fields, values, verrouilles);
             pruneInvalidFilteredValues();
             planifierRendu();
           });
@@ -1972,7 +1997,7 @@
       var prevBtn = rootEl.querySelector('[data-action="prev"]');
       if (prevBtn && typeof prevBtn.addEventListener === 'function') {
         prevBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
+          readSectionValues(rootEl, fields, values, verrouilles);
           if (stepIndex === 0) surAccueil = true; else stepIndex -= 1;
           errorFields = []; render(); remonterEnHaut();
         });
@@ -1980,7 +2005,7 @@
       var nextBtn = rootEl.querySelector('[data-action="next"]');
       if (nextBtn && typeof nextBtn.addEventListener === 'function') {
         nextBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
+          readSectionValues(rootEl, fields, values, verrouilles);
           var missing = validateRequired(fields, values);
           // Une reponse manquante ne fait pas changer d'etape : on remonte
           // quand meme, sinon le message reste hors de l'ecran.
@@ -1991,7 +2016,7 @@
       var submitBtn = rootEl.querySelector('[data-action="submit"]');
       if (submitBtn && typeof submitBtn.addEventListener === 'function') {
         submitBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
+          readSectionValues(rootEl, fields, values, verrouilles);
           var missing = validateRequired(fields, values);
           if (missing.length) { errorFields = missing; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
@@ -2081,7 +2106,7 @@
               }
               moi.setAttribute('data-etait-coche', 'oui');
             }
-            readSectionValues(rootEl, fields, values);
+            readSectionValues(rootEl, fields, values, verrouilles);
             planifierRendu();
           });
           if (cases[k].checked) cases[k].setAttribute('data-etait-coche', 'oui');

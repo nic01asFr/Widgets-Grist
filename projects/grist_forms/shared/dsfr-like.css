@@ -550,6 +550,13 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
 .fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
 
+/* Une question dont la valeur vient de l'adresse de la page : on la lit, on ne la change pas. */
+.fr-form .fr-verrouille__valeur, .champ-bloc__rendu .fr-verrouille__valeur {
+  margin: 0.25rem 0 0; padding: 0.625rem 0.875rem; min-height: var(--cible); box-sizing: border-box;
+  display: flex; align-items: center;
+  background: var(--fond-page); border: 1px dashed var(--bord); border-radius: 8px;
+}
+
 /* Sur un téléphone, le bouton passe sous le champ plutôt que de l'écraser. */
 @media (max-width: 30rem) {
   .fr-form .fr-referentiel__ligne, .champ-bloc__rendu .fr-referentiel__ligne { flex-direction: column; }
