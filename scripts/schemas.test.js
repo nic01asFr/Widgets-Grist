@@ -89,7 +89,8 @@ test('le schéma refuse ce qui n’est pas une scène', () => {
 const SOURCES = path.join(RACINE, 'projects', 'grist_forms', 'runtime');
 const CONTRATS_AVEC_SOURCE = [
   { source: 'formdef.schema.json', publie: 'formdef-1.0.schema.json' },
-  { source: 'conditions.schema.json', publie: 'conditions-1.0.schema.json' }
+  { source: 'conditions.schema.json', publie: 'conditions-1.0.schema.json' },
+  { source: 'kit-theme.schema.json', publie: 'kit-theme-0.1.schema.json' }
 ];
 const sansId = (o) => { const c = { ...o }; delete c.$id; return c; };
 
@@ -231,3 +232,25 @@ test('l’index porte une empreinte juste de chaque contrat', () => {
   }
 });
 
+// Le contrat de thème : le schéma, le module qui juge et le document disent la même chose.
+test('kit-theme-0.1 : les clés du schéma sont les 26 variables du module, nues et préfixées', () => {
+  const Theme = require('../projects/grist_forms/shared/theme.js');
+  const s = lire(path.join(SCHEMAS, 'kit-theme-0.1.schema.json'));
+  const attendues = [...Theme.CLES, ...Theme.CLES.map((c) => Theme.PREFIXE + c)].sort();
+  assert.deepEqual(Object.keys(s.properties).sort(), attendues);
+  assert.equal(s.additionalProperties, false, 'liste fermée');
+  assert.equal(s.definitions.valeur.maxLength, Theme.LONGUEUR_MAX);
+});
+
+test('kit-theme-0.1 : le motif du schéma juge comme le module (le validateur maison ne lit pas `pattern`)', () => {
+  const Theme = require('../projects/grist_forms/shared/theme.js');
+  const v = lire(path.join(SCHEMAS, 'kit-theme-0.1.schema.json')).definitions.valeur;
+  const motif = new RegExp(v.pattern);
+  const corpus = ['#fff', '#FFFFFF', '#ffffff80', 'rgb(0, 0, 0)', 'rgba(0,0,0,0.35)', 'hsl(210 50% 40%)', 'rgb(0 0 0 / 50%)',
+    'var(--c-identite-profonde)', 'var(--_x-1)', 'url(x)', 'var(--x, red)', 'calc(1px)', 'red', '#12', '#fff;color:red',
+    'rgb(0,0,0);background:url(x)', 'var(--x', 'var(--)', '#' + 'a'.repeat(47), 'var(--' + 'a'.repeat(64) + ')'];
+  for (const c of corpus) {
+    const accepte = motif.test(c) && c.length <= v.maxLength;
+    assert.equal(accepte, Theme.valeurSure(c), JSON.stringify(c));
+  }
+});

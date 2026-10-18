@@ -50,9 +50,12 @@
   var CLES_MAX = 200;
 
   // Écrites sans quantificateur illimité ni alternance imbriquée ; la longueur est bornée AVANT.
-  var HEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
-  var FONCTION = /^(?:rgb|rgba|hsl|hsla)\(\s*[0-9.%]{1,8}(?:\s*[ ,/]\s*[0-9.%]{1,8}){2,3}\s*\)$/;
-  var REFERENCE = /^var\(--[A-Za-z_][A-Za-z0-9_-]{0,63}\)$/;
+  // Les motifs sont des CHAÎNES : le schéma publié (`kit-theme-0.1`) reprend le même motif, et un test les compare.
+  var MOTIF_HEX = '#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})';
+  var MOTIF_FONCTION = '(?:rgb|rgba|hsl|hsla)\\(\\s*[0-9.%]{1,8}(?:\\s*[ ,/]\\s*[0-9.%]{1,8}){2,3}\\s*\\)';
+  var MOTIF_REFERENCE = 'var\\(--[A-Za-z_][A-Za-z0-9_-]{0,63}\\)';
+  var MOTIF = '^(?:' + MOTIF_HEX + '|' + MOTIF_FONCTION + '|' + MOTIF_REFERENCE + ')$';
+  var VALEUR = new RegExp(MOTIF);
 
   function propre(o, cle) { return Object.prototype.hasOwnProperty.call(o, cle); }
 
@@ -68,7 +71,7 @@
     if (typeof v !== 'string') return false;
     var s = v.trim();
     if (!s || s.length > LONGUEUR_MAX) return false;
-    return HEX.test(s) || FONCTION.test(s) || REFERENCE.test(s);
+    return VALEUR.test(s);
   }
 
   /**
@@ -131,6 +134,7 @@
     CLES: CLES,
     PREFIXE: PREFIXE,
     LONGUEUR_MAX: LONGUEUR_MAX,
+    MOTIF: MOTIF,
     nomDe: nomDe,
     valeurSure: valeurSure,
     valider: valider
