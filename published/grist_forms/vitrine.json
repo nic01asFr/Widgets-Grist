@@ -184,19 +184,23 @@
     ],
     "apercu": {
       "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/?cas=consultation",
-      "mention": "L’aperçu est la démonstration elle-même : quatre formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé."
+      "mention": "L’aperçu est la démonstration elle-même : cinq formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé."
     },
     "demonstration": {
-      "titre": "Quatre formulaires, à remplir pour de vrai",
-      "texte": "Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions. Rien n’est enregistré : il n’y a pas de document derrière.",
+      "titre": "Cinq formulaires, à remplir pour de vrai",
+      "texte": "Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions, un signalement dont l’adresse officielle désigne la commune. Rien n’est enregistré : il n’y a pas de document derrière.",
       "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/",
       "image": "apercu.jpeg",
-      "alt": "La démonstration : quatre cas au choix, et le formulaire à côté",
+      "alt": "La démonstration : plusieurs cas au choix, et le formulaire à côté",
       "libelle": "Ouvrir la démonstration",
       "mention": "Les cartes viennent des fonds IGN, le dessin produit un vrai PNG. Le bouton d’envoi affiche ce qui serait écrit dans la table."
     }
   },
   "journal": [
+    {
+      "version": "v1.2.1",
+      "texte": "Un cinquième cas dans la démonstration : le signalement d’un problème sur l’espace public. L’adresse se choisit dans la liste officielle, et son code INSEE et ses coordonnées partent avec la réponse : dans la table, une formule peut alors retrouver la commune et le service compétent, sans que la personne ait un compte ni connaisse la structure. Une note d’étude (docs/ENVOI-EXTERNE.md) rapporte ce qui a été mesuré sur un vrai document Grist pour un formulaire servi hors de Grist : ce que permet la clé d’un formulaire natif, et ce qu’elle interdit."
+    },
     {
       "version": "v1.2.0",
       "texte": "Un champ d’adresse : la personne tape, valide, et choisit dans la liste de la Base adresse nationale. L’adresse complète s’écrit dans la colonne de la question, et le code postal, la commune, le code INSEE et les coordonnées dans des colonnes annexes que vous nommez — seulement pour une adresse réellement choisie. La recherche part à la validation par défaut, et une mention le dit sous le champ. Autres corrections : les conditions des quatre formulaires de démonstration n’agissaient pas (elles étaient écrites dans une forme que le moteur ignorait), et le mode « créer le schéma » crée maintenant les colonnes que le moteur écrit vraiment (rangs d’un classement, précision d’un « Autre », annexes d’une adresse)."

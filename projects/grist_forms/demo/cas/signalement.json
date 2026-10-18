@@ -1,0 +1,93 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-signalement",
+  "title": "Signaler un problème sur l’espace public",
+  "tableId": "Signalements",
+  "composeMode": "ensureSchema",
+  "successMessage": "Merci, votre signalement est enregistré. Conservez votre reçu pour en suivre l’avancement.",
+  "branding": {
+    "organisation": "Service technique",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Signaler un problème",
+    "texte": "Une fuite, un éclairage éteint, un dépôt : dites **où** et **de quoi** il s’agit. L’adresse se choisit dans la liste officielle, et la commune ainsi que le service compétent s’en déduisent.",
+    "dureeMinutes": 1,
+    "bouton": "Faire un signalement"
+  },
+  "choices": {},
+  "sections": [
+    {
+      "id": "signalement",
+      "label": "Votre signalement",
+      "fields": [
+        {
+          "colId": "Adresse",
+          "label": "Où se trouve le problème ?",
+          "type": "Text",
+          "widget": "text",
+          "kind": "referentiel",
+          "required": true,
+          "description": "Tapez l’adresse puis validez : choisissez dans la liste. C’est ce choix qui permet de trouver le bon service.",
+          "options": {
+            "referentiel": {
+              "source": "ban"
+            },
+            "placeholder": "8 boulevard du Port, Amiens",
+            "colonnes": {
+              "annexes": {
+                "insee": "CodeInsee",
+                "latitude": "AdresseLat",
+                "longitude": "AdresseLon"
+              }
+            }
+          }
+        },
+        {
+          "colId": "Nature",
+          "label": "De quoi s’agit-il ?",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Fuite",
+              "Éclairage",
+              "Autre"
+            ]
+          }
+        },
+        {
+          "colId": "NaturePrecision",
+          "label": "Précisez",
+          "type": "Text",
+          "widget": "text",
+          "condition": {
+            "field": "Nature",
+            "operator": "==",
+            "value": "Autre"
+          }
+        },
+        {
+          "colId": "Gravite",
+          "label": "Est-ce dangereux ?",
+          "type": "Choice",
+          "widget": "radio",
+          "options": {
+            "choices": [
+              "Gênant",
+              "Important",
+              "Dangereux"
+            ]
+          }
+        },
+        {
+          "colId": "Commentaire",
+          "label": "Précisions utiles",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    }
+  ]
+}
