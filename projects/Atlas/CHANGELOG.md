@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.28.3 — les repères ne disparaissent plus quand une police du fond manque
+
+- **Marqueurs à états** (correctif du composant) : le texte d'un marqueur sans valeur était un tiret demi-cadratin « – », caractère hors de la plage 0-255 de la police ; quand le serveur de polices du plan IGN répondait 502 pour la plage qui le porte (8192-8447), MapLibre ne dessinait plus la couche, repères compris. Le tiret est maintenant un tiret ASCII « - ». Mesuré avec un serveur de polices qui échoue sur cette plage seule : 0 repère avec « – », 3 avec « - » ; `text-optional` n'y changeait rien.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.28.2 — la carte ne passe plus hors ligne à tort
 
 - **Repli hors ligne** (correctif du composant) : une police de caractères du fond qui répond en erreur (502 ou 404 sur `fonts/…`, constaté sur le plan IGN) faisait compter des tuiles en échec, et quatre en huit secondes basculaient la carte sur le fond uni alors que le réseau était sain. Ces erreurs-là ne comptent plus ; de vraies tuiles en échec déclenchent toujours le repli.

@@ -41,11 +41,17 @@ export function couleurTexteEtats(champEtat, etats, resoudre = (c) => c, defaut 
  * caractères (un pourcentage à trois chiffres tient moins bien dans la forme). Une règle illisible retombe sur la charte.
  * @returns {number|Array}
  */
+/**
+ * Le texte d'un marqueur sans valeur : un tiret ASCII. Un caractère hors de la plage 0-255 (le tiret demi-cadratin « – », U+2013) oblige MapLibre à
+ * charger une AUTRE plage de la police ; si le serveur de polices l'échoue (502 constaté sur le plan IGN, plage 8192-8447), la couche entière n'est plus
+ * dessinée, repères compris, et `text-optional` n'y change rien (mesuré le 18/10/2026).
+ */
+export const TIRET_MARQUEUR = '-';
 export function tailleTexte(champTexte, reglage, defaut) {
   if (typeof reglage === 'number' && Number.isFinite(reglage)) return reglage;
   if (reglage && typeof reglage === 'object' && Number.isFinite(reglage.normal) && Number.isFinite(reglage.long)) {
     const seuil = Number.isFinite(reglage.seuil) ? reglage.seuil : 2;
-    return ['case', ['>', ['length', ['to-string', ['coalesce', ['get', champTexte], '–']]], seuil], reglage.long, reglage.normal];
+    return ['case', ['>', ['length', ['to-string', ['coalesce', ['get', champTexte], TIRET_MARQUEUR]]], seuil], reglage.long, reglage.normal];
   }
   return defaut;
 }

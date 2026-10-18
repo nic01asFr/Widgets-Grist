@@ -72,8 +72,8 @@ test('taille du chiffre : la charte par défaut, un nombre, ou une règle « lon
   assert.equal(tailleTexte('pct', undefined, 12), 12);
   assert.equal(tailleTexte('pct', 15, 12), 15);
   const expr = tailleTexte('pct', { normal: 15, long: 12, seuil: 2 }, 11);
-  assert.deepEqual(expr, ['case', ['>', ['length', ['to-string', ['coalesce', ['get', 'pct'], '–']]], 2], 12, 15]);
-  assert.deepEqual(tailleTexte('pct', { normal: 15, long: 12 }, 11), ['case', ['>', ['length', ['to-string', ['coalesce', ['get', 'pct'], '–']]], 2], 12, 15], 'seuil de 2 par défaut');
+  assert.deepEqual(expr, ['case', ['>', ['length', ['to-string', ['coalesce', ['get', 'pct'], '-']]], 2], 12, 15]);
+  assert.deepEqual(tailleTexte('pct', { normal: 15, long: 12 }, 11), ['case', ['>', ['length', ['to-string', ['coalesce', ['get', 'pct'], '-']]], 2], 12, 15], 'seuil de 2 par défaut');
   assert.equal(tailleTexte('pct', { normal: 'x' }, 11), 11, 'une règle illisible retombe sur la charte');
 });
 
@@ -89,7 +89,7 @@ test('composant : la couche de marqueurs porte l\'icône par état, le chiffre (
     const l = carte.calques.find((c) => c.type === 'symbol');
     assert.ok(l, 'une couche de symboles');
     assert.equal(l.layout['icon-image'][0], 'match'); assert.deepEqual(l.layout['icon-image'][1], ['get', 'etat']);
-    assert.deepEqual(l.layout['text-field'], ['to-string', ['coalesce', ['get', 'pct'], '–']], 'sans valeur : le tiret');
+    assert.deepEqual(l.layout['text-field'], ['to-string', ['coalesce', ['get', 'pct'], '-']], 'sans valeur : le tiret');
     assert.equal(l.paint['text-color'][0], 'match'); assert.ok(l.paint['text-color'].includes('#26312B'));
     assert.equal(l.layout['text-size'][0], 'case');
   } finally { delete globalThis.OffscreenCanvas; }
@@ -106,4 +106,10 @@ test('composant : sans réglage de chiffre, rien ne change (noir, taille de la c
     assert.equal(l.paint['text-color'], '#000000');
     assert.equal(typeof l.layout['text-size'], 'number', 'la taille d\'étiquette de la charte');
   } finally { delete globalThis.OffscreenCanvas; }
+});
+
+test('le texte d un marqueur sans valeur tient dans la plage 0-255 de la police (un tiret demi-cadratin ferait charger une autre plage)', async () => {
+  const { TIRET_MARQUEUR } = await import('../lib/bi/icones-etats.js');
+  assert.ok([...TIRET_MARQUEUR].every((c) => c.codePointAt(0) < 256), 'ASCII ou latin-1 seulement');
+  assert.equal(TIRET_MARQUEUR, '-');
 });
