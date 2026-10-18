@@ -22,7 +22,7 @@
  * navigateur.
  */
 
-import { estTableAtlas } from './atlas-tables.js?v=1.28.1';
+import { estTableAtlas } from './atlas-tables.js?v=1.28.2';
 
 export const VERSION = '1.0.0';
 

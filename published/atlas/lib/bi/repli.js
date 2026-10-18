@@ -20,6 +20,22 @@ export function creerSurveillance({ seuil = 4, fenetreMs = 8000, maintenant = ()
     compte: () => echecs.length,
   };
 }
+/**
+ * Un événement `error` de MapLibre est-il un échec de TUILE qui dit quelque chose du réseau ? Une police de caractères (glyphes) qui répond 502 ou 404 fait
+ * échouer toutes les tuiles qui en ont besoin (MapLibre 5.6.1 : l'événement porte alors `sourceId` et `tile`, comme une vraie panne de tuile), sans que
+ * le réseau soit perdu : ce n'est pas une raison de passer hors ligne. Mesuré le 18/10/2026 avec un serveur de polices qui répond 502.
+ */
+export function estEchecDeTuile(ev) {
+  if (!ev || !ev.sourceId || !ev.tile) return false;
+  const e = ev.error || {};
+  const texte = String(e.url || '') + ' ' + String(e.message || '');
+  return !/\/fonts\/|glyph/i.test(texte);
+}
+/** Ce que l'hôte peut lire pour comprendre un repli automatique : le dernier échec compté (texte borné, jamais l'objet d'erreur). */
+export function diagnosticEchec(ev, echecs) {
+  const e = (ev && ev.error) || {};
+  return { echecs: Number.isFinite(echecs) ? echecs : null, message: String(e.message || '').slice(0, 160), statut: Number.isFinite(e.status) ? e.status : null, nom: String(e.name || '').slice(0, 40), sourceId: String((ev && ev.sourceId) || '').slice(0, 60) };
+}
 /** Fond à utiliser selon l'état de connexion : le fond demandé s'il est utilisable hors ligne, sinon « uni ». */
 export function fondPourConnexion(fondDemande, horsLigne) { return horsLigne && !FONDS_HORS_LIGNE.includes(fondDemande) ? 'uni' : fondDemande; }
 /** Un niveau administratif est-il disponible sans réseau ? */

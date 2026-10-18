@@ -61,7 +61,7 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   progress: ['Avancement d\'un chargement.', '{ pages, chargees, total }'],
   drill: ['Descente ou remontée administrative.', '{ sens, niveau, parent, layer, fil }'],
   statistique: ['La mesure d\'une couche administrative a changé.', 'objet'],
-  connexion: ['Passage en ligne ou hors ligne.', '{ etat, cause, automatique, fond }'],
+  connexion: ['Passage en ligne ou hors ligne.', '{ etat, cause, automatique, fond, diagnostic? }  (diagnostic, sur un repli automatique par les tuiles : { echecs, message, statut, nom, sourceId } du dernier échec compté)'],
   action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
   bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
   classe: ["La personne a cliqué une classe de la légende optionnelle (interface.legende.cible: true) ; la légende ne filtre rien, l'hôte route.", "{ layer, cle, libelle, active }"],

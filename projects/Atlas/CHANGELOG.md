@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.28.2 — la carte ne passe plus hors ligne à tort
+
+- **Repli hors ligne** (correctif du composant) : une police de caractères du fond qui répond en erreur (502 ou 404 sur `fonts/…`, constaté sur le plan IGN) faisait compter des tuiles en échec, et quatre en huit secondes basculaient la carte sur le fond uni alors que le réseau était sain. Ces erreurs-là ne comptent plus ; de vraies tuiles en échec déclenchent toujours le repli.
+- **Le repli dit ce qui l'a déclenché** : l'événement `connexion` d'un repli automatique par les tuiles porte un champ `diagnostic` (nombre d'échecs, message, statut, nom d'erreur et source du dernier échec compté).
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.28.1 — un atelier de style, et une application en direct qui dit ses limites
 
 - **Atelier de style** (`demos/hote-atelier/`) : on règle la charte d'une organisation (quatre couleurs, fond de plan, palettes, police), la carte, sa légende et ses bulles suivent en direct, le code à copier (balise `<atlas-bi>` et blocs JSON déclaratifs) et la mesure de lisibilité se mettent à jour. Les couleurs de marque sur le fond de l'organisation sont mesurées aussi (3:1 pour un bouton, 4,5:1 pour du texte). Chartes d'exemple fictives ; import et export du JSON.
