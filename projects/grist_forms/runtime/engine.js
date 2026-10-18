@@ -12,14 +12,15 @@
       require('../shared/formats.js'),
       require('../shared/enrichir.js'),
       require('../shared/saisies.js'),
-      require('../shared/conditions.js')
+      require('../shared/conditions.js'),
+      require('../shared/theme.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -3308,25 +3309,41 @@
 
   // ── L'API de montage ─────────────────────────────────────────────────────
 
-  /** Le nom d'une variable de thème : `--kit-accent`, ou `accent` qu'on complète. */
-  function nomVariableTheme(cle) {
-    var k = String(cle);
-    return k.indexOf('--') === 0 ? k : '--kit-' + k;
+  /** Le module de validation du thème, s'il est là. Sans lui, aucun thème n'est posé : on ne pose pas ce qu'on ne sait pas juger. */
+  function themeApi() {
+    if (Theme && Theme.valider) return Theme;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormTheme && global.FormTheme.valider ? global.FormTheme : null;
   }
 
-  /** Pose le thème sur le conteneur ; rend les noms posés, pour les retirer. */
+  /**
+   * Juge puis pose le thème sur le conteneur.
+   *
+   * > **Un thème est une donnée non fiable** : il vient d'un hôte, d'une table du
+   * > document, d'un fichier. Seules les variables du contrat (`shared/theme.js`,
+   * > `kit-theme/0.1`) et des valeurs d'une syntaxe sûre sont posées ; le reste est
+   * > écarté et dit dans le rapport, jamais corrigé.
+   *
+   * @returns {{ posees: string[], rapport: object }} les noms posés (pour les
+   *   retirer au démontage) et le jugement `{ version, applique, ignore, avertissements }`
+   */
   function appliquerTheme(conteneur, theme) {
     var posees = [];
-    if (!theme || typeof theme !== 'object' || !conteneur || !conteneur.style ||
-        typeof conteneur.style.setProperty !== 'function') return posees;
-    Object.keys(theme).forEach(function (cle) {
-      var valeur = theme[cle];
-      if (valeur == null || valeur === '') return;
-      var nom = nomVariableTheme(cle);
-      conteneur.style.setProperty(nom, String(valeur));
-      posees.push(nom);
-    });
-    return posees;
+    var api = themeApi();
+    var vide = { version: 'kit-theme/0.1', applique: {}, ignore: [], avertissements: [] };
+    if (theme === undefined || theme === null) return { posees: posees, rapport: vide };
+    if (!api) {
+      vide.avertissements.push({ code: 'module-absent', conseil: 'shared/theme.js n’est pas chargé : aucun thème n’est posé.' });
+      return { posees: posees, rapport: vide };
+    }
+    var rapport = api.valider(theme);
+    if (conteneur && conteneur.style && typeof conteneur.style.setProperty === 'function') {
+      Object.keys(rapport.applique).forEach(function (nom) {
+        conteneur.style.setProperty(nom, rapport.applique[nom]);
+        posees.push(nom);
+      });
+    }
+    return { posees: posees, rapport: rapport };
   }
 
   function verifierClient(client) {
@@ -3412,7 +3429,8 @@
     if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
     if (contexte) pont.context = Object.assign({}, contexte);
 
-    var themePose = appliquerTheme(conteneur, options.theme);
+    var themeRes = appliquerTheme(conteneur, options.theme);
+    var themePose = themeRes.posees;
     var poignee = mount(conteneur, formdef, pont);
     var fini = false;
 
@@ -3452,7 +3470,9 @@
       },
       valider: poignee.valider,
       contexte: poignee.getContext,
-      rendre: poignee.render
+      rendre: poignee.render,
+      // Ce que le thème posé a retenu, écarté et signalé : { version, applique, ignore, avertissements }.
+      theme: themeRes.rapport
     };
   }
 
