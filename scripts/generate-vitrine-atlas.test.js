@@ -57,7 +57,7 @@ test('la page d\'Atlas est generee sans ecart : trois carrousels, un sommaire, t
   assert.deepEqual(dits, [], `la generation a signale : ${dits.join(' | ')}`);
   assert.equal((html.match(/<section class="carrousel"/g) || []).length, 3);
   assert.equal((html.match(/class="diapo/g) || []).length, 23);
-  assert.equal((html.match(/data-widget=/g) || []).length, 3, 'le cas Longchamp, l\'atelier et Rennes');
+  assert.equal((html.match(/data-widget=/g) || []).length, 4, 'le cas Longchamp, l\'atelier, Rennes et l\'orage');
   assert.match(html, /<nav class="ancres"/);
   assert.match(html, /href="#composant"/);
   assert.match(html, /Toutes les versions \(\d+\)/);
@@ -67,4 +67,22 @@ test('la page d\'Atlas est generee sans ecart : trois carrousels, un sommaire, t
 test('aucune adresse de la page d\'Atlas ne nomme une organisation ni un poste de travail', () => {
   const brut = fs.readFileSync(ATLAS, 'utf8');
   assert.doesNotMatch(brut, /C:\\\\Users|\/Users\/|127\.0\.0\.1|localhost/);
+});
+
+test('le guide d\'integration d\'Atlas existe, sa page est generee, et ses liens relatifs menent a des pages publiees', () => {
+  const annexes = atlas.produit.annexes || [];
+  const guide = annexes.find((a) => a.id === 'integrer');
+  assert.ok(guide, 'Atlas declare une annexe « integrer »');
+  const p = { id: 'atlas', widgets: [W('atlas', 'https://nic01asfr.github.io/Widgets-Grist/atlas/')], presentation: atlas };
+  const { html, dits } = ecouter(() => V.rendreAnnexe(p, guide, BASE));
+  assert.deepEqual(dits, []);
+  assert.match(html, /&lt;atlas-bi/, 'la balise est montree, echappee');
+  assert.ok(!/<atlas-bi /.test(html), 'la balise n\'est pas interpretee');
+  const dossier = path.join(__dirname, '..', 'published', 'w', 'atlas', 'integrer');
+  for (const b of guide.blocs) for (const l of b.liens || []) {
+    if (/^https?:/.test(l.url)) continue;
+    assert.ok(fs.existsSync(path.join(dossier, l.url.split(/[?#]/)[0])), 'lien relatif mort : ' + l.url);
+  }
+  const chapitre = JSON.stringify(atlas.produit.parcours);
+  assert.ok(chapitre.includes('"url":"integrer/"'), 'la page principale mene au guide');
 });

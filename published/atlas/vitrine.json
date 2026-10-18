@@ -20,6 +20,10 @@
       "texte": "Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue."
     },
     {
+      "version": "vitrine",
+      "texte": "Une carte de chaleur dans le temps : un orage simulé traverse la région de Rennes en six heures, la page lance la lecture ou la met en pause et la carte suit. C’est un prototype du composant, sur des données inventées ; la démonstration s’ouvre depuis la page."
+    },
+    {
       "version": "v1.26.1",
       "texte": "Une bulle déclarée sur une carte de communes ou de départements s’ouvre enfin quand on en choisit une, comme sur n’importe quelle autre couche."
     },
@@ -648,7 +652,7 @@
           "titre": "Atlas dans votre site, à vos couleurs",
           "intro": "Les mêmes cartes, hors de Grist : une balise dans votre page ou votre application. Vous les personnalisez, puis vous les intégrez.",
           "fluxTitre": "Trois flux, qui peuvent venir d’ailleurs",
-          "fluxTexte": "Une carte se compose de trois choses indépendantes. Chacune se donne en bloc dans la page, ou par une adresse : le style et la scène peuvent être hébergés sur votre site, ou publiés depuis Grist ; les données viennent de Grist ou d’un fichier hébergé ailleurs.",
+          "fluxTexte": "Une carte se compose de trois choses indépendantes. Chacune se donne en bloc dans la page, ou par l’adresse d’un fichier que votre page lit : ce fichier peut être hébergé sur votre site ou ailleurs, à condition d’en autoriser la lecture depuis votre page.",
           "flux": [
             {
               "titre": "Un style",
@@ -664,17 +668,17 @@
               "texte": "Le manifeste : quelles couches, quelle caméra, quels filtres, quelle légende.",
               "vientDe": [
                 "un fichier JSON à votre adresse",
-                "une scène publiée depuis Grist",
-                "un bloc dans la page"
+                "un bloc dans la page",
+                "avec le profil complet, une scène Atlas que votre page envoie par `setScene`"
               ]
             },
             {
               "titre": "Des données",
-              "texte": "Des objets géographiques (GeoJSON), ou une table Grist. Dans l’application, on importe aussi GPX, KML et CSV.",
+              "texte": "Des objets géographiques (GeoJSON), fournis par votre page. Dans l’application, on importe aussi GPX, KML et CSV.",
               "vientDe": [
-                "une table d’un document Grist",
-                "un fichier hébergé sur un site",
-                "un flux ouvert relu en continu"
+                "un fichier GeoJSON hébergé sur un site",
+                "ce que votre page a déjà (une table Grist qu’elle lit, une API)",
+                "un flux ouvert relu en continu, comme « Rennes en direct »"
               ]
             }
           ],
@@ -690,7 +694,7 @@
               "liens": [
                 {
                   "libelle": "Le guide d’intégration complet",
-                  "url": "https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/EXPLOITATION-EXTERNE-BI.md"
+                  "url": "integrer/"
                 }
               ],
               "figure": {
@@ -738,9 +742,28 @@
                   },
                   {
                     "titre": "D’où viennent les données",
-                    "texte": "Elles doivent être lisibles depuis un navigateur : un portail de données ouvertes, ou un document Grist partagé en lecture."
+                    "texte": "Votre page doit pouvoir les lire depuis un navigateur : un portail de données ouvertes, un fichier hébergé qui en autorise la lecture, ou un document Grist partagé en lecture."
                   }
                 ]
+              }
+            },
+            {
+              "num": "Dans le temps",
+              "titre": "Voir un phénomène se déplacer",
+              "paragraphes": [
+                "Une carte de chaleur et une horloge : on regarde un événement s’étendre et se déplacer heure après heure. La démonstration simule un orage qui traverse la région de Rennes en six heures ; la page pose le temps, lance la lecture ou la met en pause, et la carte suit.",
+                "C’est un prototype : la composition existe dans le composant (carte de chaleur et dimension de temps), mais elle n’a pas la maturité du reste. Les données sont inventées pour la démonstration."
+              ],
+              "pourquoi": "Un phénomène qui bouge se comprend mieux qu’une suite de cartes figées.",
+              "figure": {
+                "image": "cas-chaleur.jpg",
+                "alt": "Une tache bleue foncée, la cellule orageuse, au-dessus de Rennes à 16 h 15, avec l’horloge et le curseur de l’heure à gauche",
+                "legende": "Un orage simulé à 16 h 15, à son plus fort : environ 42 mm/h. Données inventées pour la démonstration.",
+                "demo": {
+                  "url": "../../atlas/demos/hote-chaleur/index.html",
+                  "libelle": "Voir l’orage",
+                  "titre": "Un orage qui traverse la métropole : données simulées, prototype"
+                }
               }
             }
           ]
@@ -760,7 +783,8 @@
         {
           "titre": "Accessibilité",
           "paragraphes": [
-            "Dans le composant : navigation au clavier sur la carte (touches n et p pour passer d’un élément à l’autre, Entrée pour sélectionner), phrases annoncées aux lecteurs d’écran, préférence de contraste élevé prise en compte. Pas d’audit formel ni de test sur appareil réel à ce jour : nous préférons le dire."
+            "Dans le composant : navigation au clavier sur la carte (touches n et p pour passer d’un élément à l’autre, Entrée pour sélectionner), phrases annoncées aux lecteurs d’écran, préférence de contraste élevé prise en compte. Pas d’audit formel ni de test sur appareil réel à ce jour : nous préférons le dire.",
+            "Cette page de présentation, son guide d’intégration et la démonstration de la carte de chaleur obtiennent 100 à l’audit automatique Lighthouse pour l’accessibilité (mesuré le 18 octobre 2026) ; les autres démonstrations n’ont pas été mesurées. Un audit automatique ne remplace pas un audit complet par des personnes."
           ]
         },
         {
@@ -790,7 +814,176 @@
         }
       ],
       "journalRecent": 5
-    }
+    },
+    "annexes": [
+      {
+        "id": "integrer",
+        "titre": "Mettre une carte Atlas dans votre page",
+        "chapeau": "Trois étapes, sans serveur de cartes à monter. Ce guide dit l’essentiel ; le contrat complet (commandes, événements, limites mesurées) est dans la documentation du dépôt.",
+        "blocs": [
+          {
+            "titre": "Étape 1 : charger le composant",
+            "paragraphes": [
+              "Une ligne dans votre page. L’adresse publique suit toujours la dernière version ; pour une version figée, copiez le dossier d’Atlas chez vous et visez-le."
+            ],
+            "code": {
+              "titre": "HTML",
+              "langage": "html",
+              "source": "<script type=\"module\" src=\"https://nic01asfr.github.io/Widgets-Grist/atlas/lib/bi/atlas-bi-element.js\"></script>"
+            }
+          },
+          {
+            "titre": "Étape 2 : poser la carte",
+            "paragraphes": [
+              "La balise `<atlas-bi>` reçoit l’adresse d’Atlas, et ce qui décrit votre carte : une charte (couleurs, caractères), des données, éventuellement un manifeste. Chaque morceau s’écrit en bloc dans la page, ou par l’adresse d’un fichier JSON que votre page lit.",
+              "Sans manifeste, le composant déduit les couches, les identifiants, la clé métier et les couleurs de vos données, et dit ce qu’il a décidé (événement `atlas-bi-configure`)."
+            ],
+            "code": {
+              "titre": "HTML",
+              "langage": "html",
+              "source": "<atlas-bi src=\"https://nic01asfr.github.io/Widgets-Grist/atlas/index.html\" fond=\"plan\" style=\"display:block; height:480px\">\n  <script type=\"application/json\" data-atlas=\"charte\">\n    { \"version\": \"atlas-charte/0.1\",\n      \"graines\": { \"principal\": \"#b4452c\", \"secondaire\": \"#3d6670\", \"fond\": \"#faf6ee\", \"encre\": \"#2b2118\" },\n      \"texte\": { \"famille\": \"serif\" } }\n  </script>\n  <script type=\"application/json\" data-atlas=\"donnees\">\n    { \"sites\": [ { \"type\": \"Feature\", \"id\": 1, \"properties\": { \"nom\": \"Mairie\", \"categorie\": \"Culture\" },\n                   \"geometry\": { \"type\": \"Point\", \"coordinates\": [-1.678, 48.113] } } ] }\n  </script>\n</atlas-bi>"
+            }
+          },
+          {
+            "titre": "Étape 3 : servir la page",
+            "paragraphes": [
+              "Votre page doit être servie en http ou https, depuis n’importe quel site statique, GitHub Pages compris. Un fichier ouvert directement depuis le disque (`file://`) n’est pas accepté : Atlas ne répond qu’à une page dont l’origine est déclarée.",
+              "L’élément déclare lui-même l’origine de votre page à Atlas (attribut `hote` pour la changer). Une page qui ne s’est pas déclarée ne reçoit rien : une carte inconnue reste muette."
+            ]
+          },
+          {
+            "titre": "Les attributs de la balise",
+            "tableauTitre": "Attributs de <atlas-bi>",
+            "tableau": {
+              "colonnes": [
+                "Attribut",
+                "Ce qu’il fait"
+              ],
+              "lignes": [
+                [
+                  "`src`",
+                  "L’adresse d’Atlas (obligatoire)."
+                ],
+                [
+                  "`donnees`, `manifeste`, `charte`",
+                  "L’adresse d’un fichier JSON que votre page lit (http ou https, 16 Mo au plus), ou un bloc `<script type=\"application/json\" data-atlas=\"…\">` : l’un ou l’autre, jamais les deux."
+                ],
+                [
+                  "`charte=\"herite\"`",
+                  "La carte prend les couleurs et la famille de caractères de votre page."
+                ],
+                [
+                  "`fond`",
+                  "`atlas`, `voile`, `uni`, `plan`, `plan-ign` ou `photo`."
+                ],
+                [
+                  "`base=\"aucune\"`",
+                  "Aucun fond de carte ni service extérieur au démarrage (avec `fond=\"uni\"`). Sans cet attribut, le fond vient d’OpenFreeMap."
+                ],
+                [
+                  "`cadrage=\"aucun\"`",
+                  "Garde la caméra par défaut au lieu de cadrer la carte sur vos données."
+                ],
+                [
+                  "`profil=\"complet\"`",
+                  "L’application entière (rail, panneaux, 3D) au lieu de la carte seule."
+                ],
+                [
+                  "`evenements-api`",
+                  "Fait remonter aussi l’effet de vos propres commandes."
+                ],
+                [
+                  "`ratio-max`",
+                  "Plafonne la finesse de dessin sur un écran à fort ratio de pixels (de 1 à 4)."
+                ]
+              ]
+            }
+          },
+          {
+            "titre": "Piloter la carte",
+            "paragraphes": [
+              "Chaque commande est une promesse : elle se résout par l’accusé de la carte, ou se rejette avec une erreur. `batch` envoie jusqu’à 100 ordres en un aller-retour. Les gestes de la personne reviennent comme des événements : `atlas-bi-select`, `atlas-bi-hover`, `atlas-bi-filter`, `atlas-bi-camera`, `atlas-bi-time`, `atlas-bi-erreur`.",
+              "C’est votre page qui détient l’état (filtres, sélection, temps) : la carte l’applique, le dessine et vous le dit."
+            ],
+            "code": {
+              "titre": "JavaScript",
+              "langage": "js",
+              "source": "const carte = document.querySelector('atlas-bi');\nawait carte.setScene(manifeste, donnees);              // les commandes attendent la connexion\ncarte.addEventListener('atlas-bi-select', (e) => ouvrirFiche(e.detail.charge.key));\nawait carte.setFilter('f-type', ['a', 'b']);           // l'hôte détient les filtres"
+            },
+            "tableauTitre": "Les commandes du socle",
+            "tableau": {
+              "colonnes": [
+                "Commande",
+                "Ce qu’elle fait"
+              ],
+              "lignes": [
+                [
+                  "`setScene`",
+                  "Pose les couches, la légende, les contrôles ; `fusion: true` ne remplace que les couches listées."
+                ],
+                [
+                  "`setFilter`, `setLayerVisibility`",
+                  "Applique l’état complet d’un contrôle ; montre ou masque une couche."
+                ],
+                [
+                  "`select`, `highlight`",
+                  "Sélectionne un objet par son identifiant ; entoure plusieurs objets."
+                ],
+                [
+                  "`flyTo`, `fitTo`",
+                  "Déplace la caméra ; cadre sur une couche ou des objets."
+                ],
+                [
+                  "`setTheme`, `setFond`, `getTheme`",
+                  "Applique une charte, change le fond de carte, relit le thème mesuré."
+                ],
+                [
+                  "`getLegend`, `getRows`",
+                  "Lit la légende ou les lignes affichées."
+                ],
+                [
+                  "`setTime`, `play`, `pause`",
+                  "Pilote la dimension de temps (une carte de chaleur qui avance, par exemple)."
+                ]
+              ]
+            }
+          },
+          {
+            "titre": "Ce qu’il faut savoir",
+            "liste": [
+              "Au-delà de 100 000 objets par couche, agrégez avant d’envoyer (hexagones, grille ou unités administratives).",
+              "Le composant n’utilise que des polices du système : une police propre à votre site est ramenée à la famille la plus proche.",
+              "La carte ne se rafraîchit pas seule : votre page renvoie ses données quand elles changent.",
+              "Les fichiers que votre page lit doivent en autoriser la lecture (CORS) s’ils sont hébergés ailleurs.",
+              "Ce qui n’est pas un contrat : l’adresse publique suit la dernière version. Les hôtes qui veulent une version figée copient le dossier."
+            ]
+          },
+          {
+            "titre": "Aller plus loin",
+            "liens": [
+              {
+                "libelle": "Essayer l’atelier de style",
+                "url": "../../../atlas/demos/hote-atelier/index.html",
+                "bouton": true
+              },
+              {
+                "libelle": "Voir une application alimentée en direct",
+                "url": "../../../atlas/demos/hote-direct/index.html",
+                "bouton": true
+              },
+              {
+                "libelle": "Le guide complet du développeur",
+                "url": "https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/EXPLOITATION-EXTERNE-BI.md"
+              },
+              {
+                "libelle": "Le contrat de la carte (commandes et événements)",
+                "url": "https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/CONTRAT-CARTE-BI.md"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "forum": {
     "url": "https://forum.grist.libre.sh/t/atlas-un-widget-carte-pour-grist-lignes-polygones-3d-edition-et-partage-en-lecture/4205",
