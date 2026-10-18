@@ -54,17 +54,35 @@ test('le CHANGELOG donne la taille, l\'empreinte et la version du client en un f
   assert.ok(changelog.includes('`VERSION_CLIENT` ' + version[1]), 'VERSION_CLIENT ' + version[1] + ' absente du CHANGELOG');
 });
 
-test('la page générée de la vitrine reflète vitrine.json (version en tête, chaque entrée du journal, chaque carte)', () => {
+/** Les chapitres, les diapositives et les images du parcours d'usage (la page d'Atlas est organisée par usage : `produit.parcours`). */
+function parcoursDeLaVitrine() {
+  const chapitres = [];
+  const diapositives = [];
+  const images = new Set();
+  for (const s of vitrine.produit.parcours.sections) {
+    if (s.demo && s.demo.image) images.add(s.demo.image);
+    for (const c of s.chapitres) {
+      chapitres.push(c);
+      if (c.figure && c.figure.image) images.add(c.figure.image);
+      for (const d of c.diapositives || []) { diapositives.push(d); images.add(d.image); }
+    }
+  }
+  return { chapitres, diapositives, images };
+}
+const echappeHtml = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+test('la page générée de la vitrine reflète vitrine.json (version en tête, chaque entrée du journal, chaque chapitre et chaque diapositive)', () => {
   const page = lire('published', 'w', 'atlas', 'index.html');
-  assert.ok(page.includes('<b>v' + VERSION + '</b>'), 'la page ne porte pas l\'entrée v' + VERSION + ' : relancer node scripts/generate-vitrine.js');
+  assert.ok(page.includes('<b>v' + VERSION + '</b>'), "la page ne porte pas l'entrée v" + VERSION + ' : relancer node scripts/generate-vitrine.js');
   for (const e of vitrine.journal) assert.ok(page.includes('<b>' + e.version + '</b>'), 'entrée du journal absente de la page : ' + e.version);
-  for (const c of vitrine.produit.contextes) assert.ok(page.includes(c.titre.replace(/&/g, '&amp;').replace(/’/g, '’')) || page.includes(c.titre), 'carte absente de la page : ' + c.titre);
+  const { chapitres, diapositives } = parcoursDeLaVitrine();
+  assert.ok(chapitres.length >= 6 && diapositives.length >= 20, 'le parcours est vide : ' + chapitres.length + ' chapitres, ' + diapositives.length + ' diapositives');
+  for (const c of chapitres) assert.ok(page.includes(echappeHtml(c.titre)), 'chapitre absent de la page : ' + c.titre);
+  for (const d of diapositives) assert.ok(page.includes(echappeHtml(d.titre)), 'diapositive absente de la page : ' + d.titre);
 });
 
 test('toute image citée par la vitrine existe', () => {
-  const images = new Set();
-  for (const c of vitrine.produit.contextes) for (const i of c.images || []) images.add(i.image);
-  if (vitrine.produit.demonstration && vitrine.produit.demonstration.image) images.add(vitrine.produit.demonstration.image);
+  const { images } = parcoursDeLaVitrine();
   assert.ok(images.size >= 10);
   const absentes = [...images].filter((f) => !fs.existsSync(path.join(DEPOT, 'published', 'w', 'atlas', f)));
   assert.deepEqual(absentes, [], 'images citées mais absentes de published/w/atlas/ : ' + absentes.join(', '));

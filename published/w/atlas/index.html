@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Atlas — widget Grist</title>
-<meta name="description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
+<meta name="description" content="Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.">
 <link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/atlas/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgets Grist">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/atlas/">
 <meta property="og:title" content="Atlas — widget Grist">
-<meta property="og:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
+<meta property="og:description" content="Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.">
 <meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/atlas/apercu.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
-<meta name="twitter:description" content="La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-17"}</script>
+<meta name="twitter:description" content="Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-17"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -174,15 +174,88 @@ section { margin: 0 0 3rem; }
 @media (prefers-reduced-motion: reduce) {
   .reveler { opacity: 1; transform: none; transition: none; }
 }
+
+.statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
+.statut b { color: var(--encre); font-weight: 600; }
+.ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
+  background: color-mix(in srgb, var(--papier) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--filet); }
+.ancres::-webkit-scrollbar { display: none; }
+.ancres a { white-space: nowrap; text-decoration: none; font-size: .9rem; color: var(--plume); padding: .45rem .8rem; border-radius: 999px; min-height: 2.5rem; display: inline-flex; align-items: center; }
+.ancres a:hover { background: var(--filet); color: var(--encre); }
+.partie { margin: 0; padding: 3.2rem 0 .5rem; scroll-margin-top: 4rem; }
+.entete { max-width: 44rem; margin-bottom: 1.8rem; } .entete h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: .6rem; } .entete p { font-size: 1.02rem; margin: 0; }
+.avant-apres, .preuves { margin: 0 0 2.6rem; padding: 0; }
+.comparaison { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--filet); font-size: .93rem; }
+.comparaison caption { text-align: left; font-weight: 600; padding-bottom: .5rem; }
+.comparaison th, .comparaison td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--filet); vertical-align: top; font-weight: 400; }
+.comparaison thead th { background: var(--papier); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; }
+.comparaison tbody th { color: var(--plume); } .comparaison td:last-child { color: var(--encre); font-weight: 500; }
+.preuves ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.preuves li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1rem 1.1rem; }
+.preuves b { display: block; font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.9rem; line-height: 1.1; color: var(--encre); }
+.preuves span { display: block; font-size: .88rem; color: var(--plume); margin-top: .3rem; } .preuves em { display: block; font-size: .76rem; color: var(--plume); margin-top: .5rem; font-style: normal; }
+.chap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 2.4rem; align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--filet); }
+.chap.haut { display: block; } .chap.inverse .dit { order: 2; } .chap > .detail, .chap > .pleine { grid-column: 1 / -1; }
+.chap > .pleine:empty { display: none; }
+.chap .dit { max-width: 46rem; } .chap .dit h3 { font-size: 1.45rem; margin-bottom: .7rem; }
+.chap .num { display: block; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+.chap .dit p { font-size: .97rem; }
+.chap .pourquoi { font-size: .93rem; padding-left: .9rem; border-left: 3px solid var(--accent); color: var(--encre); }
+.chap .liens { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 0; }
+.chap .lien { color: var(--accent); }
+.chap figure { margin: 0; } .chap figure img { width: 100%; height: auto; display: block; border: 1px solid var(--filet); border-radius: 12px; } .chap figcaption { font-size: .82rem; color: var(--plume); margin-top: .5rem; }
+.chap .montre figure.vivante .cadre { aspect-ratio: 1200 / 760; }
+.demo-parcours { margin: 0 0 1rem; } .demo-parcours figure { margin: 0; } .demo-parcours figcaption { font-size: .85rem; color: var(--plume); margin-top: .5rem; }
+.demo-parcours .cadre { aspect-ratio: 16 / 9; }
+.detail { background: var(--surface); border: 1px solid var(--filet); border-radius: 12px; margin: 1rem 0 .6rem; }
+.detail > summary { cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; }
+.detail > summary::-webkit-details-marker { display: none; } .detail > summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; } .detail[open] > summary::after { content: "−"; }
+.detail > div { padding: 0 1.1rem 1rem; } .detail h4 { margin: .8rem 0 .2rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; } .detail h4:first-child { margin-top: 0; }
+.detail p, .detail li { font-size: .93rem; } .detail .comparaison { margin-top: .4rem; }
+.liste-simple { margin: 0 0 .6rem; padding-left: 1.2rem; color: var(--plume); } .liste-simple li { margin-bottom: .35rem; }
+.flux { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+.flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
+.flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
+.titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+.bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
+.entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
+.copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
+.bloc-code pre { margin: 0; padding: 1.1rem 1.2rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; tab-size: 2; }
+.bloc-code code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+.carrousel { margin-top: 1.6rem; position: relative; }
+.pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
+.pistes::-webkit-scrollbar { display: none; }
+.pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; opacity: .45; transition: opacity .25s; }
+.diapo.actif, .carrousel:not(.pret) .diapo { opacity: 1; }
+.diapo.tel { grid-template-columns: 14rem 1fr; }
+.diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
+.diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
+.diapo h4 { font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0 0 .7rem; text-wrap: balance; } .diapo p { font-size: .95rem; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: .8rem 0 0; padding: 0; } .etiquettes li { font-size: .74rem; border: 1px solid var(--filet); border-radius: 999px; padding: .1rem .55rem; color: var(--plume); }
+.prec, .suiv { position: absolute; top: 38%; z-index: 3; width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--filet); background: var(--surface); color: var(--encre); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.prec { left: -1.2rem; } .suiv { right: -1.2rem; } .prec:hover:not(:disabled), .suiv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); } .prec:disabled, .suiv:disabled { opacity: 0; pointer-events: none; }
+.carrousel:not(.pret) .prec, .carrousel:not(.pret) .suiv { display: none; }
+.commandes { display: flex; align-items: center; gap: .8rem; margin-top: .4rem; }
+.compteur { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--plume); min-width: 3.4rem; }
+.sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
+.sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
+.sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+@media (prefers-reduced-motion: reduce) { .diapo { transition: none; } }
+@media (max-width: 52rem) {
+  .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
+  .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
+  .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
+}
 </style>
 </head>
 <body>
 <main>
   <a class="retour" href="../../">← Tous les widgets</a>
-  <p class="eyebrow">Widget Grist</p>
+  <p class="eyebrow">Composant web · Widget Grist · Application Android</p>
   <h1>Atlas</h1>
-  <p class="chapeau">La carte n’est pas un export de vos données : c’en est une vue. Dans Grist, couches, symbolisation, relief, récit et tournées vivent avec vos tables — quand la donnée change, la carte a déjà changé. Hors document, la même scène peut aussi s’ouvrir seule à partir d’un manifeste publié.</p>
-  <p class="accroche">Dans Grist, on partage le document : la carte suit, avec les droits du document. On peut aussi publier une scène seule (manifeste) pour l’ouvrir hors document — même moteur, autre hôte.</p>
+  <p class="chapeau">Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.</p>
+  
   <div class="tags"><span class="tag">Cartographie</span><span class="tag">Édition</span><span class="tag">3D</span><span class="tag">Terrain</span><span class="tag">Récit</span><span class="tag">Trajet</span><span class="tag">Éclairage</span><span class="tag">Relevés</span></div>
   <div class="faits">
     <span><b>1</b> widget</span>
@@ -190,499 +263,272 @@ section { margin: 0 0 3rem; }
     <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
-    <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
+    <a class="bouton" href="#cas">Voir un cas de bout en bout</a>
+    <a class="bouton creux" href="#composant">Mettre une carte dans mon site</a>
+    <a class="bouton creux" href="https://nic01asfr.github.io/Widgets-Grist/atlas/" target="_blank" rel="noopener">Ouvrir le widget</a>
     <a class="bouton creux" href="https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas" target="_blank" rel="noopener">Le code</a>
     <a class="bouton creux" href="https://forum.grist.libre.sh/t/atlas-un-widget-carte-pour-grist-lignes-polygones-3d-edition-et-partage-en-lecture/4205" target="_blank" rel="noopener"
        title="Le fil d’Atlas sur le forum Grist francophone — questions, retours et annonces de version">En discuter</a>
   </div>
-  <section class="apercu">
-    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?vitrine=1">
-      <img src="apercu.jpg" alt="Aperçu du widget Atlas" loading="lazy">
-      <button type="button" class="lancer">Lancer l’aperçu</button>
-    </div>
-    <p class="mention">L’aperçu est Atlas seul (<code>vitrine=1</code>), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist.</p>
+  <p class="statut"><span><b>En service</b> dans Grist</span><span><b>Application Android</b> en test</span><span><b>Composant web</b> en développement actif</span><span><b>Code libre</b> (MIT)</span></p>
+  <nav class="ancres" aria-label="Dans cette page"><a href="#cas">Un cas complet</a><a href="#composant">Dans votre site</a><a href="#savoir">À savoir</a><a href="#nouveautes">Nouveautés</a></nav>
+  <section class="avant-apres" aria-label="Une carte web classique, ou Atlas ?">
+    <h2>Une carte web classique, ou Atlas ?</h2>
+    <table class="comparaison">
+      <thead><tr><th scope="col">Une carte web classique</th><th scope="col">Avec Atlas</th></tr></thead>
+      <tbody><tr><th scope="row">Un export à refaire à chaque changement</th><td>Rien à exporter : la carte suit le tableau</td></tr><tr><th scope="row">Des droits d’accès à gérer à part</th><td>Les règles d’accès de Grist s’appliquent</td></tr><tr><th scope="row">Des données copiées chez un tiers</th><td>Vos données restent chez vous</td></tr><tr><th scope="row">Une carte figée</th><td>Couleurs, filtres, récit, relief : à votre main</td></tr></tbody>
+    </table>
   </section>
-  <section class="chiffres reveler">
-    <div><b>0</b><span>export à refaire quand la donnée change</span></div>
-    <div><b>0</b><span>système de droits en plus de celui de Grist</span></div>
-    <div><b>5</b><span>façons de montrer la scène : document, page intégrée, scène publiée, application externe, application Android</span></div>
-  </section>
-  <section class="contextes reveler">
-    <h2>Atlas, fonction par fonction</h2>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Intégrer</p>
-        <h3>Atlas aux couleurs de votre site</h3>
-        <p>Une balise <code>&lt;atlas-bi&gt;</code> dans votre page, vos données en JSON, votre charte graphique : la carte, sa légende, ses bulles et son fond de plan prennent vos couleurs et votre police. Quatre couleurs suffisent : Atlas calcule les palettes de données, les contours et la sélection, puis mesure la lisibilité et vous dit ce qui ne passe pas. On peut aussi dessiner les palettes une à une. Aucune police à télécharger et, avec l’option <code>base=&quot;aucune&quot;</code>, aucun service extérieur contacté au démarrage : la carte reste rapide et respecte la vie privée de vos visiteurs. L’atelier génère le code à copier au fur et à mesure que vous réglez.</p>
-        <p class="pourquoi">Une carte qui a l’air de votre site, en quelques lignes, sans développer de module de cartographie.</p>
-        <p class="exemple"><b>Dans l’exemple</b> cinq chartes fictives de départ : changez les couleurs, le fond de carte, les palettes ; le code et la mesure de lisibilité suivent.</p>
-        <ul class="utilise"><li>Balise &lt;atlas-bi&gt;</li><li>Charte graphique (JSON)</li><li>Fond de plan aux couleurs de la marque</li><li>Palettes calculées ou dessinées</li><li>Mesure de lisibilité</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large vivante">
-    <div class="cadre" data-widget="../../atlas/demos/hote-atelier/index.html" data-titre="Atelier de style : données d’exemple fictives">
-      <img src="cas-atelier.jpg" alt="L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas. À essayer ici : données d’exemple fictives." loading="lazy">
-      <button type="button" class="lancer">Ouvrir l’atelier de style</button>
+  <section class="preuves" aria-label="En chiffres"><ul>
+    <li><b>0</b><span>service extérieur contacté au démarrage</span><em>avec l’option <code>base=&quot;aucune&quot;</code> ; sans elle, le fond de carte vient d’OpenFreeMap</em></li>
+    <li><b>1</b><span>balise à ajouter à votre page</span><em><code>&lt;atlas-bi&gt;</code>, le code est plus bas</em></li>
+    <li><b>1,4 Mo</b><span>pour la carte seule, non compressé</span><em>mesure du 16/10/2026, journal de la version 1.21.0</em></li>
+    <li><b>MIT</b><span>code libre, à héberger chez vous</span><em>fichier LICENSE du dépôt</em></li>
+  </ul></section>
+  <section class="partie" id="cas" aria-labelledby="t-cas">
+    <header class="entete"><h2 id="t-cas">Un cas de bout en bout : le Palais Longchamp</h2><p>Un seul document Grist, du parc en 3D jusqu’au relevé sur téléphone. Données ouvertes (IGN, Ville de Marseille, Licence Ouverte 2.0) ; les comptages sont fictifs, et dits tels. Chaque étape est un usage d’Atlas.</p></header>
+    <div class="demo-parcours"><figure class="vivante">
+    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fpalais-longchamp%2Fscene.json" data-titre="Le Palais Longchamp : scène publiée, comptages fictifs">
+      <img src="cas-nuit.jpg" alt="Le Palais Longchamp de nuit, éclairé par ses luminaires" loading="lazy">
+      <button type="button" class="lancer">Explorer le cas en direct</button>
     </div>
-          <figcaption>L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas. À essayer ici : données d’exemple fictives.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Charger</p>
-        <h3>Vos tables deviennent des couches</h3>
-        <p>Atlas lit le document Grist : toute table qui porte une géométrie — des coordonnées, du WKT, une colonne de géométrie — est reconnue et proposée comme couche. On peut aussi y verser un fichier (GeoJSON, GPX, KML, CSV), importer OpenStreetMap ou créer une couche vide pour la dessiner. Une couche n’est pas une copie : modifier la table modifie la carte, et l’inverse. La palette de recherche (⌘K) retrouve un objet, une couche ou un lieu, ou ouvre la liste des objets d’une couche. Un projet QGIS s’y verse par qgis2grist.</p>
-        <p class="pourquoi">Il n’y a rien à exporter, ni à refaire quand la donnée change.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les 643 points lumineux de la Ville de Marseille sont une table du document ; Atlas la pose sur la carte, à côté de la maquette 3D du Palais.</p>
-        <ul class="utilise"><li>Tables géographiques</li><li>GeoJSON, GPX, KML, CSV</li><li>OpenStreetMap</li><li>QGIS</li><li>Couche vide</li><li>Recherche ⌘K</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-couches.jpg" alt="Le panneau des couches : cinq couches, chacune liée à une table du document." loading="lazy">
-          <figcaption>Le panneau des couches : cinq couches, chacune liée à une table du document.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-jour.jpg" alt="Le résultat sur la carte, de jour." loading="lazy">
-          <figcaption>Le résultat sur la carte, de jour.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Suivre</p>
-        <h3>Une application cartographique alimentée en continu</h3>
-        <p>Rennes en direct lit deux flux de données ouvertes : l’état de la circulation (2 859 tronçons, renouvelé toutes les quelques minutes) et la position des bus du réseau STAR (toutes les 30 secondes). Rien n’est copié ni stocké : la page lit, la carte dessine. Les couleurs, l’épaisseur des routes, les bulles, les filtres et la recherche d’une voie sont ceux de l’application. Trois apparences (jour, nuit, contraste) montrent la carte reprenant le style de l’application, fond de plan compris. Une voie sélectionnée le reste quand les données se rafraîchissent, et la page se met en veille quand on change d’onglet. Si un portail atteint son quota du jour, la page le dit au lieu de prétendre que la connexion est perdue. Côté code : une balise <code>&lt;atlas-bi&gt;</code>, une scène posée avec <code>setScene</code>, des filtres avec <code>setFilter</code> ; la page entière tient en 400 lignes, publiée avec Atlas (<code>demos/hote-direct</code>).</p>
-        <p class="pourquoi">Une carte vivante sans serveur à monter : les données restent chez leur producteur, à condition qu’il les publie en accès ouvert depuis une page.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les routes de la métropole de Rennes colorées selon la circulation (fluide, dense, bloqué) et les bus en ligne selon leur ponctualité.</p>
-        <ul class="utilise"><li>Flux de données ouvertes</li><li>Couches rafraîchies en continu</li><li>Largeur des routes selon leur importance</li><li>Style repris de l’application (jour, nuit, contraste)</li><li>Filtres et recherche de l’application</li><li>Bulle d’information</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large vivante">
-    <div class="cadre" data-widget="../../atlas/demos/hote-direct/index.html" data-titre="Données réelles, lues en direct à l’ouverture">
-      <img src="cas-direct.jpg" alt="Capture du 17 octobre à 21 h 28. L’application lit les données au moment où vous l’ouvrez : vous verrez la circulation de cet instant, pas celle de la capture." loading="lazy">
-      <button type="button" class="lancer">Ouvrir l’application en direct</button>
-    </div>
-          <figcaption>Capture du 17 octobre à 21 h 28. L’application lit les données au moment où vous l’ouvrez : vous verrez la circulation de cet instant, pas celle de la capture.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Charger</p>
-        <h3>Les routes, bâtiments et eau de l’IGN, dans la zone visible</h3>
-        <p>Le bouton IGN du panneau Couches importe, dans la zone que l’on regarde, les données de la BD TOPO et d’Admin Express : routes, bâtiments, cours d’eau, plans d’eau, végétation, voies ferrées, repères routiers, équipements, communes, départements. Atlas compte d’abord les objets (« 112 objets, durée attendue : environ 1 s »), refuse une zone trop vaste plutôt que de bloquer la carte, importe page par page avec une barre d’avancement, et laisse annuler puis reprendre là où l’import s’était arrêté. La couche arrive avec un style lisible (les routes colorées par type de voie — route, route à accès restreint, chemin, sentier, escalier, piste cyclable —, les bâtiments extrudés par leur hauteur), sa provenance, sa licence et la mention de source sur la carte.</p>
-        <p class="pourquoi">Les routes importées portent leur sens de circulation, leur nombre de voies et leur type de voie : une allée de parc ne se confond pas avec une rue, et un itinéraire tracé dessus évite les sens uniques, sans rien saisir à la main.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue, 51 allées du parc à accès restreint, 7 sentiers, 6 escaliers, chacun sa couleur.</p>
-        <ul class="utilise"><li>Import IGN</li><li>Type de voie</li><li>Estimation avant import</li><li>Annuler et reprendre</li><li>Provenance et licence</li><li>Sens de circulation</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-ign.jpg" alt="Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : les rues en bleu, les allées du parc à accès restreint en violet, les sentiers en vert, les escaliers en gris ; la mention de source figure en bas à droite." loading="lazy">
-          <figcaption>Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : les rues en bleu, les allées du parc à accès restreint en violet, les sentiers en vert, les escaliers en gris ; la mention de source figure en bas à droite.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Représenter</p>
-        <h3>Colorer, dimensionner, étiqueter par la donnée</h3>
-        <p>Une couche se colore d’une couleur fixe, par catégorie ou en classes graduées, se dimensionne et s’étiquette d’après un champ, et sa légende se construit seule. Quand le champ renvoie à une autre table, Atlas reprend les couleurs et l’ordre de gravité de cette table plutôt que d’inventer une palette. Une couche dense se regroupe en ronds chiffrés qui se défont au zoom ; une couleur graduée se découpe en classes aux seuils choisis, et une image tirée d’une table peut tenir lieu d’icône.</p>
-        <p class="pourquoi">Le réglage est enregistré avec le document : celui qui ouvre la scène retrouve la même carte.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les cinq teintes de lumière, de l’ambre au blanc froid, sont lues dans la table des classes ; le libellé de chaque classe vient de la même table.</p>
-        <ul class="utilise"><li>Couleur par catégorie</li><li>Classes par seuils</li><li>Table de référence</li><li>Icônes</li><li>Étiquettes</li><li>Regroupement de points</li><li>Légende</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-symbolisation.jpg" alt="L’onglet Couleur : le champ « Classe » renvoie à une table, dont Atlas propose de reprendre les couleurs." loading="lazy">
-          <figcaption>L’onglet Couleur : le champ « Classe » renvoie à une table, dont Atlas propose de reprendre les couleurs.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Représenter</p>
-        <h3>Relief, bâti, fonds de plan et lumière du jour</h3>
-        <p>Le fond est un plan, un fond clair, l’orthophotographie de l’IGN ou le fond 3D ; le relief vient du MNT LiDAR HD de l’IGN, le bâti se met en volume et porte des ombres. Le soleil se règle par la date et l’heure, et chaque étape d’un récit retient son fond, son heure et sa date.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> le même point de vue, de jour sur le plan, puis de nuit sur l’orthophotographie.</p>
-        <ul class="utilise"><li>Fonds de plan</li><li>Relief IGN</li><li>Bâti en volume</li><li>Ombres portées</li><li>Soleil et date</li><li>Globe ou plan</li><li>Points de vue</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-jour.jpg" alt="De jour, sur le fond 3D : relief, bâti et arbres." loading="lazy">
-          <figcaption>De jour, sur le fond 3D : relief, bâti et arbres.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-nuit.jpg" alt="À la tombée de la nuit, sur l’orthophotographie." loading="lazy">
-          <figcaption>À la tombée de la nuit, sur l’orthophotographie.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Représenter</p>
-        <h3>Des objets 3D réglés comme une couche</h3>
-        <p>Un point peut devenir un objet : un modèle de la bibliothèque, un modèle réaliste du catalogue d’objets, ou un fichier glTF que l’on fournit. Le modèle peut dépendre d’un champ (un type de mobilier, de luminaire). Les réglages du catalogue — puissance, température de couleur, hauteur de feu, statut — se posent sur l’objet, la couche ou le type, et chacun dit d’où vient sa valeur. Un luminaire s’allume ou reste éteint selon son statut et l’heure du soleil.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> mât, applique, boule opaline ou projecteur selon le modèle du luminaire ; le piège de nuit est un modèle 3D fourni par fichier.</p>
-        <ul class="utilise"><li>Bibliothèque 3D</li><li>Catalogue d’objets</li><li>Spécifications</li><li>Éclairage</li><li>Fichier glTF</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-pieges-3d.jpg" alt="Un modèle 3D par piège, dont la taille suit une donnée ; les luminaires allumés laissent leurs halos." loading="lazy">
-          <figcaption>Un modèle 3D par piège, dont la taille suit une donnée ; les luminaires allumés laissent leurs halos.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Représenter</p>
-        <h3>Des surfaces en volume</h3>
-        <p>Une surface peut être extrudée d’après un champ numérique, et colorée par un autre : un bâti selon sa hauteur, une grille d’analyse selon une mesure, une colonne par relevé. Les volumes sont opaques, pour que deux couches ne se traversent pas.</p>
-        <p class="pourquoi">Atlas montre le volume ; les agrégats — totaux, moyennes, mailles — se calculent dans le document, avec des formules Grist.</p>
-        <p class="exemple"><b>Dans l’exemple</b> une colonne par nuit et par piège, haute de ce qu’il a compté ; et une grille de mailles de 50 m, haute du flux lumineux installé.</p>
-        <ul class="utilise"><li>Extrusion par un champ</li><li>Palette graduée</li><li>Mode « à plat » ou « en volume »</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-releves.jpg" alt="Trois colonnes par piège — juin, juillet, septembre. Comptages fictifs." loading="lazy">
-          <figcaption>Trois colonnes par piège — juin, juillet, septembre. Comptages fictifs.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-grille.jpg" alt="Mailles de 50 m : hauteur selon le flux installé, couleur selon la température moyenne." loading="lazy">
-          <figcaption>Mailles de 50 m : hauteur selon le flux installé, couleur selon la température moyenne.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Représenter</p>
-        <h3>Du trafic sur vos routes, pour une maquette vivante</h3>
-        <p>Une fois les routes importées — celles de l’IGN avec leur sens de circulation, leur nombre de voies et leur type de voie, ou celles d’OpenStreetMap —, « Animer le trafic » (dans « Vue &amp; rendu », ou par la palette) fait rouler des véhicules dessus : des voitures et des poids lourds qui respectent les sens uniques, se rangent sur la bonne voie avant un virage, font la queue aux carrefours et cèdent le passage à l’anneau d’un giratoire. Seules les routes ouvertes à la circulation roulent : les allées d’un parc, les chemins, les sentiers, les escaliers et les pistes cyclables restent vides, et Atlas dit ce qu’il a écarté. On règle la couche, la densité (véhicules par km) et l’accès restreint ; la même simulation se rejoue à l’identique, et un clic l’arrête.</p>
-        <p class="pourquoi">Une maquette qui bouge se lit mieux qu’une maquette figée, sans refaire une simulation dans un autre outil. Atlas dit qu’elle est simulée : la densité, les destinations et les feux sont des hypothèses, jamais une mesure du trafic réel.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les routes de la BD TOPO autour du Palais Longchamp : 48 tronçons de rue roulés, 64 écartés (50 allées à accès restreint, 7 sentiers, 6 escaliers), une quarantaine de véhicules en temps réel.</p>
-        <ul class="utilise"><li>Trafic simulé</li><li>Type de voie</li><li>Sens uniques</li><li>Voies par sens</li><li>Giratoires</li><li>Routes IGN ou OSM</li><li>Véhicules en 3D</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-trafic.jpg" alt="Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN autour du Palais Longchamp ; les allées du parc, à droite, restent vides. Trafic simulé." loading="lazy">
-          <figcaption>Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN autour du Palais Longchamp ; les allées du parc, à droite, restent vides. Trafic simulé.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Éditer</p>
-        <h3>L’objet cliqué est la ligne</h3>
-        <p>Cliquer un objet ouvre sa fiche : c’est la ligne de la table, avec ses champs typés, ses listes de choix et ses références. Ce qu’on y écrit va dans le document. Plusieurs objets se sélectionnent ensemble et se parcourent avec ◀ ▶, en sautant ceux que les filtres masquent.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> la fiche du piège P14, avec ses onglets : la ligne de la table, puis les formulaires que l’équipe a proposés.</p>
-        <ul class="utilise"><li>Fiche d’objet</li><li>Champs typés</li><li>Sélection multiple</li><li>Revue ◀ ▶</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-fiche.jpg" alt="La fiche d’un objet, à droite ; la sélection reste visible sur la carte." loading="lazy">
-          <figcaption>La fiche d’un objet, à droite ; la sélection reste visible sur la carte.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Éditer</p>
-        <h3>Ajouter et modifier des géométries</h3>
-        <p>Atlas crée une couche vide — un nom, un type (point, ligne ou surface) et la table Grist qui la portera, montrée avant d’être écrite — puis on y dessine : chaque sommet s’accroche aux objets voisins (Alt pour l’éviter), l’en-tête donne la longueur ou l’aire en direct, et la fiche se remplit avant que rien ne parte. Un envoi écrit une seule ligne, géométrie et champs ensemble. Une forme existante se reprend sommet par sommet ; une colonne de coordonnées ou de WKT reste écrivable.</p>
-        <p class="pourquoi">Pas de détour par QGIS pour tracer un périmètre ou relever dix arbres. Chaque geste se défait : annuler l’ajout, le geste, la modification.</p>
-        <p class="exemple"><b>Dans l’exemple</b> les quatre pièges témoins sont entourés d’une surface : 4 sommets, 1,03 ha, 409 m de périmètre, lus pendant le tracé.</p>
-        <ul class="utilise"><li>Nouvelle couche</li><li>Tracé de points, lignes et surfaces</li><li>Accrochage</li><li>Modifier la forme</li><li>Annuler / rétablir</li><li>Création en série</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-dessin-trace.jpg" alt="Une surface en cours de tracé : l’aire et le périmètre suivent les sommets posés." loading="lazy">
-          <figcaption>Une surface en cours de tracé : l’aire et le périmètre suivent les sommets posés.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-dessin-fiche.jpg" alt="La forme est prête ; la fiche se remplit, et « Envoyer » écrit une ligne." loading="lazy">
-          <figcaption>La forme est prête ; la fiche se remplit, et « Envoyer » écrit une ligne.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Éditer</p>
-        <h3>Une bulle sur l’objet touché</h3>
-        <p>En consultation, toucher un objet ouvre une bulle que l’équipe compose : un titre, les photos de la ligne, l’état en couleur, quelques champs, la dernière visite de la table liée, et les gestes utiles. Atlas en propose une première version d’après le schéma de la table ; l’équipe la retouche champ par champ.</p>
-        <p class="pourquoi">On voit l’essentiel sans ouvrir douze champs : la bulle lit la table, elle ne la copie pas.</p>
-        <p class="exemple"><b>Dans l’exemple</b> la bulle d’un piège, aux libellés de l’étude (type, lumière au-dessus, insectes par nuit).</p>
-        <ul class="utilise"><li>Bulle d’objet</li><li>Libellés de champs</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-bulle.jpg" alt="La bulle du piège P14. Comptages fictifs." loading="lazy">
-          <figcaption>La bulle du piège P14. Comptages fictifs.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Exploiter</p>
-        <h3>Préparer, exploiter, lire</h3>
-        <p>Trois postures disent ce que l’on fait. En Préparer, l’auteur règle les couches, les formulaires, les contrôles et le récit. En Exploiter, l’agent relève sur le terrain : il choisit un objet, ajoute une visite. En Lecture, on consulte sans rien écrire. Atlas n’a pas son propre système de droits : ceux de Grist décident, table par table, et une posture que le document n’autorise pas n’est pas proposée.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> l’agent de terrain ne peut qu’ajouter des relevés : Atlas ne lui offre que cela.</p>
-        <ul class="utilise"><li>Postures</li><li>Droits de Grist</li><li>Pastille « Relevé »</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-postures.jpg" alt="Le menu des postures." loading="lazy">
-          <figcaption>Le menu des postures.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Exploiter</p>
-        <h3>Formulaires, relevés et ajouts sur le terrain</h3>
-        <p>Atlas réutilise les formulaires natifs de Grist, et c’est en exploitation qu’ils servent. L’auteur peut aussi créer un champ ou un formulaire depuis Atlas, sans quitter la carte. L’agent choisit un objet dans une liste, prend « le plus proche de moi » ou le touche : un formulaire que l’équipe a proposé s’ouvre en onglet sur lui, champs obligatoires signalés, valeurs de départ (la date du jour, la personne connectée). Un envoi écrit la ligne dans la table. Si l’auteur le propose, l’agent peut aussi ajouter un objet qui n’existe pas encore. Cela marche dans le navigateur d’un téléphone comme dans l’application.</p>
-        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter.</p>
-        <p class="exemple"><b>Dans l’exemple</b> le « Relevé de nuit » s’ouvre sur le piège touché, date préremplie.</p>
-        <ul class="utilise"><li>Formulaires de Grist</li><li>Pastille « Relevé »</li><li>Le plus proche de moi</li><li>Valeurs de départ</li><li>Ajout d’objet en Exploiter</li></ul>
-      </div>
-      <div class="montre telephones">
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-releve-mobile.jpg" alt="Le formulaire de relevé, ouvert sur le piège P14." loading="lazy"></div>
-          <figcaption>Le formulaire de relevé, ouvert sur le piège P14.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Exploiter</p>
-        <h3>Contextes et tournées</h3>
-        <p>Un contexte règle la carte pour un travail précis : les couches visibles, les filtres, l’heure, les relevés proposés et les pastilles utiles. Il peut porter une tournée — la ligne d’un parcours, choisie dans une couche ou tracée sur un réseau —, qui se dessine avec lui et donne leur ordre aux objets qu’il montre. Une pastille « Tournée » apparaît quand le contexte actif en porte une : elle démarre par l’objet le plus proche devant soi, compte l’avancement et passe à l’objet suivant, la bulle de chaque objet offrant ses propres flèches ‹ › vers le voisin. « Choisir un objet » suit la même ligne. Tracée sur un réseau dont les tronçons portent leur sens de circulation (BD TOPO de l’IGN, ou routes importées d’OpenStreetMap), la tournée suit le sens des rues : elle ne remonte pas une rue à sens unique, sauf si l’on décoche « Respecter les sens de circulation ». En déplacement, une flèche autour du point bleu montre la direction suivie. Un contexte se prépare en capturant une étape du récit : ce que l’auteur voit dans son dock est ce que l’agent retrouve.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> le remplacement de 24 luminaires, pris un à un le long d’une tournée de 1,8 km ; une autre tournée enchaîne les dix-neuf pièges.</p>
-        <ul class="utilise"><li>Contextes</li><li>Tournée</li><li>Tracer sur un réseau</li><li>Choisir un objet</li><li>Pastilles par étape</li><li>Sens de circulation</li></ul>
-      </div>
-      <div class="montre telephones">
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-tournee.jpg" alt="Sur téléphone, le contexte « Luminaires à remplacer » : la ligne de la tournée de 1,8 km, et la pastille qui la démarre." loading="lazy"></div>
-          <figcaption>Sur téléphone, le contexte « Luminaires à remplacer » : la ligne de la tournée de 1,8 km, et la pastille qui la démarre.</figcaption>
-        </figure>
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-tournee-bulle.jpg" alt="Après « Démarrer la tournée » : le premier des 24 ouvrages, avec ses flèches ‹ 1 / 24 › vers le suivant." loading="lazy"></div>
-          <figcaption>Après « Démarrer la tournée » : le premier des 24 ouvrages, avec ses flèches ‹ 1 / 24 › vers le suivant.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Raconter</p>
-        <h3>Un récit, et un trajet si besoin</h3>
-        <p>Chaque étape retient le cadrage, les couches visibles, les filtres, l’heure et le fond de plan. En lecture, la caméra passe d’une étape à l’autre. Si une ligne existe, on peut la poser comme trajet : les étapes se placent dessus et le lecteur suit le parcours. On choisit enfin ce que voit celui qui ouvre la scène : la carte, le récit, ou un contexte. Un trajet se pose sur une ligne existante ou se trace sur un réseau de routes et de sentiers, sans service externe : on touche un départ, des points de passage et une arrivée. Des étapes peuvent aussi se créer d’un coup, une par objet qui borde le trajet.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> douze étapes, dont cinq contextes ; l’une est en plan, de nuit et sans la maquette, pour lire les zones d’ombre.</p>
-        <ul class="utilise"><li>Étapes capturées</li><li>Trajet</li><li>Itinéraire sur un réseau</li><li>Étapes depuis les objets</li><li>Lecture</li><li>Ouverture de la scène</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-recit.jpg" alt="Le panneau Récit : chaque étape garde son titre, son texte et les pastilles qu’elle offre." loading="lazy">
-          <figcaption>Le panneau Récit : chaque étape garde son titre, son texte et les pastilles qu’elle offre.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-zone-sombre.jpg" alt="Une étape en plan, de nuit, sans la maquette : ce que la lumière n’atteint pas." loading="lazy">
-          <figcaption>Une étape en plan, de nuit, sans la maquette : ce que la lumière n’atteint pas.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Raconter</p>
-        <h3>Des contrôles que le lecteur manipule</h3>
-        <p>Chaque colonne prend le contrôle que son type appelle : des cases pour des catégories, un curseur pour un nombre, une plage pour une date, une recherche pour du texte. L’auteur choisit ceux qu’il publie, avec leurs mots ; ils apparaissent comme pastilles sur la carte, et une étape ou un contexte peut n’en offrir que quelques-uns.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> la teinte de la lumière, la température de couleur, le type de piège, le nombre d’insectes par nuit.</p>
-        <ul class="utilise"><li>Filtres par colonne</li><li>Pastilles du dock</li><li>Libellés choisis par l’auteur</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-controles.jpg" alt="La pastille « Teinte de la lumière » ouverte : cinq valeurs, avec leur effectif." loading="lazy">
-          <figcaption>La pastille « Teinte de la lumière » ouverte : cinq valeurs, avec leur effectif.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Dans la poche</p>
-        <h3>L’application Android</h3>
-        <p>Un navigateur ne peut pas présenter de clé API à l’instance Grist ; l’application le peut. Elle ouvre les scènes depuis un compte — instance et clé réglées une fois —, avec leur rôle, leur date et une miniature que l’auteur choisit d’un clic sur la carte. Son menu change de posture, de scène ou d’instance, et crée une scène, dans Grist ou sur l’appareil seul, que l’on peut envoyer plus tard vers un document neuf. Pour travailler sans réseau, on prépare la scène : tables, formulaires et photos sont gardés sur l’appareil. Les relevés saisis hors réseau attendent dans une file, visible dans la barre, et partent tout seuls au retour du réseau. La position de l’appareil sert à trouver l’objet le plus proche, et un itinéraire se confie à l’application de guidage.</p>
-        <p class="pourquoi">Sur le terrain, le réseau manque souvent : rien ne se perd, et chaque relevé arrive dans la table du document.</p>
-        <p class="exemple"><b>Dans l’exemple</b> l’agent prépare la scène la veille ; le soir, au parc, il relève les pièges sans réseau, puis les envoie.</p>
-        <ul class="utilise"><li>Menu principal</li><li>Liste des scènes</li><li>Miniature</li><li>Hors ligne</li><li>File d’envoi</li><li>Scène sur l’appareil</li><li>Position</li><li>Itinéraire</li></ul>
-      </div>
-      <div class="montre telephones">
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-app-menu.jpg" alt="Le menu : posture, synchronisation, disponibilité hors ligne (scène prête, 485 Ko, 11 tables), scènes récentes, nouvelle scène." loading="lazy"></div>
-          <figcaption>Le menu : posture, synchronisation, disponibilité hors ligne (scène prête, 485 Ko, 11 tables), scènes récentes, nouvelle scène.</figcaption>
-        </figure>
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-app-contexte.jpg" alt="Le choix d’un contexte, sur le téléphone." loading="lazy"></div>
-          <figcaption>Le choix d’un contexte, sur le téléphone.</figcaption>
-        </figure>
-        <figure class="telephone">
-          <div class="ecran"><img src="cas-liste-scenes.jpg" alt="La liste des projets, avec la miniature de la scène." loading="lazy"></div>
-          <figcaption>La liste des projets, avec la miniature de la scène.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Partager</p>
-        <h3>Exporter</h3>
-        <p>Ce que la carte montre se récupère : GeoJSON (entités et attributs), CSV (la géométrie en WKT), KML, GPX (points et traces ; les surfaces sont écartées et comptées), une image de la carte, ou un projet Atlas qui rouvre couches et réglages. Le menu propose la couche sélectionnée ou toutes ; une couche distante est annoncée comme absente du fichier.</p>
-        
-        <p class="exemple"><b>Dans l’exemple</b> la table des pièges s’exporte en GeoJSON pour QGIS, et la carte de nuit en image pour un rapport.</p>
-        <ul class="utilise"><li>GeoJSON</li><li>CSV</li><li>KML</li><li>GPX</li><li>Image</li><li>Projet Atlas</li></ul>
-      </div>
-      <div class="montre">
-        <figure class="large">
-          <img src="cas-export.jpg" alt="Le menu d’export." loading="lazy">
-          <figcaption>Le menu d’export.</figcaption>
-        </figure>
-      </div>
-    </article>
-    <article class="contexte">
-      <div class="dit">
-        <p class="role">Partager</p>
-        <h3>Une scène qui se partage</h3>
-        <p>Dans Grist, on partage le document : la carte suit, avec les droits du document. Pour une page, l’intégration en iframe prend deux formes : <code>?embed=true</code>, page minimale en lecture forcée, et <code>?style=singlePage</code>, où les droits de la personne connectée s’appliquent ; <code>?navbar=false</code> retire la barre. Une scène peut aussi se publier seule, sous forme de manifeste, et s’ouvrir par son adresse (<code>?scene=</code>), sans document Grist.</p>
-        <p class="pourquoi">Retirer l’accès au document ou la scène publiée suffit : rien n’a été recopié ailleurs.</p>
-        <p class="exemple"><b>Dans l’exemple</b> la scène de l’exemple est publiée seule : c’est la démonstration, juste en dessous.</p>
-        <ul class="utilise"><li>Document Grist</li><li>Iframe (embed, singlePage)</li><li>Scène publiée</li><li>Droits du document</li></ul>
-      </div>
-      <div class="montre">
+      <figcaption>La scène est publiée seule : elle s’ouvre ici sans document Grist. Touchez un objet, changez l’heure, lancez le récit.</figcaption>
+    </figure></div>
 
+    <article class="chap haut">
+      <div class="dit">
+        <span class="num">1 · Mettre ses données en valeur</span><h3>Faire parler vos données</h3>
+        <p>Couleurs, tailles et étiquettes viennent de vos colonnes ; la légende se construit seule. Relief, bâtiments, lumière du jour, objets en 3D, volumes, trafic simulé, récit : chaque réglage est enregistré avec le document, et celui qui ouvre la scène retrouve la même carte.</p>
+        <p class="pourquoi">Un tableau de lignes devient quelque chose qu’on comprend d’un regard.</p>
+        
       </div>
+      <section class="carrousel" aria-roledescription="carrousel" aria-label="Faire parler vos données" id="c-cas-1">
+      <div class="pistes" tabindex="0" aria-label="Faire parler vos données : flèches gauche et droite pour parcourir">
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="1 sur 10">
+        <figure><img src="cas-symbolisation.jpg" alt="Réglage de la symbologie d’une couche : mode, champ source, couleurs" width="1100" height="720"><figcaption>L’onglet Couleur : le champ « Classe » renvoie à une table, dont Atlas propose de reprendre les couleurs.</figcaption></figure>
+        <div class="texte"><h4>Colorer, dimensionner, étiqueter</h4><p>Par catégorie, ou en classes aux seuils choisis ; la taille et l’étiquette suivent un champ. Quand le champ renvoie à une autre table, Atlas reprend ses couleurs et son ordre de gravité au lieu d’inventer une palette.</p><ul class="etiquettes"><li>Couleur par catégorie</li><li>Classes par seuils</li><li>Table de référence</li><li>Étiquettes</li><li>Légende</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="2 sur 10">
+        <figure><img src="cas-jour.jpg" alt="Le parc du Palais Longchamp de jour, en 3D, avec relief, arbres et bâtiments" width="1100" height="720" loading="lazy" decoding="async"><figcaption>De jour, sur le fond 3D : relief, bâti et arbres.</figcaption></figure>
+        <div class="texte"><h4>Relief, bâti et lumière du jour</h4><p>Le relief vient du modèle numérique de terrain LiDAR HD de l’IGN, le bâti se met en volume et porte des ombres. Le soleil se règle par la date et l’heure.</p><ul class="etiquettes"><li>Relief IGN</li><li>Bâti en volume</li><li>Ombres portées</li><li>Soleil et date</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="3 sur 10">
+        <figure><img src="cas-nuit.jpg" alt="Le Palais Longchamp à la tombée de la nuit, sur la photographie aérienne, avec ses luminaires" width="1100" height="720" loading="lazy" decoding="async"><figcaption>À la tombée de la nuit, sur l’orthophotographie.</figcaption></figure>
+        <div class="texte"><h4>Et de nuit, sur la photo aérienne</h4><p>Quatre fonds au choix : plan, fond clair, orthophotographie de l’IGN ou fond 3D. Chaque étape d’un récit retient son fond, son heure et sa date.</p><ul class="etiquettes"><li>Fonds de plan</li><li>Globe ou plan</li><li>Points de vue</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="4 sur 10">
+        <figure><img src="cas-pieges-3d.jpg" alt="Des modèles 3D de pièges posés sur le parc, de taille variable, et des luminaires allumés avec leurs halos" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Un modèle 3D par piège, dont la taille suit une donnée ; les luminaires allumés laissent leurs halos.</figcaption></figure>
+        <div class="texte"><h4>Des objets 3D réglés comme une couche</h4><p>Un point peut devenir un modèle de la bibliothèque, un modèle réaliste du catalogue (luminaires, mobilier) ou un fichier glTF fourni. Le modèle peut dépendre d’un champ ; un luminaire s’allume selon son statut et l’heure du soleil.</p><ul class="etiquettes"><li>Bibliothèque 3D</li><li>Catalogue d’objets</li><li>Éclairage</li><li>Fichier glTF</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="5 sur 10">
+        <figure><img src="cas-releves.jpg" alt="Des colonnes en 3D posées sur la carte, trois par piège, de hauteur proportionnelle aux comptages" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Trois colonnes par piège : juin, juillet, septembre. Comptages fictifs.</figcaption></figure>
+        <div class="texte"><h4>Des volumes d’après un chiffre</h4><p>Une surface s’élève d’après un champ numérique et se colore d’après un autre. Les totaux, moyennes et mailles se calculent dans Grist, avec des formules : Atlas montre le volume.</p><ul class="etiquettes"><li>Extrusion par un champ</li><li>Palette graduée</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="6 sur 10">
+        <figure><img src="cas-grille.jpg" alt="Une grille de mailles de 50 mètres, dont la hauteur et la couleur suivent deux mesures" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Mailles de 50 m : hauteur selon le flux installé, couleur selon la température moyenne.</figcaption></figure>
+        <div class="texte"><h4>Une grille d’analyse en relief</h4><p>La même idée pour une grille : la hauteur dit une mesure, la couleur en dit une autre. Les volumes sont opaques, pour que deux couches ne se traversent pas.</p><ul class="etiquettes"><li>Mode à plat ou en volume</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="7 sur 10">
+        <figure><img src="cas-trafic.jpg" alt="Des véhicules blancs et orange qui roulent sur les rues de l’IGN autour du Palais Longchamp" width="1100" height="687" loading="lazy" decoding="async"><figcaption>Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN ; les allées du parc, à droite, restent vides. Trafic simulé.</figcaption></figure>
+        <div class="texte"><h4>Du trafic sur vos routes</h4><p>Sur des routes importées, « Animer le trafic » fait rouler voitures et poids lourds, qui respectent les sens uniques et cèdent le passage aux giratoires. Les allées et sentiers restent vides. La densité et les destinations sont des hypothèses : Atlas dit que c’est simulé.</p><ul class="etiquettes"><li>Trafic simulé</li><li>Sens uniques</li><li>Routes IGN ou OSM</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="8 sur 10">
+        <figure><img src="cas-recit.jpg" alt="Le panneau du récit, étape par étape, avec le bouton Lecture" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Le panneau Récit : chaque étape garde son titre, son texte et les pastilles qu’elle offre.</figcaption></figure>
+        <div class="texte"><h4>Un récit, étape par étape</h4><p>Chaque étape retient le cadrage, les couches visibles, les filtres, l’heure et le fond de plan ; en lecture, la caméra passe de l’une à l’autre. On peut poser un trajet sur une ligne, ou le tracer sur un réseau de routes et de sentiers.</p><ul class="etiquettes"><li>Étapes capturées</li><li>Trajet</li><li>Itinéraire sur un réseau</li><li>Lecture</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="9 sur 10">
+        <figure><img src="cas-zone-sombre.jpg" alt="Une étape du récit en plan et de nuit, sans la maquette, qui montre les zones que la lumière n’atteint pas" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Une étape en plan, de nuit, sans la maquette : ce que la lumière n’atteint pas.</figcaption></figure>
+        <div class="texte"><h4>Une étape pour lire les zones d’ombre</h4><p>Le récit de l’exemple compte douze étapes, dont cinq contextes. Celle-ci montre en plan, de nuit, les endroits que l’éclairage ne couvre pas.</p></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="10 sur 10">
+        <figure><img src="cas-controles.jpg" alt="La pastille « Teinte de la lumière » ouverte, avec cinq valeurs et leur effectif" width="1100" height="720" loading="lazy" decoding="async"><figcaption>La pastille « Teinte de la lumière » ouverte : cinq valeurs, avec leur effectif.</figcaption></figure>
+        <div class="texte"><h4>Des contrôles que le lecteur manipule</h4><p>Chaque colonne prend le contrôle que son type appelle : cases, curseur, plage de dates, recherche. L’auteur choisit ceux qu’il publie, avec ses mots ; ils apparaissent en pastilles sur la carte.</p><ul class="etiquettes"><li>Filtres par colonne</li><li>Pastilles</li></ul></div>
+      </article>
+      </div>
+      <button type="button" class="prec" aria-label="Diapositive précédente" disabled>←</button>
+      <button type="button" class="suiv" aria-label="Diapositive suivante">→</button>
+      <div class="commandes"><span class="compteur" aria-live="polite">1 / 10</span><ul class="sommaire" aria-label="Aller à une diapositive"><li><button type="button" data-n="0" aria-current="true">Colorer, dimensionner, étiqueter</button></li><li><button type="button" data-n="1">Relief, bâti et lumière du jour</button></li><li><button type="button" data-n="2">Et de nuit, sur la photo aérienne</button></li><li><button type="button" data-n="3">Des objets 3D réglés comme une couche</button></li><li><button type="button" data-n="4">Des volumes d’après un chiffre</button></li><li><button type="button" data-n="5">Une grille d’analyse en relief</button></li><li><button type="button" data-n="6">Du trafic sur vos routes</button></li><li><button type="button" data-n="7">Un récit, étape par étape</button></li><li><button type="button" data-n="8">Une étape pour lire les zones d’ombre</button></li><li><button type="button" data-n="9">Des contrôles que le lecteur manipule</button></li></ul></div>
+    </section>
+      
+      
+    </article>
+    <article class="chap haut">
+      <div class="dit">
+        <span class="num">2 · L’exploiter grâce à Grist</span><h3>Votre tableau Grist, affiché et modifiable sur la carte</h3>
+        <p>Une table de votre document qui contient des lieux s’affiche sur la carte en un clic, sans export. Cliquez un objet : sa fiche s’ouvre, avec les champs de sa ligne. Corrigez-la, ou redessinez l’objet sur la carte, et la ligne du tableau est mise à jour. Modifiez une ligne dans Grist, et la carte suit.</p>
+        <p>Qui a le droit de lire voit la carte, qui a le droit d’écrire peut la modifier : ce sont les règles de Grist, Atlas n’en ajoute pas.</p>
+        <p class="pourquoi">Pas de copie à garder à jour : la carte et le tableau sont la même donnée.</p>
+        
+      </div>
+      <section class="carrousel" aria-roledescription="carrousel" aria-label="Votre tableau Grist, affiché et modifiable sur la carte" id="c-cas-2">
+      <div class="pistes" tabindex="0" aria-label="Votre tableau Grist, affiché et modifiable sur la carte : flèches gauche et droite pour parcourir">
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="1 sur 7">
+        <figure><img src="cas-couches.jpg" alt="Le panneau des couches : cinq couches, chacune liée à une table du document" width="1100" height="720"><figcaption>Le panneau des couches : cinq couches, chacune liée à une table du document.</figcaption></figure>
+        <div class="texte"><h4>Vos tables deviennent des couches</h4><p>Toute table qui porte une géométrie (coordonnées, WKT) est reconnue et proposée comme couche. On peut aussi verser un fichier (GeoJSON, GPX, KML, CSV), importer OpenStreetMap ou créer une couche vide. Une couche n’est pas une copie : modifier la table modifie la carte, et l’inverse.</p><ul class="etiquettes"><li>Tables géographiques</li><li>GeoJSON, GPX, KML, CSV</li><li>OpenStreetMap</li><li>QGIS</li><li>Recherche ⌘K</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="2 sur 7">
+        <figure><img src="cas-ign.jpg" alt="Les routes de la BD TOPO autour du Palais Longchamp, colorées par type de voie" width="1100" height="687" loading="lazy" decoding="async"><figcaption>Les routes de la BD TOPO autour du Palais Longchamp, par type de voie : rues en bleu, allées du parc à accès restreint en violet, sentiers en vert, escaliers en gris.</figcaption></figure>
+        <div class="texte"><h4>Les routes, bâtiments et eau de l’IGN</h4><p>Le bouton IGN importe, dans la zone regardée, la BD TOPO et Admin Express. Atlas compte d’abord les objets, refuse une zone trop vaste, importe page par page et laisse annuler puis reprendre. La couche arrive avec un style lisible, sa provenance, sa licence et la mention de source.</p><ul class="etiquettes"><li>Import IGN</li><li>Estimation avant import</li><li>Provenance et licence</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="3 sur 7">
+        <figure><img src="cas-fiche.jpg" alt="La fiche d’un piège à côté de la carte : les champs de la ligne de la table" width="1100" height="720" loading="lazy" decoding="async"><figcaption>La fiche d’un objet, à droite ; la sélection reste visible sur la carte.</figcaption></figure>
+        <div class="texte"><h4>L’objet cliqué est la ligne</h4><p>Cliquer un objet ouvre sa fiche : la ligne de la table, avec ses champs typés, ses listes de choix et ses références. Ce qu’on y écrit va dans le document. Plusieurs objets se sélectionnent ensemble et se parcourent avec ◀ ▶.</p><ul class="etiquettes"><li>Fiche d’objet</li><li>Champs typés</li><li>Revue ◀ ▶</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="4 sur 7">
+        <figure><img src="cas-dessin-trace.jpg" alt="Une surface en cours de tracé sur la carte, avec son aire et son périmètre en direct" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Une surface en cours de tracé : l’aire et le périmètre suivent les sommets posés.</figcaption></figure>
+        <div class="texte"><h4>Dessiner une forme</h4><p>Atlas crée une couche vide (un nom, un type, la table Grist qui la portera), puis on y dessine : chaque sommet s’accroche aux objets voisins, et l’en-tête donne la longueur ou l’aire en direct. Pas de détour par QGIS.</p><ul class="etiquettes"><li>Nouvelle couche</li><li>Accrochage</li><li>Annuler / rétablir</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="5 sur 7">
+        <figure><img src="cas-dessin-fiche.jpg" alt="La fiche d’une forme dessinée, prête à être envoyée vers la table" width="1100" height="720" loading="lazy" decoding="async"><figcaption>La forme est prête ; la fiche se remplit, et « Envoyer » écrit une ligne.</figcaption></figure>
+        <div class="texte"><h4>Remplir la fiche, puis envoyer</h4><p>Un envoi écrit une seule ligne, géométrie et champs ensemble. Une forme existante se reprend sommet par sommet, et chaque geste se défait.</p><ul class="etiquettes"><li>Modifier la forme</li><li>Création en série</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="6 sur 7">
+        <figure><img src="cas-bulle.jpg" alt="La bulle du piège P14, avec son titre, son état et quelques champs" width="1100" height="720" loading="lazy" decoding="async"><figcaption>La bulle du piège P14. Comptages fictifs.</figcaption></figure>
+        <div class="texte"><h4>Une bulle sur l’objet touché</h4><p>En consultation, toucher un objet ouvre une bulle que l’équipe compose : titre, photos, état en couleur, quelques champs, dernière visite, gestes utiles. Atlas propose une première version d’après le schéma de la table.</p><ul class="etiquettes"><li>Bulle d’objet</li><li>Libellés de champs</li></ul></div>
+      </article>
+      <article class="diapo" role="group" aria-roledescription="diapositive" aria-label="7 sur 7">
+        <figure><img src="cas-postures.jpg" alt="Le choix du mode : Préparer, Exploiter ou Lecture" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Le menu des postures.</figcaption></figure>
+        <div class="texte"><h4>Préparer, exploiter, lire</h4><p>En Préparer, l’auteur règle couches, formulaires, contrôles et récit. En Exploiter, l’agent relève. En Lecture, on consulte sans rien écrire. Les droits de Grist décident : une posture que le document n’autorise pas n’est pas proposée.</p><ul class="etiquettes"><li>Postures</li><li>Droits de Grist</li></ul></div>
+      </article>
+      </div>
+      <button type="button" class="prec" aria-label="Diapositive précédente" disabled>←</button>
+      <button type="button" class="suiv" aria-label="Diapositive suivante">→</button>
+      <div class="commandes"><span class="compteur" aria-live="polite">1 / 7</span><ul class="sommaire" aria-label="Aller à une diapositive"><li><button type="button" data-n="0" aria-current="true">Vos tables deviennent des couches</button></li><li><button type="button" data-n="1">Les routes, bâtiments et eau de l’IGN</button></li><li><button type="button" data-n="2">L’objet cliqué est la ligne</button></li><li><button type="button" data-n="3">Dessiner une forme</button></li><li><button type="button" data-n="4">Remplir la fiche, puis envoyer</button></li><li><button type="button" data-n="5">Une bulle sur l’objet touché</button></li><li><button type="button" data-n="6">Préparer, exploiter, lire</button></li></ul></div>
+    </section>
+      
+      
+    </article>
+    <article class="chap">
+      <div class="dit">
+        <span class="num">3 · La publier, la partager</span><h3>Un lien, une page, une scène</h3>
+        <p>Dans Grist, on partage le document : la carte suit, avec les droits du document. Pour une page, l’intégration prend deux formes : <code>?embed=true</code>, une page minimale en lecture seule, ou <code>?style=singlePage</code>, où les droits de la personne connectée s’appliquent. Une scène peut aussi se publier seule et s’ouvrir par son adresse (<code>?scene=</code>), sans document Grist.</p>
+        <p>Ce que la carte montre se récupère : GeoJSON, CSV, KML, GPX, image de la carte, ou projet Atlas qui rouvre couches et réglages.</p>
+        <p class="pourquoi">Retirer l’accès au document ou la scène publiée suffit : rien n’a été recopié ailleurs.</p>
+        
+      </div>
+      <div class="montre"><figure><img src="cas-export.jpg" alt="Le menu d’export : GeoJSON, CSV, KML, GPX, image, projet Atlas" width="1100" height="720" loading="lazy" decoding="async"><figcaption>Le menu d’export : on peut tout reprendre, sans verrou.</figcaption></figure></div>
+      
+      
+    </article>
+    <article class="chap haut">
+      <div class="dit">
+        <span class="num">4 · Sur le terrain</span><h3>Relever sur place, même sans réseau</h3>
+        <p>L’agent touche un objet ou prend « le plus proche de moi », remplit le formulaire, et la ligne arrive dans la table. Une tournée liste les objets à visiter, dans l’ordre, avec son tracé. L’application Android prépare la scène la veille et renvoie les saisies au retour du réseau.</p>
+        <p class="pourquoi">Pas d’outil de collecte à côté, ni d’export à réimporter.</p>
+        <p class="liens"><a class="lien" href="https://github.com/nic01asFr/Widgets-Grist/releases/latest/download/atlas.apk" target="_blank" rel="noopener">Télécharger l’application Android (version de test)</a></p>
+      </div>
+      <section class="carrousel" aria-roledescription="carrousel" aria-label="Relever sur place, même sans réseau" id="c-cas-4">
+      <div class="pistes" tabindex="0" aria-label="Relever sur place, même sans réseau : flèches gauche et droite pour parcourir">
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="1 sur 6">
+        <figure><img src="cas-releve-mobile.jpg" alt="Le formulaire de relevé de nuit sur un téléphone, ouvert sur le piège P14" width="780" height="1688"><figcaption>Le formulaire de relevé, ouvert sur le piège P14.</figcaption></figure>
+        <div class="texte"><h4>Le formulaire de relevé</h4><p>L’agent choisit un objet dans une liste, prend « le plus proche de moi » ou le touche : le formulaire proposé par l’équipe s’ouvre dessus, champs obligatoires signalés, valeurs de départ (date du jour, personne connectée). Un envoi écrit la ligne dans la table. Cela marche dans le navigateur d’un téléphone comme dans l’application.</p><ul class="etiquettes"><li>Formulaires de Grist</li><li>Le plus proche de moi</li><li>Valeurs de départ</li></ul></div>
+      </article>
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="2 sur 6">
+        <figure><img src="cas-tournee.jpg" alt="Le contexte « Luminaires à remplacer » sur téléphone : la ligne de la tournée et la pastille qui la démarre" width="780" height="1688" loading="lazy" decoding="async"><figcaption>Sur téléphone, le contexte « Luminaires à remplacer » : la ligne de la tournée de 1,8 km, et la pastille qui la démarre.</figcaption></figure>
+        <div class="texte"><h4>Une tournée sur le téléphone</h4><p>Un contexte règle la carte pour un travail précis : couches, filtres, heure, relevés proposés. Il peut porter une tournée, tracée sur un réseau dont elle respecte les sens de circulation.</p><ul class="etiquettes"><li>Contextes</li><li>Tournée</li><li>Sens de circulation</li></ul></div>
+      </article>
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="3 sur 6">
+        <figure><img src="cas-tournee-bulle.jpg" alt="La fiche d’un luminaire d’une tournée sur un téléphone, avec les flèches vers l’ouvrage suivant" width="780" height="1688" loading="lazy" decoding="async"><figcaption>Après « Démarrer la tournée » : le premier des 24 ouvrages, avec ses flèches ‹ 1 / 24 › vers le suivant.</figcaption></figure>
+        <div class="texte"><h4>Un ouvrage après l’autre</h4><p>La pastille Tournée démarre par l’objet le plus proche, compte l’avancement et passe au suivant ; la bulle de chaque objet offre ses flèches vers le voisin.</p><ul class="etiquettes"><li>Choisir un objet</li><li>Itinéraire</li></ul></div>
+      </article>
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="4 sur 6">
+        <figure><img src="cas-app-menu.jpg" alt="Le menu de l’application Android : posture, synchronisation, disponibilité hors ligne, scènes récentes" width="780" height="1688" loading="lazy" decoding="async"><figcaption>Le menu : posture, synchronisation, disponibilité hors ligne (scène prête, 485 Ko, 11 tables), scènes récentes, nouvelle scène.</figcaption></figure>
+        <div class="texte"><h4>L’application Android : le menu</h4><p>Pour travailler sans réseau, on prépare la scène : tables, formulaires et photos sont gardés sur l’appareil. Les relevés saisis hors réseau attendent dans une file et partent au retour du réseau. L’application est en version de test.</p><ul class="etiquettes"><li>Hors ligne</li><li>File d’envoi</li><li>Scène sur l’appareil</li></ul></div>
+      </article>
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="5 sur 6">
+        <figure><img src="cas-app-contexte.jpg" alt="Le choix d’un contexte sur le téléphone" width="780" height="1688" loading="lazy" decoding="async"><figcaption>Le choix d’un contexte, sur le téléphone.</figcaption></figure>
+        <div class="texte"><h4>Choisir son contexte</h4><p>L’auteur prépare un contexte en capturant une étape du récit : ce qu’il voit dans son dock est ce que l’agent retrouve.</p><ul class="etiquettes"><li>Pastilles par étape</li></ul></div>
+      </article>
+      <article class="diapo tel" role="group" aria-roledescription="diapositive" aria-label="6 sur 6">
+        <figure><img src="cas-liste-scenes.jpg" alt="La liste des projets de l’application, avec la miniature de chaque scène" width="780" height="1688" loading="lazy" decoding="async"><figcaption>La liste des projets, avec la miniature de la scène.</figcaption></figure>
+        <div class="texte"><h4>La liste des scènes</h4><p>L’application ouvre les scènes depuis un compte (instance et clé réglées une fois), avec leur rôle, leur date et une miniature choisie par l’auteur.</p><ul class="etiquettes"><li>Liste des scènes</li><li>Miniature</li></ul></div>
+      </article>
+      </div>
+      <button type="button" class="prec" aria-label="Diapositive précédente" disabled>←</button>
+      <button type="button" class="suiv" aria-label="Diapositive suivante">→</button>
+      <div class="commandes"><span class="compteur" aria-live="polite">1 / 6</span><ul class="sommaire" aria-label="Aller à une diapositive"><li><button type="button" data-n="0" aria-current="true">Le formulaire de relevé</button></li><li><button type="button" data-n="1">Une tournée sur le téléphone</button></li><li><button type="button" data-n="2">Un ouvrage après l’autre</button></li><li><button type="button" data-n="3">L’application Android : le menu</button></li><li><button type="button" data-n="4">Choisir son contexte</button></li><li><button type="button" data-n="5">La liste des scènes</button></li></ul></div>
+    </section>
+      
+      <details class="detail"><summary>Selon l’appareil</summary><div><table class="comparaison">
+      <thead><tr><th scope="col">Appareil</th><th scope="col">Saisie</th><th scope="col">Hors ligne</th></tr></thead>
+      <tbody><tr><th scope="row">Navigateur d’un téléphone</th><td>Oui</td><td>Non</td></tr><tr><th scope="row">Application Android (version de test, non signée ; elle peut être en retard sur le widget)</th><td>Oui</td><td>Oui</td></tr><tr><th scope="row">iPhone</th><td>Navigateur : non testé</td><td>Pas d’application</td></tr></tbody>
+    </table></div></details>
     </article>
   </section>
-  <section class="demo">
-    <h2>Une scène publiée, pour essayer</h2>
-    <p>La scène qui sert d’exemple à cette page s’ouvre seule, sans document Grist : la maquette du Palais Longchamp sous licence ouverte, 643 luminaires, dix-neuf pièges, une ronde de nuit, la grille de pression lumineuse, douze étapes de récit dont cinq contextes. On peut y toucher un objet, filtrer, changer d’heure.</p>
-    <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/atlas/?scene=https%3A%2F%2Fnic01asfr.github.io%2FWidgets-Grist%2Fatlas%2Fdemos%2Fpalais-longchamp%2Fscene.json">
-      <img src="cas-nuit.jpg" alt="Le Palais Longchamp de nuit, sur l’orthophotographie de l’IGN : les luminaires allumés laissent des halos sur le parc et les rues" loading="lazy">
-      <button type="button" class="lancer">Ouvrir la démonstration</button>
+  <section class="partie" id="composant" aria-labelledby="t-composant">
+    <header class="entete"><h2 id="t-composant">Atlas dans votre site, à vos couleurs</h2><p>Les mêmes cartes, hors de Grist : une balise dans votre page ou votre application. Vous les personnalisez, puis vous les intégrez.</p></header>
+    <h3 class="titre-flux">Trois flux, qui peuvent venir d’ailleurs</h3><p>Une carte se compose de trois choses indépendantes. Chacune se donne en bloc dans la page, ou par une adresse : le style et la scène peuvent être hébergés sur votre site, ou publiés depuis Grist ; les données viennent de Grist ou d’un fichier hébergé ailleurs.</p>
+    <ul class="flux">
+      <li><h3>Un style</h3><p>La charte : quatre couleurs, une famille de caractères. Atlas en déduit palettes, légende, bulles et fond de plan, puis mesure la lisibilité.</p><span class="d">Vient de</span><ul><li>un fichier JSON à votre adresse</li><li>un bloc dans la page</li><li>la page elle-même (<code>charte=&quot;herite&quot;</code>)</li></ul></li>
+      <li><h3>Une scène</h3><p>Le manifeste : quelles couches, quelle caméra, quels filtres, quelle légende.</p><span class="d">Vient de</span><ul><li>un fichier JSON à votre adresse</li><li>une scène publiée depuis Grist</li><li>un bloc dans la page</li></ul></li>
+      <li><h3>Des données</h3><p>Des objets géographiques (GeoJSON), ou une table Grist. Dans l’application, on importe aussi GPX, KML et CSV.</p><span class="d">Vient de</span><ul><li>une table d’un document Grist</li><li>un fichier hébergé sur un site</li><li>un flux ouvert relu en continu</li></ul></li>
+    </ul>
+    <article class="chap">
+      <div class="dit">
+        <span class="num">5 · La personnaliser et l’intégrer</span><h3>À vos couleurs, dans votre page, en une balise</h3>
+        <p>Vous donnez la couleur de votre marque, celle du texte et celle du fond. Atlas choisit la famille de caractères la plus proche parmi celles du système, sans rien télécharger, et vous dit ce qui ne passe pas, par exemple un jaune trop pâle sur fond blanc. L’atelier montre le résultat et écrit le code au fur et à mesure : vous le collez dans votre page.</p>
+        <p>Rien ne s’affiche tant que votre page n’a pas déclaré son adresse : une carte inconnue reste muette. Avec l’option <code>base=&quot;aucune&quot;</code>, aucun service extérieur n’est contacté au démarrage.</p>
+        <p class="pourquoi">Vos visiteurs ne voient pas une carte étrangère collée dans la page, et vous ne montez aucun serveur de cartes.</p>
+        <p class="liens"><a class="lien" href="https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/EXPLOITATION-EXTERNE-BI.md" target="_blank" rel="noopener">Le guide d’intégration complet</a></p>
+      </div>
+      <div class="montre"><figure class="vivante">
+    <div class="cadre" data-widget="../../atlas/demos/hote-atelier/index.html" data-titre="L’atelier de style : données fictives">
+      <img src="cas-atelier.jpg" alt="L’atelier de style : réglages à gauche, carte et aperçu de site au centre, code à copier en bas" loading="lazy">
+      <button type="button" class="lancer">Essayer l’atelier</button>
     </div>
-    <p class="mention">Positions des points lumineux : Ville de Marseille, Éclairage 2023 (Licence Ouverte 2.0). Maquette : IGN et Panoramax (Licence Ouverte 2.0), fabriquée par pix2hdr ; la fontaine, adaptée d’une photographie de Wikimedia Commons, est livrée seule sous CC BY-SA 4.0. Les caractéristiques des luminaires, les pièges, les relevés et les comptages sont fictifs : ils servent à montrer l’outil, pas à conclure.</p>
+      <figcaption>L’atelier, avec cinq chartes fictives de départ. Il s’ouvre sur place.</figcaption>
+    </figure></div>
+      <div class="pleine"><div class="bloc-code" role="group" aria-label="HTML : à coller dans votre page">
+      <div class="entete-code"><span>HTML : à coller dans votre page</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-html">&lt;!-- 1. Le composant Atlas (une ligne) --&gt;
+&lt;script type=&quot;module&quot; src=&quot;https://nic01asfr.github.io/Widgets-Grist/atlas/lib/bi/atlas-bi-element.js&quot;&gt;&lt;/script&gt;
+
+&lt;!-- 2. La carte : style, scène et données par adresse --&gt;
+&lt;atlas-bi src=&quot;https://nic01asfr.github.io/Widgets-Grist/atlas/index.html&quot;
+          charte=&quot;/carte/charte.json&quot;
+          manifeste=&quot;/carte/scene.json&quot;
+          donnees=&quot;/carte/sites.geojson&quot;
+          fond=&quot;plan&quot; style=&quot;display:block; height:480px&quot;&gt;&lt;/atlas-bi&gt;</code></pre>
+    </div></div>
+      
+    </article>
+    <article class="chap inverse">
+      <div class="dit">
+        <span class="num">Sans rien héberger</span><h3>Une application complète depuis une simple page GitHub</h3>
+        <p>Atlas est servi par GitHub Pages : votre page n’a qu’une balise à ajouter, sans serveur ni base de données. Celle de droite lit la circulation et les bus de Rennes en direct, et ne stocke rien.</p>
+        <p>Pour exploiter vos propres données, vous passez par Grist : saisie, formulaires et droits s’y règlent, et la même carte s’y ouvre aussi.</p>
+        <p class="pourquoi">Une application qui marche le jour même, sans infrastructure.</p>
+        
+      </div>
+      <div class="montre"><figure class="vivante">
+    <div class="cadre" data-widget="../../atlas/demos/hote-direct/index.html" data-titre="Rennes en direct : données ouvertes, lues à l’instant">
+      <img src="cas-direct.jpg" alt="Rennes en direct : tableau de bord et carte de la circulation" loading="lazy">
+      <button type="button" class="lancer">Voir Rennes en direct</button>
+    </div>
+      <figcaption>Données ouvertes de Rennes Métropole et du réseau STAR (ODbL), relues toutes les 30 à 60 secondes. L’image est une capture du 17 octobre au soir.</figcaption>
+    </figure></div>
+      
+      <details class="detail"><summary>À savoir pour une page publique</summary><div><h4>Ce qui est public</h4><p>Tout ce qui se trouve dans une page publique est public : n’y mettez aucun secret.</p><h4>D’où viennent les données</h4><p>Elles doivent être lisibles depuis un navigateur : un portail de données ouvertes, ou un document Grist partagé en lecture.</p></div></details>
+    </article>
   </section>
-  <section class="sequence reveler">
-    <h2>Le parcours</h2>
-    <ol>
-      <li>
-        <b>Je charge mes données</b>
-        <p>Une table du document, un GeoJSON, OpenStreetMap, un projet QGIS via qgis2grist, une couche publiée par URL dans un Scene Manifest — ou une couche vide que je crée pour la dessiner.</p>
-      </li>
-      <li>
-        <b>J’édite</b>
-        <p>Je clique un objet : sa fiche s’ouvre, c’est la ligne de la table avec ses champs. J’en crée d’autres en les dessinant — point, ligne, surface —, ou je reprends une forme sommet par sommet. Ce que j’écris est dans le document, y compris sur le terrain si la scène le propose.</p>
-      </li>
-      <li>
-        <b>Je compose mon récit — et mon trajet</b>
-        <p>Chaque étape retient le cadrage, les couches visibles, les filtres et l’heure. Si une ligne existe, je la pose comme trajet : les étapes se placent dessus, je les ajuste, et le lecteur suit le parcours — avec les formulaires que j’ai exposés pour le terrain.</p>
-      </li>
-      <li>
-        <b>Je règle les accès dans Grist</b>
-        <p>Atlas n’a pas son propre système de droits. Public Access, ACL et link keys du document décident qui voit quoi — y compris dans une iframe.</p>
-      </li>
-      <li>
-        <b>Je partage</b>
-        <p>Soit le lien d’une page du document (<code>embed</code> ou <code>singlePage</code>), soit une scène publiée ouverte avec Atlas seul (<code>?scene=</code>). Dans les deux cas, rien n’est recopié vers une autre plateforme carto.</p>
-      </li>
-    </ol>
+  <section class="partie" id="savoir" aria-labelledby="t-savoir">
+    <header class="entete"><h2 id="t-savoir">À savoir avant d’adopter</h2><p>Ce qu’il faut connaître, dit simplement.</p></header>
+    <details class="detail"><summary>Licences</summary><div><ul class="liste-simple"><li>Code d’Atlas : publié sous licence MIT. Les contenus tiers (données, images, modèles 3D) gardent leur licence : voir la liste des crédits du dépôt.</li><li>Données de l’IGN : Licence Ouverte 2.0, avec mention de la source. OpenStreetMap : ODbL.</li><li>Catalogue d’objets 3D livré avec Atlas : Licence Ouverte 2.0.</li></ul></div></details>
+    <details class="detail"><summary>Accessibilité</summary><div><p>Dans le composant : navigation au clavier sur la carte (touches n et p pour passer d’un élément à l’autre, Entrée pour sélectionner), phrases annoncées aux lecteurs d’écran, préférence de contraste élevé prise en compte. Pas d’audit formel ni de test sur appareil réel à ce jour : nous préférons le dire.</p></div></details>
+    <details class="detail"><summary>Services extérieurs contactés</summary><div><p>Par défaut, le fond de carte vient d’OpenFreeMap et d’OpenStreetMap. Avec <code>base=&quot;aucune&quot;</code>, aucun service n’est contacté au démarrage. Les données de l’IGN ne sont contactées que si vous les importez.</p></div></details>
+    <details class="detail"><summary>Limites</summary><div><ul class="liste-simple"><li>Carte à plat par défaut en intégration ; au-delà de 100 000 objets par couche, agréger avant d’envoyer.</li><li>Pas de rafraîchissement automatique : votre page renvoie ses données.</li><li>Par adresse, le composant lit des fichiers JSON (style, scène) et du GeoJSON ; GPX, KML et CSV s’importent dans l’application, pas encore par adresse dans le composant.</li><li>Le serveur qui héberge vos fichiers doit en autoriser la lecture depuis votre page (CORS).</li><li>Le composant n’utilise que des polices du système : une police propre à votre site n’est pas chargée dans la carte.</li><li>Pas de tuiles vectorielles ni de PMTiles.</li></ul></div></details>
+    <details class="detail"><summary>Maturité par partie</summary><div><ul class="liste-simple"><li>Dans Grist : en service.</li><li>Composant web : en développement actif, contrat de version 0.3.</li><li>Application Android : version de test.</li></ul></div></details>
   </section>
-  <section class="facons reveler">
-    <h2>Faire entrer la donnée, montrer la carte</h2>
-    <div class="groupes">
-    <div class="groupe">
-      <h3>Charger et montrer la donnée</h3>
-      <p class="intro">Plusieurs portes, une règle : ce qui vient d’une table du document s’y écrit ; le reste peut l’y rejoindre.</p>
-      <ul>
-        <li>
-          <div class="porte"><b>Les tables du document</b><span class="ou">Dans le document</span></div>
-          <p>Toute table qui porte une géométrie — latitude et longitude, ou une colonne GeoJSON — est proposée dans le panneau Couches ; un clic la pose sur la carte avec ses attributs, et la carte suit la table.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Une couche neuve, dessinée</b><span class="ou">Dans le document</span></div>
-          <p>« Nouvelle » crée la table vide — point, ligne ou surface —, puis on y dessine ses objets, fiche comprise.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Un projet QGIS</b><span class="ou">Dans le document</span></div>
-          <p>qgis2grist verse les couches, leur style et les formulaires QField dans le document ; Atlas lit le manifeste de scène qu’il y dépose.</p>
-        </li>
-        <li>
-          <div class="porte"><b>OpenStreetMap</b></div>
-          <p>Bâtiments, voirie, arbres, mobilier, importés autour de la vue, puis enregistrés en table Grist pour être édités comme le reste.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Les données de l’IGN</b></div>
-          <p>Le bouton IGN du panneau Couches importe, dans la zone visible, les routes, les bâtiments, l’eau, la végétation, les voies ferrées, les repères routiers, les équipements, les communes et les départements de la BD TOPO et d’Admin Express (Licence Ouverte). Atlas compte d’abord les objets, refuse une zone trop vaste, importe par pages et garde la provenance de la couche.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Un fichier GeoJSON</b></div>
-          <p>Ouvert depuis le poste, il devient une couche, qu’on peut à son tour enregistrer en table.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Des couches publiées</b><span class="ou">Sans document</span></div>
-          <p>Une scène cite des couches par adresse — GeoJSON en ligne, tuiles XYZ — ou les porte en elle. Elles s’affichent, se filtrent et se symbolisent sans passer par un document.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Le décor</b></div>
-          <p>Photographie aérienne et relief LiDAR HD de l’IGN, bâti OpenFreeMap, et le catalogue d’objets d’Atlas, qui donne à chaque objet le modèle que ses champs désignent — les luminaires EclExt d’abord ; un autre catalogue se pointe par <code>?objets=</code>.</p>
-        </li>
-      </ul>
-    </div>
-    <div class="groupe">
-      <h3>Diffuser Atlas</h3>
-      <p class="intro">Cinq façons de montrer la même scène, qui n’est jamais recopiée ailleurs. La donnée, elle, repart en fichier quand on veut : projet en .json, couches en GeoJSON.</p>
-      <ul>
-        <li>
-          <div class="porte"><b>Le document lui-même</b><span class="ou">Dans le document</span></div>
-          <p>On partage le document Grist : Atlas s’y ouvre avec les droits de chacun — qui écrit édite, qui lit consulte la scène et son récit. Règles d’accès et clés de lien s’appliquent telles quelles.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Une page intégrée</b><span class="ou">Dans le document</span></div>
-          <p>La page du document dans une iframe : <code>?embed=true</code> la montre en lecture, <code>?style=singlePage</code> garde les droits de la personne connectée. Sur l’adresse du widget, <code>?navbar=false</code> retire la barre quand la page hôte porte déjà son titre.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Une scène publiée</b><span class="ou">Sans document</span></div>
-          <p>Un manifeste de scène hébergé où l’on veut s’ouvre dans Atlas seul par <code>?scene=&lt;adresse&gt;</code>. Rien ne s’écrit : c’est la lecture publique, comme la démonstration plus haut.</p>
-        </li>
-        <li>
-          <div class="porte"><b>Dans une application de votre organisation</b><span class="ou">Sans document</span></div>
-          <p>Atlas peut être la carte d’un tableau de bord ou d’un outil de suivi que votre équipe a déjà : l’application affiche la carte dans ses pages, la colore par commune, par département ou par région à partir de son propre tableau, la filtre, et réagit à l’objet que la personne touche. Les données, les couleurs et la légende restent à l’application ; seules les applications que vous avez déclarées une à une peuvent piloter la carte. Une application d’exemple, « Rennes en direct », en montre le résultat sur des données ouvertes lues en direct.</p>
-        </li>
-        <li>
-          <div class="porte"><b>L’application Android</b><span class="ou">Terrain</span></div>
-          <p>Elle retrouve les scènes du compte Grist et les emporte sur le terrain, formulaires et photos compris. Version de test, non signée.</p>
-        </li>
-      </ul>
-    </div>
-    </div>
-  </section>
-  <section>
-    <div class="encart">
-      <h2>Sur le terrain, sans navigateur</h2>
-      <p>Une application Android ouvre vos scènes depuis votre compte Grist. Elle existe parce qu’un navigateur ne peut pas présenter de clé API à l’instance : celle-ci refuse l’en-tête d’authentification au contrôle préalable, et cela ne se change pas côté serveur. L’application émet ses requêtes hors du moteur web, ce qui lève l’obstacle.</p>
-      <a class="bouton" href="https://github.com/nic01asFr/Widgets-Grist/releases/latest/download/atlas.apk">Télécharger l’application</a>
-    </div>
-  </section>
-  <section>
-    <h2>Journal</h2>
+  <section class="partie" id="nouveautes" aria-labelledby="t-nouveautes">
+    <header class="entete"><h2 id="t-nouveautes">Nouveautés</h2></header>
     <div class="journal">
       <div><b>v1.28.1</b><p>Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue.</p></div>
       <div><b>v1.26.1</b><p>Une bulle déclarée sur une carte de communes ou de départements s’ouvre enfin quand on en choisit une, comme sur n’importe quelle autre couche.</p></div>
       <div><b>v1.26.0</b><p>La carte peut maintenant afficher sa propre légende et son curseur de temps, aux couleurs de l’application qui l’embarque, sans que celle-ci écrive le moindre code d’interface. La bulle d’un objet montre aussi son historique : les dernières lignes d’une table liée (par exemple les cotations d’un bâtiment), mises à jour à chaud.</p></div>
       <div><b>v1.25.0</b><p>Une page de démonstration montre comment une application embarque le canevas d’Atlas : envoyer une scène, recevoir les clics, afficher une maquette 3D. Les maquettes 3D s’affichent avec un éclairage plus juste, un objet surligné se voit aussi sur une surface ou une ligne, et une carte dans un cadre trop petit pour ses marges se cadre quand même.</p></div>
       <div><b>v1.24.0</b><p>Atlas peut maintenant afficher une maquette 3D de ville servie comme un fond de carte : les dalles proches se chargent d’abord, d’abord en grossier puis en détail, sans jamais laisser de trou. Une application qui embarque Atlas sait maintenant aussi ce que la personne vise et clique sur ses couches. Et une application qui n’affiche que ses propres données peut demander une carte sans fond de plan, donc sans aucun appel à un service tiers.</p></div>
+    </div>
+    <details class="detail"><summary>Toutes les versions (45)</summary><div class="journal">
       <div><b>v1.23.0</b><p>Une application qui embarque Atlas en entier peut maintenant lui envoyer une scène Atlas complète — relief, 3D, éclairage, couches d’objets — et la piloter : l’afficher, masquer une couche, cadrer dessus, la remplacer. Les adresses de données doivent être en https, et la carte seule reste le choix léger.</p></div>
       <div><b>v1.22.0</b><p>Une application peut maintenant embarquer Atlas en entier — son interface, son relief et sa 3D — tout en le pilotant : elle lui envoie ses données, ses filtres et ses sélections, et reçoit les clics en retour, comme avec la carte seule. La carte seule reste le choix léger ; le mode complet est celui des applications qui veulent le canevas d’Atlas chez elles.</p></div>
       <div><b>v1.21.1</b><p>Les marqueurs d’état gagnent une légende qui compte chaque état, signalent une couleur illisible au lieu d’afficher un marqueur noir, et le fond uni suit désormais le thème sombre d’une application.</p></div>
@@ -723,7 +569,7 @@ section { margin: 0 0 3rem; }
       <div><b>v1.1.3</b><p>Placement 3D corrigé — le viewport de la scène ne suivait pas l’ouverture d’un panneau. Droits en lecture respectés à l’édition. Récit enregistré de façon atomique.</p></div>
       <div><b>v1.1.2</b><p>Sept correctifs, dont le calage des volumes sur le relief : les surfaces extrudées se comptaient depuis le niveau de la mer, pas depuis le sol.</p></div>
       <div><b>v1.1.1</b><p>Palette et méthode de graduation atteignent la carte ; le réglage du bâti ne masque plus les couches Atlas.</p></div>
-    </div>
+    </div></details>
   </section>
 </main>
 <script>
@@ -768,6 +614,47 @@ section { margin: 0 0 3rem; }
   document.addEventListener('keydown', function (e) {
     var x = e.key === 'Escape' && document.querySelector('.cadre.plein .fermer');
     if (x) x.click();
+  });
+</script>
+<script>
+  document.querySelectorAll('.carrousel').forEach(function (c) {
+    var piste = c.querySelector('.pistes'), diapos = [].slice.call(piste.querySelectorAll('.diapo')), n = diapos.length;
+    var prec = c.querySelector('.prec'), suiv = c.querySelector('.suiv'), cpt = c.querySelector('.compteur'), sommaire = c.querySelector('.sommaire'), puces = [].slice.call(sommaire.querySelectorAll('button'));
+    var doux = function () { return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; };
+    var courant = function () {
+      if (piste.scrollLeft >= piste.scrollWidth - piste.clientWidth - 2) return n - 1;
+      var k = 0, d = Infinity;
+      diapos.forEach(function (x, j) { var e = Math.abs(x.offsetLeft - piste.offsetLeft - piste.scrollLeft); if (e < d) { d = e; k = j; } });
+      return k;
+    };
+    var aller = function (k) { k = Math.max(0, Math.min(n - 1, k)); piste.scrollTo({ left: diapos[k].offsetLeft - piste.offsetLeft, behavior: doux() }); };
+    var maj = function () {
+      var k = courant(); cpt.textContent = (k + 1) + ' / ' + n; prec.disabled = k === 0; suiv.disabled = k === n - 1;
+      diapos.forEach(function (x, j) { x.classList.toggle('actif', j === k); });
+      puces.forEach(function (p, j) {
+        if (j === k) { p.setAttribute('aria-current', 'true'); sommaire.scrollTo({ left: p.offsetLeft - sommaire.clientWidth / 2 + p.clientWidth / 2, behavior: 'auto' }); }
+        else p.removeAttribute('aria-current');
+      });
+    };
+    prec.addEventListener('click', function () { aller(courant() - 1); });
+    suiv.addEventListener('click', function () { aller(courant() + 1); });
+    puces.forEach(function (p) { p.addEventListener('click', function () { aller(Number(p.dataset.n)); }); });
+    piste.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); aller(courant() + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); aller(courant() - 1); }
+    });
+    var t; piste.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(maj, 50); }, { passive: true });
+    addEventListener('resize', maj);
+    c.classList.add('pret'); maj();
+  });
+  document.querySelectorAll('.bloc-code').forEach(function (b) {
+    var bouton = b.querySelector('.copier'); if (!bouton) return;
+    bouton.hidden = false;
+    bouton.addEventListener('click', function () {
+      var texte = b.querySelector('code').textContent;
+      var dit = function (m) { bouton.textContent = m; setTimeout(function () { bouton.textContent = 'Copier'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dit('Copié'); }, function () { dit('Sélectionnez le code'); });
+      else dit('Sélectionnez le code');
+    });
   });
 </script>
 <script>

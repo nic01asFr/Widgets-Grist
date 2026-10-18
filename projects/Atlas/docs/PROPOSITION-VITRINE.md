@@ -193,3 +193,21 @@ Autres seuils : aucune image sans dimensions (plus de saut de contenu) et image 
 4. **Maintenance** : un seul mainteneur ; que promet-on (aucune garantie de service) ?
 5. **Android** : reconstruire l'APK ou afficher la version publiée et son statut.
 6. **Le fichier `projects/Atlas/CLAUDE.md`** (public, 250 Ko) nomme une organisation aux lignes 8 et 70 : à neutraliser avant toute exposition aux agents ou aux moteurs.
+
+## 10. Réalisé (18/10/2026) : l'étape 1, par un champ `produit.parcours`
+
+La page d'Atlas est maintenant organisée par usage. Ce qui a été fait diffère de la proposition sur deux points, tranchés avec le propriétaire en regardant une maquette : la page s'ouvre sur **un cas de bout en bout** (le Palais Longchamp, quatre chapitres : mettre en valeur, exploiter avec Grist, publier, terrain) suivi de **« Atlas dans votre site »** (personnaliser et intégrer, trois flux, application sans hébergement) ; et les captures de l'ancienne page sont reprises **en carrousels** (23 diapositives), pas en blocs empilés.
+
+Fiche `vitrine.json`, tout facultatif ; une fiche sans `parcours` garde la page qu'elle avait (tests de non-régression) :
+
+| Champ de `produit.parcours` | Rôle |
+|---|---|
+| `eyebrow`, `cta[]`, `statut[]` | surtitre, boutons du haut (`ancre`, `url` ou `widget: true`), statut par partie |
+| `comparaison`, `preuves[]` | tableau « classique ou Atlas », chiffres ; **un chiffre sans `preuve` n'est pas rendu** |
+| `sections[]` | `id`, `court`, `titre`, `intro`, `demo`, `fluxTitre`, `fluxTexte`, `flux[]`, `chapitres[]` ; chaque section entre dans le sommaire collant |
+| chapitre | `num`, `titre`, `paragraphes[]`, `pourquoi`, `liens[]`, `inverse`, puis `figure` (avec `demo` si l'image se lance), `diapositives[]` (carrousel : `titre`, `image`, `alt`, `legende`, `texte`, `etiquettes[]`) et/ou `code` ; un `detail` replié (`blocs[]` ou `tableau`) |
+| `savoir[]`, `journalRecent` | sections repliées « à savoir avant d'adopter » ; nombre de versions montrées avant « Toutes les versions » |
+
+Gardes à la génération : une image sans `alt` n'est pas rendue (et l'écart est dit) ; une démonstration locale dont la page est absente est écartée ; les images portent `width` et `height` lues dans leur en-tête (plus de saut de page). Les champs par fonction (`contextes`, `sequence`, `facons`, `chiffres`, `demonstration`, `accroche`) ne sont pas rendus quand un parcours est présent et ont été retirés de la fiche d'Atlas (ils restent dans l'historique git).
+
+Reste de l'étape 1 : liens du pied (« Toutes les versions » vers une page dédiée, guide d'intégration en page satellite), déclaration d'accessibilité et page licences, démonstration « chaleur + temps », neutralisation de `projects/Atlas/CLAUDE.md`, version de l'application Android. Les satellites (`/integrer/`, `/nouveautes/`) et la standardisation aux autres widgets (étapes 1 ter et 3) ne sont pas faits.
