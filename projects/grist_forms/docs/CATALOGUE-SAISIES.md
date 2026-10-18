@@ -72,16 +72,16 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Saisie | Présentation / geste | Écrit | État | Remarque |
 |---|---|---|---|---|
 | Champ numérique | clavier numérique, `step` | Int / Numeric | livré (`number`) | `options.step` lu |
-| Bornes min / max | refus hors bornes | — | **partiel / nuance** | *non lues par le navigateur* ; lues par la formule du mode externe |
+| Bornes min / max | refus hors bornes, message qui les dit | — | livré (`options.min`, `max`) | appliquées par le navigateur **et** par la formule du mode externe |
 | Échelle 1–5 | boutons ou matrice | Int | livré (`likert`) | échelle figée 1–5 ; les échelles qui se suivent sont regroupées en matrice |
 | Échelle déclarée (0–10, NPS, libellés aux deux bouts, « non concerné ») | boutons | Int | livré (`echelle` + `kind: echelle` + `echelles`) | `min`, `max`, `libelles[2]`, `nonConcerne` ; « non concerné » s'écrit vide. *`matrice-types.html` (4/10) la disait encore figée* |
-| Curseur | glissière min–max, valeurs d'appui | Int / Numeric | absent | TaskFlow (avancement 0–100 + presets) ; QGIS : `Range` slider |
-| Compteur +/− | boutons moins/plus | Int | absent | Grist natif : Spinner ; QGIS : `Range` spinbox |
+| Curseur | glissière min–max, valeurs d'appui | Int / Numeric | livré (`curseur`, `options.presets`) | n'écrit rien tant qu'on n'y a pas touché (« Pas de réponse ») |
+| Compteur +/− | boutons moins/plus, entre ses bornes | Int | livré (`compteur`) | `min`, `max`, `step` |
 | Cadran / molette | disque | Int / Numeric | absent | QGIS : `Range` dial ; rarement utile |
 | Étoiles | icônes | Int | absent | variante d'échelle |
-| Pourcentage | champ + « % » ou curseur | Numeric 0–1 ou Int | absent | TaskFlow : disponibilité en % |
-| Montant / quantité avec unité | champ + unité | Numeric | absent | l'unité reste hors cellule ; à déclarer dans `options` |
-| Durée | h : min ou nombre + unité | Numeric (heures) | absent | TaskFlow : estimation en heures (pas 0,5) |
+| Pourcentage | champ ou curseur + « % » | Int 0–100 | partiel (`options.unite`) | l'unité est affichée, pas écrite ; Numeric 0–1 non géré |
+| Montant / quantité avec unité | champ + unité | Numeric | livré (`options.unite`) | l'unité reste hors cellule |
+| Durée | nombre + unité, pas | Numeric (heures) | livré (`step` 0,5 + `unite` h) | pas de saisie « h : min » |
 | Altitude, coordonnées | remplis par un point | Numeric | livré (`options.enrichir`) | |
 | Mesure d'une géométrie (longueur, surface) | calculée | Numeric | absent | Atlas l'affiche ; local, sans réseau |
 
@@ -101,16 +101,16 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 |---|---|---|---|---|
 | Date | **sélecteur natif du navigateur** (calendrier du système) | Date (secondes, minuit UTC) | livré (`date`) | le calendrier est celui de l'appareil ; pas de calendrier propre |
 | Date et heure | sélecteur natif date + heure | DateTime (secondes) | livré (`datetime`) | fuseau porté par la colonne |
-| « Aujourd'hui », « maintenant » | valeur de départ | Date / DateTime | **absent** | Atlas et TaskFlow l'ont ; aucune valeur de départ dans le moteur |
-| Heure seule HH:MM | champ heure ; sur mobile, la molette ou l'horloge à aiguilles *du système* | **Text `HH:MM`** (ou minutes en Numeric) | absent | Grist n'a **pas de type heure** ; `input type=time` donne l'horloge native sur Android |
+| « Aujourd'hui », « maintenant » | valeur de départ | Date / DateTime | livré (`options.depart`) | date locale (ne recule pas à minuit), jamais devant une valeur déjà donnée, pas en modification |
+| Heure seule HH:MM | champ heure ; sur mobile, la molette ou l'horloge à aiguilles *du système* | **Text `HH:MM`** | livré (`heure`) | Grist n'a **pas de type heure** ; `input type=time` donne l'horloge native ; format contrôlé sans qu'on le demande |
 | Horloge à aiguilles propre | cadran dessiné | idem | absent | à éviter : peu accessible ; au besoin, toujours doublée d'un champ HH:MM |
 | Date de naissance / âge | jour, mois, année séparés | Date | absent | évite le défilement de décennies |
 | Mois, semaine, année | `type=month`, `type=week` | Date (1er du mois) ou Text | absent | |
-| Période (début ≤ fin) | deux dates liées | 2 × Date | absent | TaskFlow : début et échéance ; contrainte à écrire |
-| Plage horaire | deux heures liées | 2 × Text | absent | |
+| Période (début ≤ fin) | deux dates liées | 2 × Date | livré (`options.apres`) | refusée dans le navigateur et jugée dans Grist ; aussi pour les heures et les nombres |
+| Plage horaire | deux heures liées | 2 × Text | livré (`heure` + `apres`) | |
 | Durée écoulée | chronomètre | Numeric | absent | hors périmètre probable |
 | Récurrence | règle (tous les lundis…) | Text | absent | TaskFlow n'en a pas non plus |
-| Bornes de dates (pas avant, pas après) | `min`/`max` | — | absent | |
+| Bornes de dates (pas avant, pas après) | `min`/`max`, dont `aujourdhui` | — | livré | |
 | Jours ouvrés | grisage du calendrier | — | absent | |
 
 ### 3.4 bis — Choix (`Choice`, `ChoiceList`)
@@ -184,7 +184,7 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Condition d'affichage (champ, étape) | livré | `condition` |
 | Question filtre (ouvre un thème) | livré | |
 | Valeur reçue de l'adresse | livré | `prefill` |
-| Valeur de départ (aujourd'hui, moi, dernière saisie) | **absent** | Atlas : cinq origines |
+| Valeur de départ (aujourd'hui, maintenant, moi, dernière saisie, valeur fixe) | livré | `options.depart` ; la dernière saisie reste sur l'appareil |
 | Champ calculé affiché | absent | |
 | Champ masqué (porte une valeur sans la montrer) | partiel | possible via `prefill` verrouillé (visible), pas masqué |
 | Anti-spam (champ piège) | absent | utile en mode externe |
@@ -231,19 +231,20 @@ Ce qui **n'est pas** un kind, par décision : `validation` (format), `prefill` (
 
 Constats faits en préparant ce catalogue :
 
-1. **`options` est un sac de ~30 clés, dont six typées** dans le schéma. Un test devrait exiger qu'une clé lue par le moteur soit déclarée.
-2. **La table cible d'une référence a trois écritures** (`options.refTable`, `refTable` du champ, suffixe `Ref:T`) ; seules les deux premières sont lues. Une seule doit être canonique.
-3. **La liste des widgets du schéma est incomplète** (`dessin` manque).
+1. ~~**`options` est un sac de ~30 clés, dont six typées.**~~ *Corrigé* : toutes les options que le moteur lit sont déclarées dans le schéma, et `tests/contrat.test.js` interdit qu'une option employée par un cas de démonstration ne le soit pas.
+2. ~~**La table cible d'une référence a trois écritures**, dont une ignorée.~~ *Corrigé* : `options.refTable` est la voie canonique, l'ancien `refTable` et le suffixe `Ref:T` sont lus, et la voie canonique l'emporte.
+3. ~~**La liste des widgets du schéma est incomplète.**~~ *Corrigé*, et gardé : le test échoue si le moteur rend un widget que le schéma ne liste pas (il a attrapé `curseur`, `compteur`, `heure` lors de leur ajout).
 4. **`kind: echelle` et `kind: geometrie` ne changent rien au moteur** : ce sont des marqueurs. À dire, ou à supprimer au profit du widget.
-5. **`options.min` / `max` ne sont pas lues par le navigateur.**
+5. ~~**`options.min` / `max` ne sont pas lues par le navigateur.**~~ *Corrigé.*
 6. **Doublons** : `polarity` (champ) et `polarite` (options) ; `profile`, `theme`, `cascade` au niveau du champ.
-7. **Pas de registre unique.** La liste des saisies est recopiée dans le compositeur (`ux.js`), le moteur (renderers), la projection de colonnes (`ensure-schema.js`), le mode externe (`externe.js`) et le schéma.
+7. **Pas de registre unique.** La liste des saisies est recopiée dans le compositeur (`ux.js`), le moteur (renderers), la projection de colonnes (`ensure-schema.js`), le mode externe (`externe.js`) et le schéma. Le test de conformité (`contrat.test.js`) empêche qu'elles divergent sans bruit ; il ne les réunit pas.
+8. **Un défaut trouvé par ce test** : une question « Dessin » ou « Signature » se relisait comme « Fichier(s) » dans le compositeur. *Corrigé* (l'usage déclaré les distingue).
 
 ## 7. Ordre proposé pour combler
 
-1. **Valeurs de départ** (aujourd'hui, maintenant, moi).
-2. **Nombre borné** : bornes appliquées dans le navigateur, curseur, compteur, pas, unité.
-3. **Heure seule** (HH:MM, stockée en texte) et **période** (début ≤ fin).
+1. ~~Valeurs de départ~~ — *livré*.
+2. ~~Nombre borné : bornes, curseur, compteur, pas, unité~~ — *livré*.
+3. ~~Heure seule et période~~ — *livré*.
 4. **Désigner un objet sur la carte**, et **scanner un code** depuis le formulaire.
 5. **Liste d'éléments répétés**, **étiquettes libres**, **pastilles colorées**.
 6. Petits : **couleur**, **clavier adapté**, **interrupteur**, **formats** supplémentaires (url, plaque, NIR).

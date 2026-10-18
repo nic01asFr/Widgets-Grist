@@ -52,6 +52,50 @@
           }
         },
         {
+          "colId": "Nombre",
+          "label": "Combien d’équipements sont touchés ?",
+          "type": "Int",
+          "widget": "compteur",
+          "options": {
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "depart": {
+              "source": "valeur",
+              "valeur": 1
+            }
+          }
+        },
+        {
+          "colId": "Constate",
+          "label": "Quand l’avez-vous constaté ?",
+          "type": "DateTime",
+          "widget": "datetime",
+          "options": {
+            "max": "aujourdhui",
+            "depart": {
+              "source": "maintenant"
+            }
+          }
+        },
+        {
+          "colId": "Urgence",
+          "label": "Est-ce urgent ?",
+          "type": "Int",
+          "widget": "curseur",
+          "options": {
+            "min": 0,
+            "max": 100,
+            "step": 5,
+            "unite": "%",
+            "presets": [
+              0,
+              50,
+              100
+            ]
+          }
+        },
+        {
           "colId": "Lieu",
           "label": "Où êtes-vous ?",
           "type": "Text",

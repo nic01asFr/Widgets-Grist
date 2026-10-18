@@ -91,6 +91,15 @@ une valeur juste est enregistrée sous sa forme normalisée (un IBAN sans espace
 La règle existe **en JavaScript et en Python** (`shared/formats.js`) : le navigateur guide la personne, et la colonne de conformité d'un envoi hors de Grist refait le même contrôle
 côté Grist, parce que le serveur d'un formulaire natif accepte tout. Les essais exécutent les deux et exigent le même verdict.
 
+### Nombres, dates, heures : bornes, départ, curseur, compteur
+
+- **Bornes** (`options.min`, `max`) : un nombre hors bornes, une date trop tôt ou trop tard est refusé avec un message qui dit les bornes. Une date accepte `aujourdhui`.
+- **Curseur** (`widget: curseur`) : une valeur entre deux bornes, avec des valeurs d'appui (`presets`) ; **il n'écrit rien tant qu'on n'y a pas touché**, et l'écran le dit (« Pas de réponse »).
+- **Compteur** (`widget: compteur`) : un nombre qu'on monte et qu'on descend d'un pas, sans sortir des bornes. `unite` affiche une unité sans l'écrire.
+- **Heure** (`widget: heure`) : « HH:MM », rangée en texte (Grist n'a pas de type heure) ; le sélecteur est celui du système.
+- **Ordre** (`options.apres`) : une fin qui ne peut pas précéder son début, pour des dates, des heures ou des nombres.
+- **Valeur de départ** (`options.depart`) : la date du jour, maintenant, le courriel de la personne connectée, la dernière saisie sur l'appareil, ou une valeur fixe. Elle ne passe jamais devant une valeur déjà donnée et ne s'applique pas quand on modifie une ligne.
+
 ### Une valeur donnée par l'adresse de la page
 
 Un code collé sur un équipement ouvre le formulaire **avec cet équipement déjà désigné** : `…/page.html?objet=LAMP-0012&objet_nom=Lampadaire%2012`.
