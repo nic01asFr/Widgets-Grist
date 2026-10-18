@@ -54,9 +54,9 @@ projects/grist_forms/
 notes précédentes était déjà périmé : 271 au 10/10 avant ce lot). `node --test
 scripts/schemas.test.js` → 11 verts (il en avait un rouge : la dérive du schéma publié).
 
-### Les prérequis du kit d'apps Cerema (10/10/2026, jalon 0b, décision D7)
+### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)
 
-Le kit (`projects/cerema-appkit`) veut référencer FormDef, réutiliser sa grammaire de
+Le kit d'applications (un projet voisin, pas encore publié) veut référencer FormDef, réutiliser sa grammaire de
 conditions et monter un formulaire hors d'un widget Grist. Cinq changements ; aucun ne change un
 FormDef sain, et ce que change une condition fautive est dans `docs/MIGRATION-CONDITIONS.md` :
 
