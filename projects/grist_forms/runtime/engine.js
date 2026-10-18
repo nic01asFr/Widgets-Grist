@@ -249,9 +249,13 @@
           }
           (caches.rangs || []).forEach(function (c) { out[c] = null; });
           if (caches.autre) out[caches.autre] = null;
-          Object.keys(caches.annexes || {}).forEach(function (cle) {
-            if (caches.annexes[cle]) out[caches.annexes[cle]] = null;
-          });
+          // Seulement pour un référentiel : des annexes que rien ne remplit ne
+          // sont pas à vider (un champ qui a changé de type en garderait la trace).
+          if (field.kind === 'referentiel') {
+            Object.keys(caches.annexes || {}).forEach(function (cle) {
+              if (caches.annexes[cle]) out[caches.annexes[cle]] = null;
+            });
+          }
           continue;
         }
         var brut = values[field.colId];

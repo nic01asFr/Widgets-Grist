@@ -121,3 +121,21 @@ it('la vue publiee en correction amorce le formulaire avec la ligne', () => {
   assert.ok(doc.includes('FormEngine.valuesFromRecord'), 'les valeurs de la ligne entrent dans le formulaire');
   assert.ok(doc.includes('onNewRecord'), 'la ligne vierge revient a la creation');
 });
+
+it('le module des adresses voyage avec le formulaire, avant le moteur qui le lit', () => {
+  const doc = P.buildRuntimeDocument({ id: 'demo', title: 'T', tableId: 'C', sections: [], choices: {} }, {
+    referentielJs: '/*referentiel*/',
+    engineJs: '/*engine*/'
+  });
+  assert.ok(doc.includes('/*referentiel*/'));
+  assert.ok(doc.indexOf('/*referentiel*/') < doc.indexOf('/*engine*/'),
+    'le moteur le cherche au chargement : il doit déjà être là');
+});
+
+it('sans le module, le formulaire se publie quand même — le champ reste un champ texte', () => {
+  const doc = P.buildRuntimeDocument({ id: 'demo', title: 'T', tableId: 'C', sections: [], choices: {} }, {
+    engineJs: '/*engine*/'
+  });
+  assert.ok(doc.includes('/*engine*/'));
+  assert.ok(!doc.includes('FormReferentiel'));
+});

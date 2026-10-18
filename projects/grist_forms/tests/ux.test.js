@@ -29,3 +29,37 @@ describe('FormUx', () => {
     assert.deepEqual(ids, ['contact', 'satisfaction', 'inscription']);
   });
 });
+
+describe('FormUx — le champ d’adresse', () => {
+  const adresse = { colId: 'A', type: 'Text', widget: 'text', kind: 'referentiel' };
+
+  it('figure parmi les types qu’on peut choisir', () => {
+    const cles = Ux.ADVANCED_TYPES.map((t) => t.key);
+    assert.ok(cles.includes('adresse'));
+  });
+
+  it('se reconnaît par son kind, pas pour un texte ordinaire', () => {
+    assert.equal(Ux.fieldTypeKey(adresse), 'adresse');
+    assert.equal(Ux.fieldTypeKey({ colId: 'T', type: 'Text', widget: 'text' }), 'text',
+      'un texte sans kind reste un texte');
+  });
+
+  it('choisir ce type pose le kind, le type Grist et le widget d’un texte', () => {
+    const f = { colId: 'A', type: 'Int', widget: 'number' };
+    Ux.applyTypeKey(f, 'adresse');
+    assert.equal(f.kind, 'referentiel');
+    assert.equal(f.type, 'Text');
+    assert.equal(f.widget, 'text');
+  });
+
+  it('le quitter retire le kind', () => {
+    const f = Object.assign({}, adresse);
+    Ux.applyTypeKey(f, 'text');
+    assert.equal(f.kind, undefined);
+  });
+
+  it('les types qui se reconnaissaient par leur widget se reconnaissent encore', () => {
+    assert.equal(Ux.fieldTypeKey({ type: 'Choice', widget: 'classement', kind: 'classement' }), 'classement');
+    assert.equal(Ux.fieldTypeKey({ type: 'Text', widget: 'geo', kind: 'geometrie' }), 'geo');
+  });
+});

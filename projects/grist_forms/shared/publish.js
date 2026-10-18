@@ -76,6 +76,9 @@
     var carteJs = bundles.carteJs || '';
     // Le dessin, de meme : rien ne se charge tant qu'aucune question n'en pose.
     var dessinJs = bundles.dessinJs || '';
+    // Le champ d'adresse, de même : sans lui le champ reste un champ texte, et
+    // un formulaire publié avant son arrivée n'en voit pas la différence.
+    var referentielJs = bundles.referentielJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -88,6 +91,7 @@
       sessionContextJs,
       carteJs,
       dessinJs,
+      referentielJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',
