@@ -119,6 +119,25 @@
     return api && api.annexesDe ? api.annexesDe(o.source) : {};
   }
 
+  /**
+   * Les sens qu'un lieu sait remplir (adresse, commune, bâtiment, altitude…) et
+   * leur type : du texte pour un code, un nombre pour l'altitude. Cherché à
+   * l'appel, comme `sensDuReferentiel`.
+   */
+  function sensDeLEnrichissement() {
+    var api = null;
+    try {
+      if (typeof module === 'object' && module.exports && typeof require === 'function') {
+        api = require('./enrichir.js');
+      }
+    } catch (e) { api = null; }
+    if (!api) {
+      var global = typeof self !== 'undefined' ? self : null;
+      api = (global && global.FormEnrichir) || null;
+    }
+    return api && api.SENS ? api.SENS : {};
+  }
+
   function copyDef(def) {
     var out = {};
     Object.keys(def).forEach(function (k) { out[k] = def[k]; });
@@ -165,6 +184,15 @@
     }
     // Un référentiel range, à côté du texte, ce que la source sait de la chose
     // choisie : un code postal est du texte, une coordonnée un nombre.
+    // Un lieu range, à côté de sa géométrie, ce que les services en ont su.
+    var enr = field.options && field.options.enrichir && field.options.enrichir.colonnes;
+    if (enr) {
+      var sensE = sensDeLEnrichissement();
+      Object.keys(enr).forEach(function (cle) {
+        if (!enr[cle] || !sensE[cle]) return;
+        out.push({ id: enr[cle], type: sensE[cle], label: cle + ' — ' + label });
+      });
+    }
     if (field.kind === 'referentiel') {
       var sens = sensDuReferentiel(field);
       Object.keys(cols.annexes || {}).forEach(function (cle) {

@@ -81,6 +81,8 @@
     var referentielJs = bundles.referentielJs || '';
     // Les formats (IBAN, SIRET…), de même : sans lui un format déclaré ne contrôle rien.
     var formatsJs = bundles.formatsJs || '';
+    // L'enrichissement d'un lieu par les services publics : sans lui le point reste un point.
+    var enrichirJs = bundles.enrichirJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -95,6 +97,7 @@
       dessinJs,
       referentielJs,
       formatsJs,
+      enrichirJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',

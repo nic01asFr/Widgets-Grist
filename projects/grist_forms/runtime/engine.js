@@ -9,14 +9,15 @@
       require('../shared/attachments.js'),
       require('../shared/session-context.js'),
       require('../shared/referentiel.js'),
-      require('../shared/formats.js')
+      require('../shared/formats.js'),
+      require('../shared/enrichir.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -46,6 +47,32 @@
     if (Formats && Formats.valide) return Formats;
     var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
     return global && global.FormFormats && global.FormFormats.valide ? global.FormFormats : null;
+  }
+
+  /** Le module d'enrichissement par un point, s'il est là. Sans lui, le point reste un point. */
+  function enrichirApi() {
+    if (Enrichir && Enrichir.enrichir) return Enrichir;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormEnrichir && global.FormEnrichir.enrichir ? global.FormEnrichir : null;
+  }
+
+  /**
+   * Ce qu'un point apporte aux colonnes d'une question de lieu.
+   *
+   * Rend `null` quand la question n'enrichit rien ou que le WKT n'est pas un
+   * point ; sinon une promesse de `{ valeurs, phrase }` où `valeurs` couvre
+   * CHAQUE colonne désignée (`null` quand le service n'a rien rendu).
+   */
+  function enrichirChamp(field, wkt, deps) {
+    var api = enrichirApi();
+    if (!api) return null;
+    var colonnes = api.colonnesDe(field);
+    if (!Object.keys(colonnes).length) return null;
+    var point = api.pointDe(wkt);
+    if (!point) return null;
+    return api.enrichir(point, colonnes, deps || {}).then(function (r) {
+      return { valeurs: r.valeurs, phrase: api.phrase(r, colonnes) };
+    });
   }
 
   function normalizeEmail(v) {
@@ -267,6 +294,11 @@
               if (caches.annexes[cle]) out[caches.annexes[cle]] = null;
             });
           }
+          var apiCache = enrichirApi();
+          if (apiCache) {
+            var colsCache = apiCache.colonnesDe(field);
+            Object.keys(colsCache).forEach(function (sens) { out[colsCache[sens]] = null; });
+          }
           continue;
         }
         var brut = values[field.colId];
@@ -294,6 +326,9 @@
         // Une adresse choisie dans la liste apporte ses annexes ; une adresse
         // tapee, ou corrigee apres le choix, n'en apporte aucune.
         if (field.kind === 'referentiel') ecrireAnnexes(out, field, values);
+        // Un lieu apporte ce que les services en ont su ; une colonne que rien
+        // n'a remplie part vide (jamais 0 : un nombre absent vaut 0 dans Grist).
+        ecrireEnrichies(out, field, values);
       }
     }
 
@@ -310,6 +345,17 @@
       }
     }
     return out;
+  }
+
+  function ecrireEnrichies(out, field, values) {
+    var api = enrichirApi();
+    if (!api) return;
+    var colonnes = api.colonnesDe(field);
+    Object.keys(colonnes).forEach(function (sens) {
+      var col = colonnes[sens];
+      var v = values[col];
+      out[col] = v === undefined || v === '' ? null : v;
+    });
   }
 
   function sameRefValue(a, b) {
@@ -1184,7 +1230,7 @@
    * > question impossible : le champ sous la carte accepte le WKT, et la
    * > position du telephone pose un point.
    */
-  function renderGeo(field, value) {
+  function renderGeo(field, value, values) {
     var id = fieldId(field);
     var v = value == null ? '' : String(value);
     var o = (field && field.options) || {};
@@ -1206,8 +1252,18 @@
       'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)" />' +
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
-      '<p class="fr-hint-text fr-geo__etat" role="status"></p>' +
+      '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
+      escapeHtml((values && values['__enrichi_' + field.colId]) || '') + '</p>' +
+      mentionEnrichissement(field) +
       '</div>';
+  }
+
+  /** Ce qui part, et vers qui, quand un lieu complète d'autres colonnes. */
+  function mentionEnrichissement(field) {
+    var api = enrichirApi();
+    if (!api) return '';
+    var m = api.mention(api.colonnesDe(field));
+    return m ? '<p class="fr-hint-text fr-geo__mention">' + escapeHtml(m) + '</p>' : '';
   }
 
   /** Ce qu'on attend de la personne, selon ce qu'on lui demande de poser. */
@@ -1269,7 +1325,7 @@
     file: function (f, v) { return renderFile(f, v); },
     ouinon: function (f, v) { return renderOuiNon(f, v); },
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
-    geo: function (f, v) { return renderGeo(f, v); },
+    geo: function (f, v, o, d, values) { return renderGeo(f, v, values); },
     dessin: function (f, v) { return renderDessin(f, v); }
   };
 
@@ -1354,7 +1410,7 @@
     // Un référentiel remplace la saisie texte plutôt que de s'y superposer : la
     // liste de suggestions vit dans le champ lui-même.
     if (field && field.kind === 'referentiel') renderer = renderReferentiel;
-    var html = renderIllustration(field) + renderer(field, value, optionsList, formDef);
+    var html = renderIllustration(field) + renderer(field, value, optionsList, formDef, values);
     // Un `kind` est une couche posee sur la saisie, pas un widget de plus :
     // « Autre : … » s'ajoute a la liste deroulante comme aux cases a cocher.
     if (field && (field.kind === 'choix_autre' || field.kind === 'classement')) {
@@ -1644,6 +1700,13 @@
         var colId = fields[j].colId;
         if (Object.prototype.hasOwnProperty.call(fournies, colId)) out[colId] = fournies[colId];
         if (fields[j].kind === 'referentiel') amorcerAnnexes(fields[j], fournies, out);
+        var apiInit = enrichirApi();
+        if (apiInit) {
+          var colsInit = apiInit.colonnesDe(fields[j]);
+          Object.keys(colsInit).forEach(function (sens) {
+            if (Object.prototype.hasOwnProperty.call(fournies, colsInit[sens])) out[colsInit[sens]] = fournies[colsInit[sens]];
+          });
+        }
       }
     }
     return out;
@@ -1755,6 +1818,7 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+    var jetonsEnrichi = {};
     // Questions dont la valeur vient de l'adresse de la page (shared/prefill.js).
     var verrouilles = Array.isArray(bridge.verrouilles) ? bridge.verrouilles : [];
     var libellesVerrou = bridge.libelles || {};
@@ -2021,7 +2085,7 @@
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
       brancherClassements(fields);
-      brancherPositions();
+      brancherPositions(fields);
       brancherCartes(fields);
       brancherDessins();
       brancherReferentiels();
@@ -2327,6 +2391,8 @@
             values[colId] = wkt;
             var champ = rootEl.querySelector('input[name="' + colId + '"]');
             if (champ) champ.value = wkt;
+            var champGeo = fields.filter(function (f) { return f.colId === colId; })[0];
+            if (champGeo) declencherEnrichissement(champGeo, wkt);
           }
         }).then(function (vue) {
           var attente = hote.querySelector('.fr-carte__attente');
@@ -2410,12 +2476,56 @@
      * le dit et la saisie a la main reste possible. La geometrie est ecrite en
      * WKT, qui est ce qu'Atlas et QGIS lisent d'une colonne texte.
      */
-    function brancherPositions() {
+    /**
+     * Un point a été posé (carte, position du navigateur, saisie à la main) :
+     * compléter les colonnes que la question désigne.
+     *
+     * Les anciennes valeurs partent d'abord — celles d'un autre point ne
+     * décrivent pas celui-ci — puis la réponse la plus récente gagne : une
+     * réponse arrivée après un autre point n'est plus la bonne.
+     */
+    function declencherEnrichissement(field, wkt) {
+      var api = enrichirApi();
+      if (!api) return;
+      var colonnes = api.colonnesDe(field);
+      var cles = Object.keys(colonnes);
+      if (!cles.length) return;
+      var clef = '__enrichi_' + field.colId;
+      var jeton = (jetonsEnrichi[field.colId] || 0) + 1;
+      jetonsEnrichi[field.colId] = jeton;
+      cles.forEach(function (sens) { values[colonnes[sens]] = null; });
+      var promesse = enrichirChamp(field, wkt, { fetch: bridge.fetch });
+      if (!promesse) { values[clef] = ''; afficherEtatLieu(field.colId, ''); return; }
+      values[clef] = 'Recherche des informations du lieu\u2026';
+      afficherEtatLieu(field.colId, values[clef]);
+      promesse.then(function (r) {
+        if (jetonsEnrichi[field.colId] !== jeton) return;
+        Object.keys(r.valeurs).forEach(function (col) { values[col] = r.valeurs[col]; });
+        values[clef] = r.phrase;
+        afficherEtatLieu(field.colId, r.phrase);
+      }, function () {
+        if (jetonsEnrichi[field.colId] !== jeton) return;
+        values[clef] = 'Les informations du lieu n\u2019ont pas pu \u00eatre compl\u00e9t\u00e9es.';
+        afficherEtatLieu(field.colId, values[clef]);
+      });
+    }
+
+    function afficherEtatLieu(colId, texte) {
+      var bloc = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"]');
+      var etat = bloc && bloc.querySelector('.fr-geo__etat');
+      if (etat) etat.textContent = texte;
+    }
+
+    function brancherPositions(champsPage) {
       var blocs = rootEl.querySelectorAll('[data-widget="geo"]');
       for (var i = 0; i < blocs.length; i++) (function (bloc) {
         var bouton = bloc.querySelector('.fr-geo__ici');
         var champ = bloc.querySelector('input[type="text"]');
         var etat = bloc.querySelector('.fr-geo__etat');
+        var champGeo = (champsPage || []).filter(function (f) { return f.colId === bloc.getAttribute('data-colid'); })[0];
+        if (champGeo && champ && typeof champ.addEventListener === 'function') {
+          champ.addEventListener('change', function () { declencherEnrichissement(champGeo, champ.value); });
+        }
         if (!bouton || typeof bouton.addEventListener !== 'function') return;
         bouton.addEventListener('click', function () {
           var geo = typeof navigator !== 'undefined' && navigator.geolocation;
@@ -2517,6 +2627,7 @@
     VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
     echelleDe: echelleDe,
     grouperParMatrice: grouperParMatrice,
+    enrichirChamp: enrichirChamp,
     mount: mount
   };
 }));

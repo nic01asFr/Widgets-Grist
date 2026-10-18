@@ -360,6 +360,23 @@
                 }
               }
             },
+            "enrichir": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Sur une question de lieu (point) : ce que les services publics savent de ce point, rangé dans des colonnes que le formulaire designe. Un service qui ne repond pas laisse ses colonnes vides (null, jamais 0). Les services recoivent la position choisie : le formulaire le dit sous la carte.",
+              "required": [
+                "colonnes"
+              ],
+              "properties": {
+                "colonnes": {
+                  "type": "object",
+                  "description": "{ <sens>: <colId> }. Sens connus : adresse, codePostal, commune, insee, departement, batiment (identifiant RNB), altitude, risques, latitude, longitude.",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "validation": {
               "type": "object",
               "additionalProperties": false,

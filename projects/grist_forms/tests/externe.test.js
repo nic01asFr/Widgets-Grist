@@ -236,3 +236,41 @@ describe('Externe — la page', () => {
     assert.equal((html.match(/<\/script>/g) || []).length, 1);
   });
 });
+
+describe('Externe — une question de lieu', { skip: !pythonDisponible() && 'Python indisponible' }, () => {
+  const def = {
+    id: 'l', title: 'Lieu', tableId: 'Lieux', composeMode: 'ensureSchema',
+    sections: [{ label: 'S', fields: [
+      { colId: 'Lieu', label: 'Où ?', type: 'Text', widget: 'geo', kind: 'geometrie', required: true,
+        options: { geometrie: 'Point', enrichir: { colonnes: { insee: 'CodeInsee', adresse: 'Adresse', altitude: 'Alt' } } } }
+    ] }]
+  };
+
+  it('crée les colonnes que le lieu remplit, avec leur type', () => {
+    const p = Externe.planExterne(def, {});
+    assert.equal(p.ok, true, p.errors.join(' / '));
+    const cols = p.actions[0][2];
+    const parId = {};
+    cols.forEach((c) => { parId[c.id] = c.type; });
+    assert.equal(parId.CodeInsee, 'Text');
+    assert.equal(parId.Adresse, 'Text');
+    assert.equal(parId.Alt, 'Numeric', 'une altitude est un nombre');
+  });
+
+  it('un texte qui n’est pas un point est dit « lieu illisible » ; un point, ou une absence, sont jugés à part', () => {
+    const f = Externe.formuleMotifs(def, 'Lieux').formule;
+    const m = motifsPython(f, [
+      { Recu: 'R', Premier: true, Lieu: 'POINT(2.29 49.89)' },
+      { Recu: 'R', Premier: true, Lieu: 'SRID=4326;POINT (2.29 49.89)' },
+      { Recu: 'R', Premier: true, Lieu: 'quelque part' },
+      { Recu: 'R', Premier: true, Lieu: 'LINESTRING(0 0, 1 1)' },
+      { Recu: 'R', Premier: true, Lieu: '' }
+    ]);
+    assert.equal(m[0], '');
+    assert.equal(m[1], '');
+    assert.match(m[2], /lieu illisible/);
+    assert.match(m[3], /lieu illisible/);
+    assert.match(m[4], /Où \? : réponse absente/);
+    assert.ok(!/illisible/.test(m[4]), 'un lieu absent n’est pas un lieu illisible');
+  });
+});

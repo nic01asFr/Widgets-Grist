@@ -1094,6 +1094,7 @@
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
   <script src="shared/formats.js"></script>
+  <script src="shared/enrichir.js"></script>
   <script src="shared/prefill.js"></script>
   <script src="shared/synthese.js"></script>
   <script src="shared/synthese-vue.js"></script>
@@ -2801,6 +2802,25 @@ function renderReglagesSaisie(def, si, f, fi, isBind) {
 function renderReglagesCommuns(def, si, f, fi) {
   const o = f.options || {};
   let html = '';
+  // ── Lieu : ce que les services publics savent du point posé ──
+  const enrichir = window.FormEnrichir;
+  if (enrichir && f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
+    const cols = (o.enrichir && o.enrichir.colonnes) || {};
+    const colonnes = (S.columnsByTable[def.tableId] || []);
+    const lignes = Object.keys(enrichir.SENS).map(sens => {
+      const attendu = enrichir.SENS[sens];
+      const candidates = colonnes.filter(c => c.type === attendu || (attendu === 'Text' && c.type === 'Text'));
+      const choix = candidates.map(c => `<option value="${esc(c.colId)}" ${c.colId === cols[sens] ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('');
+      return `<div class="fr-select-group"><label class="fr-label" for="enr-${si}-${fi}-${sens}">${esc(sens)}</label>
+        <select class="fr-select" id="enr-${si}-${fi}-${sens}" onchange="App.onEnrichir(${si}, ${fi}, '${sens}', this.value)">
+          <option value="">— ne pas remplir —</option>${choix}</select></div>`;
+    }).join('');
+    html += `
+      <details class="fr-mt-1w" ${Object.keys(cols).length ? 'open' : ''}><summary class="fr-label">Compléter le lieu avec les services publics</summary>
+        <p class="fr-hint-text">La position choisie est envoyée aux services concernés ; le formulaire le dit sous la carte. Un service qui ne répond pas laisse ses colonnes vides.</p>
+        <div class="bloc__duo">${lignes}</div>
+      </details>`;
+  }
   // ── Format : un texte qui doit être un IBAN, un SIRET… ──
   const formats = window.FormFormats;
   if (formats && f.type === 'Text' && !f.kind && f.widget !== 'geo' && f.widget !== 'dessin') {
@@ -4015,6 +4035,16 @@ function onFieldChoices(si, fi, text) {
   if (f.colId) S.currentDef.choices[f.colId] = list;
 }
 
+/** Ce qu'un lieu complète : une colonne par sens (adresse, commune, bâtiment…). */
+function onEnrichir(si, fi, sens, colId) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const e = f.options.enrichir = f.options.enrichir || { colonnes: {} };
+  if (colId) e.colonnes[sens] = colId; else delete e.colonnes[sens];
+  if (!Object.keys(e.colonnes).length) delete f.options.enrichir;
+}
+
 /** Le format qu'une question de texte contrôle (IBAN, SIRET…). */
 function onValidation(si, fi, valeur) {
   marquerModifie();
@@ -5013,7 +5043,7 @@ async function publishForm() {
     }
 
     logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, engineJs, cssText] =
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -5023,6 +5053,7 @@ async function publishForm() {
       fetchScriptSource('shared/dessin.js'),
       fetchScriptSource('shared/referentiel.js'),
       fetchScriptSource('shared/formats.js'),
+      fetchScriptSource('shared/enrichir.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -5030,7 +5061,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -5097,7 +5128,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

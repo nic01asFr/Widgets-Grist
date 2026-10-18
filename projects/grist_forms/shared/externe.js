@@ -160,6 +160,13 @@
       out.push('if ' + exclut + 'not (' + bornes.join(' and ') + '):');
       out.push('  m.append(' + py(lib + ' : hors des bornes') + ')');
     }
+    if (field.kind === 'geometrie' || field.widget === 'geo') {
+      var typeGeo = (o.geometrie || 'Point');
+      // Ce que la page envoie est du WKT ; un texte libre ne situe rien.
+      var motif = /Point/.test(typeGeo) ? 'POINT' : (/Line/.test(typeGeo) ? 'LINESTRING' : 'POLYGON');
+      out.push('if ' + col + " and not re.match(r'^(SRID=[0-9]+;)?(MULTI)?" + motif + "\\s*Z?\\s*\\(', " + col + '.strip().upper()):');
+      out.push('  m.append(' + py(lib + ' : lieu illisible') + ')');
+    }
     var fmt = Formats && Formats.formatDeChamp(field);
     if (fmt) {
       out.push('if ' + col + ' and not fmt_' + fmt + '(' + col + '):');
@@ -203,6 +210,8 @@
       }
     });
     corps.push("return ', '.join(m)");
+    // Un contrôle de motif a besoin de `re` ; les formats l'importent dans leur propre fonction.
+    if (corps.join('\n').indexOf('re.match(') !== -1) corps.unshift('import re');
 
     var defs = Formats ? Formats.definitionsPython(formats) : '';
     return { formule: (defs ? defs + '\n' : '') + corps.join('\n'), avertissements: avertissements };
@@ -350,7 +359,7 @@
    * La page autonome : le moteur, le formulaire figé, et l'envoi par la clé.
    *
    * @param {object} formDef
-   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, prefillJs, engineJs, cssText }
+   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, prefillJs, engineJs, cssText }
    * @param {object} opts     { adresse: <lien du formulaire publié> }
    */
   function buildExternalDocument(formDef, bundles, opts) {
@@ -362,7 +371,7 @@
 
     var script = [
       bundles.typesJs || '', bundles.sessionContextJs || '', bundles.carteJs || '',
-      bundles.referentielJs || '', bundles.formatsJs || '', bundles.prefillJs || '', bundles.engineJs || '',
+      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.prefillJs || '', bundles.engineJs || '',
       '(function () {',
       '  var DEF = ' + jsonPourScript(formDef || {}) + ';',
       '  var GUICHET = ' + jsonPourScript(guichet.base) + ';',
