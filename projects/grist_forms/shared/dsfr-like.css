@@ -1005,3 +1005,16 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 
 /* La barre de progression est collante : une cible amenee au focus ne doit pas se loger dessous. */
 .fr-resume-erreurs, .fr-form [data-colid] { scroll-margin-top: 6rem; }
+
+/* Les barres collantes collent vraiment.
+   > **`overflow-x: hidden` fait du formulaire un conteneur de defilement** :
+   > la progression et la barre d'action, declarees collantes, defilaient avec la
+   > page. `clip` coupe de la meme facon sans creer ce conteneur ; un navigateur qui
+   > ne le connait pas garde `hidden` (la regle precedente). Sur un ecran bas
+   > (telephone en paysage), la progression reste dans le flux : deux barres fixes
+   > mangeraient plus d'un tiers de la hauteur. */
+.fr-form, .fr-accueil, .fr-synthese { overflow-x: clip; }
+@media (max-height: 36rem) {
+  .fr-form .fr-progression { position: static; }
+}
+

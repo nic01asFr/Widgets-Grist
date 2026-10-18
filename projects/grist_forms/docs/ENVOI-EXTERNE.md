@@ -61,6 +61,17 @@ l'interface ; un reçu rejoué est signalé ; la clé ne peut pas écrire dans l
 
 - Parcourir une relation dans une règle d'accès (`rec.Commune.Zone`) échoue en silence ; une colonne à formule scalaire (`Zone = $Commune.Zone`) contourne.
 - La lecture en retour (suivre son signalement par son reçu) demande de rendre le document public en lecture, avec des règles par clé de lien. Mesuré possible, non livré.
+
+### Règles par clé de lien : la clé doit être validée
+
+Mesuré par une autre session sur un document jetable (accès public remis à Désactivé ensuite). Une clé de lien (`?cle_=`) est lue par les règles d'accès (`user.LinkKey`), en REST comme dans l'interface.
+
+- **Une règle qui compare seulement `newRec.cle_lien == user.LinkKey.cle` accepte une clé inventée** : la clé fournie est égale à elle-même. Il faut vérifier qu'elle existe.
+- **Ce qui marche** : un attribut utilisateur déclaré sur la ressource `*` / `*` (pas la ressource vide, ignorée), qui retrouve la ligne de clé : `{"name": "Cle", "tableId": "Cles", "lookupColId": "cle", "charId": "LinkKey.cle"}` (le champ s'appelle `lookupColId`), puis une règle de création : `user.Cle.Actif and newRec.cle_lien == user.Cle.cle and newRec.Statut != "valide"`.
+- **Résultats** : clé inventée refusée (403), clé valide acceptée (200), `cle_lien` d'un autre arrêt refusé, `Statut` « valide » forcé refusé, appel sans clé refusé, modification et suppression refusées, lecture anonyme limitée aux lignes validées, table des clés illisible, révocation (`Actif = false`) qui coupe la clé aussitôt.
+- **Une clé imprimée sur un QR est publique de fait.** La règle écarte l'usage maladroit et la requête forgée sans clé ; elle n'arrête pas quelqu'un qui scanne le QR puis automatise ses envois. La protection réelle est la modération par statut, les colonnes de contrôle par formule, le plafond de photo de l'instance et la révocation d'une clé par arrêt.
+- **Photos** : la limite d'instance est de 10 Mo, mais le téléversement d'une pièce jointe (`POST /attachments`) n'évalue pas les règles, seulement le droit d'écriture : un anonyme peut téléverser sans clé, d'où des pièces orphelines. Une ligne qui porte une photo n'est acceptée que depuis la session qui l'a téléversée ; la photo d'une ligne non validée n'est lisible par personne.
+- **Non testé** : le niveau « exploiter », le widget dans une page Grist (websocket), une rafale de téléversements.
 - Une référence **inventée** est vraie pour Grist mais n'a pas d'identifiant ; une référence vide est fausse. La formule le distingue.
 - Les services qui complètent un lieu (adresse, commune, bâtiment, altitude, risques) répondent depuis une page d'une autre origine ; leur licence n'est pas relevée ici.
 - Le résultat vaut pour l'instance testée.

@@ -62,6 +62,11 @@ describe('Ecrans etroits — protections de la feuille de style', () => {
     assert.match(demo, /\.demo__scene\s*\{[^}]*min-width:\s*0/);
   });
 
+  it('les barres collantes collent : le formulaire ne devient pas un conteneur de defilement', () => {
+    assert.match(css, /\.fr-form,\s*\.fr-accueil,\s*\.fr-synthese\s*\{\s*overflow-x:\s*clip;\s*\}/);
+    assert.match(css, /@media \(max-height: 36rem\)\s*\{\s*\.fr-form \.fr-progression\s*\{\s*position:\s*static/);
+  });
+
   it('le formulaire annonce sa largeur d\'appareil', () => {
     assert.match(demo, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
   });
