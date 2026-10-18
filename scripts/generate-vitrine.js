@@ -807,10 +807,10 @@ function carrouselParcours(id, libelle, diapos, ctx) {
   const n = valides.length;
   const pistes = valides.map((d, k) => {
     const img = imageParcours(ctx.racine, d.image, d.alt, { differee: k > 0 });
-    return `<article class="diapo${img.vertical ? ' tel' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
+    return `<div class="diapo${img.vertical ? ' tel' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
         <figure>${img.html}${d.legende ? `<figcaption>${enLigne(d.legende)}</figcaption>` : ''}</figure>
         <div class="texte"><h4>${echapper(d.titre)}</h4>${d.texte ? `<p>${enLigne(d.texte)}</p>` : ''}${(d.etiquettes || []).length ? `<ul class="etiquettes">${d.etiquettes.map((t) => `<li>${echapper(t)}</li>`).join('')}</ul>` : ''}</div>
-      </article>`;
+      </div>`;
   });
   const titres = valides.map((d, k) => `<li><button type="button" data-n="${k}"${k === 0 ? ' aria-current="true"' : ''}>${echapper(d.titre)}</button></li>`);
   return `<section class="carrousel" aria-roledescription="carrousel" aria-label="${echapper(libelle)}" id="${echapper(id)}">
@@ -979,6 +979,9 @@ const CSS_PARCOURS = `
 .flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
 .flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
 .titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
+.bloc-code pre { scrollbar-color: #5b5446 #1C1A17; }
+.annexe-bloc { margin: 0 0 2.4rem; max-width: 46rem; } .annexe-bloc h2 { font-size: 1.4rem; } .annexe-bloc .bloc-code, .annexe-bloc .comparaison { max-width: 100%; margin: .6rem 0 1rem; } .annexe-bloc .liens { display: flex; flex-wrap: wrap; gap: .6rem; } .annexe-bloc .lien { color: var(--accent); }
 .bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
 .entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
 .copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
@@ -988,8 +991,9 @@ const CSS_PARCOURS = `
 .pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
 .pistes::-webkit-scrollbar { display: none; }
 .pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
-.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; opacity: .45; transition: opacity .25s; }
-.diapo.actif, .carrousel:not(.pret) .diapo { opacity: 1; }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; }
+.diapo img { opacity: .45; transition: opacity .25s; }
+.diapo.actif img, .carrousel:not(.pret) .diapo img { opacity: 1; }
 .diapo.tel { grid-template-columns: 14rem 1fr; }
 .diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
 .diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
@@ -1003,7 +1007,7 @@ const CSS_PARCOURS = `
 .sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
 .sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
 .sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
-@media (prefers-reduced-motion: reduce) { .diapo { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .diapo img { transition: none; } }
 @media (max-width: 52rem) {
   .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
   .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
@@ -1054,6 +1058,58 @@ const JS_PARCOURS = `
     });
   });
 </` + `script>`;
+
+
+/**
+ * Une page annexe d'un produit : `produit.annexes[]` dans `vitrine.json`, rendue sous `w/<projet>/<id>/`.
+ *
+ * Une annexe porte ce qui encombrerait la page principale (un guide d'integration, par exemple) : `id`, `titre`, `chapeau`, puis des `blocs[]`
+ * (`titre`, `paragraphes[]`, `liste[]`, `code`, `tableau` avec `tableauTitre`, `liens[]`). Elle reprend la peau du produit, renvoie a sa page et entre
+ * au plan du site. Une fiche sans annexe ne produit aucune page de plus.
+ */
+function blocAnnexe(b) {
+  const liens = (b.liens || []).length ? `<p class="liens">${b.liens.map((l) => `<a class="${l.bouton ? 'bouton creux' : 'lien'}" href="${echapper(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ''}>${echapper(l.libelle)}</a>`).join(' ')}</p>` : '';
+  return `  <section class="annexe-bloc">
+    <h2>${echapper(b.titre)}</h2>
+    ${(b.paragraphes || []).map((t) => `<p>${enLigne(t)}</p>`).join('\n    ')}
+    ${(b.liste || []).length ? `<ul class="liste-simple">${b.liste.map((t) => `<li>${enLigne(t)}</li>`).join('')}</ul>` : ''}
+    ${blocCode(b.code)}
+    ${tableauParcours(b.tableau, b.tableauTitre)}
+    ${liens}
+  </section>`;
+}
+
+function rendreAnnexe(p, annexe, base = '') {
+  const v = p.presentation;
+  const nom = v.nom || p.widgets[0].name || p.id;
+  const titre = `${annexe.titre} — ${nom}`;
+  const description = annexe.chapeau || v.pitch || '';
+  const url = base ? `${base}w/${p.id}/${annexe.id}/` : '';
+  const corps = (annexe.blocs || []).map(blocAnnexe).join('\n');
+  return page({
+    titre,
+    description,
+    accent: v.couleur,
+    peau: v.peau,
+    meta: url ? entete({ url, titre, description, image: '' }) : '',
+    css: CSS_PROJET + CSS_PRODUIT + CSS_PARCOURS,
+    corps: `<main>
+  <a class="retour" href="../">← ${echapper(nom)}</a>
+  <p class="eyebrow">${echapper(nom)}</p>
+  <h1>${echapper(annexe.titre)}</h1>
+  ${annexe.chapeau ? `<p class="chapeau">${enLigne(annexe.chapeau)}</p>` : ''}
+${corps}
+</main>${corps.includes('class="bloc-code"') ? JS_PARCOURS : ''}
+<footer class="pied">
+  <p><a href="../">← Retour à la page d’${echapper(nom)}</a></p>
+</footer>`,
+  });
+}
+
+/** Les annexes declarees par la fiche d'un projet, celles qui ont de quoi etre rendues (un identifiant et un titre). */
+function annexesDe(p) {
+  return ((p.presentation.produit || {}).annexes || []).filter((a) => a && a.id && a.titre && /^[a-z0-9-]+$/.test(a.id));
+}
 
 /** Le style des blocs produit, et les revelations au defilement. */
 const CSS_PRODUIT = `
@@ -1541,7 +1597,10 @@ ${parcours && (parcours.statut || []).length ? `  <p class="statut">${parcours.s
 function rendreSitemap(projets, base) {
   const pages = [
     { url: base, maj: '' },
-    ...projets.map((p) => ({ url: `${base}w/${p.id}/`, maj: majProjet(p) })),
+    ...projets.flatMap((p) => [
+      { url: `${base}w/${p.id}/`, maj: majProjet(p) },
+      ...annexesDe(p).map((a) => ({ url: `${base}w/${p.id}/${a.id}/`, maj: majProjet(p) })),
+    ]),
   ];
   const lignes = pages.map(({ url, maj }) => [
     '  <url>',
@@ -1574,6 +1633,7 @@ function generer(maintenant = Date.now()) {
   const faits = [ecrire(path.join(PUBLIE, 'index.html'), rendreAccueil(projets, maintenant, base))];
   for (const p of projets) {
     faits.push(ecrire(path.join(PUBLIE, 'w', p.id, 'index.html'), rendreProjet(p, maintenant, base)));
+    for (const a of annexesDe(p)) faits.push(ecrire(path.join(PUBLIE, 'w', p.id, a.id, 'index.html'), rendreAnnexe(p, a, base)));
   }
   if (base) faits.push(ecrire(path.join(PUBLIE, 'sitemap.xml'), rendreSitemap(projets, base)));
   return { projets, faits, base };
@@ -1587,4 +1647,4 @@ if (require.main === module) {
   if (sans.length) console.log(`\nSans vitrine.json (presentation minimale) : ${sans.join(', ')}`);
 }
 
-module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreSitemap, baseDe, sectionDemo, dimensionsImage };
+module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreAnnexe, annexesDe, rendreSitemap, baseDe, sectionDemo, dimensionsImage };

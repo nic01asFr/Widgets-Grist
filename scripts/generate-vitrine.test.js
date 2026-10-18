@@ -74,10 +74,13 @@ test('la vitrine n’ecrit jamais par-dessus un widget', () => {
 test('chaque projet du manifeste a sa page, et une seule', () => {
   const { projets, faits } = V.generer();
   const pages = faits.filter((f) => f.startsWith('w/'));
-  assert.equal(pages.length, projets.length);
+  // Un projet peut avoir des annexes (un guide, par exemple) : une page de plus chacune, sous le dossier du projet.
+  const annexes = projets.flatMap((p) => V.annexesDe(p).map((a) => `w/${p.id}/${a.id}/index.html`));
+  assert.equal(pages.length, projets.length + annexes.length);
   for (const p of projets) {
     assert.ok(pages.includes(`w/${p.id}/index.html`), `page manquante pour ${p.id}`);
   }
+  for (const a of annexes) assert.ok(pages.includes(a), `annexe manquante : ${a}`);
 });
 
 test('la page d’un projet mene au widget et revient a l’accueil', () => {
@@ -156,10 +159,12 @@ test('le plan du site liste l’accueil et chaque projet, une seule fois', () =>
   const xml = fs.readFileSync(path.join(__dirname, '..', 'published', 'sitemap.xml'), 'utf8');
   const { projets, base } = V.generer();
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.equal(locs.length, projets.length + 1);
+  const annexes = projets.flatMap((p) => V.annexesDe(p).map((a) => `${base}w/${p.id}/${a.id}/`));
+  assert.equal(locs.length, projets.length + 1 + annexes.length);
   assert.equal(new Set(locs).size, locs.length, 'une URL apparait deux fois');
   assert.ok(locs.includes(base));
   for (const p of projets) assert.ok(locs.includes(`${base}w/${p.id}/`), `${p.id} absent du plan`);
+  for (const a of annexes) assert.ok(locs.includes(a), `annexe absente du plan : ${a}`);
 });
 
 test('le plan date les pages d’apres le projet, pas d’apres la generation', () => {

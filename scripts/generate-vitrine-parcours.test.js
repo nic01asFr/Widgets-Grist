@@ -99,7 +99,9 @@ test('sans script, tout reste lisible : le bouton « Copier » est masque et les
   const html = rendre(fiche());
   assert.match(html, /<button type="button" class="copier" hidden>Copier<\/button>/);
   assert.match(html, /\.carrousel:not\(\.pret\) \.prec/);
-  assert.match(html, /\.diapo\.actif, \.carrousel:not\(\.pret\) \.diapo \{ opacity: 1; \}/, 'avant le script, aucune diapositive n\'est grisee');
+  assert.match(html, /\.diapo\.actif img, \.carrousel:not\(\.pret\) \.diapo img \{ opacity: 1; \}/, 'avant le script, aucune image n\'est grisee');
+  assert.doesNotMatch(html, /\.diapo \{[^}]*opacity/, 'seul le texte garde son contraste : on estompe les images voisines, pas la diapositive');
+  assert.doesNotMatch(html, /<article class="diapo/, 'une diapositive est un groupe, pas un article');
   assert.match(html, /prefers-reduced-motion: reduce/);
 });
 
@@ -195,4 +197,53 @@ test('les dimensions d\'une image se lisent dans son en-tete, PNG comme JPEG', (
     assert.equal(V.dimensionsImage(path.join(dossier, 'c.txt')), null);
     assert.equal(V.dimensionsImage(path.join(dossier, 'absente.png')), null, 'une image absente ne fait pas planter la page');
   } finally { fs.rmSync(dossier, { recursive: true, force: true }); }
+});
+
+/* ---------- les pages annexes ---------- */
+
+const ficheAvecAnnexe = (annexes) => ({
+  id: 'x', widgets: [W('x', 'https://s.io/r/x/')],
+  presentation: { nom: 'X', pitch: 'Un produit', produit: { annexes } },
+});
+const ANNEXE = {
+  id: 'integrer', titre: 'Mettre X dans votre page', chapeau: 'Trois étapes avec `code`.',
+  blocs: [
+    { titre: 'Étape 1', paragraphes: ['Une ligne.'], code: { titre: 'HTML', langage: 'html', source: '<x-carte src="a"></x-carte>' } },
+    { titre: 'Attributs', tableauTitre: 'Les attributs', tableau: { colonnes: ['Attribut', 'Rôle'], lignes: [['`src`', 'Adresse']] } },
+    { titre: 'Limites', liste: ['Une limite'] },
+    { titre: 'Plus loin', liens: [{ libelle: 'Le guide', url: 'https://h.fr/guide' }, { libelle: 'Un essai', url: '../../../x/essai/', bouton: true }] },
+  ],
+};
+
+test('une annexe se rend sous le dossier du projet, renvoie a sa page, et echappe son code', () => {
+  const p = ficheAvecAnnexe([ANNEXE]);
+  const html = V.rendreAnnexe(p, V.annexesDe(p)[0], BASE);
+  assert.match(html, /<title>Mettre X dans votre page — X<\/title>/);
+  assert.match(html, /<a class="retour" href="\.\.\/">← X<\/a>/);
+  assert.match(html, /<h1>Mettre X dans votre page<\/h1>/);
+  assert.match(html, /<p class="chapeau">Trois étapes avec <code>code<\/code>\.<\/p>/);
+  assert.match(html, /<h2>Étape 1<\/h2>/);
+  assert.ok(!html.includes('<x-carte src="a">'), 'le code n\'est pas interprete');
+  assert.match(html, /&lt;x-carte src=&quot;a&quot;&gt;&lt;\/x-carte&gt;/);
+  assert.match(html, /<caption>Les attributs<\/caption>/);
+  assert.match(html, /<th scope="row"><code>src<\/code><\/th>/);
+  assert.match(html, /<li>Une limite<\/li>/);
+  assert.match(html, /href="https:\/\/h\.fr\/guide" target="_blank" rel="noopener"/);
+  assert.match(html, /class="bouton creux" href="\.\.\/\.\.\/\.\.\/x\/essai\/"/);
+  assert.match(html, /class="copier" hidden/, 'le bouton Copier est present, masque sans script');
+  assert.match(html, /<link rel="canonical" href="https:\/\/s\.io\/r\/w\/x\/integrer\/">/);
+});
+
+test('seule une annexe avec un identifiant sur, et un titre, est rendue ; sans annexe, aucune page de plus', () => {
+  assert.deepEqual(V.annexesDe(ficheAvecAnnexe(undefined)), []);
+  assert.deepEqual(V.annexesDe(ficheAvecAnnexe([{ titre: 'Sans identifiant' }, { id: 'x/../y', titre: 'Chemin dangereux' }, { id: 'ok-1', titre: 'Bon' }])).map((a) => a.id), ['ok-1']);
+});
+
+test('une annexe n\'ajoute rien a la page du projet, et un texte d\'annexe est echappe', () => {
+  const p = ficheAvecAnnexe([{ ...ANNEXE, titre: '<script>alert(1)</script>' }]);
+  const annexe = V.rendreAnnexe(p, V.annexesDe(p)[0], BASE);
+  assert.ok(!annexe.includes('<script>alert'));
+  assert.match(annexe, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  const page = rendre(p);
+  assert.ok(!page.includes('Mettre X dans votre page'), 'la page principale ne reprend pas le contenu de l\'annexe');
 });
