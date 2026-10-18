@@ -46,14 +46,10 @@
           "label": "Précisez",
           "type": "Text",
           "widget": "text",
-          "visibleIf": {
-            "all": [
-              {
-                "field": "Nature",
-                "op": "==",
-                "value": "Autre"
-              }
-            ]
+          "condition": {
+            "field": "Nature",
+            "operator": "==",
+            "value": "Autre"
           }
         },
         {
@@ -94,7 +90,6 @@
           "widget": "geo",
           "kind": "geometrie",
           "required": true,
-          "help": "Touchez la carte, ou utilisez votre position.",
           "options": {
             "geometrie": "Point",
             "carte": {
