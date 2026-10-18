@@ -88,3 +88,27 @@ describe('Taille de texte — jamais sous 14 px', () => {
     assert.match(CSS, /^small \{ font-size: 0\.875rem; \}/m);
   });
 });
+
+describe('Compositeur — les reglages et l\'ajout rapide offrent ce que le moteur sait faire', () => {
+  const BUILDER = fs.readFileSync(path.join(__dirname, '..', 'builder.html'), 'utf8');
+
+  it('l\'ajout rapide propose les types moins courants dans une liste, pas seulement les puces', () => {
+    const rendu = BUILDER.slice(BUILDER.indexOf('function renderAjoutRapide'), BUILDER.indexOf('function typeAjout'));
+    assert.match(rendu, /FormUx\.ADVANCED_TYPES/);
+    assert.match(rendu, /Autres types/);
+    assert.match(rendu, /aria-label="Autres types de r/);
+  });
+
+  it('la precision du GPS et le clavier ont leur reglage, branche sur les options que le moteur lit', () => {
+    assert.match(BUILDER, /App\.onPrecision\(/);
+    assert.match(BUILDER, /f\.options\.precisionCol = valeur/);
+    assert.match(BUILDER, /App\.onClavier\(/);
+    assert.match(BUILDER, /clavier\.inputmode = valeur/);
+  });
+
+  it('le point attendu s\'ecrit avec l\'espace, comme le moteur l\'ecrit', () => {
+    const moteur = fs.readFileSync(path.join(__dirname, '..', 'runtime', 'engine.js'), 'utf8');
+    assert.ok(!/POINT\(5\.37/.test(moteur));
+    assert.match(moteur, /placeholder="POINT \(5\.37 43\.29\)"/);
+  });
+});

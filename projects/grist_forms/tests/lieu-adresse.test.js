@@ -89,9 +89,9 @@ describe('Lieu — dans le moteur', () => {
 
   it('le texte du point est caché dès qu\'il y a une adresse ; la carte seule le laisse comme avant', () => {
     const deux = Engine.renderFieldHtml(geo({ saisieLieu: 'les-deux' }), {}, null, def([]));
-    assert.match(deux, /<input[^>]*name="Lieu"[^>]*placeholder="POINT\(5\.37 43\.29\)" hidden/);
+    assert.match(deux, /<input[^>]*name="Lieu"[^>]*placeholder="POINT \(5\.37 43\.29\)" hidden/);
     const carte = Engine.renderFieldHtml(geo({}), {}, null, def([]));
-    assert.ok(!/placeholder="POINT\(5\.37 43\.29\)" hidden/.test(carte));
+    assert.ok(!/placeholder="POINT \(5\.37 43\.29\)" hidden/.test(carte));
   });
 
   it('« adresse » seule : pas de carte, pas d\'onglet, le champ d\'adresse visible', () => {

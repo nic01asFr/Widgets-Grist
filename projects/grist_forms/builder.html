@@ -452,6 +452,8 @@
     font: inherit; font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0.6rem; border-radius: 999px;
     border: 1px solid var(--grey-925, #e5e5e5); background: transparent; color: var(--encre-douce, #666);
   }
+  .ajout__plus { width: auto; min-height: 2rem; padding: 0.15rem 0.5rem; font-size: 0.875rem; }
+  .ajout__plus.est-actif { border-color: var(--blue-france, #000091); box-shadow: inset 0 0 0 1px var(--blue-france, #000091); }
   .ajout__type:hover { border-color: var(--blue-france, #000091); color: var(--blue-france, #000091); }
   .ajout__type.est-actif { background: var(--blue-france, #000091); border-color: var(--blue-france, #000091); color: #fff; }
 
@@ -2594,6 +2596,16 @@ function renderAjoutRapide(si) {
   const types = ((window.FormUx && FormUx.SIMPLE_TYPES) || []).map(t =>
     `<button type="button" class="ajout__type${S.typeAjout === t.key ? ' est-actif' : ''}"
       onclick="App.typeAjout('${esc(t.key)}')">${esc(t.label)}</button>`).join('');
+  // Les types moins courants (lieu, adresse, signature, curseur, heure…) ne sont pas cachés dans les
+  // réglages : une liste les offre dans le même geste que les puces.
+  const plus = ((window.FormUx && FormUx.ADVANCED_TYPES) || []);
+  const plusActif = plus.some(t => t.key === S.typeAjout);
+  const autres = plus.length
+    ? `<select class="fr-select ajout__plus${plusActif ? ' est-actif' : ''}" aria-label="Autres types de réponse"
+        onchange="if (this.value) App.typeAjout(this.value)">
+        <option value="">Autres types…</option>
+        ${plus.map(t => `<option value="${esc(t.key)}" ${S.typeAjout === t.key ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}
+      </select>` : '';
   // Le bouton « + Ajouter une question » a disparu de la carte d'étape : il
   // n'avait pas sa place dans les réglages, puisqu'on ajoute en regardant le
   // formulaire. Mais une ligne de saisie muette ne dit pas qu'elle ajoute :
@@ -2609,7 +2621,7 @@ function renderAjoutRapide(si) {
           onclick="App.ajouterDepuisTexte(${si}, document.getElementById('ajout-rapide').value)">Ajouter</button>
       </div>
       <p class="ajout__aide">Type de réponse :</p>
-      <div class="ajout__types">${types}</div>
+      <div class="ajout__types">${types}${autres}</div>
     </div>`;
 }
 
@@ -2864,6 +2876,26 @@ function renderReglagesCommuns(def, si, f, fi) {
         <option value="carte" ${m === 'carte' ? 'selected' : ''}>Toucher la carte</option>
         <option value="les-deux" ${m === 'les-deux' ? 'selected' : ''}>Carte ou adresse, au choix</option>
         <option value="adresse" ${m === 'adresse' ? 'selected' : ''}>Taper une adresse</option></select></div>`;
+  }
+  // ── Lieu : la précision du GPS, quand la personne s'est localisée avec son appareil ──
+  if (f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
+    const numeriques = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Numeric' || c.type === 'Int');
+    const courantePrec = o.precisionCol || '';
+    const choixPrec = numeriques.map(c => `<option value="${esc(c.colId)}" ${c.colId === courantePrec ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('');
+    html += `<div class="fr-select-group"><label class="fr-label" for="prec-${si}-${fi}">Noter la précision du GPS (en mètres) dans
+        ${hintIcon('Remplie seulement quand la personne utilise « Ma position ». Vide si le point est posé sur la carte ou choisi par adresse.')}</label>
+      <select class="fr-select" id="prec-${si}-${fi}" onchange="App.onPrecision(${si}, ${fi}, this.value)">
+        <option value="">— ne pas la noter —</option>${choixPrec}</select></div>`;
+  }
+  // ── Clavier : ce que le téléphone ouvre pour une saisie de texte ou de nombre ──
+  if ((f.type === 'Text' || f.type === 'Int' || f.type === 'Numeric') && !f.kind && ['text', 'number'].includes(f.widget)) {
+    const modeClavier = (o.clavier && o.clavier.inputmode) || '';
+    const claviers = [['', 'Automatique (selon le format)'], ['text', 'Lettres'], ['numeric', 'Chiffres'], ['decimal', 'Chiffres et virgule'],
+      ['tel', 'Téléphone'], ['email', 'Courriel'], ['url', 'Adresse web'], ['search', 'Recherche']];
+    html += `<div class="fr-select-group"><label class="fr-label" for="clav-${si}-${fi}">Clavier du téléphone
+        ${hintIcon('Le clavier qui s’ouvre. Laisser « Automatique » : il se déduit du format et du type de la colonne.')}</label>
+      <select class="fr-select" id="clav-${si}-${fi}" onchange="App.onClavier(${si}, ${fi}, this.value)">
+        ${claviers.map(([v, l]) => `<option value="${v}" ${v === modeClavier ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`;
   }
   // ── Lieu : ce que les services publics savent du point posé ──
   const enrichir = window.FormEnrichir;
@@ -4175,6 +4207,26 @@ function onSaisieLieu(si, fi, valeur) {
   renderBuilder();
 }
 
+/** La colonne qui reçoit la précision d'un relevé GPS ; vide : on ne la note pas. */
+function onPrecision(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur) f.options.precisionCol = valeur; else delete f.options.precisionCol;
+  renderBuilder();
+}
+
+/** Le clavier qu'ouvre un téléphone. Automatique = rien d'écrit : il se déduit du format. */
+function onClavier(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const clavier = Object.assign({}, f.options.clavier);
+  if (valeur) clavier.inputmode = valeur; else delete clavier.inputmode;
+  if (Object.keys(clavier).length) f.options.clavier = clavier; else delete f.options.clavier;
+  renderBuilder();
+}
+
 /** Le format qu'une question de texte contrôle (IBAN, SIRET…). */
 function onValidation(si, fi, valeur) {
   marquerModifie();
@@ -5415,7 +5467,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

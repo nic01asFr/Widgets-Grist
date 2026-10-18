@@ -1578,7 +1578,7 @@
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
       // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
       // n'est plus qu'une valeur interne, qu'on ne montre pas.
-      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
+      'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
