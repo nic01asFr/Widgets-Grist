@@ -172,6 +172,7 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Plusieurs points | un point par touche | WKT MultiPoint | livré | |
 | Ligne / surface | tracé sommet par sommet | WKT | livré | règles d'Atlas (`carte-geometrie.js`) |
 | Lieu complété | adresse, commune, bâtiment, altitude, risques | colonnes annexes | livré (`options.enrichir`) | services publics ; vide jamais 0 |
+| Précision du GPS | « Utiliser ma position » | Int (mètres) | livré (`options.precisionCol`) | vide si le point est posé à la carte, choisi par adresse ou déplacé ensuite ; réglée dans le compositeur |
 | Désigner un objet existant | clic, rectangle | Ref | absent | voir 3.5 |
 | Accrochage, refus des contours qui se recoupent | aides au tracé | — | absent | Atlas |
 | Cap, précision GPS | boussole, rayon | Numeric | absent | prévu dans Atlas (terrain) |

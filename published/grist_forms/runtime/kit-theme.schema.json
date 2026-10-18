@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Kit Theme",
+  "description": "Thème applicable à un composant du kit (kit-theme/0.1) : une liste fermée de 26 variables --kit-*, chacune une valeur bornée. Une clé s'écrit nue (accent) ou complète (--kit-accent). Un thème est une donnée non fiable : il vient d'un hôte, d'une table ou d'un fichier, et chaque valeur finit dans un attribut de style. Une clé hors liste ou une valeur hors syntaxe est écartée et signalée par le lecteur, jamais corrigée. Le lecteur ne calcule pas le contraste ; les valeurs mesurées viennent du générateur de thèmes.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "surface": {
+      "$ref": "#/definitions/valeur"
+    },
+    "surface-2": {
+      "$ref": "#/definitions/valeur"
+    },
+    "texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "texte-2": {
+      "$ref": "#/definitions/valeur"
+    },
+    "bord": {
+      "$ref": "#/definitions/valeur"
+    },
+    "bord-champ": {
+      "$ref": "#/definitions/valeur"
+    },
+    "accent": {
+      "$ref": "#/definitions/valeur"
+    },
+    "accent-texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "accent-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "action": {
+      "$ref": "#/definitions/valeur"
+    },
+    "action-texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "action-survol": {
+      "$ref": "#/definitions/valeur"
+    },
+    "action-actif": {
+      "$ref": "#/definitions/valeur"
+    },
+    "focus": {
+      "$ref": "#/definitions/valeur"
+    },
+    "ok": {
+      "$ref": "#/definitions/valeur"
+    },
+    "ok-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "attention": {
+      "$ref": "#/definitions/valeur"
+    },
+    "attention-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "attention-filet": {
+      "$ref": "#/definitions/valeur"
+    },
+    "alerte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "alerte-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "info": {
+      "$ref": "#/definitions/valeur"
+    },
+    "info-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "papier": {
+      "$ref": "#/definitions/valeur"
+    },
+    "ombre": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-surface": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-surface-2": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-texte-2": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-bord": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-bord-champ": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-accent": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-accent-texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-accent-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-action": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-action-texte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-action-survol": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-action-actif": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-focus": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-ok": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-ok-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-attention": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-attention-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-attention-filet": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-alerte": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-alerte-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-info": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-info-fond": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-papier": {
+      "$ref": "#/definitions/valeur"
+    },
+    "--kit-ombre": {
+      "$ref": "#/definitions/valeur"
+    }
+  },
+  "definitions": {
+    "valeur": {
+      "type": "string",
+      "maxLength": 48,
+      "pattern": "^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(?:rgb|rgba|hsl|hsla)\\(\\s*[0-9.%]{1,8}(?:\\s*[ ,/]\\s*[0-9.%]{1,8}){2,3}\\s*\\)|var\\(--[A-Za-z_][A-Za-z0-9_-]{0,63}\\))$",
+      "description": "Une couleur en syntaxe connue (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), hsla() à arguments numériques) ou une référence var(--nom) SANS valeur de repli. 48 caractères au plus. url(), calc(), color-mix(), un nom de couleur, un point-virgule ou une accolade sont refusés."
+    }
+  }
+}

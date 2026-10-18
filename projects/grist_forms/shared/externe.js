@@ -367,7 +367,7 @@
    * La page autonome : le moteur, le formulaire figé, et l'envoi par la clé.
    *
    * @param {object} formDef
-   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText }
+   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText }
    * @param {object} opts     { adresse: <lien du formulaire publié> }
    */
   function buildExternalDocument(formDef, bundles, opts) {
@@ -379,7 +379,7 @@
 
     var script = [
       bundles.typesJs || '', bundles.sessionContextJs || '', bundles.carteJs || '',
-      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.engineJs || '',
+      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.conditionsJs || '', bundles.engineJs || '',
       '(function () {',
       '  var DEF = ' + jsonPourScript(formDef || {}) + ';',
       '  var GUICHET = ' + jsonPourScript(guichet.base) + ';',

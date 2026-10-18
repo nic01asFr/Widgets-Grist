@@ -132,7 +132,7 @@ describe('géométrie — un point relevé sur place', () => {
     const html = Engine.renderFieldHtml(champ, {}, null, def);
     assert.ok(html.includes('Utiliser ma position'));
     assert.ok(html.includes('type="text"'), 'la saisie à la main reste possible');
-    assert.ok(html.includes('POINT(5.37 43.29)'), 'le format attendu est montré');
+    assert.ok(html.includes('POINT (5.37 43.29)'), 'le format attendu est montré');
   });
 
   it('écrit le WKT tel quel dans la colonne texte', () => {

@@ -14,8 +14,39 @@
       "lu_par": [
         "grist_forms (runtime)"
       ],
-      "empreinte": "sha256:1e1d27f3c0ae27f3",
-      "octets": 27548
+      "empreinte": "sha256:ec61dc5d279d6331",
+      "octets": 31991
+    },
+    {
+      "nom": "Conditions",
+      "version": "1.0",
+      "schema": "https://nic01asfr.github.io/Widgets-Grist/schemas/conditions-1.0.schema.json",
+      "porte": "La grammaire qui dit quand une étape, une question, un menu, une page ou un bouton se montre : règles { source, field|path, operator, value } et composés { op: and|or|not, rules }. Fermée : un opérateur ou une source inconnus sont une faute, jamais « vrai ».",
+      "produit_par": [
+        "grist_forms (builder)",
+        "qgis2grist (depuis une couche QField)",
+        "kit d'applications (appdef, à venir)"
+      ],
+      "lu_par": [
+        "grist_forms (moteur, shared/conditions.js)",
+        "kit d'applications (menus, pages, boutons, champs, à venir)"
+      ],
+      "empreinte": "sha256:407690a665e23938",
+      "octets": 5723
+    },
+    {
+      "nom": "Kit Theme",
+      "version": "0.1",
+      "schema": "https://nic01asfr.github.io/Widgets-Grist/schemas/kit-theme-0.1.schema.json",
+      "porte": "Le thème appliqué à un composant du kit : 26 variables --kit-* (fonds, textes, bords, accent, famille d'action, focus, états ok/attention/alerte/info), valeurs bornées et de syntaxe sûre. Liste fermée : une clé ou une valeur hors contrat est écartée et dite, jamais corrigée.",
+      "produit_par": [
+        "kit d'applications (générateur de thèmes, à venir)"
+      ],
+      "lu_par": [
+        "grist_forms (moteur, shared/theme.js)"
+      ],
+      "empreinte": "sha256:0b38628abb23c090",
+      "octets": 4808
     },
     {
       "nom": "Scene Manifest",

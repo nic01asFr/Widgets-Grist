@@ -2,8 +2,20 @@
 // dépendance jsdom : parseHtml + sélecteurs `tag`, `[attr="val"]`, `:checked`.
 'use strict';
 
+// Un style minimal : assez pour poser et retirer des variables CSS.
+function createStyle() {
+  var props = {};
+  return {
+    props: props,
+    setProperty: function (name, value) { props[name] = String(value); },
+    removeProperty: function (name) { var v = props[name]; delete props[name]; return v || ''; },
+    getPropertyValue: function (name) { return Object.prototype.hasOwnProperty.call(props, name) ? props[name] : ''; }
+  };
+}
+
 function createElement(tagName) {
   return {
+    style: createStyle(),
     tagName: tagName,
     attrs: {},
     children: [],
@@ -19,6 +31,17 @@ function createElement(tagName) {
     addEventListener: function (type, fn) {
       if (!this.listeners[type]) this.listeners[type] = [];
       this.listeners[type].push(fn);
+    },
+    removeEventListener: function (type, fn) {
+      var l = this.listeners[type];
+      if (!l) return;
+      var i = l.indexOf(fn);
+      if (i !== -1) l.splice(i, 1);
+    },
+    // Combien d'écouteurs restent posés : de quoi vérifier qu'un démontage ne fuit pas.
+    nbEcouteurs: function () {
+      var self = this;
+      return Object.keys(this.listeners).reduce(function (n, t) { return n + self.listeners[t].length; }, 0);
     },
     dispatchEvent: function (type) {
       var self = this;

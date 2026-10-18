@@ -85,6 +85,10 @@
     var enrichirJs = bundles.enrichirJs || '';
     // Départs, bornes et ordre entre deux questions : sans lui ces réglages ne font rien.
     var saisiesJs = bundles.saisiesJs || '';
+    // Les conditions, avant le moteur qui les évalue. Absent, le moteur se
+    // replie sur son ancien évaluateur : un formulaire déjà publié sans ce
+    // script continue de fonctionner.
+    var conditionsJs = bundles.conditionsJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -101,6 +105,7 @@
       formatsJs,
       enrichirJs,
       saisiesJs,
+      conditionsJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',

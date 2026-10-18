@@ -240,6 +240,13 @@ describe('Externe — la page', () => {
     assert.ok(html.includes("'Recu'") || html.includes('Recu:'), 'envoie un reçu');
   });
 
+  it('les conditions précèdent le moteur : une condition invalide vaut « faux » dans la page autonome aussi', () => {
+    const html = Externe.buildExternalDocument(formulaire(), { engineJs: '/*moteur*/', conditionsJs: '/*conditions*/', prefillJs: '/*prefill*/', cssText: 'body{}' },
+      { adresse: 'https://g.exemple.fr/o/org/forms/CLE123/7' });
+    assert.ok(html.indexOf('/*conditions*/') !== -1, 'les conditions sont dans la page');
+    assert.ok(html.indexOf('/*conditions*/') < html.indexOf('/*moteur*/'), 'avant le moteur');
+  });
+
   it('un titre ou un libellé piégé ne referme ni la balise ni le script', () => {
     const def = formulaire();
     def.title = '</title><script>alert(1)</script>';

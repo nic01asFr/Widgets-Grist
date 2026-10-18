@@ -11,14 +11,16 @@
       require('../shared/referentiel.js'),
       require('../shared/formats.js'),
       require('../shared/enrichir.js'),
-      require('../shared/saisies.js')
+      require('../shared/saisies.js'),
+      require('../shared/conditions.js'),
+      require('../shared/theme.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -89,117 +91,247 @@
     return String(v).trim().toLowerCase();
   }
 
-  function resolveRuleSource(rule) {
-    var source = rule.source || 'field';
-    var path = rule.path != null && rule.path !== '' ? rule.path : (rule.field || '');
-    if ((!rule.source || rule.source === 'field') && path.indexOf('context.') === 0) {
-      return { source: 'context', path: path.slice(8) };
-    }
-    if ((!rule.source || rule.source === 'field') && path.indexOf('audience.') === 0) {
-      return { source: 'audience', path: path.slice(9) };
-    }
-    return { source: source, path: path };
-  }
+  // ── Conditions ───────────────────────────────────────────────────────────
+  //
+  // L'évaluateur vit dans `shared/conditions.js` (contrat `conditions-1.0`) :
+  // un seul pour un formulaire, un bouton, un menu. Le moteur n'en garde que
+  // l'adaptation : ce qu'il fait d'une condition qu'on ne sait pas évaluer.
+  //
+  // > **Une condition invalide cache la question, et le dit.** L'évaluateur
+  // > d'origine répondait « vrai » à tout opérateur inconnu : une faute de
+  // > frappe montrait la question à tout le monde, sans qu'aucune erreur ne
+  // > l'annonce. Une condition qu'on ne comprend pas vaut désormais « faux »
+  // > (le champ reste caché) et l'erreur est journalisée, une seule fois.
 
-  function compareValues(actual, operator, expected) {
-    switch (operator) {
-      case '==': return actual == expected;
-      case '!=': return actual != expected;
-      case '>': return Number(actual) > Number(expected);
-      case '>=': return Number(actual) >= Number(expected);
-      case '<': return Number(actual) < Number(expected);
-      case '<=': return Number(actual) <= Number(expected);
-      case 'contains':
-        if (Array.isArray(actual)) return actual.indexOf(expected) !== -1;
-        if (actual == null) return false;
-        return String(actual).indexOf(String(expected)) !== -1;
-      case 'in': {
-        var list = Array.isArray(expected) ? expected : (expected != null && expected !== '' ? [expected] : []);
-        if (Array.isArray(actual)) {
-          return actual.some(function (a) {
-            return list.some(function (e) { return String(a) === String(e); });
-          });
+  /**
+   * Repli quand `shared/conditions.js` n'est pas chargé : l'évaluateur
+   * d'AVANT l'extraction, tel quel (un opérateur inconnu y vaut « vrai »).
+   *
+   * Il n'existe que pour les hôtes qui chargent `engine.js` sans connaître
+   * encore le nouveau script — pages qui n'ont pas été mises à jour, copies
+   * figées. Ajouter `shared/conditions.js` avant `engine.js` suffit à le
+   * retirer du chemin ; il disparaîtra quand plus aucun hôte n'en dépendra.
+   */
+  function conditionsDeRepli() {
+    var avertie = false;
+
+    function normaliserEmail(v) {
+      if (SessionContext.normalizeEmail) return SessionContext.normalizeEmail(v);
+      if (v == null || v === '') return '';
+      return String(v).trim().toLowerCase();
+    }
+
+    function resoudre(rule) {
+      var source = rule.source || 'field';
+      var path = rule.path != null && rule.path !== '' ? rule.path : (rule.field || '');
+      if ((!rule.source || rule.source === 'field') && path.indexOf('context.') === 0) {
+        return { source: 'context', path: path.slice(8) };
+      }
+      if ((!rule.source || rule.source === 'field') && path.indexOf('audience.') === 0) {
+        return { source: 'audience', path: path.slice(9) };
+      }
+      return { source: source, path: path };
+    }
+
+    function comparer(actual, operator, expected) {
+      switch (operator) {
+        case '==': return actual == expected;
+        case '!=': return actual != expected;
+        case '>': return Number(actual) > Number(expected);
+        case '>=': return Number(actual) >= Number(expected);
+        case '<': return Number(actual) < Number(expected);
+        case '<=': return Number(actual) <= Number(expected);
+        case 'contains':
+          if (Array.isArray(actual)) return actual.indexOf(expected) !== -1;
+          if (actual == null) return false;
+          return String(actual).indexOf(String(expected)) !== -1;
+        case 'in': case 'notIn': {
+          var list = Array.isArray(expected) ? expected : (expected != null && expected !== '' ? [expected] : []);
+          var dedans = Array.isArray(actual)
+            ? actual.some(function (a) { return list.some(function (e) { return String(a) === String(e); }); })
+            : list.some(function (e) { return String(actual) === String(e); });
+          return operator === 'in' ? dedans : !dedans;
         }
-        return list.some(function (e) { return String(actual) === String(e); });
+        case 'truthy': return !!actual;
+        default: return true;
       }
-      case 'notIn': {
-        var listN = Array.isArray(expected) ? expected : (expected != null && expected !== '' ? [expected] : []);
-        if (Array.isArray(actual)) {
-          return !actual.some(function (a) {
-            return listN.some(function (e) { return String(a) === String(e); });
-          });
+    }
+
+    function regle(rule, values, context) {
+      var resolved = resoudre(rule);
+      var source = resolved.source;
+      var path = resolved.path;
+      if (source === 'field' && !path) return true;
+      var actual;
+      var expected = rule.value;
+      if (source === 'context') {
+        actual = context ? context[path] : undefined;
+      } else if (source === 'audience') {
+        context = context || {};
+        if (path === 'email' || path === 'userEmail') actual = normaliserEmail(context.userEmail);
+        else if (path === 'group' || path === 'groups') actual = context.groups || [];
+        else if (path === 'member') actual = !!normaliserEmail(context.userEmail);
+        else actual = context[path];
+        if ((path === 'group' || path === 'groups') && rule.bind && Array.isArray(rule.bind.groups) && expected == null) {
+          expected = rule.bind.groups;
         }
-        return !listN.some(function (e) { return String(actual) === String(e); });
+        if ((path === 'email' || path === 'userEmail') && expected != null) {
+          expected = Array.isArray(expected) ? expected.map(normaliserEmail) : normaliserEmail(expected);
+        }
+      } else {
+        actual = values[path];
       }
-      case 'truthy': return !!actual;
-      default: return true;
+      return comparer(actual, rule.operator || '==', expected);
+    }
+
+    function condition(cond, values, context) {
+      if (!cond) return true;
+      if (cond.op && Array.isArray(cond.rules)) {
+        var rules = cond.rules;
+        if (!rules.length) return true;
+        var i;
+        if (cond.op === 'or') {
+          for (i = 0; i < rules.length; i++) if (condition(rules[i], values, context)) return true;
+          return false;
+        }
+        for (i = 0; i < rules.length; i++) if (!condition(rules[i], values, context)) return false;
+        return true;
+      }
+      return regle(cond, values, context);
+    }
+
+    return {
+      VERSION: 'repli',
+      ConditionInvalide: function ConditionInvalide() {},
+      validerCondition: function () { return []; },
+      evaluer: function (cond, portee) {
+        if (!avertie) {
+          avertie = true;
+          journaliser('avertissement', 'repli-conditions',
+            'shared/conditions.js n\'est pas chargé : repli sur l\'ancien évaluateur, où un opérateur ' +
+            'inconnu vaut « vrai ». Ajoutez le script avant runtime/engine.js.');
+        }
+        portee = portee || {};
+        return condition(cond, portee.values || {}, portee.context || {});
+      }
+    };
+  }
+
+  if (!Conditions || typeof Conditions.evaluer !== 'function') Conditions = conditionsDeRepli();
+
+  // Le journal : celui de l'hôte s'il en a donné un, sinon la console. Une
+  // faute donnée n'est dite qu'une fois — un formulaire se redessine à chaque
+  // réponse, et la même ligne cent fois noie ce qui compte.
+  var journalHote = null;
+  var dejaDit = {};
+  var nbDits = 0;
+  var MAX_DITS = 500;
+
+  /**
+   * Un hôte qui veut les erreurs du moteur ailleurs que dans la console.
+   * `fn({ niveau: 'erreur' | 'avertissement', source: 'FormEngine', message, ... })`.
+   * Sans argument, retour à la console. Remet aussi à zéro ce qui était « déjà dit ».
+   */
+  function definirJournal(fn) {
+    journalHote = typeof fn === 'function' ? fn : null;
+    dejaDit = {};
+    nbDits = 0;
+  }
+
+  function journaliser(niveau, cle, message, details) {
+    if (dejaDit[cle] || nbDits >= MAX_DITS) return;
+    dejaDit[cle] = true;
+    nbDits++;
+    var entree = { niveau: niveau, source: 'FormEngine', message: message };
+    if (details) { for (var k in details) { if (Object.prototype.hasOwnProperty.call(details, k)) entree[k] = details[k]; } }
+    if (journalHote) {
+      try { journalHote(entree); return; } catch (e) { /* le journal de l'hôte ne casse pas le formulaire */ }
+    }
+    if (typeof console !== 'undefined') {
+      var sortie = niveau === 'erreur' ? console.error : console.warn;
+      if (sortie) sortie.call(console, '[FormEngine] ' + message);
     }
   }
 
-  function resolveAudienceActual(path, rule, context) {
-    context = context || {};
-    if (path === 'email' || path === 'userEmail') {
-      return normalizeEmail(context.userEmail);
-    }
-    if (path === 'group' || path === 'groups') {
-      return context.groups || [];
-    }
-    if (path === 'member') {
-      return !!normalizeEmail(context.userEmail);
-    }
-    return context[path];
+  function cleCondition(condition) {
+    try { return JSON.stringify(condition); } catch (e) { return String(condition); }
   }
 
-  /** Règle atomique { field|path, operator, value, source?, bind? }. */
-  function evaluateRule(rule, values, context) {
-    if (!rule) return true;
-    var resolved = resolveRuleSource(rule);
-    var source = resolved.source;
-    var path = resolved.path;
-    if (source === 'field' && !path) return true;
-
-    var actual;
-    var expected = rule.value;
-    if (source === 'context') {
-      actual = context ? context[path] : undefined;
-    } else if (source === 'audience') {
-      actual = resolveAudienceActual(path, rule, context);
-      if ((path === 'group' || path === 'groups') && rule.bind && Array.isArray(rule.bind.groups) && expected == null) {
-        expected = rule.bind.groups;
-      }
-      if ((path === 'email' || path === 'userEmail') && expected != null) {
-        if (Array.isArray(expected)) expected = expected.map(normalizeEmail);
-        else expected = normalizeEmail(expected);
-      }
-    } else {
-      actual = values[path];
-    }
-    return compareValues(actual, rule.operator || '==', expected);
+  function direFautes(erreurs) {
+    return (erreurs || []).map(function (e) { return (e.chemin || '/') + ' : ' + e.message; }).join(' ; ');
   }
 
   /**
-   * Condition simple ou composé { op, rules }.
+   * Condition simple ou composée { op, rules }.
+   *
+   * Une condition invalide (opérateur, source ou composé inconnu, règle sans
+   * cible) vaut FAUX et est journalisée une fois : voir `conditions.js`.
+   *
    * @param {object|null} condition
    * @param {object} values réponses
    * @param {object} [context] SessionContext
    */
   function evaluateCondition(condition, values, context) {
     if (!condition) return true;
-    if (condition.op && Array.isArray(condition.rules)) {
-      var rules = condition.rules;
-      if (!rules.length) return true;
-      if (condition.op === 'or') {
-        for (var i = 0; i < rules.length; i++) {
-          if (evaluateCondition(rules[i], values, context)) return true;
-        }
+    try {
+      return Conditions.evaluer(condition, { values: values, context: context });
+    } catch (err) {
+      if (err && err.name === 'ConditionInvalide') {
+        journaliser('erreur', 'condition|' + cleCondition(condition),
+          'Condition invalide, elle vaut « faux » (l\'élément reste caché) : ' + direFautes(err.erreurs) +
+          ' — condition : ' + cleCondition(condition),
+          { code: 'condition_invalide', chemin: err.chemin, condition: condition, erreurs: err.erreurs });
         return false;
       }
-      for (var j = 0; j < rules.length; j++) {
-        if (!evaluateCondition(rules[j], values, context)) return false;
-      }
-      return true;
+      throw err;
     }
-    return evaluateRule(condition, values, context);
+  }
+
+  /** Règle atomique { field|path, operator, value, source?, bind? }. */
+  function evaluateRule(rule, values, context) {
+    return evaluateCondition(rule, values, context);
+  }
+
+  /**
+   * Les fautes de conditions d'un FormDef, chemin compris.
+   *
+   * Chaque faute : `{ chemin, code, message, bloquant, propositions? }` — le
+   * chemin est un pointeur JSON dans le FormDef (`/sections/2/fields/0/condition/operator`),
+   * le message dit quoi écrire à la place. Liste vide = rien à signaler.
+   * Les fautes `bloquant: true` font valoir la condition « faux » à
+   * l'exécution ; les autres (clé inconnue) sont tolérées mais signalées.
+   */
+  function validateFormDefConditions(formDef) {
+    var out = [];
+    function ajouter(cond, base) {
+      Conditions.validerCondition(cond).forEach(function (e) {
+        var copie = {};
+        for (var k in e) { if (Object.prototype.hasOwnProperty.call(e, k)) copie[k] = e[k]; }
+        copie.chemin = base + e.chemin;
+        out.push(copie);
+      });
+    }
+    ((formDef && formDef.sections) || []).forEach(function (sec, si) {
+      var base = '/sections/' + si;
+      if (sec && sec.condition) ajouter(sec.condition, base + '/condition');
+      ((sec && sec.fields) || []).forEach(function (f, fi) {
+        if (f && f.condition) ajouter(f.condition, base + '/fields/' + fi + '/condition');
+      });
+    });
+    return out;
+  }
+
+  /** Au chargement d'un formulaire : dire ce qui ne s'évaluera pas, avant qu'on ne se demande pourquoi une question manque. */
+  function signalerConditionsInvalides(formDef) {
+    var fautes = validateFormDefConditions(formDef);
+    var id = (formDef && (formDef.id || formDef.title)) || '?';
+    fautes.forEach(function (e) {
+      journaliser(e.bloquant ? 'erreur' : 'avertissement', 'formdef|' + id + '|' + e.chemin + '|' + e.code,
+        'Formulaire « ' + id + ' », ' + e.chemin + ' : ' + e.message +
+        (e.bloquant ? ' La condition vaut « faux » : l\'élément reste caché.' : ''),
+        { code: e.code, chemin: e.chemin, formulaire: id });
+    });
+    return fautes;
   }
 
   /** gate Bool (legacy) ou condition complète (parité v3 / chemins). */
@@ -325,6 +457,12 @@
           var idFormat = fmt && fmt.formatDeChamp(field);
           if (idFormat && typeof out[field.colId] === 'string') out[field.colId] = fmt.normalise(idFormat, out[field.colId]);
         }
+        // La precision d'un releve GPS (en metres) : valable tant que le point est celui que le GPS a donne.
+        // Un point deplace a la carte ou tape a la main n'a plus de precision a annoncer.
+        if (field.options && field.options.precisionCol) {
+          var releve = values['__precision_' + field.colId];
+          out[field.options.precisionCol] = (releve && releve.wkt === brut && Number.isFinite(releve.m)) ? releve.m : null;
+        }
         // Le texte libre de « Autre » a sa propre colonne : écrit dans la liste,
         // Grist le garderait mais l'encadrerait en rouge (mesuré).
         if (cols.autre) {
@@ -351,6 +489,10 @@
       if (meta.durationCol && Number(opts.demarreA) > 0) {
         out[meta.durationCol] = Math.round((Date.now() - Number(opts.demarreA)) / 1000);
       }
+      // Qui a repondu : seulement quand l'hote connait la personne. Jamais devinee, jamais demandee ;
+      // sans identite, la colonne reste vide.
+      var courriel = opts.email ? String(opts.email).trim().toLowerCase() : '';
+      if (meta.emailCol && courriel) out[meta.emailCol] = courriel;
     }
     return out;
   }
@@ -672,8 +814,15 @@
       '</header>';
   }
 
-  /** Ce qui s'affiche une fois la réponse envoyée. */
-  function renderSuccessHtml(formDef) {
+  /**
+   * Ce qui s'affiche une fois la réponse envoyée.
+   *
+   * @param {object} [opts] `{ enfile: true }` quand l'hôte a mis l'écriture en
+   *        file (hors ligne) : la réponse est gardée, pas encore partie. Le dire
+   *        est la moindre des choses — un « envoyé » qui n'en est pas un est
+   *        exactement l'échec silencieux que la file est faite pour éviter.
+   */
+  function renderSuccessHtml(formDef, opts) {
     var brand = (formDef && formDef.branding) || {};
     var successImg = renderBrandImg(
       brand.successImageUrl,
@@ -685,7 +834,13 @@
       (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
       '<div class="fr-alert fr-alert--success"><p>' +
       escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
-      '</p></div></div>';
+      '</p></div>' +
+      (opts && opts.enfile
+        ? '<div class="fr-alert fr-alert--info" role="status" data-enfile="1"><p>' +
+          'Réponse enregistrée sur cet appareil : elle partira dès que la connexion reviendra.' +
+          '</p></div>'
+        : '') +
+      '</div>';
   }
 
   function placeholderAttr(field) {
@@ -1423,13 +1578,23 @@
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
       // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
       // n'est plus qu'une valeur interne, qu'on ne montre pas.
-      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
+      'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
-      escapeHtml((values && values['__enrichi_' + field.colId]) || '') + '</p>' +
+      escapeHtml(phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
       mentionEnrichissement(field) +
       '</div>';
+  }
+
+  /**
+   * « Position relevée à 7 m près. » : dite tant que le point est celui que le GPS a donné. Elle vit dans les
+   * valeurs, pas dans la page, sinon le prochain affichage l'efface avant qu'on ait pu la lire.
+   */
+  function phrasePosition(values, colId, wkt) {
+    var releve = values && values['__precision_' + colId];
+    if (!releve || releve.wkt !== wkt || !Number.isFinite(releve.m)) return '';
+    return 'Position relevée à ' + releve.m + ' m près. ';
   }
 
   /** Ce qui part, et vers qui, quand un lieu complète d'autres colonnes. */
@@ -1754,7 +1919,25 @@
     return missing;
   }
 
-  // defaultSubmit : bridge.submit | updateRow si editRowId | addRow | BulkAddRecord
+  /**
+   * L'API Grist de la page — sauf si l'hôte a branché son propre client
+   * (`monter` avec `client`), auquel cas le moteur n'y touche pas : ni pour
+   * lire, ni pour écrire, ni pour envoyer une pièce jointe.
+   */
+  function gristDe(bridge) {
+    if (bridge && bridge.sansGrist) return null;
+    return (typeof window !== 'undefined' && window.grist) ? window.grist : null;
+  }
+
+  /** Ce qui part dans Grist : une ligne ajoutée, ou une ligne corrigée. */
+  function actionsDeSoumission(formDef, editId, data) {
+    if (editId != null) return [['UpdateRecord', formDef.tableId, editId, data]];
+    var cols = {};
+    for (var k in data) { if (Object.prototype.hasOwnProperty.call(data, k)) cols[k] = [data[k]]; }
+    return [['BulkAddRecord', formDef.tableId, [null], cols]];
+  }
+
+  // defaultSubmit : bridge.submit | updateRow si editRowId | addRow | appliquer | BulkAddRecord
   function defaultSubmit(bridge, formDef, data) {
     var editId = (bridge && bridge.editRowId) || (formDef && formDef.editRowId) || null;
     if (editId != null && bridge && typeof bridge.updateRow === 'function') {
@@ -1766,19 +1949,19 @@
     if (bridge && typeof bridge.addRow === 'function') {
       return Promise.resolve(bridge.addRow(formDef.tableId, data));
     }
-    if (typeof window !== 'undefined' && window.grist && window.grist.docApi && window.grist.docApi.applyUserActions) {
-      if (editId != null) {
-        return Promise.resolve(window.grist.docApi.applyUserActions([
-          ['UpdateRecord', formDef.tableId, editId, data]
-        ]));
-      }
-      var cols = {};
-      for (var k in data) { if (Object.prototype.hasOwnProperty.call(data, k)) cols[k] = [data[k]]; }
-      return Promise.resolve(window.grist.docApi.applyUserActions([
-        ['BulkAddRecord', formDef.tableId, [null], cols]
-      ]));
+    // Le client d'un hôte (contrat de données : `appliquer(actions, etiquette)`).
+    // Il peut répondre `{ enfile: true }` : l'écriture est gardée, pas partie.
+    if (bridge && typeof bridge.appliquer === 'function') {
+      return Promise.resolve(bridge.appliquer(
+        actionsDeSoumission(formDef, editId, data),
+        'Formulaire « ' + ((formDef && (formDef.title || formDef.id)) || formDef.tableId) + ' »'
+      ));
     }
-    return Promise.reject(new Error('[Engine.mount] aucun mécanisme de soumission (bridge.submit / bridge.addRow / grist.docApi)'));
+    var g = gristDe(bridge);
+    if (g && g.docApi && g.docApi.applyUserActions) {
+      return Promise.resolve(g.docApi.applyUserActions(actionsDeSoumission(formDef, editId, data)));
+    }
+    return Promise.reject(new Error('[Engine.mount] aucun mécanisme de soumission (bridge.submit / bridge.addRow / bridge.appliquer / grist.docApi)'));
   }
 
   /**
@@ -2030,15 +2213,22 @@
     // sinon, et rend le focus au champ qui l'avait.
     var renduEnAttente = false;
     var pointeurEnfonce = false;
+    // Démonté : plus aucun rendu, plus aucun écouteur. Une minuterie ou une
+    // réponse qui arrive après coup ne doit pas redessiner dans un conteneur
+    // que l'hôte a rendu à autre chose.
+    var demonte = false;
+    var docEcoute = null;
+    function surPointeurEnfonce() {
+      var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
+      if (!doc || typeof doc.addEventListener !== 'function') return;
+      pointeurEnfonce = true;
+      // Sur le document : le doigt peut se lever hors du formulaire.
+      docEcoute = doc;
+      doc.addEventListener('pointerup', relacherPointeur, { capture: true, once: true });
+      doc.addEventListener('pointercancel', relacherPointeur, { capture: true, once: true });
+    }
     if (typeof rootEl.addEventListener === 'function') {
-      rootEl.addEventListener('pointerdown', function () {
-        var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
-        if (!doc || typeof doc.addEventListener !== 'function') return;
-        pointeurEnfonce = true;
-        // Sur le document : le doigt peut se lever hors du formulaire.
-        doc.addEventListener('pointerup', relacherPointeur, { capture: true, once: true });
-        doc.addEventListener('pointercancel', relacherPointeur, { capture: true, once: true });
-      }, true);
+      rootEl.addEventListener('pointerdown', surPointeurEnfonce, true);
     }
     var context = (SessionContext.emptyContext && SessionContext.emptyContext()) || {
       inGristWidget: false, canWriteNative: false, isLoggedIn: false, userEmail: '', groups: []
@@ -2049,7 +2239,7 @@
 
     function loader() {
       if (typeof bridge.loadTable === 'function') return bridge.loadTable.bind(bridge);
-      if (typeof window !== 'undefined' && window.GristBridge && window.GristBridge.loadTable) {
+      if (!bridge.sansGrist && typeof window !== 'undefined' && window.GristBridge && window.GristBridge.loadTable) {
         return window.GristBridge.loadTable;
       }
       return null;
@@ -2115,7 +2305,7 @@
     }
 
     function rendreEnAttente() {
-      if (!renduEnAttente) return;
+      if (!renduEnAttente || demonte) return;
       renduEnAttente = false;
       // Le clic a lance l'envoi : son propre rendu fait foi.
       if (submitting) return;
@@ -2222,6 +2412,7 @@
     }
 
     function render() {
+      if (demonte) return;
       var sections = getVisibleSections(formDef, values, context);
       if (!sections.length) {
         rootEl.innerHTML = '<div class="fr-alert fr-alert--info"><p>Aucune section visible.</p></div>';
@@ -2472,8 +2663,8 @@
                 // chemin possible hors du navigateur (application empaquetée).
                 uploadFile: bridge.uploadFile,
                 getAccessToken: bridge.getAccessToken ||
-                  (typeof window !== 'undefined' && window.grist && window.grist.docApi
-                    ? function (opts) { return window.grist.docApi.getAccessToken(opts); }
+                  (gristDe(bridge) && gristDe(bridge).docApi
+                    ? function (opts) { return gristDe(bridge).docApi.getAccessToken(opts); }
                     : null),
                 fetch: bridge.fetch
               })
@@ -2481,12 +2672,21 @@
           Promise.resolve(resolveAtt).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
             var data = collectSubmitData(formDef, values, context,
-              { creation: enCreation, demarreA: demarreA });
+              { creation: enCreation, demarreA: demarreA, email: context.userEmail });
             return defaultSubmit(bridge, formDef, data);
-          }).then(function () {
+          }).then(function (res) {
             memoriserDernieres();
             submitting = false;
-            rootEl.innerHTML = renderSuccessHtml(formDef);
+            if (demonte) return;
+            var enfile = !!(res && res.enfile);
+            // Un rendu planifie par la derniere saisie attend son tour : sans cela il passe APRES l'envoi
+            // et remet le formulaire a la place de la confirmation, alors que la reponse est partie
+            // (la personne renverrait la meme).
+            renduEnAttente = false;
+            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile });
+            if (typeof bridge.surEnvoi === 'function') {
+              try { bridge.surEnvoi({ enfile: enfile, resultat: res }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
+            }
           }, function (err) {
             submitting = false;
             submitError = (err && err.message) || 'Erreur lors de l\'envoi.';
@@ -2609,6 +2809,7 @@
             deposerFichier(colId, file);
           }
         }).then(function (vue) {
+          if (demonte) { try { vue.detruire(); } catch (e) { /* déjà parti */ } return; }
           var attente = hote.querySelector('.fr-dessin__attente');
           if (attente) attente.remove();
           dessins[colId] = { hote: hote, vue: vue, traits: garde.traits || [] };
@@ -2736,6 +2937,7 @@
             if (champGeo) declencherEnrichissement(champGeo, wkt);
           }
         }).then(function (vue) {
+          if (demonte) { try { vue.detruire(); } catch (e) { /* déjà parti */ } return; }
           var attente = hote.querySelector('.fr-carte__attente');
           if (attente) attente.remove();
           cartes[colId] = { hote: hote, vue: vue };
@@ -2800,6 +3002,7 @@
           // repondant de faire le lien.
           onRepere: function (option) { montrerOption(hote, option); }
         }).then(function (vue) {
+          if (demonte) { try { vue.detruire(); } catch (e) { /* déjà parti */ } return; }
           var attente = hote.querySelector('.fr-carte__attente');
           if (attente) attente.remove();
           cartes[cle] = { hote: hote, vue: vue };
@@ -2930,7 +3133,8 @@
     function afficherEtatLieu(colId, texte) {
       var bloc = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"]');
       var etat = bloc && bloc.querySelector('.fr-geo__etat');
-      if (etat) etat.textContent = texte;
+      var champ = bloc && bloc.querySelector('input[name="' + colId + '"]');
+      if (etat) etat.textContent = phrasePosition(values, colId, champ && champ.value) + texte;
     }
 
     function brancherPositions(champsPage) {
@@ -2956,6 +3160,7 @@
             // Même écriture que la carte (`POINT (x y)`) : une colonne ne mélange pas deux formes selon le geste.
             champ.value = 'POINT (' + lon + ' ' + lat + ')';
             delete values[champ.name + '__lieuChoisi'];
+            values['__precision_' + champ.name] = { wkt: champ.value, m: Math.round(pos.coords.accuracy) };
             if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
             if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
               champ.dispatchEvent(new Event('change', { bubbles: true }));
@@ -3012,10 +3217,13 @@
 
     function boot() {
       appliquerDeparts(false);
+      // Une condition qu'on ne sait pas évaluer se dit au chargement, avant
+      // qu'on ne se demande pourquoi une question manque.
+      signalerConditionsInvalides(formDef);
       var load = loader();
       var tables = collectRefTableIds(formDef);
       var aud = SessionContext.audienceConfig ? SessionContext.audienceConfig(formDef) : { mode: 'none', probe: false };
-      if (SessionContext.detectInGristWidget) {
+      if (SessionContext.detectInGristWidget && !bridge.sansGrist) {
         context.inGristWidget = SessionContext.detectInGristWidget();
         if (context.inGristWidget && !context.userEmail) context.isLoggedIn = true;
       }
@@ -3032,6 +3240,7 @@
             refRecords[t] = Array.isArray(rows) ? rowsToColumnar(rows) : rows;
           }, function () {});
         })).then(function () {
+          if (demonte) return;
           bridge.refRecords = refRecords;
           render();
         });
@@ -3050,28 +3259,255 @@
       }
 
       var probeFn = SessionContext.probe || function () { return Promise.resolve(context); };
+      var g = gristDe(bridge);
+      var pontPage = (!bridge.sansGrist && typeof window !== 'undefined') ? window.GristBridge : null;
       var probeBridge = {
         loadTable: load,
         listTables: bridge.listTables ||
-          (typeof window !== 'undefined' && window.grist && window.grist.docApi
-            ? function () { return window.grist.docApi.listTables(); } : null),
-        addRow: bridge.addRow || (typeof window !== 'undefined' && window.GristBridge && window.GristBridge.addRow
-          ? window.GristBridge.addRow : null),
-        deleteRow: bridge.deleteRow || (typeof window !== 'undefined' && window.GristBridge && window.GristBridge.deleteRow
-          ? window.GristBridge.deleteRow : null),
+          (g && g.docApi ? function () { return g.docApi.listTables(); } : null),
+        addRow: bridge.addRow || (pontPage && pontPage.addRow ? pontPage.addRow : null),
+        deleteRow: bridge.deleteRow || (pontPage && pontPage.deleteRow ? pontPage.deleteRow : null),
         getUserEmail: bridge.getUserEmail || null
       };
       Promise.resolve(probeFn(probeBridge, formDef, bridge.context ? { forceContext: Object.assign({}, context, bridge.context) } : {}))
         .then(afterContext, function () { afterContext(context); });
     }
 
+    /**
+     * Rendre le conteneur : plus d'écouteur, plus de carte ni de dessin, plus
+     * un seul rendu — y compris pour ce qui était déjà en route (minuterie,
+     * réponse d'une table, envoi). Sans danger si on l'appelle deux fois.
+     */
+    function demonter() {
+      if (demonte) return;
+      demonte = true;
+      renduEnAttente = false;
+      if (typeof rootEl.removeEventListener === 'function') {
+        rootEl.removeEventListener('pointerdown', surPointeurEnfonce, true);
+      }
+      if (docEcoute && typeof docEcoute.removeEventListener === 'function') {
+        docEcoute.removeEventListener('pointerup', relacherPointeur, { capture: true });
+        docEcoute.removeEventListener('pointercancel', relacherPointeur, { capture: true });
+      }
+      docEcoute = null;
+      Object.keys(cartes).forEach(function (k) {
+        try { if (cartes[k] && cartes[k].vue && cartes[k].vue.detruire) cartes[k].vue.detruire(); } catch (e) { /* déjà parti */ }
+      });
+      cartes = {};
+      Object.keys(dessins).forEach(function (k) {
+        try { if (dessins[k] && dessins[k].vue && dessins[k].vue.detruire) dessins[k].vue.detruire(); } catch (e) { /* déjà parti */ }
+      });
+      dessins = {};
+      rootEl.innerHTML = '';
+    }
+
+    /**
+     * Ce qui manque avant d'envoyer, sur TOUTES les étapes visibles — pas
+     * seulement celle qu'on a sous les yeux : l'hôte qui valide avant de passer
+     * la main doit savoir si le formulaire est complet.
+     *
+     * @returns {{ok:boolean, manquants:string[], conditionsInvalides:object[]}}
+     */
+    function valider() {
+      var sections = getVisibleSections(formDef, values, context);
+      // Relire l'étape affichée : un champ texte ne signale sa valeur qu'en perdant le focus.
+      if (!demonte && !surAccueil && sections.length && typeof rootEl.querySelector === 'function') {
+        var courante = sections[Math.min(stepIndex, sections.length - 1)];
+        try { readSectionValues(rootEl, getVisibleFields(courante, values, context), values); } catch (e) { /* étape non rendue */ }
+      }
+      var manquants = [];
+      sections.forEach(function (sec) {
+        validateRequired(getVisibleFields(sec, values, context), values).forEach(function (c) { manquants.push(c); });
+      });
+      var invalides = validateFormDefConditions(formDef).filter(function (e) { return e.bloquant; });
+      return { ok: !manquants.length && !invalides.length, manquants: manquants, conditionsInvalides: invalides };
+    }
+
     boot();
-    return { getValues: function () { return values; }, getContext: function () { return context; }, render: render };
+    return {
+      getValues: function () { return values; },
+      getContext: function () { return context; },
+      render: render,
+      demonter: demonter,
+      valider: valider
+    };
+  }
+
+  // ── L'API de montage ─────────────────────────────────────────────────────
+
+  /** Le module de validation du thème, s'il est là. Sans lui, aucun thème n'est posé : on ne pose pas ce qu'on ne sait pas juger. */
+  function themeApi() {
+    if (Theme && Theme.valider) return Theme;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormTheme && global.FormTheme.valider ? global.FormTheme : null;
+  }
+
+  /**
+   * Juge puis pose le thème sur le conteneur.
+   *
+   * > **Un thème est une donnée non fiable** : il vient d'un hôte, d'une table du
+   * > document, d'un fichier. Seules les variables du contrat (`shared/theme.js`,
+   * > `kit-theme/0.1`) et des valeurs d'une syntaxe sûre sont posées ; le reste est
+   * > écarté et dit dans le rapport, jamais corrigé.
+   *
+   * @returns {{ posees: string[], rapport: object }} les noms posés (pour les
+   *   retirer au démontage) et le jugement `{ version, applique, ignore, avertissements }`
+   */
+  function appliquerTheme(conteneur, theme) {
+    var posees = [];
+    var api = themeApi();
+    var vide = { version: 'kit-theme/0.1', applique: {}, ignore: [], avertissements: [] };
+    if (theme === undefined || theme === null) return { posees: posees, rapport: vide };
+    if (!api) {
+      vide.avertissements.push({ code: 'module-absent', conseil: 'shared/theme.js n’est pas chargé : aucun thème n’est posé.' });
+      return { posees: posees, rapport: vide };
+    }
+    var rapport = api.valider(theme);
+    if (conteneur && conteneur.style && typeof conteneur.style.setProperty === 'function') {
+      Object.keys(rapport.applique).forEach(function (nom) {
+        conteneur.style.setProperty(nom, rapport.applique[nom]);
+        posees.push(nom);
+      });
+    }
+    return { posees: posees, rapport: rapport };
+  }
+
+  function verifierClient(client) {
+    var manque = ['lireTable', 'appliquer'].filter(function (m) { return typeof client[m] !== 'function'; });
+    if (manque.length) {
+      throw new TypeError('[FormEngine.monter] client incomplet : il manque ' + manque.join(' et ') +
+        '. Le client suit le contrat de données (lireTable(table) → colonnaire, appliquer(actions, etiquette)).');
+    }
+  }
+
+  /**
+   * Le pont du moteur (`mount`) bâti sur un client du contrat de données.
+   *
+   * > **`lireTable(table)` ne prend qu'un argument**, et le moteur n'en passe
+   * > qu'un : ni colonnes, ni filtre. Le client rend la table entière, en
+   * > colonnaire ; le moteur filtre lui-même (cascades, filtres dynamiques).
+   * > `appliquer(actions, etiquette)` reçoit des UserActions Grist, et peut
+   * > répondre `{ enfile: true }` quand l'écriture est gardée pour plus tard.
+   */
+  function pontDepuisClient(client, options, avecSonde) {
+    verifierClient(client);
+    var pont = {
+      // Le moteur n'ira chercher ni `window.grist` ni `window.GristBridge`.
+      sansGrist: true,
+      loadTable: function (table) { return client.lireTable(table); },
+      appliquer: function (actions, etiquette) { return client.appliquer(actions, etiquette); },
+      // Sans cela, la sonde d'audience irait chercher l'API de la page : la
+      // personne est celle que le client dit, rien d'autre.
+      listTables: typeof client.listerTables === 'function'
+        ? function () { return client.listerTables(); }
+        : function () { return Promise.reject(new Error('listerTables absent du client')); }
+    };
+    if (avecSonde && typeof client.identite === 'function') {
+      pont.getUserEmail = function () {
+        return Promise.resolve(client.identite()).then(function (id) { return id && id.email; });
+      };
+    }
+    if (typeof client.televerser === 'function') {
+      pont.uploadFile = function (fichier) { return client.televerser(fichier); };
+    }
+    return pont;
+  }
+
+  /**
+   * Monter un formulaire dans un conteneur, sur le contrat de données du
+   * gabarit — la porte d'entrée des hôtes qui ne sont pas un widget Grist
+   * (le kit d'applications, une application de terrain). `mount` reste
+   * l'entrée historique, inchangée.
+   *
+   * @param {Element} conteneur
+   * @param {object}  formdef
+   * @param {object}  [options]
+   * @param {object}  [options.client]   contrat de données : `lireTable(table)`
+   *        colonnaire, `appliquer(actions, etiquette)`, et en option
+   *        `listerTables()`, `identite()` → { email, role }, `televerser(fichier)`.
+   *        Avec lui, le moteur n'accède plus à `window.grist`, ni pour lire ni pour
+   *        écrire. Sans lui, `monter` se comporte comme `mount` (pont de la page).
+   * @param {object}  [options.contexte] clés pour les conditions `source: context`
+   *        (site, bâtiment, rôle…), et `userEmail` / `groups` pour `audience`.
+   *        Sans `userEmail`, l'identité vient de `client.identite()`.
+   * @param {object}  [options.theme]    variables CSS posées sur le conteneur
+   *        (`{ accent: '#7a4b00' }` ou `{ '--kit-accent': '#7a4b00' }`) ; retirées
+   *        au démontage. Voir `docs/THEME-KIT.md`.
+   * @param {object}  [options.valeurs]  valeurs de départ (clés = colId)
+   * @param {*}       [options.ligne]    id d'une ligne à corriger (UpdateRecord)
+   * @param {function} [options.surEnvoi] `({ enfile, resultat })` après l'envoi
+   * @returns {{demonter:function, valeurs:function, valider:function, contexte:function, rendre:function}}
+   *          `valider()` → `{ ok, manquants, conditionsInvalides }`
+   */
+  function monter(conteneur, formdef, options) {
+    if (!conteneur) throw new TypeError('[FormEngine.monter] conteneur manquant.');
+    if (!formdef) throw new TypeError('[FormEngine.monter] formdef manquant.');
+    options = options || {};
+    var client = options.client || null;
+    var contexte = options.contexte && typeof options.contexte === 'object' ? options.contexte : null;
+
+    // Un contexte fourni par l'hôte écarte la sonde de `mount` (elle irait
+    // relire l'identité ailleurs) : on résout alors l'identité nous-mêmes,
+    // plus bas, sans écraser ce que l'hôte a dit.
+    var pont = client ? pontDepuisClient(client, options, !contexte) : {};
+    if (options.valeurs) pont.values = options.valeurs;
+    if (options.ligne != null) pont.editRowId = options.ligne;
+    if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
+    if (contexte) pont.context = Object.assign({}, contexte);
+
+    var themeRes = appliquerTheme(conteneur, options.theme);
+    var themePose = themeRes.posees;
+    var poignee = mount(conteneur, formdef, pont);
+    var fini = false;
+
+    if (client && contexte && !contexte.userEmail && typeof client.identite === 'function') {
+      Promise.resolve(client.identite()).then(function (id) {
+        if (fini) return null;
+        var brut = id && id.email ? String(id.email) : '';
+        var email = SessionContext.normalizeEmail ? SessionContext.normalizeEmail(brut) : brut.trim().toLowerCase();
+        var vivant = poignee.getContext();
+        if (email) { vivant.userEmail = email; vivant.isLoggedIn = true; }
+        if (id && id.role != null && contexte.role == null) vivant.role = id.role;
+        var aud = SessionContext.audienceConfig ? SessionContext.audienceConfig(formdef) : { mode: 'none' };
+        if (!email || aud.mode !== 'bind' || !aud.tableId || !SessionContext.groupsForEmail) return null;
+        return Promise.resolve(client.lireTable(aud.tableId)).then(function (brutTable) {
+          var lignes = SessionContext.rowsFromLoad ? SessionContext.rowsFromLoad(brutTable) : [];
+          vivant.groups = SessionContext.groupsForEmail(lignes, aud.emailCol, aud.groupCol, email);
+        }, function () { /* sans table d'audience, sans groupes */ });
+      }).then(function () {
+        if (!fini) poignee.render();
+      }, function () { /* identité indisponible : le formulaire reste celui d'un anonyme */ });
+    }
+
+    return {
+      demonter: function () {
+        if (fini) return;
+        fini = true;
+        poignee.demonter();
+        themePose.forEach(function (nom) {
+          if (conteneur.style && typeof conteneur.style.removeProperty === 'function') conteneur.style.removeProperty(nom);
+        });
+      },
+      valeurs: function () {
+        var v = poignee.getValues();
+        var copie = {};
+        Object.keys(v).forEach(function (k) { copie[k] = v[k]; });
+        return copie;
+      },
+      valider: poignee.valider,
+      contexte: poignee.getContext,
+      rendre: poignee.render,
+      // Ce que le thème posé a retenu, écarté et signalé : { version, applique, ignore, avertissements }.
+      theme: themeRes.rapport
+    };
   }
 
   return {
     evaluateCondition: evaluateCondition,
     evaluateRule: evaluateRule,
+    validateFormDefConditions: validateFormDefConditions,
+    definirJournal: definirJournal,
+    Conditions: Conditions,
     isSectionVisible: isSectionVisible,
     isFieldVisible: isFieldVisible,
     collectSubmitData: collectSubmitData,
@@ -3094,6 +3530,7 @@
     echelleDe: echelleDe,
     grouperParMatrice: grouperParMatrice,
     enrichirChamp: enrichirChamp,
-    mount: mount
+    mount: mount,
+    monter: monter
   };
 }));

@@ -201,6 +201,10 @@
         out.push({ id: enr[cle], type: sensE[cle], label: cle + ' — ' + label });
       });
     }
+    // La precision d'un releve GPS : un nombre de metres entiers, a cote du point.
+    if (field.options && field.options.precisionCol) {
+      out.push({ id: field.options.precisionCol, type: 'Int', label: 'Précision du GPS (m) — ' + label });
+    }
     if (field.kind === 'referentiel') {
       var sens = sensDuReferentiel(field);
       Object.keys(cols.annexes || {}).forEach(function (cle) {
@@ -228,6 +232,18 @@
         seen[col.id] = true;
         cols.push(col);
       });
+    });
+    // Les colonnes que personne ne remplit a la main : quand, combien de temps, qui.
+    var meta = (formDef && formDef.meta) || {};
+    [
+      ['timestampCol', 'DateTime', 'Reçue le'],
+      ['durationCol', 'Int', 'Durée de remplissage (s)'],
+      ['emailCol', 'Text', 'Courriel de la personne']
+    ].forEach(function (m) {
+      var id = meta[m[0]];
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      cols.push({ id: id, type: m[1], label: m[2] });
     });
     return cols;
   }
