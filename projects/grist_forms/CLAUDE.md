@@ -43,6 +43,7 @@ projects/grist_forms/
 │   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
 ├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
 ├── docs/THEME-KIT.md        # Variables --kit-* et correspondance avec les jetons du kit
+├── docs/THEMEDEF-SPEC.md    # ThemeDef 1.0 (brouillon relu) : document de thème éditable ; le moteur ne le lit pas, l'hôte oui
 ├── docs/MIGRATION-CONDITIONS.md  # Ce qui change pour qui écrit un FormDef (10/10/2026)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
@@ -225,7 +226,11 @@ section parmi d'autres.
 - **Le chrono part au clic sur « Commencer »**, pas a l'ouverture : lire la
   presentation n'est pas repondre. `meta.timestampCol` et `meta.durationCol` se
   remplissent seuls a l'envoi (en secondes) — la duree annoncee se verifie au
-  lieu de se reconduire d'une enquete a l'autre.
+  lieu de se reconduire d'une enquete a l'autre. `meta.emailCol` recoit le
+  courriel de la personne que l'hote connait (a la creation seulement, jamais
+  demande, vide sinon). `options.precisionCol` d'un lieu note la precision du GPS
+  en metres. Le compositeur regle les trois (accueil, et reglages du lieu) et
+  `ensure-schema` cree les colonnes.
 - **On remonte jusqu'au bandeau** en changeant d'etape, pas jusqu'au titre :
   s'arreter au titre poussait hors de l'ecran l'enseigne et l'avancement. La
   barre de progression est `sticky`.
