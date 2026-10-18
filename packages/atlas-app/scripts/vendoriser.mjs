@@ -14,6 +14,7 @@ import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { retirerPluginGrist, verifierPageApp } from './page-app.mjs';
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const racine = join(ici, '..', '..', '..');
@@ -158,9 +159,11 @@ async function main() {
   const reste = html.match(/https:\/\/(?:unpkg\.com|cdn\.jsdelivr\.net)\/[^"'\s)]+/g);
   if (reste) throw new Error('dépendances encore en ligne dans la page : ' + [...new Set(reste)].join(', '));
 
-  // Le script du plugin Grist n'a aucun sens dans l'application, et sa presence
-  // brouillait justement la detection de mode : on le retire du paquet.
-  html = html.replace(/\s*<script[^>]*grist-plugin-api\.js[^>]*><\/script>/g, '');
+  // Le script du plugin Grist n'a aucun sens dans l'application : sa presence fait croire a Atlas qu'un document l'encadre, et aucune
+  // donnee ne se charge. Depuis la 1.16.8 la page le charge par un petit script (plus par une balise) : page-app.mjs retire les deux
+  // formes, puis verifie qu'aucune adresse de l'API ne reste.
+  html = retirerPluginGrist(html);
+  verifierPageApp(html);
 
   // Le catalogue 3D est embarque : viser le dossier local plutot que le CDN.
   html = html.replace(/<\/head>/,
