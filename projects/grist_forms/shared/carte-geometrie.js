@@ -216,16 +216,20 @@
       var famille = geo.familleGeometrie(type) || 'Point';
       var multiple = /^Multi/.test(type);
 
+      // > **Une carte qui rouvre sur un point doit montrer ce point.** Le cadrage
+      // > venait des réglages de la question : un lieu posé ailleurs (par une
+      // > adresse, par la position du téléphone) restait hors de l'écran après
+      // > un redessin du formulaire.
+      var etat = { sommets: lireValeur(geo, opts.valeur, famille) };
+      var existe = famille === 'Point' && etat.sommets.length > 0;
       var carte = new maplibregl.Map({
         container: hote,
         style: styleDuFond(opts.fond),
-        center: opts.centre || [2.35, 46.6],
-        zoom: opts.zoom == null ? 5 : opts.zoom,
+        center: existe ? etat.sommets[0] : (opts.centre || [2.35, 46.6]),
+        zoom: existe ? Math.max(opts.zoom == null ? 5 : opts.zoom, 16) : (opts.zoom == null ? 5 : opts.zoom),
         attributionControl: { compact: true }
       });
       carte.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-
-      var etat = { sommets: lireValeur(geo, opts.valeur, famille) };
 
       /**
        * Ecrire une geometrie dans la colonne.
@@ -253,8 +257,9 @@
         ecrireGeometrie(versGeometrie(etat.sommets, type, multiple));
       }
 
+      var points = null;
       if (famille === 'Point') {
-        installerPoints(carte, maplibregl, etat, multiple, publierPoints);
+        points = installerPoints(carte, maplibregl, etat, multiple, publierPoints);
       } else {
         // > **Le trace ecrit sa geometrie directement.** Il passait par la
         // > fonction des points, qui ignore son argument et relit l'etat des
@@ -266,6 +271,11 @@
 
       return {
         carte: carte,
+        /** Poser le point de l'extérieur (une adresse choisie) et cadrer dessus. Rien pour une ligne ou une surface. */
+        poserPoint: points ? function (lon, lat) {
+          points.poser([lon, lat]);
+          try { carte.jumpTo({ center: [lon, lat], zoom: Math.max(carte.getZoom(), 17) }); } catch (e) { /* carte pas prête */ }
+        } : null,
         detruire: function () { try { carte.remove(); } catch (e) { /* déjà partie */ } }
       };
     });
@@ -298,15 +308,17 @@
       });
     }
 
-    carte.on('click', function (ev) {
-      var p = [ev.lngLat.lng, ev.lngLat.lat];
+    function poser(p) {
       if (multiple) etat.sommets.push(p);
       else etat.sommets = [p];
       redessiner();
       publier();
-    });
+    }
+
+    carte.on('click', function (ev) { poser([ev.lngLat.lng, ev.lngLat.lat]); });
 
     carte.on('load', redessiner);
+    return { poser: poser };
   }
 
   /**

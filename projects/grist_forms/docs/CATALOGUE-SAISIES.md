@@ -55,6 +55,7 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Format contrôlé | texte + règle | Text normalisé | livré (`options.validation`) | iban, siren, siret, codePostal, insee, courriel, telephone |
 | Format manquant | url, plaque d'immatriculation, NIR, date écrite, code APE… | Text | absent | à ajouter au catalogue `formats.js` |
 | Adresse | saisie + propositions BAN | Text + annexes | livré (`kind: referentiel`) | une seule source (BAN) |
+| Lieu par adresse ou par carte | onglets « Sur la carte » / « Par adresse », ou l'un des deux | Text (WKT) | livré (`options.saisieLieu` : `carte`, `adresse`, `les-deux`) | un point seulement ; même colonne, même enrichissement ; la carte se recentre sur le point ; sans le service d'adresses, la carte seule |
 | Valeur de l'URL | lue dans l'adresse de la page, verrouillable | Text | livré (`options.prefill`) | |
 | Lieu (WKT) | carte, position, saisie à la main | Text WKT | livré (`geo`, `kind: geometrie`) | |
 | Clavier adapté (téléphone, courriel, url) | `inputmode`, `autocomplete` | Text, Int, Numeric | livré (déduit du format et du type ; `options.clavier` pour le dire) | le champ reste un texte : seul le clavier change ; un nombre pouvant être négatif garde le clavier complet |

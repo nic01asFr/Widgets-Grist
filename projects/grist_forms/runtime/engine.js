@@ -1367,11 +1367,20 @@
    * > question impossible : le champ sous la carte accepte le WKT, et la
    * > position du telephone pose un point.
    */
+  /** Comment le lieu se renseigne (carte, adresse, les deux), sachant ce que la page sait faire. */
+  function modeLieuDe(field) {
+    var s = saisiesApi();
+    if (!s || !s.modeLieu) return 'carte';
+    var r = referentielApi();
+    return s.modeLieu(field, !!(r && r.sourceConnue('ban')));
+  }
+
   function renderGeo(field, value, values) {
     var id = fieldId(field);
     var v = value == null ? '' : String(value);
     var o = (field && field.options) || {};
-    var avecCarte = o.carte !== false;
+    var mode = modeLieuDe(field);
+    var avecCarte = o.carte !== false && mode !== 'adresse';
     var type = o.geometrie || 'Point';
     var carte = avecCarte
       ? '<div class="fr-carte" data-carte-de="' + escapeHtml(field.colId) + '" ' +
@@ -1382,11 +1391,39 @@
         '<p class="fr-hint-text fr-carte__attente">La carte s\u2019affiche ici.</p></div>' +
         '<p class="fr-hint-text fr-carte__mode">' + consigneCarte(type) + '</p>'
       : '';
-    return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo">' +
-      renderLabel(field, id) + carte +
+    var choix = '';
+    if (mode !== 'carte') {
+      var vals = values || {};
+      var onglet = mode === 'adresse' || vals[field.colId + '__lieuOnglet'] === 'adresse' ? 'adresse' : 'carte';
+      var ban = referentielApi().SOURCES.ban;
+      var libelleChoisi = vals[field.colId + '__lieuChoisi'] || '';
+      // Sans carte (désactivée par la question), il ne reste que l'adresse : pas d'onglet vers rien.
+      if (!carte) onglet = 'adresse';
+      var bascule = mode === 'les-deux' && carte
+        ? '<div class="fr-lieu__bascule" role="group" aria-label="Comment indiquer le lieu ?">' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-lieu__onglet" data-lieu-onglet="carte" aria-pressed="' + (onglet === 'carte') + '">Sur la carte</button>' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-lieu__onglet" data-lieu-onglet="adresse" aria-pressed="' + (onglet === 'adresse') + '">Par adresse</button></div>'
+        : '';
+      if (carte) carte = '<div class="fr-lieu__panneau" data-lieu-panneau="carte"' + (onglet === 'carte' ? '' : ' hidden') + '>' + carte + '</div>';
+      choix = bascule + carte +
+        '<div class="fr-lieu__panneau fr-referentiel" data-lieu-panneau="adresse" data-source="ban"' + (onglet === 'adresse' ? '' : ' hidden') + '>' +
+        '<label class="fr-label" for="' + id + '__adresse">Tapez une adresse</label>' +
+        '<div class="fr-referentiel__ligne">' +
+        '<input class="fr-input" type="text" id="' + id + '__adresse" name="' + escapeHtml(field.colId) + '__adresse" value="' +
+        escapeHtml(vals[field.colId + '__lieuTexte'] || '') + '" autocomplete="off" data-lieu-adresse />' +
+        '<button type="button" class="fr-btn fr-btn--secondary fr-referentiel__bouton">Rechercher</button></div>' +
+        '<p class="fr-hint-text fr-referentiel__etat" role="status" aria-live="polite"></p>' +
+        '<p class="fr-hint-text fr-referentiel__mention">' + escapeHtml(ban.mention + ' La recherche ne part que lorsque vous la lancez.') + '</p></div>' +
+        '<p class="fr-hint-text fr-geo__choisi" role="status" aria-live="polite">' +
+        (libelleChoisi ? escapeHtml('Lieu choisi : ' + libelleChoisi) : '') + '</p>';
+    }
+    return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo" data-lieu-mode="' + mode + '">' +
+      renderLabel(field, id) + (mode === 'carte' ? carte : choix) +
       '<div class="fr-geo__ligne">' +
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
-      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)" />' +
+      // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
+      // n'est plus qu'une valeur interne, qu'on ne montre pas.
+      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
@@ -2689,6 +2726,12 @@
             values[colId] = wkt;
             var champ = rootEl.querySelector('input[name="' + colId + '"]');
             if (champ) champ.value = wkt;
+            // Le point vient de la carte : l'adresse choisie plus tôt n'est plus celle qu'il dit.
+            if (values[colId + '__lieuChoisi'] !== undefined) {
+              delete values[colId + '__lieuChoisi'];
+              var choisiEl = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"] .fr-geo__choisi');
+              if (choisiEl) choisiEl.textContent = '';
+            }
             var champGeo = fields.filter(function (f) { return f.colId === colId; })[0];
             if (champGeo) declencherEnrichissement(champGeo, wkt);
           }
@@ -2774,6 +2817,82 @@
      * le dit et la saisie a la main reste possible. La geometrie est ecrite en
      * WKT, qui est ce qu'Atlas et QGIS lisent d'une colonne texte.
      */
+    // Les listes d'adresses des lieux, par colonne : détruites avant chaque redessin.
+    var lieux = {};
+
+    /**
+     * Un lieu qu'on renseigne par la carte, par une adresse, ou au choix.
+     *
+     * Choisir une adresse pose le même point qu'un toucher sur la carte : même
+     * colonne, même enrichissement. La carte se recadre dessus ; si elle n'est
+     * pas encore là, elle s'ouvrira sur la valeur.
+     */
+    function brancherLieu(bloc, champ, champGeo) {
+      var colId = bloc.getAttribute('data-colid');
+      if (lieux[colId]) { lieux[colId].detruire(); delete lieux[colId]; }
+      var mode = bloc.getAttribute('data-lieu-mode');
+      if (!mode || mode === 'carte') return;
+      var panneauCarte = bloc.querySelector('[data-lieu-panneau="carte"]');
+      var panneauAdresse = bloc.querySelector('[data-lieu-panneau="adresse"]');
+      var onglets = bloc.querySelectorAll('[data-lieu-onglet]');
+      var choisiEl = bloc.querySelector('.fr-geo__choisi');
+      var s = saisiesApi();
+      var r = referentielApi();
+      if (!panneauAdresse || !s || !r) return;
+
+      function montrer(nom) {
+        values[colId + '__lieuOnglet'] = nom;
+        if (panneauCarte) panneauCarte.hidden = nom !== 'carte';
+        panneauAdresse.hidden = nom !== 'adresse';
+        for (var k = 0; k < onglets.length; k++) {
+          onglets[k].setAttribute('aria-pressed', onglets[k].getAttribute('data-lieu-onglet') === nom ? 'true' : 'false');
+        }
+        // Une carte montée sous un panneau caché a une taille nulle : on la redimensionne en la montrant.
+        var c = cartes[colId];
+        if (nom === 'carte' && c && c.vue && c.vue.carte && typeof c.vue.carte.resize === 'function') c.vue.carte.resize();
+      }
+      for (var i = 0; i < onglets.length; i++) (function (b) {
+        if (typeof b.addEventListener === 'function') {
+          b.addEventListener('click', function () { montrer(b.getAttribute('data-lieu-onglet')); });
+        }
+      }(onglets[i]));
+
+      var champAdresse = panneauAdresse.querySelector('input[data-lieu-adresse]');
+      var etatAdresse = panneauAdresse.querySelector('.fr-referentiel__etat');
+      var vue = null;
+      if (champAdresse && typeof r.monter === 'function' && typeof document !== 'undefined') {
+        vue = r.monter(champAdresse, {
+          source: 'ban',
+          declenchement: 'validation',
+          hote: panneauAdresse,
+          etat: etatAdresse,
+          bouton: panneauAdresse.querySelector('.fr-referentiel__bouton'),
+          onTexte: function (texte) { values[colId + '__lieuTexte'] = texte; },
+          onChoisir: function (suggestion) {
+            var lieu = s.lieuDepuisSuggestion(suggestion);
+            if (!lieu) {
+              if (etatAdresse) etatAdresse.textContent = 'Cette adresse n\u2019a pas de coordonn\u00e9es : choisissez-en une autre, ou touchez la carte.';
+              return;
+            }
+            var c = cartes[colId];
+            if (c && c.vue && typeof c.vue.poserPoint === 'function') {
+              // La carte pose le point, l'écrit dans la colonne et lance l'enrichissement : un seul chemin, comme un toucher.
+              c.vue.poserPoint(lieu.longitude, lieu.latitude);
+            } else {
+              // Pas de carte (ou pas encore) : on écrit le point nous-mêmes ; la carte s'ouvrira dessus.
+              values[colId] = lieu.wkt;
+              if (champ) champ.value = lieu.wkt;
+              if (champGeo) declencherEnrichissement(champGeo, lieu.wkt);
+            }
+            // Après le point : la carte, en l'écrivant, efface l'adresse choisie (elle croit à un toucher).
+            values[colId + '__lieuChoisi'] = lieu.libelle;
+            if (choisiEl) choisiEl.textContent = 'Lieu choisi : ' + lieu.libelle;
+          }
+        });
+      }
+      lieux[colId] = { detruire: function () { if (vue && vue.detruire) vue.detruire(); } };
+    }
+
     /**
      * Un point a été posé (carte, position du navigateur, saisie à la main) :
      * compléter les colonnes que la question désigne.
@@ -2818,12 +2937,14 @@
       var blocs = rootEl.querySelectorAll('[data-widget="geo"]');
       for (var i = 0; i < blocs.length; i++) (function (bloc) {
         var bouton = bloc.querySelector('.fr-geo__ici');
-        var champ = bloc.querySelector('input[type="text"]');
+        // Le champ du point, par son nom : avec une saisie par adresse, le premier champ texte du bloc est celui de l'adresse.
+        var champ = bloc.querySelector('input[name="' + bloc.getAttribute('data-colid') + '"]') || bloc.querySelector('input[type="text"]');
         var etat = bloc.querySelector('.fr-geo__etat');
         var champGeo = (champsPage || []).filter(function (f) { return f.colId === bloc.getAttribute('data-colid'); })[0];
         if (champGeo && champ && typeof champ.addEventListener === 'function') {
           champ.addEventListener('change', function () { declencherEnrichissement(champGeo, champ.value); });
         }
+        brancherLieu(bloc, champ, champGeo);
         if (!bouton || typeof bouton.addEventListener !== 'function') return;
         bouton.addEventListener('click', function () {
           var geo = typeof navigator !== 'undefined' && navigator.geolocation;
@@ -2833,6 +2954,7 @@
             var lon = Math.round(pos.coords.longitude * 1e6) / 1e6;
             var lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
             champ.value = 'POINT(' + lon + ' ' + lat + ')';
+            delete values[champ.name + '__lieuChoisi'];
             if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
             if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
               champ.dispatchEvent(new Event('change', { bubbles: true }));

@@ -540,6 +540,11 @@
               "type": "string",
               "description": "Unite affichee apres une saisie numerique (h, m, %). N'est pas ecrite dans la cellule."
             },
+            "saisieLieu": {
+              "enum": ["carte", "adresse", "les-deux"],
+              "default": "carte",
+              "description": "Comment un lieu (point) se renseigne : en touchant la carte, en choisissant une adresse de la Base adresse nationale, ou l'un ou l'autre au choix. Sans effet pour une ligne ou une surface, ni sans le service d'adresses."
+            },
             "clavier": {
               "type": "object",
               "description": "Le clavier qu'un telephone ouvre et ce que le navigateur peut remplir. Se deduit du format et du type de la colonne ; ne change pas le type du champ.",

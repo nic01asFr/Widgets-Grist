@@ -119,7 +119,7 @@
           "type": "Text",
           "widget": "geo",
           "kind": "geometrie",
-          "description": "Touchez la carte : l’adresse et la commune se remplissent toutes seules.",
+          "description": "Touchez la carte ou tapez une adresse : l’adresse, la commune et le bâtiment se remplissent tout seuls.",
           "options": {
             "geometrie": "Point",
             "carte": {
@@ -137,7 +137,8 @@
                 "commune": "Commune",
                 "batiment": "RnbId"
               }
-            }
+            },
+            "saisieLieu": "les-deux"
           }
         },
         {

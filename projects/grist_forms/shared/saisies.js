@@ -265,8 +265,55 @@
     return (c.inputmode ? ' inputmode="' + c.inputmode + '"' : '') + (c.autocomplete ? ' autocomplete="' + c.autocomplete + '"' : '');
   }
 
+  // ── lieu : la carte, une adresse, ou les deux ──
+
+  var MODES_LIEU = ['carte', 'adresse', 'les-deux'];
+
+  /**
+   * Comment une question de lieu se renseigne.
+   *
+   * > **Un lieu se dit de deux façons, et personne n'a la même à la main.** On
+   * > touche la carte quand on est sur place ou qu'on sait où regarder ; on tape
+   * > une adresse quand on la connaît et qu'on n'est pas devant la carte. Les
+   * > deux écrivent le même point.
+   *
+   * Seul un point s'obtient par une adresse : une ligne ou une surface reste à la
+   * carte. Sans le service d'adresses, la carte seule : une question ne promet
+   * pas ce qu'elle ne sait pas tenir. Sans réglage, rien ne change.
+   *
+   * @param {object} field
+   * @param {boolean} adresseDisponible le service d'adresses est-il là
+   * @returns {'carte'|'adresse'|'les-deux'}
+   */
+  function modeLieu(field, adresseDisponible) {
+    var o = (field && field.options) || {};
+    if ((o.geometrie || 'Point') !== 'Point') return 'carte';
+    if (!adresseDisponible) return 'carte';
+    return MODES_LIEU.indexOf(o.saisieLieu) !== -1 ? o.saisieLieu : 'carte';
+  }
+
+  /**
+   * Le lieu qu'une adresse choisie désigne : le point, au format de la colonne,
+   * et le libellé à montrer. Une adresse sans coordonnées valides ne désigne rien.
+   *
+   * Les coordonnées sont des degrés ; `Number(null)` vaut 0, que l'on prendrait
+   * pour un lieu au large du golfe de Guinée : on écarte l'absence avant de convertir.
+   */
+  function lieuDepuisSuggestion(s) {
+    if (!s || s.longitude === null || s.longitude === undefined || s.latitude === null || s.latitude === undefined) return null;
+    var lon = Number(s.longitude);
+    var lat = Number(s.latitude);
+    if (!isFinite(lon) || !isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) return null;
+    var libelle = String(s.libelle === null || s.libelle === undefined ? '' : s.libelle)
+      .replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+    return { wkt: 'POINT(' + lon + ' ' + lat + ')', longitude: lon, latitude: lat, libelle: libelle };
+  }
+
   return {
     VERSION: VERSION,
+    MODES_LIEU: MODES_LIEU,
+    modeLieu: modeLieu,
+    lieuDepuisSuggestion: lieuDepuisSuggestion,
     INPUTMODES: INPUTMODES,
     clavierDe: clavierDe,
     attributsClavier: attributsClavier,

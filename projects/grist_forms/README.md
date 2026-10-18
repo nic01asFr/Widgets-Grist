@@ -56,6 +56,10 @@ La synthèse remet le sens que la définition du formulaire porte.
 Les échelles qui se suivent se regroupent en matrice : l'échelle n'est annoncée
 qu'une fois, pas sous chaque ligne.
 
+### Un lieu : la carte, une adresse, ou les deux
+
+Une question de lieu (un point) se renseigne en touchant la carte, en choisissant une adresse de la Base adresse nationale, ou l'un ou l'autre au choix (`options.saisieLieu` : `carte` par défaut, `adresse`, `les-deux`). Les deux donnent le même point, dans la même colonne, avec le même complément (commune, bâtiment, altitude, risques) ; la carte se recentre sur l'adresse choisie, et un toucher sur la carte efface l'adresse choisie, qui n'est plus celle du point. Le texte `POINT(…)` n'est pas montré quand une adresse est proposée. Une ligne ou une surface reste à la carte ; sans le service d'adresses, la carte seule.
+
 ### Le champ d’adresse
 
 La personne tape une adresse, valide (Entrée ou bouton), et choisit dans la liste

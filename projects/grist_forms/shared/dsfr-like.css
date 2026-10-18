@@ -1018,3 +1018,12 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
   .fr-form .fr-progression { position: static; }
 }
 
+/* Un lieu : la carte, une adresse, ou l'un ou l'autre. */
+.fr-lieu__bascule { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+.fr-lieu__onglet { flex: 1 1 0; }
+.fr-lieu__onglet[aria-pressed="true"] { background: var(--blue-france); color: var(--bouton-texte, #fff); }
+.fr-lieu__panneau[hidden] { display: none; }
+/* Le style des champs impose un affichage : sans cette regle, l'attribut hidden ne cache pas le texte du point. */
+.fr-geo input[hidden] { display: none; }
+.fr-geo__choisi { margin: 0.35rem 0 0; font-weight: 600; color: var(--encre); }
+.fr-geo__choisi:empty { display: none; }

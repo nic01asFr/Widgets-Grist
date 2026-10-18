@@ -2855,6 +2855,15 @@ function renderReglagesCommuns(def, si, f, fi) {
       ${dep.source === 'valeur' ? `<div class="fr-input-group"><label class="fr-label" for="depv-${si}-${fi}">Valeur</label>
         <input class="fr-input" id="depv-${si}-${fi}" value="${esc(dep.valeur === undefined ? '' : dep.valeur)}" onchange="App.onDepart(${si}, ${fi}, 'valeur', this.value)"></div>` : ''}</div>`;
   }
+  // ── Lieu : toucher la carte, taper une adresse, ou les deux ──
+  if (f.widget === 'geo' && (o.geometrie || 'Point') === 'Point' && window.FormSaisies && window.FormReferentiel) {
+    const m = o.saisieLieu || 'carte';
+    html += `<div class="fr-select-group"><label class="fr-label" for="lieu-${si}-${fi}">Comment indiquer le lieu ? ${hintIcon('Les deux donnent le même point. Une adresse est choisie dans la Base adresse nationale ; la recherche ne part que sur demande.')}</label>
+      <select class="fr-select" id="lieu-${si}-${fi}" onchange="App.onSaisieLieu(${si}, ${fi}, this.value)">
+        <option value="carte" ${m === 'carte' ? 'selected' : ''}>Toucher la carte</option>
+        <option value="les-deux" ${m === 'les-deux' ? 'selected' : ''}>Carte ou adresse, au choix</option>
+        <option value="adresse" ${m === 'adresse' ? 'selected' : ''}>Taper une adresse</option></select></div>`;
+  }
   // ── Lieu : ce que les services publics savent du point posé ──
   const enrichir = window.FormEnrichir;
   if (enrichir && f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
@@ -4156,6 +4165,15 @@ function onEnrichir(si, fi, sens, colId) {
   if (!Object.keys(e.colonnes).length) delete f.options.enrichir;
 }
 
+/** Comment un lieu se renseigne : carte, adresse, ou les deux. La carte seule est le réglage par défaut : on ne l'écrit pas. */
+function onSaisieLieu(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur && valeur !== 'carte') f.options.saisieLieu = valeur; else delete f.options.saisieLieu;
+  renderBuilder();
+}
+
 /** Le format qu'une question de texte contrôle (IBAN, SIRET…). */
 function onValidation(si, fi, valeur) {
   marquerModifie();
@@ -5394,7 +5412,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
