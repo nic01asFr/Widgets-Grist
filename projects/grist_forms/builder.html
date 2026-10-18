@@ -2804,6 +2804,13 @@ function renderReglagesSaisie(def, si, f, fi, isBind) {
 function renderReglagesCommuns(def, si, f, fi) {
   const o = f.options || {};
   let html = '';
+  // ── Pastilles : une couleur par choix ──
+  if (f.widget === 'pastilles') {
+    const couleurs = o.couleurs || {};
+    const texte = Object.keys(couleurs).map(k => k + ' = ' + couleurs[k]).join('\n');
+    html += `<div class="fr-input-group"><label class="fr-label" for="pas-${si}-${fi}">Couleur de chaque choix ${hintIcon('Une ligne par choix : Critique = #c9191e. Seules les couleurs #rgb et #rrggbb sont reprises.')}</label>
+      <textarea class="fr-input" id="pas-${si}-${fi}" rows="4" placeholder="Critique = #c9191e" onchange="App.onCouleurs(${si}, ${fi}, this.value)">${esc(texte)}</textarea></div>`;
+  }
   // ── Nombre : bornes, pas, unité, valeurs d'appui ──
   const typeBase = String(f.type || '').split(':')[0];
   if (typeBase === 'Int' || typeBase === 'Numeric') {
@@ -4093,6 +4100,23 @@ function onOptionNombre(si, fi, cle, valeur) {
   renderBuilder();
 }
 
+/** Une couleur par choix : « Critique = #c9191e », une par ligne ; ce qui n'est pas une couleur sûre est écarté. */
+function onCouleurs(si, fi, texte) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const couleurs = {};
+  String(texte || '').split('\n').forEach(ligne => {
+    const i = ligne.lastIndexOf('=');
+    if (i < 1) return;
+    const cle = ligne.slice(0, i).trim();
+    const hex = ligne.slice(i + 1).trim();
+    if (cle && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) couleurs[cle] = hex;
+  });
+  if (Object.keys(couleurs).length) f.options.couleurs = couleurs; else delete f.options.couleurs;
+  renderBuilder();
+}
+
 /** Une option de texte (borne de date, question à ne pas précéder). */
 function onOptionTexte(si, fi, cle, valeur) {
   marquerModifie();
@@ -5370,7 +5394,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

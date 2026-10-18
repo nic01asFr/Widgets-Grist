@@ -64,7 +64,7 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Dictée vocale | micro → texte | Text | absent | l'app de terrain a la voix (projets `terrain-*`, non relus) |
 | Scan de code (QR, code-barres) | caméra → texte | Text | absent | complète le QR par l'adresse de la page ; `BarcodeDetector` ou bibliothèque |
 | Identifiant généré | UUID côté Grist | Text | absent | formule `UUID()` ; QGIS : `UuidGenerator` |
-| Étiquettes libres | puces + Entrée | ChoiceList ou Text | absent | TaskFlow (`tags`) |
+| Étiquettes libres | puces + bouton Ajouter, suggestions | ChoiceList | livré (`etiquettes`) | sans doublon (casse ignorée), 40 caractères, 20 au plus ; un mot tapé et non ajouté est gardé à l'envoi |
 | Clé/valeur, liste JSON | tableau de paires | Text JSON | absent | QGIS : `KeyValue`, `List` ; TaskFlow : checklist en JSON |
 
 ### 3.2 Nombres (`Int`, `Numeric`)
@@ -123,12 +123,12 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Réponse libre « Autre » | option + champ | Choice + Text | livré (`kind: choix_autre`) | |
 | Classement | rangs dans une grille | une colonne par rang | livré (`kind: classement`) | |
 | Matrice d'échelles | lignes × crans | une Int par ligne | livré | mise en page |
-| Pastilles colorées (statut, priorité) | boutons colorés d'après la colonne | Choice | **absent** | TaskFlow : liste et couleurs lues dans `widgetOptions` |
+| Pastilles colorées (statut, priorité) | boutons colorés | Choice | livré (`pastilles`, `options.couleurs`) | seules #rgb et #rrggbb sont reprises (la couleur finit dans un style) |
 | Cartes avec image | choix illustrés | Choice | absent | |
 | Liste longue avec recherche | combobox filtrante | Choice / Ref | absent | l'adresse en est un cas particulier |
 | Choix en cascade | listes dépendantes | Choice / Ref | livré (`cascade`) | |
 | Liste filtrée dynamiquement | selon une autre réponse | Choice / Ref | livré (`dynamicFilter`) | |
-| Étiquettes libres | puces + Entrée | ChoiceList | absent | |
+| Étiquettes libres | puces + bouton Ajouter | ChoiceList | livré | voir plus haut |
 | Double liste, tri par glisser | réordonner | ChoiceList | absent | |
 
 ### 3.5 Références (`Ref`, `RefList`)
@@ -246,7 +246,7 @@ Constats faits en préparant ce catalogue :
 2. ~~Nombre borné : bornes, curseur, compteur, pas, unité~~ — *livré*.
 3. ~~Heure seule et période~~ — *livré*.
 4. **Désigner un objet sur la carte**, et **scanner un code** depuis le formulaire.
-5. **Liste d'éléments répétés**, **étiquettes libres**, **pastilles colorées**.
+5. **Liste d'éléments répétés** (les étiquettes libres et les pastilles colorées sont livrées).
 6. Petits : **couleur**, **clavier adapté**, **interrupteur**, **formats** supplémentaires (url, plaque, NIR).
 7. **Mesures d'une géométrie**, **micro** (dictée, audio).
 

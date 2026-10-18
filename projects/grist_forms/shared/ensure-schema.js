@@ -268,7 +268,8 @@
       if ((t === 'Ref' || t === 'RefList') && !resolveRefTable(field)) {
         errors.push('Champ « ' + field.colId + ' » : refTable manquant pour ' + t);
       }
-      if ((t === 'Choice' || t === 'ChoiceList') && !choiceListFor(formDef, field)) {
+      // Des étiquettes libres n'ont pas de liste à déclarer : les choix ne sont que des suggestions.
+      if ((t === 'Choice' || t === 'ChoiceList') && field.widget !== 'etiquettes' && !choiceListFor(formDef, field)) {
         errors.push('Champ « ' + field.colId + ' » : choices manquants pour ' + t);
       }
 

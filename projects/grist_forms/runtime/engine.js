@@ -872,23 +872,60 @@
       '</div>';
   }
 
+  /** Une couleur d'une question : `#rgb` ou `#rrggbb` seulement (elle finit dans un attribut de style). */
+  function couleurSure(c) {
+    return typeof c === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c) ? c : '';
+  }
+
+  function chipsEtiquettes(liste) {
+    return liste.map(function (t) {
+      return '<li class="fr-etiquette" data-etiquette="' + escapeHtml(t) + '"><span>' + escapeHtml(t) + '</span>' +
+        '<button type="button" class="fr-etiquette__retirer" data-etiquette-retirer="' + escapeHtml(t) +
+        '" aria-label="Retirer ' + escapeHtml(t) + '">\u00d7</button></li>';
+    }).join('');
+  }
+
+  /**
+   * Des étiquettes libres : on tape, on valide (Entrée, virgule ou « Ajouter »), et chaque
+   * mot devient une puce qu'on retire. Les choix déclarés sont des suggestions, pas des limites.
+   */
+  function renderEtiquettes(field, value, optionsList) {
+    var id = fieldId(field);
+    var liste = Array.isArray(value) ? value.map(String) : [];
+    var sugg = resolveOptions(field, optionsList);
+    var dl = sugg.length
+      ? '<datalist id="' + id + '-suggestions">' + sugg.map(function (s) { return '<option value="' + escapeHtml(s.value) + '"></option>'; }).join('') + '</datalist>'
+      : '';
+    return '<div class="fr-input-group fr-etiquettes" data-colid="' + escapeHtml(field.colId) + '" data-widget="etiquettes">' +
+      renderLabel(field, id) +
+      '<ul class="fr-etiquettes__liste" aria-label="Étiquettes choisies">' + chipsEtiquettes(liste) + '</ul>' +
+      '<div class="fr-etiquettes__ligne">' +
+      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '__saisie" autocomplete="off" maxlength="40"' +
+      (dl ? ' list="' + id + '-suggestions"' : '') + placeholderAttr(field) + ' />' +
+      '<button type="button" class="fr-btn fr-btn--secondary" data-etiquette-ajouter="' + escapeHtml(field.colId) + '">Ajouter</button>' +
+      '</div>' + dl + '</div>';
+  }
+
   function renderRadio(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
     var etiquettes = etiquettesDesReperes(field);
+    var pastilles = field && field.widget === 'pastilles';
+    var couleurs = (field && field.options && field.options.couleurs) || {};
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = sameValue(value, o.value) ? ' checked' : '';
+      var teinte = pastilles && couleurSure(couleurs[o.value]) ? ' style="--pastille:' + couleurSure(couleurs[o.value]) + '"' : '';
       // > **La carte EST l'etiquette.** Un `<label for>` pose a cote de la
       // > coche ne rend cliquable que le texte : le reste de la carte — la
       // > marge, l'espace a droite du mot — ne repond pas, et sur un telephone
       // > on vise une cible de quelques millimetres. En enveloppant la coche
       // > et le texte dans le `<label>`, tout l'interieur de la carte coche.
-      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
+      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '"' + teinte + '>' +
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
         '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
-    return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
+    return '<fieldset class="fr-fieldset' + (pastilles ? ' fr-fieldset--pastilles' : '') + '" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
       renderLegend(field) + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
   }
 
@@ -1392,6 +1429,8 @@
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
     geo: function (f, v, o, d, values) { return renderGeo(f, v, values); },
     dessin: function (f, v) { return renderDessin(f, v); },
+    pastilles: function (f, v, opts) { return renderRadio(f, v, opts); },
+    etiquettes: function (f, v, opts) { return renderEtiquettes(f, v, opts); },
     curseur: function (f, v) { return renderCurseur(f, v); },
     compteur: function (f, v) { return renderCompteur(f, v); },
     heure: function (f, v) { return renderDateLike(f, v, 'time'); }
@@ -1541,8 +1580,18 @@
       var cb = rootEl.querySelector('[name="' + field.colId + '"]');
       return cb ? !!cb.checked : false;
     }
+    if (field.widget === 'etiquettes') {
+      // Un mot tapé et pas encore ajouté se compte : le perdre en silence serait pire que l'ajouter.
+      var api = saisiesApi();
+      var courant = Array.isArray(previous) ? previous.slice() : [];
+      var tape = rootEl.querySelector('input[name="' + field.colId + '__saisie"]');
+      if (api && tape && String(tape.value || '').trim()) {
+        courant = api.ajouterEtiquette(courant, tape.value, { max: field.options && field.options.maxSelected });
+      }
+      return courant.length ? courant : null;
+    }
     if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle' ||
-        field.widget === 'ouinon') {
+        field.widget === 'ouinon' || field.widget === 'pastilles') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
       return checkedRadio ? checkedRadio.value : null;
     }
@@ -2199,6 +2248,42 @@
       }(blocs[i]));
     }
 
+    /** Des étiquettes libres : ajouter (Entrée, virgule, bouton), retirer (la croix de la puce). */
+    function brancherEtiquettes(champsPage) {
+      var blocs = rootEl.querySelectorAll('[data-widget="etiquettes"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var colId = bloc.getAttribute('data-colid');
+        var champ = (champsPage || []).filter(function (f) { return f.colId === colId; })[0];
+        var saisie = bloc.querySelector('input[name="' + colId + '__saisie"]');
+        var liste = bloc.querySelector('ul');
+        var ajouter = bloc.querySelector('[data-etiquette-ajouter]');
+        var api = saisiesApi();
+        if (!champ || !saisie || !api) return;
+        function maj(nouvelle) {
+          values[colId] = nouvelle;
+          if (liste) liste.innerHTML = chipsEtiquettes(nouvelle);
+        }
+        function valider() {
+          var plafond = champ.options && champ.options.maxSelected;
+          maj(api.ajouterEtiquette(Array.isArray(values[colId]) ? values[colId] : [], saisie.value, { max: plafond }));
+          saisie.value = '';
+        }
+        if (ajouter && typeof ajouter.addEventListener === 'function') ajouter.addEventListener('click', valider);
+        if (typeof saisie.addEventListener === 'function') {
+          saisie.addEventListener('keydown', function (ev) {
+            if (ev && (ev.key === 'Enter' || ev.key === ',')) { ev.preventDefault(); valider(); }
+          });
+        }
+        if (liste && typeof liste.addEventListener === 'function') {
+          liste.addEventListener('click', function (ev) {
+            var cible = ev && ev.target;
+            var retirer = cible && typeof cible.getAttribute === 'function' ? cible.getAttribute('data-etiquette-retirer') : null;
+            if (retirer !== null && retirer !== undefined) maj(api.retirerEtiquette(Array.isArray(values[colId]) ? values[colId] : [], retirer));
+          });
+        }
+      }(blocs[i]));
+    }
+
     /** Un compteur monte et descend d'un pas, sans sortir de ses bornes. */
     function brancherCompteurs() {
       var blocs = rootEl.querySelectorAll('[data-widget="compteur"]');
@@ -2232,6 +2317,7 @@
       brancherPlafonds();
       brancherCurseurs();
       brancherCompteurs();
+      brancherEtiquettes(fields);
       brancherClassements(fields);
       brancherPositions(fields);
       brancherCartes(fields);

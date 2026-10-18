@@ -550,6 +550,31 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
 .fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
 
+/* Des étiquettes libres : des puces qu'on retire, et la saisie du mot suivant. */
+.fr-form .fr-etiquettes__liste, .champ-bloc__rendu .fr-etiquettes__liste {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; margin: 0 0 0.5rem; padding: 0;
+}
+.fr-form .fr-etiquette, .champ-bloc__rendu .fr-etiquette {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border: 1px solid var(--bord); border-radius: 999px; background: var(--fond-carte); color: var(--encre);
+}
+.fr-form .fr-etiquette__retirer, .champ-bloc__rendu .fr-etiquette__retirer {
+  min-width: 2rem; min-height: 2rem; border: 0; border-radius: 999px; background: transparent; color: var(--encre-douce); cursor: pointer; font: inherit;
+}
+.fr-form .fr-etiquettes__ligne, .champ-bloc__rendu .fr-etiquettes__ligne { display: flex; gap: 0.5rem; }
+.fr-form .fr-etiquettes__ligne .fr-input, .champ-bloc__rendu .fr-etiquettes__ligne .fr-input { flex: 1 1 auto; min-width: 0; }
+
+/* Des choix en pastilles : la couleur de chaque choix vient de la question (--pastille), jamais d'ici. */
+.fr-form .fr-fieldset--pastilles .fr-fieldset__content, .champ-bloc__rendu .fr-fieldset--pastilles .fr-fieldset__content { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fr-form .fr-fieldset--pastilles .fr-radio-group, .champ-bloc__rendu .fr-fieldset--pastilles .fr-radio-group {
+  min-height: var(--cible); padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--pastille, var(--bord));
+  background: color-mix(in srgb, var(--pastille, var(--fond-carte)) 14%, transparent);
+}
+.fr-form .fr-fieldset--pastilles .fr-radio-group:has(input:checked), .champ-bloc__rendu .fr-fieldset--pastilles .fr-radio-group:has(input:checked) {
+  background: color-mix(in srgb, var(--pastille, var(--blue-france)) 35%, transparent); font-weight: 700;
+}
+
 /* Un nombre et son unité ; un curseur et sa valeur ; un compteur et ses deux boutons. */
 .fr-form .fr-nombre__ligne, .champ-bloc__rendu .fr-nombre__ligne,
 .fr-form .fr-compteur__ligne, .champ-bloc__rendu .fr-compteur__ligne { display: flex; align-items: center; gap: 0.5rem; }

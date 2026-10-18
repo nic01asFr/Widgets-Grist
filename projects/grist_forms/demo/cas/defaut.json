@@ -52,6 +52,24 @@
           }
         },
         {
+          "colId": "Priorite",
+          "label": "Quelle priorité ?",
+          "type": "Choice",
+          "widget": "pastilles",
+          "options": {
+            "choices": [
+              "Critique",
+              "Haute",
+              "Normale"
+            ],
+            "couleurs": {
+              "Critique": "#c9191e",
+              "Haute": "#b34000",
+              "Normale": "#18753c"
+            }
+          }
+        },
+        {
           "colId": "Nombre",
           "label": "Combien d’équipements sont touchés ?",
           "type": "Int",
@@ -132,6 +150,21 @@
               "format": "telephone"
             },
             "placeholder": "06 12 34 56 78"
+          }
+        },
+        {
+          "colId": "Mots",
+          "label": "Mots-clés (facultatif)",
+          "type": "ChoiceList",
+          "widget": "etiquettes",
+          "options": {
+            "choices": [
+              "froid",
+              "bruit",
+              "vandalisme",
+              "humidité"
+            ],
+            "maxSelected": 6
           }
         },
         {

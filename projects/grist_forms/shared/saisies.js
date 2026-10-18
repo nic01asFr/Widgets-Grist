@@ -179,8 +179,54 @@
     return Number(p[0]) * 60 + Number(p[1]);
   }
 
+  // ── étiquettes libres ──
+
+  var ETIQUETTE_LONGUEUR = 40;
+  var ETIQUETTES_MAX = 20;
+
+  /** Une étiquette : une ligne, sans caractères de commande, bornée. */
+  function normaliserEtiquette(texte, longueur) {
+    var s = String(texte === null || texte === undefined ? '' : texte)
+      .replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+    return s.slice(0, longueur || ETIQUETTE_LONGUEUR);
+  }
+
+  /**
+   * Ajouter une étiquette à la liste, sans doublon (la casse ne distingue pas),
+   * dans la limite du plafond. Une étiquette vide ou refusée rend la liste telle quelle.
+   */
+  function ajouterEtiquette(liste, texte, opts) {
+    opts = opts || {};
+    var base = Array.isArray(liste) ? liste.map(String) : [];
+    var e = normaliserEtiquette(texte, opts.longueur);
+    if (!e) return base;
+    var bas = e.toLowerCase();
+    if (base.some(function (x) { return x.toLowerCase() === bas; })) return base;
+    var plafond = Number(opts.max) > 0 ? Number(opts.max) : ETIQUETTES_MAX;
+    if (base.length >= plafond) return base;
+    base.push(e);
+    return base;
+  }
+
+  function retirerEtiquette(liste, texte) {
+    return (Array.isArray(liste) ? liste : []).map(String).filter(function (x) { return x !== String(texte); });
+  }
+
+  // ── couleurs ──
+
+  /** Une couleur d'une question : `#rgb` ou `#rrggbb`, rien d'autre (elle finit dans un attribut de style). */
+  function couleurValide(c) {
+    return typeof c === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c);
+  }
+
   return {
     VERSION: VERSION,
+    ETIQUETTE_LONGUEUR: ETIQUETTE_LONGUEUR,
+    ETIQUETTES_MAX: ETIQUETTES_MAX,
+    normaliserEtiquette: normaliserEtiquette,
+    ajouterEtiquette: ajouterEtiquette,
+    retirerEtiquette: retirerEtiquette,
+    couleurValide: couleurValide,
     SOURCES_DEPART: SOURCES_DEPART,
     dateLocale: dateLocale,
     heureLocale: heureLocale,

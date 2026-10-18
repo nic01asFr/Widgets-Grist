@@ -40,6 +40,8 @@
     { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
     // La case a cocher reste disponible : une acceptation de conditions n'est
     // pas une question a deux reponses, c'est un accord qu'on donne ou non.
+    { key: 'etiquettes', type: 'ChoiceList', widget: 'etiquettes', label: 'Étiquettes libres' },
+    { key: 'pastilles', type: 'Choice', widget: 'pastilles', label: 'Choix en pastilles colorées' },
     { key: 'curseur', type: 'Int', widget: 'curseur', label: 'Curseur' },
     { key: 'compteur', type: 'Int', widget: 'compteur', label: 'Compteur + / −' },
     // Grist n'a pas de type heure : « HH:MM » se range en texte.

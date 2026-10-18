@@ -320,7 +320,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, curseur, compteur, heure. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -551,6 +551,14 @@
               "type": "string",
               "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
               "description": "colId d'une autre question que celle-ci ne doit pas preceder (une fin apres son debut). Dates, heures et nombres."
+            },
+            "couleurs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+              },
+              "description": "Couleur de chaque choix d'une question en pastilles : { valeur: '#rrggbb' }. Seuls #rgb et #rrggbb sont acceptes (la couleur finit dans un attribut de style)."
             }
           }
         },

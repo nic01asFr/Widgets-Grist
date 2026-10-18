@@ -136,7 +136,7 @@
         out.push('  m.append(' + py(lib + ' : valeur hors de la liste') + ')');
       }
     }
-    if (base === 'ChoiceList' && field.kind !== 'choix_autre' && !o.autreLibre) {
+    if (base === 'ChoiceList' && field.kind !== 'choix_autre' && !o.autreLibre && field.widget !== 'etiquettes') {
       var liste2 = choixDe(formDef, field);
       if (liste2 && liste2.length) {
         out.push('if any(c not in (' + liste2.map(py).join(', ') + ',) for c in (' + col + ' or [])):');
