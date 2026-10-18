@@ -26,8 +26,8 @@ body {
   font-family: var(--font);
   font-size: 16px;
   line-height: 1.5;
-  color: var(--grey-200);
-  background: var(--grey-975);
+  color: var(--kit-texte, var(--grey-200));
+  background: var(--kit-surface-2, var(--grey-975));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,37 +59,37 @@ body {
 }
 
 /* Typography */
-.fr-h4 { font-size: 1.5rem; font-weight: 700; line-height: 1.25; color: var(--blue-france); margin: 0 0 0.5rem; }
-.fr-h5 { font-size: 1.25rem; font-weight: 700; margin: 0 0 1rem; color: var(--grey-200); }
+.fr-h4 { font-size: 1.5rem; font-weight: 700; line-height: 1.25; color: var(--kit-accent, var(--blue-france)); margin: 0 0 0.5rem; }
+.fr-h5 { font-size: 1.25rem; font-weight: 700; margin: 0 0 1rem; color: var(--kit-texte, var(--grey-200)); }
 .fr-h6 { font-size: 1.125rem; font-weight: 700; margin: 0 0 0.75rem; }
-.fr-text--sm { font-size: 0.875rem; color: var(--grey-625); }
+.fr-text--sm { font-size: 0.875rem; color: var(--kit-texte-2, var(--grey-625)); }
 
 /* Forms */
-.fr-label { display: block; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.35rem; color: var(--grey-200); }
-.fr-hint-text { color: var(--grey-625); font-weight: 400; font-size: 0.8125rem; }
+.fr-label { display: block; font-weight: 500; font-size: 0.875rem; margin-bottom: 0.35rem; color: var(--kit-texte, var(--grey-200)); }
+.fr-hint-text { color: var(--kit-texte-2, var(--grey-625)); font-weight: 400; font-size: 0.8125rem; }
 .fr-input-group, .fr-select-group, .fr-checkbox-group { margin-bottom: 1rem; }
 .fr-input, .fr-select, textarea.fr-input {
   display: block;
   width: 100%;
   padding: 0.5rem 0.75rem;
   font: inherit;
-  color: var(--grey-200);
-  background: var(--grey-1000);
-  border: 1px solid var(--grey-900);
+  color: var(--kit-texte, var(--grey-200));
+  background: var(--kit-surface, var(--grey-1000));
+  border: 1px solid var(--kit-bord, var(--grey-900));
   border-radius: var(--radius);
-  box-shadow: inset 0 -2px 0 0 var(--blue-france);
+  box-shadow: inset 0 -2px 0 0 var(--kit-accent, var(--blue-france));
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .fr-input:focus, .fr-select:focus, textarea.fr-input:focus {
-  outline: 2px solid var(--blue-france);
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france)));
   outline-offset: 2px;
-  border-color: var(--blue-france);
+  border-color: var(--kit-accent, var(--blue-france));
 }
 .fr-input[type="checkbox"], .fr-input[type="radio"] {
   width: auto;
   box-shadow: none;
   margin-right: 0.5rem;
-  accent-color: var(--blue-france);
+  accent-color: var(--kit-accent, var(--blue-france));
 }
 .fr-checkbox-group, .fr-radio-group {
   display: flex;
@@ -101,9 +101,9 @@ body {
 .fr-fieldset { border: 0; margin: 0 0 1.25rem; padding: 0; }
 .fr-fieldset__legend { font-weight: 600; margin-bottom: 0.5rem; padding: 0; }
 .fr-fieldset__content { display: flex; flex-direction: column; gap: 0.25rem; }
-.fr-error-text { color: var(--error); font-size: 0.8125rem; margin: 0.25rem 0 0; }
+.fr-error-text { color: var(--kit-alerte, var(--error)); font-size: 0.8125rem; margin: 0.25rem 0 0; }
 .fr-likert__scale { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.fr-radio-rich { padding: 0.35rem 0.5rem; border: 1px solid var(--grey-925); border-radius: var(--radius); }
+.fr-radio-rich { padding: 0.35rem 0.5rem; border: 1px solid var(--kit-bord, var(--grey-925)); border-radius: var(--radius); }
 
 /* Buttons */
 .fr-btn {
@@ -116,36 +116,36 @@ body {
   font-weight: 500;
   font-size: 0.9375rem;
   line-height: 1.25;
-  color: #fff;
-  background: var(--blue-france);
-  border: 1px solid var(--blue-france);
+  color: var(--kit-accent-texte, #fff);
+  background: var(--kit-accent, var(--blue-france));
+  border: 1px solid var(--kit-accent, var(--blue-france));
   border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;
 }
-.fr-btn:hover { background: var(--blue-france-hover); border-color: var(--blue-france-hover); }
-.fr-btn:active { background: var(--blue-france-active); }
+.fr-btn:hover { background: var(--kit-accent-survol, var(--blue-france-hover)); border-color: var(--kit-accent-survol, var(--blue-france-hover)); }
+.fr-btn:active { background: var(--kit-accent-actif, var(--blue-france-active)); }
 .fr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .fr-btn--secondary {
-  color: var(--blue-france);
-  background: #fff;
-  border-color: var(--blue-france);
+  color: var(--kit-accent, var(--blue-france));
+  background: var(--kit-surface, #fff);
+  border-color: var(--kit-accent, var(--blue-france));
 }
-.fr-btn--secondary:hover { background: #f0f0ff; }
+.fr-btn--secondary:hover { background: var(--kit-accent-fond, #f0f0ff); }
 .fr-btn--tertiary {
   background: transparent;
-  color: var(--blue-france);
-  border: 1px solid var(--bord);
+  color: var(--kit-accent, var(--blue-france));
+  border: 1px solid var(--kit-bord, var(--bord));
 }
-.fr-btn--tertiary:hover { background: var(--grey-950); }
+.fr-btn--tertiary:hover { background: var(--kit-surface-2, var(--grey-950)); }
 .fr-btn--sm { min-height: 2rem; padding: 0.25rem 0.75rem; font-size: 0.875rem; }
 .fr-btn--tertiary-no-outline {
-  color: var(--blue-france);
+  color: var(--kit-accent, var(--blue-france));
   background: transparent;
   border-color: transparent;
   padding: 0.35rem 0.5rem;
 }
-.fr-btn--tertiary-no-outline:hover { background: var(--grey-950); }
+.fr-btn--tertiary-no-outline:hover { background: var(--kit-surface-2, var(--grey-950)); }
 .fr-btn--sm { padding: 0.25rem 0.65rem; font-size: 0.8125rem; }
 .fr-btns-group { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
 .fr-btns-group--inline { flex-direction: row; }
@@ -159,43 +159,43 @@ body {
   font-weight: 600;
   border-radius: 999px;
   white-space: nowrap;
-  background: var(--grey-950);
-  color: var(--grey-425);
+  background: var(--kit-surface-2, var(--grey-950));
+  color: var(--kit-texte, var(--grey-425));
 }
-.fr-badge--info { background: #e8edff; color: var(--info); }
-.fr-badge--success { background: #e3fadb; color: var(--success); }
-.fr-badge--warning { background: #ffe9e0; color: var(--warning); }
-.fr-badge--error { background: #ffe9e9; color: var(--error); }
+.fr-badge--info { background: var(--kit-info-fond, #e8edff); color: var(--kit-info, var(--info)); }
+.fr-badge--success { background: var(--kit-ok-fond, #e3fadb); color: var(--kit-ok, var(--success)); }
+.fr-badge--warning { background: var(--kit-attention-fond, #ffe9e0); color: var(--kit-attention, var(--warning)); }
+.fr-badge--error { background: var(--kit-alerte-fond, #ffe9e9); color: var(--kit-alerte, var(--error)); }
 
 /* Alerts */
 .fr-alert {
   padding: 1rem 1.25rem;
   border-radius: var(--radius);
-  border-left: 4px solid var(--info);
-  background: #e8edff;
+  border-left: 4px solid var(--kit-info, var(--info));
+  background: var(--kit-info-fond, #e8edff);
   margin: 1rem 0;
 }
-.fr-alert--success { border-left-color: var(--success); background: #e3fadb; }
-.fr-alert--error { border-left-color: var(--error); background: #ffe9e9; }
-.fr-alert--info { border-left-color: var(--info); background: #e8edff; }
-.fr-alert--warning { border-left-color: var(--warning); background: #ffe9e0; }
+.fr-alert--success { border-left-color: var(--kit-ok, var(--success)); background: var(--kit-ok-fond, #e3fadb); }
+.fr-alert--error { border-left-color: var(--kit-alerte, var(--error)); background: var(--kit-alerte-fond, #ffe9e9); }
+.fr-alert--info { border-left-color: var(--kit-info, var(--info)); background: var(--kit-info-fond, #e8edff); }
+.fr-alert--warning { border-left-color: var(--kit-attention, var(--warning)); background: var(--kit-attention-fond, #ffe9e0); }
 .fr-alert p { margin: 0; }
 
 /* Table */
 .fr-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
-.fr-table th, .fr-table td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--grey-925); }
-.fr-table th { background: var(--grey-975); font-weight: 600; color: var(--grey-425); }
-.fr-table tbody tr:hover { background: #fafaff; }
+.fr-table th, .fr-table td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--kit-bord, var(--grey-925)); }
+.fr-table th { background: var(--kit-surface-2, var(--grey-975)); font-weight: 600; color: var(--kit-texte, var(--grey-425)); }
+.fr-table tbody tr:hover { background: var(--kit-accent-fond, #fafaff); }
 
 /* Stepper (runtime form) */
-.fr-stepper { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--grey-925); }
+.fr-stepper { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--kit-bord, var(--grey-925)); }
 .fr-stepper__title { font-weight: 700; font-size: 1.125rem; margin: 0; }
-.fr-stepper__state { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--grey-625); margin-top: 0.25rem; }
+.fr-stepper__state { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--kit-texte-2, var(--grey-625)); margin-top: 0.25rem; }
 
 .fr-form { max-width: 40rem; }
 .fr-form__header { margin-bottom: 1.25rem; }
 .fr-form__header .fr-h4 { margin-bottom: 0.35rem; }
-.fr-form__header .fr-text--sm { margin: 0; color: var(--grey-625); }
+.fr-form__header .fr-text--sm { margin: 0; color: var(--kit-texte-2, var(--grey-625)); }
 .fr-form__brand { margin-bottom: 0.85rem; }
 .fr-form__brand img {
   display: block;
@@ -223,12 +223,12 @@ body {
 .fr-echelle__nsp { margin-top: 0.5rem; }
 .fr-echelle__ancres {
   display: flex; justify-content: space-between; gap: 12px;
-  font-size: 0.78rem; color: #666; margin-top: 4px;
+  font-size: 0.78rem; color: var(--kit-texte-2, #666); margin-top: 4px;
 }
 .fr-matrice { padding: 0; border: none; }
 .fr-matrice__ligne {
   display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
-  padding: 10px 0; border-top: 1px solid #eee;
+  padding: 10px 0; border-top: 1px solid var(--kit-bord, #eee);
 }
 .fr-matrice__ligne:first-child { border-top: none; }
 .fr-matrice__intitule { flex: 1 1 14rem; min-width: 0; }
@@ -296,28 +296,28 @@ body {
   }
 }
 
-body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); color: var(--encre); }
+body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, var(--fond-page)); color: var(--kit-texte, var(--encre)); }
 
 /* Un formulaire se lit en colonne étroite : au-delà, l'œil perd sa ligne. */
 .fr-form { max-width: 38rem; margin-inline: auto; }
-.fr-form .fr-label { font-size: var(--texte); font-weight: 600; color: var(--encre); }
-.fr-form .fr-hint-text { font-size: var(--texte-consigne); color: var(--encre-douce); }
+.fr-form .fr-label { font-size: var(--texte); font-weight: 600; color: var(--kit-texte, var(--encre)); }
+.fr-form .fr-hint-text { font-size: var(--texte-consigne); color: var(--kit-texte-2, var(--encre-douce)); }
 .fr-form .fr-fieldset__legend { font-size: var(--texte-question); font-weight: 600; line-height: 1.35; }
 
 /* Ce qui se touche : 44 px, et de l'air entre deux cibles. */
 .fr-form .fr-input, .fr-form .fr-select, .fr-form textarea.fr-input { min-height: var(--cible); font-size: var(--texte); }
 .fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
 .fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
-.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--blue-france); }
+.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--kit-accent, var(--blue-france)); }
 .fr-radio-group .fr-label, .fr-checkbox-group .fr-label { font-weight: 400; }
 
 /* Progression : où j'en suis, combien il reste. */
 .fr-progression { margin-bottom: 1.25rem; }
-.fr-progression__piste { height: 6px; border-radius: 6px; background: var(--grey-950); overflow: hidden; }
-.fr-progression__piste span { display: block; height: 100%; background: var(--blue-france); transition: width .25s ease; }
+.fr-progression__piste { height: 6px; border-radius: 6px; background: var(--kit-surface-2, var(--grey-950)); overflow: hidden; }
+.fr-progression__piste span { display: block; height: 100%; background: var(--kit-accent, var(--blue-france)); transition: width .25s ease; }
 .fr-progression__etat {
   display: flex; justify-content: space-between; margin: 0.35rem 0 0.75rem;
-  font-size: 0.82rem; color: var(--encre-douce); font-variant-numeric: tabular-nums;
+  font-size: 0.82rem; color: var(--kit-texte-2, var(--encre-douce)); font-variant-numeric: tabular-nums;
 }
 .fr-progression__titre { font-size: 1.25rem; margin: 0; line-height: 1.3; }
 
@@ -326,7 +326,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   position: sticky; bottom: 0; z-index: 5;
   display: flex; justify-content: space-between; align-items: center; gap: var(--ecart);
   margin-top: 1.5rem; padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to bottom, transparent, var(--fond-page) 35%);
+  background: linear-gradient(to bottom, transparent, var(--kit-fond, var(--fond-page)) 35%);
 }
 
 /* Échelle : des crans qu'un doigt atteint. */
@@ -335,22 +335,22 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-echelle__cran label {
   display: flex; align-items: center; justify-content: center;
   min-height: var(--cible); min-width: var(--cible); padding: 0 0.5rem;
-  border: 1px solid var(--bord); border-radius: 6px; cursor: pointer; background: var(--fond-carte);
+  border: 1px solid var(--kit-bord, var(--bord)); border-radius: 6px; cursor: pointer; background: var(--kit-surface, var(--fond-carte));
 }
 .fr-echelle__cran input { position: absolute; opacity: 0; width: 0; height: 0; }
-.fr-echelle__cran input:checked + label { background: var(--blue-france); border-color: var(--blue-france); color: #fff; }
-.fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+.fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); }
+.fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
 .fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
-.fr-echelle__ancres { font-size: 0.86rem; color: var(--encre-douce); }
+.fr-echelle__ancres { font-size: 0.86rem; color: var(--kit-texte-2, var(--encre-douce)); }
 
 /* Matrice : un tableau sur grand écran, des cartes sur téléphone. */
 .fr-matrice__question { margin-bottom: 0.25rem; }
-.fr-matrice__ligne { border-top: 1px solid var(--grey-950); padding: 0.85rem 0; }
+.fr-matrice__ligne { border-top: 1px solid var(--kit-bord, var(--grey-950)); padding: 0.85rem 0; }
 .fr-matrice__intitule { font-size: var(--texte); }
 @media (max-width: 36rem) {
   .fr-matrice__ligne {
-    border: 1px solid var(--bord); border-radius: 8px; padding: 0.85rem;
-    margin-bottom: 0.6rem; background: var(--fond-carte);
+    border: 1px solid var(--kit-bord, var(--bord)); border-radius: 8px; padding: 0.85rem;
+    margin-bottom: 0.6rem; background: var(--kit-surface, var(--fond-carte));
   }
   .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
 }
@@ -369,10 +369,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 
 .fr-form .fr-radio-group, .fr-form .fr-checkbox-group,
 .champ-bloc__rendu .fr-radio-group, .champ-bloc__rendu .fr-checkbox-group {
-  border: 1px solid var(--bord); border-radius: 8px; padding: 0 0.8rem;
-  background: var(--fond-carte); cursor: pointer; transition: border-color .12s ease;
+  border: 1px solid var(--kit-bord, var(--bord)); border-radius: 8px; padding: 0 0.8rem;
+  background: var(--kit-surface, var(--fond-carte)); cursor: pointer; transition: border-color .12s ease;
 }
-.fr-form .fr-radio-group:hover, .fr-form .fr-checkbox-group:hover { border-color: var(--blue-france); }
+.fr-form .fr-radio-group:hover, .fr-form .fr-checkbox-group:hover { border-color: var(--kit-accent, var(--blue-france)); }
 .fr-form .fr-radio-group .fr-label, .fr-form .fr-checkbox-group .fr-label,
 .champ-bloc__rendu .fr-radio-group .fr-label, .champ-bloc__rendu .fr-checkbox-group .fr-label {
   flex: 1 1 auto; padding: 0.65rem 0; cursor: pointer; font-weight: 400;
@@ -381,10 +381,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-checkbox-group:has(input:checked),
 .champ-bloc__rendu .fr-radio-group:has(input:checked),
 .champ-bloc__rendu .fr-checkbox-group:has(input:checked) {
-  border-color: var(--blue-france); background: color-mix(in srgb, var(--blue-france) 6%, var(--fond-carte));
+  border-color: var(--kit-accent, var(--blue-france)); background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 6%, var(--kit-surface, var(--fond-carte)));
 }
 .fr-form .fr-radio-group:focus-within, .fr-form .fr-checkbox-group:focus-within {
-  outline: 2px solid var(--blue-france); outline-offset: 1px;
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 1px;
 }
 
 /* Les crans d'une échelle restent en ligne : ce sont des degrés, pas des options. */
@@ -395,7 +395,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    repete sur chaque question, devenait du bruit ; la marque se retrouve
    d'un coup d'oeil quand l'envoi est refuse. */
 .fr-obligatoire {
-  color: var(--error, #ce0500);
+  color: var(--kit-alerte, var(--error, #ce0500));
   font-weight: 700;
   margin-left: 0.25rem;
 }
@@ -413,7 +413,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 
 /* Les champs libres : même hauteur, même repère au focus. */
 .fr-form .fr-input:focus-visible, .fr-form .fr-select:focus-visible {
-  outline: 2px solid var(--blue-france); outline-offset: 1px;
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 1px;
 }
 .fr-form textarea.fr-input { min-height: 5.5rem; }
 .fr-form .fr-input-group, .fr-form .fr-select-group, .fr-form .fr-fieldset,
@@ -436,7 +436,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    l'aperçu du compositeur : il montre ce que le public verra. */
 .fr-form .fr-autre, .champ-bloc__rendu .fr-autre {
   margin: 0.3rem 0 0 1.6rem; padding-left: 0.8rem;
-  border-left: 3px solid var(--blue-france);
+  border-left: 3px solid var(--kit-accent, var(--blue-france));
 }
 .fr-form .fr-autre--repliee, .champ-bloc__rendu .fr-autre--repliee { display: none; }
 
@@ -455,10 +455,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 .fr-form .fr-rangs th, .fr-form .fr-rangs td,
 .champ-bloc__rendu .fr-rangs th, .champ-bloc__rendu .fr-rangs td {
-  border-bottom: 1px solid var(--bordure, #ddd); padding: 0.35rem 0.5rem; text-align: center;
+  border-bottom: 1px solid var(--kit-bord, var(--bordure, #ddd)); padding: 0.35rem 0.5rem; text-align: center;
 }
 .fr-form .fr-rangs thead th, .champ-bloc__rendu .fr-rangs thead th {
-  font-size: 0.82rem; font-weight: 600; color: var(--encre-douce, #666); white-space: nowrap;
+  font-size: 0.82rem; font-weight: 600; color: var(--kit-texte-2, var(--encre-douce, #666)); white-space: nowrap;
 }
 .fr-form .fr-rangs__intitule, .champ-bloc__rendu .fr-rangs__intitule {
   text-align: left; font-weight: 400; min-width: 12rem;
@@ -484,24 +484,24 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-rangs__cible::before, .champ-bloc__rendu .fr-rangs__cible::before {
   content: attr(data-rang); display: flex; align-items: center; justify-content: center;
   width: 2.4rem; height: 2.4rem; border-radius: 999px;
-  border: 2px solid var(--bord, #ddd);
+  border: 2px solid var(--kit-bord, var(--bord, #ddd));
   font-size: 0.9375rem; font-weight: 700; color: transparent;
   transition: background-color .12s ease, border-color .12s ease, color .12s ease;
 }
 .fr-form .fr-rangs__cible:hover::before, .champ-bloc__rendu .fr-rangs__cible:hover::before {
-  border-color: var(--blue-france);
+  border-color: var(--kit-accent, var(--blue-france));
 }
 .fr-form .fr-rangs__cible:has(input:checked)::before,
 .champ-bloc__rendu .fr-rangs__cible:has(input:checked)::before {
-  background: var(--blue-france); border-color: var(--blue-france); color: #fff;
+  background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
 }
 /* Une proposition qui a trouvé sa place se distingue de celles qui attendent. */
 .fr-form .fr-rangs tr:has(input:checked), .champ-bloc__rendu .fr-rangs tr:has(input:checked) {
-  background: color-mix(in srgb, var(--blue-france) 5%, transparent);
+  background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 5%, transparent);
 }
 .fr-form .fr-rangs__cible:focus-within::before,
 .champ-bloc__rendu .fr-rangs__cible:focus-within::before {
-  outline: 2px solid var(--blue-france); outline-offset: 2px;
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px;
 }
 /* Ce que lit un lecteur d'ecran, et que l'oeil n'a pas besoin de voir. */
 .fr-rangs__lu {
@@ -572,7 +572,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   background: color-mix(in srgb, var(--pastille, var(--fond-carte)) 14%, transparent);
 }
 .fr-form .fr-fieldset--pastilles .fr-radio-group:has(input:checked), .champ-bloc__rendu .fr-fieldset--pastilles .fr-radio-group:has(input:checked) {
-  background: color-mix(in srgb, var(--pastille, var(--blue-france)) 35%, transparent); font-weight: 700;
+  background: color-mix(in srgb, var(--pastille, var(--kit-accent, var(--blue-france))) 35%, transparent); font-weight: 700;
 }
 
 /* Un nombre et son unité ; un curseur et sa valeur ; un compteur et ses deux boutons. */
@@ -609,7 +609,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    voir la question au-dessus et le bouton en dessous sans défiler deux fois. */
 .fr-form .fr-carte, .champ-bloc__rendu .fr-carte {
   height: 16rem; border-radius: 8px; overflow: hidden;
-  border: 1px solid var(--bordure, #ddd); background: var(--grey-975, #f6f6f6);
+  border: 1px solid var(--kit-bord, var(--bordure, #ddd)); background: var(--kit-surface-2, var(--grey-975, #f6f6f6));
   display: flex; align-items: center; justify-content: center;
 }
 .fr-form .fr-carte__attente, .champ-bloc__rendu .fr-carte__attente {
@@ -619,10 +619,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 /* Un point pose : assez gros pour qu'on puisse le reprendre au doigt. */
 .fr-carte__point {
   width: 1.5rem; height: 1.5rem; border-radius: 999px; cursor: pointer;
-  border: 2px solid #fff; background: var(--error, #ce0500);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--kit-accent-texte, #fff); background: var(--kit-alerte, var(--error, #ce0500));
+  box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
-.fr-carte__point:focus-visible { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+.fr-carte__point:focus-visible { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
 @media (max-width: 30rem) {
   .fr-form .fr-carte { height: 13rem; }
 }
@@ -631,7 +631,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    qu'on regarde avant de répondre. */
 .fr-form .fr-illustration, .champ-bloc__rendu .fr-illustration { margin: 0 0 0.8rem; }
 .fr-form .fr-illustration__image img, .champ-bloc__rendu .fr-illustration__image img {
-  max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--bordure, #ddd);
+  max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--kit-bord, var(--bordure, #ddd));
 }
 .fr-form .fr-illustration__legende, .champ-bloc__rendu .fr-illustration__legende { margin-top: 0.3rem; }
 /* Une carte qui montre : on peut la déplacer, mais y cliquer n'écrit rien. */
@@ -639,13 +639,13 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-carte__repere {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.7rem; height: 1.7rem; border-radius: 999px;
-  background: var(--blue-france); color: #fff; font-size: 0.8rem; font-weight: 600;
-  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); font-size: 0.8rem; font-weight: 600;
+  border: 2px solid var(--kit-accent-texte, #fff); box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
 /* Une page intégrée : elle occupe la largeur de la question, et sa hauteur
    est celle qu'on lui a donnée — on ne devine pas le contenu d'autrui. */
 .fr-form .fr-illustration__cadre, .champ-bloc__rendu .fr-illustration__cadre {
-  width: 100%; border: 1px solid var(--bordure, #ddd); border-radius: 8px; background: #fff;
+  width: 100%; border: 1px solid var(--kit-bord, var(--bordure, #ddd)); border-radius: 8px; background: var(--kit-surface, #fff);
 }
 /* La carte du compositeur, où l'on pose les repères. */
 .fr-carte--composer { height: 14rem; margin-bottom: 0.5rem; cursor: crosshair; }
@@ -658,8 +658,8 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    qu'on lit pour decider de repondre.
    --------------------------------------------------------------- */
 .fr-bandeau {
-  background: var(--fond-carte, #fff);
-  border-bottom: 2px solid var(--blue-france);
+  background: var(--kit-surface, var(--fond-carte, #fff));
+  border-bottom: 2px solid var(--kit-accent, var(--blue-france));
   padding: 0.875rem 1rem;
   margin: -1rem -1rem 0;
 }
@@ -688,12 +688,12 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   font-weight: 700;
   font-size: 0.8125rem;
   line-height: 1.1;
-  color: var(--blue-france);
-  border-right: 1px solid var(--grey-900);
+  color: var(--kit-accent, var(--blue-france));
+  border-right: 1px solid var(--kit-bord, var(--grey-900));
   padding-right: 0.875rem;
 }
-.fr-bandeau__orga small { display: block; font-weight: 400; color: var(--encre-douce); }
-.fr-bandeau__titre { font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--encre); }
+.fr-bandeau__orga small { display: block; font-weight: 400; color: var(--kit-texte-2, var(--encre-douce)); }
+.fr-bandeau__titre { font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--kit-texte, var(--encre)); }
 
 /* L'avancement suit : en bas d'une etape longue, savoir ou l'on en est
    vaut mieux que de devoir remonter pour le lire. */
@@ -701,7 +701,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--fond-page);
+  background: var(--kit-fond, var(--fond-page));
   padding-top: 0.5rem;
 }
 
@@ -709,7 +709,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-accueil__titre {
   font-size: 1.375rem;
   margin: 0 0 0.75rem;
-  color: var(--blue-france);
+  color: var(--kit-accent, var(--blue-france));
 }
 .fr-accueil__titre:focus { outline: none; }
 .fr-accueil p { margin: 0 0 0.75rem; }
@@ -721,13 +721,13 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   font-size: 0.875rem;
 }
 .fr-encart--attention {
-  background: var(--encart-attention, #fef6e3);
-  border-left: 4px solid #ffca00;
+  background: var(--kit-attention-fond, var(--encart-attention, #fef6e3));
+  border-left: 4px solid var(--kit-attention-filet, #ffca00);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 .fr-encart--discret {
-  background: var(--grey-975);
-  color: var(--encre-douce);
+  background: var(--kit-surface-2, var(--grey-975));
+  color: var(--kit-texte-2, var(--encre-douce));
   font-size: 0.78125rem;
 }
 .fr-form__actions--fin { justify-content: flex-end; }
@@ -744,9 +744,9 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    --------------------------------------------------------------- */
 .fr-dessin__planche {
   position: relative;
-  border: 1px solid var(--bord);
+  border: 1px solid var(--kit-bord, var(--bord));
   border-radius: var(--radius);
-  background: var(--fond-carte);
+  background: var(--kit-surface, var(--fond-carte));
   overflow: hidden;
 }
 .fr-dessin__toile {
@@ -757,7 +757,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   touch-action: none;
   cursor: crosshair;
 }
-.fr-dessin--signature .fr-dessin__planche { background: #fff; }
+.fr-dessin--signature .fr-dessin__planche { background: var(--kit-papier, #fff); }
 .fr-dessin--signature .fr-dessin__toile { cursor: cell; }
 
 .fr-dessin__barre {
@@ -771,20 +771,20 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-dessin__couleur {
   width: 2rem;
   height: 2rem;
-  border: 2px solid var(--bord);
+  border: 2px solid var(--kit-bord, var(--bord));
   border-radius: 50%;
   cursor: pointer;
   padding: 0;
 }
 .fr-dessin__couleur[aria-checked="true"] {
-  border-color: var(--encre);
-  box-shadow: 0 0 0 2px var(--fond-carte), 0 0 0 4px var(--encre);
+  border-color: var(--kit-texte, var(--encre));
+  box-shadow: 0 0 0 2px var(--kit-surface, var(--fond-carte)), 0 0 0 4px var(--kit-texte, var(--encre));
 }
 .fr-dessin__barre .fr-btn[disabled] { opacity: 0.45; cursor: default; }
 .fr-dessin__etat { margin-top: 0.35rem; }
 
 /* Les mêmes règles dans l'aperçu du compositeur. */
-.champ-bloc__rendu .fr-dessin__planche { background: #fff; }
+.champ-bloc__rendu .fr-dessin__planche { background: var(--kit-papier, #fff); }
 .champ-bloc__rendu .fr-dessin__toile { touch-action: none; }
 
 /* ---------------------------------------------------------------
@@ -794,7 +794,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    restitution ne viennent pas de deux maisons différentes.
    --------------------------------------------------------------- */
 .fr-synthese { max-width: 56rem; margin-inline: auto; padding: 1rem; }
-.fr-synthese__h1 { font-size: 1.5rem; color: var(--blue-france); margin: 0 0 1rem; }
+.fr-synthese__h1 { font-size: 1.5rem; color: var(--kit-accent, var(--blue-france)); margin: 0 0 1rem; }
 
 .fr-chiffres {
   display: grid;
@@ -803,21 +803,21 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
   margin-bottom: 1.5rem;
 }
 .fr-chiffre {
-  background: var(--fond-carte);
-  border: 1px solid var(--bord);
+  background: var(--kit-surface, var(--fond-carte));
+  border: 1px solid var(--kit-bord, var(--bord));
   border-radius: var(--radius);
   padding: 0.875rem 1rem;
 }
 .fr-chiffre__libelle {
   margin: 0; font-size: 0.72rem; text-transform: uppercase;
-  letter-spacing: 0.04em; color: var(--encre-douce);
+  letter-spacing: 0.04em; color: var(--kit-texte-2, var(--encre-douce));
 }
-.fr-chiffre__valeur { margin: 0.15rem 0 0; font-size: 1.6rem; font-weight: 700; color: var(--blue-france); }
-.fr-chiffre__precision { margin: 0; font-size: 0.78rem; color: var(--encre-douce); }
+.fr-chiffre__valeur { margin: 0.15rem 0 0; font-size: 1.6rem; font-weight: 700; color: var(--kit-accent, var(--blue-france)); }
+.fr-chiffre__precision { margin: 0; font-size: 0.78rem; color: var(--kit-texte-2, var(--encre-douce)); }
 
 .fr-synthese__bloc {
-  background: var(--fond-carte);
-  border: 1px solid var(--bord);
+  background: var(--kit-surface, var(--fond-carte));
+  border: 1px solid var(--kit-bord, var(--bord));
   border-radius: var(--radius);
   padding: 1rem 1.125rem;
   margin-bottom: 1rem;
@@ -828,28 +828,28 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 
 .fr-ressort { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
 .fr-ressort__h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
-.fr-ressort__h3--besoin { color: #b34000; }
-.fr-ressort__h3--satisfaction { color: #18753c; }
-.fr-ressort__h3--preference { color: var(--blue-france); }
+.fr-ressort__h3--besoin { color: var(--kit-attention, #b34000); }
+.fr-ressort__h3--satisfaction { color: var(--kit-ok, #18753c); }
+.fr-ressort__h3--preference { color: var(--kit-accent, var(--blue-france)); }
 
 .fr-barre { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; }
 .fr-barre__corps { flex: 1; min-width: 0; }
 .fr-barre__libelle { margin: 0 0 0.2rem; font-size: 0.875rem; }
-.fr-barre__note { color: var(--encre-douce); font-size: 0.8rem; }
-.fr-barre__piste { height: 0.5rem; background: var(--grey-950); border-radius: 0.5rem; overflow: hidden; }
-.fr-barre__piste span { display: block; height: 100%; background: var(--encre-douce); }
-.fr-barre__piste--besoin span { background: #b34000; }
-.fr-barre__piste--satisfaction span { background: #18753c; }
-.fr-barre__piste--preference span { background: var(--blue-france); }
-.fr-barre__n { margin: 0.15rem 0 0; font-size: 0.72rem; color: var(--encre-douce); }
+.fr-barre__note { color: var(--kit-texte-2, var(--encre-douce)); font-size: 0.8rem; }
+.fr-barre__piste { height: 0.5rem; background: var(--kit-surface-2, var(--grey-950)); border-radius: 0.5rem; overflow: hidden; }
+.fr-barre__piste span { display: block; height: 100%; background: var(--kit-texte-2, var(--encre-douce)); }
+.fr-barre__piste--besoin span { background: var(--kit-attention, #b34000); }
+.fr-barre__piste--satisfaction span { background: var(--kit-ok, #18753c); }
+.fr-barre__piste--preference span { background: var(--kit-accent, var(--blue-france)); }
+.fr-barre__n { margin: 0.15rem 0 0; font-size: 0.72rem; color: var(--kit-texte-2, var(--encre-douce)); }
 .fr-barre__valeur { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3rem; text-align: right; }
 
 .fr-verbatim {
   margin: 0.35rem 0; padding: 0.5rem 0.75rem;
-  background: var(--grey-975); border-left: 3px solid var(--bord);
+  background: var(--kit-surface-2, var(--grey-975)); border-left: 3px solid var(--kit-bord, var(--bord));
   border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.875rem;
 }
-.fr-synthese__source { margin: 0.75rem 0 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--encre-douce); }
+.fr-synthese__source { margin: 0.75rem 0 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--kit-texte-2, var(--encre-douce)); }
 .fr-synthese__autres { margin-top: 0.75rem; }
 
 
@@ -893,7 +893,7 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 
 /* Une question en defaut : le message tient a elle, pas a la suivante. */
 .fr-champ--erreur {
-  border-left: 3px solid var(--error, #ce0500);
+  border-left: 3px solid var(--kit-alerte, var(--error, #ce0500));
   padding-left: 0.75rem;
   margin-bottom: 1.25rem;
 }
@@ -905,16 +905,16 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 .fr-repere-lie {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 1.4rem; height: 1.4rem; padding: 0 0.25rem;
-  border-radius: 0.7rem; background: var(--blue-france); color: #fff;
+  border-radius: 0.7rem; background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
   font-size: 0.75rem; font-weight: 700; margin-right: 0.4rem;
 }
 .fr-carte__repere--bouton { cursor: pointer; border: none; font: inherit; }
-.fr-carte__repere--bouton:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fr-carte__repere--bouton:focus-visible { outline: 2px solid var(--kit-accent-texte, #fff); outline-offset: 2px; }
 
 .est-designe { animation: fr-designe 1.6s ease; }
 .fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 10%, transparent); }
 @keyframes fr-designe {
-  0%, 60% { background: color-mix(in srgb, var(--blue-france) 14%, transparent); }
+  0%, 60% { background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 14%, transparent); }
   100% { background: transparent; }
 }
 @media (prefers-reduced-motion: reduce) { .est-designe { animation: none; } }
@@ -992,16 +992,16 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
     --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
   }
 }
-.fr-btn { color: var(--bouton-texte, #fff); }
-.fr-btn--secondary, .fr-btn--tertiary, .fr-btn--tertiary-no-outline { color: var(--blue-france); }
-.fr-btn--secondary { background: var(--bouton-secondaire-fond, #fff); }
-.fr-btn--secondary:hover { background: var(--bouton-secondaire-survol, #f0f0ff); }
-.fr-alert--error, .fr-badge--error { background: var(--erreur-fond, #ffe9e9); }
+.fr-btn { color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
+.fr-btn--secondary, .fr-btn--tertiary, .fr-btn--tertiary-no-outline { color: var(--kit-accent, var(--blue-france)); }
+.fr-btn--secondary { background: var(--kit-surface, var(--bouton-secondaire-fond, #fff)); }
+.fr-btn--secondary:hover { background: var(--kit-accent-fond, var(--bouton-secondaire-survol, #f0f0ff)); }
+.fr-alert--error, .fr-badge--error { background: var(--kit-alerte-fond, var(--erreur-fond, #ffe9e9)); }
 
 /* Le resume des erreurs : une liste de liens, chacun une cible de 44 px. */
 .fr-resume-erreurs ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 .fr-resume-erreurs a { display: inline-block; padding: 0.7rem 0; color: inherit; text-decoration: underline; }
-.fr-resume-erreurs:focus { outline: 3px solid var(--error, #ce0500); outline-offset: 2px; }
+.fr-resume-erreurs:focus { outline: 3px solid var(--kit-alerte, var(--error, #ce0500)); outline-offset: 2px; }
 
 /* La barre de progression est collante : une cible amenee au focus ne doit pas se loger dessous. */
 .fr-resume-erreurs, .fr-form [data-colid] { scroll-margin-top: 6rem; }
@@ -1021,7 +1021,7 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 /* Un lieu : la carte, une adresse, ou l'un ou l'autre. */
 .fr-lieu__bascule { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
 .fr-lieu__onglet { flex: 1 1 0; }
-.fr-lieu__onglet[aria-pressed="true"] { background: var(--blue-france); color: var(--bouton-texte, #fff); }
+.fr-lieu__onglet[aria-pressed="true"] { background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
 .fr-lieu__panneau[hidden] { display: none; }
 /* Le style des champs impose un affichage : sans cette regle, l'attribut hidden ne cache pas le texte du point. */
 .fr-geo input[hidden] { display: none; }

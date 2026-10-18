@@ -1090,6 +1090,7 @@
 <script src="shared/types.js"></script>
 <script src="shared/attachments.js"></script>
 <script src="shared/session-context.js"></script>
+<script src="shared/conditions.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
@@ -5156,7 +5157,7 @@ async function externeGenerer() {
   const x = S.externe = S.externe || {};
   if (!E || !def) return;
   try {
-    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText] = await Promise.all([
+    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText] = await Promise.all([
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
@@ -5165,11 +5166,12 @@ async function externeGenerer() {
       fetchScriptSource('shared/enrichir.js'),
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/prefill.js'),
+      fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('runtime/engine.js'),
       fetchScriptSource('shared/dsfr-like.css')
     ]);
     x.page = E.buildExternalDocument(def,
-      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText },
+      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText },
       { adresse: x.adresse });
     x.nom = (def.id || 'formulaire') + '.html';
     toast('Page générée', 'success');
@@ -5325,8 +5327,8 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, engineJs, cssText] =
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -5338,6 +5340,7 @@ async function publishForm() {
       fetchScriptSource('shared/formats.js'),
       fetchScriptSource('shared/enrichir.js'),
       fetchScriptSource('shared/saisies.js'),
+      fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -5345,7 +5348,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 

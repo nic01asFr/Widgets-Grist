@@ -39,6 +39,17 @@ it('runtime html embeds session-context when provided', () => {
   assert.ok(doc.includes('/*session*/'));
 });
 
+it('runtime html embeds conditions before the engine that evaluates them', () => {
+  const doc = P.buildRuntimeDocument({ id: 'demo', title: 'T', tableId: 'Contacts', sections: [], choices: {} }, {
+    conditionsJs: '/*conditions*/',
+    engineJs: '/*engine*/',
+    typesJs: '/*types*/',
+    bridgeJs: '/*bridge*/'
+  });
+  assert.ok(doc.includes('/*conditions*/'));
+  assert.ok(doc.indexOf('/*conditions*/') < doc.indexOf('/*engine*/'), 'le moteur lit FormConditions au chargement');
+});
+
 it('runtime html embeds bridge, types and DSFR-like structure (no CDN)', () => {
   const doc = P.buildRuntimeDocument({ id: 'demo', title: 'T', tableId: 'Contacts', sections: [], choices: {} }, {
     engineJs: '/*engine*/',

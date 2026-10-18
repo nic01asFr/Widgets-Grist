@@ -15,11 +15,14 @@ Façade **questionnaire** pour user non formé ; moteur technique (`bind` / `ens
 projects/grist_forms/
 ├── builder.html          # UI 4 étapes + wizard + templates
 ├── runtime/
-│   ├── engine.js         # Preview + runtime (conditions, cascade, editRowId)
+│   ├── engine.js         # Preview + runtime (cascade, editRowId) ; mount() et monter()
 │   ├── formdef.schema.json
+│   ├── conditions.schema.json   # contrat conditions-1.0 (source ; copie publiée dans published/schemas/)
 │   └── survey-manifest.schema.json
 ├── shared/
-│   ├── dsfr-like.css
+│   ├── conditions.js     # La grammaire de conditions + son évaluateur (UMD, sans dépendance)
+│   ├── client-contrat.js # Le pont grist-bridge sous la forme du contrat de données, et l'inverse
+│   ├── dsfr-like.css     # Thème : couleurs via var(--kit-*, repli)
 │   ├── ux.js
 │   ├── grist-bridge.js
 │   ├── types.js
@@ -39,13 +42,48 @@ projects/grist_forms/
 ├── tests/
 │   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
 ├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
+├── docs/THEME-KIT.md        # Variables --kit-* et correspondance avec les jetons du kit
+├── docs/MIGRATION-CONDITIONS.md  # Ce qui change pour qui écrit un FormDef (10/10/2026)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
 ```
 
-## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
+## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test projects/grist_forms/tests/*.test.js` → **267 tests verts**
+`node --test projects/grist_forms/tests/*.test.js` → **363 tests verts** (le « 267 » des
+notes précédentes était déjà périmé : 271 au 10/10 avant ce lot). `node --test
+scripts/schemas.test.js` → 11 verts (il en avait un rouge : la dérive du schéma publié).
+
+### Les prérequis du kit d'apps Cerema (10/10/2026, jalon 0b, décision D7)
+
+Le kit (`projects/cerema-appkit`) veut référencer FormDef, réutiliser sa grammaire de
+conditions et monter un formulaire hors d'un widget Grist. Cinq changements ; aucun ne change un
+FormDef sain, et ce que change une condition fautive est dans `docs/MIGRATION-CONDITIONS.md` :
+
+| Quoi | Où |
+|---|---|
+| Le schéma FormDef publié **resynchronisé** sur la source (il rejetait 48 écarts de l'enquête du 4e) ; la source n'a plus d'`$id` (un seul `$id` par adresse) ; test d'égalité source/publié, de fixtures et d'`$id` unique | `published/schemas/formdef-1.0.schema.json`, `scripts/schemas.test.js` |
+| Le contrat **`conditions-1.0`** extrait : règles et composés `and`/`or`/`not`, opérateurs en liste fermée, sources fermées (`field`, `context`, `audience`) ; `definitions.condition` du FormDef en est la copie identique (test d'équivalence) | `runtime/conditions.schema.json`, `published/schemas/conditions-1.0.schema.json` |
+| **L'évaluateur partagé** `shared/conditions.js` : `validerCondition` (fautes avec chemin et proposition), `evaluer` (lève `ConditionInvalide`), `comparer`. Nouveaux opérateurs `empty`, `notEmpty` et composé `not`. **Un opérateur inconnu n'est plus « vrai »** : la condition vaut faux, le champ reste caché, l'erreur est journalisée une fois (`Engine.definirJournal(fn)`, sinon `console.error`) | `shared/conditions.js`, `engine.js` |
+| **`FormEngine.monter(conteneur, formdef, { client, contexte, theme, valeurs, ligne, surEnvoi })`** → `{ demonter, valeurs, valider, contexte, rendre }`. Avec `client` (contrat de données du gabarit : `lireTable(table)`, `appliquer(actions, etiquette)`), le moteur n'accède plus à `window.grist` ; une écriture en file (`{ enfile: true }`) est dite à l'écran. `mount` reste l'entrée historique et gagne `demonter` et `valider` | `engine.js`, `shared/client-contrat.js` |
+| **Thème** : plus de couleur en dur hors des définitions ; `var(--kit-accent, var(--blue-france))`… le rendu par défaut est inchangé (vérifié : résolue sans thème, la feuille redonne l'ancienne ligne à ligne) | `shared/dsfr-like.css`, `docs/THEME-KIT.md` |
+
+**Pour les hôtes qui chargent `engine.js` en `<script>` :** ajouter
+`shared/conditions.js` AVANT `runtime/engine.js`. Sans lui, le moteur se replie sur
+l'ancien évaluateur (opérateur inconnu = vrai) et le dit une fois en console : rien ne
+casse, mais rien ne se corrige. Fait ici pour `builder.html`, `demo/index.html` et le
+bundle de publication (`publish.js`, paramètre `conditionsJs`). **Pas fait** (hors de ce
+projet) : Atlas (`index_v7.html`, `packages/atlas-app` — sept scripts vendorisés),
+`qgis2grist` (`terrain.html`, `lib/qfield-publish-pack.js`).
+
+**Pièges relevés pendant le lot**
+- `node --test scripts/generate-vitrine.test.js` **réécrit** `published/index.html` et
+  `published/w/*/index.html` (dates relatives) : ne pas le lancer pour « vérifier », ou
+  restaurer ensuite.
+- `mount` reçoit-il un `bridge.context` ? Alors la sonde d'identité ne tourne pas (elle
+  serait écrasée). `monter` résout l'identité lui-même dans ce cas.
+- `==` est l'égalité LÂCHE de JavaScript (`'' == 0`) ; `>`/`<` sont numériques (une date ISO
+  donne faux). Documenté dans le contrat ; pour l'absence de réponse, `empty`.
 
 ### Le mode « externe » et ses quatre briques (18/10/2026)
 
