@@ -82,6 +82,28 @@ Géoplateforme (service de l’État) ; aucun compte ni clé n’est nécessaire
 
 ---
 
+### Un format qu'on contrôle
+
+Une question de texte peut exiger un **IBAN**, un **SIREN**, un **SIRET**, un **code postal**, un **code INSEE**, un **courriel** ou un **téléphone français** (`options.validation.format`).
+Le contrôle est un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Une valeur fausse reste sous la question avec son message ;
+une valeur juste est enregistrée sous sa forme normalisée (un IBAN sans espaces, un téléphone à dix chiffres).
+
+La règle existe **en JavaScript et en Python** (`shared/formats.js`) : le navigateur guide la personne, et la colonne de conformité d'un envoi hors de Grist refait le même contrôle
+côté Grist, parce que le serveur d'un formulaire natif accepte tout. Les essais exécutent les deux et exigent le même verdict.
+
+### Une valeur donnée par l'adresse de la page
+
+Un code collé sur un équipement ouvre le formulaire **avec cet équipement déjà désigné** : `…/page.html?objet=LAMP-0012&objet_nom=Lampadaire%2012`.
+Une question le déclare (`options.prefill` : `param`, `verrouille`, `libelleParam`) ; rien n'est repris sans cette déclaration. Verrouillée, la valeur se lit sans se saisir
+et part avec la réponse. C'est une commodité, pas une protection : une adresse se fabrique à la main, la table doit contrôler ce qu'elle reçoit.
+
+### Un lieu qui complète d'autres colonnes
+
+Sur une question de lieu (un point), `options.enrichir.colonnes` désigne les colonnes que les services publics peuvent remplir à partir du point posé :
+l'**adresse** la plus proche, la **commune** (code INSEE, code postal, département), le **bâtiment** (identifiant du Référentiel national des bâtiments),
+l'**altitude**, les **risques** connus. Un service qui ne répond pas laisse ses colonnes vides (jamais `0`), et la position choisie est conservée.
+Le formulaire dit sous la carte ce qui part et vers qui. Les services sont appelés depuis le navigateur, sans clé.
+
 ## Illustrer une question
 
 Une question ne se comprend pas toujours avec des mots. « Classez ces cinq
@@ -139,6 +161,14 @@ Le formulaire publié vit dans le document : partagez la page comme vous
 partagez n'importe quelle page Grist, avec les droits que vous voulez.
 
 ---
+
+## Envoyer depuis une page hors de Grist
+
+Le formulaire peut aussi être servi **hors de Grist**, sur n'importe quelle page, et écrire dans votre document par la clé d'un **formulaire natif** de Grist.
+L'étape « Mettre en ligne » du compositeur prépare la table, vous collez le lien du formulaire publié, et une page autonome est générée.
+
+Ce que ce mode **n'est pas** : une protection. Toute personne qui a la page peut envoyer, sans limite, et Grist accepte la ligne avant qu'une colonne ne la juge.
+Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page hors de Grist. Tout est mesuré et expliqué dans `docs/ENVOI-EXTERNE.md`.
 
 ## Ce que ça ne fait pas
 

@@ -1,6 +1,6 @@
 # Envoyer un formulaire depuis une page hors de Grist
 
-*Note d'étude, 18/10/2026. Mesurée sur une instance Grist de service public, avec un document d'essai et des données fictives. Rien de ce qui suit n'est livré : c'est ce qui a été constaté, et ce qu'on en conclut pour un éventuel mode « externe » de Form Builder.*
+*Note de référence, 18/10/2026. Mesurée sur une instance Grist de service public, avec un document d'essai et des données fictives. Le mode décrit ici est livré (étape « Mettre en ligne » du compositeur, `shared/externe.js`) ; les mesures valent pour l'instance testée.*
 
 ## L'idée
 
@@ -46,8 +46,21 @@ Mesuré avec trois envois : un habitant d'Abbeville et un d'Amiens arrivent chez
 
 C'est ce que ni le formulaire natif (pas d'adresse certifiée, pas de code) ni le widget dans Grist (exige un accès au document) ne permettent.
 
+## Ce qui est livré
+
+- **`shared/externe.js`** — `planExterne` (le schéma), `buildExternalDocument` (la page autonome), `lireAdresseFormulaire` (la clé, lue dans le lien du formulaire publié).
+- **La table de réception** ne contient que ce que la personne remplit, plus `Recu`, `Premier` (premier envoi de ce reçu), `Motifs` (ce qui ne va pas) et `Conforme`.
+- **La table `<table>_Traitements`**, privée : `Reception` (référence), `Statut`, `Reponse`, `Interne`. La réception affiche `StatutAffiche` et `ReponseAffichee` : la personne qui a son reçu
+  peut les lire, jamais les notes internes.
+- **La page** envoie par la clé avec un reçu aléatoire, lit l'adresse de la page (`shared/prefill.js`), contrôle les formats (`shared/formats.js`) et peut compléter un lieu (`shared/enrichir.js`).
+
+Épreuve en Grist réel : un envoi en règle est conforme ; un objet inventé, une valeur hors liste, une gravité hors bornes et un IBAN faux sont démasqués, y compris par un client qui contourne
+l'interface ; un reçu rejoué est signalé ; la clé ne peut pas écrire dans la table de traitement (403) ; le statut posé par un agent remonte sur la ligne reçue.
+
 ## À savoir
 
 - Parcourir une relation dans une règle d'accès (`rec.Commune.Zone`) échoue en silence ; une colonne à formule scalaire (`Zone = $Commune.Zone`) contourne.
 - La lecture en retour (suivre son signalement par son reçu) demande de rendre le document public en lecture, avec des règles par clé de lien. Mesuré possible, non livré.
+- Une référence **inventée** est vraie pour Grist mais n'a pas d'identifiant ; une référence vide est fausse. La formule le distingue.
+- Les services qui complètent un lieu (adresse, commune, bâtiment, altitude, risques) répondent depuis une page d'une autre origine ; leur licence n'est pas relevée ici.
 - Le résultat vaut pour l'instance testée.

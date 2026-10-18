@@ -29,6 +29,11 @@ projects/grist_forms/
 │   ├── survey-project.js
 │   ├── ensure-schema.js
 │   ├── liens-table.js       # Tables liées : reconnaître, créer, écrire les lignes
+│   ├── referentiel.js       # Champ d'adresse (BAN) : propositions, annexes
+│   ├── formats.js           # IBAN, SIRET, … : une règle en JavaScript ET en Python
+│   ├── prefill.js           # Valeurs reçues par l'adresse de la page (QR code)
+│   ├── enrichir.js          # Un point posé : adresse, commune, bâtiment, altitude, risques
+│   ├── externe.js           # Schéma + page d'un formulaire servi hors de Grist
 │   ├── formulaires-table.js
 │   └── publish.js
 ├── tests/
@@ -41,6 +46,18 @@ projects/grist_forms/
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil** (2026-10-05)
 
 `node --test projects/grist_forms/tests/*.test.js` → **267 tests verts**
+
+### Le mode « externe » et ses quatre briques (18/10/2026)
+
+Prouvé en Grist réel sur un document d'essai ; détail et mesures : `docs/ENVOI-EXTERNE.md`. `node --test` → **446 tests**.
+
+- **Une règle, deux exécutions.** `formats.js` porte chaque format en JavaScript et en Python ; la formule `Motifs` de la table de réception est **exécutée en Python par les essais**
+  (`tests/externe.test.js`, `tests/formats.test.js`). Sans Python sur le poste, ces essais se sautent et le disent.
+- **La clé d'un formulaire natif écrit toute colonne qui n'est pas une formule.** La table de réception ne contient donc que ce que la personne peut remplir ; statut, réponse et notes
+  vivent dans `<table>_Traitements`. Les règles d'accès ne s'appliquent pas à ce chemin : ne rien leur confier.
+- **Une référence inventée est « vraie » pour Grist mais n'a pas d'identifiant** : `not $Col` dit « absente », `$Col and not $Col.id` dit « inconnue ».
+- **Un nombre absent d'un envoi vaut 0 dans Grist** : le moteur écrit `null` explicite (colonnes enrichies, annexes d'adresse).
+- Hors de Grist : pas de pièces jointes (l'envoi d'un fichier est lié à une session par cookie, bloqué hors de l'origine de Grist).
 
 ### Les quatre saisies qui manquaient (04/10/2026)
 
