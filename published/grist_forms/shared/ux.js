@@ -40,6 +40,12 @@
     { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
     // La case a cocher reste disponible : une acceptation de conditions n'est
     // pas une question a deux reponses, c'est un accord qu'on donne ou non.
+    { key: 'etiquettes', type: 'ChoiceList', widget: 'etiquettes', label: 'Étiquettes libres' },
+    { key: 'pastilles', type: 'Choice', widget: 'pastilles', label: 'Choix en pastilles colorées' },
+    { key: 'curseur', type: 'Int', widget: 'curseur', label: 'Curseur' },
+    { key: 'compteur', type: 'Int', widget: 'compteur', label: 'Compteur + / −' },
+    // Grist n'a pas de type heure : « HH:MM » se range en texte.
+    { key: 'heure', type: 'Text', widget: 'heure', label: 'Heure (HH:MM)' },
     { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Case à cocher' }
   ];
 
@@ -68,6 +74,12 @@
     if (!field) return 'text';
     if (field.widget === 'textarea') return 'textarea';
     if (field.widget === 'likert') return 'likert';
+    // Un dessin et une signature sont des pièces jointes qu'on trace : c'est le
+    // widget, puis l'usage déclaré, qui les distinguent d'un fichier envoyé.
+    if (field.widget === 'dessin') {
+      var usage = field.options && field.options.dessin && field.options.dessin.usage;
+      return usage === 'signature' ? 'signature' : 'dessin';
+    }
     if (field.widget === 'file' || field.type === 'Attachments') return 'file';
     var all = SIMPLE_TYPES.concat(ADVANCED_TYPES);
     var i;
@@ -105,6 +117,16 @@
     // Celui qu'on quitte s'en va, sauf l'echelle, qui se choisit ailleurs.
     if (found.kind) field.kind = found.kind;
     else if (field.kind && field.kind !== 'echelle') delete field.kind;
+    // La signature et le dessin partagent type et widget : l'usage les distingue.
+    if (found.widget === 'dessin') {
+      field.options = field.options || {};
+      field.options.dessin = field.options.dessin || {};
+      if (found.key === 'signature') {
+        field.options.dessin.usage = 'signature';
+      } else if (field.options.dessin.usage === 'signature') {
+        delete field.options.dessin.usage;
+      }
+    }
     return field;
   }
 

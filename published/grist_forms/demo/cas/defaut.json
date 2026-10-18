@@ -1,0 +1,180 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-defaut",
+  "title": "Signaler un défaut sur un équipement",
+  "tableId": "Defauts",
+  "composeMode": "ensureSchema",
+  "successMessage": "Merci, le défaut est signalé. Une équipe sera prévenue.",
+  "branding": {
+    "organisation": "Service technique",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Un défaut sur un équipement ?",
+    "texte": "Vous avez scanné le code collé sur l’équipement : il est **déjà désigné** ci-dessous. Dites seulement ce qui ne va pas, et touchez la carte si l’équipement n’est pas là où vous êtes.",
+    "dureeMinutes": 1,
+    "bouton": "Signaler un défaut"
+  },
+  "choices": {},
+  "sections": [
+    {
+      "id": "defaut",
+      "label": "Le défaut",
+      "fields": [
+        {
+          "colId": "Objet",
+          "label": "Équipement concerné",
+          "type": "Text",
+          "widget": "text",
+          "required": true,
+          "description": "Rempli par le code scanné. Sans code, indiquez-le ici.",
+          "options": {
+            "prefill": {
+              "param": "objet",
+              "verrouille": true,
+              "libelleParam": "objet_nom"
+            }
+          }
+        },
+        {
+          "colId": "Nature",
+          "label": "Qu’est-ce qui ne va pas ?",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Ne s’allume plus",
+              "Clignote",
+              "Cassé ou abîmé",
+              "Autre"
+            ]
+          }
+        },
+        {
+          "colId": "Priorite",
+          "label": "Quelle priorité ?",
+          "type": "Choice",
+          "widget": "pastilles",
+          "options": {
+            "choices": [
+              "Critique",
+              "Haute",
+              "Normale"
+            ],
+            "couleurs": {
+              "Critique": "#c9191e",
+              "Haute": "#b34000",
+              "Normale": "#18753c"
+            }
+          }
+        },
+        {
+          "colId": "Nombre",
+          "label": "Combien d’équipements sont touchés ?",
+          "type": "Int",
+          "widget": "compteur",
+          "options": {
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "depart": {
+              "source": "valeur",
+              "valeur": 1
+            }
+          }
+        },
+        {
+          "colId": "Constate",
+          "label": "Quand l’avez-vous constaté ?",
+          "type": "DateTime",
+          "widget": "datetime",
+          "options": {
+            "max": "aujourdhui",
+            "depart": {
+              "source": "maintenant"
+            }
+          }
+        },
+        {
+          "colId": "Urgence",
+          "label": "Est-ce urgent ?",
+          "type": "Int",
+          "widget": "curseur",
+          "options": {
+            "min": 0,
+            "max": 100,
+            "step": 5,
+            "unite": "%",
+            "presets": [
+              0,
+              50,
+              100
+            ]
+          }
+        },
+        {
+          "colId": "Lieu",
+          "label": "Où êtes-vous ?",
+          "type": "Text",
+          "widget": "geo",
+          "kind": "geometrie",
+          "description": "Touchez la carte ou tapez une adresse : l’adresse, la commune et le bâtiment se remplissent tout seuls.",
+          "options": {
+            "geometrie": "Point",
+            "carte": {
+              "centre": [
+                2.2954,
+                49.8955
+              ],
+              "zoom": 16,
+              "fond": "plan"
+            },
+            "enrichir": {
+              "colonnes": {
+                "adresse": "Adresse",
+                "insee": "CodeInsee",
+                "commune": "Commune",
+                "batiment": "RnbId"
+              }
+            },
+            "saisieLieu": "les-deux"
+          }
+        },
+        {
+          "colId": "Tel",
+          "label": "Un numéro pour vous rappeler (facultatif)",
+          "type": "Text",
+          "widget": "text",
+          "options": {
+            "validation": {
+              "format": "telephone"
+            },
+            "placeholder": "06 12 34 56 78"
+          }
+        },
+        {
+          "colId": "Mots",
+          "label": "Mots-clés (facultatif)",
+          "type": "ChoiceList",
+          "widget": "etiquettes",
+          "options": {
+            "choices": [
+              "froid",
+              "bruit",
+              "vandalisme",
+              "humidité"
+            ],
+            "maxSelected": 6
+          }
+        },
+        {
+          "colId": "Commentaire",
+          "label": "Précisions utiles",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    }
+  ]
+}

@@ -45,7 +45,10 @@
           "widget": "text",
           "required": true,
           "options": {
-            "placeholder": "prenom.nom@exemple.fr"
+            "placeholder": "prenom.nom@exemple.fr",
+            "validation": {
+              "format": "courriel"
+            }
           }
         },
         {

@@ -550,6 +550,53 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
 .fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
 
+/* Des étiquettes libres : des puces qu'on retire, et la saisie du mot suivant. */
+.fr-form .fr-etiquettes__liste, .champ-bloc__rendu .fr-etiquettes__liste {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; margin: 0 0 0.5rem; padding: 0;
+}
+.fr-form .fr-etiquette, .champ-bloc__rendu .fr-etiquette {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border: 1px solid var(--bord); border-radius: 999px; background: var(--fond-carte); color: var(--encre);
+}
+.fr-form .fr-etiquette__retirer, .champ-bloc__rendu .fr-etiquette__retirer {
+  min-width: 2rem; min-height: 2rem; border: 0; border-radius: 999px; background: transparent; color: var(--encre-douce); cursor: pointer; font: inherit;
+}
+.fr-form .fr-etiquettes__ligne, .champ-bloc__rendu .fr-etiquettes__ligne { display: flex; gap: 0.5rem; }
+.fr-form .fr-etiquettes__ligne .fr-input, .champ-bloc__rendu .fr-etiquettes__ligne .fr-input { flex: 1 1 auto; min-width: 0; }
+
+/* Des choix en pastilles : la couleur de chaque choix vient de la question (--pastille), jamais d'ici. */
+.fr-form .fr-fieldset--pastilles .fr-fieldset__content, .champ-bloc__rendu .fr-fieldset--pastilles .fr-fieldset__content { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fr-form .fr-fieldset--pastilles .fr-radio-group, .champ-bloc__rendu .fr-fieldset--pastilles .fr-radio-group {
+  min-height: var(--cible); padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--pastille, var(--bord));
+  background: color-mix(in srgb, var(--pastille, var(--fond-carte)) 14%, transparent);
+}
+.fr-form .fr-fieldset--pastilles .fr-radio-group:has(input:checked), .champ-bloc__rendu .fr-fieldset--pastilles .fr-radio-group:has(input:checked) {
+  background: color-mix(in srgb, var(--pastille, var(--blue-france)) 35%, transparent); font-weight: 700;
+}
+
+/* Un nombre et son unité ; un curseur et sa valeur ; un compteur et ses deux boutons. */
+.fr-form .fr-nombre__ligne, .champ-bloc__rendu .fr-nombre__ligne,
+.fr-form .fr-compteur__ligne, .champ-bloc__rendu .fr-compteur__ligne { display: flex; align-items: center; gap: 0.5rem; }
+.fr-form .fr-nombre__ligne .fr-input, .champ-bloc__rendu .fr-nombre__ligne .fr-input,
+.fr-form .fr-compteur__ligne .fr-input, .champ-bloc__rendu .fr-compteur__ligne .fr-input { flex: 1 1 auto; min-width: 0; }
+.fr-form .fr-compteur__ligne .fr-btn, .champ-bloc__rendu .fr-compteur__ligne .fr-btn { min-width: var(--cible); min-height: var(--cible); padding: 0; flex: 0 0 auto; }
+.fr-form .fr-unite, .champ-bloc__rendu .fr-unite { color: var(--encre-douce); white-space: nowrap; }
+.fr-form .fr-curseur__ligne, .champ-bloc__rendu .fr-curseur__ligne { display: flex; align-items: center; gap: 0.75rem; }
+.fr-form .fr-curseur__ligne input[type="range"], .champ-bloc__rendu .fr-curseur__ligne input[type="range"] {
+  flex: 1 1 auto; min-height: var(--cible); accent-color: var(--kit-accent, var(--blue-france));
+}
+.fr-form .fr-curseur__valeur, .champ-bloc__rendu .fr-curseur__valeur { min-width: 6rem; text-align: right; color: var(--encre); font-variant-numeric: tabular-nums; }
+.fr-form .fr-curseur__appuis, .champ-bloc__rendu .fr-curseur__appuis { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.fr-form .fr-curseur__preset, .champ-bloc__rendu .fr-curseur__preset { min-height: var(--cible); }
+
+/* Une question dont la valeur vient de l'adresse de la page : on la lit, on ne la change pas. */
+.fr-form .fr-verrouille__valeur, .champ-bloc__rendu .fr-verrouille__valeur {
+  margin: 0.25rem 0 0; padding: 0.625rem 0.875rem; min-height: var(--cible); box-sizing: border-box;
+  display: flex; align-items: center;
+  background: var(--fond-page); border: 1px dashed var(--bord); border-radius: 8px;
+}
+
 /* Sur un téléphone, le bouton passe sous le champ plutôt que de l'écraser. */
 @media (max-width: 30rem) {
   .fr-form .fr-referentiel__ligne, .champ-bloc__rendu .fr-referentiel__ligne { flex-direction: column; }
@@ -891,3 +938,92 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
    formulaire entier se lit en diagonale sur un telephone. */
 .fr-form, .fr-accueil, .fr-synthese { overflow-x: hidden; }
 .fr-form table { max-width: 100%; }
+
+/* ---------------------------------------------------------------
+   Toutes les tailles d'ecran : de 320 px a un grand ecran.
+   > **Un element ne decide jamais de la largeur de la page.** Le canevas
+   > pose sa largeur en pixels ; dans un parent en grille ou en flex, elle
+   > entrait dans le calcul de taille et elargissait tout le formulaire. Il est
+   > donc sorti du flux : la planche a deja sa hauteur, le canevas la remplit.
+   > Les textes reserves aux lecteurs d'ecran avaient le meme defaut : posés en
+   > absolu sans parent positionne, un cadre defilant ne les retenait pas.
+   --------------------------------------------------------------- */
+.fr-dessin__toile { position: absolute; top: 0; left: 0; }
+.fr-rangs__cadre { position: relative; }
+
+/* Une cible tactile fait au moins 44 px, meme quand le dessin est plus petit :
+   la pastille de couleur garde son rond, sa zone sensible deborde. */
+.fr-dessin__couleur { position: relative; }
+.fr-dessin__couleur::after { content: ""; position: absolute; inset: -0.55rem; }
+.fr-dessin__palette { gap: 0.9rem; }
+
+/* Le champ de fichier natif fait une vingtaine de pixels : trop peu au doigt. */
+.fr-form input[type="file"] { min-height: var(--cible, 2.75rem); max-width: 100%; }
+.fr-form input[type="file"]::file-selector-button {
+  min-height: var(--cible, 2.75rem); padding: 0 1rem; margin-right: 0.75rem; cursor: pointer;
+}
+
+/* La grille de classement tient dans un telephone : l'intitule se resserre,
+   les cases gardent 44 px de large. Au-dela de trois rangs, le cadre defile. */
+@media (max-width: 30rem) {
+  .fr-form .fr-rangs__intitule, .champ-bloc__rendu .fr-rangs__intitule { min-width: 6.5rem; }
+  .fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 3.25rem; }
+  .fr-form .fr-rangs th, .fr-form .fr-rangs td { padding-left: 0.25rem; padding-right: 0.25rem; }
+}
+
+/* ---------------------------------------------------------------
+   Mode sombre : le texte garde un contraste lisible.
+   > **Une couleur qui passe sur blanc ne passe pas sur fond sombre.** Le rouge
+   > d'erreur faisait 2,95:1 sur le fond du formulaire, et les boutons gardaient
+   > un fond clair sous un texte clair (2,3:1). Chaque couleur de texte en cause
+   > devient une variable, redefinie ici pour le mode sombre ; en clair, ce sont
+   > les valeurs d'avant.
+   --------------------------------------------------------------- */
+:root[data-grist-theme="dark"],
+:root[data-grist-appearance="dark"] {
+  --error: #ff7a75; --erreur-fond: #3b1f1f;
+  --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
+  --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) {
+    --error: #ff7a75; --erreur-fond: #3b1f1f;
+    --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
+    --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
+  }
+}
+.fr-btn { color: var(--bouton-texte, #fff); }
+.fr-btn--secondary, .fr-btn--tertiary, .fr-btn--tertiary-no-outline { color: var(--blue-france); }
+.fr-btn--secondary { background: var(--bouton-secondaire-fond, #fff); }
+.fr-btn--secondary:hover { background: var(--bouton-secondaire-survol, #f0f0ff); }
+.fr-alert--error, .fr-badge--error { background: var(--erreur-fond, #ffe9e9); }
+
+/* Le resume des erreurs : une liste de liens, chacun une cible de 44 px. */
+.fr-resume-erreurs ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+.fr-resume-erreurs a { display: inline-block; padding: 0.7rem 0; color: inherit; text-decoration: underline; }
+.fr-resume-erreurs:focus { outline: 3px solid var(--error, #ce0500); outline-offset: 2px; }
+
+/* La barre de progression est collante : une cible amenee au focus ne doit pas se loger dessous. */
+.fr-resume-erreurs, .fr-form [data-colid] { scroll-margin-top: 6rem; }
+
+/* Les barres collantes collent vraiment.
+   > **`overflow-x: hidden` fait du formulaire un conteneur de defilement** :
+   > la progression et la barre d'action, declarees collantes, defilaient avec la
+   > page. `clip` coupe de la meme facon sans creer ce conteneur ; un navigateur qui
+   > ne le connait pas garde `hidden` (la regle precedente). Sur un ecran bas
+   > (telephone en paysage), la progression reste dans le flux : deux barres fixes
+   > mangeraient plus d'un tiers de la hauteur. */
+.fr-form, .fr-accueil, .fr-synthese { overflow-x: clip; }
+@media (max-height: 36rem) {
+  .fr-form .fr-progression { position: static; }
+}
+
+/* Un lieu : la carte, une adresse, ou l'un ou l'autre. */
+.fr-lieu__bascule { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+.fr-lieu__onglet { flex: 1 1 0; }
+.fr-lieu__onglet[aria-pressed="true"] { background: var(--blue-france); color: var(--bouton-texte, #fff); }
+.fr-lieu__panneau[hidden] { display: none; }
+/* Le style des champs impose un affichage : sans cette regle, l'attribut hidden ne cache pas le texte du point. */
+.fr-geo input[hidden] { display: none; }
+.fr-geo__choisi { margin: 0.35rem 0 0; font-weight: 600; color: var(--encre); }
+.fr-geo__choisi:empty { display: none; }

@@ -41,6 +41,8 @@ La synthèse remet le sens que la définition du formulaire porte.
 | Liste, cases à cocher | choisit, avec un plafond si besoin | `Choice`, `ChoiceList` |
 | « Autre : … » | choisit *Autre* puis précise | la liste + une colonne de précision |
 | Échelle | place un curseur entre deux extrêmes nommés | `Int` |
+| Étiquettes libres | tape des mots-clés, ajoute, retire | `ChoiceList` |
+| Pastilles colorées | touche un choix coloré (priorité, statut) | `Choice` |
 | Classement | range des propositions dans une grille | une colonne par rang |
 | Date, date et heure | choisit | `Date`, `DateTime` |
 | Référence | choisit une ligne d'une autre table | `Ref`, `RefList` |
@@ -49,8 +51,14 @@ La synthèse remet le sens que la définition du formulaire porte.
 | **Adresse** | tape, puis choisit l’adresse qui existe dans la liste | `Text` + colonnes annexes |
 | **Dessin, signature** | dessine, annote une image, signe | `Attachments` |
 
+**Toutes les tailles d'écran** : chaque saisie tient de 320 px à un grand écran, sans défilement horizontal de la page, et chaque cible tactile fait au moins 44 px. La règle et la recette de mesure sont dans `docs/ECRANS.md`.
+
 Les échelles qui se suivent se regroupent en matrice : l'échelle n'est annoncée
 qu'une fois, pas sous chaque ligne.
+
+### Un lieu : la carte, une adresse, ou les deux
+
+Une question de lieu (un point) se renseigne en touchant la carte, en choisissant une adresse de la Base adresse nationale, ou l'un ou l'autre au choix (`options.saisieLieu` : `carte` par défaut, `adresse`, `les-deux`). Les deux donnent le même point, dans la même colonne, avec le même complément (commune, bâtiment, altitude, risques) ; la carte se recentre sur l'adresse choisie, et un toucher sur la carte efface l'adresse choisie, qui n'est plus celle du point. Le texte `POINT(…)` n'est pas montré quand une adresse est proposée. Une ligne ou une surface reste à la carte ; sans le service d'adresses, la carte seule.
 
 ### Le champ d’adresse
 
@@ -81,6 +89,39 @@ Géoplateforme (service de l’État) ; aucun compte ni clé n’est nécessaire
 ```
 
 ---
+
+### Un format qu'on contrôle
+
+Une question de texte peut exiger un **IBAN**, un **SIREN**, un **SIRET**, un **code postal**, un **code INSEE**, un **courriel** ou un **téléphone français** (`options.validation.format`).
+Le contrôle est un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Une valeur fausse reste sous la question avec son message ;
+une valeur juste est enregistrée sous sa forme normalisée (un IBAN sans espaces, un téléphone à dix chiffres).
+
+La règle existe **en JavaScript et en Python** (`shared/formats.js`) : le navigateur guide la personne, et la colonne de conformité d'un envoi hors de Grist refait le même contrôle
+côté Grist, parce que le serveur d'un formulaire natif accepte tout. Les essais exécutent les deux et exigent le même verdict.
+
+### Nombres, dates, heures : bornes, départ, curseur, compteur
+
+- **Bornes** (`options.min`, `max`) : un nombre hors bornes, une date trop tôt ou trop tard est refusé avec un message qui dit les bornes. Une date accepte `aujourdhui`.
+- **Curseur** (`widget: curseur`) : une valeur entre deux bornes, avec des valeurs d'appui (`presets`) ; **il n'écrit rien tant qu'on n'y a pas touché**, et l'écran le dit (« Pas de réponse »).
+- **Compteur** (`widget: compteur`) : un nombre qu'on monte et qu'on descend d'un pas, sans sortir des bornes. `unite` affiche une unité sans l'écrire.
+- **Heure** (`widget: heure`) : « HH:MM », rangée en texte (Grist n'a pas de type heure) ; le sélecteur est celui du système.
+- **Étiquettes** (`widget: etiquettes`) : des mots libres ajoutés en puces, sans doublon (la casse ne distingue pas), 40 caractères et 20 mots au plus ; un mot tapé mais pas encore ajouté n'est pas perdu à l'envoi. La liste de choix sert de suggestions, elle n'est pas obligatoire.
+- **Pastilles** (`widget: pastilles`) : des choix en boutons colorés ; `options.couleurs` donne une couleur par choix (`#rgb` ou `#rrggbb`, rien d'autre : la couleur finit dans un style).
+- **Ordre** (`options.apres`) : une fin qui ne peut pas précéder son début, pour des dates, des heures ou des nombres.
+- **Valeur de départ** (`options.depart`) : la date du jour, maintenant, le courriel de la personne connectée, la dernière saisie sur l'appareil, ou une valeur fixe. Elle ne passe jamais devant une valeur déjà donnée et ne s'applique pas quand on modifie une ligne.
+
+### Une valeur donnée par l'adresse de la page
+
+Un code collé sur un équipement ouvre le formulaire **avec cet équipement déjà désigné** : `…/page.html?objet=LAMP-0012&objet_nom=Lampadaire%2012`.
+Une question le déclare (`options.prefill` : `param`, `verrouille`, `libelleParam`) ; rien n'est repris sans cette déclaration. Verrouillée, la valeur se lit sans se saisir
+et part avec la réponse. C'est une commodité, pas une protection : une adresse se fabrique à la main, la table doit contrôler ce qu'elle reçoit.
+
+### Un lieu qui complète d'autres colonnes
+
+Sur une question de lieu (un point), `options.enrichir.colonnes` désigne les colonnes que les services publics peuvent remplir à partir du point posé :
+l'**adresse** la plus proche, la **commune** (code INSEE, code postal, département), le **bâtiment** (identifiant du Référentiel national des bâtiments),
+l'**altitude**, les **risques** connus. Un service qui ne répond pas laisse ses colonnes vides (jamais `0`), et la position choisie est conservée.
+Le formulaire dit sous la carte ce qui part et vers qui. Les services sont appelés depuis le navigateur, sans clé.
 
 ## Illustrer une question
 
@@ -139,6 +180,14 @@ Le formulaire publié vit dans le document : partagez la page comme vous
 partagez n'importe quelle page Grist, avec les droits que vous voulez.
 
 ---
+
+## Envoyer depuis une page hors de Grist
+
+Le formulaire peut aussi être servi **hors de Grist**, sur n'importe quelle page, et écrire dans votre document par la clé d'un **formulaire natif** de Grist.
+L'étape « Mettre en ligne » du compositeur prépare la table, vous collez le lien du formulaire publié, et une page autonome est générée.
+
+Ce que ce mode **n'est pas** : une protection. Toute personne qui a la page peut envoyer, sans limite, et Grist accepte la ligne avant qu'une colonne ne la juge.
+Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page hors de Grist. Tout est mesuré et expliqué dans `docs/ENVOI-EXTERNE.md`.
 
 ## Ce que ça ne fait pas
 

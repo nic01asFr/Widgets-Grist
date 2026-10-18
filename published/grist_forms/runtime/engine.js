@@ -8,14 +8,17 @@
       require('../shared/types.js'),
       require('../shared/attachments.js'),
       require('../shared/session-context.js'),
-      require('../shared/referentiel.js')
+      require('../shared/referentiel.js'),
+      require('../shared/formats.js'),
+      require('../shared/enrichir.js'),
+      require('../shared/saisies.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -35,6 +38,49 @@
     var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
     return global && global.FormReferentiel && global.FormReferentiel.sourceConnue
       ? global.FormReferentiel : null;
+  }
+
+  /**
+   * Le catalogue de formats, s'il est là. Sans lui, un format déclaré ne
+   * contrôle rien : le champ reste un champ ordinaire.
+   */
+  function formatsApi() {
+    if (Formats && Formats.valide) return Formats;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormFormats && global.FormFormats.valide ? global.FormFormats : null;
+  }
+
+  /** Départs, bornes et ordre entre deux questions, s'ils sont là. Sans eux, ces réglages ne font rien. */
+  function saisiesApi() {
+    if (Saisies && Saisies.valeurDepart) return Saisies;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormSaisies && global.FormSaisies.valeurDepart ? global.FormSaisies : null;
+  }
+
+  /** Le module d'enrichissement par un point, s'il est là. Sans lui, le point reste un point. */
+  function enrichirApi() {
+    if (Enrichir && Enrichir.enrichir) return Enrichir;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormEnrichir && global.FormEnrichir.enrichir ? global.FormEnrichir : null;
+  }
+
+  /**
+   * Ce qu'un point apporte aux colonnes d'une question de lieu.
+   *
+   * Rend `null` quand la question n'enrichit rien ou que le WKT n'est pas un
+   * point ; sinon une promesse de `{ valeurs, phrase }` où `valeurs` couvre
+   * CHAQUE colonne désignée (`null` quand le service n'a rien rendu).
+   */
+  function enrichirChamp(field, wkt, deps) {
+    var api = enrichirApi();
+    if (!api) return null;
+    var colonnes = api.colonnesDe(field);
+    if (!Object.keys(colonnes).length) return null;
+    var point = api.pointDe(wkt);
+    if (!point) return null;
+    return api.enrichir(point, colonnes, deps || {}).then(function (r) {
+      return { valeurs: r.valeurs, phrase: api.phrase(r, colonnes) };
+    });
   }
 
   function normalizeEmail(v) {
@@ -256,6 +302,11 @@
               if (caches.annexes[cle]) out[caches.annexes[cle]] = null;
             });
           }
+          var apiCache = enrichirApi();
+          if (apiCache) {
+            var colsCache = apiCache.colonnesDe(field);
+            Object.keys(colsCache).forEach(function (sens) { out[colsCache[sens]] = null; });
+          }
           continue;
         }
         var brut = values[field.colId];
@@ -269,6 +320,10 @@
         } else {
           // « Non concerné » est une réponse ; la colonne, elle, reste vide.
           out[field.colId] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
+          // La forme qu'on enregistre : un IBAN sans espaces, un téléphone à 10 chiffres.
+          var fmt = formatsApi();
+          var idFormat = fmt && fmt.formatDeChamp(field);
+          if (idFormat && typeof out[field.colId] === 'string') out[field.colId] = fmt.normalise(idFormat, out[field.colId]);
         }
         // Le texte libre de « Autre » a sa propre colonne : écrit dans la liste,
         // Grist le garderait mais l'encadrerait en rouge (mesuré).
@@ -279,6 +334,9 @@
         // Une adresse choisie dans la liste apporte ses annexes ; une adresse
         // tapee, ou corrigee apres le choix, n'en apporte aucune.
         if (field.kind === 'referentiel') ecrireAnnexes(out, field, values);
+        // Un lieu apporte ce que les services en ont su ; une colonne que rien
+        // n'a remplie part vide (jamais 0 : un nombre absent vaut 0 dans Grist).
+        ecrireEnrichies(out, field, values);
       }
     }
 
@@ -295,6 +353,17 @@
       }
     }
     return out;
+  }
+
+  function ecrireEnrichies(out, field, values) {
+    var api = enrichirApi();
+    if (!api) return;
+    var colonnes = api.colonnesDe(field);
+    Object.keys(colonnes).forEach(function (sens) {
+      var col = colonnes[sens];
+      var v = values[col];
+      out[col] = v === undefined || v === '' ? null : v;
+    });
   }
 
   function sameRefValue(a, b) {
@@ -683,6 +752,14 @@
       '</div>';
   }
 
+  /** Le clavier que la question demande ou que son format laisse entendre ; rien sans le module des saisies. */
+  function clavierAttrs(field) {
+    var api = saisiesApi();
+    if (!api || !api.attributsClavier) return '';
+    var f = formatsApi();
+    return api.attributsClavier(field, f && f.formatDeChamp ? f.formatDeChamp(field) : null);
+  }
+
   function renderTextLike(field, value, multiline) {
     var id = fieldId(field);
     var val = value == null ? '' : value;
@@ -692,22 +769,79 @@
       ? '<textarea class="fr-input" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + reqAttr + phAttr + '>' +
         escapeHtml(val) + '</textarea>'
       : '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) +
-        '" value="' + escapeHtml(val) + '"' + reqAttr + phAttr + ' />';
+        '" value="' + escapeHtml(val) + '"' + clavierAttrs(field) + reqAttr + phAttr + ' />';
     return '<div class="fr-input-group" data-colid="' + escapeHtml(field.colId) + '">' +
       renderLabel(field, id) + control + '</div>';
+  }
+
+  function attrBorne(o, cle) {
+    return typeof o[cle] === 'number' ? ' ' + cle + '="' + o[cle] + '"' : '';
   }
 
   function renderNumber(field, value) {
     var id = fieldId(field);
     var val = value == null ? '' : value;
-    var step = (field.options && field.options.step) || 'any';
+    var o = field.options || {};
+    var step = o.step || 'any';
     var reqAttr = field.required ? ' required' : '';
     var phAttr = placeholderAttr(field);
+    var unite = o.unite ? '<span class="fr-unite">' + escapeHtml(o.unite) + '</span>' : '';
     return '<div class="fr-input-group" data-colid="' + escapeHtml(field.colId) + '">' +
       renderLabel(field, id) +
+      '<div class="fr-nombre__ligne">' +
       '<input class="fr-input" type="number" id="' + id + '" name="' + escapeHtml(field.colId) +
-      '" value="' + escapeHtml(val) + '" step="' + escapeHtml(step) + '"' + reqAttr + phAttr + ' />' +
+      '" value="' + escapeHtml(val) + '" step="' + escapeHtml(step) + '"' + attrBorne(o, 'min') + attrBorne(o, 'max') +
+      clavierAttrs(field) + reqAttr + phAttr + ' />' + unite + '</div>' +
       '</div>';
+  }
+
+  /**
+   * Un curseur : une valeur entre deux bornes, avec des valeurs d'appui.
+   *
+   * > **Un curseur a toujours une position ; une réponse, non.** Tant que la
+   * > personne n'y a pas touché, rien n'est écrit — et l'écran le dit (« Pas de
+   * > réponse ») au lieu de laisser croire que le milieu est un choix.
+   */
+  function renderCurseur(field, value) {
+    var id = fieldId(field);
+    var o = field.options || {};
+    var min = typeof o.min === 'number' ? o.min : 0;
+    var max = typeof o.max === 'number' ? o.max : 100;
+    var pas = Number(o.step) > 0 ? Number(o.step) : 1;
+    var touche = value !== null && value !== undefined && value !== '';
+    var position = touche ? value : Math.round((min + max) / 2);
+    var unite = o.unite ? ' ' + o.unite : '';
+    var appuis = (Array.isArray(o.presets) ? o.presets : []).filter(function (p) { return Number.isFinite(Number(p)); })
+      .map(function (p) {
+        return '<button type="button" class="fr-btn fr-btn--secondary fr-curseur__preset" data-valeur="' + escapeHtml(p) + '">' +
+          escapeHtml(p) + escapeHtml(unite) + '</button>';
+      }).join('');
+    return '<div class="fr-input-group fr-curseur" data-colid="' + escapeHtml(field.colId) + '" data-widget="curseur" ' +
+      'data-unite="' + escapeHtml(o.unite || '') + '">' +
+      renderLabel(field, id) +
+      '<div class="fr-curseur__ligne">' +
+      '<input type="range" id="' + id + '" name="' + escapeHtml(field.colId) + '" min="' + min + '" max="' + max +
+      '" step="' + pas + '" value="' + escapeHtml(position) + '" data-touche="' + (touche ? '1' : '0') + '" />' +
+      '<output class="fr-curseur__valeur" for="' + id + '" aria-live="polite">' +
+      (touche ? escapeHtml(value) + escapeHtml(unite) : 'Pas de réponse') + '</output>' +
+      '</div>' + (appuis ? '<div class="fr-curseur__appuis">' + appuis + '</div>' : '') + '</div>';
+  }
+
+  /** Un compteur : un nombre qu'on monte et qu'on descend d'un pas, entre ses bornes. */
+  function renderCompteur(field, value) {
+    var id = fieldId(field);
+    var o = field.options || {};
+    var val = value == null ? '' : value;
+    var pas = Number(o.step) > 0 ? Number(o.step) : 1;
+    var unite = o.unite ? '<span class="fr-unite">' + escapeHtml(o.unite) + '</span>' : '';
+    return '<div class="fr-input-group fr-compteur" data-colid="' + escapeHtml(field.colId) + '" data-widget="compteur" data-pas="' + pas + '">' +
+      renderLabel(field, id) +
+      '<div class="fr-compteur__ligne">' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-compteur__moins" data-delta="-1" aria-label="Moins">\u2212</button>' +
+      '<input class="fr-input" type="number" inputmode="numeric" id="' + id + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(val) +
+      '" step="' + pas + '"' + attrBorne(o, 'min') + attrBorne(o, 'max') + (field.required ? ' required' : '') + ' />' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-compteur__plus" data-delta="1" aria-label="Plus">+</button>' +
+      unite + '</div></div>';
   }
 
   function renderCheckbox(field, value) {
@@ -746,23 +880,60 @@
       '</div>';
   }
 
+  /** Une couleur d'une question : `#rgb` ou `#rrggbb` seulement (elle finit dans un attribut de style). */
+  function couleurSure(c) {
+    return typeof c === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c) ? c : '';
+  }
+
+  function chipsEtiquettes(liste) {
+    return liste.map(function (t) {
+      return '<li class="fr-etiquette" data-etiquette="' + escapeHtml(t) + '"><span>' + escapeHtml(t) + '</span>' +
+        '<button type="button" class="fr-etiquette__retirer" data-etiquette-retirer="' + escapeHtml(t) +
+        '" aria-label="Retirer ' + escapeHtml(t) + '">\u00d7</button></li>';
+    }).join('');
+  }
+
+  /**
+   * Des étiquettes libres : on tape, on valide (Entrée, virgule ou « Ajouter »), et chaque
+   * mot devient une puce qu'on retire. Les choix déclarés sont des suggestions, pas des limites.
+   */
+  function renderEtiquettes(field, value, optionsList) {
+    var id = fieldId(field);
+    var liste = Array.isArray(value) ? value.map(String) : [];
+    var sugg = resolveOptions(field, optionsList);
+    var dl = sugg.length
+      ? '<datalist id="' + id + '-suggestions">' + sugg.map(function (s) { return '<option value="' + escapeHtml(s.value) + '"></option>'; }).join('') + '</datalist>'
+      : '';
+    return '<div class="fr-input-group fr-etiquettes" data-colid="' + escapeHtml(field.colId) + '" data-widget="etiquettes">' +
+      renderLabel(field, id) +
+      '<ul class="fr-etiquettes__liste" aria-label="Étiquettes choisies">' + chipsEtiquettes(liste) + '</ul>' +
+      '<div class="fr-etiquettes__ligne">' +
+      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '__saisie" autocomplete="off" maxlength="40"' +
+      (dl ? ' list="' + id + '-suggestions"' : '') + placeholderAttr(field) + ' />' +
+      '<button type="button" class="fr-btn fr-btn--secondary" data-etiquette-ajouter="' + escapeHtml(field.colId) + '">Ajouter</button>' +
+      '</div>' + dl + '</div>';
+  }
+
   function renderRadio(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
     var etiquettes = etiquettesDesReperes(field);
+    var pastilles = field && field.widget === 'pastilles';
+    var couleurs = (field && field.options && field.options.couleurs) || {};
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = sameValue(value, o.value) ? ' checked' : '';
+      var teinte = pastilles && couleurSure(couleurs[o.value]) ? ' style="--pastille:' + couleurSure(couleurs[o.value]) + '"' : '';
       // > **La carte EST l'etiquette.** Un `<label for>` pose a cote de la
       // > coche ne rend cliquable que le texte : le reste de la carte — la
       // > marge, l'espace a droite du mot — ne repond pas, et sur un telephone
       // > on vise une cible de quelques millimetres. En enveloppant la coche
       // > et le texte dans le `<label>`, tout l'interieur de la carte coche.
-      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
+      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '"' + teinte + '>' +
         '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
         '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
-    return '<fieldset class="fr-fieldset" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
+    return '<fieldset class="fr-fieldset' + (pastilles ? ' fr-fieldset--pastilles' : '') + '" data-colid="' + escapeHtml(field.colId) + '" data-widget="radio">' +
       renderLegend(field) + '<div class="fr-fieldset__content">' + itemsHtml + '</div></fieldset>';
   }
 
@@ -879,6 +1050,33 @@
    * demandait d'en faire. La question se déclare une fois, à côté de l'échelle
    * qu'elle partage (`formDef.matrices`), et non sur chacun de ses champs.
    */
+  /** L'identifiant du message d'erreur d'une question : c'est par lui que le champ s'y relie. */
+  function erreurId(colId) { return 'erreur-' + escapeHtml(colId); }
+
+  /**
+   * Marque une question comme en défaut pour les technologies d'assistance :
+   * le champ (ou son groupe) devient « invalide » et se décrit par son message.
+   *
+   * > **Un message qu'on ne relie pas à son champ reste un texte parmi d'autres.**
+   * > Un lecteur d'écran annonce le champ sans dire ce qui ne va pas.
+   */
+  function signalerErreurHtml(html, colId) {
+    var attrs = ' aria-invalid="true" aria-describedby="' + erreurId(colId) + '"';
+    if (html.indexOf('<fieldset') !== -1) return html.replace('<fieldset', '<fieldset' + attrs);
+    return html.replace(/<(input|select|textarea)\b/, '<$1' + attrs);
+  }
+
+  /** Le résumé des erreurs : une liste de liens vers les questions à corriger. */
+  function resumeErreursHtml(colIds, libelleDe) {
+    var items = colIds.map(function (c) {
+      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a></li>';
+    }).join('');
+    var n = colIds.length;
+    return '<div class="fr-alert fr-alert--error fr-resume-erreurs" id="resume-erreurs" role="alert" tabindex="-1">' +
+      '<p><strong>' + (n === 1 ? 'Une question est à corriger' : n + ' questions sont à corriger') + '</strong></p>' +
+      '<ul>' + items + '</ul></div>';
+  }
+
   function matriceDe(formDef, id) {
     var m = (formDef && formDef.matrices && formDef.matrices[id]) || {};
     return { titre: m.titre || '', consigne: m.consigne || '' };
@@ -889,7 +1087,7 @@
     var entete = matriceDe(formDef, groupe.matrice);
     var lignes = groupe.fields.map(function (f) {
       var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
-        ? '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
+        ? '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
         : '';
       return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '">' +
         '<span class="fr-matrice__intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
@@ -1169,11 +1367,20 @@
    * > question impossible : le champ sous la carte accepte le WKT, et la
    * > position du telephone pose un point.
    */
-  function renderGeo(field, value) {
+  /** Comment le lieu se renseigne (carte, adresse, les deux), sachant ce que la page sait faire. */
+  function modeLieuDe(field) {
+    var s = saisiesApi();
+    if (!s || !s.modeLieu) return 'carte';
+    var r = referentielApi();
+    return s.modeLieu(field, !!(r && r.sourceConnue('ban')));
+  }
+
+  function renderGeo(field, value, values) {
     var id = fieldId(field);
     var v = value == null ? '' : String(value);
     var o = (field && field.options) || {};
-    var avecCarte = o.carte !== false;
+    var mode = modeLieuDe(field);
+    var avecCarte = o.carte !== false && mode !== 'adresse';
     var type = o.geometrie || 'Point';
     var carte = avecCarte
       ? '<div class="fr-carte" data-carte-de="' + escapeHtml(field.colId) + '" ' +
@@ -1184,15 +1391,53 @@
         '<p class="fr-hint-text fr-carte__attente">La carte s\u2019affiche ici.</p></div>' +
         '<p class="fr-hint-text fr-carte__mode">' + consigneCarte(type) + '</p>'
       : '';
-    return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo">' +
-      renderLabel(field, id) + carte +
+    var choix = '';
+    if (mode !== 'carte') {
+      var vals = values || {};
+      var onglet = mode === 'adresse' || vals[field.colId + '__lieuOnglet'] === 'adresse' ? 'adresse' : 'carte';
+      var ban = referentielApi().SOURCES.ban;
+      var libelleChoisi = vals[field.colId + '__lieuChoisi'] || '';
+      // Sans carte (désactivée par la question), il ne reste que l'adresse : pas d'onglet vers rien.
+      if (!carte) onglet = 'adresse';
+      var bascule = mode === 'les-deux' && carte
+        ? '<div class="fr-lieu__bascule" role="group" aria-label="Comment indiquer le lieu ?">' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-lieu__onglet" data-lieu-onglet="carte" aria-pressed="' + (onglet === 'carte') + '">Sur la carte</button>' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-lieu__onglet" data-lieu-onglet="adresse" aria-pressed="' + (onglet === 'adresse') + '">Par adresse</button></div>'
+        : '';
+      if (carte) carte = '<div class="fr-lieu__panneau" data-lieu-panneau="carte"' + (onglet === 'carte' ? '' : ' hidden') + '>' + carte + '</div>';
+      choix = bascule + carte +
+        '<div class="fr-lieu__panneau fr-referentiel" data-lieu-panneau="adresse" data-source="ban"' + (onglet === 'adresse' ? '' : ' hidden') + '>' +
+        '<label class="fr-label" for="' + id + '__adresse">Tapez une adresse</label>' +
+        '<div class="fr-referentiel__ligne">' +
+        '<input class="fr-input" type="text" id="' + id + '__adresse" name="' + escapeHtml(field.colId) + '__adresse" value="' +
+        escapeHtml(vals[field.colId + '__lieuTexte'] || '') + '" autocomplete="off" data-lieu-adresse />' +
+        '<button type="button" class="fr-btn fr-btn--secondary fr-referentiel__bouton">Rechercher</button></div>' +
+        '<p class="fr-hint-text fr-referentiel__etat" role="status" aria-live="polite"></p>' +
+        '<p class="fr-hint-text fr-referentiel__mention">' + escapeHtml(ban.mention + ' La recherche ne part que lorsque vous la lancez.') + '</p></div>' +
+        '<p class="fr-hint-text fr-geo__choisi" role="status" aria-live="polite">' +
+        (libelleChoisi ? escapeHtml('Lieu choisi : ' + libelleChoisi) : '') + '</p>';
+    }
+    return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo" data-lieu-mode="' + mode + '">' +
+      renderLabel(field, id) + (mode === 'carte' ? carte : choix) +
       '<div class="fr-geo__ligne">' +
       '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
-      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)" />' +
+      // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
+      // n'est plus qu'une valeur interne, qu'on ne montre pas.
+      'value="' + escapeHtml(v) + '" placeholder="POINT(5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
-      '<p class="fr-hint-text fr-geo__etat" role="status"></p>' +
+      '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
+      escapeHtml((values && values['__enrichi_' + field.colId]) || '') + '</p>' +
+      mentionEnrichissement(field) +
       '</div>';
+  }
+
+  /** Ce qui part, et vers qui, quand un lieu complète d'autres colonnes. */
+  function mentionEnrichissement(field) {
+    var api = enrichirApi();
+    if (!api) return '';
+    var m = api.mention(api.colonnesDe(field));
+    return m ? '<p class="fr-hint-text fr-geo__mention">' + escapeHtml(m) + '</p>' : '';
   }
 
   /** Ce qu'on attend de la personne, selon ce qu'on lui demande de poser. */
@@ -1254,8 +1499,13 @@
     file: function (f, v) { return renderFile(f, v); },
     ouinon: function (f, v) { return renderOuiNon(f, v); },
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
-    geo: function (f, v) { return renderGeo(f, v); },
-    dessin: function (f, v) { return renderDessin(f, v); }
+    geo: function (f, v, o, d, values) { return renderGeo(f, v, values); },
+    dessin: function (f, v) { return renderDessin(f, v); },
+    pastilles: function (f, v, opts) { return renderRadio(f, v, opts); },
+    etiquettes: function (f, v, opts) { return renderEtiquettes(f, v, opts); },
+    curseur: function (f, v) { return renderCurseur(f, v); },
+    compteur: function (f, v) { return renderCompteur(f, v); },
+    heure: function (f, v) { return renderDateLike(f, v, 'time'); }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
@@ -1339,13 +1589,30 @@
     // Un référentiel remplace la saisie texte plutôt que de s'y superposer : la
     // liste de suggestions vit dans le champ lui-même.
     if (field && field.kind === 'referentiel') renderer = renderReferentiel;
-    var html = renderIllustration(field) + renderer(field, value, optionsList, formDef);
+    var html = renderIllustration(field) + renderer(field, value, optionsList, formDef, values);
     // Un `kind` est une couche posee sur la saisie, pas un widget de plus :
     // « Autre : … » s'ajoute a la liste deroulante comme aux cases a cocher.
     if (field && (field.kind === 'choix_autre' || field.kind === 'classement')) {
       html += blocAutre(field, values);
     }
     return html;
+  }
+
+  /**
+   * Une question dont la valeur est donnée par l'adresse de la page.
+   *
+   * La personne la voit, elle ne la change pas : un QR code désigne un objet,
+   * pas une liste à choisir dedans. La valeur reste dans `values`, donc dans la
+   * ligne envoyée — ce n'est qu'un affichage, pas une protection (voir
+   * `shared/prefill.js`).
+   */
+  function renderVerrouille(field, value, libelle) {
+    var affiche = libelle ||
+      (typeof value === 'number' ? 'n° ' + value : (value === null || value === undefined ? '' : String(value)));
+    return '<div class="fr-input-group fr-verrouille" data-colid="' + escapeHtml(field.colId) +
+      '" data-verrouille="1">' +
+      '<p class="fr-label">' + escapeHtml(field.label || field.colId) + '</p>' +
+      '<p class="fr-verrouille__valeur">' + escapeHtml(affiche) + '</p></div>';
   }
 
   // ── mount : runtime navigateur — étapes visibles, validation requise, submit ──
@@ -1376,12 +1643,27 @@
   }
 
   function readFieldValue(rootEl, field, previous) {
+    if (field.widget === 'curseur') {
+      // Un curseur non touché n'a pas répondu : sa position de départ n'est pas un choix.
+      var curs = rootEl.querySelector('input[name="' + field.colId + '"]');
+      return curs && curs.getAttribute('data-touche') === '1' ? curs.value : (previous != null ? previous : null);
+    }
     if (field.widget === 'checkbox') {
       var cb = rootEl.querySelector('[name="' + field.colId + '"]');
       return cb ? !!cb.checked : false;
     }
+    if (field.widget === 'etiquettes') {
+      // Un mot tapé et pas encore ajouté se compte : le perdre en silence serait pire que l'ajouter.
+      var api = saisiesApi();
+      var courant = Array.isArray(previous) ? previous.slice() : [];
+      var tape = rootEl.querySelector('input[name="' + field.colId + '__saisie"]');
+      if (api && tape && String(tape.value || '').trim()) {
+        courant = api.ajouterEtiquette(courant, tape.value, { max: field.options && field.options.maxSelected });
+      }
+      return courant.length ? courant : null;
+    }
     if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle' ||
-        field.widget === 'ouinon') {
+        field.widget === 'ouinon' || field.widget === 'pastilles') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
       return checkedRadio ? checkedRadio.value : null;
     }
@@ -1423,8 +1705,11 @@
     return el ? el.value : null;
   }
 
-  function readSectionValues(rootEl, fields, values) {
+  function readSectionValues(rootEl, fields, values, verrouilles) {
     for (var i = 0; i < fields.length; i++) {
+      // Une question verrouillée n'a pas de zone de saisie : la relire depuis
+      // l'écran effacerait la valeur que l'adresse de la page lui a donnée.
+      if (verrouilles && verrouilles.indexOf(fields[i].colId) !== -1) continue;
       values[fields[i].colId] = readFieldValue(rootEl, fields[i], values[fields[i].colId]);
       // Le texte de « Autre » vit dans sa colonne, pas dans le colId de la
       // question : sans cette lecture, il se perdait au premier re-rendu.
@@ -1435,6 +1720,24 @@
       }
     }
     return values;
+  }
+
+  /**
+   * Les réponses dont le format est faux : IBAN, SIRET, code postal…
+   *
+   * Une réponse vide n'est pas ici : l'obligation est une autre règle. Les
+   * questions cachées ne se contrôlent pas — personne ne les a vues.
+   */
+  function validerFormats(fields, values) {
+    var api = formatsApi();
+    var out = [];
+    if (!api) return out;
+    for (var i = 0; i < fields.length; i++) {
+      var id = api.formatDeChamp(fields[i]);
+      if (!id) continue;
+      if (!api.valide(id, values[fields[i].colId])) out.push({ colId: fields[i].colId, message: api.message(id) });
+    }
+    return out;
   }
 
   function validateRequired(fields, values) {
@@ -1591,6 +1894,13 @@
         var colId = fields[j].colId;
         if (Object.prototype.hasOwnProperty.call(fournies, colId)) out[colId] = fournies[colId];
         if (fields[j].kind === 'referentiel') amorcerAnnexes(fields[j], fournies, out);
+        var apiInit = enrichirApi();
+        if (apiInit) {
+          var colsInit = apiInit.colonnesDe(fields[j]);
+          Object.keys(colsInit).forEach(function (sens) {
+            if (Object.prototype.hasOwnProperty.call(fournies, colsInit[sens])) out[colsInit[sens]] = fournies[colsInit[sens]];
+          });
+        }
       }
     }
     return out;
@@ -1698,9 +2008,16 @@
     // lire la presentation n'est pas repondre.
     var demarreA = surAccueil ? 0 : Date.now();
     var errorFields = [];
+    // Vrai quand la personne vient d'essayer d'avancer ou d'envoyer : le focus va au résumé des erreurs.
+    var aSignaler = false;
+    var messagesErreur = {};
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+    var jetonsEnrichi = {};
+    // Questions dont la valeur vient de l'adresse de la page (shared/prefill.js).
+    var verrouilles = Array.isArray(bridge.verrouilles) ? bridge.verrouilles : [];
+    var libellesVerrou = bridge.libelles || {};
     // Un changement de champ redessine le formulaire : conditions, cascades et
     // filtres dynamiques en dependent. Mais pour un champ texte, `change` part
     // quand on le quitte — c'est-a-dire a l'instant ou l'on appuie sur
@@ -1827,6 +2144,30 @@
      * tantot dans la page, tantot dans un cadre qui defile tout seul — c'est
      * au navigateur de trouver lequel remonter.
      */
+    /**
+     * Après un essai raté, le focus va au résumé des erreurs : un lecteur d'écran
+     * l'annonce, et l'œil n'a pas à chercher la question fautive à des écrans de là.
+     * Chaque lien du résumé amène à la question, et la met au focus.
+     */
+    function allerAuResume() {
+      var resume = rootEl.querySelector('#resume-erreurs');
+      if (!resume) return;
+      var liens = resume.querySelectorAll('[data-aller-a]');
+      for (var i = 0; i < liens.length; i++) (function (lien) {
+        if (typeof lien.addEventListener !== 'function') return;
+        lien.addEventListener('click', function (ev) {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          var colId = lien.getAttribute('data-aller-a');
+          var bloc = rootEl.querySelector('[data-colid="' + colId + '"]');
+          var cible = bloc && bloc.querySelector('input:not([type="hidden"]), select, textarea, button');
+          if (cible && cible.focus) cible.focus();
+          if (bloc && bloc.scrollIntoView) bloc.scrollIntoView({ block: 'center', behavior: 'auto' });
+        });
+      }(liens[i]));
+      try { resume.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
+      if (resume.scrollIntoView) resume.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
+
     function remonterEnHaut() {
       var titre = rootEl.querySelector('.fr-accueil__titre') ||
         rootEl.querySelector('.fr-progression__titre') ||
@@ -1841,6 +2182,43 @@
       if (typeof haut.scrollIntoView === 'function') {
         haut.scrollIntoView({ block: 'start', behavior: 'auto' });
       }
+    }
+
+    /**
+     * Ce qui empeche de continuer : une reponse manquante, ou un format faux.
+     * Chaque question en defaut garde son propre message.
+     */
+    function libelleDe(colId) {
+      var sections = (formDef && formDef.sections) || [];
+      for (var i = 0; i < sections.length; i++) {
+        var fs = sections[i].fields || [];
+        for (var j = 0; j < fs.length; j++) if (fs[j].colId === colId) return fs[j].label || colId;
+      }
+      return colId;
+    }
+
+    function erreursDeSaisie(fields, values) {
+      messagesErreur = {};
+      var colIds = validateRequired(fields, values);
+      var api = saisiesApi();
+      if (api) {
+        fields.forEach(function (f) {
+          var msg = api.validerBornes(f, values[f.colId], new Date());
+          if (!msg) {
+            var autre = api.apresDe(f);
+            if (autre) msg = api.validerApres(f, values[f.colId], values[autre], libelleDe(autre));
+          }
+          if (msg) {
+            messagesErreur[f.colId] = msg;
+            if (colIds.indexOf(f.colId) === -1) colIds.push(f.colId);
+          }
+        });
+      }
+      validerFormats(fields, values).forEach(function (e) {
+        messagesErreur[e.colId] = e.message;
+        if (colIds.indexOf(e.colId) === -1) colIds.push(e.colId);
+      });
+      return colIds;
     }
 
     function render() {
@@ -1887,15 +2265,17 @@
         }
         var f = groupe.fields[0];
         var opts = resolveOptionsForField(f);
-        var html = renderFieldHtml(f, values, opts, formDef);
+        var html = verrouilles.indexOf(f.colId) !== -1
+          ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
+          : renderFieldHtml(f, values, opts, formDef);
         if (errorFields.indexOf(f.colId) !== -1) {
           // > **Le message doit tenir a sa question.** Pose seul entre deux
           // > blocs, il flotte : on le lit au-dessus de la question suivante et
           // > l'on corrige la mauvaise. La question en defaut et son message
           // > sont donc enfermes ensemble, et le bloc porte un filet rouge.
-          html = '<div class="fr-champ--erreur">' + html +
-            '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">' +
-            'Ce champ est obligatoire.</p></div>';
+          html = '<div class="fr-champ--erreur">' + signalerErreurHtml(html, f.colId) +
+            '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">' +
+            escapeHtml(messagesErreur[f.colId] || 'Ce champ est obligatoire.') + '</p></div>';
         }
         return html;
       }).join('');
@@ -1903,6 +2283,7 @@
       var errorHtml = submitError
         ? '<div class="fr-alert fr-alert--error" role="alert"><p>' + escapeHtml(submitError) + '</p></div>'
         : '';
+      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe);
 
       // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
       // à côté du bouton : en haut d'un écran long, personne ne le voit.
@@ -1934,6 +2315,7 @@
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
         bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       wireEvents(fields);
+      if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
 
     // Les cartes vivantes, par colonne : une carte ne se redessine pas.
@@ -1944,11 +2326,100 @@
     // re-rendu, qui remplace le champ qu'elles habitent.
     var referentiels = {};
 
+    /** Un curseur touché a répondu ; sa valeur s'affiche et se garde au redessin. */
+    function brancherCurseurs() {
+      var blocs = rootEl.querySelectorAll('[data-widget="curseur"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var curs = bloc.querySelector('input[type="range"]');
+        var sortie = bloc.querySelector('.fr-curseur__valeur');
+        var unite = bloc.getAttribute('data-unite') || '';
+        var colId = bloc.getAttribute('data-colid');
+        if (!curs || typeof curs.addEventListener !== 'function') return;
+        function toucher() {
+          curs.setAttribute('data-touche', '1');
+          if (sortie) sortie.textContent = curs.value + (unite ? ' ' + unite : '');
+          values[colId] = curs.value;
+        }
+        curs.addEventListener('input', toucher);
+        var appuis = bloc.querySelectorAll('.fr-curseur__preset');
+        for (var k = 0; k < appuis.length; k++) (function (b) {
+          b.addEventListener('click', function () { curs.value = b.getAttribute('data-valeur'); toucher(); });
+        }(appuis[k]));
+      }(blocs[i]));
+    }
+
+    /** Des étiquettes libres : ajouter (Entrée, virgule, bouton), retirer (la croix de la puce). */
+    function brancherEtiquettes(champsPage) {
+      var blocs = rootEl.querySelectorAll('[data-widget="etiquettes"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var colId = bloc.getAttribute('data-colid');
+        var champ = (champsPage || []).filter(function (f) { return f.colId === colId; })[0];
+        var saisie = bloc.querySelector('input[name="' + colId + '__saisie"]');
+        var liste = bloc.querySelector('ul');
+        var ajouter = bloc.querySelector('[data-etiquette-ajouter]');
+        var api = saisiesApi();
+        if (!champ || !saisie || !api) return;
+        function maj(nouvelle) {
+          values[colId] = nouvelle;
+          if (liste) liste.innerHTML = chipsEtiquettes(nouvelle);
+        }
+        function valider() {
+          var plafond = champ.options && champ.options.maxSelected;
+          maj(api.ajouterEtiquette(Array.isArray(values[colId]) ? values[colId] : [], saisie.value, { max: plafond }));
+          saisie.value = '';
+        }
+        if (ajouter && typeof ajouter.addEventListener === 'function') ajouter.addEventListener('click', valider);
+        if (typeof saisie.addEventListener === 'function') {
+          saisie.addEventListener('keydown', function (ev) {
+            if (ev && (ev.key === 'Enter' || ev.key === ',')) { ev.preventDefault(); valider(); }
+          });
+        }
+        if (liste && typeof liste.addEventListener === 'function') {
+          liste.addEventListener('click', function (ev) {
+            var cible = ev && ev.target;
+            var retirer = cible && typeof cible.getAttribute === 'function' ? cible.getAttribute('data-etiquette-retirer') : null;
+            if (retirer !== null && retirer !== undefined) maj(api.retirerEtiquette(Array.isArray(values[colId]) ? values[colId] : [], retirer));
+          });
+        }
+      }(blocs[i]));
+    }
+
+    /** Un compteur monte et descend d'un pas, sans sortir de ses bornes. */
+    function brancherCompteurs() {
+      var blocs = rootEl.querySelectorAll('[data-widget="compteur"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var champ = bloc.querySelector('input[type="number"]');
+        var pas = Number(bloc.getAttribute('data-pas')) || 1;
+        var boutons = bloc.querySelectorAll('[data-delta]');
+        if (!champ) return;
+        for (var k = 0; k < boutons.length; k++) (function (b) {
+          if (typeof b.addEventListener !== 'function') return;
+          b.addEventListener('click', function () {
+            var delta = Number(b.getAttribute('data-delta')) || 0;
+            var courant = Number(champ.value);
+            var suivant = (Number.isFinite(courant) && champ.value !== '' ? courant : 0) + delta * pas;
+            var min = champ.getAttribute('min');
+            var max = champ.getAttribute('max');
+            if (min !== null && min !== '' && suivant < Number(min)) suivant = Number(min);
+            if (max !== null && max !== '' && suivant > Number(max)) suivant = Number(max);
+            champ.value = String(Math.round(suivant * 1e6) / 1e6);
+            values[bloc.getAttribute('data-colid')] = champ.value;
+            if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
+              champ.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+        }(boutons[k]));
+      }(blocs[i]));
+    }
+
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
+      brancherCurseurs();
+      brancherCompteurs();
+      brancherEtiquettes(fields);
       brancherClassements(fields);
-      brancherPositions();
+      brancherPositions(fields);
       brancherCartes(fields);
       brancherDessins();
       brancherReferentiels();
@@ -1963,7 +2434,7 @@
             inputs[i].getAttribute('data-referentiel-champ') !== null) continue;
         if (typeof inputs[i].addEventListener === 'function') {
           inputs[i].addEventListener('change', function () {
-            readSectionValues(rootEl, fields, values);
+            readSectionValues(rootEl, fields, values, verrouilles);
             pruneInvalidFilteredValues();
             planifierRendu();
           });
@@ -1972,7 +2443,7 @@
       var prevBtn = rootEl.querySelector('[data-action="prev"]');
       if (prevBtn && typeof prevBtn.addEventListener === 'function') {
         prevBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
+          readSectionValues(rootEl, fields, values, verrouilles);
           if (stepIndex === 0) surAccueil = true; else stepIndex -= 1;
           errorFields = []; render(); remonterEnHaut();
         });
@@ -1980,20 +2451,20 @@
       var nextBtn = rootEl.querySelector('[data-action="next"]');
       if (nextBtn && typeof nextBtn.addEventListener === 'function') {
         nextBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
-          var missing = validateRequired(fields, values);
+          readSectionValues(rootEl, fields, values, verrouilles);
+          var missing = erreursDeSaisie(fields, values);
           // Une reponse manquante ne fait pas changer d'etape : on remonte
           // quand meme, sinon le message reste hors de l'ecran.
-          if (missing.length) { errorFields = missing; render(); remonterEnHaut(); return; }
+          if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; stepIndex += 1; render(); remonterEnHaut();
         });
       }
       var submitBtn = rootEl.querySelector('[data-action="submit"]');
       if (submitBtn && typeof submitBtn.addEventListener === 'function') {
         submitBtn.addEventListener('click', function () {
-          readSectionValues(rootEl, fields, values);
-          var missing = validateRequired(fields, values);
-          if (missing.length) { errorFields = missing; render(); return; }
+          readSectionValues(rootEl, fields, values, verrouilles);
+          var missing = erreursDeSaisie(fields, values);
+          if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
           var resolveAtt = Attachments.resolveAttachmentFields
             ? Attachments.resolveAttachmentFields(formDef, values, {
@@ -2013,6 +2484,7 @@
               { creation: enCreation, demarreA: demarreA });
             return defaultSubmit(bridge, formDef, data);
           }).then(function () {
+            memoriserDernieres();
             submitting = false;
             rootEl.innerHTML = renderSuccessHtml(formDef);
           }, function (err) {
@@ -2081,7 +2553,7 @@
               }
               moi.setAttribute('data-etait-coche', 'oui');
             }
-            readSectionValues(rootEl, fields, values);
+            readSectionValues(rootEl, fields, values, verrouilles);
             planifierRendu();
           });
           if (cases[k].checked) cases[k].setAttribute('data-etait-coche', 'oui');
@@ -2254,6 +2726,14 @@
             values[colId] = wkt;
             var champ = rootEl.querySelector('input[name="' + colId + '"]');
             if (champ) champ.value = wkt;
+            // Le point vient de la carte : l'adresse choisie plus tôt n'est plus celle qu'il dit.
+            if (values[colId + '__lieuChoisi'] !== undefined) {
+              delete values[colId + '__lieuChoisi'];
+              var choisiEl = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"] .fr-geo__choisi');
+              if (choisiEl) choisiEl.textContent = '';
+            }
+            var champGeo = fields.filter(function (f) { return f.colId === colId; })[0];
+            if (champGeo) declencherEnrichissement(champGeo, wkt);
           }
         }).then(function (vue) {
           var attente = hote.querySelector('.fr-carte__attente');
@@ -2337,12 +2817,134 @@
      * le dit et la saisie a la main reste possible. La geometrie est ecrite en
      * WKT, qui est ce qu'Atlas et QGIS lisent d'une colonne texte.
      */
-    function brancherPositions() {
+    // Les listes d'adresses des lieux, par colonne : détruites avant chaque redessin.
+    var lieux = {};
+
+    /**
+     * Un lieu qu'on renseigne par la carte, par une adresse, ou au choix.
+     *
+     * Choisir une adresse pose le même point qu'un toucher sur la carte : même
+     * colonne, même enrichissement. La carte se recadre dessus ; si elle n'est
+     * pas encore là, elle s'ouvrira sur la valeur.
+     */
+    function brancherLieu(bloc, champ, champGeo) {
+      var colId = bloc.getAttribute('data-colid');
+      if (lieux[colId]) { lieux[colId].detruire(); delete lieux[colId]; }
+      var mode = bloc.getAttribute('data-lieu-mode');
+      if (!mode || mode === 'carte') return;
+      var panneauCarte = bloc.querySelector('[data-lieu-panneau="carte"]');
+      var panneauAdresse = bloc.querySelector('[data-lieu-panneau="adresse"]');
+      var onglets = bloc.querySelectorAll('[data-lieu-onglet]');
+      var choisiEl = bloc.querySelector('.fr-geo__choisi');
+      var s = saisiesApi();
+      var r = referentielApi();
+      if (!panneauAdresse || !s || !r) return;
+
+      function montrer(nom) {
+        values[colId + '__lieuOnglet'] = nom;
+        if (panneauCarte) panneauCarte.hidden = nom !== 'carte';
+        panneauAdresse.hidden = nom !== 'adresse';
+        for (var k = 0; k < onglets.length; k++) {
+          onglets[k].setAttribute('aria-pressed', onglets[k].getAttribute('data-lieu-onglet') === nom ? 'true' : 'false');
+        }
+        // Une carte montée sous un panneau caché a une taille nulle : on la redimensionne en la montrant.
+        var c = cartes[colId];
+        if (nom === 'carte' && c && c.vue && c.vue.carte && typeof c.vue.carte.resize === 'function') c.vue.carte.resize();
+      }
+      for (var i = 0; i < onglets.length; i++) (function (b) {
+        if (typeof b.addEventListener === 'function') {
+          b.addEventListener('click', function () { montrer(b.getAttribute('data-lieu-onglet')); });
+        }
+      }(onglets[i]));
+
+      var champAdresse = panneauAdresse.querySelector('input[data-lieu-adresse]');
+      var etatAdresse = panneauAdresse.querySelector('.fr-referentiel__etat');
+      var vue = null;
+      if (champAdresse && typeof r.monter === 'function' && typeof document !== 'undefined') {
+        vue = r.monter(champAdresse, {
+          source: 'ban',
+          declenchement: 'validation',
+          hote: panneauAdresse,
+          etat: etatAdresse,
+          bouton: panneauAdresse.querySelector('.fr-referentiel__bouton'),
+          onTexte: function (texte) { values[colId + '__lieuTexte'] = texte; },
+          onChoisir: function (suggestion) {
+            var lieu = s.lieuDepuisSuggestion(suggestion);
+            if (!lieu) {
+              if (etatAdresse) etatAdresse.textContent = 'Cette adresse n\u2019a pas de coordonn\u00e9es : choisissez-en une autre, ou touchez la carte.';
+              return;
+            }
+            var c = cartes[colId];
+            if (c && c.vue && typeof c.vue.poserPoint === 'function') {
+              // La carte pose le point, l'écrit dans la colonne et lance l'enrichissement : un seul chemin, comme un toucher.
+              c.vue.poserPoint(lieu.longitude, lieu.latitude);
+            } else {
+              // Pas de carte (ou pas encore) : on écrit le point nous-mêmes ; la carte s'ouvrira dessus.
+              values[colId] = lieu.wkt;
+              if (champ) champ.value = lieu.wkt;
+              if (champGeo) declencherEnrichissement(champGeo, lieu.wkt);
+            }
+            // Après le point : la carte, en l'écrivant, efface l'adresse choisie (elle croit à un toucher).
+            values[colId + '__lieuChoisi'] = lieu.libelle;
+            if (choisiEl) choisiEl.textContent = 'Lieu choisi : ' + lieu.libelle;
+          }
+        });
+      }
+      lieux[colId] = { detruire: function () { if (vue && vue.detruire) vue.detruire(); } };
+    }
+
+    /**
+     * Un point a été posé (carte, position du navigateur, saisie à la main) :
+     * compléter les colonnes que la question désigne.
+     *
+     * Les anciennes valeurs partent d'abord — celles d'un autre point ne
+     * décrivent pas celui-ci — puis la réponse la plus récente gagne : une
+     * réponse arrivée après un autre point n'est plus la bonne.
+     */
+    function declencherEnrichissement(field, wkt) {
+      var api = enrichirApi();
+      if (!api) return;
+      var colonnes = api.colonnesDe(field);
+      var cles = Object.keys(colonnes);
+      if (!cles.length) return;
+      var clef = '__enrichi_' + field.colId;
+      var jeton = (jetonsEnrichi[field.colId] || 0) + 1;
+      jetonsEnrichi[field.colId] = jeton;
+      cles.forEach(function (sens) { values[colonnes[sens]] = null; });
+      var promesse = enrichirChamp(field, wkt, { fetch: bridge.fetch });
+      if (!promesse) { values[clef] = ''; afficherEtatLieu(field.colId, ''); return; }
+      values[clef] = 'Recherche des informations du lieu\u2026';
+      afficherEtatLieu(field.colId, values[clef]);
+      promesse.then(function (r) {
+        if (jetonsEnrichi[field.colId] !== jeton) return;
+        Object.keys(r.valeurs).forEach(function (col) { values[col] = r.valeurs[col]; });
+        values[clef] = r.phrase;
+        afficherEtatLieu(field.colId, r.phrase);
+      }, function () {
+        if (jetonsEnrichi[field.colId] !== jeton) return;
+        values[clef] = 'Les informations du lieu n\u2019ont pas pu \u00eatre compl\u00e9t\u00e9es.';
+        afficherEtatLieu(field.colId, values[clef]);
+      });
+    }
+
+    function afficherEtatLieu(colId, texte) {
+      var bloc = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"]');
+      var etat = bloc && bloc.querySelector('.fr-geo__etat');
+      if (etat) etat.textContent = texte;
+    }
+
+    function brancherPositions(champsPage) {
       var blocs = rootEl.querySelectorAll('[data-widget="geo"]');
       for (var i = 0; i < blocs.length; i++) (function (bloc) {
         var bouton = bloc.querySelector('.fr-geo__ici');
-        var champ = bloc.querySelector('input[type="text"]');
+        // Le champ du point, par son nom : avec une saisie par adresse, le premier champ texte du bloc est celui de l'adresse.
+        var champ = bloc.querySelector('input[name="' + bloc.getAttribute('data-colid') + '"]') || bloc.querySelector('input[type="text"]');
         var etat = bloc.querySelector('.fr-geo__etat');
+        var champGeo = (champsPage || []).filter(function (f) { return f.colId === bloc.getAttribute('data-colid'); })[0];
+        if (champGeo && champ && typeof champ.addEventListener === 'function') {
+          champ.addEventListener('change', function () { declencherEnrichissement(champGeo, champ.value); });
+        }
+        brancherLieu(bloc, champ, champGeo);
         if (!bouton || typeof bouton.addEventListener !== 'function') return;
         bouton.addEventListener('click', function () {
           var geo = typeof navigator !== 'undefined' && navigator.geolocation;
@@ -2351,19 +2953,65 @@
           geo.getCurrentPosition(function (pos) {
             var lon = Math.round(pos.coords.longitude * 1e6) / 1e6;
             var lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
-            champ.value = 'POINT(' + lon + ' ' + lat + ')';
+            // Même écriture que la carte (`POINT (x y)`) : une colonne ne mélange pas deux formes selon le geste.
+            champ.value = 'POINT (' + lon + ' ' + lat + ')';
+            delete values[champ.name + '__lieuChoisi'];
             if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
             if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
               champ.dispatchEvent(new Event('change', { bubbles: true }));
             }
           }, function () {
-            if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.';
+            // Le refus ne fait pas oublier ce que l'on sait du point d\u00e9j\u00e0 pos\u00e9.
+            var garde = values['__enrichi_' + bloc.getAttribute('data-colid')];
+            if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.' + (garde ? ' ' + garde : '');
           }, { enableHighAccuracy: true, timeout: 15000 });
         });
       }(blocs[i]));
     }
 
+    /**
+     * Les valeurs de départ : ce qu'une question montre avant que la personne n'y
+     * touche. Elles ne passent jamais devant une valeur déjà donnée (adresse de la
+     * page, ligne qu'on modifie), et ne s'appliquent pas en modification.
+     */
+    var departsAppliques = false;
+    function cleDerniere(field) { return 'fr-forms:' + (formDef.id || '') + ':' + field.colId; }
+    function derniereSaisie(field) {
+      try {
+        if (typeof localStorage === 'undefined') return undefined;
+        var v = localStorage.getItem(cleDerniere(field));
+        return v === null ? undefined : JSON.parse(v);
+      } catch (e) { return undefined; }
+    }
+    function memoriserDernieres() {
+      var api = saisiesApi();
+      if (!api) return;
+      (formDef.sections || []).forEach(function (s) {
+        (s.fields || []).forEach(function (f) {
+          var d = api.departDe(f);
+          if (!d || d.source !== 'derniere') return;
+          var v = values[f.colId];
+          if (v === undefined || v === null || v === '') return;
+          try { if (typeof localStorage !== 'undefined') localStorage.setItem(cleDerniere(f), JSON.stringify(v)); } catch (e) { /* stockage refusé */ }
+        });
+      });
+    }
+    function appliquerDeparts(tardif) {
+      var api = saisiesApi();
+      if (!api || bridge.editRowId || formDef.editRowId) return;
+      (formDef.sections || []).forEach(function (s) {
+        (s.fields || []).forEach(function (f) {
+          if (!api.departDe(f) || api.departTardif(f) !== tardif) return;
+          var courant = values[f.colId];
+          if (courant !== undefined && courant !== null && courant !== '') return;
+          var v = api.valeurDepart(f, { now: new Date(), email: context.userEmail, derniere: derniereSaisie });
+          if (v !== undefined) values[f.colId] = v;
+        });
+      });
+    }
+
     function boot() {
+      appliquerDeparts(false);
       var load = loader();
       var tables = collectRefTableIds(formDef);
       var aud = SessionContext.audienceConfig ? SessionContext.audienceConfig(formDef) : { mode: 'none', probe: false };
@@ -2376,6 +3024,7 @@
         if (ctx) {
           Object.keys(ctx).forEach(function (k) { context[k] = ctx[k]; });
         }
+        appliquerDeparts(true);
         if (!load || !tables.length) { render(); return; }
         Promise.all(tables.map(function (t) {
           if (refRecords[t]) return Promise.resolve();
@@ -2444,6 +3093,7 @@
     VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
     echelleDe: echelleDe,
     grouperParMatrice: grouperParMatrice,
+    enrichirChamp: enrichirChamp,
     mount: mount
   };
 }));

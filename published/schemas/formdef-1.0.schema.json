@@ -316,11 +316,11 @@
         },
         "type": {
           "type": "string",
-          "description": "Type Grist (Text, Int, Bool, Date, Choice, Ref:T, etc.)"
+          "description": "Type Grist (Text, Int, Numeric, Bool, Date, DateTime, Choice, ChoiceList, Ref, RefList, Attachments). Pour Ref et RefList, la table cible se donne dans `options.refTable` ; le suffixe `Ref:Table` est aussi lu."
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -359,6 +359,239 @@
                   "description": "Quand la recherche part. `validation` (defaut) : sur Entree ou sur le bouton, rien n'est envoye au service que la personne n'ait demande — le choix le plus prudent pour les donnees personnelles. `frappe` : 500 ms apres la derniere touche, plus fluide, mais chaque pause envoie un prefixe de l'adresse."
                 }
               }
+            },
+            "enrichir": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Sur une question de lieu (point) : ce que les services publics savent de ce point, rangé dans des colonnes que le formulaire designe. Un service qui ne repond pas laisse ses colonnes vides (null, jamais 0). Les services recoivent la position choisie : le formulaire le dit sous la carte.",
+              "required": [
+                "colonnes"
+              ],
+              "properties": {
+                "colonnes": {
+                  "type": "object",
+                  "description": "{ <sens>: <colId> }. Sens connus : adresse, codePostal, commune, insee, departement, batiment (identifiant RNB), altitude, risques, latitude, longitude.",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "validation": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Un format qu'une question de texte controle, sans appeler aucun service. Connus aujourd'hui : iban, siren, siret, codePostal, insee, courriel, telephone. Un format inconnu ne controle rien : un moteur plus ancien que le formulaire ne bloque personne. Le serveur d'un formulaire natif accepte tout : la table doit refaire le meme controle (shared/formats.js porte la regle en JavaScript et en Python).",
+              "required": [
+                "format"
+              ],
+              "properties": {
+                "format": {
+                  "type": "string",
+                  "description": "Identifiant du format."
+                }
+              }
+            },
+            "prefill": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Une valeur recue par l'adresse de la page (un QR code qui designe un objet : `?objet=123`). Rien n'est repris sans cette declaration. C'est une commodite, pas une protection : l'adresse se fabrique a la main, et la table doit controler ce qu'elle recoit.",
+              "required": [
+                "param"
+              ],
+              "properties": {
+                "param": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                  "description": "Nom du parametre d'adresse."
+                },
+                "verrouille": {
+                  "type": "boolean",
+                  "description": "La personne voit la valeur sans pouvoir la changer."
+                },
+                "libelleParam": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                  "description": "Parametre d'adresse qui porte le texte a montrer a la place de la valeur (`?objet=123&objet_nom=Lampadaire%2012`)."
+                }
+              }
+            },
+            "placeholder": {
+              "type": "string",
+              "description": "Texte d'aide dans la zone de saisie."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Liste proposee pour un choix (Choice, ChoiceList), dans l'ordre."
+            },
+            "choicesKey": {
+              "type": "string",
+              "description": "Cle de `choices` (racine) a utiliser a la place de celle du colId : plusieurs questions partagent une liste."
+            },
+            "maxSelected": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Plafond de cases cochees d'une liste a choix multiples."
+            },
+            "maxFiles": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Nombre maximal de fichiers d'une question de pieces jointes."
+            },
+            "accept": {
+              "type": "string",
+              "description": "Types de fichiers acceptes (`image/*`, `application/pdf`…)."
+            },
+            "step": {
+              "description": "Pas d'une saisie numerique (un nombre, ou `any`)."
+            },
+            "min": {
+              "description": "Borne basse : un nombre, ou pour une date `AAAA-MM-JJ` ou `aujourdhui`. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+            },
+            "max": {
+              "description": "Borne haute : un nombre, ou pour une date `AAAA-MM-JJ` ou `aujourdhui`. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+            },
+            "refTable": {
+              "type": "string",
+              "description": "Table cible d'une Ref / RefList. Voie canonique ; le suffixe du type (`Ref:T`) est aussi lu."
+            },
+            "visibleCol": {
+              "type": "string",
+              "description": "Colonne de la table cible dont la valeur est montree."
+            },
+            "sortOrder": {
+              "description": "Ordre des lignes de la table cible."
+            },
+            "libelleOui": {
+              "type": "string",
+              "description": "Mot du bouton « oui » d'une question oui/non."
+            },
+            "libelleNon": {
+              "type": "string",
+              "description": "Mot du bouton « non » d'une question oui/non."
+            },
+            "valeurAutre": {
+              "type": "string",
+              "description": "Valeur de la liste qui ouvre la reponse libre (`Autre` par defaut)."
+            },
+            "consigneAutre": {
+              "type": "string",
+              "description": "Consigne de la reponse libre."
+            },
+            "autreLibre": {
+              "type": "boolean",
+              "description": "La liste offre une reponse libre."
+            },
+            "rangs": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Nombre de rangs retenus d'un classement."
+            },
+            "colonnes": {
+              "type": "object",
+              "description": "Ou la reponse se range quand ce n'est pas la colonne du colId : { valeur, autre, rangs, geometrie, annexes }."
+            },
+            "carte": {
+              "description": "Reglages de la carte d'une question de lieu : { centre, zoom, fond }, ou `false` pour une saisie sans carte."
+            },
+            "geometrie": {
+              "type": "string",
+              "description": "Forme attendue d'un lieu : Point (defaut), LineString, Polygon, et leurs Multi."
+            },
+            "dessin": {
+              "type": "object",
+              "description": "Reglages du canevas d'un dessin ou d'une signature."
+            },
+            "illustration": {
+              "type": "object",
+              "description": "Une image, une carte a reperes ou une page qui illustre la question."
+            },
+            "echelle": {
+              "description": "Cle d'une echelle partagee de `echelles` (kind echelle)."
+            },
+            "matrice": {
+              "description": "Nom de la matrice a laquelle l'echelle se joint."
+            },
+            "depart": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ],
+              "description": "Ce que la question montre avant qu'on y touche. Ne passe jamais devant une valeur deja donnee (adresse de la page, ligne qu'on modifie) et ne s'applique pas en modification. `aujourdhui` (Date), `maintenant` (DateTime, heure), `moi` (Text : le courriel de la personne connectee, si l'hote le sait), `derniere` (la derniere saisie faite sur cet appareil), `valeur` (une valeur fixe).",
+              "properties": {
+                "source": {
+                  "enum": [
+                    "aujourdhui",
+                    "maintenant",
+                    "moi",
+                    "derniere",
+                    "valeur"
+                  ]
+                },
+                "valeur": {
+                  "description": "La valeur fixe quand source = valeur."
+                }
+              }
+            },
+            "unite": {
+              "type": "string",
+              "description": "Unite affichee apres une saisie numerique (h, m, %). N'est pas ecrite dans la cellule."
+            },
+            "saisieLieu": {
+              "enum": [
+                "carte",
+                "adresse",
+                "les-deux"
+              ],
+              "default": "carte",
+              "description": "Comment un lieu (point) se renseigne : en touchant la carte, en choisissant une adresse de la Base adresse nationale, ou l'un ou l'autre au choix. Sans effet pour une ligne ou une surface, ni sans le service d'adresses."
+            },
+            "clavier": {
+              "type": "object",
+              "description": "Le clavier qu'un telephone ouvre et ce que le navigateur peut remplir. Se deduit du format et du type de la colonne ; ne change pas le type du champ.",
+              "additionalProperties": false,
+              "properties": {
+                "inputmode": {
+                  "enum": [
+                    "none",
+                    "text",
+                    "decimal",
+                    "numeric",
+                    "tel",
+                    "search",
+                    "email",
+                    "url"
+                  ]
+                },
+                "autocomplete": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]{1,40}( [a-z0-9-]{1,40}){0,2}$",
+                  "description": "Jetons HTML standard : email, tel, postal-code, given-name…"
+                }
+              }
+            },
+            "presets": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Valeurs d'appui d'un curseur (0, 25, 50, 75, 100)."
+            },
+            "apres": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "description": "colId d'une autre question que celle-ci ne doit pas preceder (une fin apres son debut). Dates, heures et nombres."
+            },
+            "couleurs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+              },
+              "description": "Couleur de chaque choix d'une question en pastilles : { valeur: '#rrggbb' }. Seuls #rgb et #rrggbb sont acceptes (la couleur finit dans un attribut de style)."
             }
           }
         },

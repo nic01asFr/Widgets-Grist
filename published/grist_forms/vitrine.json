@@ -38,6 +38,22 @@
       "texte": "la personne choisit dans la liste de la Base adresse nationale : l’adresse complète, le code postal, la commune et les coordonnées s’écrivent dans vos colonnes. Un texte libre reste possible si le service ne répond pas."
     },
     {
+      "titre": "Un lieu qui se complète",
+      "texte": "on touche la carte : l’adresse, la commune, le bâtiment et l’altitude se remplissent depuis les services publics, et le formulaire dit ce qui part et vers qui. On pose le point en touchant la carte, ou en choisissant une adresse : le résultat est le même."
+    },
+    {
+      "titre": "Un code scanné désigne l’équipement",
+      "texte": "un QR code collé sur un lampadaire ouvre le formulaire avec l’équipement déjà désigné : la personne dit seulement ce qui ne va pas."
+    },
+    {
+      "titre": "Des formats contrôlés",
+      "texte": "IBAN, SIRET, code postal, téléphone : un calcul, jamais un service tiers, refait côté Grist pour un envoi hors de Grist."
+    },
+    {
+      "titre": "Des saisies à leur mesure",
+      "texte": "un curseur, un compteur, une heure, une période, des étiquettes, des pastilles colorées, une valeur de départ : chacune dit ses bornes, et celui qui n’a pas répondu n’écrit rien."
+    },
+    {
       "titre": "Un canevas qu'on compose",
       "texte": "entourer un désordre sur une photo, croquer une implantation, signer un constat : le dessin part en pièce jointe, avec son fond."
     },
@@ -56,7 +72,7 @@
   ],
   "encart": {
     "titre": "Tout reste dans votre document",
-    "texte": "Aucun service tiers entre la réponse et votre table, aucun compte à créer. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n'importe quelle page, avec les droits que vous choisissez. Les conditions d'affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls. Une seule exception, dite sous le champ : si vous posez un champ d’adresse, les caractères tapés sont envoyés à la Géoplateforme (service de l’État) pour proposer des adresses — à la validation, pas à la frappe, sauf réglage contraire."
+    "texte": "Aucun service tiers entre la réponse et votre table, aucun compte à créer. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n'importe quelle page, avec les droits que vous choisissez. Les conditions d'affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls. Deux exceptions, dites sous le champ : un champ d’adresse envoie les caractères tapés à la Géoplateforme (service de l’État) pour proposer des adresses — à la validation, pas à la frappe, sauf réglage contraire ; un lieu qui se complète envoie la position choisie aux services publics concernés."
   },
   "produit": {
     "accroche": "Composer, mettre en ligne, dépouiller : trois écrans du même outil, sur la même table. Rien ne transite ailleurs, et la synthèse ne demande aucun travail de remise en forme.",
@@ -184,11 +200,11 @@
     ],
     "apercu": {
       "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/?cas=consultation",
-      "mention": "L’aperçu est la démonstration elle-même : cinq formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé."
+      "mention": "L’aperçu est la démonstration elle-même : six formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé."
     },
     "demonstration": {
-      "titre": "Cinq formulaires, à remplir pour de vrai",
-      "texte": "Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions, un signalement dont l’adresse officielle désigne la commune. Rien n’est enregistré : il n’y a pas de document derrière.",
+      "titre": "Six formulaires, à remplir pour de vrai",
+      "texte": "Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions, un signalement dont l’adresse officielle désigne la commune, un défaut sur un équipement désigné par le code scanné. Rien n’est enregistré : il n’y a pas de document derrière.",
       "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/",
       "image": "apercu.jpeg",
       "alt": "La démonstration : plusieurs cas au choix, et le formulaire à côté",
@@ -197,6 +213,10 @@
     }
   },
   "journal": [
+    {
+      "version": "v1.3.0",
+      "texte": "Un formulaire peut être servi hors de Grist et écrire dans votre document par la clé d’un formulaire natif : l’étape « Mettre en ligne » prépare la table (colonnes de tri « Conforme » et « Motifs », table de traitement privée pour le statut et les notes), puis génère une page autonome. Ce mode ne protège rien — toute personne qui a la page peut envoyer — et ne sait pas envoyer de pièces jointes ; l’étape le dit. Autour de lui : une question peut recevoir sa valeur de l’adresse de la page (un code scanné désigne un équipement), exiger un format (IBAN, SIREN, SIRET, code postal, code INSEE, courriel, téléphone — la même règle en JavaScript et en Python), et un lieu posé sur la carte complète l’adresse, la commune, le bâtiment et l’altitude depuis les services publics. Un sixième cas de la démonstration montre l’ensemble. Côté saisies : des bornes appliquées dans le navigateur (elles ne l’étaient que dans Grist), un curseur qui n’écrit rien tant qu’on n’y a pas touché, un compteur, des étiquettes libres, des pastilles colorées, une heure seule, une fin qui ne peut pas précéder son début, et des valeurs de départ (la date du jour, maintenant, la dernière saisie). Le contrat d’une saisie est gardé par un essai : le schéma déclare tous les widgets et toutes les options que le moteur lit, et une question « Dessin » ou « Signature » se relit enfin comme telle dans le compositeur."
+    },
     {
       "version": "v1.2.2",
       "texte": "Le champ d’adresse se choisit désormais aussi avec un lecteur d’écran et à l’activation d’une option : le choix d’une proposition se prenait au seul appui de la souris, qu’un lecteur d’écran n’émet pas. Il se prend maintenant au clic, une seule fois, et l’appui de la souris garde seulement le focus dans le champ."

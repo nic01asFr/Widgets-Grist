@@ -1093,6 +1093,11 @@
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
+  <script src="shared/formats.js"></script>
+  <script src="shared/enrichir.js"></script>
+  <script src="shared/saisies.js"></script>
+  <script src="shared/externe.js"></script>
+  <script src="shared/prefill.js"></script>
   <script src="shared/synthese.js"></script>
   <script src="shared/synthese-vue.js"></script>
 <script src="runtime/engine.js"></script>
@@ -2788,7 +2793,128 @@ function renderOptionsDuChamp(def, si, f, fi, isBind) {
  * Rien ne s'affiche pour une saisie qui n'a pas de reglage propre : le panneau
  * ne montre que ce qui s'applique a la question qu'on regle.
  */
+/**
+ * Les réglages d'une question : ceux de son type, puis ceux qui valent pour toute
+ * question (le format qu'on contrôle, la valeur reçue par l'adresse).
+ */
 function renderReglagesSaisie(def, si, f, fi, isBind) {
+  return renderReglagesSaisieSpecifiques(def, si, f, fi, isBind) + renderReglagesCommuns(def, si, f, fi);
+}
+
+function renderReglagesCommuns(def, si, f, fi) {
+  const o = f.options || {};
+  let html = '';
+  // ── Pastilles : une couleur par choix ──
+  if (f.widget === 'pastilles') {
+    const couleurs = o.couleurs || {};
+    const texte = Object.keys(couleurs).map(k => k + ' = ' + couleurs[k]).join('\n');
+    html += `<div class="fr-input-group"><label class="fr-label" for="pas-${si}-${fi}">Couleur de chaque choix ${hintIcon('Une ligne par choix : Critique = #c9191e. Seules les couleurs #rgb et #rrggbb sont reprises.')}</label>
+      <textarea class="fr-input" id="pas-${si}-${fi}" rows="4" placeholder="Critique = #c9191e" onchange="App.onCouleurs(${si}, ${fi}, this.value)">${esc(texte)}</textarea></div>`;
+  }
+  // ── Nombre : bornes, pas, unité, valeurs d'appui ──
+  const typeBase = String(f.type || '').split(':')[0];
+  if (typeBase === 'Int' || typeBase === 'Numeric') {
+    const champNb = (cle, libelle, aide, ph) => `<div class="fr-input-group"><label class="fr-label" for="nb-${cle}-${si}-${fi}">${libelle}${aide ? ' ' + hintIcon(aide) : ''}</label>
+      <input class="fr-input" id="nb-${cle}-${si}-${fi}" value="${esc(o[cle] === undefined ? '' : o[cle])}" ${ph ? 'placeholder="' + ph + '"' : ''}
+        onchange="App.onOptionNombre(${si}, ${fi}, '${cle}', this.value)"></div>`;
+    html += `<div class="bloc__duo">${champNb('min', 'Minimum')}${champNb('max', 'Maximum')}</div>
+      <div class="bloc__duo">${champNb('step', 'Pas', 'Le plus petit écart entre deux valeurs (0,5 pour des demi-heures).')}${champNb('unite', 'Unité', 'Affichée après le nombre ; elle n’est pas écrite dans la cellule.', 'h, m, %')}</div>`;
+    if (f.widget === 'curseur') {
+      html += `<div class="fr-input-group"><label class="fr-label" for="nb-presets-${si}-${fi}">Valeurs d’appui ${hintIcon('Des boutons qui posent le curseur d’un geste : 0, 25, 50, 75, 100.')}</label>
+        <input class="fr-input" id="nb-presets-${si}-${fi}" value="${esc((o.presets || []).join(', '))}" placeholder="0, 25, 50, 75, 100"
+          onchange="App.onOptionPresets(${si}, ${fi}, this.value)"></div>`;
+    }
+  }
+  // ── Date, heure : bornes et ordre ──
+  if (typeBase === 'Date' || typeBase === 'DateTime' || f.widget === 'heure') {
+    const memeType = (S.currentDef.sections || []).reduce((acc, s) => acc.concat(s.fields || []), [])
+      .filter(g => g !== f && g.colId && String(g.type || '').split(':')[0] === typeBase && g.widget === f.widget);
+    const choixApres = memeType.map(g => `<option value="${esc(g.colId)}" ${g.colId === o.apres ? 'selected' : ''}>${esc(g.label || g.colId)}</option>`).join('');
+    if (f.widget !== 'heure') {
+      html += `<div class="bloc__duo">
+        <div class="fr-input-group"><label class="fr-label" for="dt-min-${si}-${fi}">Pas avant ${hintIcon('Une date AAAA-MM-JJ, ou « aujourdhui ».')}</label>
+          <input class="fr-input" id="dt-min-${si}-${fi}" value="${esc(o.min === undefined ? '' : o.min)}" placeholder="aujourdhui" onchange="App.onOptionTexte(${si}, ${fi}, 'min', this.value)"></div>
+        <div class="fr-input-group"><label class="fr-label" for="dt-max-${si}-${fi}">Pas après</label>
+          <input class="fr-input" id="dt-max-${si}-${fi}" value="${esc(o.max === undefined ? '' : o.max)}" placeholder="2026-12-31" onchange="App.onOptionTexte(${si}, ${fi}, 'max', this.value)"></div>
+      </div>`;
+    }
+    if (memeType.length) {
+      html += `<div class="fr-select-group"><label class="fr-label" for="dt-apres-${si}-${fi}">Ne précède pas ${hintIcon('Une fin qui ne peut pas tomber avant son début : choisissez la question de début.')}</label>
+        <select class="fr-select" id="dt-apres-${si}-${fi}" onchange="App.onOptionTexte(${si}, ${fi}, 'apres', this.value)">
+          <option value="">— aucune —</option>${choixApres}</select></div>`;
+    }
+  }
+  // ── Valeur de départ ──
+  if (f.colId && ['file', 'geo', 'dessin', 'classement'].indexOf(f.widget) === -1 && !f.kind) {
+    const dep = o.depart || {};
+    const sources = [['', 'aucune'], ['aujourdhui', 'la date du jour'], ['maintenant', 'maintenant (date et heure)'], ['moi', 'le courriel de la personne connectée'],
+      ['derniere', 'la dernière saisie sur cet appareil'], ['valeur', 'une valeur fixe']];
+    html += `<div class="bloc__duo"><div class="fr-select-group"><label class="fr-label" for="dep-${si}-${fi}">Valeur de départ ${hintIcon('Ce que la question montre avant qu’on y touche. Elle ne passe jamais devant une valeur déjà donnée, ni en modification d’une ligne.')}</label>
+      <select class="fr-select" id="dep-${si}-${fi}" onchange="App.onDepart(${si}, ${fi}, this.value, null)">
+        ${sources.map(([v, l]) => `<option value="${v}" ${v === (dep.source || '') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      ${dep.source === 'valeur' ? `<div class="fr-input-group"><label class="fr-label" for="depv-${si}-${fi}">Valeur</label>
+        <input class="fr-input" id="depv-${si}-${fi}" value="${esc(dep.valeur === undefined ? '' : dep.valeur)}" onchange="App.onDepart(${si}, ${fi}, 'valeur', this.value)"></div>` : ''}</div>`;
+  }
+  // ── Lieu : toucher la carte, taper une adresse, ou les deux ──
+  if (f.widget === 'geo' && (o.geometrie || 'Point') === 'Point' && window.FormSaisies && window.FormReferentiel) {
+    const m = o.saisieLieu || 'carte';
+    html += `<div class="fr-select-group"><label class="fr-label" for="lieu-${si}-${fi}">Comment indiquer le lieu ? ${hintIcon('Les deux donnent le même point. Une adresse est choisie dans la Base adresse nationale ; la recherche ne part que sur demande.')}</label>
+      <select class="fr-select" id="lieu-${si}-${fi}" onchange="App.onSaisieLieu(${si}, ${fi}, this.value)">
+        <option value="carte" ${m === 'carte' ? 'selected' : ''}>Toucher la carte</option>
+        <option value="les-deux" ${m === 'les-deux' ? 'selected' : ''}>Carte ou adresse, au choix</option>
+        <option value="adresse" ${m === 'adresse' ? 'selected' : ''}>Taper une adresse</option></select></div>`;
+  }
+  // ── Lieu : ce que les services publics savent du point posé ──
+  const enrichir = window.FormEnrichir;
+  if (enrichir && f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
+    const cols = (o.enrichir && o.enrichir.colonnes) || {};
+    const colonnes = (S.columnsByTable[def.tableId] || []);
+    const lignes = Object.keys(enrichir.SENS).map(sens => {
+      const attendu = enrichir.SENS[sens];
+      const candidates = colonnes.filter(c => c.type === attendu || (attendu === 'Text' && c.type === 'Text'));
+      const choix = candidates.map(c => `<option value="${esc(c.colId)}" ${c.colId === cols[sens] ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('');
+      return `<div class="fr-select-group"><label class="fr-label" for="enr-${si}-${fi}-${sens}">${esc(sens)}</label>
+        <select class="fr-select" id="enr-${si}-${fi}-${sens}" onchange="App.onEnrichir(${si}, ${fi}, '${sens}', this.value)">
+          <option value="">— ne pas remplir —</option>${choix}</select></div>`;
+    }).join('');
+    html += `
+      <details class="fr-mt-1w" ${Object.keys(cols).length ? 'open' : ''}><summary class="fr-label">Compléter le lieu avec les services publics</summary>
+        <p class="fr-hint-text">La position choisie est envoyée aux services concernés ; le formulaire le dit sous la carte. Un service qui ne répond pas laisse ses colonnes vides.</p>
+        <div class="bloc__duo">${lignes}</div>
+      </details>`;
+  }
+  // ── Format : un texte qui doit être un IBAN, un SIRET… ──
+  const formats = window.FormFormats;
+  if (formats && f.type === 'Text' && !f.kind && f.widget !== 'geo' && f.widget !== 'dessin') {
+    const courant = (o.validation && o.validation.format) || '';
+    const choix = Object.keys(formats.FORMATS).map(id =>
+      `<option value="${esc(id)}" ${id === courant ? 'selected' : ''}>${esc(formats.FORMATS[id].libelle)}</option>`).join('');
+    html += `
+      <div class="fr-select-group"><label class="fr-label" for="fmt-${si}-${fi}">Format contrôlé ${hintIcon('Un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Le même contrôle peut être refait côté Grist (voir l’envoi externe).')}</label>
+        <select class="fr-select" id="fmt-${si}-${fi}" onchange="App.onValidation(${si}, ${fi}, this.value)">
+          <option value="">— aucun —</option>${choix}
+        </select></div>`;
+  }
+  // ── Valeur reçue par l'adresse de la page (QR code) ──
+  const p = o.prefill || {};
+  if (f.colId && ['file', 'geo', 'dessin'].indexOf(f.widget) === -1) {
+    html += `
+      <details class="fr-mt-1w" ${p.param ? 'open' : ''}><summary class="fr-label">Valeur reçue par l’adresse de la page</summary>
+        <div class="fr-input-group"><label class="fr-label" for="pf-${si}-${fi}">Paramètre ${hintIcon('Un QR code collé sur un objet ouvre le formulaire avec ce paramètre : ?objet=123. Rien n’est repris sans ce réglage. C’est une commodité, pas une protection : une adresse se fabrique à la main.')}</label>
+          <input class="fr-input" id="pf-${si}-${fi}" value="${esc(p.param || '')}" placeholder="objet" pattern="[a-z][a-z0-9_]{0,31}"
+            oninput="App.onPrefill(${si}, ${fi}, 'param', this.value)"></div>
+        <div class="fr-checkbox-group"><input type="checkbox" id="pfv-${si}-${fi}" ${p.verrouille ? 'checked' : ''}
+          onchange="App.onPrefill(${si}, ${fi}, 'verrouille', this.checked)">
+          <label class="fr-label" for="pfv-${si}-${fi}">La personne ne peut pas la changer</label></div>
+        <div class="fr-input-group"><label class="fr-label" for="pfl-${si}-${fi}">Paramètre du texte à montrer</label>
+          <input class="fr-input" id="pfl-${si}-${fi}" value="${esc(p.libelleParam || '')}" placeholder="objet_nom"
+            oninput="App.onPrefill(${si}, ${fi}, 'libelleParam', this.value)"></div>
+      </details>`;
+  }
+  return html;
+}
+
+function renderReglagesSaisieSpecifiques(def, si, f, fi, isBind) {
   const o = f.options || {};
   const cols = o.colonnes || {};
   const texte = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Text');
@@ -3971,6 +4097,105 @@ function onFieldChoices(si, fi, text) {
   if (f.colId) S.currentDef.choices[f.colId] = list;
 }
 
+/** Une option numérique : vide l'efface, un nombre s'écrit comme nombre. */
+function onOptionNombre(si, fi, cle, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const v = String(valeur || '').trim().replace(',', '.');
+  if (cle === 'unite') { if (v) f.options.unite = String(valeur).trim(); else delete f.options.unite; }
+  else if (v !== '' && Number.isFinite(Number(v))) f.options[cle] = Number(v);
+  else delete f.options[cle];
+  renderBuilder();
+}
+
+/** Une couleur par choix : « Critique = #c9191e », une par ligne ; ce qui n'est pas une couleur sûre est écarté. */
+function onCouleurs(si, fi, texte) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const couleurs = {};
+  String(texte || '').split('\n').forEach(ligne => {
+    const i = ligne.lastIndexOf('=');
+    if (i < 1) return;
+    const cle = ligne.slice(0, i).trim();
+    const hex = ligne.slice(i + 1).trim();
+    if (cle && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) couleurs[cle] = hex;
+  });
+  if (Object.keys(couleurs).length) f.options.couleurs = couleurs; else delete f.options.couleurs;
+  renderBuilder();
+}
+
+/** Une option de texte (borne de date, question à ne pas précéder). */
+function onOptionTexte(si, fi, cle, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (String(valeur || '').trim()) f.options[cle] = String(valeur).trim(); else delete f.options[cle];
+}
+
+function onOptionPresets(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const liste = String(valeur || '').split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+  if (liste.length) f.options.presets = liste; else delete f.options.presets;
+}
+
+/** La valeur de départ d'une question. */
+function onDepart(si, fi, source, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (!source) { delete f.options.depart; renderBuilder(); return; }
+  const d = f.options.depart = f.options.depart || {};
+  d.source = source;
+  if (source === 'valeur') { if (valeur !== null) d.valeur = valeur; else if (d.valeur === undefined) d.valeur = ''; }
+  else delete d.valeur;
+  renderBuilder();
+}
+
+/** Ce qu'un lieu complète : une colonne par sens (adresse, commune, bâtiment…). */
+function onEnrichir(si, fi, sens, colId) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const e = f.options.enrichir = f.options.enrichir || { colonnes: {} };
+  if (colId) e.colonnes[sens] = colId; else delete e.colonnes[sens];
+  if (!Object.keys(e.colonnes).length) delete f.options.enrichir;
+}
+
+/** Comment un lieu se renseigne : carte, adresse, ou les deux. La carte seule est le réglage par défaut : on ne l'écrit pas. */
+function onSaisieLieu(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur && valeur !== 'carte') f.options.saisieLieu = valeur; else delete f.options.saisieLieu;
+  renderBuilder();
+}
+
+/** Le format qu'une question de texte contrôle (IBAN, SIRET…). */
+function onValidation(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur) f.options.validation = { format: valeur }; else delete f.options.validation;
+  renderBuilder();
+}
+
+/** Ce que la question reprend de l'adresse de la page. */
+function onPrefill(si, fi, cle, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const p = f.options.prefill = f.options.prefill || {};
+  if (cle === 'verrouille') { if (valeur) p.verrouille = true; else delete p.verrouille; }
+  else if (String(valeur || '').trim()) p[cle] = String(valeur).trim();
+  else delete p[cle];
+  // Sans paramètre, il n'y a plus de valeur reçue : la déclaration s'efface.
+  if (!p.param) delete f.options.prefill;
+}
+
 /** D'ou viennent les propositions d'une adresse, et quand la recherche part. */
 function onReferentiel(si, fi, cle, valeur) {
   const f = S.currentDef.sections[si].fields[fi];
@@ -4805,12 +5030,166 @@ function renderPublishStep() {
     ${S.isDemo ? `<div class="fr-alert fr-alert--info fr-mb-2w"><p>Mode démo : publication simulée, sans écriture Grist.</p></div>` : ''}
     <button class="fr-btn" onclick="App.publishForm()">${btnLabel}</button>
     <span class="publish-hint">Le bundle inclut session, audience et moteur de conditions. Les droits Grist restent la vraie barrière de sécurité.</span>
+    ${renderExterneBloc()}
     <details class="json-preview fr-mt-3w">
       <summary>Journal technique</summary>
       <div id="publish-log-entries" class="fr-mt-1w"></div>
     </details>
   `;
   renderPublishLogEntries();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Envoi depuis une page hors de Grist (voir docs/ENVOI-EXTERNE.md)
+// ═══════════════════════════════════════════════════════════
+
+/** Les colonnes déjà là pour la table des réponses et sa table de traitement. */
+function existantExterne(def) {
+  const tables = {};
+  [def.tableId, def.tableId + '_Traitements'].forEach(function (id) {
+    if (S.tables.some(t => t.tableId === id)) {
+      tables[id] = (S.columnsByTable[id] || []).map(c => ({ id: c.colId, type: c.type }));
+    }
+  });
+  return { tables: tables };
+}
+
+function renderExterneBloc() {
+  const E = window.FormExterne;
+  const def = S.currentDef;
+  if (!E || !def) return '';
+  const x = S.externe = S.externe || {};
+  let plan = null;
+  try { plan = E.planExterne(def, existantExterne(def)); } catch (e) { plan = null; }
+  const guichet = E.lireAdresseFormulaire(x.adresse);
+  const avertissements = plan ? plan.avertissements : [];
+  const erreurs = plan && !plan.ok ? plan.errors : [];
+  return `
+    <details class="fr-mt-3w" ${x.ouvert ? 'open' : ''} ontoggle="App.externeOuvrir(this.open)">
+      <summary class="fr-label">Envoyer depuis une page hors de Grist</summary>
+      <div class="fr-alert fr-alert--warning fr-mt-1w"><p><strong>À savoir avant de l’ouvrir.</strong>
+        Toute personne qui a la page peut envoyer, sans limite : Grist accepte la ligne, puis une colonne la juge (« Conforme »).
+        Rien n’est refusé. Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page hors de Grist.
+        Ce qui est collecté ainsi l’est sur une page publique : le dire est de votre responsabilité.</p></div>
+      ${erreurs.length ? `<div class="fr-alert fr-alert--error fr-mt-1w"><p>${erreurs.map(esc).join('<br>')}</p></div>` : ''}
+      ${avertissements.length ? `<div class="fr-alert fr-alert--info fr-mt-1w"><p>${avertissements.map(esc).join('<br>')}</p></div>` : ''}
+
+      <h3 class="fr-h6 fr-mt-2w">1. Préparer la table</h3>
+      <p class="fr-text--sm">Crée la table des réponses avec ses colonnes de tri (reçu, motifs, conformité), une table de traitement privée
+        (statut, réponse, notes internes) et une page de formulaire natif. Le statut et les notes ne sont jamais dans la table que la page peut écrire.</p>
+      <button class="fr-btn fr-btn--secondary" ${erreurs.length ? 'disabled' : ''} onclick="App.externePreparer()">Préparer la table et le formulaire natif</button>
+      ${x.message ? `<p class="fr-text--sm fr-mt-1w" role="status">${esc(x.message)}</p>` : ''}
+
+      <h3 class="fr-h6 fr-mt-2w">2. Publier le formulaire natif</h3>
+      <p class="fr-text--sm">Dans Grist, ouvrez la page de formulaire créée sur la table « ${esc(def.tableId)} », cliquez sur <strong>Publier</strong>,
+        puis sur <strong>Partager</strong> et copiez le lien. La clé n’apparaît qu’à cet endroit, et Grist ne la donne à aucun programme.</p>
+
+      <h3 class="fr-h6 fr-mt-2w">3. Coller le lien</h3>
+      <div class="fr-input-group"><label class="fr-label" for="ext-adresse">Lien du formulaire publié</label>
+        <input class="fr-input" id="ext-adresse" value="${esc(x.adresse || '')}" placeholder="https://…/forms/…/…"
+          oninput="App.externeAdresse(this.value)"></div>
+      <p class="fr-text--sm" id="ext-adresse-etat" role="status">${x.adresse ? (guichet ? 'Lien reconnu.' : 'Ce lien n’est pas celui d’un formulaire publié.') : ''}</p>
+
+      <h3 class="fr-h6 fr-mt-2w">4. Générer la page</h3>
+      <p class="fr-text--sm">Une page autonome, à déposer où vous voulez (un site, un dépôt). La clé y est écrite : elle ne permet qu’<em>ajouter</em> des lignes dans la table des réponses.
+        Pour désigner un objet depuis un QR code, ajoutez le paramètre déclaré à l’adresse de la page (<code>?objet=123</code>).</p>
+      <button class="fr-btn" id="ext-generer" data-erreurs="${erreurs.length ? '1' : '0'}" ${guichet && !erreurs.length ? '' : 'disabled'} onclick="App.externeGenerer()">Générer la page</button>
+      ${x.page ? `<button class="fr-btn fr-btn--secondary fr-ml-1w" onclick="App.externeTelecharger()">Télécharger ${esc(x.nom)} (${Math.round(x.page.length / 1024)} Ko)</button>` : ''}
+    </details>`;
+}
+
+function externeOuvrir(ouvert) {
+  (S.externe = S.externe || {}).ouvert = !!ouvert;
+}
+
+function externeAdresse(valeur) {
+  const x = S.externe = S.externe || {};
+  x.adresse = String(valeur || '').trim();
+  x.page = null;
+  const etat = document.getElementById('ext-adresse-etat');
+  const E = window.FormExterne;
+  if (etat && E) etat.textContent = x.adresse ? (E.lireAdresseFormulaire(x.adresse) ? 'Lien reconnu.' : 'Ce lien n’est pas celui d’un formulaire publié.') : '';
+  // Le bouton suit le lien sans attendre que l'écran soit redessiné.
+  const gen = document.getElementById('ext-generer');
+  if (gen && E) gen.disabled = !E.lireAdresseFormulaire(x.adresse) || gen.getAttribute('data-erreurs') === '1';
+}
+
+async function externePreparer() {
+  const E = window.FormExterne;
+  const def = S.currentDef;
+  const x = S.externe = S.externe || {};
+  if (!E || !def) return;
+  try {
+    const plan = E.planExterne(def, existantExterne(def));
+    if (!plan.ok) { toast(plan.errors.join(' ; '), 'error'); return; }
+    if (plan.avertissements.length &&
+        !confirm('À noter :\n- ' + plan.avertissements.join('\n- ') + '\n\nContinuer ?')) return;
+    if (S.isDemo) {
+      x.message = 'Mode démo : ' + plan.actions.length + ' action(s) seraient appliquées ; rien n’est écrit.';
+      toast(x.message, 'success');
+      renderPublishStep();
+      return;
+    }
+    await GristBridge.applyUserActions(plan.actions);
+    await refreshTablesAfterSchemaChange();
+    await applyVisibleColMeta(def);
+    const table = S.tables.find(t => t.tableId === def.tableId);
+    let formulaire = '';
+    if (table && !x.formulaireCree) {
+      await GristBridge.applyUserActions(E.actionsFormulaireNatif(table.id));
+      x.formulaireCree = true;
+      formulaire = ' Une page de formulaire natif a été créée.';
+    }
+    x.message = 'Table prête (' + plan.actions.length + ' action(s)).' + formulaire + ' Passez à l’étape 2.';
+    toast('Table préparée', 'success');
+    renderPublishStep();
+  } catch (e) {
+    x.message = 'Échec : ' + (e && e.message);
+    toast(x.message, 'error');
+    renderPublishStep();
+  }
+}
+
+async function externeGenerer() {
+  const E = window.FormExterne;
+  const def = S.currentDef;
+  const x = S.externe = S.externe || {};
+  if (!E || !def) return;
+  try {
+    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText] = await Promise.all([
+      fetchScriptSource('shared/types.js'),
+      fetchScriptSource('shared/session-context.js'),
+      fetchScriptSource('shared/carte-geometrie.js'),
+      fetchScriptSource('shared/referentiel.js'),
+      fetchScriptSource('shared/formats.js'),
+      fetchScriptSource('shared/enrichir.js'),
+      fetchScriptSource('shared/saisies.js'),
+      fetchScriptSource('shared/prefill.js'),
+      fetchScriptSource('runtime/engine.js'),
+      fetchScriptSource('shared/dsfr-like.css')
+    ]);
+    x.page = E.buildExternalDocument(def,
+      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText },
+      { adresse: x.adresse });
+    x.nom = (def.id || 'formulaire') + '.html';
+    toast('Page générée', 'success');
+    renderPublishStep();
+  } catch (e) {
+    toast('Échec de la génération : ' + (e && e.message), 'error');
+  }
+}
+
+function externeTelecharger() {
+  const x = S.externe || {};
+  if (!x.page) return;
+  const url = URL.createObjectURL(new Blob([x.page], { type: 'text/html;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = x.nom || 'formulaire.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
 }
 
 function renderPublishLogEntries() {
@@ -4947,7 +5326,7 @@ async function publishForm() {
     }
 
     logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText] =
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -4956,6 +5335,9 @@ async function publishForm() {
       fetchScriptSource('shared/carte-geometrie.js'),
       fetchScriptSource('shared/dessin.js'),
       fetchScriptSource('shared/referentiel.js'),
+      fetchScriptSource('shared/formats.js'),
+      fetchScriptSource('shared/enrichir.js'),
+      fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -4963,7 +5345,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -5030,7 +5412,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

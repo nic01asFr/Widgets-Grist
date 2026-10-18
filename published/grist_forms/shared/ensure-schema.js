@@ -20,18 +20,26 @@
     return t;
   }
 
+  /**
+   * La table cible d'une référence, par ordre de préférence :
+   * `options.refTable` (la voie canonique), puis l'ancien `refTable` du champ,
+   * puis le suffixe du type (`Ref:Lampadaires`) — que le schéma décrit comme
+   * valide et que cette fonction ignorait : la table se perdait en silence.
+   */
   function resolveRefTable(field) {
     if (!field) return '';
-    if (field.refTable) return field.refTable;
     if (field.options && field.options.refTable) return field.options.refTable;
-    return '';
+    if (field.refTable) return field.refTable;
+    var m = /^Ref(?:List)?:(.+)$/.exec(String(field.type || ''));
+    return m ? m[1] : '';
   }
 
   function fieldToGristType(field) {
     var t = field.type || 'Text';
     var ref = resolveRefTable(field);
-    if (t === 'Ref' && ref) return 'Ref:' + ref;
-    if (t === 'RefList' && ref) return 'RefList:' + ref;
+    // `Ref:Ancien` avec une table donnée ailleurs : la voie canonique l'emporte.
+    var base = String(t).split(':')[0];
+    if ((base === 'Ref' || base === 'RefList') && ref) return base + ':' + ref;
     return t;
   }
 
@@ -119,6 +127,25 @@
     return api && api.annexesDe ? api.annexesDe(o.source) : {};
   }
 
+  /**
+   * Les sens qu'un lieu sait remplir (adresse, commune, bâtiment, altitude…) et
+   * leur type : du texte pour un code, un nombre pour l'altitude. Cherché à
+   * l'appel, comme `sensDuReferentiel`.
+   */
+  function sensDeLEnrichissement() {
+    var api = null;
+    try {
+      if (typeof module === 'object' && module.exports && typeof require === 'function') {
+        api = require('./enrichir.js');
+      }
+    } catch (e) { api = null; }
+    if (!api) {
+      var global = typeof self !== 'undefined' ? self : null;
+      api = (global && global.FormEnrichir) || null;
+    }
+    return api && api.SENS ? api.SENS : {};
+  }
+
   function copyDef(def) {
     var out = {};
     Object.keys(def).forEach(function (k) { out[k] = def[k]; });
@@ -165,6 +192,15 @@
     }
     // Un référentiel range, à côté du texte, ce que la source sait de la chose
     // choisie : un code postal est du texte, une coordonnée un nombre.
+    // Un lieu range, à côté de sa géométrie, ce que les services en ont su.
+    var enr = field.options && field.options.enrichir && field.options.enrichir.colonnes;
+    if (enr) {
+      var sensE = sensDeLEnrichissement();
+      Object.keys(enr).forEach(function (cle) {
+        if (!enr[cle] || !sensE[cle]) return;
+        out.push({ id: enr[cle], type: sensE[cle], label: cle + ' — ' + label });
+      });
+    }
     if (field.kind === 'referentiel') {
       var sens = sensDuReferentiel(field);
       Object.keys(cols.annexes || {}).forEach(function (cle) {
@@ -232,7 +268,8 @@
       if ((t === 'Ref' || t === 'RefList') && !resolveRefTable(field)) {
         errors.push('Champ « ' + field.colId + ' » : refTable manquant pour ' + t);
       }
-      if ((t === 'Choice' || t === 'ChoiceList') && !choiceListFor(formDef, field)) {
+      // Des étiquettes libres n'ont pas de liste à déclarer : les choix ne sont que des suggestions.
+      if ((t === 'Choice' || t === 'ChoiceList') && field.widget !== 'etiquettes' && !choiceListFor(formDef, field)) {
         errors.push('Champ « ' + field.colId + ' » : choices manquants pour ' + t);
       }
 

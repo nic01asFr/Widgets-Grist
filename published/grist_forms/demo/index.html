@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Form Builder — cinq formulaires à essayer</title>
-<meta name="description" content="Cinq formulaires Grist à remplir pour de vrai : consultation, relevé de terrain, constat signé, inscription, signalement. Rien n'est enregistré.">
+<title>Form Builder — six formulaires à essayer</title>
+<meta name="description" content="Six formulaires Grist à remplir pour de vrai : consultation, relevé de terrain, constat signé, inscription, signalement, défaut sur un équipement. Rien n'est enregistré.">
 <link rel="stylesheet" href="../shared/dsfr-like.css">
 <style>
   :root { --demo-rail: 19rem; }
   body { margin: 0; background: var(--fond-page); color: var(--encre); }
 
-  .demo { display: grid; grid-template-columns: var(--demo-rail) 1fr; min-height: 100vh; }
-  @media (max-width: 52rem) { .demo { grid-template-columns: 1fr; } }
+  .demo { display: grid; grid-template-columns: var(--demo-rail) minmax(0, 1fr); min-height: 100vh; }
+  @media (max-width: 52rem) { .demo { grid-template-columns: minmax(0, 1fr); } }
 
   .demo__rail {
     background: var(--fond-carte);
@@ -36,7 +36,7 @@
   .demo__cas span { display: block; font-size: 0.8125rem; color: var(--encre-douce); margin-top: 0.15rem; }
   .demo__cas em { font-style: normal; font-size: 0.72rem; color: var(--blue-france); }
 
-  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; }
+  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; min-width: 0; }
   .demo__barre { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .demo__note {
     font-size: 0.8125rem; color: var(--encre-douce);
@@ -58,7 +58,7 @@
 <div class="demo">
   <nav class="demo__rail" aria-label="Les cas de démonstration">
     <h1 class="demo__titre">Form Builder</h1>
-    <p class="demo__sous">Cinq formulaires à remplir pour de vrai. Rien n’est enregistré.</p>
+    <p class="demo__sous">Six formulaires à remplir pour de vrai. Rien n’est enregistré.</p>
     <div id="cas"></div>
     <p class="demo__lien">
       <a href="../../w/grist_forms/">← La fiche du widget</a>
@@ -82,6 +82,10 @@
 <script src="../shared/carte-geometrie.js"></script>
 <script src="../shared/dessin.js"></script>
 <script src="../shared/referentiel.js"></script>
+<script src="../shared/formats.js"></script>
+<script src="../shared/enrichir.js"></script>
+<script src="../shared/saisies.js"></script>
+<script src="../shared/prefill.js"></script>
 <script src="../runtime/engine.js"></script>
 <script>
 /**
@@ -108,8 +112,15 @@ var CAS = [
     quoiVoir: 'oui/non · cases · encart', vue: 'ordi' },
   { id: 'signalement', nom: 'Signalement d’un problème',
     quoi: 'Une adresse officielle choisie dans la liste : elle donne la commune, et par elle le service compétent.',
-    quoiVoir: 'adresse · code INSEE · coordonnées', vue: 'tel' }
+    quoiVoir: 'adresse · code INSEE · coordonnées', vue: 'tel' },
+  { id: 'defaut', nom: 'Défaut sur un équipement',
+    quoi: 'Le code collé sur l’équipement le désigne ; la carte complète l’adresse, la commune et le bâtiment. Avec le code d’un équipement dans l’adresse : ?objet=LAMP-0012',
+    quoiVoir: 'valeur reçue par l’adresse · lieu complété · compteur · curseur · date de départ · téléphone contrôlé', vue: 'tel' }
 ];
+
+// L'adresse de la page, lue AVANT que le choix d'un cas ne la réécrive : un code
+// scanné y porte l'équipement désigné.
+var RECHERCHE_INITIALE = location.search;
 
 var S = { cas: null, def: null, vue: 'ordi' };
 
@@ -151,8 +162,10 @@ function charger(id) {
 
 function monter() {
   if (!S.def) return;
+  var recu = window.FormPrefill ? FormPrefill.lire(S.def, RECHERCHE_INITIALE) : { values: {}, verrouilles: [], libelles: {} };
   FormEngine.mount(elt('form'), S.def, {
     skipProbe: true,
+    values: recu.values, verrouilles: recu.verrouilles, libelles: recu.libelles,
     submit: function (donnees) {
       elt('note').textContent = 'Envoi simulé — voici ce qui serait écrit dans la table « ' +
         S.def.tableId + ' » : ' + Object.keys(donnees).filter(function (k) {
