@@ -1,0 +1,102 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "demo-defaut",
+  "title": "Signaler un défaut sur un équipement",
+  "tableId": "Defauts",
+  "composeMode": "ensureSchema",
+  "successMessage": "Merci, le défaut est signalé. Une équipe sera prévenue.",
+  "branding": {
+    "organisation": "Service technique",
+    "organisationDetail": "Commune d’Exemple"
+  },
+  "accueil": {
+    "titre": "Un défaut sur un équipement ?",
+    "texte": "Vous avez scanné le code collé sur l’équipement : il est **déjà désigné** ci-dessous. Dites seulement ce qui ne va pas, et touchez la carte si l’équipement n’est pas là où vous êtes.",
+    "dureeMinutes": 1,
+    "bouton": "Signaler un défaut"
+  },
+  "choices": {},
+  "sections": [
+    {
+      "id": "defaut",
+      "label": "Le défaut",
+      "fields": [
+        {
+          "colId": "Objet",
+          "label": "Équipement concerné",
+          "type": "Text",
+          "widget": "text",
+          "required": true,
+          "description": "Rempli par le code scanné. Sans code, indiquez-le ici.",
+          "options": {
+            "prefill": {
+              "param": "objet",
+              "verrouille": true,
+              "libelleParam": "objet_nom"
+            }
+          }
+        },
+        {
+          "colId": "Nature",
+          "label": "Qu’est-ce qui ne va pas ?",
+          "type": "Choice",
+          "widget": "radio",
+          "required": true,
+          "options": {
+            "choices": [
+              "Ne s’allume plus",
+              "Clignote",
+              "Cassé ou abîmé",
+              "Autre"
+            ]
+          }
+        },
+        {
+          "colId": "Lieu",
+          "label": "Où êtes-vous ?",
+          "type": "Text",
+          "widget": "geo",
+          "kind": "geometrie",
+          "description": "Touchez la carte : l’adresse et la commune se remplissent toutes seules.",
+          "options": {
+            "geometrie": "Point",
+            "carte": {
+              "centre": [
+                2.2954,
+                49.8955
+              ],
+              "zoom": 16,
+              "fond": "plan"
+            },
+            "enrichir": {
+              "colonnes": {
+                "adresse": "Adresse",
+                "insee": "CodeInsee",
+                "commune": "Commune",
+                "batiment": "RnbId"
+              }
+            }
+          }
+        },
+        {
+          "colId": "Tel",
+          "label": "Un numéro pour vous rappeler (facultatif)",
+          "type": "Text",
+          "widget": "text",
+          "options": {
+            "validation": {
+              "format": "telephone"
+            },
+            "placeholder": "06 12 34 56 78"
+          }
+        },
+        {
+          "colId": "Commentaire",
+          "label": "Précisions utiles",
+          "type": "Text",
+          "widget": "textarea"
+        }
+      ]
+    }
+  ]
+}

@@ -104,3 +104,26 @@ describe('les conditions des démonstrations agissent vraiment', () => {
     assert.equal(Engine.isFieldVisible(frequence, { Lien: 'Je n’y viens jamais' }, {}), false);
   });
 });
+
+describe('le cas « défaut sur un équipement »', () => {
+  const Prefill = require('../shared/prefill.js');
+  const Formats = require('../shared/formats.js');
+  const def = charger('defaut.json');
+
+  it('désigne l’équipement par l’adresse de la page, et le verrouille', () => {
+    const r = Prefill.lire(def, '?objet=LAMP-0012&objet_nom=Lampadaire%2012');
+    assert.equal(r.values.Objet, 'LAMP-0012');
+    assert.deepEqual(r.verrouilles, ['Objet']);
+    assert.equal(r.libelles.Objet, 'Lampadaire 12');
+  });
+
+  it('n’emploie que des formats et des sens d’enrichissement que les modules connaissent', () => {
+    const Enrichir = require('../shared/enrichir.js');
+    def.sections.forEach((s) => s.fields.forEach((f) => {
+      const v = f.options && f.options.validation;
+      if (v) assert.ok(Formats.connu(v.format), f.colId + ' : format inconnu ' + v.format);
+      const e = f.options && f.options.enrichir;
+      if (e) Object.keys(e.colonnes).forEach((sens) => assert.ok(Enrichir.sensConnu(sens), f.colId + ' : sens inconnu ' + sens));
+    }));
+  });
+});
