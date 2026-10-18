@@ -28,8 +28,8 @@ function formulaire() {
   return {
     id: 'gmao', title: 'Signaler un défaut', tableId: 'Signalements', composeMode: 'ensureSchema',
     sections: [{ label: 'Le défaut', fields: [
-      { colId: 'Objet', label: 'Objet', type: 'Ref:Lampadaires', refTable: 'Lampadaires', widget: 'text', required: true,
-        options: { prefill: { param: 'objet', verrouille: true } } },
+      { colId: 'Objet', label: 'Objet', type: 'Ref', widget: 'select', required: true,
+        options: { refTable: 'Lampadaires', prefill: { param: 'objet', verrouille: true } } },
       { colId: 'Nature', label: 'Nature', type: 'Choice', widget: 'select', required: true, options: { choices: ['Panne', 'Casse', 'Autre'] } },
       { colId: 'Detail', label: 'Détail', type: 'Text', widget: 'text', required: true,
         condition: { field: 'Nature', operator: '==', value: 'Autre' } },
@@ -40,6 +40,21 @@ function formulaire() {
     ] }]
   };
 }
+
+describe('Externe — la définition d’essai est conforme au contrat', () => {
+  it('passe le schéma du FormDef', () => {
+    const { valider } = require('../../../scripts/valider-schema.js');
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const schema = JSON.parse(fs.readFileSync(path.join(__dirname, '../runtime/formdef.schema.json'), 'utf8'));
+    const def = formulaire();
+    def.manifest_version = '1.0.0';
+    def.choices = {};
+    def.sections[0].id = 'a';
+    const ecarts = valider(def, schema, schema);
+    assert.deepEqual(ecarts, [], ecarts.join(' ; '));
+  });
+});
 
 describe('Externe — le plan de schéma', () => {
   it('crée la réception, le traitement, puis les colonnes qui lisent le traitement', () => {

@@ -20,18 +20,26 @@
     return t;
   }
 
+  /**
+   * La table cible d'une référence, par ordre de préférence :
+   * `options.refTable` (la voie canonique), puis l'ancien `refTable` du champ,
+   * puis le suffixe du type (`Ref:Lampadaires`) — que le schéma décrit comme
+   * valide et que cette fonction ignorait : la table se perdait en silence.
+   */
   function resolveRefTable(field) {
     if (!field) return '';
-    if (field.refTable) return field.refTable;
     if (field.options && field.options.refTable) return field.options.refTable;
-    return '';
+    if (field.refTable) return field.refTable;
+    var m = /^Ref(?:List)?:(.+)$/.exec(String(field.type || ''));
+    return m ? m[1] : '';
   }
 
   function fieldToGristType(field) {
     var t = field.type || 'Text';
     var ref = resolveRefTable(field);
-    if (t === 'Ref' && ref) return 'Ref:' + ref;
-    if (t === 'RefList' && ref) return 'RefList:' + ref;
+    // `Ref:Ancien` avec une table donnée ailleurs : la voie canonique l'emporte.
+    var base = String(t).split(':')[0];
+    if ((base === 'Ref' || base === 'RefList') && ref) return base + ':' + ref;
     return t;
   }
 

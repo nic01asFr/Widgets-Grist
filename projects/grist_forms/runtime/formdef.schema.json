@@ -316,11 +316,11 @@
         },
         "type": {
           "type": "string",
-          "description": "Type Grist (Text, Int, Bool, Date, Choice, Ref:T, etc.)"
+          "description": "Type Grist (Text, Int, Numeric, Bool, Date, DateTime, Choice, ChoiceList, Ref, RefList, Attachments). Pour Ref et RefList, la table cible se donne dans `options.refTable` ; le suffixe `Ref:Table` est aussi lu."
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -414,6 +414,107 @@
                   "description": "Parametre d'adresse qui porte le texte a montrer a la place de la valeur (`?objet=123&objet_nom=Lampadaire%2012`)."
                 }
               }
+            },
+            "placeholder": {
+              "type": "string",
+              "description": "Texte d'aide dans la zone de saisie."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Liste proposee pour un choix (Choice, ChoiceList), dans l'ordre."
+            },
+            "choicesKey": {
+              "type": "string",
+              "description": "Cle de `choices` (racine) a utiliser a la place de celle du colId : plusieurs questions partagent une liste."
+            },
+            "maxSelected": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Plafond de cases cochees d'une liste a choix multiples."
+            },
+            "maxFiles": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Nombre maximal de fichiers d'une question de pieces jointes."
+            },
+            "accept": {
+              "type": "string",
+              "description": "Types de fichiers acceptes (`image/*`, `application/pdf`…)."
+            },
+            "step": {
+              "description": "Pas d'une saisie numerique (un nombre, ou `any`)."
+            },
+            "min": {
+              "type": "number",
+              "description": "Borne basse d'une saisie numerique. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+            },
+            "max": {
+              "type": "number",
+              "description": "Borne haute d'une saisie numerique. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+            },
+            "refTable": {
+              "type": "string",
+              "description": "Table cible d'une Ref / RefList. Voie canonique ; le suffixe du type (`Ref:T`) est aussi lu."
+            },
+            "visibleCol": {
+              "type": "string",
+              "description": "Colonne de la table cible dont la valeur est montree."
+            },
+            "sortOrder": {
+              "description": "Ordre des lignes de la table cible."
+            },
+            "libelleOui": {
+              "type": "string",
+              "description": "Mot du bouton « oui » d'une question oui/non."
+            },
+            "libelleNon": {
+              "type": "string",
+              "description": "Mot du bouton « non » d'une question oui/non."
+            },
+            "valeurAutre": {
+              "type": "string",
+              "description": "Valeur de la liste qui ouvre la reponse libre (`Autre` par defaut)."
+            },
+            "consigneAutre": {
+              "type": "string",
+              "description": "Consigne de la reponse libre."
+            },
+            "autreLibre": {
+              "type": "boolean",
+              "description": "La liste offre une reponse libre."
+            },
+            "rangs": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Nombre de rangs retenus d'un classement."
+            },
+            "colonnes": {
+              "type": "object",
+              "description": "Ou la reponse se range quand ce n'est pas la colonne du colId : { valeur, autre, rangs, geometrie, annexes }."
+            },
+            "carte": {
+              "description": "Reglages de la carte d'une question de lieu : { centre, zoom, fond }, ou `false` pour une saisie sans carte."
+            },
+            "geometrie": {
+              "type": "string",
+              "description": "Forme attendue d'un lieu : Point (defaut), LineString, Polygon, et leurs Multi."
+            },
+            "dessin": {
+              "type": "object",
+              "description": "Reglages du canevas d'un dessin ou d'une signature."
+            },
+            "illustration": {
+              "type": "object",
+              "description": "Une image, une carte a reperes ou une page qui illustre la question."
+            },
+            "echelle": {
+              "description": "Cle d'une echelle partagee de `echelles` (kind echelle)."
+            },
+            "matrice": {
+              "description": "Nom de la matrice a laquelle l'echelle se joint."
             }
           }
         },

@@ -68,6 +68,12 @@
     if (!field) return 'text';
     if (field.widget === 'textarea') return 'textarea';
     if (field.widget === 'likert') return 'likert';
+    // Un dessin et une signature sont des pièces jointes qu'on trace : c'est le
+    // widget, puis l'usage déclaré, qui les distinguent d'un fichier envoyé.
+    if (field.widget === 'dessin') {
+      var usage = field.options && field.options.dessin && field.options.dessin.usage;
+      return usage === 'signature' ? 'signature' : 'dessin';
+    }
     if (field.widget === 'file' || field.type === 'Attachments') return 'file';
     var all = SIMPLE_TYPES.concat(ADVANCED_TYPES);
     var i;
@@ -105,6 +111,16 @@
     // Celui qu'on quitte s'en va, sauf l'echelle, qui se choisit ailleurs.
     if (found.kind) field.kind = found.kind;
     else if (field.kind && field.kind !== 'echelle') delete field.kind;
+    // La signature et le dessin partagent type et widget : l'usage les distingue.
+    if (found.widget === 'dessin') {
+      field.options = field.options || {};
+      field.options.dessin = field.options.dessin || {};
+      if (found.key === 'signature') {
+        field.options.dessin.usage = 'signature';
+      } else if (field.options.dessin.usage === 'signature') {
+        delete field.options.dessin.usage;
+      }
+    }
     return field;
   }
 
