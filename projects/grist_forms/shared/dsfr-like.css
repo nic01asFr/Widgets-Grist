@@ -542,10 +542,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 }
 .fr-form .fr-referentiel__option:hover, .champ-bloc__rendu .fr-referentiel__option:hover,
 .fr-form .fr-referentiel__option[aria-selected="true"], .champ-bloc__rendu .fr-referentiel__option[aria-selected="true"] {
-  background: color-mix(in srgb, var(--blue-france) 10%, transparent);
+  background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 10%, transparent);
 }
 .fr-form .fr-referentiel__option[aria-selected="true"], .champ-bloc__rendu .fr-referentiel__option[aria-selected="true"] {
-  box-shadow: inset 3px 0 0 var(--blue-france);
+  box-shadow: inset 3px 0 0 var(--kit-accent, var(--blue-france));
 }
 .fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
 .fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
@@ -865,7 +865,7 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 .fr-carte__repere--bouton:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .est-designe { animation: fr-designe 1.6s ease; }
-.fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--blue-france) 10%, transparent); }
+.fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 10%, transparent); }
 @keyframes fr-designe {
   0%, 60% { background: color-mix(in srgb, var(--blue-france) 14%, transparent); }
   100% { background: transparent; }

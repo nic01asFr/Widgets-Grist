@@ -30,6 +30,14 @@ function clesInconnues(objet, proprietes) {
   return Object.keys(objet).filter((k) => !Object.prototype.hasOwnProperty.call(proprietes, k));
 }
 
+/** Les clés d'une règle : le schéma les porte à plat, ou dans la branche « regle » d'un oneOf. */
+function proprietesCondition() {
+  const c = SCHEMA.definitions.condition;
+  if (c.properties) return c.properties;
+  const regle = (c.oneOf || []).find((o) => o.title === 'regle');
+  return regle ? regle.properties : {};
+}
+
 /** Toutes les conditions d'un cas, avec l'endroit où elles sont posées. */
 function conditionsDe(def) {
   const out = [];
@@ -60,7 +68,7 @@ describe('les cas de démonstration respectent le schéma', () => {
         });
       });
       conditionsDe(def).forEach((c) => {
-        clesInconnues(c.condition, SCHEMA.definitions.condition.properties)
+        clesInconnues(c.condition, proprietesCondition())
           .forEach((k) => fautes.push(c.ou + ', condition : ' + k));
       });
 
