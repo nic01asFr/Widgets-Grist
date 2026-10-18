@@ -342,10 +342,15 @@
         li.setAttribute('role', 'option');
         li.setAttribute('aria-selected', 'false');
         li.textContent = s.libelle;
-        // `mousedown` et non `click` : le clic retirerait d'abord le focus du
-        // champ, ce qui fermerait la liste avant que le choix ne soit pris.
+        // Deux gestes, deux rôles. `mousedown` ne choisit pas : il empêche
+        // seulement le champ de perdre le focus, ce qui fermerait la liste avant
+        // que le choix ne soit pris. Le choix se prend au `click`, que les
+        // lecteurs d'écran et l'activation au clavier émettent seul, sans
+        // `mousedown` (et que le tactile émet aussi).
         li.addEventListener('mousedown', function (ev) {
           ev.preventDefault();
+        });
+        li.addEventListener('click', function () {
           choisir(i);
         });
         liste.appendChild(li);

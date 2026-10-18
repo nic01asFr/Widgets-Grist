@@ -54,7 +54,7 @@ COPY_DIRS.forEach(function (d) {
 
 const pkg = {
   name: 'grist-forms',
-  version: '1.2.1',
+  version: '1.2.2',
   description: 'Form Builder Grist — composer, remplir et dépouiller des formulaires dans un document',
   authors: [{ name: 'nic01asfr', url: 'https://github.com/nic01asfr' }],
   grist: {

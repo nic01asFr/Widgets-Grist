@@ -198,6 +198,10 @@
   },
   "journal": [
     {
+      "version": "v1.2.2",
+      "texte": "Le champ d’adresse se choisit désormais aussi avec un lecteur d’écran et à l’activation d’une option : le choix d’une proposition se prenait au seul appui de la souris, qu’un lecteur d’écran n’émet pas. Il se prend maintenant au clic, une seule fois, et l’appui de la souris garde seulement le focus dans le champ."
+    },
+    {
       "version": "v1.2.1",
       "texte": "Un cinquième cas dans la démonstration : le signalement d’un problème sur l’espace public. L’adresse se choisit dans la liste officielle, et son code INSEE et ses coordonnées partent avec la réponse : dans la table, une formule peut alors retrouver la commune et le service compétent, sans que la personne ait un compte ni connaisse la structure. Une note d’étude (docs/ENVOI-EXTERNE.md) rapporte ce qui a été mesuré sur un vrai document Grist pour un formulaire servi hors de Grist : ce que permet la clé d’un formulaire natif, et ce qu’elle interdit."
     },
