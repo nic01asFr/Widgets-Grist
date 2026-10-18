@@ -178,6 +178,7 @@ describe('Externe — la formule Motifs, exécutée en Python', { skip: !pythonD
   it('un objet absent ou inventé est dit — l’inventé est démasqué par son identifiant', () => {
     assert.match(m[3], /Objet : réponse absente/);
     assert.match(m[4], /Objet : élément inconnu/);
+    assert.ok(!/absente/.test(m[4]), 'un objet inventé n’est pas un objet absent : un seul message');
   });
   it('une valeur hors de la liste est dite', () => assert.match(m[5], /Nature : valeur hors de la liste/));
   it('une question conditionnelle n’est exigée que quand elle s’affiche', () => {

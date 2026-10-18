@@ -112,7 +112,9 @@
     var vide;
 
     if (base === 'Text') vide = 'not (' + col + " or '').strip()";
-    else if (base === 'Ref') vide = 'not ' + col + '.id';
+    // Une référence vide est fausse pour Grist ; une référence inventée est « vraie »
+    // sans identifiant (mesuré) : « absente » et « inconnue » ne se confondent pas.
+    else if (base === 'Ref') vide = 'not ' + col;
     else if (base === 'Int' || base === 'Numeric') vide = col + ' is None';
     else if (base === 'Bool') vide = null;
     else vide = 'not ' + col;
