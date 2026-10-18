@@ -306,7 +306,7 @@
     if (!isFinite(lon) || !isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) return null;
     var libelle = String(s.libelle === null || s.libelle === undefined ? '' : s.libelle)
       .replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
-    return { wkt: 'POINT(' + lon + ' ' + lat + ')', longitude: lon, latitude: lat, libelle: libelle };
+    return { wkt: 'POINT (' + lon + ' ' + lat + ')', longitude: lon, latitude: lat, libelle: libelle };
   }
 
   return {

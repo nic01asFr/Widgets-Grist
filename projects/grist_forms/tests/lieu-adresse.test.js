@@ -47,7 +47,7 @@ describe('Lieu — le point qu\'une adresse désigne', () => {
   const adresse = { libelle: '8 Boulevard du Port 80000 Amiens', longitude: 2.301, latitude: 49.892 };
 
   it('donne le point au format de la colonne et le libellé à montrer', () => {
-    assert.deepEqual(Saisies.lieuDepuisSuggestion(adresse), { wkt: 'POINT(2.301 49.892)', longitude: 2.301, latitude: 49.892, libelle: '8 Boulevard du Port 80000 Amiens' });
+    assert.deepEqual(Saisies.lieuDepuisSuggestion(adresse), { wkt: 'POINT (2.301 49.892)', longitude: 2.301, latitude: 49.892, libelle: '8 Boulevard du Port 80000 Amiens' });
   });
 
   it('une adresse sans coordonnées ne désigne rien — et 0 n\'est pas « absent »', () => {
@@ -134,6 +134,17 @@ describe('Lieu — dans le moteur', () => {
     assert.ok(envoye);
     assert.equal(envoye.Lieu, 'POINT(2.301 49.892)');
     assert.deepEqual(Object.keys(envoye).filter((k) => /lieu/i.test(k) && k !== 'Lieu'), []);
+  });
+});
+
+describe('Lieu — une seule écriture du point', () => {
+  const lire = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+
+  it('aucun geste n\'écrit « POINT(x y) » sans espace : la carte écrit « POINT (x y) » et la colonne ne mélange pas deux formes', () => {
+    ['runtime/engine.js', 'shared/saisies.js'].forEach((f) => {
+      assert.ok(!/'POINT\(/.test(lire(f)), f + ' écrit un point sans espace');
+    });
+    assert.match(lire('runtime/engine.js'), /'POINT \(' \+ lon/);
   });
 });
 

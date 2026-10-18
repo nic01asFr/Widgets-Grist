@@ -2953,14 +2953,17 @@
           geo.getCurrentPosition(function (pos) {
             var lon = Math.round(pos.coords.longitude * 1e6) / 1e6;
             var lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
-            champ.value = 'POINT(' + lon + ' ' + lat + ')';
+            // Même écriture que la carte (`POINT (x y)`) : une colonne ne mélange pas deux formes selon le geste.
+            champ.value = 'POINT (' + lon + ' ' + lat + ')';
             delete values[champ.name + '__lieuChoisi'];
             if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
             if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
               champ.dispatchEvent(new Event('change', { bubbles: true }));
             }
           }, function () {
-            if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.';
+            // Le refus ne fait pas oublier ce que l'on sait du point d\u00e9j\u00e0 pos\u00e9.
+            var garde = values['__enrichi_' + bloc.getAttribute('data-colid')];
+            if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.' + (garde ? ' ' + garde : '');
           }, { enableHighAccuracy: true, timeout: 15000 });
         });
       }(blocs[i]));
