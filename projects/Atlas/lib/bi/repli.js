@@ -31,6 +31,11 @@ export function estEchecDeTuile(ev) {
   const texte = String(e.url || '') + ' ' + String(e.message || '');
   return !/\/fonts\/|glyph/i.test(texte);
 }
+/** Ce que l'hôte peut lire pour comprendre un repli automatique : le dernier échec compté (texte borné, jamais l'objet d'erreur). */
+export function diagnosticEchec(ev, echecs) {
+  const e = (ev && ev.error) || {};
+  return { echecs: Number.isFinite(echecs) ? echecs : null, message: String(e.message || '').slice(0, 160), statut: Number.isFinite(e.status) ? e.status : null, nom: String(e.name || '').slice(0, 40), sourceId: String((ev && ev.sourceId) || '').slice(0, 60) };
+}
 /** Fond à utiliser selon l'état de connexion : le fond demandé s'il est utilisable hors ligne, sinon « uni ». */
 export function fondPourConnexion(fondDemande, horsLigne) { return horsLigne && !FONDS_HORS_LIGNE.includes(fondDemande) ? 'uni' : fondDemande; }
 /** Un niveau administratif est-il disponible sans réseau ? */

@@ -22,7 +22,7 @@ import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, tr
 const CURSEURS_ADMIS = CURSEURS.join(', ');
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
-import { creerSurveillance, estEchecDeTuile, fondPourConnexion } from './repli.js';
+import { creerSurveillance, diagnosticEchec, estEchecDeTuile, fondPourConnexion } from './repli.js';
 import { creerGestionnaire, preferencesDepuisFenetre } from './theme-charte.js';
 import { resoudreJeton, avertissementIgnore } from '../charte/resolution.js';
 import { assainirJetonsFond } from '../charte/schema.js';
@@ -360,14 +360,14 @@ export function attacher(map, opts = {}) {
 
   // ---------- repli hors ligne ----------
   const horsLigne = { actif: false, auto: true, fondAvant: null, cause: null }; const surveillance = creerSurveillance();
-  async function basculerHorsLigne(actif, cause, automatique) {
+  async function basculerHorsLigne(actif, cause, automatique, diagnostic) {
     if (actif === horsLigne.actif) return { actif, auto: horsLigne.auto };
     if (actif) { horsLigne.fondAvant = modeFond; horsLigne.cause = cause; horsLigne.actif = true; try { await api.setFond(fondPourConnexion(modeFond, true), theme.plan || {}); } catch (e) { /* le repli ne doit jamais casser la carte */ } }
     else { horsLigne.actif = false; try { await api.setFond(horsLigne.fondAvant || 'atlas', theme.plan || {}); } catch (e) { /* idem */ } horsLigne.fondAvant = null; }
-    emettre('connexion', { etat: actif ? 'hors_ligne' : 'en_ligne', cause, automatique: !!automatique, fond: modeFond }, automatique ? 'utilisateur' : 'api');
+    emettre('connexion', { etat: actif ? 'hors_ligne' : 'en_ligne', cause, automatique: !!automatique, fond: modeFond, ...(diagnostic ? { diagnostic } : {}) }, automatique ? 'utilisateur' : 'api');
     return { actif, auto: horsLigne.auto };
   }
-  map.on('error', (ev) => { if (!horsLigne.auto || horsLigne.actif || !estEchecDeTuile(ev)) return; if (surveillance.echec()) basculerHorsLigne(true, 'tuiles', true); });
+  map.on('error', (ev) => { if (!horsLigne.auto || horsLigne.actif || !estEchecDeTuile(ev)) return; if (surveillance.echec()) basculerHorsLigne(true, 'tuiles', true, diagnosticEchec(ev, surveillance.compte())); });
   map.on('data', (ev) => { if (ev && ev.tile && ev.sourceId) surveillance.succes(); });
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('offline', () => { if (horsLigne.auto) basculerHorsLigne(true, 'navigateur', true); });

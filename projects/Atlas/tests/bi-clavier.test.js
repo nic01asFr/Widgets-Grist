@@ -79,6 +79,8 @@ test('hors ligne : forcé par l\'hôte, retour au fond précédent, détection a
   assert.ok(evts.some((e) => e.type === 'connexion' && e.charge.etat === 'en_ligne')); assert.deepEqual((await rt.api.setHorsLigne('auto')), { actif: false, auto: true });
   for (let i = 0; i < 4; i++) map.emit('error', { sourceId: 'x', tile: {}, error: new Error('réseau') });
   await new Promise((r) => setTimeout(r, 20)); assert.ok(evts.some((e) => e.type === 'connexion' && e.charge.cause === 'tuiles' && e.charge.automatique === true && e.origine === 'utilisateur'), 'détection par les tuiles');
+  const rep = evts.find((x) => x.type === 'connexion' && x.charge.cause === 'tuiles');
+  assert.deepEqual(rep.charge.diagnostic, { echecs: 4, message: 'réseau', statut: null, nom: 'Error', sourceId: 'x' }, 'le repli dit ce qui l a déclenché');
 });
 test('hors ligne : une rafale de polices en 502 ne bascule pas la carte, de vraies tuiles en échec oui', async () => {
   const { evts, map } = await monter();
