@@ -4,7 +4,7 @@
   "title": "Signaler un problème sur l’espace public",
   "tableId": "Signalements",
   "composeMode": "ensureSchema",
-  "successMessage": "Merci, votre signalement est enregistré. Conservez votre reçu pour en suivre l’avancement.",
+  "successMessage": "Merci, votre signalement est enregistré.",
   "branding": {
     "organisation": "Service technique",
     "organisationDetail": "Commune d’Exemple"
