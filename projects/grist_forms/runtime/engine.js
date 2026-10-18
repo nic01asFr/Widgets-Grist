@@ -457,6 +457,12 @@
           var idFormat = fmt && fmt.formatDeChamp(field);
           if (idFormat && typeof out[field.colId] === 'string') out[field.colId] = fmt.normalise(idFormat, out[field.colId]);
         }
+        // La precision d'un releve GPS (en metres) : valable tant que le point est celui que le GPS a donne.
+        // Un point deplace a la carte ou tape a la main n'a plus de precision a annoncer.
+        if (field.options && field.options.precisionCol) {
+          var releve = values['__precision_' + field.colId];
+          out[field.options.precisionCol] = (releve && releve.wkt === brut && Number.isFinite(releve.m)) ? releve.m : null;
+        }
         // Le texte libre de « Autre » a sa propre colonne : écrit dans la liste,
         // Grist le garderait mais l'encadrerait en rouge (mesuré).
         if (cols.autre) {
@@ -483,6 +489,10 @@
       if (meta.durationCol && Number(opts.demarreA) > 0) {
         out[meta.durationCol] = Math.round((Date.now() - Number(opts.demarreA)) / 1000);
       }
+      // Qui a repondu : seulement quand l'hote connait la personne. Jamais devinee, jamais demandee ;
+      // sans identite, la colonne reste vide.
+      var courriel = opts.email ? String(opts.email).trim().toLowerCase() : '';
+      if (meta.emailCol && courriel) out[meta.emailCol] = courriel;
     }
     return out;
   }
@@ -2652,7 +2662,7 @@
           Promise.resolve(resolveAtt).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
             var data = collectSubmitData(formDef, values, context,
-              { creation: enCreation, demarreA: demarreA });
+              { creation: enCreation, demarreA: demarreA, email: context.userEmail });
             return defaultSubmit(bridge, formDef, data);
           }).then(function (res) {
             memoriserDernieres();
@@ -3135,6 +3145,7 @@
             // Même écriture que la carte (`POINT (x y)`) : une colonne ne mélange pas deux formes selon le geste.
             champ.value = 'POINT (' + lon + ' ' + lat + ')';
             delete values[champ.name + '__lieuChoisi'];
+            values['__precision_' + champ.name] = { wkt: champ.value, m: Math.round(pos.coords.accuracy) };
             if (etat) etat.textContent = 'Position relev\u00e9e \u00e0 ' + Math.round(pos.coords.accuracy) + ' m pr\u00e8s.';
             if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
               champ.dispatchEvent(new Event('change', { bubbles: true }));

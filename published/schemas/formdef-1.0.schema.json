@@ -169,7 +169,8 @@
           "description": "ChoiceList où consigner les questions répondues « Non concerné »"
         },
         "emailCol": {
-          "type": "string"
+          "type": "string",
+          "description": "Colonne qui recoit le courriel de la personne connectee, a la creation seulement. Vide quand l'hote ne connait pas la personne : il n'est jamais demande dans le formulaire."
         }
       }
     },
@@ -538,6 +539,10 @@
             "unite": {
               "type": "string",
               "description": "Unite affichee apres une saisie numerique (h, m, %). N'est pas ecrite dans la cellule."
+            },
+            "precisionCol": {
+              "type": "string",
+              "description": "Colonne numerique qui recoit la precision (en metres) d'un point releve avec le GPS de l'appareil. Vide quand le point a ete pose a la carte, choisi par adresse ou tape a la main."
             },
             "saisieLieu": {
               "enum": [
