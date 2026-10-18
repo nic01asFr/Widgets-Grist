@@ -8,14 +8,15 @@
       require('../shared/types.js'),
       require('../shared/attachments.js'),
       require('../shared/session-context.js'),
-      require('../shared/referentiel.js')
+      require('../shared/referentiel.js'),
+      require('../shared/formats.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -35,6 +36,16 @@
     var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
     return global && global.FormReferentiel && global.FormReferentiel.sourceConnue
       ? global.FormReferentiel : null;
+  }
+
+  /**
+   * Le catalogue de formats, s'il est là. Sans lui, un format déclaré ne
+   * contrôle rien : le champ reste un champ ordinaire.
+   */
+  function formatsApi() {
+    if (Formats && Formats.valide) return Formats;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormFormats && global.FormFormats.valide ? global.FormFormats : null;
   }
 
   function normalizeEmail(v) {
@@ -269,6 +280,10 @@
         } else {
           // « Non concerné » est une réponse ; la colonne, elle, reste vide.
           out[field.colId] = brut === VALEUR_NON_CONCERNE ? null : Types.coerceForWrite(field, brut);
+          // La forme qu'on enregistre : un IBAN sans espaces, un téléphone à 10 chiffres.
+          var fmt = formatsApi();
+          var idFormat = fmt && fmt.formatDeChamp(field);
+          if (idFormat && typeof out[field.colId] === 'string') out[field.colId] = fmt.normalise(idFormat, out[field.colId]);
         }
         // Le texte libre de « Autre » a sa propre colonne : écrit dans la liste,
         // Grist le garderait mais l'encadrerait en rouge (mesuré).
@@ -1457,6 +1472,24 @@
     return values;
   }
 
+  /**
+   * Les réponses dont le format est faux : IBAN, SIRET, code postal…
+   *
+   * Une réponse vide n'est pas ici : l'obligation est une autre règle. Les
+   * questions cachées ne se contrôlent pas — personne ne les a vues.
+   */
+  function validerFormats(fields, values) {
+    var api = formatsApi();
+    var out = [];
+    if (!api) return out;
+    for (var i = 0; i < fields.length; i++) {
+      var id = api.formatDeChamp(fields[i]);
+      if (!id) continue;
+      if (!api.valide(id, values[fields[i].colId])) out.push({ colId: fields[i].colId, message: api.message(id) });
+    }
+    return out;
+  }
+
   function validateRequired(fields, values) {
     var missing = [];
     for (var i = 0; i < fields.length; i++) {
@@ -1718,6 +1751,7 @@
     // lire la presentation n'est pas repondre.
     var demarreA = surAccueil ? 0 : Date.now();
     var errorFields = [];
+    var messagesErreur = {};
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
@@ -1866,6 +1900,20 @@
       }
     }
 
+    /**
+     * Ce qui empeche de continuer : une reponse manquante, ou un format faux.
+     * Chaque question en defaut garde son propre message.
+     */
+    function erreursDeSaisie(fields, values) {
+      messagesErreur = {};
+      var colIds = validateRequired(fields, values);
+      validerFormats(fields, values).forEach(function (e) {
+        messagesErreur[e.colId] = e.message;
+        if (colIds.indexOf(e.colId) === -1) colIds.push(e.colId);
+      });
+      return colIds;
+    }
+
     function render() {
       var sections = getVisibleSections(formDef, values, context);
       if (!sections.length) {
@@ -1920,7 +1968,7 @@
           // > sont donc enfermes ensemble, et le bloc porte un filet rouge.
           html = '<div class="fr-champ--erreur">' + html +
             '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">' +
-            'Ce champ est obligatoire.</p></div>';
+            escapeHtml(messagesErreur[f.colId] || 'Ce champ est obligatoire.') + '</p></div>';
         }
         return html;
       }).join('');
@@ -2006,7 +2054,7 @@
       if (nextBtn && typeof nextBtn.addEventListener === 'function') {
         nextBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values, verrouilles);
-          var missing = validateRequired(fields, values);
+          var missing = erreursDeSaisie(fields, values);
           // Une reponse manquante ne fait pas changer d'etape : on remonte
           // quand meme, sinon le message reste hors de l'ecran.
           if (missing.length) { errorFields = missing; render(); remonterEnHaut(); return; }
@@ -2017,7 +2065,7 @@
       if (submitBtn && typeof submitBtn.addEventListener === 'function') {
         submitBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values, verrouilles);
-          var missing = validateRequired(fields, values);
+          var missing = erreursDeSaisie(fields, values);
           if (missing.length) { errorFields = missing; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
           var resolveAtt = Attachments.resolveAttachmentFields

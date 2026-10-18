@@ -79,6 +79,8 @@
     // Le champ d'adresse, de même : sans lui le champ reste un champ texte, et
     // un formulaire publié avant son arrivée n'en voit pas la différence.
     var referentielJs = bundles.referentielJs || '';
+    // Les formats (IBAN, SIRET…), de même : sans lui un format déclaré ne contrôle rien.
+    var formatsJs = bundles.formatsJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -92,6 +94,7 @@
       carteJs,
       dessinJs,
       referentielJs,
+      formatsJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',

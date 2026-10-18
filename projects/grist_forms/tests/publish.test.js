@@ -139,3 +139,12 @@ it('sans le module, le formulaire se publie quand même — le champ reste un ch
   assert.ok(doc.includes('/*engine*/'));
   assert.ok(!doc.includes('FormReferentiel'));
 });
+
+it('le module des formats voyage avec le formulaire, avant le moteur qui le lit', () => {
+  const doc = P.buildRuntimeDocument({ id: 'demo', title: 'T', tableId: 'C', sections: [], choices: {} }, {
+    formatsJs: '/*formats*/',
+    engineJs: '/*engine*/'
+  });
+  assert.ok(doc.includes('/*formats*/'));
+  assert.ok(doc.indexOf('/*formats*/') < doc.indexOf('/*engine*/'));
+});

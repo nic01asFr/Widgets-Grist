@@ -1093,6 +1093,8 @@
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
+  <script src="shared/formats.js"></script>
+  <script src="shared/prefill.js"></script>
   <script src="shared/synthese.js"></script>
   <script src="shared/synthese-vue.js"></script>
 <script src="runtime/engine.js"></script>
@@ -2788,7 +2790,49 @@ function renderOptionsDuChamp(def, si, f, fi, isBind) {
  * Rien ne s'affiche pour une saisie qui n'a pas de reglage propre : le panneau
  * ne montre que ce qui s'applique a la question qu'on regle.
  */
+/**
+ * Les réglages d'une question : ceux de son type, puis ceux qui valent pour toute
+ * question (le format qu'on contrôle, la valeur reçue par l'adresse).
+ */
 function renderReglagesSaisie(def, si, f, fi, isBind) {
+  return renderReglagesSaisieSpecifiques(def, si, f, fi, isBind) + renderReglagesCommuns(def, si, f, fi);
+}
+
+function renderReglagesCommuns(def, si, f, fi) {
+  const o = f.options || {};
+  let html = '';
+  // ── Format : un texte qui doit être un IBAN, un SIRET… ──
+  const formats = window.FormFormats;
+  if (formats && f.type === 'Text' && !f.kind && f.widget !== 'geo' && f.widget !== 'dessin') {
+    const courant = (o.validation && o.validation.format) || '';
+    const choix = Object.keys(formats.FORMATS).map(id =>
+      `<option value="${esc(id)}" ${id === courant ? 'selected' : ''}>${esc(formats.FORMATS[id].libelle)}</option>`).join('');
+    html += `
+      <div class="fr-select-group"><label class="fr-label" for="fmt-${si}-${fi}">Format contrôlé ${hintIcon('Un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Le même contrôle peut être refait côté Grist (voir l’envoi externe).')}</label>
+        <select class="fr-select" id="fmt-${si}-${fi}" onchange="App.onValidation(${si}, ${fi}, this.value)">
+          <option value="">— aucun —</option>${choix}
+        </select></div>`;
+  }
+  // ── Valeur reçue par l'adresse de la page (QR code) ──
+  const p = o.prefill || {};
+  if (f.colId && ['file', 'geo', 'dessin'].indexOf(f.widget) === -1) {
+    html += `
+      <details class="fr-mt-1w" ${p.param ? 'open' : ''}><summary class="fr-label">Valeur reçue par l’adresse de la page</summary>
+        <div class="fr-input-group"><label class="fr-label" for="pf-${si}-${fi}">Paramètre ${hintIcon('Un QR code collé sur un objet ouvre le formulaire avec ce paramètre : ?objet=123. Rien n’est repris sans ce réglage. C’est une commodité, pas une protection : une adresse se fabrique à la main.')}</label>
+          <input class="fr-input" id="pf-${si}-${fi}" value="${esc(p.param || '')}" placeholder="objet" pattern="[a-z][a-z0-9_]{0,31}"
+            oninput="App.onPrefill(${si}, ${fi}, 'param', this.value)"></div>
+        <div class="fr-checkbox-group"><input type="checkbox" id="pfv-${si}-${fi}" ${p.verrouille ? 'checked' : ''}
+          onchange="App.onPrefill(${si}, ${fi}, 'verrouille', this.checked)">
+          <label class="fr-label" for="pfv-${si}-${fi}">La personne ne peut pas la changer</label></div>
+        <div class="fr-input-group"><label class="fr-label" for="pfl-${si}-${fi}">Paramètre du texte à montrer</label>
+          <input class="fr-input" id="pfl-${si}-${fi}" value="${esc(p.libelleParam || '')}" placeholder="objet_nom"
+            oninput="App.onPrefill(${si}, ${fi}, 'libelleParam', this.value)"></div>
+      </details>`;
+  }
+  return html;
+}
+
+function renderReglagesSaisieSpecifiques(def, si, f, fi, isBind) {
   const o = f.options || {};
   const cols = o.colonnes || {};
   const texte = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Text');
@@ -3971,6 +4015,28 @@ function onFieldChoices(si, fi, text) {
   if (f.colId) S.currentDef.choices[f.colId] = list;
 }
 
+/** Le format qu'une question de texte contrôle (IBAN, SIRET…). */
+function onValidation(si, fi, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur) f.options.validation = { format: valeur }; else delete f.options.validation;
+  renderBuilder();
+}
+
+/** Ce que la question reprend de l'adresse de la page. */
+function onPrefill(si, fi, cle, valeur) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const p = f.options.prefill = f.options.prefill || {};
+  if (cle === 'verrouille') { if (valeur) p.verrouille = true; else delete p.verrouille; }
+  else if (String(valeur || '').trim()) p[cle] = String(valeur).trim();
+  else delete p[cle];
+  // Sans paramètre, il n'y a plus de valeur reçue : la déclaration s'efface.
+  if (!p.param) delete f.options.prefill;
+}
+
 /** D'ou viennent les propositions d'une adresse, et quand la recherche part. */
 function onReferentiel(si, fi, cle, valeur) {
   const f = S.currentDef.sections[si].fields[fi];
@@ -4947,7 +5013,7 @@ async function publishForm() {
     }
 
     logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText] =
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -4956,6 +5022,7 @@ async function publishForm() {
       fetchScriptSource('shared/carte-geometrie.js'),
       fetchScriptSource('shared/dessin.js'),
       fetchScriptSource('shared/referentiel.js'),
+      fetchScriptSource('shared/formats.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -4963,7 +5030,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -5030,7 +5097,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

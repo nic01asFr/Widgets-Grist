@@ -360,6 +360,20 @@
                 }
               }
             },
+            "validation": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Un format qu'une question de texte controle, sans appeler aucun service. Connus aujourd'hui : iban, siren, siret, codePostal, insee, courriel, telephone. Un format inconnu ne controle rien : un moteur plus ancien que le formulaire ne bloque personne. Le serveur d'un formulaire natif accepte tout : la table doit refaire le meme controle (shared/formats.js porte la regle en JavaScript et en Python).",
+              "required": [
+                "format"
+              ],
+              "properties": {
+                "format": {
+                  "type": "string",
+                  "description": "Identifiant du format."
+                }
+              }
+            },
             "prefill": {
               "type": "object",
               "additionalProperties": false,
