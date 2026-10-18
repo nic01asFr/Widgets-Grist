@@ -408,12 +408,10 @@
       if (controleur) controleur.abort();
       clearTimeout(attente);
       clearTimeout(minuteur);
-      if (declenchement === 'frappe') {
-        if (nettoyer(texte).length >= src.minimum) {
-          minuteur = setTimeout(chercher, src.attenteFrappeMs);
-        } else {
-          annoncer('');
-        }
+      // « Adresse choisie : … » ne dit plus vrai dès que le texte change.
+      annoncer('');
+      if (declenchement === 'frappe' && nettoyer(texte).length >= src.minimum) {
+        minuteur = setTimeout(chercher, src.attenteFrappeMs);
       }
     }
 
