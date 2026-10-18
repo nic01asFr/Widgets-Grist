@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { actionPourTouche, pas, phraseUnite, phrasePoint, TOUCHES, AIDE } from '../lib/bi/clavier.js';
-import { creerSurveillance, fondPourConnexion, niveauHorsLigne } from '../lib/bi/repli.js';
+import { creerSurveillance, estEchecDeTuile, fondPourConnexion, niveauHorsLigne } from '../lib/bi/repli.js';
 import { attacher } from '../lib/bi/bi-runtime.js';
 import { installerClavier } from '../lib/bi/clavier-runtime.js';
 
@@ -25,6 +25,15 @@ test('repli : la perte de réseau se déclare après une série d\'échecs, un s
   let t = 0; const s = creerSurveillance({ seuil: 3, fenetreMs: 1000, maintenant: () => t });
   assert.equal(s.echec(), false); t = 100; assert.equal(s.echec(), false); s.succes(); t = 200; assert.equal(s.echec(), false); t = 300; assert.equal(s.echec(), false); t = 400; assert.equal(s.echec(), true);
   t = 5000; assert.equal(s.echec(), false, 'les échecs anciens sortent de la fenêtre'); assert.equal(s.compte(), 1);
+});
+test('repli : un échec de police de caractères n\'est pas une perte de réseau (MapLibre le rapporte comme un échec de tuile)', () => {
+  const tuile = (message, url) => ({ sourceId: 's', tile: {}, error: Object.assign(new Error(message), url ? { url } : {}) });
+  assert.equal(estEchecDeTuile(tuile('AJAXError: Bad Gateway (502): https://data.geopf.fr/tms/1.0.0/PLAN.IGN/8/131/93.pbf')), true, 'une vraie tuile en échec compte');
+  assert.equal(estEchecDeTuile(tuile('AJAXError: Bad Gateway (502): https://data.geopf.fr/annexes/ressources/vectorTiles/fonts/Noto Sans Regular/8192-8447.pbf')), false, 'une police en 502 ne compte pas');
+  assert.equal(estEchecDeTuile(tuile('Failed', 'https://exemple.org/fonts/X/0-255.pbf')), false, 'l\'adresse est lue aussi');
+  assert.equal(estEchecDeTuile(tuile('Could not load glyphs')), false);
+  for (const sans of [null, undefined, {}, { sourceId: 's' }, { tile: {} }]) assert.equal(estEchecDeTuile(sans), false);
+  assert.equal(estEchecDeTuile({ sourceId: 's', tile: {}, error: null }), true, 'sans détail, on compte comme avant');
 });
 test('repli : seul le fond uni et les jeux embarqués restent utilisables', () => {
   assert.equal(fondPourConnexion('plan-ign', true), 'uni'); assert.equal(fondPourConnexion('photo', true), 'uni'); assert.equal(fondPourConnexion('plan', false), 'plan'); assert.equal(fondPourConnexion('uni', true), 'uni');
@@ -70,4 +79,14 @@ test('hors ligne : forcé par l\'hôte, retour au fond précédent, détection a
   assert.ok(evts.some((e) => e.type === 'connexion' && e.charge.etat === 'en_ligne')); assert.deepEqual((await rt.api.setHorsLigne('auto')), { actif: false, auto: true });
   for (let i = 0; i < 4; i++) map.emit('error', { sourceId: 'x', tile: {}, error: new Error('réseau') });
   await new Promise((r) => setTimeout(r, 20)); assert.ok(evts.some((e) => e.type === 'connexion' && e.charge.cause === 'tuiles' && e.charge.automatique === true && e.origine === 'utilisateur'), 'détection par les tuiles');
+});
+test('hors ligne : une rafale de polices en 502 ne bascule pas la carte, de vraies tuiles en échec oui', async () => {
+  const { evts, map } = await monter();
+  const police = () => ({ sourceId: 'x', tile: {}, error: new Error('AJAXError: Bad Gateway (502): https://data.geopf.fr/annexes/ressources/vectorTiles/fonts/Noto Sans Regular/8192-8447.pbf') });
+  for (let i = 0; i < 12; i++) map.emit('error', police());
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(evts.some((e) => e.type === 'connexion'), false, 'aucun repli sur des polices manquantes');
+  for (let i = 0; i < 4; i++) map.emit('error', { sourceId: 'x', tile: {}, error: new Error('AJAXError: Bad Gateway (502): https://data.geopf.fr/tms/1.0.0/PLAN.IGN/8/131/93.pbf') });
+  await new Promise((r) => setTimeout(r, 20));
+  assert.ok(evts.some((e) => e.type === 'connexion' && e.charge.cause === 'tuiles'), 'de vraies tuiles en échec déclenchent toujours le repli');
 });

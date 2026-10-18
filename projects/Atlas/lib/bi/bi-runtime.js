@@ -22,7 +22,7 @@ import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, tr
 const CURSEURS_ADMIS = CURSEURS.join(', ');
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
-import { creerSurveillance, fondPourConnexion } from './repli.js';
+import { creerSurveillance, estEchecDeTuile, fondPourConnexion } from './repli.js';
 import { creerGestionnaire, preferencesDepuisFenetre } from './theme-charte.js';
 import { resoudreJeton, avertissementIgnore } from '../charte/resolution.js';
 import { assainirJetonsFond } from '../charte/schema.js';
@@ -367,7 +367,7 @@ export function attacher(map, opts = {}) {
     emettre('connexion', { etat: actif ? 'hors_ligne' : 'en_ligne', cause, automatique: !!automatique, fond: modeFond }, automatique ? 'utilisateur' : 'api');
     return { actif, auto: horsLigne.auto };
   }
-  map.on('error', (ev) => { if (!horsLigne.auto || horsLigne.actif || !ev || !ev.sourceId || !ev.tile) return; if (surveillance.echec()) basculerHorsLigne(true, 'tuiles', true); });
+  map.on('error', (ev) => { if (!horsLigne.auto || horsLigne.actif || !estEchecDeTuile(ev)) return; if (surveillance.echec()) basculerHorsLigne(true, 'tuiles', true); });
   map.on('data', (ev) => { if (ev && ev.tile && ev.sourceId) surveillance.succes(); });
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('offline', () => { if (horsLigne.auto) basculerHorsLigne(true, 'navigateur', true); });
