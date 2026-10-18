@@ -316,7 +316,7 @@ Niveau « au-dessus des projets » = **regroupement simple** (pas une hiérarchi
 
 ## Feuille de temps / CRA — `cra.html` (6ᵉ widget, opt-in)
 
-Saisie du **réalisé daté par personne** (lot temps GENCI #9 + export Excel #12). Spec : `CRA_FEUILLE_DE_TEMPS_SPEC.md`. Standalone (hors `build-taskflow`). Onglet dans le launcher.
+Saisie du **réalisé daté par personne** (lot temps #9 + export Excel #12). Spec : `CRA_FEUILLE_DE_TEMPS_SPEC.md`. Standalone (hors `build-taskflow`). Onglet dans le launcher.
 
 - **Tables satellites opt-in** (créées par la CRA uniquement, comme le Plan pour `charges`) :
   - `TimeEntries` : `membre Ref:Team, tache Ref:Tasks, date (le JOUR), heures (canonique), imputation, description`.

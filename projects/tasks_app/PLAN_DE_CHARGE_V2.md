@@ -3,7 +3,7 @@
 Spécification de la **5ᵉ vue** de la suite TaskFlow : un outil de pilotage de la
 charge des ressources, complémentaire (et **distinct**) du Gantt.
 
-Statut : proposition / cadrage pour devis GENCI (#3 plan de charge).
+Statut : proposition / cadrage pour devis (#3 plan de charge).
 Pré-requis acquis : charge propre + consolidée, étalement temporel, capacité,
 composant Dashboard "Plan de charge" (Niveau 0–1, livrés et validés).
 

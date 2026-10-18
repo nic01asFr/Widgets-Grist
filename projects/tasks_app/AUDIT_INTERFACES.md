@@ -1,6 +1,6 @@
 # Audit des interfaces TaskFlow — synthèse multi-agents
 
-Audit mené par **5 sous-agents** (1 par widget), lecture du code en entier + contexte, sur le cas d'usage réel « Activité GIDI » (équipe Cerema 6 pers., 9 départements, 31 affaires parentes + ~61 sous-tâches « affaire — personne », dates année pleine, priorité non saisie, `Disponibilites` pour décharge/temps partiel).
+Audit mené par **5 sous-agents** (1 par widget), lecture du code en entier + contexte, sur le cas d'usage réel « Activité GIDI » (équipe de 6 pers., 9 départements, 31 affaires parentes + ~61 sous-tâches « affaire — personne », dates année pleine, priorité non saisie, `Disponibilites` pour décharge/temps partiel).
 
 Statut : **évaluation** (aucun code modifié par les agents). Recoupé avec l'audit live déjà mené sur Kanban/Gantt/Calendrier.
 

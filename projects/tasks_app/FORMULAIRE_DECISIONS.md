@@ -1,4 +1,4 @@
-# GENCI — Formulaire de décisions (avant implémentation)
+# Formulaire de décisions (avant implémentation)
 
 > But : trancher de façon **fiable** les derniers choix, en langage d'usage.
 > **Comment répondre** : pour chaque question, **entoure une option**. En cas de doute, **prends la reco (en gras)** : l'ensemble des recos forme une base **cohérente, générique et sûre**.
@@ -25,7 +25,7 @@
 ## Q1 — Décrire l'organisation : unités nommées ou juste « qui est le chef de qui » ? 🔵
 *Veux-tu modéliser des **unités** (Direction › Service › Équipe…) comme objets nommés, ou seulement la **chaîne de management** ?*
 
-- **A) Unités nommées multi-niveaux** *(table `Entites`)* — permet organigramme, **charge par équipe**, portefeuilles. ✅ **Reco** (GENCI veut charge par équipe + portefeuilles).
+- **A) Unités nommées multi-niveaux** *(table `Entites`)* — permet organigramme, **charge par équipe**, portefeuilles. ✅ **Reco** (le commanditaire veut charge par équipe + portefeuilles).
 - B) Juste la chaîne de management *(une colonne « responsable » sur les personnes)* — plus simple, suffit pour les **droits** seuls.
 
 **Réponse : ____**
@@ -66,7 +66,7 @@
 *Une personne peut-elle dépendre de **deux chefs en même temps** (hiérarchique **et** fonctionnel/projet) ?*
 
 - **A) Un seul chef par personne** *(arbre)* — simple, couvre l'immense majorité des cas. ✅ **Reco** (on garde la porte ouverte pour la matrice plus tard, sans la coder).
-- B) Plusieurs chefs *(matrice)* — nécessaire seulement si c'est un vrai besoin GENCI maintenant.
+- B) Plusieurs chefs *(matrice)* — nécessaire seulement si c'est un vrai besoin du commanditaire maintenant.
 
 **Réponse : ____**
 

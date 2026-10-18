@@ -167,7 +167,7 @@ Idem applicable à `priorite` et `type` (colonnes Choice) pour cohérence.
 
 ---
 
-## Lots de livraison GENCI
+## Lots de livraison
 
 - **Lot 1** : #2 (visibleCol des Ref -> noms dans vues natives) ; #1 (statuts
   dynamiques) ; #3 (plan de charge JSON). Schéma auto, noms fixes. 4 widgets.

@@ -1,4 +1,4 @@
-# TaskFlow / GENCI — Roadmap & Index (document maître)
+# TaskFlow — Roadmap & Index (document maître)
 
 > Point d'entrée unique : état, carte des docs, backlog priorisé, plan de publication.
 > Détails dans les docs référencés. Mis à jour 2026-06-21. Branche `draft` (rien publié de neuf).
@@ -45,16 +45,16 @@ Pivot données = table **`Team`** (voir §6). Tout est **opt-in** (sweet-spot) :
 | Doc | Contenu |
 |---|---|
 | `CLAUDE.md` | Architecture suite + schéma données + **modèle du réalisé** (anti-doublon) |
-| `GENCI_REPONSE_SYNTHESE.md` | Synthèse stratégique + **§9 cartographie des 12 demandes JPP** (traçabilité) |
-| `GENCI_LOT3_ANNUAIRE_ACL.md` | Cadrage annuaire + ACL |
-| `ACL_RULES_GENCI.md` | **Recette ACL prête à coller** (Étape 3 bis = solution prouvée) + scénario « View as » |
+| `REPONSE_SYNTHESE.md` | Synthèse stratégique + **§9 cartographie des 12 demandes JPP** (traçabilité) |
+| `LOT3_ANNUAIRE_ACL.md` | Cadrage annuaire + ACL |
+| `ACL_RULES.md` | **Recette ACL prête à coller** (Étape 3 bis = solution prouvée) + scénario « View as » |
 | `CRA_FEUILLE_DE_TEMPS_SPEC.md` | Spec Feuille de temps / CRA (modèle, UX, workflow, phasage) |
-| `ORGCHART_FONCTIONS_GENCI.md` | Étude fonctions org-chart (#1 annuaire, #4 compétences) |
-| `GENCI_FORMULAIRE_DECISIONS.md` | Décisions actées (Q1-Q7) |
+| `ORGCHART_FONCTIONS.md` | Étude fonctions org-chart (#1 annuaire, #4 compétences) |
+| `FORMULAIRE_DECISIONS.md` | Décisions actées (Q1-Q7) |
 | `PLAN_DE_CHARGE_V2.md` / `COLUMNS_SPEC.md` | Spec Plan / colonnes (historique) |
-| **`ROADMAP_GENCI.md`** | **Ce document** |
+| **`ROADMAP.md`** | **Ce document** |
 
-Mémoire agent : `genci-lot3-annuaire-acl`, `taskflow-cra-lot-temps`, `taskflow-plan-de-charge`, etc. (index dans `MEMORY.md`).
+Mémoire agent : `lot3-annuaire-acl`, `taskflow-cra-lot-temps`, `taskflow-plan-de-charge`, etc. (index dans `MEMORY.md`).
 
 ---
 
@@ -85,7 +85,7 @@ Pour publier l'org-chart + la CRA :
 3. Ajouter `orgchart` + `cra` au `package.json` `grist[]` + ajuster les `urlFor` prod du launcher.
 4. `npm run manifest` → commit → PR `draft → main` (CI déploie gh-pages).
 
-⚠️ **Avant publi** : décider tout-d'un-coup vs étapes ; le working-tree `draft` contient aussi qgis2grist/artefactory/Atlas (ne pas embarquer) ; empreinte opt-in (tables créées à l'usage). Cf. [[taskflow-plan-de-charge]] / `genci-lot3`.
+⚠️ **Avant publi** : décider tout-d'un-coup vs étapes ; le working-tree `draft` contient aussi qgis2grist/artefactory/Atlas (ne pas embarquer) ; empreinte opt-in (tables créées à l'usage). Cf. [[taskflow-plan-de-charge]] / `lot3`.
 
 ---
 

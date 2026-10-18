@@ -10,7 +10,7 @@ des deux côtés, et aucun des deux ne connaît l'autre.
 
 | | Commits | Contenu |
 |---|---|---|
-| **Local** (`draft`), non publié | 16 | Lot 3 GENCI (organigramme, annuaire, ACL dérivée), CRA feuille de temps, Plan réalisé daté, filtre de niveau, respect ACL sur les 7 widgets, passe UX/UI |
+| **Local** (`draft`), non publié | 16 | Lot 3 (organigramme, annuaire, ACL dérivée), CRA feuille de temps, Plan réalisé daté, filtre de niveau, respect ACL sur les 7 widgets, passe UX/UI |
 | **Distant** (`origin/main`), absent du local | 4 | merge du 07/06, checklist éditable, publications **v1.1.1** et **v1.1.2** (whiteboard harmonisé) |
 
 Le dossier `published/taskflow/` diffère aussi :
@@ -22,7 +22,7 @@ calendar   : DIFFÉRENT
 whiteboard : DIFFÉRENT
 ```
 
-**Enjeu** : le travail local relève d'une prestation financée (GENCI). Il n'est ni
+**Enjeu** : le travail local relève d'une prestation financée par un commanditaire. Il n'est ni
 sauvegardé, ni partagé, ni déployé — il n'existe que sur ce poste.
 
 ## 2. Le piège à éviter — leçon vécue sur Atlas
@@ -129,5 +129,5 @@ Resynchroniser le dépôt **local** avec `origin/main`, sinon la divergence
 repartira immédiatement. C'est la cause racine : deux publications par worktree
 (7 juin, 30 juillet) sans rapatriement.
 
-Mettre à jour `projects/tasks_app/ROADMAP_GENCI.md` (document maître de l'état
+Mettre à jour `projects/tasks_app/ROADMAP.md` (document maître de l'état
 par chantier) et la note WikiChat du projet « Widgets Grist ».
