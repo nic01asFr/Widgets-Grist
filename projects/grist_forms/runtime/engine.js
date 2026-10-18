@@ -752,6 +752,14 @@
       '</div>';
   }
 
+  /** Le clavier que la question demande ou que son format laisse entendre ; rien sans le module des saisies. */
+  function clavierAttrs(field) {
+    var api = saisiesApi();
+    if (!api || !api.attributsClavier) return '';
+    var f = formatsApi();
+    return api.attributsClavier(field, f && f.formatDeChamp ? f.formatDeChamp(field) : null);
+  }
+
   function renderTextLike(field, value, multiline) {
     var id = fieldId(field);
     var val = value == null ? '' : value;
@@ -761,7 +769,7 @@
       ? '<textarea class="fr-input" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + reqAttr + phAttr + '>' +
         escapeHtml(val) + '</textarea>'
       : '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) +
-        '" value="' + escapeHtml(val) + '"' + reqAttr + phAttr + ' />';
+        '" value="' + escapeHtml(val) + '"' + clavierAttrs(field) + reqAttr + phAttr + ' />';
     return '<div class="fr-input-group" data-colid="' + escapeHtml(field.colId) + '">' +
       renderLabel(field, id) + control + '</div>';
   }
@@ -783,7 +791,7 @@
       '<div class="fr-nombre__ligne">' +
       '<input class="fr-input" type="number" id="' + id + '" name="' + escapeHtml(field.colId) +
       '" value="' + escapeHtml(val) + '" step="' + escapeHtml(step) + '"' + attrBorne(o, 'min') + attrBorne(o, 'max') +
-      reqAttr + phAttr + ' />' + unite + '</div>' +
+      clavierAttrs(field) + reqAttr + phAttr + ' />' + unite + '</div>' +
       '</div>';
   }
 
@@ -1042,6 +1050,33 @@
    * demandait d'en faire. La question se déclare une fois, à côté de l'échelle
    * qu'elle partage (`formDef.matrices`), et non sur chacun de ses champs.
    */
+  /** L'identifiant du message d'erreur d'une question : c'est par lui que le champ s'y relie. */
+  function erreurId(colId) { return 'erreur-' + escapeHtml(colId); }
+
+  /**
+   * Marque une question comme en défaut pour les technologies d'assistance :
+   * le champ (ou son groupe) devient « invalide » et se décrit par son message.
+   *
+   * > **Un message qu'on ne relie pas à son champ reste un texte parmi d'autres.**
+   * > Un lecteur d'écran annonce le champ sans dire ce qui ne va pas.
+   */
+  function signalerErreurHtml(html, colId) {
+    var attrs = ' aria-invalid="true" aria-describedby="' + erreurId(colId) + '"';
+    if (html.indexOf('<fieldset') !== -1) return html.replace('<fieldset', '<fieldset' + attrs);
+    return html.replace(/<(input|select|textarea)\b/, '<$1' + attrs);
+  }
+
+  /** Le résumé des erreurs : une liste de liens vers les questions à corriger. */
+  function resumeErreursHtml(colIds, libelleDe) {
+    var items = colIds.map(function (c) {
+      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a></li>';
+    }).join('');
+    var n = colIds.length;
+    return '<div class="fr-alert fr-alert--error fr-resume-erreurs" id="resume-erreurs" role="alert" tabindex="-1">' +
+      '<p><strong>' + (n === 1 ? 'Une question est à corriger' : n + ' questions sont à corriger') + '</strong></p>' +
+      '<ul>' + items + '</ul></div>';
+  }
+
   function matriceDe(formDef, id) {
     var m = (formDef && formDef.matrices && formDef.matrices[id]) || {};
     return { titre: m.titre || '', consigne: m.consigne || '' };
@@ -1052,7 +1087,7 @@
     var entete = matriceDe(formDef, groupe.matrice);
     var lignes = groupe.fields.map(function (f) {
       var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
-        ? '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
+        ? '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
         : '';
       return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '">' +
         '<span class="fr-matrice__intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
@@ -1936,6 +1971,8 @@
     // lire la presentation n'est pas repondre.
     var demarreA = surAccueil ? 0 : Date.now();
     var errorFields = [];
+    // Vrai quand la personne vient d'essayer d'avancer ou d'envoyer : le focus va au résumé des erreurs.
+    var aSignaler = false;
     var messagesErreur = {};
     var submitting = false;
     var submitError = '';
@@ -2070,6 +2107,30 @@
      * tantot dans la page, tantot dans un cadre qui defile tout seul — c'est
      * au navigateur de trouver lequel remonter.
      */
+    /**
+     * Après un essai raté, le focus va au résumé des erreurs : un lecteur d'écran
+     * l'annonce, et l'œil n'a pas à chercher la question fautive à des écrans de là.
+     * Chaque lien du résumé amène à la question, et la met au focus.
+     */
+    function allerAuResume() {
+      var resume = rootEl.querySelector('#resume-erreurs');
+      if (!resume) return;
+      var liens = resume.querySelectorAll('[data-aller-a]');
+      for (var i = 0; i < liens.length; i++) (function (lien) {
+        if (typeof lien.addEventListener !== 'function') return;
+        lien.addEventListener('click', function (ev) {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          var colId = lien.getAttribute('data-aller-a');
+          var bloc = rootEl.querySelector('[data-colid="' + colId + '"]');
+          var cible = bloc && bloc.querySelector('input:not([type="hidden"]), select, textarea, button');
+          if (cible && cible.focus) cible.focus();
+          if (bloc && bloc.scrollIntoView) bloc.scrollIntoView({ block: 'center', behavior: 'auto' });
+        });
+      }(liens[i]));
+      try { resume.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
+      if (resume.scrollIntoView) resume.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
+
     function remonterEnHaut() {
       var titre = rootEl.querySelector('.fr-accueil__titre') ||
         rootEl.querySelector('.fr-progression__titre') ||
@@ -2175,8 +2236,8 @@
           // > blocs, il flotte : on le lit au-dessus de la question suivante et
           // > l'on corrige la mauvaise. La question en defaut et son message
           // > sont donc enfermes ensemble, et le bloc porte un filet rouge.
-          html = '<div class="fr-champ--erreur">' + html +
-            '<p class="fr-error-text" data-error-for="' + escapeHtml(f.colId) + '">' +
+          html = '<div class="fr-champ--erreur">' + signalerErreurHtml(html, f.colId) +
+            '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">' +
             escapeHtml(messagesErreur[f.colId] || 'Ce champ est obligatoire.') + '</p></div>';
         }
         return html;
@@ -2185,6 +2246,7 @@
       var errorHtml = submitError
         ? '<div class="fr-alert fr-alert--error" role="alert"><p>' + escapeHtml(submitError) + '</p></div>'
         : '';
+      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe);
 
       // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
       // à côté du bouton : en haut d'un écran long, personne ne le voit.
@@ -2216,6 +2278,7 @@
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
         bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       wireEvents(fields);
+      if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
 
     // Les cartes vivantes, par colonne : une carte ne se redessine pas.
@@ -2355,7 +2418,7 @@
           var missing = erreursDeSaisie(fields, values);
           // Une reponse manquante ne fait pas changer d'etape : on remonte
           // quand meme, sinon le message reste hors de l'ecran.
-          if (missing.length) { errorFields = missing; render(); remonterEnHaut(); return; }
+          if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; stepIndex += 1; render(); remonterEnHaut();
         });
       }
@@ -2364,7 +2427,7 @@
         submitBtn.addEventListener('click', function () {
           readSectionValues(rootEl, fields, values, verrouilles);
           var missing = erreursDeSaisie(fields, values);
-          if (missing.length) { errorFields = missing; render(); return; }
+          if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
           var resolveAtt = Attachments.resolveAttachmentFields
             ? Attachments.resolveAttachmentFields(formDef, values, {

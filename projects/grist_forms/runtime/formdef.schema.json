@@ -540,6 +540,15 @@
               "type": "string",
               "description": "Unite affichee apres une saisie numerique (h, m, %). N'est pas ecrite dans la cellule."
             },
+            "clavier": {
+              "type": "object",
+              "description": "Le clavier qu'un telephone ouvre et ce que le navigateur peut remplir. Se deduit du format et du type de la colonne ; ne change pas le type du champ.",
+              "additionalProperties": false,
+              "properties": {
+                "inputmode": { "enum": ["none", "text", "decimal", "numeric", "tel", "search", "email", "url"] },
+                "autocomplete": { "type": "string", "pattern": "^[a-z0-9-]{1,40}( [a-z0-9-]{1,40}){0,2}$", "description": "Jetons HTML standard : email, tel, postal-code, given-name\u2026" }
+              }
+            },
             "presets": {
               "type": "array",
               "items": {

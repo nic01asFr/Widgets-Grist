@@ -970,3 +970,38 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
   .fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 3.25rem; }
   .fr-form .fr-rangs th, .fr-form .fr-rangs td { padding-left: 0.25rem; padding-right: 0.25rem; }
 }
+
+/* ---------------------------------------------------------------
+   Mode sombre : le texte garde un contraste lisible.
+   > **Une couleur qui passe sur blanc ne passe pas sur fond sombre.** Le rouge
+   > d'erreur faisait 2,95:1 sur le fond du formulaire, et les boutons gardaient
+   > un fond clair sous un texte clair (2,3:1). Chaque couleur de texte en cause
+   > devient une variable, redefinie ici pour le mode sombre ; en clair, ce sont
+   > les valeurs d'avant.
+   --------------------------------------------------------------- */
+:root[data-grist-theme="dark"],
+:root[data-grist-appearance="dark"] {
+  --error: #ff7a75; --erreur-fond: #3b1f1f;
+  --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
+  --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) {
+    --error: #ff7a75; --erreur-fond: #3b1f1f;
+    --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
+    --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
+  }
+}
+.fr-btn { color: var(--bouton-texte, #fff); }
+.fr-btn--secondary, .fr-btn--tertiary, .fr-btn--tertiary-no-outline { color: var(--blue-france); }
+.fr-btn--secondary { background: var(--bouton-secondaire-fond, #fff); }
+.fr-btn--secondary:hover { background: var(--bouton-secondaire-survol, #f0f0ff); }
+.fr-alert--error, .fr-badge--error { background: var(--erreur-fond, #ffe9e9); }
+
+/* Le resume des erreurs : une liste de liens, chacun une cible de 44 px. */
+.fr-resume-erreurs ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+.fr-resume-erreurs a { display: inline-block; padding: 0.7rem 0; color: inherit; text-decoration: underline; }
+.fr-resume-erreurs:focus { outline: 3px solid var(--error, #ce0500); outline-offset: 2px; }
+
+/* La barre de progression est collante : une cible amenee au focus ne doit pas se loger dessous. */
+.fr-resume-erreurs, .fr-form [data-colid] { scroll-margin-top: 6rem; }

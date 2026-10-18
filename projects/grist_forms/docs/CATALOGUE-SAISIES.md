@@ -57,7 +57,7 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Adresse | saisie + propositions BAN | Text + annexes | livré (`kind: referentiel`) | une seule source (BAN) |
 | Valeur de l'URL | lue dans l'adresse de la page, verrouillable | Text | livré (`options.prefill`) | |
 | Lieu (WKT) | carte, position, saisie à la main | Text WKT | livré (`geo`, `kind: geometrie`) | |
-| Clavier adapté (téléphone, courriel, url) | `inputmode`, `autocomplete` | Text | absent | aucun `inputmode` dans le moteur |
+| Clavier adapté (téléphone, courriel, url) | `inputmode`, `autocomplete` | Text, Int, Numeric | livré (déduit du format et du type ; `options.clavier` pour le dire) | le champ reste un texte : seul le clavier change ; un nombre pouvant être négatif garde le clavier complet |
 | Couleur | sélecteur de couleur | Text `#rrggbb` | absent | TaskFlow l'a (`input type=color`) |
 | Texte riche / Markdown | éditeur | Text | absent | Grist natif propose Markdown en lecture |
 | Lien | champ url + aperçu | Text | absent | Grist natif : HyperLink |

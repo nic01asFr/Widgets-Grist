@@ -219,8 +219,57 @@
     return typeof c === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c);
   }
 
+  // ── clavier du téléphone ──
+
+  var INPUTMODES = ['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url'];
+  var CLAVIER_DU_FORMAT = {
+    courriel: { inputmode: 'email', autocomplete: 'email' },
+    telephone: { inputmode: 'tel', autocomplete: 'tel' },
+    codePostal: { inputmode: 'numeric', autocomplete: 'postal-code' },
+    siren: { inputmode: 'numeric' },
+    siret: { inputmode: 'numeric' }
+  };
+
+  /**
+   * Le clavier qu'un téléphone doit ouvrir, et ce que le navigateur peut remplir.
+   *
+   * > **Un champ de courriel qui ouvre le clavier de texte fait perdre le @.**
+   * > Le clavier se déduit du format demandé et du type de la colonne ; une
+   * > question peut le dire elle-même (`options.clavier`). Le type du champ ne
+   * > change pas : seul le clavier change, la saisie reste un texte.
+   *
+   * @param {object} field
+   * @param {string|null} format le format de la question, s'il y en a un
+   * @returns {{ inputmode?: string, autocomplete?: string }}
+   */
+  function clavierDe(field, format) {
+    var o = (field && field.options) || {};
+    var voulu = o.clavier && typeof o.clavier === 'object' ? o.clavier : {};
+    var out = {};
+    var t = typeDe(field);
+    var base = (format && CLAVIER_DU_FORMAT[format]) || null;
+    if (!base && (t === 'Int' || t === 'Numeric')) {
+      // Un nombre négatif a besoin du signe moins : le clavier numérique d'un téléphone n'en a pas toujours.
+      var min = nombreOuNull(o.min);
+      if (min === null || min >= 0) base = { inputmode: t === 'Int' ? 'numeric' : 'decimal' };
+    }
+    if (base) { if (base.inputmode) out.inputmode = base.inputmode; if (base.autocomplete) out.autocomplete = base.autocomplete; }
+    if (typeof voulu.inputmode === 'string' && INPUTMODES.indexOf(voulu.inputmode) !== -1) out.inputmode = voulu.inputmode;
+    if (typeof voulu.autocomplete === 'string' && /^[a-z0-9-]{1,40}( [a-z0-9-]{1,40}){0,2}$/.test(voulu.autocomplete)) out.autocomplete = voulu.autocomplete;
+    return out;
+  }
+
+  /** Les attributs HTML correspondants, déjà échappés (la liste blanche ne laisse rien passer d'autre). */
+  function attributsClavier(field, format) {
+    var c = clavierDe(field, format);
+    return (c.inputmode ? ' inputmode="' + c.inputmode + '"' : '') + (c.autocomplete ? ' autocomplete="' + c.autocomplete + '"' : '');
+  }
+
   return {
     VERSION: VERSION,
+    INPUTMODES: INPUTMODES,
+    clavierDe: clavierDe,
+    attributsClavier: attributsClavier,
     ETIQUETTE_LONGUEUR: ETIQUETTE_LONGUEUR,
     ETIQUETTES_MAX: ETIQUETTES_MAX,
     normaliserEtiquette: normaliserEtiquette,
