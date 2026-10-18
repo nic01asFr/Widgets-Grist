@@ -601,6 +601,19 @@ ${l.map((c) => `    <div><b>${echapper(c.valeur)}</b><span>${echapper(c.libelle)
 }
 
 /**
+ * Une demonstration annoncee doit mener quelque part : une adresse locale dont la page est absente est ecartee, et dite.
+ * Une adresse en http(s) est crue sur parole, et sans dossier de reference il n'y a rien a verifier.
+ */
+function demoLocaleValide(d, base) {
+  if (!d || !d.url) return false;
+  if (/^https?:/.test(d.url) || !base) return true;
+  const local = path.join(base, d.url.split(/[?#]/)[0]);
+  if (fs.existsSync(local)) return true;
+  console.error(`  demonstration de capture ignoree — page absente : ${d.url}`);
+  return false;
+}
+
+/**
  * Ou le produit tourne, et pourquoi chaque endroit existe.
  *
  * Une capture sans son pourquoi ne fait que remplir la page : le lecteur se
@@ -616,14 +629,7 @@ function blocContextes(produit, base) {
   // Une capture peut porter une demonstration vivante (`demo: { url, libelle }`) : la vignette tient lieu d'apercu, le clic lance la page
   // dans un cadre, comme la demonstration de fin de page (`cadre`). Une adresse locale qui ne mene a rien est ecartee et dite : une
   // demonstration annoncee puis vide est pire qu'une capture seule.
-  const demoValide = (d) => {
-    if (!d || !d.url) return false;
-    if (/^https?:/.test(d.url) || !base) return true;
-    const local = path.join(base, d.url.split(/[?#]/)[0]);
-    if (fs.existsSync(local)) return true;
-    console.error(`  demonstration de capture ignoree — page absente : ${d.url}`);
-    return false;
-  };
+  const demoValide = (d) => demoLocaleValide(d, base);
   const figure = (i, mobile) => (demoValide(i.demo)
     ? `        <figure class="large vivante">
 ${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libelle || 'Essayer la démonstration', titre: i.demo.titre || '' })}
@@ -728,6 +734,326 @@ ${l.map(li).join('\n')}
 ${sans.length ? `${liste(sans)}\n` : ''}${noms.map((n) => `    <h3 class="groupe-points">${echapper(n)}</h3>\n${liste(points.filter((p) => p.groupe === n))}`).join('\n')}
   </section>`;
 }
+
+/* ------------------------------------------------------------------ */
+/* Le parcours : une page organisee par usage                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Une page de produit peut s'organiser par usage plutot que par fonction : `produit.parcours`.
+ *
+ * Ce que la fiche declare (tout est facultatif, et une fiche sans `parcours` garde la page qu'elle avait) :
+ *   - `cta[]`, `statut[]`, `comparaison`, `preuves[]` : le haut de page ;
+ *   - `sections[]` : chacune a un `id`, un `titre`, une `intro`, des `chapitres[]` et, au choix, une `demo` ou des `flux[]` ;
+ *   - un chapitre : `num`, `titre`, `paragraphes[]`, `pourquoi`, `liens[]`, puis UN des trois, `figure` (avec `demo` si l'image se lance),
+ *     `diapositives[]` (un carrousel) ou `code` ; et un `detail` replie (`blocs[]` ou `tableau`) ;
+ *   - `savoir[]` : les sections repliees « a savoir avant d'adopter » ; `journalRecent` : combien de versions montrer avant « toutes ».
+ *
+ * Deux gardes : une image sans `alt` n'est pas rendue (elle serait muette pour un lecteur d'ecran), un chiffre sans `preuve` non plus
+ * (la vitrine ne chiffre que ce qu'elle sait montrer). Chaque ecart est dit a la generation, pas tu.
+ */
+
+/** Largeur et hauteur d'une image PNG ou JPEG, lues dans son en-tete : sans elles, la page saute a chaque image chargee. */
+function dimensionsImage(fichier) {
+  try {
+    const d = fs.readFileSync(fichier);
+    if (d.length > 24 && d.readUInt32BE(0) === 0x89504e47) return { w: d.readUInt32BE(16), h: d.readUInt32BE(20) };
+    if (d[0] === 0xff && d[1] === 0xd8) {
+      let i = 2;
+      while (i + 9 < d.length) {
+        if (d[i] !== 0xff) { i += 1; continue; }
+        const m = d[i + 1];
+        if (m === 0xff) { i += 1; continue; }
+        if (m >= 0xc0 && m <= 0xc3) return { h: d.readUInt16BE(i + 5), w: d.readUInt16BE(i + 7) };
+        if (m >= 0xd0 && m <= 0xd9) { i += 2; continue; }
+        i += 2 + d.readUInt16BE(i + 2);
+      }
+    }
+  } catch (e) { /* image absente ou illisible : pas de dimensions, la page marche quand meme */ }
+  return null;
+}
+
+/** Une image de la fiche, avec ses dimensions quand on les connait ; la premiere d'un carrousel n'est pas differee. */
+function imageParcours(racine, nom, alt, { differee = true } = {}) {
+  const dim = dimensionsImage(path.join(racine, nom));
+  return {
+    html: `<img src="${echapper(nom)}" alt="${echapper(alt)}"${dim ? ` width="${dim.w}" height="${dim.h}"` : ''}${differee ? ' loading="lazy" decoding="async"' : ''}>`,
+    vertical: !!dim && dim.h > dim.w,
+  };
+}
+
+/** Une figure : l'image, et la demonstration derriere si la fiche en declare une qui existe. */
+function figureParcours(f, ctx) {
+  if (!f || !f.image) return '';
+  if (!f.alt) { console.error(`  figure ignoree — pas de texte alternatif : ${f.image}`); return ''; }
+  const legende = f.legende ? `<figcaption>${enLigne(f.legende)}</figcaption>` : '';
+  if (demoLocaleValide(f.demo, ctx.racine)) {
+    return `<figure class="vivante">
+${cadre({ url: f.demo.url, image: f.image, alt: f.alt, libelle: f.demo.libelle || 'Essayer la démonstration', titre: f.demo.titre || '' })}
+      ${legende}
+    </figure>`;
+  }
+  return `<figure>${imageParcours(ctx.racine, f.image, f.alt).html}${legende}</figure>`;
+}
+
+/** Un carrousel : on voit la suite, on avance par les fleches, par le clavier ou par un titre ; rien ne defile seul. */
+function carrouselParcours(id, libelle, diapos, ctx) {
+  const valides = (diapos || []).filter((d) => {
+    if (!d.image || !d.titre) return false;
+    if (!d.alt) { console.error(`  diapositive ignoree — pas de texte alternatif : ${d.image}`); return false; }
+    return true;
+  });
+  if (!valides.length) return '';
+  const n = valides.length;
+  const pistes = valides.map((d, k) => {
+    const img = imageParcours(ctx.racine, d.image, d.alt, { differee: k > 0 });
+    return `<article class="diapo${img.vertical ? ' tel' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
+        <figure>${img.html}${d.legende ? `<figcaption>${enLigne(d.legende)}</figcaption>` : ''}</figure>
+        <div class="texte"><h4>${echapper(d.titre)}</h4>${d.texte ? `<p>${enLigne(d.texte)}</p>` : ''}${(d.etiquettes || []).length ? `<ul class="etiquettes">${d.etiquettes.map((t) => `<li>${echapper(t)}</li>`).join('')}</ul>` : ''}</div>
+      </article>`;
+  });
+  const titres = valides.map((d, k) => `<li><button type="button" data-n="${k}"${k === 0 ? ' aria-current="true"' : ''}>${echapper(d.titre)}</button></li>`);
+  return `<section class="carrousel" aria-roledescription="carrousel" aria-label="${echapper(libelle)}" id="${echapper(id)}">
+      <div class="pistes" tabindex="0" aria-label="${echapper(libelle)} : flèches gauche et droite pour parcourir">
+      ${pistes.join('\n      ')}
+      </div>
+      <button type="button" class="prec" aria-label="Diapositive précédente" disabled>←</button>
+      <button type="button" class="suiv" aria-label="Diapositive suivante"${n < 2 ? ' disabled' : ''}>→</button>
+      <div class="commandes"><span class="compteur" aria-live="polite">1 / ${n}</span><ul class="sommaire" aria-label="Aller à une diapositive">${titres.join('')}</ul></div>
+    </section>`;
+}
+
+/** Un bloc de code a copier : le code reste lisible sans script, le bouton « Copier » n'apparait que s'il peut servir. */
+function blocCode(c) {
+  if (!c || !c.source) return '';
+  return `<div class="bloc-code" role="group" aria-label="${echapper(c.titre || 'Code à copier')}">
+      <div class="entete-code"><span>${echapper(c.titre || 'Code')}</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code${c.langage ? ` class="langage-${echapper(c.langage)}"` : ''}>${echapper(c.source)}</code></pre>
+    </div>`;
+}
+
+/** Un tableau court : des intitules en colonne, jamais de cellule fusionnee. */
+function tableauParcours(t, titre = '') {
+  if (!t || !(t.colonnes || []).length || !(t.lignes || []).length) return '';
+  return `<table class="comparaison">${titre ? `<caption>${echapper(titre)}</caption>` : ''}
+      <thead><tr>${t.colonnes.map((c) => `<th scope="col">${echapper(c)}</th>`).join('')}</tr></thead>
+      <tbody>${t.lignes.map((l) => `<tr>${l.map((c, i) => (i === 0 ? `<th scope="row">${enLigne(c)}</th>` : `<td>${enLigne(c)}</td>`)).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+}
+
+/** Ce qui se replie : des blocs titres, ou un tableau. */
+function detailParcours(d) {
+  if (!d || !d.titre) return '';
+  const corps = (d.blocs || []).map((b) => `<h4>${echapper(b.titre)}</h4><p>${enLigne(b.texte)}</p>`).join('') + tableauParcours(d.tableau);
+  return corps ? `<details class="detail"><summary>${echapper(d.titre)}</summary><div>${corps}</div></details>` : '';
+}
+
+/** Un chapitre : le texte, et ce qui le montre (une figure, un carrousel ou du code). */
+function chapitreParcours(c, ctx, id) {
+  const texte = `<div class="dit">
+        ${c.num ? `<span class="num">${echapper(c.num)}</span>` : ''}<h3>${echapper(c.titre)}</h3>
+        ${(c.paragraphes || []).map((t) => `<p>${enLigne(t)}</p>`).join('\n        ')}
+        ${c.pourquoi ? `<p class="pourquoi">${enLigne(c.pourquoi)}</p>` : ''}
+        ${(c.liens || []).length ? `<p class="liens">${c.liens.map((l) => `<a class="${l.bouton ? 'bouton creux' : 'lien'}" href="${echapper(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ''}>${echapper(l.libelle)}</a>`).join(' ')}</p>` : ''}
+      </div>`;
+  const carrousel = (c.diapositives || []).length ? carrouselParcours(`c-${id}`, c.titre, c.diapositives, ctx) : '';
+  const figure = figureParcours(c.figure, ctx);
+  const code = blocCode(c.code);
+  const montre = carrousel || figure || code;
+  // Une figure ET du code : la figure accompagne le texte, le code s'etale dessous sur toute la largeur.
+  const apres = !carrousel && figure && code ? `<div class="pleine">${code}</div>` : '';
+  const detail = detailParcours(c.detail);
+  const haut = !!carrousel;
+  return `    <article class="chap${haut ? ' haut' : ''}${c.inverse && !haut ? ' inverse' : ''}">
+      ${texte}
+      ${haut ? montre : `<div class="montre">${montre}</div>`}
+      ${apres}
+      ${detail}
+    </article>`;
+}
+
+/** Les trois flux d'une carte : ce qu'ils sont, et d'ou ils peuvent venir. */
+function fluxParcours(flux) {
+  if (!(flux || []).length) return '';
+  return `    <ul class="flux">
+${flux.map((f) => `      <li><h3>${echapper(f.titre)}</h3><p>${enLigne(f.texte)}</p>${(f.vientDe || []).length ? `<span class="d">Vient de</span><ul>${f.vientDe.map((v) => `<li>${enLigne(v)}</li>`).join('')}</ul>` : ''}</li>`).join('\n')}
+    </ul>`;
+}
+
+/** Les sections du parcours, le sommaire collant qui les relie, et ce que la page doit charger de script. */
+function blocParcours(produit, ctx) {
+  const pc = produit.parcours;
+  const sections = pc.sections || [];
+  const preuves = (pc.preuves || []).filter((x) => {
+    if (x.preuve) return true;
+    console.error(`  chiffre ignoré — pas de preuve : ${x.valeur} ${x.libelle}`);
+    return false;
+  });
+  const haut = [];
+  if (pc.comparaison) haut.push(`  <section class="avant-apres" aria-label="${echapper(pc.comparaison.titre || 'Comparaison')}">
+    ${pc.comparaison.titre ? `<h2>${echapper(pc.comparaison.titre)}</h2>` : ''}
+    ${tableauParcours({ colonnes: pc.comparaison.colonnes, lignes: pc.comparaison.lignes })}
+  </section>`);
+  if (preuves.length) haut.push(`  <section class="preuves" aria-label="En chiffres"><ul>
+${preuves.map((x) => `    <li><b>${echapper(x.valeur)}</b><span>${enLigne(x.libelle)}</span><em>${enLigne(x.preuve)}</em></li>`).join('\n')}
+  </ul></section>`);
+
+  const rendues = sections.map((s) => {
+    const intro = s.intro ? `<p>${enLigne(s.intro)}</p>` : '';
+    const demo = s.demo ? figureParcours(s.demo, ctx) : '';
+    return `  <section class="partie" id="${echapper(s.id)}" aria-labelledby="t-${echapper(s.id)}">
+    <header class="entete"><h2 id="t-${echapper(s.id)}">${echapper(s.titre)}</h2>${intro}</header>
+${demo ? `    <div class="demo-parcours">${demo}</div>\n` : ''}${s.fluxTitre ? `    <h3 class="titre-flux">${echapper(s.fluxTitre)}</h3>${s.fluxTexte ? `<p>${enLigne(s.fluxTexte)}</p>` : ''}\n` : ''}${fluxParcours(s.flux)}
+${(s.chapitres || []).map((c, k) => chapitreParcours(c, ctx, `${s.id}-${k + 1}`)).join('\n')}
+  </section>`;
+  });
+
+  const savoir = (pc.savoir || []).length ? `  <section class="partie" id="savoir" aria-labelledby="t-savoir">
+    <header class="entete"><h2 id="t-savoir">${echapper(pc.savoirTitre || 'À savoir avant d’adopter')}</h2>${pc.savoirIntro ? `<p>${enLigne(pc.savoirIntro)}</p>` : ''}</header>
+${pc.savoir.map((s) => `    <details class="detail"><summary>${echapper(s.titre)}</summary><div>${(s.paragraphes || []).map((t) => `<p>${enLigne(t)}</p>`).join('')}${(s.liste || []).length ? `<ul class="liste-simple">${s.liste.map((t) => `<li>${enLigne(t)}</li>`).join('')}</ul>` : ''}</div></details>`).join('\n')}
+  </section>` : '';
+
+  const journal = (ctx.journal || []);
+  const recent = Math.max(1, pc.journalRecent || 5);
+  const entree = (e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.texte)}</p></div>`;
+  const nouveautes = journal.length ? `  <section class="partie" id="nouveautes" aria-labelledby="t-nouveautes">
+    <header class="entete"><h2 id="t-nouveautes">Nouveautés</h2></header>
+    <div class="journal">
+${journal.slice(0, recent).map(entree).join('\n')}
+    </div>
+${journal.length > recent ? `    <details class="detail"><summary>Toutes les versions (${journal.length})</summary><div class="journal">
+${journal.slice(recent).map(entree).join('\n')}
+    </div></details>\n` : ''}  </section>` : '';
+
+  const ancres = [
+    ...sections.map((s) => ({ id: s.id, libelle: s.court || s.titre })),
+    ...(savoir ? [{ id: 'savoir', libelle: 'À savoir' }] : []),
+    ...(nouveautes ? [{ id: 'nouveautes', libelle: 'Nouveautés' }] : []),
+  ];
+  const nav = ancres.length ? `  <nav class="ancres" aria-label="Dans cette page">${ancres.map((a) => `<a href="#${echapper(a.id)}">${echapper(a.libelle)}</a>`).join('')}</nav>` : '';
+  const toutes = [...haut, ...rendues, savoir, nouveautes].filter(Boolean);
+  const html = toutes.join('\n');
+  return { nav, sections: toutes, html };
+}
+
+const CSS_PARCOURS = `
+.statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
+.statut b { color: var(--encre); font-weight: 600; }
+.ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
+  background: color-mix(in srgb, var(--papier) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--filet); }
+.ancres::-webkit-scrollbar { display: none; }
+.ancres a { white-space: nowrap; text-decoration: none; font-size: .9rem; color: var(--plume); padding: .45rem .8rem; border-radius: 999px; min-height: 2.5rem; display: inline-flex; align-items: center; }
+.ancres a:hover { background: var(--filet); color: var(--encre); }
+.partie { margin: 0; padding: 3.2rem 0 .5rem; scroll-margin-top: 4rem; }
+.entete { max-width: 44rem; margin-bottom: 1.8rem; } .entete h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: .6rem; } .entete p { font-size: 1.02rem; margin: 0; }
+.avant-apres, .preuves { margin: 0 0 2.6rem; padding: 0; }
+.comparaison { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--filet); font-size: .93rem; }
+.comparaison caption { text-align: left; font-weight: 600; padding-bottom: .5rem; }
+.comparaison th, .comparaison td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--filet); vertical-align: top; font-weight: 400; }
+.comparaison thead th { background: var(--papier); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; }
+.comparaison tbody th { color: var(--plume); } .comparaison td:last-child { color: var(--encre); font-weight: 500; }
+.preuves ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.preuves li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1rem 1.1rem; }
+.preuves b { display: block; font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.9rem; line-height: 1.1; color: var(--encre); }
+.preuves span { display: block; font-size: .88rem; color: var(--plume); margin-top: .3rem; } .preuves em { display: block; font-size: .76rem; color: var(--plume); margin-top: .5rem; font-style: normal; }
+.chap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 2.4rem; align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--filet); }
+.chap.haut { display: block; } .chap.inverse .dit { order: 2; } .chap > .detail, .chap > .pleine { grid-column: 1 / -1; }
+.chap > .pleine:empty { display: none; }
+.chap .dit { max-width: 46rem; } .chap .dit h3 { font-size: 1.45rem; margin-bottom: .7rem; }
+.chap .num { display: block; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+.chap .dit p { font-size: .97rem; }
+.chap .pourquoi { font-size: .93rem; padding-left: .9rem; border-left: 3px solid var(--accent); color: var(--encre); }
+.chap .liens { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 0; }
+.chap .lien { color: var(--accent); }
+.chap figure { margin: 0; } .chap figure img { width: 100%; height: auto; display: block; border: 1px solid var(--filet); border-radius: 12px; } .chap figcaption { font-size: .82rem; color: var(--plume); margin-top: .5rem; }
+.chap .montre figure.vivante .cadre { aspect-ratio: 1200 / 760; }
+.demo-parcours { margin: 0 0 1rem; } .demo-parcours figure { margin: 0; } .demo-parcours figcaption { font-size: .85rem; color: var(--plume); margin-top: .5rem; }
+.demo-parcours .cadre { aspect-ratio: 16 / 9; }
+.detail { background: var(--surface); border: 1px solid var(--filet); border-radius: 12px; margin: 1rem 0 .6rem; }
+.detail > summary { cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; }
+.detail > summary::-webkit-details-marker { display: none; } .detail > summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; } .detail[open] > summary::after { content: "−"; }
+.detail > div { padding: 0 1.1rem 1rem; } .detail h4 { margin: .8rem 0 .2rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; } .detail h4:first-child { margin-top: 0; }
+.detail p, .detail li { font-size: .93rem; } .detail .comparaison { margin-top: .4rem; }
+.liste-simple { margin: 0 0 .6rem; padding-left: 1.2rem; color: var(--plume); } .liste-simple li { margin-bottom: .35rem; }
+.flux { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+.flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
+.flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
+.titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+.bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
+.entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
+.copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
+.bloc-code pre { margin: 0; padding: 1.1rem 1.2rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; tab-size: 2; }
+.bloc-code code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+.carrousel { margin-top: 1.6rem; position: relative; }
+.pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
+.pistes::-webkit-scrollbar { display: none; }
+.pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; opacity: .45; transition: opacity .25s; }
+.diapo.actif, .carrousel:not(.pret) .diapo { opacity: 1; }
+.diapo.tel { grid-template-columns: 14rem 1fr; }
+.diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
+.diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
+.diapo h4 { font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0 0 .7rem; text-wrap: balance; } .diapo p { font-size: .95rem; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: .8rem 0 0; padding: 0; } .etiquettes li { font-size: .74rem; border: 1px solid var(--filet); border-radius: 999px; padding: .1rem .55rem; color: var(--plume); }
+.prec, .suiv { position: absolute; top: 38%; z-index: 3; width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--filet); background: var(--surface); color: var(--encre); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.prec { left: -1.2rem; } .suiv { right: -1.2rem; } .prec:hover:not(:disabled), .suiv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); } .prec:disabled, .suiv:disabled { opacity: 0; pointer-events: none; }
+.carrousel:not(.pret) .prec, .carrousel:not(.pret) .suiv { display: none; }
+.commandes { display: flex; align-items: center; gap: .8rem; margin-top: .4rem; }
+.compteur { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--plume); min-width: 3.4rem; }
+.sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
+.sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
+.sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+@media (prefers-reduced-motion: reduce) { .diapo { transition: none; } }
+@media (max-width: 52rem) {
+  .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
+  .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
+  .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
+}
+`;
+
+/** Le carrousel et le bouton « Copier » : sans ce script, la page reste entierement lisible (toutes les diapositives, le code). */
+const JS_PARCOURS = `
+<script>
+  document.querySelectorAll('.carrousel').forEach(function (c) {
+    var piste = c.querySelector('.pistes'), diapos = [].slice.call(piste.querySelectorAll('.diapo')), n = diapos.length;
+    var prec = c.querySelector('.prec'), suiv = c.querySelector('.suiv'), cpt = c.querySelector('.compteur'), sommaire = c.querySelector('.sommaire'), puces = [].slice.call(sommaire.querySelectorAll('button'));
+    var doux = function () { return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; };
+    var courant = function () {
+      if (piste.scrollLeft >= piste.scrollWidth - piste.clientWidth - 2) return n - 1;
+      var k = 0, d = Infinity;
+      diapos.forEach(function (x, j) { var e = Math.abs(x.offsetLeft - piste.offsetLeft - piste.scrollLeft); if (e < d) { d = e; k = j; } });
+      return k;
+    };
+    var aller = function (k) { k = Math.max(0, Math.min(n - 1, k)); piste.scrollTo({ left: diapos[k].offsetLeft - piste.offsetLeft, behavior: doux() }); };
+    var maj = function () {
+      var k = courant(); cpt.textContent = (k + 1) + ' / ' + n; prec.disabled = k === 0; suiv.disabled = k === n - 1;
+      diapos.forEach(function (x, j) { x.classList.toggle('actif', j === k); });
+      puces.forEach(function (p, j) {
+        if (j === k) { p.setAttribute('aria-current', 'true'); sommaire.scrollTo({ left: p.offsetLeft - sommaire.clientWidth / 2 + p.clientWidth / 2, behavior: 'auto' }); }
+        else p.removeAttribute('aria-current');
+      });
+    };
+    prec.addEventListener('click', function () { aller(courant() - 1); });
+    suiv.addEventListener('click', function () { aller(courant() + 1); });
+    puces.forEach(function (p) { p.addEventListener('click', function () { aller(Number(p.dataset.n)); }); });
+    piste.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); aller(courant() + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); aller(courant() - 1); }
+    });
+    var t; piste.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(maj, 50); }, { passive: true });
+    addEventListener('resize', maj);
+    c.classList.add('pret'); maj();
+  });
+  document.querySelectorAll('.bloc-code').forEach(function (b) {
+    var bouton = b.querySelector('.copier'); if (!bouton) return;
+    bouton.hidden = false;
+    bouton.addEventListener('click', function () {
+      var texte = b.querySelector('code').textContent;
+      var dit = function (m) { bouton.textContent = m; setTimeout(function () { bouton.textContent = 'Copier'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dit('Copié'); }, function () { dit('Sélectionnez le code'); });
+      else dit('Sélectionnez le code');
+    });
+  });
+</` + `script>`;
 
 /** Le style des blocs produit, et les revelations au defilement. */
 const CSS_PRODUIT = `
@@ -1072,6 +1398,20 @@ function ligneWidget(w, archive = false) {
       </div>`;
 }
 
+/**
+ * Les boutons du haut de page. Sans `parcours.cta`, l'unique bouton d'avant (« Ouvrir le widget ») ; avec, ceux de la fiche : une ancre,
+ * une adresse, ou `widget: true` pour le widget mis en avant. Le premier est plein, les autres creux.
+ */
+function boutonsParcours(parcours, principal) {
+  const cta = (parcours && parcours.cta) || [];
+  if (!cta.length) return `<a class="bouton" href="${echapper(principal.url)}" target="_blank" rel="noopener">Ouvrir le widget</a>`;
+  return cta.map((b, i) => {
+    const externe = b.widget || /^https?:/.test(b.url || '');
+    const href = b.widget ? principal.url : (b.ancre ? `#${b.ancre}` : (b.url || '#'));
+    return `<a class="bouton${i ? ' creux' : ''}" href="${echapper(href)}"${externe ? ' target="_blank" rel="noopener"' : ''}>${echapper(b.libelle)}</a>`;
+  }).join('\n    ');
+}
+
 function rendreProjet(p, maintenant, base = '') {
   const v = p.presentation;
   const maj = majProjet(p);
@@ -1084,46 +1424,54 @@ function rendreProjet(p, maintenant, base = '') {
   const produit = v.produit || {};
   const sections = [];
 
-  const ap = sectionApercu(p, image);
-  if (ap) sections.push(ap);
-  for (const bloc of [blocChiffres(produit), blocContextes(produit, path.join(PUBLIE, 'w', p.id))]) if (bloc) sections.push(bloc);
+  // Une fiche qui declare un `parcours` est presentee par usage : les blocs par fonction ne sont alors pas rendus (leurs champs sont
+  // ceux d'une autre page). Une fiche sans parcours garde exactement la page qu'elle avait.
+  const parcours = produit.parcours;
+  const rendu = parcours ? blocParcours(produit, { racine: path.join(PUBLIE, 'w', p.id), journal: v.journal || [] }) : null;
+  if (rendu) {
+    sections.push(...rendu.sections);
+  } else {
+    const ap = sectionApercu(p, image);
+    if (ap) sections.push(ap);
+    for (const bloc of [blocChiffres(produit), blocContextes(produit, path.join(PUBLIE, 'w', p.id))]) if (bloc) sections.push(bloc);
 
-  const dm = sectionDemo(p, PUBLIE);
-  if (dm) sections.push(dm);
+    const dm = sectionDemo(p, PUBLIE);
+    if (dm) sections.push(dm);
 
-  if ((v.points || []).length) sections.push(blocPoints(v.points));
+    if ((v.points || []).length) sections.push(blocPoints(v.points));
 
-  if (p.widgets.length > 1) {
-    sections.push(`  <section>
-    <h2>Les vues</h2>
-    <div class="liste">
-${p.widgets.map((w) => ligneWidget(w, estArchive(p, w))).join('\n')}
-    </div>
-  </section>`);
-  }
+    if (p.widgets.length > 1) {
+      sections.push(`  <section>
+      <h2>Les vues</h2>
+      <div class="liste">
+  ${p.widgets.map((w) => ligneWidget(w, estArchive(p, w))).join('\n')}
+      </div>
+    </section>`);
+    }
 
-  const seq = blocSequence(produit);
-  if (seq) sections.push(seq);
-  const fc = blocFacons(produit);
-  if (fc) sections.push(fc);
+    const seq = blocSequence(produit);
+    if (seq) sections.push(seq);
+    const fc = blocFacons(produit);
+    if (fc) sections.push(fc);
 
-  if (v.encart) {
-    sections.push(`  <section>
-    <div class="encart">
-      <h2>${echapper(v.encart.titre)}</h2>
-      <p>${echapper(v.encart.texte)}</p>
-      ${v.encart.lien ? `<a class="bouton" href="${echapper(v.encart.lien.url)}">${echapper(v.encart.lien.libelle)}</a>` : ''}
-    </div>
-  </section>`);
-  }
+    if (v.encart) {
+      sections.push(`  <section>
+      <div class="encart">
+        <h2>${echapper(v.encart.titre)}</h2>
+        <p>${echapper(v.encart.texte)}</p>
+        ${v.encart.lien ? `<a class="bouton" href="${echapper(v.encart.lien.url)}">${echapper(v.encart.lien.libelle)}</a>` : ''}
+      </div>
+    </section>`);
+    }
 
-  if ((v.journal || []).length) {
-    sections.push(`  <section>
-    <h2>Journal</h2>
-    <div class="journal">
-${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.texte)}</p></div>`).join('\n')}
-    </div>
-  </section>`);
+    if ((v.journal || []).length) {
+      sections.push(`  <section>
+      <h2>Journal</h2>
+      <div class="journal">
+  ${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.texte)}</p></div>`).join('\n')}
+      </div>
+    </section>`);
+    }
   }
 
   const titre = `${nom} — widget Grist`;
@@ -1149,10 +1497,10 @@ ${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.t
       ...(v.depot ? { codeRepository: v.depot } : {}),
       ...(maj ? { dateModified: maj.slice(0, 10) } : {}),
     }) : '',
-    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : ''),
+    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '') + (parcours ? CSS_PARCOURS : ''),
     corps: `<main>
   <a class="retour" href="../../">← Tous les widgets</a>
-  <p class="eyebrow">Widget Grist</p>
+  <p class="eyebrow">${echapper((parcours && parcours.eyebrow) || 'Widget Grist')}</p>
   <h1>${echapper(nom)}</h1>
   <p class="chapeau">${echapper(v.pitch || principal.description || '')}</p>
   ${produit.accroche ? `<p class="accroche">${echapper(produit.accroche)}</p>` : ''}
@@ -1163,13 +1511,13 @@ ${v.journal.map((e) => `      <div><b>${echapper(e.version)}</b><p>${enLigne(e.t
     ${maj ? `<span>${estRecent(maj, maintenant) ? '<span class="vif"></span>' : ''}Mis à jour ${echapper(depuis(maj, maintenant))}</span>` : ''}
   </div>
   <div class="boutons">
-    <a class="bouton" href="${echapper(principal.url)}" target="_blank" rel="noopener">Ouvrir le widget</a>
+    ${boutonsParcours(parcours, principal)}
     ${v.depot ? `<a class="bouton creux" href="${echapper(v.depot)}" target="_blank" rel="noopener">Le code</a>` : ''}
     ${v.forum ? `<a class="bouton creux" href="${echapper(v.forum.url)}" target="_blank" rel="noopener"
        title="${echapper(v.forum.titre || '')}">En discuter</a>` : ''}
   </div>
-${sections.join('\n')}
-</main>${sections.some((x) => x.includes('class="cadre"')) ? JS_CADRES : ''}${Object.keys(produit).length ? JS_REVELER : ''}
+${parcours && (parcours.statut || []).length ? `  <p class="statut">${parcours.statut.map((x) => `<span><b>${echapper(x.niveau)}</b> ${echapper(x.texte || '')}</span>`).join('')}</p>\n` : ''}${rendu ? `${rendu.nav}\n` : ''}${sections.join('\n')}
+</main>${sections.some((x) => x.includes('class="cadre"')) ? JS_CADRES : ''}${sections.some((x) => x.includes('class="carrousel"') || x.includes('class="bloc-code"')) ? JS_PARCOURS : ''}${Object.keys(produit).length ? JS_REVELER : ''}
 <footer class="pied">
   <p>Dans Grist : <em>Ajouter un widget</em> → <em>Custom</em> → collez l’adresse
      <code>${echapper(principal.url)}</code>, et donnez l’accès
@@ -1239,4 +1587,4 @@ if (require.main === module) {
   if (sans.length) console.log(`\nSans vitrine.json (presentation minimale) : ${sans.join(', ')}`);
 }
 
-module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreSitemap, baseDe, sectionDemo };
+module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreSitemap, baseDe, sectionDemo, dimensionsImage };
