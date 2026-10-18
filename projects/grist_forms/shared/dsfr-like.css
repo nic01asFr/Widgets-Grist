@@ -513,6 +513,48 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
    quand l'écran est étroit. */
 .fr-form .fr-geo__ligne, .champ-bloc__rendu .fr-geo__ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .fr-form .fr-geo__ligne .fr-input, .champ-bloc__rendu .fr-geo__ligne .fr-input { flex: 1 1 14rem; }
+
+/* Le champ d'adresse : une saisie, une liste de propositions posée dessous, et un
+   repli en champ texte.
+
+   La liste est insérée juste après la ligne de saisie et se pose en absolu depuis
+   elle : elle ne pousse pas le reste du formulaire, et elle se ferme d'un geste.
+   Aucune couleur en dur : seulement les variables de la feuille, pour que le
+   thème de l'hôte s'applique ici comme ailleurs. */
+.fr-form .fr-referentiel, .champ-bloc__rendu .fr-referentiel { position: relative; }
+.fr-form .fr-referentiel__ligne, .champ-bloc__rendu .fr-referentiel__ligne { display: flex; gap: 0.5rem; }
+.fr-form .fr-referentiel__ligne .fr-input, .champ-bloc__rendu .fr-referentiel__ligne .fr-input {
+  flex: 1 1 auto; min-width: 0;
+}
+.fr-form .fr-referentiel__bouton, .champ-bloc__rendu .fr-referentiel__bouton { flex: 0 0 auto; }
+
+.fr-form .fr-referentiel__liste, .champ-bloc__rendu .fr-referentiel__liste {
+  position: absolute; left: 0; right: 0; z-index: 20;
+  margin: 0.25rem 0 0; padding: 0.25rem 0; list-style: none;
+  background: var(--fond-carte); border: 1px solid var(--bord); border-radius: 8px;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--encre) 18%, transparent);
+  max-height: 16rem; overflow-y: auto;
+}
+.fr-form .fr-referentiel__liste[hidden], .champ-bloc__rendu .fr-referentiel__liste[hidden] { display: none; }
+.fr-form .fr-referentiel__option, .champ-bloc__rendu .fr-referentiel__option {
+  display: flex; align-items: center; min-height: var(--cible);
+  padding: 0.5rem 0.875rem; line-height: 1.35; cursor: pointer;
+}
+.fr-form .fr-referentiel__option:hover, .champ-bloc__rendu .fr-referentiel__option:hover,
+.fr-form .fr-referentiel__option[aria-selected="true"], .champ-bloc__rendu .fr-referentiel__option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--blue-france) 10%, transparent);
+}
+.fr-form .fr-referentiel__option[aria-selected="true"], .champ-bloc__rendu .fr-referentiel__option[aria-selected="true"] {
+  box-shadow: inset 3px 0 0 var(--blue-france);
+}
+.fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
+.fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
+
+/* Sur un téléphone, le bouton passe sous le champ plutôt que de l'écraser. */
+@media (max-width: 30rem) {
+  .fr-form .fr-referentiel__ligne, .champ-bloc__rendu .fr-referentiel__ligne { flex-direction: column; }
+  .fr-form .fr-referentiel__bouton, .champ-bloc__rendu .fr-referentiel__bouton { width: 100%; }
+}
 .fr-form .fr-geo__etat:empty, .champ-bloc__rendu .fr-geo__etat:empty { display: none; }
 
 /* ── La carte d'une question de lieu ────────────────────────────────────────
