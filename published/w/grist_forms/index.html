@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Form Builder — widget Grist">
 <meta name="twitter:description" content="Un formulaire n&#39;est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Form Builder","description":"Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms","dateModified":"2026-10-05"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Form Builder","description":"Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms","dateModified":"2026-10-18"}</script>
 <style>
 :root { --papier: #F6F6F6; --surface: #FFFFFF; --encre: #161616; --plume: #666666; --filet: #DDDDDD; --accent: #000091; }
 
@@ -93,6 +93,15 @@ section { margin: 0 0 3rem; }
 .cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cadre iframe { display: block; width: 100%; height: 100%; border: 0; }
 .cadre.vivant { aspect-ratio: auto; height: 70vh; min-height: 26rem; }
+/* Une demonstration d'application (figure vivante) a besoin de largeur : la colonne de la page la ferait tenir sur un telephone, carte
+   hors de vue. Lancee, elle passe au premier plan, presque plein ecran, et se referme (bouton ou Echap). */
+.cadre.plein { position: fixed; inset: 3vh 3vw; z-index: 60; height: auto; min-height: 0; border-radius: 10px; background: #fff; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 100vmax rgba(20, 16, 12, .62); }
+.cadre.plein iframe { flex: 1; min-height: 0; height: auto; }
+.barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .4rem .6rem .4rem .9rem; border-bottom: 1px solid #ddd5c8;
+  background: #fff; color: #1f2933; font-size: .85rem; border-radius: 10px 10px 0 0; }
+.fermer { flex: none; min-height: 44px; padding: .35rem 1rem; border: 1px solid #1f2933; border-radius: 6px; background: #fff; color: #1f2933; font: inherit; font-size: .85rem; cursor: pointer; }
+.fermer:hover { background: #eef2f6; }
 .lancer { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
   padding: .8rem 1.4rem; border-radius: 999px; border: 0; cursor: pointer;
   font: inherit; font-weight: 600; color: #fff; background: var(--accent);
@@ -292,6 +301,7 @@ section { margin: 0 0 3rem; }
       <li><b>Une page d&#39;accueil</b> — qui publie, pourquoi, pour combien de temps, ce qu&#39;il advient des réponses : ce qu&#39;on lit pour décider de répondre.</li>
       <li><b>Toutes les formes de saisie</b> — listes plafonnées, « Autre : … » dans sa propre colonne, échelles en matrice, classement en grille, pièces jointes et photo prise sur place.</li>
       <li><b>Un lieu sur une carte</b> — un point se pose au doigt, un trajet ou un contour se trace sommet par sommet. Fonds IGN, et chaque sommet posé est enregistré.</li>
+      <li><b>Une adresse qui existe</b> — la personne choisit dans la liste de la Base adresse nationale : l’adresse complète, le code postal, la commune et les coordonnées s’écrivent dans vos colonnes. Un texte libre reste possible si le service ne répond pas.</li>
       <li><b>Un canevas qu&#39;on compose</b> — entourer un désordre sur une photo, croquer une implantation, signer un constat : le dessin part en pièce jointe, avec son fond.</li>
       <li><b>Illustrer n&#39;importe quelle question</b> — une image, une carte à repères, ou une page entière intégrée — une vue publiée, un tableau de bord, un autre widget.</li>
       <li><b>Mise en ligne qui fige</b> — la version publiée reste stable pendant que l&#39;édition continue à côté. Le formulaire vit dans le document, avec ses droits.</li>
@@ -321,24 +331,27 @@ section { margin: 0 0 3rem; }
     </ol>
   </section>
   <section>
-    <div class="encart">
-      <h2>Tout reste dans votre document</h2>
-      <p>Aucun service tiers, aucun compte à créer, aucune donnée qui sort. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n&#39;importe quelle page, avec les droits que vous choisissez. Les conditions d&#39;affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls.</p>
-      
-    </div>
-  </section>
+      <div class="encart">
+        <h2>Tout reste dans votre document</h2>
+        <p>Aucun service tiers entre la réponse et votre table, aucun compte à créer. Le formulaire publié est une page Grist : vous la partagez comme vous partagez n&#39;importe quelle page, avec les droits que vous choisissez. Les conditions d&#39;affichage servent le confort de lecture — ce sont les droits Grist qui protègent, et eux seuls. Une seule exception, dite sous le champ : si vous posez un champ d’adresse, les caractères tapés sont envoyés à la Géoplateforme (service de l’État) pour proposer des adresses — à la validation, pas à la frappe, sauf réglage contraire.</p>
+        
+      </div>
+    </section>
   <section>
-    <h2>Journal</h2>
-    <div class="journal">
+      <h2>Journal</h2>
+      <div class="journal">
+        <div><b>v1.2.0</b><p>Un champ d’adresse : la personne tape, valide, et choisit dans la liste de la Base adresse nationale. L’adresse complète s’écrit dans la colonne de la question, et le code postal, la commune, le code INSEE et les coordonnées dans des colonnes annexes que vous nommez — seulement pour une adresse réellement choisie. La recherche part à la validation par défaut, et une mention le dit sous le champ. Autres corrections : les conditions des quatre formulaires de démonstration n’agissaient pas (elles étaient écrites dans une forme que le moteur ignorait), et le mode « créer le schéma » crée maintenant les colonnes que le moteur écrit vraiment (rangs d’un classement, précision d’un « Autre », annexes d’une adresse).</p></div>
       <div><b>v1.1.0</b><p>Un questionnaire ne commence plus par sa première question : une page d&#39;accueil annonce qui publie, pourquoi et pour combien de temps, et un bandeau reste à l&#39;écran du début à la fin. N&#39;importe quelle question peut porter une illustration — une image, une carte à repères, ou une page entière intégrée. Un lieu se saisit sur une carte : point au doigt, trajet et contour au tracé. Un canevas permet d&#39;annoter une photo, de croquer ou de signer, et part en pièce jointe avec son fond. Quatre saisies qui manquaient aux enquêtes réelles sont là : oui/non en deux mots, « Autre : … » dans sa propre colonne, cases plafonnées, classement en grille. Enfin une synthèse relit les réponses avec la définition qui les a produites — ce qui est demandé, ce qui va bien, ce qui est préféré, l&#39;effectif toujours écrit à côté du pourcentage.</p></div>
       <div><b>v1.0.0</b><p>Composer un formulaire branché sur les colonnes d&#39;une table, le prévisualiser, le mettre en ligne sur une page du document. Étapes, conditions par champ et par section, chemins selon les réponses, reconnaissance de la personne connectée et réserve de questions par audience.</p></div>
-    </div>
-  </section>
+      </div>
+    </section>
 </main>
 <script>
-  document.querySelectorAll('.cadre').forEach(function (cadre) {
+  function armer(cadre) {
     var bouton = cadre.querySelector('.lancer');
     if (!bouton) return;
+    var origine = cadre.innerHTML;
+    var grand = !!cadre.closest('figure.vivante');
     bouton.addEventListener('click', function () {
       var f = document.createElement('iframe');
       f.src = cadre.dataset.widget;
@@ -348,7 +361,33 @@ section { margin: 0 0 3rem; }
       cadre.innerHTML = '';
       cadre.appendChild(f);
       cadre.classList.add('vivant');
+      if (!grand) return;
+      cadre.classList.add('plein');
+      var barre = document.createElement('div'); barre.className = 'barre';
+      var libelleDemo = cadre.dataset.titre || 'Démonstration, données fictives';
+      var titre = document.createElement('span'); titre.textContent = libelleDemo; barre.appendChild(titre);
+      f.title = libelleDemo; cadre.setAttribute('role', 'dialog'); cadre.setAttribute('aria-modal', 'true'); cadre.setAttribute('aria-label', libelleDemo);
+      var garde = function (e) { if (!cadre.contains(e.target)) x.focus(); };   // tant que la démonstration est ouverte, le focus ne sort pas du cadre
+      document.addEventListener('focusin', garde);
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'fermer'; x.textContent = 'Fermer';
+      barre.appendChild(x);
+      x.addEventListener('click', function () {
+        cadre.classList.remove('vivant', 'plein');
+        cadre.removeAttribute('role'); cadre.removeAttribute('aria-modal'); cadre.removeAttribute('aria-label');
+        document.removeEventListener('focusin', garde);
+        cadre.innerHTML = origine;
+        armer(cadre);
+        var relancer = cadre.querySelector('.lancer'); if (relancer) relancer.focus();   // le focus revient au bouton qui a ouvert la démonstration
+      });
+      cadre.insertBefore(barre, f);
+      x.focus();
     });
+  }
+  document.querySelectorAll('.cadre').forEach(armer);
+  document.addEventListener('keydown', function (e) {
+    var x = e.key === 'Escape' && document.querySelector('.cadre.plein .fermer');
+    if (x) x.click();
   });
 </script>
 <script>
