@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Form Builder — quatre formulaires à essayer</title>
-<meta name="description" content="Quatre formulaires Grist à remplir pour de vrai : consultation, relevé de terrain, constat signé, inscription. Rien n'est enregistré.">
+<title>Form Builder — cinq formulaires à essayer</title>
+<meta name="description" content="Cinq formulaires Grist à remplir pour de vrai : consultation, relevé de terrain, constat signé, inscription, signalement. Rien n'est enregistré.">
 <link rel="stylesheet" href="../shared/dsfr-like.css">
 <style>
   :root { --demo-rail: 19rem; }
@@ -58,7 +58,7 @@
 <div class="demo">
   <nav class="demo__rail" aria-label="Les cas de démonstration">
     <h1 class="demo__titre">Form Builder</h1>
-    <p class="demo__sous">Quatre formulaires à remplir pour de vrai. Rien n’est enregistré.</p>
+    <p class="demo__sous">Cinq formulaires à remplir pour de vrai. Rien n’est enregistré.</p>
     <div id="cas"></div>
     <p class="demo__lien">
       <a href="../../w/grist_forms/">← La fiche du widget</a>
@@ -105,7 +105,10 @@ var CAS = [
     quoiVoir: 'annotation · signature', vue: 'ordi' },
   { id: 'inscription', nom: 'Inscription',
     quoi: 'Le cas le plus simple : trois questions, et c’est envoyé.',
-    quoiVoir: 'oui/non · cases · encart', vue: 'ordi' }
+    quoiVoir: 'oui/non · cases · encart', vue: 'ordi' },
+  { id: 'signalement', nom: 'Signalement d’un problème',
+    quoi: 'Une adresse officielle choisie dans la liste : elle donne la commune, et par elle le service compétent.',
+    quoiVoir: 'adresse · code INSEE · coordonnées', vue: 'tel' }
 ];
 
 var S = { cas: null, def: null, vue: 'ordi' };
