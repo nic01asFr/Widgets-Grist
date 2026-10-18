@@ -5,7 +5,7 @@
 Widget Grist de maquette territoriale 3D (MapLibre + three.js), direction UX **Atlas**.
 Cible : construire et présenter une scène (import, symbolisation, contrôles, récit, modèles 3D).
 
-Interop Cerema : lecture **Scene Manifest V0.2.2** produit par qgis2grist, prefs utilisateur
+Interopérabilité : lecture **Scene Manifest V0.2.2** produit par qgis2grist, prefs utilisateur
 `Atlas_LayerPrefs`, récit `Atlas_Story`.
 
 ## Architecture des fichiers
@@ -67,7 +67,7 @@ Familles de `lib/` (état du 02/10/2026) :
 > Portage : l'export QGIS ≈ 108 lignes, quatre fonctions isolables en
 > `lib/qgis-export.js` — mais le QML doit alors être **généré depuis le
 > StyleDeclarative**, pas depuis l'état interne, pour respecter
-> `BINDING-QGIS-GRIST-CEREMA-v2.md` §5.2. Pour `model_glb`, arbitrer d'abord la
+> le binding qgis2grist v2 (`projects/qgis2grist/docs/`) §5.2. Pour `model_glb`, arbitrer d'abord la
 > coexistence avec le catalogue partagé (`catalog.json`) : pièce jointe par objet
 > > `gltf_url` de couche > catalogue > cercle 2D.
 
