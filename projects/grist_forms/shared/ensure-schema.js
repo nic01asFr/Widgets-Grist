@@ -94,14 +94,71 @@
     return def;
   }
 
+  function copyDef(def) {
+    var out = {};
+    Object.keys(def).forEach(function (k) { out[k] = def[k]; });
+    return out;
+  }
+
+  function rangLabel(i) {
+    return i === 0 ? '1re place' : (i + 1) + 'e place';
+  }
+
+  /**
+   * Les colonnes qu'un champ implique — pas toujours celle de son colId.
+   *
+   * > **Une saisie range parfois sa réponse ailleurs que sous son nom.** Un
+   * > classement n'écrit que dans la colonne de chacun de ses rangs, et rien
+   * > sous son propre `colId` ; une réponse « Autre » écrit sa précision dans
+   * > une colonne à part. La projection créait pourtant UNE colonne par champ,
+   * > celle du `colId` : le formulaire créé automatiquement ne pouvait pas
+   * > enregistrer ce que le moteur écrit, et créait une colonne que personne
+   * > n'écrit jamais.
+   *
+   * La règle est celle du moteur (`collectSubmitData`), recopiée ici et non
+   * inventée : ce que le moteur écrit, la projection le crée.
+   */
+  function columnsOfField(formDef, field) {
+    var cols = (field.options && field.options.colonnes) || {};
+    var base = buildColumnDef(formDef, field);
+    var label = field.label || field.colId;
+
+    if (field.kind === 'classement') {
+      return (cols.rangs || []).map(function (id, i) {
+        var def = copyDef(base);
+        def.id = id;
+        def.label = label + ' — ' + rangLabel(i);
+        return def;
+      });
+    }
+
+    var out = [];
+    if (cols.valeur && cols.valeur !== field.colId) base.id = cols.valeur;
+    out.push(base);
+    if (cols.autre) {
+      out.push({ id: cols.autre, type: 'Text', label: 'Précision — ' + label });
+    }
+    return out;
+  }
+
   /**
    * Projection pure FormDef → colonnes (inverse conceptuel du bind).
    * Exige un binding complet pour un résultat fiable.
+   *
+   * Deux questions qui nomment la même colonne ne la créent qu'une fois : la
+   * première l'emporte, et le plan ne se contredit pas.
    */
   function columnsFromFormDef(formDef) {
-    return collectFields(formDef).map(function (field) {
-      return buildColumnDef(formDef, field);
+    var seen = {};
+    var cols = [];
+    collectFields(formDef).forEach(function (field) {
+      columnsOfField(formDef, field).forEach(function (col) {
+        if (seen[col.id]) return;
+        seen[col.id] = true;
+        cols.push(col);
+      });
     });
+    return cols;
   }
 
   /**
@@ -143,6 +200,22 @@
       if ((t === 'Choice' || t === 'ChoiceList') && !choiceListFor(formDef, field)) {
         errors.push('Champ « ' + field.colId + ' » : choices manquants pour ' + t);
       }
+
+      // Les colonnes où la saisie range sa réponse sont des colonnes comme les
+      // autres : un nom que Grist refuserait, ou un classement qui n'en nomme
+      // aucune (il n'écrirait alors nulle part), se disent avant d'agir.
+      var cols = (field.options && field.options.colonnes) || {};
+      if (field.kind === 'classement' && !(cols.rangs && cols.rangs.length)) {
+        errors.push('Champ « ' + field.colId + ' » : un classement doit nommer la colonne de chaque rang ' +
+          '(options.colonnes.rangs)');
+      }
+      var nommees = (cols.rangs || []).concat(cols.autre ? [cols.autre] : [])
+        .concat(cols.valeur && cols.valeur !== field.colId ? [cols.valeur] : []);
+      nommees.forEach(function (id) {
+        if (!isValidGristIdent(id)) {
+          errors.push('identifiant invalide pour la colonne « ' + id + ' » (champ « ' + field.colId + ' »)');
+        }
+      });
     });
     return { ok: errors.length === 0, errors: errors };
   }

@@ -140,3 +140,101 @@ it('planVisibleColUpdates maps Nom → colRef id', () => {
     'UpdateRecord', '_grist_Tables_column', 20, { visibleCol: 10 }
   ]);
 });
+
+/*
+ * Les saisies qui rangent leur réponse ailleurs que sous leur colId.
+ *
+ * Un classement n'écrit que dans la colonne de chacun de ses rangs ; une
+ * réponse « Autre » écrit sa précision dans une colonne à part. La projection
+ * créait pourtant UNE colonne par champ, celle du colId : le formulaire créé
+ * automatiquement ne pouvait pas enregistrer ce que le moteur écrit.
+ */
+describe('colonnes annexes projetées', () => {
+  const classement = {
+    colId: 'Priorites', label: 'Vos priorités', type: 'Choice', widget: 'classement', kind: 'classement',
+    options: { choices: ['Arbres', 'Bancs', 'Jeux'], colonnes: { rangs: ['Rang1', 'Rang2', 'Rang3'] } }
+  };
+
+  it('un classement crée la colonne de chaque rang, et pas celle de son colId', () => {
+    const def = { tableId: 'T', sections: [{ fields: [classement] }] };
+    const ids = columnsFromFormDef(def).map((c) => c.id);
+    assert.deepEqual(ids, ['Rang1', 'Rang2', 'Rang3']);
+  });
+
+  it('chaque rang propose les mêmes choix que la question', () => {
+    const def = { tableId: 'T', sections: [{ fields: [classement] }] };
+    const rang = columnsFromFormDef(def)[1];
+    assert.equal(rang.type, 'Choice');
+    assert.deepEqual(JSON.parse(rang.widgetOptions).choices, ['Arbres', 'Bancs', 'Jeux']);
+    assert.match(rang.label, /2e place/);
+  });
+
+  it('« Autre » ajoute sa colonne de précision, en texte', () => {
+    const def = {
+      tableId: 'T',
+      sections: [{ fields: [{
+        colId: 'Mode', label: 'Mode', type: 'Choice', widget: 'radio', kind: 'choix_autre',
+        options: { choices: ['Vélo', 'Autre'], colonnes: { autre: 'Mode_Autre' } }
+      }] }]
+    };
+    const cols = columnsFromFormDef(def);
+    assert.deepEqual(cols.map((c) => c.id), ['Mode', 'Mode_Autre']);
+    assert.equal(cols[1].type, 'Text');
+  });
+
+  it('une réponse rangée dans une autre colonne (`valeur`) crée celle-là', () => {
+    const def = {
+      tableId: 'T',
+      sections: [{ fields: [{
+        colId: 'Question', label: 'Q', type: 'Text', options: { colonnes: { valeur: 'Reponse' } }
+      }] }]
+    };
+    assert.deepEqual(columnsFromFormDef(def).map((c) => c.id), ['Reponse']);
+  });
+
+  it('une même colonne nommée deux fois n’est créée qu’une fois', () => {
+    const def = {
+      tableId: 'T',
+      sections: [{ fields: [
+        { colId: 'A', type: 'Choice', kind: 'choix_autre', options: { choices: ['x', 'Autre'], colonnes: { autre: 'Precision' } } },
+        { colId: 'B', type: 'Choice', kind: 'choix_autre', options: { choices: ['y', 'Autre'], colonnes: { autre: 'Precision' } } }
+      ] }]
+    };
+    assert.deepEqual(columnsFromFormDef(def).map((c) => c.id), ['A', 'Precision', 'B']);
+  });
+
+  it('le plan n’ajoute que ce qui manque à une table existante', () => {
+    const def = { tableId: 'T', sections: [{ fields: [classement] }] };
+    const plan = planEnsureSchema(def, [{ id: 'Rang1', type: 'Choice' }]);
+    assert.equal(plan.ok, true);
+    assert.deepEqual(plan.actions.map((a) => a[2]), ['Rang2', 'Rang3']);
+  });
+
+  it('un classement sans colonnes de rang n’est pas un binding complet', () => {
+    const sans = JSON.parse(JSON.stringify(classement));
+    delete sans.options.colonnes;
+    const r = bindingIsComplete({ tableId: 'T', sections: [{ fields: [sans] }] });
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join(' '), /rang/);
+  });
+
+  it('un nom de colonne de rang invalide est refusé', () => {
+    const mauvais = JSON.parse(JSON.stringify(classement));
+    mauvais.options.colonnes.rangs = ['Rang 1', 'Rang2', 'Rang3'];
+    const r = bindingIsComplete({ tableId: 'T', sections: [{ fields: [mauvais] }] });
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join(' '), /Rang 1/);
+  });
+
+  it('un nom de colonne de précision invalide est refusé', () => {
+    const r = bindingIsComplete({
+      tableId: 'T',
+      sections: [{ fields: [{
+        colId: 'M', type: 'Choice', kind: 'choix_autre',
+        options: { choices: ['a', 'Autre'], colonnes: { autre: 'bad name' } }
+      }] }]
+    });
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join(' '), /bad name/);
+  });
+});
