@@ -75,7 +75,7 @@ body {
   font: inherit;
   color: var(--kit-texte, var(--grey-200));
   background: var(--kit-surface, var(--grey-1000));
-  border: 1px solid var(--kit-bord, var(--grey-900));
+  border: 1px solid var(--kit-bord-champ, var(--kit-bord, var(--grey-900)));
   border-radius: var(--radius);
   box-shadow: inset 0 -2px 0 0 var(--kit-accent, var(--blue-france));
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -116,15 +116,15 @@ body {
   font-weight: 500;
   font-size: 0.9375rem;
   line-height: 1.25;
-  color: var(--kit-accent-texte, #fff);
-  background: var(--kit-accent, var(--blue-france));
-  border: 1px solid var(--kit-accent, var(--blue-france));
+  color: var(--kit-action-texte, #fff);
+  background: var(--kit-action, var(--blue-france));
+  border: 1px solid var(--kit-action, var(--blue-france));
   border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;
 }
-.fr-btn:hover { background: var(--kit-accent-survol, var(--blue-france-hover)); border-color: var(--kit-accent-survol, var(--blue-france-hover)); }
-.fr-btn:active { background: var(--kit-accent-actif, var(--blue-france-active)); }
+.fr-btn:hover { background: var(--kit-action-survol, var(--blue-france-hover)); border-color: var(--kit-action-survol, var(--blue-france-hover)); }
+.fr-btn:active { background: var(--kit-action-actif, var(--blue-france-active)); }
 .fr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .fr-btn--secondary {
   color: var(--kit-accent, var(--blue-france));
@@ -992,7 +992,7 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
     --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
   }
 }
-.fr-btn { color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
+.fr-btn { color: var(--kit-action-texte, var(--bouton-texte, #fff)); }
 .fr-btn--secondary, .fr-btn--tertiary, .fr-btn--tertiary-no-outline { color: var(--kit-accent, var(--blue-france)); }
 .fr-btn--secondary { background: var(--kit-surface, var(--bouton-secondaire-fond, #fff)); }
 .fr-btn--secondary:hover { background: var(--kit-accent-fond, var(--bouton-secondaire-survol, #f0f0ff)); }
@@ -1021,9 +1021,38 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 /* Un lieu : la carte, une adresse, ou l'un ou l'autre. */
 .fr-lieu__bascule { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
 .fr-lieu__onglet { flex: 1 1 0; }
-.fr-lieu__onglet[aria-pressed="true"] { background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
+.fr-lieu__onglet[aria-pressed="true"] { background: var(--kit-action, var(--blue-france)); color: var(--kit-action-texte, var(--bouton-texte, #fff)); }
 .fr-lieu__panneau[hidden] { display: none; }
 /* Le style des champs impose un affichage : sans cette regle, l'attribut hidden ne cache pas le texte du point. */
 .fr-geo input[hidden] { display: none; }
 .fr-geo__choisi { margin: 0.35rem 0 0; font-weight: 600; color: var(--encre); }
 .fr-geo__choisi:empty { display: none; }
+
+/* ---------------------------------------------------------------
+   La personne prime : contraste forcé et préférence de contraste.
+   > **Un thème ne passe jamais avant ce qu'une personne a demandé à son
+   > système.** Sous contraste forcé, le navigateur impose ses couleurs : on ne
+   > lutte pas contre, on garde ce que la couleur disait (la case choisie,
+   > l'étape en cours, l'onglet actif) par un contour ou un remplissage système.
+   > Sous préférence de contraste renforcé, les bords et l'anneau de focus
+   > s'épaississent et prennent la couleur du texte.
+   --------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .fr-btn { border: 1px solid ButtonText; }
+  .fr-btn:hover, .fr-btn:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  .fr-input, .fr-select, textarea.fr-input { border: 1px solid FieldText; }
+  :focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
+  .fr-radio-rich:has(input:checked), .fr-fieldset--pastilles label:has(input:checked) { border: 3px solid Highlight; }
+  .fr-progression__piste { border: 1px solid CanvasText; }
+  .fr-progression__piste span { background: Highlight; forced-color-adjust: none; }
+  .fr-echelle__cran input:checked + label { background: Highlight; color: HighlightText; forced-color-adjust: none; }
+  .fr-rangs__cible:has(input:checked)::before { background: Highlight; color: HighlightText; border-color: Highlight; forced-color-adjust: none; }
+  .fr-lieu__onglet[aria-pressed="true"] { background: Highlight; color: HighlightText; forced-color-adjust: none; }
+  .fr-champ--erreur { border-left: 4px solid CanvasText; }
+  .fr-resume-erreurs { border: 2px solid CanvasText; }
+}
+@media (prefers-contrast: more) {
+  .fr-input, .fr-select, textarea.fr-input { border-width: 2px; border-color: currentColor; }
+  .fr-radio-rich, .fr-btn--secondary, .fr-btn--tertiary { border-color: currentColor; }
+  :focus-visible { outline-width: 3px; }
+}
