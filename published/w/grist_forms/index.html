@@ -198,7 +198,7 @@ section { margin: 0 0 3rem; }
       <img src="apercu.jpeg" alt="Aperçu du widget Form Builder" loading="lazy">
       <button type="button" class="lancer">Lancer l’aperçu</button>
     </div>
-    <p class="mention">L’aperçu est la démonstration elle-même : quatre formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé.</p>
+    <p class="mention">L’aperçu est la démonstration elle-même : cinq formulaires à remplir, sans document Grist derrière. Les cartes se chargent vraiment, le dessin produit vraiment une image — seul l’envoi est simulé.</p>
   </section>
   <section class="chiffres reveler">
     <div><b>0</b><span>service tiers entre la réponse et votre table</span></div>
@@ -285,10 +285,10 @@ section { margin: 0 0 3rem; }
     </article>
   </section>
   <section class="demo">
-    <h2>Quatre formulaires, à remplir pour de vrai</h2>
-    <p>Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions. Rien n’est enregistré : il n’y a pas de document derrière.</p>
+    <h2>Cinq formulaires, à remplir pour de vrai</h2>
+    <p>Une consultation du public avec ses échelles et son classement sur carte, un relevé de terrain tel qu’il se remplit sur un téléphone, un constat qu’on annote et qu’on signe, une inscription en trois questions, un signalement dont l’adresse officielle désigne la commune. Rien n’est enregistré : il n’y a pas de document derrière.</p>
     <div class="cadre" data-widget="https://nic01asfr.github.io/Widgets-Grist/grist_forms/demo/">
-      <img src="apercu.jpeg" alt="La démonstration : quatre cas au choix, et le formulaire à côté" loading="lazy">
+      <img src="apercu.jpeg" alt="La démonstration : plusieurs cas au choix, et le formulaire à côté" loading="lazy">
       <button type="button" class="lancer">Ouvrir la démonstration</button>
     </div>
     <p class="mention">Les cartes viennent des fonds IGN, le dessin produit un vrai PNG. Le bouton d’envoi affiche ce qui serait écrit dans la table.</p>
@@ -340,7 +340,8 @@ section { margin: 0 0 3rem; }
   <section>
       <h2>Journal</h2>
       <div class="journal">
-        <div><b>v1.2.0</b><p>Un champ d’adresse : la personne tape, valide, et choisit dans la liste de la Base adresse nationale. L’adresse complète s’écrit dans la colonne de la question, et le code postal, la commune, le code INSEE et les coordonnées dans des colonnes annexes que vous nommez — seulement pour une adresse réellement choisie. La recherche part à la validation par défaut, et une mention le dit sous le champ. Autres corrections : les conditions des quatre formulaires de démonstration n’agissaient pas (elles étaient écrites dans une forme que le moteur ignorait), et le mode « créer le schéma » crée maintenant les colonnes que le moteur écrit vraiment (rangs d’un classement, précision d’un « Autre », annexes d’une adresse).</p></div>
+        <div><b>v1.2.1</b><p>Un cinquième cas dans la démonstration : le signalement d’un problème sur l’espace public. L’adresse se choisit dans la liste officielle, et son code INSEE et ses coordonnées partent avec la réponse : dans la table, une formule peut alors retrouver la commune et le service compétent, sans que la personne ait un compte ni connaisse la structure. Une note d’étude (docs/ENVOI-EXTERNE.md) rapporte ce qui a été mesuré sur un vrai document Grist pour un formulaire servi hors de Grist : ce que permet la clé d’un formulaire natif, et ce qu’elle interdit.</p></div>
+      <div><b>v1.2.0</b><p>Un champ d’adresse : la personne tape, valide, et choisit dans la liste de la Base adresse nationale. L’adresse complète s’écrit dans la colonne de la question, et le code postal, la commune, le code INSEE et les coordonnées dans des colonnes annexes que vous nommez — seulement pour une adresse réellement choisie. La recherche part à la validation par défaut, et une mention le dit sous le champ. Autres corrections : les conditions des quatre formulaires de démonstration n’agissaient pas (elles étaient écrites dans une forme que le moteur ignorait), et le mode « créer le schéma » crée maintenant les colonnes que le moteur écrit vraiment (rangs d’un classement, précision d’un « Autre », annexes d’une adresse).</p></div>
       <div><b>v1.1.0</b><p>Un questionnaire ne commence plus par sa première question : une page d&#39;accueil annonce qui publie, pourquoi et pour combien de temps, et un bandeau reste à l&#39;écran du début à la fin. N&#39;importe quelle question peut porter une illustration — une image, une carte à repères, ou une page entière intégrée. Un lieu se saisit sur une carte : point au doigt, trajet et contour au tracé. Un canevas permet d&#39;annoter une photo, de croquer ou de signer, et part en pièce jointe avec son fond. Quatre saisies qui manquaient aux enquêtes réelles sont là : oui/non en deux mots, « Autre : … » dans sa propre colonne, cases plafonnées, classement en grille. Enfin une synthèse relit les réponses avec la définition qui les a produites — ce qui est demandé, ce qui va bien, ce qui est préféré, l&#39;effectif toujours écrit à côté du pourcentage.</p></div>
       <div><b>v1.0.0</b><p>Composer un formulaire branché sur les colonnes d&#39;une table, le prévisualiser, le mettre en ligne sur une page du document. Étapes, conditions par champ et par section, chemins selon les réponses, reconnaissance de la personne connectée et réserve de questions par audience.</p></div>
       </div>
