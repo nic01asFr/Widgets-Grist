@@ -94,6 +94,31 @@
     return def;
   }
 
+  /**
+   * Ce qu'une source de référentiel sait donner, avec le type Grist de chaque
+   * sens — lu dans le module qui la connaît, pas recopié ici : deux listes de
+   * types finissent toujours par diverger.
+   *
+   * Cherché à l'appel et pas au chargement : sous Node c'est un `require`, dans
+   * un navigateur c'est le global posé par `referentiel.js`, qui doit alors être
+   * chargé avant qu'on projette quoi que ce soit.
+   */
+  function sensDuReferentiel(field) {
+    var o = field && field.options && field.options.referentiel;
+    if (!o || !o.source) return {};
+    var api = null;
+    try {
+      if (typeof module === 'object' && module.exports && typeof require === 'function') {
+        api = require('./referentiel.js');
+      }
+    } catch (e) { api = null; }
+    if (!api) {
+      var global = typeof self !== 'undefined' ? self : null;
+      api = (global && global.FormReferentiel) || null;
+    }
+    return api && api.annexesDe ? api.annexesDe(o.source) : {};
+  }
+
   function copyDef(def) {
     var out = {};
     Object.keys(def).forEach(function (k) { out[k] = def[k]; });
@@ -137,6 +162,16 @@
     out.push(base);
     if (cols.autre) {
       out.push({ id: cols.autre, type: 'Text', label: 'Précision — ' + label });
+    }
+    // Un référentiel range, à côté du texte, ce que la source sait de la chose
+    // choisie : un code postal est du texte, une coordonnée un nombre.
+    if (field.kind === 'referentiel') {
+      var sens = sensDuReferentiel(field);
+      Object.keys(cols.annexes || {}).forEach(function (cle) {
+        var id = cols.annexes[cle];
+        if (!id || !sens[cle]) return;
+        out.push({ id: id, type: sens[cle].type, label: sens[cle].label + ' — ' + label });
+      });
     }
     return out;
   }
@@ -209,8 +244,24 @@
         errors.push('Champ « ' + field.colId + ' » : un classement doit nommer la colonne de chaque rang ' +
           '(options.colonnes.rangs)');
       }
+      var annexes = cols.annexes || {};
       var nommees = (cols.rangs || []).concat(cols.autre ? [cols.autre] : [])
-        .concat(cols.valeur && cols.valeur !== field.colId ? [cols.valeur] : []);
+        .concat(cols.valeur && cols.valeur !== field.colId ? [cols.valeur] : [])
+        .concat(Object.keys(annexes).map(function (cle) { return annexes[cle]; }).filter(Boolean));
+      if (field.kind === 'referentiel') {
+        // Un sens que la source ne donne pas ne créerait aucune colonne, sans le
+        // dire : on le dit. Une source inconnue ne peut pas être jugée.
+        var sens = sensDuReferentiel(field);
+        var connus = Object.keys(sens);
+        if (connus.length) {
+          Object.keys(annexes).forEach(function (cle) {
+            if (!sens[cle]) {
+              errors.push('Champ « ' + field.colId + ' » : « ' + cle + ' » n’est pas un sens que la source ' +
+                'sait donner (' + connus.join(', ') + ')');
+            }
+          });
+        }
+      }
       nommees.forEach(function (id) {
         if (!isValidGristIdent(id)) {
           errors.push('identifiant invalide pour la colonne « ' + id + ' » (champ « ' + field.colId + ' »)');

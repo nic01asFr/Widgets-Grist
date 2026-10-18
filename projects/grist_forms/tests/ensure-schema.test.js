@@ -238,3 +238,82 @@ describe('colonnes annexes projetées', () => {
     assert.match(r.errors.join(' '), /bad name/);
   });
 });
+
+describe('colonnes annexes d’un référentiel', () => {
+  const adresse = {
+    colId: 'Adresse', label: 'Adresse du désordre', type: 'Text', widget: 'text', kind: 'referentiel',
+    options: {
+      referentiel: { source: 'ban' },
+      colonnes: { annexes: { codePostal: 'CP', insee: 'INSEE', latitude: 'Lat', longitude: 'Lon' } }
+    }
+  };
+
+  it('crée la colonne du texte, puis chaque annexe désignée', () => {
+    const def = { tableId: 'T', sections: [{ fields: [adresse] }] };
+    assert.deepEqual(columnsFromFormDef(def).map((c) => c.id), ['Adresse', 'CP', 'INSEE', 'Lat', 'Lon']);
+  });
+
+  it('donne à chaque sens son type : un code est du texte, une coordonnée un nombre', () => {
+    const def = { tableId: 'T', sections: [{ fields: [adresse] }] };
+    const parId = {};
+    columnsFromFormDef(def).forEach((c) => { parId[c.id] = c.type; });
+    assert.equal(parId.Adresse, 'Text');
+    assert.equal(parId.CP, 'Text');
+    assert.equal(parId.INSEE, 'Text', 'un zéro de tête est une information');
+    assert.equal(parId.Lat, 'Numeric');
+    assert.equal(parId.Lon, 'Numeric');
+  });
+
+  it('nomme chaque annexe par son sens et par la question', () => {
+    const def = { tableId: 'T', sections: [{ fields: [adresse] }] };
+    const cp = columnsFromFormDef(def).find((c) => c.id === 'CP');
+    assert.match(cp.label, /Code postal/);
+    assert.match(cp.label, /Adresse du désordre/);
+  });
+
+  it('ne crée aucune annexe qu’on n’a pas désignée', () => {
+    const f = JSON.parse(JSON.stringify(adresse));
+    f.options.colonnes.annexes = { codePostal: 'CP' };
+    assert.deepEqual(columnsFromFormDef({ tableId: 'T', sections: [{ fields: [f] }] }).map((c) => c.id),
+      ['Adresse', 'CP']);
+  });
+
+  it('le plan n’ajoute que ce qui manque à une table existante', () => {
+    const def = { tableId: 'T', sections: [{ fields: [adresse] }] };
+    const plan = planEnsureSchema(def, [{ id: 'Adresse', type: 'Text' }, { id: 'CP', type: 'Text' }]);
+    assert.equal(plan.ok, true);
+    assert.deepEqual(plan.actions.map((a) => a[2]), ['INSEE', 'Lat', 'Lon']);
+  });
+
+  it('refuse une annexe qui existe déjà avec un autre type', () => {
+    const def = { tableId: 'T', sections: [{ fields: [adresse] }] };
+    const plan = planEnsureSchema(def, [{ id: 'Lat', type: 'Text' }]);
+    assert.equal(plan.ok, false);
+    assert.match(plan.errors.join(' '), /Lat/);
+  });
+
+  it('refuse un sens que la source ne sait pas donner', () => {
+    const f = JSON.parse(JSON.stringify(adresse));
+    f.options.colonnes.annexes = { codePostal: 'CP', altitude: 'Alt' };
+    const r = bindingIsComplete({ tableId: 'T', sections: [{ fields: [f] }] });
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join(' '), /altitude/);
+    assert.match(r.errors.join(' '), /codePostal/, 'dit ce que la source sait donner');
+  });
+
+  it('refuse un nom de colonne que Grist refuserait', () => {
+    const f = JSON.parse(JSON.stringify(adresse));
+    f.options.colonnes.annexes.codePostal = 'Code postal';
+    const r = bindingIsComplete({ tableId: 'T', sections: [{ fields: [f] }] });
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join(' '), /Code postal/);
+  });
+
+  it('une source inconnue ne crée aucune annexe, sans faire échouer le reste', () => {
+    const f = JSON.parse(JSON.stringify(adresse));
+    f.options.referentiel.source = 'bdtopo';
+    const def = { tableId: 'T', sections: [{ fields: [f] }] };
+    assert.deepEqual(columnsFromFormDef(def).map((c) => c.id), ['Adresse']);
+    assert.equal(bindingIsComplete(def).ok, true, 'on ne juge pas ce qu’on ne connaît pas');
+  });
+});
