@@ -10,14 +10,15 @@
       require('../shared/session-context.js'),
       require('../shared/referentiel.js'),
       require('../shared/formats.js'),
-      require('../shared/enrichir.js')
+      require('../shared/enrichir.js'),
+      require('../shared/saisies.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -47,6 +48,13 @@
     if (Formats && Formats.valide) return Formats;
     var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
     return global && global.FormFormats && global.FormFormats.valide ? global.FormFormats : null;
+  }
+
+  /** Départs, bornes et ordre entre deux questions, s'ils sont là. Sans eux, ces réglages ne font rien. */
+  function saisiesApi() {
+    if (Saisies && Saisies.valeurDepart) return Saisies;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormSaisies && global.FormSaisies.valeurDepart ? global.FormSaisies : null;
   }
 
   /** Le module d'enrichissement par un point, s'il est là. Sans lui, le point reste un point. */
@@ -758,17 +766,74 @@
       renderLabel(field, id) + control + '</div>';
   }
 
+  function attrBorne(o, cle) {
+    return typeof o[cle] === 'number' ? ' ' + cle + '="' + o[cle] + '"' : '';
+  }
+
   function renderNumber(field, value) {
     var id = fieldId(field);
     var val = value == null ? '' : value;
-    var step = (field.options && field.options.step) || 'any';
+    var o = field.options || {};
+    var step = o.step || 'any';
     var reqAttr = field.required ? ' required' : '';
     var phAttr = placeholderAttr(field);
+    var unite = o.unite ? '<span class="fr-unite">' + escapeHtml(o.unite) + '</span>' : '';
     return '<div class="fr-input-group" data-colid="' + escapeHtml(field.colId) + '">' +
       renderLabel(field, id) +
+      '<div class="fr-nombre__ligne">' +
       '<input class="fr-input" type="number" id="' + id + '" name="' + escapeHtml(field.colId) +
-      '" value="' + escapeHtml(val) + '" step="' + escapeHtml(step) + '"' + reqAttr + phAttr + ' />' +
+      '" value="' + escapeHtml(val) + '" step="' + escapeHtml(step) + '"' + attrBorne(o, 'min') + attrBorne(o, 'max') +
+      reqAttr + phAttr + ' />' + unite + '</div>' +
       '</div>';
+  }
+
+  /**
+   * Un curseur : une valeur entre deux bornes, avec des valeurs d'appui.
+   *
+   * > **Un curseur a toujours une position ; une réponse, non.** Tant que la
+   * > personne n'y a pas touché, rien n'est écrit — et l'écran le dit (« Pas de
+   * > réponse ») au lieu de laisser croire que le milieu est un choix.
+   */
+  function renderCurseur(field, value) {
+    var id = fieldId(field);
+    var o = field.options || {};
+    var min = typeof o.min === 'number' ? o.min : 0;
+    var max = typeof o.max === 'number' ? o.max : 100;
+    var pas = Number(o.step) > 0 ? Number(o.step) : 1;
+    var touche = value !== null && value !== undefined && value !== '';
+    var position = touche ? value : Math.round((min + max) / 2);
+    var unite = o.unite ? ' ' + o.unite : '';
+    var appuis = (Array.isArray(o.presets) ? o.presets : []).filter(function (p) { return Number.isFinite(Number(p)); })
+      .map(function (p) {
+        return '<button type="button" class="fr-btn fr-btn--secondary fr-curseur__preset" data-valeur="' + escapeHtml(p) + '">' +
+          escapeHtml(p) + escapeHtml(unite) + '</button>';
+      }).join('');
+    return '<div class="fr-input-group fr-curseur" data-colid="' + escapeHtml(field.colId) + '" data-widget="curseur" ' +
+      'data-unite="' + escapeHtml(o.unite || '') + '">' +
+      renderLabel(field, id) +
+      '<div class="fr-curseur__ligne">' +
+      '<input type="range" id="' + id + '" name="' + escapeHtml(field.colId) + '" min="' + min + '" max="' + max +
+      '" step="' + pas + '" value="' + escapeHtml(position) + '" data-touche="' + (touche ? '1' : '0') + '" />' +
+      '<output class="fr-curseur__valeur" for="' + id + '" aria-live="polite">' +
+      (touche ? escapeHtml(value) + escapeHtml(unite) : 'Pas de réponse') + '</output>' +
+      '</div>' + (appuis ? '<div class="fr-curseur__appuis">' + appuis + '</div>' : '') + '</div>';
+  }
+
+  /** Un compteur : un nombre qu'on monte et qu'on descend d'un pas, entre ses bornes. */
+  function renderCompteur(field, value) {
+    var id = fieldId(field);
+    var o = field.options || {};
+    var val = value == null ? '' : value;
+    var pas = Number(o.step) > 0 ? Number(o.step) : 1;
+    var unite = o.unite ? '<span class="fr-unite">' + escapeHtml(o.unite) + '</span>' : '';
+    return '<div class="fr-input-group fr-compteur" data-colid="' + escapeHtml(field.colId) + '" data-widget="compteur" data-pas="' + pas + '">' +
+      renderLabel(field, id) +
+      '<div class="fr-compteur__ligne">' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-compteur__moins" data-delta="-1" aria-label="Moins">\u2212</button>' +
+      '<input class="fr-input" type="number" inputmode="numeric" id="' + id + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(val) +
+      '" step="' + pas + '"' + attrBorne(o, 'min') + attrBorne(o, 'max') + (field.required ? ' required' : '') + ' />' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-compteur__plus" data-delta="1" aria-label="Plus">+</button>' +
+      unite + '</div></div>';
   }
 
   function renderCheckbox(field, value) {
@@ -1326,7 +1391,10 @@
     ouinon: function (f, v) { return renderOuiNon(f, v); },
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
     geo: function (f, v, o, d, values) { return renderGeo(f, v, values); },
-    dessin: function (f, v) { return renderDessin(f, v); }
+    dessin: function (f, v) { return renderDessin(f, v); },
+    curseur: function (f, v) { return renderCurseur(f, v); },
+    compteur: function (f, v) { return renderCompteur(f, v); },
+    heure: function (f, v) { return renderDateLike(f, v, 'time'); }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
@@ -1464,6 +1532,11 @@
   }
 
   function readFieldValue(rootEl, field, previous) {
+    if (field.widget === 'curseur') {
+      // Un curseur non touché n'a pas répondu : sa position de départ n'est pas un choix.
+      var curs = rootEl.querySelector('input[name="' + field.colId + '"]');
+      return curs && curs.getAttribute('data-touche') === '1' ? curs.value : (previous != null ? previous : null);
+    }
     if (field.widget === 'checkbox') {
       var cb = rootEl.querySelector('[name="' + field.colId + '"]');
       return cb ? !!cb.checked : false;
@@ -1968,9 +2041,32 @@
      * Ce qui empeche de continuer : une reponse manquante, ou un format faux.
      * Chaque question en defaut garde son propre message.
      */
+    function libelleDe(colId) {
+      var sections = (formDef && formDef.sections) || [];
+      for (var i = 0; i < sections.length; i++) {
+        var fs = sections[i].fields || [];
+        for (var j = 0; j < fs.length; j++) if (fs[j].colId === colId) return fs[j].label || colId;
+      }
+      return colId;
+    }
+
     function erreursDeSaisie(fields, values) {
       messagesErreur = {};
       var colIds = validateRequired(fields, values);
+      var api = saisiesApi();
+      if (api) {
+        fields.forEach(function (f) {
+          var msg = api.validerBornes(f, values[f.colId], new Date());
+          if (!msg) {
+            var autre = api.apresDe(f);
+            if (autre) msg = api.validerApres(f, values[f.colId], values[autre], libelleDe(autre));
+          }
+          if (msg) {
+            messagesErreur[f.colId] = msg;
+            if (colIds.indexOf(f.colId) === -1) colIds.push(f.colId);
+          }
+        });
+      }
       validerFormats(fields, values).forEach(function (e) {
         messagesErreur[e.colId] = e.message;
         if (colIds.indexOf(e.colId) === -1) colIds.push(e.colId);
@@ -2081,9 +2177,61 @@
     // re-rendu, qui remplace le champ qu'elles habitent.
     var referentiels = {};
 
+    /** Un curseur touché a répondu ; sa valeur s'affiche et se garde au redessin. */
+    function brancherCurseurs() {
+      var blocs = rootEl.querySelectorAll('[data-widget="curseur"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var curs = bloc.querySelector('input[type="range"]');
+        var sortie = bloc.querySelector('.fr-curseur__valeur');
+        var unite = bloc.getAttribute('data-unite') || '';
+        var colId = bloc.getAttribute('data-colid');
+        if (!curs || typeof curs.addEventListener !== 'function') return;
+        function toucher() {
+          curs.setAttribute('data-touche', '1');
+          if (sortie) sortie.textContent = curs.value + (unite ? ' ' + unite : '');
+          values[colId] = curs.value;
+        }
+        curs.addEventListener('input', toucher);
+        var appuis = bloc.querySelectorAll('.fr-curseur__preset');
+        for (var k = 0; k < appuis.length; k++) (function (b) {
+          b.addEventListener('click', function () { curs.value = b.getAttribute('data-valeur'); toucher(); });
+        }(appuis[k]));
+      }(blocs[i]));
+    }
+
+    /** Un compteur monte et descend d'un pas, sans sortir de ses bornes. */
+    function brancherCompteurs() {
+      var blocs = rootEl.querySelectorAll('[data-widget="compteur"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var champ = bloc.querySelector('input[type="number"]');
+        var pas = Number(bloc.getAttribute('data-pas')) || 1;
+        var boutons = bloc.querySelectorAll('[data-delta]');
+        if (!champ) return;
+        for (var k = 0; k < boutons.length; k++) (function (b) {
+          if (typeof b.addEventListener !== 'function') return;
+          b.addEventListener('click', function () {
+            var delta = Number(b.getAttribute('data-delta')) || 0;
+            var courant = Number(champ.value);
+            var suivant = (Number.isFinite(courant) && champ.value !== '' ? courant : 0) + delta * pas;
+            var min = champ.getAttribute('min');
+            var max = champ.getAttribute('max');
+            if (min !== null && min !== '' && suivant < Number(min)) suivant = Number(min);
+            if (max !== null && max !== '' && suivant > Number(max)) suivant = Number(max);
+            champ.value = String(Math.round(suivant * 1e6) / 1e6);
+            values[bloc.getAttribute('data-colid')] = champ.value;
+            if (typeof champ.dispatchEvent === 'function' && typeof Event === 'function') {
+              champ.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+        }(boutons[k]));
+      }(blocs[i]));
+    }
+
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
+      brancherCurseurs();
+      brancherCompteurs();
       brancherClassements(fields);
       brancherPositions(fields);
       brancherCartes(fields);
@@ -2150,6 +2298,7 @@
               { creation: enCreation, demarreA: demarreA });
             return defaultSubmit(bridge, formDef, data);
           }).then(function () {
+            memoriserDernieres();
             submitting = false;
             rootEl.innerHTML = renderSuccessHtml(formDef);
           }, function (err) {
@@ -2546,7 +2695,49 @@
       }(blocs[i]));
     }
 
+    /**
+     * Les valeurs de départ : ce qu'une question montre avant que la personne n'y
+     * touche. Elles ne passent jamais devant une valeur déjà donnée (adresse de la
+     * page, ligne qu'on modifie), et ne s'appliquent pas en modification.
+     */
+    var departsAppliques = false;
+    function cleDerniere(field) { return 'fr-forms:' + (formDef.id || '') + ':' + field.colId; }
+    function derniereSaisie(field) {
+      try {
+        if (typeof localStorage === 'undefined') return undefined;
+        var v = localStorage.getItem(cleDerniere(field));
+        return v === null ? undefined : JSON.parse(v);
+      } catch (e) { return undefined; }
+    }
+    function memoriserDernieres() {
+      var api = saisiesApi();
+      if (!api) return;
+      (formDef.sections || []).forEach(function (s) {
+        (s.fields || []).forEach(function (f) {
+          var d = api.departDe(f);
+          if (!d || d.source !== 'derniere') return;
+          var v = values[f.colId];
+          if (v === undefined || v === null || v === '') return;
+          try { if (typeof localStorage !== 'undefined') localStorage.setItem(cleDerniere(f), JSON.stringify(v)); } catch (e) { /* stockage refusé */ }
+        });
+      });
+    }
+    function appliquerDeparts(tardif) {
+      var api = saisiesApi();
+      if (!api || bridge.editRowId || formDef.editRowId) return;
+      (formDef.sections || []).forEach(function (s) {
+        (s.fields || []).forEach(function (f) {
+          if (!api.departDe(f) || api.departTardif(f) !== tardif) return;
+          var courant = values[f.colId];
+          if (courant !== undefined && courant !== null && courant !== '') return;
+          var v = api.valeurDepart(f, { now: new Date(), email: context.userEmail, derniere: derniereSaisie });
+          if (v !== undefined) values[f.colId] = v;
+        });
+      });
+    }
+
     function boot() {
+      appliquerDeparts(false);
       var load = loader();
       var tables = collectRefTableIds(formDef);
       var aud = SessionContext.audienceConfig ? SessionContext.audienceConfig(formDef) : { mode: 'none', probe: false };
@@ -2559,6 +2750,7 @@
         if (ctx) {
           Object.keys(ctx).forEach(function (k) { context[k] = ctx[k]; });
         }
+        appliquerDeparts(true);
         if (!load || !tables.length) { render(); return; }
         Promise.all(tables.map(function (t) {
           if (refRecords[t]) return Promise.resolve();

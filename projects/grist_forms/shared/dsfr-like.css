@@ -550,6 +550,21 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--fond-page); 
 .fr-form .fr-referentiel__etat, .champ-bloc__rendu .fr-referentiel__etat { min-height: 1.5em; margin: 0.35rem 0 0; }
 .fr-form .fr-referentiel__mention, .champ-bloc__rendu .fr-referentiel__mention { margin: 0.1rem 0 0; font-size: 0.8125rem; }
 
+/* Un nombre et son unité ; un curseur et sa valeur ; un compteur et ses deux boutons. */
+.fr-form .fr-nombre__ligne, .champ-bloc__rendu .fr-nombre__ligne,
+.fr-form .fr-compteur__ligne, .champ-bloc__rendu .fr-compteur__ligne { display: flex; align-items: center; gap: 0.5rem; }
+.fr-form .fr-nombre__ligne .fr-input, .champ-bloc__rendu .fr-nombre__ligne .fr-input,
+.fr-form .fr-compteur__ligne .fr-input, .champ-bloc__rendu .fr-compteur__ligne .fr-input { flex: 1 1 auto; min-width: 0; }
+.fr-form .fr-compteur__ligne .fr-btn, .champ-bloc__rendu .fr-compteur__ligne .fr-btn { min-width: var(--cible); min-height: var(--cible); padding: 0; flex: 0 0 auto; }
+.fr-form .fr-unite, .champ-bloc__rendu .fr-unite { color: var(--encre-douce); white-space: nowrap; }
+.fr-form .fr-curseur__ligne, .champ-bloc__rendu .fr-curseur__ligne { display: flex; align-items: center; gap: 0.75rem; }
+.fr-form .fr-curseur__ligne input[type="range"], .champ-bloc__rendu .fr-curseur__ligne input[type="range"] {
+  flex: 1 1 auto; min-height: var(--cible); accent-color: var(--kit-accent, var(--blue-france));
+}
+.fr-form .fr-curseur__valeur, .champ-bloc__rendu .fr-curseur__valeur { min-width: 6rem; text-align: right; color: var(--encre); font-variant-numeric: tabular-nums; }
+.fr-form .fr-curseur__appuis, .champ-bloc__rendu .fr-curseur__appuis { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.fr-form .fr-curseur__preset, .champ-bloc__rendu .fr-curseur__preset { min-height: var(--cible); }
+
 /* Une question dont la valeur vient de l'adresse de la page : on la lit, on ne la change pas. */
 .fr-form .fr-verrouille__valeur, .champ-bloc__rendu .fr-verrouille__valeur {
   margin: 0.25rem 0 0; padding: 0.625rem 0.875rem; min-height: var(--cible); box-sizing: border-box;

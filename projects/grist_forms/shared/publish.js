@@ -83,6 +83,8 @@
     var formatsJs = bundles.formatsJs || '';
     // L'enrichissement d'un lieu par les services publics : sans lui le point reste un point.
     var enrichirJs = bundles.enrichirJs || '';
+    // Départs, bornes et ordre entre deux questions : sans lui ces réglages ne font rien.
+    var saisiesJs = bundles.saisiesJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -98,6 +100,7 @@
       referentielJs,
       formatsJs,
       enrichirJs,
+      saisiesJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',

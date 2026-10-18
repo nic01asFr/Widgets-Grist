@@ -320,7 +320,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, curseur, compteur, heure. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -448,12 +448,10 @@
               "description": "Pas d'une saisie numerique (un nombre, ou `any`)."
             },
             "min": {
-              "type": "number",
-              "description": "Borne basse d'une saisie numerique. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+              "description": "Borne basse : un nombre, ou pour une date `AAAA-MM-JJ` ou `aujourdhui`. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
             },
             "max": {
-              "type": "number",
-              "description": "Borne haute d'une saisie numerique. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
+              "description": "Borne haute : un nombre, ou pour une date `AAAA-MM-JJ` ou `aujourdhui`. Appliquee par le navigateur et, hors de Grist, par la formule de conformite."
             },
             "refTable": {
               "type": "string",
@@ -515,6 +513,44 @@
             },
             "matrice": {
               "description": "Nom de la matrice a laquelle l'echelle se joint."
+            },
+            "depart": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ],
+              "description": "Ce que la question montre avant qu'on y touche. Ne passe jamais devant une valeur deja donnee (adresse de la page, ligne qu'on modifie) et ne s'applique pas en modification. `aujourdhui` (Date), `maintenant` (DateTime, heure), `moi` (Text : le courriel de la personne connectee, si l'hote le sait), `derniere` (la derniere saisie faite sur cet appareil), `valeur` (une valeur fixe).",
+              "properties": {
+                "source": {
+                  "enum": [
+                    "aujourdhui",
+                    "maintenant",
+                    "moi",
+                    "derniere",
+                    "valeur"
+                  ]
+                },
+                "valeur": {
+                  "description": "La valeur fixe quand source = valeur."
+                }
+              }
+            },
+            "unite": {
+              "type": "string",
+              "description": "Unite affichee apres une saisie numerique (h, m, %). N'est pas ecrite dans la cellule."
+            },
+            "presets": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Valeurs d'appui d'un curseur (0, 25, 50, 75, 100)."
+            },
+            "apres": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "description": "colId d'une autre question que celle-ci ne doit pas preceder (une fin apres son debut). Dates, heures et nombres."
             }
           }
         },

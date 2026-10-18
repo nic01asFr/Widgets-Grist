@@ -169,6 +169,12 @@
       out.push('if ' + col + " and not re.match(r'^(SRID=[0-9]+;)?(MULTI)?" + motif + "\\s*Z?\\s*\\(', " + col + '.strip().upper()):');
       out.push('  m.append(' + py(lib + ' : lieu illisible') + ')');
     }
+    var apres = o.apres;
+    if (typeof apres === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(apres)) {
+      // Une des deux valeurs vide ne contredit rien ; les dates, heures (« HH:MM ») et nombres se comparent.
+      out.push('if ' + col + ' and $' + apres + ' and ' + col + ' < $' + apres + ':');
+      out.push('  m.append(' + py(lib + ' : avant « ' + apres + ' »') + ')');
+    }
     var fmt = Formats && Formats.formatDeChamp(field);
     if (fmt) {
       out.push('if ' + col + ' and not fmt_' + fmt + '(' + col + '):');
@@ -361,7 +367,7 @@
    * La page autonome : le moteur, le formulaire figé, et l'envoi par la clé.
    *
    * @param {object} formDef
-   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, prefillJs, engineJs, cssText }
+   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, engineJs, cssText }
    * @param {object} opts     { adresse: <lien du formulaire publié> }
    */
   function buildExternalDocument(formDef, bundles, opts) {
@@ -373,7 +379,7 @@
 
     var script = [
       bundles.typesJs || '', bundles.sessionContextJs || '', bundles.carteJs || '',
-      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.prefillJs || '', bundles.engineJs || '',
+      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.engineJs || '',
       '(function () {',
       '  var DEF = ' + jsonPourScript(formDef || {}) + ';',
       '  var GUICHET = ' + jsonPourScript(guichet.base) + ';',

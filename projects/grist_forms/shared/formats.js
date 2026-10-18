@@ -107,6 +107,9 @@
     else if (s.indexOf('0033') === 0) s = '0' + s.slice(4);
     return s;
   }
+  function validerHeure(v) {
+    return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(normaliserTexte(v));
+  }
   function validerTelephone(v) {
     return /^0[1-9][0-9]{8}$/.test(normaliserTelephone(v));
   }
@@ -177,6 +180,12 @@
       "  s = ('' if v is None else str(v)).strip().upper()",
       "  return bool(re.match(r'^([0-9]{2}|2A|2B)[0-9]{3}$', s))"
     ].join('\n'),
+    heure: [
+      'def fmt_heure(v):',
+      '  import re',
+      "  s = ('' if v is None else str(v)).strip()",
+      "  return bool(re.match(r'^([01][0-9]|2[0-3]):[0-5][0-9]$', s))"
+    ].join('\n'),
     courriel: [
       'def fmt_courriel(v):',
       '  import re',
@@ -201,6 +210,7 @@
     siret: { id: 'siret', libelle: 'SIRET', message: 'Ce n’est pas un SIRET valide (14 chiffres).', normaliser: normaliserChiffres, valider: validerSiret, python: PYTHON.siret },
     codePostal: { id: 'codePostal', libelle: 'Code postal', message: 'Ce n’est pas un code postal (5 chiffres).', normaliser: normaliserChiffres, valider: validerCodePostal, python: PYTHON.codePostal },
     insee: { id: 'insee', libelle: 'Code INSEE de commune', message: 'Ce n’est pas un code INSEE de commune.', normaliser: function (v) { return normaliserTexte(v).toUpperCase(); }, valider: validerInsee, python: PYTHON.insee },
+    heure: { id: 'heure', libelle: 'Heure (HH:MM)', message: 'Ce n’est pas une heure (HH:MM).', normaliser: normaliserTexte, valider: validerHeure, python: PYTHON.heure },
     courriel: { id: 'courriel', libelle: 'Courriel', message: 'Ce n’est pas une adresse de courriel.', normaliser: normaliserTexte, valider: validerCourriel, python: PYTHON.courriel },
     telephone: { id: 'telephone', libelle: 'Téléphone (France)', message: 'Ce n’est pas un numéro de téléphone français.', normaliser: normaliserTelephone, valider: validerTelephone, python: PYTHON.telephone }
   };
@@ -232,7 +242,9 @@
   /** Le format qu'une question demande, ou null. */
   function formatDeChamp(field) {
     var v = field && field.options && field.options.validation;
-    return v && typeof v.format === 'string' && connu(v.format) ? v.format : null;
+    if (v && typeof v.format === 'string' && connu(v.format)) return v.format;
+    // Une question d'heure range du texte « HH:MM » : le format va de soi.
+    return field && field.widget === 'heure' ? 'heure' : null;
   }
 
   /**
