@@ -82,6 +82,11 @@ describe('Enrichir — quels services pour quels sens', () => {
     assert.match(Enrichir.mention({ adresse: 'A', insee: 'I' }), /position choisie est envoyée à .* et .*/);
     assert.equal(Enrichir.mention({ latitude: 'Lat' }), '');
   });
+
+  it('nomme une seule fois un opérateur qui fournit deux services', () => {
+    const m = Enrichir.mention({ adresse: 'A', altitude: 'Alt', insee: 'I' });
+    assert.equal((m.match(/Géoplateforme/g) || []).length, 1, m);
+  });
 });
 
 describe('Enrichir — remplir les colonnes d’un point', () => {

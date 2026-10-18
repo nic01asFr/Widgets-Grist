@@ -151,7 +151,9 @@
   function mention(colonnes) {
     var ids = servicesPour(colonnes);
     if (!ids.length) return '';
-    var qui = ids.map(function (id) { return SERVICES[id].mention; });
+    // Deux services d'un même opérateur ne se nomment qu'une fois.
+    var qui = ids.map(function (id) { return SERVICES[id].mention; })
+      .filter(function (m, i, tous) { return tous.indexOf(m) === i; });
     return 'Pour compléter le lieu, la position choisie est envoyée à ' + qui.join(', ').replace(/, ([^,]*)$/, ' et $1') + '.';
   }
 
