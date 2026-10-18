@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Un orage qui traverse la métropole - une carte de chaleur dans le temps</title>
+<meta name="description" content="Une carte de chaleur dans le temps : un orage simulé traverse la région de Rennes en six heures. Démonstration du composant Atlas, données inventées, prototype.">
+<style>
+  :root {
+    --fond: #f6f4ef; --surface: #ffffff; --encre: #16212b; --doux: #55626f; --trait: #dcd8cf; --marque: #1b5fa8; --marque-clair: #e1edf8; --focus: #1d4ed8; --fort: #8a1c28;
+    --atlas-principal: var(--marque); --atlas-secondaire: #7a4b1f; --atlas-fond: var(--surface); --atlas-encre: var(--encre); --atlas-police: sans;
+    --police: system-ui, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 14px/1.45 var(--police); color: var(--encre); background: var(--fond); }
+  .app { display: grid; grid-template-columns: 340px 1fr; height: 100%; }
+  .zone-carte { position: relative; min-width: 0; height: 100%; }
+  atlas-bi { display: block; min-width: 0; height: 100%; }
+  .credit { position: absolute; left: 10px; bottom: 8px; z-index: 3; margin: 0; padding: 3px 9px; border-radius: 8px; background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--doux); font-size: 11.5px; max-width: calc(100% - 70px); }
+  .panneau { overflow: auto; padding: 18px 18px 14px; background: var(--fond); border-right: 1px solid var(--trait); }
+  h1 { margin: 0 0 6px; font-size: 21px; letter-spacing: -.01em; line-height: 1.2; }
+  .etiquettes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+  .etiquettes li { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--trait); font-size: 12px; color: var(--doux); }
+  .etiquettes li.proto { border-color: var(--fort); color: var(--fort); font-weight: 600; }
+  .sous { margin: 0 0 14px; color: var(--doux); }
+  .bloc { margin: 0 0 12px; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--trait); }
+  .bloc h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--doux); }
+  .heure { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+  .heure output { font-size: 38px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; white-space: nowrap; }
+  .heure span { color: var(--doux); }
+  .commandes { display: flex; align-items: center; gap: 10px; }
+  #lecture { flex: none; min-width: 44px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--marque); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  #lecture:hover { filter: brightness(1.08); }
+  #heure-curseur { flex: 1; min-width: 0; min-height: 44px; accent-color: var(--marque); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .chiffre { display: flex; align-items: baseline; gap: 8px; }
+  .chiffre b { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .chiffre span { color: var(--doux); }
+  .echelle { height: 12px; border-radius: 6px; margin: 4px 0 6px; background: linear-gradient(to right, rgba(27,95,168,.12), #1b5fa8, #0b2c52); }
+  .echelle-legende { display: flex; justify-content: space-between; font-size: 12px; color: var(--doux); }
+  .sources { margin: 14px 2px 0; font-size: 12px; color: var(--doux); }
+  .sources a { color: inherit; }
+  .annonce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    .panneau { order: 2; border-right: 0; border-top: 1px solid var(--trait); padding: 10px 14px; }
+    .zone-carte { order: 1; }
+    h1 { font-size: 17px; } .sous, .sources, .bloc.echelle-bloc { display: none; } .heure output { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <aside class="panneau" aria-label="Commandes du temps">
+    <h1>Un orage qui traverse la métropole</h1>
+    <ul class="etiquettes"><li>Données simulées</li><li class="proto">Prototype</li></ul>
+    <p class="sous">Une cellule orageuse, inventée pour la démonstration, traverse la région de Rennes en six heures. La carte de chaleur la suit, heure après heure, au rythme que la page lui donne.</p>
+
+    <section class="bloc" aria-labelledby="t-temps">
+      <h2 id="t-temps">Le temps</h2>
+      <div class="heure"><output id="heure-texte" for="heure-curseur">13 h 00</output><span id="heure-sous">début de l’épisode</span></div>
+      <div class="commandes">
+        <button type="button" id="lecture" aria-pressed="false">Lire</button>
+        <input id="heure-curseur" type="range" min="13" max="19" step="0.25" value="13" aria-label="Heure de l’épisode" aria-valuetext="13 h 00">
+      </div>
+    </section>
+
+    <section class="bloc" aria-labelledby="t-intensite">
+      <h2 id="t-intensite">À cet instant</h2>
+      <div class="chiffre"><b id="intensite-max">–</b><span>mm/h au plus fort de la cellule</span></div>
+    </section>
+
+    <section class="bloc echelle-bloc" aria-labelledby="t-echelle">
+      <h2 id="t-echelle">Intensité de la pluie</h2>
+      <div class="echelle" aria-hidden="true"></div>
+      <div class="echelle-legende"><span>faible</span><span>forte</span></div>
+    </section>
+
+    <p class="sources">Aucune donnée réelle : la cellule est calculée dans la page. La carte de chaleur avec dimension de temps est un <em>prototype</em> du composant, décrit dans son contrat.</p>
+    <div class="annonce" id="annonce" role="status" aria-live="polite"></div>
+  </aside>
+  <div class="zone-carte"><atlas-bi id="carte" src="../../index.html" charte="herite" fond="plan" evenements-api aria-label="Carte de la cellule orageuse"></atlas-bi><p class="credit">Cellule orageuse simulée · fond © contributeurs OpenStreetMap, OpenFreeMap</p></div>
+</main>
+
+<script type="module">
+import '../../lib/bi/atlas-bi-element.js';
+
+const $ = (id) => document.getElementById(id);
+const carte = $('carte');
+// En développement, l'entrée d'Atlas est index_v7.html : ?atlas=../../index_v7.html
+const atlas = new URLSearchParams(location.search).get('atlas'); if (atlas) carte.setAttribute('src', atlas);
+
+// ---- La simulation : une cellule qui va du sud-ouest au nord-est, pas de réseau ----
+const DEBUT = 13, FIN = 19, PAS = 0.25, POINTS_PAR_INSTANT = 160;
+const DEPART = [-1.82, 48.05], ARRIVEE = [-1.53, 48.2], CENTRE_VUE = [-1.675, 48.125];
+
+/** Un générateur pseudo-aléatoire à graine : la même cellule à chaque ouverture, sans dépendance. */
+function generateur(graine) {
+  let s = graine >>> 0;
+  return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+/** Où est la cellule, quelle taille elle a et quelle force à l'heure `h` (de DEBUT à FIN). */
+function cellule(h) {
+  const s = Math.min(1, Math.max(0, (h - DEBUT) / (FIN - DEBUT)));
+  const cr = Math.sin(Math.PI * s);
+  return {
+    lon: DEPART[0] + (ARRIVEE[0] - DEPART[0]) * s + 0.03 * Math.sin(s * 5),
+    lat: DEPART[1] + (ARRIVEE[1] - DEPART[1]) * s,
+    sigma: 0.018 + 0.014 * cr,
+    pic: Math.round((8 + 34 * Math.pow(cr, 1.2)) * 10) / 10,
+  };
+}
+
+/** Les mesures de pluie d'un instant : des points autour de la cellule, plus intenses près de son centre. */
+function pointsDeLInstant(h, rnd, premierId) {
+  const c = cellule(h), f = [];
+  for (let i = 0; i < POINTS_PAR_INSTANT; i += 1) {
+    const u = Math.max(1e-9, rnd()), a = 2 * Math.PI * rnd(), r = c.sigma * Math.sqrt(-2 * Math.log(u));
+    const dx = r * Math.cos(a), dy = r * Math.sin(a) * 0.72;
+    const intensite = Math.round(c.pic * Math.exp(-(r * r) / (2 * c.sigma * c.sigma)) * (0.7 + 0.3 * rnd()) * 10) / 10;
+    f.push({ type: 'Feature', id: premierId + i, geometry: { type: 'Point', coordinates: [Math.round((c.lon + dx) * 1e5) / 1e5, Math.round((c.lat + dy) * 1e5) / 1e5] }, properties: { heure: h, intensite } });
+  }
+  return f;
+}
+
+function simuler() {
+  const rnd = generateur(20261018), pluie = [], centre = [], heures = [];
+  for (let h = DEBUT; h <= FIN + 1e-9; h += PAS) {
+    const hh = Math.round(h * 100) / 100, c = cellule(hh);
+    heures.push(hh);
+    pluie.push(...pointsDeLInstant(hh, rnd, pluie.length + 1));
+    centre.push({ type: 'Feature', id: 100001 + centre.length, geometry: { type: 'Point', coordinates: [Math.round(c.lon * 1e5) / 1e5, Math.round(c.lat * 1e5) / 1e5] }, properties: { heure: hh, intensite: c.pic } });
+  }
+  return { pluie, centre, heures };
+}
+
+/** 16.5 -> « 16 h 30 ». */
+const heureEnTexte = (h) => { const m = Math.round((h - Math.floor(h)) * 60); return Math.floor(h) + ' h ' + String(m).padStart(2, '0'); };
+// ---- La scène : une carte de chaleur et le centre de la cellule, tous deux datés par `heure` ----
+const DONNEES = simuler();
+const MANIFESTE = {
+  temps: { champ: 'heure', mode: 'instant', pas: PAS, valeur: DEBUT },
+  layers: [
+    { id: 'pluie', name: 'Pluie (mm/h)', geometry_type: 'point', style: { declarative: { kind: 'single', color: '#1b5fa8' } },
+      visuel: { type: 'heat', poids: 'intensite', poidsMax: 42, rayon: 1.7, opacite: 0.88 } },
+    { id: 'centre', name: 'Centre de la cellule', geometry_type: 'point', style: { declarative: { kind: 'single', color: '#16212b' } }, visuel: { type: 'cercles' } },
+  ],
+};
+
+let heure = DEBUT, enLecture = false;
+const intensiteMax = (h) => (DONNEES.centre.find((p) => Math.abs(p.properties.heure - h) < 1e-6) || { properties: { intensite: 0 } }).properties.intensite;
+const sousTitre = (h) => (h <= DEBUT ? 'début de l’épisode' : h >= FIN ? 'fin de l’épisode' : 'la cellule avance vers le nord-est');
+
+function afficher(h, annoncer) {
+  heure = h;
+  const t = heureEnTexte(h);
+  $('heure-texte').textContent = t; $('heure-sous').textContent = sousTitre(h);
+  $('heure-curseur').value = String(h); $('heure-curseur').setAttribute('aria-valuetext', t);
+  const m = intensiteMax(h); $('intensite-max').textContent = String(m);
+  if (annoncer) $('annonce').textContent = t + ' : intensité maximale ' + m + ' millimètres par heure.';
+}
+
+carte.addEventListener('atlas-bi-time', (e) => { const c = e.detail && e.detail.charge; if (c && Number.isFinite(c.valeur)) afficher(c.valeur, !enLecture); });
+carte.addEventListener('atlas-bi-erreur', (e) => { $('annonce').textContent = 'La carte signale une erreur : ' + (e.detail && e.detail.erreur && e.detail.erreur.message || 'inconnue') + '.'; });
+
+$('heure-curseur').addEventListener('input', async (e) => {
+  const h = Number(e.target.value);
+  if (enLecture) { await carte.pause(); enLecture = false; $('lecture').textContent = 'Lire'; $('lecture').setAttribute('aria-pressed', 'false'); }
+  afficher(h, true); await carte.setTime(h);
+});
+
+$('lecture').addEventListener('click', async () => {
+  if (enLecture) { await carte.pause(); enLecture = false; } else {
+    // Revenu au bout, on repart du début ; la lecture reprend sinon là où elle en est.
+    if (heure >= FIN - 1e-6) { await carte.setTime(DEBUT); afficher(DEBUT, false); }
+    await carte.play({ parSeconde: 4, boucle: true }); enLecture = true;
+  }
+  $('lecture').textContent = enLecture ? 'Pause' : 'Lire'; $('lecture').setAttribute('aria-pressed', String(enLecture));
+});
+
+carte.addEventListener('atlas-bi-pret', async () => {
+  try {
+    await carte.setScene(MANIFESTE, { pluie: DONNEES.pluie, centre: DONNEES.centre });
+    await carte.flyTo({ center: CENTRE_VUE, zoom: 9.7, pitch: 0, bearing: 0 });
+    await carte.setTime(DEBUT); afficher(DEBUT, false);
+  } catch (e) { $('annonce').textContent = 'La carte n’a pas pu recevoir la scène : ' + (e && e.message || e); }
+});
+afficher(DEBUT, false);
+</script>
+</body>
+</html>
