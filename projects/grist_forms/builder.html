@@ -3374,6 +3374,40 @@ function renderCibleEtMode(def) {
       <button type="button" onclick="App.onComposeModeChange('ensureSchema')">les créer automatiquement</button></p>`;
 }
 
+/**
+ * Trois colonnes que personne ne remplit à la main : quand la réponse est arrivée, combien de temps
+ * elle a pris, et qui l'a donnée quand l'hôte connaît la personne. Écrites à la création seulement.
+ */
+function renderMetaColonnes(def) {
+  const meta = def.meta || {};
+  const colonnes = S.columnsByTable[def.tableId] || [];
+  const lignes = [
+    ['timestampCol', 'Quand la réponse est arrivée', ['Date', 'DateTime', 'Numeric', 'Int'], 'Écrite en secondes, à la création.'],
+    ['durationCol', 'Combien de temps elle a pris (secondes)', ['Numeric', 'Int'], 'Mesurée depuis le début du questionnaire.'],
+    ['emailCol', 'Le courriel de la personne connectée', ['Text'], 'Rempli seulement quand l’hôte connaît la personne ; jamais demandé dans le formulaire.']
+  ];
+  const champs = lignes.map(([cle, libelle, types, aide]) => {
+    const choix = colonnes.filter(c => types.includes(c.type)).map(c =>
+      `<option value="${esc(c.colId)}" ${meta[cle] === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('');
+    return `<div class="fr-select-group"><label class="fr-label" for="meta-${cle}">${esc(libelle)} ${hintIcon(aide)}</label>
+      <select class="fr-select" id="meta-${cle}" onchange="App.onMeta('${cle}', this.value)">
+        <option value="">— ne pas l’enregistrer —</option>${choix}</select></div>`;
+  }).join('');
+  return `<p class="bloc__intitule">Ce qui s’enregistre sans question <span>quand, combien de temps, qui</span></p>
+      <div class="bloc__duo">${champs}</div>`;
+}
+
+/** Une colonne remplie sans question ; vide : on ne l'écrit pas. */
+function onMeta(cle, valeur) {
+  if (!['timestampCol', 'durationCol', 'emailCol'].includes(cle)) return;
+  marquerModifie();
+  const def = S.currentDef;
+  def.meta = def.meta || {};
+  if (valeur) def.meta[cle] = valeur; else delete def.meta[cle];
+  if (!Object.keys(def.meta).length) delete def.meta;
+  renderBuilder();
+}
+
 /** Ce qu'on compose : l'accueil, une étape, une question, ou la fin. */
 function renderZoneQuestion(def) {
   const sel = S.selection;
@@ -3431,6 +3465,8 @@ function renderZoneQuestion(def) {
           placeholder="Le questionnaire s’adapte à vos réponses…"
           oninput="App.onAccueil('dureeTexte', this.value)">
       </div>` : ''}
+
+      ${renderMetaColonnes(def)}
 
       <p class="bloc__intitule">Les mentions <span>RGPD, conditions, avertissements</span></p>
       ${(acc.encarts || []).map((e, i) => `
@@ -5467,7 +5503,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

@@ -1582,9 +1582,19 @@
       '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
       '</div>' +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
-      escapeHtml((values && values['__enrichi_' + field.colId]) || '') + '</p>' +
+      escapeHtml(phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
       mentionEnrichissement(field) +
       '</div>';
+  }
+
+  /**
+   * « Position relevée à 7 m près. » : dite tant que le point est celui que le GPS a donné. Elle vit dans les
+   * valeurs, pas dans la page, sinon le prochain affichage l'efface avant qu'on ait pu la lire.
+   */
+  function phrasePosition(values, colId, wkt) {
+    var releve = values && values['__precision_' + colId];
+    if (!releve || releve.wkt !== wkt || !Number.isFinite(releve.m)) return '';
+    return 'Position relevée à ' + releve.m + ' m près. ';
   }
 
   /** Ce qui part, et vers qui, quand un lieu complète d'autres colonnes. */
@@ -2669,6 +2679,10 @@
             submitting = false;
             if (demonte) return;
             var enfile = !!(res && res.enfile);
+            // Un rendu planifie par la derniere saisie attend son tour : sans cela il passe APRES l'envoi
+            // et remet le formulaire a la place de la confirmation, alors que la reponse est partie
+            // (la personne renverrait la meme).
+            renduEnAttente = false;
             rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile });
             if (typeof bridge.surEnvoi === 'function') {
               try { bridge.surEnvoi({ enfile: enfile, resultat: res }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
@@ -3119,7 +3133,8 @@
     function afficherEtatLieu(colId, texte) {
       var bloc = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"]');
       var etat = bloc && bloc.querySelector('.fr-geo__etat');
-      if (etat) etat.textContent = texte;
+      var champ = bloc && bloc.querySelector('input[name="' + colId + '"]');
+      if (etat) etat.textContent = phrasePosition(values, colId, champ && champ.value) + texte;
     }
 
     function brancherPositions(champsPage) {

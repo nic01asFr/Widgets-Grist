@@ -112,3 +112,25 @@ describe('Compositeur — les reglages et l\'ajout rapide offrent ce que le mote
     assert.match(moteur, /placeholder="POINT \(5\.37 43\.29\)"/);
   });
 });
+
+describe('Creation des colonnes — celles que le moteur ecrit sans question', () => {
+  const Schema = require('../shared/ensure-schema.js');
+
+  it('cree l\'horodatage, la duree, le courriel et la precision du GPS, une fois chacune', () => {
+    const def = base({ meta: { timestampCol: 'Recue', durationCol: 'Duree', emailCol: 'Courriel' } });
+    const cols = Schema.columnsFromFormDef(def);
+    const parId = Object.fromEntries(cols.map((c) => [c.id, c.type]));
+    assert.equal(parId.Recue, 'DateTime');
+    assert.equal(parId.Duree, 'Int');
+    assert.equal(parId.Courriel, 'Text');
+    assert.equal(parId.Precision, 'Int');
+    assert.equal(cols.filter((c) => c.id === 'Courriel').length, 1);
+  });
+
+  it('ne cree rien de plus sans ces options', () => {
+    const def = base({});
+    delete def.sections[0].fields[0].options;
+    const ids = Schema.columnsFromFormDef(def).map((c) => c.id);
+    assert.deepEqual(ids.sort(), ['A', 'Lieu']);
+  });
+});

@@ -129,6 +129,22 @@ describe('FormEngine.monter — avec un client du contrat', () => {
     assert.ok(root.innerHTML.includes('<option value="2">Lyon</option>'));
   });
 
+  it('la confirmation n’est pas remplacée par le formulaire quand on envoie aussitôt après une saisie', async () => {
+    // Une saisie planifie un rendu (minuterie). L’envoi réussit avant qu’elle ne sonne : sans correctif,
+    // elle remettait le formulaire à la place du « Merci » alors que la réponse était partie.
+    const client = fauxClient(TABLES());
+    const root = createRoot();
+    Engine.monter(root, formdef(), { client, contexte: { role: 'agent' } });
+    await flush();
+    root.querySelector('[name="Nom"]').value = 'Dupont';
+    root.querySelector('[name="Nom"]').dispatchEvent('change');
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush(); await flush();
+    assert.ok(root.innerHTML.includes('Merci !'), 'la confirmation reste affichée');
+    assert.ok(!root.innerHTML.includes('name="Nom"'), 'le formulaire n’est pas revenu');
+    assert.equal(client.ecritures.length, 1, 'une seule réponse partie');
+  });
+
   it('écrit par appliquer(actions, etiquette) en UserActions Grist', async () => {
     const client = fauxClient(TABLES());
     const root = createRoot();
