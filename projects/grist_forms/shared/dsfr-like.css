@@ -938,3 +938,35 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
    formulaire entier se lit en diagonale sur un telephone. */
 .fr-form, .fr-accueil, .fr-synthese { overflow-x: hidden; }
 .fr-form table { max-width: 100%; }
+
+/* ---------------------------------------------------------------
+   Toutes les tailles d'ecran : de 320 px a un grand ecran.
+   > **Un element ne decide jamais de la largeur de la page.** Le canevas
+   > pose sa largeur en pixels ; dans un parent en grille ou en flex, elle
+   > entrait dans le calcul de taille et elargissait tout le formulaire. Il est
+   > donc sorti du flux : la planche a deja sa hauteur, le canevas la remplit.
+   > Les textes reserves aux lecteurs d'ecran avaient le meme defaut : posés en
+   > absolu sans parent positionne, un cadre defilant ne les retenait pas.
+   --------------------------------------------------------------- */
+.fr-dessin__toile { position: absolute; top: 0; left: 0; }
+.fr-rangs__cadre { position: relative; }
+
+/* Une cible tactile fait au moins 44 px, meme quand le dessin est plus petit :
+   la pastille de couleur garde son rond, sa zone sensible deborde. */
+.fr-dessin__couleur { position: relative; }
+.fr-dessin__couleur::after { content: ""; position: absolute; inset: -0.55rem; }
+.fr-dessin__palette { gap: 0.9rem; }
+
+/* Le champ de fichier natif fait une vingtaine de pixels : trop peu au doigt. */
+.fr-form input[type="file"] { min-height: var(--cible, 2.75rem); max-width: 100%; }
+.fr-form input[type="file"]::file-selector-button {
+  min-height: var(--cible, 2.75rem); padding: 0 1rem; margin-right: 0.75rem; cursor: pointer;
+}
+
+/* La grille de classement tient dans un telephone : l'intitule se resserre,
+   les cases gardent 44 px de large. Au-dela de trois rangs, le cadre defile. */
+@media (max-width: 30rem) {
+  .fr-form .fr-rangs__intitule, .champ-bloc__rendu .fr-rangs__intitule { min-width: 6.5rem; }
+  .fr-form .fr-rangs__case, .champ-bloc__rendu .fr-rangs__case { width: 3.25rem; }
+  .fr-form .fr-rangs th, .fr-form .fr-rangs td { padding-left: 0.25rem; padding-right: 0.25rem; }
+}

@@ -51,6 +51,8 @@ La synthèse remet le sens que la définition du formulaire porte.
 | **Adresse** | tape, puis choisit l’adresse qui existe dans la liste | `Text` + colonnes annexes |
 | **Dessin, signature** | dessine, annote une image, signe | `Attachments` |
 
+**Toutes les tailles d'écran** : chaque saisie tient de 320 px à un grand écran, sans défilement horizontal de la page, et chaque cible tactile fait au moins 44 px. La règle et la recette de mesure sont dans `docs/ECRANS.md`.
+
 Les échelles qui se suivent se regroupent en matrice : l'échelle n'est annoncée
 qu'une fois, pas sous chaque ligne.
 

@@ -10,8 +10,8 @@
   :root { --demo-rail: 19rem; }
   body { margin: 0; background: var(--fond-page); color: var(--encre); }
 
-  .demo { display: grid; grid-template-columns: var(--demo-rail) 1fr; min-height: 100vh; }
-  @media (max-width: 52rem) { .demo { grid-template-columns: 1fr; } }
+  .demo { display: grid; grid-template-columns: var(--demo-rail) minmax(0, 1fr); min-height: 100vh; }
+  @media (max-width: 52rem) { .demo { grid-template-columns: minmax(0, 1fr); } }
 
   .demo__rail {
     background: var(--fond-carte);
@@ -36,7 +36,7 @@
   .demo__cas span { display: block; font-size: 0.8125rem; color: var(--encre-douce); margin-top: 0.15rem; }
   .demo__cas em { font-style: normal; font-size: 0.72rem; color: var(--blue-france); }
 
-  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; }
+  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; min-width: 0; }
   .demo__barre { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .demo__note {
     font-size: 0.8125rem; color: var(--encre-douce);
