@@ -7,7 +7,7 @@ le modèle de données, les unités et les décisions ouvertes avant tout dével
 Sources dépouillées :
 - `PDC-GIDI-2026-CGOV181225.xlsx` — plan de charge 2026 (programmation par affaire).
 - `Congés S2_2026 - GIDI.xlsx` — calendrier d'absences (maille demi-journée).
-- Écosystème outils : **Nova / Orchestra PPM** (`cerema.orchestra-ppm.cloud`), **Efficy CRM**.
+- Écosystème outils : **Nova / Orchestra PPM**, **Efficy CRM**.
 
 ---
 
@@ -141,7 +141,7 @@ si besoin d'un niveau au-dessus.
 TaskFlow raisonne en **heures / semaines** ; le PDC en **jours / trimestres**. Deux
 conversions à figer une fois pour toutes :
 
-1. **Jour ↔ heure** : poser `1 j = 7 h` (agent Cerema). `charges` et `estimationH` stockés
+1. **Jour ↔ heure** : poser `1 j = 7 h` (agent de l'organisation). `charges` et `estimationH` stockés
    en heures ; l'affichage Plan peut basculer en **jours** (unité native du Plan). Le
    « potentiel de production » annuel (632 j) se retrouve via `capaciteHebdo × semaines
    travaillées × (1 − indispoFrac)`.

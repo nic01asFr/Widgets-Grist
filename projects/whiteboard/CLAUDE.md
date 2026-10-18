@@ -2,7 +2,7 @@
 
 ## Contexte
 
-Widget Grist de tableau blanc interactif pour l'animation de sessions collaboratives (retrospectives, ateliers, brainstorming). Conçu initialement pour CEREMA Méditerranée / GIDI.
+Widget Grist de tableau blanc interactif pour l'animation de sessions collaboratives (retrospectives, ateliers, brainstorming). Conçu initialement pour une direction territoriale / GIDI.
 
 Fonctionnalités principales :
 - Stickies (post-it) avec couleurs, texte, auteur

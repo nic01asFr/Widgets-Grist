@@ -1,7 +1,7 @@
-# Org-chart — Fonctions #1 (Gestion de l'annuaire) & #4 (Compétences) — étude GENCI
+# Org-chart — Fonctions #1 (Gestion de l'annuaire) & #4 (Compétences)
 
 > L'org-chart devient le **pilier « Personnes & Organisation »** de la suite (le seul non centré-tâche).
-> Ces deux fonctions sont **préparées pour GENCI** : #1 = qui/où + chefs (socle ACL & charge par équipe), #4 = qui-sait-quoi (staffing).
+> Ces deux fonctions sont **préparées pour le commanditaire** : #1 = qui/où + chefs (socle ACL & charge par équipe), #4 = qui-sait-quoi (staffing).
 > Principes : **opt-in**, **configurable**, **non destructif**, écriture via `TF.safeApply` (respect ACL), init **ordonnée**.
 
 ---
@@ -29,7 +29,7 @@ Faire de l'org-chart le **hub de gestion de l'organisation** : créer/éditer la
 ### Init ordonnée (déjà amorcée dans `activateAnnuaire`)
 tables → colonnes → **affichage des Ref par le nom** (`setRefDisplay`) → (à compléter) **colonnes dérivées** (`chaine_chefs`, `agents_geres`, `ancetres`) + **choix `niveau`**. ⇒ tout est parfaitement défini dès l'activation.
 
-### Valeur GENCI
+### Valeur pour le commanditaire
 **Indispensable** : c'est ici qu'on saisit Directions/Services/Équipes + personnes + chefs + **emails** → le **socle de l'ACL** (chefs = droits) et de la **charge par équipe** (#10).
 
 ---
@@ -43,7 +43,7 @@ Savoir **qui sait faire quoi** → **staffing** (mettre la bonne personne sur la
 - **`Competences`** (référentiel) : `nom, categorie (Choice), actif` (+ `description`).
 - **Lien personne ↔ compétence** — deux options :
   - **A (simple)** : `Team.competences` → **RefList:Competences**. Une personne a une liste de compétences.
-  - **B (riche — recommandé GENCI)** : table **`CompetencesAgents`** : `membre (Ref:Team), competence (Ref:Competences), niveau (Choice: notion/confirmé/expert)`. Permet « **qui est EXPERT en X** ».
+  - **B (riche — recommandé)** : table **`CompetencesAgents`** : `membre (Ref:Team), competence (Ref:Competences), niveau (Choice: notion/confirmé/expert)`. Permet « **qui est EXPERT en X** ».
 - **Reco** : **B** (niveau) pour un staffing fin ; A en repli minimal. (Cohérent avec le motif satellite des autres lots.)
 
 ### Intégration dans l'org-chart
@@ -52,7 +52,7 @@ Savoir **qui sait faire quoi** → **staffing** (mettre la bonne personne sur la
 - **Couverture par unité** (gap analysis) : compétences **présentes / manquantes** dans une équipe (roll-up des compétences des membres).
 - **Aide à l'affectation (le cœur)** : croiser **compétence × disponibilité (#3) × charge (période)** → « qui peut prendre cette tâche » = a la compétence **et** est dispo **et** sous-chargé.
 
-### Valeur GENCI
+### Valeur pour le commanditaire
 Le **staffing** est un besoin direct (affectation, plan de charge). Croisé avec charge + dispo, l'org-chart devient un **cockpit de staffing** que la suite n'a pas.
 
 ### Généricité
@@ -61,7 +61,7 @@ Concept universel ; **opt-in** (tables créées seulement si activé) ; **config
 ---
 
 ## La combinaison #1 + #4 = cockpit « Personnes & Organisation »
-Structure (qui / chef) **+** charge (période courante) **+** disponibilité **+** **compétences** → l'org-chart porte les décisions de **staffing** ET de **droits** — exactement ce qui manquait à la suite, et exactement ce dont GENCI a besoin.
+Structure (qui / chef) **+** charge (période courante) **+** disponibilité **+** **compétences** → l'org-chart porte les décisions de **staffing** ET de **droits** — exactement ce qui manquait à la suite, et exactement ce dont le commanditaire a besoin.
 
 | Brique | Donnée | Sert à |
 |---|---|---|
@@ -71,7 +71,7 @@ Structure (qui / chef) **+** charge (période courante) **+** disponibilité **+
 | Charge période | Tasks.charges | qui est libre/surchargé |
 
 ## Phasage proposé
-1. **#1 édition annuaire** : panneau CRUD `Entites`/`Team` + déplacer + supprimer + **import CSV**. *(socle GENCI)*
+1. **#1 édition annuaire** : panneau CRUD `Entites`/`Team` + déplacer + supprimer + **import CSV**. *(socle)*
 2. **#1 init complète** : colonnes dérivées + choix `niveau` dans `activateAnnuaire`.
 3. **#4 schéma compétences** : `Competences` + `CompetencesAgents` (opt-in) + badges sur la fiche agent.
 4. **#4 staffing** : filtre par compétence + croisement compétence × dispo × charge.

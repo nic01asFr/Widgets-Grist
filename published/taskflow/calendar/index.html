@@ -2745,9 +2745,9 @@
             const day = (d) => Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate() + d).getTime() / 1000);
             try {
                 await grist.docApi.applyUserActions([
-                    ['AddRecord', 'Team', null, { nom: 'Alice Martin', email: 'alice@cerema.fr', role: 'Chef de projet', actif: true }],
-                    ['AddRecord', 'Team', null, { nom: 'Bob Durant', email: 'bob@cerema.fr', role: 'Développeur', actif: true }],
-                    ['AddRecord', 'Team', null, { nom: 'Claire Bernard', email: 'claire@cerema.fr', role: 'Designer', actif: true }]
+                    ['AddRecord', 'Team', null, { nom: 'Alice Martin', email: 'alice@exemple.org', role: 'Chef de projet', actif: true }],
+                    ['AddRecord', 'Team', null, { nom: 'Bob Durant', email: 'bob@exemple.org', role: 'Développeur', actif: true }],
+                    ['AddRecord', 'Team', null, { nom: 'Claire Bernard', email: 'claire@exemple.org', role: 'Designer', actif: true }]
                 ]);
                 await grist.docApi.applyUserActions([
                     ['AddRecord', 'Projects', null, { nom: 'Refonte Portail', couleur: '#4f46e5', actif: true }],

@@ -2,14 +2,14 @@
 
 > Cadrage figé (enrichi par benchmark Odoo Timesheets + CRA français + templates Excel).
 > Comble le vrai manque : `tempsPasse` n'est qu'un **total par tâche** ; il manque un **réalisé daté par personne** (le Plan le note « hors cadre, Niveau 3 »).
-> Principes : **opt-in**, **configurable**, **natif Grist**, **réutilise l'existant** (Plan, annuaire/chefs, org-chart, export CSV). Voir [[genci-lot3-annuaire-acl]].
+> Principes : **opt-in**, **configurable**, **natif Grist**, **réutilise l'existant** (Plan, annuaire/chefs, org-chart, export CSV). Voir [[lot3-annuaire-acl]].
 
 ---
 
 ## 1. Pourquoi (besoin JPP #9/#12 + contexte)
 
 - **#9** : page de saisie des temps. **#12** : export Excel des feuilles de temps.
-- Contexte GENCI : dev financé par **tokens / refacturation** → l'**imputation** (code projet/affaire) et l'**export Excel** sont centraux (aujourd'hui fait à la main dans Excel).
+- Contexte : dev financé par **tokens / refacturation** → l'**imputation** (code projet/affaire) et l'**export Excel** sont centraux (aujourd'hui fait à la main dans Excel).
 - **Boucle de la suite** : Plan (planifié) → **CRA (réalisé saisi)** → **Validation par le chef (annuaire)** → **Export Excel**. La hiérarchie déjà construite (`Team.responsable`, `chaine_chefs`) devient le **moteur d'approbation**.
 
 ## 2. Patrons retenus (du benchmark)
@@ -55,7 +55,7 @@
 ## 4. UX — widget `cra.html` (nouveau pilier, standalone)
 
 ### a. Onglet « Ma semaine » (saisie)
-- **Identité** : `getAccessToken().userId` → ma ligne `Team` (pivot, cf. [[genci-lot3-annuaire-acl]]). Fallback sélecteur « Qui suis-je ? » (auto-claim).
+- **Identité** : `getAccessToken().userId` → ma ligne `Team` (pivot, cf. [[lot3-annuaire-acl]]). Fallback sélecteur « Qui suis-je ? » (auto-claim).
 - **Grille hebdo** : lignes = mes tâches (assignées + ajoutables), colonnes = **Lun→Dim**, cellules = quantité (dans l'unité). **Totaux** par ligne, par jour, et **total semaine**.
 - **Pré-remplissage** : lignes initialisées depuis mes `charges` planifiées (Plan) de la semaine → on ne saisit que les écarts.
 - **Navigation** semaine précédente/courante/suivante.
@@ -83,7 +83,7 @@
 
 - Un agent édite **ses** lignes en `brouillon` ; verrouillées dès `soumis`.
 - Le chef valide les feuilles de son **sous-arbre** (`agents_geres` / `chaine_chefs`).
-- Posable via le **même mécanisme que les droits tâches** (colonne précalculée d'emails autorisés + règle ACL substring + bouton « Configurer les droits CRA »). Voir [[genci-lot3-annuaire-acl]] (contraintes ACL : pas de table-ref/traversée/comprehension ; aplatir dans une colonne formule).
+- Posable via le **même mécanisme que les droits tâches** (colonne précalculée d'emails autorisés + règle ACL substring + bouton « Configurer les droits CRA »). Voir [[lot3-annuaire-acl]] (contraintes ACL : pas de table-ref/traversée/comprehension ; aplatir dans une colonne formule).
 
 ## 7. Phasage
 

@@ -1,14 +1,14 @@
-# GENCI — Synthèse de réflexion : répondre au besoin de la meilleure manière
+# Synthèse de réflexion : répondre au besoin de la meilleure manière
 
 > Document de **synthèse stratégique** (cadrage, rien d'implémenté). Consolide nos réflexions.
-> Détail annuaire/ACL : `GENCI_LOT3_ANNUAIRE_ACL.md`. Lots historiques : `COLUMNS_SPEC.md`.
+> Détail annuaire/ACL : `LOT3_ANNUAIRE_ACL.md`. Lots historiques : `COLUMNS_SPEC.md`.
 > Tests à mener dans `projects/tasks_app` (doc Grist de test).
 
 ---
 
-## 1. Le besoin (mail JPP/GENCI, 12/06/2026)
+## 1. Le besoin (mail JPP, 12/06/2026)
 
-Contexte : GENCI veut **embarquer la communauté** + adosser la DINUM ; réunion webu.coop pour la **professionnalisation** (maintenance, bugs urgents, dev d'appoint). Financement direct ou **via tokens**.
+Contexte : le commanditaire veut **embarquer la communauté** + adosser la DINUM ; réunion webu.coop pour la **professionnalisation** (maintenance, bugs urgents, dev d'appoint). Financement direct ou **via tokens**.
 
 Demandes :
 - **Hiérarchie** portefeuille › projet › tâche › sous-tâche › **action**.
@@ -22,7 +22,7 @@ Demandes :
 ## 2. Principes directeurs (nos invariants de conception)
 
 1. **Générique d'abord** : ne rien coder en dur (ni la taxonomie, ni les niveaux, ni les droits). On **configure** — comme les **statuts dynamiques** déjà en place.
-2. **Opt-in (sweet-spot)** : sans les tables/colonnes nouvelles → comportement **actuel inchangé**. La communauté garde le simple ; GENCI active la richesse via un **profil de configuration**.
+2. **Opt-in (sweet-spot)** : sans les tables/colonnes nouvelles → comportement **actuel inchangé**. La communauté garde le simple ; le commanditaire active la richesse via un **profil de configuration**.
 3. **Réutiliser l'existant** : motif récursif `parentTask` (WBS), statuts dynamiques, moteur Whiteboard, pivot `email`, core inliné (`taskflow-core.js`).
 4. **S'appuyer sur le natif Grist** (ACL, import CSV, Ref/lookup) plutôt que recréer un système parallèle.
 5. **Sécurité = serveur** : l'ACL est appliquée par Grist ; les widgets **respectent**, ils ne sécurisent pas.
@@ -93,7 +93,7 @@ Comme les règles sont **génériques et posées une fois**, le plus simple **ET
 
 ## 7. Surfaces & vues — minimalisme
 
-- **Fondation = sans vue nouvelle** : édition **native** des tables (`Entites`/`Team`) + **page ACL native** (snippet collé une fois) + widgets qui **respectent** l'ACL. **GENCI servi sans widget en plus.**
+- **Fondation = sans vue nouvelle** : édition **native** des tables (`Entites`/`Team`) + **page ACL native** (snippet collé une fois) + widgets qui **respectent** l'ACL. **Besoin couvert sans widget en plus.**
 - Le **Plan** absorbe la « charge par équipe » (#10) via un **groupement Équipe** + filtre par sous-arbre.
 
 ---
@@ -105,7 +105,7 @@ Comme les règles sont **génériques et posées une fois**, le plus simple **ET
 - **Multi-usage = justifie la vue** : visualiser la structure + **piloter la répartition** + gérer l'annuaire/chefs + (option) **poser/voir les droits**.
 - **Réalisation — DÉCISION : voie B (widget dédié)** (vanilla, comme les autres widgets) = pilier « Org/pilotage » autonome, cohérent avec « un widget = une lentille ». Coût un peu supérieur à la voie Whiteboard, mais séparation propre. (La voie A « mode Whiteboard » réutilisait canvas/zoom/nœuds/`aggregate*` WBS — écartée.)
 - **Complémentarité** : org-chart = *où est la charge* (vue d'ensemble) ; Plan = *quelle semaine/tâche, réaffecter* (détail).
-- **Pertinence ∝ profondeur de hiérarchie + usage pilotage** → fort pour GENCI, **opt-in** pour équipes plates.
+- **Pertinence ∝ profondeur de hiérarchie + usage pilotage** → fort pour une hiérarchie profonde, **opt-in** pour équipes plates.
 
 ---
 
@@ -129,7 +129,7 @@ Comme les règles sont **génériques et posées une fois**, le plus simple **ET
 
 ---
 
-## 10. Décisions — RETENUES (nic01asfr, 2026-06-18 ; voir `GENCI_FORMULAIRE_DECISIONS.md`)
+## 10. Décisions — RETENUES (nic01asfr, 2026-06-18 ; voir `FORMULAIRE_DECISIONS.md`)
 
 | Q | Décision |
 |---|---|

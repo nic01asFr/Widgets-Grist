@@ -1,4 +1,4 @@
-# GENCI — Lot 3 : Annuaire hiérarchique & ACL (CADRAGE)
+# Lot 3 : Annuaire hiérarchique & ACL (CADRAGE)
 
 > Statut : **cadrage** — rien n'est implémenté. À acter avant tout code.
 > Tests prévus dans `projects/tasks_app` (doc Grist de test), comme pour les lots précédents.
@@ -8,7 +8,7 @@
 
 ## 0. Principes directeurs
 
-1. **Générique** : ne rien coder en dur de la taxonomie GENCI. On *configure* (niveaux), comme les statuts dynamiques.
+1. **Générique** : ne rien coder en dur de la taxonomie du commanditaire. On *configure* (niveaux), comme les statuts dynamiques.
 2. **Opt-in (sweet-spot)** : sans les tables/colonnes d'annuaire → `Team` reste plat = **comportement actuel inchangé**. La hiérarchie + l'ACL ne s'activent que si on les crée.
 3. **Réutilise l'existant** : motif récursif déjà éprouvé (`Tasks.parentTask`, API `walkTree`/`getDepth`/`canSetParent`), statuts dynamiques (niveaux configurables), pivot `email`.
 4. **ACL = native Grist** : le widget *génère* le schéma et *propose* de poser les règles ; il ne *sécurise* pas — c'est Grist qui applique. Écriture ACL **one-shot, owner-only, explicite** (voir §6).
