@@ -1092,6 +1092,7 @@
 <script src="shared/session-context.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
+  <script src="shared/referentiel.js"></script>
   <script src="shared/synthese.js"></script>
   <script src="shared/synthese-vue.js"></script>
 <script src="runtime/engine.js"></script>
@@ -2809,6 +2810,65 @@ function renderReglagesSaisie(def, si, f, fi, isBind) {
       <p class="fr-hint-text">Sans réponse, Grist écrira « non » : une question qui doit distinguer « non » de « sans réponse » se pose en liste de choix.</p>`;
   }
 
+  // ── Adresse : d'ou viennent les propositions, et ou ranger ce qu'elles apportent ──
+  if (f.kind === 'referentiel') {
+    const r = o.referentiel || {};
+    const api = window.FormReferentiel;
+    const source = r.source || 'ban';
+    const connue = !!(api && api.sourceConnue(source));
+    const sens = connue ? api.annexesDe(source) : {};
+    const annexes = cols.annexes || {};
+    const colonnes = S.columnsByTable[def.tableId] || [];
+    const frappe = r.declenchement === 'frappe';
+
+    const ligneAnnexe = (cle) => {
+      const modele = sens[cle];
+      const courant = annexes[cle] || '';
+      if (isBind) {
+        // Une table qui existe : on choisit une colonne du bon type, sans en retaper le nom.
+        // Pas la colonne du texte lui-même : y ranger un code postal écraserait l'adresse.
+        const memeType = colonnes.filter((c) => c.type === modele.type && c.colId !== f.colId);
+        return `
+          <div class="fr-select-group">
+            <label class="fr-label" for="ann-${si}-${fi}-${cle}">${esc(modele.label)}</label>
+            <select class="fr-select" id="ann-${si}-${fi}-${cle}"
+              onchange="App.onReferentielAnnexe(${si}, ${fi}, '${cle}', this.value)">
+              <option value="">— ne pas l’enregistrer —</option>${optCols(memeType, courant)}
+            </select>
+          </div>`;
+      }
+      // Une table à créer : on coche, et le nom se déduit — il n'y a pas de colonne à choisir.
+      return `
+        <div class="fr-checkbox-group">
+          <input type="checkbox" id="ann-${si}-${fi}-${cle}" ${courant ? 'checked' : ''}
+            onchange="App.onReferentielAnnexeCase(${si}, ${fi}, '${cle}', this.checked)">
+          <label class="fr-label" for="ann-${si}-${fi}-${cle}">${esc(modele.label)}
+            ${courant ? `<span class="fr-hint-text">colonne « ${esc(courant)} »</span>` : ''}</label>
+        </div>`;
+    };
+
+    return `
+      ${connue ? '' : `<div class="fr-alert fr-alert--warning"><p>La source « ${esc(source)} » n’est pas connue de ce moteur : le champ restera un champ texte.</p></div>`}
+      <div class="fr-select-group">
+        <label class="fr-label" for="ref-src-${si}-${fi}">Source des propositions ${hintIcon('Aujourd’hui : la Base Adresse Nationale, par le service de géocodage de la Géoplateforme.')}</label>
+        <select class="fr-select" id="ref-src-${si}-${fi}" onchange="App.onReferentiel(${si}, ${fi}, 'source', this.value)">
+          <option value="ban" selected>${esc(api && api.SOURCES.ban ? api.SOURCES.ban.nom : 'Base Adresse Nationale')}</option>
+        </select>
+      </div>
+      <div class="fr-select-group">
+        <label class="fr-label" for="ref-decl-${si}-${fi}">Quand chercher ${hintIcon('Sur validation, rien n’est envoyé au service que la personne n’ait demandé : c’est le plus prudent, une adresse étant souvent celle d’une personne. À la frappe, chaque pause envoie un début d’adresse.')}</label>
+        <select class="fr-select" id="ref-decl-${si}-${fi}" onchange="App.onReferentiel(${si}, ${fi}, 'declenchement', this.value)">
+          <option value="validation" ${frappe ? '' : 'selected'}>Quand la personne valide (Entrée ou bouton) — recommandé</option>
+          <option value="frappe" ${frappe ? 'selected' : ''}>À mesure qu’elle tape</option>
+        </select>
+      </div>
+      ${connue ? `
+      <p class="bloc__intitule">Ce que la liste apporte <span>enregistré à côté du texte, pour l’adresse choisie seulement</span></p>
+      ${Object.keys(sens).map(ligneAnnexe).join('')}
+      <p class="fr-hint-text">Si la personne corrige l’adresse après l’avoir choisie, ces colonnes restent vides : elles décriraient une autre adresse. Sans réponse du service, ce qu’elle tape est enregistré tel quel.</p>
+      <p class="fr-hint-text">${esc(api.SOURCES[source].mention)} Cette mention s’affiche sous le champ.</p>` : ''}`;
+  }
+
   // ── Dessin : ce qu'on demande de composer ──
   if (f.widget === 'dessin') {
     const d = o.dessin || {};
@@ -3117,6 +3177,7 @@ function natureCourte(f) {
   // Grist : une géométrie se range dans du texte, et ce n'est pas du texte.
   if (f.kind === 'echelle') return 'échelle';
   if (f.kind === 'geometrie' || f.widget === 'geo') return 'lieu';
+  if (f.kind === 'referentiel') return 'adresse';
   if (f.kind === 'classement' || f.widget === 'classement') return 'classement';
   if (f.widget === 'ouinon') return 'oui/non';
   if (f.widget === 'radio') return 'choix en boutons';
@@ -3887,6 +3948,19 @@ function onFieldTypeChange(si, fi, value) {
 function onFieldTypeKeyChange(si, fi, key) {
   const f = S.currentDef.sections[si].fields[fi];
   FormUx.applyTypeKey(f, key);
+  f.options = f.options || {};
+  if (f.kind === 'referentiel') {
+    // Une adresse sans source n'est qu'un champ texte : on pose la seule connue.
+    if (!f.options.referentiel) f.options.referentiel = { source: 'ban' };
+  } else {
+    // On quitte l'adresse : ses reglages et ses colonnes annexes s'en vont avec elle,
+    // sans quoi un champ ordinaire garderait la trace de ce qu'il n'est plus.
+    delete f.options.referentiel;
+    if (f.options.colonnes) {
+      delete f.options.colonnes.annexes;
+      if (!Object.keys(f.options.colonnes).length) delete f.options.colonnes;
+    }
+  }
   renderBuilder();
 }
 
@@ -3895,6 +3969,45 @@ function onFieldChoices(si, fi, text) {
   const f = S.currentDef.sections[si].fields[fi];
   const list = text.split('\n').map(s => s.trim()).filter(Boolean);
   if (f.colId) S.currentDef.choices[f.colId] = list;
+}
+
+/** D'ou viennent les propositions d'une adresse, et quand la recherche part. */
+function onReferentiel(si, fi, cle, valeur) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  const r = f.options.referentiel || (f.options.referentiel = { source: 'ban' });
+  marquerModifie();
+  if (cle === 'declenchement') {
+    // La validation est le defaut : on ne l'ecrit pas, pour que le FormDef dise ce qui est choisi.
+    if (valeur === 'frappe') r.declenchement = 'frappe'; else delete r.declenchement;
+  } else {
+    r[cle] = valeur;
+  }
+  renderBuilder();
+}
+
+/** Associer un sens (code postal, coordonnees…) a une colonne qui existe. */
+function onReferentielAnnexe(si, fi, cle, colId) {
+  const f = S.currentDef.sections[si].fields[fi];
+  f.options = f.options || {};
+  f.options.colonnes = f.options.colonnes || {};
+  const annexes = f.options.colonnes.annexes || (f.options.colonnes.annexes = {});
+  marquerModifie();
+  if (colId) annexes[cle] = colId; else delete annexes[cle];
+  if (!Object.keys(annexes).length) delete f.options.colonnes.annexes;
+  renderBuilder();
+}
+
+/** Les noms de colonnes qu'on propose quand la table est a creer. */
+const SUFFIXES_ANNEXES = {
+  codePostal: 'CodePostal', commune: 'Commune', insee: 'Insee',
+  latitude: 'Latitude', longitude: 'Longitude', identifiant: 'IdBan'
+};
+
+/** Table a creer : cocher un sens fixe le nom de sa colonne, qu'on n'a pas a inventer. */
+function onReferentielAnnexeCase(si, fi, cle, coche) {
+  const f = S.currentDef.sections[si].fields[fi];
+  onReferentielAnnexe(si, fi, cle, coche ? ((f.colId || 'Adresse') + '_' + (SUFFIXES_ANNEXES[cle] || cle)) : '');
 }
 
 /** Ce que le canevas demande de composer. */
@@ -4833,8 +4946,8 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, engineJs, cssText] =
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -4842,6 +4955,7 @@ async function publishForm() {
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
       fetchScriptSource('shared/dessin.js'),
+      fetchScriptSource('shared/referentiel.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -4849,7 +4963,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -4916,6 +5030,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

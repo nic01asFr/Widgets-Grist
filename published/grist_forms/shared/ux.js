@@ -35,6 +35,8 @@
     { key: 'geo', type: 'Text', widget: 'geo', kind: 'geometrie', label: 'Lieu (position)' },
     // Un dessin arrive dans la base comme une photo : en piece jointe.
     { key: 'dessin', type: 'Attachments', widget: 'dessin', label: 'Dessin / annotation' },
+    // Une adresse choisie dans une liste vaut mieux qu'une adresse inventee.
+    { key: 'adresse', type: 'Text', widget: 'text', kind: 'referentiel', label: 'Adresse (propositions)' },
     { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
     // La case a cocher reste disponible : une acceptation de conditions n'est
     // pas une question a deux reponses, c'est un accord qu'on donne ou non.
@@ -69,6 +71,13 @@
     if (field.widget === 'file' || field.type === 'Attachments') return 'file';
     var all = SIMPLE_TYPES.concat(ADVANCED_TYPES);
     var i;
+    // Un `kind` qui a son propre type se reconnait avant le widget : une adresse
+    // est un champ texte pour Grist, et sans cela elle se lirait comme du texte.
+    if (field.kind) {
+      for (i = 0; i < all.length; i++) {
+        if (all[i].kind && all[i].kind === field.kind) return all[i].key;
+      }
+    }
     // Le widget d'abord : « oui/non » et « case a cocher » ont le meme type
     // Grist, et c'est la maniere de poser la question qui les distingue.
     for (i = 0; i < all.length; i++) {

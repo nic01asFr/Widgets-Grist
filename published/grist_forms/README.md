@@ -1,8 +1,9 @@
 # Form Builder — des formulaires qui vivent dans votre document Grist
 
 Composer un questionnaire, le mettre en ligne, voir ce que les réponses disent :
-le tout dans un document Grist, sans service tiers et sans recopier quoi que ce
-soit. Les réponses arrivent directement dans vos tables, dans les colonnes que
+le tout dans un document Grist, sans service tiers entre la réponse et votre
+table (le seul appel extérieur est celui du champ d’adresse, s’il en pose un) et
+sans recopier quoi que ce soit. Les réponses arrivent directement dans vos tables, dans les colonnes que
 vous avez choisies.
 
 ---
@@ -45,10 +46,39 @@ La synthèse remet le sens que la définition du formulaire porte.
 | Référence | choisit une ligne d'une autre table | `Ref`, `RefList` |
 | Fichier, photo | joint, ou photographie sur son téléphone | `Attachments` |
 | **Lieu** | pose un point, trace un trajet ou un contour sur une carte | `Text` (WKT) |
+| **Adresse** | tape, puis choisit l’adresse qui existe dans la liste | `Text` + colonnes annexes |
 | **Dessin, signature** | dessine, annote une image, signe | `Attachments` |
 
 Les échelles qui se suivent se regroupent en matrice : l'échelle n'est annoncée
 qu'une fois, pas sous chaque ligne.
+
+### Le champ d’adresse
+
+La personne tape une adresse, valide (Entrée ou bouton), et choisit dans la liste
+des adresses qui existent. La source est la Base adresse nationale, servie par la
+Géoplateforme (service de l’État) ; aucun compte ni clé n’est nécessaire.
+
+- **Ce qui part** : les caractères tapés, à la validation seulement (réglage par
+  défaut). On peut demander la recherche à la frappe (`declenchement: "frappe"`),
+  avec une requête par seconde au plus. Une mention le dit sous le champ.
+- **Ce qui est écrit** : l’adresse complète dans la colonne de la question ; et,
+  dans des colonnes annexes que vous nommez, le code postal, la commune, le code
+  INSEE, la latitude, la longitude, l’identifiant de l’adresse
+  (`options.colonnes.annexes`, par sens : `codePostal`, `commune`, `insee`,
+  `latitude`, `longitude`, `identifiant`).
+- **Garde-fou** : les annexes ne valent que pour une adresse choisie dans la liste.
+  Un texte libre, ou modifié après le choix, laisse les annexes vides.
+- **Si le service ne répond pas** : la saisie libre reste possible.
+- **Mode « créer le schéma »** : les colonnes annexes sont créées avec le bon type
+  (texte pour les codes, nombre pour les coordonnées).
+
+```json
+{ "colId": "Adresse", "kind": "referentiel", "type": "Text",
+  "options": { "referentiel": { "source": "ban" },
+               "colonnes": { "annexes": { "codePostal": "AdresseCP",
+                                          "latitude": "AdresseLat",
+                                          "longitude": "AdresseLon" } } } }
+```
 
 ---
 

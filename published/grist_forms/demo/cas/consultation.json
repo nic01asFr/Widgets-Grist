@@ -78,14 +78,10 @@
               "Plus rarement"
             ]
           },
-          "visibleIf": {
-            "all": [
-              {
-                "field": "Lien",
-                "op": "!=",
-                "value": "Je n’y viens jamais"
-              }
-            ]
+          "condition": {
+            "field": "Lien",
+            "operator": "!=",
+            "value": "Je n’y viens jamais"
           }
         }
       ]
@@ -165,7 +161,6 @@
           "label": "Qu’attendez-vous de la future place ?",
           "type": "ChoiceList",
           "widget": "multiselect",
-          "help": "Trois réponses au maximum.",
           "options": {
             "choices": [
               "De l’ombre",
@@ -257,7 +252,6 @@
           "type": "Text",
           "widget": "geo",
           "kind": "geometrie",
-          "help": "Touchez la carte à l’endroit concerné.",
           "options": {
             "geometrie": "Point",
             "carte": {

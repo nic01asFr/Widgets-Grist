@@ -7,18 +7,35 @@
     module.exports = factory(
       require('../shared/types.js'),
       require('../shared/attachments.js'),
-      require('../shared/session-context.js')
+      require('../shared/session-context.js'),
+      require('../shared/referentiel.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel) {
   'use strict';
 
   Attachments = Attachments || {};
   SessionContext = SessionContext || {};
+
+  /**
+   * Le module des référentiels, s'il est là.
+   *
+   * Un hôte peut ne pas l'embarquer (un formulaire publié avant son arrivée,
+   * une copie du moteur qui n'en a jamais eu) : le champ reste alors un champ
+   * texte, qui enregistre ce qu'on y tape. Il est cherché à l'appel et pas
+   * seulement au chargement, parce que l'ordre des scripts n'est pas toujours
+   * celui qu'on croit.
+   */
+  function referentielApi() {
+    if (Referentiel && Referentiel.sourceConnue) return Referentiel;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormReferentiel && global.FormReferentiel.sourceConnue
+      ? global.FormReferentiel : null;
+  }
 
   function normalizeEmail(v) {
     if (SessionContext.normalizeEmail) return SessionContext.normalizeEmail(v);
@@ -190,6 +207,27 @@
     return out;
   }
 
+  /**
+   * Les colonnes annexes d'un référentiel : écrites pour l'adresse CHOISIE.
+   *
+   * Si le texte du champ n'est plus celui de l'adresse choisie, ou s'il n'y en
+   * a jamais eu, les annexes valent `null` : elles videraient sinon, dans la
+   * ligne, ce qu'une adresse précédente y avait posé, ou lui feraient dire le
+   * contraire de ce que le texte annonce.
+   */
+  function ecrireAnnexes(out, field, values) {
+    var annexes = colonnesDe(field).annexes || {};
+    var choisi = values[field.colId + SUFFIXE_CHOISI];
+    var valide = choisi != null && choisi !== '' &&
+      espacesNormalises(values[field.colId]) === choisi;
+    Object.keys(annexes).forEach(function (cle) {
+      var col = annexes[cle];
+      if (!col) return;
+      var v = valide ? values[col] : null;
+      out[col] = (v === undefined || v === '') ? null : v;
+    });
+  }
+
   function collectSubmitData(formDef, values, context, opts) {
     opts = opts || {};
     var out = {};
@@ -211,6 +249,13 @@
           }
           (caches.rangs || []).forEach(function (c) { out[c] = null; });
           if (caches.autre) out[caches.autre] = null;
+          // Seulement pour un référentiel : des annexes que rien ne remplit ne
+          // sont pas à vider (un champ qui a changé de type en garderait la trace).
+          if (field.kind === 'referentiel') {
+            Object.keys(caches.annexes || {}).forEach(function (cle) {
+              if (caches.annexes[cle]) out[caches.annexes[cle]] = null;
+            });
+          }
           continue;
         }
         var brut = values[field.colId];
@@ -231,6 +276,9 @@
           var libre = values[cols.autre];
           out[cols.autre] = (valeurAutreChoisie(field, values) && libre) ? String(libre) : null;
         }
+        // Une adresse choisie dans la liste apporte ses annexes ; une adresse
+        // tapee, ou corrigee apres le choix, n'en apporte aucune.
+        if (field.kind === 'referentiel') ecrireAnnexes(out, field, values);
       }
     }
 
@@ -575,6 +623,64 @@
     var ph = field && field.options && field.options.placeholder;
     if (ph == null || ph === '') return '';
     return ' placeholder="' + escapeHtml(String(ph)) + '"';
+  }
+
+  /** Les blancs superflus ne font pas une autre adresse. */
+  function espacesNormalises(texte) {
+    return String(texte == null ? '' : texte).replace(/\s+/g, ' ').trim();
+  }
+
+  /**
+   * La clé où le moteur retient quelle adresse a été CHOISIE dans la liste.
+   *
+   * > **Les colonnes annexes ne valent que pour l'adresse choisie.** Après
+   * > « 8 Boulevard du Port 80000 Amiens », on peut corriger le numéro : le
+   * > code postal et les coordonnées qui restent seraient ceux d'une autre
+   * > porte. La valeur retenue ici sert à reconnaître ce cas — si le texte du
+   * > champ n'est plus celui de l'adresse choisie, les annexes ne sont pas
+   * > écrites. Mieux vaut des annexes vides qu'une adresse et des coordonnées
+   * > qui se contredisent.
+   *
+   * Ce n'est pas une colonne : `collectSubmitData` parcourt les champs, pas les
+   * valeurs, et cette clé n'est donc jamais écrite.
+   */
+  var SUFFIXE_CHOISI = '__choisi';
+
+  /**
+   * Une saisie qui propose des adresses qui existent, sur un champ texte.
+   *
+   * Le champ reste un champ texte : sans le module, ou pour une source qu'il ne
+   * connaît pas, c'est exactement celui d'avant, et la saisie s'enregistre
+   * telle quelle. Rien n'est promis qu'on ne sait pas tenir.
+   *
+   * Par défaut la recherche part sur validation (Entrée ou bouton) : rien
+   * n'est envoyé au service que la personne n'ait demandé. La frappe est une
+   * option, qui assume d'envoyer un préfixe de l'adresse à chaque pause.
+   */
+  function renderReferentiel(field, value) {
+    var o = (field && field.options && field.options.referentiel) || {};
+    var api = referentielApi();
+    var source = String(o.source || '');
+    if (!api || !api.sourceConnue(source)) return renderTextLike(field, value, false);
+
+    var id = fieldId(field);
+    var frappe = o.declenchement === 'frappe';
+    var reqAttr = field.required ? ' required' : '';
+    var val = value == null ? '' : value;
+    var mention = api.SOURCES[source].mention + (frappe ? '' : ' La recherche ne part que lorsque vous la lancez.');
+
+    return '<div class="fr-input-group fr-referentiel" data-colid="' + escapeHtml(field.colId) + '" ' +
+      'data-referentiel-de="' + escapeHtml(field.colId) + '" data-source="' + escapeHtml(source) + '" ' +
+      'data-declenchement="' + (frappe ? 'frappe' : 'validation') + '">' +
+      renderLabel(field, id) +
+      '<div class="fr-referentiel__ligne">' +
+      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+      'value="' + escapeHtml(val) + '" autocomplete="off" data-referentiel-champ' + reqAttr + placeholderAttr(field) + ' />' +
+      (frappe ? '' : '<button type="button" class="fr-btn fr-btn--secondary fr-referentiel__bouton">Rechercher</button>') +
+      '</div>' +
+      '<p class="fr-hint-text fr-referentiel__etat" role="status" aria-live="polite"></p>' +
+      '<p class="fr-hint-text fr-referentiel__mention">' + escapeHtml(mention) + '</p>' +
+      '</div>';
   }
 
   function renderTextLike(field, value, multiline) {
@@ -1230,6 +1336,9 @@
     var parDefaut = Types && Types.defaultWidget ? Types.defaultWidget(field && field.type) : 'text';
     var renderer = WIDGET_RENDERERS[field && field.widget] ||
       WIDGET_RENDERERS[parDefaut] || WIDGET_RENDERERS.text;
+    // Un référentiel remplace la saisie texte plutôt que de s'y superposer : la
+    // liste de suggestions vit dans le champ lui-même.
+    if (field && field.kind === 'referentiel') renderer = renderReferentiel;
     var html = renderIllustration(field) + renderer(field, value, optionsList, formDef);
     // Un `kind` est une couche posee sur la saisie, pas un widget de plus :
     // « Autre : … » s'ajoute a la liste deroulante comme aux cases a cocher.
@@ -1481,9 +1590,33 @@
       for (var j = 0; j < fields.length; j++) {
         var colId = fields[j].colId;
         if (Object.prototype.hasOwnProperty.call(fournies, colId)) out[colId] = fournies[colId];
+        if (fields[j].kind === 'referentiel') amorcerAnnexes(fields[j], fournies, out);
       }
     }
     return out;
+  }
+
+  /**
+   * Modifier une ligne qui porte déjà une adresse choisie.
+   *
+   * Les colonnes annexes ne sont pas des champs : `initialValues` ne les
+   * recopiait pas, et la première modification d'une AUTRE question de la ligne
+   * aurait effacé le code postal et les coordonnées. On les ramène, et on tient
+   * l'adresse pour choisie tant que son texte ne change pas — c'est ce que dit
+   * la présence d'annexes à côté d'un texte.
+   */
+  function amorcerAnnexes(field, fournies, out) {
+    var annexes = colonnesDe(field).annexes || {};
+    var presentes = false;
+    Object.keys(annexes).forEach(function (cle) {
+      var col = annexes[cle];
+      if (!col || !Object.prototype.hasOwnProperty.call(fournies, col)) return;
+      var v = fournies[col];
+      out[col] = v;
+      if (v !== null && v !== undefined && v !== '' && v !== 0) presentes = true;
+    });
+    var texte = espacesNormalises(out[field.colId]);
+    if (presentes && texte) out[field.colId + SUFFIXE_CHOISI] = texte;
   }
 
   /**
@@ -1807,6 +1940,9 @@
     var cartes = {};
     // Les dessins, par colonne : le modele survit au re-rendu, pas le canevas.
     var dessins = {};
+    // Les listes d'adresses vivantes, par colonne : on les detruit avant chaque
+    // re-rendu, qui remplace le champ qu'elles habitent.
+    var referentiels = {};
 
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
@@ -1815,8 +1951,16 @@
       brancherPositions();
       brancherCartes(fields);
       brancherDessins();
+      brancherReferentiels();
       var inputs = rootEl.querySelectorAll('input, select, textarea');
       for (var i = 0; i < inputs.length; i++) {
+        // > **Un `change` redessine le formulaire, et le formulaire redessiné
+        // > n'a plus la liste.** Sur un champ texte, `change` part quand on
+        // > valide — c'est-à-dire sur Entrée, l'instant même où la recherche
+        // > d'adresse se lance : la liste serait détruite avant d'arriver. Le
+        // > champ gère sa propre valeur ; elle se relit au changement d'étape.
+        if (typeof inputs[i].getAttribute === 'function' &&
+            inputs[i].getAttribute('data-referentiel-champ') !== null) continue;
         if (typeof inputs[i].addEventListener === 'function') {
           inputs[i].addEventListener('change', function () {
             readSectionValues(rootEl, fields, values);
@@ -2006,6 +2150,71 @@
           if (attente) attente.textContent = 'La zone de dessin n’a pas pu être chargée.';
         });
       }(hotes[i]));
+    }
+
+    /**
+     * Les champs d'adresse : brancher la liste de suggestions.
+     *
+     * Le champ est détruit et recréé à chaque rendu ; la liste, ses minuteurs et
+     * sa requête en vol, eux, ne le sont pas d'eux-mêmes. On les détruit donc
+     * tous avant de rebrancher ceux que le rendu a remis à l'écran — sans cela,
+     * une réponse arrivée trop tard écrirait dans un champ qui n'existe plus.
+     *
+     * Sans module (hôte qui ne l'embarque pas) ou hors navigateur, rien n'est
+     * branché : le champ reste un champ texte.
+     */
+    function brancherReferentiels() {
+      Object.keys(referentiels).forEach(function (cle) {
+        referentiels[cle].detruire();
+        delete referentiels[cle];
+      });
+      var api = referentielApi();
+      if (!api || typeof api.monter !== 'function' || typeof document === 'undefined') return;
+      var hotes = rootEl.querySelectorAll('.fr-referentiel[data-referentiel-de]');
+      for (var i = 0; i < hotes.length; i++) (function (hote) {
+        var colId = hote.getAttribute('data-referentiel-de');
+        var champ = hote.querySelector('input[data-referentiel-champ]');
+        var def = trouverChamp(colId);
+        if (!champ || !def) return;
+        var annexes = colonnesDe(def).annexes || {};
+        referentiels[colId] = api.monter(champ, {
+          source: hote.getAttribute('data-source'),
+          declenchement: hote.getAttribute('data-declenchement'),
+          hote: hote,
+          etat: hote.querySelector('.fr-referentiel__etat'),
+          bouton: hote.querySelector('.fr-referentiel__bouton'),
+          onTexte: function (texte) {
+            values[colId] = texte;
+            // Le texte a bougé : l'adresse choisie n'est plus celle qu'il dit.
+            var choisi = values[colId + SUFFIXE_CHOISI];
+            if (choisi !== undefined && espacesNormalises(texte) !== choisi) {
+              delete values[colId + SUFFIXE_CHOISI];
+              Object.keys(annexes).forEach(function (cle) {
+                if (annexes[cle]) delete values[annexes[cle]];
+              });
+            }
+          },
+          onChoisir: function (s) {
+            values[colId] = s.libelle;
+            values[colId + SUFFIXE_CHOISI] = espacesNormalises(s.libelle);
+            Object.keys(annexes).forEach(function (cle) {
+              if (annexes[cle]) values[annexes[cle]] = s[cle] === undefined ? null : s[cle];
+            });
+          }
+        });
+      }(hotes[i]));
+    }
+
+    /** Un champ du formulaire, par sa colonne. */
+    function trouverChamp(colId) {
+      var sections = (formDef && formDef.sections) || [];
+      for (var i = 0; i < sections.length; i++) {
+        var fields = sections[i].fields || [];
+        for (var j = 0; j < fields.length; j++) {
+          if (fields[j].colId === colId) return fields[j];
+        }
+      }
+      return null;
     }
 
     /** Poser un fichier produit dans le champ cache, comme s'il avait ete choisi. */
@@ -2231,7 +2440,7 @@
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.
     WIDGETS: Object.keys(WIDGET_RENDERERS),
-    KINDS: ['echelle', 'choix_autre', 'classement', 'geometrie'],
+    KINDS: ['echelle', 'choix_autre', 'classement', 'geometrie', 'referentiel'],
     VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
     echelleDe: echelleDe,
     grouperParMatrice: grouperParMatrice,

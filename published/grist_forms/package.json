@@ -1,6 +1,6 @@
 {
   "name": "grist-forms",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Form Builder Grist — composer, remplir et dépouiller des formulaires dans un document",
   "authors": [
     {
