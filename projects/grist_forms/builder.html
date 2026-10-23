@@ -245,7 +245,7 @@
      Trois colonnes stables : le parcours, le formulaire tel qu'il sera vu, et
      ce qu'on règle. Ouvrir un réglage ne déplace plus ce qu'on regarde. */
   .atelier3 {
-    display: grid; grid-template-columns: 13.5rem minmax(0, 1fr) 27rem;
+    display: grid; grid-template-columns: 13.5rem minmax(0, 1fr) clamp(20rem, 32%, 27rem);
     gap: 1px; background: var(--grey-925, #e5e5e5);
     border: 1px solid var(--grey-925, #e5e5e5); border-radius: 8px; overflow: hidden;
     height: calc(100vh - 7.5rem);
@@ -324,10 +324,23 @@
   .canevas__titre-public { font-size: 1.3rem; margin: 0; }
   .section-card__retirer { margin-top: 0.6rem; color: var(--rouge, #ce0500); font-size: 0.84rem; }
 
-  @media (max-width: 78rem) {
-    .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); }
-    .inspecteur { grid-column: 1 / -1; max-height: 26rem; }
+  /* Les trois colonnes tiennent dès 58 rem : en dessous, les réglages passent sous la page d'édition
+     (et prennent la moitié de la hauteur au lieu d'une part fixe). */
+  @media (max-width: 58rem) {
+    .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 46%); }
+    .inspecteur { grid-column: 1 / -1; max-height: none; }
   }
+
+  /* Le compositeur remplit exactement la hauteur que Grist donne au widget : la fenêtre ne défile
+     pas (la barre d'étapes et la barre d'enregistrement restent en place), seules les trois
+     colonnes défilent chacune pour elle-même. */
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; }
+  .app-main { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+  .app-main > .builder-step:not([hidden]) { flex: 0 0 auto; width: 100%; box-sizing: border-box; }
+  #builder.builder-step:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #builder .atelier3 { flex: 1 1 auto; min-height: 0; height: auto; }
+  #builder .barre-enregistrement { position: static; flex: 0 0 auto; margin-top: 0; }
   @media (max-width: 48rem) {
     .atelier3 { grid-template-columns: 1fr; height: auto; }
     .rail { max-height: 11rem; }
@@ -2263,7 +2276,7 @@ function renderBuilder() {
   el.innerHTML = `
     <div class="atelier3">
       <nav class="rail" aria-label="Parcours du formulaire">
-        <p class="colonne__role">Parcours</p>
+        <p class="colonne__role">Pages du formulaire</p>
         ${renderRailEtapes(def)}
       </nav>
       <div class="canevas" id="canevas">${renderCanevas(def)}</div>
@@ -2465,7 +2478,7 @@ function renderInspecteur(def) {
       <button type="button" role="tab" class="inspecteur__onglet${onglet === 'reglages' ? ' est-actif' : ''}"
         aria-selected="${onglet === 'reglages'}" onclick="App.inspecteur('reglages')">Réglages</button>
       <button type="button" role="tab" class="inspecteur__onglet${onglet === 'controle' ? ' est-actif' : ''}"
-        aria-selected="${onglet === 'controle'}" onclick="App.inspecteur('controle')">Contrôle${soucis.length ? ' (' + soucis.length + ')' : ''}</button>
+        aria-selected="${onglet === 'controle'}" onclick="App.inspecteur('controle')">Vérifications${soucis.length ? ' (' + soucis.length + ')' : ''}</button>
     </div>
     <div class="inspecteur__corps">
       ${onglet === 'reglages' ? renderZoneQuestion(def) : renderControle(def, soucis)}
@@ -2584,7 +2597,7 @@ function renderCanevas(def) {
           <button type="button" class="champ-bloc__action" title="Dupliquer" onclick="App.dupliquerChamp(${si}, ${fi})">⧉</button>
           <select class="champ-bloc__deplacer" title="Déplacer vers une autre étape"
             onchange="App.deplacerVersEtape(${si}, ${fi}, this.value); this.selectedIndex = 0;">
-            <option value="">→ étape…</option>
+            <option value="">Déplacer vers la page…</option>
             ${def.sections.map((sec, k) => k === si ? '' : `<option value="${k}">${k + 1}. ${esc(sec.label || '')}</option>`).join('')}
           </select>
           <button type="button" class="champ-bloc__action" title="Régler cette question"
