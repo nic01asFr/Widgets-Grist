@@ -2247,6 +2247,12 @@ function renderBuilder() {
   const cols = S.columnsByTable[def.tableId] || [];
   const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
 
+  // Un réglage change, le panneau est redessiné : on garde la position de lecture
+  // et les blocs repliables ouverts (ceux qui portent un identifiant).
+  const avant = el.querySelector('.inspecteur');
+  const defile = avant ? avant.scrollTop : 0;
+  const ouverts = Array.prototype.map.call(el.querySelectorAll('details[id][open]'), d => d.id);
+
   el.innerHTML = `
     <div class="atelier3">
       <nav class="rail" aria-label="Parcours du formulaire">
@@ -2263,6 +2269,9 @@ function renderBuilder() {
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
+  ouverts.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
+  const apres = el.querySelector('.inspecteur');
+  if (apres && defile) apres.scrollTop = defile;
   monterCarteDeComposition();
 }
 
@@ -3506,6 +3515,19 @@ function choixDeQuestion(def, f) {
  * Le formulaire lit ce qui est pris et ferme ce qui est plein ; la table tranche par ordre d'arrivée (colonne
  * « Place ») quand deux envois se croisent. Voir docs/LIMITES.md.
  */
+/** Une limite incomplète ou fausse se dit ici : elle serait sinon ignorée sans que personne ne le sache. */
+function alerteLimites(def) {
+  const verdict = (window.FormLimites && def.limites) ? FormLimites.normaliser(def.limites) : { erreurs: [] };
+  return verdict.erreurs.length
+    ? `<div class="fr-alert fr-alert--warning fr-mt-1w" role="status"><p>${verdict.erreurs.map(esc).join('<br>')}</p></div>` : '';
+}
+
+/** Remet l'alerte à jour sans redessiner le panneau (le champ en cours de saisie garde le focus). */
+function majAlerteLimites() {
+  const z = (typeof document !== 'undefined' && document.getElementById) ? document.getElementById('lim-alerte') : null;
+  if (z && S.currentDef) z.innerHTML = alerteLimites(S.currentDef);
+}
+
 function renderLimites(def) {
   const L = def.limites || {};
   const toutes = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []);
@@ -3539,10 +3561,7 @@ function renderLimites(def) {
   const msg = L.messages || {};
   const champMsg = (cle, libelle, defaut) => `<div class="fr-input-group"><label class="fr-label" for="lim-msg-${cle}">${libelle}</label>
     <input class="fr-input" id="lim-msg-${cle}" value="${esc(msg[cle] || '')}" placeholder="${esc(defaut)}" oninput="App.onLimite('msg:${cle}', this.value)"></div>`;
-  // Une limite incomplète ou fausse se dit ici : elle serait sinon ignorée sans que personne ne le sache.
-  const verdict = (window.FormLimites && def.limites) ? FormLimites.normaliser(def.limites) : { erreurs: [] };
-  const alerte = verdict.erreurs.length
-    ? `<div class="fr-alert fr-alert--warning fr-mt-1w" role="status"><p>${verdict.erreurs.map(esc).join('<br>')}</p></div>` : '';
+  const alerte = `<div id="lim-alerte">${alerteLimites(def)}</div>`;
   return `<p class="bloc__intitule">Limites de participation <span>places, dates d’ouverture</span></p>
     <p class="fr-hint-text">Le formulaire annonce les places qui restent et ferme ce qui est plein. Il ne peut pas refuser seul : la colonne « Place » de la table tranche par ordre d’arrivée quand deux envois se croisent.</p>
     <div class="bloc__duo">
@@ -3558,7 +3577,7 @@ function renderLimites(def) {
     <div class="fr-select-group"><label class="fr-label" for="lim-ajout">Limiter les places d’une question</label>
       <select class="fr-select" id="lim-ajout" onchange="App.onLimiteChoix(-1, 'ajouter', this.value); this.selectedIndex = 0;">
         <option value="">Choisir une question…</option>${ajoutables.map(f => `<option value="${esc(f.colId)}">${esc(f.label || f.colId)}</option>`).join('')}</select></div>
-    <details class="fr-mt-1w"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
+    <details class="fr-mt-1w" id="lim-details"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
       <div class="bloc__duo">
         <div class="fr-select-group"><label class="fr-label" for="lim-sauf">Une ligne ne compte pas quand cette colonne vaut…</label>
           <select class="fr-select" id="lim-sauf" onchange="App.onLimite('saufCol', this.value)">
@@ -3594,7 +3613,7 @@ function onLimite(cle, valeur) {
     if (!Object.keys(L.messages).length) delete L.messages;
   }
   if (!Object.keys(L).length) delete def.limites;
-  if (cle === 'placeCol' || cle === 'saufCol') renderBuilder();
+  if (cle === 'placeCol' || cle === 'saufCol') renderBuilder(); else majAlerteLimites();
 }
 
 /** Une limite par choix : ajouter une question, régler ses places, la retirer. */
@@ -3622,7 +3641,7 @@ function onLimiteChoix(i, cle, valeur, choix) {
   }
   if (!L.parChoix.length) delete L.parChoix;
   if (!Object.keys(L).length) delete def.limites;
-  if (cle === 'ajouter' || cle === 'retirer' || cle === 'capaciteCol') renderBuilder();
+  if (cle === 'ajouter' || cle === 'retirer' || cle === 'capaciteCol') renderBuilder(); else majAlerteLimites();
 }
 
 /** Une colonne remplie sans question ; vide : on ne l'écrit pas. */

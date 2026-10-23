@@ -28,7 +28,7 @@ function extraire(nom) {
 function banc(def) {
   const S = { currentDef: def };
   const appels = { rendus: 0 };
-  const code = ['estReference', 'onLimite', 'onLimiteChoix'].map(extraire).join('\n');
+  const code = ['estReference', 'majAlerteLimites', 'onLimite', 'onLimiteChoix'].map(extraire).join('\n');
   const f = new Function('S', 'marquerModifie', 'renderBuilder', code + '; return { onLimite, onLimiteChoix };');
   const api = f(S, () => {}, () => { appels.rendus++; });
   return Object.assign({ S, appels }, api);
