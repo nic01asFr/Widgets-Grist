@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.28.4 — valider un manifeste avant de l'envoyer, et l'état initial des contrôles
+
+- **`validerManifeste`** (`lib/bi/valider-manifeste.js`, module pur sans dépendance, importable par un serveur) : dit, avant `setScene`, les écarts que `setScene` laisse passer en silence : `kind` inconnu, champ absent des propriétés des données, `breaks`/`colors` au lieu de `stops`, palier sans couleur, clé inconnue, contrôle sans identifiant, identifiants d'entités non entiers ou en double. Il ne corrige rien. Adresse : `<adresse publique>/lib/bi/valider-manifeste.js`.
+- **État initial d'un contrôle** (documenté et testé) : `controls[{ id, type, field, active: true, values | min/max | texte }]` s'applique au montage et est rejoué à chaque `setScene`.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.28.3 — les repères ne disparaissent plus quand une police du fond manque
 
 - **Marqueurs à états** (correctif du composant) : le texte d'un marqueur sans valeur était un tiret demi-cadratin « – », caractère hors de la plage 0-255 de la police ; quand le serveur de polices du plan IGN répondait 502 pour la plage qui le porte (8192-8447), MapLibre ne dessinait plus la couche, repères compris. Le tiret est maintenant un tiret ASCII « - ». Mesuré avec un serveur de polices qui échoue sur cette plage seule : 0 repère avec « – », 3 avec « - » ; `text-optional` n'y changeait rien.

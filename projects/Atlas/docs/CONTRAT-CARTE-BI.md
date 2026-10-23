@@ -240,5 +240,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.28.0 | 0.3 | couche de lignes : `visuel.largeur` (nombre, ou `{ champ, min, max, lMin, lMax }`) et `visuel.opacite`. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.28.2 | 0.3 | l'événement `connexion` d'un repli automatique par les tuiles porte `diagnostic { echecs, message, statut, nom, sourceId }` ; une police de caractères en erreur ne compte plus comme une tuile en échec. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.28.3 | 0.3 | le texte d'un marqueur à états sans valeur est le tiret ASCII « - » (et non « – ») : une plage de police en erreur ne fait plus disparaître la couche. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
+| 1.28.4 | 0.3 | module `lib/bi/valider-manifeste.js` (validation d'un manifeste avant `setScene`, hors contrat) ; l'état initial d'un contrôle (`active`, `values`/`min`/`max`/`texte`) est documenté au §4. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
