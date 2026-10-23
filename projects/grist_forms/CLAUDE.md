@@ -48,6 +48,9 @@ projects/grist_forms/
 ├── docs/THEMEDEF-SPEC.md    # ThemeDef 1.0 (brouillon relu) : document de thème éditable ; le moteur ne le lit pas, l'hôte oui
 ├── docs/LIMITES.md          # Limiter participants, réponses, durée d'ouverture ; ce que la table tranche (formule Place)
 ├── docs/EXPOSITION.md       # Trois façons de partager, qui lit quoi, règles d'accès, ce qui est mesuré ou non
+├── docs/ETUDE-INSCRIPTION.md        # Inscription à des créneaux : ce qui est tenu (mesuré), ce qui ne l'est pas, ce qu'on peut faire
+├── docs/ETUDE-MODES-ET-ACCES.md     # Cinq modes (connectés, public, iframe, clé hors Grist, hybride), qui lit quoi ; mode B mesuré en réel
+├── docs/ETUDE-CRENEAUX-CALENDRIER.md  # Créneaux datés, calendrier et standards TaskFlow, ICS, chevauchement (étude, rien de codé)
 ├── docs/MIGRATION-CONDITIONS.md  # Ce qui change pour qui écrit un FormDef (10/10/2026)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
@@ -92,7 +95,7 @@ projet) : Atlas (`index_v7.html`, `packages/atlas-app` — sept scripts vendoris
 
 ### Le mode « externe » et ses quatre briques (18/10/2026)
 
-Prouvé en Grist réel sur un document d'essai ; détail et mesures : `docs/ENVOI-EXTERNE.md`. `node --test` → **446 tests**.
+Prouvé en Grist réel sur un document d'essai ; détail et mesures : `docs/ENVOI-EXTERNE.md`. `node --test` → **944 tests** (au 23/10/2026).
 
 - **Une règle, deux exécutions.** `formats.js` porte chaque format en JavaScript et en Python ; la formule `Motifs` de la table de réception est **exécutée en Python par les essais**
   (`tests/externe.test.js`, `tests/formats.test.js`). Sans Python sur le poste, ces essais se sautent et le disent.
@@ -413,7 +416,22 @@ Widget Grist → cette URL, accès **full**. E2E auto : `?e2e=1` uniquement.
 - **Qui voit les réponses** (`docs/EXPOSITION.md`) : un formulaire dans le document est une page de ce document ; ses
   participants en sont éditeurs. Le compositeur propose trois réglages et pose des règles d'accès **sur confirmation
   seulement**, sans jamais modifier une règle existante. **Grist refuse une règle placée après une règle sans condition** :
-  une seule règle finale (`+C-RUDS`). Non mesuré : le comportement d'un éditeur non propriétaire (voir le document).
+  une seule règle finale (`+C-RUDS`). **Mesuré en réel (23/10/2026, mode public)** : un anonyme en rôle Éditeur ajoute une ligne,
+  ne lit que la colonne `Place`, ne peut ni modifier, ni supprimer, ni toucher à la structure ; non mesuré avec un compte
+  connecté non propriétaire (voir `docs/ETUDE-MODES-ET-ACCES.md`).
+- **Document partagé avec le public** : la case de l'écran « Qui voit les réponses ? » impose « tout le reste caché »
+  (sinon un anonyme pourrait modifier la structure des autres tables) ; une règle `*`/`*` déjà fermante est gardée telle
+  quelle. Le partage public lui-même reste l'affaire d'un propriétaire.
+- **Une seule réponse par personne** (`limites.unique`) : la table tranche (`Doublon` dans la colonne `Place`), le
+  formulaire ne lit jamais le courriel des autres. **Le formulaire compte les places d'après `Place`** (lisible sans rien
+  révéler) : une liste d'attente ou un doublon ne ferme pas le formulaire à tort.
+- **Maximum par choix dans la question** (`Nombre de réponses par choix`) ; vocabulaire des limites neutre (rien n'est
+  propre aux « ateliers ») ; messages par défaut génériques.
+- **Compositeur** : un redessin ne déplace plus la fenêtre ni les zones qui défilent (`DEFILEMENTS`, hauteur figée),
+  mise en page pleine hauteur sans défilement de fenêtre, trois colonnes dès 58 rem ; `colonnesExistantes()` lit toutes
+  les colonnes (formules comprises) pour ne pas recréer `Place` à chaque enregistrement ; une colonne créée
+  automatiquement est une colonne de données (`isFormula: false`), pas une « colonne vide » ; une question sans colonne
+  ne fait plus refuser toute la ligne (`KeyError ''`).
 - **Régler une question en cliquant dessus** : la carte entière l'ouvre (la roue reste).
 - **Piège d'écriture** : les heredocs `python - <<EOF` transforment les séquences à antislash (retour à la ligne, escapes
   unicode) ; écrire les fichiers avec l'outil d'édition. Sous Windows, Python lit l'entrée standard en cp1252 :

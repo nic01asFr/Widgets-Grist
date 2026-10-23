@@ -15,6 +15,7 @@
   ],
   "sauf": { "colId": "Statut", "valeurs": ["Annulé", "Refusé"] },
   "placeCol": "Place",
+  "unique": { "colId": "Courriel" },
   "messages": { "complet": "Complet, merci de votre intérêt." }
 }
 ```
@@ -26,15 +27,16 @@
 | `parChoix[].max` | un nombre (le même pour tous les choix) ou `{ choix: places }` ; un choix sans entrée est illimité |
 | `parChoix[].capaciteCol` | pour une **référence** : la colonne de la table liée qui porte les places de chaque ligne — la personne qui gère les ateliers les modifie dans Grist, pas dans le formulaire |
 | `sauf` | les lignes qui ne comptent pas : une annulation libère une place |
-| `placeCol` | crée une colonne à formule (`Confirmé` / `Liste d'attente`), voir plus bas |
+| `placeCol` | crée une colonne à formule (`Confirmé` / `Liste d'attente` / `Doublon`), voir plus bas ; le formulaire s'en sert pour compter (une réponse en liste d'attente ou en doublon ne remplit pas le formulaire) |
+| `unique` | une seule réponse par personne, reconnue à cette colonne (son courriel : la comparaison ignore la casse et les espaces) ; la première réponse est retenue, les suivantes sont marquées `Doublon` et ne prennent la place de personne. Une réponse annulée (`sauf`) libère l'adresse. Active la colonne `Place` d'office |
 | `messages` | `complet`, `ferme`, `pasOuvert`, `choixComplet` (accepte `{choix}`) |
 
-Le compositeur règle tout cela dans l'**accueil** du formulaire (« Limites de participation »). Une limite incomplète est dite à l'écran, jamais ignorée en silence.
+Le compositeur règle le total, les dates et l'unicité dans l'**accueil** du formulaire (« Limiter les réponses »), et le **maximum par choix dans la question elle-même** (« Nombre de réponses par choix »), avec les vrais choix de la question : le même réglage vaut pour des places d'atelier, des créneaux, des portions ou des salles. Une limite incomplète est dite à l'écran, jamais ignorée en silence.
 
 ## Ce que voit la personne qui répond
 
 - Chaque choix limité annonce ses places : « Cuisine — 3 places restantes », ou « Jardin — complet » (désactivé).
-- Total atteint, hors fenêtre, ou pas encore ouvert : un message à la place du formulaire (« Inscriptions complètes », « Inscriptions closes », « Pas encore ouvert — ouverture le 1er novembre 2026 »).
+- Total atteint, hors fenêtre, ou pas encore ouvert : un message à la place du formulaire (titres « Complet », « Fermé », « Pas encore ouvert — ouverture le 1er novembre 2026 » ; phrases par défaut neutres : « Le nombre maximum de réponses est atteint. », « Ce formulaire est fermé. », « Ce formulaire n'est pas encore ouvert. », modifiables).
 - À l'envoi, le formulaire **relit** ce qui est pris. Si un choix est devenu plein entre-temps, rien n'est écrit, le choix est ôté de la réponse et le message le dit.
 
 ## Ce qu'un formulaire ne sait pas faire seul
@@ -55,7 +57,7 @@ Le formulaire compte en **lisant** la table des réponses. Trois situations :
 | Où est le formulaire | Peut-il compter ? |
 |---|---|
 | Dans le document, personne avec accès en lecture à la table | oui |
-| Dans le document, avec des règles d'accès qui cachent les réponses | seulement si la colonne comptée (et celle de `sauf`) reste lisible — voir `docs/EXPOSITION.md` : le réglage « Les participants ne voient pas les réponses » la laisse lisible, sans les noms ni courriels |
+| Dans le document, avec des règles d'accès qui cachent les réponses | seulement si la colonne comptée (celles de `sauf` et `placeCol`) reste lisible — voir `docs/EXPOSITION.md` : le réglage « Les participants ne voient pas les réponses » la laisse lisible, sans les noms ni courriels |
 | Page hors de Grist (clé de formulaire) | **non** : la clé n'écrit que, elle ne lit rien. Seule la fenêtre d'ouverture s'applique à l'écran ; la colonne `Place` trie après coup ; arrêter les inscriptions = dépublier le formulaire natif |
 
 Quand la table n'est pas lisible, le formulaire **n'invente aucun chiffre** : il n'annonce pas de places et ne bloque personne. Seule la fenêtre d'ouverture s'applique.
