@@ -43,6 +43,15 @@ Deux options : **qui garde tous les droits** en plus des propriétaires (par cou
 
 Form Builder **n'applique rien sans votre confirmation**, ne **modifie jamais** une règle existante, et marque les siennes (`form-builder:<identifiant>`) pour pouvoir les **retirer d'un geste**. S'il trouve déjà des règles sur la même table, il s'arrête et propose les règles à poser à la main. Les propriétaires gardent toujours tous les droits.
 
+### Un document partagé avec le public (personnes sans compte)
+
+Case « Le document est partagé avec le public, sans compte » de l'écran. Le partage public lui-même (rôle Éditeur) se règle dans « Partager » de Grist **par un propriétaire** ; Form Builder n'y touche pas. Ce que la case change :
+
+- **« Tout le reste caché » devient obligatoire.** Un éditeur anonyme, sans cette règle, pourrait aussi modifier la structure (colonnes, tables, pages) des autres tables : le droit de schéma se retire par la règle posée sur tout le reste du document.
+- **Personne n'est identifié** : le courriel ou le nom qu'on tape est déclaratif. Une règle « une seule réponse par personne » écarte les doublons d'une même adresse, pas une adresse inventée.
+- **Pièces jointes** : un anonyme peut téléverser un fichier sans que les règles s'appliquent (mesuré le 18/10/2026, limite d'instance 10 Mo) ; l'écran le dit si le formulaire en comporte.
+- **Le formulaire compte les places à partir de la colonne « Place »**, la seule lisible quand tout le reste est caché : elle ne dit rien d'une personne (Confirmé, Liste d'attente, Doublon). Une réponse en liste d'attente ou en doublon ne ferme donc pas le formulaire à tort.
+
 ### Ce qui est mesuré, ce qui ne l'est pas
 
 Mesuré sur une instance Grist de service public (document d'essai) :

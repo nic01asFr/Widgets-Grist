@@ -122,6 +122,12 @@
    *   `regles` : [{ tableId, colIds, aclFormula, permissionsText, memo }] dans l'ordre d'évaluation :
    *   colonnes précises, puis la table, puis le reste du document.
    */
+  function champsFichiers(def) {
+    return ((def && def.sections) || []).some(function (s) {
+      return (s.fields || []).some(function (f) { return f && (f.type === 'Attachments' || f.widget === 'file' || f.widget === 'photo'); });
+    });
+  }
+
   function planRegles(def, opts) {
     opts = opts || {};
     var out = { ok: true, erreurs: [], avertissements: [], resume: [], regles: [] };
@@ -143,6 +149,10 @@
       return out;
     }
 
+    // Un document partagé avec le public (personnes sans compte, rôle Éditeur) : sans « le reste caché », un
+    // anonyme pourrait aussi modifier la structure des autres tables. La règle est donc posée d'office.
+    var enPublic = !!opts.public;
+    var defautRefus = !!opts.defautRefus || enPublic;
     var memo = memoDe(def);
     var staff = conditionGestion(gest);
     var retenu = def.limites && Limites ? Limites.normaliser(def.limites).limites : null;
@@ -182,7 +192,7 @@
     }
 
     // 4. Le reste du document.
-    if (opts.defautRefus) {
+    if (defautRefus) {
       regle('*', '*', staff, '+CRUDS');
       regle('*', '*', '', '-CRUDS');
     } else {
@@ -200,7 +210,11 @@
       : 'Les participants ajoutent une réponse ; ils ne lisent aucune réponse (ni les leurs) et ne peuvent ni modifier ni supprimer.');
     if (comptees.length) out.resume.push('Restent lisibles pour compter les places : ' + comptees.join(', ') + ' (sans noms ni courriels).');
     if (liees.length) out.resume.push('Lisibles, en lecture seule : ' + liees.join(', ') + '.');
-    out.resume.push(opts.defautRefus ? 'Tout le reste du document est caché aux participants.' : 'Le reste du document n’est pas touché.');
+    out.resume.push(defautRefus ? 'Tout le reste du document est caché aux participants.' : 'Le reste du document n’est pas touché.');
+    if (enPublic) {
+      out.avertissements.push('Accès public : personne n’est identifié, ce que la personne tape (son courriel, son nom) est déclaratif et peut être inventé. Le partage public se règle dans « Partager » de Grist, par un propriétaire : Form Builder n’y touche pas.');
+      if (champsFichiers(def)) out.avertissements.push('Une question de pièce jointe est présente : un anonyme peut téléverser un fichier sans que les règles s’appliquent (mesuré) ; la limite d’instance est de 10 Mo par fichier.');
+    }
     return out;
   }
 

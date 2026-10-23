@@ -235,3 +235,31 @@ describe('Accès — retirer, sans toucher à ce qui n\'est pas à nous', () => 
     assert.equal(A.modePose(def(), { regles: [{ memo, aclFormula: 'user.Email and rec.Courriel == user.Email' }] }), 'propres');
   });
 });
+
+describe('Accès — un document partagé avec le public', () => {
+  it('cache le reste du document d\'office : sinon un anonyme pourrait modifier la structure des autres tables', () => {
+    const p = A.planRegles(def(), { mode: 'ajout-seul', public: true });
+    assert.equal(p.ok, true);
+    const dernieres = lire(p.regles).slice(-2);
+    assert.deepEqual(dernieres[1], ['*', '*', '-CRUDS', '']);
+    assert.match(p.resume.join(' '), /Tout le reste du document est caché/);
+  });
+
+  it('prévient que personne n\'est identifié, et que le partage public est l\'affaire du propriétaire', () => {
+    const w = A.planRegles(def(), { mode: 'ajout-seul', public: true }).avertissements.join(' ');
+    assert.match(w, /personne n’est identifié/);
+    assert.match(w, /Form Builder n’y touche pas/);
+  });
+
+  it('prévient d\'un téléversement de pièce jointe sans garde', () => {
+    const d = def();
+    d.sections[0].fields.push(champ('Photo', 'Attachments', { widget: 'file' }));
+    assert.match(A.planRegles(d, { mode: 'ajout-seul', public: true }).avertissements.join(' '), /sans que les règles s’appliquent/);
+    assert.doesNotMatch(A.planRegles(def(), { mode: 'ajout-seul', public: true }).avertissements.join(' '), /pièce jointe/);
+  });
+
+  it('sans accès public, le reste du document n\'est pas touché par défaut', () => {
+    const l = lire(A.planRegles(def(), { mode: 'ajout-seul' }).regles);
+    assert.ok(!l.some((r) => r[0] === '*'));
+  });
+});

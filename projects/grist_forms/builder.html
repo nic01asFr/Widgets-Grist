@@ -5561,7 +5561,7 @@ function renderAccesBloc() {
   const def = S.currentDef;
   if (!A || !def) return '';
   const a = etatAcces();
-  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
   const pose = a.existant ? A.modePose(def, a.existant) : null;
   const modes = Object.keys(A.MODES).map(k => `
     <div class="fr-radio-group"><input type="radio" id="acc-m-${k}" name="acces-mode" value="${k}" ${a.mode === k ? 'checked' : ''} onchange="App.onAcces('mode', '${k}')">
@@ -5581,7 +5581,10 @@ function renderAccesBloc() {
       <div class="fr-input-group"><label class="fr-label" for="acc-gest">Qui garde tous les droits, en plus des propriétaires du document (un courriel par ligne)
         ${hintIcon('Les propriétaires gardent toujours tous les droits. Ajoutez ici les personnes qui gèrent les réponses sans être propriétaires : sans cela, elles seraient traitées comme des participants.')}</label>
         <textarea class="fr-input" id="acc-gest" rows="2" oninput="App.onAcces('gestionnaires', this.value)">${esc(a.gestionnaires)}</textarea></div>
-      <div class="fr-checkbox-group"><input type="checkbox" id="acc-defaut" ${a.defautRefus ? 'checked' : ''} onchange="App.onAcces('defautRefus', this.checked)">
+      <div class="fr-checkbox-group"><input type="checkbox" id="acc-public" ${a.public ? 'checked' : ''} onchange="App.onAcces('public', this.checked)">
+        <label class="fr-label" for="acc-public">Le document est partagé avec le public, sans compte
+          <span class="fr-hint-text">Une personne sans compte peut répondre (rôle Éditeur du public). Les règles d’accès sont alors la seule protection : « tout le reste caché » est imposé, et personne n’est identifié.</span></label></div>
+      <div class="fr-checkbox-group"><input type="checkbox" id="acc-defaut" ${(a.defautRefus || a.public) ? 'checked' : ''} ${a.public ? 'disabled' : ''} onchange="App.onAcces('defautRefus', this.checked)">
         <label class="fr-label" for="acc-defaut">Cacher aussi le reste du document aux participants
           <span class="fr-hint-text">Sinon ils voient encore les autres tables et pages. À cocher si le document n’est partagé qu’avec eux ; à éviter si des collègues non propriétaires y travaillent.</span></label></div>
       ${plan.erreurs.length ? `<div class="fr-alert fr-alert--error fr-mt-1w"><p>${plan.erreurs.map(esc).join('<br>')}</p></div>` : ''}
@@ -5637,7 +5640,7 @@ async function accesAppliquer() {
   const def = S.currentDef;
   const a = etatAcces();
   if (!A || !def) return;
-  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
   if (!plan.ok || !plan.regles.length) return;
   if (!a.lu) { a.message = 'Lisez d’abord les règles du document : on ne pose rien sans savoir ce qui existe.'; renderPublishStep(); return; }
   const pose = A.actionsPose(plan.regles, a.existant);
@@ -5684,7 +5687,7 @@ async function accesRetirer() {
 async function accesCopier() {
   const A = window.FormAcces;
   const a = etatAcces();
-  const plan = A.planRegles(S.currentDef, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  const plan = A.planRegles(S.currentDef, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
   const texte = plan.regles.map(r => [r.tableId === '*' ? 'Tout le reste' : r.tableId, 'colonnes : ' + (r.colIds === '*' ? 'toutes' : r.colIds),
     'si : ' + (r.aclFormula || '(sinon)'), 'droits : ' + r.permissionsText].join(' | ')).join('\n');
   try { await navigator.clipboard.writeText(texte); a.message = 'Règles copiées.'; }
