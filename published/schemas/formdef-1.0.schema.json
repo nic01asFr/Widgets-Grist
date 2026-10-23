@@ -174,6 +174,131 @@
         }
       }
     },
+    "limites": {
+      "type": "object",
+      "description": "Jusqu'ou le formulaire accepte de reponses : un atelier de 12 places, une fenetre d'ouverture, un plafond. Le formulaire LIT ce qui est deja pris (table lisible par la personne qui repond) et ferme ce qui est plein ; la table TRANCHE par une formule d'ordre d'arrivee (shared/limites.js, `formulePlace`) quand deux envois se croisent. Une table illisible ne bloque personne : seule la fenetre d'ouverture s'applique.",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Nombre maximal de reponses."
+        },
+        "placeCol": {
+          "type": "string",
+          "description": "Nom de la colonne a formule (Confirme / Liste d'attente) que la table tient par ordre d'arrivee : c'est elle qui tranche quand deux envois se croisent, et la seule garantie pour une page hors de Grist. Creee avec la table ; une colonne deja la n'est pas modifiee."
+        },
+        "ouvertDu": {
+          "type": "string",
+          "description": "Date (AAAA-MM-JJ) ou date-heure (AAAA-MM-JJTHH:MM) d'ouverture, a l'heure de l'appareil."
+        },
+        "jusquau": {
+          "type": "string",
+          "description": "Date ou date-heure de fermeture ; une date seule vaut jusqu'a la fin de ce jour."
+        },
+        "parChoix": {
+          "type": "array",
+          "description": "Une limite par question a choix : chaque choix a ses places.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "colId"
+            ],
+            "properties": {
+              "colId": {
+                "type": "string",
+                "description": "La question (colonne) dont les choix sont comptes."
+              },
+              "max": {
+                "description": "Un nombre (le meme pour tous les choix) ou { choix: nombre }."
+              },
+              "capaciteCol": {
+                "type": "string",
+                "description": "Pour une reference : la colonne de la table liee qui porte la capacite de chaque ligne."
+              }
+            }
+          }
+        },
+        "sauf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colId",
+            "valeurs"
+          ],
+          "description": "Les lignes qui ne comptent pas (annulee, refusee) : une annulation libere une place.",
+          "properties": {
+            "colId": {
+              "type": "string"
+            },
+            "valeurs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "unique": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colId"
+          ],
+          "description": "Une seule reponse par personne, reconnue a cette colonne (son courriel, par exemple, sans tenir compte de la casse ni des espaces). La table tranche : la premiere reponse est retenue, les suivantes sont marquees « Doublon » dans la colonne `placeCol` et ne prennent la place de personne. Le formulaire ne lit pas cette colonne (rien n'est montre des reponses des autres).",
+          "properties": {
+            "colId": {
+              "type": "string"
+            }
+          }
+        },
+        "messages": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Les phrases de l'ecran. `choixComplet` accepte {choix}.",
+          "properties": {
+            "complet": {
+              "type": "string"
+            },
+            "ferme": {
+              "type": "string"
+            },
+            "pasOuvert": {
+              "type": "string"
+            },
+            "choixComplet": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "groupes": {
+      "type": "object",
+      "description": "Groupes de questions : un bloc sous une legende, lu comme un seul geste. Les questions y entrent par `options.groupe`.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titre": {
+            "type": "string",
+            "description": "La legende du bloc, telle que le public la lit"
+          },
+          "consigne": {
+            "type": "string",
+            "description": "Une phrase sous la legende"
+          },
+          "colonnes": {
+            "enum": [
+              1,
+              2
+            ],
+            "description": "2 : les questions se rangent cote a cote quand la place le permet ; 1 (defaut) : empilees"
+          }
+        }
+      }
+    },
     "matrices": {
       "type": "object",
       "description": "Matrices : la question posée une fois pour plusieurs échelles qui la déclinent",
@@ -380,7 +505,7 @@
             "validation": {
               "type": "object",
               "additionalProperties": false,
-              "description": "Un format qu'une question de texte controle, sans appeler aucun service. Connus aujourd'hui : iban, siren, siret, codePostal, insee, courriel, telephone. Un format inconnu ne controle rien : un moteur plus ancien que le formulaire ne bloque personne. Le serveur d'un formulaire natif accepte tout : la table doit refaire le meme controle (shared/formats.js porte la regle en JavaScript et en Python).",
+              "description": "Un format qu'une question de texte controle, sans appeler aucun service. Connus aujourd'hui : iban, siren, siret, codePostal, insee, courriel, telephone, nom (MAJUSCULES), prenom (initiales), nomComplet (un champ, particules en minuscules). nom, prenom, nomComplet et courriel corrigent la forme a la saisie. Un format inconnu ne controle rien : un moteur plus ancien que le formulaire ne bloque personne. Le serveur d'un formulaire natif accepte tout : la table doit refaire le meme controle (shared/formats.js porte la regle en JavaScript et en Python).",
               "required": [
                 "format"
               ],
@@ -388,6 +513,13 @@
                 "format": {
                   "type": "string",
                   "description": "Identifiant du format."
+                },
+                "mode": {
+                  "enum": [
+                    "verifier",
+                    "corriger"
+                  ],
+                  "description": "`verifier` (defaut) : une reponse qui ne respecte pas le format est refusee. `corriger` : la forme est remise en ordre (initiales, espaces), sans rien refuser ; reserve aux noms (nom, prenom, nomComplet). Une personne a un seul mot dans son nom, une apostrophe ou un nom compose n'est ainsi jamais bloquee."
                 }
               }
             },
@@ -514,6 +646,10 @@
             "matrice": {
               "description": "Nom de la matrice a laquelle l'echelle se joint."
             },
+            "groupe": {
+              "type": "string",
+              "description": "Nom du groupe (voir `groupes`) auquel la question se joint : les questions d'un meme groupe qui se suivent forment un bloc sous une legende (nom, prenom, courriel d'une inscription)."
+            },
             "depart": {
               "type": "object",
               "additionalProperties": false,
@@ -574,6 +710,15 @@
                   "type": "string",
                   "pattern": "^[a-z0-9-]{1,40}( [a-z0-9-]{1,40}){0,2}$",
                   "description": "Jetons HTML standard : email, tel, postal-code, given-name…"
+                },
+                "autocapitalize": {
+                  "enum": [
+                    "none",
+                    "sentences",
+                    "words",
+                    "characters"
+                  ],
+                  "description": "La majuscule que le clavier propose : aucune (courriel), par mot (prenom), partout (nom)."
                 }
               }
             },

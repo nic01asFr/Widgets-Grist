@@ -245,7 +245,7 @@
      Trois colonnes stables : le parcours, le formulaire tel qu'il sera vu, et
      ce qu'on règle. Ouvrir un réglage ne déplace plus ce qu'on regarde. */
   .atelier3 {
-    display: grid; grid-template-columns: 13.5rem minmax(0, 1fr) 27rem;
+    display: grid; grid-template-columns: 13.5rem minmax(0, 1fr) clamp(20rem, 32%, 27rem);
     gap: 1px; background: var(--grey-925, #e5e5e5);
     border: 1px solid var(--grey-925, #e5e5e5); border-radius: 8px; overflow: hidden;
     height: calc(100vh - 7.5rem);
@@ -324,10 +324,26 @@
   .canevas__titre-public { font-size: 1.3rem; margin: 0; }
   .section-card__retirer { margin-top: 0.6rem; color: var(--rouge, #ce0500); font-size: 0.84rem; }
 
-  @media (max-width: 78rem) {
-    .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); }
-    .inspecteur { grid-column: 1 / -1; max-height: 26rem; }
+  .liste-sans-puce { list-style: none; margin: 0 0 0.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .liste-sans-puce li { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+
+  /* Les trois colonnes tiennent dès 58 rem : en dessous, les réglages passent sous la page d'édition
+     (et prennent la moitié de la hauteur au lieu d'une part fixe). */
+  @media (max-width: 58rem) {
+    .atelier3 { grid-template-columns: 12rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 46%); }
+    .inspecteur { grid-column: 1 / -1; max-height: none; }
   }
+
+  /* Le compositeur remplit exactement la hauteur que Grist donne au widget : la fenêtre ne défile
+     pas (la barre d'étapes et la barre d'enregistrement restent en place), seules les trois
+     colonnes défilent chacune pour elle-même. */
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; }
+  .app-main { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+  .app-main > .builder-step:not([hidden]) { flex: 0 0 auto; width: 100%; box-sizing: border-box; }
+  #builder.builder-step:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #builder .atelier3 { flex: 1 1 auto; min-height: 0; height: auto; }
+  #builder .barre-enregistrement { position: static; flex: 0 0 auto; margin-top: 0; }
   @media (max-width: 48rem) {
     .atelier3 { grid-template-columns: 1fr; height: auto; }
     .rail { max-height: 11rem; }
@@ -390,7 +406,10 @@
     border: 1px solid transparent; border-radius: 8px; padding: 0.5rem 0.6rem;
     position: relative; background: var(--fond-carte, #fff);
   }
+  .champ-bloc { cursor: pointer; }
   .champ-bloc:hover { border-color: var(--grey-925, #e5e5e5); }
+  .champ-bloc:focus-visible { outline: 3px solid var(--blue-france, #000091); outline-offset: 2px; }
+  .champ-bloc.est-ouvert { cursor: default; }
   .champ-bloc.est-ouvert { border-color: var(--blue-france, #000091); background: var(--grey-975, #f6f6f6); }
   .champ-bloc__barre {
     display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem;
@@ -1093,6 +1112,8 @@
 <script src="shared/attachments.js"></script>
 <script src="shared/session-context.js"></script>
 <script src="shared/conditions.js"></script>
+<script src="shared/limites.js"></script>
+<script src="shared/acces.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
@@ -1889,6 +1910,27 @@ async function reloadColumnsForTable(tableId) {
     .map(colonneLue);
 }
 
+/**
+ * Toutes les colonnes d'une table, formules comprises. Les listes proposées à la composition écartent
+ * les colonnes de calcul (on ne répond pas dans une formule) : s'en servir pour savoir ce qui existe
+ * faisait recréer la colonne « Place » à chaque enregistrement (Place, Place2, Place3…).
+ */
+async function colonnesExistantes(tableId) {
+  const repli = () => (S.columnsByTable[tableId] || []).map(c => ({ id: c.colId, type: c.type }));
+  if (S.isDemo) return repli();
+  try {
+    const tables = await GristBridge.loadTable('_grist_Tables');
+    const table = tables.find(t => t.tableId === tableId);
+    if (!table) return repli();
+    const colonnes = await GristBridge.loadTable('_grist_Tables_column');
+    return colonnes
+      .filter(c => c.parentId === table.id && c.colId !== 'manualSort' && c.type !== 'ManualSortPos')
+      .map(c => ({ id: c.colId, type: c.type }));
+  } catch (e) {
+    return repli();
+  }
+}
+
 async function refreshTablesAfterSchemaChange() {
   await loadTablesAndColumns();
 }
@@ -2242,10 +2284,23 @@ function renderBuilder() {
   const cols = S.columnsByTable[def.tableId] || [];
   const colsDatalist = `<datalist id="cols-datalist">${cols.map(c => `<option value="${esc(c.colId)}">`).join('')}</datalist>`;
 
+  // Un réglage change, le panneau est redessiné : on garde la position de lecture
+  // et les blocs repliables ouverts (ceux qui portent un identifiant).
+  // Redessiner ne doit rien déplacer : ni la fenêtre, ni la structure, ni la page d'édition, ni les
+  // réglages. La hauteur est figée le temps du redessin, sinon la page se raccourcit un instant et le
+  // navigateur ramène la fenêtre en haut.
+  const defileur = document.scrollingElement || document.documentElement;
+  const yFenetre = defileur.scrollTop;
+  const zones = DEFILEMENTS.map(s => { const n = el.querySelector(s); return n ? n.scrollTop : 0; });
+  const remise = S._remiseDefilement || {};
+  S._remiseDefilement = null;
+  if (el.offsetHeight) el.style.minHeight = el.offsetHeight + 'px';
+  const ouverts = Array.prototype.map.call(el.querySelectorAll('details[id][open]'), d => d.id);
+
   el.innerHTML = `
     <div class="atelier3">
       <nav class="rail" aria-label="Parcours du formulaire">
-        <p class="colonne__role">Parcours</p>
+        <p class="colonne__role">Pages du formulaire</p>
         ${renderRailEtapes(def)}
       </nav>
       <div class="canevas" id="canevas">${renderCanevas(def)}</div>
@@ -2258,8 +2313,18 @@ function renderBuilder() {
       <button class="fr-btn" onclick="App.saveForm()">Enregistrer</button>
     </div>
   `;
+  ouverts.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
+  DEFILEMENTS.forEach((s, i) => {
+    const n = el.querySelector(s);
+    if (n) n.scrollTop = remise[s] ? 0 : zones[i];
+  });
+  defileur.scrollTop = yFenetre;
+  el.style.minHeight = '';
   monterCarteDeComposition();
 }
+
+/** Les zones qui défilent chacune pour elles-mêmes dans le compositeur. */
+const DEFILEMENTS = ['.rail', '.canevas', '.inspecteur', '.inspecteur__corps'];
 
 /**
  * La carte sur laquelle on pose les reperes d'une illustration.
@@ -2437,7 +2502,7 @@ function renderInspecteur(def) {
       <button type="button" role="tab" class="inspecteur__onglet${onglet === 'reglages' ? ' est-actif' : ''}"
         aria-selected="${onglet === 'reglages'}" onclick="App.inspecteur('reglages')">Réglages</button>
       <button type="button" role="tab" class="inspecteur__onglet${onglet === 'controle' ? ' est-actif' : ''}"
-        aria-selected="${onglet === 'controle'}" onclick="App.inspecteur('controle')">Contrôle${soucis.length ? ' (' + soucis.length + ')' : ''}</button>
+        aria-selected="${onglet === 'controle'}" onclick="App.inspecteur('controle')">Vérifications${soucis.length ? ' (' + soucis.length + ')' : ''}</button>
     </div>
     <div class="inspecteur__corps">
       ${onglet === 'reglages' ? renderZoneQuestion(def) : renderControle(def, soucis)}
@@ -2524,18 +2589,26 @@ function renderCanevas(def) {
   if (!section) return '<div class="canevas__page"><p>Aucune étape.</p></div>';
 
   let derniereMatrice = null;
+  let derniereGroupe = null;
   const blocs = (section.fields || []).map((f, fi) => {
     const ouvert = selectionEst('question', si, fi);
     const matrice = (f.options && f.options.matrice) || null;
+    const groupe = (!matrice && f.options && f.options.groupe) || null;
     const enteteMatrice = (matrice && matrice !== derniereMatrice)
-      ? `<p class="canevas__matrice">▦ ${esc(((def.matrices || {})[matrice] || {}).titre || matrice)}</p>` : '';
+      ? `<p class="canevas__matrice">▦ ${esc(((def.matrices || {})[matrice] || {}).titre || matrice)}</p>`
+      : ((groupe && groupe !== derniereGroupe)
+        ? `<p class="canevas__matrice">▭ Groupe : ${esc(((def.groupes || {})[groupe] || {}).titre || groupe)}</p>` : '');
     derniereMatrice = matrice;
+    derniereGroupe = groupe;
     let rendu = '';
     try { rendu = window.FormEngine ? FormEngine.renderFieldHtml(f, {}, optionsDApercu(def, f), def) : ''; }
     catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
     return `
       ${enteteMatrice}
-      <div class="champ-bloc${ouvert ? ' est-ouvert' : ''}">
+      <div class="champ-bloc${ouvert ? ' est-ouvert' : ''}" role="group" tabindex="0"
+        aria-label="Question ${fi + 1} : ${esc(f.label || f.colId || '')}. Entrée pour la régler."
+        ${ouvert ? 'aria-current="true"' : ''}
+        onclick="App.choisirSurClic(event, ${si}, ${fi})" onkeydown="App.choisirAuClavier(event, ${si}, ${fi})">
         <div class="champ-bloc__barre">
           <span class="champ-bloc__rang">${fi + 1}</span>
           <span class="champ-bloc__nature">${esc(natureCourte(f))}</span>
@@ -2548,7 +2621,7 @@ function renderCanevas(def) {
           <button type="button" class="champ-bloc__action" title="Dupliquer" onclick="App.dupliquerChamp(${si}, ${fi})">⧉</button>
           <select class="champ-bloc__deplacer" title="Déplacer vers une autre étape"
             onchange="App.deplacerVersEtape(${si}, ${fi}, this.value); this.selectedIndex = 0;">
-            <option value="">→ étape…</option>
+            <option value="">Déplacer vers…</option>
             ${def.sections.map((sec, k) => k === si ? '' : `<option value="${k}">${k + 1}. ${esc(sec.label || '')}</option>`).join('')}
           </select>
           <button type="button" class="champ-bloc__action" title="Régler cette question"
@@ -2622,6 +2695,11 @@ function renderAjoutRapide(si) {
       </div>
       <p class="ajout__aide">Type de réponse :</p>
       <div class="ajout__types">${types}${autres}</div>
+      <p class="ajout__aide">Ou d’un geste :</p>
+      <div class="ajout__types">
+        <button type="button" class="ajout__type" onclick="App.ajouterIdentite(${si})"
+          title="Pose Nom, Prénom et Courriel (obligatoires), sans refaire celles que le formulaire a déjà">Nom, prénom et courriel</button>
+      </div>
     </div>`;
 }
 
@@ -2650,6 +2728,29 @@ function ajouterDepuisTexte(si, texte) {
   renderBuilder();
   const suivant = document.getElementById('ajout-rapide');
   if (suivant) { suivant.value = ''; suivant.focus(); }
+}
+
+/**
+ * Qui répond, d'un geste : Nom, Prénom, Courriel. Seules les questions absentes sont ajoutées ; en liaison
+ * avec une table, une colonne qui existe déjà sous un autre nom (« e-mail », « prénom ») est reconnue.
+ */
+function ajouterIdentite(si) {
+  const def = S.currentDef;
+  const section = def.sections[si];
+  if (!section) return;
+  const tous = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []);
+  const colonnes = S.columnsByTable[def.tableId] || [];
+  const nouvelles = FormUx.identiteChamps(tous, colonnes, def.composeMode !== 'ensureSchema');
+  if (!nouvelles.length) { toast('Nom, prénom et courriel sont déjà dans le formulaire.', 'info'); return; }
+  const premier = section.fields.length;
+  // Les trois questions forment un groupe : une légende, côte à côte quand la place le permet.
+  def.groupes = def.groupes || {};
+  if (!def.groupes.identite) def.groupes.identite = { titre: 'Qui êtes-vous ?', colonnes: 2 };
+  nouvelles.forEach(c => { c.options = c.options || {}; c.options.groupe = 'identite'; section.fields.push(c); });
+  nouvelles.forEach((c, k) => onFieldLabelBlur(si, premier + k));
+  S.selection = { quoi: 'question', si: si, fi: premier };
+  marquerModifie();
+  renderBuilder();
 }
 
 /** Déplacer, dupliquer, supprimer : sans glisser, donc au clavier et au doigt. */
@@ -2877,6 +2978,28 @@ function renderReglagesCommuns(def, si, f, fi) {
         <option value="les-deux" ${m === 'les-deux' ? 'selected' : ''}>Carte ou adresse, au choix</option>
         <option value="adresse" ${m === 'adresse' ? 'selected' : ''}>Taper une adresse</option></select></div>`;
   }
+  // ── Groupe : des questions lues comme un seul geste (nom, prénom, courriel) ──
+  if (!(f.options && f.options.matrice)) {
+    const groupeCourant = (f.options && f.options.groupe) || '';
+    const definis = def.groupes || {};
+    const choixGroupe = Object.keys(definis).map(k =>
+      `<option value="${esc(k)}" ${groupeCourant === k ? 'selected' : ''}>${esc((definis[k] || {}).titre || k)}</option>`).join('');
+    const g = groupeCourant ? (definis[groupeCourant] || {}) : null;
+    html += `<div class="fr-select-group"><label class="fr-label" for="grp-${si}-${fi}">Groupe
+        ${hintIcon('Les questions qui se suivent dans un même groupe forment un bloc sous une légende, côte à côte quand la place le permet.')}</label>
+      <select class="fr-select" id="grp-${si}-${fi}" onchange="App.onGroupe(${si}, ${fi}, this.value)">
+        <option value="">Aucun</option>${choixGroupe}<option value="__nouveau">+ Nouveau groupe…</option></select></div>`;
+    if (g) {
+      html += `<div class="bloc__duo">
+        <div class="fr-input-group"><label class="fr-label" for="grp-t-${si}-${fi}">Légende du groupe</label>
+          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${esc(groupeCourant)}', 'titre', this.value)"></div>
+        <div class="fr-select-group"><label class="fr-label" for="grp-c-${si}-${fi}">Disposition</label>
+          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${esc(groupeCourant)}', 'colonnes', this.value)">
+            <option value="1" ${g.colonnes === 2 ? '' : 'selected'}>Les unes sous les autres</option>
+            <option value="2" ${g.colonnes === 2 ? 'selected' : ''}>Côte à côte si la place le permet</option></select></div>
+      </div>`;
+    }
+  }
   // ── Lieu : la précision du GPS, quand la personne s'est localisée avec son appareil ──
   if (f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
     const numeriques = (S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Numeric' || c.type === 'Int');
@@ -2927,6 +3050,15 @@ function renderReglagesCommuns(def, si, f, fi) {
         <select class="fr-select" id="fmt-${si}-${fi}" onchange="App.onValidation(${si}, ${fi}, this.value)">
           <option value="">— aucun —</option>${choix}
         </select></div>`;
+    if (courant && formats.peutCorrigerSeulement && formats.peutCorrigerSeulement(courant)) {
+      const mode = (o.validation && o.validation.mode) === 'verifier' ? 'verifier' : ((o.validation && o.validation.mode) === 'corriger' ? 'corriger' : 'verifier');
+      html += `
+      <div class="fr-select-group"><label class="fr-label" for="fmtm-${si}-${fi}">Si ce n’est pas la bonne forme ${hintIcon('Pour un nom, mieux vaut corriger que refuser : une personne qui n’a qu’un mot dans son nom, ou un nom à particule, ne doit jamais être bloquée. Les initiales et les espaces sont remis en ordre, ce qui est déjà bien écrit (« McDonald ») n’est pas touché.')}</label>
+        <select class="fr-select" id="fmtm-${si}-${fi}" onchange="App.onValidationMode(${si}, ${fi}, this.value)">
+          <option value="corriger" ${mode === 'corriger' ? 'selected' : ''}>La corriger, sans rien refuser — recommandé</option>
+          <option value="verifier" ${mode === 'verifier' ? 'selected' : ''}>Demander de la corriger</option>
+        </select></div>`;
+    }
   }
   // ── Valeur reçue par l'adresse de la page (QR code) ──
   const p = o.prefill || {};
@@ -3308,8 +3440,35 @@ function selectionEst(quoi, si, fi) {
 
 /** Choisir ce qu'on compose : la zone centrale et l'aperçu suivent. */
 function choisir(quoi, si, fi) {
+  const avant = S.selection || {};
+  // Les réglages d'une autre question repartent du haut ; la page d'édition ne bouge que si l'on
+  // change d'étape (passer d'une question à sa voisine ne doit pas la faire sauter).
+  const memeEtape = avant.quoi === 'question' && quoi === 'question' && avant.si === si;
+  S._remiseDefilement = { '.inspecteur': true, '.inspecteur__corps': true };
+  if (!memeEtape) S._remiseDefilement['.canevas'] = true;
   S.selection = { quoi: quoi, si: si, fi: fi };
   renderBuilder();
+}
+
+/**
+ * Régler une question en cliquant dessus, pas seulement sur la roue : la carte est l'image de ce que
+ * le public verra, c'est elle qu'on vise. Les boutons de la barre (monter, dupliquer, déplacer…)
+ * gardent leur geste ; une question déjà ouverte n'est pas rouverte (on ne perd ni le défilement,
+ * ni le focus des réglages).
+ */
+function choisirSurClic(evenement, si, fi) {
+  const cible = evenement && evenement.target;
+  if (cible && cible.closest && cible.closest('button, select, a, input, textarea, label')) return;
+  if (selectionEst('question', si, fi)) return;
+  choisir('question', si, fi);
+}
+
+/** Même geste au clavier : Entrée ou Espace sur la carte (pas sur un bouton qu'elle contient). */
+function choisirAuClavier(evenement, si, fi) {
+  if (!evenement || evenement.target !== evenement.currentTarget) return;
+  if (evenement.key !== 'Enter' && evenement.key !== ' ') return;
+  evenement.preventDefault();
+  if (!selectionEst('question', si, fi)) choisir('question', si, fi);
 }
 
 /**
@@ -3325,6 +3484,7 @@ function marquesDeChamp(f) {
     m.push('<span class="structure__marque" title="Sa liste dépend d’une autre réponse">⇄</span>');
   }
   if (f.options && f.options.matrice) m.push('<span class="structure__marque" title="Groupée en matrice">▦</span>');
+  if (f.options && f.options.groupe) m.push('<span class="structure__marque" title="Dans un groupe de questions">▭</span>');
   if (f.options && f.options.autreLibre) m.push('<span class="structure__marque" title="Accepte une réponse libre">✎</span>');
   if (f.options && f.options.maxSelected) m.push(`<span class="structure__marque" title="Au plus ${f.options.maxSelected} réponses">≤${f.options.maxSelected}</span>`);
   return m.join('');
@@ -3397,6 +3557,202 @@ function renderMetaColonnes(def) {
       <div class="bloc__duo">${champs}</div>`;
 }
 
+/** Une question qui vise une table liée : `Ref`, `Ref:Table`, `RefList`. */
+function estReference(f) {
+  return !!f && /^Ref(List)?(:|$)/.test(String(f.type || ''));
+}
+
+/** La table qu'une référence vise, par son réglage ou par son type (`Ref:Salles`). */
+function tableDeReference(f) {
+  const r = resolveRefTableOfField(f);
+  if (r) return r;
+  const m = /^Ref(?:List)?:(.+)$/.exec(String((f && f.type) || ''));
+  return m ? m[1] : '';
+}
+
+/** Les choix qu'une question propose (liste, cases, pastilles), tels que le formulaire les déclare. */
+function choixDeQuestion(def, f) {
+  const l = (def.choices && def.choices[f.colId]) || (f.options && f.options.choices) || [];
+  return l.map(c => (c && typeof c === 'object') ? String(c.value) : String(c));
+}
+
+/**
+ * Jusqu'où le formulaire accepte de réponses : un atelier de 12 places, une fenêtre d'ouverture, un plafond.
+ * Le formulaire lit ce qui est pris et ferme ce qui est plein ; la table tranche par ordre d'arrivée (colonne
+ * « Place ») quand deux envois se croisent. Voir docs/LIMITES.md.
+ */
+/** Une limite incomplète ou fausse se dit ici : elle serait sinon ignorée sans que personne ne le sache. */
+function alerteLimites(def) {
+  const verdict = (window.FormLimites && def.limites) ? FormLimites.normaliser(def.limites) : { erreurs: [] };
+  return verdict.erreurs.length
+    ? `<div class="fr-alert fr-alert--warning fr-mt-1w" role="status"><p>${verdict.erreurs.map(esc).join('<br>')}</p></div>` : '';
+}
+
+/** Remet l'alerte à jour sans redessiner le panneau (le champ en cours de saisie garde le focus). */
+function majAlerteLimites() {
+  const z = (typeof document !== 'undefined' && document.getElementById) ? document.getElementById('lim-alerte') : null;
+  if (z && S.currentDef) z.innerHTML = alerteLimites(S.currentDef);
+}
+
+/** Une question dont on peut plafonner chaque choix : une liste, des cases, une référence. */
+function estPlafonnable(f) {
+  return !!f && !!f.colId && (['Choice', 'ChoiceList', 'Ref'].includes(f.type) || estReference(f)) && f.kind !== 'geometrie' && f.widget !== 'geo';
+}
+
+/** Le réglage du maximum par choix d'une question : un nombre pour tous, ou un nombre par choix. */
+function reglageLimiteChoix(def, p, i, f) {
+  if (estReference(f) || p.capaciteCol) {
+    const cols = (S.columnsByTable[tableDeReference(f)] || []).filter(c => c.type === 'Int' || c.type === 'Numeric');
+    return `<div class="fr-select-group"><label class="fr-label" for="lim-cap-${i}">Colonne de la table liée qui donne le maximum de chaque choix</label>
+      <select class="fr-select" id="lim-cap-${i}" onchange="App.onLimiteChoix(${i}, 'capaciteCol', this.value)">
+        <option value="">—</option>${cols.map(c => `<option value="${esc(c.colId)}" ${p.capaciteCol === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>`;
+  }
+  const choix = choixDeQuestion(def, f);
+  const valeurs = (p.max && typeof p.max === 'object') ? p.max : {};
+  const commun = typeof p.max === 'number' ? p.max : '';
+  return `<div class="fr-input-group"><label class="fr-label" for="lim-commun-${i}">Le même maximum pour tous les choix</label>
+      <input class="fr-input" id="lim-commun-${i}" type="number" min="1" value="${esc(commun)}" placeholder="Pas de maximum" oninput="App.onLimiteChoix(${i}, 'maxCommun', this.value)"></div>
+    ${choix.length ? `<p class="fr-hint-text">Ou un maximum propre à chaque choix (vide : pas de maximum) :</p>
+    <div class="bloc__duo">${choix.map((c, k) => `<div class="fr-input-group"><label class="fr-label" for="lim-${i}-${k}">${esc(c)}</label>
+      <input class="fr-input" id="lim-${i}-${k}" type="number" min="1" value="${esc(valeurs[c] !== undefined ? valeurs[c] : '')}"
+        data-choix="${esc(c)}" oninput="App.onLimiteChoix(${i}, 'maxChoix', this.value, this.getAttribute('data-choix'))"></div>`).join('')}</div>` : ''}`;
+}
+
+/**
+ * Plafonner les choix d'une question se règle dans la question elle-même : c'est elle qu'on a sous les yeux,
+ * et ses choix sont déjà là. Le même geste vaut pour des places d'atelier, des créneaux, des portions ou
+ * des salles ; rien ici ne dépend de ce que les choix représentent.
+ */
+function renderLimiteQuestion(def, f) {
+  if (!estPlafonnable(f)) return '';
+  const parChoix = (def.limites && def.limites.parChoix) || [];
+  const i = parChoix.findIndex(p => p.colId === f.colId);
+  const actif = i >= 0;
+  return `<section class="bloc">
+    <h4 class="bloc__titre">Nombre de réponses par choix ${hintIcon('Facultatif. Quand un choix a atteint son maximum, il n’est plus proposé : « complet » s’affiche à sa place. Sert à limiter des places, des créneaux, des portions, des salles…')}</h4>
+    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${esc(f.colId)}', this.checked)">
+      <label class="fr-label" for="lim-q-actif">Limiter le nombre de réponses de chaque choix</label></div>
+    ${actif ? reglageLimiteChoix(def, parChoix[i], i, f) : ''}
+  </section>`;
+}
+
+/** Cocher ou décocher la limite par choix d'une question. */
+function onLimiteQuestion(colId, actif) {
+  const parChoix = (S.currentDef.limites && S.currentDef.limites.parChoix) || [];
+  const i = parChoix.findIndex(p => p.colId === colId);
+  if (actif && i < 0) onLimiteChoix(-1, 'ajouter', colId);
+  else if (!actif && i >= 0) onLimiteChoix(i, 'retirer');
+}
+
+/** Ce qui est plafonné ailleurs dans le formulaire, avec un accès direct à la question. */
+function resumeLimitesChoix(def) {
+  const parChoix = (def.limites && def.limites.parChoix) || [];
+  if (!parChoix.length) return '';
+  const lignes = [];
+  def.sections.forEach((s, si) => (s.fields || []).forEach((f, fi) => {
+    const p = parChoix.find(x => x.colId === f.colId);
+    if (!p) return;
+    const detail = p.capaciteCol ? 'maximum lu dans la table liée'
+      : typeof p.max === 'number' ? p.max + ' par choix'
+      : Object.keys(p.max || {}).map(c => c + ' : ' + p.max[c]).join(' · ') || 'pas encore de maximum';
+    lignes.push(`<li><button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.choisir('question', ${si}, ${fi})">${esc(f.label || f.colId)}</button> <span class="fr-hint-text">${esc(detail)}</span></li>`);
+  }));
+  return lignes.length ? `<p class="fr-label fr-mt-1w">Maximum par choix <span class="fr-hint-text">(se règle dans chaque question)</span></p><ul class="liste-sans-puce">${lignes.join('')}</ul>` : '';
+}
+
+function renderLimites(def) {
+  const L = def.limites || {};
+  const sauf = L.sauf || {};
+  const msg = L.messages || {};
+  const champMsg = (cle, libelle, defaut) => `<div class="fr-input-group"><label class="fr-label" for="lim-msg-${cle}">${libelle}</label>
+    <input class="fr-input" id="lim-msg-${cle}" value="${esc(msg[cle] || '')}" placeholder="${esc(defaut)}" oninput="App.onLimite('msg:${cle}', this.value)"></div>`;
+  const alerte = `<div id="lim-alerte">${alerteLimites(def)}</div>`;
+  return `<p class="bloc__intitule">Limiter les réponses <span>maximum, dates d’ouverture</span></p>
+    <p class="fr-hint-text">Quand le maximum est atteint, le formulaire (ou le choix concerné) n’est plus proposé. Il ne peut pas refuser seul : si deux envois se croisent, la colonne « Place » du document tranche par ordre d’arrivée. Le maximum par choix se règle dans la question.</p>
+    <div class="bloc__duo">
+      <div class="fr-input-group"><label class="fr-label" for="lim-total">Nombre maximum de réponses (tout le formulaire)</label>
+        <input class="fr-input" id="lim-total" type="number" min="1" value="${esc(L.total || '')}" placeholder="Pas de limite" oninput="App.onLimite('total', this.value)"></div>
+      <div class="fr-input-group"><label class="fr-label" for="lim-ouvert">Ouvert à partir du</label>
+        <input class="fr-input" id="lim-ouvert" type="date" value="${esc((L.ouvertDu || '').slice(0, 10))}" onchange="App.onLimite('ouvertDu', this.value)"></div>
+      <div class="fr-input-group"><label class="fr-label" for="lim-jusquau">Ouvert jusqu’au (ce jour compris)</label>
+        <input class="fr-input" id="lim-jusquau" type="date" value="${esc((L.jusquau || '').slice(0, 10))}" onchange="App.onLimite('jusquau', this.value)"></div>
+    </div>
+    <div class="fr-select-group"><label class="fr-label" for="lim-unique">Une seule réponse par personne, reconnue à… ${hintIcon('La première réponse est retenue ; les suivantes de la même personne sont marquées « Doublon » dans la colonne « Place » et ne prennent la place de personne. La comparaison ignore la casse et les espaces. Le formulaire ne montre rien des réponses des autres.')}</label>
+      <select class="fr-select" id="lim-unique" onchange="App.onLimite('unique', this.value)">
+        <option value="">— pas de contrôle —</option>${def.sections.reduce((acc, s) => acc.concat(s.fields || []), []).filter(f => f.colId && f.type === 'Text').map(f => `<option value="${esc(f.colId)}" ${(L.unique || {}).colId === f.colId ? 'selected' : ''}>${esc(f.label || f.colId)}</option>`).join('')}</select></div>
+    ${alerte}
+    ${resumeLimitesChoix(def)}
+    <details class="fr-mt-1w" id="lim-details"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
+      <div class="bloc__duo">
+        <div class="fr-select-group"><label class="fr-label" for="lim-sauf">Une ligne ne compte pas quand cette colonne vaut…</label>
+          <select class="fr-select" id="lim-sauf" onchange="App.onLimite('saufCol', this.value)">
+            <option value="">— toujours compter —</option>${(S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Text' || c.type === 'Choice').map(c => `<option value="${esc(c.colId)}" ${sauf.colId === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>
+        <div class="fr-input-group"><label class="fr-label" for="lim-sauf-v">…l’une de ces valeurs (séparées par une virgule)</label>
+          <input class="fr-input" id="lim-sauf-v" value="${esc((sauf.valeurs || []).join(', '))}" placeholder="Annulé, Refusé" oninput="App.onLimite('saufValeurs', this.value)"></div>
+      </div>
+      <div class="fr-checkbox-group fr-mt-1w"><input type="checkbox" id="lim-place" ${L.placeCol ? 'checked' : ''} onchange="App.onLimite('placeCol', this.checked ? 'Place' : '')">
+        <label class="fr-label" for="lim-place">Tenir la liste d’attente dans la table (colonne « Place » : Confirmé ou Liste d’attente, par ordre d’arrivée)</label></div>
+      <div class="bloc__duo">
+        ${champMsg('complet', 'Quand le maximum est atteint', 'Le nombre maximum de réponses est atteint.')}
+        ${champMsg('ferme', 'Après la fermeture', 'Ce formulaire est fermé.')}
+        ${champMsg('pasOuvert', 'Avant l’ouverture', 'Ce formulaire n’est pas encore ouvert.')}
+        ${champMsg('choixComplet', 'Quand un choix est complet ({choix})', '« {choix} » est complet. Choisissez-en un autre.')}
+      </div>
+    </details>`;
+}
+
+/** Une limite générale : total, dates, colonne « Place », messages, lignes qui ne comptent pas. */
+function onLimite(cle, valeur) {
+  marquerModifie();
+  const def = S.currentDef;
+  const L = def.limites = def.limites || {};
+  const v = String(valeur == null ? '' : valeur).trim();
+  if (cle === 'total') { const n = Number(v); if (n >= 1) L.total = Math.floor(n); else delete L.total; }
+  else if (cle === 'ouvertDu' || cle === 'jusquau') { if (v) L[cle] = v; else delete L[cle]; }
+  else if (cle === 'placeCol') { if (v) L.placeCol = v; else delete L.placeCol; }
+  else if (cle === 'unique') {
+    if (v) { L.unique = { colId: v }; if (!L.placeCol) L.placeCol = 'Place'; }
+    else delete L.unique;
+  }
+  else if (cle === 'saufCol') { if (v) L.sauf = { colId: v, valeurs: (L.sauf && L.sauf.valeurs) || [] }; else delete L.sauf; }
+  else if (cle === 'saufValeurs') { if (L.sauf) L.sauf.valeurs = v.split(',').map(s => s.trim()).filter(Boolean); }
+  else if (cle.indexOf('msg:') === 0) {
+    L.messages = L.messages || {};
+    if (v) L.messages[cle.slice(4)] = v; else delete L.messages[cle.slice(4)];
+    if (!Object.keys(L.messages).length) delete L.messages;
+  }
+  if (!Object.keys(L).length) delete def.limites;
+  if (cle === 'placeCol' || cle === 'saufCol' || cle === 'unique') renderBuilder(); else majAlerteLimites();
+}
+
+/** Une limite par choix : ajouter une question, régler ses places, la retirer. */
+function onLimiteChoix(i, cle, valeur, choix) {
+  marquerModifie();
+  const def = S.currentDef;
+  const L = def.limites = def.limites || {};
+  L.parChoix = L.parChoix || [];
+  if (cle === 'ajouter') {
+    if (valeur) {
+      const f = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []).find(x => x.colId === valeur);
+      L.parChoix.push(estReference(f) ? { colId: valeur, capaciteCol: '' } : { colId: valeur, max: {} });
+    }
+  } else {
+    const p = L.parChoix[i];
+    if (!p) return;
+    if (cle === 'retirer') L.parChoix.splice(i, 1);
+    else if (cle === 'capaciteCol') { if (valeur) p.capaciteCol = valeur; else delete p.capaciteCol; }
+    else if (cle === 'maxCommun') { const n = Number(valeur); if (n >= 1) p.max = Math.floor(n); else if (typeof p.max === 'number') p.max = {}; }
+    else if (cle === 'maxChoix') {
+      if (typeof p.max !== 'object' || p.max === null) p.max = {};
+      const n = Number(valeur);
+      if (n >= 1) p.max[choix] = Math.floor(n); else delete p.max[choix];
+    }
+  }
+  if (!L.parChoix.length) delete L.parChoix;
+  if (!Object.keys(L).length) delete def.limites;
+  if (cle === 'ajouter' || cle === 'retirer' || cle === 'capaciteCol') renderBuilder(); else majAlerteLimites();
+}
+
 /** Une colonne remplie sans question ; vide : on ne l'écrit pas. */
 function onMeta(cle, valeur) {
   if (!['timestampCol', 'durationCol', 'emailCol'].includes(cle)) return;
@@ -3467,6 +3823,8 @@ function renderZoneQuestion(def) {
       </div>` : ''}
 
       ${renderMetaColonnes(def)}
+
+      ${renderLimites(def)}
 
       <p class="bloc__intitule">Les mentions <span>RGPD, conditions, avertissements</span></p>
       ${(acc.encarts || []).map((e, i) => `
@@ -3936,6 +4294,8 @@ function renderFieldEditor(def, si, f, fi) {
         </details>
       </section>
 
+      ${renderLimiteQuestion(def, f)}
+
       <section class="bloc">
         <h4 class="bloc__titre">Quand elle s’affiche ${hintIcon('Une question peut dépendre d’une réponse précédente. Sans condition, elle est toujours posée. Les conditions ne remplacent pas les droits Grist : elles cachent, elles ne protègent pas.')}</h4>
         ${renderConditionEditor('field', si, fi, f.condition, prior)}
@@ -4054,6 +4414,13 @@ function onComposeModeChange(value) {
     S.autoTable = true;
     if (!S.currentDef.tableId && S.currentDef.title) {
       S.currentDef.tableId = FormUx.tableNameFromTitle(S.currentDef.title);
+    }
+    // Une question sans colonne reçoit son identifiant depuis son libellé : sans lui,
+    // le moteur n'écrit rien pour elle (ni correction ni valeur).
+    for (const s of S.currentDef.sections) {
+      for (const f of s.fields) {
+        if (!f.colId && f.label) f.colId = FormUx.slugify(f.label);
+      }
     }
   } else {
     S.autoTable = false;
@@ -4243,6 +4610,36 @@ function onSaisieLieu(si, fi, valeur) {
   renderBuilder();
 }
 
+/** Ranger une question dans un groupe, ou en créer un ; vide : elle sort du groupe. */
+function onGroupe(si, fi, valeur) {
+  marquerModifie();
+  const def = S.currentDef;
+  const f = def.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur === '__nouveau') {
+    def.groupes = def.groupes || {};
+    let n = Object.keys(def.groupes).length + 1;
+    while (def.groupes['groupe-' + n]) n++;
+    def.groupes['groupe-' + n] = { titre: 'Nouveau groupe', colonnes: 1 };
+    f.options.groupe = 'groupe-' + n;
+  } else if (valeur) {
+    f.options.groupe = valeur;
+  } else {
+    delete f.options.groupe;
+  }
+  renderBuilder();
+}
+
+/** La légende et la disposition d'un groupe, partagées par toutes ses questions. */
+function onGroupeDef(id, cle, valeur) {
+  const def = S.currentDef;
+  if (!def.groupes || !def.groupes[id]) return;
+  marquerModifie();
+  if (cle === 'colonnes') def.groupes[id].colonnes = Number(valeur) === 2 ? 2 : 1;
+  else if (cle === 'titre') def.groupes[id].titre = String(valeur || '');
+  if (cle === 'colonnes') renderBuilder();
+}
+
 /** La colonne qui reçoit la précision d'un relevé GPS ; vide : on ne la note pas. */
 function onPrecision(si, fi, valeur) {
   marquerModifie();
@@ -4268,7 +4665,21 @@ function onValidation(si, fi, valeur) {
   marquerModifie();
   const f = S.currentDef.sections[si].fields[fi];
   f.options = f.options || {};
-  if (valeur) f.options.validation = { format: valeur }; else delete f.options.validation;
+  if (valeur) {
+    f.options.validation = { format: valeur };
+    // Un nom se corrige, il ne se refuse pas : c'est le réglage de départ.
+    if (window.FormFormats && FormFormats.peutCorrigerSeulement && FormFormats.peutCorrigerSeulement(valeur)) f.options.validation.mode = 'corriger';
+  } else delete f.options.validation;
+  renderBuilder();
+}
+
+/** Corriger sans rien refuser, ou demander de corriger (les noms). */
+function onValidationMode(si, fi, mode) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  const v = f.options && f.options.validation;
+  if (!v) return;
+  if (mode === 'corriger') v.mode = 'corriger'; else delete v.mode;
   renderBuilder();
 }
 
@@ -4820,11 +5231,23 @@ async function saveForm() {
   if (!def.title) { toast('Le titre du formulaire est requis', 'error'); return; }
   if (!def.tableId) { toast('Indiquez un nom pour la table des réponses', 'error'); return; }
 
+  // Une question sans colonne ferait refuser toute la ligne à l'envoi : on la nomme d'après son libellé.
+  for (const s of def.sections) {
+    for (const f of s.fields) {
+      if (!f.colId && f.label && def.composeMode === 'ensureSchema') f.colId = FormUx.slugify(f.label);
+    }
+  }
+  const sansColonne = def.sections.flatMap(s => s.fields).filter(f => !f.colId);
+  if (sansColonne.length) {
+    toast('Choisissez la colonne de : ' + sansColonne.map(f => f.label || 'question sans titre').join(', '), 'error');
+    return;
+  }
+
   try {
     if (def.composeMode === 'ensureSchema') {
       const tableExists = S.tables.some(t => t.tableId === def.tableId);
       if (!tableExists) S.columnsByTable[def.tableId] = S.columnsByTable[def.tableId] || [];
-      const existingColumns = (S.columnsByTable[def.tableId] || []).map(c => ({ id: c.colId, type: c.type }));
+      const existingColumns = await colonnesExistantes(def.tableId);
       const plan = EnsureSchema.planEnsureSchema(def, existingColumns, { tableExists: tableExists });
       if (!plan.ok) {
         const msgs = FormUx.humanizeBindingErrors(plan.errors);
@@ -5113,12 +5536,26 @@ function renderPublishStep() {
   const btnLabel = alreadyPublished ? 'Remettre en ligne' : 'Mettre en ligne';
   el.innerHTML = `
     <h2 class="fr-h5">Mettre en ligne</h2>
+    <details class="fr-mb-2w">
+      <summary class="fr-label">Trois façons de partager : qui peut répondre, qui peut lire quoi</summary>
+      <div class="fr-table fr-mt-1w"><table>
+        <thead><tr><th></th><th>Dans le document</th><th>Lien d’un formulaire natif Grist</th><th>Page hors de Grist</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Qui peut répondre</th><td>un éditeur du document (ou un lien public en édition)</td><td>n’importe qui, sans compte</td><td>n’importe qui, sans compte</td></tr>
+          <tr><th scope="row">Voit les réponses des autres</th><td>oui, sauf si vous le cachez (« Qui voit les réponses ? », plus bas)</td><td>non</td><td>non</td></tr>
+          <tr><th scope="row">Étapes, conditions, carte, formats</th><td>oui</td><td>non</td><td>oui</td></tr>
+          <tr><th scope="row">Pièces jointes, photo, signature</th><td>oui</td><td>oui</td><td>non</td></tr>
+          <tr><th scope="row">Places restantes affichées</th><td>oui</td><td>non</td><td>non (la page ne lit rien)</td></tr>
+        </tbody></table></div>
+      <p class="fr-text--sm">Pour des personnes sans compte, <strong>la page hors de Grist</strong> est la façon de partager un lien sans rien montrer des autres réponses. Voir <code>docs/EXPOSITION.md</code>.</p>
+    </details>
     <p>Crée une page Grist dédiée pour remplir le formulaire (bundle figé : moteur, audience, styles).</p>
     <p class="fr-text--sm">Version : <strong>${esc(row ? row.Version : 0)}</strong> — Statut : <strong>${esc(row ? row.Statut : 'brouillon (non enregistré)')}</strong></p>
     ${alreadyPublished ? `<div class="fr-alert fr-alert--warning fr-mb-2w"><p>Une version est déjà en ligne. <strong>Remettre en ligne</strong> remplace le formulaire figé sur la page publiée (même URL).</p></div>` : ''}
     ${S.isDemo ? `<div class="fr-alert fr-alert--info fr-mb-2w"><p>Mode démo : publication simulée, sans écriture Grist.</p></div>` : ''}
     <button class="fr-btn" onclick="App.publishForm()">${btnLabel}</button>
     <span class="publish-hint">Le bundle inclut session, audience et moteur de conditions. Les droits Grist restent la vraie barrière de sécurité.</span>
+    ${renderAccesBloc()}
     ${renderExterneBloc()}
     <details class="json-preview fr-mt-3w">
       <summary>Journal technique</summary>
@@ -5126,6 +5563,159 @@ function renderPublishStep() {
     </details>
   `;
   renderPublishLogEntries();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Qui voit les réponses (voir docs/EXPOSITION.md)
+// ═══════════════════════════════════════════════════════════
+
+/** Le réglage en cours dans l'écran : jamais écrit dans le formulaire, seulement dans les règles du document. */
+function etatAcces() {
+  S.acces = S.acces || { mode: 'ajout-seul', gestionnaires: '', defautRefus: false, existant: null, lu: false, message: '' };
+  return S.acces;
+}
+
+function gestionnairesDe(texte) {
+  return String(texte || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+}
+
+function renderAccesBloc() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  if (!A || !def) return '';
+  const a = etatAcces();
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
+  const pose = a.existant ? A.modePose(def, a.existant) : null;
+  const modes = Object.keys(A.MODES).map(k => `
+    <div class="fr-radio-group"><input type="radio" id="acc-m-${k}" name="acces-mode" value="${k}" ${a.mode === k ? 'checked' : ''} onchange="App.onAcces('mode', '${k}')">
+      <label class="fr-label" for="acc-m-${k}">${esc(A.MODES[k].libelle)}<span class="fr-hint-text">${esc(A.MODES[k].explication)}</span></label></div>`).join('');
+  const regles = plan.regles.map(r => `<tr><td>${esc(r.tableId === '*' ? 'tout le reste' : r.tableId)}</td><td>${esc(r.colIds === '*' ? 'toutes' : r.colIds)}</td>
+    <td><code>${esc(r.aclFormula || 'sinon')}</code></td><td><code>${esc(r.permissionsText)}</code></td></tr>`).join('');
+  const peutPoser = plan.ok && plan.regles.length && !pose;
+  return `
+    <details class="fr-mt-3w" ${a.ouvert ? 'open' : ''} ontoggle="App.onAcces('ouvert', this.open)">
+      <summary class="fr-label">Qui voit les réponses ?${pose ? ' — règles posées' : ''}</summary>
+      <p class="fr-text--sm fr-mt-1w">Une page de formulaire est une page de votre document : <strong>celles et ceux qui la remplissent en sont éditeurs</strong> et voient tout ce que les
+        règles d’accès ne leur cachent pas. Pour exposer le formulaire sans exposer les réponses, dites ici ce qu’ils peuvent lire. Une règle ne peut que retirer des droits :
+        les participants doivent déjà être éditeurs (ou arriver par un lien public en édition). Pour des personnes qui n’ont pas de compte, préférez la page hors de Grist, plus bas.</p>
+      ${pose ? `<div class="fr-alert fr-alert--info"><p>Des règles de ce formulaire sont posées dans le document (réglage : <strong>${esc(A.MODES[pose] ? A.MODES[pose].libelle : pose)}</strong>).
+        Retirez-les pour changer de réglage.</p></div>` : ''}
+      <fieldset class="fr-fieldset fr-mt-1w"><legend class="fr-label">Ce que lisent les participants</legend>${modes}</fieldset>
+      <div class="fr-input-group"><label class="fr-label" for="acc-gest">Qui garde tous les droits, en plus des propriétaires du document (un courriel par ligne)
+        ${hintIcon('Les propriétaires gardent toujours tous les droits. Ajoutez ici les personnes qui gèrent les réponses sans être propriétaires : sans cela, elles seraient traitées comme des participants.')}</label>
+        <textarea class="fr-input" id="acc-gest" rows="2" oninput="App.onAcces('gestionnaires', this.value)">${esc(a.gestionnaires)}</textarea></div>
+      <div class="fr-checkbox-group"><input type="checkbox" id="acc-public" ${a.public ? 'checked' : ''} onchange="App.onAcces('public', this.checked)">
+        <label class="fr-label" for="acc-public">Le document est partagé avec le public, sans compte
+          <span class="fr-hint-text">Une personne sans compte peut répondre (rôle Éditeur du public). Les règles d’accès sont alors la seule protection : « tout le reste caché » est imposé, et personne n’est identifié.</span></label></div>
+      <div class="fr-checkbox-group"><input type="checkbox" id="acc-defaut" ${(a.defautRefus || a.public) ? 'checked' : ''} ${a.public ? 'disabled' : ''} onchange="App.onAcces('defautRefus', this.checked)">
+        <label class="fr-label" for="acc-defaut">Cacher aussi le reste du document aux participants
+          <span class="fr-hint-text">Sinon ils voient encore les autres tables et pages. À cocher si le document n’est partagé qu’avec eux ; à éviter si des collègues non propriétaires y travaillent.</span></label></div>
+      ${plan.erreurs.length ? `<div class="fr-alert fr-alert--error fr-mt-1w"><p>${plan.erreurs.map(esc).join('<br>')}</p></div>` : ''}
+      <h3 class="fr-h6 fr-mt-2w">Ce que cela change</h3>
+      <ul class="fr-text--sm">${plan.resume.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+      ${plan.avertissements.length ? `<div class="fr-alert fr-alert--warning"><p>${plan.avertissements.map(esc).join('<br>')}</p></div>` : ''}
+      ${plan.regles.length ? `<details class="fr-mt-1w"><summary class="fr-text--sm">Voir les règles (pour les poser à la main dans « Règles d’accès » de Grist)</summary>
+        <div class="fr-table fr-mt-1w"><table><thead><tr><th>Table</th><th>Colonnes</th><th>Condition</th><th>Droits</th></tr></thead><tbody>${regles}</tbody></table></div>
+        <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w" onclick="App.accesCopier()">Copier les règles</button></details>` : ''}
+      <div class="fr-mt-2w">
+        <button type="button" class="fr-btn" ${peutPoser ? '' : 'disabled'} onclick="App.accesAppliquer()">Poser ces règles dans le document</button>
+        ${pose ? `<button type="button" class="fr-btn fr-btn--secondary fr-ml-1w" onclick="App.accesRetirer()">Retirer les règles de ce formulaire</button>` : ''}
+        <button type="button" class="fr-btn fr-btn--tertiary fr-ml-1w" onclick="App.accesLire()">${a.lu ? 'Relire les règles du document' : 'Lire les règles du document'}</button>
+      </div>
+      ${a.message ? `<p class="fr-text--sm fr-mt-1w" role="status">${esc(a.message)}</p>` : ''}
+      <p class="fr-text--sm fr-mt-1w">Posées sur le document, ces règles s’appliquent à tout le monde, y compris à vous si vous n’êtes pas propriétaire : vérifiez-les avec un compte de participant.</p>
+    </details>`;
+}
+
+function onAcces(cle, valeur) {
+  const a = etatAcces();
+  if (cle === 'ouvert') { a.ouvert = !!valeur; return; }
+  a[cle] = valeur;
+  if (cle === 'gestionnaires') return;   // la saisie ne redessine pas : le focus resterait perdu
+  renderPublishStep();
+}
+
+/** Les règles qui existent déjà dans le document, lues sans rien modifier. */
+async function accesLire() {
+  const a = etatAcces();
+  if (S.isDemo) { a.existant = { ressources: [], regles: [] }; a.lu = true; a.message = 'Mode démo : aucune règle à lire.'; renderPublishStep(); return; }
+  try {
+    const lignes = (donnees) => (window.FormLimites ? FormLimites.lignesDe(donnees) : []);
+    const [res, regles] = await Promise.all([GristBridge.loadTable('_grist_ACLResources'), GristBridge.loadTable('_grist_ACLRules')]);
+    const ressources = lignes(res).map(r => ({ id: r.id, tableId: r.tableId || '', colIds: r.colIds || '' }));
+    const parRes = {}; ressources.forEach(r => { parRes[r.id] = r; });
+    a.existant = {
+      ressources: ressources,
+      regles: lignes(regles).map(r => ({ id: r.id, resource: r.resource, rulePos: typeof r.rulePos === 'number' ? r.rulePos : null, memo: r.memo || '',
+        aclFormula: r.aclFormula || '', permissionsText: r.permissionsText || '', tableId: (parRes[r.resource] || {}).tableId || '' }))
+    };
+    a.lu = true;
+    a.message = 'Règles du document lues : ' + a.existant.regles.length + ' règle(s).';
+  } catch (e) {
+    a.existant = null; a.lu = false;
+    a.message = 'Les règles du document n’ont pas pu être lues (' + ((e && e.message) || 'refusé') + '). Posez-les à la main avec « Voir les règles ».';
+  }
+  renderPublishStep();
+}
+
+async function accesAppliquer() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  const a = etatAcces();
+  if (!A || !def) return;
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
+  if (!plan.ok || !plan.regles.length) return;
+  if (!a.lu) { a.message = 'Lisez d’abord les règles du document : on ne pose rien sans savoir ce qui existe.'; renderPublishStep(); return; }
+  const pose = A.actionsPose(plan.regles, a.existant);
+  if (!pose.ok) { a.message = pose.erreurs.join(' '); renderPublishStep(); return; }
+  const texte = 'Poser ces règles d’accès dans le document ?\n\n- ' + plan.resume.join('\n- ') +
+    (plan.avertissements.length ? '\n\nÀ noter :\n- ' + plan.avertissements.join('\n- ') : '') +
+    '\n\nElles s’appliquent aussitôt à tout le monde. Les propriétaires du document gardent tous les droits.';
+  if (!confirm(texte)) return;
+  if (S.isDemo) { a.message = 'Mode démo : ' + pose.actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
+  try {
+    await GristBridge.applyUserActions(pose.actions);
+    a.message = 'Règles posées (' + pose.actions.filter(x => x[1] === '_grist_ACLRules').length + ').' + (pose.infos && pose.infos.length ? ' ' + pose.infos.join(' ') : '');
+    toast('Règles d’accès posées', 'success');
+    await accesLire();
+  } catch (e) {
+    a.message = 'Échec : ' + ((e && e.message) || 'refusé') + '. Rien n’a été modifié ; posez les règles à la main avec « Voir les règles ».';
+    toast(a.message, 'error');
+    renderPublishStep();
+  }
+}
+
+async function accesRetirer() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  const a = etatAcces();
+  if (!A || !def || !a.existant) return;
+  const actions = A.actionsRetrait(def, a.existant);
+  if (!actions.length) { a.message = 'Aucune règle de ce formulaire à retirer.'; renderPublishStep(); return; }
+  if (!confirm('Retirer les règles d’accès posées pour ce formulaire ?\n\nLes participants retrouveront les droits que leur donne leur rôle dans le document (ils pourront de nouveau lire les réponses). Les autres règles du document ne sont pas touchées.')) return;
+  if (S.isDemo) { a.message = 'Mode démo : ' + actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
+  try {
+    await GristBridge.applyUserActions(actions);
+    a.message = 'Règles retirées.';
+    toast('Règles d’accès retirées', 'success');
+    await accesLire();
+  } catch (e) {
+    a.message = 'Échec : ' + ((e && e.message) || 'refusé');
+    toast(a.message, 'error');
+    renderPublishStep();
+  }
+}
+
+/** Les règles en texte, pour les poser à la main dans « Règles d’accès » de Grist. */
+async function accesCopier() {
+  const A = window.FormAcces;
+  const a = etatAcces();
+  const plan = A.planRegles(S.currentDef, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
+  const texte = plan.regles.map(r => [r.tableId === '*' ? 'Tout le reste' : r.tableId, 'colonnes : ' + (r.colIds === '*' ? 'toutes' : r.colIds),
+    'si : ' + (r.aclFormula || '(sinon)'), 'droits : ' + r.permissionsText].join(' | ')).join('\n');
+  try { await navigator.clipboard.writeText(texte); a.message = 'Règles copiées.'; }
+  catch (e) { a.message = 'Copie impossible : sélectionnez le tableau des règles.'; }
+  renderPublishStep();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5245,7 +5835,7 @@ async function externeGenerer() {
   const x = S.externe = S.externe || {};
   if (!E || !def) return;
   try {
-    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText] = await Promise.all([
+    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText] = await Promise.all([
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
@@ -5255,11 +5845,12 @@ async function externeGenerer() {
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/prefill.js'),
       fetchScriptSource('shared/conditions.js'),
+      fetchScriptSource('shared/limites.js'),
       fetchScriptSource('runtime/engine.js'),
       fetchScriptSource('shared/dsfr-like.css')
     ]);
     x.page = E.buildExternalDocument(def,
-      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText },
+      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText },
       { adresse: x.adresse });
     x.nom = (def.id || 'formulaire') + '.html';
     toast('Page générée', 'success');
@@ -5415,8 +6006,8 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText] =
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + limites + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -5429,6 +6020,7 @@ async function publishForm() {
       fetchScriptSource('shared/enrichir.js'),
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/conditions.js'),
+      fetchScriptSource('shared/limites.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -5436,7 +6028,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -5503,7 +6095,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onValidationMode, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

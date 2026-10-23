@@ -222,8 +222,13 @@
   // ── clavier du téléphone ──
 
   var INPUTMODES = ['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url'];
+  var AUTOCAPITALIZE = ['none', 'sentences', 'words', 'characters'];
   var CLAVIER_DU_FORMAT = {
     courriel: { inputmode: 'email', autocomplete: 'email' },
+    // Un nom s'ecrit en lettres : le clavier propose la majuscule, le navigateur peut le remplir.
+    nom: { inputmode: 'text', autocomplete: 'family-name', autocapitalize: 'characters' },
+    prenom: { inputmode: 'text', autocomplete: 'given-name', autocapitalize: 'words' },
+    nomComplet: { inputmode: 'text', autocomplete: 'name', autocapitalize: 'words' },
     telephone: { inputmode: 'tel', autocomplete: 'tel' },
     codePostal: { inputmode: 'numeric', autocomplete: 'postal-code' },
     siren: { inputmode: 'numeric' },
@@ -253,7 +258,12 @@
       var min = nombreOuNull(o.min);
       if (min === null || min >= 0) base = { inputmode: t === 'Int' ? 'numeric' : 'decimal' };
     }
-    if (base) { if (base.inputmode) out.inputmode = base.inputmode; if (base.autocomplete) out.autocomplete = base.autocomplete; }
+    if (base) {
+      if (base.inputmode) out.inputmode = base.inputmode;
+      if (base.autocomplete) out.autocomplete = base.autocomplete;
+      if (base.autocapitalize) out.autocapitalize = base.autocapitalize;
+    }
+    if (typeof voulu.autocapitalize === 'string' && AUTOCAPITALIZE.indexOf(voulu.autocapitalize) !== -1) out.autocapitalize = voulu.autocapitalize;
     if (typeof voulu.inputmode === 'string' && INPUTMODES.indexOf(voulu.inputmode) !== -1) out.inputmode = voulu.inputmode;
     if (typeof voulu.autocomplete === 'string' && /^[a-z0-9-]{1,40}( [a-z0-9-]{1,40}){0,2}$/.test(voulu.autocomplete)) out.autocomplete = voulu.autocomplete;
     return out;
@@ -262,7 +272,8 @@
   /** Les attributs HTML correspondants, déjà échappés (la liste blanche ne laisse rien passer d'autre). */
   function attributsClavier(field, format) {
     var c = clavierDe(field, format);
-    return (c.inputmode ? ' inputmode="' + c.inputmode + '"' : '') + (c.autocomplete ? ' autocomplete="' + c.autocomplete + '"' : '');
+    return (c.inputmode ? ' inputmode="' + c.inputmode + '"' : '') + (c.autocomplete ? ' autocomplete="' + c.autocomplete + '"' : '') +
+      (c.autocapitalize ? ' autocapitalize="' + c.autocapitalize + '"' : '');
   }
 
   // ── lieu : la carte, une adresse, ou les deux ──

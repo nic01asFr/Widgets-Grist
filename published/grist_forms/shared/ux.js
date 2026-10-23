@@ -46,8 +46,76 @@
     { key: 'compteur', type: 'Int', widget: 'compteur', label: 'Compteur + / −' },
     // Grist n'a pas de type heure : « HH:MM » se range en texte.
     { key: 'heure', type: 'Text', widget: 'heure', label: 'Heure (HH:MM)' },
-    { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Case à cocher' }
+    { key: 'bool', type: 'Bool', widget: 'checkbox', label: 'Case à cocher' },
+    // Un courriel est un texte que le moteur contrôle (format, clavier « @ ») : le choisir pose les deux.
+    { key: 'courriel', type: 'Text', widget: 'text', label: 'Courriel', options: { validation: { format: 'courriel' } } },
+    // Qui répond : un type qui contrôle et met en forme (majuscules appropriées), pas un texte libre.
+    { key: 'nom', type: 'Text', widget: 'text', label: 'Nom de famille (MAJUSCULES)', options: { validation: { format: 'nom', mode: 'corriger' } } },
+    { key: 'prenom', type: 'Text', widget: 'text', label: 'Prénom (Initiale en majuscule)', options: { validation: { format: 'prenom', mode: 'corriger' } } },
+    { key: 'nomcomplet', type: 'Text', widget: 'text', label: 'Nom et prénom (un seul champ)', options: { validation: { format: 'nomComplet', mode: 'corriger' } } }
   ];
+
+  /**
+   * Qui répond : nom, prénom, courriel. Le trio qu'une inscription demande presque toujours, posé d'un
+   * geste. Chaque question dit ce que le navigateur peut remplir (`autocomplete`) et, pour le courriel,
+   * le format contrôlé. `alias` sert à reconnaître une colonne déjà là sous un autre nom.
+   */
+  var IDENTITE = [
+    { label: 'Nom', colId: 'Nom', alias: ['nom', 'nomdefamille', 'name', 'lastname', 'familyname'],
+      options: { validation: { format: 'nom', mode: 'corriger' } } },
+    { label: 'Prénom', colId: 'Prenom', alias: ['prenom', 'firstname', 'givenname'],
+      options: { validation: { format: 'prenom', mode: 'corriger' } } },
+    { label: 'Courriel', colId: 'Courriel', alias: ['courriel', 'email', 'mail', 'adresseemail', 'adressemail', 'emailaddress', 'adressecourriel'],
+      options: { validation: { format: 'courriel' } } }
+  ];
+
+  /** Un nom comparable : sans accents, sans majuscules, sans ponctuation. */
+  function nomComparable(texte) {
+    return String(texte || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /**
+   * La colonne qui correspond probablement à une question d'identité, parmi celles de la table.
+   * L'identifiant ou le libellé de la colonne suffit ; sans correspondance : null (on ne devine pas).
+   */
+  function colonneProbable(modele, colonnes) {
+    var vises = (modele.alias || []).concat([modele.label, modele.colId]).map(nomComparable);
+    var liste = colonnes || [];
+    for (var i = 0; i < liste.length; i++) {
+      var c = liste[i];
+      if (c.type !== 'Text') continue;
+      if (vises.indexOf(nomComparable(c.colId)) !== -1 || vises.indexOf(nomComparable(c.label)) !== -1) return c.colId;
+    }
+    return null;
+  }
+
+  /**
+   * Les questions d'identité à ajouter à un formulaire : celles qu'il n'a pas déjà (par identifiant ou par
+   * libellé), prêtes à poser. Obligatoires par défaut : une inscription sans nom ni courriel n'en est pas une.
+   *
+   * @param {Array} champsExistants les questions déjà dans le formulaire
+   * @param {Array} colonnes les colonnes de la table, si elle existe (`{ colId, label, type }`)
+   * @param {boolean} laisserVideSiAbsente en liaison avec une table : une colonne introuvable reste à choisir
+   */
+  function identiteChamps(champsExistants, colonnes, laisserVideSiAbsente) {
+    var deja = (champsExistants || []).reduce(function (acc, f) {
+      acc[nomComparable(f.colId)] = true; acc[nomComparable(f.label)] = true; return acc;
+    }, {});
+    var out = [];
+    IDENTITE.forEach(function (m) {
+      var trouvee = colonneProbable(m, colonnes);
+      var cles = [m.label, m.colId].concat(m.alias).map(nomComparable);
+      if (trouvee) cles.push(nomComparable(trouvee));
+      if (cles.some(function (k) { return deja[k]; })) return;
+      var colId = trouvee || (laisserVideSiAbsente ? '' : m.colId);
+      out.push({
+        colId: colId, label: m.label, type: 'Text', widget: 'text', required: true,
+        options: JSON.parse(JSON.stringify(m.options)), condition: null, cascade: null, dynamicFilter: null,
+        profile: null, theme: null, polarity: '', _colIdLocked: !!trouvee
+      });
+    });
+    return out;
+  }
 
   function slugify(text) {
     var s = String(text || '')
@@ -90,6 +158,14 @@
         if (all[i].kind && all[i].kind === field.kind) return all[i].key;
       }
     }
+    // Un type qui porte un format (courriel, nom, prenom) se reconnait par ce format : sinon il se lirait « texte ».
+    var formatVoulu = field.options && field.options.validation && field.options.validation.format;
+    if (formatVoulu) {
+      for (i = 0; i < all.length; i++) {
+        var fmt = all[i].options && all[i].options.validation && all[i].options.validation.format;
+        if (fmt && fmt === formatVoulu && all[i].type === field.type && all[i].widget === field.widget) return all[i].key;
+      }
+    }
     // Le widget d'abord : « oui/non » et « case a cocher » ont le meme type
     // Grist, et c'est la maniere de poser la question qui les distingue.
     for (i = 0; i < all.length; i++) {
@@ -113,6 +189,13 @@
     if (!found) found = SIMPLE_TYPES[0];
     field.type = found.type;
     field.widget = found.widget;
+    // Un type qui porte ses réglages (courriel : format contrôlé) les pose, sans écraser ce que la question dit déjà.
+    if (found.options) {
+      field.options = field.options || {};
+      Object.keys(found.options).forEach(function (k) {
+        if (field.options[k] === undefined) field.options[k] = JSON.parse(JSON.stringify(found.options[k]));
+      });
+    }
     // Le `kind` suit le choix : il n'est pas un reglage de plus a trouver.
     // Celui qu'on quitte s'en va, sauf l'echelle, qui se choisit ailleurs.
     if (found.kind) field.kind = found.kind;
@@ -388,6 +471,10 @@
     tableNameFromTitle: tableNameFromTitle,
     fieldTypeKey: fieldTypeKey,
     applyTypeKey: applyTypeKey,
+    IDENTITE: IDENTITE,
+    identiteChamps: identiteChamps,
+    colonneProbable: colonneProbable,
+    nomComparable: nomComparable,
     humanizeBindingErrors: humanizeBindingErrors,
     operatorsForType: operatorsForType,
     emptyRule: emptyRule,

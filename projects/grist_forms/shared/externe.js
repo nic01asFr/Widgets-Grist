@@ -27,13 +27,13 @@
   'use strict';
   var asNode = typeof process !== 'undefined' && process.versions && process.versions.node;
   if (asNode && typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./ensure-schema.js'), require('./formats.js'));
+    module.exports = factory(require('./ensure-schema.js'), require('./formats.js'), require('./limites.js'));
   } else if (typeof define === 'function' && define.amd) {
-    define(['./ensure-schema', './formats'], factory);
+    define(['./ensure-schema', './formats', './limites'], factory);
   } else {
-    root.FormExterne = factory(root.EnsureSchema, root.FormFormats);
+    root.FormExterne = factory(root.EnsureSchema, root.FormFormats, root.FormLimites);
   }
-}(typeof self !== 'undefined' ? self : this, function (Ensure, Formats) {
+}(typeof self !== 'undefined' ? self : this, function (Ensure, Formats, Limites) {
   'use strict';
 
   var VERSION = '1.0.0';
@@ -175,7 +175,7 @@
       out.push('if ' + col + ' and $' + apres + ' and ' + col + ' < $' + apres + ':');
       out.push('  m.append(' + py(lib + ' : avant « ' + apres + ' »') + ')');
     }
-    var fmt = Formats && Formats.formatDeChamp(field);
+    var fmt = Formats && (Formats.formatControle || Formats.formatDeChamp)(field);
     if (fmt) {
       out.push('if ' + col + ' and not fmt_' + fmt + '(' + col + '):');
       out.push('  m.append(' + py(lib + ' : ' + Formats.message(fmt).replace(/\.$/, '').replace(/^Ce n’est pas /, 'ce n’est pas ')) + ')');
@@ -205,7 +205,7 @@
       var regles = [];
       reglesDeQuestion(formDef, f, regles);
       if (!regles.length) return;
-      var fmt = Formats && Formats.formatDeChamp(f);
+      var fmt = Formats && (Formats.formatControle || Formats.formatDeChamp)(f);
       if (fmt) formats.push(fmt);
       var conds = [];
       if (sectionCond) conds.push('(' + sectionCond + ')');
@@ -234,6 +234,12 @@
       formula: "bool($Recu) and $id == min(r.id for r in " + t + ".lookupRecords(Recu=$Recu))" });
     cols.push({ id: 'Motifs', type: 'Text', isFormula: true, label: 'Motifs de non-conformité', formula: motifs });
     cols.push({ id: 'Conforme', type: 'Bool', isFormula: true, label: 'Conforme', formula: 'not $Motifs' });
+    // Une page hors de Grist ne peut rien refuser : si le formulaire a des places, la table tranche par ordre d'arrivée.
+    var lim = formDef.limites;
+    var nomPlace = lim && typeof lim.placeCol === 'string' ? lim.placeCol : '';
+    var retenu = nomPlace && Limites && /^[A-Za-z_][A-Za-z0-9_]*$/.test(nomPlace) && RESERVEES.indexOf(nomPlace) === -1 ? Limites.normaliser(lim).limites : null;
+    var formulePlace = retenu ? Limites.formulePlace(retenu, t) : null;
+    if (formulePlace) cols.push({ id: nomPlace, type: 'Text', isFormula: true, label: 'Place', formula: formulePlace });
     cols.push({ id: 'StatutAffiche', type: 'Text', isFormula: true, label: 'Statut',
       formula: 't = ' + trait + ".lookupOne(Reception=$id)\nreturn t.Statut if t and t.Statut else 'recu'" });
     cols.push({ id: 'ReponseAffichee', type: 'Text', isFormula: true, label: 'Réponse',
@@ -367,7 +373,7 @@
    * La page autonome : le moteur, le formulaire figé, et l'envoi par la clé.
    *
    * @param {object} formDef
-   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText }
+   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText }
    * @param {object} opts     { adresse: <lien du formulaire publié> }
    */
   function buildExternalDocument(formDef, bundles, opts) {
@@ -379,7 +385,7 @@
 
     var script = [
       bundles.typesJs || '', bundles.sessionContextJs || '', bundles.carteJs || '',
-      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.conditionsJs || '', bundles.engineJs || '',
+      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.conditionsJs || '', bundles.limitesJs || '', bundles.engineJs || '',
       '(function () {',
       '  var DEF = ' + jsonPourScript(formDef || {}) + ';',
       '  var GUICHET = ' + jsonPourScript(guichet.base) + ';',
