@@ -397,6 +397,7 @@
         if (col.label) addDef.label = col.label;
         if (col.widgetOptions) addDef.widgetOptions = col.widgetOptions;
         if (col.isFormula) { addDef.isFormula = true; addDef.formula = col.formula; }
+        else addDef.isFormula = false;   // sinon Grist crée une « colonne vide », prise ensuite pour un calcul
         actions.push(['AddColumn', tableId, col.id, addDef]);
       } else if (!typesCompatible(existingType, col.type)) {
         errors.push(
