@@ -560,3 +560,49 @@ describe('Engine sans shared/conditions.js — repli sur l’ancien évaluateur'
     assert.ok(/conditions\.js/.test(sortie[0]), sortie[0]);
   });
 });
+
+describe('condition « est renseigné » (champ qui attend une réponse précédente)', () => {
+  const groupe = { field: 'Departement', operator: 'notEmpty', value: '' };
+
+  it('cache la question tant que rien n’est répondu, la montre ensuite', () => {
+    assert.equal(Engine.evaluateCondition(groupe, {}), false);
+    assert.equal(Engine.evaluateCondition(groupe, { Departement: undefined }), false);
+    assert.equal(Engine.evaluateCondition(groupe, { Departement: null }), false);
+    assert.equal(Engine.evaluateCondition(groupe, { Departement: '' }), false);
+    assert.equal(Engine.evaluateCondition(groupe, { Departement: 5 }), true);
+    assert.equal(Engine.evaluateCondition(groupe, { Departement: '5' }), true);
+  });
+
+  it('« n’est pas renseigné » est le contraire', () => {
+    const vide = { field: 'Departement', operator: 'empty', value: '' };
+    assert.equal(Engine.evaluateCondition(vide, {}), true);
+    assert.equal(Engine.evaluateCondition(vide, { Departement: 5 }), false);
+  });
+
+  it('le piège : « différent de (vide) » laisse la question visible sans réponse', () => {
+    const piege = { field: 'Departement', operator: '!=', value: '' };
+    assert.equal(Engine.evaluateCondition(piege, {}), true);
+  });
+
+  it('le compositeur propose « est renseigné » pour une liste liée, un choix et un texte', () => {
+    ['Ref', 'Ref:Departements', 'Choice', 'Text', 'Date'].forEach((t) => {
+      const valeurs = FormUx.operatorsForType(t).map((o) => o.value);
+      assert.ok(valeurs.includes('notEmpty'), t + ' : notEmpty manquant');
+      assert.ok(valeurs.includes('empty'), t + ' : empty manquant');
+    });
+    // L'opérateur par défaut ne change pas : on n'impose pas « est renseigné » d'office.
+    assert.equal(FormUx.operatorsForType('Ref')[0].value, '==');
+  });
+
+  it('ces opérateurs n’attendent pas de valeur ; les autres oui', () => {
+    assert.equal(FormUx.operatorTakesValue('notEmpty'), false);
+    assert.equal(FormUx.operatorTakesValue('empty'), false);
+    assert.equal(FormUx.operatorTakesValue('=='), true);
+    assert.equal(FormUx.operatorTakesValue('in'), true);
+  });
+
+  it('le résumé se lit en français', () => {
+    assert.equal(FormUx.summarizeCondition(groupe), 'Departement est renseigné');
+    assert.equal(FormUx.summarizeCondition({ field: 'A', operator: 'empty', value: '' }), 'A n’est pas renseigné');
+  });
+});
