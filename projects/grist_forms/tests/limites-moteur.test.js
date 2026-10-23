@@ -181,6 +181,89 @@ describe('Limites — à l\'envoi', () => {
   });
 });
 
+describe('Limites — dire où en est la réponse envoyée', () => {
+  const limites = (extra) => Object.assign({ placeCol: 'Place', unique: { colId: 'Nom' } }, extra || {});
+  /** La table après l'envoi : la ligne 3 est celle qu'on vient d'ajouter, `place` est ce que la formule en a dit. */
+  const apres = (place) => ({ id: [1, 2, 3], Atelier: ['A', 'B', 'A'], Nom: ['x', 'y', 'z'], Place: ['Confirmé', 'Confirmé', place] });
+  const envoyer = async (def, etat, retour) => {
+    const c = client(etat);
+    c.appliquer = function (actions) { this.ecritures.push(actions); return Promise.resolve(retour === undefined ? [[3]] : retour); };
+    const root = createRoot();
+    Engine.monter(root, def, { client: c, contexte: {} });
+    await flush();
+    root.querySelector('[name="Atelier"]').value = 'A';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush(); await flush();
+    return { root, c };
+  };
+
+  it('« Confirmé » : une phrase, sans alarme', async () => {
+    const { root, c } = await envoyer(formulaire(limites()), { table: apres('Confirmé') });
+    assert.equal(c.ecritures.length, 1);
+    assert.match(root.innerHTML, /data-statut="retenue"/);
+    assert.match(root.innerHTML, /Votre réponse est retenue\./);
+    assert.match(root.innerHTML, /fr-alert--info/);
+  });
+
+  it('« Liste d\'attente » : le dit, en avertissement', async () => {
+    const { root } = await envoyer(formulaire(limites()), { table: apres("Liste d'attente") });
+    assert.match(root.innerHTML, /data-statut="attente"/);
+    assert.match(root.innerHTML, /fr-alert--warning/);
+    assert.match(root.innerHTML, /C’est complet : votre réponse est sur liste d’attente\./);
+  });
+
+  it('« Doublon » : dit que la première est conservée', async () => {
+    const { root } = await envoyer(formulaire(limites()), { table: apres('Doublon') });
+    assert.match(root.innerHTML, /data-statut="doublon"/);
+    assert.match(root.innerHTML, /la première est conservée/);
+  });
+
+  it('les phrases se règlent dans le formulaire', async () => {
+    const def = formulaire(limites({ messages: { attente: 'Vous êtes sur la liste, nous vous écrirons.' } }));
+    const { root } = await envoyer(def, { table: apres("Liste d'attente") });
+    assert.match(root.innerHTML, /Vous êtes sur la liste, nous vous écrirons\./);
+    assert.ok(!/C’est complet/.test(root.innerHTML), 'la phrase par défaut est remplacée');
+  });
+
+  it('se tait quand il ne sait pas : pas de colonne Place demandée, valeur inconnue, ligne introuvable, table illisible', async () => {
+    const sansPlace = await envoyer(formulaire({ total: 50 }), { table: apres('Confirmé') });
+    assert.ok(!/data-statut/.test(sansPlace.root.innerHTML), 'sans placeCol, aucune phrase');
+    const inconnue = await envoyer(formulaire(limites()), { table: apres('Écartée') });
+    assert.ok(!/data-statut/.test(inconnue.root.innerHTML), 'valeur inconnue : rien');
+    const introuvable = await envoyer(formulaire(limites()), { table: apres('Confirmé') }, [[99]]);
+    assert.ok(!/data-statut/.test(introuvable.root.innerHTML), 'identifiant absent de la table : rien');
+    const sansId = await envoyer(formulaire(limites()), { table: apres('Confirmé') }, []);
+    assert.ok(!/data-statut/.test(sansId.root.innerHTML), 'pas d\'identifiant renvoyé : rien');
+    assert.match(sansId.root.innerHTML, /envoyé avec succès|Merci/, 'la confirmation reste');
+  });
+
+  it('un envoi réussi ne dépend jamais de cette relecture', async () => {
+    const etat = { table: apres('Confirmé') };
+    const c = client(etat);
+    let lectures = 0;
+    c.lireTable = function () { lectures++; return lectures === 1 ? Promise.resolve(etat.table) : (lectures === 2 ? Promise.resolve(etat.table) : Promise.reject(new Error('refusé'))); };
+    c.appliquer = function (actions) { this.ecritures.push(actions); return Promise.resolve([[3]]); };
+    const root = createRoot();
+    Engine.monter(root, formulaire(limites()), { client: c, contexte: {} });
+    await flush();
+    root.querySelector('[name="Atelier"]').value = 'A';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush(); await flush();
+    assert.equal(c.ecritures.length, 1);
+    assert.match(root.innerHTML, /envoyé avec succès|Merci/);
+    assert.ok(!/data-statut/.test(root.innerHTML));
+  });
+
+  it('le module dit les phrases par défaut et laisse les valeurs de la table en code stable', () => {
+    const L = require('../shared/limites.js');
+    assert.deepEqual(L.statut({}, 'Confirmé'), { code: 'retenue', message: 'Votre réponse est retenue.' });
+    assert.equal(L.statut({}, 'Écartée'), null);
+    assert.equal(L.statut({}, ''), null);
+    assert.equal(L.statut({ messages: { doublon: 'Déjà là' } }, 'Doublon').message, 'Déjà là');
+    assert.deepEqual(L.normaliser({ placeCol: 'Place', messages: { retenue: 'Ok', inconnue: 'Z' } }).limites.messages, { retenue: 'Ok' });
+  });
+});
+
 describe('Limites — la colonne « Place » créée avec la table', () => {
   const Ensure = require('../shared/ensure-schema.js');
   const Externe = require('../shared/externe.js');

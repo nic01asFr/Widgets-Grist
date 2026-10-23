@@ -435,6 +435,9 @@ Widget Grist → cette URL, accès **full**. E2E auto : `?e2e=1` uniquement.
   automatiquement est une colonne de données (`isFormula: false`), pas une « colonne vide » ; une question sans colonne
   ne fait plus refuser toute la ligne (`KeyError ''`).
 - **Régler une question en cliquant dessus** : la carte entière l'ouvre (la roue reste).
+- **Conditions « est renseigné » / « n'est pas renseigné »** (`empty`, `notEmpty`, sans valeur) offertes pour tous les types : « différent de (vide) » reste vrai tant que la personne n'a rien répondu (la valeur n'existe pas), donc ne cache rien. C'est le moyen de n'afficher une question qu'après une autre.
+- **Reconfigurer après la première mise en ligne** : la formule de `Place` est remplacée quand les limites changent, si elle porte la marque `# Généré par Form Builder` (`ensure-schema.js`, action `ModifyColumn`) ; les règles d'accès se mettent à jour **en place** (`FormAcces.actionsMiseAJour` : seule la liste des colonnes lisibles change, aucune règle retirée, jamais d'état sans protection ; bouton « Mettre à jour les règles »). Les deux ne suivaient pas un changement fait après la première mise en ligne.
+- **Statut après l'envoi** : `engine.js` relit sa ligne (identifiant renvoyé par l'ajout) et dit `retenue` / `attente` / `doublon` d'après `placeCol` (`FormLimites.statut`, phrases réglables dans `limites.messages`) ; toute difficulté laisse l'écran de fin inchangé. Statut **par ligne**, pas par question (voir `docs/ETUDE-STATUT-INSCRIPTION.md`).
 - **Piège d'écriture** : les heredocs `python - <<EOF` transforment les séquences à antislash (retour à la ligne, escapes
   unicode) ; écrire les fichiers avec l'outil d'édition. Sous Windows, Python lit l'entrée standard en cp1252 :
   transmettre les échantillons de test en ASCII échappé.

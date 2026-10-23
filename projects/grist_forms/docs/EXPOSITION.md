@@ -43,6 +43,12 @@ Deux options : **qui garde tous les droits** en plus des propriétaires (par cou
 
 Form Builder **n'applique rien sans votre confirmation**, ne **modifie jamais** une règle existante, et marque les siennes (`form-builder:<identifiant>`) pour pouvoir les **retirer d'un geste**. S'il trouve déjà des règles sur la même table, il s'arrête et propose les règles à poser à la main. Les propriétaires gardent toujours tous les droits.
 
+### Changer le formulaire après avoir posé les règles
+
+Les règles se posent une fois. Si le formulaire change ensuite — un maximum par choix ajouté, par exemple — il demande à lire de nouvelles colonnes (celles qui servent à compter), et les règles posées n'en laissent plus lire assez : le formulaire annonce alors des places qui ne tiennent pas compte des réponses des autres.
+
+« Poser » est refusé tant que des règles du formulaire existent, et « Retirer » laisserait le document sans protection le temps de reposer. L'écran propose donc **« Mettre à jour les règles »** : après lecture des règles du document, il change **en place la seule liste des colonnes lisibles**, sans retirer ni ajouter aucune règle (le document n'est jamais sans protection). Si autre chose diffère (réglage, accès public, tables liées, reste du document), ou si une règle étrangère vise les mêmes colonnes, il le dit et laisse le chemin « retirer puis reposer ».
+
 ### Un document partagé avec le public (personnes sans compte)
 
 Case « Le document est partagé avec le public, sans compte » de l'écran. Le partage public lui-même (rôle Éditeur) se règle dans « Partager » de Grist **par un propriétaire** ; Form Builder n'y touche pas. Ce que la case change :
@@ -69,6 +75,6 @@ Mesuré sur une instance Grist de service public (document d'essai) :
 
 ## Ce qui n'est pas fait
 
-- Une personne qui s'inscrit ne **relit pas sa ligne** : pas de message « confirmé / liste d'attente » (il faudrait une lecture de sa seule ligne, par courriel ou par reçu).
+- Le statut après l'envoi (« retenue », « liste d'attente », « doublon ») est livré : voir `LIMITES.md`. Il ne vaut que pour l'instant de l'envoi et aucun courriel n'est envoyé.
 - Une table de « places » en lecture publique, qui permettrait d'afficher les places restantes sur une page hors de Grist, n'est pas livrée.
 - Les pièces jointes restent impossibles hors de l'origine de Grist.

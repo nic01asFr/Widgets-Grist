@@ -317,6 +317,73 @@
     return actions;
   }
 
+  /**
+   * Mettre les règles posées à jour quand le formulaire a changé depuis la pose.
+   *
+   * Le cas qui arrive : on pose les règles, puis on ajoute une limite par choix. Le formulaire a besoin de
+   * lire de nouvelles colonnes (celles qui servent à compter), les règles posées n'en laissent lire qu'une.
+   * « Poser » est refusé tant que des règles du formulaire existent, et « Retirer » ouvrirait le document le
+   * temps de reposer. On change donc en place la liste des colonnes lisibles, rien d'autre : le document ne
+   * passe jamais par un état sans protection.
+   *
+   * Seule cette différence est traitée. Si autre chose diffère (le réglage, l'accès public, une table liée,
+   * le défaut du document), c'est `impossible` : retirer puis reposer reste le chemin, et il faut le dire.
+   *
+   * @param {Array} regles la sortie de `planRegles`
+   * @param {object} existant { ressources, regles } lus dans le document
+   * @returns {{ etat: 'aucune'|'a-jour'|'en-place'|'impossible', actions: Array, changements: Array<{avant:string,apres:string}>, raison: string }}
+   */
+  function actionsMiseAJour(regles, existant) {
+    var res = (existant && existant.ressources) || [];
+    var rls = (existant && existant.regles) || [];
+    var rien = function (etat, raison) { return { etat: etat, actions: [], changements: [], raison: raison || '' }; };
+    if (!regles || !regles.length) return rien('aucune');
+    var memo = regles[0].memo;
+    var siennes = rls.filter(function (r) { return r.memo === memo; })
+      .sort(function (a, b) { return (a.rulePos || 0) - (b.rulePos || 0); });
+    if (!siennes.length) return rien('aucune');
+    var parId = {};
+    res.forEach(function (x) { parId[x.id] = x; });
+    if (siennes.length !== regles.length) return rien('impossible', 'Le nombre de règles posées n’est plus celui du réglage voulu.');
+
+    var voulu = {};   // ressource -> colIds voulues
+    var impossible = '';
+    siennes.forEach(function (posee, i) {
+      var v = regles[i];
+      var rs = parId[posee.resource];
+      if (!rs) { impossible = 'Une règle posée n’a plus sa ressource.'; return; }
+      if (rs.tableId !== v.tableId || (posee.aclFormula || '') !== (v.aclFormula || '') || (posee.permissionsText || '') !== (v.permissionsText || '')) {
+        impossible = 'Le réglage posé n’est plus celui qui est voulu (droits, accès public, tables liées ou reste du document).';
+        return;
+      }
+      if (voulu[posee.resource] !== undefined && voulu[posee.resource] !== v.colIds) {
+        impossible = 'Deux règles partagent une ressource et ne veulent pas les mêmes colonnes.';
+        return;
+      }
+      voulu[posee.resource] = v.colIds;
+    });
+    if (impossible) return rien('impossible', impossible);
+
+    var actions = [];
+    var changements = [];
+    var idsRessources = Object.keys(voulu);
+    for (var k = 0; k < idsRessources.length; k++) {
+      var id = Number(idsRessources[k]);
+      var rs = parId[id];
+      if (rs.colIds === voulu[id]) continue;
+      // La ressource ne doit servir qu'à nos règles, et la liste voulue ne doit pas déjà être une autre ressource.
+      var partagee = rls.some(function (r) { return r.resource === id && r.memo !== memo; });
+      var doublon = res.some(function (x) { return x.id !== id && x.tableId === rs.tableId && x.colIds === voulu[id]; });
+      if (partagee) return rien('impossible', 'Les colonnes à changer sont aussi visées par une règle qui n’est pas celle du formulaire.');
+      if (doublon) return rien('impossible', 'Une autre ressource vise déjà ces colonnes.');
+      actions.push(['UpdateRecord', '_grist_ACLResources', id, { colIds: voulu[id] }]);
+      changements.push({ avant: rs.colIds, apres: voulu[id] });
+    }
+    return actions.length
+      ? { etat: 'en-place', actions: actions, changements: changements, raison: '' }
+      : rien('a-jour');
+  }
+
   /** Quel réglage est posé : retrouvé aux règles qui portent le mémo du formulaire. */
   function modePose(def, existant) {
     var memo = memoDe(def);
@@ -331,6 +398,7 @@
     planRegles: planRegles,
     actionsPose: actionsPose,
     actionsRetrait: actionsRetrait,
+    actionsMiseAJour: actionsMiseAJour,
     modePose: modePose,
     ordreInvalide: ordreInvalide,
     memoDe: memoDe,

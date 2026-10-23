@@ -52,9 +52,21 @@ COPY_DIRS.forEach(function (d) {
   copyDir(path.join(SRC, d), path.join(DEST, d));
 });
 
+// La version se lit dans le journal de la fiche de vitrine (sa première entrée) : c'est elle qu'on écrit à chaque
+// publication. Elle était ici en dur (« 1.4.0 ») et écrasait, à chaque promotion, la version corrigée à la main.
+function versionPubliee() {
+  try {
+    const fiche = JSON.parse(garde['vitrine.json'].toString('utf8'));
+    const v = String((fiche.journal && fiche.journal[0] && fiche.journal[0].version) || '').replace(/^v/, '');
+    if (/^\d+\.\d+\.\d+$/.test(v)) return v;
+  } catch (e) { /* fiche absente ou illisible : version de repli ci-dessous */ }
+  console.warn('Version illisible dans vitrine.json (journal[0].version) : 0.0.0 écrite, à corriger.');
+  return '0.0.0';
+}
+
 const pkg = {
   name: 'grist-forms',
-  version: '1.4.0',
+  version: versionPubliee(),
   description: 'Form Builder Grist — composer, remplir et dépouiller des formulaires dans un document',
   authors: [{ name: 'nic01asfr', url: 'https://github.com/nic01asfr' }],
   grist: {

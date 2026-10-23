@@ -43,6 +43,9 @@
     return t;
   }
 
+  /** Première ligne des formules que Form Builder écrit lui-même (voir limites.js) : sa marque. */
+  var MARQUE_GENEREE = '# Généré par Form Builder';
+
   function typesCompatible(existingType, expectedType) {
     if (normalizeGristType(existingType) !== normalizeGristType(expectedType)) return false;
     if (normalizeGristType(existingType) === 'Ref' || normalizeGristType(existingType) === 'RefList') {
@@ -386,12 +389,24 @@
     }
 
     var existingById = {};
+    var existingFormulaById = {};
     (existingColumns || []).forEach(function (col) {
       existingById[col.id] = col.type;
+      if (col.isFormula) existingFormulaById[col.id] = String(col.formula || '');
     });
 
     columns.forEach(function (col) {
       var existingType = existingById[col.id];
+      if (existingType !== undefined && col.isFormula && existingFormulaById[col.id] !== undefined
+          && existingFormulaById[col.id].indexOf(MARQUE_GENEREE) === 0
+          && existingFormulaById[col.id] !== col.formula) {
+        // Les limites ont changé depuis la première mise en ligne : sans cela, la colonne « Place »
+        // continuait de trancher avec les anciennes (un maximum changé restait sans effet, en silence).
+        // Seule une formule que Form Builder a écrite est remplacée ; une formule retouchée à la main
+        // n'a plus la marque et reste intacte.
+        actions.push(['ModifyColumn', tableId, col.id, { formula: col.formula, isFormula: true }]);
+        return;
+      }
       if (existingType === undefined) {
         var addDef = { type: col.type };
         if (col.label) addDef.label = col.label;

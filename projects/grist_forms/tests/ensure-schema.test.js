@@ -317,3 +317,56 @@ describe('colonnes annexes d’un référentiel', () => {
     assert.equal(bindingIsComplete(def).ok, true, 'on ne juge pas ce qu’on ne connaît pas');
   });
 });
+
+describe('la colonne « Place » suit les limites', () => {
+  const defAvec = (max) => ({
+    tableId: 'Inscriptions',
+    choices: { Creneau: ['10h', '14h'] },
+    limites: { placeCol: 'Place', unique: { colId: 'Courriel' }, parChoix: [{ colId: 'Creneau', max: { '10h': max, '14h': max } }] },
+    sections: [{ fields: [
+      { colId: 'Courriel', type: 'Text' },
+      { colId: 'Creneau', type: 'Choice' }
+    ] }]
+  });
+  const colonnesDe = (def, place) => columnsFromFormDef(def)
+    .filter(c => !c.isFormula)
+    .map(c => ({ id: c.id, type: c.type }))
+    .concat(place);
+  const formuleDe = (def) => columnsFromFormDef(def).find(c => c.id === 'Place').formula;
+
+  it('crée la colonne la première fois', () => {
+    const def = defAvec(10);
+    const plan = planEnsureSchema(def, colonnesDe(def, []), { tableExists: true });
+    const ajout = plan.actions.find(a => a[0] === 'AddColumn' && a[2] === 'Place');
+    assert.ok(ajout, 'Place doit être créée');
+  });
+
+  it('ne fait rien quand les limites n’ont pas changé', () => {
+    const def = defAvec(10);
+    const existantes = colonnesDe(def, [{ id: 'Place', type: 'Text', isFormula: true, formula: formuleDe(def) }]);
+    const plan = planEnsureSchema(def, existantes, { tableExists: true });
+    assert.equal(plan.actions.length, 0);
+  });
+
+  it('remplace la formule quand un maximum change (sinon il restait sans effet)', () => {
+    const ancienne = formuleDe(defAvec(10));
+    const def = defAvec(20);
+    const existantes = colonnesDe(def, [{ id: 'Place', type: 'Text', isFormula: true, formula: ancienne }]);
+    const plan = planEnsureSchema(def, existantes, { tableExists: true });
+    assert.equal(plan.ok, true);
+    assert.equal(plan.actions.length, 1);
+    const [type, table, col, def2] = plan.actions[0];
+    assert.equal(type, 'ModifyColumn');
+    assert.equal(table, 'Inscriptions');
+    assert.equal(col, 'Place');
+    assert.equal(def2.isFormula, true);
+    assert.match(def2.formula, /'10h': 20/);
+  });
+
+  it('laisse intacte une formule retouchée à la main (plus de marque)', () => {
+    const def = defAvec(20);
+    const existantes = colonnesDe(def, [{ id: 'Place', type: 'Text', isFormula: true, formula: 'return "Confirmé"' }]);
+    const plan = planEnsureSchema(def, existantes, { tableExists: true });
+    assert.equal(plan.actions.length, 0);
+  });
+});

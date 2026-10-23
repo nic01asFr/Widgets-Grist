@@ -851,6 +851,10 @@
       '<div class="fr-alert fr-alert--success"><p>' +
       escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
       '</p></div>' +
+      (opts && opts.statut && opts.statut.message
+        ? '<div class="fr-alert ' + (opts.statut.code === 'retenue' ? 'fr-alert--info' : 'fr-alert--warning') +
+          '" role="status" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
+        : '') +
       (opts && opts.enfile
         ? '<div class="fr-alert fr-alert--info" role="status" data-enfile="1"><p>' +
           'Réponse enregistrée sur cet appareil : elle partira dès que la connexion reviendra.' +
@@ -2336,6 +2340,41 @@
         }
       });
     }
+    /**
+     * L'identifiant de la ligne que l'envoi vient d'ajouter, quelle que soit la forme de la réponse de l'hôte :
+     * `{ retValues: [[12]] }` (Grist), `[[12]]`, `[12]` ou `12`. Rien d'exploitable : null.
+     */
+    function idCree(res) {
+      // `GristBridge.addRow` rend la table à jour et porte l'identifiant de la ligne ajoutée en `idCree`.
+      if (res && typeof res.idCree === 'number') return res.idCree;
+      // Une table à jour sans `idCree` (lignes en objets) ne dit pas laquelle est la nôtre : on ne devine pas.
+      if (Array.isArray(res) && res.length && res[0] && typeof res[0] === 'object' && !Array.isArray(res[0])) return null;
+      var v = res && !Array.isArray(res) && typeof res === 'object' && 'retValues' in res ? res.retValues : res;
+      for (var i = 0; i < 3 && Array.isArray(v); i++) v = v[0];
+      return typeof v === 'number' && isFinite(v) ? v : null;
+    }
+
+    /**
+     * Où en est la réponse qu'on vient d'envoyer : relire sa propre ligne (par son identifiant) et dire ce que
+     * la colonne « Place » en dit. Mesuré en Grist réel (document public) : l'ajout renvoie l'identifiant et
+     * « Place » reste lisible quand tout le reste est caché. Toute difficulté (pas de colonne, pas de lecture,
+     * pas d'identifiant, lecture trop longue) donne null : on ne dit pas ce qu'on ne sait pas.
+     */
+    function lireStatut(res) {
+      var api = limitesApi();
+      var load = loader();
+      var id = idCree(res);
+      if (!api || !api.statut || !limitesActives() || !limites.placeCol || !load || !formDef.tableId || id == null) {
+        return Promise.resolve(null);
+      }
+      if (bridge.editRowId || formDef.editRowId || (res && res.enfile)) return Promise.resolve(null);
+      var lecture = Promise.resolve(load(formDef.tableId)).then(function (rows) {
+        var ligne = api.lignesDe(rows).filter(function (r) { return r && r.id === id; })[0];
+        return ligne ? api.statut(limites, ligne[limites.placeCol]) : null;
+      });
+      var delai = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 4000); });
+      return Promise.race([lecture, delai]).then(function (st) { return st || null; }, function () { return null; });
+    }
     var jetonsEnrichi = {};
     // Questions dont la valeur vient de l'adresse de la page (shared/prefill.js).
     var verrouilles = Array.isArray(bridge.verrouilles) ? bridge.verrouilles : [];
@@ -2841,6 +2880,10 @@
             return defaultSubmit(bridge, formDef, data);
           }).then(function (res) {
             memoriserDernieres();
+            // La réponse est partie : tant qu'on relit son statut, le formulaire ne se renvoie pas.
+            return lireStatut(res).then(function (st) { return { res: res, statut: st }; });
+          }).then(function (fin) {
+            var res = fin.res;
             submitting = false;
             if (demonte) return;
             var enfile = !!(res && res.enfile);
@@ -2848,9 +2891,9 @@
             // et remet le formulaire a la place de la confirmation, alors que la reponse est partie
             // (la personne renverrait la meme).
             renduEnAttente = false;
-            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile });
+            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut });
             if (typeof bridge.surEnvoi === 'function') {
-              try { bridge.surEnvoi({ enfile: enfile, resultat: res }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
+              try { bridge.surEnvoi({ enfile: enfile, resultat: res, statut: fin.statut }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
             }
           }, function (err) {
             submitting = false;

@@ -1927,7 +1927,7 @@ async function colonnesExistantes(tableId) {
     const colonnes = await GristBridge.loadTable('_grist_Tables_column');
     return colonnes
       .filter(c => c.parentId === table.id && c.colId !== 'manualSort' && c.type !== 'ManualSortPos')
-      .map(c => ({ id: c.colId, type: c.type }));
+      .map(c => ({ id: c.colId, type: c.type, isFormula: !!c.isFormula, formula: c.formula }));
   } catch (e) {
     return repli();
   }
@@ -3700,6 +3700,12 @@ function renderLimites(def) {
         ${champMsg('pasOuvert', 'Avant l’ouverture', 'Ce formulaire n’est pas encore ouvert.')}
         ${champMsg('choixComplet', 'Quand un choix est complet ({choix})', '« {choix} » est complet. Choisissez-en un autre.')}
       </div>
+      <p class="fr-hint-text fr-mt-1w">Après l’envoi, si la colonne « Place » est tenue dans la table, la personne lit où en est sa réponse. Sans cette colonne, rien n’est affiché.</p>
+      <div class="bloc__duo">
+        ${champMsg('retenue', 'Réponse retenue', 'Votre réponse est retenue.')}
+        ${champMsg('attente', 'Réponse sur liste d’attente', 'C’est complet : votre réponse est sur liste d’attente.')}
+        ${champMsg('doublon', 'Réponse déjà reçue (même personne)', 'Une réponse existe déjà pour cette personne : la première est conservée.')}
+      </div>
     </details>`;
 }
 
@@ -5274,10 +5280,15 @@ async function saveForm() {
           await applyVisibleColMeta(def);
         }
         const createdTable = plan.actions.some(a => a[0] === 'AddTable');
+        const misesAJour = plan.actions.filter(a => a[0] === 'ModifyColumn').length;
+        const creees = plan.actions.length - misesAJour;
         toast(
           createdTable
             ? 'Table « ' + def.tableId + ' » créée depuis le formulaire'
-            : plan.actions.length + ' colonne(s) créée(s) sur ' + def.tableId,
+            : [
+                creees ? creees + ' colonne(s) créée(s) sur ' + def.tableId : '',
+                misesAJour ? 'formule des places mise à jour' : ''
+              ].filter(Boolean).join(', '),
           'success'
         );
       } else if (!S.isDemo) {
@@ -5590,6 +5601,9 @@ function renderAccesBloc() {
   const a = etatAcces();
   const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
   const pose = a.existant ? A.modePose(def, a.existant) : null;
+  // Les règles posées suivent-elles ce que le formulaire demande aujourd'hui ? Un maximum par choix ajouté après la pose
+  // demande de lire de nouvelles colonnes : on le dit, et on met la liste à jour en place.
+  const maj = (pose && A.actionsMiseAJour && plan.ok) ? A.actionsMiseAJour(plan.regles, a.existant) : null;
   const modes = Object.keys(A.MODES).map(k => `
     <div class="fr-radio-group"><input type="radio" id="acc-m-${k}" name="acces-mode" value="${k}" ${a.mode === k ? 'checked' : ''} onchange="App.onAcces('mode', '${k}')">
       <label class="fr-label" for="acc-m-${k}">${esc(A.MODES[k].libelle)}<span class="fr-hint-text">${esc(A.MODES[k].explication)}</span></label></div>`).join('');
@@ -5602,8 +5616,12 @@ function renderAccesBloc() {
       <p class="fr-text--sm fr-mt-1w">Une page de formulaire est une page de votre document : <strong>celles et ceux qui la remplissent en sont éditeurs</strong> et voient tout ce que les
         règles d’accès ne leur cachent pas. Pour exposer le formulaire sans exposer les réponses, dites ici ce qu’ils peuvent lire. Une règle ne peut que retirer des droits :
         les participants doivent déjà être éditeurs (ou arriver par un lien public en édition). Pour des personnes qui n’ont pas de compte, préférez la page hors de Grist, plus bas.</p>
-      ${pose ? `<div class="fr-alert fr-alert--info"><p>Des règles de ce formulaire sont posées dans le document (réglage : <strong>${esc(A.MODES[pose] ? A.MODES[pose].libelle : pose)}</strong>).
-        Retirez-les pour changer de réglage.</p></div>` : ''}
+      ${pose ? (maj && maj.etat === 'en-place'
+        ? `<div class="fr-alert fr-alert--warning"><p>Les colonnes lisibles par les participants ne sont plus celles que ce formulaire demande aujourd’hui
+            (${maj.changements.map(c => `posé : <code>${esc(c.avant)}</code>, demandé : <code>${esc(c.apres)}</code>`).join(' ; ')}).
+            Sans mise à jour, le formulaire ne peut pas compter les places ; avec elle, rien n’est retiré, le document n’est jamais sans protection.</p></div>`
+        : `<div class="fr-alert fr-alert--info"><p>Des règles de ce formulaire sont posées dans le document (réglage : <strong>${esc(A.MODES[pose] ? A.MODES[pose].libelle : pose)}</strong>).
+            ${maj && maj.etat === 'a-jour' ? 'Elles sont à jour.' : (maj && maj.etat === 'impossible' ? esc(maj.raison) + ' Retirez-les pour les changer.' : 'Retirez-les pour changer de réglage.')}</p></div>`) : ''}
       <fieldset class="fr-fieldset fr-mt-1w"><legend class="fr-label">Ce que lisent les participants</legend>${modes}</fieldset>
       <div class="fr-input-group"><label class="fr-label" for="acc-gest">Qui garde tous les droits, en plus des propriétaires du document (un courriel par ligne)
         ${hintIcon('Les propriétaires gardent toujours tous les droits. Ajoutez ici les personnes qui gèrent les réponses sans être propriétaires : sans cela, elles seraient traitées comme des participants.')}</label>
@@ -5623,6 +5641,7 @@ function renderAccesBloc() {
         <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w" onclick="App.accesCopier()">Copier les règles</button></details>` : ''}
       <div class="fr-mt-2w">
         <button type="button" class="fr-btn" ${peutPoser ? '' : 'disabled'} onclick="App.accesAppliquer()">Poser ces règles dans le document</button>
+        ${maj && maj.etat === 'en-place' ? `<button type="button" class="fr-btn fr-ml-1w" onclick="App.accesMettreAJour()">Mettre à jour les règles</button>` : ''}
         ${pose ? `<button type="button" class="fr-btn fr-btn--secondary fr-ml-1w" onclick="App.accesRetirer()">Retirer les règles de ce formulaire</button>` : ''}
         <button type="button" class="fr-btn fr-btn--tertiary fr-ml-1w" onclick="App.accesLire()">${a.lu ? 'Relire les règles du document' : 'Lire les règles du document'}</button>
       </div>
@@ -5684,6 +5703,33 @@ async function accesAppliquer() {
     await accesLire();
   } catch (e) {
     a.message = 'Échec : ' + ((e && e.message) || 'refusé') + '. Rien n’a été modifié ; posez les règles à la main avec « Voir les règles ».';
+    toast(a.message, 'error');
+    renderPublishStep();
+  }
+}
+
+/** Changer en place les colonnes lisibles quand le formulaire a changé depuis la pose : rien n'est retiré. */
+async function accesMettreAJour() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  const a = etatAcces();
+  if (!A || !def || !a.existant) return;
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus, public: a.public });
+  if (!plan.ok) return;
+  const maj = A.actionsMiseAJour(plan.regles, a.existant);
+  if (maj.etat !== 'en-place') { a.message = maj.etat === 'a-jour' ? 'Les règles sont déjà à jour.' : (maj.raison || 'Rien à mettre à jour.'); renderPublishStep(); return; }
+  const texte = 'Mettre à jour les règles d’accès de ce formulaire ?\n\nColonnes lisibles par les participants :\n- ' +
+    maj.changements.map(c => 'posé : ' + c.avant + '\n  demandé : ' + c.apres).join('\n- ') +
+    '\n\nSeule cette liste change : aucune règle n’est retirée, le document reste protégé pendant la mise à jour.';
+  if (!confirm(texte)) return;
+  if (S.isDemo) { a.message = 'Mode démo : ' + maj.actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
+  try {
+    await GristBridge.applyUserActions(maj.actions);
+    a.message = 'Règles mises à jour : ' + maj.changements.length + ' liste(s) de colonnes lisibles.';
+    toast('Règles d’accès mises à jour', 'success');
+    await accesLire();
+  } catch (e) {
+    a.message = 'Échec : ' + ((e && e.message) || 'refusé') + '. Rien n’a été modifié.';
     toast(a.message, 'error');
     renderPublishStep();
   }
@@ -6099,7 +6145,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onValidationMode, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onValidationMode, onAcces, accesLire, accesAppliquer, accesMettreAJour, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

@@ -222,6 +222,10 @@
   },
   "journal": [
     {
+      "version": "v1.5.2",
+      "texte": "La personne qui vient d’envoyer sait où en est sa réponse : le formulaire relit sa propre ligne et dit « retenue », « sur liste d’attente » ou « une réponse existe déjà pour cette personne » (c’est le cas de qui se réinscrit pour changer son choix). Les trois phrases se règlent dans le compositeur ; sans la colonne « Place », rien n’est affiché. Deux réglages ne suivaient pas un changement fait après la première mise en ligne et le suivent désormais : la formule de « Place » est recalculée quand un maximum change (une formule retouchée à la main n’est pas touchée), et un bouton « Mettre à jour les règles » change en place la liste des colonnes lisibles par les participants, sans retirer aucune règle, donc sans jamais laisser le document sans protection. Corrigé : un maximum par choix ajouté après la pose des règles faisait afficher des places restantes fausses à qui n’a pas de compte."
+    },
+    {
       "version": "v1.5.1",
       "texte": "Une question peut attendre une réponse précédente : le compositeur propose « est renseigné » et « n’est pas renseigné » pour tous les types de réponse, sans valeur à saisir. C’est ce qui permet de ne montrer le groupe qu’une fois le département choisi ; « différent de (vide) » laissait la question visible tant que rien n’était répondu."
     },
