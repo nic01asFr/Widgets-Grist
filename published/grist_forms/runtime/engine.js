@@ -13,14 +13,15 @@
       require('../shared/enrichir.js'),
       require('../shared/saisies.js'),
       require('../shared/conditions.js'),
-      require('../shared/theme.js')
+      require('../shared/theme.js'),
+      require('../shared/limites.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme', '../shared/limites'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme, root.FormLimites);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme, Limites) {
   'use strict';
 
   Attachments = Attachments || {};
@@ -50,6 +51,16 @@
     if (Formats && Formats.valide) return Formats;
     var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
     return global && global.FormFormats && global.FormFormats.valide ? global.FormFormats : null;
+  }
+
+  /**
+   * Les limites (places, fenêtre d'ouverture), si le module est là. Sans lui, un formulaire qui en déclare
+   * s'ouvre comme avant : un moteur plus ancien que le formulaire ne ferme la porte à personne par erreur.
+   */
+  function limitesApi() {
+    if (Limites && Limites.normaliser) return Limites;
+    var global = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null);
+    return global && global.FormLimites && global.FormLimites.normaliser ? global.FormLimites : null;
   }
 
   /** Départs, bornes et ordre entre deux questions, s'ils sont là. Sans eux, ces réglages ne font rien. */
@@ -494,6 +505,9 @@
       var courriel = opts.email ? String(opts.email).trim().toLowerCase() : '';
       if (meta.emailCol && courriel) out[meta.emailCol] = courriel;
     }
+    // Une question sans colonne n'écrit nulle part : Grist refuserait toute la
+    // ligne (« KeyError '' »), y compris les réponses valables.
+    delete out[''];
     return out;
   }
 
@@ -611,7 +625,9 @@
 
   function normalizeOption(o) {
     if (o && typeof o === 'object') {
-      return { value: o.value, label: o.label != null ? o.label : o.value };
+      var n = { value: o.value, label: o.label != null ? o.label : o.value };
+      if (o.disabled) n.disabled = true;
+      return n;
     }
     return { value: o, label: o };
   }
@@ -1026,7 +1042,7 @@
     var placeholder = '<option value="">' + (field.required ? 'Choisir…' : '(aucun)') + '</option>';
     var optsHtml = placeholder + options.map(function (o) {
       var sel = sameValue(value, o.value) ? ' selected' : '';
-      return '<option value="' + escapeHtml(o.value) + '"' + sel + '>' + escapeHtml(o.label) + '</option>';
+      return '<option value="' + escapeHtml(o.value) + '"' + sel + (o.disabled ? ' disabled' : '') + '>' + escapeHtml(o.label) + '</option>';
     }).join('');
     return '<div class="fr-select-group" data-colid="' + escapeHtml(field.colId) + '">' +
       renderLabel(field, id) +
@@ -1083,8 +1099,8 @@
       // > marge, l'espace a droite du mot — ne repond pas, et sur un telephone
       // > on vise une cible de quelques millimetres. En enveloppant la coche
       // > et le texte dans le `<label>`, tout l'interieur de la carte coche.
-      return '<label class="fr-radio-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '"' + teinte + '>' +
-        '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
+      return '<label class="fr-radio-group' + (o.disabled ? ' fr-option--complet' : '') + '" for="' + oid + '" data-option="' + escapeHtml(o.value) + '"' + teinte + '>' +
+        '<input type="radio" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + (o.disabled ? ' disabled data-complet="1"' : '') + ' />' +
         '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
@@ -1099,8 +1115,8 @@
     var itemsHtml = options.map(function (o, i) {
       var oid = fieldId(field) + '-' + i;
       var checked = selected.indexOf(String(o.value)) !== -1 ? ' checked' : '';
-      return '<label class="fr-checkbox-group" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
-        '<input type="checkbox" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + ' />' +
+      return '<label class="fr-checkbox-group' + (o.disabled ? ' fr-option--complet' : '') + '" for="' + oid + '" data-option="' + escapeHtml(o.value) + '">' +
+        '<input type="checkbox" id="' + oid + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(o.value) + '"' + checked + (o.disabled ? ' disabled data-complet="1"' : '') + ' />' +
         '<span class="fr-label">' + libelleRepere(etiquettes, o) + '</span>' +
         '</label>';
     }).join('');
@@ -1263,12 +1279,30 @@
     var courant = null;
     (fields || []).forEach(function (f) {
       var m = f.options && f.options.matrice;
+      var g = !m && f.options && typeof f.options.groupe === 'string' && f.options.groupe ? f.options.groupe : '';
       if (m && courant && courant.matrice === m) { courant.fields.push(f); return; }
       if (m) { courant = { matrice: m, fields: [f] }; groupes.push(courant); return; }
+      // Les questions d'un meme groupe qui se suivent forment un bloc sous une legende.
+      if (g && courant && courant.groupe === g) { courant.fields.push(f); return; }
+      if (g) { courant = { groupe: g, fields: [f] }; groupes.push(courant); return; }
       courant = null;
       groupes.push({ fields: [f] });
     });
     return groupes;
+  }
+
+  /**
+   * Un groupe de questions : « Qui êtes-vous ? » (nom, prénom, courriel) lu comme un seul geste. Une légende,
+   * une consigne, et les questions en grille : côte à côte quand la place le permet, empilées sur un téléphone.
+   * `rendreChamp` rend une question avec ses erreurs (le même chemin que hors groupe).
+   */
+  function renderGroupe(groupe, formDef, rendreChamp) {
+    var def = (formDef && formDef.groupes && formDef.groupes[groupe.groupe]) || {};
+    var deux = def.colonnes === 2 ? ' fr-groupe--2' : '';
+    return '<fieldset class="fr-fieldset fr-groupe' + deux + '" data-groupe="' + escapeHtml(groupe.groupe) + '">' +
+      (def.titre ? '<legend class="fr-fieldset__legend fr-groupe__titre">' + escapeHtml(def.titre) + '</legend>' : '') +
+      (def.consigne ? '<p class="fr-hint-text fr-groupe__consigne">' + escapeHtml(def.consigne) + '</p>' : '') +
+      '<div class="fr-groupe__champs">' + groupe.fields.map(rendreChamp).join('') + '</div></fieldset>';
   }
 
   function renderLikert(field, value) {
@@ -1898,7 +1932,7 @@
     var out = [];
     if (!api) return out;
     for (var i = 0; i < fields.length; i++) {
-      var id = api.formatDeChamp(fields[i]);
+      var id = api.formatControle ? api.formatControle(fields[i]) : api.formatDeChamp(fields[i]);
       if (!id) continue;
       if (!api.valide(id, values[fields[i].colId])) out.push({ colId: fields[i].colId, message: api.message(id) });
     }
@@ -2197,6 +2231,111 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+
+    // ── Limites : jusqu'où le formulaire accepte de réponses (voir shared/limites.js) ──
+    var limites = null;         // la forme retenue de formDef.limites
+    var limitesLignes = null;   // les lignes déjà reçues ; null : illisibles (on ne compte pas, on ne devine pas)
+
+    function limitesActives() {
+      return !!limites && !(bridge.editRowId || formDef.editRowId);
+    }
+
+    /** { colId: { id: capacité } } : la capacité qu'une table liée porte (`capaciteCol`). */
+    function capacitesLimites() {
+      var out = {};
+      (limites && limites.parChoix || []).forEach(function (p) {
+        if (!p.capaciteCol) return;
+        var champ = null;
+        (formDef.sections || []).forEach(function (s) {
+          (s.fields || []).forEach(function (f) { if (f.colId === p.colId) champ = f; });
+        });
+        var table = champ && resolveRefTable(champ);
+        var recs = table && refRecords[table];
+        if (!recs || !Array.isArray(recs.id)) return;
+        out[p.colId] = {};
+        recs.id.forEach(function (id, i) {
+          var n = Number(recs[p.capaciteCol] && recs[p.capaciteCol][i]);
+          if (n >= 1) out[p.colId][String(id)] = n;
+        });
+      });
+      return out;
+    }
+
+    function etatLimites() {
+      var api = limitesApi();
+      if (!api || !limitesActives()) return null;
+      return api.etat(limites, limitesLignes || [], new Date(), capacitesLimites());
+    }
+
+    /** Charger ce qui est déjà pris. Une table qu'on ne peut pas lire ne bloque personne : la fenêtre d'ouverture, elle, s'applique. */
+    function chargerLimites() {
+      return Promise.resolve(loader()(formDef.tableId)).then(function (rows) {
+        limitesLignes = rows || [];
+      }, function () { limitesLignes = null; });
+    }
+
+    /** Marquer les choix pleins (désactivés) et dire les places qui restent. */
+    function marquerPlaces(field, options) {
+      // Sans lecture des réponses, on ne sait rien des places : on n'en annonce pas.
+      if (limitesLignes === null) return options;
+      var e = etatLimites();
+      var api = limitesApi();
+      if (!e || !api || !Array.isArray(options) || !(limites.parChoix || []).some(function (p) { return p.colId === field.colId; })) return options;
+      return options.map(function (o) {
+        var pl = api.place(e, field.colId, o.value);
+        if (!pl) return o;
+        var n = normalizeOption(o);
+        if (pl.complet) {
+          n.label = n.label + ' — complet';
+          n.disabled = true;
+        } else {
+          n.label = n.label + ' — ' + pl.restant + (pl.restant > 1 ? ' places restantes' : ' place restante');
+        }
+        return n;
+      });
+    }
+
+    /** Fermé, plein ou pas encore ouvert : l'écran dit pourquoi, à la place du formulaire. */
+    function rendreFerme() {
+      var e = etatLimites();
+      if (!e || e.ouvert) return '';
+      var titres = { complet: 'Complet', ferme: 'Fermé', 'pas-ouvert': 'Pas encore ouvert' };
+      var suite = '';
+      if (e.raison === 'pas-ouvert' && limites.ouvertDu) {
+        var d = new Date(limites.ouvertDu.length > 10 ? limites.ouvertDu : limites.ouvertDu + 'T00:00:00');
+        if (!isNaN(d.getTime())) {
+          suite = ' Ouverture le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) +
+            (limites.ouvertDu.length > 10 ? ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '') + '.';
+        }
+      }
+      var tete = aUnAccueil(formDef) ? renderBandeauHtml(formDef) : renderHeaderHtml(formDef);
+      return tete + '<div class="fr-alert fr-alert--info fr-ferme" role="status" data-limite="' + escapeHtml(e.raison) + '">' +
+        '<h2 class="fr-alert__title">' + escapeHtml(titres[e.raison] || 'Fermé') + '</h2>' +
+        '<p>' + escapeHtml(e.message + suite) + '</p></div>';
+    }
+
+    /** À l'envoi : relire ce qui est pris et refuser, avec les mots de l'écran, ce qui est devenu plein entre-temps. */
+    function verifierLimites() {
+      var api = limitesApi();
+      var load = loader();
+      if (!api || !limitesActives() || !load || !formDef.tableId) return Promise.resolve();
+      return Promise.resolve(load(formDef.tableId)).then(function (rows) {
+        limitesLignes = rows || [];
+      }, function () { /* illisible : on ne peut pas vérifier, la formule de la table tranchera */ }).then(function () {
+        if (limitesLignes === null) return;
+        var verdict = api.verifierEnvoi(etatLimites(), values);
+        if (!verdict.ok) {
+          // Le choix devenu plein est ôté de la réponse : la personne en choisit un autre.
+          verdict.motifs.forEach(function (m) {
+            if (m.code !== 'choix-complet') return;
+            var v = values[m.colId];
+            if (Array.isArray(v)) values[m.colId] = v.filter(function (x) { return String(x) !== m.valeur; });
+            else if (String(v) === m.valeur) delete values[m.colId];
+          });
+          throw new Error(verdict.motifs.map(function (m) { return m.message; }).join(' '));
+        }
+      });
+    }
     var jetonsEnrichi = {};
     // Questions dont la valeur vient de l'adresse de la page (shared/prefill.js).
     var verrouilles = Array.isArray(bridge.verrouilles) ? bridge.verrouilles : [];
@@ -2245,7 +2384,7 @@
       return null;
     }
 
-    function resolveOptionsForField(field) {
+    function resolveOptionsBase(field) {
       var base = optionsForField(field, formDef);
       var refTable = resolveRefTable(field);
       if (typeRef(field.type) && refTable && refRecords[refTable]) {
@@ -2274,6 +2413,11 @@
         });
       }
       return normalized.length ? normalized : (optionsForField(field, formDef) || null);
+    }
+
+    /** Les choix d'une question, avec ce que les limites en disent : places restantes, ou « complet ». */
+    function resolveOptionsForField(field) {
+      return marquerPlaces(field, resolveOptionsBase(field));
     }
 
     /** Invalide valeurs Ref hors liste filtrée (cascade ou dynamicFilter). */
@@ -2413,6 +2557,8 @@
 
     function render() {
       if (demonte) return;
+      var fermeture = rendreFerme();
+      if (fermeture) { rootEl.innerHTML = fermeture; return; }
       var sections = getVisibleSections(formDef, values, context);
       if (!sections.length) {
         rootEl.innerHTML = '<div class="fr-alert fr-alert--info"><p>Aucune section visible.</p></div>';
@@ -2450,11 +2596,7 @@
 
       // Les échelles qui se suivent et partagent une matrice sont rendues
       // ensemble : l'échelle n'est annoncée qu'une fois, pas sous chaque ligne.
-      var fieldsHtml = grouperParMatrice(fields).map(function (groupe) {
-        if (groupe.matrice && groupe.fields.length > 1) {
-          return renderMatrice(groupe, values, formDef, errorFields);
-        }
-        var f = groupe.fields[0];
+      function rendreChamp(f) {
         var opts = resolveOptionsForField(f);
         var html = verrouilles.indexOf(f.colId) !== -1
           ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
@@ -2469,6 +2611,13 @@
             escapeHtml(messagesErreur[f.colId] || 'Ce champ est obligatoire.') + '</p></div>';
         }
         return html;
+      }
+      var fieldsHtml = grouperParMatrice(fields).map(function (groupe) {
+        if (groupe.matrice && groupe.fields.length > 1) {
+          return renderMatrice(groupe, values, formDef, errorFields);
+        }
+        if (groupe.groupe) return renderGroupe(groupe, formDef, rendreChamp);
+        return rendreChamp(groupe.fields[0]);
       }).join('');
 
       var errorHtml = submitError
@@ -2603,6 +2752,21 @@
       }(blocs[i]));
     }
 
+    /**
+     * Nom, prénom, courriel : la forme enregistrée se montre dès qu'on quitte le champ (« dupont » devient
+     * « DUPONT »), pour que la personne voie ce qui part. Seuls les formats qui le demandent (`corrige`).
+     */
+    function corrigerALaSaisie(champ, fields) {
+      var api = formatsApi();
+      var nom = champ && (champ.name || (typeof champ.getAttribute === 'function' ? champ.getAttribute('name') : ''));
+      if (!champ || typeof champ.value !== 'string' || !api || !api.corrige || !nom) return;
+      var voulu = (fields || []).filter(function (f) { return f.colId === nom; })[0];
+      var id = voulu && api.formatDeChamp(voulu);
+      if (!id || !api.corrige(id) || champ.value.trim() === '') return;
+      var forme = api.normalise(id, champ.value);
+      if (typeof forme === 'string' && forme !== champ.value) champ.value = forme;
+    }
+
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
@@ -2624,7 +2788,8 @@
         if (typeof inputs[i].getAttribute === 'function' &&
             inputs[i].getAttribute('data-referentiel-champ') !== null) continue;
         if (typeof inputs[i].addEventListener === 'function') {
-          inputs[i].addEventListener('change', function () {
+          inputs[i].addEventListener('change', function (evenement) {
+            corrigerALaSaisie(evenement && evenement.target, fields);
             readSectionValues(rootEl, fields, values, verrouilles);
             pruneInvalidFilteredValues();
             planifierRendu();
@@ -2669,7 +2834,7 @@
                 fetch: bridge.fetch
               })
             : Promise.resolve(values);
-          Promise.resolve(resolveAtt).then(function () {
+          Promise.resolve(verifierLimites()).then(function () { return resolveAtt; }).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
             var data = collectSubmitData(formDef, values, context,
               { creation: enCreation, demarreA: demarreA, email: context.userEmail });
@@ -2713,7 +2878,8 @@
           var n = 0, j;
           for (j = 0; j < cases.length; j++) if (cases[j].checked) n++;
           for (j = 0; j < cases.length; j++) {
-            if (!cases[j].checked) cases[j].disabled = n >= max;
+            // Un choix complet le reste : le plafond de choix ne le rouvre pas.
+            if (!cases[j].checked && !(cases[j].getAttribute && cases[j].getAttribute('data-complet'))) cases[j].disabled = n >= max;
           }
           if (compteur) compteur.textContent = n + ' sur ' + max + ' maximum';
         }
@@ -3233,7 +3399,14 @@
           Object.keys(ctx).forEach(function (k) { context[k] = ctx[k]; });
         }
         appliquerDeparts(true);
-        if (!load || !tables.length) { render(); return; }
+        function demarrer() {
+          var api = limitesApi();
+          limites = api ? api.normaliser(formDef.limites).limites : null;
+          // Rien à lire (pas de limite, pas de table lisible, ou une ligne qu'on modifie) : le rendu reste immédiat.
+          if (!limitesActives() || !load || !formDef.tableId) { render(); return; }
+          chargerLimites().then(function () { if (!demonte) render(); });
+        }
+        if (!load || !tables.length) { demarrer(); return; }
         Promise.all(tables.map(function (t) {
           if (refRecords[t]) return Promise.resolve();
           return Promise.resolve(load(t)).then(function (rows) {
@@ -3242,7 +3415,7 @@
         })).then(function () {
           if (demonte) return;
           bridge.refRecords = refRecords;
-          render();
+          demarrer();
         });
       }
 

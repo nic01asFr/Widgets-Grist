@@ -68,6 +68,14 @@
     {
       "titre": "Une synthèse qui a du sens",
       "texte": "une table de réponses ne se lit pas seule : une échelle y écrit « 4 », un classement est éclaté en trois colonnes. La synthèse remet ce que la définition sait."
+    },
+    {
+      "titre": "Des places qui se tiennent",
+      "texte": "un maximum par choix ou pour tout le formulaire, une fenêtre d’ouverture, une seule réponse par personne : le formulaire ferme ce qui est plein, la table tranche par ordre d’arrivée. Rien n’est propre à un cas : places, créneaux, portions, salles."
+    },
+    {
+      "titre": "Des réponses qu’on ne montre pas",
+      "texte": "l’étape « Mettre en ligne » propose les règles d’accès : on ajoute sans rien lire, sans rien modifier ni supprimer. Elles ne se posent que sur confirmation, sans toucher à une règle existante."
     }
   ],
   "encart": {
@@ -213,6 +221,10 @@
     }
   },
   "journal": [
+    {
+      "version": "v1.5.0",
+      "texte": "Une inscription à des places limitées se compose de bout en bout. Le formulaire annonce les places qui restent, ferme ce qui est plein et le dit ; la table tranche par ordre d’arrivée (« Confirmé », « Liste d’attente ») et une seule réponse par personne est retenue, les suivantes étant marquées « Doublon ». Le maximum se règle dans la question elle-même, avec ses vrais choix, pour des places, des créneaux, des portions ou des salles. Qui répond se pose d’un geste : nom, prénom et courriel, seuls ou en groupe ; un nom se corrige sans jamais se refuser, et « McDonald » n’est pas touché. L’étape « Mettre en ligne » règle qui voit les réponses : les participants ajoutent sans rien lire, sans rien changer ni supprimer ; pour un document partagé avec le public, tout le reste du document est caché d’office. Mesuré sur un document d’essai : un visiteur sans compte ajoute une réponse, ne lit qu’une colonne sans nom ni courriel, et ne peut ni modifier, ni supprimer, ni toucher à la structure. Côté compositeur : un clic sur une question l’ouvre, un redessin ne déplace plus la fenêtre, et la mise en page remplit la hauteur du widget. Corrigé : une question sans colonne ne fait plus refuser toute la ligne, et la colonne « Place » n’est plus recréée à chaque enregistrement."
+    },
     {
       "version": "v1.4.0",
       "texte": "Un formulaire s’habille des couleurs de la page qui l’accueille : l’hôte pose un thème de 26 variables, sans thème rien ne change, et le contraste forcé ou renforcé demandé par la personne passe avant. Il se monte aussi dans une page qui n’est pas un widget Grist, et les conditions suivent désormais une grammaire commune, fermée : un opérateur inconnu est une faute, jamais « vrai ». La réponse peut noter la précision du GPS et le courriel de la personne connue de l’hôte ; le compositeur règle ces colonnes, propose tous les types de réponse et le clavier du téléphone, et aucun texte ne descend sous 14 px. Corrigé : une saisie suivie d’un envoi immédiat laissait le formulaire remplacer la confirmation, alors que la réponse était partie."

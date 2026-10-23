@@ -89,6 +89,8 @@
     // replie sur son ancien évaluateur : un formulaire déjà publié sans ce
     // script continue de fonctionner.
     var conditionsJs = bundles.conditionsJs || '';
+    // Les limites (places, fenêtre d'ouverture) : absentes, un formulaire qui en déclare s'ouvre comme avant.
+    var limitesJs = bundles.limitesJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = JSON.stringify(formDef || {});
@@ -106,6 +108,7 @@
       enrichirJs,
       saisiesJs,
       conditionsJs,
+      limitesJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',
