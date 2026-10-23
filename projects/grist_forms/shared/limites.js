@@ -38,9 +38,9 @@
   var MESSAGE_MAX = 240;
 
   var MESSAGES = {
-    complet: 'Les inscriptions sont complètes.',
-    ferme: 'Les inscriptions sont closes.',
-    pasOuvert: 'Les inscriptions ne sont pas encore ouvertes.',
+    complet: 'Le nombre maximum de réponses est atteint.',
+    ferme: 'Ce formulaire est fermé.',
+    pasOuvert: 'Ce formulaire n’est pas encore ouvert.',
     choixComplet: '« {choix} » est complet. Choisissez-en un autre.'
   };
 

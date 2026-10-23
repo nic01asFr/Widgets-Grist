@@ -136,3 +136,31 @@ describe('Compositeur — le bloc est dans l\'accueil et son export est branché
     assert.match(SOURCE, /data-choix="\$\{esc\(c\)\}" oninput="App\.onLimiteChoix\(\$\{i\}, 'maxChoix', this\.value, this\.getAttribute\('data-choix'\)\)"/);
   });
 });
+
+describe('Compositeur — la limite se règle dans la question', () => {
+  function banc2(d) {
+    const S = { currentDef: d };
+    const code = ['estReference', 'estPlafonnable', 'majAlerteLimites', 'onLimite', 'onLimiteChoix', 'onLimiteQuestion'].map(extraire).join('\n');
+    const f = new Function('S', 'marquerModifie', 'renderBuilder', code + '; return { onLimiteQuestion, estPlafonnable };');
+    return Object.assign({ S }, f(S, () => {}, () => {}));
+  }
+
+  it('cocher ajoute la limite de la question, décocher la retire, sans doublon', () => {
+    const b = banc2(def());
+    b.onLimiteQuestion('Atelier', true);
+    b.onLimiteQuestion('Atelier', true);
+    assert.equal(b.S.currentDef.limites.parChoix.length, 1);
+    assert.equal(b.S.currentDef.limites.parChoix[0].colId, 'Atelier');
+    b.onLimiteQuestion('Atelier', false);
+    assert.equal(b.S.currentDef.limites, undefined);
+  });
+
+  it('seules les questions à choix peuvent être plafonnées', () => {
+    const b = banc2(def());
+    assert.equal(b.estPlafonnable({ colId: 'A', type: 'Choice' }), true);
+    assert.equal(b.estPlafonnable({ colId: 'A', type: 'Ref:Salles' }), true);
+    assert.equal(b.estPlafonnable({ colId: 'A', type: 'Ref' }), true);
+    assert.equal(b.estPlafonnable({ colId: 'A', type: 'Text' }), false);
+    assert.equal(b.estPlafonnable({ colId: '', type: 'Choice' }), false);
+  });
+});

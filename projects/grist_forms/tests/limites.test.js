@@ -78,7 +78,7 @@ describe('Limites — où en est le formulaire', () => {
     const e = L.etat(l, lignes({ Atelier: 'A' }, { Atelier: 'A' }, { Atelier: 'B' }), le('2026-11-10'));
     assert.equal(e.ouvert, false);
     assert.equal(e.raison, 'complet');
-    assert.equal(e.message, 'Les inscriptions sont complètes.');
+    assert.equal(e.message, 'Le nombre maximum de réponses est atteint.');
   });
 
   it('une annulation libère une place', () => {
@@ -112,7 +112,7 @@ describe('Limites — la fenêtre d\'ouverture', () => {
     assert.equal(L.etat(l, [], new Date(2026, 10, 30, 23, 30)).ouvert, true);
     const ferme = L.etat(l, [], new Date(2026, 11, 1, 0, 0, 1));
     assert.equal(ferme.raison, 'ferme');
-    assert.equal(ferme.message, 'Les inscriptions sont closes.');
+    assert.equal(ferme.message, 'Ce formulaire est fermé.');
   });
   it('une heure précise vaut cette heure', () => {
     const t = ok({ jusquau: '2026-11-30T12:00' });

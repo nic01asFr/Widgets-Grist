@@ -324,6 +324,9 @@
   .canevas__titre-public { font-size: 1.3rem; margin: 0; }
   .section-card__retirer { margin-top: 0.6rem; color: var(--rouge, #ce0500); font-size: 0.84rem; }
 
+  .liste-sans-puce { list-style: none; margin: 0 0 0.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .liste-sans-puce li { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+
   /* Les trois colonnes tiennent dès 58 rem : en dessous, les réglages passent sous la page d'édition
      (et prennent la moitié de la hauteur au lieu d'une part fixe). */
   @media (max-width: 58rem) {
@@ -2597,7 +2600,7 @@ function renderCanevas(def) {
           <button type="button" class="champ-bloc__action" title="Dupliquer" onclick="App.dupliquerChamp(${si}, ${fi})">⧉</button>
           <select class="champ-bloc__deplacer" title="Déplacer vers une autre étape"
             onchange="App.deplacerVersEtape(${si}, ${fi}, this.value); this.selectedIndex = 0;">
-            <option value="">Déplacer vers la page…</option>
+            <option value="">Déplacer vers…</option>
             ${def.sections.map((sec, k) => k === si ? '' : `<option value="${k}">${k + 1}. ${esc(sec.label || '')}</option>`).join('')}
           </select>
           <button type="button" class="champ-bloc__action" title="Régler cette question"
@@ -3561,44 +3564,83 @@ function majAlerteLimites() {
   if (z && S.currentDef) z.innerHTML = alerteLimites(S.currentDef);
 }
 
+/** Une question dont on peut plafonner chaque choix : une liste, des cases, une référence. */
+function estPlafonnable(f) {
+  return !!f && !!f.colId && (['Choice', 'ChoiceList', 'Ref'].includes(f.type) || estReference(f)) && f.kind !== 'geometrie' && f.widget !== 'geo';
+}
+
+/** Le réglage du maximum par choix d'une question : un nombre pour tous, ou un nombre par choix. */
+function reglageLimiteChoix(def, p, i, f) {
+  if (estReference(f) || p.capaciteCol) {
+    const cols = (S.columnsByTable[tableDeReference(f)] || []).filter(c => c.type === 'Int' || c.type === 'Numeric');
+    return `<div class="fr-select-group"><label class="fr-label" for="lim-cap-${i}">Colonne de la table liée qui donne le maximum de chaque choix</label>
+      <select class="fr-select" id="lim-cap-${i}" onchange="App.onLimiteChoix(${i}, 'capaciteCol', this.value)">
+        <option value="">—</option>${cols.map(c => `<option value="${esc(c.colId)}" ${p.capaciteCol === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>`;
+  }
+  const choix = choixDeQuestion(def, f);
+  const valeurs = (p.max && typeof p.max === 'object') ? p.max : {};
+  const commun = typeof p.max === 'number' ? p.max : '';
+  return `<div class="fr-input-group"><label class="fr-label" for="lim-commun-${i}">Le même maximum pour tous les choix</label>
+      <input class="fr-input" id="lim-commun-${i}" type="number" min="1" value="${esc(commun)}" placeholder="Pas de maximum" oninput="App.onLimiteChoix(${i}, 'maxCommun', this.value)"></div>
+    ${choix.length ? `<p class="fr-hint-text">Ou un maximum propre à chaque choix (vide : pas de maximum) :</p>
+    <div class="bloc__duo">${choix.map((c, k) => `<div class="fr-input-group"><label class="fr-label" for="lim-${i}-${k}">${esc(c)}</label>
+      <input class="fr-input" id="lim-${i}-${k}" type="number" min="1" value="${esc(valeurs[c] !== undefined ? valeurs[c] : '')}"
+        data-choix="${esc(c)}" oninput="App.onLimiteChoix(${i}, 'maxChoix', this.value, this.getAttribute('data-choix'))"></div>`).join('')}</div>` : ''}`;
+}
+
+/**
+ * Plafonner les choix d'une question se règle dans la question elle-même : c'est elle qu'on a sous les yeux,
+ * et ses choix sont déjà là. Le même geste vaut pour des places d'atelier, des créneaux, des portions ou
+ * des salles ; rien ici ne dépend de ce que les choix représentent.
+ */
+function renderLimiteQuestion(def, f) {
+  if (!estPlafonnable(f)) return '';
+  const parChoix = (def.limites && def.limites.parChoix) || [];
+  const i = parChoix.findIndex(p => p.colId === f.colId);
+  const actif = i >= 0;
+  return `<section class="bloc">
+    <h4 class="bloc__titre">Nombre de réponses par choix ${hintIcon('Facultatif. Quand un choix a atteint son maximum, il n’est plus proposé : « complet » s’affiche à sa place. Sert à limiter des places, des créneaux, des portions, des salles…')}</h4>
+    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${esc(f.colId)}', this.checked)">
+      <label class="fr-label" for="lim-q-actif">Limiter le nombre de réponses de chaque choix</label></div>
+    ${actif ? reglageLimiteChoix(def, parChoix[i], i, f) : ''}
+  </section>`;
+}
+
+/** Cocher ou décocher la limite par choix d'une question. */
+function onLimiteQuestion(colId, actif) {
+  const parChoix = (S.currentDef.limites && S.currentDef.limites.parChoix) || [];
+  const i = parChoix.findIndex(p => p.colId === colId);
+  if (actif && i < 0) onLimiteChoix(-1, 'ajouter', colId);
+  else if (!actif && i >= 0) onLimiteChoix(i, 'retirer');
+}
+
+/** Ce qui est plafonné ailleurs dans le formulaire, avec un accès direct à la question. */
+function resumeLimitesChoix(def) {
+  const parChoix = (def.limites && def.limites.parChoix) || [];
+  if (!parChoix.length) return '';
+  const lignes = [];
+  def.sections.forEach((s, si) => (s.fields || []).forEach((f, fi) => {
+    const p = parChoix.find(x => x.colId === f.colId);
+    if (!p) return;
+    const detail = p.capaciteCol ? 'maximum lu dans la table liée'
+      : typeof p.max === 'number' ? p.max + ' par choix'
+      : Object.keys(p.max || {}).map(c => c + ' : ' + p.max[c]).join(' · ') || 'pas encore de maximum';
+    lignes.push(`<li><button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.choisir('question', ${si}, ${fi})">${esc(f.label || f.colId)}</button> <span class="fr-hint-text">${esc(detail)}</span></li>`);
+  }));
+  return lignes.length ? `<p class="fr-label fr-mt-1w">Maximum par choix <span class="fr-hint-text">(se règle dans chaque question)</span></p><ul class="liste-sans-puce">${lignes.join('')}</ul>` : '';
+}
+
 function renderLimites(def) {
   const L = def.limites || {};
-  const toutes = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []);
-  const comptables = toutes.filter(f => ['Choice', 'ChoiceList', 'Ref', 'Text'].includes(f.type) && f.colId && f.kind !== 'geometrie' && f.widget !== 'geo');
-  const parChoix = L.parChoix || [];
-  const lignesChoix = parChoix.map((p, i) => {
-    const f = toutes.find(x => x.colId === p.colId) || { colId: p.colId };
-    let reglage;
-    if (estReference(f) || p.capaciteCol) {
-      const cols = (S.columnsByTable[tableDeReference(f)] || []).filter(c => c.type === 'Int' || c.type === 'Numeric');
-      reglage = `<div class="fr-select-group"><label class="fr-label" for="lim-cap-${i}">Colonne qui porte le nombre de places</label>
-        <select class="fr-select" id="lim-cap-${i}" onchange="App.onLimiteChoix(${i}, 'capaciteCol', this.value)">
-          <option value="">—</option>${cols.map(c => `<option value="${esc(c.colId)}" ${p.capaciteCol === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>`;
-    } else {
-      const choix = choixDeQuestion(def, f);
-      const valeurs = (p.max && typeof p.max === 'object') ? p.max : {};
-      const commun = typeof p.max === 'number' ? p.max : '';
-      reglage = `<div class="fr-input-group"><label class="fr-label" for="lim-commun-${i}">Places par choix (le même nombre pour tous)</label>
-          <input class="fr-input" id="lim-commun-${i}" type="number" min="1" value="${esc(commun)}" oninput="App.onLimiteChoix(${i}, 'maxCommun', this.value)"></div>
-        ${choix.length ? `<p class="fr-hint-text">Ou choix par choix (laissez vide : pas de limite) :</p>
-        <div class="bloc__duo">${choix.map((c, k) => `<div class="fr-input-group"><label class="fr-label" for="lim-${i}-${k}">${esc(c)}</label>
-          <input class="fr-input" id="lim-${i}-${k}" type="number" min="1" value="${esc(valeurs[c] !== undefined ? valeurs[c] : '')}"
-            data-choix="${esc(c)}" oninput="App.onLimiteChoix(${i}, 'maxChoix', this.value, this.getAttribute('data-choix'))"></div>`).join('')}</div>` : ''}`;
-    }
-    return `<div class="encart-edit"><p class="fr-label">Places pour la question « ${esc(f.label || p.colId)} »</p>${reglage}
-      <button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.onLimiteChoix(${i}, 'retirer')">Retirer cette limite</button></div>`;
-  }).join('');
-  const dejaVisees = parChoix.map(p => p.colId);
-  const ajoutables = comptables.filter(f => !dejaVisees.includes(f.colId));
   const sauf = L.sauf || {};
   const msg = L.messages || {};
   const champMsg = (cle, libelle, defaut) => `<div class="fr-input-group"><label class="fr-label" for="lim-msg-${cle}">${libelle}</label>
     <input class="fr-input" id="lim-msg-${cle}" value="${esc(msg[cle] || '')}" placeholder="${esc(defaut)}" oninput="App.onLimite('msg:${cle}', this.value)"></div>`;
   const alerte = `<div id="lim-alerte">${alerteLimites(def)}</div>`;
-  return `<p class="bloc__intitule">Limites de participation <span>places, dates d’ouverture</span></p>
-    <p class="fr-hint-text">Le formulaire annonce les places qui restent et ferme ce qui est plein. Il ne peut pas refuser seul : la colonne « Place » de la table tranche par ordre d’arrivée quand deux envois se croisent.</p>
+  return `<p class="bloc__intitule">Limiter les réponses <span>maximum, dates d’ouverture</span></p>
+    <p class="fr-hint-text">Quand le maximum est atteint, le formulaire (ou le choix concerné) n’est plus proposé. Il ne peut pas refuser seul : si deux envois se croisent, la colonne « Place » du document tranche par ordre d’arrivée. Le maximum par choix se règle dans la question.</p>
     <div class="bloc__duo">
-      <div class="fr-input-group"><label class="fr-label" for="lim-total">Nombre de réponses au plus</label>
+      <div class="fr-input-group"><label class="fr-label" for="lim-total">Nombre maximum de réponses (tout le formulaire)</label>
         <input class="fr-input" id="lim-total" type="number" min="1" value="${esc(L.total || '')}" placeholder="Pas de limite" oninput="App.onLimite('total', this.value)"></div>
       <div class="fr-input-group"><label class="fr-label" for="lim-ouvert">Ouvert à partir du</label>
         <input class="fr-input" id="lim-ouvert" type="date" value="${esc((L.ouvertDu || '').slice(0, 10))}" onchange="App.onLimite('ouvertDu', this.value)"></div>
@@ -3606,10 +3648,7 @@ function renderLimites(def) {
         <input class="fr-input" id="lim-jusquau" type="date" value="${esc((L.jusquau || '').slice(0, 10))}" onchange="App.onLimite('jusquau', this.value)"></div>
     </div>
     ${alerte}
-    ${lignesChoix}
-    <div class="fr-select-group"><label class="fr-label" for="lim-ajout">Limiter les places d’une question</label>
-      <select class="fr-select" id="lim-ajout" onchange="App.onLimiteChoix(-1, 'ajouter', this.value); this.selectedIndex = 0;">
-        <option value="">Choisir une question…</option>${ajoutables.map(f => `<option value="${esc(f.colId)}">${esc(f.label || f.colId)}</option>`).join('')}</select></div>
+    ${resumeLimitesChoix(def)}
     <details class="fr-mt-1w" id="lim-details"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
       <div class="bloc__duo">
         <div class="fr-select-group"><label class="fr-label" for="lim-sauf">Une ligne ne compte pas quand cette colonne vaut…</label>
@@ -3621,9 +3660,9 @@ function renderLimites(def) {
       <div class="fr-checkbox-group fr-mt-1w"><input type="checkbox" id="lim-place" ${L.placeCol ? 'checked' : ''} onchange="App.onLimite('placeCol', this.checked ? 'Place' : '')">
         <label class="fr-label" for="lim-place">Tenir la liste d’attente dans la table (colonne « Place » : Confirmé ou Liste d’attente, par ordre d’arrivée)</label></div>
       <div class="bloc__duo">
-        ${champMsg('complet', 'Quand c’est complet', 'Les inscriptions sont complètes.')}
-        ${champMsg('ferme', 'Après la fermeture', 'Les inscriptions sont closes.')}
-        ${champMsg('pasOuvert', 'Avant l’ouverture', 'Les inscriptions ne sont pas encore ouvertes.')}
+        ${champMsg('complet', 'Quand le maximum est atteint', 'Le nombre maximum de réponses est atteint.')}
+        ${champMsg('ferme', 'Après la fermeture', 'Ce formulaire est fermé.')}
+        ${champMsg('pasOuvert', 'Avant l’ouverture', 'Ce formulaire n’est pas encore ouvert.')}
         ${champMsg('choixComplet', 'Quand un choix est complet ({choix})', '« {choix} » est complet. Choisissez-en un autre.')}
       </div>
     </details>`;
@@ -4217,6 +4256,8 @@ function renderFieldEditor(def, si, f, fi) {
           </div>
         </details>
       </section>
+
+      ${renderLimiteQuestion(def, f)}
 
       <section class="bloc">
         <h4 class="bloc__titre">Quand elle s’affiche ${hintIcon('Une question peut dépendre d’une réponse précédente. Sans condition, elle est toujours posée. Les conditions ne remplacent pas les droits Grist : elles cachent, elles ne protègent pas.')}</h4>
@@ -6000,7 +6041,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

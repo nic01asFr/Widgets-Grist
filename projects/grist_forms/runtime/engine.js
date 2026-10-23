@@ -2299,7 +2299,7 @@
     function rendreFerme() {
       var e = etatLimites();
       if (!e || e.ouvert) return '';
-      var titres = { complet: 'Inscriptions complètes', ferme: 'Inscriptions closes', 'pas-ouvert': 'Pas encore ouvert' };
+      var titres = { complet: 'Complet', ferme: 'Fermé', 'pas-ouvert': 'Pas encore ouvert' };
       var suite = '';
       if (e.raison === 'pas-ouvert' && limites.ouvertDu) {
         var d = new Date(limites.ouvertDu.length > 10 ? limites.ouvertDu : limites.ouvertDu + 'T00:00:00');

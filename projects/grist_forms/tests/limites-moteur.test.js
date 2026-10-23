@@ -65,8 +65,8 @@ describe('Limites — l\'écran', () => {
     Engine.monter(root, formulaire({ total: 2 }), { client: client({ table: table('A', 'B') }), contexte: {} });
     await flush();
     assert.match(root.innerHTML, /data-limite="complet"/);
-    assert.match(root.innerHTML, /Inscriptions complètes/);
-    assert.match(root.innerHTML, /Les inscriptions sont complètes\./);
+    assert.match(root.innerHTML, />Complet</);
+    assert.match(root.innerHTML, /Le nombre maximum de réponses est atteint\./);
     assert.ok(!/name="Atelier"/.test(root.innerHTML), 'plus de formulaire');
   });
 
@@ -133,7 +133,7 @@ describe('Limites — la fenêtre d\'ouverture', () => {
     Engine.monter(apres, formulaire({ jusquau: passe }), { client: client({ table: table() }), contexte: {} });
     await flush();
     assert.match(apres.innerHTML, /data-limite="ferme"/);
-    assert.match(apres.innerHTML, /Inscriptions closes/);
+    assert.match(apres.innerHTML, />Fermé</);
   });
 });
 
