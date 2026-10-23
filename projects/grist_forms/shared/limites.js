@@ -141,6 +141,8 @@
       }
     }
 
+    if (typeof brut.placeCol === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(brut.placeCol)) l.placeCol = brut.placeCol;
+
     if (brut.unique !== undefined && brut.unique !== null && brut.unique !== '') {
       var u = typeof brut.unique === 'string' ? brut.unique : (brut.unique && brut.unique.colId);
       if (typeof u === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(u)) l.unique = { colId: u };
@@ -190,7 +192,14 @@
     return [String(cellule)];
   }
 
+  /**
+   * Une ligne compte-t-elle pour le plafond ? Pas si elle est écartée (`sauf`), ni si la table l'a déjà
+   * rangée hors des places : liste d'attente, doublon. La colonne « Place » ne dit rien d'une personne,
+   * elle peut donc rester lisible quand tout le reste est caché.
+   */
+  var HORS_PLACES = ["Liste d'attente", 'Doublon', 'Écartée'];
   function compte(ligne, limites) {
+    if (limites.placeCol && HORS_PLACES.indexOf(String(ligne[limites.placeCol])) !== -1) return false;
     var s = limites.sauf;
     if (!s) return true;
     return choixDe(ligne[s.colId]).every(function (v) { return s.valeurs.indexOf(v) === -1; });
@@ -277,6 +286,7 @@
     if (!limites) return cols;
     (limites.parChoix || []).forEach(function (p) { if (cols.indexOf(p.colId) === -1) cols.push(p.colId); });
     if (limites.sauf && cols.indexOf(limites.sauf.colId) === -1) cols.push(limites.sauf.colId);
+    if (limites.placeCol && cols.indexOf(limites.placeCol) === -1) cols.push(limites.placeCol);
     return cols;
   }
 

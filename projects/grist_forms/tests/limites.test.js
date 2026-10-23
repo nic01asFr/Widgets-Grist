@@ -260,3 +260,26 @@ describe('Limites — la formule « Place » tranche par ordre d\'arrivée', { s
     assert.deepEqual(placesPython(f, 'Inscriptions', rows({ Statut: 'Refusé d\'office' }, {})), ['Écartée', 'Confirmé']);
   });
 });
+
+describe('Limites — la colonne « Place » rangée hors des places', () => {
+  it('la liste d\'attente et les doublons ne comptent pas pour le plafond, et la colonne reste lisible', () => {
+    const lim = ok({ total: 2, placeCol: 'Place', parChoix: [{ colId: 'Atelier', max: 1 }] });
+    assert.ok(L.colonnesComptees(lim).includes('Place'));
+    const lignes = [
+      { id: 1, Atelier: 'A', Place: 'Confirmé' },
+      { id: 2, Atelier: 'A', Place: "Liste d'attente" },
+      { id: 3, Atelier: 'B', Place: 'Doublon' },
+      { id: 4, Atelier: 'B', Place: 'Confirmé' }
+    ];
+    const e = L.etat(lim, lignes, new Date());
+    assert.equal(e.total.pris, 2);
+    assert.equal(e.total.complet, true);
+    assert.equal(e.comptes.Atelier.A, 1);
+    assert.equal(e.comptes.Atelier.B, 1);
+  });
+
+  it('sans colonne « Place », rien ne change', () => {
+    const e = L.etat(ok({ total: 2 }), [{ id: 1, Place: 'Doublon' }, { id: 2 }], new Date());
+    assert.equal(e.total.pris, 2);
+  });
+});
