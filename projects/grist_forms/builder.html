@@ -1096,6 +1096,7 @@
 <script src="shared/attachments.js"></script>
 <script src="shared/session-context.js"></script>
 <script src="shared/conditions.js"></script>
+<script src="shared/limites.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
@@ -3480,6 +3481,149 @@ function renderMetaColonnes(def) {
       <div class="bloc__duo">${champs}</div>`;
 }
 
+/** Une question qui vise une table liée : `Ref`, `Ref:Table`, `RefList`. */
+function estReference(f) {
+  return !!f && /^Ref(List)?(:|$)/.test(String(f.type || ''));
+}
+
+/** La table qu'une référence vise, par son réglage ou par son type (`Ref:Salles`). */
+function tableDeReference(f) {
+  const r = resolveRefTableOfField(f);
+  if (r) return r;
+  const m = /^Ref(?:List)?:(.+)$/.exec(String((f && f.type) || ''));
+  return m ? m[1] : '';
+}
+
+/** Les choix qu'une question propose (liste, cases, pastilles), tels que le formulaire les déclare. */
+function choixDeQuestion(def, f) {
+  const l = (def.choices && def.choices[f.colId]) || (f.options && f.options.choices) || [];
+  return l.map(c => (c && typeof c === 'object') ? String(c.value) : String(c));
+}
+
+/**
+ * Jusqu'où le formulaire accepte de réponses : un atelier de 12 places, une fenêtre d'ouverture, un plafond.
+ * Le formulaire lit ce qui est pris et ferme ce qui est plein ; la table tranche par ordre d'arrivée (colonne
+ * « Place ») quand deux envois se croisent. Voir docs/LIMITES.md.
+ */
+function renderLimites(def) {
+  const L = def.limites || {};
+  const toutes = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []);
+  const comptables = toutes.filter(f => ['Choice', 'ChoiceList', 'Ref', 'Text'].includes(f.type) && f.colId && f.kind !== 'geometrie' && f.widget !== 'geo');
+  const parChoix = L.parChoix || [];
+  const lignesChoix = parChoix.map((p, i) => {
+    const f = toutes.find(x => x.colId === p.colId) || { colId: p.colId };
+    let reglage;
+    if (estReference(f) || p.capaciteCol) {
+      const cols = (S.columnsByTable[tableDeReference(f)] || []).filter(c => c.type === 'Int' || c.type === 'Numeric');
+      reglage = `<div class="fr-select-group"><label class="fr-label" for="lim-cap-${i}">Colonne qui porte le nombre de places</label>
+        <select class="fr-select" id="lim-cap-${i}" onchange="App.onLimiteChoix(${i}, 'capaciteCol', this.value)">
+          <option value="">—</option>${cols.map(c => `<option value="${esc(c.colId)}" ${p.capaciteCol === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>`;
+    } else {
+      const choix = choixDeQuestion(def, f);
+      const valeurs = (p.max && typeof p.max === 'object') ? p.max : {};
+      const commun = typeof p.max === 'number' ? p.max : '';
+      reglage = `<div class="fr-input-group"><label class="fr-label" for="lim-commun-${i}">Places par choix (le même nombre pour tous)</label>
+          <input class="fr-input" id="lim-commun-${i}" type="number" min="1" value="${esc(commun)}" oninput="App.onLimiteChoix(${i}, 'maxCommun', this.value)"></div>
+        ${choix.length ? `<p class="fr-hint-text">Ou choix par choix (laissez vide : pas de limite) :</p>
+        <div class="bloc__duo">${choix.map((c, k) => `<div class="fr-input-group"><label class="fr-label" for="lim-${i}-${k}">${esc(c)}</label>
+          <input class="fr-input" id="lim-${i}-${k}" type="number" min="1" value="${esc(valeurs[c] !== undefined ? valeurs[c] : '')}"
+            data-choix="${esc(c)}" oninput="App.onLimiteChoix(${i}, 'maxChoix', this.value, this.getAttribute('data-choix'))"></div>`).join('')}</div>` : ''}`;
+    }
+    return `<div class="encart-edit"><p class="fr-label">Places pour la question « ${esc(f.label || p.colId)} »</p>${reglage}
+      <button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" onclick="App.onLimiteChoix(${i}, 'retirer')">Retirer cette limite</button></div>`;
+  }).join('');
+  const dejaVisees = parChoix.map(p => p.colId);
+  const ajoutables = comptables.filter(f => !dejaVisees.includes(f.colId));
+  const sauf = L.sauf || {};
+  const msg = L.messages || {};
+  const champMsg = (cle, libelle, defaut) => `<div class="fr-input-group"><label class="fr-label" for="lim-msg-${cle}">${libelle}</label>
+    <input class="fr-input" id="lim-msg-${cle}" value="${esc(msg[cle] || '')}" placeholder="${esc(defaut)}" oninput="App.onLimite('msg:${cle}', this.value)"></div>`;
+  // Une limite incomplète ou fausse se dit ici : elle serait sinon ignorée sans que personne ne le sache.
+  const verdict = (window.FormLimites && def.limites) ? FormLimites.normaliser(def.limites) : { erreurs: [] };
+  const alerte = verdict.erreurs.length
+    ? `<div class="fr-alert fr-alert--warning fr-mt-1w" role="status"><p>${verdict.erreurs.map(esc).join('<br>')}</p></div>` : '';
+  return `<p class="bloc__intitule">Limites de participation <span>places, dates d’ouverture</span></p>
+    <p class="fr-hint-text">Le formulaire annonce les places qui restent et ferme ce qui est plein. Il ne peut pas refuser seul : la colonne « Place » de la table tranche par ordre d’arrivée quand deux envois se croisent.</p>
+    <div class="bloc__duo">
+      <div class="fr-input-group"><label class="fr-label" for="lim-total">Nombre de réponses au plus</label>
+        <input class="fr-input" id="lim-total" type="number" min="1" value="${esc(L.total || '')}" placeholder="Pas de limite" oninput="App.onLimite('total', this.value)"></div>
+      <div class="fr-input-group"><label class="fr-label" for="lim-ouvert">Ouvert à partir du</label>
+        <input class="fr-input" id="lim-ouvert" type="date" value="${esc((L.ouvertDu || '').slice(0, 10))}" onchange="App.onLimite('ouvertDu', this.value)"></div>
+      <div class="fr-input-group"><label class="fr-label" for="lim-jusquau">Ouvert jusqu’au (ce jour compris)</label>
+        <input class="fr-input" id="lim-jusquau" type="date" value="${esc((L.jusquau || '').slice(0, 10))}" onchange="App.onLimite('jusquau', this.value)"></div>
+    </div>
+    ${alerte}
+    ${lignesChoix}
+    <div class="fr-select-group"><label class="fr-label" for="lim-ajout">Limiter les places d’une question</label>
+      <select class="fr-select" id="lim-ajout" onchange="App.onLimiteChoix(-1, 'ajouter', this.value); this.selectedIndex = 0;">
+        <option value="">Choisir une question…</option>${ajoutables.map(f => `<option value="${esc(f.colId)}">${esc(f.label || f.colId)}</option>`).join('')}</select></div>
+    <details class="fr-mt-1w"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
+      <div class="bloc__duo">
+        <div class="fr-select-group"><label class="fr-label" for="lim-sauf">Une ligne ne compte pas quand cette colonne vaut…</label>
+          <select class="fr-select" id="lim-sauf" onchange="App.onLimite('saufCol', this.value)">
+            <option value="">— toujours compter —</option>${(S.columnsByTable[def.tableId] || []).filter(c => c.type === 'Text' || c.type === 'Choice').map(c => `<option value="${esc(c.colId)}" ${sauf.colId === c.colId ? 'selected' : ''}>${esc(c.label || c.colId)}</option>`).join('')}</select></div>
+        <div class="fr-input-group"><label class="fr-label" for="lim-sauf-v">…l’une de ces valeurs (séparées par une virgule)</label>
+          <input class="fr-input" id="lim-sauf-v" value="${esc((sauf.valeurs || []).join(', '))}" placeholder="Annulé, Refusé" oninput="App.onLimite('saufValeurs', this.value)"></div>
+      </div>
+      <div class="fr-checkbox-group fr-mt-1w"><input type="checkbox" id="lim-place" ${L.placeCol ? 'checked' : ''} onchange="App.onLimite('placeCol', this.checked ? 'Place' : '')">
+        <label class="fr-label" for="lim-place">Tenir la liste d’attente dans la table (colonne « Place » : Confirmé ou Liste d’attente, par ordre d’arrivée)</label></div>
+      <div class="bloc__duo">
+        ${champMsg('complet', 'Quand c’est complet', 'Les inscriptions sont complètes.')}
+        ${champMsg('ferme', 'Après la fermeture', 'Les inscriptions sont closes.')}
+        ${champMsg('pasOuvert', 'Avant l’ouverture', 'Les inscriptions ne sont pas encore ouvertes.')}
+        ${champMsg('choixComplet', 'Quand un choix est complet ({choix})', '« {choix} » est complet. Choisissez-en un autre.')}
+      </div>
+    </details>`;
+}
+
+/** Une limite générale : total, dates, colonne « Place », messages, lignes qui ne comptent pas. */
+function onLimite(cle, valeur) {
+  marquerModifie();
+  const def = S.currentDef;
+  const L = def.limites = def.limites || {};
+  const v = String(valeur == null ? '' : valeur).trim();
+  if (cle === 'total') { const n = Number(v); if (n >= 1) L.total = Math.floor(n); else delete L.total; }
+  else if (cle === 'ouvertDu' || cle === 'jusquau') { if (v) L[cle] = v; else delete L[cle]; }
+  else if (cle === 'placeCol') { if (v) L.placeCol = v; else delete L.placeCol; }
+  else if (cle === 'saufCol') { if (v) L.sauf = { colId: v, valeurs: (L.sauf && L.sauf.valeurs) || [] }; else delete L.sauf; }
+  else if (cle === 'saufValeurs') { if (L.sauf) L.sauf.valeurs = v.split(',').map(s => s.trim()).filter(Boolean); }
+  else if (cle.indexOf('msg:') === 0) {
+    L.messages = L.messages || {};
+    if (v) L.messages[cle.slice(4)] = v; else delete L.messages[cle.slice(4)];
+    if (!Object.keys(L.messages).length) delete L.messages;
+  }
+  if (!Object.keys(L).length) delete def.limites;
+  if (cle === 'placeCol' || cle === 'saufCol') renderBuilder();
+}
+
+/** Une limite par choix : ajouter une question, régler ses places, la retirer. */
+function onLimiteChoix(i, cle, valeur, choix) {
+  marquerModifie();
+  const def = S.currentDef;
+  const L = def.limites = def.limites || {};
+  L.parChoix = L.parChoix || [];
+  if (cle === 'ajouter') {
+    if (valeur) {
+      const f = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []).find(x => x.colId === valeur);
+      L.parChoix.push(estReference(f) ? { colId: valeur, capaciteCol: '' } : { colId: valeur, max: {} });
+    }
+  } else {
+    const p = L.parChoix[i];
+    if (!p) return;
+    if (cle === 'retirer') L.parChoix.splice(i, 1);
+    else if (cle === 'capaciteCol') { if (valeur) p.capaciteCol = valeur; else delete p.capaciteCol; }
+    else if (cle === 'maxCommun') { const n = Number(valeur); if (n >= 1) p.max = Math.floor(n); else if (typeof p.max === 'number') p.max = {}; }
+    else if (cle === 'maxChoix') {
+      if (typeof p.max !== 'object' || p.max === null) p.max = {};
+      const n = Number(valeur);
+      if (n >= 1) p.max[choix] = Math.floor(n); else delete p.max[choix];
+    }
+  }
+  if (!L.parChoix.length) delete L.parChoix;
+  if (!Object.keys(L).length) delete def.limites;
+  if (cle === 'ajouter' || cle === 'retirer' || cle === 'capaciteCol') renderBuilder();
+}
+
 /** Une colonne remplie sans question ; vide : on ne l'écrit pas. */
 function onMeta(cle, valeur) {
   if (!['timestampCol', 'durationCol', 'emailCol'].includes(cle)) return;
@@ -3550,6 +3694,8 @@ function renderZoneQuestion(def) {
       </div>` : ''}
 
       ${renderMetaColonnes(def)}
+
+      ${renderLimites(def)}
 
       <p class="bloc__intitule">Les mentions <span>RGPD, conditions, avertissements</span></p>
       ${(acc.encarts || []).map((e, i) => `
@@ -5358,7 +5504,7 @@ async function externeGenerer() {
   const x = S.externe = S.externe || {};
   if (!E || !def) return;
   try {
-    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText] = await Promise.all([
+    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText] = await Promise.all([
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
@@ -5368,11 +5514,12 @@ async function externeGenerer() {
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/prefill.js'),
       fetchScriptSource('shared/conditions.js'),
+      fetchScriptSource('shared/limites.js'),
       fetchScriptSource('runtime/engine.js'),
       fetchScriptSource('shared/dsfr-like.css')
     ]);
     x.page = E.buildExternalDocument(def,
-      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, engineJs, cssText },
+      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText },
       { adresse: x.adresse });
     x.nom = (def.id || 'formulaire') + '.html';
     toast('Page générée', 'success');
@@ -5528,8 +5675,8 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText] =
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + limites + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -5542,6 +5689,7 @@ async function publishForm() {
       fetchScriptSource('shared/enrichir.js'),
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/conditions.js'),
+      fetchScriptSource('shared/limites.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -5549,7 +5697,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
@@ -5616,7 +5764,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

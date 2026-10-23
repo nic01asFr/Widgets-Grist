@@ -174,6 +174,93 @@
         }
       }
     },
+    "limites": {
+      "type": "object",
+      "description": "Jusqu'ou le formulaire accepte de reponses : un atelier de 12 places, une fenetre d'ouverture, un plafond. Le formulaire LIT ce qui est deja pris (table lisible par la personne qui repond) et ferme ce qui est plein ; la table TRANCHE par une formule d'ordre d'arrivee (shared/limites.js, `formulePlace`) quand deux envois se croisent. Une table illisible ne bloque personne : seule la fenetre d'ouverture s'applique.",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Nombre maximal de reponses."
+        },
+        "placeCol": {
+          "type": "string",
+          "description": "Nom de la colonne a formule (Confirme / Liste d'attente) que la table tient par ordre d'arrivee : c'est elle qui tranche quand deux envois se croisent, et la seule garantie pour une page hors de Grist. Creee avec la table ; une colonne deja la n'est pas modifiee."
+        },
+        "ouvertDu": {
+          "type": "string",
+          "description": "Date (AAAA-MM-JJ) ou date-heure (AAAA-MM-JJTHH:MM) d'ouverture, a l'heure de l'appareil."
+        },
+        "jusquau": {
+          "type": "string",
+          "description": "Date ou date-heure de fermeture ; une date seule vaut jusqu'a la fin de ce jour."
+        },
+        "parChoix": {
+          "type": "array",
+          "description": "Une limite par question a choix : chaque choix a ses places.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "colId"
+            ],
+            "properties": {
+              "colId": {
+                "type": "string",
+                "description": "La question (colonne) dont les choix sont comptes."
+              },
+              "max": {
+                "description": "Un nombre (le meme pour tous les choix) ou { choix: nombre }."
+              },
+              "capaciteCol": {
+                "type": "string",
+                "description": "Pour une reference : la colonne de la table liee qui porte la capacite de chaque ligne."
+              }
+            }
+          }
+        },
+        "sauf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colId",
+            "valeurs"
+          ],
+          "description": "Les lignes qui ne comptent pas (annulee, refusee) : une annulation libere une place.",
+          "properties": {
+            "colId": {
+              "type": "string"
+            },
+            "valeurs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "messages": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Les phrases de l'ecran. `choixComplet` accepte {choix}.",
+          "properties": {
+            "complet": {
+              "type": "string"
+            },
+            "ferme": {
+              "type": "string"
+            },
+            "pasOuvert": {
+              "type": "string"
+            },
+            "choixComplet": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "groupes": {
       "type": "object",
       "description": "Groupes de questions : un bloc sous une legende, lu comme un seul geste. Les questions y entrent par `options.groupe`.",

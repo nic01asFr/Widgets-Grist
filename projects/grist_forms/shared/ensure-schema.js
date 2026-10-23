@@ -132,6 +132,34 @@
    * leur type : du texte pour un code, un nombre pour l'altitude. Cherché à
    * l'appel, comme `sensDuReferentiel`.
    */
+  /** Le module des limites, cherché à l'appel (Node : `require` ; navigateur : le global). */
+  function limitesApi() {
+    var api = null;
+    try {
+      if (typeof module === 'object' && module.exports && typeof require === 'function') api = require('./limites.js');
+    } catch (e) { api = null; }
+    if (!api) {
+      var global = typeof self !== 'undefined' ? self : null;
+      api = (global && global.FormLimites) || null;
+    }
+    return api && api.formulePlace ? api : null;
+  }
+
+  /**
+   * La colonne « Place » (Confirmé / Liste d'attente) d'un formulaire à limites, quand il en demande une
+   * (`limites.placeCol`). Une formule d'ordre d'arrivée : c'est elle qui tranche quand deux envois se croisent.
+   * @returns {{ id, type, isFormula, formula, label }|null}
+   */
+  function colonnePlace(formDef) {
+    var lim = formDef && formDef.limites;
+    var nom = lim && typeof lim.placeCol === 'string' ? lim.placeCol : '';
+    var api = limitesApi();
+    if (!nom || !isValidGristIdent(nom) || !api || !formDef.tableId) return null;
+    var retenu = api.normaliser(lim).limites;
+    var formule = retenu ? api.formulePlace(retenu, formDef.tableId) : null;
+    return formule ? { id: nom, type: 'Text', isFormula: true, formula: formule, label: 'Place' } : null;
+  }
+
   function sensDeLEnrichissement() {
     var api = null;
     try {
@@ -245,6 +273,8 @@
       seen[id] = true;
       cols.push({ id: id, type: m[1], label: m[2] });
     });
+    var place = colonnePlace(formDef);
+    if (place && !seen[place.id]) { seen[place.id] = true; cols.push(place); }
     return cols;
   }
 
@@ -362,6 +392,7 @@
         var addDef = { type: col.type };
         if (col.label) addDef.label = col.label;
         if (col.widgetOptions) addDef.widgetOptions = col.widgetOptions;
+        if (col.isFormula) { addDef.isFormula = true; addDef.formula = col.formula; }
         actions.push(['AddColumn', tableId, col.id, addDef]);
       } else if (!typesCompatible(existingType, col.type)) {
         errors.push(
