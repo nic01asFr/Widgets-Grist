@@ -30,12 +30,30 @@ Ce qui est **nouveau** : dire à la question que ses choix sont datés (`debutCo
 | 2 | **Chevauchement** : deux créneaux choisis dans le même formulaire se recouvrent → refus clair | **formulaire** : comparer les créneaux choisis (rien à lire hors `Creneaux`) ; **table** : une colonne « Conflit » qui compare, **dans la même ligne**, les créneaux des colonnes concernées (pas de lecture d'une autre ligne : aucun risque de référence circulaire) | moyen | tous, y compris hors Grist (la formule fait foi) |
 | 3 | **Ajout à l'agenda** : après l'envoi, un fichier `.ics` des créneaux retenus | génération côté page (un `Blob`), sans serveur ; seulement les données de `Creneaux` + le choix de la personne | petit | tous |
 | 4 | **Sélecteur en calendrier** : une grille semaine où l'on clique un créneau | un nouveau mode de rendu de la question ; plus de code et de tests (clavier, lecteur d'écran, téléphone) que la liste groupée du point 1 | moyen à grand | tous |
-| 5 | **Vue de l'organisateur** : l'occupation des créneaux dans un calendrier | **aucun code** pour une première version : le widget Calendrier natif de Grist sur `Creneaux` (titre, début, fin) et une colonne « Inscrits » calculée | nul | côté document |
+| 5 | **Vue de l'organisateur** : l'occupation des créneaux dans un calendrier | **aucun code** : le calendrier de TaskFlow relié par mappage à `Creneaux` (ou à `Tasks` de type `reunion`), et une colonne « Inscrits » calculée | nul | côté document |
 
 Le point 1 + le point 3 donnent déjà l'essentiel de la valeur utilisateur pour peu d'effort. Les points 2 et 4 se décident ensemble : le sélecteur en calendrier rend le chevauchement plus visible, la liste groupée le rend plus textuel mais aussi plus accessible.
 
+## S'appuyer sur le calendrier et les standards de TaskFlow (relu le 23/10/2026)
+
+**Oui, c'est pertinent, au niveau des données et de la présentation, pas du code.** Ce que dit le dépôt (`projects/tasks_app/COLUMNS_SPEC.md`, `CLAUDE.md`) :
+
+- **Le calendrier de TaskFlow se branche par le mappage de colonnes de Grist.** Il déclare des colonnes logiques (`titre`, `dateDebut`, `dateEcheance` de type Date ou DateTime en secondes, `type` dont la valeur `reunion`, `statut`, `projet`, `assignees`) que la personne relie à **ses propres colonnes** dans le panneau de Grist. Une table de créneaux n'a donc besoin que d'un titre, d'un début et d'une fin pour s'y afficher : mois, semaine, année, sans une ligne de code de notre côté.
+- **Ses conventions deviennent celles de la table `Creneaux`** : mêmes noms logiques (`titre`, `dateDebut`, `dateEcheance`), dates en secondes (c'est déjà la règle de Grist), `type = reunion`, un statut actif / annulé (la sémantique « fait / annulé / actif » existe, un créneau annulé libère la place), et un `projet` pour regrouper les créneaux d'un même événement. Un document qui a déjà TaskFlow garde un seul vocabulaire.
+- **Deux façons de brancher, au choix de la personne qui compose :**
+  1. *Table à part* `Creneaux` aux colonnes ci-dessus : simple, sans rien changer à TaskFlow ; son calendrier la montre par mappage.
+  2. *Créneaux = tâches de type `reunion` de la table `Tasks` existante* : l'événement apparaît tel quel dans le Kanban, le Gantt, le Calendrier et le Plan de charge. Le formulaire pointe sa question « référence » sur `Tasks`, avec une colonne de capacité ajoutée par la personne (le formulaire sait déjà lire une capacité dans la table liée).
+- **Le courriel se rapproche de `Team`** (colonne `email`) : dans la table des réponses, une formule peut retrouver le service ou le nom d'une personne par son adresse, sans que le formulaire lise `Team`.
+
+**Ce qu'il ne faut pas faire.**
+- **Dépendre du code de TaskFlow.** `core/taskflow-core.js` n'est pas importable (source inlinée dans six fichiers par un script) : l'extraction en module est le point dur du chantier « contrat TaskFlow » encore à penser avec l'agent TaskFlow. On s'appuie sur son **schéma de données** (lecture passive, détection par présence), pas sur ses fonctions.
+- **Faire écrire le formulaire dans TaskFlow** (par exemple ajouter la personne aux `assignees` d'une tâche). Les règles de l'écosystème sont de ne rien écrire hors contrat, pas dans une colonne à formule, et de ne rien créer sans confirmation. Les inscrits restent dans **leur** table ; une formule côté `Creneaux` ou `Tasks` compte les inscrits (colonne « Inscrits ») et le calendrier de TaskFlow peut l'afficher.
+- **Confondre inscription et affectation de charge.** S'inscrire à un atelier n'est pas être assigné à une tâche : le Plan de charge ne doit pas le compter.
+
+**Ce que ça change à la proposition.** Le point 5 (vue de l'organisateur) devient « le calendrier de TaskFlow par mappage » plutôt que le calendrier natif de Grist ; le point 1 gagne un format de date et des noms de colonnes déjà décidés ; le point 4 (sélecteur en grille semaine) peut reprendre le rendu semaine du calendrier de TaskFlow **en le copiant ou en l'extrayant**, jamais en le chargeant (il est lié au modèle des tâches, au panneau et aux filtres, et fait environ 4 600 lignes).
+
 ## Ce qui est déjà dans le dépôt et peut servir
-- **Calendrier de TaskFlow** (`projects/tasks_app/calendar.html`) : un vrai calendrier mois/semaine/année avec glisser-déposer, mais **lié au modèle des tâches** (début, échéance, projet). Le brancher à une table de créneaux demanderait un adaptateur de colonnes ou le « contrat » à penser pour exposer des événements à d'autres widgets (voir la note de contrat TaskFlow). Pour l'organisateur, le calendrier natif de Grist suffit au départ.
+- **Calendrier de TaskFlow** (`projects/tasks_app/calendar.html`) : un vrai calendrier mois/semaine/année avec glisser-déposer, **lié au modèle des tâches** mais **mappable** (voir plus haut). Il sert tel quel de vue de l'organisateur ; il ne sert pas de composant embarquable dans un formulaire.
 - **Aucun `.ics` ni export agenda** n'existe encore dans le dépôt : le point 3 est entièrement à écrire (un module `shared/ics.js` de quelques dizaines de lignes, testable en Node).
 - **Les colonnes de métadonnées** (`meta.timestampCol`, `emailCol`, `durationCol`) montrent la voie : une option du FormDef, un module qui juge, un compositeur qui la règle.
 
