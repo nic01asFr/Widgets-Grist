@@ -1097,6 +1097,7 @@
 <script src="shared/session-context.js"></script>
 <script src="shared/conditions.js"></script>
 <script src="shared/limites.js"></script>
+<script src="shared/acces.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
   <script src="shared/referentiel.js"></script>
@@ -5372,12 +5373,26 @@ function renderPublishStep() {
   const btnLabel = alreadyPublished ? 'Remettre en ligne' : 'Mettre en ligne';
   el.innerHTML = `
     <h2 class="fr-h5">Mettre en ligne</h2>
+    <details class="fr-mb-2w">
+      <summary class="fr-label">Trois façons de partager : qui peut répondre, qui peut lire quoi</summary>
+      <div class="fr-table fr-mt-1w"><table>
+        <thead><tr><th></th><th>Dans le document</th><th>Lien d’un formulaire natif Grist</th><th>Page hors de Grist</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Qui peut répondre</th><td>un éditeur du document (ou un lien public en édition)</td><td>n’importe qui, sans compte</td><td>n’importe qui, sans compte</td></tr>
+          <tr><th scope="row">Voit les réponses des autres</th><td>oui, sauf si vous le cachez (« Qui voit les réponses ? », plus bas)</td><td>non</td><td>non</td></tr>
+          <tr><th scope="row">Étapes, conditions, carte, formats</th><td>oui</td><td>non</td><td>oui</td></tr>
+          <tr><th scope="row">Pièces jointes, photo, signature</th><td>oui</td><td>oui</td><td>non</td></tr>
+          <tr><th scope="row">Places restantes affichées</th><td>oui</td><td>non</td><td>non (la page ne lit rien)</td></tr>
+        </tbody></table></div>
+      <p class="fr-text--sm">Pour des personnes sans compte, <strong>la page hors de Grist</strong> est la façon de partager un lien sans rien montrer des autres réponses. Voir <code>docs/EXPOSITION.md</code>.</p>
+    </details>
     <p>Crée une page Grist dédiée pour remplir le formulaire (bundle figé : moteur, audience, styles).</p>
     <p class="fr-text--sm">Version : <strong>${esc(row ? row.Version : 0)}</strong> — Statut : <strong>${esc(row ? row.Statut : 'brouillon (non enregistré)')}</strong></p>
     ${alreadyPublished ? `<div class="fr-alert fr-alert--warning fr-mb-2w"><p>Une version est déjà en ligne. <strong>Remettre en ligne</strong> remplace le formulaire figé sur la page publiée (même URL).</p></div>` : ''}
     ${S.isDemo ? `<div class="fr-alert fr-alert--info fr-mb-2w"><p>Mode démo : publication simulée, sans écriture Grist.</p></div>` : ''}
     <button class="fr-btn" onclick="App.publishForm()">${btnLabel}</button>
     <span class="publish-hint">Le bundle inclut session, audience et moteur de conditions. Les droits Grist restent la vraie barrière de sécurité.</span>
+    ${renderAccesBloc()}
     ${renderExterneBloc()}
     <details class="json-preview fr-mt-3w">
       <summary>Journal technique</summary>
@@ -5385,6 +5400,156 @@ function renderPublishStep() {
     </details>
   `;
   renderPublishLogEntries();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Qui voit les réponses (voir docs/EXPOSITION.md)
+// ═══════════════════════════════════════════════════════════
+
+/** Le réglage en cours dans l'écran : jamais écrit dans le formulaire, seulement dans les règles du document. */
+function etatAcces() {
+  S.acces = S.acces || { mode: 'ajout-seul', gestionnaires: '', defautRefus: false, existant: null, lu: false, message: '' };
+  return S.acces;
+}
+
+function gestionnairesDe(texte) {
+  return String(texte || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+}
+
+function renderAccesBloc() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  if (!A || !def) return '';
+  const a = etatAcces();
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  const pose = a.existant ? A.modePose(def, a.existant) : null;
+  const modes = Object.keys(A.MODES).map(k => `
+    <div class="fr-radio-group"><input type="radio" id="acc-m-${k}" name="acces-mode" value="${k}" ${a.mode === k ? 'checked' : ''} onchange="App.onAcces('mode', '${k}')">
+      <label class="fr-label" for="acc-m-${k}">${esc(A.MODES[k].libelle)}<span class="fr-hint-text">${esc(A.MODES[k].explication)}</span></label></div>`).join('');
+  const regles = plan.regles.map(r => `<tr><td>${esc(r.tableId === '*' ? 'tout le reste' : r.tableId)}</td><td>${esc(r.colIds === '*' ? 'toutes' : r.colIds)}</td>
+    <td><code>${esc(r.aclFormula || 'sinon')}</code></td><td><code>${esc(r.permissionsText)}</code></td></tr>`).join('');
+  const peutPoser = plan.ok && plan.regles.length && !pose;
+  return `
+    <details class="fr-mt-3w" ${a.ouvert ? 'open' : ''} ontoggle="App.onAcces('ouvert', this.open)">
+      <summary class="fr-label">Qui voit les réponses ?${pose ? ' — règles posées' : ''}</summary>
+      <p class="fr-text--sm fr-mt-1w">Une page de formulaire est une page de votre document : <strong>celles et ceux qui la remplissent en sont éditeurs</strong> et voient tout ce que les
+        règles d’accès ne leur cachent pas. Pour exposer le formulaire sans exposer les réponses, dites ici ce qu’ils peuvent lire. Une règle ne peut que retirer des droits :
+        les participants doivent déjà être éditeurs (ou arriver par un lien public en édition). Pour des personnes qui n’ont pas de compte, préférez la page hors de Grist, plus bas.</p>
+      ${pose ? `<div class="fr-alert fr-alert--info"><p>Des règles de ce formulaire sont posées dans le document (réglage : <strong>${esc(A.MODES[pose] ? A.MODES[pose].libelle : pose)}</strong>).
+        Retirez-les pour changer de réglage.</p></div>` : ''}
+      <fieldset class="fr-fieldset fr-mt-1w"><legend class="fr-label">Ce que lisent les participants</legend>${modes}</fieldset>
+      <div class="fr-input-group"><label class="fr-label" for="acc-gest">Qui garde tous les droits, en plus des propriétaires du document (un courriel par ligne)
+        ${hintIcon('Les propriétaires gardent toujours tous les droits. Ajoutez ici les personnes qui gèrent les réponses sans être propriétaires : sans cela, elles seraient traitées comme des participants.')}</label>
+        <textarea class="fr-input" id="acc-gest" rows="2" oninput="App.onAcces('gestionnaires', this.value)">${esc(a.gestionnaires)}</textarea></div>
+      <div class="fr-checkbox-group"><input type="checkbox" id="acc-defaut" ${a.defautRefus ? 'checked' : ''} onchange="App.onAcces('defautRefus', this.checked)">
+        <label class="fr-label" for="acc-defaut">Cacher aussi le reste du document aux participants
+          <span class="fr-hint-text">Sinon ils voient encore les autres tables et pages. À cocher si le document n’est partagé qu’avec eux ; à éviter si des collègues non propriétaires y travaillent.</span></label></div>
+      ${plan.erreurs.length ? `<div class="fr-alert fr-alert--error fr-mt-1w"><p>${plan.erreurs.map(esc).join('<br>')}</p></div>` : ''}
+      <h3 class="fr-h6 fr-mt-2w">Ce que cela change</h3>
+      <ul class="fr-text--sm">${plan.resume.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+      ${plan.avertissements.length ? `<div class="fr-alert fr-alert--warning"><p>${plan.avertissements.map(esc).join('<br>')}</p></div>` : ''}
+      ${plan.regles.length ? `<details class="fr-mt-1w"><summary class="fr-text--sm">Voir les règles (pour les poser à la main dans « Règles d’accès » de Grist)</summary>
+        <div class="fr-table fr-mt-1w"><table><thead><tr><th>Table</th><th>Colonnes</th><th>Condition</th><th>Droits</th></tr></thead><tbody>${regles}</tbody></table></div>
+        <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w" onclick="App.accesCopier()">Copier les règles</button></details>` : ''}
+      <div class="fr-mt-2w">
+        <button type="button" class="fr-btn" ${peutPoser ? '' : 'disabled'} onclick="App.accesAppliquer()">Poser ces règles dans le document</button>
+        ${pose ? `<button type="button" class="fr-btn fr-btn--secondary fr-ml-1w" onclick="App.accesRetirer()">Retirer les règles de ce formulaire</button>` : ''}
+        <button type="button" class="fr-btn fr-btn--tertiary fr-ml-1w" onclick="App.accesLire()">${a.lu ? 'Relire les règles du document' : 'Lire les règles du document'}</button>
+      </div>
+      ${a.message ? `<p class="fr-text--sm fr-mt-1w" role="status">${esc(a.message)}</p>` : ''}
+      <p class="fr-text--sm fr-mt-1w">Posées sur le document, ces règles s’appliquent à tout le monde, y compris à vous si vous n’êtes pas propriétaire : vérifiez-les avec un compte de participant.</p>
+    </details>`;
+}
+
+function onAcces(cle, valeur) {
+  const a = etatAcces();
+  if (cle === 'ouvert') { a.ouvert = !!valeur; return; }
+  a[cle] = valeur;
+  if (cle === 'gestionnaires') return;   // la saisie ne redessine pas : le focus resterait perdu
+  renderPublishStep();
+}
+
+/** Les règles qui existent déjà dans le document, lues sans rien modifier. */
+async function accesLire() {
+  const a = etatAcces();
+  if (S.isDemo) { a.existant = { ressources: [], regles: [] }; a.lu = true; a.message = 'Mode démo : aucune règle à lire.'; renderPublishStep(); return; }
+  try {
+    const lignes = (donnees) => (window.FormLimites ? FormLimites.lignesDe(donnees) : []);
+    const [res, regles] = await Promise.all([GristBridge.loadTable('_grist_ACLResources'), GristBridge.loadTable('_grist_ACLRules')]);
+    const ressources = lignes(res).map(r => ({ id: r.id, tableId: r.tableId || '', colIds: r.colIds || '' }));
+    const parRes = {}; ressources.forEach(r => { parRes[r.id] = r; });
+    a.existant = {
+      ressources: ressources,
+      regles: lignes(regles).map(r => ({ id: r.id, resource: r.resource, rulePos: typeof r.rulePos === 'number' ? r.rulePos : null, memo: r.memo || '',
+        aclFormula: r.aclFormula || '', permissionsText: r.permissionsText || '', tableId: (parRes[r.resource] || {}).tableId || '' }))
+    };
+    a.lu = true;
+    a.message = 'Règles du document lues : ' + a.existant.regles.length + ' règle(s).';
+  } catch (e) {
+    a.existant = null; a.lu = false;
+    a.message = 'Les règles du document n’ont pas pu être lues (' + ((e && e.message) || 'refusé') + '). Posez-les à la main avec « Voir les règles ».';
+  }
+  renderPublishStep();
+}
+
+async function accesAppliquer() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  const a = etatAcces();
+  if (!A || !def) return;
+  const plan = A.planRegles(def, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  if (!plan.ok || !plan.regles.length) return;
+  if (!a.lu) { a.message = 'Lisez d’abord les règles du document : on ne pose rien sans savoir ce qui existe.'; renderPublishStep(); return; }
+  const pose = A.actionsPose(plan.regles, a.existant);
+  if (!pose.ok) { a.message = pose.erreurs.join(' '); renderPublishStep(); return; }
+  const texte = 'Poser ces règles d’accès dans le document ?\n\n- ' + plan.resume.join('\n- ') +
+    (plan.avertissements.length ? '\n\nÀ noter :\n- ' + plan.avertissements.join('\n- ') : '') +
+    '\n\nElles s’appliquent aussitôt à tout le monde. Les propriétaires du document gardent tous les droits.';
+  if (!confirm(texte)) return;
+  if (S.isDemo) { a.message = 'Mode démo : ' + pose.actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
+  try {
+    await GristBridge.applyUserActions(pose.actions);
+    a.message = 'Règles posées (' + plan.regles.length + ').';
+    toast('Règles d’accès posées', 'success');
+    await accesLire();
+  } catch (e) {
+    a.message = 'Échec : ' + ((e && e.message) || 'refusé') + '. Rien n’a été modifié ; posez les règles à la main avec « Voir les règles ».';
+    toast(a.message, 'error');
+    renderPublishStep();
+  }
+}
+
+async function accesRetirer() {
+  const A = window.FormAcces;
+  const def = S.currentDef;
+  const a = etatAcces();
+  if (!A || !def || !a.existant) return;
+  const actions = A.actionsRetrait(def, a.existant);
+  if (!actions.length) { a.message = 'Aucune règle de ce formulaire à retirer.'; renderPublishStep(); return; }
+  if (!confirm('Retirer les règles d’accès posées pour ce formulaire ?\n\nLes participants retrouveront les droits que leur donne leur rôle dans le document (ils pourront de nouveau lire les réponses). Les autres règles du document ne sont pas touchées.')) return;
+  if (S.isDemo) { a.message = 'Mode démo : ' + actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
+  try {
+    await GristBridge.applyUserActions(actions);
+    a.message = 'Règles retirées.';
+    toast('Règles d’accès retirées', 'success');
+    await accesLire();
+  } catch (e) {
+    a.message = 'Échec : ' + ((e && e.message) || 'refusé');
+    toast(a.message, 'error');
+    renderPublishStep();
+  }
+}
+
+/** Les règles en texte, pour les poser à la main dans « Règles d’accès » de Grist. */
+async function accesCopier() {
+  const A = window.FormAcces;
+  const a = etatAcces();
+  const plan = A.planRegles(S.currentDef, { mode: a.mode, gestionnaires: gestionnairesDe(a.gestionnaires), defautRefus: a.defautRefus });
+  const texte = plan.regles.map(r => [r.tableId === '*' ? 'Tout le reste' : r.tableId, 'colonnes : ' + (r.colIds === '*' ? 'toutes' : r.colIds),
+    'si : ' + (r.aclFormula || '(sinon)'), 'droits : ' + r.permissionsText].join(' | ')).join('\n');
+  try { await navigator.clipboard.writeText(texte); a.message = 'Règles copiées.'; }
+  catch (e) { a.message = 'Copie impossible : sélectionnez le tableau des règles.'; }
+  renderPublishStep();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5764,7 +5929,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

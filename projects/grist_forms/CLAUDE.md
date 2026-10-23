@@ -21,6 +21,8 @@ projects/grist_forms/
 │   └── survey-manifest.schema.json
 ├── shared/
 │   ├── conditions.js     # La grammaire de conditions + son évaluateur (UMD, sans dépendance)
+│   ├── limites.js        # Jusqu'où un formulaire accepte de réponses (places, fenêtre) + la formule « Place » (UMD)
+│   ├── acces.js          # Qui voit les réponses : règles d'accès à poser (ne parle pas à Grist)
 │   ├── client-contrat.js # Le pont grist-bridge sous la forme du contrat de données, et l'inverse
 │   ├── dsfr-like.css     # Thème : couleurs via var(--kit-*, repli)
 │   ├── ux.js
@@ -44,6 +46,8 @@ projects/grist_forms/
 ├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
 ├── docs/THEME-KIT.md        # Variables --kit-* et correspondance avec les jetons du kit
 ├── docs/THEMEDEF-SPEC.md    # ThemeDef 1.0 (brouillon relu) : document de thème éditable ; le moteur ne le lit pas, l'hôte oui
+├── docs/LIMITES.md          # Limiter participants, réponses, durée d'ouverture ; ce que la table tranche (formule Place)
+├── docs/EXPOSITION.md       # Trois façons de partager, qui lit quoi, règles d'accès, ce qui est mesuré ou non
 ├── docs/MIGRATION-CONDITIONS.md  # Ce qui change pour qui écrit un FormDef (10/10/2026)
 ├── docs/MANUAL_TEST.md
 └── docs/PUBLICATION.md
@@ -395,3 +399,22 @@ npm run serve:dev
 ```
 
 Widget Grist → cette URL, accès **full**. E2E auto : `?e2e=1` uniquement.
+
+
+## Retours d'usage du 23/10/2026 (inscription à des ateliers)
+
+- **Nom, prénom, courriel** : formats `nom` (MAJUSCULES), `prenom` (initiales), `nomComplet` (un champ), `courriel`
+  (minuscules), contrôlés en JavaScript **et en Python** (même verdict, essais exécutés) ; la forme corrigée se montre
+  dès qu'on quitte le champ. Un **groupe de questions** (`groupes` + `options.groupe`) range les questions qui se suivent
+  sous une légende, en grille adaptative ; le geste « Nom, prénom et courriel » du compositeur le crée.
+- **Limites** (`limites`, `docs/LIMITES.md`) : le formulaire lit ce qui est pris, annonce les places, ferme ce qui est
+  plein, relit à l'envoi ; la colonne `Place` (formule d'ordre d'arrivée, une liste d'attente ne prend la place de
+  personne) tranche quand deux envois se croisent. Une table illisible ne bloque personne et n'invente aucun chiffre.
+- **Qui voit les réponses** (`docs/EXPOSITION.md`) : un formulaire dans le document est une page de ce document ; ses
+  participants en sont éditeurs. Le compositeur propose trois réglages et pose des règles d'accès **sur confirmation
+  seulement**, sans jamais modifier une règle existante. **Grist refuse une règle placée après une règle sans condition** :
+  une seule règle finale (`+C-RUDS`). Non mesuré : le comportement d'un éditeur non propriétaire (voir le document).
+- **Régler une question en cliquant dessus** : la carte entière l'ouvre (la roue reste).
+- **Piège d'écriture** : les heredocs `python - <<EOF` transforment les séquences à antislash (retour à la ligne, escapes
+  unicode) ; écrire les fichiers avec l'outil d'édition. Sous Windows, Python lit l'entrée standard en cp1252 :
+  transmettre les échantillons de test en ASCII échappé.
