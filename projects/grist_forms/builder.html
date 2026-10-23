@@ -1910,6 +1910,27 @@ async function reloadColumnsForTable(tableId) {
     .map(colonneLue);
 }
 
+/**
+ * Toutes les colonnes d'une table, formules comprises. Les listes proposées à la composition écartent
+ * les colonnes de calcul (on ne répond pas dans une formule) : s'en servir pour savoir ce qui existe
+ * faisait recréer la colonne « Place » à chaque enregistrement (Place, Place2, Place3…).
+ */
+async function colonnesExistantes(tableId) {
+  const repli = () => (S.columnsByTable[tableId] || []).map(c => ({ id: c.colId, type: c.type }));
+  if (S.isDemo) return repli();
+  try {
+    const tables = await GristBridge.loadTable('_grist_Tables');
+    const table = tables.find(t => t.tableId === tableId);
+    if (!table) return repli();
+    const colonnes = await GristBridge.loadTable('_grist_Tables_column');
+    return colonnes
+      .filter(c => c.parentId === table.id && c.colId !== 'manualSort' && c.type !== 'ManualSortPos')
+      .map(c => ({ id: c.colId, type: c.type }));
+  } catch (e) {
+    return repli();
+  }
+}
+
 async function refreshTablesAfterSchemaChange() {
   await loadTablesAndColumns();
 }
@@ -5196,7 +5217,7 @@ async function saveForm() {
     if (def.composeMode === 'ensureSchema') {
       const tableExists = S.tables.some(t => t.tableId === def.tableId);
       if (!tableExists) S.columnsByTable[def.tableId] = S.columnsByTable[def.tableId] || [];
-      const existingColumns = (S.columnsByTable[def.tableId] || []).map(c => ({ id: c.colId, type: c.type }));
+      const existingColumns = await colonnesExistantes(def.tableId);
       const plan = EnsureSchema.planEnsureSchema(def, existingColumns, { tableExists: tableExists });
       if (!plan.ok) {
         const msgs = FormUx.humanizeBindingErrors(plan.errors);
