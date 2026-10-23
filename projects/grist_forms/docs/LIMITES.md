@@ -29,7 +29,7 @@
 | `sauf` | les lignes qui ne comptent pas : une annulation libère une place |
 | `placeCol` | crée une colonne à formule (`Confirmé` / `Liste d'attente` / `Doublon`), voir plus bas ; le formulaire s'en sert pour compter (une réponse en liste d'attente ou en doublon ne remplit pas le formulaire) |
 | `unique` | une seule réponse par personne, reconnue à cette colonne (son courriel : la comparaison ignore la casse et les espaces) ; la première réponse est retenue, les suivantes sont marquées `Doublon` et ne prennent la place de personne. Une réponse annulée (`sauf`) libère l'adresse. Active la colonne `Place` d'office |
-| `messages` | `complet`, `ferme`, `pasOuvert`, `choixComplet` (accepte `{choix}`) |
+| `messages` | `complet`, `ferme`, `pasOuvert`, `choixComplet` (accepte `{choix}`), et après l'envoi `retenue`, `attente`, `doublon` (voir « Dire où en est la réponse ») |
 
 Le compositeur règle le total, les dates et l'unicité dans l'**accueil** du formulaire (« Limiter les réponses »), et le **maximum par choix dans la question elle-même** (« Nombre de réponses par choix »), avec les vrais choix de la question : le même réglage vaut pour des places d'atelier, des créneaux, des portions ou des salles. Une limite incomplète est dite à l'écran, jamais ignorée en silence.
 
@@ -67,3 +67,24 @@ Quand la table n'est pas lisible, le formulaire **n'invente aucun chiffre** : il
 - La formule ne tient pas une liste de choix multiples (plusieurs ateliers cochés) : le formulaire, lui, compte chaque choix. Une question « un seul atelier » reste le cas sûr.
 - Une page hors de Grist ne peut pas annoncer les places restantes (la clé ne lit pas). Une table de « places » en lecture publique serait une solution, non livrée.
 - Aucun message de confirmation « vous êtes confirmé / en liste d'attente » à la personne : elle ne relit pas sa ligne (voir `docs/EXPOSITION.md`).
+
+## Dire où en est la réponse
+
+Une fois la réponse envoyée, l'écran de fin dit ce que la colonne « Place » de **sa** ligne en dit : le formulaire relit sa propre ligne (par l'identifiant que l'ajout renvoie), puis affiche l'une des trois phrases.
+
+| `Place` | Phrase par défaut | Clé |
+|---|---|---|
+| `Confirmé` | Votre réponse est retenue. | `messages.retenue` |
+| `Liste d'attente` | C'est complet : votre réponse est sur liste d'attente. | `messages.attente` |
+| `Doublon` | Une réponse existe déjà pour cette personne : la première est conservée. | `messages.doublon` |
+
+- Il faut `placeCol` (la colonne est créée d'office avec « Une seule réponse par personne »). Sans elle, rien n'est affiché.
+- Les valeurs de la table restent un code stable lu par le moteur ; seules les phrases se règlent. Une valeur inconnue (`Écartée`, vide) ne donne aucune phrase : mieux vaut se taire que dire faux.
+- Toute difficulté (pas de lecture, ligne introuvable, lecture trop longue — 4 secondes) laisse l'écran de fin tel quel : la relecture ne retarde ni ne fait échouer un envoi réussi.
+- Le statut est celui **du moment de l'envoi** : une annulation ultérieure libère une place sans prévenir personne, et aucun courriel n'est envoyé.
+- Mesuré en Grist réel (document public) : l'ajout renvoie l'identifiant de la ligne et « Place » reste lisible quand tout le reste est caché.
+
+La colonne « Place » est **par ligne** : si une des séances choisies est pleine au moment où deux envois se croisent, toute la ligne passe en liste d'attente. Une séance pleine est normalement grisée avant l'envoi et relue à l'envoi, donc ce n'est le cas que d'envois simultanés. Un statut par question, pour des choix vraiment indépendants, reste à faire si le besoin se confirme (voir `ETUDE-STATUT-INSCRIPTION.md`).
+
+**La formule suit les limites.** Quand les limites changent après la première mise en ligne (un maximum, une unicité), la formule de « Place » est remplacée à la mise en ligne suivante, si c'est Form Builder qui l'a écrite (elle commence par `# Généré par Form Builder`). Une formule retouchée à la main n'a plus cette marque et n'est pas touchée.
+

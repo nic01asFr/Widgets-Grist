@@ -3700,6 +3700,12 @@ function renderLimites(def) {
         ${champMsg('pasOuvert', 'Avant l’ouverture', 'Ce formulaire n’est pas encore ouvert.')}
         ${champMsg('choixComplet', 'Quand un choix est complet ({choix})', '« {choix} » est complet. Choisissez-en un autre.')}
       </div>
+      <p class="fr-hint-text fr-mt-1w">Après l’envoi, si la colonne « Place » est tenue dans la table, la personne lit où en est sa réponse. Sans cette colonne, rien n’est affiché.</p>
+      <div class="bloc__duo">
+        ${champMsg('retenue', 'Réponse retenue', 'Votre réponse est retenue.')}
+        ${champMsg('attente', 'Réponse sur liste d’attente', 'C’est complet : votre réponse est sur liste d’attente.')}
+        ${champMsg('doublon', 'Réponse déjà reçue (même personne)', 'Une réponse existe déjà pour cette personne : la première est conservée.')}
+      </div>
     </details>`;
 }
 

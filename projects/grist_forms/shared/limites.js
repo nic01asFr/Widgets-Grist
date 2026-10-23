@@ -19,7 +19,8 @@
  *   parChoix[]   { colId, max } : max est un nombre (le même pour tous les choix), un objet
  *                { choix: n } ou absent si `capaciteCol` dit la capacité dans la table liée
  *   sauf         { colId, valeurs[] } : les lignes qui ne comptent pas (annulée, refusée…)
- *   messages     { complet, ferme, pasOuvert, choixComplet }
+ *   messages     { complet, ferme, pasOuvert, choixComplet, retenue, attente, doublon }
+ *                (retenue / attente / doublon : ce qu'on dit à la personne une fois sa réponse envoyée, d'après `placeCol`)
  */
 (function (root, factory) {
   'use strict';
@@ -41,7 +42,11 @@
     complet: 'Le nombre maximum de réponses est atteint.',
     ferme: 'Ce formulaire est fermé.',
     pasOuvert: 'Ce formulaire n’est pas encore ouvert.',
-    choixComplet: '« {choix} » est complet. Choisissez-en un autre.'
+    choixComplet: '« {choix} » est complet. Choisissez-en un autre.',
+    // Après l'envoi, d'après la colonne « Place » de la ligne qu'on vient d'ajouter.
+    retenue: 'Votre réponse est retenue.',
+    attente: 'C’est complet : votre réponse est sur liste d’attente.',
+    doublon: 'Une réponse existe déjà pour cette personne : la première est conservée.'
   };
 
   function propre(o, cle) { return Object.prototype.hasOwnProperty.call(o, cle); }
@@ -198,6 +203,26 @@
    * elle peut donc rester lisible quand tout le reste est caché.
    */
   var HORS_PLACES = ["Liste d'attente", 'Doublon', 'Écartée'];
+
+  /**
+   * Ce que dit la colonne « Place » d'une ligne, en phrase pour la personne qui vient d'envoyer.
+   *
+   * Les valeurs de la table (`Confirmé`, `Liste d'attente`, `Doublon`) sont un code stable que le moteur
+   * lit ; seules les phrases se règlent (`messages.retenue`, `attente`, `doublon`). Une valeur qu'on ne
+   * connaît pas (`Écartée`, vide, autre chose) ne donne rien : mieux vaut se taire que dire faux.
+   *
+   * @param {object} limites forme retenue par `normaliser`
+   * @param {*} valeurPlace contenu de la colonne `placeCol` de la ligne
+   * @returns {{code:string, message:string}|null}
+   */
+  function statut(limites, valeurPlace) {
+    var codes = { 'Confirmé': 'retenue', "Liste d'attente": 'attente', 'Doublon': 'doublon' };
+    var v = String(valeurPlace == null ? '' : valeurPlace);
+    if (!Object.prototype.hasOwnProperty.call(codes, v)) return null;
+    var code = codes[v];
+    var m = (limites && limites.messages && limites.messages[code]) || MESSAGES[code];
+    return { code: code, message: m };
+  }
   function compte(ligne, limites) {
     if (limites.placeCol && HORS_PLACES.indexOf(String(ligne[limites.placeCol])) !== -1) return false;
     var s = limites.sauf;
@@ -363,6 +388,7 @@
     normaliser: normaliser,
     etat: etat,
     place: place,
+    statut: statut,
     verifierEnvoi: verifierEnvoi,
     colonnesComptees: colonnesComptees,
     formulePlace: formulePlace,

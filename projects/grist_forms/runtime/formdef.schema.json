@@ -217,12 +217,15 @@
         "messages": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Les phrases de l'ecran. `choixComplet` accepte {choix}.",
+          "description": "Les phrases de l'ecran. `choixComplet` accepte {choix}. `retenue`, `attente` et `doublon` se disent a la personne apres l'envoi, d'apres la colonne `placeCol` de sa ligne (Confirme, Liste d'attente, Doublon) ; sans `placeCol`, rien n'est dit.",
           "properties": {
             "complet": { "type": "string" },
             "ferme": { "type": "string" },
             "pasOuvert": { "type": "string" },
-            "choixComplet": { "type": "string" }
+            "choixComplet": { "type": "string" },
+            "retenue": { "type": "string" },
+            "attente": { "type": "string" },
+            "doublon": { "type": "string" }
           }
         }
       }
