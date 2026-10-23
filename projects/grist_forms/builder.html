@@ -1927,7 +1927,7 @@ async function colonnesExistantes(tableId) {
     const colonnes = await GristBridge.loadTable('_grist_Tables_column');
     return colonnes
       .filter(c => c.parentId === table.id && c.colId !== 'manualSort' && c.type !== 'ManualSortPos')
-      .map(c => ({ id: c.colId, type: c.type }));
+      .map(c => ({ id: c.colId, type: c.type, isFormula: !!c.isFormula, formula: c.formula }));
   } catch (e) {
     return repli();
   }
@@ -5274,10 +5274,15 @@ async function saveForm() {
           await applyVisibleColMeta(def);
         }
         const createdTable = plan.actions.some(a => a[0] === 'AddTable');
+        const misesAJour = plan.actions.filter(a => a[0] === 'ModifyColumn').length;
+        const creees = plan.actions.length - misesAJour;
         toast(
           createdTable
             ? 'Table « ' + def.tableId + ' » créée depuis le formulaire'
-            : plan.actions.length + ' colonne(s) créée(s) sur ' + def.tableId,
+            : [
+                creees ? creees + ' colonne(s) créée(s) sur ' + def.tableId : '',
+                misesAJour ? 'formule des places mise à jour' : ''
+              ].filter(Boolean).join(', '),
           'success'
         );
       } else if (!S.isDemo) {
