@@ -2249,8 +2249,15 @@ function renderBuilder() {
 
   // Un réglage change, le panneau est redessiné : on garde la position de lecture
   // et les blocs repliables ouverts (ceux qui portent un identifiant).
-  const avant = el.querySelector('.inspecteur');
-  const defile = avant ? avant.scrollTop : 0;
+  // Redessiner ne doit rien déplacer : ni la fenêtre, ni la structure, ni la page d'édition, ni les
+  // réglages. La hauteur est figée le temps du redessin, sinon la page se raccourcit un instant et le
+  // navigateur ramène la fenêtre en haut.
+  const defileur = document.scrollingElement || document.documentElement;
+  const yFenetre = defileur.scrollTop;
+  const zones = DEFILEMENTS.map(s => { const n = el.querySelector(s); return n ? n.scrollTop : 0; });
+  const remise = S._remiseDefilement || {};
+  S._remiseDefilement = null;
+  if (el.offsetHeight) el.style.minHeight = el.offsetHeight + 'px';
   const ouverts = Array.prototype.map.call(el.querySelectorAll('details[id][open]'), d => d.id);
 
   el.innerHTML = `
@@ -2270,10 +2277,17 @@ function renderBuilder() {
     </div>
   `;
   ouverts.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; });
-  const apres = el.querySelector('.inspecteur');
-  if (apres && defile) apres.scrollTop = defile;
+  DEFILEMENTS.forEach((s, i) => {
+    const n = el.querySelector(s);
+    if (n) n.scrollTop = remise[s] ? 0 : zones[i];
+  });
+  defileur.scrollTop = yFenetre;
+  el.style.minHeight = '';
   monterCarteDeComposition();
 }
+
+/** Les zones qui défilent chacune pour elles-mêmes dans le compositeur. */
+const DEFILEMENTS = ['.rail', '.canevas', '.inspecteur', '.inspecteur__corps'];
 
 /**
  * La carte sur laquelle on pose les reperes d'une illustration.
@@ -3380,6 +3394,12 @@ function selectionEst(quoi, si, fi) {
 
 /** Choisir ce qu'on compose : la zone centrale et l'aperçu suivent. */
 function choisir(quoi, si, fi) {
+  const avant = S.selection || {};
+  // Les réglages d'une autre question repartent du haut ; la page d'édition ne bouge que si l'on
+  // change d'étape (passer d'une question à sa voisine ne doit pas la faire sauter).
+  const memeEtape = avant.quoi === 'question' && quoi === 'question' && avant.si === si;
+  S._remiseDefilement = { '.inspecteur': true, '.inspecteur__corps': true };
+  if (!memeEtape) S._remiseDefilement['.canevas'] = true;
   S.selection = { quoi: quoi, si: si, fi: fi };
   renderBuilder();
 }
