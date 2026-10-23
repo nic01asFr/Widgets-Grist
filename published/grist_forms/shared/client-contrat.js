@@ -163,7 +163,16 @@
       addRow: function (table, fields) {
         var cols = {};
         Object.keys(fields || {}).forEach(function (k) { cols[k] = [fields[k]]; });
-        return applyAndFetch([['BulkAddRecord', table, [null], cols]], table);
+        // Comme `GristBridge.addRow` : la table à jour, avec l'identifiant de la ligne ajoutée en `idCree`
+        // (non énumérable) pour que le formulaire relise SA ligne après l'envoi.
+        return applyUserActions([['BulkAddRecord', table, [null], cols]], undefined).then(function (res) {
+          var id = res && Array.isArray(res.retValues) ? res.retValues[0] : (Array.isArray(res) ? res[0] : null);
+          if (Array.isArray(id)) id = id[0];
+          return loadTable(table).then(function (rows) {
+            if (typeof id === 'number' && Array.isArray(rows)) Object.defineProperty(rows, 'idCree', { value: id, enumerable: false });
+            return rows;
+          });
+        });
       },
       updateRow: function (table, id, fields) { return applyAndFetch([['UpdateRecord', table, id, fields]], table); },
       deleteRow: function (table, id) { return applyAndFetch([['RemoveRecord', table, id]], table); },
