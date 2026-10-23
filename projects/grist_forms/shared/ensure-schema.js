@@ -81,6 +81,10 @@
       type: fieldToGristType(field)
     };
     if (field.label) def.label = field.label;
+    // Sans cela Grist crée une « colonne vide » (formule vide) : le compositeur la
+    // prend pour une colonne de calcul, ne la propose plus et la recrée à chaque
+    // enregistrement (Prenom, Prenom2, ...).
+    def.isFormula = false;
     var t = normalizeGristType(field.type);
     if (t === 'Choice' || t === 'ChoiceList') {
       var choices = choiceListFor(formDef, field);
