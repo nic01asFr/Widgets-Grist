@@ -4285,6 +4285,13 @@ function onComposeModeChange(value) {
     if (!S.currentDef.tableId && S.currentDef.title) {
       S.currentDef.tableId = FormUx.tableNameFromTitle(S.currentDef.title);
     }
+    // Une question sans colonne reçoit son identifiant depuis son libellé : sans lui,
+    // le moteur n'écrit rien pour elle (ni correction ni valeur).
+    for (const s of S.currentDef.sections) {
+      for (const f of s.fields) {
+        if (!f.colId && f.label) f.colId = FormUx.slugify(f.label);
+      }
+    }
   } else {
     S.autoTable = false;
     if (!S.currentDef.tableId && S.tables[0]) S.currentDef.tableId = S.tables[0].tableId;
