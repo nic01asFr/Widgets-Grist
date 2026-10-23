@@ -297,3 +297,78 @@ describe('Accès — le reste du document déjà fermé', () => {
     assert.equal(A.actionsPose(plan.regles, e).ok, false);
   });
 });
+
+describe('Accès — mettre à jour les règles posées quand le formulaire a changé', () => {
+  const sansMax = () => def({ limites: { placeCol: 'Place', unique: { colId: 'Courriel' } } });
+  const avecMax = () => def({ limites: { placeCol: 'Place', unique: { colId: 'Courriel' }, parChoix: [{ colId: 'Atelier', max: { A: 5, B: 8 } }] } });
+  /** Ce que le document contient une fois les règles d'un plan posées (comme le ferait « Poser »). */
+  const poser = (d, opts) => {
+    const plan = A.planRegles(d, opts || { public: true });
+    const a = A.actionsPose(plan.regles, { ressources: [{ id: 1, tableId: '', colIds: '' }], regles: [{ id: 1, resource: 1, rulePos: null, memo: '', aclFormula: '', permissionsText: '' }] });
+    const ressources = [{ id: 1, tableId: '', colIds: '' }];
+    const regles = [{ id: 1, resource: 1, rulePos: null, memo: '', aclFormula: '', permissionsText: '', tableId: '' }];
+    a.actions.forEach((x) => {
+      if (x[1] === '_grist_ACLResources') ressources.push({ id: x[2], tableId: x[3].tableId, colIds: x[3].colIds });
+      else regles.push({ id: x[2], resource: x[3].resource, rulePos: x[3].rulePos, memo: x[3].memo, aclFormula: x[3].aclFormula, permissionsText: x[3].permissionsText, tableId: (ressources.find((r) => r.id === x[3].resource) || {}).tableId });
+    });
+    return { ressources, regles };
+  };
+
+  it('rien de posé : rien à mettre à jour', () => {
+    const plan = A.planRegles(avecMax(), { public: true });
+    const m = A.actionsMiseAJour(plan.regles, { ressources: [], regles: [] });
+    assert.equal(m.etat, 'aucune');
+    assert.deepEqual(m.actions, []);
+  });
+
+  it('règles posées d\'après le même formulaire : à jour, aucune action', () => {
+    const d = avecMax();
+    const m = A.actionsMiseAJour(A.planRegles(d, { public: true }).regles, poser(d));
+    assert.equal(m.etat, 'a-jour');
+    assert.deepEqual(m.actions, []);
+  });
+
+  it('un maximum par choix ajouté après la pose : la liste des colonnes lisibles change en place', () => {
+    const existant = poser(sansMax());
+    const voulu = A.planRegles(avecMax(), { public: true });
+    const m = A.actionsMiseAJour(voulu.regles, existant);
+    assert.equal(m.etat, 'en-place');
+    assert.equal(m.actions.length, 1);
+    const [verbe, table, id, valeurs] = m.actions[0];
+    assert.equal(verbe, 'UpdateRecord', 'on modifie, on ne retire ni n\'ajoute aucune règle');
+    assert.equal(table, '_grist_ACLResources');
+    assert.equal(valeurs.colIds, 'Atelier,Place');
+    assert.equal(existant.ressources.find((r) => r.id === id).colIds, 'Place', 'la ressource visée est celle des colonnes comptées');
+    assert.deepEqual(m.changements, [{ avant: 'Place', apres: 'Atelier,Place' }]);
+  });
+
+  it('jamais d\'état sans protection : aucune action ne retire une règle', () => {
+    const m = A.actionsMiseAJour(A.planRegles(avecMax(), { public: true }).regles, poser(sansMax()));
+    assert.ok(m.actions.every((x) => x[0] === 'UpdateRecord'));
+  });
+
+  it('un autre réglage que les colonnes (accès public retiré, mode changé) : impossible, avec la raison', () => {
+    const existant = poser(avecMax(), { public: true });
+    const m = A.actionsMiseAJour(A.planRegles(avecMax(), { public: false }).regles, existant);
+    assert.equal(m.etat, 'impossible');
+    assert.match(m.raison, /réglage|nombre de règles/);
+    assert.deepEqual(m.actions, []);
+  });
+
+  it('refuse quand une règle étrangère vise les mêmes colonnes', () => {
+    const existant = poser(sansMax());
+    const res = existant.ressources.find((r) => r.colIds === 'Place');
+    existant.regles.push({ id: 99, resource: res.id, rulePos: 99, memo: 'autre', aclFormula: 'user.Email == "x"', permissionsText: '+U', tableId: res.tableId });
+    const m = A.actionsMiseAJour(A.planRegles(avecMax(), { public: true }).regles, existant);
+    assert.equal(m.etat, 'impossible');
+    assert.match(m.raison, /pas celle du formulaire/);
+  });
+
+  it('refuse quand une autre ressource vise déjà la liste voulue', () => {
+    const existant = poser(sansMax());
+    existant.ressources.push({ id: 77, tableId: 'Inscriptions', colIds: 'Atelier,Place' });
+    const m = A.actionsMiseAJour(A.planRegles(avecMax(), { public: true }).regles, existant);
+    assert.equal(m.etat, 'impossible');
+    assert.match(m.raison, /déjà ces colonnes/);
+  });
+});

@@ -20,10 +20,24 @@ const corps = (nom) => {
 };
 
 describe('Compositeur — qui voit les réponses', () => {
+  it('le script du compositeur est du JavaScript valide (une chaîne coupée par un saut de ligne casse tout l\'écran)', () => {
+    const scripts = [...SOURCE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+    assert.ok(scripts.length > 0);
+    scripts.forEach((s) => assert.doesNotThrow(() => new Function(s)));
+  });
+
+  it('« Mettre à jour les règles » change en place, sans retirer ni reposer', () => {
+    const f = corps('accesMettreAJour');
+    assert.match(f, /actionsMiseAJour/);
+    assert.match(f, /confirm\(/, 'rien ne part sans confirmation');
+    assert.ok(!/actionsRetrait|actionsPose/.test(f), 'jamais de retrait ni de nouvelle pose : le document reste protégé');
+    assert.match(SOURCE, /onclick="App\.accesMettreAJour\(\)"/);
+  });
+
   it('le module est chargé et l\'écran est dans l\'étape « Mettre en ligne »', () => {
     assert.match(SOURCE, /<script src="shared\/acces\.js"><\/script>/);
     assert.match(corps('renderPublishStep'), /\$\{renderAccesBloc\(\)\}/);
-    assert.match(SOURCE, /onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier/);
+    assert.match(SOURCE, /onAcces, accesLire, accesAppliquer, accesMettreAJour, accesRetirer, accesCopier/);
   });
 
   it('rien n\'est posé sans une confirmation, et jamais sans avoir lu ce qui existe', () => {
