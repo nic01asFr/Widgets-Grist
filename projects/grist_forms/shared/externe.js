@@ -175,7 +175,7 @@
       out.push('if ' + col + ' and $' + apres + ' and ' + col + ' < $' + apres + ':');
       out.push('  m.append(' + py(lib + ' : avant « ' + apres + ' »') + ')');
     }
-    var fmt = Formats && Formats.formatDeChamp(field);
+    var fmt = Formats && (Formats.formatControle || Formats.formatDeChamp)(field);
     if (fmt) {
       out.push('if ' + col + ' and not fmt_' + fmt + '(' + col + '):');
       out.push('  m.append(' + py(lib + ' : ' + Formats.message(fmt).replace(/\.$/, '').replace(/^Ce n’est pas /, 'ce n’est pas ')) + ')');
@@ -205,7 +205,7 @@
       var regles = [];
       reglesDeQuestion(formDef, f, regles);
       if (!regles.length) return;
-      var fmt = Formats && Formats.formatDeChamp(f);
+      var fmt = Formats && (Formats.formatControle || Formats.formatDeChamp)(f);
       if (fmt) formats.push(fmt);
       var conds = [];
       if (sectionCond) conds.push('(' + sectionCond + ')');

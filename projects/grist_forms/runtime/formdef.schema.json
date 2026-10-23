@@ -454,6 +454,10 @@
                 "format": {
                   "type": "string",
                   "description": "Identifiant du format."
+                },
+                "mode": {
+                  "enum": ["verifier", "corriger"],
+                  "description": "`verifier` (defaut) : une reponse qui ne respecte pas le format est refusee. `corriger` : la forme est remise en ordre (initiales, espaces), sans rien refuser ; reserve aux noms (nom, prenom, nomComplet). Une personne a un seul mot dans son nom, une apostrophe ou un nom compose n'est ainsi jamais bloquee."
                 }
               }
             },

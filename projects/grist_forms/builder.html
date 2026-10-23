@@ -3050,6 +3050,15 @@ function renderReglagesCommuns(def, si, f, fi) {
         <select class="fr-select" id="fmt-${si}-${fi}" onchange="App.onValidation(${si}, ${fi}, this.value)">
           <option value="">— aucun —</option>${choix}
         </select></div>`;
+    if (courant && formats.peutCorrigerSeulement && formats.peutCorrigerSeulement(courant)) {
+      const mode = (o.validation && o.validation.mode) === 'verifier' ? 'verifier' : ((o.validation && o.validation.mode) === 'corriger' ? 'corriger' : 'verifier');
+      html += `
+      <div class="fr-select-group"><label class="fr-label" for="fmtm-${si}-${fi}">Si ce n’est pas la bonne forme ${hintIcon('Pour un nom, mieux vaut corriger que refuser : une personne qui n’a qu’un mot dans son nom, ou un nom à particule, ne doit jamais être bloquée. Les initiales et les espaces sont remis en ordre, ce qui est déjà bien écrit (« McDonald ») n’est pas touché.')}</label>
+        <select class="fr-select" id="fmtm-${si}-${fi}" onchange="App.onValidationMode(${si}, ${fi}, this.value)">
+          <option value="corriger" ${mode === 'corriger' ? 'selected' : ''}>La corriger, sans rien refuser — recommandé</option>
+          <option value="verifier" ${mode === 'verifier' ? 'selected' : ''}>Demander de la corriger</option>
+        </select></div>`;
+    }
   }
   // ── Valeur reçue par l'adresse de la page (QR code) ──
   const p = o.prefill || {};
@@ -4656,7 +4665,21 @@ function onValidation(si, fi, valeur) {
   marquerModifie();
   const f = S.currentDef.sections[si].fields[fi];
   f.options = f.options || {};
-  if (valeur) f.options.validation = { format: valeur }; else delete f.options.validation;
+  if (valeur) {
+    f.options.validation = { format: valeur };
+    // Un nom se corrige, il ne se refuse pas : c'est le réglage de départ.
+    if (window.FormFormats && FormFormats.peutCorrigerSeulement && FormFormats.peutCorrigerSeulement(valeur)) f.options.validation.mode = 'corriger';
+  } else delete f.options.validation;
+  renderBuilder();
+}
+
+/** Corriger sans rien refuser, ou demander de corriger (les noms). */
+function onValidationMode(si, fi, mode) {
+  marquerModifie();
+  const f = S.currentDef.sections[si].fields[fi];
+  const v = f.options && f.options.validation;
+  if (!v) return;
+  if (mode === 'corriger') v.mode = 'corriger'; else delete v.mode;
   renderBuilder();
 }
 
@@ -6072,7 +6095,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onValidationMode, onAcces, accesLire, accesAppliquer, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };

@@ -50,9 +50,9 @@
     // Un courriel est un texte que le moteur contrôle (format, clavier « @ ») : le choisir pose les deux.
     { key: 'courriel', type: 'Text', widget: 'text', label: 'Courriel', options: { validation: { format: 'courriel' } } },
     // Qui répond : un type qui contrôle et met en forme (majuscules appropriées), pas un texte libre.
-    { key: 'nom', type: 'Text', widget: 'text', label: 'Nom de famille (MAJUSCULES)', options: { validation: { format: 'nom' } } },
-    { key: 'prenom', type: 'Text', widget: 'text', label: 'Prénom (Initiale en majuscule)', options: { validation: { format: 'prenom' } } },
-    { key: 'nomcomplet', type: 'Text', widget: 'text', label: 'Nom et prénom (un seul champ)', options: { validation: { format: 'nomComplet' } } }
+    { key: 'nom', type: 'Text', widget: 'text', label: 'Nom de famille (MAJUSCULES)', options: { validation: { format: 'nom', mode: 'corriger' } } },
+    { key: 'prenom', type: 'Text', widget: 'text', label: 'Prénom (Initiale en majuscule)', options: { validation: { format: 'prenom', mode: 'corriger' } } },
+    { key: 'nomcomplet', type: 'Text', widget: 'text', label: 'Nom et prénom (un seul champ)', options: { validation: { format: 'nomComplet', mode: 'corriger' } } }
   ];
 
   /**
@@ -62,9 +62,9 @@
    */
   var IDENTITE = [
     { label: 'Nom', colId: 'Nom', alias: ['nom', 'nomdefamille', 'name', 'lastname', 'familyname'],
-      options: { validation: { format: 'nom' } } },
+      options: { validation: { format: 'nom', mode: 'corriger' } } },
     { label: 'Prénom', colId: 'Prenom', alias: ['prenom', 'firstname', 'givenname'],
-      options: { validation: { format: 'prenom' } } },
+      options: { validation: { format: 'prenom', mode: 'corriger' } } },
     { label: 'Courriel', colId: 'Courriel', alias: ['courriel', 'email', 'mail', 'adresseemail', 'adressemail', 'emailaddress', 'adressecourriel'],
       options: { validation: { format: 'courriel' } } }
   ];

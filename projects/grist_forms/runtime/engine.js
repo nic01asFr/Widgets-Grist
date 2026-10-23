@@ -1932,7 +1932,7 @@
     var out = [];
     if (!api) return out;
     for (var i = 0; i < fields.length; i++) {
-      var id = api.formatDeChamp(fields[i]);
+      var id = api.formatControle ? api.formatControle(fields[i]) : api.formatDeChamp(fields[i]);
       if (!id) continue;
       if (!api.valide(id, values[fields[i].colId])) out.push({ colId: fields[i].colId, message: api.message(id) });
     }

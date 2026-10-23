@@ -408,7 +408,9 @@ Widget Grist → cette URL, accès **full**. E2E auto : `?e2e=1` uniquement.
 
 - **Nom, prénom, courriel** : formats `nom` (MAJUSCULES), `prenom` (initiales), `nomComplet` (un champ), `courriel`
   (minuscules), contrôlés en JavaScript **et en Python** (même verdict, essais exécutés) ; la forme corrigée se montre
-  dès qu'on quitte le champ. Un **groupe de questions** (`groupes` + `options.groupe`) range les questions qui se suivent
+  dès qu'on quitte le champ. **Un nom se corrige, il ne se refuse pas** : `validation.mode: 'corriger'` (réglage de départ des
+  types de nom) remet en ordre initiales et espaces sans jamais bloquer (un seul mot, une particule, une apostrophe) ; ce qui
+  porte déjà une majuscule au milieu (« McDonald ») n'est pas touché ; sans `mode`, le refus d'avant reste. Un **groupe de questions** (`groupes` + `options.groupe`) range les questions qui se suivent
   sous une légende, en grille adaptative ; le geste « Nom, prénom et courriel » du compositeur le crée.
 - **Limites** (`limites`, `docs/LIMITES.md`) : le formulaire lit ce qui est pris, annonce les places, ferme ce qui est
   plein, relit à l'envoi ; la colonne `Place` (formule d'ordre d'arrivée, une liste d'attente ne prend la place de

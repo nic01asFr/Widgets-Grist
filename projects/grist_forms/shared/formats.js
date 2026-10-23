@@ -144,10 +144,22 @@
       return avant + lettre.toLocaleUpperCase('fr');
     });
   }
+  /**
+   * Les initiales, sans rien abîmer : un mot écrit tout en minuscules ou tout en majuscules est remis en forme
+   * (« marie » et « MARIE » deviennent « Marie »), un mot qui porte déjà une majuscule au milieu est la façon
+   * dont la personne écrit son nom et reste tel quel (« McDonald », « d'Artagnan »).
+   */
+  function majusculesInitialesPrudentes(s) {
+    return s.split(' ').map(function (mot) {
+      var lettres = mot.replace(/[^\p{L}]/gu, '');
+      if (lettres && (lettres === lettres.toLocaleLowerCase('fr') || lettres === lettres.toLocaleUpperCase('fr'))) return majusculesInitiales(mot);
+      return mot;
+    }).join(' ');
+  }
   function normaliserNom(v) { return espacesPropres(v).toLocaleUpperCase('fr'); }
-  function normaliserPrenom(v) { return majusculesInitiales(espacesPropres(v)); }
+  function normaliserPrenom(v) { return majusculesInitialesPrudentes(espacesPropres(v)); }
   function normaliserNomComplet(v) {
-    return majusculesInitiales(espacesPropres(v)).split(' ').map(function (mot, i) {
+    return majusculesInitialesPrudentes(espacesPropres(v)).split(' ').map(function (mot, i) {
       return i > 0 && PARTICULES.indexOf(mot.toLowerCase()) !== -1 ? mot.toLowerCase() : mot;
     }).join(' ');
   }
@@ -274,9 +286,9 @@
     insee: { id: 'insee', libelle: 'Code INSEE de commune', message: 'Ce n’est pas un code INSEE de commune.', normaliser: function (v) { return normaliserTexte(v).toUpperCase(); }, valider: validerInsee, python: PYTHON.insee },
     heure: { id: 'heure', libelle: 'Heure (HH:MM)', message: 'Ce n’est pas une heure (HH:MM).', normaliser: normaliserTexte, valider: validerHeure, python: PYTHON.heure },
     courriel: { id: 'courriel', libelle: 'Courriel', message: 'Ce n’est pas une adresse de courriel.', normaliser: normaliserCourriel, valider: validerCourriel, python: PYTHON.courriel, corrige: true },
-    nom: { id: 'nom', libelle: 'Nom de famille', message: 'Un nom ne contient que des lettres, des espaces, des tirets ou des apostrophes.', normaliser: normaliserNom, valider: validerPartieNom, python: PYTHON.nom, corrige: true },
-    prenom: { id: 'prenom', libelle: 'Prénom', message: 'Un prénom ne contient que des lettres, des espaces, des tirets ou des apostrophes.', normaliser: normaliserPrenom, valider: validerPartieNom, python: PYTHON.prenom, corrige: true },
-    nomComplet: { id: 'nomComplet', libelle: 'Nom et prénom (un champ)', message: 'Écrivez le prénom et le nom, en lettres (par exemple « Marie Dupont »).', normaliser: normaliserNomComplet, valider: validerNomComplet, python: PYTHON.nomComplet, corrige: true },
+    nom: { id: 'nom', libelle: 'Nom de famille', message: 'Un nom ne contient que des lettres, des espaces, des tirets ou des apostrophes.', normaliser: normaliserNom, valider: validerPartieNom, python: PYTHON.nom, corrige: true, souple: true },
+    prenom: { id: 'prenom', libelle: 'Prénom', message: 'Un prénom ne contient que des lettres, des espaces, des tirets ou des apostrophes.', normaliser: normaliserPrenom, valider: validerPartieNom, python: PYTHON.prenom, corrige: true, souple: true },
+    nomComplet: { id: 'nomComplet', libelle: 'Nom et prénom (un champ)', message: 'Écrivez le prénom et le nom, en lettres (par exemple « Marie Dupont »).', normaliser: normaliserNomComplet, valider: validerNomComplet, python: PYTHON.nomComplet, corrige: true, souple: true },
     telephone: { id: 'telephone', libelle: 'Téléphone (France)', message: 'Ce n’est pas un numéro de téléphone français.', normaliser: normaliserTelephone, valider: validerTelephone, python: PYTHON.telephone }
   };
 
@@ -309,6 +321,20 @@
     var f = formatDe(id);
     return f ? f.message : '';
   }
+
+  /**
+   * Le format qu'une question CONTRÔLE : celui qu'elle demande, sauf si elle le fait seulement corriger
+   * (`validation.mode: 'corriger'`, pour les noms) — la forme est alors remise en ordre, jamais refusée.
+   */
+  function formatControle(field) {
+    var id = formatDeChamp(field);
+    var v = field && field.options && field.options.validation;
+    if (id && v && v.mode === 'corriger' && FORMATS[id] && FORMATS[id].souple) return null;
+    return id;
+  }
+
+  /** Ce format peut-il se contenter de corriger ? (les noms ; pas un IBAN ni un courriel) */
+  function peutCorrigerSeulement(id) { return !!(FORMATS[id] && FORMATS[id].souple); }
 
   /** Le format qu'une question demande, ou null. */
   function formatDeChamp(field) {
@@ -346,6 +372,8 @@
     corrige: corrige,
     message: message,
     formatDeChamp: formatDeChamp,
+    formatControle: formatControle,
+    peutCorrigerSeulement: peutCorrigerSeulement,
     definitionsPython: definitionsPython,
     appelPython: appelPython
   };

@@ -236,3 +236,54 @@ describe('Un groupe de questions : un bloc sous une légende', () => {
     assert.match(root.innerHTML, /&lt;img/);
   });
 });
+
+describe('Un nom se corrige, il ne se refuse pas', () => {
+  const def = (mode) => ({
+    id: 'inscription', title: 'Inscription', tableId: 'Inscriptions',
+    sections: [{ label: 'Vous', fields: [
+      { colId: 'Nom', label: 'Nom complet', type: 'Text', widget: 'text', required: true, options: { validation: mode ? { format: 'nomComplet', mode } : { format: 'nomComplet' } } }
+    ] }]
+  });
+  const envoyer = async (d, valeur) => {
+    const root = createRoot();
+    let envoye = null;
+    Engine.mount(root, d, { skipProbe: true, submit: (x) => { envoye = x; return Promise.resolve({}); } });
+    root.querySelector('[name="Nom"]').value = valeur;
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await new Promise((r) => setTimeout(r, 5));
+    return envoye;
+  };
+
+  it('en mode « corriger », un seul mot ou un chiffre n\'empêche pas l\'envoi, la forme est remise en ordre', async () => {
+    assert.deepEqual(await envoyer(def('corriger'), 'madonna'), { Nom: 'Madonna' });
+    assert.equal((await envoyer(def('corriger'), 'jean dupont 2')).Nom, 'Jean Dupont 2');
+  });
+
+  it('sans mode (formulaire existant) ou en mode « verifier », le refus reste', async () => {
+    assert.equal(await envoyer(def(), 'Madonna'), null);
+    assert.equal(await envoyer(def('verifier'), 'Madonna'), null);
+  });
+
+  it('ne refuse que les noms : un courriel ne peut pas se contenter de corriger', () => {
+    assert.equal(Formats.formatControle({ options: { validation: { format: 'courriel', mode: 'corriger' } } }), 'courriel');
+    assert.equal(Formats.formatControle({ options: { validation: { format: 'nomComplet', mode: 'corriger' } } }), null);
+    assert.equal(Formats.peutCorrigerSeulement('nom'), true);
+    assert.equal(Formats.peutCorrigerSeulement('iban'), false);
+  });
+
+  it('ne casse pas ce qui est déjà bien écrit', () => {
+    assert.equal(Formats.normalise('nomComplet', 'Jean McDonald'), 'Jean McDonald');
+    assert.equal(Formats.normalise('prenom', 'd\'Artagnan'), 'd\'Artagnan');
+    assert.equal(Formats.normalise('nomComplet', 'marie Dupont'), 'Marie Dupont');
+    assert.equal(Formats.normalise('nomComplet', 'JEAN DE LA FONTAINE'), 'Jean de la Fontaine');
+  });
+
+  it('les nouveaux types de nom partent en mode « corriger »', () => {
+    ['nom', 'prenom', 'nomcomplet'].forEach((k) => {
+      const t = Ux.FIELD_TYPES ? Ux.FIELD_TYPES.find((x) => x.key === k) : null;
+      if (t) assert.equal(t.options.validation.mode, 'corriger', k);
+    });
+    Ux.identiteChamps([], [], false).filter((c) => c.options.validation.format !== 'courriel')
+      .forEach((c) => assert.equal(c.options.validation.mode, 'corriger'));
+  });
+});
