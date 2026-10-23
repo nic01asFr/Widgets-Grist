@@ -390,7 +390,10 @@
     border: 1px solid transparent; border-radius: 8px; padding: 0.5rem 0.6rem;
     position: relative; background: var(--fond-carte, #fff);
   }
+  .champ-bloc { cursor: pointer; }
   .champ-bloc:hover { border-color: var(--grey-925, #e5e5e5); }
+  .champ-bloc:focus-visible { outline: 3px solid var(--blue-france, #000091); outline-offset: 2px; }
+  .champ-bloc.est-ouvert { cursor: default; }
   .champ-bloc.est-ouvert { border-color: var(--blue-france, #000091); background: var(--grey-975, #f6f6f6); }
   .champ-bloc__barre {
     display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem;
@@ -2535,7 +2538,10 @@ function renderCanevas(def) {
     catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
     return `
       ${enteteMatrice}
-      <div class="champ-bloc${ouvert ? ' est-ouvert' : ''}">
+      <div class="champ-bloc${ouvert ? ' est-ouvert' : ''}" role="group" tabindex="0"
+        aria-label="Question ${fi + 1} : ${esc(f.label || f.colId || '')}. Entrée pour la régler."
+        ${ouvert ? 'aria-current="true"' : ''}
+        onclick="App.choisirSurClic(event, ${si}, ${fi})" onkeydown="App.choisirAuClavier(event, ${si}, ${fi})">
         <div class="champ-bloc__barre">
           <span class="champ-bloc__rang">${fi + 1}</span>
           <span class="champ-bloc__nature">${esc(natureCourte(f))}</span>
@@ -3310,6 +3316,27 @@ function selectionEst(quoi, si, fi) {
 function choisir(quoi, si, fi) {
   S.selection = { quoi: quoi, si: si, fi: fi };
   renderBuilder();
+}
+
+/**
+ * Régler une question en cliquant dessus, pas seulement sur la roue : la carte est l'image de ce que
+ * le public verra, c'est elle qu'on vise. Les boutons de la barre (monter, dupliquer, déplacer…)
+ * gardent leur geste ; une question déjà ouverte n'est pas rouverte (on ne perd ni le défilement,
+ * ni le focus des réglages).
+ */
+function choisirSurClic(evenement, si, fi) {
+  const cible = evenement && evenement.target;
+  if (cible && cible.closest && cible.closest('button, select, a, input, textarea, label')) return;
+  if (selectionEst('question', si, fi)) return;
+  choisir('question', si, fi);
+}
+
+/** Même geste au clavier : Entrée ou Espace sur la carte (pas sur un bouton qu'elle contient). */
+function choisirAuClavier(evenement, si, fi) {
+  if (!evenement || evenement.target !== evenement.currentTarget) return;
+  if (evenement.key !== 'Enter' && evenement.key !== ' ') return;
+  evenement.preventDefault();
+  if (!selectionEst('question', si, fi)) choisir('question', si, fi);
 }
 
 /**
@@ -5503,7 +5530,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, choisirSurClic, choisirAuClavier, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
