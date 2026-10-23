@@ -505,6 +505,9 @@
       var courriel = opts.email ? String(opts.email).trim().toLowerCase() : '';
       if (meta.emailCol && courriel) out[meta.emailCol] = courriel;
     }
+    // Une question sans colonne n'écrit nulle part : Grist refuserait toute la
+    // ligne (« KeyError '' »), y compris les réponses valables.
+    delete out[''];
     return out;
   }
 

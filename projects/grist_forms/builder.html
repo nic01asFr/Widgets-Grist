@@ -5087,6 +5087,18 @@ async function saveForm() {
   if (!def.title) { toast('Le titre du formulaire est requis', 'error'); return; }
   if (!def.tableId) { toast('Indiquez un nom pour la table des réponses', 'error'); return; }
 
+  // Une question sans colonne ferait refuser toute la ligne à l'envoi : on la nomme d'après son libellé.
+  for (const s of def.sections) {
+    for (const f of s.fields) {
+      if (!f.colId && f.label && def.composeMode === 'ensureSchema') f.colId = FormUx.slugify(f.label);
+    }
+  }
+  const sansColonne = def.sections.flatMap(s => s.fields).filter(f => !f.colId);
+  if (sansColonne.length) {
+    toast('Choisissez la colonne de : ' + sansColonne.map(f => f.label || 'question sans titre').join(', '), 'error');
+    return;
+  }
+
   try {
     if (def.composeMode === 'ensureSchema') {
       const tableExists = S.tables.some(t => t.tableId === def.tableId);
