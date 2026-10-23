@@ -228,6 +228,13 @@ small { font-size: 0.875rem; }
   font-size: 0.875rem; color: var(--kit-texte-2, #666); margin-top: 4px;
 }
 .fr-matrice { padding: 0; border: none; }
+/* Un groupe de questions (nom, prenom, courriel) : une legende, puis les questions en grille adaptative. */
+.fr-groupe { padding: 0; border: none; margin: 0 0 1.5rem; }
+.fr-groupe__titre { padding: 0; margin: 0 0 0.25rem; font-weight: 700; font-size: 1.125rem; color: var(--kit-texte, var(--grey-200)); }
+.fr-groupe__consigne { margin: 0 0 0.75rem; }
+.fr-groupe__champs { display: grid; gap: 0 1rem; grid-template-columns: minmax(0, 1fr); }
+.fr-groupe--2 .fr-groupe__champs { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.fr-groupe__champs > * { min-width: 0; }
 .fr-matrice__ligne {
   display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
   padding: 10px 0; border-top: 1px solid var(--kit-bord, #eee);

@@ -1263,12 +1263,30 @@
     var courant = null;
     (fields || []).forEach(function (f) {
       var m = f.options && f.options.matrice;
+      var g = !m && f.options && typeof f.options.groupe === 'string' && f.options.groupe ? f.options.groupe : '';
       if (m && courant && courant.matrice === m) { courant.fields.push(f); return; }
       if (m) { courant = { matrice: m, fields: [f] }; groupes.push(courant); return; }
+      // Les questions d'un meme groupe qui se suivent forment un bloc sous une legende.
+      if (g && courant && courant.groupe === g) { courant.fields.push(f); return; }
+      if (g) { courant = { groupe: g, fields: [f] }; groupes.push(courant); return; }
       courant = null;
       groupes.push({ fields: [f] });
     });
     return groupes;
+  }
+
+  /**
+   * Un groupe de questions : « Qui êtes-vous ? » (nom, prénom, courriel) lu comme un seul geste. Une légende,
+   * une consigne, et les questions en grille : côte à côte quand la place le permet, empilées sur un téléphone.
+   * `rendreChamp` rend une question avec ses erreurs (le même chemin que hors groupe).
+   */
+  function renderGroupe(groupe, formDef, rendreChamp) {
+    var def = (formDef && formDef.groupes && formDef.groupes[groupe.groupe]) || {};
+    var deux = def.colonnes === 2 ? ' fr-groupe--2' : '';
+    return '<fieldset class="fr-fieldset fr-groupe' + deux + '" data-groupe="' + escapeHtml(groupe.groupe) + '">' +
+      (def.titre ? '<legend class="fr-fieldset__legend fr-groupe__titre">' + escapeHtml(def.titre) + '</legend>' : '') +
+      (def.consigne ? '<p class="fr-hint-text fr-groupe__consigne">' + escapeHtml(def.consigne) + '</p>' : '') +
+      '<div class="fr-groupe__champs">' + groupe.fields.map(rendreChamp).join('') + '</div></fieldset>';
   }
 
   function renderLikert(field, value) {
@@ -2450,11 +2468,7 @@
 
       // Les échelles qui se suivent et partagent une matrice sont rendues
       // ensemble : l'échelle n'est annoncée qu'une fois, pas sous chaque ligne.
-      var fieldsHtml = grouperParMatrice(fields).map(function (groupe) {
-        if (groupe.matrice && groupe.fields.length > 1) {
-          return renderMatrice(groupe, values, formDef, errorFields);
-        }
-        var f = groupe.fields[0];
+      function rendreChamp(f) {
         var opts = resolveOptionsForField(f);
         var html = verrouilles.indexOf(f.colId) !== -1
           ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
@@ -2469,6 +2483,13 @@
             escapeHtml(messagesErreur[f.colId] || 'Ce champ est obligatoire.') + '</p></div>';
         }
         return html;
+      }
+      var fieldsHtml = grouperParMatrice(fields).map(function (groupe) {
+        if (groupe.matrice && groupe.fields.length > 1) {
+          return renderMatrice(groupe, values, formDef, errorFields);
+        }
+        if (groupe.groupe) return renderGroupe(groupe, formDef, rendreChamp);
+        return rendreChamp(groupe.fields[0]);
       }).join('');
 
       var errorHtml = submitError
@@ -2603,6 +2624,21 @@
       }(blocs[i]));
     }
 
+    /**
+     * Nom, prénom, courriel : la forme enregistrée se montre dès qu'on quitte le champ (« dupont » devient
+     * « DUPONT »), pour que la personne voie ce qui part. Seuls les formats qui le demandent (`corrige`).
+     */
+    function corrigerALaSaisie(champ, fields) {
+      var api = formatsApi();
+      var nom = champ && (champ.name || (typeof champ.getAttribute === 'function' ? champ.getAttribute('name') : ''));
+      if (!champ || typeof champ.value !== 'string' || !api || !api.corrige || !nom) return;
+      var voulu = (fields || []).filter(function (f) { return f.colId === nom; })[0];
+      var id = voulu && api.formatDeChamp(voulu);
+      if (!id || !api.corrige(id) || champ.value.trim() === '') return;
+      var forme = api.normalise(id, champ.value);
+      if (typeof forme === 'string' && forme !== champ.value) champ.value = forme;
+    }
+
     function wireEvents(fields) {
       if (typeof rootEl.querySelectorAll !== 'function') return;
       brancherPlafonds();
@@ -2624,7 +2660,8 @@
         if (typeof inputs[i].getAttribute === 'function' &&
             inputs[i].getAttribute('data-referentiel-champ') !== null) continue;
         if (typeof inputs[i].addEventListener === 'function') {
-          inputs[i].addEventListener('change', function () {
+          inputs[i].addEventListener('change', function (evenement) {
+            corrigerALaSaisie(evenement && evenement.target, fields);
             readSectionValues(rootEl, fields, values, verrouilles);
             pruneInvalidFilteredValues();
             planifierRendu();

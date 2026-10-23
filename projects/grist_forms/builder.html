@@ -2527,12 +2527,17 @@ function renderCanevas(def) {
   if (!section) return '<div class="canevas__page"><p>Aucune étape.</p></div>';
 
   let derniereMatrice = null;
+  let derniereGroupe = null;
   const blocs = (section.fields || []).map((f, fi) => {
     const ouvert = selectionEst('question', si, fi);
     const matrice = (f.options && f.options.matrice) || null;
+    const groupe = (!matrice && f.options && f.options.groupe) || null;
     const enteteMatrice = (matrice && matrice !== derniereMatrice)
-      ? `<p class="canevas__matrice">▦ ${esc(((def.matrices || {})[matrice] || {}).titre || matrice)}</p>` : '';
+      ? `<p class="canevas__matrice">▦ ${esc(((def.matrices || {})[matrice] || {}).titre || matrice)}</p>`
+      : ((groupe && groupe !== derniereGroupe)
+        ? `<p class="canevas__matrice">▭ Groupe : ${esc(((def.groupes || {})[groupe] || {}).titre || groupe)}</p>` : '');
     derniereMatrice = matrice;
+    derniereGroupe = groupe;
     let rendu = '';
     try { rendu = window.FormEngine ? FormEngine.renderFieldHtml(f, {}, optionsDApercu(def, f), def) : ''; }
     catch (e) { rendu = '<p class="fr-hint-text">Rendu indisponible</p>'; }
@@ -2628,6 +2633,11 @@ function renderAjoutRapide(si) {
       </div>
       <p class="ajout__aide">Type de réponse :</p>
       <div class="ajout__types">${types}${autres}</div>
+      <p class="ajout__aide">Ou d’un geste :</p>
+      <div class="ajout__types">
+        <button type="button" class="ajout__type" onclick="App.ajouterIdentite(${si})"
+          title="Pose Nom, Prénom et Courriel (obligatoires), sans refaire celles que le formulaire a déjà">Nom, prénom et courriel</button>
+      </div>
     </div>`;
 }
 
@@ -2656,6 +2666,29 @@ function ajouterDepuisTexte(si, texte) {
   renderBuilder();
   const suivant = document.getElementById('ajout-rapide');
   if (suivant) { suivant.value = ''; suivant.focus(); }
+}
+
+/**
+ * Qui répond, d'un geste : Nom, Prénom, Courriel. Seules les questions absentes sont ajoutées ; en liaison
+ * avec une table, une colonne qui existe déjà sous un autre nom (« e-mail », « prénom ») est reconnue.
+ */
+function ajouterIdentite(si) {
+  const def = S.currentDef;
+  const section = def.sections[si];
+  if (!section) return;
+  const tous = def.sections.reduce((acc, s) => acc.concat(s.fields || []), []);
+  const colonnes = S.columnsByTable[def.tableId] || [];
+  const nouvelles = FormUx.identiteChamps(tous, colonnes, def.composeMode !== 'ensureSchema');
+  if (!nouvelles.length) { toast('Nom, prénom et courriel sont déjà dans le formulaire.', 'info'); return; }
+  const premier = section.fields.length;
+  // Les trois questions forment un groupe : une légende, côte à côte quand la place le permet.
+  def.groupes = def.groupes || {};
+  if (!def.groupes.identite) def.groupes.identite = { titre: 'Qui êtes-vous ?', colonnes: 2 };
+  nouvelles.forEach(c => { c.options = c.options || {}; c.options.groupe = 'identite'; section.fields.push(c); });
+  nouvelles.forEach((c, k) => onFieldLabelBlur(si, premier + k));
+  S.selection = { quoi: 'question', si: si, fi: premier };
+  marquerModifie();
+  renderBuilder();
 }
 
 /** Déplacer, dupliquer, supprimer : sans glisser, donc au clavier et au doigt. */
@@ -2882,6 +2915,28 @@ function renderReglagesCommuns(def, si, f, fi) {
         <option value="carte" ${m === 'carte' ? 'selected' : ''}>Toucher la carte</option>
         <option value="les-deux" ${m === 'les-deux' ? 'selected' : ''}>Carte ou adresse, au choix</option>
         <option value="adresse" ${m === 'adresse' ? 'selected' : ''}>Taper une adresse</option></select></div>`;
+  }
+  // ── Groupe : des questions lues comme un seul geste (nom, prénom, courriel) ──
+  if (!(f.options && f.options.matrice)) {
+    const groupeCourant = (f.options && f.options.groupe) || '';
+    const definis = def.groupes || {};
+    const choixGroupe = Object.keys(definis).map(k =>
+      `<option value="${esc(k)}" ${groupeCourant === k ? 'selected' : ''}>${esc((definis[k] || {}).titre || k)}</option>`).join('');
+    const g = groupeCourant ? (definis[groupeCourant] || {}) : null;
+    html += `<div class="fr-select-group"><label class="fr-label" for="grp-${si}-${fi}">Groupe
+        ${hintIcon('Les questions qui se suivent dans un même groupe forment un bloc sous une légende, côte à côte quand la place le permet.')}</label>
+      <select class="fr-select" id="grp-${si}-${fi}" onchange="App.onGroupe(${si}, ${fi}, this.value)">
+        <option value="">Aucun</option>${choixGroupe}<option value="__nouveau">+ Nouveau groupe…</option></select></div>`;
+    if (g) {
+      html += `<div class="bloc__duo">
+        <div class="fr-input-group"><label class="fr-label" for="grp-t-${si}-${fi}">Légende du groupe</label>
+          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${esc(groupeCourant)}', 'titre', this.value)"></div>
+        <div class="fr-select-group"><label class="fr-label" for="grp-c-${si}-${fi}">Disposition</label>
+          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${esc(groupeCourant)}', 'colonnes', this.value)">
+            <option value="1" ${g.colonnes === 2 ? '' : 'selected'}>Les unes sous les autres</option>
+            <option value="2" ${g.colonnes === 2 ? 'selected' : ''}>Côte à côte si la place le permet</option></select></div>
+      </div>`;
+    }
   }
   // ── Lieu : la précision du GPS, quand la personne s'est localisée avec son appareil ──
   if (f.widget === 'geo' && (o.geometrie || 'Point') === 'Point') {
@@ -3352,6 +3407,7 @@ function marquesDeChamp(f) {
     m.push('<span class="structure__marque" title="Sa liste dépend d’une autre réponse">⇄</span>');
   }
   if (f.options && f.options.matrice) m.push('<span class="structure__marque" title="Groupée en matrice">▦</span>');
+  if (f.options && f.options.groupe) m.push('<span class="structure__marque" title="Dans un groupe de questions">▭</span>');
   if (f.options && f.options.autreLibre) m.push('<span class="structure__marque" title="Accepte une réponse libre">✎</span>');
   if (f.options && f.options.maxSelected) m.push(`<span class="structure__marque" title="Au plus ${f.options.maxSelected} réponses">≤${f.options.maxSelected}</span>`);
   return m.join('');
@@ -4268,6 +4324,36 @@ function onSaisieLieu(si, fi, valeur) {
   f.options = f.options || {};
   if (valeur && valeur !== 'carte') f.options.saisieLieu = valeur; else delete f.options.saisieLieu;
   renderBuilder();
+}
+
+/** Ranger une question dans un groupe, ou en créer un ; vide : elle sort du groupe. */
+function onGroupe(si, fi, valeur) {
+  marquerModifie();
+  const def = S.currentDef;
+  const f = def.sections[si].fields[fi];
+  f.options = f.options || {};
+  if (valeur === '__nouveau') {
+    def.groupes = def.groupes || {};
+    let n = Object.keys(def.groupes).length + 1;
+    while (def.groupes['groupe-' + n]) n++;
+    def.groupes['groupe-' + n] = { titre: 'Nouveau groupe', colonnes: 1 };
+    f.options.groupe = 'groupe-' + n;
+  } else if (valeur) {
+    f.options.groupe = valeur;
+  } else {
+    delete f.options.groupe;
+  }
+  renderBuilder();
+}
+
+/** La légende et la disposition d'un groupe, partagées par toutes ses questions. */
+function onGroupeDef(id, cle, valeur) {
+  const def = S.currentDef;
+  if (!def.groupes || !def.groupes[id]) return;
+  marquerModifie();
+  if (cle === 'colonnes') def.groupes[id].colonnes = Number(valeur) === 2 ? 2 : 1;
+  else if (cle === 'titre') def.groupes[id].titre = String(valeur || '');
+  if (cle === 'colonnes') renderBuilder();
 }
 
 /** La colonne qui reçoit la précision d'un relevé GPS ; vide : on ne la note pas. */
@@ -5530,7 +5616,7 @@ window.App = {
   typeAjout, ajouterDepuisTexte, deplacerChamp, deplacerVersEtape, dupliquerChamp, basculerVerification, inspecteur,
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
-  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, choisirSurClic, choisirAuClavier, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
+  onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
   onDessin, onDessinFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
