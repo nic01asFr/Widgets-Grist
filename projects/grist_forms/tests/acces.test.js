@@ -197,7 +197,7 @@ describe('Accès — poser, sans toucher à ce qui existe', () => {
   });
 
   it('sans règle à poser (tout le monde voit tout), aucune action', () => {
-    assert.deepEqual(A.actionsPose([], { ressources, regles }), { ok: true, erreurs: [], actions: [] });
+    assert.deepEqual(A.actionsPose([], { ressources, regles }), { ok: true, erreurs: [], infos: [], actions: [] });
   });
 });
 
@@ -261,5 +261,39 @@ describe('Accès — un document partagé avec le public', () => {
   it('sans accès public, le reste du document n\'est pas touché par défaut', () => {
     const l = lire(A.planRegles(def(), { mode: 'ajout-seul' }).regles);
     assert.ok(!l.some((r) => r[0] === '*'));
+  });
+});
+
+describe('Accès — le reste du document déjà fermé', () => {
+  const existant = () => ({
+    ressources: [{ id: 1, tableId: '', colIds: '' }, { id: 2, tableId: '*', colIds: '*' }],
+    regles: [
+      { id: 8, resource: 2, rulePos: 7, memo: '', aclFormula: 'user.Access == OWNER', permissionsText: '+CRUDS', tableId: '*' },
+      { id: 9, resource: 2, rulePos: 8, memo: '', aclFormula: '', permissionsText: '-CRUDS', tableId: '*' }
+    ]
+  });
+
+  it('ne double pas une règle qui ferme déjà le reste du document, et ne la touche pas', () => {
+    const plan = A.planRegles(def(), { mode: 'ajout-seul', public: true });
+    const p = A.actionsPose(plan.regles, existant());
+    assert.equal(p.ok, true, p.erreurs.join(' '));
+    assert.match(p.infos.join(' '), /déjà fermé/);
+    const ajouts = p.actions.filter((a) => a[1] === '_grist_ACLRules').map((a) => a[3].permissionsText);
+    assert.deepEqual(ajouts, ['+CRUDS', '+C-RUDS']);
+    assert.ok(!p.actions.some((a) => a[0] !== 'AddRecord'), 'rien n’est modifié ni retiré');
+  });
+
+  it('garde le refus si des gestionnaires doivent avoir des droits que la règle existante ne leur donne pas', () => {
+    const plan = A.planRegles(def(), { mode: 'ajout-seul', public: true, gestionnaires: ['a@x.fr'] });
+    const p = A.actionsPose(plan.regles, existant());
+    assert.equal(p.ok, false);
+    assert.match(p.erreurs.join(' '), /existent déjà/);
+  });
+
+  it('une règle de défaut qui ne ferme pas tout n\'est pas prise pour une fermeture', () => {
+    const e = existant();
+    e.regles[1].permissionsText = '-U';
+    const plan = A.planRegles(def(), { mode: 'ajout-seul', public: true });
+    assert.equal(A.actionsPose(plan.regles, e).ok, false);
   });
 });

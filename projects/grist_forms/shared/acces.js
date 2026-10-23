@@ -230,8 +230,24 @@
     existant = existant || {};
     var res = existant.ressources || [];
     var rls = existant.regles || [];
-    var out = { ok: true, erreurs: [], actions: [] };
+    var out = { ok: true, erreurs: [], infos: [], actions: [] };
     if (!regles || !regles.length) return out;
+
+    // Le reste du document déjà fermé aux non-propriétaires (une règle « propriétaire : tous les droits » suivie d'un
+    // refus sans condition) : celle qu'on s'apprêtait à poser est déjà là, on ne la double pas et on ne la touche pas.
+    var racine = res.filter(function (x) { return x.tableId === '*' && x.colIds === '*'; })[0];
+    var regRacine = racine ? rls.filter(function (r) { return r.resource === racine.id; }) : [];
+    var dejaFerme = regRacine.some(function (r) { return r.aclFormula === 'user.Access == OWNER' && /^\+CRUDS$/.test(r.permissionsText || ''); }) &&
+      regRacine.some(function (r) { return !r.aclFormula && /^-CRUDS$/.test(r.permissionsText || ''); });
+    if (dejaFerme && regles.some(function (r) { return r.tableId === '*' && r.colIds === '*'; })) {
+      var gardees = regles.filter(function (r) { return !(r.tableId === '*' && r.colIds === '*'); });
+      var staffAutre = regles.some(function (r) { return r.tableId === '*' && r.colIds === '*' && r.aclFormula && r.aclFormula !== 'user.Access == OWNER'; });
+      if (!staffAutre) {
+        regles = gardees;
+        out.infos.push('Le reste du document est déjà fermé aux non-propriétaires par une règle existante : elle est gardée telle quelle.');
+        if (!regles.length) return out;
+      }
+    }
 
     // Des règles étrangères déjà posées sur la même table ou sur le défaut : on ne les croise pas, on le dit.
     var visees = {};

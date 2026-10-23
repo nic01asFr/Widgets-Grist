@@ -5652,7 +5652,7 @@ async function accesAppliquer() {
   if (S.isDemo) { a.message = 'Mode démo : ' + pose.actions.length + ' action(s) seraient appliquées ; rien n’est écrit.'; renderPublishStep(); return; }
   try {
     await GristBridge.applyUserActions(pose.actions);
-    a.message = 'Règles posées (' + plan.regles.length + ').';
+    a.message = 'Règles posées (' + pose.actions.filter(x => x[1] === '_grist_ACLRules').length + ').' + (pose.infos && pose.infos.length ? ' ' + pose.infos.join(' ') : '');
     toast('Règles d’accès posées', 'success');
     await accesLire();
   } catch (e) {
