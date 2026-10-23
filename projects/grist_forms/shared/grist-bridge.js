@@ -120,10 +120,21 @@
   // ['L',v1,v2] devient [['L',v1,v2]] = 1 cellule-liste, pas N lignes (sinon corruption
   // des champs multi-choix). NE PAS déléguer la mise en colonnaire à normalizeUserActions
   // qui ne peut pas distinguer « liste-cellule » de « N valeurs par ligne ».
+  //
+  // Rend la table à jour, comme avant ; et, quand Grist dit l'identifiant de la ligne ajoutée, le porte en
+  // `idCree` sur le tableau (non énumérable : rien d'autre ne change pour qui le parcourt). Le formulaire s'en
+  // sert pour relire SA ligne après l'envoi — sans cela, il devrait deviner laquelle est la sienne.
   function addRow(table, fields) {
     var cols = {};
     for (var k in fields) { if (Object.prototype.hasOwnProperty.call(fields, k)) cols[k] = [fields[k]]; }
-    return applyAndFetch([['BulkAddRecord', table, [null], cols]], table);
+    return applyUserActions([['BulkAddRecord', table, [null], cols]]).then(function (res) {
+      var id = res && !Array.isArray(res) && res.retValues ? res.retValues[0] : (Array.isArray(res) ? res[0] : null);
+      if (Array.isArray(id)) id = id[0];
+      return fetchTable(table).then(util.toRows).then(function (rows) {
+        if (typeof id === 'number' && Array.isArray(rows)) Object.defineProperty(rows, 'idCree', { value: id, enumerable: false });
+        return rows;
+      });
+    });
   }
   function updateRow(table, id, fields) { return applyAndFetch([['UpdateRecord', table, id, fields]], table); }
   function deleteRow(table, id)         { return applyAndFetch([['RemoveRecord', table, id]], table); }

@@ -2345,6 +2345,10 @@
      * `{ retValues: [[12]] }` (Grist), `[[12]]`, `[12]` ou `12`. Rien d'exploitable : null.
      */
     function idCree(res) {
+      // `GristBridge.addRow` rend la table à jour et porte l'identifiant de la ligne ajoutée en `idCree`.
+      if (res && typeof res.idCree === 'number') return res.idCree;
+      // Une table à jour sans `idCree` (lignes en objets) ne dit pas laquelle est la nôtre : on ne devine pas.
+      if (Array.isArray(res) && res.length && res[0] && typeof res[0] === 'object' && !Array.isArray(res[0])) return null;
       var v = res && !Array.isArray(res) && typeof res === 'object' && 'retValues' in res ? res.retValues : res;
       for (var i = 0; i < 3 && Array.isArray(v); i++) v = v[0];
       return typeof v === 'number' && isFinite(v) ? v : null;
