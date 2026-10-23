@@ -12,12 +12,12 @@
 | Comment on empêche le reste | règles d'accès « ajout seul » (livré, **non mesuré avec un participant**) | règles d'accès avec **attribut utilisateur sur la clé de lien** (mesuré 18/10) | idem B | la clé n'écrit que des lignes, rien ne se lit ni se modifie (mesuré 18/10) | idem D |
 | Places restantes affichées | oui, si les colonnes comptées sont lisibles par les participants | oui, si on laisse leur lecture à l'anonyme (restreinte aux lignes voulues, mesuré) | idem B | **non** : la clé ne lit rien | **oui** : une table de compteurs, sans aucun nom, lisible par tous *(à mesurer)* |
 | Le formulaire se ferme seul quand c'est plein | oui | oui | oui | **non** : seule la table trie (« Liste d'attente ») | oui, lu dans les compteurs |
-| La personne voit son statut (confirmé / liste d'attente) | oui avec « chacun voit sa ligne » (règle sur le courriel du compte) | possible par un jeton propre à la personne passé dans l'adresse *(à mesurer)* | idem B | non | idem B *(à mesurer)* |
+| La personne voit son statut (confirmé / liste d'attente) | oui avec « chacun voit sa ligne » (règle sur le courriel du compte) | **oui, mesuré** : l'ajout renvoie l'identifiant de la ligne et « Place » est lisible (reste à l'afficher) | idem B | non | idem B *(à mesurer)* |
 | Voit les réponses des autres | **non si les règles tiennent** | non si les règles tiennent ; une erreur de règle ouvre un document en écriture publique | idem B | **jamais** (la clé ne lit pas) | non : seuls des compteurs sont publics |
 | Pièces jointes, photo | oui | oui (10 Mo ; un anonyme peut téléverser **sans clé**, vecteur d'abus, mesuré) | idem B | **impossible** hors de l'origine Grist | impossible |
 | Doublons | fiable (compte) ; la formule d'unicité tranche | déclaratif : la formule d'unicité tranche, une adresse inventée la contourne | idem B | idem B | idem B |
 | Protection contre l'inondation | droits du compte | aucune limite d'envoi mesurée | idem B | **aucune** : seule la dépublication arrête (mesuré) | idem D |
-| Mise en place | livrée | règles à poser (attribut + règles `+C`) : décrit, mesuré, non automatisé | à mesurer | **livrée** (étape « Mettre en ligne ») | non livrée |
+| Mise en place | livrée | **livrée** : case « partagé avec le public » + règles posées par le bouton (mesuré le 23/10) ; le partage public reste au propriétaire | à mesurer | **livrée** (étape « Mettre en ligne ») | non livrée |
 
 ### À retenir de chaque mode
 
@@ -47,8 +47,33 @@
 2. **« Les gens ne voient pas les réponses des autres »** : D et E par construction ; A et B par les règles d'accès. **A est le mode demandé le plus probable (collègues du même Grist) et celui dont la garantie n'est pas mesurée.**
 3. **« Une seule réponse par personne »** : tenu dans tous les modes par la formule d'unicité (mesuré). Fiable en A (courriel du compte), contournable ailleurs par une adresse inventée.
 
+## Mesuré en réel le 23/10/2026 : mode B (document public en rôle Éditeur)
+
+Document d'essai, formulaire d'inscription (10 réponses au plus, une seule réponse par courriel), règles posées par le bouton « Poser ces règles dans le document » avec la case « partagé avec le public », partage public en Éditeur, puis essais depuis une fenêtre **sans compte** (@Guest).
+
+| Essai en anonyme | Résultat |
+|---|---|
+| Ouvrir la page du formulaire | s'affiche ; **« Complet » déjà annoncé** : le formulaire compte à partir de la colonne « Place », lisible |
+| Lire la table des réponses | 200, **une seule colonne : « Place »** (aucun nom, aucun courriel, aucun choix) |
+| Lire les autres tables | 403 « Blocked by table read access rules » (sauf les lignes qu'une ancienne règle d'un autre essai laissait lire) |
+| Ajouter une réponse | **200** (la ligne est créée) |
+| Modifier une réponse existante | **403** « Blocked by table update access rules » |
+| Supprimer une réponse | **403** |
+| Ajouter une colonne, une table, supprimer une autre table | **403** « Blocked by table structure access rules » |
+| Écrire dans une autre table | **403** |
+| Écrire une règle d'accès | **500** « Only owners can modify access rules » |
+| Après le plafond : la 12e réponse | « **Liste d'attente** » (les 10 premières confirmées) |
+| Même adresse en autre casse et avec des espaces | « **Doublon** », sans prendre de place |
+| Lire le statut de sa propre ligne | **possible** : l'ajout renvoie l'identifiant de la ligne, et « Place » est lisible |
+
+Ce que cela change à l'étude :
+- Le statut visible après l'envoi (« confirmé » ou « liste d'attente ») **ne demande aucune règle de plus** en mode B : le formulaire relit « Place » de la ligne qu'il vient d'ajouter. Il reste à l'afficher.
+- Le droit de modifier la structure est bien retiré par la règle posée sur tout le reste du document : c'est l'élément que la case « partagé avec le public » rend obligatoire.
+- Une règle de document **déjà présente** qui ferme le reste aux non-propriétaires n'empêche plus de poser les règles du formulaire : elle est gardée telle quelle.
+- **Reste vrai** : un anonyme peut ajouter autant de lignes qu'il le veut (aucune limite d'envoi) ; l'unicité par courriel ne retient pas une adresse inventée ; l'accès public a été remis à « Désactivé » après l'essai.
+
 ## Ce qu'il reste à mesurer, par ordre d'utilité
-1. Un compte participant (éditeur non propriétaire) sous les règles « ajout seul » : lecture des colonnes comptées, ajout, refus de la lecture des autres lignes. Bloque la garantie de **A**.
+1. Un compte participant **connecté** (éditeur non propriétaire) sous les mêmes règles : le mode B est mesuré en anonyme, pas le mode A. Les règles étant les mêmes, le résultat devrait l'être aussi, mais ce n'est pas mesuré.
 2. Une iframe de la page du document dans un site tiers, avec et sans compte (cookies).
 3. Une table de compteurs lue par un anonyme, et le statut par jeton dans l'adresse (**E**, et statut en **B**).
 4. L'écriture d'une ligne par la clé du formulaire depuis une page qui annonce le créneau choisi (aller-retour sans lecture).
