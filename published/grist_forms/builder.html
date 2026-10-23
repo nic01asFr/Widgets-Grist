@@ -1511,6 +1511,8 @@ const OPERATOR_TIPS = {
   '<=': 'Inférieur ou égal.',
   'contains': 'Contient le texte (non sensible à la casse).',
   'notContains': 'Ne contient pas le texte.',
+  'notEmpty': 'La personne a répondu à cette question (utile pour attendre un choix avant d’en montrer la suite).',
+  'empty': 'La personne n’a pas encore répondu à cette question.',
   'in': 'La valeur est dans la liste (virgules). Ex. : Agents, Public',
   'notIn': 'La valeur n’est pas dans la liste.'
 };
@@ -4070,7 +4072,9 @@ function renderConditionEditor(scope, si, fi, condition, prior) {
           <select class="fr-select" onchange="${opSelect}">${opOpts}</select>
         </div>
         <div class="fr-input-group">${hintLabel('Valeur', isAud ? valueHint : (isCtx && rule.path !== 'userEmail' ? 'Oui = critère vrai, Non = critère faux.' : CONDITION_VALUE_TIP))}
-          ${isCtx && rule.path !== 'userEmail'
+          ${!FormUx.operatorTakesValue(rule.operator)
+            ? `<input class="fr-input" disabled value="" placeholder="Aucune valeur à saisir" aria-label="Aucune valeur : ${esc(opTip)}">`
+            : isCtx && rule.path !== 'userEmail'
             ? `<select class="fr-select" onchange="${scope === 'section'
                 ? `App.onSectionRule(${si}, ${ri}, 'value', this.value === 'true')`
                 : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value === 'true')`}">

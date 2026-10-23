@@ -222,6 +222,10 @@
   },
   "journal": [
     {
+      "version": "v1.5.1",
+      "texte": "Une question peut attendre une réponse précédente : le compositeur propose « est renseigné » et « n’est pas renseigné » pour tous les types de réponse, sans valeur à saisir. C’est ce qui permet de ne montrer le groupe qu’une fois le département choisi ; « différent de (vide) » laissait la question visible tant que rien n’était répondu."
+    },
+    {
       "version": "v1.5.0",
       "texte": "Une inscription à des places limitées se compose de bout en bout. Le formulaire annonce les places qui restent, ferme ce qui est plein et le dit ; la table tranche par ordre d’arrivée (« Confirmé », « Liste d’attente ») et une seule réponse par personne est retenue, les suivantes étant marquées « Doublon ». Le maximum se règle dans la question elle-même, avec ses vrais choix, pour des places, des créneaux, des portions ou des salles. Qui répond se pose d’un geste : nom, prénom et courriel, seuls ou en groupe ; un nom se corrige sans jamais se refuser, et « McDonald » n’est pas touché. L’étape « Mettre en ligne » règle qui voit les réponses : les participants ajoutent sans rien lire, sans rien changer ni supprimer ; pour un document partagé avec le public, tout le reste du document est caché d’office. Mesuré sur un document d’essai : un visiteur sans compte ajoute une réponse, ne lit qu’une colonne sans nom ni courriel, et ne peut ni modifier, ni supprimer, ni toucher à la structure. Côté compositeur : un clic sur une question l’ouvre, un redessin ne déplace plus la fenêtre, et la mise en page remplit la hauteur du widget. Corrigé : une question sans colonne ne fait plus refuser toute la ligne, et la colonne « Place » n’est plus recréée à chaque enregistrement."
     },

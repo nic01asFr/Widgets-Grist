@@ -277,6 +277,26 @@
     ]
   };
 
+  /**
+   * « Est renseigné » : le seul moyen de tester qu'une question a reçu une
+   * réponse. « Différent de (vide) » ne le fait pas : tant que la personne n'a
+   * rien répondu, la valeur n'existe pas, et rien n'est « différent de vide ».
+   */
+  var OPERATORS_RENSEIGNE = [
+    { value: 'notEmpty', label: 'est renseigné' },
+    { value: 'empty', label: 'n’est pas renseigné' }
+  ];
+  var SANS_VALEUR = { empty: true, notEmpty: true };
+
+  /** Cet opérateur compare-t-il à une valeur ? (`empty` et `notEmpty` n'en ont pas.) */
+  function operatorTakesValue(op) {
+    return !SANS_VALEUR[op];
+  }
+
+  Object.keys(OPERATORS_BY_TYPE).forEach(function (k) {
+    if (k !== 'Bool') OPERATORS_BY_TYPE[k] = OPERATORS_BY_TYPE[k].concat(OPERATORS_RENSEIGNE);
+  });
+
   function operatorsForType(type) {
     var t = type || 'Text';
     if (t.indexOf('Ref:') === 0) t = 'Ref';
@@ -363,6 +383,8 @@
     var label = condition.path || condition.field || '';
     if (src === 'context') label = 'contexte.' + (condition.path || String(condition.field || '').replace(/^context\./, ''));
     if (src === 'audience') label = 'audience.' + (condition.path || String(condition.field || '').replace(/^audience\./, ''));
+    if (condition.operator === 'notEmpty') return label + ' est renseigné';
+    if (condition.operator === 'empty') return label + ' n’est pas renseigné';
     return label + ' ' + (condition.operator || '==') + ' ' + String(condition.value);
   }
 
@@ -466,6 +488,7 @@
     SIMPLE_TYPES: SIMPLE_TYPES,
     ADVANCED_TYPES: ADVANCED_TYPES,
     OPERATORS_BY_TYPE: OPERATORS_BY_TYPE,
+    operatorTakesValue: operatorTakesValue,
     slugify: slugify,
     isValidGristIdent: isValidGristIdent,
     tableNameFromTitle: tableNameFromTitle,
