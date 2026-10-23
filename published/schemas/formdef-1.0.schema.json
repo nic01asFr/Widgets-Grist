@@ -240,6 +240,19 @@
             }
           }
         },
+        "unique": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colId"
+          ],
+          "description": "Une seule reponse par personne, reconnue a cette colonne (son courriel, par exemple, sans tenir compte de la casse ni des espaces). La table tranche : la premiere reponse est retenue, les suivantes sont marquees « Doublon » dans la colonne `placeCol` et ne prennent la place de personne. Le formulaire ne lit pas cette colonne (rien n'est montre des reponses des autres).",
+          "properties": {
+            "colId": {
+              "type": "string"
+            }
+          }
+        },
         "messages": {
           "type": "object",
           "additionalProperties": false,

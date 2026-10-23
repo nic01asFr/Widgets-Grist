@@ -3668,6 +3668,9 @@ function renderLimites(def) {
       <div class="fr-input-group"><label class="fr-label" for="lim-jusquau">Ouvert jusqu’au (ce jour compris)</label>
         <input class="fr-input" id="lim-jusquau" type="date" value="${esc((L.jusquau || '').slice(0, 10))}" onchange="App.onLimite('jusquau', this.value)"></div>
     </div>
+    <div class="fr-select-group"><label class="fr-label" for="lim-unique">Une seule réponse par personne, reconnue à… ${hintIcon('La première réponse est retenue ; les suivantes de la même personne sont marquées « Doublon » dans la colonne « Place » et ne prennent la place de personne. La comparaison ignore la casse et les espaces. Le formulaire ne montre rien des réponses des autres.')}</label>
+      <select class="fr-select" id="lim-unique" onchange="App.onLimite('unique', this.value)">
+        <option value="">— pas de contrôle —</option>${def.sections.reduce((acc, s) => acc.concat(s.fields || []), []).filter(f => f.colId && f.type === 'Text').map(f => `<option value="${esc(f.colId)}" ${(L.unique || {}).colId === f.colId ? 'selected' : ''}>${esc(f.label || f.colId)}</option>`).join('')}</select></div>
     ${alerte}
     ${resumeLimitesChoix(def)}
     <details class="fr-mt-1w" id="lim-details"><summary class="fr-label">Annulations, liste d’attente et messages</summary>
@@ -3698,6 +3701,10 @@ function onLimite(cle, valeur) {
   if (cle === 'total') { const n = Number(v); if (n >= 1) L.total = Math.floor(n); else delete L.total; }
   else if (cle === 'ouvertDu' || cle === 'jusquau') { if (v) L[cle] = v; else delete L[cle]; }
   else if (cle === 'placeCol') { if (v) L.placeCol = v; else delete L.placeCol; }
+  else if (cle === 'unique') {
+    if (v) { L.unique = { colId: v }; if (!L.placeCol) L.placeCol = 'Place'; }
+    else delete L.unique;
+  }
   else if (cle === 'saufCol') { if (v) L.sauf = { colId: v, valeurs: (L.sauf && L.sauf.valeurs) || [] }; else delete L.sauf; }
   else if (cle === 'saufValeurs') { if (L.sauf) L.sauf.valeurs = v.split(',').map(s => s.trim()).filter(Boolean); }
   else if (cle.indexOf('msg:') === 0) {
@@ -3706,7 +3713,7 @@ function onLimite(cle, valeur) {
     if (!Object.keys(L.messages).length) delete L.messages;
   }
   if (!Object.keys(L).length) delete def.limites;
-  if (cle === 'placeCol' || cle === 'saufCol') renderBuilder(); else majAlerteLimites();
+  if (cle === 'placeCol' || cle === 'saufCol' || cle === 'unique') renderBuilder(); else majAlerteLimites();
 }
 
 /** Une limite par choix : ajouter une question, régler ses places, la retirer. */

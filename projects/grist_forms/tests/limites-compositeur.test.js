@@ -164,3 +164,23 @@ describe('Compositeur — la limite se règle dans la question', () => {
     assert.equal(b.estPlafonnable({ colId: '', type: 'Choice' }), false);
   });
 });
+
+describe('Compositeur — une seule réponse par personne', () => {
+  it('choisir la colonne l\'écrit et active la colonne « Place » ; la retirer l\'efface', () => {
+    const d = def();
+    const b = banc(d);
+    b.onLimite('unique', 'Courriel');
+    assert.deepEqual(b.S.currentDef.limites.unique, { colId: 'Courriel' });
+    assert.equal(b.S.currentDef.limites.placeCol, 'Place');
+    b.onLimite('unique', '');
+    assert.equal(b.S.currentDef.limites.unique, undefined);
+  });
+
+  it('une colonne « Place » déjà choisie n\'est pas renommée', () => {
+    const d = def();
+    d.limites = { placeCol: 'Statut_place' };
+    const b = banc(d);
+    b.onLimite('unique', 'Courriel');
+    assert.equal(b.S.currentDef.limites.placeCol, 'Statut_place');
+  });
+});

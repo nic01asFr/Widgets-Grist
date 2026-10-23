@@ -141,6 +141,12 @@
       }
     }
 
+    if (brut.unique !== undefined && brut.unique !== null && brut.unique !== '') {
+      var u = typeof brut.unique === 'string' ? brut.unique : (brut.unique && brut.unique.colId);
+      if (typeof u === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(u)) l.unique = { colId: u };
+      else out.erreurs.push('« Une seule réponse par personne » dit la colonne qui reconnaît la personne (son courriel, par exemple).');
+    }
+
     if (brut.messages && typeof brut.messages === 'object') {
       l.messages = {};
       Object.keys(MESSAGES).forEach(function (k) {
@@ -299,7 +305,8 @@
   function formulePlace(limites, tableId) {
     if (!limites || !ident(String(tableId))) return null;
     var pc = (limites.parChoix || []).filter(function (p) { return ident(p.colId); });
-    if (!limites.total && !pc.length) return null;
+    var unique = limites.unique && ident(limites.unique.colId) ? limites.unique : null;
+    if (!limites.total && !pc.length && !unique) return null;
     var sauf = limites.sauf && ident(limites.sauf.colId) ? limites.sauf : null;
     var enSauf = function (v) { return v + ' in (' + sauf.valeurs.map(litteralPython).join(', ') + ',)'; };
     var capacite = function (p) {
@@ -314,8 +321,15 @@
     L.push('# Généré par Form Builder : l\'ordre d\'arrivée tranche, la liste d\'attente ne prend la place de personne.');
     if (sauf) L.push('if ' + enSauf('$' + sauf.colId) + ':', '  return "Écartée"');
     L.push('confirmes = 0', 'pris = {}');
+    if (unique) L.push('vus = set()');
     L.push('for r in sorted([x for x in ' + tableId + '.all if x.id <= $id], key=lambda x: x.id):');
     if (sauf) L.push('  if ' + enSauf('r.' + sauf.colId) + ':', '    continue');
+    if (unique) {
+      // La première réponse d'une personne est la seule retenue : les suivantes ne prennent la place de personne.
+      L.push('  qui = str(r.' + unique.colId + ' or "").strip().lower()');
+      L.push('  if qui and qui in vus:', '    if r.id == $id:', '      return "Doublon"', '    continue');
+      L.push('  if qui:', '    vus.add(qui)');
+    }
     L.push('  place = True');
     if (limites.total) L.push('  if confirmes >= ' + limites.total + ':', '    place = False');
     pc.forEach(function (p) {

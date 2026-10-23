@@ -230,6 +230,31 @@ describe('Limites — la formule « Place » tranche par ordre d\'arrivée', { s
     assert.deepEqual(placesPython(f, 'Inscriptions', donnees), ['Confirmé', "Liste d'attente", 'Confirmé', 'Confirmé', "Liste d'attente"]);
   });
 
+  it('une seule réponse par personne : la première est retenue, les suivantes sont des doublons qui ne prennent aucune place', () => {
+    const f = L.formulePlace(ok({ total: 2, unique: 'Courriel' }), 'Inscriptions');
+    const r = placesPython(f, 'Inscriptions', rows(
+      { Courriel: 'a@x.fr' }, { Courriel: ' A@X.fr ' }, { Courriel: 'b@x.fr' }, { Courriel: 'a@x.fr' }, { Courriel: 'c@x.fr' }));
+    assert.deepEqual(r, ['Confirmé', 'Doublon', 'Confirmé', 'Doublon', "Liste d'attente"]);
+  });
+
+  it('l\'unicité seule suffit à produire la formule, et une réponse sans courriel n\'est pas un doublon', () => {
+    const f = L.formulePlace(ok({ unique: 'Courriel' }), 'Inscriptions');
+    assert.ok(f);
+    assert.deepEqual(placesPython(f, 'Inscriptions', rows({}, {}, { Courriel: 'a@x.fr' }, { Courriel: 'a@x.fr' })), ['Confirmé', 'Confirmé', 'Confirmé', 'Doublon']);
+  });
+
+  it('une inscription annulée libère l\'adresse : la personne peut se réinscrire', () => {
+    const f = L.formulePlace(ok({ unique: 'Courriel', sauf: { colId: 'Statut', valeurs: ['Annulé'] } }), 'Inscriptions');
+    const r = placesPython(f, 'Inscriptions', rows({ Courriel: 'a@x.fr', Statut: 'Annulé' }, { Courriel: 'a@x.fr' }, { Courriel: 'a@x.fr' }));
+    assert.deepEqual(r, ['Écartée', 'Confirmé', 'Doublon']);
+  });
+
+  it('une colonne d\'unicité qui n\'est pas un identifiant est refusée', () => {
+    assert.ok(L.normaliser({ unique: 'a; b' }).erreurs.length);
+    assert.equal(L.normaliser({ unique: 'Courriel' }).limites.unique.colId, 'Courriel');
+    assert.equal(L.formulePlace(ok({ unique: 'Courriel' }), 'Inscriptions; import os'), null);
+  });
+
   it('une valeur d\'apostrophe ne casse pas la formule', () => {
     const f = L.formulePlace(ok({ total: 1, sauf: { colId: 'Statut', valeurs: ['Refusé d\'office'] } }), 'Inscriptions');
     assert.deepEqual(placesPython(f, 'Inscriptions', rows({ Statut: 'Refusé d\'office' }, {})), ['Écartée', 'Confirmé']);
