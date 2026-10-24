@@ -73,7 +73,7 @@ test('la page maigre garde la règle du voile de la page de l\'application (?voi
 
 test('la fermeture de entree.js ne contient AUCUN module de l\'application', () => {
   const f = fermeture('lib/bi/entree.js');
-  const permis = ['lib/acces-carte.js', 'lib/attribution.js', 'lib/controls.js', 'lib/declarative-style.js', 'lib/fonds-base.js', 'lib/html.js', 'lib/ratio-hote.js'];
+  const permis = ['lib/acces-carte.js', 'lib/attribution.js', 'lib/controls.js', 'lib/declarative-style.js', 'lib/fonds-base.js', 'lib/html.js', 'lib/ratio-hote.js', 'lib/soleil.js', 'lib/terrain-base.js'];   // soleil.js et terrain-base.js : modules purs sans dépendance, chargés À LA DEMANDE par `environnement.js` (relief, soleil), jamais par la page seule
   const hors = f.filter((x) => !/^lib\/(bi|charte)\//.test(x));
   assert.deepEqual(hors, permis, 'un module de plus dans la fermeture est une dépendance de plus pour tous les hôtes : à justifier ici');
   assert.ok(!f.includes('app_v7.js'));

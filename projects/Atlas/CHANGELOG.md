@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.30.0 — le relief, le bâti en volume, le ciel et le soleil pour la carte nue
+
+- **`environnement` dans le manifeste** (brique chargée à la demande, jamais par la page seule) : `environnement: { relief, bati3d, ciel, soleil }`. `relief: true | { exageration?, source? }` : relief 3D depuis les altitudes mondiales « terrarium » (AWS, service tiers, sans clé), les couches de l'hôte le suivent ; le relief du LiDAR HD de l'IGN reste dans l'application complète. `bati3d: true` : le bâti du fond en volume, quand le fond n'en montre pas déjà. `ciel: true` : ciel et brume (vue inclinée). `soleil: { instant } | { maintenant: true }` : la lumière de la carte suit la direction réelle du soleil à cet instant (NOAA) et nuance les faces des volumes ; ce ne sont pas des ombres portées. Rejoué à chaque `setScene` ; une scène complète sans `environnement` défait celui d'avant ; une déclaration invalide est ignorée et dite (`_avertissements._environnement`).
+- **`validerManifeste`** connaît `environnement`.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.29.1 — l'application complète se relit, et prend l'identité de l'hôte
 
 - **Correctif** : la 1.29.0 a rendu `app.js` illisible (une apostrophe mal échappée dans un message de console) : l'application complète d'Atlas (widget Grist, application mobile, profil `complet` du composant) ne démarrait plus ; la carte nue n'était pas touchée. Un test lit désormais la syntaxe de `app_v7.js` et de chaque module de `lib/` (`tests/syntaxe-modules.test.js`).

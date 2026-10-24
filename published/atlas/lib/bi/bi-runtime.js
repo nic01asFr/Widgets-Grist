@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.29.1';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.29.1';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.30.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.30.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.29.1';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.30.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -328,6 +328,7 @@ export function attacher(map, opts = {}) {
     dernierClic = e.lngLat; poserSelection(c, f.id); dernierClic = null; emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
   }
   let rafSurvol = 0, curseurScene = null;   // `curseurScene` : le curseur demandé par la scène (`manifest.curseur`), hors survol d’un objet
+  let etatEnvironnement = null;   // ce que `manifest.environnement` a posé (lib/bi/environnement.js, chargé à la demande), pour le défaire à la scène suivante
   function surSurvol(e) {
     if (rafSurvol) return; rafSurvol = requestAnimationFrame(() => { rafSurvol = 0;
       const hit = calquesInteractifs().map((h) => h.id).filter((id) => map.getLayer(id)); if (!hit.length) return;
@@ -430,6 +431,16 @@ export function attacher(map, opts = {}) {
       if (!fusion || manifest.attribution !== undefined) attributionScene = typeof manifest.attribution === 'string' && manifest.attribution.trim() ? manifest.attribution : null;
       // la charte du manifeste de scène (niveau « hôte ») : assainie comme toute charte, ajoutée à ce que l'hôte a déjà donné
       if (manifest.charte && typeof manifest.charte === 'object') { const retourTheme = themes.appliquer(manifest.charte); poserTheme(); emettre('theme', retourTheme, 'api'); }
+      // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
+      if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
+        try {
+          const env = await import('./environnement.js?v=1.30.0');
+          if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
+          const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
+          etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
+          if (r.avertissements.length) avertissements._environnement = r.avertissements;
+        } catch (e) { avertissements._environnement = ['environnement : ' + String((e && e.message) || e).slice(0, 120)]; }
+      }
       for (const def of manifest.layers || []) {
         if (def && def.type === 'table') {   // une table liée : des lignes sans géométrie, fournies par l’hôte (`donnees.<id>`), jamais montées sur la carte
           const r = normaliserLignes(donnees[def.id] !== undefined ? donnees[def.id] : def.lignes);

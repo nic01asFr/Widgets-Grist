@@ -131,3 +131,14 @@ test('la validation ne modifie rien et reste rapide sur 100 000 entités (échan
   const r = validerManifeste(m, d);
   assert.equal(JSON.stringify(m), avant); assert.equal(r.ok, true); assert.ok(Date.now() - t0 < 2000, 'moins de 2 s');
 });
+
+test('environnement : valide, bornes dites en avertissement, types et clés inconnues en erreur', () => {
+  const avec = (environnement) => validerManifeste({ layers: [{ id: 'a', name: 'a' }], environnement });
+  assert.deepEqual(avec({ relief: true, bati3d: true, ciel: false, soleil: { instant: '2026-06-21T17:30:00+02:00' } }).ecarts, []);
+  assert.deepEqual(avec({ relief: { exageration: 2, source: 'terrarium' }, soleil: { maintenant: true } }).ecarts, []);
+  const bornes = avec({ relief: { exageration: 9, source: 'ign' } });
+  assert.equal(bornes.ok, true); assert.deepEqual(codes(bornes).sort(), ['hors-bornes', 'source-non-offerte']);
+  const mal = avec({ relief: 'oui', ciel: 1, soleil: { instant: 'demain' }, brume: true });
+  assert.deepEqual(codes(mal).sort(), ['cle-inconnue', 'instant-illisible', 'type', 'type']);
+  assert.deepEqual(codes(avec(12)), ['type']);
+});

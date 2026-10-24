@@ -19,7 +19,7 @@ export const TYPES_CONTROLE = Object.freeze(['select', 'range', 'time', 'text'])
 export const TYPES_VISUEL = Object.freeze(['cercles', 'proportionnel', 'heat', 'grille', 'hex', 'etats', 'choroplethe']);
 export const NIVEAUX_ADMIN = Object.freeze(['pays', 'region', 'departement', 'commune', 'epci', 'arrondissement']);
 
-const CLES_RACINE = ['version', 'title', 'subtitle', 'classification', 'meta', 'layers', 'story', 'terrain', 'fusion', 'curseur', 'marges', 'attribution', 'charte', 'interface', 'temps'];
+const CLES_RACINE = ['version', 'title', 'subtitle', 'classification', 'meta', 'layers', 'story', 'terrain', 'fusion', 'curseur', 'marges', 'attribution', 'charte', 'interface', 'temps', 'environnement'];
 const CLES_COUCHE = ['id', 'name', 'displayName', 'source', 'geometry_type', 'geomType', 'profile', 'color', 'featureCount', 'fetch', 'fields', 'limits', 'visibility', 'style', 'controls',
   'cle', 'visuel', 'temps', 'bulle', 'admin', 'geojson', 'visible', 'type', 'lignes'];
 const CLES_STYLE = ['declarative', 'charte'];
@@ -72,6 +72,34 @@ export function validerManifeste(manifeste, donnees, options = {}) {
     dire('erreur', 'manifeste.version', 'version-hors-liste', `version « ${texte(manifeste.version).slice(0, 20)} » non lue (lues : ${VERSIONS_MANIFESTE.join(', ')}).`);
   }
   if (!Array.isArray(manifeste.layers)) { dire('erreur', 'manifeste.layers', 'layers-absent', '`layers` doit être un tableau de couches'); return resume(ecarts); }
+  if (manifeste.environnement !== undefined) {
+    const ce = 'manifeste.environnement', env = manifeste.environnement;
+    if (!estObjet(env)) dire('erreur', ce, 'type', '`environnement` doit être un objet.');
+    else {
+      cles(env, ['relief', 'bati3d', 'ciel', 'soleil'], ce);
+      const booleen = (k) => { if (env[k] !== undefined && typeof env[k] !== 'boolean') dire('erreur', `${ce}.${k}`, 'type', `\`${k}\` doit être true ou false.`); };
+      booleen('bati3d'); booleen('ciel');
+      const r = env.relief;
+      if (r !== undefined && typeof r !== 'boolean') {
+        if (!estObjet(r)) dire('erreur', `${ce}.relief`, 'type', '`relief` doit être true ou un objet.');
+        else {
+          cles(r, ['exageration', 'source'], `${ce}.relief`);
+          if (r.source !== undefined && r.source !== 'terrarium') dire('avertissement', `${ce}.relief.source`, 'source-non-offerte', 'seule la source « terrarium » est offerte à la carte nue (relief IGN : application complète).');
+          if (r.exageration !== undefined && (typeof r.exageration !== 'number' || !Number.isFinite(r.exageration))) dire('erreur', `${ce}.relief.exageration`, 'type', '`exageration` doit être un nombre.');
+          else if (r.exageration !== undefined && (r.exageration < 0.5 || r.exageration > 3)) dire('avertissement', `${ce}.relief.exageration`, 'hors-bornes', '`exageration` est bornée de 0,5 à 3.');
+        }
+      }
+      const s = env.soleil;
+      if (s !== undefined && s !== false) {
+        if (!estObjet(s)) dire('erreur', `${ce}.soleil`, 'type', '`soleil` doit être un objet { instant } ou { maintenant: true }.');
+        else {
+          cles(s, ['instant', 'maintenant'], `${ce}.soleil`);
+          const ms = typeof s.instant === 'number' ? s.instant : (typeof s.instant === 'string' ? Date.parse(s.instant) : NaN);
+          if (s.maintenant !== true && !Number.isFinite(ms)) dire('erreur', `${ce}.soleil.instant`, 'instant-illisible', '`soleil.instant` doit être une date ISO 8601 avec fuseau ou des millisecondes (ou `maintenant: true`).');
+        }
+      }
+    }
+  }
   const donneesObj = estObjet(donnees) ? donnees : null;
   const idsCouches = new Set(), idsControles = new Set();
   const idsEntites = new Map();   // id d'entité -> id de couche : l'identifiant est unique sur TOUTE la scène (contrat 0.3)
