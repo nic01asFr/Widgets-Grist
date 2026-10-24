@@ -203,6 +203,8 @@
         body.mode-bi #map-controls-dock, body.mode-bi #selection-bar, body.mode-bi #compass, body.mode-bi #toasts,
         body.mode-bi #loading, body.mode-bi #story-present,
         body.mode-bi .maplibregl-ctrl-top-left, body.mode-bi .maplibregl-ctrl-top-right, body.mode-bi .maplibregl-ctrl-bottom-left { display: none !important; }
+        /* Profil complet, manifeste BI monté : la légende est celle du composant (interface.legende), comme sur la carte nue. */
+        body.scene-bi #legend { display: none !important; }
         /*
          * Premier rendu du composant (`?bi=1`, sauf `?voile=0`) : un voile neutre cache la carte jusqu'à ce que l'hôte ait posé sa scène (lib/bi/voile.js
          * le lève), pour qu'aucun fond ni style par défaut d'Atlas ne se voie avant sa configuration. Hors de ce mode, l'élément n'existe pas à l'écran.
@@ -504,7 +506,9 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 8;
         }
-        .compass .n-label { position: absolute; top: 4px; font-size: 9px; font-weight: 700; color: var(--accent); }
+        .compass .n-label { position: absolute; top: 3px; font-size: 9px; line-height: 10px; font-weight: 700; color: var(--accent); }
+        /* L'aiguille du nord prend la couleur principale (celle du thème), comme la lettre N ; le rouge d'origine reste la couleur de repli du dessin. */
+        .compass #compass-svg path:first-child { fill: var(--accent); }
 
         /* Dock contrôles — ancré à gauche de la boussole (gap 12px) */
         .map-controls-dock {
@@ -1956,7 +1960,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.32.1" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.32.2" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2089,8 +2093,8 @@
 
                 <div class="compass" id="compass" title="Réorienter au Nord">
                     <svg width="54" height="54" viewBox="0 0 54 54" id="compass-svg">
-                        <path d="M27 8 L31 27 L27 24 L23 27 Z" fill="#C44536" />
-                        <path d="M27 46 L23 27 L27 30 L31 27 Z" fill="#7A6F5E" opacity="0.5" />
+                        <path d="M27 18 L31 29 L27 26.5 L23 29 Z" fill="#C44536" />
+                        <path d="M27 43 L23 29 L27 31.5 L31 29 Z" fill="#7A6F5E" opacity="0.5" />
                     </svg>
                     <span class="n-label">N</span>
                 </div>
@@ -2215,6 +2219,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.32.1"></script>
+    <script type="module" src="./app.js?v=1.32.2"></script>
 </body>
 </html>

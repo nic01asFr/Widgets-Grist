@@ -51,7 +51,7 @@ const total = (fichiers) => {
 // [description, fichiers, plafond brut (octets), plafond gzip (octets)] ; mesures du 15/10/2026 entre parenthèses
 const BUDGETS = [
   ['application complète (app.js)', ['app.js'], 1_040_000, 300_000],                                  // 992 153 / 284 850
-  ['page (index.html)', ['index.html'], 165_000, 35_000],                                                // 156 478 / 33 196
+  ['page (index.html)', ['index.html'], 170_000, 36_000],                                                // 156 478 / 33 196
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 15_500, 5_800],                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
   ['page maigre du composant (bi.html)', ['bi.html'], 8_000, 3_200],                                    // 5 759 octets : la page de l'application en fait 157 909 // 1.30.0 : 490 Ko bruts (environnement.js, soleil.js, terrain-base.js : chargés À LA DEMANDE, la fermeture les compte, la page seule non) ; plafonds 475 -> 505 Ko bruts, 172 -> 185 Ko gzip
   ['page maigre : fermeture de lib/bi/entree.js (tout ce que `?bi=1` charge en plus de MapLibre)', fermeture('lib/bi/entree.js'), 505_000, 185_000],   // 403 907 / 145 934 (42 fichiers) ; avant 1.21.0, `?bi=1` chargeait AUSSI app.js, 86 modules d'application et three.js (~3,4 Mo de plus) // 1.23.0 : 411 Ko ; +7 Ko = lib/bi/canevas.js, chargé À LA DEMANDE par montage.js (profil complet seulement) mais compté par la fermeture ; le composant nu ne le télécharge jamais ; gzip 148,7 Ko

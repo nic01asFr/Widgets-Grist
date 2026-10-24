@@ -18303,6 +18303,8 @@ async function demarrerBi() {
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
                 // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
                 // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
+                // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.
+                sceneBi: (oui) => document.body.classList.toggle('scene-bi', !!oui),
                 habiller: async (lecture) => {
                     const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=20261025a');
                     const { variables, notes } = variablesApplication(lecture);

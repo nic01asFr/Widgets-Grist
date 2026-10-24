@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.32.2 — boussole aux couleurs du thème, une seule légende
+
+- **Boussole** : l'aiguille du nord prend la couleur principale du thème (comme la lettre N), au lieu d'un rouge fixe. Sans thème, la couleur d'origine d'Atlas ne change pas.
+- **Boussole** : l'aiguille est raccourcie, la lettre N ne la chevauche plus.
+- **Légende** : en profil complet, un manifeste BI monté éteint la légende de l'application (qui ne connaît pas ses couches) ; seule celle du composant (`interface.legende`) reste, comme sur la carte nue. Une scène Atlas garde la légende de l'application.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.32.1 — une page pour choisir, et un paquet web figé par version
 
 - **Page « Choisir comment utiliser Atlas »** (vitrine, annexe) : les manières de s'en servir, la forme de scène à envoyer, suivre ou figer une version, l'identité visuelle commune, ce qu'Atlas ne promet pas, les licences.

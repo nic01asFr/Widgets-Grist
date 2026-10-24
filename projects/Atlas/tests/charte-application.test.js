@@ -68,3 +68,21 @@ test('profil complet : un setTheme de l\'hôte appelle `habiller` avec la charte
   const rt2 = attacher(carteSimulee()); brancher(rt2, { ...f, habiller: undefined });
   rt2.api.setTheme({ version: 'atlas-charte/0.1', graines: { principal: '#017c51' } });
 });
+
+test('la boussole : aiguille du nord suit la couleur principale, comme sa lettre', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(join(ICI, '../index_v7.html'), 'utf8');
+  assert.match(html, /\.compass #compass-svg path:first-child \{ fill: var\(--accent\); \}/);
+  assert.match(html, /\.compass \.n-label \{[^}]*color: var\(--accent\)/);
+  assert.match(html, /<svg width="54" height="54" viewBox="0 0 54 54" id="compass-svg">\s*<path d="M27 18 L31 29 L27 26.5 L23 29 Z" fill="#C44536" \/>/, 'le dessin garde son rouge d origine en repli');
+});
+
+test('profil complet : un manifeste BI éteint la légende de l\'application (celle du composant suffit), une scène Atlas la rend', async () => {
+  const etats = [];
+  const f = { outils: { VERSIONS_LUES: ['0.2.0'], deballerScene: (x) => x, verifierFormeScene: () => [], adresseAdmise: () => true }, monterScene: async () => ({ couches: [] }), monterDalles: async () => ({}), abonner: () => () => {}, retirerScene: () => 0, visibilite: () => true, cadrer: () => true, sceneBi: (oui) => etats.push(oui) };
+  const rt = attacher(carteSimulee()); brancher(rt, f);
+  await rt.api.setScene({ layers: [] });
+  assert.deepEqual(etats, [true]);
+  const html = readFileSync(join(ICI, '../index_v7.html'), 'utf8');
+  assert.match(html, /body\.scene-bi #legend \{ display: none !important; \}/);
+});

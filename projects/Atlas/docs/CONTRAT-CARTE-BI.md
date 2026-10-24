@@ -247,5 +247,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.31.0 | 0.3 | `lib/charte/theme-document.js` (lecture de `Theme_document`, hors contrat) ; le widget Atlas applique le thème du document à son interface. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.0 | 0.3 | interface de l'application sans emoji ; `?marque=icone|aucune`. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.1 | 0.3 | paquet web figé par version (hors contrat) ; page « Choisir ». Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
+| 1.32.2 | 0.3 | l'aiguille du nord de la boussole suit la couleur principale. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

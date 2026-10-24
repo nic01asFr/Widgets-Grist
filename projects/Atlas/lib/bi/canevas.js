@@ -125,12 +125,14 @@ export function brancher(rt, canevas) {
 
   api.setScene = async (manifest, donnees) => {
     if (!estSceneAtlas(manifest, canevas.outils)) {   // un manifeste BI remplace une éventuelle scène Atlas
+      if (typeof canevas.sceneBi === 'function') canevas.sceneBi(true);   // la légende est celle du composant (interface.legende), pas une seconde
       if (Object.keys(correspondance).length) { canevas.retirerScene(); correspondance = {}; }
       return avant.setScene(manifest, donnees);
     }
     const { scene, ecarts } = verifierSceneHote(manifest, canevas.outils);
     if (ecarts.length) throw new Error('scène Atlas refusée : ' + ecarts.join(' | '));
     await avant.setScene({ layers: [] });   // vide la scène BI : une scène en remplace une autre
+    if (typeof canevas.sceneBi === 'function') canevas.sceneBi(false);   // une scène Atlas garde la légende de l'application
     canevas.retirerScene();                  // et la scène Atlas précédente (couches de l'application et dalles 3D)
     const dalles = scene.layers.filter(estCoucheDalles), autres = scene.layers.filter((d) => !estCoucheDalles(d));
     const r = autres.length ? await canevas.monterScene({ ...scene, layers: autres }) : { couches: [], echecs: [], erreur: null };
