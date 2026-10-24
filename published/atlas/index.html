@@ -28,12 +28,12 @@
             var causes = [], alerte = false;
             function voile(t) { var v = document.getElementById('bi-voile'); if (v) v.textContent = t; }
             function hote(u) { try { return new URL(u, location.href).host; } catch (e) { return String(u).slice(0, 60); } }
-            function prevenir(code, message) {
+            function prevenir(code, message, niveau) {
                 if (alerte) return; alerte = true;
                 console.error('[Atlas BI] ' + message);
                 try {
                     if (window.parent && window.parent !== window) sp.getAll('hote').forEach(function (o) {
-                        try { window.parent.postMessage({ source: 'atlas-bi', version: '0.3', type: 'error', charge: { code: code, message: message, niveau: 'fatal' }, origine: 'utilisateur' }, o); } catch (e) { /* origine invalide */ }
+                        try { window.parent.postMessage({ source: 'atlas-bi', version: '0.3', type: 'error', charge: { code: code, message: message, niveau: niveau || 'fatal' }, origine: 'utilisateur' }, o); } catch (e) { /* origine invalide */ }
                     });
                 } catch (e) { /* pas d'hote */ }
             }
@@ -49,7 +49,7 @@
             setTimeout(function () {
                 if (window.__biPret) return;
                 var m = causes.length ? 'La carte n’a pas démarré : ' + causes.join(', ') + ' ne se charge pas.' : 'La carte n’a pas démarré après 20 s (réseau lent ou dépendance bloquée).';
-                voile(m); prevenir(causes.length ? 'dependance' : 'delai', m);
+                voile(m); prevenir(causes.length ? 'dependance' : 'delai', m, causes.length ? 'fatal' : 'avertissement');
             }, 20000);
         })();
     </script>
@@ -1945,7 +1945,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.28.4" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.29.0" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2204,6 +2204,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.28.4"></script>
+    <script type="module" src="./app.js?v=1.29.0"></script>
 </body>
 </html>

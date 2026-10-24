@@ -7,7 +7,7 @@ import {
   boundsFromGeoJSON,
   configLayerMeta,
   resolveSceneGeometryType,
-} from './grist-rows.js?v=1.28.4';
+} from './grist-rows.js?v=1.29.0';
 import {
   manifestGeometryType,
   atlasGeomToBridge,
@@ -15,10 +15,10 @@ import {
   colorFnFromDeclarative,
   opacityFnFromDeclarative,
   applyDeclarativeToLayer,
-} from './declarative-style.js?v=1.28.4';
-import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.28.4';
-import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.28.4';
-import { attributionSure } from './attribution.js?v=1.28.4';
+} from './declarative-style.js?v=1.29.0';
+import { defaultLayerVisible, applyAtlas3dFromRows } from './grist-sync.js?v=1.29.0';
+import { applyManifestControlsToLayer } from './manifest-binding.js?v=1.29.0';
+import { attributionSure } from './attribution.js?v=1.29.0';
 
 export const SCENE_MANIFEST_TABLE = 'SceneManifest';
 

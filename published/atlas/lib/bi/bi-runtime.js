@@ -8,17 +8,17 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.28.4';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.28.4';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.29.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.29.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.28.4';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.29.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
 import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, TIRET_MARQUEUR, tailleTexte } from './icones-etats.js';
-import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
+import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, extrusionDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
 const CURSEURS_ADMIS = CURSEURS.join(', ');
 import { creerLecture, valeursDuDomaine } from './lecture-temps.js';
 import { creerAdmin } from './admin-runtime.js';
@@ -146,14 +146,29 @@ export function attacher(map, opts = {}) {
     } else if (g === 'point') {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
       ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(0.9)] } });
+      const etp = etiquetteDeclaree(v.etiquette);   // l'étiquette d'un point : son texte, sous la marque, posé dans une couche À PART (une police en erreur n'emporte pas les marques)
+      if (etp) {
+        const policeEp = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+        ajouterCalque(c, { id: PREF + 'etiq-' + c.id, type: 'symbol', source: idSrc(c), minzoom: Number.isFinite(Number(v.etiquette.zoomMin)) ? Math.min(22, Math.max(0, Number(v.etiquette.zoomMin))) : 0,
+          layout: { 'text-field': ['to-string', ['coalesce', ['get', etp.champ], '']], 'text-size': etp.taille, 'text-font': policeEp, 'text-anchor': 'top', 'text-offset': [0, 0.9], 'text-optional': true },
+          paint: { 'text-color': T.selection || '#111111', 'text-halo-color': T.halo || '#ffffff', 'text-halo-width': 1.4 } });
+      }
     } else if (g === 'polygon') {
       // Réglages de l'hôte, facultatifs (lib/bi/style-polygone.js) : opacité du remplissage, contour (couleur, largeur, tirets). Sans eux : le rendu d'avant.
       const opacite = opaciteDeclaree(decl), ct = contourPolygone(v.contour, (cc) => resoudre(cc, T));
-      ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, hl, 0.88, 0.72] } });
+      const vol = extrusionDeclaree(v.extrusion);   // le volume : la surface s'élève de la valeur d'une propriété (en mètres) ; le contour reste posé au sol
+      if (vol) {
+        const hauteur = ['min', vol.max, ['*', vol.facteur, ['max', 0, ['to-number', ['get', vol.champ], 0]]]];
+        ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill-extrusion', source: idSrc(c), paint: { 'fill-extrusion-color': couleur, 'fill-extrusion-height': hauteur, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': opacite !== null ? opacite : 1 } });
+      } else {
+        ajouterCalque(c, { id: PREF + 'fill-' + c.id, type: 'fill', source: idSrc(c), paint: { 'fill-color': couleur, 'fill-opacity': opacite !== null ? opacite : ['case', sel, 0.95, hl, 0.88, 0.72] } });
+      }
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), paint: {
         'line-color': ['case', sel, T.selection, hl, T.selection, ct && ct.couleur ? ct.couleur : contourMarque(0.72)],   // surligné (`highlight`) : le contour de la sélection, un peu moins épais
         'line-width': ['case', sel, Math.max(3, (ct ? ct.largeur : 1) + 2), hl, Math.max(2, (ct ? ct.largeur : 1) + 1), ct ? ct.largeur : 1],
-        ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}) } });
+        ...(ct && ct.tirets ? { 'line-dasharray': ct.tirets } : {}),
+        // sous un volume, le contour posé au sol traverserait les faces (une couche de lignes n'est pas masquée par une extrusion) : il n'apparaît qu'à la sélection
+        ...(vol ? { 'line-opacity': ['case', sel, 1, hl, 1, 0] } : {}) } });
       const et = etiquetteDeclaree(v.etiquette);   // l’étiquette permanente (« 6/25 ») : un texte par surface, jamais masqué par une collision
       if (et) {
         const policeEt = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
@@ -182,7 +197,7 @@ export function attacher(map, opts = {}) {
     const pred = buildControlPredicate(c.layerLike);
     c.vue = pred ? c.features.filter(pred) : c.features;
     const expr = expressionFiltreControles(c.layerLike);
-    for (const id of c.ids) { const spec = map.getLayer(id); if (spec && spec.type !== 'fill-extrusion' && !id.startsWith(PREF + 'agg-')) map.setFilter(id, expr || null); }
+    for (const id of c.ids) { const spec = map.getLayer(id); if (spec && !id.startsWith(PREF + 'agg-')) map.setFilter(id, expr || null); }
     if (c.visuel.type === 'hex' || c.visuel.type === 'grille') recalculerAgregats(c);
     planifierUi();
     admin.surVueChangee(c.id);

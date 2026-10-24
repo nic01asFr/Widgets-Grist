@@ -44,6 +44,19 @@ export function etiquetteDeclaree(e) {
 }
 
 /**
+ * Le volume d'une couche de polygones, déclaré par l'hôte : `visuel.extrusion: { champ: 'hauteur', facteur: 1, max: 200 }` élève chaque surface de la valeur de sa
+ * propriété `champ` (en mètres, multipliée par `facteur`, bornée à `max`) ; une valeur absente ou non numérique donne 0 (la surface reste à plat). Le relief se voit en
+ * inclinant la carte (`flyTo({ pitch })`). `facteur` : de 0,01 à 1 000 (1 par défaut) ; `max` : de 1 à 2 000 m (500 par défaut). `null` quand rien n'est déclaré ou que la
+ * déclaration est invalide (jamais d'erreur : la couche reste à plat).
+ * @returns {{ champ: string, facteur: number, max: number }|null}
+ */
+export function extrusionDeclaree(e) {
+  if (!e || typeof e !== 'object' || Array.isArray(e) || typeof e.champ !== 'string' || !e.champ.trim()) return null;
+  const f = Number(e.facteur), m = Number(e.max);
+  return { champ: e.champ.trim(), facteur: Number.isFinite(f) && f >= 0.01 && f <= 1000 ? f : 1, max: Number.isFinite(m) && m >= 1 && m <= 2000 ? m : 500 };
+}
+
+/**
  * Le tracé d'une couche de LIGNES déclaré par l'hôte : `visuel: { largeur: 4, opacite: 0.8 }` ou une largeur qui suit un nombre,
  * `largeur: { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 }`. Largeurs bornées de 0,5 à 12 px, opacité de 0 à 1. Sans réglage : 3 px, comme avant.
  * @returns {{ largeur: number|{champ:string,min:number,max:number,lMin:number,lMax:number}, opacite: number|null }}

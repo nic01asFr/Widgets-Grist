@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Atlas — widget Grist">
 <meta name="twitter:description" content="Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-18"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-10-23"}</script>
 <style>
 :root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
 @media (prefers-color-scheme: dark) {
@@ -264,7 +264,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour il y a 5 j</span>
+    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="#cas">Voir un cas de bout en bout</a>
@@ -544,13 +544,14 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <section class="partie" id="nouveautes" aria-labelledby="t-nouveautes">
     <header class="entete"><h2 id="t-nouveautes">Nouveautés</h2></header>
     <div class="journal">
+      <div><b>v1.29.0</b><p>La carte nue sait élever des surfaces selon une hauteur et écrire le nom des points sous leur marque. Un récit retrouve de nouveau les couches d’une scène, et un démarrage lent n’est plus signalé comme une panne.</p></div>
       <div><b>v1.28.4</b><p>Les applications qui pilotent la carte peuvent vérifier leur description de scène avant de l’envoyer : une erreur de style, de champ ou de contrôle est dite au lieu de se traduire par une légende vide. L’état initial des filtres se déclare dans la description de la scène.</p></div>
       <div><b>v1.28.3</b><p>Les repères ne disparaissent plus quand une police du fond de plan est indisponible : les marqueurs sans valeur affichent un tiret simple, qui n’oblige pas la carte à charger une plage de police supplémentaire.</p></div>
       <div><b>v1.28.2</b><p>La carte ne passe plus hors ligne à tort : une police de caractères du fond qui répond en erreur (constaté sur le plan IGN) la faisait basculer sur le fond uni alors que le réseau était sain. Quand un repli automatique a lieu, la carte dit désormais ce qui l’a déclenché.</p></div>
       <div><b>v1.28.1</b><p>Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue.</p></div>
-      <div><b>vitrine</b><p>Une carte de chaleur dans le temps : un orage simulé traverse la région de Rennes en six heures, la page lance la lecture ou la met en pause et la carte suit. C’est un prototype du composant, sur des données inventées ; la démonstration s’ouvre depuis la page.</p></div>
     </div>
-    <details class="detail"><summary>Toutes les versions (49)</summary><div class="journal">
+    <details class="detail"><summary>Toutes les versions (50)</summary><div class="journal">
+      <div><b>vitrine</b><p>Une carte de chaleur dans le temps : un orage simulé traverse la région de Rennes en six heures, la page lance la lecture ou la met en pause et la carte suit. C’est un prototype du composant, sur des données inventées ; la démonstration s’ouvre depuis la page.</p></div>
       <div><b>v1.26.1</b><p>Une bulle déclarée sur une carte de communes ou de départements s’ouvre enfin quand on en choisit une, comme sur n’importe quelle autre couche.</p></div>
       <div><b>v1.26.0</b><p>La carte peut maintenant afficher sa propre légende et son curseur de temps, aux couleurs de l’application qui l’embarque, sans que celle-ci écrive le moindre code d’interface. La bulle d’un objet montre aussi son historique : les dernières lignes d’une table liée (par exemple les cotations d’un bâtiment), mises à jour à chaud.</p></div>
       <div><b>v1.25.0</b><p>Une page de démonstration montre comment une application embarque le canevas d’Atlas : envoyer une scène, recevoir les clics, afficher une maquette 3D. Les maquettes 3D s’affichent avec un éclairage plus juste, un objet surligné se voit aussi sur une surface ou une ligne, et une carte dans un cadre trop petit pour ses marges se cadre quand même.</p></div>

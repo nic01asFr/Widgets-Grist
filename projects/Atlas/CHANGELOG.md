@@ -13,6 +13,15 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.29.0 — des volumes et des étiquettes pour la carte nue, un récit qui retrouve ses couches
+
+- **Volume des polygones** (`visuel.extrusion: { champ, facteur?, max? }`) : chaque surface de la couche s'élève de la valeur de sa propriété `champ` (en mètres × `facteur`, bornée à `max`, 500 par défaut) ; une valeur absente donne une surface à plat. Le volume est opaque ; le contour reste posé au sol mais n'apparaît qu'à la sélection (il traverserait les faces) ; les contrôles filtrent aussi le volume. On le voit en inclinant la carte (`flyTo({ pitch })`). Une déclaration invalide laisse la couche à plat.
+- **Étiquette des points** (`visuel.etiquette: { champ, taille?, zoomMin? }`) : le texte d'un point, posé sous sa marque, dans une couche à part (une police en erreur ne retire pas les marques).
+- **Récit** (correctif) : l'entrée `layers[]` d'une étape retrouve la couche d'une scène externe par l'`id` de son manifeste (elle s'appelle `layer-scene-<id>` dans l'application) ; avant, la couche n'était pas citée et se retrouvait masquée, sans message. Une entrée sans couche l'écrit en console.
+- **Démarrage lent** (correctif) : la garde d'amorçage de 20 s prévient l'hôte par un avertissement et non plus par une erreur fatale (fatale seulement quand une dépendance ne se charge pas).
+- **Description des commandes** : `highlight`, `setVisual` et `getRows` disent ce qu'elles rendent vraiment.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.28.4 — valider un manifeste avant de l'envoyer, et l'état initial des contrôles
 
 - **`validerManifeste`** (`lib/bi/valider-manifeste.js`, module pur sans dépendance, importable par un serveur) : dit, avant `setScene`, les écarts que `setScene` laisse passer en silence : `kind` inconnu, champ absent des propriétés des données, `breaks`/`colors` au lieu de `stops`, palier sans couleur, clé inconnue, contrôle sans identifiant, identifiants d'entités non entiers ou en double. Il ne corrige rien. Adresse : `<adresse publique>/lib/bi/valider-manifeste.js`.
