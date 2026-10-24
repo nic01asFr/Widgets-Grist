@@ -305,12 +305,13 @@ function ignRasterStyle(tiles) {
         sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: IGN_ZOOM_MAX, attribution: '© IGN / Géoplateforme' } },
         layers: [{ id: 'ign-base', type: 'raster', source: 'ign' }] };
 }
+// `icon` est un accesseur : le vocabulaire d'icônes (`IC`) est défini plus loin, et il ne doit être lu qu'à l'affichage.
 const BASEMAPS = {
-    liberty:  { url: STYLE_BASE_URL,  label: 'Liberty 3D', icon: '✨' },
-    bright:   { url: 'https://tiles.openfreemap.org/styles/bright',   label: 'Plan',       icon: '🗺️' },
-    positron: { url: 'https://tiles.openfreemap.org/styles/positron', label: 'Clair',      icon: '⬜' },
-    'plan-ign':  { style: () => ignRasterStyle(IGN.plan),  label: 'Plan IGN',  icon: '🇫🇷' },
-    'ortho-ign': { style: () => ignRasterStyle(IGN.ortho), label: 'Ortho IGN', icon: '🛰️' },
+    liberty:  { url: STYLE_BASE_URL,  label: 'Liberty 3D', get icon() { return icTrait(IC.cube, 22); } },
+    bright:   { url: 'https://tiles.openfreemap.org/styles/bright',   label: 'Plan',       get icon() { return icTrait(IC.carte, 22); } },
+    positron: { url: 'https://tiles.openfreemap.org/styles/positron', label: 'Clair',      get icon() { return icTrait(IC.carreClair, 22); } },
+    'plan-ign':  { style: () => ignRasterStyle(IGN.plan),  label: 'Plan IGN',  get icon() { return icTrait(IC.quadrillage, 22); } },
+    'ortho-ign': { style: () => ignRasterStyle(IGN.ortho), label: 'Ortho IGN', get icon() { return icTrait(IC.image, 22); } },
 };
 
 // Sources de relief (DEM) : terrarium mondial (sans clé) ou LIDAR HD IGN (France)
@@ -6044,7 +6045,7 @@ function renderLayersPanel(mode) {
                     <div class="layer-info">
                         <div class="layer-name" title="${escapeHtml(l.name)}">${echapper(l.name)}</div>
                         <div class="layer-meta"><span>${formatLayerCount(l)} obj.</span>${is3D ? '<span class="badge3d">3D</span>' : ''}${linked
-                            ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">⛓ table</span>'
+                            ? '<span class="badge-saved" title="Objets liés aux lignes de ' + (l.sourceTable || 'la table') + ' — modifiables un par un">' + icLigne(IC.lien, 11) + ' table</span>'
                             : (l.gristId ? '<span class="badge-copie" title="Géométries copiées dans le document — pas de ligne par objet, donc pas de fiche modifiable">copie</span>' : '')}</div>
                     </div>
                     <button class="layer-act layer-act-zoom" onclick="A.zoomLayer('${l.id}', event)" title="Zoomer sur la couche" aria-label="Zoomer sur ${escapeHtml(l.name)}">${icTrait(IC.cible)}</button>
@@ -6132,6 +6133,10 @@ function renderLayersPanelLecture() {
  * controle pas, et pique des pastilles bariolees dans une interface qui n'en a
  * aucune. Un trace inline ne depend d'aucune police et suit la couleur du texte.
  */
+/** Une icône DANS une ligne de texte (libellé de bouton, de réglage, de message) : en ligne, calée sur la base du texte. */
+function icLigne(d, taille = 14) {
+    return icTrait(d, taille).replace('class="ic-trait"', 'class="ic-trait ic-ligne"');
+}
 function icTrait(d, taille = 19) {
     // L'epaisseur se reduit quand l'icone grandit, sinon une illustration d'etat
     // vide parait grossiere a cote d'un bouton de 19 px.
@@ -6179,18 +6184,31 @@ const IC = {
     piste:     '<path d="M4 20V7a3 3 0 0 1 6 0v10a3 3 0 0 0 6 0V4"/><path d="M17 7h4M17 4h4"/>',
     plus:      '<path d="M12 5v14M5 12h14"/>',
     pieton:    '<circle cx="12" cy="4" r="2"/><path d="M12 7v6m0 0-3 8m3-8 3 8M8 10l4-2 4 2"/>',
+    calendrier:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    etiquette: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+    coche:     '<path d="M5 12.5l4.2 4.2L19 7"/>',
+    alerte:    '<path d="M12 3 2 20h20z"/><path d="M12 10v4m0 3.2v.3"/>',
+    batiment:  '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6M9 11h.01M15 11h.01"/>',
+    relief:    '<path d="M2 20l6-10 4 6 3-4 7 8z"/>',
+    nuage:     '<path d="M7 18a4 4 0 1 1 .8-7.9A5 5 0 0 1 17.5 11 3.5 3.5 0 0 1 17 18z"/>',
+    regle:     '<rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v3m4-3v4m4-4v3m4-3v4"/>',
+    haut:      '<path d="M12 20V5m-6 6 6-6 6 6"/>',
+    carreClair:'<rect x="4" y="4" width="16" height="16" rx="2"/>',
+    quadrillage:'<path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+    bas:       '<path d="M12 4v15m-6-6 6 6 6-6"/>',
+    vertical:  '<path d="M12 4v16m-4-12 4-4 4 4m-8 8 4 4 4-4"/>',
+    horizontal:'<path d="M4 12h16M8 8l-4 4 4 4m8-8 4 4-4 4"/>',
+    cercle:    '<circle cx="12" cy="12" r="7"/>',
 };
 
 
 
 function controlTypeIcon(type) {
-    // Les filtres gardent leurs emoji : ils nomment une donnee, pas une commande
-    // de la carte, et l'utilisateur les repere mieux ainsi dans une rangee de
-    // pastilles. Le sujet est le choix de l'auteur de la scene, pas la charte.
-    if (type === 'time') return '🕑';
-    if (type === 'range') return '📊';
-    if (type === 'text') return '🔎';
-    return '🏷️';
+    // Le dessin dit la nature du filtre (date, nombre, texte, liste) ; il suit l'accent et la charte comme le reste de l'interface.
+    if (type === 'time') return icTrait(IC.calendrier, 15);
+    if (type === 'range') return icTrait(IC.controles, 15);
+    if (type === 'text') return icTrait(IC.loupe, 15);
+    return icLigne(IC.etiquette, 15);
 }
 
 /** Le nom d'un type de contrôle, en français — l'interface disait « range », « select ». */
@@ -6614,7 +6632,7 @@ function listDockPills() {
     // leur module dans le rail lateral. La pastille dit ce que le LECTEUR
     // verra ; c'est bien ce que le libelle promet sous chaque interrupteur.
     if (getViewerControl(vcs, 'sun')?.exposed) {
-        pills.push({ id: 'sun', kind: 'sun', icon: '☀', label: 'Soleil' });
+        pills.push({ id: 'sun', kind: 'sun', icon: icTrait(IC.soleil, 16), label: 'Soleil' });
     }
     // Le recit ne se lance que par cette pastille : le bouton de la barre et
     // le bouton flottant mobile sont retires (`pastilleRecitRequise`). Elle
@@ -6694,10 +6712,10 @@ function listDockPills() {
     // les polices système courantes, et un emoji sans sélecteur bascule en
     // rendu texte : dans les deux cas la pastille s'affiche vide, sans erreur.
     if (getViewerControl(vcs, 'view3d')?.exposed) {
-        pills.push({ id: 'view3d', kind: 'env', icon: '🏙️', label: '2D / 3D' });
+        pills.push({ id: 'view3d', kind: 'env', icon: icTrait(IC.cube, 16), label: '2D / 3D' });
     }
     if (getViewerControl(vcs, 'basemap')?.exposed) {
-        pills.push({ id: 'basemap', kind: 'env', icon: '🗺️', label: 'Fonds' });
+        pills.push({ id: 'basemap', kind: 'env', icon: icTrait(IC.carte, 16), label: 'Fonds' });
     }
     for (const { layer, c } of collectPublishedControls()) {
         pills.push({
@@ -8501,8 +8519,8 @@ function renderModelsPanel() {
         <div class="section">
             <div class="section-title">Jeu de modèles</div>
             <div class="seg">
-                <button class="${MODEL_LIBRARY.set === 'colored' ? 'active' : ''}" onclick="A.setModelSet('colored')">🎨 Coloré</button>
-                <button class="${MODEL_LIBRARY.set === 'mono' ? 'active' : ''}" onclick="A.setModelSet('mono')">⬜ Maquette</button>
+                <button class="${MODEL_LIBRARY.set === 'colored' ? 'active' : ''}" onclick="A.setModelSet('colored')">${icLigne(IC.palette, 14)} Coloré</button>
+                <button class="${MODEL_LIBRARY.set === 'mono' ? 'active' : ''}" onclick="A.setModelSet('mono')">${icLigne(IC.carreClair, 14)} Maquette</button>
             </div>
         </div>
         <div class="section">
@@ -8517,8 +8535,8 @@ function renderModelsPanel() {
         <div class="section">
             <div class="section-title">Catalogue d'objets${infoBulle('Modèles générés d\'après les champs des objets (atlas-objets/0.1). Une couche de points s\'y soumet par l\'affectation « Catalogue » de son onglet Modèle 3D ; le catalogue ci-dessus reste le repli.')}</div>
             <div class="range-info" style="word-break:break-all">${
-                CATALOGUE_OBJETS.etat === 'pret' ? `✅ ${CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas (intégré) — ' : ''}${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
-                : CATALOGUE_OBJETS.etat === 'erreur' ? `❌ ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
+                CATALOGUE_OBJETS.etat === 'pret' ? `${icLigne(IC.coche, 14)} ${CATALOGUE_OBJETS.origine === 'integre' ? 'Catalogue d’Atlas (intégré) — ' : ''}${CATALOGUE_OBJETS.cat.types.length} type(s), ${CATALOGUE_OBJETS.cat.assets.length} fichier(s)`
+                : CATALOGUE_OBJETS.etat === 'erreur' ? `${icLigne(IC.alerte, 14)} ${escapeHtml(CATALOGUE_OBJETS.erreur)}`
                 : CATALOGUE_OBJETS.etat === 'chargement' ? '… chargement'
                 : 'Aucun'}</div>
             <input class="input" id="catalogue-objets-input" style="margin-top:6px;font-family:var(--mono);font-size:11px" value="${escapeHtml(CATALOGUE_OBJETS.origine === 'integre' ? '' : (CATALOGUE_OBJETS.url || ''))}" placeholder="Catalogue d’Atlas — ou https://…/catalog.json">
@@ -8609,9 +8627,9 @@ function renderVues() {
         <div class="section">
             <div class="section-title">Points de vue</div>
             <div class="option-cards">
-                <div class="option-card" onclick="A.viewPreset('top')"><div class="oc-icon">⬇️</div><div class="oc-label">Dessus</div></div>
-                <div class="option-card" onclick="A.viewPreset('3d')"><div class="oc-icon">🎯</div><div class="oc-label">3D</div></div>
-                <div class="option-card" onclick="A.viewPreset('street')"><div class="oc-icon">🚶</div><div class="oc-label">Piéton</div></div>
+                <div class="option-card" onclick="A.viewPreset('top')"><div class="oc-icon">${icTrait(IC.bas, 22)}</div><div class="oc-label">Dessus</div></div>
+                <div class="option-card" onclick="A.viewPreset('3d')"><div class="oc-icon">${icTrait(IC.cube, 22)}</div><div class="oc-label">3D</div></div>
+                <div class="option-card" onclick="A.viewPreset('street')"><div class="oc-icon">${icTrait(IC.pieton, 22)}</div><div class="oc-label">Piéton</div></div>
             </div>
         </div>
         <div class="section">
@@ -8623,8 +8641,8 @@ function renderVues() {
         <div class="section">
             <div class="section-title">Projection${infoBulle('Le globe (façon Google Earth) bascule automatiquement en plan une fois zoomé sur la zone.')}</div>
             <div class="seg">
-                <button class="${s.projection === 'globe' ? 'active' : ''}" onclick="A.setProjection('globe')">🌍 Globe</button>
-                <button class="${s.projection === 'mercator' ? 'active' : ''}" onclick="A.setProjection('mercator')">🗺️ Plan</button>
+                <button class="${s.projection === 'globe' ? 'active' : ''}" onclick="A.setProjection('globe')">${icLigne(IC.globe, 14)} Globe</button>
+                <button class="${s.projection === 'mercator' ? 'active' : ''}" onclick="A.setProjection('mercator')">${icLigne(IC.carte, 14)} Plan</button>
             </div>
         </div>
         <div class="section">
@@ -8635,19 +8653,19 @@ function renderVues() {
         </div>
         <div class="section">
             <div class="section-title">Rendu 3D</div>
-            <div class="toggle-row"><span class="tlabel">🏢 Bâti du fond de carte</span><div class="toggle ${s.buildings3D ? 'on' : ''}" onclick="A.toggleSetting('buildings3D')" role="switch" tabindex="0" aria-checked="${!!s.buildings3D}" aria-label="Bâti du fond de carte"></div></div>
-            <div class="toggle-row"><span class="tlabel">⛰️ Terrain 3D</span><div class="toggle ${s.terrain3D ? 'on' : ''}" onclick="A.toggleSetting('terrain3D')" role="switch" tabindex="0" aria-checked="${!!s.terrain3D}" aria-label="Terrain 3D"></div></div>
+            <div class="toggle-row"><span class="tlabel">${icLigne(IC.batiment, 15)} Bâti du fond de carte</span><div class="toggle ${s.buildings3D ? 'on' : ''}" onclick="A.toggleSetting('buildings3D')" role="switch" tabindex="0" aria-checked="${!!s.buildings3D}" aria-label="Bâti du fond de carte"></div></div>
+            <div class="toggle-row"><span class="tlabel">${icLigne(IC.relief, 15)} Terrain 3D</span><div class="toggle ${s.terrain3D ? 'on' : ''}" onclick="A.toggleSetting('terrain3D')" role="switch" tabindex="0" aria-checked="${!!s.terrain3D}" aria-label="Terrain 3D"></div></div>
             <label class="input-label" style="margin-top:6px">Source du relief</label>
             <select class="input" onchange="A.setTerrainSource(this.value)">
                 ${Object.entries(TERRAIN_SOURCES).map(([k, t]) => `<option value="${k}" ${s.terrainSource === k ? 'selected' : ''}>${t.label}</option>`).join('')}
             </select>
             <div class="slider-head" style="margin-top:8px"><span class="lbl">Exagération relief</span><span class="val" id="v-exag">${s.terrainExaggeration}×</span></div>
             <input type="range" class="rng" min="1" max="3" step="0.1" value="${s.terrainExaggeration}" oninput="A.setExag(this.value)">
-            <div class="toggle-row"><span class="tlabel">🏷️ Libellés du fond</span><div class="toggle ${s.labels ? 'on' : ''}" onclick="A.toggleSetting('labels')" role="switch" tabindex="0" aria-checked="${!!s.labels}" aria-label="Libellés du fond"></div></div>
-            <div class="toggle-row"><span class="tlabel">🌫️ Ciel / atmosphère</span><div class="toggle ${s.sky ? 'on' : ''}" onclick="A.toggleSetting('sky')" role="switch" tabindex="0" aria-checked="${!!s.sky}" aria-label="Ciel et atmosphère"></div></div>
+            <div class="toggle-row"><span class="tlabel">${icLigne(IC.etiquette, 15)} Libellés du fond</span><div class="toggle ${s.labels ? 'on' : ''}" onclick="A.toggleSetting('labels')" role="switch" tabindex="0" aria-checked="${!!s.labels}" aria-label="Libellés du fond"></div></div>
+            <div class="toggle-row"><span class="tlabel">${icLigne(IC.nuage, 15)} Ciel / atmosphère</span><div class="toggle ${s.sky ? 'on' : ''}" onclick="A.toggleSetting('sky')" role="switch" tabindex="0" aria-checked="${!!s.sky}" aria-label="Ciel et atmosphère"></div></div>
         </div>
         ${htmlTraficVues()}
-        <button class="btn btn-soft btn-full" onclick="A.resetView()">🔄 Réinitialiser la vue</button>`;
+        <button class="btn btn-soft btn-full" onclick="A.resetView()">${icLigne(IC.rafraichir, 14)} Réinitialiser la vue</button>`;
 }
 
 // ============================================================
@@ -8976,7 +8994,7 @@ function boutonRevueObjets(layer) {
     // autant que de tables qui la referencent, nommer le premier laisserait
     // croire qu'il est le seul.
     const combien = formulairesDeLaCouche(layer).length;
-    const libelle = combien ? `📝 Saisir${combien > 1 ? ` · ${combien}` : ''}` : '✏️ Éditer';
+    const libelle = combien ? `${icLigne(IC.releve, 14)} Saisir${combien > 1 ? ` · ${combien}` : ''}` : `${icLigne(IC.crayon, 14)} Éditer`;
     const titre = combien
         ? `Saisir sur les objets${combien > 1 ? ` (${combien} formulaires)` : ''}`
         : 'Éditer les objets un par un';
@@ -9493,7 +9511,7 @@ function rangeInfo(layer, field) {
             return '<div class="range-info">Valeurs inconnues — la couche est distante '
                  + 'et le manifeste ne déclare pas de bornes pour ce champ.</div>';
         }
-        return '<div class="range-info">⚠️ Pas de valeurs numériques</div>';
+        return '<div class="range-info">' + icLigne(IC.alerte, 13) + ' Pas de valeurs numériques</div>';
     }
     return `<div class="range-info" style="margin-top:6px">Valeurs : <strong>${r.min.toFixed(1)}</strong> → <strong>${r.max.toFixed(1)}</strong> (${r.count} obj.)</div>`;
 }
@@ -9899,8 +9917,8 @@ function symModelPanel(layer, sym) {
     // Représentation de la couche : cercle 2D (Mapbox) ou modèle 3D
     const repr = `<div class="section"><div class="section-title">Représentation</div>
         <div class="seg">
-            <button class="${!is3D ? 'active' : ''}" onclick="A.setRepresentation('${layer.id}','mapbox')">⬤ Cercle 2D</button>
-            <button class="${is3D ? 'active' : ''}" onclick="A.setRepresentation('${layer.id}','library')">📦 Modèle 3D</button>
+            <button class="${!is3D ? 'active' : ''}" onclick="A.setRepresentation('${layer.id}','mapbox')">${icLigne(IC.cercle, 14)} Cercle 2D</button>
+            <button class="${is3D ? 'active' : ''}" onclick="A.setRepresentation('${layer.id}','library')">${icLigne(IC.cube, 14)} Modèle 3D</button>
         </div></div>`;
     if (!is3D) return repr + `<div class="hint">Couche en cercles 2D (couleur/taille dans les onglets dédiés). Passe en « Modèle 3D » pour choisir un objet du catalogue.</div>`;
 
@@ -11212,19 +11230,19 @@ function renderObjectInspector() {
                 : geoReadOnly();
         } else if (!multi) {
             $('insp-body').innerHTML = htmlAvertissementPersistance(layer) +
-                slider('f-scale', '📏 Échelle', r.scale, 0.1, 5, 0.05, '×') +
-                slider('f-rotationZ', '🔄 Rotation Z (azimut)', r.rotationZ, 0, 360, 5, '°') +
-                slider('f-rotationX', '↕️ Rotation X', r.rotationX, -90, 90, 5, '°') +
-                slider('f-offsetZ', '⬆️ Altitude', r.offsetZ, 0, 20, 0.5, 'm') +
-                slider('f-offsetX', '↔️ Décalage X', r.offsetX, -100, 100, 0.5, 'm') +
-                slider('f-offsetY', '↕️ Décalage Y', r.offsetY, -100, 100, 0.5, 'm');
+                slider('f-scale', `${icLigne(IC.regle, 14)} Échelle`, r.scale, 0.1, 5, 0.05, '×') +
+                slider('f-rotationZ', `${icLigne(IC.rafraichir, 14)} Rotation Z (azimut)`, r.rotationZ, 0, 360, 5, '°') +
+                slider('f-rotationX', `${icLigne(IC.vertical, 14)} Rotation X`, r.rotationX, -90, 90, 5, '°') +
+                slider('f-offsetZ', `${icLigne(IC.haut, 14)} Altitude`, r.offsetZ, 0, 20, 0.5, 'm') +
+                slider('f-offsetX', `${icLigne(IC.horizontal, 14)} Décalage X`, r.offsetX, -100, 100, 0.5, 'm') +
+                slider('f-offsetY', `${icLigne(IC.vertical, 14)} Décalage Y`, r.offsetY, -100, 100, 0.5, 'm');
         } else {
             $('insp-body').innerHTML = `<div class="hint">Modifications relatives appliquées aux ${count} objets.</div>` +
-                slider('m-scale', '📏 Échelle (×)', 1, 0.1, 5, 0.05, '×') +
-                slider('m-rotationZ', '🔄 Rotation Z (+/-)', 0, -180, 180, 5, '°') +
-                slider('m-offsetZ', '⬆️ Altitude (+/-)', 0, -5, 10, 0.5, 'm') +
-                slider('m-offsetX', '↔️ Décalage X (+/-)', 0, -50, 50, 0.5, 'm') +
-                slider('m-offsetY', '↕️ Décalage Y (+/-)', 0, -50, 50, 0.5, 'm');
+                slider('m-scale', `${icLigne(IC.regle, 14)} Échelle (×)`, 1, 0.1, 5, 0.05, '×') +
+                slider('m-rotationZ', `${icLigne(IC.rafraichir, 14)} Rotation Z (+/-)`, 0, -180, 180, 5, '°') +
+                slider('m-offsetZ', `${icLigne(IC.haut, 14)} Altitude (+/-)`, 0, -5, 10, 0.5, 'm') +
+                slider('m-offsetX', `${icLigne(IC.horizontal, 14)} Décalage X (+/-)`, 0, -50, 50, 0.5, 'm') +
+                slider('m-offsetY', `${icLigne(IC.vertical, 14)} Décalage Y (+/-)`, 0, -50, 50, 0.5, 'm');
         }
     } else if (count === 1 && f) {
         // Un seul objet et aucun formulaire à montrer — en lecture, depuis le
@@ -11252,7 +11270,7 @@ function renderObjectInspector() {
         // « Reset » ne rétablit que les surcharges de placement 3D ; « Enregistrer »
         // persiste aussi les attributs, il reste donc dans tous les cas.
         const reset = is3D && _inspObjTab !== ONGLET_SPECS
-            ? `<button class="btn btn-soft" style="flex:1" onclick="A.resetSelected()">🔄 Reset</button>`
+            ? `<button class="btn btn-soft" style="flex:1" onclick="A.resetSelected()">${icLigne(IC.rafraichir, 14)} Reset</button>`
             : '';
         $('insp-foot').innerHTML = reset
             + `<button class="btn btn-dark" style="flex:2" onclick="A.applySelected()">Enregistrer · ${count} objet${count > 1 ? 's' : ''}</button>`;
@@ -16945,9 +16963,9 @@ const A = {
         if (el) { el.textContent = '… test ' + base; el.style.color = 'var(--muted)'; }
         try {
             const r = await fetch(base + 'catalog.json', { cache: 'no-store' });
-            if (r.ok) { const c = await r.json(); if (el) { el.textContent = `✅ OK — ${c.models?.length || 0} modèles · ${base}`; el.style.color = 'var(--green)'; } }
-            else if (el) { el.textContent = `❌ HTTP ${r.status} · ${base}`; el.style.color = 'var(--accent)'; }
-        } catch (e) { if (el) { el.textContent = `❌ ${e.message} · ${base}`; el.style.color = 'var(--accent)'; } }
+            if (r.ok) { const c = await r.json(); if (el) { el.textContent = `✓ OK — ${c.models?.length || 0} modèles · ${base}`; el.style.color = 'var(--green)'; } }
+            else if (el) { el.textContent = `✕ HTTP ${r.status} · ${base}`; el.style.color = 'var(--accent)'; }
+        } catch (e) { if (el) { el.textContent = `✕ ${e.message} · ${base}`; el.style.color = 'var(--accent)'; } }
     },
     pickModel(id, modelId, repliCatalogue = false) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;

@@ -17,7 +17,7 @@ const doc = fs.readFileSync(path.join(atlas, 'docs', 'INVENTAIRE-DEPENDANCES.md'
 const manifeste = JSON.parse(fs.readFileSync(path.join(atlas, 'vendor-externe.json'), 'utf8'));
 
 /** Hôtes qui ne sont pas des services : exemples de documentation, espaces de noms, identifiants de schéma. */
-const SANS_RESEAU = [/\.example$/, /^localhost$/, /^www\.opengis\.net$/, /^www\.topografix\.com$/, /^json-schema\.org$/, /^x\.org$/];
+const SANS_RESEAU = [/\.example$/, /^localhost$/, /^www\.opengis\.net$/, /^www\.topografix\.com$/, /^json-schema\.org$/, /^x\.org$/, /^www\.w3\.org$/];   // www.w3.org : l'espace de noms XML du SVG (toast.js), un identifiant, jamais une adresse jointe
 
 test('chaque bibliothèque embarquée figure dans l\'inventaire avec sa version et sa licence', () => {
   assert.ok(manifeste.bibliotheques.length >= 6);

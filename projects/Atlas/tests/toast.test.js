@@ -19,18 +19,26 @@ function faussesDoc() {
       set textContent(v) { this._texte = String(v); },
       get textContent() { return this._texte + this.enfants.map((e) => e.textContent).join(''); },
       append(...n) { this.enfants.push(...n); },
+      attributs: {}, setAttribute(k, v) { this.attributs[k] = String(v); },
     };
     Object.defineProperty(el, 'innerHTML', { set() { throw new Error('innerHTML interdit'); }, get() { throw new Error('innerHTML interdit'); } });
     return el;
   };
-  return { createElement: creer };
+  return { createElement: creer, createElementNS: (ns, nom) => Object.assign(creer(nom), { ns }) };
+}
+
+/** Un document sans DOM vectoriel : l'icône retombe sur un signe en texte. */
+function fausseDocSansSvg() {
+  const d = faussesDoc(); delete d.createElementNS; return d;
 }
 
 describe('creerToast', () => {
   it('le message est posé comme texte, jamais comme HTML', () => {
     const el = creerToast(faussesDoc(), `Couche non chargée : <img src=x onerror="top.x=1">`, 'warning');
     assert.equal(el.enfants[1].textContent, `Couche non chargée : <img src=x onerror="top.x=1">`);
-    assert.equal(el.enfants[0].textContent, '⚠️');
+    const icone = el.enfants[0];
+    assert.equal(icone.nom, 'svg'); assert.equal(icone.ns, 'http://www.w3.org/2000/svg'); assert.equal(icone.attributs.class, 'toast-ic');
+    assert.equal(icone.enfants[0].nom, 'path'); assert.match(icone.enfants[0].attributs.d, /^M12 3 2 20h20z/, 'le tracé est fixe : celui de l avertissement');
     assert.equal(el.className, 'toast warning');
   });
 
@@ -56,5 +64,20 @@ describe('showToast dans app_v7.js', () => {
     const corps = app.slice(debut, debut + app.slice(debut).search(/\r?\n}\r?\n/));
     assert.match(corps, /creerToast\(document, msg, type\)/);
     assert.doesNotMatch(corps, /innerHTML|insertAdjacentHTML|outerHTML/);
+  });
+});
+
+describe('icone du message', () => {
+  it('chaque type a son tracé fixe, jamais un texte du message', () => {
+    const traces = new Set();
+    for (const type of ['success', 'warning', 'error', 'info']) {
+      const el = creerToast(faussesDoc(), '<script>alert(1)</script>', type);
+      const d = el.enfants[0].enfants[0].attributs.d; assert.match(d, /^M[0-9 .a-z-]+$/i); traces.add(d);
+    }
+    assert.equal(traces.size, 4);
+  });
+  it('sans DOM vectoriel : un signe en texte, pas un emoji', () => {
+    const el = creerToast(fausseDocSansSvg(), 'x', 'error');
+    assert.equal(el.enfants[0].textContent, '✕');
   });
 });

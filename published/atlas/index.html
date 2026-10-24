@@ -12,6 +12,8 @@
     <link rel="icon" href="data:," />
     <title>Atlas — Maquette 3D Territoriale</title>
 
+    <script>try { var mq = new URLSearchParams(location.search).get('marque'); if (mq === 'icone' || mq === 'aucune') document.documentElement.setAttribute('data-marque', mq); } catch (e) { /* adresse illisible : la marque d'origine */ }</script>
+
     <!-- Le composant carte BI (paramètre bi=1) n'a pas besoin de l'application : ce script, le PREMIER de la page, mène à la page maigre (index_bi.html, publiée sous
          le nom bi.html) avec les mêmes paramètres, et la page de l'application s'arrête là. Aucun hôte ne change d'adresse. Une scène externe
          (`?scene=`) reste dans l'application : elle charge des couches d'application. Gardé par tests/bi-page-maigre.test.js. -->
@@ -239,6 +241,9 @@
         .brand { display: flex; align-items: center; gap: 10px; }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
+        /* La marque de l'en-tête, réglée par `?marque=` : « atlas » (défaut), « icone » (le logo seul), « aucune » (ni logo ni nom : le nom du projet seul). */
+        html[data-marque="icone"] .brand-name, html[data-marque="icone"] .brand-chevron { display: none !important; }
+        html[data-marque="aucune"] .brand > svg, html[data-marque="aucune"] .brand-name, html[data-marque="aucune"] .brand-chevron, html[data-marque="aucune"] .brand-sep { display: none !important; }
         .brand-project { font-size: 13px; color: var(--text); font-weight: 500; }
         .dirty-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); margin-left: 4px; display: none; }
         .dirty .dirty-dot { display: inline-block; }
@@ -598,6 +603,7 @@
         /* Les icones sont tracees, pas ecrites : elles suivent l'encre du dock
            au lieu de dependre d'une police d'emoji propre a chaque appareil. */
         .ic-trait { display: block; color: var(--ink); }
+        .ic-trait.ic-ligne { display: inline-block; vertical-align: -3px; margin-right: 5px; color: currentColor; }
         .dock-chip .ic-trait { display: inline-block; vertical-align: -3px; margin-right: 2px; }
 
         .map-controls-dock .dock-panel {
@@ -1235,7 +1241,7 @@
         @container (max-width: 300px) {
             .layer-item { gap: 5px; padding: 8px 6px; }
             .layer-meta .badge-saved { font-size: 0; padding: 1px 3px; }
-            .layer-meta .badge-saved::before { content: '⛓'; font-size: 9px; }
+            .layer-meta .badge-saved .ic-ligne { margin-right: 0; }
             /* Le menu « autres actions » reste visible : c'est lui qu'on cherche. Seul le zoom se retire. */
             .layer-item:not(.active):not(:hover) .layer-act-zoom { display: none; }
         }
@@ -1307,6 +1313,11 @@
         .toast.warning { border-left: 4px solid var(--sun); }
         .toast.error { border-left: 4px solid var(--accent); }
         .toast.info { border-left: 4px solid var(--accent2); }
+        .toast .toast-ic { flex: none; }
+        .toast.success .toast-ic { color: var(--green); }
+        .toast.warning .toast-ic { color: var(--sun); }
+        .toast.error .toast-ic { color: var(--accent); }
+        .toast.info .toast-ic { color: var(--accent2); }
 
         /* Command palette */
         .cmd-overlay { position: fixed; inset: 0; background: rgba(31,27,20,0.35); display: none; align-items: flex-start; justify-content: center; padding-top: 14vh; z-index: 4000; }
@@ -1945,7 +1956,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.31.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.32.0" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2204,6 +2215,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.31.0"></script>
+    <script type="module" src="./app.js?v=1.32.0"></script>
 </body>
 </html>

@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.32.0 — une interface sans emoji, et une marque qu'on règle
+
+- **Icônes** : l'interface de l'application (réglages, vues, fonds de carte, curseurs de modèle, filtres, messages) n'emploie plus d'emoji : des icônes à trait, du même vocabulaire que le reste, qui suivent la couleur et la police du thème. Les messages éphémères portent une icône vectorielle posée par le DOM (jamais un texte du message). Les pictogrammes des objets du catalogue 3D (lampadaire, banc, arbre…) restent des emoji : ils nomment des objets, ils auront leur propre jeu.
+- **Marque réglable** : `?marque=icone` ne garde que le logo dans l'en-tête, `?marque=aucune` n'affiche que le nom du projet ; sans paramètre, rien ne change.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.31.0 — le thème du document, partout
 
 - **`Theme_document`** : un document Grist porte UNE identité visuelle (ThemeDef 1.0, table `Theme_document`). Le **widget Atlas** la lit seul (par `listTables` : il ne crée jamais la table et n'y écrit rien) et l'interface de l'application prend l'accent, la police, les surfaces et l'encre du thème (mode clair ; un thème sombre ne retourne pas l'interface claire et le dit en console). Un **hôte du composant** lit la table et appelle `themeDuDocument(...)` (`lib/charte/theme-document.js`, module pur) puis `carte.setTheme(theme.charte)` : la carte nue, le profil complet et l'application ont la même identité. Règle de lecture de la spécification : table absente, vide ou sans ligne active = aucun thème ; plusieurs actives = rien et `plusieurs-actifs` dit ; contenu illisible = rien et le motif dit ; valeurs résolues non crues.
