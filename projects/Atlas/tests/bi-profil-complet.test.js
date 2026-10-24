@@ -25,18 +25,19 @@ function classes(search) {
   const posees = new Set(); vm.runInNewContext(CLASSES, { URLSearchParams, location: { search }, document: { body: { classList: { add: (c) => posees.add(c) }, setAttribute() {} } } }); return posees;
 }
 
-test('profil complet : la page de l\'application ne redirige PAS vers la page maigre, ne masque pas l\'interface (pas de mode-bi) et ne pose pas de voile', () => {
+test('profil complet : la page ne redirige PAS vers la page maigre, garde l interface (pas de mode-bi) mais pose le voile du premier rendu', () => {
   assert.equal(redirige('?bi=1&hote=https%3A%2F%2Fh.test'), true, 'le composant nu redirige (inchangé)');
   assert.equal(redirige('?bi=1&profil=complet&hote=https%3A%2F%2Fh.test'), false);
   assert.deepEqual([...classes('?bi=1')].sort(), ['mode-bi', 'voile-bi']);
-  assert.deepEqual([...classes('?bi=1&profil=complet')], [], 'l\'interface reste visible, aucun voile');
+  assert.deepEqual([...classes('?bi=1&profil=complet')], ['voile-bi'], 'interface montee, voilee jusqu a la scene de l hote');
+  assert.deepEqual([...classes('?bi=1&profil=complet&voile=0')], [], 'voile=0 le retire');
   assert.deepEqual([...classes('?profil=complet')], [], 'sans bi=1 : rien non plus');
   assert.equal(redirige('?bi=1&profil=autre'), true, 'un autre profil est le composant nu');
 });
 
 test('le voile de lib/bi/voile.js suit la même règle que la page', () => {
-  assert.equal(voileDemande('?bi=1'), true); assert.equal(voileDemande('?bi=1&profil=complet'), false);
-  assert.equal(voileDemande('?bi=1&profil=complet&voile=1'), false, 'pas de voile en profil complet, même demandé');
+  assert.equal(voileDemande('?bi=1'), true); assert.equal(voileDemande('?bi=1&profil=complet'), true);
+  assert.equal(voileDemande('?bi=1&profil=complet&voile=0'), false, 'voile=0 le retire aussi en profil complet');
   assert.equal(voileDemande('?bi=1&profil=autre'), true);
 });
 

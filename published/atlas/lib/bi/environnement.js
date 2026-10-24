@@ -19,8 +19,8 @@
  *    (bâti, volumes de l'hôte). Ce ne sont PAS des ombres portées : MapLibre n'en dessine pas ; les ombres sont une fonction de l'application complète.
  * Une déclaration invalide est ignorée et dite (`ignores`), jamais une erreur : l'hôte ne perd pas sa carte pour un réglage d'ambiance.
  */
-import { positionSoleil } from '../soleil.js?v=1.32.2';
-import { garderDemAuRechargement } from '../terrain-base.js?v=1.32.2';
+import { positionSoleil } from '../soleil.js?v=1.32.3';
+import { garderDemAuRechargement } from '../terrain-base.js?v=1.32.3';
 import { melanger } from '../charte/couleurs.js';
 
 export const VERSION = '1.0.0';

@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.32.3 — plus de défilé au chargement du profil complet
+
+- **Premier rendu** : en `?bi=1&profil=complet`, le voile neutre du composant nu couvre aussi l'application complète jusqu'à la scène de l'hôte (ou au plus 8 s). On ne voit plus l'application de base, la carte par défaut, puis la carte voulue. `?voile=0` rend l'ancien comportement.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.32.2 — boussole aux couleurs du thème, une seule légende
 
 - **Boussole** : l'aiguille du nord prend la couleur principale du thème (comme la lettre N), au lieu d'un rouge fixe. Sans thème, la couleur d'origine d'Atlas ne change pas.
