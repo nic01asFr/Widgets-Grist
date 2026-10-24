@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.32.1 — une page pour choisir, et un paquet web figé par version
+
+- **Page « Choisir comment utiliser Atlas »** (vitrine, annexe) : les manières de s'en servir, la forme de scène à envoyer, suivre ou figer une version, l'identité visuelle commune, ce qu'Atlas ne promet pas, les licences.
+- **Paquet web figé** : à chaque étiquette `atlas-web-v<version>`, le workflow `paquet-atlas.yml` dépose en publication une archive du paquet web (page maigre, application, dépendances sans CDN, environ 9 Mo) avec `PAQUET.json` (version, contrat, client et son empreinte, SHA-256 de chaque fichier) et `SHA256SUMS`. Fabriqué par `scripts/paquet-atlas.js` (testé).
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.32.0 — une interface sans emoji, et une marque qu'on règle
 
 - **Icônes** : l'interface de l'application (réglages, vues, fonds de carte, curseurs de modèle, filtres, messages) n'emploie plus d'emoji : des icônes à trait, du même vocabulaire que le reste, qui suivent la couleur et la police du thème. Les messages éphémères portent une icône vectorielle posée par le DOM (jamais un texte du message). Les pictogrammes des objets du catalogue 3D (lampadaire, banc, arbre…) restent des emoji : ils nomment des objets, ils auront leur propre jeu.

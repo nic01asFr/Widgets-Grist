@@ -1,0 +1,76 @@
+# Atlas — le paquet WEB figé
+#
+# À chaque étiquette `atlas-web-v<version>` : fabrique l'archive du paquet web d'Atlas (la page maigre, l'application et leurs dépendances, sans CDN) depuis
+# `published/atlas/` au commit étiqueté, et la dépose en release avec ses empreintes. C'est ce qu'un client en production télécharge pour ne pas suivre la dernière
+# version de l'adresse publique. L'étiquette est un geste qu'on pose soi-même : rien ne part tant qu'elle n'est pas poussée.
+#
+# Ne se confond pas avec `apk-atlas.yml` (étiquettes `atlas-v*` : l'application Android).
+
+name: Paquet web Atlas
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - "atlas-web-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  paquet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # L'étiquette et la version du paquet doivent dire la même chose : sinon la release annoncerait une version et en livrerait une autre.
+      - name: Vérifier que l'étiquette dit la version publiée
+        run: |
+          version=$(node -p "require('./published/atlas/package.json').version")
+          etiquette="${GITHUB_REF_NAME#atlas-web-v}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "$version" != "$etiquette" ]; then
+            echo "L'étiquette ($GITHUB_REF_NAME) ne correspond pas à la version publiée ($version)"; exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Fabriquer le paquet
+        run: |
+          node scripts/paquet-atlas.js --sortie dist
+          cd dist
+          zip -r -q "atlas-web-${VERSION}.zip" "atlas-web-${VERSION}"
+          sha256sum "atlas-web-${VERSION}.zip" > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Le paquet se relit (archive complète, empreinte du client)
+        run: |
+          cd dist
+          unzip -q -t "atlas-web-${VERSION}.zip"
+          test -f "atlas-web-${VERSION}/PAQUET.json"
+          test -f "atlas-web-${VERSION}/bi.html"
+          test -f "atlas-web-${VERSION}/lib/bi/client-hote.js"
+          test ! -d "atlas-web-${VERSION}/demos"
+
+      - name: Déposer la release (sur étiquette)
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "dist/atlas-web-${VERSION}.zip" dist/SHA256SUMS \
+            --title "Atlas — paquet web ${VERSION}" --notes-file dist/NOTES.md
+
+      - name: Garder l'archive (hors étiquette)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-web
+          path: |
+            dist/atlas-web-${{ env.VERSION }}.zip
+            dist/SHA256SUMS
+            dist/NOTES.md
+          if-no-files-found: error

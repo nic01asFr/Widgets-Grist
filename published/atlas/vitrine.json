@@ -15,14 +15,42 @@
   "depot": "https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas",
   "points": [],
   "journal": [
-    { "version": "v1.32.0", "texte": "L’interface d’Atlas n’emploie plus d’emoji : des icônes à trait, cohérentes entre elles, qui suivent les couleurs du thème. Et la marque de l’en-tête se règle : le logo seul, ou seulement le nom du projet, par un paramètre de l’adresse." },
-    { "version": "v1.31.0", "texte": "Un document Grist peut maintenant porter son identité visuelle (couleurs, police) dans une table dédiée : Atlas la lit tout seul et s’habille de la même façon dans le widget, dans la carte nue et dans l’application complète, sans jamais modifier le document." },
-    { "version": "v1.30.0", "texte": "La carte nue peut maintenant afficher le relief, le bâti en volume, le ciel et la lumière du soleil à une heure choisie, déclarés dans la description de la scène, sans télécharger l’application complète." },
-    { "version": "v1.29.1", "texte": "L’application complète d’Atlas redémarre : la version 1.29.0 l’avait rendue illisible, le correctif est en ligne. Et quand une page hôte donne ses couleurs à la carte, l’interface de l’application complète les prend aussi, pour qu’on ne voie plus de différence entre la carte nue, le composant et l’application." },
-    { "version": "v1.29.0", "texte": "La carte nue sait élever des surfaces selon une hauteur et écrire le nom des points sous leur marque. Un récit retrouve de nouveau les couches d’une scène, et un démarrage lent n’est plus signalé comme une panne." },
-    { "version": "v1.28.4", "texte": "Les applications qui pilotent la carte peuvent vérifier leur description de scène avant de l’envoyer : une erreur de style, de champ ou de contrôle est dite au lieu de se traduire par une légende vide. L’état initial des filtres se déclare dans la description de la scène." },
-    { "version": "v1.28.3", "texte": "Les repères ne disparaissent plus quand une police du fond de plan est indisponible : les marqueurs sans valeur affichent un tiret simple, qui n’oblige pas la carte à charger une plage de police supplémentaire." },
-    { "version": "v1.28.2", "texte": "La carte ne passe plus hors ligne à tort : une police de caractères du fond qui répond en erreur (constaté sur le plan IGN) la faisait basculer sur le fond uni alors que le réseau était sain. Quand un repli automatique a lieu, la carte dit désormais ce qui l’a déclenché." },
+    {
+      "version": "v1.32.1",
+      "texte": "Une page « Choisir comment utiliser Atlas » dit les manières de s’en servir, la forme de scène à envoyer, comment suivre ou figer une version, et ce qu’Atlas ne promet pas. Et chaque version a maintenant son paquet web figé, téléchargeable avec ses empreintes."
+    },
+    {
+      "version": "v1.32.0",
+      "texte": "L’interface d’Atlas n’emploie plus d’emoji : des icônes à trait, cohérentes entre elles, qui suivent les couleurs du thème. Et la marque de l’en-tête se règle : le logo seul, ou seulement le nom du projet, par un paramètre de l’adresse."
+    },
+    {
+      "version": "v1.31.0",
+      "texte": "Un document Grist peut maintenant porter son identité visuelle (couleurs, police) dans une table dédiée : Atlas la lit tout seul et s’habille de la même façon dans le widget, dans la carte nue et dans l’application complète, sans jamais modifier le document."
+    },
+    {
+      "version": "v1.30.0",
+      "texte": "La carte nue peut maintenant afficher le relief, le bâti en volume, le ciel et la lumière du soleil à une heure choisie, déclarés dans la description de la scène, sans télécharger l’application complète."
+    },
+    {
+      "version": "v1.29.1",
+      "texte": "L’application complète d’Atlas redémarre : la version 1.29.0 l’avait rendue illisible, le correctif est en ligne. Et quand une page hôte donne ses couleurs à la carte, l’interface de l’application complète les prend aussi, pour qu’on ne voie plus de différence entre la carte nue, le composant et l’application."
+    },
+    {
+      "version": "v1.29.0",
+      "texte": "La carte nue sait élever des surfaces selon une hauteur et écrire le nom des points sous leur marque. Un récit retrouve de nouveau les couches d’une scène, et un démarrage lent n’est plus signalé comme une panne."
+    },
+    {
+      "version": "v1.28.4",
+      "texte": "Les applications qui pilotent la carte peuvent vérifier leur description de scène avant de l’envoyer : une erreur de style, de champ ou de contrôle est dite au lieu de se traduire par une légende vide. L’état initial des filtres se déclare dans la description de la scène."
+    },
+    {
+      "version": "v1.28.3",
+      "texte": "Les repères ne disparaissent plus quand une police du fond de plan est indisponible : les marqueurs sans valeur affichent un tiret simple, qui n’oblige pas la carte à charger une plage de police supplémentaire."
+    },
+    {
+      "version": "v1.28.2",
+      "texte": "La carte ne passe plus hors ligne à tort : une police de caractères du fond qui répond en erreur (constaté sur le plan IGN) la faisait basculer sur le fond uni alors que le réseau était sain. Quand un repli automatique a lieu, la carte dit désormais ce qui l’a déclenché."
+    },
     {
       "version": "v1.28.1",
       "texte": "Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue."
@@ -990,6 +1018,122 @@
             ]
           }
         ]
+      },
+      {
+        "id": "choisir",
+        "titre": "Choisir comment utiliser Atlas",
+        "chapeau": "Quatre manières de s’en servir, deux formes de scène, une version à suivre ou à figer : ce qu’il faut savoir avant de s’engager, et ce qu’Atlas ne promet pas.",
+        "blocs": [
+          {
+            "titre": "Quatre manières d’utiliser Atlas",
+            "paragraphes": [
+              "Elles partagent le même moteur et la même charte. Elles ne pèsent pas pareil et ne donnent pas les mêmes droits."
+            ],
+            "tableauTitre": "Les manières d’utiliser Atlas",
+            "tableau": {
+              "colonnes": [
+                "Manière",
+                "Pour qui",
+                "Ce qu’on y trouve",
+                "À savoir"
+              ],
+              "lignes": [
+                [
+                  "La carte nue (`<atlas-bi>`)",
+                  "Une application qui garde ses données et son état",
+                  "Couches, filtres, légende, bulles, temps ; relief, bâti en volume et soleil déclarés ; environ 1,4 Mo",
+                  "C’est l’hôte qui détient l’état ; Atlas n’écrit rien"
+                ],
+                [
+                  "Le profil complet (même balise, `profil=\"complet\"`)",
+                  "Une page qui veut aussi la 3D, l’éclairage ou le récit",
+                  "L’application entière derrière le même pont de commandes ; environ 5 Mo",
+                  "Deux formes de scène, qui ne se combinent pas (voir plus bas)"
+                ],
+                [
+                  "Le widget Grist ou la page autonome",
+                  "Les équipes qui travaillent dans Grist",
+                  "Consulter, relever sur le terrain, éditer les couches, présenter un récit ; le thème du document",
+                  "Les règles d’accès de Grist s’appliquent ; l’interface se règle par l’adresse (`?mode=view`, `?marque=icone`)"
+                ],
+                [
+                  "L’appel direct (`attacher(carte)`)",
+                  "Un hôte qui garde sa propre carte MapLibre",
+                  "Les mêmes commandes, sans iframe",
+                  "Pas encore éprouvé en production : à figer et à essayer"
+                ],
+                [
+                  "L’application Android",
+                  "Le terrain",
+                  "Les scènes d’un document, la saisie, la prise de photo",
+                  "Version de test : à essayer avant de s’y engager"
+                ]
+              ]
+            }
+          },
+          {
+            "titre": "Quelle forme de scène envoyer",
+            "paragraphes": [
+              "Le composant accepte deux formes de scène. Le manifeste de la carte (sans `version`) est monté par le moteur léger : tout se pilote et se vérifie, filtres, légende, comptes, sélection. La scène Atlas (avec `version`, le Scene Manifest 0.2.x) est montée par l’application : relief, 3D, éclairage, récit, objets du catalogue ; mais seules la visibilité et le cadrage se pilotent de l’extérieur.",
+              "La règle : pour des données qu’on pilote depuis son application, envoyer le manifeste de la carte, dans les deux profils (le bloc `environnement` donne le relief, le bâti en volume, le ciel et la lumière du soleil). Pour montrer une maquette riche, la scène Atlas. Les deux ne se combinent pas : une scène remplace la précédente, quelle que soit sa forme.",
+              "Avant d’envoyer un manifeste, `validerManifeste` (un module sans dépendance) dit les écarts que le composant laisserait passer en silence : un champ qui n’existe pas, un style mal écrit, un identifiant en double."
+            ]
+          },
+          {
+            "titre": "Suivre la dernière version, ou figer la sienne",
+            "paragraphes": [
+              "L’adresse publique suit toujours la dernière version : pratique pour essayer, risqué pour une application en production. Deux protections : le contrat de la carte (0.3) est additif, et une évolution qui changerait le sens d’une commande donnerait un 0.4, annoncé aux hôtes avant publication ; le client des hôtes, un seul fichier, se fige par son empreinte SHA-384.",
+              "Pour ne dépendre de personne, prenez le paquet web figé : à chaque version, une archive d’environ 9 Mo (MapLibre, three.js et les polices y sont : aucun CDN) est déposée dans les publications du dépôt, avec l’empreinte de chaque fichier. Servez-la depuis votre domaine ; l’hôte déclare son origine par `hote=`."
+            ],
+            "liens": [
+              {
+                "libelle": "Les paquets web figés",
+                "url": "https://github.com/nic01asFr/Widgets-Grist/releases?q=atlas-web",
+                "bouton": true
+              }
+            ]
+          },
+          {
+            "titre": "Une identité visuelle commune",
+            "paragraphes": [
+              "Une charte (accent, fond, encre, police) se donne par `setTheme`, ou se lit dans la page (`charte=\"herite\"`). Un document Grist peut porter la sienne dans une table `Theme_document` : le widget Atlas la lit seul, un hôte la lit puis la passe au composant. La carte nue, le profil complet et l’application prennent alors la même identité.",
+              "L’interface de l’application n’a qu’une palette claire : un thème sombre n’y est pas suivi, et c’est dit. `?marque=icone` ou `?marque=aucune` règle la marque de l’en-tête."
+            ]
+          },
+          {
+            "titre": "Ce qu’Atlas ne promet pas",
+            "liste": [
+              "Aucun accord de service. Un seul mainteneur, une adresse sur GitHub Pages. Pour la production, figer le paquet.",
+              "Des services tiers. Le fond de carte (OpenFreeMap) voit l’adresse IP de la personne et l’emprise affichée ; l’IGN fournit les contours, le plan et la photographie ; le relief mondial vient d’AWS ; le widget charge l’API de Grist. Avec `base=\"aucune\"`, la carte ne contacte personne.",
+              "Pas de hors ligne réseau coupé éprouvé dans le navigateur : la carte se replie sur un fond uni.",
+              "Une édition limitée : l’hôte peut déplacer un point ; les polygones et les lignes ne se modifient pas depuis l’extérieur.",
+              "Des volumes mesurés, pas garantis : au-delà de 100 000 entités par couche, agréger ; un client a monté 256 000 polygones avec des filtres sous 130 ms.",
+              "Pas d’ombres portées dans la carte nue : la lumière du soleil nuance les faces des volumes, c’est tout.",
+              "Pas de déclaration d’accessibilité formelle : la navigation au clavier et l’annonce vocale existent, l’audit reste à faire."
+            ]
+          },
+          {
+            "titre": "Licences et mentions",
+            "paragraphes": [
+              "Le code d’Atlas est sous licence MIT ; le catalogue d’objets 3D livré, sous Licence Ouverte 2.0. Les données et les fonds ont leurs licences et leurs mentions, affichées sur la carte. Le guide d’exploitation (§6) dit, service par service, la licence, la cadence et les pièges."
+            ],
+            "liens": [
+              {
+                "libelle": "Le guide d’exploitation",
+                "url": "https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/EXPLOITATION-EXTERNE-BI.md"
+              },
+              {
+                "libelle": "Mettre une carte dans votre page",
+                "url": "../integrer/",
+                "bouton": true
+              },
+              {
+                "libelle": "Poser une question sur le forum",
+                "url": "https://forum.grist.libre.sh/t/atlas-un-widget-carte-pour-grist-lignes-polygones-3d-edition-et-partage-en-lecture/4205"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -1006,7 +1150,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.32.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.32.1 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

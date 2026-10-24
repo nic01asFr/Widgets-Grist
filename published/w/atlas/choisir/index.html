@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choisir comment utiliser Atlas — Atlas</title>
+<meta name="description" content="Quatre manières de s’en servir, deux formes de scène, une version à suivre ou à figer : ce qu’il faut savoir avant de s’engager, et ce qu’Atlas ne promet pas.">
+<link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/atlas/choisir/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Widgets Grist">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/atlas/choisir/">
+<meta property="og:title" content="Choisir comment utiliser Atlas — Atlas">
+<meta property="og:description" content="Quatre manières de s’en servir, deux formes de scène, une version à suivre ou à figer : ce qu’il faut savoir avant de s’engager, et ce qu’Atlas ne promet pas.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Choisir comment utiliser Atlas — Atlas">
+<meta name="twitter:description" content="Quatre manières de s’en servir, deux formes de scène, une version à suivre ou à figer : ce qu’il faut savoir avant de s’engager, et ce qu’Atlas ne promet pas.">
+<style>
+:root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --papier: #14120F; --surface: #1D1A16; --encre: #F2EDE3; --plume: #9A9184; --filet: #2E2A23; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--papier); color: var(--encre);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+main { max-width: 60rem; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 500;
+  line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -.01em; }
+h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+p { margin: 0 0 1rem; color: var(--plume); }
+.eyebrow { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--plume); margin-bottom: 1.4rem; }
+.tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0; }
+.tag { font-size: .78rem; padding: .2rem .6rem; border-radius: 999px;
+  border: 1px solid var(--filet); color: var(--plume); }
+.faits { display: flex; flex-wrap: wrap; gap: 1.4rem; align-items: baseline;
+  font-size: .88rem; color: var(--plume); margin: 1.4rem 0 2rem; }
+.faits b { color: var(--encre); font-weight: 600; }
+.vif { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: #4E9A5B; margin-right: .4rem; vertical-align: middle; }
+.pied { max-width: 60rem; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+  border-top: 1px solid var(--filet); font-size: .85rem; color: var(--plume); }
+code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: .85em;
+  background: var(--surface); border: 1px solid var(--filet); border-radius: 4px;
+  padding: .1rem .35rem; }
+
+.retour { display: inline-block; font-size: .88rem; color: var(--plume);
+  text-decoration: none; margin-bottom: 2rem; }
+.retour:hover { color: var(--accent); }
+.chapeau { font-size: 1.15rem; line-height: 1.55; color: var(--encre);
+  max-width: 40rem; margin: 1rem 0 0; }
+.accroche { max-width: 40rem; margin: .8rem 0 0; font-size: 1rem; }
+.boutons { display: flex; flex-wrap: wrap; gap: .7rem; margin: 2rem 0 3rem; }
+.bouton { display: inline-block; padding: .8rem 1.3rem; border-radius: 10px;
+  font-size: .95rem; font-weight: 600; text-decoration: none;
+  background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+.bouton.creux { background: none; color: var(--encre); border-color: var(--filet);
+  font-weight: 500; }
+.bouton.creux:hover { border-color: var(--accent); }
+section { margin: 0 0 3rem; }
+.liste { display: flex; flex-direction: column; gap: .6rem; }
+.vue { display: flex; gap: 1rem; align-items: baseline; padding: .9rem 1.1rem;
+  background: var(--surface); border: 1px solid var(--filet); border-radius: 10px; }
+.vue b { font-weight: 600; min-width: 8.5rem; }
+.vue span { color: var(--plume); font-size: .9rem; flex: 1; }
+.vue a { font-size: .82rem; color: var(--accent); text-decoration: none;
+  white-space: nowrap; }
+/* Une version precedente reste atteignable — son adresse vit dans des
+   documents — mais elle ne se presente plus comme le chemin a prendre. */
+.vue.passee { opacity: .62; }
+.vue.passee em { font-style: normal; font-weight: 400; font-size: .78rem;
+  color: var(--plume); }
+.points { list-style: none; padding: 0; margin: 0; display: grid; gap: .8rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.points li { padding-left: 1.1rem; position: relative; color: var(--plume);
+  line-height: 1.55; }
+.points li::before { content: ''; position: absolute; left: 0; top: .55em;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.points li b { color: var(--encre); font-weight: 600; }
+.journal { border-left: 2px solid var(--filet); padding-left: 1.2rem; }
+.journal div { margin-bottom: 1.1rem; }
+.journal b { font-family: ui-monospace, Menlo, monospace; font-size: .85rem; }
+.journal p { margin: .2rem 0 0; font-size: .92rem; }
+.encart { background: var(--surface); border: 1px solid var(--filet);
+  border-left: 3px solid var(--accent); border-radius: 10px; padding: 1.3rem 1.4rem; }
+.encart h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+.apercu { margin-top: 0; }
+.cadre { position: relative; border: 1px solid var(--filet); border-radius: 12px;
+  overflow: hidden; background: var(--surface); aspect-ratio: 1200 / 630; }
+.cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cadre iframe { display: block; width: 100%; height: 100%; border: 0; }
+.cadre.vivant { aspect-ratio: auto; height: 70vh; min-height: 26rem; }
+/* Une demonstration d'application (figure vivante) a besoin de largeur : la colonne de la page la ferait tenir sur un telephone, carte
+   hors de vue. Lancee, elle passe au premier plan, presque plein ecran, et se referme (bouton ou Echap). */
+.cadre.plein { position: fixed; inset: 3vh 3vw; z-index: 60; height: auto; min-height: 0; border-radius: 10px; background: #fff; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 100vmax rgba(20, 16, 12, .62); }
+.cadre.plein iframe { flex: 1; min-height: 0; height: auto; }
+.barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .4rem .6rem .4rem .9rem; border-bottom: 1px solid #ddd5c8;
+  background: #fff; color: #1f2933; font-size: .85rem; border-radius: 10px 10px 0 0; }
+.fermer { flex: none; min-height: 44px; padding: .35rem 1rem; border: 1px solid #1f2933; border-radius: 6px; background: #fff; color: #1f2933; font: inherit; font-size: .85rem; cursor: pointer; }
+.fermer:hover { background: #eef2f6; }
+.lancer { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
+  padding: .8rem 1.4rem; border-radius: 999px; border: 0; cursor: pointer;
+  font: inherit; font-weight: 600; color: #fff; background: var(--accent);
+  box-shadow: 0 6px 24px rgba(0,0,0,.28); }
+.lancer:hover { filter: brightness(1.08); }
+.mention { font-size: .85rem; margin-top: .7rem; }
+
+.chiffres { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  padding: 1.6rem 0; border-top: 1px solid var(--filet); border-bottom: 1px solid var(--filet); }
+.chiffres b { display: block; font-family: var(--display-f, inherit); font-size: 2rem;
+  line-height: 1; color: var(--accent); font-weight: 500; }
+.chiffres span { font-size: .88rem; color: var(--plume); }
+.contexte { display: grid; gap: 1.4rem; margin-bottom: 2.8rem;
+  grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .contexte { grid-template-columns: 17rem minmax(0, 1fr); gap: 2.2rem; } }
+.contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.contexte p { font-size: .94rem; margin: 0 0 .7rem; }
+.contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .exemple { font-size: .86rem; color: var(--plume); margin: .9rem 0 0; padding: .6rem .8rem; background: var(--filet); border-radius: 8px; }
+.contexte .exemple b { color: var(--encre); font-weight: 600; margin-right: .3rem; }
+.contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
+.contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
+/* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
+   raison de montrer une capture de plus. */
+.contexte .pourquoi { font-size: .88rem; padding-left: .85rem;
+  border-left: 2px solid var(--accent); margin-bottom: 0; }
+.contexte figure { margin: 0 0 1rem; }
+.contexte .large img { width: 100%; height: auto; display: block; border-radius: 12px;
+  border: 1px solid var(--filet); }
+.contexte figcaption { font-size: .85rem; color: var(--plume); margin-top: .6rem; }
+.telephones { display: grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+/* Un cadre : sans lui, une capture verticale se lit comme une image mal recadree. */
+/* Un téléphone n'est pas plus large qu'un téléphone : seul dans sa colonne, il ne s'étire pas. */
+.telephone { max-width: 17rem; }
+.telephone .ecran { border: 8px solid var(--encre); border-radius: 26px; overflow: hidden;
+  background: var(--encre); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+/* Le cadre suit l image, au lieu de lui imposer un rapport : une capture prise
+   sur un autre appareil se trouvait rognee, et c est le haut de l ecran — la
+   barre du produit — qui disparaissait. */
+.telephone .ecran img { width: 100%; height: auto; display: block; }
+.telephone figcaption { text-align: center; }
+.sequence ol { list-style: none; counter-reset: pas; padding: 0; margin: 0;
+  display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.sequence li { counter-increment: pas; padding-top: 2.6rem; position: relative; }
+.sequence li::before { content: counter(pas); position: absolute; top: 0; left: 0;
+  width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center;
+  font-size: .85rem; font-weight: 600; color: #fff; background: var(--accent); }
+.sequence li b { display: block; margin-bottom: .3rem; }
+.sequence li p { font-size: .93rem; margin: 0; }
+.facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.groupe-points { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--plume); font-weight: 600; }
+.facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
+.facons ul { list-style: none; padding: 0; margin: 0; }
+.facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
+.facons li p { font-size: .9rem; margin: .25rem 0 0; }
+.facons .porte { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+/* Ou la porte tourne : c'est ce qui decide laquelle choisir. */
+.facons .ou { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: .05rem .5rem; }
+.contexte code, .sequence code, .facons code, .journal code, .mention code { font-size: .88em; padding: .05em .3em;
+  border-radius: 4px; background: var(--filet); overflow-wrap: anywhere; }
+/* La revelation accompagne le defilement ; elle ne le commande pas. */
+.reveler { opacity: 0; transform: translateY(14px);
+  transition: opacity .5s ease, transform .5s ease; }
+.reveler.vu { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveler { opacity: 1; transform: none; transition: none; }
+}
+
+.statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
+.statut b { color: var(--encre); font-weight: 600; }
+.ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
+  background: color-mix(in srgb, var(--papier) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--filet); }
+.ancres::-webkit-scrollbar { display: none; }
+.ancres a { white-space: nowrap; text-decoration: none; font-size: .9rem; color: var(--plume); padding: .45rem .8rem; border-radius: 999px; min-height: 2.5rem; display: inline-flex; align-items: center; }
+.ancres a:hover { background: var(--filet); color: var(--encre); }
+.partie { margin: 0; padding: 3.2rem 0 .5rem; scroll-margin-top: 4rem; }
+.entete { max-width: 44rem; margin-bottom: 1.8rem; } .entete h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: .6rem; } .entete p { font-size: 1.02rem; margin: 0; }
+.avant-apres, .preuves { margin: 0 0 2.6rem; padding: 0; }
+.comparaison { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--filet); font-size: .93rem; }
+.comparaison caption { text-align: left; font-weight: 600; padding-bottom: .5rem; }
+.comparaison th, .comparaison td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--filet); vertical-align: top; font-weight: 400; }
+.comparaison thead th { background: var(--papier); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; }
+.comparaison tbody th { color: var(--plume); } .comparaison td:last-child { color: var(--encre); font-weight: 500; }
+.preuves ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.preuves li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1rem 1.1rem; }
+.preuves b { display: block; font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.9rem; line-height: 1.1; color: var(--encre); }
+.preuves span { display: block; font-size: .88rem; color: var(--plume); margin-top: .3rem; } .preuves em { display: block; font-size: .76rem; color: var(--plume); margin-top: .5rem; font-style: normal; }
+.chap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 2.4rem; align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--filet); }
+.chap.haut { display: block; } .chap.inverse .dit { order: 2; } .chap > .detail, .chap > .pleine { grid-column: 1 / -1; }
+.chap > .pleine:empty { display: none; }
+.chap .dit { max-width: 46rem; } .chap .dit h3 { font-size: 1.45rem; margin-bottom: .7rem; }
+.chap .num { display: block; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+.chap .dit p { font-size: .97rem; }
+.chap .pourquoi { font-size: .93rem; padding-left: .9rem; border-left: 3px solid var(--accent); color: var(--encre); }
+.chap .liens { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 0; }
+.chap .lien { color: var(--accent); }
+.chap figure { margin: 0; } .chap figure img { width: 100%; height: auto; display: block; border: 1px solid var(--filet); border-radius: 12px; } .chap figcaption { font-size: .82rem; color: var(--plume); margin-top: .5rem; }
+.chap .montre figure.vivante .cadre { aspect-ratio: 1200 / 760; }
+.demo-parcours { margin: 0 0 1rem; } .demo-parcours figure { margin: 0; } .demo-parcours figcaption { font-size: .85rem; color: var(--plume); margin-top: .5rem; }
+.demo-parcours .cadre { aspect-ratio: 16 / 9; }
+.detail { background: var(--surface); border: 1px solid var(--filet); border-radius: 12px; margin: 1rem 0 .6rem; }
+.detail > summary { cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; }
+.detail > summary::-webkit-details-marker { display: none; } .detail > summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; } .detail[open] > summary::after { content: "−"; }
+.detail > div { padding: 0 1.1rem 1rem; } .detail h4 { margin: .8rem 0 .2rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; } .detail h4:first-child { margin-top: 0; }
+.detail p, .detail li { font-size: .93rem; } .detail .comparaison { margin-top: .4rem; }
+.liste-simple { margin: 0 0 .6rem; padding-left: 1.2rem; color: var(--plume); } .liste-simple li { margin-bottom: .35rem; }
+.flux { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+.flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
+.flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
+.titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
+.bloc-code pre { scrollbar-color: #5b5446 #1C1A17; }
+.annexe-bloc { margin: 0 0 2.4rem; max-width: 46rem; } .annexe-bloc h2 { font-size: 1.4rem; } .annexe-bloc .bloc-code, .annexe-bloc .comparaison { max-width: 100%; margin: .6rem 0 1rem; } .annexe-bloc .liens { display: flex; flex-wrap: wrap; gap: .6rem; } .annexe-bloc .lien { color: var(--accent); }
+.bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
+.entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
+.copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
+.bloc-code pre { margin: 0; padding: 1.1rem 1.2rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; tab-size: 2; }
+.bloc-code code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+.carrousel { margin-top: 1.6rem; position: relative; }
+.pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
+.pistes::-webkit-scrollbar { display: none; }
+.pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; }
+.diapo img { opacity: .45; transition: opacity .25s; }
+.diapo.actif img, .carrousel:not(.pret) .diapo img { opacity: 1; }
+.diapo.tel { grid-template-columns: 14rem 1fr; }
+.diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
+.diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
+.diapo h4 { font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0 0 .7rem; text-wrap: balance; } .diapo p { font-size: .95rem; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: .8rem 0 0; padding: 0; } .etiquettes li { font-size: .74rem; border: 1px solid var(--filet); border-radius: 999px; padding: .1rem .55rem; color: var(--plume); }
+.prec, .suiv { position: absolute; top: 38%; z-index: 3; width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--filet); background: var(--surface); color: var(--encre); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.prec { left: -1.2rem; } .suiv { right: -1.2rem; } .prec:hover:not(:disabled), .suiv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); } .prec:disabled, .suiv:disabled { opacity: 0; pointer-events: none; }
+.carrousel:not(.pret) .prec, .carrousel:not(.pret) .suiv { display: none; }
+.commandes { display: flex; align-items: center; gap: .8rem; margin-top: .4rem; }
+.compteur { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--plume); min-width: 3.4rem; }
+.sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
+.sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
+.sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+@media (prefers-reduced-motion: reduce) { .diapo img { transition: none; } }
+@media (max-width: 52rem) {
+  .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
+  .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
+  .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
+}
+</style>
+</head>
+<body>
+<main>
+  <a class="retour" href="../">← Atlas</a>
+  <p class="eyebrow">Atlas</p>
+  <h1>Choisir comment utiliser Atlas</h1>
+  <p class="chapeau">Quatre manières de s’en servir, deux formes de scène, une version à suivre ou à figer : ce qu’il faut savoir avant de s’engager, et ce qu’Atlas ne promet pas.</p>
+  <section class="annexe-bloc">
+    <h2>Quatre manières d’utiliser Atlas</h2>
+    <p>Elles partagent le même moteur et la même charte. Elles ne pèsent pas pareil et ne donnent pas les mêmes droits.</p>
+    
+    
+    <table class="comparaison"><caption>Les manières d’utiliser Atlas</caption>
+      <thead><tr><th scope="col">Manière</th><th scope="col">Pour qui</th><th scope="col">Ce qu’on y trouve</th><th scope="col">À savoir</th></tr></thead>
+      <tbody><tr><th scope="row">La carte nue (<code>&lt;atlas-bi&gt;</code>)</th><td>Une application qui garde ses données et son état</td><td>Couches, filtres, légende, bulles, temps ; relief, bâti en volume et soleil déclarés ; environ 1,4 Mo</td><td>C’est l’hôte qui détient l’état ; Atlas n’écrit rien</td></tr><tr><th scope="row">Le profil complet (même balise, <code>profil=&quot;complet&quot;</code>)</th><td>Une page qui veut aussi la 3D, l’éclairage ou le récit</td><td>L’application entière derrière le même pont de commandes ; environ 5 Mo</td><td>Deux formes de scène, qui ne se combinent pas (voir plus bas)</td></tr><tr><th scope="row">Le widget Grist ou la page autonome</th><td>Les équipes qui travaillent dans Grist</td><td>Consulter, relever sur le terrain, éditer les couches, présenter un récit ; le thème du document</td><td>Les règles d’accès de Grist s’appliquent ; l’interface se règle par l’adresse (<code>?mode=view</code>, <code>?marque=icone</code>)</td></tr><tr><th scope="row">L’appel direct (<code>attacher(carte)</code>)</th><td>Un hôte qui garde sa propre carte MapLibre</td><td>Les mêmes commandes, sans iframe</td><td>Pas encore éprouvé en production : à figer et à essayer</td></tr><tr><th scope="row">L’application Android</th><td>Le terrain</td><td>Les scènes d’un document, la saisie, la prise de photo</td><td>Version de test : à essayer avant de s’y engager</td></tr></tbody>
+    </table>
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Quelle forme de scène envoyer</h2>
+    <p>Le composant accepte deux formes de scène. Le manifeste de la carte (sans <code>version</code>) est monté par le moteur léger : tout se pilote et se vérifie, filtres, légende, comptes, sélection. La scène Atlas (avec <code>version</code>, le Scene Manifest 0.2.x) est montée par l’application : relief, 3D, éclairage, récit, objets du catalogue ; mais seules la visibilité et le cadrage se pilotent de l’extérieur.</p>
+    <p>La règle : pour des données qu’on pilote depuis son application, envoyer le manifeste de la carte, dans les deux profils (le bloc <code>environnement</code> donne le relief, le bâti en volume, le ciel et la lumière du soleil). Pour montrer une maquette riche, la scène Atlas. Les deux ne se combinent pas : une scène remplace la précédente, quelle que soit sa forme.</p>
+    <p>Avant d’envoyer un manifeste, <code>validerManifeste</code> (un module sans dépendance) dit les écarts que le composant laisserait passer en silence : un champ qui n’existe pas, un style mal écrit, un identifiant en double.</p>
+    
+    
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Suivre la dernière version, ou figer la sienne</h2>
+    <p>L’adresse publique suit toujours la dernière version : pratique pour essayer, risqué pour une application en production. Deux protections : le contrat de la carte (0.3) est additif, et une évolution qui changerait le sens d’une commande donnerait un 0.4, annoncé aux hôtes avant publication ; le client des hôtes, un seul fichier, se fige par son empreinte SHA-384.</p>
+    <p>Pour ne dépendre de personne, prenez le paquet web figé : à chaque version, une archive d’environ 9 Mo (MapLibre, three.js et les polices y sont : aucun CDN) est déposée dans les publications du dépôt, avec l’empreinte de chaque fichier. Servez-la depuis votre domaine ; l’hôte déclare son origine par <code>hote=</code>.</p>
+    
+    
+    
+    <p class="liens"><a class="bouton creux" href="https://github.com/nic01asFr/Widgets-Grist/releases?q=atlas-web" target="_blank" rel="noopener">Les paquets web figés</a></p>
+  </section>
+  <section class="annexe-bloc">
+    <h2>Une identité visuelle commune</h2>
+    <p>Une charte (accent, fond, encre, police) se donne par <code>setTheme</code>, ou se lit dans la page (<code>charte=&quot;herite&quot;</code>). Un document Grist peut porter la sienne dans une table <code>Theme_document</code> : le widget Atlas la lit seul, un hôte la lit puis la passe au composant. La carte nue, le profil complet et l’application prennent alors la même identité.</p>
+    <p>L’interface de l’application n’a qu’une palette claire : un thème sombre n’y est pas suivi, et c’est dit. <code>?marque=icone</code> ou <code>?marque=aucune</code> règle la marque de l’en-tête.</p>
+    
+    
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Ce qu’Atlas ne promet pas</h2>
+    
+    <ul class="liste-simple"><li>Aucun accord de service. Un seul mainteneur, une adresse sur GitHub Pages. Pour la production, figer le paquet.</li><li>Des services tiers. Le fond de carte (OpenFreeMap) voit l’adresse IP de la personne et l’emprise affichée ; l’IGN fournit les contours, le plan et la photographie ; le relief mondial vient d’AWS ; le widget charge l’API de Grist. Avec <code>base=&quot;aucune&quot;</code>, la carte ne contacte personne.</li><li>Pas de hors ligne réseau coupé éprouvé dans le navigateur : la carte se replie sur un fond uni.</li><li>Une édition limitée : l’hôte peut déplacer un point ; les polygones et les lignes ne se modifient pas depuis l’extérieur.</li><li>Des volumes mesurés, pas garantis : au-delà de 100 000 entités par couche, agréger ; un client a monté 256 000 polygones avec des filtres sous 130 ms.</li><li>Pas d’ombres portées dans la carte nue : la lumière du soleil nuance les faces des volumes, c’est tout.</li><li>Pas de déclaration d’accessibilité formelle : la navigation au clavier et l’annonce vocale existent, l’audit reste à faire.</li></ul>
+    
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Licences et mentions</h2>
+    <p>Le code d’Atlas est sous licence MIT ; le catalogue d’objets 3D livré, sous Licence Ouverte 2.0. Les données et les fonds ont leurs licences et leurs mentions, affichées sur la carte. Le guide d’exploitation (§6) dit, service par service, la licence, la cadence et les pièges.</p>
+    
+    
+    
+    <p class="liens"><a class="lien" href="https://github.com/nic01asFr/Widgets-Grist/blob/main/projects/Atlas/docs/EXPLOITATION-EXTERNE-BI.md" target="_blank" rel="noopener">Le guide d’exploitation</a> <a class="bouton creux" href="../integrer/">Mettre une carte dans votre page</a> <a class="lien" href="https://forum.grist.libre.sh/t/atlas-un-widget-carte-pour-grist-lignes-polygones-3d-edition-et-partage-en-lecture/4205" target="_blank" rel="noopener">Poser une question sur le forum</a></p>
+  </section>
+</main>
+<footer class="pied">
+  <p><a href="../">← Retour à la page d’Atlas</a></p>
+</footer>
+</body>
+</html>
