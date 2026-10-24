@@ -244,5 +244,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.29.0 | 0.3 | `visuel.extrusion` (volume d'une couche de polygones) et `visuel.etiquette` pour les points ; l'entrée `layers[]` d'une étape de récit reconnaît l'`id` du manifeste. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.29.1 | 0.3 | correctif de `app.js` (profil `complet`) ; en profil `complet`, la charte de l'hôte habille aussi l'interface de l'application. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.30.0 | 0.3 | `environnement` (relief, bâti en volume, ciel, soleil) dans le manifeste de scène. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
+| 1.31.0 | 0.3 | `lib/charte/theme-document.js` (lecture de `Theme_document`, hors contrat) ; le widget Atlas applique le thème du document à son interface. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

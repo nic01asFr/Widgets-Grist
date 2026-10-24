@@ -544,13 +544,14 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <section class="partie" id="nouveautes" aria-labelledby="t-nouveautes">
     <header class="entete"><h2 id="t-nouveautes">Nouveautés</h2></header>
     <div class="journal">
+      <div><b>v1.31.0</b><p>Un document Grist peut maintenant porter son identité visuelle (couleurs, police) dans une table dédiée : Atlas la lit tout seul et s’habille de la même façon dans le widget, dans la carte nue et dans l’application complète, sans jamais modifier le document.</p></div>
       <div><b>v1.30.0</b><p>La carte nue peut maintenant afficher le relief, le bâti en volume, le ciel et la lumière du soleil à une heure choisie, déclarés dans la description de la scène, sans télécharger l’application complète.</p></div>
       <div><b>v1.29.1</b><p>L’application complète d’Atlas redémarre : la version 1.29.0 l’avait rendue illisible, le correctif est en ligne. Et quand une page hôte donne ses couleurs à la carte, l’interface de l’application complète les prend aussi, pour qu’on ne voie plus de différence entre la carte nue, le composant et l’application.</p></div>
       <div><b>v1.29.0</b><p>La carte nue sait élever des surfaces selon une hauteur et écrire le nom des points sous leur marque. Un récit retrouve de nouveau les couches d’une scène, et un démarrage lent n’est plus signalé comme une panne.</p></div>
       <div><b>v1.28.4</b><p>Les applications qui pilotent la carte peuvent vérifier leur description de scène avant de l’envoyer : une erreur de style, de champ ou de contrôle est dite au lieu de se traduire par une légende vide. L’état initial des filtres se déclare dans la description de la scène.</p></div>
-      <div><b>v1.28.3</b><p>Les repères ne disparaissent plus quand une police du fond de plan est indisponible : les marqueurs sans valeur affichent un tiret simple, qui n’oblige pas la carte à charger une plage de police supplémentaire.</p></div>
     </div>
-    <details class="detail"><summary>Toutes les versions (52)</summary><div class="journal">
+    <details class="detail"><summary>Toutes les versions (53)</summary><div class="journal">
+      <div><b>v1.28.3</b><p>Les repères ne disparaissent plus quand une police du fond de plan est indisponible : les marqueurs sans valeur affichent un tiret simple, qui n’oblige pas la carte à charger une plage de police supplémentaire.</p></div>
       <div><b>v1.28.2</b><p>La carte ne passe plus hors ligne à tort : une police de caractères du fond qui répond en erreur (constaté sur le plan IGN) la faisait basculer sur le fond uni alors que le réseau était sain. Quand un repli automatique a lieu, la carte dit désormais ce qui l’a déclenché.</p></div>
       <div><b>v1.28.1</b><p>Un atelier de style pour mettre Atlas aux couleurs de son site : on règle la charte, la carte suit en direct et le code à copier se met à jour. Et l’application « Rennes en direct » dit clairement quand un portail de données atteint son quota du jour, au lieu de prétendre que la connexion est perdue.</p></div>
       <div><b>vitrine</b><p>Une carte de chaleur dans le temps : un orage simulé traverse la région de Rennes en six heures, la page lance la lecture ou la met en pause et la carte suit. C’est un prototype du composant, sur des données inventées ; la démonstration s’ouvre depuis la page.</p></div>

@@ -12702,6 +12702,38 @@ const TABLE_SCHEMAS = {
  * pour que l'appelant n'ait pas a distinguer « pas de table » de « pas de
  * formulaire pour cette couche » — les deux donnent le meme repli.
  */
+/**
+ * Pose sur l'interface de l'application les jetons que `lib/charte/application.js` ou `lib/charte/theme-document.js` ont dérivés d'une identité (d'un document ou de l'hôte) :
+ * ceux que la charte précédente avait posés sont retirés d'abord, donc sans identité l'application retrouve ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi).
+ */
+function poserHabillageApplication(variables, noms) {
+    const style = document.documentElement.style;
+    for (const nom of noms) style.removeProperty(nom);
+    for (const [nom, valeur] of Object.entries(variables)) if (noms.includes(nom)) style.setProperty(nom, valeur);
+}
+
+/**
+ * L'identité visuelle du DOCUMENT : la table `Theme_document` (ThemeDef 1.0) habille l'interface de l'application. Lue seulement si le document la porte (`listTables`) : le widget ne la crée
+ * jamais et n'y écrit rien. Table absente, vide, sans ligne active ou illisible : l'application garde ses jetons d'origine, sans bruit. Interface claire seulement : un thème sombre ne retourne
+ * pas les surfaces (voir `lib/charte/application.js`).
+ */
+async function chargerThemeDocument() {
+    try {
+        if (!CONFIG.grist.ready) return;
+        const tables = await grist.docApi.listTables();
+        if (!tables.includes('Theme_document')) return;
+        const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
+        const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
+        if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
+        if (!theme.charte) return;
+        const { variables, notes } = TD.habillageApplication(theme);
+        poserHabillageApplication(variables, AP.VARIABLES);
+        if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
+    } catch (e) {
+        console.warn('[Atlas] thème du document', e && e.message);
+    }
+}
+
 async function chargerFormulaires() {
     // La pastille « Releve » depend des formulaires, qui arrivent APRES la
     // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
@@ -13699,6 +13731,7 @@ async function initGrist() {
         }
         await syncStoryFromGrist();
         await chargerFormulaires();
+        await chargerThemeDocument();
         // Ce qu'on peut proposer dépend des formulaires : la posture d'ouverture se
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
@@ -18255,9 +18288,7 @@ async function demarrerBi() {
                 habiller: async (lecture) => {
                     const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=20261025a');
                     const { variables, notes } = variablesApplication(lecture);
-                    const style = document.documentElement.style;
-                    for (const nom of VARIABLES) style.removeProperty(nom);
-                    for (const [nom, valeur] of Object.entries(variables)) if (VARIABLES.includes(nom)) style.setProperty(nom, valeur);
+                    poserHabillageApplication(variables, VARIABLES);
                     return notes;
                 },
             });

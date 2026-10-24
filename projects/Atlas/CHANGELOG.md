@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.31.0 — le thème du document, partout
+
+- **`Theme_document`** : un document Grist porte UNE identité visuelle (ThemeDef 1.0, table `Theme_document`). Le **widget Atlas** la lit seul (par `listTables` : il ne crée jamais la table et n'y écrit rien) et l'interface de l'application prend l'accent, la police, les surfaces et l'encre du thème (mode clair ; un thème sombre ne retourne pas l'interface claire et le dit en console). Un **hôte du composant** lit la table et appelle `themeDuDocument(...)` (`lib/charte/theme-document.js`, module pur) puis `carte.setTheme(theme.charte)` : la carte nue, le profil complet et l'application ont la même identité. Règle de lecture de la spécification : table absente, vide ou sans ligne active = aucun thème ; plusieurs actives = rien et `plusieurs-actifs` dit ; contenu illisible = rien et le motif dit ; valeurs résolues non crues.
+- Documenté dans `EXPLOITATION-EXTERNE-BI.md` §7 bis.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.30.0 — le relief, le bâti en volume, le ciel et le soleil pour la carte nue
 
 - **`environnement` dans le manifeste** (brique chargée à la demande, jamais par la page seule) : `environnement: { relief, bati3d, ciel, soleil }`. `relief: true | { exageration?, source? }` : relief 3D depuis les altitudes mondiales « terrarium » (AWS, service tiers, sans clé), les couches de l'hôte le suivent ; le relief du LiDAR HD de l'IGN reste dans l'application complète. `bati3d: true` : le bâti du fond en volume, quand le fond n'en montre pas déjà. `ciel: true` : ciel et brume (vue inclinée). `soleil: { instant } | { maintenant: true }` : la lumière de la carte suit la direction réelle du soleil à cet instant (NOAA) et nuance les faces des volumes ; ce ne sont pas des ombres portées. Rejoué à chaque `setScene` ; une scène complète sans `environnement` défait celui d'avant ; une déclaration invalide est ignorée et dite (`_avertissements._environnement`).
