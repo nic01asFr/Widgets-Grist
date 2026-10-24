@@ -64,6 +64,22 @@ function cloneJson(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+/**
+ * La couche de la scène que désigne l'entrée `layers[]` d'une étape de récit. L'ordre : `sourceTable`, `id` de la couche, `manifestLayerId` (l'`id` que le
+ * manifeste de la scène lui a donné : la couche d'une scène externe s'appelle `layer-scene-<id>` dans l'application, et un récit écrit à la main cite
+ * l'`id` du manifeste), puis `name`. Sans cela, l'entrée ne trouvait pas sa couche, qui n'était pas citée et se retrouvait masquée avec les autres.
+ * @param {object[]} couches  `STATE.layers`
+ * @param {{sourceTable?: string, id?: string, name?: string}} ls  l'entrée de l'étape
+ */
+export function coucheDuRecit(couches, ls) {
+  if (!ls || !Array.isArray(couches)) return null;
+  return (ls.sourceTable && couches.find((x) => x.sourceTable === ls.sourceTable))
+    || (ls.id !== undefined && ls.id !== null && couches.find((x) => x.id === ls.id))
+    || (ls.id !== undefined && ls.id !== null && couches.find((x) => x.manifestLayerId === ls.id))
+    || (ls.name && couches.find((x) => x.name === ls.name))
+    || null;
+}
+
 /** Snapshot état scène pour une étape Récit. */
 export function captureStoryState(map, state) {
   markStoryCaptureControls(state.layers);

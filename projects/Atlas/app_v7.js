@@ -183,6 +183,7 @@ import {
   chargerRecitGrist,
   assurerCles,
   storyToManifestFragment,
+  coucheDuRecit,
 } from './lib/story.js?v=20261005a';
 import {
   copieLineaire,
@@ -5542,11 +5543,7 @@ function formatLayerCount(layer) {
  * enregistrés avant que sourceTable ne soit systématiquement capturé.
  */
 function findStoryLayer(ls) {
-    if (!ls) return null;
-    return (ls.sourceTable && STATE.layers.find((x) => x.sourceTable === ls.sourceTable))
-        || STATE.layers.find((x) => x.id === ls.id)
-        || STATE.layers.find((x) => x.name === ls.name)
-        || null;
+    return coucheDuRecit(STATE.layers, ls);
 }
 
 function cloneStoryState(s) {
@@ -5645,7 +5642,11 @@ function applyStoryState(s, opts = {}) {
     const cited = new Set();
     (s.layers || []).forEach((ls) => {
         const l = findStoryLayer(ls);
-        if (!l) return;
+        if (!l) {
+            // Une entrée qui ne trouve pas sa couche la laisse non citée, donc masquée : le dire, au lieu de la faire disparaître en silence.
+            console.warn('[Atlas] récit : la couche « ' + String((ls && (ls.id || ls.name || ls.sourceTable)) || '?').slice(0, 60) + ' » citée par l'étape n'existe pas dans la scène ; les couches non citées sont masquées.');
+            return;
+        }
         cited.add(l);
         applyStoryLayerMeta(l, ls);
     });

@@ -85,6 +85,7 @@ test('sans cause identifiée : message de délai et code « delai »', () => {
   p.attendre(20000);
   assert.match(p.voile.textContent, /après 20 s/);
   assert.equal(p.messages[0].m.charge.code, 'delai');
+  assert.equal(p.messages[0].m.charge.niveau, 'avertissement', 'un démarrage lent n est pas fatal : la carte peut encore se monter (mesuré : 32 s sur un réseau lent)');
 });
 
 test('quand le composant a démarré (__biPret) : rien ne change, aucun message', () => {
