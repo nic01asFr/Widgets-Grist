@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.29.1 — l'application complète se relit, et prend l'identité de l'hôte
+
+- **Correctif** : la 1.29.0 a rendu `app.js` illisible (une apostrophe mal échappée dans un message de console) : l'application complète d'Atlas (widget Grist, application mobile, profil `complet` du composant) ne démarrait plus ; la carte nue n'était pas touchée. Un test lit désormais la syntaxe de `app_v7.js` et de chaque module de `lib/` (`tests/syntaxe-modules.test.js`).
+- **Une seule identité** : en profil `complet`, la charte donnée par l'hôte (`setTheme`, charte du manifeste) habille aussi l'interface de l'application (surfaces, encre, filets, accent, police) : plus de différence visible entre la carte nue, le composant et l'application. L'interface de l'application n'a qu'une palette claire : une charte à fond sombre, une encre peu contrastée ou un accent trop pâle ne sont pas repris, et c'est dit (`notes`). Sans charte de l'hôte, rien ne change.
+- Contrat 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.29.0 — des volumes et des étiquettes pour la carte nue, un récit qui retrouve ses couches
 
 - **Volume des polygones** (`visuel.extrusion: { champ, facteur?, max? }`) : chaque surface de la couche s'élève de la valeur de sa propriété `champ` (en mètres × `facteur`, bornée à `max`, 500 par défaut) ; une valeur absente donne une surface à plat. Le volume est opaque ; le contour reste posé au sol mais n'apparaît qu'à la sélection (il traverserait les faces) ; les contrôles filtrent aussi le volume. On le voit en inclinant la carte (`flyTo({ pitch })`). Une déclaration invalide laisse la couche à plat.

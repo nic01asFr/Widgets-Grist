@@ -5644,7 +5644,7 @@ function applyStoryState(s, opts = {}) {
         const l = findStoryLayer(ls);
         if (!l) {
             // Une entrée qui ne trouve pas sa couche la laisse non citée, donc masquée : le dire, au lieu de la faire disparaître en silence.
-            console.warn('[Atlas] récit : la couche « ' + String((ls && (ls.id || ls.name || ls.sourceTable)) || '?').slice(0, 60) + ' » citée par l'étape n'existe pas dans la scène ; les couches non citées sont masquées.');
+            console.warn('[Atlas] récit : la couche « ' + String((ls && (ls.id || ls.name || ls.sourceTable)) || '?').slice(0, 60) + ' » citée par l’étape n’existe pas dans la scène ; les couches non citées sont masquées.');
             return;
         }
         cited.add(l);
@@ -18250,6 +18250,16 @@ async function demarrerBi() {
             window.__atlasCanevas = Object.freeze({
                 monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: (fn) => { _abonneHote = fn; return () => { if (_abonneHote === fn) _abonneHote = null; }; }, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
+                // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
+                // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
+                habiller: async (lecture) => {
+                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=20261025a');
+                    const { variables, notes } = variablesApplication(lecture);
+                    const style = document.documentElement.style;
+                    for (const nom of VARIABLES) style.removeProperty(nom);
+                    for (const [nom, valeur] of Object.entries(variables)) if (VARIABLES.includes(nom)) style.setProperty(nom, valeur);
+                    return notes;
+                },
             });
         }
         const bi = await chargement;

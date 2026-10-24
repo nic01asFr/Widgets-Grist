@@ -1,0 +1,70 @@
+// L'identité de l'hôte sur l'application complète : variables dérivées des graines que l'hôte a données, refus dits, branchement du profil complet.
+// node --test tests/charte-application.test.js   (aucun accès réseau, aucune dépendance)
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { variablesApplication, VARIABLES } from '../lib/charte/application.js';
+import { charteDepuisKit } from '../lib/charte/depuis-kit.js';
+import { resoudre } from '../lib/charte/resolution.js';
+import { attacher } from '../lib/bi/bi-runtime.js';
+import { brancher } from '../lib/bi/canevas.js';
+import { carteSimulee } from './aide-carte-bi.js';
+
+const ICI = dirname(fileURLToPath(import.meta.url));
+const kit = (paquet, mode) => JSON.parse(readFileSync(join(ICI, 'fixtures/kit-theme', `theme-formulaire.${paquet}.${mode}.json`), 'utf8'));
+const lecture = (hote) => ({ charte: resoudre({ hote }).charte, hote: resoudre({ hote }).charte && assaini(hote) });
+// ce que `getTheme` rend comme `hote` : la charte de l'hôte assainie (graines en minuscules)
+const assaini = (h) => JSON.parse(JSON.stringify(h, (k, v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : v)));
+const HEX = /^#[0-9a-f]{6}$/;
+
+test('sans charte de l\'hôte : aucune variable, l\'application garde ses jetons', () => {
+  assert.deepEqual(variablesApplication({ charte: resoudre({}).charte, hote: {} }), { variables: {}, notes: [] });
+  assert.deepEqual(variablesApplication(null), { variables: {}, notes: [] });
+  assert.deepEqual(variablesApplication({}), { variables: {}, notes: [] });
+});
+
+test('une charte claire du kit habille surfaces, encre, filets et accent ; seules des couleurs #rrggbb et la pile admise sont écrites', () => {
+  const hote = charteDepuisKit(kit('grist', 'clair')).charte;
+  const { variables, notes } = variablesApplication(lecture(hote));
+  assert.deepEqual(notes, []);
+  assert.equal(variables['--accent'], '#017c51'); assert.equal(variables['--ink'], '#262633'); assert.equal(variables['--bg'], '#ffffff');
+  for (const nom of ['--bg', '--surface', '--surface-muted', '--ink', '--text', '--muted', '--muted-light', '--hairline', '--hairline-strong', '--accent', '--accent-soft']) assert.match(variables[nom], HEX, nom);
+  assert.equal(variables['--sans'], 'system-ui, sans-serif'); assert.equal(variables['--serif'], variables['--sans']);
+  for (const nom of Object.keys(variables)) assert.ok(VARIABLES.includes(nom), nom + ' : hors de la liste fermée');
+  assert.equal('--accent2' in variables, false, 'le kit n\'a pas de couleur secondaire');
+});
+
+test('une charte qui ne fixe que la couleur principale ne change que l\'accent', () => {
+  const { variables, notes } = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#1b5fa8' } }));
+  assert.deepEqual(Object.keys(variables).sort(), ['--accent', '--accent-soft']); assert.deepEqual(notes, []);
+});
+
+test('une charte à fond SOMBRE ne retourne pas l\'interface claire : surfaces et encre refusées, un accent pâle aussi, et c\'est dit', () => {
+  const { variables, notes } = variablesApplication(lecture(charteDepuisKit(kit('grist', 'sombre')).charte));
+  for (const nom of ['--bg', '--surface', '--ink', '--text', '--hairline', '--accent']) assert.equal(nom in variables, false, nom);
+  assert.deepEqual(notes.sort(), ['accent-peu-lisible-non-suivi', 'encre-non-suivie', 'fond-sombre-non-suivi']);
+  assert.ok('--sans' in variables, 'la police est reprise');
+});
+
+test('une encre peu contrastée sur le fond de l\'application, ou un accent trop pâle, sont refusés', () => {
+  const r = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#f1f1a0', encre: '#cfcfcf' } }));
+  assert.deepEqual(r.variables && Object.keys(r.variables).filter((k) => k !== '--sans' && k !== '--serif'), []);
+  assert.deepEqual(r.notes.sort(), ['accent-peu-lisible-non-suivi', 'encre-non-suivie']);
+});
+
+test('profil complet : un setTheme de l\'hôte appelle `habiller` avec la charte lue, et l\'interface retombe sur ses jetons sans charte', async () => {
+  const appels = [];
+  const f = { outils: {}, monterScene: async () => ({ couches: [] }), monterDalles: async () => ({}), abonner: () => () => {}, retirerScene: () => 0, visibilite: () => true, cadrer: () => true, habiller: async (l) => { appels.push(l); } };
+  const rt = attacher(carteSimulee()); brancher(rt, f);
+  rt.api.setTheme({ version: 'atlas-charte/0.1', graines: { principal: '#017c51' } });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(appels.length, 1); assert.equal(appels[0].hote.graines.principal, '#017c51'); assert.ok(appels[0].charte.graines.fond);
+  rt.api.setTheme({}, { remplacer: true });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(appels.length, 2); assert.deepEqual(variablesApplication(appels[1]).variables, {}, 'sans charte de l\'hôte : rien');
+  // une façade sans `habiller` (anciennes pages) reste valide
+  const rt2 = attacher(carteSimulee()); brancher(rt2, { ...f, habiller: undefined });
+  rt2.api.setTheme({ version: 'atlas-charte/0.1', graines: { principal: '#017c51' } });
+});

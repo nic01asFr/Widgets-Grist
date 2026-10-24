@@ -168,6 +168,11 @@ export function brancher(rt, canevas) {
     if (c && c.couche && !layer) return;   // une couche qui n'est pas dans la scène de la page
     rt._interne.emettre(type, layer ? { layer, featureId: c.id, key: c.id, ...(c.proprietes && Object.keys(c.proprietes).length ? { properties: c.proprietes } : {}) } : { layer: null, featureId: null }, 'utilisateur');
   }) : () => {};
+  // l'identité de l'hôte (`setTheme`, charte du manifeste, préférence de contraste) habille aussi l'interface de l'application : une seule charte pour la carte nue, le composant et l'application
+  if (typeof canevas.habiller === 'function') {
+    const habiller = () => { try { Promise.resolve(canevas.habiller(rt.api.getTheme())).catch(() => { /* l'interface garde ses jetons */ }); } catch (_) { /* idem */ } };
+    rt.on('theme', habiller);
+  }
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
   return { couches: () => ({ ...correspondance }), desabonner };
 }
