@@ -12,9 +12,9 @@ const ligne = (id, props) => ({ type: 'Feature', id, geometry: { type: 'LineStri
 const COUCHE = (visuel) => ({ id: 'rues', name: 'Rues', geometry_type: 'line', cle: 'ref', visuel, style: { declarative: { kind: 'categorized', field: 'etat', stops: [{ value: 'a', color: '#2a9d8f' }, { value: 'b', color: '#e76f51' }] } } });
 
 test('traceLigneDeclare : largeur bornée de 0,5 à 12, une largeur qui suit un nombre, opacité de 0 à 1 ; le reste est écarté', () => {
-  assert.deepEqual(traceLigneDeclare({}), { largeur: 3, opacite: null });
-  assert.deepEqual(traceLigneDeclare({ largeur: 99, opacite: 4 }), { largeur: 12, opacite: 1 });
-  assert.deepEqual(traceLigneDeclare({ largeur: 0, opacite: -1 }), { largeur: 0.5, opacite: 0 });
+  assert.deepEqual(traceLigneDeclare({}), { largeur: 3, opacite: null, tirets: null });
+  assert.deepEqual(traceLigneDeclare({ largeur: 99, opacite: 4 }), { largeur: 12, opacite: 1, tirets: null });
+  assert.deepEqual(traceLigneDeclare({ largeur: 0, opacite: -1 }), { largeur: 0.5, opacite: 0, tirets: null });
   assert.deepEqual(traceLigneDeclare({ largeur: { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 } }).largeur, { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 });
   for (const mauvais of ['x', null, [], {}, { champ: '' }, { champ: 'd', min: 5, max: 5 }, { champ: 'd', min: 'a', max: 9 }]) assert.equal(traceLigneDeclare({ largeur: mauvais }).largeur, 3, JSON.stringify(mauvais));
   assert.equal(traceLigneDeclare({ opacite: 'beaucoup' }).opacite, null);

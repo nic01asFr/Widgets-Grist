@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.33.0 — une couche exclue du clic, des pointillés sur les lignes
+
+- **`interactive: false`** sur une couche : elle n'est plus interrogée au clic ni au survol (pas de sélection, pas de curseur « main »), et elle ne compte pas dans le test « clic dans le vide » de l'édition : un clic au-dessus d'elle, en édition, ajoute un objet au lieu de sélectionner la couche. Sans le réglage, ou à `true` : comme avant.
+- **`visuel.tirets`** sur une couche de lignes : `[4, 2]`, au moins deux longueurs positives (huit au plus, vingt au plus chacune), en multiples de la largeur. Même validation que pour le contour des polygones ; invalide, la ligne reste pleine.
+- Le validateur de manifeste connaît `interactive` et dit un non-booléen.
+- Contrat 0.3 (additif), client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.32.3 — plus de défilé au chargement du profil complet
 
 - **Premier rendu** : en `?bi=1&profil=complet`, le voile neutre du composant nu couvre aussi l'application complète jusqu'à la scène de l'hôte (ou au plus 8 s). On ne voit plus l'application de base, la carte par défaut, puis la carte voulue. `?voile=0` rend l'ancien comportement.

@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.32.3';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.32.3';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.33.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.33.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.32.3';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.33.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -179,7 +179,7 @@ export function attacher(map, opts = {}) {
       // Le tracé des lignes est celui que l'hôte déclare (`visuel.largeur`, `visuel.opacite`) ; sans réglage, 3 px comme avant.
       const tr = traceLigneDeclare(v); const base = typeof tr.largeur === 'number' ? tr.largeur : ['interpolate', ['linear'], ['to-number', ['get', tr.largeur.champ], tr.largeur.min], tr.largeur.min, tr.largeur.lMin, tr.largeur.max, tr.largeur.lMax];
       ajouterCalque(c, { id: PREF + 'line-' + c.id, type: 'line', source: idSrc(c), layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': couleur, 'line-width': ['case', sel, ['+', base, 3], hl, ['+', base, 2], base], ...(tr.opacite !== null ? { 'line-opacity': tr.opacite } : {}) } });
+        paint: { 'line-color': couleur, 'line-width': ['case', sel, ['+', base, 3], hl, ['+', base, 2], base], ...(tr.opacite !== null ? { 'line-opacity': tr.opacite } : {}), ...(tr.tirets ? { 'line-dasharray': tr.tirets } : {}) } });
     }
     appliquerVue(c);
   }
@@ -310,7 +310,7 @@ export function attacher(map, opts = {}) {
   }
 
   // ---------- sélection, survol, caméra ----------
-  const calquesInteractifs = () => [...couches.values()].filter((c) => c.visible).flatMap((c) => c.ids.filter((id) => !id.includes('heat-') && !id.includes('agg-')).map((id) => ({ id, c })));
+  const calquesInteractifs = () => [...couches.values()].filter((c) => c.visible && c.def.interactive !== false).flatMap((c) => c.ids.filter((id) => !id.includes('heat-') && !id.includes('agg-')).map((id) => ({ id, c })));
   function etat(c, id, patch) { if (c.visuel.type === 'hex' || c.visuel.type === 'grille' || c.visuel.type === 'heat') { if (!map.getSource(idSrc(c))) return; } map.setFeatureState({ source: idSrc(c), id }, patch); }
   function poserSelection(c, id) {
     if (selection) etat(selection.c, selection.id, { selected: false });
@@ -434,7 +434,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.32.3');
+          const env = await import('./environnement.js?v=1.33.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;

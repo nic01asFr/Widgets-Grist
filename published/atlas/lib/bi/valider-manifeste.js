@@ -21,7 +21,7 @@ export const NIVEAUX_ADMIN = Object.freeze(['pays', 'region', 'departement', 'co
 
 const CLES_RACINE = ['version', 'title', 'subtitle', 'classification', 'meta', 'layers', 'story', 'terrain', 'fusion', 'curseur', 'marges', 'attribution', 'charte', 'interface', 'temps', 'environnement'];
 const CLES_COUCHE = ['id', 'name', 'displayName', 'source', 'geometry_type', 'geomType', 'profile', 'color', 'featureCount', 'fetch', 'fields', 'limits', 'visibility', 'style', 'controls',
-  'cle', 'visuel', 'temps', 'bulle', 'admin', 'geojson', 'visible', 'type', 'lignes'];
+  'cle', 'visuel', 'temps', 'bulle', 'admin', 'geojson', 'visible', 'type', 'lignes', 'interactive'];
 const CLES_STYLE = ['declarative', 'charte'];
 const CLES_DECLARATIF = { single: ['kind', 'color', 'opacity'], categorized: ['kind', 'field', 'stops'], graduated: ['kind', 'field', 'method', 'stops'] };
 const CLES_PALIER = { categorized: ['value', 'color', 'label', 'opacity'], graduated: ['lower', 'upper', 'color', 'opacity', 'label'] };
@@ -112,6 +112,7 @@ export function validerManifeste(manifeste, donnees, options = {}) {
     else if (idsCouches.has(def.id)) dire('erreur', `${ch}.id`, 'id-en-double', `identifiant de couche « ${def.id} » déjà employé.`);
     else idsCouches.add(def.id);
     if (def.type === 'table' || def.admin) { if (def.admin && estObjet(def.admin) && !NIVEAUX_ADMIN.includes(def.admin.niveau)) dire('erreur', `${ch}.admin.niveau`, 'niveau-inconnu', `niveau administratif « ${texte(def.admin.niveau).slice(0, 20)} » inconnu (${NIVEAUX_ADMIN.join(', ')}).`); }
+    if (def.interactive !== undefined && typeof def.interactive !== 'boolean') dire('avertissement', `${ch}.interactive`, 'type', '`interactive` doit être true ou false : la couche reste interactive.');
     if (def.visuel !== undefined) {
       if (!estObjet(def.visuel)) dire('erreur', `${ch}.visuel`, 'type', '`visuel` doit être un objet');
       else if (def.visuel.type !== undefined && !TYPES_VISUEL.includes(def.visuel.type)) dire('erreur', `${ch}.visuel.type`, 'visuel-inconnu', `type de visuel « ${texte(def.visuel.type).slice(0, 20)} » inconnu (${TYPES_VISUEL.join(', ')}).`);

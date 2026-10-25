@@ -58,8 +58,8 @@ export function extrusionDeclaree(e) {
 
 /**
  * Le tracé d'une couche de LIGNES déclaré par l'hôte : `visuel: { largeur: 4, opacite: 0.8 }` ou une largeur qui suit un nombre,
- * `largeur: { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 }`. Largeurs bornées de 0,5 à 12 px, opacité de 0 à 1. Sans réglage : 3 px, comme avant.
- * @returns {{ largeur: number|{champ:string,min:number,max:number,lMin:number,lMax:number}, opacite: number|null }}
+ * `largeur: { champ: 'debit', min: 0, max: 100, lMin: 1, lMax: 6 }`, et `tirets: [4, 2]` (au moins deux longueurs positives, en multiples de la largeur : pointillés). Largeurs bornées de 0,5 à 12 px, opacité de 0 à 1. Sans réglage : 3 px, plein, comme avant.
+ * @returns {{ largeur: number|{champ:string,min:number,max:number,lMin:number,lMax:number}, opacite: number|null, tirets: number[]|null }}
  */
 export function traceLigneDeclare(v) {
   const bornee = (x, mini, maxi) => Math.min(maxi, Math.max(mini, x));
@@ -68,8 +68,9 @@ export function traceLigneDeclare(v) {
   else if (l && typeof l === 'object' && !Array.isArray(l) && typeof l.champ === 'string' && l.champ.trim() && [l.min, l.max].every((n) => Number.isFinite(Number(n))) && Number(l.max) > Number(l.min)) {
     largeur = { champ: l.champ.trim(), min: Number(l.min), max: Number(l.max), lMin: bornee(Number.isFinite(Number(l.lMin)) ? Number(l.lMin) : 1, 0.5, 12), lMax: bornee(Number.isFinite(Number(l.lMax)) ? Number(l.lMax) : 6, 0.5, 12) };
   }
-  const o = v && v.opacite;
-  return { largeur, opacite: typeof o === 'number' && Number.isFinite(o) ? bornee(o, 0, 1) : null };
+  const o = v && v.opacite, t = v && v.tirets;
+  const tirets = Array.isArray(t) && t.length >= 2 && t.length <= 8 && t.every((x) => typeof x === 'number' && Number.isFinite(x) && x > 0 && x <= LARGEUR_MAX) ? [...t] : null;
+  return { largeur, opacite: typeof o === 'number' && Number.isFinite(o) ? bornee(o, 0, 1) : null, tirets };
 }
 
 /** Les curseurs que l’hôte peut demander pour la carte (hors survol d’un objet, qui garde « pointer »). */

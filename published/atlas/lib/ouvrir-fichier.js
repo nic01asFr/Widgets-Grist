@@ -10,7 +10,7 @@
  *
  * Les deux portes demandent désormais d'abord ce qu'est le fichier.
  */
-import { deballerScene, verifierFormeScene } from './scene-externe.js?v=1.32.3';
+import { deballerScene, verifierFormeScene } from './scene-externe.js?v=1.33.0';
 
 /**
  * @param {any} obj le JSON lu
