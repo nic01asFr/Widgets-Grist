@@ -481,6 +481,10 @@ désignent ; il ne génère rien. Le catalogue low-poly reste le repli.
   les vecteurs du générateur, copiés tels quels dans `tests/fixtures/`
   (`graine-vecteurs.json`, `saison-vecteurs.json`) : ne pas les régénérer ici, c'est
   l'implémentation Python qui fait foi.
+- **atlas-objets 0.2 (1.34.0)** : `lib/catalogue-objets.js` lit aussi le critère `taxon` (normalisation écrite, mots entiers),
+  `rotation_draw: false` (cap mesuré, aucun tirage) et `parametric.requires_atlas` (refus net d'un catalogue trop récent,
+  d'après `version-atlas` (`lib/version-atlas.js`), gardé égal à la version du paquet par un test). Vecteurs de la fabrique :
+  `tests/fixtures/atlas-objets-0.2/` (commit 90122966), `tests/atlas-objets-02.test.js`.
 - **Pointer** : `?objets=<url>` ou module Modèles → « Catalogue d'objets » (mémorisé
   sur le poste, `atlas_catalogue_objets`). Un dossier désigne son `catalog.json`.
 - **Sinon, le catalogue d'Atlas** (26/09/2026) : `objets/` (`CATALOGUE_INTEGRE`,

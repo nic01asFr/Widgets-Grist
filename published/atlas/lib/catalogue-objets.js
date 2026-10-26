@@ -30,13 +30,17 @@ const SCHEMA = /^atlas-objets\/0\.\d+$/;
  * @param {object} json   contenu de `catalog.json`
  * @param {string} base   URL du catalogue (les chemins lui sont relatifs, §2)
  */
-export function lireCatalogue(json, base) {
+export function lireCatalogue(json, base, versionAtlas = null) {
   const racine = String(base || '').replace(/[^/]*$/, '');
   const p = json?.parametric;
   const vide = { schema: null, types: [], assets: [], shaders: {}, base: racine };
   if (!p || !SCHEMA.test(String(p.schema || ''))) return vide;
+  // `requires_atlas` (0.2) : un catalogue qui demande une Atlas plus recente n'est PAS utilise, et le dit.
+  const requis = verifierRequisAtlas(p.requires_atlas, versionAtlas);
+  if (requis.decision === 'refuse') return { ...vide, schema: p.schema, id: p.catalog_id || null, refuse: requis.message };
   return {
     schema: p.schema,
+    ...(requis.decision === 'accepte_avertissement' ? { avertissements: [requis.message] } : {}),
     id: p.catalog_id || null,
     types: Array.isArray(p.types) ? p.types.filter((t) => t && t.id) : [],
     assets: Array.isArray(p.assets) ? p.assets.filter((a) => a && a.type && a.keys && a.files) : [],
@@ -73,6 +77,81 @@ export function choisirCatalogue({ parametre = null, memorise = null } = {}) {
 }
 
 // ------------------------------------------------------------------
+// Version d'Atlas demandee par un catalogue (0.2, `requires_atlas`)
+// ------------------------------------------------------------------
+
+const VERSION_PRECISE = /^[0-9]+\.[0-9]+\.[0-9]+$/;
+
+/**
+ * Un catalogue 0.2 peut demander une version minimale d'Atlas (`parametric.requires_atlas`, `MAJ.MIN.CORR`), comparee composante par composante
+ * en nombres (1.10.0 > 1.9.9). Absent : accepte. Illisible : accepte, avec un avertissement. Plus recent que cette Atlas : refuse, avec un message.
+ * Sans version d'Atlas connue (`versionAtlas` absente), rien n'est refuse.
+ * @returns {{decision: 'accepte'|'accepte_avertissement'|'refuse', message: string|null}}
+ */
+export function verifierRequisAtlas(requis, versionAtlas) {
+  if (requis === undefined || requis === null) return { decision: 'accepte', message: null };
+  if (typeof requis !== 'string' || !VERSION_PRECISE.test(requis)) return { decision: 'accepte_avertissement', message: 'requires_atlas illisible (attendu MAJ.MIN.CORR) : le catalogue est utilise tel quel' };
+  if (typeof versionAtlas !== 'string' || !VERSION_PRECISE.test(versionAtlas)) return { decision: 'accepte', message: null };
+  const a = requis.split('.').map(Number), b = versionAtlas.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (a[i] > b[i]) return { decision: 'refuse', message: `ce catalogue demande Atlas ${requis} ou plus recente ; cette Atlas est la ${versionAtlas} : il n'est pas utilise` };
+    if (a[i] < b[i]) break;
+  }
+  return { decision: 'accepte', message: null };
+}
+
+// ------------------------------------------------------------------
+// Critere `taxon` (0.2, §3.2) : nom scientifique normalise, comparaison par mots entiers
+// ------------------------------------------------------------------
+
+const GUILLEMETS = { "'": "'", '‘': '’', '"': '"', '“': '”' };
+
+/**
+ * La normalisation ecrite par la spec, dans cet ordre : valeur non textuelle -> '' ; NFKC ; × -> ' x ' ; segments entre guillemets retires (un guillemet
+ * ouvrant sans fermeture retire tout ce qui suit) ; blancs -> une espace, bords retires (jamais `\s`) ; par mot, `x`/`X` -> `x`, le premier autre mot (le genre)
+ * prend son premier POINT DE CODE en majuscule et le reste en minuscules, les suivants en minuscules.
+ */
+export function normaliserTaxon(valeur) {
+  if (typeof valeur !== 'string') return '';
+  const t = valeur.normalize('NFKC').replace(/×/g, ' x ');
+  let sortie = '';
+  for (let i = 0; i < t.length;) {
+    const c = t[i], fin = GUILLEMETS[c];
+    if (fin === undefined) { sortie += c; i++; continue; }
+    const j = t.indexOf(fin, i + 1);
+    if (j < 0) break;                 // sans fermeture : tout ce qui suit est retire
+    sortie += ' '; i = j + 1;
+  }
+  const mots = sortie.replace(/[\t\n\v\f\r ]+/g, ' ').replace(/^ | $/g, '').split(' ').filter(Boolean);
+  let genreVu = false;
+  return mots.map((m) => {
+    if (m === 'x' || m === 'X') return 'x';
+    if (!genreVu) { genreVu = true; const [p, ...r] = [...m]; return p.toUpperCase() + r.join('').toLowerCase(); }
+    return m.toLowerCase();
+  }).join(' ');
+}
+
+/** Le poids du `taxon` d'un match dans la specificite : 0 vide, 1 pour un mot, 2 pour deux mots ou plus (la marque `x` ne compte pas). */
+export function poidsTaxon(taxon) {
+  const n = normaliserTaxon(taxon).split(' ').filter((m) => m && m !== 'x').length;
+  return n === 0 ? 0 : n === 1 ? 1 : 2;
+}
+
+/** Le taxon d'un objet : le premier champ non vide APRES normalisation parmi `taxonFrom` (par defaut species puis genus). */
+export function taxonDeLObjet(props, taxonFrom) {
+  const champs = Array.isArray(taxonFrom) && taxonFrom.length ? taxonFrom : ['species', 'genus'];
+  for (const c of champs) { const n = normaliserTaxon(props?.[c]); if (n) return n; }
+  return '';
+}
+
+/** L'objet correspond si N = C, ou si N commence par C suivi d'une espace (mots entiers) ; faux si N ou C est vide. */
+export function taxonCorrespond(match, props) {
+  const c = normaliserTaxon(match.taxon), n = taxonDeLObjet(props, match.taxon_from);
+  if (!c || !n) return false;
+  return n === c || n.startsWith(c + ' ');
+}
+
+// ------------------------------------------------------------------
 // Correspondance : quel type pour cet objet (§3.2 et §3.3)
 // ------------------------------------------------------------------
 
@@ -95,6 +174,7 @@ export function matchApplicable(match, couche, props, geometrie) {
     const valeurs = Array.isArray(attendu) ? attendu : [attendu];
     if (!valeurs.some((a) => String(a) === String(v))) return false;
   }
+  if (match.taxon !== undefined && !taxonCorrespond(match, props)) return false;   // 0.2 : un `taxon` qui ne correspond pas (ou un objet sans taxon) n'est pas un joker
   return true;
 }
 
@@ -111,7 +191,7 @@ export function choisirType(types, couche, props, geometrie) {
       const cand = {
         type,
         priorite: Number.isFinite(type.priority) ? type.priority : 0,
-        specificite: Object.keys(m.tags || {}).length,
+        specificite: Object.keys(m.tags || {}).length + (m.taxon !== undefined ? poidsTaxon(m.taxon) : 0),
         rang,
       };
       if (!meilleur
@@ -288,8 +368,9 @@ export function resoudreObjet(cat, couche, feature, o = {}) {
     fallback: type.fallback || null,
     // §5 : la mesure REMPLACE le tirage, et les deux se MULTIPLIENT par la couche.
     echelle: echelleCouche * propre,
-    // §5 : la rotation tiree S'AJOUTE a la rotation manuelle.
-    rotationDeg: (o.rotationCoucheDeg || 0) + rotationTiree(cle) * 180 / Math.PI,
+    // §5 : la rotation tiree S'AJOUTE a la rotation manuelle, sauf `rotation_draw: false`.
+    // 0.2 (`rotation_draw: false`) : cap mesure, aucun tirage ; la rotation est celle de la couche et de la feature (`_rotationZ`, deja dans `rotationCoucheDeg`).
+    rotationDeg: (o.rotationCoucheDeg || 0) + (type.rotation_draw === false ? 0 : rotationTiree(cle) * 180 / Math.PI),
     cle,
   };
 }

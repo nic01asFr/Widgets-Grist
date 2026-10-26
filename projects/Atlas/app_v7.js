@@ -12,6 +12,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
 import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
+import { VERSION_ATLAS } from './lib/version-atlas.js?v=20261026a';
 import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=20261002g';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
@@ -910,8 +911,10 @@ async function chargerCatalogueObjets(url) {
         try {
             const r = await fetch(fichier, { cache: 'no-store' });
             if (!r.ok) throw new Error('HTTP ' + r.status);
-            const cat = lireCatalogue(await r.json(), r.url || fichier);
+            const cat = lireCatalogue(await r.json(), r.url || fichier, VERSION_ATLAS);
             if (!cat.schema) throw new Error('aucun bloc « parametric » atlas-objets/0.x');
+            if (cat.refuse) throw new Error(cat.refuse);
+            for (const m of cat.avertissements || []) console.warn('Catalogue d’objets :', m);
             Object.assign(CATALOGUE_OBJETS, { cat, etat: 'pret' });
         } catch (e) {
             // Pas de repli silencieux : l'etat s'affiche dans le module Modeles.

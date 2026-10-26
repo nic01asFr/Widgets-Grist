@@ -1,0 +1,166 @@
+{
+  "schema": "atlas-objets/0.2#orientation",
+  "statut": "convention du modele ecrite par la fabrique ; sens de rotation de la feature a confirmer par la mesure d'Atlas-BI (Atlas 1.34.0)",
+  "reference": "docs/schemas/atlas_objets_orientation.py",
+  "spec": "docs/SPEC-ATLAS-OBJETS-0.2.md, par. 5.1",
+  "tolerance_deg": 1e-09,
+  "convention": {
+    "axe_haut_glb": "+Y",
+    "axe_avant_glb": "+Z",
+    "origine_glb": "pied de l'objet, au sol, sur l'axe vertical de pose",
+    "cap": "degres, sens horaire, depuis le nord geographique, dans [0, 360)",
+    "repere_atlas": "x = est, y = haut, z = -nord ; rotation positive = sens trigonometrique vu du dessus",
+    "formule": "_rotationZ = (180 - cap) mod 360 ; cap = cap_grille - convergence ; cap = 90 - angle_trigo"
+  },
+  "cas": [
+    {
+      "label": "cap_0",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 0,
+      "feature_rotationZ_deg": 180.0,
+      "rotation_finale_deg": 180.0,
+      "cap_face_avant_deg": 0.0
+    },
+    {
+      "label": "cap_90",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 90,
+      "feature_rotationZ_deg": 90.0,
+      "rotation_finale_deg": 90.0,
+      "cap_face_avant_deg": 90.0
+    },
+    {
+      "label": "cap_180",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 180,
+      "feature_rotationZ_deg": 0.0,
+      "rotation_finale_deg": 0.0,
+      "cap_face_avant_deg": 180.0
+    },
+    {
+      "label": "cap_270",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 270,
+      "feature_rotationZ_deg": 270.0,
+      "rotation_finale_deg": 270.0,
+      "cap_face_avant_deg": 270.0
+    },
+    {
+      "label": "cap_45",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 45,
+      "feature_rotationZ_deg": 135.0,
+      "rotation_finale_deg": 135.0,
+      "cap_face_avant_deg": 45.0
+    },
+    {
+      "label": "cap_359.5",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 359.5,
+      "feature_rotationZ_deg": 180.5,
+      "rotation_finale_deg": 180.5,
+      "cap_face_avant_deg": 359.5
+    },
+    {
+      "label": "couche_reglee_10",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 10.0,
+      "cap_deg": 90,
+      "feature_rotationZ_deg": 90.0,
+      "rotation_finale_deg": 100.0,
+      "cap_face_avant_deg": 80.0,
+      "note": "un reglage manuel de la couche decale tous les objets : la face regarde alors cap - 10"
+    },
+    {
+      "label": "cap_grille_longchamp",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "cap_grille_deg": 90.0,
+      "convergence_deg": -1.73754,
+      "cap_deg": 91.73754,
+      "feature_rotationZ_deg": 88.26246,
+      "rotation_finale_deg": 88.26246,
+      "cap_face_avant_deg": 91.73754,
+      "note": "cap mesure dans la grille L93, convergence du Palais Longchamp"
+    },
+    {
+      "label": "trigo_est",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "angle_trigo_deg": 0.0,
+      "cap_deg": 90.0,
+      "feature_rotationZ_deg": 90.0,
+      "rotation_finale_deg": 90.0,
+      "cap_face_avant_deg": 90.0,
+      "note": "angle trigonometrique depuis l'est : _rotationZ = angle + 90"
+    },
+    {
+      "label": "trigo_nord",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "angle_trigo_deg": 90.0,
+      "cap_deg": 0.0,
+      "feature_rotationZ_deg": 180.0,
+      "rotation_finale_deg": 180.0,
+      "cap_face_avant_deg": 0.0
+    },
+    {
+      "label": "trigo_30",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "angle_trigo_deg": 30.0,
+      "cap_deg": 60.0,
+      "feature_rotationZ_deg": 120.0,
+      "rotation_finale_deg": 120.0,
+      "cap_face_avant_deg": 60.0
+    },
+    {
+      "label": "tirage_avec_cap",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": true,
+      "couche_rotationZ_deg": 0.0,
+      "cap_deg": 90,
+      "feature_rotationZ_deg": 90.0,
+      "tirage_rot_deg": 135.641180724,
+      "rotation_finale_deg": 225.641180724,
+      "note": "rotation_draw vrai (defaut) : le tirage s'ajoute, le cap mesure est perdu"
+    },
+    {
+      "label": "tirage_sans_feature",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": true,
+      "couche_rotationZ_deg": 0.0,
+      "feature_rotationZ_deg": null,
+      "tirage_rot_deg": 135.641180724,
+      "rotation_finale_deg": 135.641180724,
+      "note": "arbre : pas de _rotationZ, tirage seul"
+    },
+    {
+      "label": "sans_tirage_sans_feature",
+      "cle_graine": "ll:43304350,5394600",
+      "rotation_draw": false,
+      "couche_rotationZ_deg": 0.0,
+      "feature_rotationZ_deg": null,
+      "rotation_finale_deg": 0.0,
+      "cap_face_avant_deg": 180.0,
+      "note": "rotation_draw faux sans _rotationZ : orientation du GLB, face avant au sud"
+    }
+  ]
+}

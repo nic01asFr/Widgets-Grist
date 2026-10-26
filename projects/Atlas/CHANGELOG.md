@@ -13,6 +13,15 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.34.0 — catalogue d'objets atlas-objets 0.2
+
+- **`rotation_draw: false`** sur un type : aucun tirage de rotation par graine ; la rotation est celle de la couche plus le `_rotationZ` de l'objet (cap mesuré d'un panneau, d'un abri). Sans le réglage : le tirage s'ajoute, comme avant.
+- **Critère `taxon`** (et `taxon_from`) dans un `match` : nom scientifique normalisé (hybrides ×, cultivars entre guillemets, casse), comparé par mots entiers ; un objet sans taxon ne correspond pas. Pèse dans le départage : un type d'essence l'emporte sur un type de genre.
+- **`requires_atlas`** (racine du bloc `parametric`, `MAJ.MIN.CORR`) : un catalogue qui demande une Atlas plus récente est refusé avec un message, jamais mal affiché ; illisible, il est utilisé avec un avertissement.
+- Vecteurs de la fabrique (pix2hdr, atlas-objets 0.2, commit 90122966) repris tels quels dans les tests.
+- **Orientation mesurée** (26/10/2026, Chrome, flèche glTF face +Z posée par `gltf_url`, carte au nord, à plat) : `_rotationZ` 180, 90, 0, 270 et 135 montrent le nord, l'est, le sud, l'ouest et le nord-est. La convention de la spec, `_rotationZ = (180 − cap) mod 360`, est confirmée ; le chargeur ne réoriente pas le modèle. Non mesuré : l'effet d'un `rotationX` ou `rotationY` de couche non nul.
+- Contrat de la carte BI 0.3, client et empreinte inchangés, aucune commande ajoutée.
+
 ## 1.33.0 — une couche exclue du clic, des pointillés sur les lignes
 
 - **`interactive: false`** sur une couche : elle n'est plus interrogée au clic ni au survol (pas de sélection, pas de curseur « main »), et elle ne compte pas dans le test « clic dans le vide » de l'édition : un clic au-dessus d'elle, en édition, ajoute un objet au lieu de sélectionner la couche. Sans le réglage, ou à `true` : comme avant.

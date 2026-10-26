@@ -19,7 +19,7 @@
 import {
   lireGrille, urlGabarit, urlDisponibilite, lireDisponibilite, lireAncrage, matriceDalle, produit4, inverse4, niveauPourDistance, niveauAffiche,
   distanceM, mercator, metreEnMercator, creerCacheLRU, PLAFOND_DALLES_VUE, PLAFOND_OCTETS_GLB,
-} from './dalles3d-geo.js?v=1.33.0';
+} from './dalles3d-geo.js?v=1.34.0';
 
 export const BUDGET_OCTETS_DEFAUT = 320 * 1024 * 1024;
 export const PARALLELISME_DEFAUT = 3;

@@ -1,0 +1,377 @@
+{
+  "generatedAt": "2026-10-25T12:00:00+00:00",
+  "sets": [
+    "colored",
+    "mono"
+  ],
+  "categories": {
+    "vegetation": {
+      "icon": "🌳",
+      "name": "Végétation"
+    }
+  },
+  "models": [
+    {
+      "id": "tree_deciduous",
+      "name": "Arbre feuillu",
+      "icon": "🌳",
+      "category": "vegetation",
+      "file": "TreeDeciduous.glb",
+      "heightMeters": 5.9
+    }
+  ],
+  "parametric": {
+    "schema": "atlas-objets/0.2",
+    "catalog_id": "cerema.vegetation.essai",
+    "version": "0.2.0",
+    "requires_atlas": "1.34.0",
+    "generated_at": "2026-10-25T12:00:00+00:00",
+    "shaders": {
+      "atlas-vegetation-season/0.1": {
+        "description": "Saison par modèle : feuillage présent, coloration d'automne. Variation individuelle par _phen et _tint (par bouquet).",
+        "attributes": [
+          "_part",
+          "_phen",
+          "_tint",
+          "_pivot"
+        ],
+        "uniforms": {
+          "uFoliage": {
+            "type": "float",
+            "range": [
+              0,
+              1
+            ],
+            "default": 1,
+            "description": "Part des bouquets présents : un bouquet de feuilles est replié sur _pivot si _phen > uFoliage."
+          },
+          "uAutumn": {
+            "type": "float",
+            "range": [
+              0,
+              1
+            ],
+            "default": 0,
+            "description": "Part des bouquets colorés : un bouquet vire si _phen > 1 - uAutumn."
+          },
+          "uAutumnColor": {
+            "type": "vec3",
+            "default": [
+              0.62,
+              0.38,
+              0.12
+            ],
+            "description": "Teinte d'automne, espace linéaire."
+          }
+        }
+      }
+    },
+    "types": [
+      {
+        "id": "platanus_orientalis",
+        "family": "vegetation",
+        "name": "Platane (d'Orient et commun)",
+        "icon": "🌳",
+        "category": "vegetation",
+        "fallback": "tree_deciduous",
+        "priority": 10,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "osm",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "natural": "tree"
+            },
+            "taxon": "Platanus"
+          }
+        ],
+        "measure": [
+          {
+            "param": "height",
+            "from": [
+              "height",
+              "est_height"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              4,
+              45
+            ],
+            "mode": "scale",
+            "axis": "uniform"
+          },
+          {
+            "param": "age_class",
+            "from": [
+              "circumference"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              0.1,
+              8
+            ],
+            "mode": "select",
+            "key": "age_class",
+            "thresholds": [
+              [
+                0.6,
+                "young"
+              ],
+              [
+                1.8,
+                "adult"
+              ],
+              [
+                null,
+                "old"
+              ]
+            ]
+          }
+        ],
+        "defaults": {
+          "age_class": "adult"
+        },
+        "variants": 4,
+        "lod_distances_m": [
+          40,
+          200
+        ],
+        "shader": "atlas-vegetation-season/0.1",
+        "vegetation": {
+          "species": "platanus_orientalis",
+          "name_sci": "Platanus orientalis L.",
+          "name_fr": "Platane d'Orient",
+          "sesame_id": 179,
+          "leaf_type": "caduc",
+          "crown_ratio": 0.6,
+          "phenology": {
+            "budburst": 100,
+            "full_leaf": 135,
+            "colour_start": 285,
+            "colour_full": 325,
+            "fall_start": 300,
+            "fall_end": 345
+          }
+        },
+        "note": "Type écrit au niveau du genre (critère taxon, 0.2) : il reconnaît les six graphies OSM du platane commun. Platanus × hispanica (hybride d'orientalis et d'occidentalis, port et phénologie proches) est rattaché au profil SESAME 179 (Platanus orientalis L., colonne ID du CSV SESAME). Un type distinct viendra si l'écart visuel le justifie."
+      },
+      {
+        "id": "feuillu_generique",
+        "family": "vegetation",
+        "name": "Feuillu (générique)",
+        "icon": "🌳",
+        "category": "vegetation",
+        "fallback": "tree_deciduous",
+        "priority": 0,
+        "seed": "ll",
+        "matches": [
+          {
+            "source": "osm",
+            "geometry": "point",
+            "mode": "instance",
+            "tags": {
+              "natural": "tree"
+            }
+          },
+          {
+            "source": "bdtopo",
+            "layer": "zone_de_vegetation",
+            "geometry": "polygon",
+            "mode": "scatter",
+            "tags": {
+              "nature": [
+                "Zone arborée",
+                "Forêt fermée de feuillus",
+                "Bois"
+              ]
+            },
+            "scatter": {
+              "grid": "EPSG:2154",
+              "step_m": 8,
+              "fill": 0.7,
+              "max_per_zone": 4000
+            }
+          }
+        ],
+        "measure": [
+          {
+            "param": "height",
+            "from": [
+              "height",
+              "est_height",
+              "hauteur"
+            ],
+            "unit": "m",
+            "parse": "osm_length",
+            "clamp": [
+              3,
+              40
+            ],
+            "mode": "scale",
+            "axis": "uniform"
+          }
+        ],
+        "defaults": {
+          "age_class": "adult"
+        },
+        "variants": 1,
+        "lod_distances_m": [
+          40,
+          200
+        ],
+        "shader": "atlas-vegetation-season/0.1",
+        "vegetation": {
+          "species": "platanus_orientalis",
+          "name_sci": "Platanus orientalis L.",
+          "leaf_type": "caduc",
+          "phenology": {
+            "budburst": 100,
+            "full_leaf": 135,
+            "colour_start": 285,
+            "colour_full": 325,
+            "fall_start": 300,
+            "fall_end": 345
+          }
+        }
+      }
+    ],
+    "assets": [
+      {
+        "type": "platanus_orientalis",
+        "keys": {
+          "age_class": "old",
+          "variant": 0,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v0_lod1.glb",
+          "mono": "platanus_orientalis/adult_v0_lod1.glb"
+        },
+        "md5": "2d2c482bb46a775613364fdf16b831c9",
+        "bytes": 1873200,
+        "triangles": 33916,
+        "height_m": 31.79,
+        "attributes": [
+          {
+            "name": "_part",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_phen",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_tint",
+            "type": "SCALAR",
+            "component": "UNSIGNED_BYTE",
+            "normalized": true,
+            "range": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "_pivot",
+            "type": "VEC3",
+            "component": "FLOAT"
+          }
+        ],
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v8",
+          "seed": 1,
+          "params": {
+            "species": "platanus_orientalis",
+            "age": 60,
+            "doy": 200,
+            "lod": 1
+          }
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Profils SESAME à licence non vérifiée : usage interne Cerema."
+        },
+        "sources": [
+          {
+            "corpus": "SESAME",
+            "ref_id": "179",
+            "millesime": "export DataSud jeu 3980",
+            "authority": "Cerema",
+            "licence": "a verifier",
+            "statut": "a_verifier"
+          },
+          {
+            "corpus": "ambientCG",
+            "ref_id": "LeafSet024, Bark012",
+            "millesime": "2026",
+            "authority": "ambientCG",
+            "licence": "CC0 1.0",
+            "statut": "verifie"
+          }
+        ],
+        "resources": [
+          0
+        ]
+      },
+      {
+        "type": "feuillu_generique",
+        "keys": {
+          "age_class": "old",
+          "variant": 0,
+          "lod": 1
+        },
+        "files": {
+          "colored": "platanus_orientalis/adult_v0_lod1.glb",
+          "mono": "platanus_orientalis/adult_v0_lod1.glb"
+        },
+        "md5": "2d2c482bb46a775613364fdf16b831c9",
+        "bytes": 1873200,
+        "triangles": 33916,
+        "height_m": 31.79,
+        "extensions_required": [
+          "EXT_meshopt_compression",
+          "KHR_texture_basisu",
+          "KHR_mesh_quantization"
+        ],
+        "generator": {
+          "name": "gn_lib.tree/GN_TPL_TreeParametric",
+          "version": "v8",
+          "seed": 1
+        },
+        "licence": {
+          "usage": "internal",
+          "notice": "Même fichier que le platane, en attendant un feuillu générique."
+        }
+      }
+    ],
+    "resources": [
+      {
+        "path": "textures/Bark_Bark012_BaseColorTexture_41a1b652.ktx2",
+        "bytes": 243864,
+        "media_type": "image/ktx2",
+        "sha256": "e3b5e7bad908e1c39650849b9ae0e15f7423bac8c68bfa96e8c85eafd1270af9"
+      }
+    ]
+  }
+}

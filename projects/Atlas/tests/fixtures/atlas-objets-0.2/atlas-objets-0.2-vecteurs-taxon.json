@@ -1,0 +1,650 @@
+{
+  "schema": "atlas-objets/0.2#taxon",
+  "statut": "fige avec la spec 0.2 (GO de Nicolas LAVAL le 25/10/2026)",
+  "reference": "docs/schemas/atlas_objets_taxon.py",
+  "spec": "docs/SPEC-ATLAS-OBJETS-0.2.md, par. 3.2 et 3.3",
+  "origine": "cas repris de paquets/gn_lib/gn_lib/objtaxon_vectors.json (29 cas, 5 cas de champs), recalcules et identiques ; ajouts : champ taxon_from, specificite",
+  "egalite": "stricte (chaines et booleens)",
+  "rules": {
+    "1": "valeur absente ou non textuelle -> ''",
+    "2": "NFKC",
+    "3": "U+00D7 -> ' x '",
+    "4": "segments entre ' ', U+2018 U+2019, \" \", U+201C U+201D retires (remplaces par une espace) ; guillemet ouvrant sans fermeture : tout ce qui suit est retire",
+    "5": "blancs [\\t\\n\\v\\f\\r ]+ -> une espace, bords retires (jamais \\s)",
+    "6": "mot 'x' ou 'X' -> 'x' ; premier autre mot : premier point de code en majuscule, reste en minuscules ; mots suivants en minuscules (casse Unicode par defaut, sans locale)",
+    "genus": "premier mot ; 'x <Genre>' si le nom commence par 'x'",
+    "match": "N == C ou N commence par C + ' ' (N objet, C taxon, tous deux normalises ; vide : faux)",
+    "object_taxon": "premier champ non vide apres normalisation parmi taxon_from (defaut species, genus)"
+  },
+  "taxa": [
+    "Platanus",
+    "Platanus × hispanica",
+    "Platanus hispanica",
+    "Pinus",
+    "Pinus pinea",
+    "Quercus ilex",
+    "x Cupressocyparis"
+  ],
+  "cases": [
+    {
+      "label": "ndm_vallis_clausa_65",
+      "value": "Platanus × hispanica 'Vallis Clausa'",
+      "utf8_hex": "506c6174616e757320c3972068697370616e696361202756616c6c697320436c6175736127",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "ndm_x_latin_66",
+      "value": "Platanus x hispanica",
+      "utf8_hex": "506c6174616e757320782068697370616e696361",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "ndm_sans_hybride_34",
+      "value": "Platanus hispanica",
+      "utf8_hex": "506c6174616e75732068697370616e696361",
+      "normalized": "Platanus hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": true,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "ndm_signe_colle_30",
+      "value": "Platanus ×acerifolia",
+      "utf8_hex": "506c6174616e757320c3976163657269666f6c6961",
+      "normalized": "Platanus x acerifolia",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "ndm_signe_espace_13",
+      "value": "Platanus × hispanica",
+      "utf8_hex": "506c6174616e757320c3972068697370616e696361",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "ndm_x_acerifolia_1",
+      "value": "Platanus x acerifolia",
+      "utf8_hex": "506c6174616e75732078206163657269666f6c6961",
+      "normalized": "Platanus x acerifolia",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "genre_minuscules",
+      "value": "platanus x acerifolia",
+      "utf8_hex": "706c6174616e75732078206163657269666f6c6961",
+      "normalized": "Platanus x acerifolia",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "genre_majuscules",
+      "value": "PLATANUS ORIENTALIS",
+      "utf8_hex": "504c4154414e5553204f5249454e54414c4953",
+      "normalized": "Platanus orientalis",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "genre_seul",
+      "value": "Platanus",
+      "utf8_hex": "506c6174616e7573",
+      "normalized": "Platanus",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "genre_sp",
+      "value": "Platanus sp.",
+      "utf8_hex": "506c6174616e75732073702e",
+      "normalized": "Platanus sp.",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "espece_vide",
+      "value": "",
+      "utf8_hex": "",
+      "normalized": "",
+      "genus": "",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "blancs_seuls",
+      "value": " \t ",
+      "utf8_hex": "200920",
+      "normalized": "",
+      "genus": "",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "absent",
+      "value": null,
+      "normalized": "",
+      "genus": "",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "non_texte",
+      "value": 42,
+      "normalized": "",
+      "genus": "",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "x_majuscule",
+      "value": "Platanus X hispanica",
+      "utf8_hex": "506c6174616e757320582068697370616e696361",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "x_colle_latin",
+      "value": "Platanus xacerifolia",
+      "utf8_hex": "506c6174616e757320786163657269666f6c6961",
+      "normalized": "Platanus xacerifolia",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "insecables",
+      "value": "Platanus × hispanica 'Vallis Clausa'",
+      "utf8_hex": "506c6174616e7573c2a0c397e2808968697370616e696361e280af2756616c6c697320436c6175736127",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "apostrophes_typo",
+      "value": "Platanus × hispanica ‘Vallis Clausa’",
+      "utf8_hex": "506c6174616e757320c3972068697370616e69636120e2809856616c6c697320436c61757361e28099",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "guillemets_doubles",
+      "value": "Platanus × hispanica “Vallis Clausa”",
+      "utf8_hex": "506c6174616e757320c3972068697370616e69636120e2809c56616c6c697320436c61757361e2809d",
+      "normalized": "Platanus x hispanica",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": true,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "cultivar_au_milieu",
+      "value": "Acer 'Globosum' platanoides",
+      "utf8_hex": "416365722027476c6f626f73756d2720706c6174616e6f69646573",
+      "normalized": "Acer platanoides",
+      "genus": "Acer",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "apostrophe_non_fermee",
+      "value": "Platanus orientalis 'Digitata",
+      "utf8_hex": "506c6174616e7573206f7269656e74616c697320274469676974617461",
+      "normalized": "Platanus orientalis",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "pleine_chasse",
+      "value": "ＰＬＡＴＡＮＵＳ orientalis",
+      "utf8_hex": "efbcb0efbcacefbca1efbcb4efbca1efbcaeefbcb5efbcb3206f7269656e74616c6973",
+      "normalized": "Platanus orientalis",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "auteur",
+      "value": "Pinus pinea L.",
+      "utf8_hex": "50696e75732070696e6561204c2e",
+      "normalized": "Pinus pinea l.",
+      "genus": "Pinus",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": true,
+        "Pinus pinea": true,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "pin_alep",
+      "value": "Pinus halepensis Mill.",
+      "utf8_hex": "50696e75732068616c6570656e736973204d696c6c2e",
+      "normalized": "Pinus halepensis mill.",
+      "genus": "Pinus",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": true,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "hybride_intergenerique",
+      "value": "× Cupressocyparis leylandii",
+      "utf8_hex": "c39720437570726573736f63797061726973206c65796c616e646969",
+      "normalized": "x Cupressocyparis leylandii",
+      "genus": "x Cupressocyparis",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": true
+      }
+    },
+    {
+      "label": "hybride_intergenerique_seul",
+      "value": "×",
+      "utf8_hex": "c397",
+      "normalized": "x",
+      "genus": "",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "autre_genre_prefixe",
+      "value": "Platanusia fictiva",
+      "utf8_hex": "506c6174616e757369612066696374697661",
+      "normalized": "Platanusia fictiva",
+      "genus": "Platanusia",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "tabulations",
+      "value": "Quercus\t\tilex\n",
+      "utf8_hex": "517565726375730909696c65780a",
+      "normalized": "Quercus ilex",
+      "genus": "Quercus",
+      "matches": {
+        "Platanus": false,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": true,
+        "x Cupressocyparis": false
+      }
+    },
+    {
+      "label": "platanus_orientalis_exact",
+      "value": "Platanus orientalis",
+      "utf8_hex": "506c6174616e7573206f7269656e74616c6973",
+      "normalized": "Platanus orientalis",
+      "genus": "Platanus",
+      "matches": {
+        "Platanus": true,
+        "Platanus × hispanica": false,
+        "Platanus hispanica": false,
+        "Pinus": false,
+        "Pinus pinea": false,
+        "Quercus ilex": false,
+        "x Cupressocyparis": false
+      }
+    }
+  ],
+  "fields": [
+    {
+      "label": "species_prioritaire",
+      "fields": {
+        "species": "Platanus x hispanica",
+        "genus": "Quercus"
+      },
+      "taxon_from": [
+        "species",
+        "genus"
+      ],
+      "object_taxon": "Platanus x hispanica"
+    },
+    {
+      "label": "species_vide_genus",
+      "fields": {
+        "species": "",
+        "genus": "platanus"
+      },
+      "taxon_from": [
+        "species",
+        "genus"
+      ],
+      "object_taxon": "Platanus"
+    },
+    {
+      "label": "species_blancs_genus",
+      "fields": {
+        "species": "  ",
+        "genus": "Pinus"
+      },
+      "taxon_from": [
+        "species",
+        "genus"
+      ],
+      "object_taxon": "Pinus"
+    },
+    {
+      "label": "aucun",
+      "fields": {
+        "name": "Platane"
+      },
+      "taxon_from": [
+        "species",
+        "genus"
+      ],
+      "object_taxon": ""
+    },
+    {
+      "label": "longchamp_genus_sans_species",
+      "comment": "Ajout 20/09/2026 : cas Longchamp, genus sans cle species, signale par Atlas",
+      "fields": {
+        "genus": "Platanus"
+      },
+      "taxon_from": [
+        "species",
+        "genus"
+      ],
+      "object_taxon": "Platanus"
+    },
+    {
+      "label": "taxon_from_inventaire_grist",
+      "fields": {
+        "essence": "platanus x acerifolia",
+        "species": "Quercus ilex"
+      },
+      "taxon_from": [
+        "essence"
+      ],
+      "object_taxon": "Platanus x acerifolia"
+    }
+  ],
+  "specificity": [
+    {
+      "taxon": "Platanus",
+      "specificity": 1
+    },
+    {
+      "taxon": "Platanus × hispanica",
+      "specificity": 2
+    },
+    {
+      "taxon": "Platanus hispanica",
+      "specificity": 2
+    },
+    {
+      "taxon": "Pinus",
+      "specificity": 1
+    },
+    {
+      "taxon": "Pinus pinea",
+      "specificity": 2
+    },
+    {
+      "taxon": "Quercus ilex",
+      "specificity": 2
+    },
+    {
+      "taxon": "x Cupressocyparis",
+      "specificity": 1
+    },
+    {
+      "taxon": "",
+      "specificity": 0
+    },
+    {
+      "taxon": "x",
+      "specificity": 0
+    }
+  ],
+  "match_specificity": [
+    {
+      "label": "genre_seul",
+      "match": {
+        "tags": {
+          "natural": "tree"
+        },
+        "taxon": "Platanus"
+      },
+      "specificity": 2
+    },
+    {
+      "label": "espece",
+      "match": {
+        "tags": {
+          "natural": "tree"
+        },
+        "taxon": "Platanus × hispanica"
+      },
+      "specificity": 3
+    },
+    {
+      "label": "tags_seuls",
+      "match": {
+        "tags": {
+          "natural": "tree",
+          "genus": "Platanus"
+        }
+      },
+      "specificity": 2
+    }
+  ],
+  "effectifs_notre_dame_du_mont": {
+    "graphies": {
+      "ndm_vallis_clausa_65": 65,
+      "ndm_x_latin_66": 66,
+      "ndm_sans_hybride_34": 34,
+      "ndm_signe_colle_30": 30,
+      "ndm_signe_espace_13": 13,
+      "ndm_x_acerifolia_1": 1
+    },
+    "reconnus": {
+      "Platanus": 209,
+      "Platanus × hispanica": 144
+    },
+    "total": 209,
+    "note": "effectifs OSM releves par Atlas-Formulaires le 20/09, non verifiables dans ce depot ; seule la coherence interne est controlee"
+  }
+}
