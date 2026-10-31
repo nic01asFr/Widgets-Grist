@@ -83,6 +83,7 @@ import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261003a';
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
+import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
 import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
 import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
@@ -13663,6 +13664,42 @@ function wireMobileNav() {
     });
 }
 
+/**
+ * La ligne que Grist désigne (un autre widget, la table elle-même) amène la carte sur l'objet qui la porte.
+ *
+ * Seules comptent les couches liées à la table de la section d'Atlas : leurs entités portent `_row_id`
+ * (`lib/selection-grist.js`). Une ligne sans localisation, d'une autre table, ou la création d'une ligne ne font rien.
+ * Pendant une sélection en cours (fiche ouverte, édition), la carte se centre mais la sélection n'est pas touchée :
+ * un clic ailleurs dans le document ne doit pas faire perdre une saisie.
+ */
+let _tableSectionGrist = null;
+let _haloGrist = false;   // le halo affiché vient de Grist : on le retire quand la ligne suivante n'a pas d'objet
+async function brancherSelectionGrist() {
+    if (typeof grist.onRecord !== 'function') return;
+    try { _tableSectionGrist = await grist.selectedTable.getTableId(); } catch (e) { _tableSectionGrist = null; }
+    grist.onRecord((enregistrement) => {
+        if (!map || lecteurRecitActif()) return;
+        const trouve = retrouverEntite(STATE.layers, _tableSectionGrist, idLigne(enregistrement));
+        if (!trouve) {
+            if (_haloGrist && !STATE.selection.mode) {
+                clearHighlight();
+                STATE.selection = { mode: false, layerId: null, features: [], multiIndex: 0 };
+            }
+            _haloGrist = false;
+            return;
+        }
+        const { layer, idx } = trouve;
+        if (!STATE.selection.mode) {
+            STATE.selection.layerId = layer.id;
+            STATE.selection.features = [idx];
+            STATE.selection.multiIndex = 0;
+            updateHighlight();
+            _haloGrist = true;
+        }
+        flyToFeature(layer, idx);
+    });
+}
+
 async function initGrist() {
     // Une scène venue d'une adresse n'est pas de confiance : n'importe qui peut
     // fabriquer l'URL et la faire ouvrir, alors qu'une scène lue dans le
@@ -13686,6 +13723,7 @@ async function initGrist() {
         grist.ready({ requiredAccess: acc.requiredAccess });
         CONFIG.grist.ready = true;
         surveillerEcritures(grist.docApi);
+        brancherSelectionGrist();
         CONFIG.viewMode = acc.viewMode;
         // `viewMode` dit « Atlas ne montre pas ses outils d'auteur ».
         // `peutSaisir` dit « cette personne peut ecrire dans le document ».
