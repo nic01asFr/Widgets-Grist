@@ -65,6 +65,7 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
   bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
   classe: ["La personne a cliqué une classe de la légende optionnelle (interface.legende.cible: true) ; la légende ne filtre rien, l'hôte route.", "{ layer, cle, libelle, active }"],
+  clic: ['La personne a cliqué la carte en un point qui ne touche aucune entité interactive (contrat 0.4) : sa position, pour une page qui superpose sa propre 3D.', '{ lng, lat, x, y, zoom }'],
   theme: ['La charte résolue a changé.', '{ version, entree, applique, derive, ignore, avertissements, a11y }'],
 });
 

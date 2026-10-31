@@ -319,11 +319,21 @@ export function attacher(map, opts = {}) {
     if (selection && selection.c.bulle) bulleCtl.ouvrir(selection.c, selection.c.parId.get(selection.id), dernierClic); else bulleCtl.fermer();
   }
   const cle = (c, f) => (c.def.cle ? f.properties?.[c.def.cle] : undefined);
+  /** Un clic qui ne touche aucune entité : sa position pour l'hôte (`clic`, contrat 0.4). Coordonnées finies, bornées et arrondies ; jamais d'exception. */
+  function emettreClic(e) {
+    const p = e && e.lngLat, pt = e && e.point;
+    const lng = p ? Number(p.lng) : NaN, lat = p ? Number(p.lat) : NaN;
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    const r = (v, n) => Math.round(v * 10 ** n) / 10 ** n, pixel = (v) => (Number.isFinite(v) ? r(v, 1) : null);
+    const z = Number(map.getZoom());
+    emettre('clic', { lng: r(((lng + 180) % 360 + 360) % 360 - 180, 7), lat: r(Math.max(-90, Math.min(90, lat)), 7), x: pixel(pt && pt.x), y: pixel(pt && pt.y), zoom: Number.isFinite(z) ? r(z, 3) : null }, 'utilisateur');
+  }
   function surClic(e) {
-    const hit = calquesInteractifs(); if (!hit.length) return;
-    const fs = map.queryRenderedFeatures(e.point, { layers: hit.map((h) => h.id).filter((id) => map.getLayer(id)) });
-    if (opts.edition && opts.edition.actif && !fs.length) { emettre('edit', { op: 'add', layer: opts.edition.couche, geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] } }, 'utilisateur'); return; }
-    if (!fs.length) { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } return; }
+    const hit = calquesInteractifs();
+    const fs = hit.length ? map.queryRenderedFeatures(e.point, { layers: hit.map((h) => h.id).filter((id) => map.getLayer(id)) }) : [];
+    if (hit.length && opts.edition && opts.edition.actif && !fs.length) { emettre('edit', { op: 'add', layer: opts.edition.couche, geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] } }, 'utilisateur'); return; }
+    // ni entité ni édition : l'hôte reçoit la position du clic, après la désélection éventuelle (une sélection ne se perd pas sans le dire)
+    if (!fs.length) { if (hit.length && selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } emettreClic(e); return; }
     const f = fs[0], c = [...couches.values()].find((k) => f.layer.id.endsWith(k.id) && f.source === idSrc(k)); if (!c) return;
     dernierClic = e.lngLat; poserSelection(c, f.id); dernierClic = null; emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
   }
