@@ -361,6 +361,40 @@ export function attacher(map, opts = {}) {
   let tmCam = 0;
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); const b = typeof map.getBounds === 'function' ? map.getBounds() : null; emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), ...(b && typeof b.getWest === 'function' ? { bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] } : {}) }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
+  // ---- la vue de la caméra (contrat 0.4) : `getCamera`, et le flux `mouvement` sur abonnement (`watchCamera`) ----
+  let modeVue = 'libre';
+  const horloge = opts.horloge || {};
+  const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
+  const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
+  const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
+  /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
+  function etatCamera() {
+    const ce = map.getCenter(), b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+    const pad = typeof map.getPadding === 'function' ? map.getPadding() : null, taille = tailleCadre();
+    const zoom = map.getZoom(), lat = ce.lat;
+    const ratio = typeof map.getPixelRatio === 'function' ? map.getPixelRatio() : (typeof devicePixelRatio === 'number' ? devicePixelRatio : 1);
+    return {
+      center: [arrondi(ce.lng, 7), arrondi(ce.lat, 7)], zoom: arrondi(zoom, 5), pitch: arrondi(map.getPitch(), 3), bearing: arrondi(map.getBearing(), 3),
+      ...(b && typeof b.getWest === 'function' ? { bounds: [arrondi(b.getWest(), 6), arrondi(b.getSouth(), 6), arrondi(b.getEast(), 6), arrondi(b.getNorth(), 6)] } : {}),
+      taille, ratioPixels: arrondi(ratio, 3),
+      padding: { top: Number(pad && pad.top) || 0, right: Number(pad && pad.right) || 0, bottom: Number(pad && pad.bottom) || 0, left: Number(pad && pad.left) || 0 },
+      metresParPixel: arrondi((40075016.686 * Math.cos((lat * Math.PI) / 180)) / (512 * 2 ** zoom), 4),
+      mode: modeVue, t: arrondi(maintenant(), 1),
+    };
+  }
+  let flux = null;   // { intervalleMs, dernier, minuterie } : un seul abonnement par composant
+  const emettreMouvement = (phase) => { if (!flux) return; flux.dernier = maintenant(); emettre('mouvement', { ...etatCamera(), phase }, camApi ? 'api' : 'utilisateur'); };
+  const arreterFlux = () => { if (flux && flux.minuterie) annuler(flux.minuterie); flux = null; };
+  map.on('movestart', () => { if (flux) emettreMouvement('debut'); });
+  // coalescence : jamais plus d'un message en attente, et on envoie l'état COURANT, pas l'historique des images
+  map.on('move', () => {
+    if (!flux || flux.minuterie) return;
+    const reste = flux.intervalleMs - (maintenant() - flux.dernier);
+    if (reste <= 0) emettreMouvement('en_cours');
+    else flux.minuterie = planifier(() => { if (!flux) return; flux.minuterie = 0; emettreMouvement('en_cours'); }, reste);
+  });
+  map.on('moveend', () => { if (!flux) return; if (flux.minuterie) { annuler(flux.minuterie); flux.minuterie = 0; } emettreMouvement('fin'); });
+  if (typeof globalThis.addEventListener === 'function') globalThis.addEventListener('pagehide', arreterFlux);
   const conteneurCarte = typeof map.getCanvasContainer === 'function' ? map.getCanvasContainer() : null;
   if (conteneurCarte && conteneurCarte.addEventListener) conteneurCarte.addEventListener('mouseleave', surSortie);
 
@@ -528,6 +562,18 @@ export function attacher(map, opts = {}) {
     },
     /** La charte résolue, ce que l'hôte a donné, ce qui a été dérivé ou écarté, les avertissements chiffrés et l'état d'accessibilité. */
     getTheme() { return themes.lire(); },
+    /** La vue courante pour aligner une 3D de l'hôte (contrat 0.4). */
+    getCamera() { return etatCamera(); },
+    /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
+    watchCamera(o = {}) {
+      const actif = o.actif === undefined ? true : o.actif;
+      if (typeof actif !== 'boolean') throw new Error('watchCamera : actif doit être true ou false');
+      if (!actif) { arreterFlux(); return { actif: false, intervalleMs: null }; }
+      const ms = o.intervalleMs === undefined ? 33 : o.intervalleMs;
+      if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 16 || ms > 1000) throw new Error('watchCamera : intervalleMs hors bornes (16 à 1000)');
+      arreterFlux(); flux = { intervalleMs: Math.round(ms), dernier: -Infinity, minuterie: 0 };
+      return { actif: true, intervalleMs: flux.intervalleMs };
+    },
     setVisual(id, v) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); const { style, ...vis } = v; if (style) c.def.style = style; demonter(c); c.visuel = { ...c.visuel, ...vis }; monter(c); if (!c.visible) api.setLayerVisibility(id, false); return c.visuel; },
     updateFeature(layer, id, patch) {
       if (tables.has(layer)) { const { cree } = mettreAJourLigne(tables.get(layer), id, patch); bulleCtl.rafraichir(); return cree ? 'cree' : true; }   // une table liée : la ligne est corrigée, ou créée si l’identifiant est nouveau

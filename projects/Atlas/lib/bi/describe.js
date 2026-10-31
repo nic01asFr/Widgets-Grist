@@ -44,6 +44,8 @@ export const TEXTES_COMMANDES = Object.freeze({
   setUnitFilter: ['Filtre une couche de points par l\'unité administrative sélectionnée.', 'objet'],
   batch: ['Exécute jusqu\'à ' + BATCH_MAX + ' ordres en un aller-retour ({ arret: \'erreur\' | \'continuer\' }).', '{ ok, ko, nonExecutes, resultats }'],
   setHorsLigne: ['Mode hors ligne : true (forcé), false, ou \'auto\' (détection).', 'objet'],
+  getCamera: ['La vue courante : centre, zoom, inclinaison, cap, emprise, taille du cadre, marges de projection, mètres par pixel (contrat 0.4).', '{ center, zoom, pitch, bearing, bounds, taille, ratioPixels, padding, metresParPixel, mode, t }'],
+  watchCamera: ['Abonne l\'hôte au flux d\'événements mouvement ({ actif, intervalleMs : 16 à 1000, 33 par défaut } ; actif:false l\'arrête). Un seul abonnement : un second remplace le premier (contrat 0.4).', '{ actif, intervalleMs }'],
 });
 
 /** Ce que porte chaque événement. */
@@ -65,6 +67,7 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
   bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
   classe: ["La personne a cliqué une classe de la légende optionnelle (interface.legende.cible: true) ; la légende ne filtre rien, l'hôte route.", "{ layer, cle, libelle, active }"],
+  mouvement: ['La caméra bouge (flux cadencé, sur abonnement par watchCamera) ; un message fin termine chaque mouvement (contrat 0.4).', '{ center, zoom, pitch, bearing, bounds, taille, ratioPixels, padding, metresParPixel, mode, t, phase: \'debut\' | \'en_cours\' | \'fin\' }'],
   clic: ['La personne a cliqué la carte en un point qui ne touche aucune entité interactive (contrat 0.4) : sa position, pour une page qui superpose sa propre 3D.', '{ lng, lat, x, y, zoom }'],
   theme: ['La charte résolue a changé.', '{ version, entree, applique, derive, ignore, avertissements, a11y }'],
 });

@@ -20,7 +20,7 @@ test('chaque commande du pont est décrite, et seulement elles', () => {
     assert.ok(c.description.length > 10, c.nom + ' : description');
     assert.ok(c.resultat, c.nom + ' : résultat');
     assert.equal(c.arguments.length, COMMANDES[c.nom].length, c.nom + ' : nombre d\'arguments');
-    assert.ok(['0.2', '0.3'].includes(c.depuis));
+    assert.ok(['0.2', '0.3', '0.4'].includes(c.depuis));
   }
 });
 

@@ -49,11 +49,14 @@ export const COMMANDES = Object.freeze({
   batch: [['array', true], ['object', false]],
   setHorsLigne: [['any', true]],
   getTheme: [],
+  // --- contrat 0.4 : la caméra, pour une page qui aligne sa propre 3D ---
+  getCamera: [],
+  watchCamera: [['object', false]],
 });
 /** Commandes ajoutées par la 0.3 (une commande 0.3 envoyée avec la version 0.2 est refusée). */
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
 /** Commandes ajoutées par la 0.4 (une commande 0.4 envoyée avec la version 0.2 ou 0.3 est refusée). */
-export const COMMANDES_0_4 = Object.freeze([]);
+export const COMMANDES_0_4 = Object.freeze(['getCamera', 'watchCamera']);
 /** La plus petite version du contrat qui connaît la commande. */
 export function versionDeCommande(cmd) { return COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
 /** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
@@ -73,7 +76,7 @@ export const CAPACITES = Object.freeze(['edition', 'points', 'socle', 'temps', '
 /** Brique dont dépend chaque commande. `socle` : ce qui vaut pour toute scène (carte, thème, fond, cadrage, couches, filtres, sélection). */
 export const CAPACITE_DE_COMMANDE = Object.freeze({
   ping: 'socle', setScene: 'socle', setLayerVisibility: 'socle', setFilter: 'socle', select: 'socle', highlight: 'socle', flyTo: 'socle', fitTo: 'socle',
-  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle',
+  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle',
   setVisual: 'points',
   setTime: 'temps', play: 'temps', pause: 'temps',
   setEdition: 'edition', updateFeature: 'edition',
