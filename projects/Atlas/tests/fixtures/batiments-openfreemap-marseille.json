@@ -1,0 +1,13 @@
+{
+  "_source": "Échantillon lu le 31/10/2026 dans les tuiles OpenFreeMap (source openmaptiles, couche building, MapLibre 5.6.1, zoom 15, Marseille) par querySourceFeatures ; coordonnées arrondies à 7 décimales.",
+  "_licence": "© OpenStreetMap contributors (ODbL), © OpenMapTiles, OpenFreeMap",
+  "_cas": "6998751562 : un même bâtiment coupé en deux fragments (géométries différentes) ; 2644237122 : deux copies strictement identiques ; 2652470892 et 689412552 : bâtiments seuls, avec render_min_height non nul.",
+  "features": [
+    {"id": 6998751562, "geometry": {"type": "Polygon", "coordinates": [[[5.3616124, 43.2972648], [5.3620416, 43.2974561], [5.3623044, 43.2971476], [5.3618485, 43.2969798], [5.3616124, 43.2972648]]]}, "properties": {"render_height": 19, "render_min_height": 14}},
+    {"id": 6998751562, "geometry": {"type": "Polygon", "coordinates": [[[5.3616124, 43.2972648], [5.3616714, 43.2972921], [5.3616714, 43.2971945], [5.3616124, 43.2972648]]]}, "properties": {"render_height": 19, "render_min_height": 14}},
+    {"id": 2644237122, "geometry": {"type": "Polygon", "coordinates": [[[5.3611511, 43.2957031], [5.3611887, 43.2956913], [5.3612101, 43.295664], [5.3611994, 43.2956406], [5.3611887, 43.2956289], [5.3611511, 43.2956211], [5.3611135, 43.2956367], [5.3610975, 43.2956679], [5.3611135, 43.2956913], [5.3611511, 43.2957031]]]}, "properties": {"render_height": 29, "render_min_height": 0}},
+    {"id": 2644237122, "geometry": {"type": "Polygon", "coordinates": [[[5.3611511, 43.2957031], [5.3611887, 43.2956913], [5.3612101, 43.295664], [5.3611994, 43.2956406], [5.3611887, 43.2956289], [5.3611511, 43.2956211], [5.3611135, 43.2956367], [5.3610975, 43.2956679], [5.3611135, 43.2956913], [5.3611511, 43.2957031]]]}, "properties": {"render_height": 29, "render_min_height": 0}},
+    {"id": 2652470892, "geometry": {"type": "Polygon", "coordinates": [[[5.3581631, 43.2942077], [5.3583026, 43.2942584], [5.3581631, 43.2942038], [5.3581631, 43.2942077]]]}, "properties": {"render_height": 19, "render_min_height": 15}},
+    {"id": 689412552, "geometry": {"type": "Polygon", "coordinates": [[[5.3761071, 43.3039407], [5.3760856, 43.3039446], [5.376091, 43.3039563], [5.3761071, 43.3039524], [5.3761071, 43.3039407]]]}, "properties": {"render_height": 22, "render_min_height": 7}}
+  ]
+}

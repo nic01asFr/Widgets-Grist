@@ -77,7 +77,8 @@ test('la fermeture de entree.js ne contient AUCUN module de l\'application', () 
   const hors = f.filter((x) => !/^lib\/(bi|charte)\//.test(x));
   assert.deepEqual(hors, permis, 'un module de plus dans la fermeture est une dépendance de plus pour tous les hôtes : à justifier ici');
   assert.ok(!f.includes('app_v7.js'));
-  assert.ok(f.length >= 38 && f.length <= 50, 'taille de la fermeture : ' + f.length);
+  // 51 depuis le contrat 0.4 : lib/bi/batiments.js (commande getBuildings), importé À LA DEMANDE : il n'est téléchargé que si l'hôte appelle la commande
+  assert.ok(f.length >= 38 && f.length <= 51, 'taille de la fermeture : ' + f.length);
 });
 
 test('la page maigre est promue (bi.html) sous le même numéro de version que l\'application', () => {

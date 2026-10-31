@@ -15,13 +15,13 @@
  *    délai maximal (`delai`, défaut 10 s) ;
  *  - les messages d'une origine ou d'une fenêtre inattendue sont écartés (`transportFenetre`), jamais traités ;
  *  - les commandes partent avec une `targetOrigin` précise, jamais `*` ;
- *  - la version du contrat se négocie (0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
+ *  - la version du contrat se négocie (0.4, puis 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
-import { COMMANDES, COMMANDES_0_3, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande } from './pont.js';
+import { COMMANDES, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande, versionDeCommande, versionAuMoins } from './pont.js';
 
 /** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
-export const VERSION_CLIENT = 1;
+export const VERSION_CLIENT = 2;
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
@@ -165,7 +165,7 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
     appeler(cmd, ...args) {
       if (!estCommande(cmd)) return Promise.reject(new ErreurBi('commande', 'commande inconnue : ' + cmd, { cmd }));
       const v = version || versions[0];
-      if (COMMANDES_0_3.includes(cmd) && v !== '0.3') return Promise.reject(new ErreurBi('version', cmd + ' demande la version 0.3 (négociée : ' + v + ')', { cmd }));
+      if (!versionAuMoins(v, versionDeCommande(cmd))) return Promise.reject(new ErreurBi('version', cmd + ' demande la version ' + versionDeCommande(cmd) + ' (négociée : ' + v + ')', { cmd }));
       if (!desinscrire) return Promise.reject(new ErreurBi('deconnecte', 'client déconnecté ou non connecté : appeler connecter()', { cmd }));
       return envoyerCommande(cmd, args, v);
     },

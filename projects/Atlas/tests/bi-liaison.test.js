@@ -59,7 +59,7 @@ test('installerPont : « ready » ne part qu\'aux origines déclarées, avec une
   l.annoncer();
   assert.deepEqual(r.journal.map((j) => j.targetOrigin), ['https://hote.test', 'https://autre.test']);
   assert.deepEqual(r.joker, []);
-  const m = r.journal[0].msg; assert.equal(m.type, 'ready'); assert.equal(m.charge.runtime, true); assert.deepEqual(m.charge.versions, ['0.2', '0.3']);
+  const m = r.journal[0].msg; assert.equal(m.type, 'ready'); assert.equal(m.charge.runtime, true); assert.deepEqual(m.charge.versions, ['0.2', '0.3', '0.4']);
 });
 
 test('installerPont : aucun hôte déclaré -> rien n\'est émis, rien n\'est accepté', async () => {

@@ -23,7 +23,7 @@ const unix = (texte) => String(texte).split(String.fromCharCode(13, 10)).join(St
 const empreinte = (texte) => crypto.createHash('sha256').update(texte).digest('hex').slice(0, 16);
 
 /** Ce que le client peut demander au pont : tout autre nom fait échouer la génération (le générateur est à compléter). */
-const FOURNI = ['COMMANDES', 'COMMANDES_0_3', 'VERSIONS_ACCEPTEES', 'SOURCE_RUNTIME', 'SOURCE_HOTE', 'versionsCompatibles', 'estCommande'];
+const FOURNI = ['COMMANDES', 'COMMANDES_0_3', 'COMMANDES_0_4', 'VERSIONS_ACCEPTEES', 'SOURCE_RUNTIME', 'SOURCE_HOTE', 'versionsCompatibles', 'estCommande', 'versionDeCommande', 'versionAuMoins'];
 
 /** @returns {string} le texte du fichier autonome */
 export function construireClientHote() {
@@ -45,12 +45,17 @@ export function construireClientHote() {
     `export const SOURCE_HOTE = ${JSON.stringify(pont.SOURCE_HOTE)};`,
     `export const COMMANDES = Object.freeze(${JSON.stringify(pont.COMMANDES)});`,
     `export const COMMANDES_0_3 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_3)});`,
+    `export const COMMANDES_0_4 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_4)});`,
   ].join('\n');
   const fonctions = [
     `/** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */`,
     'export ' + unix(pont.versionsCompatibles.toString()),
     `/** Une commande du contrat, en propriété PROPRE : \`constructor\`, \`__proto__\`... ne sont pas des commandes. */`,
     `export const estCommande = ${unix(pont.estCommande.toString())};`,
+    `/** La plus petite version du contrat qui connaît la commande. */`,
+    'export ' + unix(pont.versionDeCommande.toString()),
+    `/** Vrai si la version \`v\` du contrat (« 0.x ») est au moins \`min\`. Une version illisible n'est jamais suffisante. */`,
+    'export ' + unix(pont.versionAuMoins.toString()),
   ].join('\n');
 
   const entete = `/**

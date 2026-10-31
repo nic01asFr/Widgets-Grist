@@ -8,7 +8,7 @@
  * Aucune commande n'est ajoutée au contrat pour cela (le client en un fichier reste identique) : on lit la description par
  * `import { decrire } from '.../lib/bi/describe.js'` ou par `await AtlasBi.decrire()` (l'élément `<atlas-bi>`, qui ne charge ce module qu'à la demande), sans iframe ni connexion.
  */
-import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, COMMANDES_0_3, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
+import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, versionDeCommande, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
 import { TOUS_LES_EVENEMENTS as EVENEMENTS } from './evenements-ext.js';
 import { LIMITE_OCTETS, DECLARATIFS } from './declaratif.js';
 
@@ -44,6 +44,10 @@ export const TEXTES_COMMANDES = Object.freeze({
   setUnitFilter: ['Filtre une couche de points par l\'unité administrative sélectionnée.', 'objet'],
   batch: ['Exécute jusqu\'à ' + BATCH_MAX + ' ordres en un aller-retour ({ arret: \'erreur\' | \'continuer\' }).', '{ ok, ko, nonExecutes, resultats }'],
   setHorsLigne: ['Mode hors ligne : true (forcé), false, ou \'auto\' (détection).', 'objet'],
+  getCamera: ['La vue courante : centre, zoom, inclinaison, cap, emprise, taille du cadre, marges de projection, mètres par pixel (contrat 0.4).', '{ center, zoom, pitch, bearing, bounds, taille, ratioPixels, padding, metresParPixel, mode, t }'],
+  setViewMode: ['Vue plane verrouillée (plat : inclinaison à 0, gestes d\'inclinaison et de rotation coupés, { bearing, garderCap:false } pour garder la rotation) ou libre (contrat 0.4). L\'état dure d\'une scène à l\'autre.', '{ mode, pitch, bearing, gestesInclinaison }'],
+  getBuildings: ['Les bâtiments visibles du fond de carte en GeoJSON, avec leur hauteur et leur base en mètres ({ bbox, limite : 1 à 5000, hauteurMin }) ; un bâtiment coupé par un joint de tuile garde ses fragments, marqués coupe:true. L\'attribution (ODbL) est à afficher par l\'hôte (contrat 0.4).', '{ type, features, total, tronque, zoom, bounds, source, attribution, avertissements }'],
+  watchCamera: ['Abonne l\'hôte au flux d\'événements mouvement ({ actif, intervalleMs : 16 à 1000, 33 par défaut } ; actif:false l\'arrête). Un seul abonnement : un second remplace le premier (contrat 0.4).', '{ actif, intervalleMs }'],
 });
 
 /** Ce que porte chaque événement. */
@@ -65,6 +69,8 @@ export const TEXTES_EVENEMENTS = Object.freeze({
   action: ["La personne a cliqué un bouton de la bulle d'un objet (manifeste : layers[].bulle.actions) : à l'hôte de router.", '{ layer, featureId, key, actionId }'],
   bulle: ["La bulle d'un objet s'ouvre ou se ferme.", "{ etat: 'ouverte' | 'fermee', layer, featureId }"],
   classe: ["La personne a cliqué une classe de la légende optionnelle (interface.legende.cible: true) ; la légende ne filtre rien, l'hôte route.", "{ layer, cle, libelle, active }"],
+  mouvement: ['La caméra bouge (flux cadencé, sur abonnement par watchCamera) ; un message fin termine chaque mouvement (contrat 0.4).', '{ center, zoom, pitch, bearing, bounds, taille, ratioPixels, padding, metresParPixel, mode, t, phase: \'debut\' | \'en_cours\' | \'fin\' }'],
+  clic: ['La personne a cliqué la carte en un point qui ne touche aucune entité interactive (contrat 0.4) : sa position, pour une page qui superpose sa propre 3D.', '{ lng, lat, x, y, zoom }'],
   theme: ['La charte résolue a changé.', '{ version, entree, applique, derive, ignore, avertissements, a11y }'],
 });
 
@@ -121,7 +127,7 @@ export const GUIDE = Object.freeze([
 export function decrire() {
   const commandes = Object.keys(COMMANDES).map((nom) => ({
     nom,
-    depuis: COMMANDES_0_3.includes(nom) ? '0.3' : '0.2',
+    depuis: versionDeCommande(nom),
     capacite: CAPACITE_DE_COMMANDE[nom] || 'socle',
     arguments: COMMANDES[nom].map(([type, obligatoire]) => ({ type: TYPES[type] || type, obligatoire: !!obligatoire })),
     description: (TEXTES_COMMANDES[nom] || [''])[0],

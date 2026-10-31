@@ -15,7 +15,7 @@ import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
-import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
+import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, VERSION as VERSION_PONT } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, TIRET_MARQUEUR, tailleTexte } from './icones-etats.js';
 import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, extrusionDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
@@ -33,7 +33,7 @@ import { creerBulle, normaliserBulle } from './bulle.js';
 import { normaliserLignes, mettreAJour as mettreAJourLigne } from './tables.js';
 import { normaliserMarges, avecConfort, limiterPadding } from './marges.js';
 
-export const VERSION = '0.3';
+export const VERSION = VERSION_PONT;   // une seule version du contrat : celle du pont
 const PREF = 'bi-';
 const nombre = (v) => { const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
 const copie = (o) => JSON.parse(JSON.stringify(o));
@@ -319,11 +319,21 @@ export function attacher(map, opts = {}) {
     if (selection && selection.c.bulle) bulleCtl.ouvrir(selection.c, selection.c.parId.get(selection.id), dernierClic); else bulleCtl.fermer();
   }
   const cle = (c, f) => (c.def.cle ? f.properties?.[c.def.cle] : undefined);
+  /** Un clic qui ne touche aucune entité : sa position pour l'hôte (`clic`, contrat 0.4). Coordonnées finies, bornées et arrondies ; jamais d'exception. */
+  function emettreClic(e) {
+    const p = e && e.lngLat, pt = e && e.point;
+    const lng = p ? Number(p.lng) : NaN, lat = p ? Number(p.lat) : NaN;
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    const r = (v, n) => Math.round(v * 10 ** n) / 10 ** n, pixel = (v) => (Number.isFinite(v) ? r(v, 1) : null);
+    const z = Number(map.getZoom());
+    emettre('clic', { lng: r(((lng + 180) % 360 + 360) % 360 - 180, 7), lat: r(Math.max(-90, Math.min(90, lat)), 7), x: pixel(pt && pt.x), y: pixel(pt && pt.y), zoom: Number.isFinite(z) ? r(z, 3) : null }, 'utilisateur');
+  }
   function surClic(e) {
-    const hit = calquesInteractifs(); if (!hit.length) return;
-    const fs = map.queryRenderedFeatures(e.point, { layers: hit.map((h) => h.id).filter((id) => map.getLayer(id)) });
-    if (opts.edition && opts.edition.actif && !fs.length) { emettre('edit', { op: 'add', layer: opts.edition.couche, geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] } }, 'utilisateur'); return; }
-    if (!fs.length) { if (selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } return; }
+    const hit = calquesInteractifs();
+    const fs = hit.length ? map.queryRenderedFeatures(e.point, { layers: hit.map((h) => h.id).filter((id) => map.getLayer(id)) }) : [];
+    if (hit.length && opts.edition && opts.edition.actif && !fs.length) { emettre('edit', { op: 'add', layer: opts.edition.couche, geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] } }, 'utilisateur'); return; }
+    // ni entité ni édition : l'hôte reçoit la position du clic, après la désélection éventuelle (une sélection ne se perd pas sans le dire)
+    if (!fs.length) { if (hit.length && selection) { poserSelection(null, null); emettre('select', { layer: null, featureId: null }, 'utilisateur'); } emettreClic(e); return; }
     const f = fs[0], c = [...couches.values()].find((k) => f.layer.id.endsWith(k.id) && f.source === idSrc(k)); if (!c) return;
     dernierClic = e.lngLat; poserSelection(c, f.id); dernierClic = null; emettre('select', { layer: c.id, featureId: f.id, key: c.admin ? f.id : cle(c, f), ...(c.admin ? admin.infosUnite(c, f.id) : {}) }, 'utilisateur');
   }
@@ -351,6 +361,41 @@ export function attacher(map, opts = {}) {
   let tmCam = 0;
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); const b = typeof map.getBounds === 'function' ? map.getBounds() : null; emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), ...(b && typeof b.getWest === 'function' ? { bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] } : {}) }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
+  // ---- la vue de la caméra (contrat 0.4) : `getCamera`, et le flux `mouvement` sur abonnement (`watchCamera`) ----
+  let modeVue = 'libre', limitesAvant = null;   // `limitesAvant` : les limites d'inclinaison d'avant `plat`, rendues par `libre`
+  const horloge = opts.horloge || {};
+  const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
+  const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
+  let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
+  const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
+  /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
+  function etatCamera() {
+    const ce = map.getCenter(), b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+    const pad = typeof map.getPadding === 'function' ? map.getPadding() : null, taille = tailleCadre();
+    const zoom = map.getZoom(), lat = ce.lat;
+    const ratio = typeof map.getPixelRatio === 'function' ? map.getPixelRatio() : (typeof devicePixelRatio === 'number' ? devicePixelRatio : 1);
+    return {
+      center: [arrondi(ce.lng, 7), arrondi(ce.lat, 7)], zoom: arrondi(zoom, 5), pitch: arrondi(map.getPitch(), 3), bearing: arrondi(map.getBearing(), 3),
+      ...(b && typeof b.getWest === 'function' ? { bounds: [arrondi(b.getWest(), 6), arrondi(b.getSouth(), 6), arrondi(b.getEast(), 6), arrondi(b.getNorth(), 6)] } : {}),
+      taille, ratioPixels: arrondi(ratio, 3),
+      padding: { top: Number(pad && pad.top) || 0, right: Number(pad && pad.right) || 0, bottom: Number(pad && pad.bottom) || 0, left: Number(pad && pad.left) || 0 },
+      metresParPixel: arrondi((40075016.686 * Math.cos((lat * Math.PI) / 180)) / (512 * 2 ** zoom), 4),
+      mode: modeVue, t: arrondi(maintenant(), 1),
+    };
+  }
+  let flux = null;   // { intervalleMs, dernier, minuterie } : un seul abonnement par composant
+  const emettreMouvement = (phase) => { if (!flux) return; flux.dernier = maintenant(); emettre('mouvement', { ...etatCamera(), phase }, camApi ? 'api' : 'utilisateur'); };
+  const arreterFlux = () => { if (flux && flux.minuterie) annuler(flux.minuterie); flux = null; };
+  map.on('movestart', () => { if (flux) emettreMouvement('debut'); });
+  // coalescence : jamais plus d'un message en attente, et on envoie l'état COURANT, pas l'historique des images
+  map.on('move', () => {
+    if (!flux || flux.minuterie) return;
+    const reste = flux.intervalleMs - (maintenant() - flux.dernier);
+    if (reste <= 0) emettreMouvement('en_cours');
+    else flux.minuterie = planifier(() => { if (!flux) return; flux.minuterie = 0; emettreMouvement('en_cours'); }, reste);
+  });
+  map.on('moveend', () => { if (!flux) return; if (flux.minuterie) { annuler(flux.minuterie); flux.minuterie = 0; } emettreMouvement('fin'); });
+  if (typeof globalThis.addEventListener === 'function') globalThis.addEventListener('pagehide', arreterFlux);
   const conteneurCarte = typeof map.getCanvasContainer === 'function' ? map.getCanvasContainer() : null;
   if (conteneurCarte && conteneurCarte.addEventListener) conteneurCarte.addEventListener('mouseleave', surSortie);
 
@@ -447,6 +492,9 @@ export function attacher(map, opts = {}) {
           tables.set(def.id, r.lignes); if (r.avertissements.length) avertissements[def.id] = r.avertissements;
           continue;
         }
+        // Une maquette en dalles 3D n'existe que dans le canevas complet (three.js, `profil="complet"`) et dans une scène Atlas (`version`) : la carte nue la ferait
+        // passer pour une couche sans entité, `0` sans un mot. Elle est refusée seule, avec ce qu'il faut changer.
+        if (def && def.type === 'dalles3d') { erreurs[def.id] = 'capacite_absente : la couche « ' + def.id + ' » (dalles 3D) demande le profil complet (`profil="complet"`) et une scène Atlas (`version: "0.2.2"`) ; la carte nue ne la monte pas'; continue; }
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
@@ -488,6 +536,7 @@ export function attacher(map, opts = {}) {
     flyTo(cam) {
       // `marges` : zone utile persistante (voir lib/bi/marges.js) ; seule, elle ne déplace rien
       const { marges: m, ...reste } = cam; if (m !== undefined) poserMarges(m);
+      if (modeVue === 'plat' && reste.pitch) reste.pitch = 0;   // la vue plane ne s'incline pas, même sur demande de la page
       if (m !== undefined && !Object.keys(reste).length) return true;
       const t = tailleCadre();
       camApi = true; map.flyTo({ duration: 600, ...(marges ? { padding: limiterPadding(marges, t.w, t.h) } : {}), ...reste }); return true;
@@ -515,6 +564,67 @@ export function attacher(map, opts = {}) {
     },
     /** La charte résolue, ce que l'hôte a donné, ce qui a été dérivé ou écarté, les avertissements chiffrés et l'état d'accessibilité. */
     getTheme() { return themes.lire(); },
+    /** La vue courante pour aligner une 3D de l'hôte (contrat 0.4). */
+    getCamera() { return etatCamera(); },
+    /**
+     * La vue plane, verrouillée (contrat 0.4) : pour une page qui pose sa propre 3D au-dessus d'une carte vue du dessus. `plat` ramène l'inclinaison à 0
+     * (sans animation), coupe l'inclinaison par les gestes et, sauf `garderCap: false`, la rotation ; `libre` rend ce que `plat` a retiré. L'état dure d'une scène à l'autre.
+     */
+    setViewMode(mode, o = {}) {
+      if (mode !== 'plat' && mode !== 'libre') throw new Error('mode inconnu : ' + String(mode).slice(0, 40) + ' (plat, libre)');
+      const options = o && typeof o === 'object' ? o : {};
+      const garderCap = options.garderCap === undefined ? true : options.garderCap;
+      if (typeof garderCap !== 'boolean') throw new Error('setViewMode : garderCap doit être true ou false');
+      const cap = options.bearing;
+      if (cap !== undefined && (typeof cap !== 'number' || !Number.isFinite(cap) || cap < -360 || cap > 360)) throw new Error('setViewMode : bearing hors bornes (-360 à 360)');
+      const gestes = (nom, f) => { try { const g = map[nom]; if (g && typeof g[f] === 'function') g[f](); } catch (_) { /* un geste que cette carte n'a pas */ } };
+      if (mode === 'plat') {
+        if (!limitesAvant) limitesAvant = { max: typeof map.getMaxPitch === 'function' ? map.getMaxPitch() : 80, min: typeof map.getMinPitch === 'function' ? map.getMinPitch() : 0 };
+        camApi = true; map.jumpTo({ pitch: 0, ...(cap !== undefined ? { bearing: cap } : {}) });
+        if (typeof map.setMinPitch === 'function') map.setMinPitch(0);
+        if (typeof map.setMaxPitch === 'function') map.setMaxPitch(0);
+        gestes('touchPitch', 'disable');
+        if (garderCap) { gestes('dragRotate', 'disable'); gestes('touchZoomRotate', 'disableRotation'); gestes('keyboard', 'disableRotation'); }
+        else { gestes('dragRotate', 'enable'); gestes('touchZoomRotate', 'enableRotation'); gestes('keyboard', 'enableRotation'); }
+        modeVue = 'plat';
+      } else {
+        if (limitesAvant) { if (typeof map.setMaxPitch === 'function') map.setMaxPitch(limitesAvant.max); if (typeof map.setMinPitch === 'function') map.setMinPitch(limitesAvant.min); limitesAvant = null; }
+        gestes('touchPitch', 'enable'); gestes('dragRotate', 'enable'); gestes('touchZoomRotate', 'enableRotation'); gestes('keyboard', 'enableRotation');
+        modeVue = 'libre';
+      }
+      return { mode: modeVue, pitch: arrondi(map.getPitch(), 3), bearing: arrondi(map.getBearing(), 3), gestesInclinaison: modeVue === 'libre' };
+    },
+    /**
+     * Les bâtiments visibles du fond (contrat 0.4), pour une page qui pose sa propre 3D : GeoJSON avec `hauteur` et `base` en mètres, lus dans les tuiles déjà chargées
+     * (aucun appel réseau). Voir lib/bi/batiments.js pour les fragments aux joints de tuiles et les plafonds.
+     */
+    async getBuildings(o) {
+      // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
+      const B = await import('./batiments.js?v=20261031a');
+      const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
+      const opt = normaliserOptionsBatiments(o);
+      if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
+      if (!limiteurBatiments()) throw new Error('getBuildings : trop_frequent (' + APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      if (typeof map.getSource !== 'function' || !map.getSource('openmaptiles') || typeof map.querySourceFeatures !== 'function') throw new Error("batiments : ce fond n'a pas de bâti (source absente)");
+      const zoom = map.getZoom(), b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+      const vue = b && typeof b.getWest === 'function' ? [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] : [-180, -90, 180, 90];
+      const utile = opt.bbox ? intersectionBatiments(opt.bbox, vue) : vue;
+      const base = { type: 'FeatureCollection', zoom: arrondi(zoom, 3), source: 'openmaptiles', attribution: attributionSure(ATTRIBUTION_BATIMENTS) };
+      if (!utile) return { ...base, features: [], total: 0, tronque: false, bounds: opt.bbox, avertissements: ["emprise : la bbox demandée ne touche pas la vue"] };
+      if (zoom < ZOOM_MINIMAL_BATIMENTS) return { ...base, features: [], total: 0, tronque: false, bounds: utile, avertissements: ["zoom-trop-faible : le bâti n'est lu qu'à partir du zoom " + ZOOM_MINIMAL_BATIMENTS + ' (zoom actuel ' + arrondi(zoom, 1) + ')'] };
+      const r = batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox: utile, limite: opt.limite, hauteurMin: opt.hauteurMin });
+      return { ...base, features: r.features, total: r.total, tronque: r.tronque, bounds: utile.map((v) => arrondi(v, 6)), avertissements: r.avertissements };
+    },
+    /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
+    watchCamera(o = {}) {
+      const actif = o.actif === undefined ? true : o.actif;
+      if (typeof actif !== 'boolean') throw new Error('watchCamera : actif doit être true ou false');
+      if (!actif) { arreterFlux(); return { actif: false, intervalleMs: null }; }
+      const ms = o.intervalleMs === undefined ? 33 : o.intervalleMs;
+      if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 16 || ms > 1000) throw new Error('watchCamera : intervalleMs hors bornes (16 à 1000)');
+      arreterFlux(); flux = { intervalleMs: Math.round(ms), dernier: -Infinity, minuterie: 0 };
+      return { actif: true, intervalleMs: flux.intervalleMs };
+    },
     setVisual(id, v) { const c = couches.get(id); if (!c) throw new Error('couche inconnue : ' + id); const { style, ...vis } = v; if (style) c.def.style = style; demonter(c); c.visuel = { ...c.visuel, ...vis }; monter(c); if (!c.visible) api.setLayerVisibility(id, false); return c.visuel; },
     updateFeature(layer, id, patch) {
       if (tables.has(layer)) { const { cree } = mettreAJourLigne(tables.get(layer), id, patch); bulleCtl.rafraichir(); return cree ? 'cree' : true; }   // une table liée : la ligne est corrigée, ou créée si l’identifiant est nouveau

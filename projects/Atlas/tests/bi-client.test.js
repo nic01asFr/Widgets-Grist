@@ -31,14 +31,14 @@ test('client : connexion, négociation de version et ping', async () => {
   liaison.annoncer();
   const info = await client.connecter();
   assert.equal(client.connecte, true); assert.equal(client.version, VERSION); assert.equal(info.version, VERSION);
-  assert.deepEqual(client.composant.versions, ['0.2', '0.3']);
+  assert.deepEqual(client.composant.versions, ['0.2', '0.3', '0.4']);
   const p = await client.ping(); assert.equal(p.version, VERSION); assert.deepEqual(p.couches, []);
   client.deconnecter();
 });
 
 test('client : connexion sans annonce (le composant était déjà prêt) par relance du ping', async () => {
   const { client } = monter();
-  await client.connecter(); assert.equal(client.connecte, true); assert.equal(client.version, '0.3');
+  await client.connecter(); assert.equal(client.connecte, true); assert.equal(client.version, '0.4');
   client.deconnecter();
 });
 
@@ -81,7 +81,7 @@ test('client : version incompatible — aucune version commune, et commande 0.3 
   const ancien = monter({ versionsClient: ['0.2'] }); ancien.liaison.annoncer();
   await ancien.client.connecter(); assert.equal(ancien.client.version, '0.2');
   await assert.rejects(ancien.client.batch([]), (e) => e.code === 'version' && /0\.3/.test(e.message));
-  assert.equal((await ancien.client.ping()).version, '0.3', 'les 19 commandes 0.2 restent servies');
+  assert.equal((await ancien.client.ping()).version, '0.4', 'les 19 commandes 0.2 restent servies (le composant annonce sa version courante)');
   ancien.client.deconnecter();
 });
 
@@ -155,7 +155,7 @@ test('client : fonctions pures de négociation et d\'analyse d\'erreur', () => {
   assert.equal(negocierVersion(['0.3', '0.2'], ['0.2', '0.3']), '0.3'); assert.equal(negocierVersion(['0.3', '0.2'], ['0.2']), '0.2'); assert.equal(negocierVersion(['0.3'], ['0.2']), null); assert.equal(negocierVersion(['0.3'], undefined), null);
   assert.deepEqual(analyserErreur('version : trop vieux'), { code: 'version', message: 'trop vieux' });
   assert.deepEqual(analyserErreur('couche inconnue : a'), { code: 'api', message: 'couche inconnue : a' });
-  assert.deepEqual(VERSIONS_CLIENT, ['0.3', '0.2']);
+  assert.deepEqual(VERSIONS_CLIENT, ['0.4', '0.3', '0.2']);
 });
 
 test('transportFenetre : refuse une origine qui n\'est pas une origine canonique http(s) (chemin, schema, casse, port par defaut)', () => {

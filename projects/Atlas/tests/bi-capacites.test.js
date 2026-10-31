@@ -135,7 +135,7 @@ test('client : une commande dont la brique manque rejette ErreurBi capacite_abse
   liaison.annoncer(); await client.connecter();
   await assert.rejects(() => client.appeler('setTime', '2020'), (e) => e instanceof ErreurBi && e.code === 'capacite_absente' && e.capacite === 'temps' && e.details.cmd === 'setTime');
   await assert.rejects(() => client.appeler('drillUp'), (e) => e.code === 'capacite_absente' && e.capacite === 'territoires');
-  assert.equal((await client.ping()).version, '0.3', 'le reste fonctionne');
+  assert.equal((await client.ping()).version, '0.4', 'le reste fonctionne');
   client.deconnecter();
 });
 
