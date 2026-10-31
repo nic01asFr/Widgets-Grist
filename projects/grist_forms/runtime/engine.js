@@ -872,22 +872,40 @@
     // dit que la réponse est sur liste d'attente ou déjà reçue. Quand la réponse n'est pas retenue, seule la
     // phrase de statut s'affiche, en avertissement.
     var pasRetenue = !!(opts && opts.statut && opts.statut.message && opts.statut.code !== 'retenue');
+    var enfile = !!(opts && opts.enfile);
+    var message = (formDef && formDef.successMessage) || '';
+    // Le titre dit l'essentiel et reçoit le focus : c'est lui qu'un lecteur d'écran annonce. Le message de
+    // l'auteur vient dessous, tel quel ; sans message de sa part, une phrase simple.
+    var titre = enfile ? 'Votre réponse est gardée sur cet appareil' : 'Votre réponse est enregistrée';
+    var quand = opts && opts.quand ? dateEtHeure(opts.quand) : '';
     return '<div class="fr-form__success" role="status" tabindex="-1">' +
       successImg +
-      (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
-      (pasRetenue ? '' : '<div class="fr-alert fr-alert--success"><p>' +
-        escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
-        '</p></div>') +
+      (formDef && formDef.title ? '<p class="fr-text--sm fr-form__success-form">' + escapeHtml(formDef.title) + '</p>' : '') +
+      (pasRetenue ? '' : '<div class="fr-alert fr-alert--success"><h2 class="fr-h5 fr-form__success-titre">' + titre + '</h2><p>' +
+        escapeHtml(message || 'Merci, votre réponse a bien été envoyée.') + '</p></div>') +
       (opts && opts.statut && opts.statut.message
         ? '<div class="fr-alert ' + (opts.statut.code === 'retenue' ? 'fr-alert--info' : 'fr-alert--warning') +
           '" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
         : '') +
-      (opts && opts.enfile
+      (enfile
         ? '<div class="fr-alert fr-alert--info" data-enfile="1"><p>' +
           'Réponse enregistrée sur cet appareil : elle partira dès que la connexion reviendra.' +
           '</p></div>'
         : '') +
+      (quand ? '<p class="fr-hint-text fr-form__success-quand">' + (enfile ? 'Remplie' : 'Reçue') + ' le ' + escapeHtml(quand) + '.</p>' : '') +
+      (opts && opts.recommencer
+        ? '<p class="fr-form__success-suite"><button type="button" class="fr-btn fr-btn--secondary" data-action="recommencer">Remplir une autre réponse</button></p>'
+        : '') +
       '</div>';
+  }
+
+  /** « 31 octobre 2026 à 14 h 05 » : l'heure de l'appareil, dite en toutes lettres. */
+  function dateEtHeure(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    var mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var mm = d.getMinutes();
+    return d.getDate() + (d.getDate() === 1 ? 'er ' : ' ') + mois[d.getMonth()] + ' ' + d.getFullYear() +
+      ' à ' + d.getHours() + ' h ' + (mm < 10 ? '0' : '') + mm;
   }
 
   function placeholderAttr(field) {
@@ -3051,8 +3069,20 @@
             // et remet le formulaire a la place de la confirmation, alors que la reponse est partie
             // (la personne renverrait la meme).
             renduEnAttente = false;
-            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut });
+            var autreReponse = !(bridge.editRowId || formDef.editRowId) && !(formDef.limites && formDef.limites.unique) &&
+              (!fin.statut || !fin.statut.message || fin.statut.code === 'retenue');
+            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut, quand: new Date(), recommencer: autreReponse });
             typographier(rootEl);
+            var recommencer = rootEl.querySelector('[data-action="recommencer"]');
+            if (recommencer && typeof recommencer.addEventListener === 'function') {
+              recommencer.addEventListener('click', function () {
+                demonter();
+                var racine = rootEl;
+                // Un formulaire neuf, avec ce que l'hôte donnait au départ : rien de la réponse précédente ne reste.
+                var neuf = mount(racine, formDef, bridge);
+                if (neuf && typeof racine.scrollIntoView === 'function') { try { racine.scrollIntoView(); } catch (e4) { /* tant pis */ } }
+              });
+            }
             // Le bouton qui avait le focus a disparu : sans cela le focus tombe sur la page et un lecteur d'écran
             // n'annonce pas la confirmation (une zone vivante insérée avec son contenu n'est pas lue).
             var confirmation = rootEl.querySelector('.fr-form__success');

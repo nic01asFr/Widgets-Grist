@@ -212,6 +212,10 @@ small { font-size: 0.875rem; }
 }
 .fr-form__brand--success img { max-height: 140px; }
 .fr-form__success { max-width: 40rem; }
+.fr-form__success .fr-form__success-form { margin: 0 0 0.25rem; color: var(--kit-texte-2, var(--grey-625)); }
+.fr-form__success .fr-form__success-titre { margin: 0 0 0.5rem; }
+.fr-form__success .fr-form__success-quand { margin: 0.5rem 0 0; }
+.fr-form__success .fr-form__success-suite { margin: 1.25rem 0 0; }
 
 /* ── Échelles et matrices ─────────────────────────────────────────────────
    Une échelle se lit d'un coup d'œil : les crans alignés, et ce que valent

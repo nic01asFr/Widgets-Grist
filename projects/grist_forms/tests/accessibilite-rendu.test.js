@@ -111,3 +111,68 @@ describe('Audit UX du 31/10/2026 : textes et progression', () => {
     assert.match(huit, /Environ 8 minutes\./);
   });
 });
+
+describe('Ecran de fin : une confirmation qui se lit et qui propose la suite', () => {
+  const def = {
+    id: 'f', title: 'Releve', tableId: 'T', choices: {}, successMessage: 'Merci pour votre aide !',
+    sections: [{ id: 's', label: 'S', gate: null, fields: [{ colId: 'N', label: 'Nom', type: 'Text', widget: 'text', required: false }] }]
+  };
+
+  it('un titre dit que la reponse est enregistree, le message de l\'auteur vient dessous', () => {
+    const html = Engine.renderSuccessHtml(def, {});
+    assert.match(html, /<h2[^>]*>Votre r\u00e9ponse est enregistr\u00e9e<\/h2>/);
+    assert.ok(html.includes('Merci pour votre aide !'));
+    assert.ok(!/data-action="recommencer"/.test(html), 'pas de bouton sans demande');
+  });
+
+  it('sans message de l\'auteur, une phrase simple', () => {
+    const html = Engine.renderSuccessHtml(Object.assign({}, def, { successMessage: '' }), {});
+    assert.ok(html.includes('Merci, votre r\u00e9ponse a bien \u00e9t\u00e9 envoy\u00e9e.'));
+  });
+
+  it('la date de reception se dit en toutes lettres', () => {
+    const html = Engine.renderSuccessHtml(def, { quand: new Date(2026, 9, 31, 14, 5) });
+    assert.ok(html.includes('Re\u00e7ue le 31 octobre 2026 \u00e0 14 h 05.'));
+    const premier = Engine.renderSuccessHtml(def, { quand: new Date(2026, 10, 1, 9, 30) });
+    assert.ok(premier.includes('1er novembre 2026 \u00e0 9 h 30'));
+  });
+
+  it('une reponse en file est dite gardee sur l\'appareil, pas enregistree', () => {
+    const html = Engine.renderSuccessHtml(def, { enfile: true, quand: new Date(2026, 9, 31, 14, 5) });
+    assert.ok(html.includes('Votre r\u00e9ponse est gard\u00e9e sur cet appareil'));
+    assert.ok(!html.includes('Votre r\u00e9ponse est enregistr\u00e9e<'));
+    assert.ok(html.includes('Remplie le 31 octobre'));
+  });
+
+  it('« Remplir une autre reponse » remet un formulaire neuf, vide', async () => {
+    const root = createRoot();
+    Engine.mount(root, def, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    root.querySelector('[name="N"]').value = 'Alice';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.match(root.innerHTML, /data-action="recommencer"/);
+    root.querySelector('[data-action="recommencer"]').dispatchEvent('click');
+    await flush();
+    const champ = root.querySelector('[name="N"]');
+    assert.ok(champ, 'le formulaire est revenu');
+    assert.ok(!/value="Alice"/.test(root.innerHTML), 'rien de la reponse precedente');
+  });
+
+  it('pas de seconde reponse quand une seule est permise, ni en modification', async () => {
+    const unique = Object.assign({}, def, { limites: { unique: ['N'] } });
+    const root = createRoot();
+    Engine.mount(root, unique, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    root.querySelector('[name="N"]').value = 'Alice';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.ok(!/data-action="recommencer"/.test(root.innerHTML));
+    const modif = createRoot();
+    Engine.mount(modif, def, { editRowId: 4, submit: () => Promise.resolve([[4]]) });
+    await flush();
+    modif.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.ok(!/data-action="recommencer"/.test(modif.innerHTML));
+  });
+});
