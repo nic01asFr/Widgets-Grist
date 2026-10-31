@@ -447,6 +447,9 @@ export function attacher(map, opts = {}) {
           tables.set(def.id, r.lignes); if (r.avertissements.length) avertissements[def.id] = r.avertissements;
           continue;
         }
+        // Une maquette en dalles 3D n'existe que dans le canevas complet (three.js, `profil="complet"`) et dans une scène Atlas (`version`) : la carte nue la ferait
+        // passer pour une couche sans entité, `0` sans un mot. Elle est refusée seule, avec ce qu'il faut changer.
+        if (def && def.type === 'dalles3d') { erreurs[def.id] = 'capacite_absente : la couche « ' + def.id + ' » (dalles 3D) demande le profil complet (`profil="complet"`) et une scène Atlas (`version: "0.2.2"`) ; la carte nue ne la monte pas'; continue; }
         const brique = def.admin ? 'territoires' : 'points';   // une couche dont la brique manque est refusée seule : les autres se montent
         if (!capacites.includes(brique)) { erreurs[def.id] = new ErreurCapacite(brique, 'la couche « ' + def.id + ' »').message; continue; }
         if (def.admin) { // couche administrative : chargée par le runtime (ou fournie par l'hôte dans `donnees`)
