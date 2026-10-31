@@ -797,7 +797,7 @@
     var encarts = '';
     if (Number(a.dureeMinutes) > 0) {
       encarts += '<div class="fr-encart fr-encart--attention">' +
-        '<strong>⏱ Environ ' + escapeHtml(String(a.dureeMinutes)) + ' minutes.</strong>' +
+        '<strong><span aria-hidden="true">⏱</span> Environ ' + escapeHtml(String(a.dureeMinutes)) + (Number(a.dureeMinutes) > 1 ? ' minutes.' : ' minute.') + '</strong>' +
         (a.dureeTexte ? ' ' + enrichirTexte(a.dureeTexte) : '') + '</div>';
     }
     var liste = a.encarts || [];
@@ -1432,7 +1432,7 @@
     }
     var hint = names.length
       ? '<p class="fr-hint-text">' + escapeHtml(names.join(', ')) + '</p>'
-      : '<p class="fr-hint-text">Jusqu\'à ' + maxFiles + ' fichier(s)</p>';
+      : '<p class="fr-hint-text">Jusqu’à ' + maxFiles + (maxFiles > 1 ? ' fichiers' : ' fichier') + '</p>';
     // Sur un appareil tactile, un champ qui accepte des images propose aussi la
     // prise de vue. Sans l'attribut `capture`, le telephone n'ouvre qu'un
     // selecteur de fichiers : on devait photographier ailleurs, puis retrouver
@@ -2753,11 +2753,15 @@
       // ouvrant un questionnaire, et ce que l'enquête écrite à la main offrait
       // alors que le moteur ne le disait qu'en toutes lettres.
       var avancement = Math.round(((stepIndex + 1) / sections.length) * 100);
+      // Une seule étape : « Étape 1 sur 1 — 100 % » ferait croire que tout est déjà fait avant d'avoir répondu.
+      // Le titre reste (c'est lui qui reçoit le focus), la barre et le compte disparaissent.
       var stepperHtml = '<nav class="fr-progression" aria-label="Progression">' +
-        '<div class="fr-progression__piste"><span style="width:' + avancement + '%"></span></div>' +
-        '<p class="fr-progression__etat">' +
-        '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
-        '<span>' + avancement + ' %</span></p>' +
+        (sections.length > 1
+          ? '<div class="fr-progression__piste"><span style="width:' + avancement + '%"></span></div>' +
+            '<p class="fr-progression__etat">' +
+            '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
+            '<span>' + avancement + ' %</span></p>'
+          : '') +
         '<h2 class="fr-progression__titre" tabindex="-1">' + escapeHtml(section.label) + '</h2>' +
         (section.description ? '<p class="fr-hint-text">' + escapeHtml(section.description) + '</p>' : '') +
         '</nav>';

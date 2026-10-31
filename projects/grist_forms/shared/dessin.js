@@ -43,6 +43,21 @@
 
   var COULEURS = ['#c9191e', '#161616', '#000091'];
 
+  /** Le nom d'une couleur de trait : les trois par défaut ont leur nom, les autres une teinte approchée. */
+  var NOMS_COULEURS = { '#c9191e': 'Rouge', '#161616': 'Noir', '#000091': 'Bleu' };
+  function nomDeCouleur(c) {
+    var cle = String(c || '').toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(NOMS_COULEURS, cle)) return NOMS_COULEURS[cle];
+    var m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/.exec(cle);
+    if (!m) return 'Couleur personnalisée';
+    var r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    if (Math.max(r, g, b) < 60) return 'Noir';
+    if (Math.min(r, g, b) > 200) return 'Blanc';
+    if (r >= g && r >= b) return g > 140 ? 'Orange' : 'Rouge';
+    if (g >= r && g >= b) return 'Vert';
+    return 'Bleu';
+  }
+
   /**
    * La signature n'est pas un croquis.
    *
@@ -152,7 +167,9 @@
         b.className = 'fr-dessin__couleur';
         b.style.background = c;
         b.setAttribute('role', 'radio');
-        b.setAttribute('aria-label', 'Couleur ' + c);
+        // Un nom lisible, jamais « Couleur #c9191e » dans la bouche d'un lecteur d'écran.
+        b.setAttribute('aria-label', nomDeCouleur(c));
+        b.title = nomDeCouleur(c);
         b.setAttribute('aria-checked', c === couleur ? 'true' : 'false');
         b.addEventListener('click', function () {
           couleur = c;

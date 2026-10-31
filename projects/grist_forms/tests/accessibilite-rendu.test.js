@@ -74,3 +74,40 @@ describe('Un réglage mal saisi n\'écrit rien dans la page', () => {
     if (e) assert.ok(e.max - e.min <= 50);
   });
 });
+
+describe('Audit UX du 31/10/2026 : textes et progression', () => {
+  const NB = String.fromCharCode(160);
+
+  it('une seule étape : ni « Étape 1 sur 1 » ni « 100 % » avant d\'avoir répondu', async () => {
+    const root = createRoot();
+    Engine.mount(root, {
+      id: 'f', title: 'F', tableId: 'T', choices: {},
+      sections: [{ id: 's', label: 'Vos coordonnées', gate: null, fields: [{ colId: 'N', label: 'Nom', type: 'Text', widget: 'text', required: false }] }]
+    }, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    assert.ok(!/Étape 1 sur 1/.test(root.innerHTML));
+    assert.ok(!/100 %/.test(root.innerHTML));
+    assert.match(root.innerHTML, /Vos coordonnées/, 'le titre de l\'étape reste');
+  });
+
+  it('plusieurs étapes : la progression est là', async () => {
+    const root = createRoot();
+    Engine.mount(root, {
+      id: 'f', title: 'F', tableId: 'T', choices: {},
+      sections: [
+        { id: 's1', label: 'Un', gate: null, fields: [{ colId: 'N', label: 'Nom', type: 'Text', widget: 'text', required: false }] },
+        { id: 's2', label: 'Deux', gate: null, fields: [{ colId: 'M', label: 'Mail', type: 'Text', widget: 'text', required: false }] }
+      ]
+    }, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    assert.match(root.innerHTML, /Étape 1 sur 2/);
+  });
+
+  it('la durée s\'accorde : « 1 minute », « 8 minutes »', () => {
+    const un = Engine.renderAccueilHtml({ id: 'f', title: 'F', accueil: { dureeMinutes: 1 } });
+    const huit = Engine.renderAccueilHtml({ id: 'f', title: 'F', accueil: { dureeMinutes: 8 } });
+    assert.match(un, /Environ 1 minute\./);
+    assert.ok(!/1 minutes/.test(un));
+    assert.match(huit, /Environ 8 minutes\./);
+  });
+});

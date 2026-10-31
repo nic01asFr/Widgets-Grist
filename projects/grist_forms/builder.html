@@ -2717,10 +2717,18 @@ function renderAjoutRapide(si) {
 }
 
 function typeAjout(cle) {
+  // Le geste naturel est de taper la question PUIS de choisir son type : le redessin recrée le champ, la saisie
+  // serait perdue à chaque fois. On la garde, avec la position du curseur.
+  const avant = document.getElementById('ajout-rapide');
+  const texte = avant ? avant.value : '';
   S.typeAjout = cle;
   renderBuilder();
   const champ = document.getElementById('ajout-rapide');
-  if (champ) champ.focus();
+  if (champ) {
+    champ.value = texte;
+    champ.focus();
+    try { champ.setSelectionRange(texte.length, texte.length); } catch (e) { /* type sans sélection */ }
+  }
 }
 
 function ajouterDepuisTexte(si, texte) {
@@ -2904,8 +2912,10 @@ function renderOptionsDuChamp(def, si, f, fi, isBind) {
   return `
     <div class="fr-input-group">
       <label class="fr-label" for="opt-${si}-${fi}">Options proposées ${hintIcon('Une par ligne. Elles deviendront les choix de la colonne créée dans Grist.')}</label>
-      <textarea class="fr-input" id="opt-${si}-${fi}" rows="4"
+      <textarea class="fr-input" id="opt-${si}-${fi}" rows="4" placeholder="Une option par ligne"
+        aria-describedby="opt-aide-${si}-${fi}"
         oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(valeur)}</textarea>
+      <p class="fr-hint-text" id="opt-aide-${si}-${fi}">Une option par ligne. Sans option, la question ne propose aucun choix.</p>
     </div>`;
 }
 

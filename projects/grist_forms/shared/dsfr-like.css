@@ -523,7 +523,7 @@ html { scroll-padding-bottom: 6rem; }
 .fr-form .fr-rangs__cible::before, .champ-bloc__rendu .fr-rangs__cible::before {
   content: attr(data-rang); display: flex; align-items: center; justify-content: center;
   width: 2.4rem; height: 2.4rem; border-radius: 999px;
-  border: 2px solid var(--kit-bord, var(--bord, #ddd));
+  border: 2px solid var(--kit-texte-2, var(--encre-douce, #666)); /* 3:1 au moins : une commande vide reste visible */
   font-size: 0.9375rem; font-weight: 700; color: transparent;
   transition: background-color .12s ease, border-color .12s ease, color .12s ease;
 }
