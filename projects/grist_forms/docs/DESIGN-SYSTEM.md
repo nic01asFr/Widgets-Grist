@@ -57,6 +57,12 @@ document (`assembler`) et qui relit un document dans le formulaire (`aplatir`).
   séries de visualisation. Rien de ce qu'on tape n'y entre tel quel : couleur en `#RRGGBB` seulement, longueurs et ombres
   bornées, noms de police en lettres, tout texte échappé.
 
+## Les widgets du document prennent le thème
+
+Le design system défini ici a pour but de **servir** le document : les widgets compatibles ThemeDef lisent la table `Theme_document`
+(ligne active). Form Builder l'est depuis `shared/themedef.js` : le formulaire publié et l'aperçu du compositeur prennent ce thème.
+Poser le thème d'un design system dans `Theme_document` (l'activation) reste un geste de personne, à venir : cette page n'y écrit pas.
+
 ## Brouillon, proposition
 
 - **Brouillon** : s'enregistre à tout moment, incomplet ; rien n'est refusé.

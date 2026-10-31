@@ -128,6 +128,21 @@ thème valide gardé ; échec = rendu neutre). Atlas n'accepte aucune adresse da
 
 Priorité : la personne (`forced-colors`, `prefers-contrast`) > thème posé par l'hôte > document > rendu d'origine.
 
+### Les lecteurs de Form Builder
+
+Le moteur de formulaire ne lit toujours pas de ThemeDef : ce sont ses **hôtes** qui le font, avec `shared/themedef.js` (règle de lecture
+du §3, la même que celle d'Atlas) :
+
+- le **formulaire publié** (bundle figé) : lit `Theme_document`, pose les variables `--kit-*` sur la page, puis se monte ; au bout de 1,5 s
+  sans réponse il s'ouvre avec son apparence d'origine ;
+- le **compositeur** : habille son canevas et son aperçu (ce que le public verra), pas l'outil lui-même ;
+- la page **design-system** : applique le thème en cours de construction (aperçu).
+
+Chaque lecteur est **opt-in par le document** (sans table `Theme_document`, ou sans ligne active, rien ne change) et **ne crée ni n'écrit
+jamais** la table. Les valeurs mesurées de `resolu` s'appliquent quand elles y sont, sans être crues ; sinon les graines en donnent un
+**aperçu** (le compilateur du kit reste seul juge). La personne passe avant le thème : sous `forced-colors` ou `prefers-contrast: more`,
+rien n'est posé. Les formulaires déjà publiés (bundles figés avant ce lecteur) ne changent pas tant qu'on ne les remet pas en ligne.
+
 ## 4. Forme canonique, `hash` et `resolu`
 
 **JSON canonique** (unique pour tout le contrat) : UTF-8, **un seul LF final**, clés triées récursivement par
