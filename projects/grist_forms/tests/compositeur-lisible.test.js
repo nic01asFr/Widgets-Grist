@@ -74,6 +74,11 @@ describe('Compositeur : l\'apparence d\'un formulaire', () => {
     assert.ok(BUILDER.includes("T.apparenceDe(S.currentDef)"));
   });
 
+  it('un thème pas encore donné attend, sans message d\'erreur', () => {
+    assert.match(BUILDER, /ap\.attente \?/);
+    assert.ok(BUILDER.includes('Rien n’est encore donné'));
+  });
+
   it('la page autonome fige le thème du document, jamais une adresse', () => {
     const gen = BUILDER.slice(BUILDER.indexOf('async function externeGenerer()'));
     assert.match(gen, /S\.themeDocument\.themedef/);

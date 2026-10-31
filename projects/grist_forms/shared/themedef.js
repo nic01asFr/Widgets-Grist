@@ -363,15 +363,17 @@
    *   - `formulaire` : le ThemeDef 1.0 donné en entrée avec le formulaire (déposé ou collé dans le compositeur) ;
    *   - `aucune` : l'apparence d'origine, quoi que dise le document.
    *
-   * Un thème de formulaire illisible ne casse rien : le formulaire retombe sur le document, et `erreur` dit pourquoi.
+   * Un thème de formulaire illisible ne casse rien : le formulaire retombe sur le document, et `erreur` dit pourquoi. Un thème PAS ENCORE
+   * donné (on vient de choisir « un thème pour ce formulaire ») n'est pas une erreur : `attente` le dit, et le formulaire suit le document.
    *
-   * @returns {{mode:string, themedef:object|null, erreur:string|null}}
+   * @returns {{mode:string, themedef:object|null, erreur:string|null, attente?:boolean}}
    */
   function apparenceDe(def) {
     var a = def && typeof def === 'object' ? def.apparence : null;
     if (!objetSimple(a)) return { mode: 'document', themedef: null, erreur: null };
     var mode = ['document', 'formulaire', 'aucune'].indexOf(a.mode) !== -1 ? a.mode : 'document';
     if (mode !== 'formulaire') return { mode: mode, themedef: null, erreur: null };
+    if (a.themedef === undefined || a.themedef === null) return { mode: 'document', themedef: null, erreur: null, attente: true };
     var lu = lireThemeDef(a.themedef);
     if (!lu.ok) return { mode: 'document', themedef: null, erreur: lu.erreur };
     return { mode: 'formulaire', themedef: lu.themedef, erreur: null };

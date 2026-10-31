@@ -3916,6 +3916,7 @@ function renderApparence(def) {
         ${choix('aucune', 'L’apparence d’origine', 'Quoi que dise le document.')}
       </div>
       ${formulaire}
+      ${ap.attente ? '<p class="fr-hint-text">Rien n’est encore donné : en attendant, le formulaire suit le document.</p>' : ''}
       ${ap.erreur ? '<p class="fr-error-text" role="alert">Le thème de ce formulaire n’est pas lisible (' + esc(PHRASES_THEMEDEF[ap.erreur] || ap.erreur) + ') : le formulaire suit le document.</p>' : ''}`;
 }
 

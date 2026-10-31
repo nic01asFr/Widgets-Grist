@@ -304,7 +304,10 @@ describe('ThemeDef : l\'apparence d\'un formulaire, et le thème donné en entr�
     const casse = T.apparenceDe(def({ mode: 'formulaire', themedef: td({ version: 'themedef-2.0' }) }));
     assert.equal(casse.mode, 'document', 'un thème illisible ne casse rien');
     assert.equal(casse.erreur, 'version');
-    assert.equal(T.apparenceDe(def({ mode: 'formulaire' })).erreur, 'type', 'rien donné : illisible');
+    // Choisir « un thème pour ce formulaire » avant d'en donner un n'est pas une erreur : on attend, et le formulaire suit le document.
+    assert.deepEqual(T.apparenceDe(def({ mode: 'formulaire' })), { mode: 'document', themedef: null, erreur: null, attente: true });
+    assert.equal(T.apparenceDe(def({ mode: 'formulaire', themedef: null })).attente, true);
+    assert.equal(T.apparenceDe(def({ mode: 'formulaire', themedef: 'pas un objet' })).erreur, 'json', 'donné mais illisible : une erreur');
   });
 
   it('le thème du formulaire est résolu sans rien lire, et le dit non vérifié', () => {
