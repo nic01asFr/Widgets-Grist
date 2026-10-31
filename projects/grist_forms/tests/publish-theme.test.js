@@ -20,12 +20,14 @@ const source = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const THEME_JS = source('shared/theme.js');
 const THEMEDEF_JS = source('shared/themedef.js');
 
-const def = { id: 'f', title: 'F', tableId: 'T', manifest_version: '1.0.0', composeMode: 'ensureSchema', sections: [{ id: 's', label: 'S', fields: [] }] };
+const defBase = { id: 'f', title: 'F', tableId: 'T', manifest_version: '1.0.0', composeMode: 'ensureSchema', sections: [{ id: 's', label: 'S', fields: [] }] };
+let def = defBase;
 
 const themedef = JSON.stringify({ version: 'themedef-1.0', nom: 'Vert', graines: { principal: '#0b6e4f', fond: '#fdfaf3' }, modes: { sombre: 'aucun' } });
 
 /** Exécute le bootstrap d'un formulaire publié ; rend ce qui s'est passé. */
-function executer(bundles, grist) {
+function executer(bundles, grist, apparence) {
+  def = apparence ? Object.assign({}, defBase, { apparence }) : defBase;
   const html = Publish.buildRuntimeDocument(def, Object.assign({ engineJs: '' }, bundles));
   const js = Publish.splitHtmlJs(html).js;
   const journal = [];
@@ -130,5 +132,55 @@ describe('Formulaire publié : le thème du document', () => {
     await new Promise((resolu) => setTimeout(resolu, 30));
     r.minuteries.forEach((m) => m.fn());
     assert.equal(r.journal.filter((j) => j === 'mount').length, 1);
+  });
+});
+
+describe('Formulaire publié : l\'apparence qu\'il demande', () => {
+  it('un thème donné au formulaire est posé avant le montage, même sans document', async () => {
+    const r = executer(bundleTheme, null, { mode: 'formulaire', themedef: JSON.parse(themedef) });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.ok(r.journal.indexOf('pose') > -1 && r.journal.indexOf('pose') < r.journal.indexOf('mount'));
+    assert.ok(r.posees['--kit-action']);
+  });
+
+  it('il prime sur le thème du document, qui n\'est même pas lu', async () => {
+    const appels = [];
+    const r = executer(bundleTheme, gristAvec(['Theme_document'], tableTheme(true), appels), { mode: 'formulaire', themedef: JSON.parse(themedef) });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.ok(r.posees['--kit-action']);
+    assert.deepEqual(appels, []);
+  });
+
+  it('« aucune » : rien n\'est posé, quoi que dise le document', async () => {
+    const appels = [];
+    const r = executer(bundleTheme, gristAvec(['Theme_document'], tableTheme(true), appels), { mode: 'aucune' });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.deepEqual(r.journal, ['mount']);
+    assert.deepEqual(appels, []);
+  });
+
+  it('un thème de formulaire illisible : le formulaire suit le document', async () => {
+    const r = executer(bundleTheme, gristAvec(['Theme_document'], tableTheme(true), []), { mode: 'formulaire', themedef: { version: 'themedef-9' } });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.ok(r.posees['--kit-action'], 'le thème du document s\'applique');
+  });
+});
+
+describe('Page autonome : le thème donné avec le formulaire', () => {
+  const Externe = require('../shared/externe.js');
+  const adresse = 'https://g.exemple.fr/o/org/forms/CLE123/7';
+
+  it('embarque le lecteur avant le moteur et applique le thème avant de monter', () => {
+    const html = Externe.buildExternalDocument(
+      Object.assign({}, defBase, { apparence: { mode: 'formulaire', themedef: JSON.parse(themedef) } }),
+      { themeJs: '/*THEME*/', themeDefJs: '/*THEMEDEF*/', engineJs: '/*ENGINE*/', cssText: '' }, { adresse });
+    assert.ok(html.indexOf('/*THEMEDEF*/') > -1 && html.indexOf('/*THEMEDEF*/') < html.indexOf('/*ENGINE*/'));
+    assert.match(html, /T\.charger\(null, \{ def: DEF \}\)/);
+    assert.match(html, /"apparence":\{"mode":"formulaire"/);
+  });
+
+  it('sans le lecteur (bundle ancien), la page se monte tout de suite, comme avant', () => {
+    const html = Externe.buildExternalDocument(defBase, { engineJs: '/*ENGINE*/', cssText: '' }, { adresse });
+    assert.match(html, /if \(!T\) \{ monter\(\); return; \}/);
   });
 });

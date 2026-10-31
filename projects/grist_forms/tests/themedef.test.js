@@ -285,3 +285,74 @@ describe('ThemeDef : poser et retirer', () => {
     T.retirer(null, ['--kit-fond']);
   });
 });
+
+describe('ThemeDef : l\'apparence d\'un formulaire, et le thème donné en entrée', () => {
+  const def = (apparence) => ({ id: 'f', title: 'F', tableId: 'T', sections: [], apparence });
+
+  it('sans apparence, ou avec une apparence illisible, le formulaire suit le document', () => {
+    assert.deepEqual(T.apparenceDe({}), { mode: 'document', themedef: null, erreur: null });
+    assert.deepEqual(T.apparenceDe(null), { mode: 'document', themedef: null, erreur: null });
+    assert.equal(T.apparenceDe(def('x')).mode, 'document');
+    assert.equal(T.apparenceDe(def({ mode: 'inconnu' })).mode, 'document');
+    assert.equal(T.apparenceDe(def({ mode: 'aucune' })).mode, 'aucune');
+  });
+
+  it('un thème donné au formulaire se lit comme une donnée non fiable, et retombe sur le document en le disant', () => {
+    const ok = T.apparenceDe(def({ mode: 'formulaire', themedef: td() }));
+    assert.equal(ok.mode, 'formulaire');
+    assert.equal(ok.themedef.nom, 'Mon thème');
+    const casse = T.apparenceDe(def({ mode: 'formulaire', themedef: td({ version: 'themedef-2.0' }) }));
+    assert.equal(casse.mode, 'document', 'un thème illisible ne casse rien');
+    assert.equal(casse.erreur, 'version');
+    assert.equal(T.apparenceDe(def({ mode: 'formulaire' })).erreur, 'type', 'rien donné : illisible');
+  });
+
+  it('le thème du formulaire est résolu sans rien lire, et le dit non vérifié', () => {
+    const r = T.themeFormulaire(def({ mode: 'formulaire', themedef: td() }), 'clair');
+    assert.equal(Object.keys(r.theme).length, 26);
+    assert.equal(r.verifie, false);
+    assert.equal(r.themedef.nom, 'Mon thème', 'de quoi le figer dans une page autonome');
+    assert.equal(T.themeFormulaire(def({ mode: 'aucune' })), null);
+    assert.equal(T.themeFormulaire({}), null);
+  });
+
+  it('charger : le thème du formulaire prime sur le document et ne lit aucune table', async () => {
+    const api = apiFausse(['Theme_document'], colonnes([{ cle: 'doc', themedef: JSON.stringify(td({ nom: 'Document' })), actif: true }]));
+    const r = await T.charger(api, { def: def({ mode: 'formulaire', themedef: td({ nom: 'Formulaire' }) }), mode: 'clair' });
+    assert.equal(r.raison, 'formulaire');
+    assert.equal(r.nom, 'Formulaire');
+    assert.deepEqual(api.appels, [], 'aucune lecture');
+  });
+
+  it('charger : « aucune » ne pose rien, quoi que dise le document', async () => {
+    const api = apiFausse(['Theme_document'], colonnes([{ cle: 'doc', themedef: JSON.stringify(td()), actif: true }]));
+    const r = await T.charger(api, { def: def({ mode: 'aucune' }) });
+    assert.equal(r.theme, null);
+    assert.equal(r.raison, 'apparence-aucune');
+    assert.deepEqual(api.appels, []);
+  });
+
+  it('charger : le thème donné en entrée marche hors de Grist (aucun document)', async () => {
+    const r = await T.charger(null, { def: def({ mode: 'formulaire', themedef: td() }), mode: 'sombre' });
+    assert.equal(r.raison, 'formulaire');
+    assert.equal(r.mode, 'sombre');
+    assert.equal((await T.charger(null, { def: def({ mode: 'document' }) })).raison, 'pas-de-document');
+  });
+
+  it('charger : un thème du document garde son ThemeDef, de quoi le figer dans une page autonome', async () => {
+    const api = apiFausse(['Theme_document'], colonnes([{ cle: 'doc', themedef: JSON.stringify(td()), actif: true }]));
+    const r = await T.charger(api, { def: def(undefined) });
+    assert.equal(r.raison, 'applique');
+    assert.equal(r.themedef.nom, 'Mon thème');
+  });
+
+  it('la personne passe avant : même un thème donné au formulaire cède au contraste forcé', async () => {
+    const avant = global.matchMedia;
+    global.matchMedia = (q) => ({ matches: /forced-colors/.test(q) });
+    try {
+      assert.equal((await T.charger(null, { def: def({ mode: 'formulaire', themedef: td() }) })).raison, 'preference-personne');
+    } finally {
+      if (avant === undefined) delete global.matchMedia; else global.matchMedia = avant;
+    }
+  });
+});

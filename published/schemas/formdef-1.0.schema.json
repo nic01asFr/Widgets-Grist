@@ -175,6 +175,24 @@
         }
       }
     },
+    "apparence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "L'apparence du formulaire. `mode` : `document` (defaut : le theme actif du document, table Theme_document), `formulaire` (le ThemeDef 1.0 donne dans `themedef`, fige avec le formulaire : il s'applique aussi hors de Grist) ou `aucune` (l'apparence d'origine, quoi que dise le document). Un `themedef` illisible n'empeche rien : le formulaire retombe sur le document. La personne passe avant le theme (contraste force ou renforce).",
+      "properties": {
+        "mode": {
+          "enum": [
+            "document",
+            "formulaire",
+            "aucune"
+          ]
+        },
+        "themedef": {
+          "type": "object",
+          "description": "Un ThemeDef 1.0 (docs/THEMEDEF-SPEC.md) : 16 Ko au plus, lu comme une donnee non fiable a chaque ouverture."
+        }
+      }
+    },
     "limites": {
       "type": "object",
       "description": "Jusqu'ou le formulaire accepte de reponses : un atelier de 12 places, une fenetre d'ouverture, un plafond. Le formulaire LIT ce qui est deja pris (table lisible par la personne qui repond) et ferme ce qui est plein ; la table TRANCHE par une formule d'ordre d'arrivee (shared/limites.js, `formulePlace`) quand deux envois se croisent. Une table illisible ne bloque personne : seule la fenetre d'ouverture s'applique.",

@@ -55,3 +55,28 @@ describe('Compositeur : le canevas suit la frappe', () => {
     assert.ok(corps.includes('canevas.contains(document.activeElement)'));
   });
 });
+
+describe('Compositeur : l\'apparence d\'un formulaire', () => {
+  it('trois choix, un thème déposé ou collé, des phrases pour chaque défaut', () => {
+    assert.match(BUILDER, /function renderApparence\(def\)/);
+    for (const mode of ['document', 'formulaire', 'aucune']) assert.ok(BUILDER.includes("choix('" + mode + "'"), mode);
+    for (const geste of ['onApparenceMode', 'onApparenceTexte', 'onApparenceFichier']) {
+      assert.ok(BUILDER.includes('function ' + geste + '('), geste);
+      assert.match(BUILDER, new RegExp('window\\.App = \\{[\\s\\S]*' + geste));
+    }
+    for (const code of ['trop-gros', 'json', 'version', 'principal', 'explicite-incomplet', 'exigence']) assert.ok(BUILDER.includes("'" + code + "':"), code);
+  });
+
+  it('un thème illisible n\'entre jamais dans le formulaire, et l\'aperçu suit le choix', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function onApparenceTexte('), BUILDER.indexOf('function onApparenceFichier('));
+    assert.ok(corps.indexOf('if (!lu.ok)') < corps.indexOf('def.apparence ='), 'le défaut est traité avant d\'écrire dans le formulaire');
+    assert.match(BUILDER, /function themeDuFormulaire\(\)/);
+    assert.ok(BUILDER.includes("T.apparenceDe(S.currentDef)"));
+  });
+
+  it('la page autonome fige le thème du document, jamais une adresse', () => {
+    const gen = BUILDER.slice(BUILDER.indexOf('async function externeGenerer()'));
+    assert.match(gen, /S\.themeDocument\.themedef/);
+    assert.ok(!/themedef[^\n]*https?:/i.test(gen.slice(0, gen.indexOf('x.nom ='))));
+  });
+});

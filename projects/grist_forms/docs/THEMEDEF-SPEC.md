@@ -151,6 +151,18 @@ du §3, la même que celle d'Atlas) :
 - le **compositeur** : habille son canevas et son aperçu (ce que le public verra), pas l'outil lui-même ;
 - la page **design-system** : applique le thème en cours de construction (aperçu).
 
+**Un ThemeDef en entrée du formulaire.** Le FormDef porte une `apparence` facultative : `{ mode, themedef }`.
+
+| `mode` | Ce que le formulaire prend |
+|---|---|
+| `document` (défaut) | le thème actif de `Theme_document`, quand le document en porte un |
+| `formulaire` | le ThemeDef 1.0 donné dans `themedef` (déposé ou collé dans le compositeur) : **il part avec le formulaire**, donc il s'applique aussi hors de Grist (page autonome), sans table à lire |
+| `aucune` | l'apparence d'origine, quoi que dise le document |
+
+Le thème du formulaire prime sur celui du document. Il est lu comme une donnée non fiable à chaque ouverture ; illisible, il n'empêche
+rien : le formulaire retombe sur le document, et le compositeur dit pourquoi. Dans la page autonome, un formulaire qui suit le document
+reçoit une **copie** du ThemeDef actif au moment de la génération (jamais une adresse).
+
 Chaque lecteur est **opt-in par le document** (sans table `Theme_document`, ou sans ligne active, rien ne change) et **ne crée ni n'écrit
 jamais** la table. Les valeurs mesurées de `resolu` s'appliquent quand elles y sont, sans être crues ; sinon les graines en donnent un
 **aperçu** (le compilateur du kit reste seul juge). La personne passe avant le thème : sous `forced-colors` ou `prefers-contrast: more`,

@@ -991,6 +991,12 @@
   .carte-publication > details > summary::before, #publish-log > details > summary::before { content: '\25B8'; transition: transform 0.15s; }
   .carte-publication > details[open] > summary::before, #publish-log > details[open] > summary::before { transform: rotate(90deg); }
   .carte-publication .publish-hint { display: block; margin-top: 0.5rem; max-width: none; font-size: 0.875rem; }
+  /* L'apparence : trois choix, celui qui est retenu se reconnaît à son cadre. */
+  .apparence { display: grid; gap: 0.5rem; margin: 0 0 0.75rem; }
+  .apparence__choix { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.6rem 0.75rem; border: 1px solid #e5e5e5; border-radius: 4px; background: #fff; cursor: pointer; }
+  .apparence__choix input { margin-top: 0.3rem; width: 1.1rem; height: 1.1rem; flex: 0 0 1.1rem; }
+  .apparence__choix .fr-hint-text { display: block; }
+  .apparence__choix:has(input:checked) { border-color: #000091; background: #f3f3fb; }
   .rule-resume { margin: 0.5rem 0 0.25rem; font-size: 0.875rem; color: #3a3a3a; }
   .rule-row .fr-hint-text {
     font-size: 0.7rem;
@@ -2033,12 +2039,29 @@ async function chargerThemeDocument() {
   try { S.themeDocument = await window.FormThemeDef.charger(window.grist.docApi); } catch (e) { S.themeDocument = null; }
 }
 
-/** Pose le thème du document sur ce qui montre le formulaire tel que le public le verra. */
+/**
+ * Le thème que le public verra pour ce formulaire : celui qu'on lui a donné en entrée, sinon celui du document, sinon aucun
+ * (ou aucun du tout quand l'apparence dit « aucune »).
+ */
+function themeDuFormulaire() {
+  const T = window.FormThemeDef;
+  if (!T || !S.currentDef) return null;
+  const ap = T.apparenceDe(S.currentDef);
+  if (ap.mode === 'aucune') return null;
+  if (ap.mode === 'formulaire') return T.themeFormulaire(S.currentDef);
+  return S.themeDocument && S.themeDocument.theme ? S.themeDocument : null;
+}
+
+/** Pose ce thème sur ce qui montre le formulaire tel que le public le verra (et retire celui d'avant). */
 function habillerApercus() {
-  const t = S.themeDocument;
+  const T = window.FormThemeDef;
+  if (!T) return;
+  const t = themeDuFormulaire();
   ['canevas', 'preview-mount'].forEach(function (id) {
     const el = document.getElementById(id);
-    if (el && t && t.theme && window.FormThemeDef) window.FormThemeDef.appliquer(el, t.theme);
+    if (!el) return;
+    T.retirer(el, el.__themeNoms);
+    el.__themeNoms = t && t.theme ? T.appliquer(el, t.theme) : [];
   });
 }
 
@@ -3842,6 +3865,97 @@ function onMeta(cle, valeur) {
   renderBuilder();
 }
 
+/** Ce que dit un défaut de lecture de ThemeDef, en phrase. */
+const PHRASES_THEMEDEF = {
+  'trop-gros': 'Ce thème dépasse 16 Ko.',
+  'json': 'Ce texte n’est pas du JSON lisible.',
+  'type': 'Un thème est un objet JSON.',
+  'profondeur': 'Ce thème est trop profond (six niveaux au plus).',
+  'cle-interdite': 'Ce thème contient un nom de clé interdit.',
+  'version': 'Ce n’est pas un ThemeDef 1.0 : sa version doit être « themedef-1.0 ».',
+  'section': 'Une partie du thème (graines, modes, surcharges ou exigences) n’est pas un objet.',
+  'principal': 'La couleur principale (graines.principal) manque ou n’est pas au format #RRGGBB.',
+  'sombre': 'Le mode sombre doit être « aucun », « derive » ou « explicite ».',
+  'explicite-incomplet': 'Un mode sombre « explicite » demande ses 26 valeurs.',
+  'exigence': 'Une exigence de contraste est plus lâche que le minimum (4,5 pour le texte, 3 pour les composants).'
+};
+
+/**
+ * L'apparence : le thème que le public verra. Trois choix : celui du document (par défaut), un thème donné à ce formulaire
+ * (déposé ou collé : il part avec lui, y compris hors de Grist), ou aucun.
+ */
+function renderApparence(def) {
+  const T = window.FormThemeDef;
+  if (!T) return '';
+  const ap = T.apparenceDe(def);
+  const doc = S.themeDocument;
+  const nomDoc = doc && doc.theme ? (doc.nom || doc.ligne || 'sans nom') : '';
+  const choix = (mode, libelle, aide) => `
+    <label class="apparence__choix"><input type="radio" name="apparence" value="${mode}" ${ap.mode === mode ? 'checked' : ''}
+      onchange="App.onApparenceMode('${mode}')"><span><strong>${libelle}</strong><span class="fr-hint-text">${aide}</span></span></label>`;
+  const brut = (def.apparence && def.apparence.mode === 'formulaire') ? (S._apparenceTexte != null ? S._apparenceTexte : JSON.stringify(def.apparence.themedef || {}, null, 2)) : '';
+  const erreur = S._apparenceErreur ? `<p class="fr-error-text" role="alert">${esc(PHRASES_THEMEDEF[S._apparenceErreur] || 'Ce thème n’est pas lisible.')}</p>` : '';
+  const pose = def.apparence && def.apparence.mode === 'formulaire' && ap.mode === 'formulaire'
+    ? `<p class="fr-hint-text">Thème « ${esc(typeof ap.themedef.nom === 'string' ? ap.themedef.nom : 'sans nom')}» appliqué à ce formulaire.</p>` : '';
+  const formulaire = def.apparence && def.apparence.mode === 'formulaire' ? `
+    <div class="fr-input-group">
+      <label class="fr-label" for="app-fichier">Un fichier ThemeDef (.json)</label>
+      <input type="file" id="app-fichier" accept=".json,application/json" onchange="App.onApparenceFichier(this)">
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="app-texte">Ou son contenu ${hintIcon('Un ThemeDef 1.0 : le nom, les graines de couleur (principal, secondaire, encre, fond), le mode sombre et les seuils. Il part avec le formulaire.')}</label>
+      <textarea class="fr-input" id="app-texte" rows="8" spellcheck="false" placeholder='{ "version": "themedef-1.0", "graines": { "principal": "#3D4F63" } }'
+        onchange="App.onApparenceTexte(this.value)">${esc(brut)}</textarea>
+    </div>
+    ${erreur}${pose}` : '';
+  return `
+      <p class="bloc__intitule">L’apparence <span>les couleurs que le public voit</span></p>
+      <div class="apparence" role="radiogroup" aria-label="Apparence du formulaire">
+        ${choix('document', 'Celle du document', nomDoc ? 'Thème actif : « ' + esc(nomDoc) + ' ».' : 'Ce document ne porte pas de thème actif : le formulaire garde son apparence d’origine.')}
+        ${choix('formulaire', 'Un thème pour ce formulaire', 'Un ThemeDef 1.0 déposé ou collé ici, qui part avec le formulaire.')}
+        ${choix('aucune', 'L’apparence d’origine', 'Quoi que dise le document.')}
+      </div>
+      ${formulaire}
+      ${ap.erreur ? '<p class="fr-error-text" role="alert">Le thème de ce formulaire n’est pas lisible (' + esc(PHRASES_THEMEDEF[ap.erreur] || ap.erreur) + ') : le formulaire suit le document.</p>' : ''}`;
+}
+
+function majApparence() {
+  marquerModifie();
+  renderBuilder();
+  habillerApercus();
+}
+
+function onApparenceMode(mode) {
+  const def = S.currentDef;
+  S._apparenceErreur = null;
+  if (mode === 'document') delete def.apparence;
+  else if (mode === 'aucune') def.apparence = { mode: 'aucune' };
+  else def.apparence = Object.assign({ mode: 'formulaire' }, def.apparence && def.apparence.themedef ? { themedef: def.apparence.themedef } : {});
+  if (mode !== 'formulaire') S._apparenceTexte = null;
+  majApparence();
+}
+
+/** Un thème collé ou déposé : lu comme une donnée non fiable ; il n'entre dans le formulaire que s'il est lisible. */
+function onApparenceTexte(texte) {
+  const T = window.FormThemeDef;
+  const def = S.currentDef;
+  const lu = T.lireThemeDef(String(texte || ''));
+  if (!lu.ok) { S._apparenceErreur = lu.erreur; S._apparenceTexte = String(texte || ''); majApparence(); return; }
+  S._apparenceErreur = null;
+  S._apparenceTexte = null;
+  def.apparence = { mode: 'formulaire', themedef: lu.themedef };
+  majApparence();
+}
+
+function onApparenceFichier(input) {
+  const f = input && input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 16384) { S._apparenceErreur = 'trop-gros'; majApparence(); return; }
+  const lecteur = new FileReader();
+  lecteur.onload = function () { onApparenceTexte(String(lecteur.result || '')); };
+  lecteur.readAsText(f);
+}
+
 /** Ce qu'on compose : l'accueil, une étape, une question, ou la fin. */
 function renderZoneQuestion(def) {
   const sel = S.selection;
@@ -3868,6 +3982,8 @@ function renderZoneQuestion(def) {
           oninput="App.onDefInput('title', this.value)" onblur="App.onTitleBlur()">
       </div>
       ${renderBrandSlot({ kind: 'logo', urlKey: 'logoUrl', altKey: 'logoAlt', url: brand.logoUrl, alt: brand.logoAlt })}
+
+      ${renderApparence(def)}
 
       <p class="bloc__intitule">La page d’accueil <span>ce qu’on lit pour décider de répondre</span></p>
       <div class="fr-input-group">
@@ -6012,7 +6128,7 @@ async function externeGenerer() {
   const x = S.externe = S.externe || {};
   if (!E || !def) return;
   try {
-    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText] = await Promise.all([
+    const [typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, themeJs, themeDefJs, engineJs, cssText] = await Promise.all([
       fetchScriptSource('shared/types.js'),
       fetchScriptSource('shared/session-context.js'),
       fetchScriptSource('shared/carte-geometrie.js'),
@@ -6023,11 +6139,20 @@ async function externeGenerer() {
       fetchScriptSource('shared/prefill.js'),
       fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('shared/limites.js'),
+      fetchScriptSource('shared/theme.js'),
+      fetchScriptSource('shared/themedef.js'),
       fetchScriptSource('runtime/engine.js'),
       fetchScriptSource('shared/dsfr-like.css')
     ]);
-    x.page = E.buildExternalDocument(def,
-      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText },
+    // Hors de Grist, il n'y a pas de document à lire : le thème du document, s'il y en a un et que le formulaire le suit, est figé
+    // dans la page avec le formulaire (une copie du ThemeDef, jamais une adresse).
+    let defExt = def;
+    const T = window.FormThemeDef;
+    if (T && T.apparenceDe(def).mode === 'document' && S.themeDocument && S.themeDocument.themedef) {
+      defExt = Object.assign({}, def, { apparence: { mode: 'formulaire', themedef: S.themeDocument.themedef } });
+    }
+    x.page = E.buildExternalDocument(defExt,
+      { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, themeJs, themeDefJs, engineJs, cssText },
       { adresse: x.adresse });
     x.nom = (def.id || 'formulaire') + '.html';
     toast('Page générée', 'success');
@@ -6277,7 +6402,7 @@ window.App = {
   onFieldRangs, onFieldRang, onFieldMax, onFieldAutre, onFieldAutreCol, ajouterChoixALaColonne, apercuLargeur,
   ouvrirPlan, allerA, fermerModale,
   onReferentiel, onReferentielAnnexe, onReferentielAnnexeCase, onValidation, onPrefill, onEnrichir, onOptionNombre, onOptionTexte, onOptionPresets, onDepart, onCouleurs, onSaisieLieu, onPrecision, onClavier, onMeta, onGroupe, onGroupeDef, onLimite, onLimiteChoix, onLimiteQuestion, onValidationMode, onAcces, accesLire, accesAppliquer, accesMettreAJour, accesRetirer, accesCopier, choisirSurClic, choisirAuClavier, ajouterIdentite, externeOuvrir, externeAdresse, externePreparer, externeGenerer, externeTelecharger,
-  onDessin, onDessinFichier,
+  onDessin, onDessinFichier, onApparenceMode, onApparenceTexte, onApparenceFichier,
   onIllustrationType, onIllustration, onIllustrationFichier, illustrationRepere, illustrationViderReperes, downloadSurveyManifest, downloadFormDef, copierFormDef, ouvrirReglages, publishForm
 };
 

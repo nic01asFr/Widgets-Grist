@@ -356,6 +356,39 @@
 
   function vide(raison) { return { theme: null, raison: raison, avertissements: [], ligne: null }; }
 
+  /**
+   * L'apparence qu'un formulaire demande : `{ mode, themedef }` dans le FormDef (`apparence`).
+   *
+   *   - `document` (défaut) : le thème actif du document, quand il en porte un ;
+   *   - `formulaire` : le ThemeDef 1.0 donné en entrée avec le formulaire (déposé ou collé dans le compositeur) ;
+   *   - `aucune` : l'apparence d'origine, quoi que dise le document.
+   *
+   * Un thème de formulaire illisible ne casse rien : le formulaire retombe sur le document, et `erreur` dit pourquoi.
+   *
+   * @returns {{mode:string, themedef:object|null, erreur:string|null}}
+   */
+  function apparenceDe(def) {
+    var a = def && typeof def === 'object' ? def.apparence : null;
+    if (!objetSimple(a)) return { mode: 'document', themedef: null, erreur: null };
+    var mode = ['document', 'formulaire', 'aucune'].indexOf(a.mode) !== -1 ? a.mode : 'document';
+    if (mode !== 'formulaire') return { mode: mode, themedef: null, erreur: null };
+    var lu = lireThemeDef(a.themedef);
+    if (!lu.ok) return { mode: 'document', themedef: null, erreur: lu.erreur };
+    return { mode: 'formulaire', themedef: lu.themedef, erreur: null };
+  }
+
+  /** Le thème donné en entrée avec un formulaire, résolu pour un mode ; `null` quand le formulaire n'en porte pas. */
+  function themeFormulaire(def, mode) {
+    var ap = apparenceDe(def);
+    if (ap.mode !== 'formulaire') return null;
+    var r = resoudre(ap.themedef, mode || modeSysteme());
+    return {
+      theme: r.vars, raison: 'formulaire', mode: r.mode, source: r.source, nom: typeof ap.themedef.nom === 'string' ? ap.themedef.nom.slice(0, 80) : '',
+      ligne: null, remarques: r.remarques, verifie: false, themedef: ap.themedef,
+      avertissements: [{ code: 'non-verifie', conseil: 'Le thème est appliqué tel que lu : seul le compilateur du kit en mesure les contrastes.' }]
+    };
+  }
+
   function traiter(lignes, opts) {
     var choix = choisirActif(lignes);
     if (!choix.ligne) return { theme: null, raison: choix.avertissements.some(function (a) { return a.code === 'plusieurs-actifs'; }) ? 'plusieurs-actifs' : 'aucun-actif', avertissements: choix.avertissements, ligne: null };
@@ -364,7 +397,7 @@
     var r = resoudre(lu.themedef, opts.mode || modeSysteme());
     return {
       theme: r.vars, raison: 'applique', mode: r.mode, source: r.source, nom: typeof lu.themedef.nom === 'string' ? lu.themedef.nom.slice(0, 80) : '',
-      ligne: choix.ligne.cle, remarques: r.remarques, verifie: false,
+      ligne: choix.ligne.cle, remarques: r.remarques, verifie: false, themedef: lu.themedef,
       avertissements: [{ code: 'non-verifie', conseil: 'Le thème est appliqué tel que lu : seul le compilateur du kit en mesure les contrastes.' }]
     };
   }
@@ -373,13 +406,17 @@
    * Lit le thème actif du document, SANS RIEN ÉCRIRE : la table n'est lue que si le document la porte.
    *
    * @param {{listTables:function, fetchTable:function}} api l'API de document de Grist (`grist.docApi`)
-   * @param {{mode?:string}} [opts] `mode` : `clair` ou `sombre` (le système par défaut)
+   * @param {{mode?:string, def?:object}} [opts] `mode` : `clair` ou `sombre` (le système par défaut) ; `def` : le FormDef, dont l'`apparence`
+   *   peut donner son propre thème (sans lire le document) ou n'en vouloir aucun
    * @returns {Promise<{theme:Object|null, raison:string, avertissements:Array, ligne:string|null}>} `raison` : `applique`, `aucun-actif`,
    *   `plusieurs-actifs`, `invalide`, `table-absente`, `preference-personne`, `pas-de-document`, `lecture-impossible`
    */
   function charger(api, opts) {
     opts = opts || {};
     if (personneImpose()) return Promise.resolve(vide('preference-personne'));
+    var ap = apparenceDe(opts.def);
+    if (ap.mode === 'aucune') return Promise.resolve(vide('apparence-aucune'));
+    if (ap.mode === 'formulaire') return Promise.resolve(themeFormulaire(opts.def, opts.mode));
     if (!api || typeof api.listTables !== 'function' || typeof api.fetchTable !== 'function') return Promise.resolve(vide('pas-de-document'));
     return Promise.resolve(api.listTables()).then(function (tables) {
       var noms = (tables || []).map(function (t) { return typeof t === 'string' ? t : (t && t.id); });
@@ -395,6 +432,8 @@
     contraste: contraste,
     deriver: deriver,
     lireThemeDef: lireThemeDef,
+    apparenceDe: apparenceDe,
+    themeFormulaire: themeFormulaire,
     lignesDeTable: lignesDeTable,
     choisirActif: choisirActif,
     modesDe: modesDe,
