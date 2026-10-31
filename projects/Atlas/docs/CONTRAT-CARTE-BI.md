@@ -1,4 +1,4 @@
-# Composant carte BI : contrat 0.3
+# Composant carte BI : contrat 0.4
 
 Atlas peut être embarqué dans une application externe (« l'hôte ») comme **composant de carte** : l'hôte envoie des commandes, la carte renvoie des événements. Ce document fixe le **contrat** (version `0.3`). Le guide du développeur de l'hôte est `EXPLOITATION-EXTERNE-BI.md`.
 
@@ -132,6 +132,37 @@ Le client en un fichier ne change pas : ces ajouts passent par le manifeste, par
 
 **Marges (zone utile)** [testé] : quand l'hôte pose un panneau sur un côté, `manifeste.marges = { top?, right?, bottom?, left? }` (pixels, 0 à 2000), `flyTo({ marges })` ou, sur l'élément, `setMarges({ right: 380 })` règlent la zone utile. Elles **persistent** : `flyTo` et `fitTo` cadrent dans la zone utile (un `padding` explicite d'un `flyTo` l'emporte pour ce seul déplacement). `flyTo({ marges })` seul ne déplace rien ; `null` les retire. Les marges passent en `padding` de chaque déplacement (`flyTo`, `fitTo`), jamais par `map.setPadding`, que MapLibre 5.6.1 compte deux fois avec le `padding` de `fitBounds`. La bulle d'objet se décale pour rester dans la zone utile. Une forme invalide est une erreur franche par `flyTo`, un avertissement (`_avertissements._scene`) par le manifeste.
 
+## 6 quater. Contrat 0.4 : la vue, la vue plane, les bâtiments, le clic libre [testé, navigateur]
+
+Ajouts **additifs** pour une page qui pose sa propre 3D au-dessus d'une carte vue du dessus et doit l'aligner pixel pour pixel. Un hôte resté en 0.3 (ou 0.2) reste servi pour ses commandes ; une commande 0.4 lui répond `version : <commande> demande la version 0.4`. Les événements nouveaux atteignent aussi les anciens clients (le client livre tout type reçu).
+
+**Version.** `VERSION` vaut `0.4`, `VERSIONS_ACCEPTEES` `0.2, 0.3, 0.4`, et une commande exige **au moins** la version qui l'a introduite (`versionDeCommande`, `versionAuMoins` dans `lib/bi/pont.js`). `ready.version` annonce 0.4 : **un hôte qui compare `ready.version === '0.3'` en dur casserait**, il doit négocier par `ready.versions` (ce que fait `client.js`, `VERSION_CLIENT` 2 : il préfère 0.4 et retombe sur 0.3 avec un composant plus ancien).
+
+**`getCamera()`** : `{ center: [lng, lat], zoom, pitch, bearing, bounds: [ouest, sud, est, nord], taille: { w, h, connu }, ratioPixels, padding: { top, right, bottom, left }, metresParPixel, mode: 'plat' | 'libre', t }`, environ 270 octets.
+- `bounds` est le rectangle **englobant** de la vue : quand le cap n'est pas nul, il est plus large que le cadre (mesuré : cap -18°, cadre de 900 px, emprise de 1 041 px). Pour aligner une 3D, utiliser `center`, `zoom`, `bearing`, `pitch` et `taille`, pas `bounds`.
+- `padding` : les marges persistantes décalent le point de projection du centre ; une page qui aligne une 3D les lit, ou les retire (`flyTo({ marges: null })`).
+- `metresParPixel` suppose des tuiles de 512 px (MapLibre) : 78 271,517 m au zoom 0 à l'équateur, `40075016,686 × cos(lat) / (512 × 2^zoom)` ailleurs. Mesuré en navigateur : cohérent avec l'emprise et la taille du cadre, et avec la position d'un vrai clic (25 px à gauche du centre = 43,4 m au zoom 15).
+- `t` : horloge du composant (`performance.now()`), pour estimer le décalage du flux.
+
+**`watchCamera({ actif?, intervalleMs? })`** : abonne l'hôte à l'événement **`mouvement`** (la vue de `getCamera()` plus `phase` : `debut`, `en_cours`, `fin`). Sans abonnement aucun message continu n'est émis. `intervalleMs` de 16 à 1000 (33 par défaut), sinon erreur `intervalleMs hors bornes (16 à 1000)` ; `actif: false` arrête le flux ; un seul abonnement par composant (un second remplace le premier) ; jamais plus d'un message en attente (l'état courant part, pas l'historique des images) ; un message `fin` est **toujours** envoyé à la fin du mouvement ; arrêt à `pagehide`. L'origine est `utilisateur` pour un geste et `api` pour un déplacement demandé par la page (l'élément `<atlas-bi>` ne livre les événements `api` qu'avec l'attribut `evenements-api`). `camera` (fin de mouvement, anti-rebond de 120 ms) est inchangé.
+- Mesuré en navigateur (deux origines, vol animé de 900 ms, intervalle demandé 50 ms) : 15 messages (`debut`, 13 `en_cours`, `fin`), écart médian 69 ms, maximum 125 ms. Le `postMessage` entre l'iframe et la page ajoute au moins une image de retard : la 3D de l'hôte suit la carte avec ce décalage.
+
+**`setViewMode(mode, options?)`** : `plat` ramène l'inclinaison à 0 sans animation, met les limites d'inclinaison à 0, coupe l'inclinaison par les gestes et, sauf `garderCap: false`, la rotation ; `{ bearing }` (-360 à 360) pose un cap. `libre` rend **exactement** ce que `plat` a retiré (les limites d'avant sont mémorisées). Réponse : `{ mode, pitch, bearing, gestesInclinaison }`. L'état dure d'une scène à l'autre ; en vue plane, un `flyTo` qui demande une inclinaison est ramené à 0. Identique en carte nue et en profil complet (mesuré : l'application complète démarre à 55° et passe à 0). Erreurs : `mode inconnu : <valeur> (plat, libre)`, `bearing hors bornes (-360 à 360)`, `garderCap doit être true ou false`. Le relief (`environnement.relief`) n'est pas désactivé : avec une 3D alignée, ne pas le demander.
+
+**`getBuildings({ bbox?, limite?, hauteurMin? })`** : les bâtiments visibles du fond (source `openmaptiles`, couche `building`) en GeoJSON : `{ type: 'FeatureCollection', features, total, tronque, zoom, bounds, source, attribution, avertissements }`. Chaque entité : `id` (identifiant OpenStreetMap), `geometry` (`Polygon` ou `MultiPolygon`), `properties: { hauteur, base, coupe }` en mètres (`render_height`, `render_min_height` ; rien d'autre ne traverse, et seulement des nombres finis). Aucun appel réseau : seules les tuiles déjà chargées sont lues. `bbox` ([ouest, sud, est, nord]) est intersectée avec la vue, jamais élargie ; `limite` de 1 à 5000 (2000 par défaut) ; `hauteurMin` de 0 à 1000.
+- **Fragments** (mesuré sur le vrai fond) : un bâtiment coupé par un joint de tuile arrive en plusieurs fragments de **même identifiant**. Les copies strictement identiques sont retirées ; les fragments qui diffèrent sont tous marqués `coupe: true` et **ne sont pas réunis** : une page qui extrude fragment par fragment verra des coutures. Au zoom 15 à Marseille : 108 bâtiments, dont 3 coupés (6 fragments).
+- **Entités géantes** : une entité de plus de 20 000 sommets est ignorée et nommée (`geometrie-trop-grande`, avec ses identifiants) ; mesuré : un seul « bâtiment » du Vieux-Port a 35 216 sommets (médiane 21, 90 % sous 300). Sans cette règle, 2 bâtiments sur 55 étaient rendus. Plafonds : 200 000 sommets et 2 Mo par réponse ; une entité qui ferait dépasser le budget est sautée (`tronque: true`, avertissement `taille`).
+- **Hauteurs** : celles d'OpenStreetMap, souvent estimées ; `0` veut dire « inconnue ». `hauteur` vaut `null` si la tuile n'en donne pas.
+- **Zoom** : moins de 14, liste vide et avertissement `zoom-trop-faible`. Un fond sans bâti (`base=aucune`, fonds unis) : erreur `batiments : ce fond n'a pas de bâti (source absente)`. Au plus 5 appels par seconde (`trop_frequent`).
+- **Licence** : données dérivées d'OpenStreetMap (ODbL) : `attribution` est rendue et **doit être affichée par l'hôte**.
+- Mesuré en navigateur (Marseille, zoom 16) : 53 bâtiments en 215 ms (premier appel : le module est chargé à la demande), 526 Ko ; 35 en profil complet.
+
+**Événement `clic { lng, lat, x, y, zoom }`** : un clic de la personne qui ne touche **aucune** entité interactive (avant, il ne disait rien, et sans couche interactive il était perdu). Un clic sur une entité reste un `select` seul ; en édition, `edit add` garde la priorité ; après une sélection, `select { layer: null, featureId: null }` part avant `clic` (mesuré en profil complet). Coordonnées finies, longitude ramenée dans [-180, 180], latitude bornée, arrondies (7 décimales, pixels au dixième). C'est une donnée de navigation de la personne : elle part vers l'hôte déclaré, comme `select`.
+
+**Refus d'une couche de dalles 3D** : la carte nue refuse une couche `type: 'dalles3d'` (`_erreurs.<id>` commence par `capacite_absente`, le compte de la couche n'apparaît pas) au lieu de répondre `0`. Elle demande le profil complet **et** une scène Atlas (`version: "0.2.2"`).
+
+**Non retenu** : un refus général d'un type de couche inconnu (la clé `type` est admise par le validateur de manifeste : le refuser risquerait des hôtes légitimes) ; un fond transparent (non trouvé, à traiter séparément) ; la fusion des fragments de bâtiments ; l'export glTF et WebXR.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -250,5 +281,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.33.0 | 0.3 | couche : `interactive: false` (exclue du clic, du survol et du test « vide » de l'édition) ; couche de lignes : `visuel.tirets`. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.3 | 0.3 | profil complet : le voile du premier rendu s'applique aussi (`voile=0` le retire), la page ne montre plus l'application de base puis la carte par défaut avant la scène de l'hôte. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.2 | 0.3 | l'aiguille du nord de la boussole suit la couleur principale. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
+| à venir (non publié) | 0.3 -> 0.4 | contrat 0.4, additif : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode` (vue plane verrouillée), `getBuildings` (bâtiments visibles, hauteurs, fragments), événement `clic` en un point libre ; la carte nue refuse une couche `dalles3d` (`capacite_absente`) ; règle de version : une commande exige au moins la version qui l'a introduite ; `VERSION_CLIENT` 2 ; `ready.version` annonce 0.4 (négocier par `ready.versions`) |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
