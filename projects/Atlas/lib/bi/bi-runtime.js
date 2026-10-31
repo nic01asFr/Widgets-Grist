@@ -366,6 +366,7 @@ export function attacher(map, opts = {}) {
   const horloge = opts.horloge || {};
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
+  let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
   function etatCamera() {
@@ -592,6 +593,27 @@ export function attacher(map, opts = {}) {
         modeVue = 'libre';
       }
       return { mode: modeVue, pitch: arrondi(map.getPitch(), 3), bearing: arrondi(map.getBearing(), 3), gestesInclinaison: modeVue === 'libre' };
+    },
+    /**
+     * Les bâtiments visibles du fond (contrat 0.4), pour une page qui pose sa propre 3D : GeoJSON avec `hauteur` et `base` en mètres, lus dans les tuiles déjà chargées
+     * (aucun appel réseau). Voir lib/bi/batiments.js pour les fragments aux joints de tuiles et les plafonds.
+     */
+    async getBuildings(o) {
+      // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
+      const B = await import('./batiments.js?v=20261031a');
+      const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
+      const opt = normaliserOptionsBatiments(o);
+      if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
+      if (!limiteurBatiments()) throw new Error('getBuildings : trop_frequent (' + APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      if (typeof map.getSource !== 'function' || !map.getSource('openmaptiles') || typeof map.querySourceFeatures !== 'function') throw new Error("batiments : ce fond n'a pas de bâti (source absente)");
+      const zoom = map.getZoom(), b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+      const vue = b && typeof b.getWest === 'function' ? [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] : [-180, -90, 180, 90];
+      const utile = opt.bbox ? intersectionBatiments(opt.bbox, vue) : vue;
+      const base = { type: 'FeatureCollection', zoom: arrondi(zoom, 3), source: 'openmaptiles', attribution: attributionSure(ATTRIBUTION_BATIMENTS) };
+      if (!utile) return { ...base, features: [], total: 0, tronque: false, bounds: opt.bbox, avertissements: ["emprise : la bbox demandée ne touche pas la vue"] };
+      if (zoom < ZOOM_MINIMAL_BATIMENTS) return { ...base, features: [], total: 0, tronque: false, bounds: utile, avertissements: ["zoom-trop-faible : le bâti n'est lu qu'à partir du zoom " + ZOOM_MINIMAL_BATIMENTS + ' (zoom actuel ' + arrondi(zoom, 1) + ')'] };
+      const r = batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox: utile, limite: opt.limite, hauteurMin: opt.hauteurMin });
+      return { ...base, features: r.features, total: r.total, tronque: r.tronque, bounds: utile.map((v) => arrondi(v, 6)), avertissements: r.avertissements };
     },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
