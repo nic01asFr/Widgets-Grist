@@ -323,7 +323,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-form .fr-input, .fr-form .fr-select, .fr-form textarea.fr-input { min-height: var(--cible); font-size: var(--texte); }
 .fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
 .fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
-.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--kit-accent, var(--blue-france)); }
+.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; flex: 0 0 1.25rem; accent-color: var(--kit-accent, var(--blue-france)); }
 .fr-radio-group .fr-label, .fr-checkbox-group .fr-label { font-weight: 400; }
 
 /* Progression : où j'en suis, combien il reste. */
@@ -340,7 +340,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-form__actions {
   position: sticky; bottom: 0; z-index: 5;
   display: flex; justify-content: space-between; align-items: center; gap: var(--ecart);
-  margin-top: 1.5rem; padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  margin-top: 0.75rem; padding: 0.6rem 0 calc(0.6rem + env(safe-area-inset-bottom, 0px));
   /* Opaque sur toute sa largeur : avec un fond qui commence transparent, le texte de la question
      suivante se lisait entre les deux boutons. Le fondu est au-dessus de la barre, pas dedans. */
   background: var(--kit-fond, var(--fond-page));
@@ -699,7 +699,7 @@ html { scroll-padding-bottom: 6rem; }
 .fr-bandeau {
   background: var(--kit-surface, var(--fond-carte, #fff));
   border-bottom: 2px solid var(--kit-accent, var(--blue-france));
-  padding: 0.875rem 1rem;
+  padding: 0.7rem 1rem;
   margin: -1rem -1rem 0;
 }
 .fr-bandeau__inner {
@@ -1119,4 +1119,4 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 }
 
 /* La phrase qui dit ce que l'astérisque veut dire : discrète, au-dessus des questions. */
-.fr-form .fr-legende-obligatoire { margin: 0 0 1rem; }
+.fr-form .fr-legende-obligatoire { margin: 0 0 0.5rem; }
