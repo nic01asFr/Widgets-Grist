@@ -6,12 +6,21 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 | Repère | Valeur actuelle |
 |---|---|
-| Contrat du composant carte BI | 0.3 (additif depuis sa publication) |
-| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 1, 14 770 octets |
-| Empreinte du client | `sha384-BKqMqAslAVNAB7iCXpuHU+RzIQ8TLTCfKdh+rHpibyJnplgaOexPQ4nKzpDVWKYY` |
+| Contrat du composant carte BI | 0.4 (additif ; 0.3 et 0.2 restent servis) |
+| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 2, 15 586 octets |
+| Empreinte du client | `sha384-uGkFCm2s3lMQU5tCJlXwLm/MP0SUkKfy9LtodrgG6F1TkwQ/2BTrt4M0QNBwS5Hp` |
 | Moteur de formulaires vendorisé | celui de la 1.13.1 (une publication d'Atlas ne le fait pas bouger) |
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
+
+## 1.35.0 — contrat carte BI 0.4, dalles 3D compressées et protégées, sélection Grist
+
+- **Contrat 0.4** (additif, annoncé aux hôtes avant publication) : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode('plat' | 'libre')` (vue plane verrouillée), `getBuildings` (bâtiments visibles en GeoJSON avec hauteur et base, fragments aux joints de tuiles marqués `coupe: true`, entités de plus de 20 000 sommets ignorées), événement `clic { lng, lat, x, y, zoom }`. Détail et mesures : `docs/CONTRAT-CARTE-BI.md` §6 quater, recette d'alignement d'une 3D : `docs/EXPLOITATION-EXTERNE-BI.md` §7 quater.
+- **Règle de version** : une commande exige au moins la version qui l'a introduite ; un hôte resté en 0.3 (ou 0.2) garde ses commandes. **`ready.version` et `ping().version` annoncent maintenant `0.4`** : un hôte qui les compare à `'0.3'` en dur doit négocier par `ready.versions`. Nouveau client d'hôte : `VERSION_CLIENT` 2, empreinte ci-dessus (un hôte qui épingle l'empreinte ne change rien tant qu'il ne copie pas le nouveau fichier).
+- **La carte nue refuse une couche `dalles3d`** (`capacite_absente` dans `_erreurs`) au lieu de répondre `0` ; elle demande le profil complet et une scène Atlas (`version: "0.2.2"`).
+- **Dalles 3D** : le chargeur lit les textures KTX2 (`KHR_texture_basisu`) des GLB de pix2hdr (avant : `setKTX2Loader must be called before loading KTX2 textures`) ; vérifié sur les 4 dalles réelles des Milles. Une maquette protégée en HTTP Basic demande l'identifiant dans une boîte (gardé en mémoire de la page, présenté à la seule origine de la grille, jamais enregistré ni mis dans une adresse) ; vérifié en navigateur : refus puis nouvelle saisie, puis chargement avec l'en-tête. Seules les dalles de statut `livree` sont montées (voir le guide).
+- **Sélection Grist** : en widget, une ligne choisie dans Grist (autre widget ou table) amène la carte sur l'objet de la couche liée à la table de la section (`_row_id`), avec le halo de sélection ; vérifié dans un document Grist réel.
+- Client de l'hôte : `VERSION_CLIENT` 2, `lib/bi/client-hote.js`, 15 586 octets.
 
 ## 1.34.0 — catalogue d'objets atlas-objets 0.2
 

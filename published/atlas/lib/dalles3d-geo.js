@@ -16,7 +16,7 @@
  * SÉCURITÉ. Le manifeste vient d'une adresse que la page hôte désigne : toute adresse calculée doit avoir l'origine du manifeste (jamais un tiers), être admise
  * (https, ou http sur localhost), et les nombres lus sont bornés.
  */
-import { adresseAdmise } from './scene-externe.js?v=1.34.0';
+import { adresseAdmise } from './scene-externe.js?v=1.35.0';
 
 export const SCHEMA_GRILLE = 'pix2hdr-atlas-grille3d/0.1';
 /** Un niveau de détail reste sous ce nom ; le plus fin porte le plus petit numéro (D1 fin, D3 grossier). */

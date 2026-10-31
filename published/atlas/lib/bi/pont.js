@@ -10,9 +10,9 @@
  */
 import { verifierTaille } from '../charte/schema.js';
 
-export const VERSION = '0.3';
-/** Versions d'hôte acceptées : la 0.3 n'ajoute que des commandes et des événements, une 0.2 reste servie pour ses 19 commandes. */
-export const VERSIONS_ACCEPTEES = Object.freeze(['0.2', '0.3']);
+export const VERSION = '0.4';
+/** Versions d'hôte acceptées : les 0.3 et 0.4 n'ajoutent que des commandes et des événements ; une 0.2 reste servie pour ses 19 commandes, une 0.3 pour les siennes. */
+export const VERSIONS_ACCEPTEES = Object.freeze(['0.2', '0.3', '0.4']);
 export const SOURCE_RUNTIME = 'atlas-bi';
 export const SOURCE_HOTE = 'hote-bi';
 
@@ -49,9 +49,23 @@ export const COMMANDES = Object.freeze({
   batch: [['array', true], ['object', false]],
   setHorsLigne: [['any', true]],
   getTheme: [],
+  // --- contrat 0.4 : la caméra, pour une page qui aligne sa propre 3D ---
+  getCamera: [],
+  watchCamera: [['object', false]],
+  setViewMode: [['string', true], ['object', false]],
+  getBuildings: [['object', false]],
 });
 /** Commandes ajoutées par la 0.3 (une commande 0.3 envoyée avec la version 0.2 est refusée). */
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
+/** Commandes ajoutées par la 0.4 (une commande 0.4 envoyée avec la version 0.2 ou 0.3 est refusée). */
+export const COMMANDES_0_4 = Object.freeze(['getCamera', 'watchCamera', 'setViewMode', 'getBuildings']);
+/** La plus petite version du contrat qui connaît la commande. */
+export function versionDeCommande(cmd) { return COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
+/** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
+export function versionAuMoins(v, min) {
+  const mineure = (x) => { const [maj, min2] = String(x).split('.').map(Number); return maj === 0 && Number.isFinite(min2) ? min2 : NaN; };
+  return mineure(v) >= mineure(min);
+}
 export const BATCH_MAX = 100;
 
 /**
@@ -64,7 +78,7 @@ export const CAPACITES = Object.freeze(['edition', 'points', 'socle', 'temps', '
 /** Brique dont dépend chaque commande. `socle` : ce qui vaut pour toute scène (carte, thème, fond, cadrage, couches, filtres, sélection). */
 export const CAPACITE_DE_COMMANDE = Object.freeze({
   ping: 'socle', setScene: 'socle', setLayerVisibility: 'socle', setFilter: 'socle', select: 'socle', highlight: 'socle', flyTo: 'socle', fitTo: 'socle',
-  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle',
+  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle', setViewMode: 'socle', getBuildings: 'socle',
   setVisual: 'points',
   setTime: 'temps', play: 'temps', pause: 'temps',
   setEdition: 'edition', updateFeature: 'edition',
@@ -175,7 +189,8 @@ export function validerCommande(msg, { origine = '', autorisees = [] } = {}) {
   if (!ok) return { ok: false, code: 'origine', erreur: 'origine non autorisée : ' + origine };
   if (!VERSIONS_ACCEPTEES.some((v) => versionsCompatibles(msg.version, v))) return { ok: false, code: 'version', erreur: 'version ' + (typeof msg.version === 'string' ? msg.version.slice(0, 32) : typeof msg.version) + ' incompatible avec ' + VERSION };
   if (!estCommande(msg.cmd)) return { ok: false, code: 'commande', erreur: 'commande inconnue : ' + (typeof msg.cmd === 'string' ? msg.cmd.slice(0, 64) : typeof msg.cmd) };
-  if (msg.version !== VERSION && COMMANDES_0_3.includes(msg.cmd)) return { ok: false, code: 'version', erreur: msg.cmd + ' demande la version ' + VERSION + ' (reçu ' + msg.version + ')' };
+  // une commande exige AU MOINS la version qui l'a introduite : une 0.3 reste servie à un hôte en 0.3 (ou plus), une 0.4 n'est servie qu'à un hôte en 0.4
+  if (!versionAuMoins(msg.version, versionDeCommande(msg.cmd))) return { ok: false, code: 'version', erreur: msg.cmd + ' demande la version ' + versionDeCommande(msg.cmd) + ' (reçu ' + msg.version + ')' };
   const args = Array.isArray(msg.args) ? msg.args : [];
   const e = validerArguments(msg.cmd, args); if (e) return { ok: false, code: 'argument', erreur: e };
   return { ok: true, id: msg.id, cmd: msg.cmd, args };

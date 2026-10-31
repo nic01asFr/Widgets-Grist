@@ -19,7 +19,7 @@
 import {
   lireGrille, urlGabarit, urlDisponibilite, lireDisponibilite, lireAncrage, matriceDalle, produit4, inverse4, niveauPourDistance, niveauAffiche,
   distanceM, mercator, metreEnMercator, creerCacheLRU, PLAFOND_DALLES_VUE, PLAFOND_OCTETS_GLB,
-} from './dalles3d-geo.js?v=1.34.0';
+} from './dalles3d-geo.js?v=1.35.0';
 
 export const BUDGET_OCTETS_DEFAUT = 320 * 1024 * 1024;
 export const PARALLELISME_DEFAUT = 3;
@@ -32,7 +32,7 @@ export const MARGE_FENETRE = 0.25;
  * @param {string} o.id  identifiant de la couche (celui de la scène)
  * @param {string} o.urlGrille  adresse du manifeste de grille
  * @param {object} o.THREE  three.js
- * @param {() => object} o.creerChargeur  un GLTFLoader prêt (décodeurs compris)
+ * @param {(renderer: object) => object} o.creerChargeur  un GLTFLoader prêt (décodeurs compris, dont le KTX2 : il reçoit le moteur de rendu) ; `liberer()` facultatif
  * @param {object} o.carte  la carte MapLibre
  * @param {(ancrage:object) => number} o.altitudeBase  altitude (m) du plan `y = 0` de la dalle selon le relief de la carte
  * @param {(url:string) => Promise<any>} o.fetchJson
@@ -182,7 +182,7 @@ export function creerCoucheDalles({
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true }); renderer.autoClear = false;
       // les couleurs de sommet du glTF sont LINÉAIRES : sans encodage de sortie sRGB, tout sortirait trop sombre (explicite, même si c'est le défaut de three.js)
       if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
-      chargeur = creerChargeur();
+      chargeur = creerChargeur(renderer);   // le moteur de rendu : KTX2Loader en a besoin pour choisir le format de texture du GPU
     },
     render(gl, matrice) {
       if (!renderer || !visible || !origine) return;
@@ -225,6 +225,8 @@ export function creerCoucheDalles({
     try { carte.off('moveend', surMouvement); } catch (e) { /* carte déjà détruite */ }
     try { if (carte.getLayer(idCouche)) carte.removeLayer(idCouche); if (carte.getSource(idAttribution)) carte.removeSource(idAttribution); } catch (e) { /* idem */ }
     viderTout();
+    if (chargeur && typeof chargeur.liberer === 'function') chargeur.liberer();
+    chargeur = null;
     if (renderer && renderer.dispose) renderer.dispose();
     renderer = null; scene = null;
   }

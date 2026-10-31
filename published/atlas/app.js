@@ -4,33 +4,33 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.34.0';
+import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.35.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=1.34.0';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.34.0';
-import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.34.0';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.34.0';
+import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=1.35.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.35.0';
+import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.35.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.35.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.34.0';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.34.0';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.34.0';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.34.0';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.34.0';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.34.0';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.34.0';
-import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.34.0';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.34.0';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.34.0';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.34.0';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.34.0';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.34.0';
+} from './lib/parametres-objet.js?v=1.35.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.35.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.35.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.35.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.35.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.35.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.35.0';
+import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.35.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.35.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.35.0';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.35.0';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.35.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.35.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -38,8 +38,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.34.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.34.0';
+} from './lib/scene-loader.js?v=1.35.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.35.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -48,53 +48,55 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.34.0';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.34.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.34.0';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.34.0';
+} from './lib/fiche-formulaire.js?v=1.35.0';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.35.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.35.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.35.0';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.34.0';
+} from './lib/classes.js?v=1.35.0';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.34.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.34.0';
+} from './lib/grappes.js?v=1.35.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.35.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.34.0';
+} from './lib/layer-order.js?v=1.35.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.34.0';
+} from './lib/table-reference.js?v=1.35.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.34.0';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.34.0';
-import { attributionSure } from './lib/attribution.js?v=1.34.0';
-import { creerToast } from './lib/toast.js?v=1.34.0';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.34.0';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.34.0';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.34.0';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.34.0';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.34.0';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.34.0';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.34.0';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.34.0';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.34.0';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.34.0';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.34.0';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.34.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.34.0';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.34.0';
+} from './lib/bulle-objet.js?v=1.35.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.35.0';
+import { attributionSure } from './lib/attribution.js?v=1.35.0';
+import { creerToast } from './lib/toast.js?v=1.35.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.35.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.35.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.35.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.35.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.35.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.35.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.35.0';
+import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=1.35.0';
+import { creerAccesDalles } from './lib/dalles3d-acces.js?v=1.35.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.35.0';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.35.0';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.35.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.35.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.35.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.35.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.35.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.34.0';
+} from './lib/terrain-base.js?v=1.35.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -112,20 +114,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.34.0';
+} from './lib/grist-sync.js?v=1.35.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.34.0';
+} from './lib/nouvelle-couche.js?v=1.35.0';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.34.0';
+} from './lib/champ-formulaire.js?v=1.35.0';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.34.0';
+} from './lib/saisie-objet.js?v=1.35.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -133,7 +135,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.34.0';
+} from './lib/geometrie-saisie.js?v=1.35.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -145,14 +147,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.34.0';
+} from './lib/declarative-style.js?v=1.35.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.34.0';
+} from './lib/geo-tables.js?v=1.35.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -177,7 +179,7 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.34.0';
+} from './lib/controls.js?v=1.35.0';
 import {
   captureStoryState,
   saveStoryToGrist,
@@ -185,7 +187,7 @@ import {
   assurerCles,
   storyToManifestFragment,
   coucheDuRecit,
-} from './lib/story.js?v=1.34.0';
+} from './lib/story.js?v=1.35.0';
 import {
   copieLineaire,
   estLineaire,
@@ -207,11 +209,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.34.0';
+} from './lib/trajet.js?v=1.35.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.34.0';
+} from './lib/manifest-binding.js?v=1.35.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -224,7 +226,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.34.0';
+} from './lib/viewport.js?v=1.35.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -239,36 +241,36 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.34.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.34.0';
-import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.34.0';
-import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.34.0';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.34.0';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.34.0';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.34.0';
-import { capUtilisable } from './lib/cap-position.js?v=1.34.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.34.0';
+} from './lib/view-mode.js?v=1.35.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.35.0';
+import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.35.0';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.35.0';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.35.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.35.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.35.0';
+import { capUtilisable } from './lib/cap-position.js?v=1.35.0';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.35.0';
 import {
   etageCoteACote,
   legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.34.0';
+} from './lib/habillage-carte.js?v=1.35.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.34.0';
+} from './lib/viewer-controls.js?v=1.35.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.34.0';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.34.0';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.34.0';
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.34.0';
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=1.34.0';
+} from './lib/scene-prefs.js?v=1.35.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.35.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.35.0';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.35.0';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=1.35.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -12743,7 +12745,7 @@ async function chargerThemeDocument() {
         if (!CONFIG.grist.ready) return;
         const tables = await grist.docApi.listTables();
         if (!tables.includes('Theme_document')) return;
-        const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.34.0'), import('./lib/charte/application.js?v=1.34.0')]);
+        const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.35.0'), import('./lib/charte/application.js?v=1.35.0')]);
         const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
         if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
         if (!theme.charte) return;
@@ -13297,7 +13299,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.34.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.35.0');
     return Feuille;
 }
 
@@ -13518,10 +13520,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.34.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.35.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.34.0');
+        const dc = await import('./lib/data-client.js?v=1.35.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -13663,6 +13665,42 @@ function wireMobileNav() {
     });
 }
 
+/**
+ * La ligne que Grist désigne (un autre widget, la table elle-même) amène la carte sur l'objet qui la porte.
+ *
+ * Seules comptent les couches liées à la table de la section d'Atlas : leurs entités portent `_row_id`
+ * (`lib/selection-grist.js`). Une ligne sans localisation, d'une autre table, ou la création d'une ligne ne font rien.
+ * Pendant une sélection en cours (fiche ouverte, édition), la carte se centre mais la sélection n'est pas touchée :
+ * un clic ailleurs dans le document ne doit pas faire perdre une saisie.
+ */
+let _tableSectionGrist = null;
+let _haloGrist = false;   // le halo affiché vient de Grist : on le retire quand la ligne suivante n'a pas d'objet
+async function brancherSelectionGrist() {
+    if (typeof grist.onRecord !== 'function') return;
+    try { _tableSectionGrist = await grist.selectedTable.getTableId(); } catch (e) { _tableSectionGrist = null; }
+    grist.onRecord((enregistrement) => {
+        if (!map || lecteurRecitActif()) return;
+        const trouve = retrouverEntite(STATE.layers, _tableSectionGrist, idLigne(enregistrement));
+        if (!trouve) {
+            if (_haloGrist && !STATE.selection.mode) {
+                clearHighlight();
+                STATE.selection = { mode: false, layerId: null, features: [], multiIndex: 0 };
+            }
+            _haloGrist = false;
+            return;
+        }
+        const { layer, idx } = trouve;
+        if (!STATE.selection.mode) {
+            STATE.selection.layerId = layer.id;
+            STATE.selection.features = [idx];
+            STATE.selection.multiIndex = 0;
+            updateHighlight();
+            _haloGrist = true;
+        }
+        flyToFeature(layer, idx);
+    });
+}
+
 async function initGrist() {
     // Une scène venue d'une adresse n'est pas de confiance : n'importe qui peut
     // fabriquer l'URL et la faire ouvrir, alors qu'une scène lue dans le
@@ -13686,6 +13724,7 @@ async function initGrist() {
         grist.ready({ requiredAccess: acc.requiredAccess });
         CONFIG.grist.ready = true;
         surveillerEcritures(grist.docApi);
+        brancherSelectionGrist();
         CONFIG.viewMode = acc.viewMode;
         // `viewMode` dit « Atlas ne montre pas ses outils d'auteur ».
         // `peutSaisir` dit « cette personne peut ecrire dans le document ».
@@ -14119,8 +14158,48 @@ function altitudeBaseDalle(ancrage) {
     return Number.isFinite(e) ? e : 0;
 }
 
+/**
+ * La boîte où la personne donne l'identifiant d'une maquette qui le demande (HTTP 401). Le texte vient d'ici ou de l'origine du serveur, posée en `textContent` ;
+ * la saisie n'est ni journalisée ni stockée (voir `lib/dalles3d-acces.js`).
+ * @returns {Promise<{identifiant:string, motDePasse:string}|null>}  `null` : annulée
+ */
+function demanderIdentifiantsDalles({ origine, refuse }) {
+    return new Promise((resolve) => {
+        const fond = document.createElement('div');
+        fond.setAttribute('role', 'dialog'); fond.setAttribute('aria-modal', 'true'); fond.setAttribute('aria-label', 'Accès à la maquette 3D');
+        fond.style.cssText = 'position:fixed;inset:0;z-index:100000;display:grid;place-items:center;background:rgba(0,0,0,.35)';
+        const boite = document.createElement('div');   // pas de <form> : Atlas n'en crée aucun (tests/csp-meta.test.js) ; Entrée et « Valider » font l'envoi
+        boite.style.cssText = 'background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--hairline,#ccc);border-radius:10px;padding:18px;width:min(360px,92vw);display:grid;gap:10px;font:13px/1.4 system-ui,sans-serif';
+        const ligne = (tag, texte, style) => { const e = document.createElement(tag); e.textContent = texte; if (style) e.style.cssText = style; return e; };
+        const champ = (libelle, type) => { const l = document.createElement('label'); l.style.cssText = 'display:grid;gap:3px'; l.append(ligne('span', libelle)); const i = document.createElement('input'); i.type = type; i.className = 'input'; i.autocomplete = 'off'; l.append(i); return { l, i }; };
+        const id = champ('Identifiant', 'text'), mdp = champ('Mot de passe', 'password');
+        const barre = document.createElement('div'); barre.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+        const annuler = ligne('button', 'Annuler'); annuler.type = 'button'; annuler.className = 'btn btn-soft';
+        const valider = ligne('button', 'Valider'); valider.type = 'button'; valider.className = 'btn';
+        barre.append(annuler, valider);
+        boite.append(ligne('strong', 'Maquette protégée'),
+            ligne('div', (refuse ? 'Identifiant refusé. ' : '') + 'Le serveur ' + origine + ' demande un identifiant pour afficher la maquette.'),
+            id.l, mdp.l, barre,
+            ligne('div', 'Gardé dans cette page seulement, jamais enregistré.', 'font-size:11.5px;color:var(--muted,#666)'));
+        fond.append(boite);
+        const fermer = (valeur) => { document.removeEventListener('keydown', surTouche, true); fond.remove(); resolve(valeur); };
+        const surTouche = (e) => { if (e.key === 'Escape') { e.preventDefault(); fermer(null); } };
+        document.addEventListener('keydown', surTouche, true);
+        annuler.addEventListener('click', () => fermer(null));
+        const envoyer = () => { if (id.i.value) fermer({ identifiant: id.i.value, motDePasse: mdp.i.value }); else id.i.focus(); };
+        valider.addEventListener('click', envoyer);
+        for (const i of [id.i, mdp.i]) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); envoyer(); } });
+        document.body.append(fond);
+        id.i.focus();
+    });
+}
+const accesDalles = creerAccesDalles({ demander: demanderIdentifiantsDalles, adresseAdmise });
+
 async function lireReponseDalles(url, maxOctets, lecture) {
-    const r = await fetch(url, { credentials: 'omit' });
+    const envoye = accesDalles.entetes(url);
+    let r = await fetch(url, { credentials: 'omit', headers: envoye });
+    // un serveur qui demande un identifiant : une seule question, puis on rejoue UNE fois
+    if (r.status === 401 && await accesDalles.apres401(url, 'Authorization' in envoye)) r = await fetch(url, { credentials: 'omit', headers: accesDalles.entetes(url) });
     if (!r.ok) throw new Error('HTTP ' + r.status + ' pour ' + url);
     const annonce = Number(r.headers.get('content-length'));
     if (Number.isFinite(annonce) && annonce > maxOctets) throw new Error('réponse trop volumineuse (' + Math.round(annonce / 1048576) + ' Mo) : ' + url);
@@ -14131,12 +14210,12 @@ async function lireReponseDalles(url, maxOctets, lecture) {
 
 /** Monte une maquette en dalles 3D désignée par l'adresse de son manifeste de grille. Chargé À LA DEMANDE : rien de tout cela sans une scène de dalles. */
 async function monterDallesHote({ id, grille }) {
-    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.34.0');
+    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.35.0');
     const cle = 'dalles:' + id;
     if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
     const couche = creerCoucheDalles({
         id, urlGrille: grille, THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
-        creerChargeur: () => { const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder); return l; },
+        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
         fetchJson: (u) => lireReponseDalles(u, 2 * 1024 * 1024, (r) => r.json()),
         fetchOctets: (u, max) => lireReponseDalles(u, max, (r) => r.arrayBuffer()),
     });
@@ -15725,7 +15804,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openIGN: () => import('./lib/vue-import-ign.js?v=1.34.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
+    openIGN: () => import('./lib/vue-import-ign.js?v=1.35.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
             A.zoomLayer(id);
@@ -16577,7 +16656,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.34.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.35.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -16623,7 +16702,7 @@ const A = {
         const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
-            const m = await import('./lib/trafic-couche.js?v=1.34.0');
+            const m = await import('./lib/trafic-couche.js?v=1.35.0');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
             _traficRepli3d = false;
             if (_traficReglages.rendu !== 'points') {
@@ -18268,9 +18347,9 @@ async function demarrer() {
     }
     if (MODE_BI) return demarrerBi();   // ni accueil ni document : les données viennent de l'hôte
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.34.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.35.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.34.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.35.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
@@ -18295,7 +18374,7 @@ async function demarrerBi() {
         CONFIG.defaultPitch = 0;
         Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
     }
-    const chargement = import('./lib/bi/montage.js?v=1.34.0');
+    const chargement = import('./lib/bi/montage.js?v=1.35.0');
     chargement.catch(() => {});
     try {
         await init();
@@ -18309,7 +18388,7 @@ async function demarrerBi() {
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.
                 sceneBi: (oui) => document.body.classList.toggle('scene-bi', !!oui),
                 habiller: async (lecture) => {
-                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.34.0');
+                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.35.0');
                     const { variables, notes } = variablesApplication(lecture);
                     poserHabillageApplication(variables, VARIABLES);
                     return notes;
