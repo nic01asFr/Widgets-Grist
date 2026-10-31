@@ -48,8 +48,8 @@ describe('Limites — l\'écran', () => {
     await flush();
     assert.deepEqual(c.lectures, ['Inscriptions'], 'les réponses déjà reçues sont lues une fois');
     const html = root.innerHTML;
-    assert.match(html, /<option value="A" disabled>A — complet<\/option>/);
-    assert.match(html, /<option value="B">B — 2 places restantes<\/option>/);
+    assert.match(html, /<option value="A" disabled>A — complet<\/option>/);
+    assert.match(html, /<option value="B">B — 2 places restantes<\/option>/);
     assert.match(html, /<option value="C">C<\/option>/, 'un choix sans limite reste tel quel');
   });
 
@@ -57,7 +57,7 @@ describe('Limites — l\'écran', () => {
     const root = createRoot();
     Engine.monter(root, formulaire({ parChoix: [{ colId: 'Atelier', max: 2 }] }), { client: client({ table: table('A') }), contexte: {} });
     await flush();
-    assert.match(root.innerHTML, /A — 1 place restante</);
+    assert.match(root.innerHTML, /A — 1 place restante</);
   });
 
   it('remplace le formulaire par un message quand le total est atteint', async () => {
@@ -91,8 +91,8 @@ describe('Limites — l\'écran', () => {
     const root = createRoot();
     Engine.monter(root, def, { client: c, contexte: {} });
     await flush();
-    assert.match(root.innerHTML, /<option value="7" disabled>Petite — complet<\/option>/);
-    assert.match(root.innerHTML, /<option value="9">Grande — 4 places restantes<\/option>/);
+    assert.match(root.innerHTML, /<option value="7" disabled>Petite — complet<\/option>/);
+    assert.match(root.innerHTML, /<option value="9">Grande — 4 places restantes<\/option>/);
   });
 
   it('une table illisible ne bloque personne et n\'invente aucun chiffre', async () => {
@@ -150,7 +150,7 @@ describe('Limites — à l\'envoi', () => {
     await flush(); await flush();
     assert.deepEqual(c.ecritures, [], 'rien n\'est écrit');
     assert.match(root.innerHTML, /« A » est complet\. Choisissez-en un autre\./);
-    assert.match(root.innerHTML, /<option value="A" disabled>A — complet<\/option>/, 'l\'écran se met à jour');
+    assert.match(root.innerHTML, /<option value="A" disabled>A — complet<\/option>/, 'l\'écran se met à jour');
     assert.equal(c.lectures.length, 2, 'une lecture au chargement, une à l\'envoi');
   });
 
@@ -203,6 +203,7 @@ describe('Limites — dire où en est la réponse envoyée', () => {
     assert.match(root.innerHTML, /data-statut="retenue"/);
     assert.match(root.innerHTML, /Votre réponse est retenue\./);
     assert.match(root.innerHTML, /fr-alert--info/);
+    assert.match(root.innerHTML, /fr-alert--success/, 'retenue : le message de fin de l\'auteur reste');
   });
 
   it('« Liste d\'attente » : le dit, en avertissement', async () => {
@@ -210,12 +211,14 @@ describe('Limites — dire où en est la réponse envoyée', () => {
     assert.match(root.innerHTML, /data-statut="attente"/);
     assert.match(root.innerHTML, /fr-alert--warning/);
     assert.match(root.innerHTML, /C’est complet : votre réponse est sur liste d’attente\./);
+    assert.ok(!/fr-alert--success/.test(root.innerHTML), 'pas de « enregistrée » en vert au-dessus d\'une liste d\'attente');
   });
 
   it('« Doublon » : dit que la première est conservée', async () => {
     const { root } = await envoyer(formulaire(limites()), { table: apres('Doublon') });
     assert.match(root.innerHTML, /data-statut="doublon"/);
     assert.match(root.innerHTML, /la première est conservée/);
+    assert.ok(!/fr-alert--success/.test(root.innerHTML), 'le message de fin ne contredit pas le doublon');
   });
 
   it('les phrases se règlent dans le formulaire', async () => {

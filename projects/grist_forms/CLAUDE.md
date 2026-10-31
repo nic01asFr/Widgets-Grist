@@ -40,6 +40,12 @@ projects/grist_forms/
 │   ├── enrichir.js          # Un point posé : adresse, commune, bâtiment, altitude, risques
 │   ├── externe.js           # Schéma + page d'un formulaire servi hors de Grist
 │   ├── formulaires-table.js
+│   ├── saisies.js           # Gestes de saisie : curseur, classement, échelle, mesure
+│   ├── carte-geometrie.js   # Carte de saisie d'un point, d'une ligne, d'un polygone
+│   ├── dessin.js            # Annotation et signature sur une image ; `nomDeCouleur`
+│   ├── theme.js             # Contrat de thème `kit-theme/0.1` : juge puis pose les variables --kit-*
+│   ├── formdef-from-table.js         # Un FormDef déduit d'une table Grist
+│   ├── formdef-from-grist-form.js    # Un FormDef relu depuis un formulaire natif Grist
 │   └── publish.js
 ├── tests/
 │   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
@@ -58,9 +64,8 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test projects/grist_forms/tests/*.test.js` → **363 tests verts** (le « 267 » des
-notes précédentes était déjà périmé : 271 au 10/10 avant ce lot). `node --test
-scripts/schemas.test.js` → 11 verts (il en avait un rouge : la dérive du schéma publié).
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1045 tests verts** (31/10/2026 ; les
+chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)
 
@@ -73,7 +78,7 @@ FormDef sain, et ce que change une condition fautive est dans `docs/MIGRATION-CO
 | Le schéma FormDef publié **resynchronisé** sur la source (il rejetait 48 écarts de l'enquête du 4e) ; la source n'a plus d'`$id` (un seul `$id` par adresse) ; test d'égalité source/publié, de fixtures et d'`$id` unique | `published/schemas/formdef-1.0.schema.json`, `scripts/schemas.test.js` |
 | Le contrat **`conditions-1.0`** extrait : règles et composés `and`/`or`/`not`, opérateurs en liste fermée, sources fermées (`field`, `context`, `audience`) ; `definitions.condition` du FormDef en est la copie identique (test d'équivalence) | `runtime/conditions.schema.json`, `published/schemas/conditions-1.0.schema.json` |
 | **L'évaluateur partagé** `shared/conditions.js` : `validerCondition` (fautes avec chemin et proposition), `evaluer` (lève `ConditionInvalide`), `comparer`. Nouveaux opérateurs `empty`, `notEmpty` et composé `not`. **Un opérateur inconnu n'est plus « vrai »** : la condition vaut faux, le champ reste caché, l'erreur est journalisée une fois (`Engine.definirJournal(fn)`, sinon `console.error`) | `shared/conditions.js`, `engine.js` |
-| **`FormEngine.monter(conteneur, formdef, { client, contexte, theme, valeurs, ligne, surEnvoi })`** → `{ demonter, valeurs, valider, contexte, rendre }`. Avec `client` (contrat de données du gabarit : `lireTable(table)`, `appliquer(actions, etiquette)`), le moteur n'accède plus à `window.grist` ; une écriture en file (`{ enfile: true }`) est dite à l'écran. `mount` reste l'entrée historique et gagne `demonter` et `valider` | `engine.js`, `shared/client-contrat.js` |
+| **`FormEngine.monter(conteneur, formdef, { client, contexte, theme, valeurs, ligne, surEnvoi, brouillon })`** → `{ demonter, valeurs, valider, contexte, rendre }`. Avec `client` (contrat de données du gabarit : `lireTable(table)`, `appliquer(actions, etiquette)`), le moteur n'accède plus à `window.grist` ; une écriture en file (`{ enfile: true }`) est dite à l'écran. `mount` reste l'entrée historique et gagne `demonter` et `valider`. `brouillon: true` (ou un objet `getItem/setItem/removeItem`) garde ce qu'on a commencé à répondre dans l'onglet (sessionStorage), le propose au rechargement (« Reprendre » / « Recommencer à zéro ») et l'efface à l'envoi ; jamais en modification de ligne, ni les fichiers ni les valeurs internes. Les pages publiées le demandent ; `FormEngine.effacerBrouillon(def)` pour repartir de zéro | `engine.js`, `shared/client-contrat.js` |
 | **Thème** : plus de couleur en dur hors des définitions ; `var(--kit-accent, var(--blue-france))`… le rendu par défaut est inchangé (vérifié : résolue sans thème, la feuille redonne l'ancienne ligne à ligne) | `shared/dsfr-like.css`, `docs/THEME-KIT.md` |
 
 **Pour les hôtes qui chargent `engine.js` en `<script>` :** ajouter

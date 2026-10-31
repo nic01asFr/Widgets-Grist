@@ -168,7 +168,8 @@
         return applyUserActions([['BulkAddRecord', table, [null], cols]], undefined).then(function (res) {
           var id = res && Array.isArray(res.retValues) ? res.retValues[0] : (Array.isArray(res) ? res[0] : null);
           if (Array.isArray(id)) id = id[0];
-          return loadTable(table).then(function (rows) {
+          // Relecture au mieux : la ligne est écrite, une table illisible ne doit pas faire échouer l'envoi.
+          return loadTable(table).then(function (rows) { return rows; }, function () { return []; }).then(function (rows) {
             if (typeof id === 'number' && Array.isArray(rows)) Object.defineProperty(rows, 'idCree', { value: id, enumerable: false });
             return rows;
           });

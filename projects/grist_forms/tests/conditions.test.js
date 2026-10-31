@@ -606,3 +606,16 @@ describe('condition « est renseigné » (champ qui attend une réponse précéd
     assert.equal(FormUx.summarizeCondition({ field: 'A', operator: 'empty', value: '' }), 'A n’est pas renseigné');
   });
 });
+
+describe('Revue du 31/10/2026 : conditions et éditeur', () => {
+  it('« not » survit à l\'éditeur : ni réécrit en « and », ni compacté en règle simple', () => {
+    const cond = { op: 'not', rules: [{ field: 'A', operator: '==', value: 'x' }] };
+    const apres = FormUx.compactCondition(FormUx.normalizeToCompound(cond));
+    assert.equal(apres.op, 'not');
+    assert.equal(apres.rules.length, 1);
+    assert.equal(FormUx.summarizeCondition(cond), 'NON (A == x)');
+    assert.equal(Engine.evaluateCondition(apres, { A: 'x' }), false);
+    assert.equal(Engine.evaluateCondition(apres, { A: 'y' }), true);
+  });
+
+});
