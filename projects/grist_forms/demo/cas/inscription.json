@@ -4,7 +4,7 @@
   "title": "Atelier « Jardiner en ville »",
   "tableId": "Inscriptions",
   "composeMode": "ensureSchema",
-  "successMessage": "Inscription enregistrée. Un courriel de confirmation suivra.",
+  "successMessage": "Inscription enregistrée. À samedi au jardin !",
   "branding": {
     "organisation": "Service animation",
     "organisationDetail": "Commune d’Exemple"
