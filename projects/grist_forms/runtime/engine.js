@@ -747,7 +747,7 @@
    * > sur chaque ecran — le moteur n'affichait son en-tete qu'a la premiere
    * > etape, et le melangeait avec la presentation.
    */
-  function renderBandeauHtml(formDef) {
+  function renderBandeauHtml(formDef, opts) {
     var brand = (formDef && formDef.branding) || {};
     var logoHtml = renderBrandImg(brand.logoUrl, brand.logoAlt, 'fr-bandeau__logo');
     var orga = brand.organisation
@@ -755,7 +755,9 @@
         (brand.organisationDetail ? '<small>' + escapeHtml(brand.organisationDetail) + '</small>' : '') +
         '</p>'
       : '';
-    var titre = formDef && formDef.title
+    // Sur la page d'accueil, le grand titre dit déjà la même chose : le répéter juste au-dessus fait lire
+    // deux fois la même phrase, et sur un téléphone il remplit tout l'écran avant le premier mot utile.
+    var titre = formDef && formDef.title && !(opts && opts.sansTitre)
       ? '<h1 class="fr-bandeau__titre">' + escapeHtml(formDef.title) + '</h1>' : '';
     if (!logoHtml && !orga && !titre) return '';
     return '<header class="fr-bandeau"><div class="fr-bandeau__inner">' +
@@ -845,12 +847,16 @@
       brand.successImageAlt,
       'fr-form__brand fr-form__brand--success'
     );
+    // Le message de fin de l'auteur dit « enregistrée » : il ne peut pas rester, en vert, au-dessus d'une phrase qui
+    // dit que la réponse est sur liste d'attente ou déjà reçue. Quand la réponse n'est pas retenue, seule la
+    // phrase de statut s'affiche, en avertissement.
+    var pasRetenue = !!(opts && opts.statut && opts.statut.message && opts.statut.code !== 'retenue');
     return '<div class="fr-form__success" role="status">' +
       successImg +
       (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
-      '<div class="fr-alert fr-alert--success"><p>' +
-      escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
-      '</p></div>' +
+      (pasRetenue ? '' : '<div class="fr-alert fr-alert--success"><p>' +
+        escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
+        '</p></div>') +
       (opts && opts.statut && opts.statut.message
         ? '<div class="fr-alert ' + (opts.statut.code === 'retenue' ? 'fr-alert--info' : 'fr-alert--warning') +
           '" role="status" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
@@ -2290,10 +2296,12 @@
         if (!pl) return o;
         var n = normalizeOption(o);
         if (pl.complet) {
-          n.label = n.label + ' — complet';
+          // Espaces insécables : « — complet » et « — 10 places restantes » passent à la ligne d'un bloc, jamais
+          // coupés en deux (« 10 places / restantes ») ni avec un tiret resté seul en bout de ligne.
+          n.label = n.label + ' — complet';
           n.disabled = true;
         } else {
-          n.label = n.label + ' — ' + pl.restant + (pl.restant > 1 ? ' places restantes' : ' place restante');
+          n.label = n.label + ' — ' + pl.restant + (pl.restant > 1 ? ' places restantes' : ' place restante');
         }
         return n;
       });
@@ -2607,6 +2615,13 @@
       if (stepIndex < 0) stepIndex = 0;
       var section = sections[stepIndex];
       var fields = getVisibleFields(section, values, context);
+      // Une question signalée suit ce que la personne en fait : corrigée, son message disparaît ; encore fausse,
+      // il dit ce qui est faux MAINTENANT (« obligatoire » ne reste pas sous un champ rempli). Seules les
+      // questions déjà signalées sont revues : on n'en accuse pas une qu'on n'a pas encore demandée.
+      if (errorFields.length) {
+        var encoreEnDefaut = erreursDeSaisie(fields, values);
+        errorFields = errorFields.filter(function (c) { return encoreEnDefaut.indexOf(c) !== -1; });
+      }
       var isLast = stepIndex === sections.length - 1;
       var editId = bridge.editRowId || formDef.editRowId;
       var editHint = editId
@@ -2677,8 +2692,12 @@
         '</div>';
 
       if (surAccueil) {
+        var accueilDef = formDef.accueil || {};
+        var titreAccueil = String(accueilDef.titre || formDef.title || '').trim().toLowerCase();
+        var memeTitre = titreAccueil && titreAccueil === String(formDef.title || '').trim().toLowerCase();
         rootEl.innerHTML = '<form class="fr-form fr-form--accueil" novalidate>' +
-          bandeauHtml + renderAccueilHtml(formDef) + '</form>';
+          (memeTitre ? renderBandeauHtml(formDef, { sansTitre: true }) : bandeauHtml) +
+          renderAccueilHtml(formDef) + '</form>';
         var cmd = rootEl.querySelector('[data-action="commencer"]');
         if (cmd && typeof cmd.addEventListener === 'function') {
           cmd.addEventListener('click', function () {
