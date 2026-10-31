@@ -129,6 +129,10 @@
     }
     var actionTexte = meilleurTexte(action);
     var accent = secondaire || action;
+    if (rapport(accent, surface) < 3) {
+      remarques.push('La couleur secondaire est trop proche du fond pour des titres : l’aperçu la fonce pour rester lisible.');
+      accent = redresser(accent, surface, 3, vers);
+    }
     var bordChamp = redresser(melanger(surface, texte, 0.3), surface, 3, texte);
 
     var vars = {

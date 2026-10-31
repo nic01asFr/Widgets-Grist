@@ -60,6 +60,12 @@ describe('Aperçu : le thème dont le formulaire s\'habille', () => {
     assert.equal(A.themeVars(doc(), 'clair').remarques.length, 1, 'l orange de marque, 2,82:1 sur blanc, est redressé pour le bouton et le dit');
   });
 
+  it('une secondaire trop claire pour des titres est foncée, et le dit', () => {
+    const r = A.themeVars(doc({ couleurs: { principal: '#0b6e4f', secondaire: '#f4a259', encre: '#1b1b1b', fond: '#fdfaf3' } }), 'clair');
+    assert.ok(D.contraste(r.vars.accent, r.vars.surface) >= 3);
+    assert.ok(r.remarques.some((x) => /secondaire/.test(x)));
+  });
+
   it('la couleur choisie se voit : la principale est celle du bouton quand elle est lisible', () => {
     assert.equal(A.themeVars(doc({ couleurs: { principal: '#3d4f63', fond: '#ffffff' } }), 'clair').vars.action, '#3d4f63');
   });
