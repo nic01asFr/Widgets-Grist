@@ -216,12 +216,20 @@
     for (var i = 0; i < sections.length; i++) {
       if (propre(td, sections[i]) && !objetSimple(td[sections[i]])) return { ok: false, erreur: 'section' };
     }
-    if (!HEX.test(String(lire(td, ['graines', 'principal'])))) return { ok: false, erreur: 'principal' };
+    var principal = lire(td, ['graines', 'principal']);
+    if (typeof principal !== 'string' || !HEX.test(principal)) return { ok: false, erreur: 'principal' };
+    // Les deux jeux de surcharges, quand ils sont dits, sont des objets (un tableau, ou `null`, est refusé).
+    var jeux = td.surcharges || {};
+    var modesJeux = ['clair', 'sombre'];
+    for (var j = 0; j < modesJeux.length; j++) {
+      if (propre(jeux, modesJeux[j]) && !objetSimple(jeux[modesJeux[j]])) return { ok: false, erreur: 'section' };
+    }
     var sombre = lire(td, ['modes', 'sombre']);
     if (sombre !== undefined && ['aucun', 'derive', 'explicite'].indexOf(sombre) === -1) return { ok: false, erreur: 'sombre' };
     if (sombre === 'explicite') {
       var s = lire(td, ['surcharges', 'sombre']);
-      var complet = objetSimple(s) && CLES.every(function (k) { return propre(s, k) || propre(s, '--kit-' + k); });
+      // Complet : les 26 valeurs, chacune admise (une valeur refusée manque autant qu'une valeur absente).
+      var complet = objetSimple(s) && Object.keys(juger(s)).length === CLES.length;
       if (!complet) return { ok: false, erreur: 'explicite-incomplet' };
     }
     var ex = td.exigences || {};
@@ -249,16 +257,27 @@
    * @returns {{ligne:object|null, avertissements:Array}}
    */
   function choisirActif(lignes) {
-    var actifs = (lignes || []).slice(0, LIGNES_MAX).filter(function (l) {
+    var toutes = Array.isArray(lignes) ? lignes : [];
+    var avertissements = [];
+    // Au-delà de cinquante lignes, les suivantes ne sont pas examinées, et on le dit.
+    if (toutes.length > LIGNES_MAX) avertissements.push({ code: 'lignes-ignorees', nombre: toutes.length - LIGNES_MAX });
+    var actifs = toutes.slice(0, LIGNES_MAX).filter(function (l) {
       return l && l.actif === true && typeof l.cle === 'string' && CLE_LIGNE.test(l.cle);
     });
-    if (actifs.length > 1) return { ligne: null, avertissements: [{ code: 'plusieurs-actifs', conseil: 'Plusieurs thèmes sont actifs dans ce document : aucun n’est appliqué.' }] };
-    return { ligne: actifs[0] || null, avertissements: [] };
+    if (actifs.length > 1) {
+      avertissements.push({ code: 'plusieurs-actifs', nombre: actifs.length, conseil: 'Plusieurs thèmes sont actifs dans ce document : aucun n’est appliqué.' });
+      return { ligne: null, avertissements: avertissements };
+    }
+    return { ligne: actifs[0] || null, avertissements: avertissements };
   }
 
   // ── Résoudre et poser ───────────────────────────────────────────────────────
 
   function juger(vars) {
+    // Une valeur de l'étage A s'écrit sans espace autour (le juge du moteur, lui, les retirait) : « #fff » avec un espace est refusée.
+    var nets = {};
+    Object.keys(vars).forEach(function (k) { if (typeof vars[k] !== 'string' || vars[k] === vars[k].trim()) nets[k] = vars[k]; });
+    vars = nets;
     if (Theme && typeof Theme.valider === 'function') return Theme.valider(vars).applique;
     var out = {};
     Object.keys(vars).forEach(function (k) {
@@ -339,7 +358,7 @@
 
   function traiter(lignes, opts) {
     var choix = choisirActif(lignes);
-    if (!choix.ligne) return { theme: null, raison: choix.avertissements.length ? 'plusieurs-actifs' : 'aucun-actif', avertissements: choix.avertissements, ligne: null };
+    if (!choix.ligne) return { theme: null, raison: choix.avertissements.some(function (a) { return a.code === 'plusieurs-actifs'; }) ? 'plusieurs-actifs' : 'aucun-actif', avertissements: choix.avertissements, ligne: null };
     var lu = lireThemeDef(choix.ligne.themedef);
     if (!lu.ok) return { theme: null, raison: 'invalide', avertissements: [{ code: 'themedef-invalide', detail: lu.erreur }], ligne: choix.ligne.cle };
     var r = resoudre(lu.themedef, opts.mode || modeSysteme());

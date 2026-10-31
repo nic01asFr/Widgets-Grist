@@ -81,6 +81,33 @@ describe('ThemeDef : un contenu non fiable', () => {
     assert.equal(T.lireThemeDef(td({ exigences: { contrasteTexte: 7, contrasteComposant: 3 } })).ok, true, 'on peut renforcer');
   });
 
+  it('vecteurs du kit : une graine qui n est pas un texte, des surcharges qui n en sont pas, un mode sombre aux valeurs refusées', () => {
+    assert.equal(T.lireThemeDef(td({ graines: { principal: ['#3D4F63'] } })).erreur, 'principal', 'un tableau n est pas une couleur');
+    assert.equal(T.lireThemeDef(td({ surcharges: { clair: [] } })).erreur, 'section');
+    assert.equal(T.lireThemeDef(td({ surcharges: { sombre: null } })).erreur, 'section');
+    const presque = {};
+    T.CLES.forEach((k) => { presque[k] = '#112233'; });
+    presque.accent = 'url(x)';
+    assert.equal(T.lireThemeDef(td({ modes: { sombre: 'explicite' }, surcharges: { sombre: presque } })).erreur, 'explicite-incomplet', 'une valeur refusée manque');
+    assert.deepEqual(T.choisirActif('x'), { ligne: null, avertissements: [] }, 'des lignes qui ne sont pas une liste : rien');
+    assert.deepEqual(T.choisirActif({}), { ligne: null, avertissements: [] });
+  });
+
+  it('vecteurs du kit : les lignes au-delà de cinquante sont dites, une valeur ne porte aucun espace', () => {
+    const lignes = Array.from({ length: 60 }, (_, i) => ({ cle: 't' + i, themedef: '{}', actif: i === 55 }));
+    assert.deepEqual(T.choisirActif(lignes), { ligne: null, avertissements: [{ code: 'lignes-ignorees', nombre: 10 }] });
+    const deux = Array.from({ length: 60 }, (_, i) => ({ cle: 't' + i, themedef: '{}', actif: i === 1 || i === 2 }));
+    const r = T.choisirActif(deux);
+    assert.equal(r.ligne, null);
+    assert.deepEqual(r.avertissements.map((x) => [x.code, x.nombre]), [['lignes-ignorees', 10], ['plusieurs-actifs', 2]]);
+    const un = Array.from({ length: 60 }, (_, i) => ({ cle: 'l' + i, themedef: '{}', actif: i === 3 || i === 55 }));
+    assert.equal(T.choisirActif(un).ligne.cle, 'l3');
+    const r2 = T.resoudre({ version: 'themedef-1.0', graines: { principal: '#112233' }, surcharges: { clair: { accent: ' #fff', texte: '#fff ', fond: '#fff\n', action: '#fff' } } }, 'clair');
+    assert.equal(r2.vars['--kit-action'], '#fff');
+    assert.notEqual(r2.vars['--kit-accent'], '#fff', 'avec un espace devant : refusée');
+    assert.notEqual(r2.vars['--kit-texte'], '#fff', 'avec un espace derrière : refusée');
+  });
+
   it('arbitrage : ce qui est écarté sans refuser le document', () => {
     assert.equal(T.lireThemeDef(td({ cle_inconnue: 1, police: 'comic', graines: { principal: '#112233', secondaire: 'pas-une-couleur' } })).ok, true);
     assert.equal(T.lireThemeDef(td({ resolu: 'illisible' })).ok, true);
