@@ -190,6 +190,7 @@
       '    window.FormEngine.mount(cible, window.__FORM_DEF__, {',
       '      submit: submit,',
       '      values: valeurs || {},',
+      '      brouillon: true,',
       '      get editRowId() { return editRowId; },',
       '      getAccessToken: function (o) { return window.grist.docApi.getAccessToken(o); },',
       '      loadTable: window.GristBridge && window.GristBridge.loadTable',

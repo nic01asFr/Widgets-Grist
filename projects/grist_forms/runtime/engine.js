@@ -2281,6 +2281,65 @@
     return raw;
   }
 
+  // -- Brouillon : ce qu'on a commence a repondre survit a un rechargement de la page --
+  //
+  // > **Dans l'onglet seulement** (sessionStorage) : rien ne quitte l'appareil, et tout disparait a la fermeture de
+  // > l'onglet. Ce n'est pas une sauvegarde, c'est un filet : une page rechargee, un telephone qui rafraichit.
+  // > Rien n'est garde pour les fichiers, les signatures lourdes ni les valeurs internes (cle contenant `__`).
+  var BROUILLON_PREFIXE = 'formbuilder:brouillon:';
+  var BROUILLON_VALIDITE_MS = 12 * 3600 * 1000;
+  var BROUILLON_VALEUR_MAX = 20000;
+
+  /** La cle du brouillon : un formulaire, une page. */
+  function cleBrouillon(formDef) {
+    var lieu = typeof location !== 'undefined' && location ? String(location.pathname || '') : '';
+    return BROUILLON_PREFIXE + String(formDef && (formDef.id || formDef.tableId) || '') + ':' + lieu;
+  }
+
+  /** Ce qui se garde des valeurs : du texte, des nombres, des booleens, des listes de ceux-la. Fonction pure. */
+  function valeursDeBrouillon(values) {
+    function simple(v) {
+      var t = typeof v;
+      if (t === 'string') return v.length <= BROUILLON_VALEUR_MAX;
+      return v === null || t === 'boolean' || (t === 'number' && isFinite(v));
+    }
+    var out = {};
+    Object.keys(values || {}).forEach(function (k) {
+      if (k.indexOf('__') !== -1) return;
+      var v = values[k];
+      if (simple(v)) out[k] = v;
+      else if (Array.isArray(v) && v.every(simple)) out[k] = v;
+    });
+    return out;
+  }
+
+  /** Le stockage a utiliser : `bridge.brouillon` vaut `true` (l'onglet) ou un objet getItem/setItem/removeItem. */
+  function stockageDeBrouillon(bridge, formDef) {
+    if (!bridge || !bridge.brouillon || bridge.editRowId || (formDef && formDef.editRowId)) return null;
+    if (typeof bridge.brouillon === 'object' && typeof bridge.brouillon.getItem === 'function') return bridge.brouillon;
+    try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch (e) { return null; }
+  }
+
+  /** Le brouillon enregistre, s'il est lisible et recent ; sinon rien. */
+  function lireBrouillon(stockage, cle) {
+    try {
+      var brut = stockage.getItem(cle);
+      if (!brut) return null;
+      var b = JSON.parse(brut);
+      if (!b || typeof b.valeurs !== 'object' || !b.valeurs || !Object.keys(b.valeurs).length) return null;
+      if (!Number.isFinite(b.date) || Date.now() - b.date > BROUILLON_VALIDITE_MS) { stockage.removeItem(cle); return null; }
+      return b;
+    } catch (e) { return null; }
+  }
+
+  /** Efface le brouillon d'un formulaire (l'hote qui recommence a zero). */
+  function effacerBrouillon(formDef, stockage) {
+    try {
+      var st = stockage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null);
+      if (st) st.removeItem(cleBrouillon(formDef));
+    } catch (e) { /* stockage refuse : il n'y avait rien a effacer */ }
+  }
+
   function mount(rootEl, formDef, bridge) {
     if (!rootEl) return null;
     bridge = bridge || {};
@@ -2301,6 +2360,67 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+
+    // -- Brouillon (voir plus haut) : proposé au chargement, gardé à chaque changement, effacé à l'envoi --
+    var stockageB = stockageDeBrouillon(bridge, formDef);
+    var cleB = stockageB ? cleBrouillon(formDef) : '';
+    var departB = stockageB ? JSON.stringify(valeursDeBrouillon(values)) : '';
+    var brouillonPropose = stockageB ? lireBrouillon(stockageB, cleB) : null;
+    var envoye = false;
+
+    function sauverBrouillon() {
+      // Tant que la proposition attend une réponse, elle n'est pas écrasée par ce qu'on tape à côté.
+      if (!stockageB || brouillonPropose || envoye || demonte) return;
+      var v = valeursDeBrouillon(values);
+      var json = JSON.stringify(v);
+      try {
+        if (json === departB) stockageB.removeItem(cleB);
+        else stockageB.setItem(cleB, JSON.stringify({ valeurs: v, etape: stepIndex, date: Date.now() }));
+      } catch (e) { /* stockage plein ou refusé : le brouillon se perd, pas la réponse */ }
+    }
+
+    function oublierBrouillon() {
+      envoye = true;
+      brouillonPropose = null;
+      if (stockageB) { try { stockageB.removeItem(cleB); } catch (e) { /* rien à effacer */ } }
+    }
+
+    function brouillonHtml() {
+      if (!brouillonPropose) return '';
+      return '<div class="fr-alert fr-alert--info fr-brouillon" role="region" aria-label="Réponse commencée">' +
+        '<p><strong>Vous aviez commencé à répondre.</strong> Reprendre là où vous en étiez ?</p>' +
+        '<p class="fr-brouillon__actions">' +
+        '<button type="button" class="fr-btn" data-action="reprendre-brouillon">Reprendre</button>' +
+        '<button type="button" class="fr-btn fr-btn--secondary" data-action="oublier-brouillon">Recommencer à zéro</button>' +
+        '</p></div>';
+    }
+
+    function brancherBrouillon() {
+      var reprendre = rootEl.querySelector('[data-action="reprendre-brouillon"]');
+      var oublier = rootEl.querySelector('[data-action="oublier-brouillon"]');
+      if (reprendre && typeof reprendre.addEventListener === 'function') {
+        reprendre.addEventListener('click', function () {
+          var b = brouillonPropose;
+          brouillonPropose = null;
+          if (!b) return;
+          Object.keys(b.valeurs).forEach(function (k) {
+            if (verrouilles.indexOf(k) === -1) values[k] = b.valeurs[k];
+          });
+          surAccueil = false;
+          demarreA = Date.now();
+          if (Number.isFinite(b.etape)) stepIndex = Math.max(0, b.etape);
+          render();
+          remonterEnHaut();
+        });
+      }
+      if (oublier && typeof oublier.addEventListener === 'function') {
+        oublier.addEventListener('click', function () {
+          brouillonPropose = null;
+          if (stockageB) { try { stockageB.removeItem(cleB); } catch (e) { /* rien à effacer */ } }
+          render();
+        });
+      }
+    }
 
     // ── Limites : jusqu'où le formulaire accepte de réponses (voir shared/limites.js) ──
     var limites = null;         // la forme retenue de formDef.limites
@@ -2476,6 +2596,9 @@
     if (typeof rootEl.addEventListener === 'function') {
       rootEl.addEventListener('pointerdown', surPointeurEnfonce, true);
     }
+    // Un champ qu'on quitte ou une case qu'on coche : les écouteurs du champ ont mis la valeur à jour, on la garde.
+    function surChangementBrouillon() { setTimeout(sauverBrouillon, 0); }
+    if (stockageB && typeof rootEl.addEventListener === 'function') rootEl.addEventListener('change', surChangementBrouillon);
     var context = (SessionContext.emptyContext && SessionContext.emptyContext()) || {
       inGristWidget: false, canWriteNative: false, isLoggedIn: false, userEmail: '', groups: []
     };
@@ -2845,9 +2968,10 @@
         var titreAccueil = String(accueilDef.titre || formDef.title || '').trim().toLowerCase();
         var memeTitre = titreAccueil && titreAccueil === String(formDef.title || '').trim().toLowerCase();
         rootEl.innerHTML = '<form class="fr-form fr-form--accueil" novalidate>' +
-          (memeTitre ? renderBandeauHtml(formDef, { sansTitre: true }) : bandeauHtml) +
+          (memeTitre ? renderBandeauHtml(formDef, { sansTitre: true }) : bandeauHtml) + brouillonHtml() +
           renderAccueilHtml(formDef) + '</form>';
         typographier(rootEl);
+        brancherBrouillon();
         var cmd = rootEl.querySelector('[data-action="commencer"]');
         if (cmd && typeof cmd.addEventListener === 'function') {
           cmd.addEventListener('click', function () {
@@ -2861,8 +2985,10 @@
       }
 
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
-        bandeauHtml + editHint + headerHtml + stepperHtml + legendeHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+        bandeauHtml + editHint + brouillonHtml() + headerHtml + stepperHtml + legendeHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       typographier(rootEl);
+      brancherBrouillon();
+      sauverBrouillon();
       brancherEntree();
       brancherLiensResume();
       wireEvents(fields);
@@ -3058,6 +3184,7 @@
             return defaultSubmit(bridge, formDef, data);
           }).then(function (res) {
             memoriserDernieres();
+            oublierBrouillon();
             // La réponse est partie : tant qu'on relit son statut, le formulaire ne se renvoie pas.
             return lireStatut(res).then(function (st) { return { res: res, statut: st }; });
           }).then(function (fin) {
@@ -3704,6 +3831,7 @@
       renduEnAttente = false;
       if (typeof rootEl.removeEventListener === 'function') {
         rootEl.removeEventListener('pointerdown', surPointeurEnfonce, true);
+        rootEl.removeEventListener('change', surChangementBrouillon);
       }
       if (docEcoute && typeof docEcoute.removeEventListener === 'function') {
         docEcoute.removeEventListener('pointerup', relacherPointeur, { capture: true });
@@ -3871,6 +3999,7 @@
     // plus bas, sans écraser ce que l'hôte a dit.
     var pont = client ? pontDepuisClient(client, options, !contexte) : {};
     if (options.valeurs) pont.values = options.valeurs;
+    if (options.brouillon) pont.brouillon = options.brouillon;
     if (options.ligne != null) pont.editRowId = options.ligne;
     if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
     if (contexte) pont.context = Object.assign({}, contexte);
@@ -3942,6 +4071,9 @@
     renderAccueilHtml: renderAccueilHtml,
     aUnAccueil: aUnAccueil,
     renderSuccessHtml: renderSuccessHtml,
+    effacerBrouillon: effacerBrouillon,
+    valeursDeBrouillon: valeursDeBrouillon,
+    cleBrouillon: cleBrouillon,
     valuesFromRecord: valuesFromRecord,
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.

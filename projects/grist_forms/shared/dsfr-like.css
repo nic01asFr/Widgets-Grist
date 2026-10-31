@@ -1134,3 +1134,7 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 }
 .fr-form .fr-geo__avance[open] > summary, .champ-bloc__rendu .fr-geo__avance[open] > summary { margin-bottom: 0.25rem; }
 .fr-form .fr-geo__avance .fr-input, .champ-bloc__rendu .fr-geo__avance .fr-input { width: 100%; }
+
+/* Une réponse commencée : la proposition de la reprendre, avant la première question. */
+.fr-form .fr-brouillon { margin-top: 0; }
+.fr-form .fr-brouillon__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
