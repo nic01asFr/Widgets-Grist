@@ -362,7 +362,7 @@ export function attacher(map, opts = {}) {
   function surFinMouvement() { clearTimeout(tmCam); tmCam = setTimeout(() => { const ce = map.getCenter(); const b = typeof map.getBounds === 'function' ? map.getBounds() : null; emettre('camera', { center: [ce.lng, ce.lat], zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), ...(b && typeof b.getWest === 'function' ? { bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] } : {}) }, camApi ? 'api' : 'utilisateur'); camApi = false; }, 120); }
   map.on('click', surClic); map.on('mousemove', surSurvol); map.on('moveend', surFinMouvement);
   // ---- la vue de la caméra (contrat 0.4) : `getCamera`, et le flux `mouvement` sur abonnement (`watchCamera`) ----
-  let modeVue = 'libre';
+  let modeVue = 'libre', limitesAvant = null;   // `limitesAvant` : les limites d'inclinaison d'avant `plat`, rendues par `libre`
   const horloge = opts.horloge || {};
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
@@ -535,6 +535,7 @@ export function attacher(map, opts = {}) {
     flyTo(cam) {
       // `marges` : zone utile persistante (voir lib/bi/marges.js) ; seule, elle ne déplace rien
       const { marges: m, ...reste } = cam; if (m !== undefined) poserMarges(m);
+      if (modeVue === 'plat' && reste.pitch) reste.pitch = 0;   // la vue plane ne s'incline pas, même sur demande de la page
       if (m !== undefined && !Object.keys(reste).length) return true;
       const t = tailleCadre();
       camApi = true; map.flyTo({ duration: 600, ...(marges ? { padding: limiterPadding(marges, t.w, t.h) } : {}), ...reste }); return true;
@@ -564,6 +565,34 @@ export function attacher(map, opts = {}) {
     getTheme() { return themes.lire(); },
     /** La vue courante pour aligner une 3D de l'hôte (contrat 0.4). */
     getCamera() { return etatCamera(); },
+    /**
+     * La vue plane, verrouillée (contrat 0.4) : pour une page qui pose sa propre 3D au-dessus d'une carte vue du dessus. `plat` ramène l'inclinaison à 0
+     * (sans animation), coupe l'inclinaison par les gestes et, sauf `garderCap: false`, la rotation ; `libre` rend ce que `plat` a retiré. L'état dure d'une scène à l'autre.
+     */
+    setViewMode(mode, o = {}) {
+      if (mode !== 'plat' && mode !== 'libre') throw new Error('mode inconnu : ' + String(mode).slice(0, 40) + ' (plat, libre)');
+      const options = o && typeof o === 'object' ? o : {};
+      const garderCap = options.garderCap === undefined ? true : options.garderCap;
+      if (typeof garderCap !== 'boolean') throw new Error('setViewMode : garderCap doit être true ou false');
+      const cap = options.bearing;
+      if (cap !== undefined && (typeof cap !== 'number' || !Number.isFinite(cap) || cap < -360 || cap > 360)) throw new Error('setViewMode : bearing hors bornes (-360 à 360)');
+      const gestes = (nom, f) => { try { const g = map[nom]; if (g && typeof g[f] === 'function') g[f](); } catch (_) { /* un geste que cette carte n'a pas */ } };
+      if (mode === 'plat') {
+        if (!limitesAvant) limitesAvant = { max: typeof map.getMaxPitch === 'function' ? map.getMaxPitch() : 80, min: typeof map.getMinPitch === 'function' ? map.getMinPitch() : 0 };
+        camApi = true; map.jumpTo({ pitch: 0, ...(cap !== undefined ? { bearing: cap } : {}) });
+        if (typeof map.setMinPitch === 'function') map.setMinPitch(0);
+        if (typeof map.setMaxPitch === 'function') map.setMaxPitch(0);
+        gestes('touchPitch', 'disable');
+        if (garderCap) { gestes('dragRotate', 'disable'); gestes('touchZoomRotate', 'disableRotation'); gestes('keyboard', 'disableRotation'); }
+        else { gestes('dragRotate', 'enable'); gestes('touchZoomRotate', 'enableRotation'); gestes('keyboard', 'enableRotation'); }
+        modeVue = 'plat';
+      } else {
+        if (limitesAvant) { if (typeof map.setMaxPitch === 'function') map.setMaxPitch(limitesAvant.max); if (typeof map.setMinPitch === 'function') map.setMinPitch(limitesAvant.min); limitesAvant = null; }
+        gestes('touchPitch', 'enable'); gestes('dragRotate', 'enable'); gestes('touchZoomRotate', 'enableRotation'); gestes('keyboard', 'enableRotation');
+        modeVue = 'libre';
+      }
+      return { mode: modeVue, pitch: arrondi(map.getPitch(), 3), bearing: arrondi(map.getBearing(), 3), gestesInclinaison: modeVue === 'libre' };
+    },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
       const actif = o.actif === undefined ? true : o.actif;

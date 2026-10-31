@@ -1,7 +1,7 @@
 /**
  * Client JavaScript de l'application HÔTE du composant carte d'Atlas, en UN SEUL FICHIER, sans import.
  *
- * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (3a7732b29662ed16) et lib/bi/pont.js (6e80d0f2398951de).
+ * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (3a7732b29662ed16) et lib/bi/pont.js (86d4ff540d5b88de).
  * Ne pas modifier à la main : relancer le générateur. Contrat 0.4 ; les tables de commandes sont celles du pont (test d'égalité).
  * Usage : voir docs/EXPLOITATION-EXTERNE-BI.md.
  */
@@ -31,9 +31,9 @@ export const VERSION = "0.4";
 export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4"]);
 export const SOURCE_RUNTIME = "atlas-bi";
 export const SOURCE_HOTE = "hote-bi";
-export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]]});
+export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]]});
 export const COMMANDES_0_3 = Object.freeze(["addAdminLayer","removeLayer","setChoropleth","setStatistique","drillDown","drillUp","setDrillAuto","setUnitFilter","batch","setHorsLigne","getTheme"]);
-export const COMMANDES_0_4 = Object.freeze(["getCamera","watchCamera"]);
+export const COMMANDES_0_4 = Object.freeze(["getCamera","watchCamera","setViewMode"]);
 /** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
   const p = (v) => (typeof v === 'string' ? v : '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);

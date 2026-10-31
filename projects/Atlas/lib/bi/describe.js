@@ -45,6 +45,7 @@ export const TEXTES_COMMANDES = Object.freeze({
   batch: ['Exécute jusqu\'à ' + BATCH_MAX + ' ordres en un aller-retour ({ arret: \'erreur\' | \'continuer\' }).', '{ ok, ko, nonExecutes, resultats }'],
   setHorsLigne: ['Mode hors ligne : true (forcé), false, ou \'auto\' (détection).', 'objet'],
   getCamera: ['La vue courante : centre, zoom, inclinaison, cap, emprise, taille du cadre, marges de projection, mètres par pixel (contrat 0.4).', '{ center, zoom, pitch, bearing, bounds, taille, ratioPixels, padding, metresParPixel, mode, t }'],
+  setViewMode: ['Vue plane verrouillée (plat : inclinaison à 0, gestes d\'inclinaison et de rotation coupés, { bearing, garderCap:false } pour garder la rotation) ou libre (contrat 0.4). L\'état dure d\'une scène à l\'autre.', '{ mode, pitch, bearing, gestesInclinaison }'],
   watchCamera: ['Abonne l\'hôte au flux d\'événements mouvement ({ actif, intervalleMs : 16 à 1000, 33 par défaut } ; actif:false l\'arrête). Un seul abonnement : un second remplace le premier (contrat 0.4).', '{ actif, intervalleMs }'],
 });
 
