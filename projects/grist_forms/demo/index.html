@@ -10,13 +10,32 @@
   :root { --demo-rail: 19rem; }
   body { margin: 0; background: var(--fond-page); color: var(--encre); }
 
-  .demo { display: grid; grid-template-columns: var(--demo-rail) minmax(0, 1fr); min-height: 100vh; }
-  @media (max-width: 52rem) { .demo { grid-template-columns: minmax(0, 1fr); } }
+  /* La page tient dans l'ecran : le rail et la scene sont deux panneaux, chacun defile SEUL et seulement quand son
+     contenu ne tient pas. Pas de defilement de la page elle-meme, donc pas de barre d'action cachee sous un pli. */
+  html, body { height: 100%; }
+  .demo { display: grid; grid-template-columns: var(--demo-rail) minmax(0, 1fr); height: 100vh; height: 100dvh; overflow: hidden; }
 
   .demo__rail {
     background: var(--fond-carte);
     border-right: 1px solid var(--bord);
     padding: 1.25rem 1rem;
+    overflow-y: auto; overscroll-behavior: contain; min-height: 0;
+  }
+
+  /* Un ecran bas : le rail se resserre (titres seuls) pour rester sans defilement autant que possible. */
+  @media (max-height: 56rem) {
+    .demo__rail { padding: 0.9rem 0.8rem; }
+    .demo__sous { margin-bottom: 0.75rem; }
+    .demo__cas { padding: 0.5rem 0.7rem; margin-bottom: 0.35rem; }
+    .demo .demo__cas span, .demo .demo__cas em { display: none; }
+  }
+
+  /* Un telephone : retour a une page qui defile, le rail au-dessus du formulaire. */
+  @media (max-width: 52rem) {
+    .demo { grid-template-columns: minmax(0, 1fr); height: auto; overflow: visible; }
+    .demo .demo__rail { overflow: visible; border-right: none; border-bottom: 1px solid var(--bord); }
+    .demo .demo__scene { overflow: visible; }
+    .demo .demo__cas span, .demo .demo__cas em { display: block; }
   }
   .demo__titre { font-size: 1.0625rem; margin: 0 0 0.25rem; color: var(--blue-france); }
   .demo__sous { font-size: 0.8125rem; color: var(--encre-douce); margin: 0 0 1.25rem; }
@@ -36,8 +55,12 @@
   .demo__cas span { display: block; font-size: 0.8125rem; color: var(--encre-douce); margin-top: 0.15rem; }
   .demo__cas em { font-style: normal; font-size: 0.72rem; color: var(--blue-france); }
 
-  .demo__scene { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; min-width: 0; }
+  .demo__scene {
+    padding: 1rem 1.25rem 0; display: grid; gap: 0.75rem; align-content: start; min-width: 0; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: 6rem;
+  }
   .demo__barre { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .demo__barre .demo__note { flex: 1 1 14rem; }
   .demo__note {
     font-size: 0.8125rem; color: var(--encre-douce);
     background: var(--grey-975); border-radius: 4px; padding: 0.5rem 0.75rem; margin: 0;
@@ -46,6 +69,8 @@
   /* Le cadre de téléphone : une saisie de terrain ne se juge pas sur un écran large. */
   .demo__cadre { margin-inline: auto; width: 100%; max-width: 46rem; transition: max-width .15s ease; }
   .demo__cadre--tel { max-width: 23rem; }
+  /* Le bandeau d'une page entiere deborde de 1 rem sur ses marges ; dans la scene, il ne doit pas monter sous la barre. */
+  .demo__cadre .fr-bandeau { margin: 0; }
   .demo__cadre--tel .fr-form {
     border: 1px solid var(--bord); border-radius: 18px;
     padding: 0.75rem; background: var(--fond-carte);
@@ -70,8 +95,8 @@
       <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" id="tel">Téléphone</button>
       <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" id="ordi">Ordinateur</button>
       <button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" id="rejouer">Recommencer</button>
+      <p class="demo__note" id="note">Choisissez un cas à gauche.</p>
     </div>
-    <p class="demo__note" id="note">Choisissez un cas à gauche.</p>
     <div class="demo__cadre" id="cadre"><div id="form"></div></div>
   </main>
 </div>
@@ -155,7 +180,13 @@ function charger(id) {
   elt('form').innerHTML = '<p class="fr-hint-text">Chargement…</p>';
   fetch('cas/' + id + '.json')
     .then(function (r) { if (!r.ok) throw new Error('cas introuvable'); return r.json(); })
-    .then(function (def) { S.def = def; monter(); })
+    .then(function (def) {
+      S.def = def; monter();
+      // Sur un telephone, le rail est au-dessus du formulaire : on amene la personne a ce qu'elle vient de choisir.
+      if (window.matchMedia && matchMedia('(max-width: 52rem)').matches && elt('cadre').scrollIntoView) {
+        elt('cadre').scrollIntoView({ block: 'start', behavior: 'auto' });
+      }
+    })
     .catch(function (e) {
       elt('form').innerHTML = '<div class="fr-alert fr-alert--error"><p>' + e.message + '</p></div>';
     });
