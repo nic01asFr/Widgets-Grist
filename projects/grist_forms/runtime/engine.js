@@ -1884,7 +1884,11 @@
     if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle' ||
         field.widget === 'ouinon' || field.widget === 'pastilles') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
-      return checkedRadio ? checkedRadio.value : null;
+      if (!checkedRadio) return null;
+      // Oui / Non est un booléen : une condition écrite `valeur: true` ne reconnaissait pas la chaîne 'true'
+      // (comparaison lâche, 'true' == true est faux) et la question qui en dépendait ne s'affichait jamais.
+      if (field.widget === 'ouinon') return checkedRadio.value === 'true';
+      return checkedRadio.value;
     }
     if (field.widget === 'classement') {
       var bloc = rootEl.querySelector('[data-colid="' + field.colId + '"]');
@@ -2512,13 +2516,39 @@
       if (submitting) return;
       var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
       var actif = doc && doc.activeElement;
-      var idActif = actif && typeof rootEl.contains === 'function' && rootEl.contains(actif)
-        ? actif.id : '';
+      var dansLeFormulaire = !!(actif && typeof rootEl.contains === 'function' && rootEl.contains(actif));
+      var idActif = dansLeFormulaire ? actif.id : '';
+      var cleActif = dansLeFormulaire && !idActif ? cleDeFocus(actif) : '';
+      var debut = null, fin = null;
+      try { if (dansLeFormulaire && typeof actif.selectionStart === 'number') { debut = actif.selectionStart; fin = actif.selectionEnd; } } catch (e) { /* type sans sélection */ }
       render();
-      if (idActif && doc && typeof doc.getElementById === 'function') {
-        var cible = doc.getElementById(idActif);
-        if (cible && typeof cible.focus === 'function') cible.focus();
+      var cible = null;
+      if (idActif && doc && typeof doc.getElementById === 'function') cible = doc.getElementById(idActif);
+      else if (cleActif && typeof rootEl.querySelector === 'function') cible = rootEl.querySelector(cleActif);
+      if (cible && typeof cible.focus === 'function') {
+        cible.focus();
+        try { if (debut !== null && typeof cible.setSelectionRange === 'function') cible.setSelectionRange(debut, fin); } catch (e2) { /* idem */ }
       }
+    }
+
+    /**
+     * Un sélecteur qui retrouve un élément sans identifiant après un redessin : son action (Précédent, Suivant,
+     * Envoyer…), ou son nom et sa valeur (une option de choix). Sans cela, la personne qui tabule du dernier champ
+     * vers « Suivant » perd le focus à chaque saisie, et un lecteur d'écran repart du début de la page.
+     */
+    function cleDeFocus(el) {
+      var guillemets = function (v) { return String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"'); };
+      var action = el.getAttribute && el.getAttribute('data-action');
+      if (action) return '[data-action="' + guillemets(action) + '"]';
+      var nom = el.getAttribute && el.getAttribute('name');
+      if (nom) {
+        var type = el.getAttribute('type');
+        var valeur = (type === 'radio' || type === 'checkbox') && el.getAttribute('value') != null
+          ? '[value="' + guillemets(el.getAttribute('value')) + '"]' : '';
+        return '[name="' + guillemets(nom) + '"]' + valeur;
+      }
+      var colonne = el.getAttribute && el.getAttribute('data-colid');
+      return colonne ? '[data-colid="' + guillemets(colonne) + '"]' : '';
     }
 
     /**
@@ -2575,6 +2605,31 @@
         if (typographie(n.nodeValue) !== n.nodeValue) noeuds.push(n);
       }
       noeuds.forEach(function (t) { t.nodeValue = typographie(t.nodeValue); });
+    }
+
+    /** Ce que lit la personne quand l'envoi echoue : une phrase claire, jamais le message technique du navigateur. */
+    function messageEnvoiEchoue(err) {
+      var m = String((err && err.message) || '');
+      if (!m || /failed to fetch|networkerror|load failed|network request|timeout|timed out|err_/i.test(m)) {
+        return 'L’envoi a échoué. Vérifiez votre connexion puis réessayez : vos réponses sont gardées.';
+      }
+      return m;
+    }
+
+    /**
+     * La touche Entrée dans un champ vaut « Suivant » (ou « Envoyer » à la dernière étape).
+     *
+     * Les boutons sont de type `button` : sans écouteur, un formulaire à UN seul champ texte était soumis par le
+     * navigateur sur Entrée, ce qui rechargeait la page et perdait toute la saisie (constaté à l'écran).
+     */
+    function brancherEntree() {
+      var formEl = rootEl.querySelector && rootEl.querySelector('form');
+      if (!formEl || typeof formEl.addEventListener !== 'function') return;
+      formEl.addEventListener('submit', function (ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        var bouton = rootEl.querySelector('[data-action="next"], [data-action="submit"]');
+        if (bouton && !bouton.disabled && typeof bouton.click === 'function') bouton.click();
+      });
     }
 
     function remonterEnHaut() {
@@ -2742,6 +2797,7 @@
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
         bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       typographier(rootEl);
+      brancherEntree();
       wireEvents(fields);
       if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
@@ -2912,7 +2968,10 @@
           var missing = erreursDeSaisie(fields, values);
           if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
-          var resolveAtt = Attachments.resolveAttachmentFields
+          // Les pieces jointes ne partent qu'APRES la verification des limites : un formulaire devenu complet ne laisse
+          // pas des fichiers orphelins dans le document, et un echec d'envoi n'est plus un rejet sans gestionnaire.
+          function televerser() {
+            return Attachments.resolveAttachmentFields
             ? Attachments.resolveAttachmentFields(formDef, values, {
                 // Un hôte qui sait envoyer lui-même le fait : c'est le seul
                 // chemin possible hors du navigateur (application empaquetée).
@@ -2924,7 +2983,8 @@
                 fetch: bridge.fetch
               })
             : Promise.resolve(values);
-          Promise.resolve(verifierLimites()).then(function () { return resolveAtt; }).then(function () {
+          }
+          Promise.resolve(verifierLimites()).then(televerser).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
             var data = collectSubmitData(formDef, values, context,
               { creation: enCreation, demarreA: demarreA, email: context.userEmail });
@@ -2949,7 +3009,7 @@
             }
           }, function (err) {
             submitting = false;
-            submitError = (err && err.message) || 'Erreur lors de l\'envoi.';
+            submitError = messageEnvoiEchoue(err);
             render();
           });
         });

@@ -41,6 +41,33 @@ describe('Typographie française à l\'affichage', () => {
   });
 });
 
+describe('Oui / Non et conditions', () => {
+  const def = {
+    id: 'f', title: 'F', tableId: 'T', choices: {},
+    sections: [{ id: 's', label: 'S', gate: null, fields: [
+      { colId: 'Velo', label: 'Vélo', type: 'Bool', widget: 'ouinon', required: false },
+      { colId: 'Marque', label: 'Marque', type: 'Text', widget: 'text', required: false,
+        condition: { field: 'Velo', operator: '==', value: true } }
+    ] }]
+  };
+
+  it('une question conditionnée par « Oui » apparaît quand on répond Oui, disparaît sur Non, et part avec un booléen', async () => {
+    let envoye = null;
+    const root = createRoot();
+    Engine.mount(root, def, { submit: (d) => { envoye = d; return Promise.resolve([[1]]); } });
+    await flush();
+    assert.ok(!root.querySelector('[name="Marque"]'), 'cachée tant qu\'on n\'a rien répondu');
+    const oui = root.querySelector('[name="Velo"][value="true"]');
+    oui.checked = true; oui.dispatchEvent('change');
+    await flush();
+    assert.ok(root.querySelector('[name="Marque"]'), 'visible après « Oui »');
+    root.querySelector('[name="Marque"]').value = 'Peugeot';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.deepEqual(envoye, { Velo: true, Marque: 'Peugeot' });
+  });
+});
+
 describe('Fiabilité de l\'envoi', () => {
   it('deux clics sur « Envoyer » n\'envoient qu\'une réponse', async () => {
     let appels = 0;
@@ -72,5 +99,32 @@ describe('Fiabilité de l\'envoi', () => {
     await flush(); await flush();
     assert.equal(appels, 2);
     assert.match(root.innerHTML, /fr-form__success/);
+  });
+});
+
+describe('Une ligne écrite n\'est jamais annoncée comme un échec', () => {
+  const GristBridge = require('../shared/grist-bridge.js');
+
+  it('table illisible après l\'ajout (règles « ajout seul ») : l\'ajout réussit quand même, avec l\'identifiant', async () => {
+    global.window = { grist: { docApi: {
+      fetchTable: async () => { throw new Error('Blocked by table read access rules'); },
+      applyUserActions: async () => ({ retValues: [[7]] })
+    } } };
+    try {
+      const rows = await GristBridge.addRow('T', { Nom: 'Alice' });
+      assert.deepEqual(rows, []);
+      assert.equal(rows.idCree, 7);
+    } finally { delete global.window; }
+  });
+
+  it('un échec réseau se lit en français et dit que les réponses sont gardées', async () => {
+    const root = createRoot();
+    Engine.mount(root, formDef, { submit: () => Promise.reject(new Error('Failed to fetch')) });
+    await flush();
+    root.querySelector('[name="Nom"]').value = 'Alice';
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.ok(!/Failed to fetch/.test(root.innerHTML));
+    assert.match(root.innerHTML, /vos réponses sont gardées/);
   });
 });
