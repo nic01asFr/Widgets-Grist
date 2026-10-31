@@ -452,6 +452,11 @@
           }
           continue;
         }
+        // Un groupe répétable s'écrit en une seule colonne : ses lignes remplies, en JSON.
+        if (estGroupe(field)) {
+          out[field.colId] = celluleDeGroupe(field, values);
+          continue;
+        }
         var brut = values[field.colId];
         var cols = colonnesDe(field);
         if (field.kind === 'classement') {
@@ -467,6 +472,7 @@
           var fmt = formatsApi();
           var idFormat = fmt && fmt.formatDeChamp(field);
           if (idFormat && typeof out[field.colId] === 'string') out[field.colId] = fmt.normalise(idFormat, out[field.colId]);
+          if (field.widget === 'couleur' && typeof out[field.colId] === 'string') out[field.colId] = out[field.colId].trim();
         }
         // La precision d'un releve GPS (en metres) : valable tant que le point est celui que le GPS a donne.
         // Un point deplace a la carte ou tape a la main n'a plus de precision a annoncer.
@@ -994,6 +1000,58 @@
       renderLabel(field, id) + control + '</div>';
   }
 
+  /**
+   * Une couleur : le code (`#3D4F63`) se tape, ou se choisit avec le sélecteur du navigateur ; la pastille montre
+   * ce qui est retenu. Le code reste LA réponse (une colonne de texte) : le sélecteur n'en est que la commodité, et
+   * il ne répond rien tant qu'on n'y a pas touché.
+   */
+  var MOTIF_COULEUR = '^#[0-9A-Fa-f]{6}$';
+  var MESSAGE_COULEUR = 'Une couleur s’écrit # suivi de six chiffres ou lettres (a à f), par exemple #3D4F63.';
+
+  function couleurSureHex(v) {
+    return typeof v === 'string' && new RegExp(MOTIF_COULEUR).test(v.trim()) ? v.trim().toLowerCase() : '';
+  }
+
+  function renderCouleur(field, value) {
+    var id = fieldId(field);
+    var val = value == null ? '' : String(value);
+    var hex = couleurSureHex(val);
+    var reqAttr = field.required ? ' required' : '';
+    return '<div class="fr-input-group fr-couleur" data-colid="' + escapeHtml(field.colId) + '" data-widget="couleur">' +
+      renderLabel(field, id) +
+      '<div class="fr-couleur__ligne">' +
+      '<span class="fr-couleur__pastille" aria-hidden="true"' + (hex ? ' style="background-color:' + hex + '"' : '') + '></span>' +
+      '<input class="fr-input fr-couleur__code" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(val) +
+      '" maxlength="7" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="#3D4F63"' + reqAttr + ' />' +
+      '<input class="fr-couleur__choix" type="color" data-couleur-pour="' + escapeHtml(field.colId) + '" value="' + (hex || '#000000') + '" ' +
+      'aria-label="Choisir la couleur : ' + escapeHtml(field.label || field.colId) + '" />' +
+      '</div></div>';
+  }
+
+  /** Une réponse qui doit suivre un motif : `options.motif` (expression, 200 caractères au plus) et son message. */
+  function motifDe(field) {
+    var o = (field && field.options) || {};
+    if (typeof o.motif === 'string' && o.motif && o.motif.length <= 200) {
+      return { source: o.motif, message: typeof o.motifMessage === 'string' && o.motifMessage ? o.motifMessage : 'Ce n’est pas au bon format.' };
+    }
+    if (field && field.widget === 'couleur') return { source: MOTIF_COULEUR, message: MESSAGE_COULEUR };
+    return null;
+  }
+
+  /** Les réponses qui ne suivent pas leur motif. Une réponse vide n'est pas ici : l'obligation est une autre règle. */
+  function validerMotifs(fields, values) {
+    var out = [];
+    for (var i = 0; i < fields.length; i++) {
+      var m = motifDe(fields[i]);
+      var v = values[fields[i].colId];
+      if (!m || typeof v !== 'string' || v.trim() === '') continue;
+      var bon = false;
+      try { bon = v.trim().length <= 2000 && new RegExp(m.source).test(v.trim()); } catch (e) { bon = true; /* un motif illisible ne bloque personne */ }
+      if (!bon) out.push({ colId: fields[i].colId, message: m.message });
+    }
+    return out;
+  }
+
   function attrBorne(o, cle) {
     return typeof o[cle] === 'number' ? ' ' + cle + '="' + o[cle] + '"' : '';
   }
@@ -1354,12 +1412,33 @@
    * `rendreChamp` rend une question avec ses erreurs (le même chemin que hors groupe).
    */
   function renderGroupe(groupe, formDef, rendreChamp) {
-    var def = (formDef && formDef.groupes && formDef.groupes[groupe.groupe]) || {};
+    // Une ligne d'un groupe répétable (`widget: 'groupe'`) : sa légende, son bouton « Retirer », et — sous la dernière —
+    // « Ajouter ». Le groupe lui-même porte un titre et une consigne, dits une fois au-dessus de la première ligne.
+    var ligne = groupe.fields[0] && groupe.fields[0]._ligne;
+    var def = ligne
+      ? { titre: ligne.vide ? '' : ligne.titre, colonnes: ligne.colonnes }
+      : ((formDef && formDef.groupes && formDef.groupes[groupe.groupe]) || {});
     var deux = def.colonnes === 2 ? ' fr-groupe--2' : '';
-    return '<fieldset class="fr-fieldset fr-groupe' + deux + '" data-groupe="' + escapeHtml(groupe.groupe) + '">' +
+    var tete = ligne && ligne.premiere && (ligne.tete.titre || ligne.tete.consigne)
+      ? '<div class="fr-groupe-repete__tete">' +
+        (ligne.tete.titre ? '<h3 class="fr-groupe-repete__titre">' + escapeHtml(ligne.tete.titre) + '</h3>' : '') +
+        (ligne.tete.consigne ? '<p class="fr-hint-text">' + escapeHtml(ligne.tete.consigne) + '</p>' : '') +
+        '</div>'
+      : '';
+    var retirer = ligne && !ligne.vide && ligne.peutRetirer
+      ? '<button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm fr-groupe-repete__retirer" data-action="groupe-retirer" ' +
+        'data-groupe="' + escapeHtml(ligne.groupe) + '" data-ligne="' + ligne.i + '">Retirer ' +
+        '<span class="fr-sr-only">' + escapeHtml(def.titre) + '</span></button>'
+      : '';
+    var ajouter = ligne && ligne.derniere && ligne.peutAjouter
+      ? '<div class="fr-groupe-repete__actions"><button type="button" class="fr-btn fr-btn--secondary fr-groupe-repete__ajouter" ' +
+        'data-action="groupe-ajouter" data-groupe="' + escapeHtml(ligne.groupe) + '">' + escapeHtml(ligne.libelleAjout) + '</button></div>'
+      : '';
+    return tete + '<fieldset class="fr-fieldset fr-groupe' + deux + (ligne ? ' fr-groupe--ligne' : '') + '" data-groupe="' +
+      escapeHtml(groupe.groupe) + '">' +
       (def.titre ? '<legend class="fr-fieldset__legend fr-groupe__titre">' + escapeHtml(def.titre) + '</legend>' : '') +
       (def.consigne ? '<p class="fr-hint-text fr-groupe__consigne">' + escapeHtml(def.consigne) + '</p>' : '') +
-      '<div class="fr-groupe__champs">' + groupe.fields.map(rendreChamp).join('') + '</div></fieldset>';
+      '<div class="fr-groupe__champs">' + groupe.fields.map(rendreChamp).join('') + '</div>' + retirer + '</fieldset>' + ajouter;
   }
 
   function renderLikert(field, value) {
@@ -1769,7 +1848,13 @@
     etiquettes: function (f, v, opts) { return renderEtiquettes(f, v, opts); },
     curseur: function (f, v) { return renderCurseur(f, v); },
     compteur: function (f, v) { return renderCompteur(f, v); },
-    heure: function (f, v) { return renderDateLike(f, v, 'time'); }
+    heure: function (f, v) { return renderDateLike(f, v, 'time'); },
+    couleur: function (f, v) { return renderCouleur(f, v); },
+    // Un groupe se développe avant le rendu ; rendu tel quel (un aperçu qui ne l'a pas développé), il se dit sans se saisir.
+    groupe: function (f) {
+      return '<p class="fr-hint-text fr-groupe-repete__vide">' + escapeHtml(f.label || f.colId) + ' : une liste de lignes à ajouter.</p>';
+    },
+    'groupe-vide': function () { return '<p class="fr-hint-text fr-groupe-repete__vide">Aucune ligne pour l’instant.</p>'; }
   };
 
   // renderFieldHtml : field → chaîne HTML échappée, DSFR (fr-input, fr-select, ...).
@@ -1879,6 +1964,189 @@
       '<p class="fr-verrouille__valeur">' + escapeHtml(affiche) + '</p></div>';
   }
 
+  // ── Groupes répétables ────────────────────────────────────────────────────
+  //
+  // > **Une liste d'objets n'a pas de colonne.** « Les couleurs de la marque » (nom, valeur) en compte autant que la
+  // > personne en ajoute. Le groupe est UNE question du formulaire (`widget: 'groupe'`), qui s'écrit dans UNE colonne
+  // > de texte, en JSON : `[{"nom":"Ardoise","valeur":"#3D4F63"}]`. À l'écran il se développe en questions ordinaires
+  // > (`colonne[0].nom`, `colonne[1].nom`…) : la saisie, l'obligation, le format et le brouillon sont ceux de toutes les
+  // > autres questions, sans second chemin. Un formulaire sans groupe ne passe par rien de ceci.
+  //
+  //     { colId: 'couleurs', label: 'Couleurs', widget: 'groupe', type: 'Text',
+  //       options: { min: 1, max: 8, libelleLigne: 'Couleur', libelleAjout: 'Ajouter une couleur',
+  //                  champs: [ { colId: 'nom', label: 'Nom', type: 'Text', widget: 'text', required: true },
+  //                            { colId: 'valeur', label: 'Valeur', type: 'Text', widget: 'couleur' } ] } }
+  var GROUPE_PLAFOND = 50;
+  var GROUPE_MAX_DEFAUT = 12;
+
+  function copierSimple(source) {
+    var out = {};
+    for (var k in source) { if (Object.prototype.hasOwnProperty.call(source, k)) out[k] = source[k]; }
+    return out;
+  }
+
+  function estGroupe(field) { return !!field && field.widget === 'groupe'; }
+
+  /** Les questions d'une ligne. Un nom qui contiendrait `[` ou `]` brouillerait les clés des lignes : écarté. */
+  function sousChampsDe(field) {
+    var liste = field && field.options && field.options.champs;
+    if (!Array.isArray(liste)) return [];
+    return liste.filter(function (c) {
+      return c && typeof c.colId === 'string' && c.colId && c.colId.indexOf('[') === -1 && c.colId.indexOf(']') === -1;
+    });
+  }
+
+  /** Combien de lignes, au moins et au plus. Un groupe obligatoire compte au moins une ligne. */
+  function bornesDeGroupe(field) {
+    var o = (field && field.options) || {};
+    var min = Math.floor(Number(o.min));
+    if (!isFinite(min) || min < 0) min = 0;
+    if (field && field.required && min < 1) min = 1;
+    min = Math.min(min, GROUPE_PLAFOND);
+    var max = entierBorne(o.max, GROUPE_MAX_DEFAUT, GROUPE_PLAFOND);
+    if (max < min) max = min;
+    return { min: min, max: max };
+  }
+
+  function cleNombre(colId) { return colId + '[n]'; }
+  function cleVide(colId) { return colId + '[vide]'; }
+  function nomDeLigne(colId, i, sub) { return colId + '[' + i + '].' + sub; }
+
+  /** Le nombre de lignes montrées : celui qu'on a choisi, sinon celui du départ (`options.lignesDepart`, une ligne au moins). */
+  function nombreDeLignes(field, values) {
+    var b = bornesDeGroupe(field);
+    var n = values && values[cleNombre(field.colId)];
+    if (typeof n === 'number' && isFinite(n)) return Math.max(b.min, Math.min(Math.floor(n), b.max));
+    var depart = field.options && field.options.lignesDepart != null ? Math.floor(Number(field.options.lignesDepart)) : 1;
+    if (!isFinite(depart)) depart = 1;
+    return Math.max(b.min, Math.min(depart, b.max));
+  }
+
+  /** Les questions ordinaires d'un groupe, une série par ligne ; une ligne « vide » à elle seule quand il n'y en a aucune. */
+  function developperGroupe(field, values) {
+    var subs = sousChampsDe(field);
+    if (!subs.length) return [];
+    var b = bornesDeGroupe(field);
+    var n = nombreDeLignes(field, values);
+    var o = field.options || {};
+    var libelle = typeof o.libelleLigne === 'string' && o.libelleLigne ? o.libelleLigne : 'Ligne';
+    var ajout = typeof o.libelleAjout === 'string' && o.libelleAjout ? o.libelleAjout : 'Ajouter une ligne';
+    var tete = { titre: field.label || '', consigne: field.description || '' };
+    var out = [];
+    if (n === 0) {
+      out.push({
+        colId: cleVide(field.colId), label: field.label || '', type: 'Text', widget: 'groupe-vide', required: false,
+        options: { groupe: field.colId + '#vide' },
+        _ligne: { groupe: field.colId, i: -1, n: 0, vide: true, premiere: true, derniere: true, peutAjouter: b.max > 0,
+          peutRetirer: false, libelleAjout: ajout, tete: tete }
+      });
+      return out;
+    }
+    for (var i = 0; i < n; i++) {
+      for (var k = 0; k < subs.length; k++) {
+        var f = copierSimple(subs[k]);
+        f.colId = nomDeLigne(field.colId, i, subs[k].colId);
+        f.condition = null;
+        f.options = copierSimple(subs[k].options || {});
+        f.options.groupe = field.colId + '#' + i;
+        f._ligne = { groupe: field.colId, i: i, n: n, titre: libelle + ' ' + (i + 1), colonnes: o.colonnesLigne === 2 ? 2 : 1,
+          premiere: i === 0, derniere: i === n - 1, peutRetirer: n > b.min, peutAjouter: n < b.max, libelleAjout: ajout,
+          tete: tete, debutDeLigne: k === 0 };
+        out.push(f);
+      }
+    }
+    return out;
+  }
+
+  /** Ce qu'une ligne a de rempli, par nom de question ; `null` si elle est vide. */
+  function ligneDeGroupe(field, values, i) {
+    var ligne = {};
+    var rempli = false;
+    sousChampsDe(field).forEach(function (sub) {
+      var brut = values[nomDeLigne(field.colId, i, sub.colId)];
+      if (brut === undefined || brut === null || brut === '' || (Array.isArray(brut) && !brut.length)) return;
+      var v = Types.coerceForWrite(sub, brut);
+      if (typeof v === 'string' && sub.widget === 'couleur') v = v.trim();
+      if (v === undefined || v === null || v === '') return;
+      ligne[sub.colId] = v;
+      rempli = true;
+    });
+    return rempli ? ligne : null;
+  }
+
+  /** Le contenu de la colonne du groupe : les lignes remplies en JSON, ou `null` quand il n'y en a aucune. */
+  function celluleDeGroupe(field, values) {
+    var n = nombreDeLignes(field, values);
+    var lignes = [];
+    for (var i = 0; i < n; i++) {
+      var l = ligneDeGroupe(field, values, i);
+      if (l) lignes.push(l);
+    }
+    return lignes.length ? JSON.stringify(lignes) : null;
+  }
+
+  /** Le sens inverse : la colonne (texte JSON ou liste) vers les valeurs à plat que le formulaire rend. Une cellule illisible ne donne rien. */
+  function aplatirGroupe(field, brut) {
+    var out = {};
+    var liste = brut;
+    if (typeof brut === 'string') {
+      try { liste = JSON.parse(brut); } catch (e) { return out; }
+    }
+    if (!Array.isArray(liste)) return out;
+    var b = bornesDeGroupe(field);
+    var lignes = liste.filter(function (l) { return l && typeof l === 'object' && !Array.isArray(l); }).slice(0, b.max);
+    out[cleNombre(field.colId)] = Math.max(b.min, lignes.length);
+    lignes.forEach(function (l, i) {
+      sousChampsDe(field).forEach(function (sub) {
+        var v = valueFromCell(sub, l[sub.colId]);
+        if (v !== undefined) out[nomDeLigne(field.colId, i, sub.colId)] = v;
+      });
+    });
+    return out;
+  }
+
+  /** Ajouter une ligne à la fin, si le groupe n'est pas plein. */
+  function ajouterLigneDeGroupe(field, values) {
+    var n = nombreDeLignes(field, values);
+    if (n >= bornesDeGroupe(field).max) return n;
+    values[cleNombre(field.colId)] = n + 1;
+    return n + 1;
+  }
+
+  /** Retirer une ligne : celles d'après remontent, la dernière disparaît. Jamais sous le minimum. */
+  function retirerLigneDeGroupe(field, values, index) {
+    var n = nombreDeLignes(field, values);
+    if (n <= bornesDeGroupe(field).min || index < 0 || index >= n) return n;
+    var subs = sousChampsDe(field);
+    for (var i = index; i < n - 1; i++) {
+      subs.forEach(function (sub) { values[nomDeLigne(field.colId, i, sub.colId)] = values[nomDeLigne(field.colId, i + 1, sub.colId)]; });
+    }
+    subs.forEach(function (sub) { delete values[nomDeLigne(field.colId, n - 1, sub.colId)]; });
+    values[cleNombre(field.colId)] = n - 1;
+    return n - 1;
+  }
+
+  /** « Couleur 2 — Nom » pour une question de ligne ; le libellé tel quel pour toute autre. */
+  function libelleDeSousChamp(formDef, colId) {
+    var sections = (formDef && formDef.sections) || [];
+    for (var s = 0; s < sections.length; s++) {
+      var fs = sections[s].fields || [];
+      for (var j = 0; j < fs.length; j++) {
+        var g = fs[j];
+        if (!estGroupe(g) || colId.indexOf(g.colId + '[') !== 0) continue;
+        var reste = colId.slice(g.colId.length + 1);
+        var fin = reste.indexOf(']');
+        var i = parseInt(reste.slice(0, fin), 10);
+        var nom = reste.slice(fin + 2);
+        var sub = sousChampsDe(g).filter(function (c) { return c.colId === nom; })[0];
+        if (!sub || !isFinite(i)) continue;
+        var libelle = g.options && g.options.libelleLigne ? g.options.libelleLigne : 'Ligne';
+        return libelle + ' ' + (i + 1) + ' — ' + (sub.label || sub.colId);
+      }
+    }
+    return null;
+  }
+
   // ── mount : runtime navigateur — étapes visibles, validation requise, submit ──
   function getVisibleSections(formDef, values, context) {
     var sections = (formDef && formDef.sections) || [];
@@ -1893,7 +2161,10 @@
     var fields = (section && section.fields) || [];
     var out = [];
     for (var i = 0; i < fields.length; i++) {
-      if (isFieldVisible(fields[i], values, context)) out.push(fields[i]);
+      if (!isFieldVisible(fields[i], values, context)) continue;
+      // Un groupe se développe en questions ordinaires : tout ce qui suit (rendu, lecture, obligation) les connaît déjà.
+      if (estGroupe(fields[i])) Array.prototype.push.apply(out, developperGroupe(fields[i], values));
+      else out.push(fields[i]);
     }
     return out;
   }
@@ -2179,6 +2450,14 @@
       var fields = sections[i].fields || [];
       for (var j = 0; j < fields.length; j++) {
         var colId = fields[j].colId;
+        if (estGroupe(fields[j])) {
+          // Les lignes d'un groupe arrivent en bloc (liste ou JSON) et se posent à plat.
+          if (Object.prototype.hasOwnProperty.call(fournies, colId)) {
+            var posees = aplatirGroupe(fields[j], fournies[colId]);
+            Object.keys(posees).forEach(function (cle) { out[cle] = posees[cle]; });
+          }
+          continue;
+        }
         if (Object.prototype.hasOwnProperty.call(fournies, colId)) out[colId] = fournies[colId];
         if (fields[j].kind === 'referentiel') amorcerAnnexes(fields[j], fournies, out);
         var apiInit = enrichirApi();
@@ -2240,6 +2519,11 @@
       for (var j = 0; j < fields.length; j++) {
         var field = fields[j];
         if (!Object.prototype.hasOwnProperty.call(record, field.colId)) continue;
+        if (estGroupe(field)) {
+          var lignesPosees = aplatirGroupe(field, record[field.colId]);
+          Object.keys(lignesPosees).forEach(function (cle) { out[cle] = lignesPosees[cle]; });
+          continue;
+        }
         var v = valueFromCell(field, record[field.colId]);
         if (v !== undefined) out[field.colId] = v;
       }
@@ -2833,6 +3117,8 @@
      * Chaque question en defaut garde son propre message.
      */
     function libelleDe(colId) {
+      var deLigne = libelleDeSousChamp(formDef, colId);
+      if (deLigne) return deLigne;
       var sections = (formDef && formDef.sections) || [];
       for (var i = 0; i < sections.length; i++) {
         var fs = sections[i].fields || [];
@@ -2859,6 +3145,11 @@
         });
       }
       validerFormats(fields, values).forEach(function (e) {
+        messagesErreur[e.colId] = e.message;
+        if (colIds.indexOf(e.colId) === -1) colIds.push(e.colId);
+      });
+      validerMotifs(fields, values).forEach(function (e) {
+        if (messagesErreur[e.colId]) return;
         messagesErreur[e.colId] = e.message;
         if (colIds.indexOf(e.colId) === -1) colIds.push(e.colId);
       });
@@ -3115,6 +3406,8 @@
       brancherCartes(fields);
       brancherDessins();
       brancherReferentiels();
+      brancherCouleurs();
+      brancherGroupes(fields);
       var inputs = rootEl.querySelectorAll('input, select, textarea');
       for (var i = 0; i < inputs.length; i++) {
         // > **Un `change` redessine le formulaire, et le formulaire redessiné
@@ -3226,6 +3519,62 @@
           });
         });
       }
+    }
+
+    /** Une couleur : le sélecteur met le code à jour ; le code met la pastille et le sélecteur à jour. */
+    function brancherCouleurs() {
+      var blocs = rootEl.querySelectorAll('[data-widget="couleur"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var code = bloc.querySelector('input[type="text"]');
+        var choix = bloc.querySelector('input[type="color"]');
+        var pastille = bloc.querySelector('.fr-couleur__pastille');
+        if (!code || !choix || !pastille || typeof code.addEventListener !== 'function') return;
+        function montrer() {
+          var hex = couleurSureHex(code.value);
+          pastille.style.backgroundColor = hex;
+          if (hex) choix.value = hex;
+        }
+        code.addEventListener('input', montrer);
+        choix.addEventListener('input', function () { code.value = choix.value; montrer(); });
+      })(blocs[i]);
+    }
+
+    /**
+     * « Ajouter » et « Retirer » d'un groupe répétable.
+     *
+     * Ce que la personne vient de taper est relu AVANT de changer le nombre de lignes : le redessin repart des
+     * valeurs, et en perdrait la frappe en cours. Le focus va ensuite sur la ligne ajoutée, ou sur celle qui a pris
+     * la place de la ligne retirée.
+     */
+    function brancherGroupes(fields) {
+      function relier(selecteur, agir) {
+        var liste = rootEl.querySelectorAll(selecteur);
+        for (var i = 0; i < liste.length; i++) (function (bouton) {
+          if (typeof bouton.addEventListener !== 'function') return;
+          bouton.addEventListener('click', function () {
+            var groupe = trouverChamp(bouton.getAttribute('data-groupe'));
+            if (!groupe || !estGroupe(groupe)) return;
+            readSectionValues(rootEl, fields, values, verrouilles);
+            var cible = agir(groupe, bouton);
+            errorFields = [];
+            render();
+            var el = cible ? rootEl.querySelector('[name="' + cible + '"]') : null;
+            if (el && typeof el.focus === 'function') { try { el.focus(); } catch (e) { /* élément parti */ } }
+          });
+        })(liste[i]);
+      }
+      relier('[data-action="groupe-ajouter"]', function (groupe) {
+        var avant = nombreDeLignes(groupe, values);
+        var apres = ajouterLigneDeGroupe(groupe, values);
+        var premiere = sousChampsDe(groupe)[0];
+        return apres > avant && premiere ? nomDeLigne(groupe.colId, avant, premiere.colId) : null;
+      });
+      relier('[data-action="groupe-retirer"]', function (groupe, bouton) {
+        var index = parseInt(bouton.getAttribute('data-ligne'), 10);
+        var n = retirerLigneDeGroupe(groupe, values, index);
+        var premiere = sousChampsDe(groupe)[0];
+        return n > 0 && premiere ? nomDeLigne(groupe.colId, Math.min(index, n - 1), premiere.colId) : null;
+      });
     }
 
     /**
@@ -4077,7 +4426,21 @@
     valuesFromRecord: valuesFromRecord,
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.
-    WIDGETS: Object.keys(WIDGET_RENDERERS),
+    WIDGETS: Object.keys(WIDGET_RENDERERS).filter(function (w) { return w !== 'groupe-vide'; }),
+    // Les groupes répétables, pour les hôtes qui assemblent ou relisent leurs lignes (et pour les essais).
+    groupes: {
+      estGroupe: estGroupe,
+      sousChamps: sousChampsDe,
+      bornes: bornesDeGroupe,
+      nombre: nombreDeLignes,
+      developper: developperGroupe,
+      cellule: celluleDeGroupe,
+      aplatir: aplatirGroupe,
+      ajouter: ajouterLigneDeGroupe,
+      retirer: retirerLigneDeGroupe,
+      nom: nomDeLigne
+    },
+    validerMotifs: validerMotifs,
     KINDS: ['echelle', 'choix_autre', 'classement', 'geometrie', 'referentiel'],
     VALEUR_NON_CONCERNE: VALEUR_NON_CONCERNE,
     echelleDe: echelleDe,

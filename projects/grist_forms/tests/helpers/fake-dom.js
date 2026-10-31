@@ -90,7 +90,8 @@ function parseHtml(html) {
 }
 
 function matchesSimple(el, simple) {
-  var m = /^([a-zA-Z0-9]*)((?:\[[^\]]+\])*)(:checked)?$/.exec(simple.trim());
+  // Une valeur entre guillemets peut contenir des crochets (name="couleurs[0].nom").
+  var m = /^([a-zA-Z0-9]*)((?:\[(?:[^\]"]|"[^"]*")+\])*)(:checked)?$/.exec(simple.trim());
   if (!m) return false;
   var tag = m[1], attrsPart = m[2], pseudo = m[3];
   if (tag && el.tagName !== tag) return false;

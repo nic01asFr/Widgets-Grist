@@ -1173,7 +1173,7 @@ const S = {
 
 const GRIST_TYPES = ['Text', 'Int', 'Numeric', 'Bool', 'Date', 'DateTime', 'Choice', 'ChoiceList', 'Ref', 'RefList', 'Attachments'];
 const WIDGETS_BY_TYPE = {
-  Text: ['text', 'textarea'], Int: ['number', 'likert'], Numeric: ['number'], Bool: ['checkbox'],
+  Text: ['text', 'textarea', 'couleur'], Int: ['number', 'likert'], Numeric: ['number'], Bool: ['checkbox'],
   Date: ['date'], DateTime: ['datetime'], Choice: ['select', 'radio'], ChoiceList: ['multiselect'],
   Attachments: ['file'],
   Ref: ['select'], RefList: ['multiselect']
@@ -1183,7 +1183,8 @@ const WIDGET_LABELS = {
   text: 'Une ligne de texte', textarea: 'Un grand champ de texte', number: 'Un nombre', likert: 'Une échelle de notes',
   checkbox: 'Une case à cocher', date: 'Un calendrier', datetime: 'Un calendrier et une heure',
   select: 'Une liste déroulante', radio: 'Des boutons, un seul choix', multiselect: 'Des cases, plusieurs choix',
-  file: 'Un envoi de fichiers'
+  file: 'Un envoi de fichiers', couleur: 'Une couleur (code et sélecteur)',
+  groupe: 'Une liste de lignes à répéter'
 };
 const CONDITION_OPERATORS = ['==', '!=', '>', '>=', '<', '<=', 'contains'];
 
@@ -4247,7 +4248,8 @@ function renderFieldEditor(def, si, f, fi) {
   const advancedOpts = ((window.FormUx && FormUx.ADVANCED_TYPES) || []).map(t =>
     `<option value="${esc(t.key)}" ${typeKey === t.key ? 'selected' : ''}>${esc(t.label)}</option>`
   ).join('');
-  const widgetChoices = WIDGETS_BY_TYPE[f.type] || ['text'];
+  // Un groupe répétable se règle dans le FormDef (`options.champs`) : le compositeur le garde tel quel, sans le déformer.
+  const widgetChoices = f.widget === 'groupe' ? ['groupe'] : (WIDGETS_BY_TYPE[f.type] || ['text']);
   const widgetOptions = widgetChoices.map(w => `<option value="${w}" ${f.widget === w ? 'selected' : ''}>${esc(WIDGET_LABELS[w] || w)}</option>`).join('');
   const prior = priorFields(def, si, fi);
   const refParents = prior.filter(p => p.type === 'Ref');
