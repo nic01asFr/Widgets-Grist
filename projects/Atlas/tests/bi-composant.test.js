@@ -109,7 +109,7 @@ test('pont : validation de forme, source, origine, version, commande et argument
   assert.equal(validerCommande(hote('setLayerVisibility', ['a', 'oui']), ctx).code, 'argument');
   assert.equal(validerCommande(hote('ping', [1]), ctx).code, 'argument');
   assert.equal(validerCommande(hote('select', [null]), ctx).ok, true);
-  assert.ok(versionsCompatibles('0.3') && !versionsCompatibles('0.2') && !versionsCompatibles('0.4') && !versionsCompatibles('1.2') && !versionsCompatibles(undefined));
+  assert.ok(versionsCompatibles('0.4') && !versionsCompatibles('0.2') && !versionsCompatibles('0.3') && !versionsCompatibles('0.5') && !versionsCompatibles('1.2') && !versionsCompatibles(undefined));
 });
 test('pont : résultat, erreur d\'API, rejet sans exécution et anti-boucle (origine api)', async () => {
   const sortie = []; let appels = 0;
@@ -122,7 +122,7 @@ test('pont : résultat, erreur d\'API, rejet sans exécution et anti-boucle (ori
   sortie.length = 0; pont.emettre('select', { featureId: 8 }); assert.equal(sortie[0].origine, 'utilisateur');
   sortie.length = 0; await pont.recevoir(hote('flyTo', [{}], 'c'), o); assert.deepEqual([sortie[0].ok, sortie[0].erreur], [false, 'carte absente']);
   sortie.length = 0; await pont.recevoir({ ...hote('select', [1], 'd'), version: '9.9' }, o); assert.equal(sortie[0].ok, false); assert.equal(appels, 1, 'aucune exécution sur une version incompatible');
-  assert.ok(Object.keys(COMMANDES).length >= 14 && VERSION === '0.3');
+  assert.ok(Object.keys(COMMANDES).length >= 14 && VERSION === '0.4');
 });
 
 // ---- lecture temporelle ----

@@ -8,7 +8,7 @@
  * Aucune commande n'est ajoutée au contrat pour cela (le client en un fichier reste identique) : on lit la description par
  * `import { decrire } from '.../lib/bi/describe.js'` ou par `await AtlasBi.decrire()` (l'élément `<atlas-bi>`, qui ne charge ce module qu'à la demande), sans iframe ni connexion.
  */
-import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, COMMANDES_0_3, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
+import { VERSION, VERSIONS_ACCEPTEES, COMMANDES, versionDeCommande, CAPACITES, CAPACITE_DE_COMMANDE, BATCH_MAX } from './pont.js';
 import { TOUS_LES_EVENEMENTS as EVENEMENTS } from './evenements-ext.js';
 import { LIMITE_OCTETS, DECLARATIFS } from './declaratif.js';
 
@@ -121,7 +121,7 @@ export const GUIDE = Object.freeze([
 export function decrire() {
   const commandes = Object.keys(COMMANDES).map((nom) => ({
     nom,
-    depuis: COMMANDES_0_3.includes(nom) ? '0.3' : '0.2',
+    depuis: versionDeCommande(nom),
     capacite: CAPACITE_DE_COMMANDE[nom] || 'socle',
     arguments: COMMANDES[nom].map(([type, obligatoire]) => ({ type: TYPES[type] || type, obligatoire: !!obligatoire })),
     description: (TEXTES_COMMANDES[nom] || [''])[0],

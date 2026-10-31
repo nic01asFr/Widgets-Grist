@@ -15,7 +15,7 @@ import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
-import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite } from './pont.js';
+import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, VERSION as VERSION_PONT } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, TIRET_MARQUEUR, tailleTexte } from './icones-etats.js';
 import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, extrusionDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
@@ -33,7 +33,7 @@ import { creerBulle, normaliserBulle } from './bulle.js';
 import { normaliserLignes, mettreAJour as mettreAJourLigne } from './tables.js';
 import { normaliserMarges, avecConfort, limiterPadding } from './marges.js';
 
-export const VERSION = '0.3';
+export const VERSION = VERSION_PONT;   // une seule version du contrat : celle du pont
 const PREF = 'bi-';
 const nombre = (v) => { const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
 const copie = (o) => JSON.parse(JSON.stringify(o));
