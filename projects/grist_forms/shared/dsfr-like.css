@@ -366,7 +366,7 @@ html { scroll-padding-bottom: 6rem; }
 .fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); }
 .fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
 .fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
-.fr-echelle__ancres { font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); }
+.fr-echelle__ancres { font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); margin-bottom: 0.6rem; }
 
 /* Matrice : un tableau sur grand écran, des cartes sur téléphone. */
 .fr-matrice__question { margin-bottom: 0.25rem; }
@@ -377,7 +377,8 @@ html { scroll-padding-bottom: 6rem; }
     border: 1px solid var(--kit-bord, var(--bord)); border-radius: 8px; padding: 0.85rem;
     margin-bottom: 0.6rem; background: var(--kit-surface, var(--fond-carte));
   }
-  .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
+  /* En colonne, la base de 14rem de l'intitulé devient une HAUTEUR : 224 px de vide entre l'affirmation et l'échelle. */
+  .fr-matrice__intitule { flex: 0 0 auto; width: 100%; font-weight: 500; margin-bottom: 0.5rem; }
 }
 
 /* Une consigne se lit sous son libellé, pas dans son prolongement. */

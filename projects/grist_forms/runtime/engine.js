@@ -833,6 +833,16 @@
   }
 
   /**
+   * La typographie francaise d'un texte affiche : une espace insecable avant ? ! : ; et a l'interieur des guillemets
+   * francais. Fonction pure : le moteur l'applique aux textes du rendu (`typographier`), jamais aux valeurs saisies.
+   */
+  function typographie(texte) {
+    return String(texte)
+      .replace(/[ \t\n]+([?!:;»])/g, '\u00a0$1')
+      .replace(/«[ \t\n]+/g, '«\u00a0');
+  }
+
+  /**
    * Ce qui s'affiche une fois la réponse envoyée.
    *
    * @param {object} [opts] `{ enfile: true }` quand l'hôte a mis l'écriture en
@@ -2549,6 +2559,24 @@
       if (resume.scrollIntoView) resume.scrollIntoView({ block: 'start', behavior: 'auto' });
     }
 
+    /**
+     * La typographie française à l'affichage : une espace insécable avant « ? ! : ; » et à l'intérieur des guillemets
+     * français, pour qu'un « ? » ne tombe jamais seul en début de ligne. Les textes seulement : jamais une valeur
+     * saisie (champs, zones de texte), un script ou une feuille de style.
+     */
+    function typographier(racine) {
+      var doc = racine && racine.ownerDocument;
+      if (!doc || typeof doc.createTreeWalker !== 'function' || typeof NodeFilter === 'undefined') return;
+      var interdit = /^(TEXTAREA|INPUT|SCRIPT|STYLE|CODE|PRE)$/;
+      var marche = doc.createTreeWalker(racine, NodeFilter.SHOW_TEXT, null);
+      var noeuds = [];
+      for (var n = marche.nextNode(); n; n = marche.nextNode()) {
+        if (n.parentNode && interdit.test(n.parentNode.nodeName)) continue;
+        if (typographie(n.nodeValue) !== n.nodeValue) noeuds.push(n);
+      }
+      noeuds.forEach(function (t) { t.nodeValue = typographie(t.nodeValue); });
+    }
+
     function remonterEnHaut() {
       var titre = rootEl.querySelector('.fr-accueil__titre') ||
         rootEl.querySelector('.fr-progression__titre') ||
@@ -2698,6 +2726,7 @@
         rootEl.innerHTML = '<form class="fr-form fr-form--accueil" novalidate>' +
           (memeTitre ? renderBandeauHtml(formDef, { sansTitre: true }) : bandeauHtml) +
           renderAccueilHtml(formDef) + '</form>';
+        typographier(rootEl);
         var cmd = rootEl.querySelector('[data-action="commencer"]');
         if (cmd && typeof cmd.addEventListener === 'function') {
           cmd.addEventListener('click', function () {
@@ -2712,6 +2741,7 @@
 
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
         bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+      typographier(rootEl);
       wireEvents(fields);
       if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
@@ -2876,6 +2906,8 @@
       var submitBtn = rootEl.querySelector('[data-action="submit"]');
       if (submitBtn && typeof submitBtn.addEventListener === 'function') {
         submitBtn.addEventListener('click', function () {
+          // Un envoi en cours n'en déclenche pas un second : deux clics, ou Entrée puis clic, créeraient deux lignes.
+          if (submitting) return;
           readSectionValues(rootEl, fields, values, verrouilles);
           var missing = erreursDeSaisie(fields, values);
           if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
@@ -2911,6 +2943,7 @@
             // (la personne renverrait la meme).
             renduEnAttente = false;
             rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut });
+            typographier(rootEl);
             if (typeof bridge.surEnvoi === 'function') {
               try { bridge.surEnvoi({ enfile: enfile, resultat: res, statut: fin.statut }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
             }
@@ -3752,6 +3785,7 @@
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
     renderHeaderHtml: renderHeaderHtml,
+    typographie: typographie,
     renderBandeauHtml: renderBandeauHtml,
     renderAccueilHtml: renderAccueilHtml,
     aUnAccueil: aUnAccueil,
