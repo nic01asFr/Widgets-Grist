@@ -861,7 +861,7 @@
     // dit que la réponse est sur liste d'attente ou déjà reçue. Quand la réponse n'est pas retenue, seule la
     // phrase de statut s'affiche, en avertissement.
     var pasRetenue = !!(opts && opts.statut && opts.statut.message && opts.statut.code !== 'retenue');
-    return '<div class="fr-form__success" role="status">' +
+    return '<div class="fr-form__success" role="status" tabindex="-1">' +
       successImg +
       (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
       (pasRetenue ? '' : '<div class="fr-alert fr-alert--success"><p>' +
@@ -869,10 +869,10 @@
         '</p></div>') +
       (opts && opts.statut && opts.statut.message
         ? '<div class="fr-alert ' + (opts.statut.code === 'retenue' ? 'fr-alert--info' : 'fr-alert--warning') +
-          '" role="status" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
+          '" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
         : '') +
       (opts && opts.enfile
-        ? '<div class="fr-alert fr-alert--info" role="status" data-enfile="1"><p>' +
+        ? '<div class="fr-alert fr-alert--info" data-enfile="1"><p>' +
           'Réponse enregistrée sur cet appareil : elle partira dès que la connexion reviendra.' +
           '</p></div>'
         : '') +
@@ -1040,7 +1040,7 @@
     var checked = value ? ' checked' : '';
     return '<div class="fr-checkbox-group" data-colid="' + escapeHtml(field.colId) + '">' +
       '<input type="checkbox" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + checked + ' />' +
-      '<label class="fr-label" for="' + id + '">' + escapeHtml(field.label) + '</label>' +
+      '<label class="fr-label" for="' + id + '">' + escapeHtml(field.label) + requiredHint(field) + descriptionHint(field) + '</label>' +
       '</div>';
   }
 
@@ -1258,9 +1258,11 @@
   }
 
   /** Le résumé des erreurs : une liste de liens vers les questions à corriger. */
-  function resumeErreursHtml(colIds, libelleDe) {
+  function resumeErreursHtml(colIds, libelleDe, messages) {
     var items = colIds.map(function (c) {
-      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a></li>';
+      // Le lien dit QUELLE question, le texte qui suit dit CE QUI est faux : le résumé se suffit à lui-même.
+      var message = messages && messages[c] ? ' : ' + escapeHtml(messages[c]) : '';
+      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a>' + message + '</li>';
     }).join('');
     var n = colIds.length;
     return '<div class="fr-alert fr-alert--error fr-resume-erreurs" id="resume-erreurs" role="alert" tabindex="-1">' +
@@ -2571,7 +2573,12 @@
      * l'annonce, et l'œil n'a pas à chercher la question fautive à des écrans de là.
      * Chaque lien du résumé amène à la question, et la met au focus.
      */
-    function allerAuResume() {
+    /**
+     * Les liens du résumé d'erreurs mènent à leur question. Posés à CHAQUE rendu : le formulaire se redessine à
+     * chaque réponse, et des liens posés une seule fois devenaient inertes dès la première correction (un clic
+     * remontait en haut de page sans rien focaliser).
+     */
+    function brancherLiensResume() {
       var resume = rootEl.querySelector('#resume-erreurs');
       if (!resume) return;
       var liens = resume.querySelectorAll('[data-aller-a]');
@@ -2586,6 +2593,12 @@
           if (bloc && bloc.scrollIntoView) bloc.scrollIntoView({ block: 'center', behavior: 'auto' });
         });
       }(liens[i]));
+    }
+
+    /** Après un envoi refusé : le focus va au résumé, que l'œil et un lecteur d'écran trouvent d'abord. */
+    function allerAuResume() {
+      var resume = rootEl.querySelector('#resume-erreurs');
+      if (!resume) return;
       try { resume.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
       if (resume.scrollIntoView) resume.scrollIntoView({ block: 'start', behavior: 'auto' });
     }
@@ -2758,10 +2771,15 @@
         return rendreChamp(groupe.fields[0]);
       }).join('');
 
+      // Le DSFR demande de dire ce que l'astérisque veut dire, une fois, en tête de page : sans cela, le public voyant
+      // ne sait pas que la marque rouge signifie « obligatoire ». Rien si aucune question de l'étape n'est requise.
+      var legendeHtml = fields.some(function (f) { return f.required; })
+        ? '<p class="fr-hint-text fr-legende-obligatoire">Les champs marqués d’un astérisque (<span aria-hidden="true">*</span>) sont obligatoires.</p>'
+        : '';
       var errorHtml = submitError
         ? '<div class="fr-alert fr-alert--error" role="alert"><p>' + escapeHtml(submitError) + '</p></div>'
         : '';
-      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe);
+      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe, messagesErreur);
 
       // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
       // à côté du bouton : en haut d'un écran long, personne ne le voit.
@@ -2796,9 +2814,10 @@
       }
 
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
-        bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+        bandeauHtml + editHint + headerHtml + stepperHtml + legendeHtml + errorHtml + fieldsHtml + navHtml + '</form>';
       typographier(rootEl);
       brancherEntree();
+      brancherLiensResume();
       wireEvents(fields);
       if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
@@ -3005,6 +3024,12 @@
             renduEnAttente = false;
             rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut });
             typographier(rootEl);
+            // Le bouton qui avait le focus a disparu : sans cela le focus tombe sur la page et un lecteur d'écran
+            // n'annonce pas la confirmation (une zone vivante insérée avec son contenu n'est pas lue).
+            var confirmation = rootEl.querySelector('.fr-form__success');
+            if (confirmation && typeof confirmation.focus === 'function') {
+              try { confirmation.focus(); } catch (e3) { /* vieux navigateur */ }
+            }
             if (typeof bridge.surEnvoi === 'function') {
               try { bridge.surEnvoi({ enfile: enfile, resultat: res, statut: fin.statut }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
             }

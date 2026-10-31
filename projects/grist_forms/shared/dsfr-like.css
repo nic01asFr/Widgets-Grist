@@ -363,7 +363,7 @@ html { scroll-padding-bottom: 6rem; }
   border: 1px solid var(--kit-bord, var(--bord)); border-radius: 6px; cursor: pointer; background: var(--kit-surface, var(--fond-carte));
 }
 .fr-echelle__cran input { position: absolute; opacity: 0; width: 0; height: 0; }
-.fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); }
+.fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
 .fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
 .fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
 .fr-echelle__ancres { font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); margin-bottom: 0.6rem; }
@@ -532,7 +532,7 @@ html { scroll-padding-bottom: 6rem; }
 }
 .fr-form .fr-rangs__cible:has(input:checked)::before,
 .champ-bloc__rendu .fr-rangs__cible:has(input:checked)::before {
-  background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
+  background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff));
 }
 /* Une proposition qui a trouvé sa place se distingue de celles qui attendent. */
 .fr-form .fr-rangs tr:has(input:checked), .champ-bloc__rendu .fr-rangs tr:has(input:checked) {
@@ -658,7 +658,7 @@ html { scroll-padding-bottom: 6rem; }
 /* Un point pose : assez gros pour qu'on puisse le reprendre au doigt. */
 .fr-carte__point {
   width: 1.5rem; height: 1.5rem; border-radius: 999px; cursor: pointer;
-  border: 2px solid var(--kit-accent-texte, #fff); background: var(--kit-alerte, var(--error, #ce0500));
+  border: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); background: var(--kit-alerte, var(--error, #ce0500));
   box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
 .fr-carte__point:focus-visible { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
@@ -678,8 +678,8 @@ html { scroll-padding-bottom: 6rem; }
 .fr-carte__repere {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.7rem; height: 1.7rem; border-radius: 999px;
-  background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); font-size: 0.875rem; font-weight: 600;
-  border: 2px solid var(--kit-accent-texte, #fff); box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
+  background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); font-size: 0.875rem; font-weight: 600;
+  border: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
 /* Une page intégrée : elle occupe la largeur de la question, et sa hauteur
    est celle qu'on lui a donnée — on ne devine pas le contenu d'autrui. */
@@ -798,7 +798,7 @@ html { scroll-padding-bottom: 6rem; }
   position: relative;
   border: 1px solid var(--kit-bord, var(--bord));
   border-radius: var(--radius);
-  background: var(--kit-surface, var(--fond-carte));
+  background: var(--kit-papier, #fff); /* du papier dans tous les themes : les traits par defaut (noir, bleu) sont invisibles sur fond sombre */
   overflow: hidden;
 }
 .fr-dessin__toile {
@@ -957,11 +957,11 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 .fr-repere-lie {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 1.4rem; height: 1.4rem; padding: 0 0.25rem;
-  border-radius: 0.7rem; background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
+  border-radius: 0.7rem; background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff));
   font-size: 0.875rem; font-weight: 700; margin-right: 0.4rem;
 }
 .fr-carte__repere--bouton { cursor: pointer; border: none; font: inherit; }
-.fr-carte__repere--bouton:focus-visible { outline: 2px solid var(--kit-accent-texte, #fff); outline-offset: 2px; }
+.fr-carte__repere--bouton:focus-visible { outline: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); outline-offset: 2px; }
 
 .est-designe { animation: fr-designe 1.6s ease; }
 .fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 10%, transparent); }
@@ -1117,3 +1117,6 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
   .fr-radio-rich, .fr-btn--secondary, .fr-btn--tertiary { border-color: currentColor; }
   :focus-visible { outline-width: 3px; }
 }
+
+/* La phrase qui dit ce que l'astérisque veut dire : discrète, au-dessus des questions. */
+.fr-form .fr-legende-obligatoire { margin: 0 0 1rem; }
