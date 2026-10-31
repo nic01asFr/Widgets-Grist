@@ -40,6 +40,12 @@ projects/grist_forms/
 │   ├── enrichir.js          # Un point posé : adresse, commune, bâtiment, altitude, risques
 │   ├── externe.js           # Schéma + page d'un formulaire servi hors de Grist
 │   ├── formulaires-table.js
+│   ├── saisies.js           # Gestes de saisie : curseur, classement, échelle, mesure
+│   ├── carte-geometrie.js   # Carte de saisie d'un point, d'une ligne, d'un polygone
+│   ├── dessin.js            # Annotation et signature sur une image ; `nomDeCouleur`
+│   ├── theme.js             # Contrat de thème `kit-theme/0.1` : juge puis pose les variables --kit-*
+│   ├── formdef-from-table.js         # Un FormDef déduit d'une table Grist
+│   ├── formdef-from-grist-form.js    # Un FormDef relu depuis un formulaire natif Grist
 │   └── publish.js
 ├── tests/
 │   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
@@ -58,9 +64,8 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test projects/grist_forms/tests/*.test.js` → **363 tests verts** (le « 267 » des
-notes précédentes était déjà périmé : 271 au 10/10 avant ce lot). `node --test
-scripts/schemas.test.js` → 11 verts (il en avait un rouge : la dérive du schéma publié).
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1045 tests verts** (31/10/2026 ; les
+chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)
 
