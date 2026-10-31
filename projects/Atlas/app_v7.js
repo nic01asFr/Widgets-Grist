@@ -84,6 +84,7 @@ import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from '.
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
+import { creerAccesDalles } from './lib/dalles3d-acces.js?v=20261031a';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
 import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
 import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
@@ -14157,8 +14158,48 @@ function altitudeBaseDalle(ancrage) {
     return Number.isFinite(e) ? e : 0;
 }
 
+/**
+ * La boîte où la personne donne l'identifiant d'une maquette qui le demande (HTTP 401). Le texte vient d'ici ou de l'origine du serveur, posée en `textContent` ;
+ * la saisie n'est ni journalisée ni stockée (voir `lib/dalles3d-acces.js`).
+ * @returns {Promise<{identifiant:string, motDePasse:string}|null>}  `null` : annulée
+ */
+function demanderIdentifiantsDalles({ origine, refuse }) {
+    return new Promise((resolve) => {
+        const fond = document.createElement('div');
+        fond.setAttribute('role', 'dialog'); fond.setAttribute('aria-modal', 'true'); fond.setAttribute('aria-label', 'Accès à la maquette 3D');
+        fond.style.cssText = 'position:fixed;inset:0;z-index:100000;display:grid;place-items:center;background:rgba(0,0,0,.35)';
+        const boite = document.createElement('div');   // pas de <form> : Atlas n'en crée aucun (tests/csp-meta.test.js) ; Entrée et « Valider » font l'envoi
+        boite.style.cssText = 'background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--hairline,#ccc);border-radius:10px;padding:18px;width:min(360px,92vw);display:grid;gap:10px;font:13px/1.4 system-ui,sans-serif';
+        const ligne = (tag, texte, style) => { const e = document.createElement(tag); e.textContent = texte; if (style) e.style.cssText = style; return e; };
+        const champ = (libelle, type) => { const l = document.createElement('label'); l.style.cssText = 'display:grid;gap:3px'; l.append(ligne('span', libelle)); const i = document.createElement('input'); i.type = type; i.className = 'input'; i.autocomplete = 'off'; l.append(i); return { l, i }; };
+        const id = champ('Identifiant', 'text'), mdp = champ('Mot de passe', 'password');
+        const barre = document.createElement('div'); barre.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+        const annuler = ligne('button', 'Annuler'); annuler.type = 'button'; annuler.className = 'btn btn-soft';
+        const valider = ligne('button', 'Valider'); valider.type = 'button'; valider.className = 'btn';
+        barre.append(annuler, valider);
+        boite.append(ligne('strong', 'Maquette protégée'),
+            ligne('div', (refuse ? 'Identifiant refusé. ' : '') + 'Le serveur ' + origine + ' demande un identifiant pour afficher la maquette.'),
+            id.l, mdp.l, barre,
+            ligne('div', 'Gardé dans cette page seulement, jamais enregistré.', 'font-size:11.5px;color:var(--muted,#666)'));
+        fond.append(boite);
+        const fermer = (valeur) => { document.removeEventListener('keydown', surTouche, true); fond.remove(); resolve(valeur); };
+        const surTouche = (e) => { if (e.key === 'Escape') { e.preventDefault(); fermer(null); } };
+        document.addEventListener('keydown', surTouche, true);
+        annuler.addEventListener('click', () => fermer(null));
+        const envoyer = () => { if (id.i.value) fermer({ identifiant: id.i.value, motDePasse: mdp.i.value }); else id.i.focus(); };
+        valider.addEventListener('click', envoyer);
+        for (const i of [id.i, mdp.i]) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); envoyer(); } });
+        document.body.append(fond);
+        id.i.focus();
+    });
+}
+const accesDalles = creerAccesDalles({ demander: demanderIdentifiantsDalles, adresseAdmise });
+
 async function lireReponseDalles(url, maxOctets, lecture) {
-    const r = await fetch(url, { credentials: 'omit' });
+    const envoye = accesDalles.entetes(url);
+    let r = await fetch(url, { credentials: 'omit', headers: envoye });
+    // un serveur qui demande un identifiant : une seule question, puis on rejoue UNE fois
+    if (r.status === 401 && await accesDalles.apres401(url, 'Authorization' in envoye)) r = await fetch(url, { credentials: 'omit', headers: accesDalles.entetes(url) });
     if (!r.ok) throw new Error('HTTP ' + r.status + ' pour ' + url);
     const annonce = Number(r.headers.get('content-length'));
     if (Number.isFinite(annonce) && annonce > maxOctets) throw new Error('réponse trop volumineuse (' + Math.round(annonce / 1048576) + ' Mo) : ' + url);
