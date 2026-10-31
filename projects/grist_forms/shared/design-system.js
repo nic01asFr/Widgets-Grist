@@ -108,6 +108,14 @@
     return texte;
   }
 
+  /** Dans une ligne, « Neutre : nom » se dit « Nom » : le titre du groupe porte déjà « Neutre ». */
+  function libelleDeLigne(label, repli) {
+    var texte = String(label || repli || '');
+    var i = texte.indexOf(':');
+    if (i > 0 && i < texte.length - 1) texte = texte.slice(i + 1).trim();
+    return texte.charAt(0).toUpperCase() + texte.slice(1);
+  }
+
   function motifLongueur(max) { return '^[\\s\\S]{0,' + max + '}$'; }
 
   /** Les options communes d'une question de texte ou de couleur : le motif et sa phrase. */
@@ -170,7 +178,8 @@
    * Du catalogue au formulaire.
    *
    * @param {object} catalogue `dsdef-catalogue/0.1`
-   * @param {object} [opts] `{ niveau }` : jusqu'où aller (0 à 3, défaut 1)
+   * @param {object} [opts] `{ niveau, ecarter }` : jusqu'où aller (0 à 3, défaut 1) ; `ecarter` liste des identifiants que l'hôte
+   *   renseigne lui-même et qui ne se posent donc pas en question (le statut, par exemple)
    * @returns {{formdef:object, plan:object, avertissements:string[]}} le formulaire, et le plan qui permet d'y rassembler
    *   (`assembler`) ou d'y relire (`aplatir`) un document
    */
@@ -190,7 +199,9 @@
       plan.champs.push(entree);
     }
 
-    var inclus = catalogue.champs.filter(function (f) { return typeof f.niveau !== 'number' || f.niveau <= niveau; });
+    var ecartes = {};
+    (Array.isArray(opts.ecarter) ? opts.ecarter : []).forEach(function (id) { ecartes[id] = true; });
+    var inclus = catalogue.champs.filter(function (f) { return !ecartes[f.id] && (typeof f.niveau !== 'number' || f.niveau <= niveau); });
     var groupes = {};
 
     catalogue.modules.forEach(function (mod) {
@@ -219,6 +230,7 @@
               description: 'Les valeurs, séparées par des virgules.' }
             : questionDe(f, sub, true);
           if (f.obligation === 'requis' && !csv) qSub.required = true;
+          qSub.label = libelleDeLigne(f.label, sub);
           g.question.options.champs.push(qSub);
           g.entree.sous.push({ id: sub, kind: csv ? 'csv' : f.type });
           if (!g.question.label) {

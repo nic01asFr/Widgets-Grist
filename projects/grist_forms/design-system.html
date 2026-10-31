@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design system — saisir et verser</title>
+<link rel="stylesheet" href="shared/dsfr-like.css">
+<style>
+  body { margin: 0; background: var(--fond-page); color: var(--encre); }
+  .ds { max-width: 80rem; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; }
+  .ds[hidden], .ds [hidden] { display: none !important; }
+  .ds .fr-btn { min-height: var(--cible); font-size: var(--texte); }
+  .ds__tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; justify-content: space-between; }
+  .ds__tete h1 { margin: 0; font-size: 1.5rem; }
+  .ds__note { margin: 0; color: var(--encre-douce); font-size: var(--texte-consigne); }
+  .ds__carte { background: var(--fond-carte); border: 1px solid var(--bord); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .ds__carte h2 { margin: 0 0 0.5rem; font-size: 1.125rem; }
+  .ds__liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .ds__ligne { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; border: 1px solid var(--bord); border-radius: var(--radius); padding: 0.6rem 0.9rem; }
+  .ds__ligne-nom { font-weight: 700; }
+  .ds__statut { display: inline-block; padding: 0 0.5rem; border-radius: 1rem; font-size: 0.8125rem; border: 1px solid var(--bord); }
+  .ds__barre { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .ds__barre label { font-weight: 700; }
+  .ds__barre select { min-height: var(--cible); font: inherit; padding: 0 0.5rem; }
+  .ds__grille { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; align-items: start; }
+  @media (max-width: 62rem) { .ds__grille { grid-template-columns: minmax(0, 1fr); } }
+  .ds__formulaire { min-width: 0; }
+  /* Une proposition est partie : on revient à la liste, on ne recommence pas sur place. */
+  .ds__formulaire [data-action="recommencer"] { display: none; }
+  .ds__aside { display: grid; gap: 1rem; min-width: 0; }
+  .ds__constats { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .ds__constat { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.5rem; align-items: start; font-size: var(--texte-consigne); }
+  .ds__constat b { white-space: nowrap; }
+  .ds__constat--erreur b { color: var(--kit-alerte, var(--error-425, #ce0500)); }
+  .ds__constat--avertissement b { color: var(--kit-attention, var(--warning-425, #b34000)); }
+  .ds__json { margin: 0; max-height: 20rem; overflow: auto; padding: 0.6rem 0.75rem; background: var(--fond-page); border: 1px solid var(--bord); border-radius: var(--radius); font-size: 0.8125rem; white-space: pre-wrap; word-break: break-word; }
+  .ds__avance { height: 0.5rem; border-radius: 0.25rem; background: var(--bord); overflow: hidden; }
+  .ds__avance > span { display: block; height: 100%; background: var(--kit-action, var(--blue-france)); }
+  .ds__catalogue textarea { width: 100%; min-height: 8rem; font: inherit; font-size: 0.875rem; }
+  .ds__mode { margin: 0; padding: 0.4rem 0.75rem; border-radius: var(--radius); background: var(--fond-carte); border: 1px solid var(--bord); font-size: var(--texte-consigne); }
+</style>
+</head>
+<body>
+<main class="ds" id="app">
+  <header class="ds__tete">
+    <h1>Design system</h1>
+    <p class="ds__note" id="ds-source"></p>
+  </header>
+  <p class="ds__mode" id="ds-mode" hidden></p>
+  <p class="ds__note" id="ds-etat" role="status" aria-live="polite"></p>
+
+  <section class="ds__carte" id="ds-liste" aria-labelledby="ds-liste-titre">
+    <h2 id="ds-liste-titre">Vos design systems</h2>
+    <p class="ds__note">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Seule une personne peut le rendre actif, ailleurs.</p>
+    <ul class="ds__liste" id="ds-lignes"></ul>
+    <div class="ds__barre" style="margin-top:0.75rem">
+      <button type="button" class="fr-btn" id="ds-nouveau">Nouveau design system</button>
+      <button type="button" class="fr-btn fr-btn--secondary" id="ds-catalogue-ouvrir">Utiliser un autre catalogue</button>
+    </div>
+  </section>
+
+  <section class="ds__carte ds__catalogue" id="ds-catalogue" aria-labelledby="ds-catalogue-titre" hidden>
+    <h2 id="ds-catalogue-titre">Catalogue des champs</h2>
+    <p class="ds__note">Le catalogue dit quels champs poser. Importez un fichier ou collez son contenu : il est gardé dans le document, pour tous ceux qui l’ouvrent.</p>
+    <p><label class="fr-label" for="ds-catalogue-fichier">Importer un fichier</label>
+      <input type="file" id="ds-catalogue-fichier" accept=".json,application/json"></p>
+    <p><label class="fr-label" for="ds-catalogue-texte">Ou coller son contenu</label>
+      <textarea id="ds-catalogue-texte" spellcheck="false"></textarea></p>
+    <div class="ds__barre">
+      <button type="button" class="fr-btn" id="ds-catalogue-garder">Garder ce catalogue</button>
+      <button type="button" class="fr-btn fr-btn--secondary" id="ds-catalogue-minimal">Revenir au catalogue minimal</button>
+      <button type="button" class="fr-btn fr-btn--tertiary" id="ds-catalogue-fermer">Fermer</button>
+    </div>
+  </section>
+
+  <section id="ds-edition" aria-labelledby="ds-edition-titre" hidden>
+    <div class="ds__carte" style="margin-bottom:1rem">
+      <h2 id="ds-edition-titre" tabindex="-1">Un design system</h2>
+      <div class="ds__barre">
+        <button type="button" class="fr-btn fr-btn--secondary" id="ds-retour">Retour à la liste</button>
+        <label for="ds-niveau">Jusqu’où aller</label>
+        <select id="ds-niveau"></select>
+        <button type="button" class="fr-btn" id="ds-brouillon">Enregistrer le brouillon</button>
+        <span class="ds__statut" id="ds-statut"></span>
+      </div>
+      <p class="ds__note" id="ds-niveau-aide" style="margin-top:0.5rem"></p>
+    </div>
+    <div class="ds__grille">
+      <div class="ds__formulaire" id="ds-formulaire"></div>
+      <aside class="ds__aside" aria-label="Ce que dit le document">
+        <div class="ds__carte">
+          <h2>Où vous en êtes</h2>
+          <div class="ds__avance" aria-hidden="true"><span id="ds-avance"></span></div>
+          <p class="ds__note" id="ds-avance-texte"></p>
+        </div>
+        <div class="ds__carte">
+          <h2>Les contrôles</h2>
+          <ul class="ds__constats" id="ds-constats"></ul>
+          <p class="ds__note" id="ds-constats-aide"></p>
+        </div>
+        <div class="ds__carte">
+          <h2>Le thème qui en découle</h2>
+          <p class="ds__note">Un ThemeDef 1.0 : le nom, les graines de couleur, le mode sombre et les seuils. Il n’est pas écrit dans le document : l’activation relève de l’éditeur d’apparence.</p>
+          <pre class="ds__json" id="ds-themedef"></pre>
+          <p class="ds__note" id="ds-themedef-remarques"></p>
+          <button type="button" class="fr-btn fr-btn--secondary" id="ds-copier">Copier le ThemeDef</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<script src="shared/types.js"></script>
+<script src="shared/attachments.js"></script>
+<script src="shared/session-context.js"></script>
+<script src="shared/referentiel.js"></script>
+<script src="shared/formats.js"></script>
+<script src="shared/enrichir.js"></script>
+<script src="shared/saisies.js"></script>
+<script src="shared/conditions.js"></script>
+<script src="shared/theme.js"></script>
+<script src="shared/limites.js"></script>
+<script src="runtime/engine.js"></script>
+<script src="shared/design-system.js"></script>
+<script>
+/**
+ * Saisir un design system, et le verser dans le document.
+ *
+ * Le moteur de formulaire pose les questions ; `shared/design-system.js` en fait le formulaire, rassemble les réponses et
+ * rejoue les règles. Cette page ne fait que relier : la liste des design systems du document, le formulaire du niveau
+ * choisi, un brouillon qui s'enregistre à tout moment, une proposition qui passe les règles.
+ *
+ * > **Un seul écrivain.** La page écrit dans `Design_system`, avec `actif` faux. Elle n'active jamais : c'est le geste d'une
+ * > personne, avec l'éditeur d'apparence du kit. Elle n'écrit pas non plus dans `Theme_document`.
+ */
+(function () {
+  'use strict';
+  var D = window.FormDesignSystem;
+  var E = window.FormEngine;
+  var TABLE_CATALOGUE = 'Design_system_catalogue';
+  var TAILLE_CATALOGUE_MAX = 400 * 1024;
+
+  var S = {
+    magasin: null, lignes: [], catalogue: D.CATALOGUE_MINIMAL, source: 'minimal', niveau: 0,
+    courant: null, doc: {}, statut: 'brouillon', plan: null, formdef: null, poignee: null, minuterie: 0, apresEnvoi: false
+  };
+
+  function el(id) { return document.getElementById(id); }
+  function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function dire(texte) { el('ds-etat').textContent = texte || ''; }
+
+  // ── Le magasin : un document Grist, ou la mémoire de la page (démonstration) ──────────────────────
+
+  function lignesDe(colonnes) {
+    var n = colonnes && colonnes.id ? colonnes.id.length : 0;
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var l = {};
+      Object.keys(colonnes).forEach(function (k) { l[k] = colonnes[k][i]; });
+      out.push(l);
+    }
+    return out;
+  }
+
+  function magasinGrist(api) {
+    function tables() { return Promise.resolve(api.listTables()).then(function (l) { return (l || []).map(function (t) { return typeof t === 'string' ? t : t.id; }); }); }
+    function creerSiAbsente(nom, colonnes) {
+      return tables().then(function (ts) {
+        if (ts.indexOf(nom) !== -1) return null;
+        return api.applyUserActions([['AddTable', nom, colonnes.map(function (c) {
+          var info = { id: c.id, type: c.type, label: c.label };
+          if (c.widgetOptions) info.widgetOptions = JSON.stringify(c.widgetOptions);
+          return info;
+        })]]);
+      });
+    }
+    return {
+      nom: 'grist',
+      lister: function () {
+        return tables().then(function (ts) { return ts.indexOf(D.TABLE) === -1 ? [] : api.fetchTable(D.TABLE).then(lignesDe); });
+      },
+      enregistrer: function (ligne, id) {
+        return creerSiAbsente(D.TABLE, D.COLONNES).then(function () {
+          return api.applyUserActions([id ? ['UpdateRecord', D.TABLE, id, ligne] : ['AddRecord', D.TABLE, null, ligne]]);
+        }).then(function (r) { return id || (r && r.retValues && r.retValues[0]); });
+      },
+      lireCatalogue: function () {
+        return tables().then(function (ts) {
+          if (ts.indexOf(TABLE_CATALOGUE) === -1) return null;
+          return api.fetchTable(TABLE_CATALOGUE).then(function (c) { var l = lignesDe(c); return l.length ? l[l.length - 1].json : null; });
+        });
+      },
+      ecrireCatalogue: function (texte) {
+        return creerSiAbsente(TABLE_CATALOGUE, [{ id: 'cle', type: 'Text', label: 'Clé' }, { id: 'json', type: 'Text', label: 'Catalogue' }]).then(function () {
+          return api.fetchTable(TABLE_CATALOGUE);
+        }).then(function (c) {
+          var l = lignesDe(c);
+          return api.applyUserActions([l.length ? ['UpdateRecord', TABLE_CATALOGUE, l[l.length - 1].id, { cle: 'catalogue', json: texte }]
+            : ['AddRecord', TABLE_CATALOGUE, null, { cle: 'catalogue', json: texte }]]);
+        });
+      }
+    };
+  }
+
+  function magasinLocal() {
+    var cle = 'formbuilder:design-system:demo';
+    var memoire = { lignes: [], catalogue: null, suivant: 1 };
+    try { var brut = window.localStorage.getItem(cle); if (brut) memoire = JSON.parse(brut); } catch (e) { /* mémoire seule */ }
+    function garder() { try { window.localStorage.setItem(cle, JSON.stringify(memoire)); } catch (e) { /* tant pis */ } }
+    return {
+      nom: 'demo',
+      lister: function () { return Promise.resolve(memoire.lignes.map(function (l) { return Object.assign({}, l); })); },
+      enregistrer: function (ligne, id) {
+        var cible = id ? memoire.lignes.filter(function (l) { return l.id === id; })[0] : null;
+        if (cible) Object.assign(cible, ligne); else { id = memoire.suivant++; memoire.lignes.push(Object.assign({ id: id }, ligne)); }
+        garder();
+        return Promise.resolve(id);
+      },
+      lireCatalogue: function () { return Promise.resolve(memoire.catalogue); },
+      ecrireCatalogue: function (texte) { memoire.catalogue = texte; garder(); return Promise.resolve(); }
+    };
+  }
+
+  function choisirMagasin() {
+    var g = window.grist;
+    if (g && g.docApi && typeof g.ready === 'function') {
+      try { g.ready({ requiredAccess: 'full' }); } catch (e) { return Promise.resolve(magasinLocal()); }
+      var m = magasinGrist(g.docApi);
+      return Promise.resolve(g.docApi.listTables()).then(function () { return m; }, function () { return magasinLocal(); });
+    }
+    return Promise.resolve(magasinLocal());
+  }
+
+  // ── Le catalogue ──────────────────────────────────────────────────────────────────────────────────
+
+  function niveauxDe(catalogue) {
+    var vus = {};
+    catalogue.champs.forEach(function (c) { vus[typeof c.niveau === 'number' ? c.niveau : 0] = true; });
+    return Object.keys(vus).map(Number).sort();
+  }
+
+  function poserCatalogue(catalogue, source) {
+    D.verifierCatalogue(catalogue);
+    S.catalogue = catalogue;
+    S.source = source;
+    var niv = niveauxDe(catalogue);
+    if (niv.indexOf(S.niveau) === -1) S.niveau = niv[0];
+    el('ds-source').textContent = source === 'minimal'
+      ? 'Catalogue minimal : une identité (ThemeDef 1.0). Importez un catalogue pour aller plus loin.'
+      : 'Catalogue du document : ' + catalogue.champs.length + ' champs, ' + niv.length + ' niveau' + (niv.length > 1 ? 'x' : '') + '.';
+  }
+
+  function lireCatalogueTexte(texte) {
+    if (String(texte).length > TAILLE_CATALOGUE_MAX) throw new Error('Ce fichier dépasse ' + Math.round(TAILLE_CATALOGUE_MAX / 1024) + ' Ko : ce n’est pas un catalogue.');
+    var c;
+    try { c = JSON.parse(texte); } catch (e) { throw new Error('Ce texte n’est pas du JSON lisible.'); }
+    return D.verifierCatalogue(c);
+  }
+
+  // ── La liste ──────────────────────────────────────────────────────────────────────────────────────
+
+  function dateDe(secondes) {
+    if (typeof secondes !== 'number' || !isFinite(secondes) || secondes <= 0) return '';
+    try { return new Date(secondes * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; }
+  }
+
+  function afficherListe() {
+    var ul = el('ds-lignes');
+    if (!S.lignes.length) {
+      ul.innerHTML = '<li class="ds__note">Aucun design system pour l’instant.</li>';
+      return;
+    }
+    ul.innerHTML = S.lignes.map(function (l, i) {
+      var quand = dateDe(l.maj);
+      return '<li class="ds__ligne"><span><span class="ds__ligne-nom">' + esc(l.nom || l.cle) + '</span> ' +
+        '<span class="ds__statut">' + esc(l.statut || 'brouillon') + (l.actif ? ' · actif' : '') + '</span>' +
+        (quand ? ' <span class="ds__note">modifié le ' + esc(quand) + '</span>' : '') + '</span>' +
+        '<button type="button" class="fr-btn fr-btn--secondary" data-ouvrir="' + i + '">Ouvrir<span class="fr-sr-only"> ' + esc(l.nom || l.cle) + '</span></button></li>';
+    }).join('');
+  }
+
+  function recharger() {
+    return S.magasin.lister().then(function (lignes) { S.lignes = lignes; afficherListe(); });
+  }
+
+  // ── L'édition ─────────────────────────────────────────────────────────────────────────────────────
+
+  function remplirNiveaux() {
+    var niv = niveauxDe(S.catalogue);
+    var noms = {};
+    (S.catalogue.niveaux || []).forEach(function (n) { noms[n.niveau] = n; });
+    el('ds-niveau').innerHTML = niv.map(function (n) {
+      return '<option value="' + n + '"' + (n === S.niveau ? ' selected' : '') + '>Niveau ' + n + (noms[n] && noms[n].nom ? ' — ' + esc(noms[n].nom) : '') + '</option>';
+    }).join('');
+    el('ds-niveau').disabled = niv.length < 2;
+    var info = noms[S.niveau];
+    el('ds-niveau-aide').textContent = info && info.aide ? info.aide : '';
+  }
+
+  /** Le document tel que le formulaire le dit à cet instant (l'étape affichée est relue d'abord). */
+  function lireDocument() {
+    // Une fois la proposition partie, l'écran n'est plus le formulaire : le document est celui qu'on a enregistré.
+    if (!S.poignee || S.apresEnvoi) return S.doc;
+    try { S.poignee.valider(); } catch (e) { /* étape non rendue */ }
+    var donnees = E.collectSubmitData(S.formdef, S.poignee.valeurs(), {}, { creation: true });
+    return D.assembler(S.plan, donnees);
+  }
+
+  /** Le statut est celui du geste (brouillon, proposition), pas une question : il est renseigné par la page. */
+  function construireNiveau() { return D.construire(S.catalogue, { niveau: S.niveau, ecarter: ['identite.statut'] }); }
+
+  function monter(valeurs) {
+    if (S.poignee) { S.poignee.demonter(); S.poignee = null; }
+    S.apresEnvoi = false;
+    var r = construireNiveau();
+    S.formdef = r.formdef;
+    S.plan = r.plan;
+    S.formdef.title = 'Design system';
+    S.formdef.successMessage = 'Proposition enregistrée. Une personne doit maintenant la valider : elle seule peut la rendre active.';
+    var client = {
+      lireTable: function () { return Promise.resolve({ id: [] }); },
+      appliquer: function (actions) {
+        // L'envoi du formulaire est une PROPOSITION : elle passe les règles, un brouillon non.
+        var cols = actions[0][3];
+        var donnees = {};
+        Object.keys(cols).forEach(function (k) { donnees[k] = cols[k][0]; });
+        var doc = D.assembler(S.plan, donnees);
+        var bloquants = D.bloquants(D.controler(doc));
+        if (bloquants.length) {
+          return Promise.reject(new Error('Pas encore une proposition : ' + bloquants.map(function (b) { return b.message; }).join(' ')));
+        }
+        return enregistrer(doc, 'proposition').then(function () { S.apresEnvoi = true; return [1]; });
+      }
+    };
+    S.poignee = E.monter(el('ds-formulaire'), S.formdef, { client: client, valeurs: valeurs || {} });
+    el('ds-formulaire').scrollTop = 0;
+    r.avertissements.forEach(function (a) { dire(a); });
+    planifier();
+  }
+
+  /** Enregistrer : une ligne par design system, retrouvée par sa clé. */
+  function enregistrer(doc, statut) {
+    var nom = doc.identite && doc.identite.nom;
+    var id = doc.identite && doc.identite.id;
+    var courant = S.courant;
+    var cle = courant && courant.cle ? courant.cle : D.cleDepuisNom(id || nom || 'design-system');
+    if (!courant) {
+      var pris = S.lignes.map(function (l) { return l.cle; });
+      var base = cle; var n = 2;
+      while (pris.indexOf(cle) !== -1) { cle = base.slice(0, 36) + '-' + n++; }
+    }
+    // Le statut du document dit où il en est : la page le pose, la personne ne le tape pas.
+    if (S.catalogue.champs.some(function (c) { return c.id === 'identite.statut'; })) { doc.identite = doc.identite || {}; doc.identite.statut = statut; }
+    var ligne;
+    try { ligne = D.ligneDeDocument(doc, cle, statut, S.niveau); } catch (e) { return Promise.reject(e); }
+    return Promise.resolve(D.empreinte(doc)).then(function (h) {
+      if (h) ligne.hash = h;
+      // Une ligne déjà active le reste : la page ne désactive ni n'active jamais.
+      if (courant && courant.id && courant.actif) delete ligne.actif;
+      return S.magasin.enregistrer(ligne, courant && courant.id);
+    }).then(function (id2) {
+      S.courant = { id: id2, cle: cle, actif: !!(courant && courant.actif) };
+      S.doc = doc;
+      S.statut = statut;
+      majStatut();
+      return recharger();
+    });
+  }
+
+  function majStatut() { el('ds-statut').textContent = 'Statut : ' + S.statut; }
+
+  // ── Ce que dit le document : avancement, contrôles, thème ─────────────────────────────────────────
+
+  function planifier() {
+    clearTimeout(S.minuterie);
+    S.minuterie = setTimeout(afficherControles, 150);
+  }
+
+  function afficherControles() {
+    if (!S.plan) return;
+    var doc = lireDocument();
+    // Une valeur de départ (un seuil par défaut, un statut) n'est pas une réponse : on ne la compte pas.
+    var departs = {};
+    S.formdef.sections.forEach(function (sec) {
+      sec.fields.forEach(function (q) { if (q.options && q.options.depart) departs[q.colId] = q.options.depart.valeur; });
+    });
+    var valeurs = D.aplatir(S.plan, doc);
+    var rempli = Object.keys(valeurs).filter(function (k) { return !(k in departs) || JSON.stringify(departs[k]) !== JSON.stringify(valeurs[k]); }).length;
+    var total = S.plan.champs.length;
+    el('ds-avance').style.width = total ? Math.round((rempli / total) * 100) + '%' : '0%';
+    el('ds-avance-texte').textContent = rempli + ' réponse' + (rempli > 1 ? 's' : '') + ' sur ' + total + ' questions. Aucune n’est obligatoire pour un brouillon.';
+
+    var constats = D.controler(doc);
+    el('ds-constats').innerHTML = constats.length
+      ? constats.map(function (c) {
+        return '<li class="ds__constat ds__constat--' + c.gravite + '"><b>' + esc(c.regle) + ' · ' + (c.gravite === 'erreur' ? 'à corriger' : (c.declare ? 'déclaré' : 'à déclarer')) + '</b><span>' + esc(c.message) + '</span></li>';
+      }).join('')
+      : '<li class="ds__note">Aucun constat pour l’instant.</li>';
+    var bloquants = D.bloquants(constats).length;
+    el('ds-constats-aide').textContent = bloquants
+      ? bloquants + ' point' + (bloquants > 1 ? 's' : '') + ' à corriger avant de proposer. Un brouillon s’enregistre quand même.'
+      : 'Rien n’empêche de proposer ce document.';
+
+    var p = D.projeterThemeDef(doc);
+    el('ds-themedef').textContent = JSON.stringify(p.themedef, null, 2);
+    el('ds-themedef-remarques').textContent = p.remarques.join(' ');
+  }
+
+  // ── Les gestes ────────────────────────────────────────────────────────────────────────────────────
+
+  function ouvrir(ligne) {
+    var doc = {};
+    if (ligne) {
+      try { doc = JSON.parse(ligne.dsdef || '{}'); } catch (e) { dire('Ce document n’est pas lisible : il s’ouvre vide.'); }
+      S.courant = { id: ligne.id, cle: ligne.cle, actif: !!ligne.actif };
+      S.statut = ligne.statut || 'brouillon';
+      if (typeof ligne.niveau === 'number' && niveauxDe(S.catalogue).indexOf(ligne.niveau) !== -1) S.niveau = ligne.niveau;
+    } else {
+      S.courant = null;
+      S.statut = 'brouillon';
+    }
+    S.doc = doc;
+    el('ds-liste').hidden = true;
+    el('ds-edition').hidden = false;
+    remplirNiveaux();
+    majStatut();
+    monter(D.aplatir(construireNiveau().plan, doc));
+    el('ds-edition-titre').focus();
+  }
+
+  function revenir() {
+    if (S.poignee) { S.poignee.demonter(); S.poignee = null; }
+    el('ds-edition').hidden = true;
+    el('ds-liste').hidden = false;
+    recharger();
+  }
+
+  function changerNiveau() {
+    var doc = lireDocument();
+    S.doc = doc;
+    S.niveau = parseInt(el('ds-niveau').value, 10) || 0;
+    remplirNiveaux();
+    monter(D.aplatir(construireNiveau().plan, doc));
+  }
+
+  function brouillon() {
+    var doc = lireDocument();
+    dire('Enregistrement…');
+    enregistrer(doc, S.statut === 'valide' ? 'proposition' : (S.statut === 'proposition' ? 'proposition' : 'brouillon')).then(function () {
+      dire('Brouillon enregistré. Vous pouvez le reprendre à tout moment.');
+    }, function (e) { dire('Enregistrement impossible : ' + (e && e.message ? e.message : e)); });
+  }
+
+  function gererCatalogue(action) {
+    if (action === 'ouvrir') { el('ds-catalogue').hidden = false; el('ds-catalogue-texte').value = ''; el('ds-catalogue-fichier').value = ''; el('ds-catalogue-texte').focus(); return; }
+    if (action === 'fermer') { el('ds-catalogue').hidden = true; return; }
+    if (action === 'minimal') {
+      poserCatalogue(D.CATALOGUE_MINIMAL, 'minimal');
+      S.magasin.ecrireCatalogue('').then(function () { dire('Retour au catalogue minimal.'); el('ds-catalogue').hidden = true; });
+      return;
+    }
+    var texte = el('ds-catalogue-texte').value;
+    try {
+      var c = lireCatalogueTexte(texte);
+      poserCatalogue(c, 'document');
+      S.magasin.ecrireCatalogue(texte).then(function () { dire('Catalogue gardé dans le document.'); el('ds-catalogue').hidden = true; },
+        function (e) { dire('Catalogue utilisé, mais pas gardé dans le document : ' + (e && e.message ? e.message : e)); });
+    } catch (e) { dire(e.message); }
+  }
+
+  function brancher() {
+    el('ds-nouveau').addEventListener('click', function () { ouvrir(null); });
+    el('ds-lignes').addEventListener('click', function (ev) {
+      var b = ev.target && ev.target.closest ? ev.target.closest('[data-ouvrir]') : null;
+      if (b) ouvrir(S.lignes[parseInt(b.getAttribute('data-ouvrir'), 10)]);
+    });
+    el('ds-retour').addEventListener('click', revenir);
+    el('ds-niveau').addEventListener('change', changerNiveau);
+    el('ds-brouillon').addEventListener('click', brouillon);
+    el('ds-copier').addEventListener('click', function () {
+      var texte = el('ds-themedef').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dire('ThemeDef copié.'); }, function () { dire('Copie impossible : sélectionnez le texte.'); });
+      else dire('Copie impossible : sélectionnez le texte.');
+    });
+    el('ds-catalogue-ouvrir').addEventListener('click', function () { gererCatalogue('ouvrir'); });
+    el('ds-catalogue-garder').addEventListener('click', function () { gererCatalogue('garder'); });
+    el('ds-catalogue-minimal').addEventListener('click', function () { gererCatalogue('minimal'); });
+    el('ds-catalogue-fermer').addEventListener('click', function () { gererCatalogue('fermer'); });
+    el('ds-catalogue-fichier').addEventListener('change', function (ev) {
+      var f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      if (f.size > TAILLE_CATALOGUE_MAX) { dire('Ce fichier dépasse ' + Math.round(TAILLE_CATALOGUE_MAX / 1024) + ' Ko : ce n’est pas un catalogue.'); return; }
+      var lecteur = new FileReader();
+      lecteur.onload = function () { el('ds-catalogue-texte').value = String(lecteur.result || ''); };
+      lecteur.readAsText(f);
+    });
+    // Les contrôles suivent la frappe et les étapes.
+    var f = el('ds-formulaire');
+    ['input', 'change', 'click'].forEach(function (t) { f.addEventListener(t, planifier); });
+  }
+
+  function demarrer() {
+    brancher();
+    choisirMagasin().then(function (m) {
+      S.magasin = m;
+      if (m.nom === 'demo') {
+        el('ds-mode').hidden = false;
+        el('ds-mode').textContent = 'Mode démonstration : aucun document Grist n’est branché, rien n’est écrit ailleurs que dans cet onglet.';
+      }
+      return m.lireCatalogue().then(function (texte) {
+        if (texte) {
+          try { poserCatalogue(lireCatalogueTexte(texte), 'document'); } catch (e) { dire('Le catalogue du document n’est pas lisible : le catalogue minimal est utilisé. ' + e.message); poserCatalogue(D.CATALOGUE_MINIMAL, 'minimal'); }
+        } else poserCatalogue(D.CATALOGUE_MINIMAL, 'minimal');
+      }, function () { poserCatalogue(D.CATALOGUE_MINIMAL, 'minimal'); });
+    }).then(recharger).then(function () { dire(''); }, function (e) { dire('Lecture impossible : ' + (e && e.message ? e.message : e)); });
+  }
+
+  demarrer();
+}());
+</script>
+</body>
+</html>

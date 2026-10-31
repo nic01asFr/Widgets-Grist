@@ -1001,9 +1001,9 @@
   }
 
   /**
-   * Une couleur : le code (`#3D4F63`) se tape, ou se choisit avec le sélecteur du navigateur ; la pastille montre
-   * ce qui est retenu. Le code reste LA réponse (une colonne de texte) : le sélecteur n'en est que la commodité, et
-   * il ne répond rien tant qu'on n'y a pas touché.
+   * Une couleur : le code (`#3D4F63`) se tape, ou se choisit avec le sélecteur du navigateur, qui montre ce qui est
+   * retenu. Le code reste LA réponse (une colonne de texte) : le sélecteur n'en est que la commodité, et il ne répond
+   * rien tant qu'on n'y a pas touché — vide, il se montre estompé plutôt que noir.
    */
   var MOTIF_COULEUR = '^#[0-9A-Fa-f]{6}$';
   var MESSAGE_COULEUR = 'Une couleur s’écrit # suivi de six chiffres ou lettres (a à f), par exemple #3D4F63.';
@@ -1020,10 +1020,10 @@
     return '<div class="fr-input-group fr-couleur" data-colid="' + escapeHtml(field.colId) + '" data-widget="couleur">' +
       renderLabel(field, id) +
       '<div class="fr-couleur__ligne">' +
-      '<span class="fr-couleur__pastille" aria-hidden="true"' + (hex ? ' style="background-color:' + hex + '"' : '') + '></span>' +
       '<input class="fr-input fr-couleur__code" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" value="' + escapeHtml(val) +
       '" maxlength="7" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="#3D4F63"' + reqAttr + ' />' +
-      '<input class="fr-couleur__choix" type="color" data-couleur-pour="' + escapeHtml(field.colId) + '" value="' + (hex || '#000000') + '" ' +
+      '<input class="fr-couleur__choix" type="color" data-couleur-pour="' + escapeHtml(field.colId) + '" value="' + (hex || '#ffffff') + '"' +
+      (hex ? '' : ' data-vide="1"') + ' ' +
       'aria-label="Choisir la couleur : ' + escapeHtml(field.label || field.colId) + '" />' +
       '</div></div>';
   }
@@ -3521,18 +3521,16 @@
       }
     }
 
-    /** Une couleur : le sélecteur met le code à jour ; le code met la pastille et le sélecteur à jour. */
+    /** Une couleur : le sélecteur met le code à jour ; le code met le sélecteur à jour. */
     function brancherCouleurs() {
       var blocs = rootEl.querySelectorAll('[data-widget="couleur"]');
       for (var i = 0; i < blocs.length; i++) (function (bloc) {
         var code = bloc.querySelector('input[type="text"]');
         var choix = bloc.querySelector('input[type="color"]');
-        var pastille = bloc.querySelector('.fr-couleur__pastille');
-        if (!code || !choix || !pastille || typeof code.addEventListener !== 'function') return;
+        if (!code || !choix || typeof code.addEventListener !== 'function') return;
         function montrer() {
           var hex = couleurSureHex(code.value);
-          pastille.style.backgroundColor = hex;
-          if (hex) choix.value = hex;
+          if (hex) { choix.value = hex; choix.removeAttribute('data-vide'); } else choix.setAttribute('data-vide', '1');
         }
         code.addEventListener('input', montrer);
         choix.addEventListener('input', function () { code.value = choix.value; montrer(); });

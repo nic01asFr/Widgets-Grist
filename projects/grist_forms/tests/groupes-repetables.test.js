@@ -223,18 +223,17 @@ describe('Groupe répétable : à l\'écran', () => {
   });
 });
 
-describe('Couleur : le code, la pastille, le sélecteur', () => {
+describe('Couleur : le code et le sélecteur', () => {
   const unique = (valeur) => ({
     id: 'c', title: 'C', tableId: 'T', choices: {},
     sections: [{ id: 's', label: 'S', gate: null, fields: [{ colId: 'Teinte', label: 'Teinte', type: 'Text', widget: 'couleur', required: true }] }]
   });
 
-  it('rend un code à taper, une pastille et un sélecteur nommé', async () => {
+  it('rend un code à taper et un sélecteur nommé', async () => {
     const root = createRoot();
     Engine.mount(root, unique(), sans());
     await flush();
     assert.ok(root.querySelector('[name="Teinte"]'));
-    assert.match(root.innerHTML, /fr-couleur__pastille/);
     assert.match(root.innerHTML, /type="color"/);
     assert.match(root.innerHTML, /aria-label="Choisir la couleur : Teinte"/);
   });
@@ -257,11 +256,13 @@ describe('Couleur : le code, la pastille, le sélecteur', () => {
     assert.equal(envoyes[0].Teinte, '#3d4f63', 'sans espaces autour');
   });
 
-  it('la pastille ne reçoit jamais autre chose qu\'un code juste', () => {
+  it('le sélecteur ne reçoit jamais autre chose qu\'un code juste, et se montre estompé tant qu\'il est vide', () => {
     const html = Engine.renderFieldHtml({ colId: 'T', label: 'T', widget: 'couleur', type: 'Text' }, { T: 'red;background:url(x)' }, null, {});
     assert.ok(!/style=/.test(html));
+    assert.match(html, /type="color"[^>]*value="#ffffff" data-vide="1"/);
     const bon = Engine.renderFieldHtml({ colId: 'T', label: 'T', widget: 'couleur', type: 'Text' }, { T: '#ABCDEF' }, null, {});
-    assert.match(bon, /style="background-color:#abcdef"/);
+    assert.match(bon, /type="color"[^>]*value="#abcdef"/);
+    assert.ok(!/data-vide/.test(bon));
   });
 
   it('un motif propre à la question juge aussi ; un motif illisible ne bloque personne', () => {

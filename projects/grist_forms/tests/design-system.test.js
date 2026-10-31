@@ -68,6 +68,12 @@ describe('Design system : le catalogue en formulaire', () => {
     assert.ok(n1.plan.champs.length > n0.plan.champs.length);
   });
 
+  it('un identifiant que l hôte renseigne lui-même ne se pose pas en question', () => {
+    const { plan } = D.construire(catalogue(), { niveau: 0, ecarter: ['identite.id'] });
+    assert.ok(!plan.champs.some((e) => e.id === 'identite.id'));
+    assert.ok(plan.champs.some((e) => e.id === 'identite.nom'));
+  });
+
   it('chaque type devient la bonne question', () => {
     const { formdef } = D.construire(catalogue(), { niveau: 1 });
     const q = {};

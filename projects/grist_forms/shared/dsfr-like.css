@@ -249,11 +249,10 @@ small { font-size: 0.875rem; }
 .fr-groupe-repete__actions { margin: 0 0 1.5rem; }
 .fr-groupe-repete__vide { margin: 0 0 1rem; }
 
-/* Une couleur : une pastille, le code à taper, le sélecteur du navigateur. */
+/* Une couleur : le code à taper, et le sélecteur du navigateur qui en montre la teinte. */
 .fr-couleur__ligne { display: flex; align-items: center; gap: 0.5rem; }
-.fr-couleur__pastille { flex: 0 0 var(--cible); width: var(--cible); height: var(--cible); border-radius: var(--radius); border: 1px solid var(--kit-bord-champ, var(--kit-bord, var(--grey-900))); background-image: repeating-conic-gradient(var(--kit-bord, var(--grey-925)) 0% 25%, transparent 0% 50%); background-size: 0.75rem 0.75rem; }
-.fr-couleur__pastille[style] { background-image: none; }
 .fr-couleur__code { flex: 1 1 8rem; min-width: 0; font-variant-numeric: tabular-nums; }
+.fr-couleur__choix[data-vide] { opacity: 0.4; }
 .fr-couleur__choix { flex: 0 0 var(--cible); width: var(--cible); height: var(--cible); padding: 0.125rem; border: 1px solid var(--kit-bord-champ, var(--kit-bord, var(--grey-900))); border-radius: var(--radius); background: var(--kit-surface, var(--grey-1000)); cursor: pointer; }
 .fr-matrice__ligne {
   display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
