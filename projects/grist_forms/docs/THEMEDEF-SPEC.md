@@ -90,8 +90,21 @@ Piège : le mot « alerte » désigne le rouge côté kit et l'orange côté Atl
 `exigences` ne renforce que les portes d'**interface** (`contrasteTexte`, `contrasteComposant`). Les exigences de
 **visualisation** d'Atlas (`contrasteMinimal`, `ecartMinimal`, `classesMax`) sont **hors ThemeDef 1.0**.
 
-Tailles : document ≤ 16 Ko, profondeur ≤ 6, aucune clé `__proto__` / `constructor` / `prototype`. Toute clé
+Tailles : document ≤ 16 Ko **en octets UTF-8**, profondeur ≤ 6, aucune clé `__proto__` / `constructor` / `prototype`. Toute clé
 inconnue est signalée, jamais interprétée.
+
+**Arbitrage du 31/10/2026** (points soulevés par le kit à la livraison de TD-1) :
+
+- **Valeur de surcharge : 48 caractères au plus** (l'étude 57 disait 64 : 48 retenu, c'est aussi la limite du juge du moteur).
+- **Profondeur : le niveau 1 est la racine, et chaque valeur compte un niveau, feuilles comprises** (comme Atlas). Passé le sixième
+  niveau, le document est refusé.
+- **Graines : `#RRGGBB` strict.** `#abc` est refusé (la spec l'a toujours dit) ; un lecteur qui l'acceptait s'aligne.
+- **Forme canonique** : un LF final qui entre dans l'empreinte ; le producteur du document ARRONDIT les contrastes à 2 décimales
+  (le canonicaliseur n'arrondit rien : il est une fonction pure des valeurs) ; l'empreinte est celle du document **sans `resolu` ni
+  champ `hash`** (un document n'entre pas lui-même dans son empreinte).
+- **Refus ou valeur écartée** — *refusés* : version, taille, type, profondeur, clé interdite, section qui n'est pas un objet,
+  `principal` absent ou mal écrit, mode sombre hors liste, mode sombre explicite sans ses 26 valeurs, exigence plus lâche que
+  4,5 / 3. *Écartées et dites* : clé inconnue, surcharge refusée, police hors liste, graine facultative mal écrite, `resolu`.
 
 **Hors ThemeDef** : le halo, le lavis et le plan de carte d'Atlas ne sont **pas** des champs du ThemeDef. Atlas les
 calcule par défaut à partir des variables lues. Même chose pour les rampes de visualisation, les rayons, les

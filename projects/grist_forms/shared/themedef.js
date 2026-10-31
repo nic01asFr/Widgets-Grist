@@ -163,41 +163,70 @@
 
   // ── Lire la table ───────────────────────────────────────────────────────────
 
-  function profondeur(v, n) {
-    if (v === null || typeof v !== 'object') return n;
-    var max = n + 1;
+  /** La taille en octets UTF-8, pas en caractères : « é » en pèse deux. */
+  function octets(texte) {
+    try { return new TextEncoder().encode(texte).length; } catch (e) { return texte.length; }
+  }
+
+  /**
+   * La forme d'un document : le niveau 1 est la racine, et CHAQUE valeur compte un niveau, feuilles comprises (comme Atlas) ; un
+   * document qui passe le sixième niveau est refusé. Une clé `__proto__`, `constructor` ou `prototype` aussi, où qu'elle soit.
+   *
+   * @returns {string|null} `profondeur`, `cle-interdite`, ou rien
+   */
+  function defautDeForme(v, niveau) {
+    if (niveau > PROFONDEUR_MAX) return 'profondeur';
+    if (v === null || typeof v !== 'object') return null;
     var cles = Object.keys(v);
     for (var i = 0; i < cles.length; i++) {
-      if (cles[i] === '__proto__' || cles[i] === 'constructor' || cles[i] === 'prototype') return 99;
-      var p = profondeur(v[cles[i]], n + 1);
-      if (p > max) max = p;
-      if (max > PROFONDEUR_MAX + 1) return max;
+      if (!Array.isArray(v) && (cles[i] === '__proto__' || cles[i] === 'constructor' || cles[i] === 'prototype')) return 'cle-interdite';
+      var d = defautDeForme(v[cles[i]], niveau + 1);
+      if (d) return d;
     }
-    return max;
+    return null;
   }
+
+  function objetSimple(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
 
   /**
    * Un ThemeDef lu comme une donnée non fiable.
    *
    * @param {string|object} contenu le texte JSON de la colonne `themedef`, ou l'objet déjà lu
-   * @returns {{ok:boolean, themedef?:object, erreur?:string}} `erreur` : `trop-gros`, `json`, `type`, `profondeur`, `cle-interdite`,
-   *   `version`, `principal`
+   * Refus (le document n'applique rien) : `trop-gros` (16 Ko en octets), `json`, `type`, `profondeur`, `cle-interdite`, `version`, `section`
+   * (graines, modes, surcharges ou exigences qui n'est pas un objet), `principal` (absent ou pas #RRGGBB), `sombre` (hors liste),
+   * `explicite-incomplet` (mode sombre explicite sans ses 26 valeurs), `exigence` (un seuil plus lâche que 4,5 ou 3). Le reste (clé
+   * inconnue, surcharge refusée, police hors liste, graine facultative mal écrite, `resolu`) s'écarte sans refuser le document.
+   *
+   * @returns {{ok:boolean, themedef?:object, erreur?:string}}
    */
   function lireThemeDef(contenu) {
     var td = contenu;
     if (typeof contenu === 'string') {
-      if (contenu.length > TAILLE_MAX) return { ok: false, erreur: 'trop-gros' };
+      if (octets(contenu) > TAILLE_MAX) return { ok: false, erreur: 'trop-gros' };
       try { td = JSON.parse(contenu); } catch (e) { return { ok: false, erreur: 'json' }; }
     }
     if (!td || typeof td !== 'object' || Array.isArray(td)) return { ok: false, erreur: 'type' };
     var texte;
     try { texte = JSON.stringify(td); } catch (e2) { return { ok: false, erreur: 'json' }; }
-    if (texte.length > TAILLE_MAX) return { ok: false, erreur: 'trop-gros' };
-    var p = profondeur(td, 0);
-    if (p === 99) return { ok: false, erreur: 'cle-interdite' };
-    if (p > PROFONDEUR_MAX) return { ok: false, erreur: 'profondeur' };
+    if (octets(texte) > TAILLE_MAX) return { ok: false, erreur: 'trop-gros' };
+    var defaut = defautDeForme(td, 1);
+    if (defaut) return { ok: false, erreur: defaut };
     if (td.version !== VERSION) return { ok: false, erreur: 'version' };
-    if (!couleurSure(lire(td, ['graines', 'principal']))) return { ok: false, erreur: 'principal' };
+    var sections = ['graines', 'modes', 'surcharges', 'exigences'];
+    for (var i = 0; i < sections.length; i++) {
+      if (propre(td, sections[i]) && !objetSimple(td[sections[i]])) return { ok: false, erreur: 'section' };
+    }
+    if (!HEX.test(String(lire(td, ['graines', 'principal'])))) return { ok: false, erreur: 'principal' };
+    var sombre = lire(td, ['modes', 'sombre']);
+    if (sombre !== undefined && ['aucun', 'derive', 'explicite'].indexOf(sombre) === -1) return { ok: false, erreur: 'sombre' };
+    if (sombre === 'explicite') {
+      var s = lire(td, ['surcharges', 'sombre']);
+      var complet = objetSimple(s) && CLES.every(function (k) { return propre(s, k) || propre(s, '--kit-' + k); });
+      if (!complet) return { ok: false, erreur: 'explicite-incomplet' };
+    }
+    var ex = td.exigences || {};
+    if (propre(ex, 'contrasteTexte') && !(typeof ex.contrasteTexte === 'number' && ex.contrasteTexte >= 4.5)) return { ok: false, erreur: 'exigence' };
+    if (propre(ex, 'contrasteComposant') && !(typeof ex.contrasteComposant === 'number' && ex.contrasteComposant >= 3)) return { ok: false, erreur: 'exigence' };
     return { ok: true, themedef: td };
   }
 

@@ -56,6 +56,36 @@ describe('ThemeDef : un contenu non fiable', () => {
     assert.equal(T.lireThemeDef('{"version":"themedef-1.0","graines":{"principal":"#112233"},"surcharges":{"clair":{"constructor":"x"}}}').erreur, 'cle-interdite');
   });
 
+  it('arbitrage : les feuilles comptent dans la profondeur, la taille se mesure en octets', () => {
+    // racine = niveau 1 ; chaque valeur, feuille comprise, un niveau de plus ; au-delà du sixième : refusé
+    assert.equal(T.lireThemeDef(td({ a: { b: { c: { d: { e: 1 } } } } })).ok, true, 'la feuille au sixième niveau passe');
+    assert.equal(T.lireThemeDef(td({ a: { b: { c: { d: { e: { f: 1 } } } } } })).erreur, 'profondeur', 'la feuille au septième : refusée');
+    const accents = td({ nom: 'é'.repeat(9000) });
+    assert.ok(JSON.stringify(accents).length < 16384, 'moins de 16 384 caractères…');
+    assert.equal(T.lireThemeDef(accents).erreur, 'trop-gros', '…mais plus de 16 384 octets');
+  });
+
+  it('arbitrage : #RRGGBB strict, et les refus nets', () => {
+    assert.equal(T.lireThemeDef(td({ graines: { principal: '#abc' } })).erreur, 'principal');
+    assert.equal(T.lireThemeDef(td({ graines: [] })).erreur, 'section');
+    assert.equal(T.lireThemeDef(td({ modes: 'derive' })).erreur, 'section');
+    assert.equal(T.lireThemeDef(td({ modes: { sombre: 'bleu' } })).erreur, 'sombre');
+    assert.equal(T.lireThemeDef(td({ modes: { sombre: 'explicite' } })).erreur, 'explicite-incomplet');
+    assert.equal(T.lireThemeDef(td({ modes: { sombre: 'explicite' }, surcharges: { sombre: { fond: '#000000' } } })).erreur, 'explicite-incomplet');
+    const complet = {};
+    T.CLES.forEach((k) => { complet[k] = '#112233'; });
+    assert.equal(T.lireThemeDef(td({ modes: { sombre: 'explicite' }, surcharges: { sombre: complet } })).ok, true);
+    assert.equal(T.lireThemeDef(td({ exigences: { contrasteTexte: 4 } })).erreur, 'exigence');
+    assert.equal(T.lireThemeDef(td({ exigences: { contrasteComposant: 2.9 } })).erreur, 'exigence');
+    assert.equal(T.lireThemeDef(td({ exigences: { contrasteTexte: 'sept' } })).erreur, 'exigence');
+    assert.equal(T.lireThemeDef(td({ exigences: { contrasteTexte: 7, contrasteComposant: 3 } })).ok, true, 'on peut renforcer');
+  });
+
+  it('arbitrage : ce qui est écarté sans refuser le document', () => {
+    assert.equal(T.lireThemeDef(td({ cle_inconnue: 1, police: 'comic', graines: { principal: '#112233', secondaire: 'pas-une-couleur' } })).ok, true);
+    assert.equal(T.lireThemeDef(td({ resolu: 'illisible' })).ok, true);
+  });
+
   it('la table est lue en lignes, cinquante au plus', () => {
     const c = colonnes(Array.from({ length: 70 }, (_, i) => ({ cle: 't' + i, themedef: '{}', actif: false })));
     assert.equal(T.lignesDeTable(c).length, 50);
