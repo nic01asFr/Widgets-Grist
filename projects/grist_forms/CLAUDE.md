@@ -44,6 +44,7 @@ projects/grist_forms/
 │   ├── carte-geometrie.js   # Carte de saisie d'un point, d'une ligne, d'un polygone
 │   ├── dessin.js            # Annotation et signature sur une image ; `nomDeCouleur`
 │   ├── theme.js             # Contrat de thème `kit-theme/0.1` : juge puis pose les variables --kit-*
+│   ├── design-system.js     # Catalogue → formulaire, réponses → document, règles croisées, ThemeDef 1.0 (page `design-system.html`)
 │   ├── formdef-from-table.js         # Un FormDef déduit d'une table Grist
 │   ├── formdef-from-grist-form.js    # Un FormDef relu depuis un formulaire natif Grist
 │   └── publish.js
@@ -51,6 +52,7 @@ projects/grist_forms/
 │   └── e2e-hook.js       # Harnais d'essai — chargé seulement sur `?e2e=1`
 ├── docs/matrice-types.html  # Types Grist, formes de question, gestes (page de référence)
 ├── docs/THEME-KIT.md        # Variables --kit-* et correspondance avec les jetons du kit
+├── docs/DESIGN-SYSTEM.md    # Saisir un design system : catalogue, niveaux, brouillon, proposition, table `Design_system`, mesures
 ├── docs/THEMEDEF-SPEC.md    # ThemeDef 1.0 (brouillon relu) : document de thème éditable ; le moteur ne le lit pas, l'hôte oui
 ├── docs/LIMITES.md          # Limiter participants, réponses, durée d'ouverture ; ce que la table tranche (formule Place)
 ├── docs/EXPOSITION.md       # Trois façons de partager, qui lit quoi, règles d'accès, ce qui est mesuré ou non
@@ -64,7 +66,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1045 tests verts** (31/10/2026 ; les
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1096 tests verts** (dont 31 sur le design system ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
 chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)

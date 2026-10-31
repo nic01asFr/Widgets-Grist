@@ -11,7 +11,7 @@ const SRC = path.join(ROOT, 'projects', 'grist_forms');
 const DEST = path.join(ROOT, 'published', 'grist_forms');
 
 const COPY_DIRS = ['shared', 'runtime', 'demo'];
-const COPY_FILES = ['builder.html', 'README.md'];
+const COPY_FILES = ['builder.html', 'design-system.html', 'README.md'];
 
 // Ce qui vit dans published/ et ne vient PAS des sources : la fiche de vitrine
 // est ecrite la, et la promotion ne doit pas l'emporter en faisant le menage.
@@ -69,13 +69,26 @@ const pkg = {
   version: versionPubliee(),
   description: 'Form Builder Grist — composer, remplir et dépouiller des formulaires dans un document',
   authors: [{ name: 'nic01asfr', url: 'https://github.com/nic01asfr' }],
-  grist: {
-    widgetId: 'grist-forms-builder',
-    name: 'Form Builder — formulaires Grist',
-    url: 'builder.html',
-    accessLevel: 'full',
-    description: 'Questionnaires liés aux tables : étapes, conditions, audience, carte, dessin, synthèse'
-  }
+  // Deux widgets, un seul paquet : le compositeur de formulaires, et la page qui verse un design system dans le document.
+  grist: [
+    {
+      widgetId: 'grist-forms-builder',
+      name: 'Form Builder — formulaires Grist',
+      url: 'builder.html',
+      accessLevel: 'full',
+      description: 'Questionnaires liés aux tables : étapes, conditions, audience, carte, dessin, synthèse'
+    },
+    {
+      widgetId: 'grist-forms-design-system',
+      name: 'Design system — saisir et verser',
+      url: 'design-system.html',
+      // Servi, mais pas proposé dans le sélecteur de Grist tant que la décision de le montrer n'est pas prise
+      // (le manifeste ignore un widget `prive`) : passer à false pour l'annoncer.
+      prive: true,
+      accessLevel: 'full',
+      description: 'Renseigner un design system par niveaux, le garder en brouillon dans le document, contrôler ses règles'
+    }
+  ]
 };
 fs.writeFileSync(path.join(DEST, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
 
