@@ -1,0 +1,76 @@
+'use strict';
+
+/*
+ * Revue du 31/10/2026 : ce qu'un lecteur d'écran et un clavier trouvent dans le rendu, et ce qu'un réglage mal
+ * saisi ne doit jamais faire écrire dans la page.
+ */
+
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+const Engine = require('../runtime/engine.js');
+const { createRoot } = require('./helpers/fake-dom.js');
+
+const flush = () => new Promise((resolve) => setTimeout(() => setImmediate(resolve), 2));
+
+describe('Matrice d\'échelles : un groupe nommé par ligne', () => {
+  const def = {
+    id: 'f', title: 'F', tableId: 'T', choices: {},
+    echelles: { e: { min: 1, max: 5, libelles: ['Pas du tout d\'accord', 'Tout à fait d\'accord'] } },
+    matrices: { m: { titre: 'Comment jugez-vous la place ?' } },
+    sections: [{ id: 's', label: 'S', gate: null, fields: [
+      { colId: 'A', label: 'La place est agréable', type: 'Int', widget: 'echelle', required: true, options: { echelle: 'e', matrice: 'm' } },
+      { colId: 'B', label: 'On y trouve de l\'ombre', type: 'Int', widget: 'echelle', required: true, options: { echelle: 'e', matrice: 'm' } }
+    ] }]
+  };
+
+  it('chaque ligne est un groupe nommé par son affirmation et décrit par les ancres de l\'échelle', async () => {
+    const root = createRoot();
+    Engine.mount(root, def, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    const html = root.innerHTML;
+    assert.equal((html.match(/role="radiogroup"/g) || []).length, 2, 'un groupe par ligne');
+    assert.match(html, /aria-labelledby="field-A-intitule"/);
+    assert.match(html, /id="field-A-intitule"/);
+    assert.match(html, /aria-describedby="ancres-m"/);
+    assert.match(html, /id="ancres-m"/);
+  });
+
+  it('une ligne en erreur est signalée sur le groupe et reliée à son message', async () => {
+    const root = createRoot();
+    Engine.mount(root, def, { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush();
+    assert.match(root.innerHTML, /role="radiogroup"[^>]*aria-describedby="ancres-m [^"]+"[^>]*aria-invalid="true"/);
+  });
+});
+
+describe('Un réglage mal saisi n\'écrit rien dans la page', () => {
+  const avec = (options, widget, type) => ({
+    id: 'f', title: 'F', tableId: 'T', choices: { C: ['a', 'b', 'c'] },
+    sections: [{ id: 's', label: 'S', gate: null, fields: [
+      { colId: 'Q', label: 'Q', type: type || 'Attachments', widget: widget || 'file', options: options }
+    ] }]
+  });
+
+  it('maxFiles : un texte n\'est jamais écrit tel quel', async () => {
+    const root = createRoot();
+    Engine.mount(root, avec({ maxFiles: '<img src=x onerror=alert(1)>' }), { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    assert.ok(!/<img src=x/.test(root.innerHTML));
+    assert.match(root.innerHTML, /Jusqu.{1,3}à 5 fichier/);
+  });
+
+  it('maxSelected : un texte n\'entre pas dans data-max', async () => {
+    const root = createRoot();
+    Engine.mount(root, avec({ maxSelected: '3" onclick="alert(1)' }, 'checkbox-list', 'ChoiceList'), { submit: () => Promise.resolve([[1]]) });
+    await flush();
+    assert.ok(!/onclick="alert/.test(root.innerHTML));
+  });
+
+  it('une échelle démesurée est plafonnée', () => {
+    const e = Engine.echelleDe ? Engine.echelleDe({ echelles: { x: { min: 1, max: 1000000000 } } }, { options: { echelle: 'x' } }) : null;
+    if (e) assert.ok(e.max - e.min <= 50);
+  });
+});

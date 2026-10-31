@@ -644,7 +644,18 @@
     return String(a) === String(b);
   }
 
-  function fieldId(field) { return 'field-' + field.colId; }
+  /** L'identifiant HTML d'une question : un nom de colonne ne sort jamais de son attribut. */
+  function fieldId(field) { return 'field-' + String(field.colId).replace(/[^A-Za-z0-9_-]/g, '_'); }
+
+  /**
+   * Un entier de reglage (maximum, nombre de rangs ou de fichiers) : un nombre borne, jamais le texte brut du
+   * formulaire dans une balise ou une boucle de rendu.
+   */
+  function entierBorne(valeur, defaut, plafond) {
+    var n = Math.floor(Number(valeur));
+    if (!isFinite(n) || n < 1) return defaut;
+    return Math.min(n, plafond || 100);
+  }
 
   /**
    * « Obligatoire » se lit dans la ligne du libellé.
@@ -1141,7 +1152,7 @@
         '</label>';
     }).join('');
     // Un plafond annonce avant de choisir, pas un refus apres coup.
-    var max = field.options && field.options.maxSelected;
+    var max = entierBorne(field.options && field.options.maxSelected, 0);
     var plafond = max
       ? '<p class="fr-hint-text fr-plafond" data-max="' + max + '">' +
         selected.length + ' sur ' + max + ' maximum</p>'
@@ -1170,7 +1181,7 @@
     var max = Number.isFinite(e.max) ? e.max : 5;
     return {
       min: min,
-      max: max > min ? max : min + 4,
+      max: max > min ? Math.min(max, min + 50) : min + 4,
       libelles: Array.isArray(e.libelles) && e.libelles.length === 2 ? e.libelles : null,
       nonConcerne: !!e.nonConcerne
     };
@@ -1282,14 +1293,20 @@
       var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
         ? '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
         : '';
-      return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '">' +
-        '<span class="fr-matrice__intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
+      var enErreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1;
+      // Chaque ligne est un groupe de boutons NOMMÉ par son affirmation, décrit par les ancres de l'échelle (le sens
+      // de 1 et de 5) et par son erreur : un lecteur d'écran annonce « La place est agréable, groupe », pas « 3, bouton ».
+      return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '" role="radiogroup"' +
+        ' aria-labelledby="' + fieldId(f) + '-intitule" aria-describedby="ancres-' + escapeHtml(groupe.matrice) + (enErreur ? ' ' + erreurId(f.colId) : '') + '"' +
+        (enErreur ? ' aria-invalid="true"' : '') + '>' +
+        '<span class="fr-matrice__intitule" id="' + fieldId(f) + '-intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
         boutonsEchelle(f, values[f.colId], e) + erreur + '</div>';
     }).join('');
     return '<fieldset class="fr-fieldset fr-matrice" data-matrice="' + escapeHtml(groupe.matrice) + '">' +
       (entete.titre ? '<legend class="fr-fieldset__legend fr-matrice__question">' + escapeHtml(entete.titre) + '</legend>' : '') +
       (entete.consigne ? '<p class="fr-hint-text">' + escapeHtml(entete.consigne) + '</p>' : '') +
-      ancresEchelle(e) + '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
+      '<div id="ancres-' + escapeHtml(groupe.matrice) + '">' + ancresEchelle(e) + '</div>' +
+      '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
   }
 
   /**
@@ -1403,7 +1420,7 @@
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
     var accept = (field.options && field.options.accept) || '';
-    var maxFiles = (field.options && field.options.maxFiles) || 5;
+    var maxFiles = entierBorne(field.options && field.options.maxFiles, 5, 50);
     var acceptAttr = accept ? ' accept="' + escapeHtml(accept) + '"' : '';
     var names = [];
     if (Attachments.filesFromValue) {
@@ -1526,7 +1543,7 @@
 
   function renderClassement(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
-    var rangs = (field.options && field.options.rangs) || Math.min(3, options.length);
+    var rangs = entierBorne(field.options && field.options.rangs, Math.min(3, options.length), 20);
     var choisis = Array.isArray(value) ? value.map(function (v) { return v == null ? '' : String(v); }) : [];
     var id = fieldId(field);
 
