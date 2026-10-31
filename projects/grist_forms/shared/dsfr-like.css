@@ -164,9 +164,9 @@ small { font-size: 0.875rem; }
   background: var(--kit-surface-2, var(--grey-950));
   color: var(--kit-texte, var(--grey-425));
 }
-.fr-badge--info { background: var(--kit-info-fond, #e8edff); color: var(--kit-info, var(--info)); }
-.fr-badge--success { background: var(--kit-ok-fond, #e3fadb); color: var(--kit-ok, var(--success)); }
-.fr-badge--warning { background: var(--kit-attention-fond, #ffe9e0); color: var(--kit-attention, var(--warning)); }
+.fr-badge--info { background: var(--kit-info-fond, var(--info-fond, #e8edff)); color: var(--kit-info, var(--info)); }
+.fr-badge--success { background: var(--kit-ok-fond, var(--ok-fond, #e3fadb)); color: var(--kit-ok, var(--success)); }
+.fr-badge--warning { background: var(--kit-attention-fond, var(--attention-fond, #ffe9e0)); color: var(--kit-attention, var(--warning)); }
 .fr-badge--error { background: var(--kit-alerte-fond, #ffe9e9); color: var(--kit-alerte, var(--error)); }
 
 /* Alerts */
@@ -174,13 +174,13 @@ small { font-size: 0.875rem; }
   padding: 1rem 1.25rem;
   border-radius: var(--radius);
   border-left: 4px solid var(--kit-info, var(--info));
-  background: var(--kit-info-fond, #e8edff);
+  background: var(--kit-info-fond, var(--info-fond, #e8edff));
   margin: 1rem 0;
 }
-.fr-alert--success { border-left-color: var(--kit-ok, var(--success)); background: var(--kit-ok-fond, #e3fadb); }
+.fr-alert--success { border-left-color: var(--kit-ok, var(--success)); background: var(--kit-ok-fond, var(--ok-fond, #e3fadb)); }
 .fr-alert--error { border-left-color: var(--kit-alerte, var(--error)); background: var(--kit-alerte-fond, #ffe9e9); }
-.fr-alert--info { border-left-color: var(--kit-info, var(--info)); background: var(--kit-info-fond, #e8edff); }
-.fr-alert--warning { border-left-color: var(--kit-attention, var(--warning)); background: var(--kit-attention-fond, #ffe9e0); }
+.fr-alert--info { border-left-color: var(--kit-info, var(--info)); background: var(--kit-info-fond, var(--info-fond, #e8edff)); }
+.fr-alert--warning { border-left-color: var(--kit-attention, var(--warning)); background: var(--kit-attention-fond, var(--attention-fond, #ffe9e0)); }
 .fr-alert p { margin: 0; }
 
 /* Table */
@@ -212,6 +212,10 @@ small { font-size: 0.875rem; }
 }
 .fr-form__brand--success img { max-height: 140px; }
 .fr-form__success { max-width: 40rem; }
+.fr-form__success .fr-form__success-form { margin: 0 0 0.25rem; color: var(--kit-texte-2, var(--grey-625)); }
+.fr-form__success .fr-form__success-titre { margin: 0 0 0.5rem; }
+.fr-form__success .fr-form__success-quand { margin: 0.5rem 0 0; }
+.fr-form__success .fr-form__success-suite { margin: 1.25rem 0 0; }
 
 /* ── Échelles et matrices ─────────────────────────────────────────────────
    Une échelle se lit d'un coup d'œil : les crans alignés, et ce que valent
@@ -285,6 +289,10 @@ small { font-size: 0.875rem; }
   --grey-975: #1f2320;
   --grey-950: #2a2f2b;
   --grey-925: #39423c;
+  /* Les gris de TEXTE s'inversent aussi : #666 sur fond sombre fait 3,3:1, sous le seuil de lecture. Le « blanc »
+     (champs, listes) devient le fond des cartes : un champ blanc sous un texte clair ne se lit pas. */
+  --grey-625: #a7b0a9; --grey-425: #d5dbd6; --grey-200: #edf1ec;
+  --grey-1000: #222624; --grey-900: #4a544d;
   --blue-france: #9aa2ff;
   --encart-attention: #3a3220;
   color-scheme: dark;
@@ -299,6 +307,8 @@ small { font-size: 0.875rem; }
     --grey-975: #1f2320;
     --grey-950: #2a2f2b;
     --grey-925: #39423c;
+    --grey-625: #a7b0a9; --grey-425: #d5dbd6; --grey-200: #edf1ec;
+    --grey-1000: #222624; --grey-900: #4a544d;
     --blue-france: #9aa2ff;
     --encart-attention: #3a3220;
     color-scheme: dark;
@@ -317,7 +327,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-form .fr-input, .fr-form .fr-select, .fr-form textarea.fr-input { min-height: var(--cible); font-size: var(--texte); }
 .fr-form .fr-btn { min-height: var(--cible); font-size: var(--texte); }
 .fr-radio-group, .fr-checkbox-group { display: flex; align-items: center; gap: var(--ecart); min-height: var(--cible); }
-.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; accent-color: var(--kit-accent, var(--blue-france)); }
+.fr-radio-group input, .fr-checkbox-group input { width: 1.25rem; height: 1.25rem; flex: 0 0 1.25rem; accent-color: var(--kit-accent, var(--blue-france)); }
 .fr-radio-group .fr-label, .fr-checkbox-group .fr-label { font-weight: 400; }
 
 /* Progression : où j'en suis, combien il reste. */
@@ -334,9 +344,19 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-form__actions {
   position: sticky; bottom: 0; z-index: 5;
   display: flex; justify-content: space-between; align-items: center; gap: var(--ecart);
-  margin-top: 1.5rem; padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to bottom, transparent, var(--kit-fond, var(--fond-page)) 35%);
+  margin-top: 0.75rem; padding: 0.6rem 0 calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  /* Opaque sur toute sa largeur : avec un fond qui commence transparent, le texte de la question
+     suivante se lisait entre les deux boutons. Le fondu est au-dessus de la barre, pas dedans. */
+  background: var(--kit-fond, var(--fond-page));
 }
+.fr-form__actions::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 1.25rem;
+  background: linear-gradient(to bottom, transparent, var(--kit-fond, var(--fond-page)));
+  pointer-events: none;
+}
+/* Ce qu'on atteint au clavier ou par un lien d'erreur ne passe jamais sous la barre. */
+html { scroll-padding-bottom: 6rem; }
+.fr-form input, .fr-form select, .fr-form textarea, .fr-form button, .fr-form a, .fr-form [tabindex] { scroll-margin-bottom: 6rem; }
 
 /* Échelle : des crans qu'un doigt atteint. */
 .fr-echelle__crans { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
@@ -347,10 +367,10 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
   border: 1px solid var(--kit-bord, var(--bord)); border-radius: 6px; cursor: pointer; background: var(--kit-surface, var(--fond-carte));
 }
 .fr-echelle__cran input { position: absolute; opacity: 0; width: 0; height: 0; }
-.fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); }
+.fr-echelle__cran input:checked + label { background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); }
 .fr-echelle__cran input:focus-visible + label { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
 .fr-echelle__nsp { margin-left: 0; padding-left: 0; border-left: none; }
-.fr-echelle__ancres { font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); }
+.fr-echelle__ancres { font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); margin-bottom: 0.6rem; }
 
 /* Matrice : un tableau sur grand écran, des cartes sur téléphone. */
 .fr-matrice__question { margin-bottom: 0.25rem; }
@@ -361,7 +381,8 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
     border: 1px solid var(--kit-bord, var(--bord)); border-radius: 8px; padding: 0.85rem;
     margin-bottom: 0.6rem; background: var(--kit-surface, var(--fond-carte));
   }
-  .fr-matrice__intitule { font-weight: 500; margin-bottom: 0.5rem; }
+  /* En colonne, la base de 14rem de l'intitulé devient une HAUTEUR : 224 px de vide entre l'affirmation et l'échelle. */
+  .fr-matrice__intitule { flex: 0 0 auto; width: 100%; font-weight: 500; margin-bottom: 0.5rem; }
 }
 
 /* Une consigne se lit sous son libellé, pas dans son prolongement. */
@@ -392,9 +413,13 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .champ-bloc__rendu .fr-checkbox-group:has(input:checked) {
   border-color: var(--kit-accent, var(--blue-france)); background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 6%, var(--kit-surface, var(--fond-carte)));
 }
+/* Un seul anneau de focus, celui de la carte, et DANS la carte : posé à l'extérieur il est rogné sur les bords
+   quand le conteneur coupe ce qui déborde (vu dans Grist), et le rond natif en dessinait un second par-dessus. */
 .fr-form .fr-radio-group:focus-within, .fr-form .fr-checkbox-group:focus-within {
-  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 1px;
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: -2px;
 }
+.fr-form .fr-radio-group input:focus, .fr-form .fr-checkbox-group input:focus,
+.fr-form .fr-radio-group input:focus-visible, .fr-form .fr-checkbox-group input:focus-visible { outline: none; }
 
 /* Les crans d'une échelle restent en ligne : ce sont des degrés, pas des options. */
 .fr-form .fr-echelle__crans .fr-radio-group,
@@ -454,6 +479,15 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
   margin: -0.2rem 0 0.4rem; font-variant-numeric: tabular-nums;
 }
 .fr-form .fr-checkbox-group input:disabled + .fr-label, .champ-bloc__rendu .fr-checkbox-group input:disabled + .fr-label { opacity: 0.45; }
+/* Une option qui n'est plus offerte (choix complet) se voit d'un coup d'œil : la carte entière s'efface, pas
+   seulement la pastille ; le curseur dit « non », la bordure ne s'allume plus au survol. */
+.fr-form .fr-radio-group:has(input:disabled), .champ-bloc__rendu .fr-radio-group:has(input:disabled) {
+  background: transparent; border-style: dashed; cursor: not-allowed;
+}
+.fr-form .fr-radio-group:has(input:disabled):hover { border-color: var(--kit-bord, var(--bord)); }
+.fr-form .fr-radio-group input:disabled + .fr-label, .champ-bloc__rendu .fr-radio-group input:disabled + .fr-label {
+  opacity: 0.55; cursor: not-allowed;
+}
 
 /* Classer : une grille, une ligne par proposition, une colonne par place.
    C'est la forme du questionnaire papier, et celle des colonnes qui recoivent
@@ -493,7 +527,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-form .fr-rangs__cible::before, .champ-bloc__rendu .fr-rangs__cible::before {
   content: attr(data-rang); display: flex; align-items: center; justify-content: center;
   width: 2.4rem; height: 2.4rem; border-radius: 999px;
-  border: 2px solid var(--kit-bord, var(--bord, #ddd));
+  border: 2px solid var(--kit-texte-2, var(--encre-douce, #666)); /* 3:1 au moins : une commande vide reste visible */
   font-size: 0.9375rem; font-weight: 700; color: transparent;
   transition: background-color .12s ease, border-color .12s ease, color .12s ease;
 }
@@ -502,7 +536,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 }
 .fr-form .fr-rangs__cible:has(input:checked)::before,
 .champ-bloc__rendu .fr-rangs__cible:has(input:checked)::before {
-  background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
+  background: var(--kit-accent, var(--blue-france)); border-color: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff));
 }
 /* Une proposition qui a trouvé sa place se distingue de celles qui attendent. */
 .fr-form .fr-rangs tr:has(input:checked), .champ-bloc__rendu .fr-rangs tr:has(input:checked) {
@@ -628,7 +662,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 /* Un point pose : assez gros pour qu'on puisse le reprendre au doigt. */
 .fr-carte__point {
   width: 1.5rem; height: 1.5rem; border-radius: 999px; cursor: pointer;
-  border: 2px solid var(--kit-accent-texte, #fff); background: var(--kit-alerte, var(--error, #ce0500));
+  border: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); background: var(--kit-alerte, var(--error, #ce0500));
   box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
 .fr-carte__point:focus-visible { outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 2px; }
@@ -648,8 +682,8 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-carte__repere {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.7rem; height: 1.7rem; border-radius: 999px;
-  background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff); font-size: 0.875rem; font-weight: 600;
-  border: 2px solid var(--kit-accent-texte, #fff); box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
+  background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff)); font-size: 0.875rem; font-weight: 600;
+  border: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); box-shadow: 0 1px 4px var(--kit-ombre, rgba(0, 0, 0, 0.35));
 }
 /* Une page intégrée : elle occupe la largeur de la question, et sa hauteur
    est celle qu'on lui a donnée — on ne devine pas le contenu d'autrui. */
@@ -669,13 +703,14 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
 .fr-bandeau {
   background: var(--kit-surface, var(--fond-carte, #fff));
   border-bottom: 2px solid var(--kit-accent, var(--blue-france));
-  padding: 0.875rem 1rem;
+  padding: 0.7rem 1rem;
   margin: -1rem -1rem 0;
 }
 .fr-bandeau__inner {
   display: flex;
+  flex-wrap: wrap;           /* le titre passe sous le logo quand la place manque, il n'est jamais écrasé */
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.5rem 0.875rem;
   max-width: 48rem;
   margin: 0 auto;
 }
@@ -698,11 +733,23 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
   font-size: 0.875rem;
   line-height: 1.1;
   color: var(--kit-accent, var(--blue-france));
-  border-right: 1px solid var(--kit-bord, var(--grey-900));
-  padding-right: 0.875rem;
+  /* Pas de filet vertical : quand le titre passe sous le logo (écran étroit), il restait seul en bout de ligne. */
 }
 .fr-bandeau__orga small { display: block; font-weight: 400; color: var(--kit-texte-2, var(--encre-douce)); }
-.fr-bandeau__titre { font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--kit-texte, var(--encre)); }
+.fr-bandeau__titre {
+  font-size: 0.9375rem; margin: 0; font-weight: 600; color: var(--kit-texte, var(--encre));
+  /* Une base de 18rem : à côté du logo quand il y a la place, sur sa propre ligne sinon. Jamais un mot par ligne. */
+  flex: 1 1 18rem; min-width: 0; overflow-wrap: break-word;
+}
+/* Un logo est fait pour un fond clair : en sombre, un PNG à texte foncé disparaît. Il garde son fond blanc. */
+:root[data-grist-theme="dark"] .fr-bandeau__logo img,
+:root[data-grist-theme="dark"] .fr-form__brand img,
+:root[data-grist-appearance="dark"] .fr-bandeau__logo img,
+:root[data-grist-appearance="dark"] .fr-form__brand img { background: var(--kit-papier, #fff); border-radius: 6px; padding: 0.25rem 0.5rem; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) .fr-bandeau__logo img,
+  :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) .fr-form__brand img { background: var(--kit-papier, #fff); border-radius: 6px; padding: 0.25rem 0.5rem; }
+}
 
 /* L'avancement suit : en bas d'une etape longue, savoir ou l'on en est
    vaut mieux que de devoir remonter pour le lire. */
@@ -755,7 +802,7 @@ body { font-size: var(--texte); line-height: 1.6; background: var(--kit-fond, va
   position: relative;
   border: 1px solid var(--kit-bord, var(--bord));
   border-radius: var(--radius);
-  background: var(--kit-surface, var(--fond-carte));
+  background: var(--kit-papier, #fff); /* du papier dans tous les themes : les traits par defaut (noir, bleu) sont invisibles sur fond sombre */
   overflow: hidden;
 }
 .fr-dessin__toile {
@@ -914,11 +961,11 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 .fr-repere-lie {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 1.4rem; height: 1.4rem; padding: 0 0.25rem;
-  border-radius: 0.7rem; background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, #fff);
+  border-radius: 0.7rem; background: var(--kit-accent, var(--blue-france)); color: var(--kit-accent-texte, var(--bouton-texte, #fff));
   font-size: 0.875rem; font-weight: 700; margin-right: 0.4rem;
 }
 .fr-carte__repere--bouton { cursor: pointer; border: none; font: inherit; }
-.fr-carte__repere--bouton:focus-visible { outline: 2px solid var(--kit-accent-texte, #fff); outline-offset: 2px; }
+.fr-carte__repere--bouton:focus-visible { outline: 2px solid var(--kit-accent-texte, var(--bouton-texte, #fff)); outline-offset: 2px; }
 
 .est-designe { animation: fr-designe 1.6s ease; }
 .fr-rangs tr.est-designe th, .fr-rangs tr.est-designe td { background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 10%, transparent); }
@@ -988,15 +1035,24 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
    > devient une variable, redefinie ici pour le mode sombre ; en clair, ce sont
    > les valeurs d'avant.
    --------------------------------------------------------------- */
+/* Les quatre alertes (erreur, succès, info, avertissement) : un fond sombre et une couleur de filet/texte claire
+   chacune. Seule l'erreur y était : les trois autres gardaient un fond pastel sous un texte clair, illisibles
+   (constaté le 31/10/2026 sur la phrase « une réponse existe déjà »). */
 :root[data-grist-theme="dark"],
 :root[data-grist-appearance="dark"] {
   --error: #ff7a75; --erreur-fond: #3b1f1f;
+  --success: #6fd58f; --ok-fond: #1b3324;
+  --info: #9bbcff; --info-fond: #1d2a47;
+  --warning: #ffb27a; --attention-fond: #3a2a1b;
   --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
   --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-grist-theme="light"]):not([data-grist-appearance="light"]) {
     --error: #ff7a75; --erreur-fond: #3b1f1f;
+    --success: #6fd58f; --ok-fond: #1b3324;
+    --info: #9bbcff; --info-fond: #1d2a47;
+    --warning: #ffb27a; --attention-fond: #3a2a1b;
     --blue-france-hover: #b4baff; --blue-france-active: #c8ccff;
     --bouton-texte: #161a18; --bouton-secondaire-fond: transparent; --bouton-secondaire-survol: #2a2f2b;
   }
@@ -1065,3 +1121,20 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
   .fr-radio-rich, .fr-btn--secondary, .fr-btn--tertiary { border-color: currentColor; }
   :focus-visible { outline-width: 3px; }
 }
+
+/* La phrase qui dit ce que l'astérisque veut dire : discrète, au-dessus des questions. */
+.fr-form .fr-legende-obligatoire { margin: 0 0 0.5rem; }
+
+/* Saisir un point à la main : replié, c'est le recours du clavier et de ceux
+   qui ont déjà les coordonnées, pas le geste du public. */
+.fr-form .fr-geo__avance, .champ-bloc__rendu .fr-geo__avance { margin-top: 0.75rem; }
+.fr-form .fr-geo__avance > summary, .champ-bloc__rendu .fr-geo__avance > summary {
+  cursor: pointer; font-size: 0.875rem; color: var(--kit-action, #000091);
+  text-decoration: underline; text-underline-offset: 3px; padding: 0.25rem 0;
+}
+.fr-form .fr-geo__avance[open] > summary, .champ-bloc__rendu .fr-geo__avance[open] > summary { margin-bottom: 0.25rem; }
+.fr-form .fr-geo__avance .fr-input, .champ-bloc__rendu .fr-geo__avance .fr-input { width: 100%; }
+
+/* Une réponse commencée : la proposition de la reprendre, avant la première question. */
+.fr-form .fr-brouillon { margin-top: 0; }
+.fr-form .fr-brouillon__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }

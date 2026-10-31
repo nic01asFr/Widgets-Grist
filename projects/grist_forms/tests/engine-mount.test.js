@@ -136,7 +136,8 @@ describe('Engine.renderFieldHtml — widgets v1', () => {
     }, {});
     assert.ok(html.includes('type="file"'));
     assert.ok(html.includes('multiple'));
-    assert.ok(html.includes('Jusqu\'à 3'));
+    assert.ok(html.includes('Jusqu’à 3 fichiers'), 'apostrophe typographique, pluriel, pas de « (s) »');
+    assert.ok(!html.includes('fichier(s)'));
   });
 });
 

@@ -370,3 +370,10 @@ describe('la colonne « Place » suit les limites', () => {
     assert.equal(plan.actions.length, 0);
   });
 });
+
+it('une colonne DateTime avec fuseau (DateTime:Europe/Paris) est compatible avec une question DateTime', () => {
+  const def = { tableId: 'T', sections: [{ fields: [{ colId: 'Quand', type: 'DateTime' }] }] };
+  const plan = planEnsureSchema(def, [{ id: 'Quand', type: 'DateTime:Europe/Paris' }]);
+  assert.equal(plan.ok, true, plan.errors.join(' '));
+  assert.equal(plan.actions.length, 0);
+});

@@ -128,7 +128,14 @@
           } else if (p.max !== undefined && p.max !== null) {
             out.erreurs.push(ou + ' : le maximum est un nombre ou une liste { choix : nombre }.');
           }
-          if (typeof p.capaciteCol === 'string' && p.capaciteCol) { e.capaciteCol = p.capaciteCol; ok = true; }
+          if (typeof p.capaciteCol === 'string' && p.capaciteCol) {
+            // Un nom de colonne, rien d'autre : il est recopié tel quel dans la formule Python de « Place ».
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(p.capaciteCol)) {
+              out.erreurs.push(ou + ' : « capaciteCol » est un nom de colonne (lettres, chiffres et _).');
+              return;
+            }
+            e.capaciteCol = p.capaciteCol; ok = true;
+          }
           if (!ok) { out.erreurs.push(ou + ' : dites le maximum (`max`) ou la colonne qui le porte (`capaciteCol`).'); return; }
           vus[p.colId] = true;
           l.parChoix.push(e);
@@ -318,7 +325,11 @@
   // ── la formule qui tranche, côté Grist ──
 
   function ident(s) { return /^[A-Za-z_][A-Za-z0-9_]*$/.test(s); }
-  function litteralPython(s) { return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
+  /** Une chaîne Python sur une seule ligne : antislash, apostrophe, retours à la ligne et NUL échappés. */
+  function litteralPython(s) {
+    return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      .replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\0/g, '\\x00') + "'";
+  }
 
   /**
    * La formule de la colonne « Place » : `Confirmé` ou `Liste d'attente`, selon l'ordre d'arrivée.
@@ -339,7 +350,9 @@
    */
   function formulePlace(limites, tableId) {
     if (!limites || !ident(String(tableId))) return null;
-    var pc = (limites.parChoix || []).filter(function (p) { return ident(p.colId); });
+    // Défense en profondeur : même une limite qui n'a pas passé `normaliser` ne met rien d'autre qu'un nom de
+    // colonne dans la formule.
+    var pc = (limites.parChoix || []).filter(function (p) { return ident(p.colId) && (!p.capaciteCol || ident(p.capaciteCol)); });
     var unique = limites.unique && ident(limites.unique.colId) ? limites.unique : null;
     if (!limites.total && !pc.length && !unique) return null;
     var sauf = limites.sauf && ident(limites.sauf.colId) ? limites.sauf : null;
