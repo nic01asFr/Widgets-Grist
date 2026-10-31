@@ -1971,7 +1971,8 @@
       var v = values[f.colId];
       var empty;
       if (f.widget === 'checkbox') empty = v !== true;
-      else empty = v == null || v === '' || (Array.isArray(v) && v.length === 0);
+      // Des espaces seuls ne sont pas une réponse (la formule `Motifs` de la table les compte déjà comme absents).
+      else empty = v == null || v === '' || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0);
       if (empty) missing.push(f.colId);
     }
     return missing;

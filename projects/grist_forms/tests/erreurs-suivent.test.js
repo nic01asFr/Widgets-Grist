@@ -113,3 +113,19 @@ describe('Le focus d\'une carte de choix', () => {
     assert.match(css, /\.fr-radio-group input:focus-visible[^{]*\{\s*outline:\s*none/);
   });
 });
+
+describe('Obligatoire : des espaces ne sont pas une réponse', () => {
+  it('« Nom » obligatoire refuse « ␣␣␣ »', async () => {
+    const root = createRoot();
+    let envoyes = 0;
+    Engine.mount(root, formDef, { submit: () => { envoyes++; return Promise.resolve([[1]]); } });
+    await flush();
+    await saisir(root, 'Nom', '   ');
+    await saisir(root, 'Courriel', 'a@b.fr');
+    await saisir(root, 'Note', 'ok');
+    root.querySelector('[data-action="submit"]').dispatchEvent('click');
+    await flush(); await flush();
+    assert.equal(envoyes, 0);
+    assert.match(root.innerHTML, /data-error-for="Nom"/);
+  });
+});
