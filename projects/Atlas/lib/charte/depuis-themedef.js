@@ -20,7 +20,9 @@ export const LIMITES_THEMEDEF = Object.freeze({ octets: 16384, profondeur: 6, li
 
 const CLE_LIGNE = /^[a-z][a-z0-9-]{0,39}$/;
 const INTERDITES = new Set(['__proto__', 'constructor', 'prototype']);
-const GRAINES_THEMEDEF = Object.freeze({ principal: 'principal', secondaire: 'secondaire', encre: 'encre', fond: 'fond' });
+// Une graine ThemeDef s'écrit #RRGGBB (arbitrage du 01/11/2026) ; la lecture générale des chartes, elle, reste tolérante.
+const GRAINE_STRICTE = /^#[0-9a-fA-F]{6}$/;
+const GRAINES_THEMEDEF =Object.freeze({ principal: 'principal', secondaire: 'secondaire', encre: 'encre', fond: 'fond' });
 const ETATS_IGNORES = Object.freeze(['ok', 'attention', 'alerte', 'info']);
 const MODES = Object.freeze(['clair', 'sombre']);
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -49,6 +51,7 @@ export function lireThemeDef(brut) {
   if (doc.version !== VERSION_THEMEDEF) return refuser('version', 'version-inconnue', doc.version);
   if (!profondeurOk(doc)) return refuser('themedef', 'profondeur-ou-cle-interdite');
   if (!estObjet(doc.graines) || typeof doc.graines.principal !== 'string') return refuser('graines.principal', 'absent');
+  if (!GRAINE_STRICTE.test(doc.graines.principal)) return refuser('graines.principal', 'couleur-invalide');
   return { themedef: doc, ignore };
 }
 
@@ -99,7 +102,7 @@ export function charteDepuisThemeDef(brut, { mode = 'clair' } = {}) {
   const graines = {};
   for (const [cle, graine] of Object.entries(GRAINES_THEMEDEF)) {
     if (!(cle in doc.graines)) continue;
-    const c = analyserCouleur(doc.graines[cle]);
+    const c = GRAINE_STRICTE.test(doc.graines[cle]) ? analyserCouleur(doc.graines[cle]) : null;
     if (!c || c.alpha < 1) { ignore.push({ chemin: 'graines.' + cle, code: c ? 'alpha-non-admis' : 'couleur-invalide', valeur: String(doc.graines[cle]).slice(0, 30) }); continue; }
     graines[graine] = c.hex;
   }

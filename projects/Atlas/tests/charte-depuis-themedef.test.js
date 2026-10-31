@@ -76,3 +76,12 @@ test('règle de lecture : table absente, vide, sans actif, un actif, plusieurs a
   const r = T.choisirThemeDefActif(beaucoup);
   assert.equal(r.ligne, null); assert.deepEqual(r.avertissements, [{ code: 'lignes-ignorees', nombre: 10 }]);
 });
+
+test('une graine s\'écrit #RRGGBB : `#abc` est refusé pour le principal, écarté et dit pour les autres', () => {
+  const r = T.charteDepuisThemeDef({ version: 'themedef-1.0', graines: { principal: '#abc' } });
+  assert.equal(r.charte, null);
+  assert.deepEqual(r.ignore.map((i) => i.chemin + ':' + i.code), ['graines.principal:couleur-invalide']);
+  const s = T.charteDepuisThemeDef({ version: 'themedef-1.0', graines: { principal: '#3D4F63', fond: '#fff' } });
+  assert.deepEqual(s.charte.graines, { principal: '#3d4f63' });
+  assert.deepEqual(s.ignore.map((i) => i.chemin + ':' + i.code), ['graines.fond:couleur-invalide']);
+});
