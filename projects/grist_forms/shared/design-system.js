@@ -443,6 +443,67 @@
     return out;
   }
 
+  /** Retire une valeur d'un document et les objets que ce retrait laisse vides. */
+  function retirer(doc, chemin) {
+    var pile = [doc];
+    for (var i = 0; i < chemin.length - 1; i++) {
+      var c = pile[pile.length - 1][chemin[i]];
+      if (!c || typeof c !== 'object') return;
+      pile.push(c);
+    }
+    delete pile[pile.length - 1][chemin[chemin.length - 1]];
+    for (var j = chemin.length - 1; j > 0; j--) {
+      if (Object.keys(pile[j]).length === 0) delete pile[j - 1][chemin[j - 1]]; else break;
+    }
+  }
+
+  /**
+   * Le document après une saisie : ce que le formulaire dit PRIME, et ce qu'il ne pose pas est gardé.
+   *
+   * > **Un niveau plus bas ne doit rien effacer.** Le formulaire d'un niveau ne montre qu'une partie du document : ce que
+   * > l'on a renseigné plus haut, ou ailleurs (un fichier importé), n'est pas à perdre en enregistrant. Une question vidée,
+   * > elle, disparaît du document.
+   */
+  function fusionner(plan, ancien, nouveau) {
+    var out = JSON.parse(JSON.stringify(ancien || {}));
+    (plan.champs || []).forEach(function (e) { retirer(out, e.id.split('.')); });
+    (plan.champs || []).forEach(function (e) {
+      var v = lire(nouveau || {}, e.id.split('.'));
+      if (!vide(v)) poser(out, e.id.split('.'), v);
+    });
+    out.dsdef = (nouveau && nouveau.dsdef) || out.dsdef || RACINE_DOCUMENT;
+    return out;
+  }
+
+  // ── Les fichiers qu'on dépose ─────────────────────────────────────────────
+
+  /** Ce qu'est un fichier JSON déposé : un catalogue, un design system, un ThemeDef 1.0 — ou rien de connu. */
+  function typeDeFichier(objet) {
+    if (!objet || typeof objet !== 'object' || Array.isArray(objet)) return null;
+    if (typeof objet._format === 'string' && objet._format.indexOf(FORMAT_CATALOGUE) === 0) return 'catalogue';
+    if (objet.version === 'themedef-1.0') return 'themedef';
+    if (typeof objet.dsdef === 'string') return 'document';
+    return null;
+  }
+
+  /** Un ThemeDef 1.0 en début de design system : ses graines, son mode sombre et ses seuils. Le reste reste à dire. */
+  function depuisThemeDef(td) {
+    var doc = { dsdef: RACINE_DOCUMENT };
+    td = td || {};
+    if (typeof td.nom === 'string' && td.nom) {
+      poser(doc, ['identite', 'nom'], td.nom.slice(0, 80));
+      poser(doc, ['identite', 'id'], cleDepuisNom(td.nom));
+    }
+    var g = td.graines || {};
+    ['principal', 'secondaire', 'encre', 'fond'].forEach(function (k) { if (HEX.test(String(g[k]))) poser(doc, ['couleurs', k], g[k]); });
+    var sombre = td.modes && td.modes.sombre;
+    if (sombre === 'aucun' || sombre === 'derive' || sombre === 'explicite') poser(doc, ['modes', 'sombre'], sombre);
+    var ex = td.exigences || {};
+    if (typeof ex.contrasteTexte === 'number') poser(doc, ['exigences', 'contrasteTexte'], ex.contrasteTexte);
+    if (typeof ex.contrasteComposant === 'number') poser(doc, ['exigences', 'contrasteMinimal'], ex.contrasteComposant);
+    return doc;
+  }
+
   // ── Les règles croisées ───────────────────────────────────────────────────
 
   function luminance(hex) {
@@ -673,6 +734,9 @@
     TABLE: TABLE,
     COLONNES: COLONNES,
     verifierCatalogue: verifierCatalogue,
+    typeDeFichier: typeDeFichier,
+    depuisThemeDef: depuisThemeDef,
+    fusionner: fusionner,
     construire: construire,
     assembler: assembler,
     aplatir: aplatir,

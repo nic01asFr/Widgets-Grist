@@ -45,6 +45,7 @@ projects/grist_forms/
 │   ├── dessin.js            # Annotation et signature sur une image ; `nomDeCouleur`
 │   ├── theme.js             # Contrat de thème `kit-theme/0.1` : juge puis pose les variables --kit-*
 │   ├── design-system.js     # Catalogue → formulaire, réponses → document, règles croisées, ThemeDef 1.0 (page `design-system.html`)
+│   ├── design-system-apercu.js  # Thème d'aperçu (variables --kit-*) et illustration de chaque module
 │   ├── formdef-from-table.js         # Un FormDef déduit d'une table Grist
 │   ├── formdef-from-grist-form.js    # Un FormDef relu depuis un formulaire natif Grist
 │   └── publish.js
@@ -66,7 +67,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1096 tests verts** (dont 31 sur le design system ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1114 tests verts** (dont 49 sur le design system ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
 chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)

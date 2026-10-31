@@ -8,6 +8,7 @@ Grist, et rejoue les règles croisées. Rien ne passe par un serveur.
 | Pièce | Rôle |
 |---|---|
 | `design-system.html` | La page : liste des design systems du document, formulaire du niveau choisi, brouillon, proposition, contrôles, ThemeDef 1.0 qui en découle |
+| `shared/design-system-apercu.js` | Le thème d'aperçu dont le formulaire s'habille, et l'illustration de chaque module (couleurs, formes, espacements, types…) |
 | `shared/design-system.js` | Fonctions pures : catalogue → formulaire, réponses → document (et retour), règles croisées, projection ThemeDef 1.0, ligne de table, empreinte |
 | `runtime/engine.js` | Trois ajouts facultatifs : le **groupe répétable** (`widget: 'groupe'`), la **couleur** (`widget: 'couleur'`), le **motif de réponse** (`options.motif`) |
 | `tests/design-system.test.js`, `tests/groupes-repetables.test.js` | Les essais |
@@ -37,6 +38,24 @@ donnée non fiable : format vérifié, 400 Ko au plus.
 
 Le plan (`plan.champs`) garde la correspondance question ↔ identifiant : c'est lui qui rassemble les réponses en un
 document (`assembler`) et qui relit un document dans le formulaire (`aplatir`).
+
+## Des fichiers en entrée, un formulaire qui s'habille
+
+- **Fichiers.** On dépose (n'importe où sur la page) ou on choisit des fichiers JSON ; chacun est reconnu à son contenu : un
+  **catalogue** (gardé dans le document), un **design system** déjà écrit (ouvert en brouillon), un **ThemeDef 1.0** (ses
+  graines, son mode sombre et ses seuils deviennent le début d'un design system). Un fichier non reconnu est dit, pas ignoré
+  en silence. On en repart aussi : « Télécharger le design system » et « Télécharger le ThemeDef ».
+- **Rien ne se perd.** Le formulaire d'un niveau ne montre qu'une partie du document : l'enregistrer le **fusionne** avec ce
+  qu'il ne montre pas (un niveau plus haut, un fichier importé). Seule une question vidée disparaît.
+- **Le formulaire prend l'apparence du thème en cours** (case cochée par défaut). Les variables `--kit-*` sont tirées des
+  graines du document (`themeVars`), jugées par le même module que le moteur, puis posées sur la page : boutons, champs,
+  progression, cartes. Le rayon, la taille de cible et la taille du texte que le document dit s'appliquent aussi. Le mode clair
+  ou sombre se choisit. **C'est un aperçu** : le compilateur du kit reste le juge du thème. Un texte sous 3:1, une couleur
+  principale trop proche du fond sont **redressés pour rester lisible, et la page le dit**.
+- **Ce que ça donne.** Un panneau illustre le module de l'étape : palette et contrastes mesurés, clair et sombre côte à côte,
+  spécimens typographiques, rayons et ombres, échelle d'espacement, grille, formats de support, cible tactile et anneau de focus,
+  séries de visualisation. Rien de ce qu'on tape n'y entre tel quel : couleur en `#RRGGBB` seulement, longueurs et ombres
+  bornées, noms de police en lettres, tout texte échappé.
 
 ## Brouillon, proposition
 
@@ -85,5 +104,7 @@ en demanderait les 26 valeurs.
 - Le compositeur de formulaires ne sait pas **composer** un groupe répétable (il le garde tel quel à l'ouverture et à
   l'enregistrement) ; il propose la couleur.
 - Pas de validation de contraste à la saisie dans le formulaire lui-même : elle vient du panneau « Les contrôles ».
+- L'illustration est celle du **module** de l'étape, pas de chaque question ; elle se met à jour à chaque saisie.
+- Les polices du document ne sont pas chargées (le contrat ThemeDef ne porte ni adresse ni fichier) : le spécimen montre la pile de repli quand la police n'est pas installée.
 - La page n'est pas annoncée dans le sélecteur de widgets de Grist : le paquet la porte avec `prive: true`
   (`scripts/promote-grist-forms.js`).

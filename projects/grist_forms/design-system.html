@@ -6,14 +6,14 @@
 <title>Design system — saisir et verser</title>
 <link rel="stylesheet" href="shared/dsfr-like.css">
 <style>
-  body { margin: 0; background: var(--fond-page); color: var(--encre); }
+  body { margin: 0; background: var(--kit-fond, var(--fond-page)); color: var(--kit-texte, var(--encre)); }
   .ds { max-width: 80rem; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; }
   .ds[hidden], .ds [hidden] { display: none !important; }
   .ds .fr-btn { min-height: var(--cible); font-size: var(--texte); }
   .ds__tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; justify-content: space-between; }
   .ds__tete h1 { margin: 0; font-size: 1.5rem; }
-  .ds__note { margin: 0; color: var(--encre-douce); font-size: var(--texte-consigne); }
-  .ds__carte { background: var(--fond-carte); border: 1px solid var(--bord); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .ds__note { margin: 0; color: var(--kit-texte-2, var(--encre-douce)); font-size: var(--texte-consigne); }
+  .ds__carte { background: var(--kit-surface, var(--fond-carte)); border: 1px solid var(--kit-bord, var(--bord)); border-radius: var(--radius); padding: 1rem 1.25rem; }
   .ds__carte h2 { margin: 0 0 0.5rem; font-size: 1.125rem; }
   .ds__liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
   .ds__ligne { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; border: 1px solid var(--bord); border-radius: var(--radius); padding: 0.6rem 0.9rem; }
@@ -37,7 +37,56 @@
   .ds__avance { height: 0.5rem; border-radius: 0.25rem; background: var(--bord); overflow: hidden; }
   .ds__avance > span { display: block; height: 100%; background: var(--kit-action, var(--blue-france)); }
   .ds__catalogue textarea { width: 100%; min-height: 8rem; font: inherit; font-size: 0.875rem; }
-  .ds__mode { margin: 0; padding: 0.4rem 0.75rem; border-radius: var(--radius); background: var(--fond-carte); border: 1px solid var(--bord); font-size: var(--texte-consigne); }
+  .ds__mode { margin: 0; padding: 0.4rem 0.75rem; border-radius: var(--radius); background: var(--kit-surface, var(--fond-carte)); border: 1px solid var(--kit-bord, var(--bord)); font-size: var(--texte-consigne); }
+  .ds__case { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 400 !important; min-height: var(--cible); }
+  .ds__case input { width: 1.25rem; height: 1.25rem; accent-color: var(--kit-action, var(--blue-france)); }
+  .ds__depot { margin-top: 1rem; padding: 0.9rem 1rem; border: 2px dashed var(--kit-bord-champ, var(--bord)); border-radius: var(--radius); }
+  .ds__depot--sur { border-color: var(--kit-action, var(--blue-france)); background: var(--kit-accent-fond, transparent); }
+  .ds__depot p { margin: 0 0 0.4rem; }
+  .ds__depot input[type="file"] { max-width: 100%; }
+
+  /* Ce que ça donne : l'illustration du module dont on remplit l'étape. */
+  .ds-ap__bloc { margin: 0 0 0.9rem; }
+  .ds-ap__titre { margin: 0 0 0.35rem; font-weight: 700; font-size: 0.9rem; }
+  .ds-ap__note { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--kit-texte-2, var(--encre-douce)); }
+  .ds-ap__nom { margin: 0; font-size: 1.25rem; font-weight: 700; }
+  .ds-ap__rang { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .ds-ap__paires { display: grid; gap: 0.4rem; }
+  .ds-ap__liste { margin: 0; padding-left: 1.1rem; font-size: 0.875rem; }
+  .ds-sw { display: flex; flex-direction: column; justify-content: flex-end; width: 6.5rem; min-height: 4rem; padding: 0.4rem 0.5rem; border-radius: var(--radius, 4px); border: 1px solid var(--kit-bord, #ddd); font-size: 0.75rem; }
+  .ds-sw__h { font-variant-numeric: tabular-nums; }
+  .ds-paire { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius, 4px); border: 1px solid var(--kit-bord, #ccc); }
+  .ds-paire b { font-size: 1.25rem; }
+  .ds-paire__r { margin-left: auto; font-size: 0.8125rem; }
+  .ds-ap__minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.5rem; }
+  .ds-mini { display: grid; gap: 0.4rem; justify-items: start; padding: 0.6rem 0.75rem; background: var(--kit-fond); color: var(--kit-texte); border: 1px solid var(--kit-bord); border-radius: var(--radius, 4px); }
+  .ds-mini__t { margin: 0; font-weight: 700; }
+  .ds-mini__p { margin: 0; font-size: 0.8125rem; color: var(--kit-texte-2); }
+  .ds-mini__lien { color: var(--kit-action); text-decoration: underline; }
+  .ds-mini__b { background: var(--kit-action); color: var(--kit-action-texte); padding: 0.25rem 0.75rem; border-radius: 4px; }
+  .ds-mini__e { background: var(--kit-alerte-fond); color: var(--kit-alerte); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8125rem; }
+  .ds-spec { display: grid; gap: 0.1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--kit-bord, #ddd); }
+  .ds-spec__r { font-size: 0.75rem; color: var(--kit-texte-2, #666); }
+  .ds-spec__a { font-size: 1.75rem; }
+  .ds-ech { display: block; line-height: 1.2; margin: 0.1rem 0; }
+  .ds-bloc { display: grid; place-items: center; align-content: center; gap: 0.1rem; width: 6rem; height: 4.5rem; border: 2px solid var(--kit-action, #000091); background: var(--kit-surface, #fff); font-size: 0.75rem; text-align: center; }
+  .ds-bloc--ombre { border: 1px solid var(--kit-bord, #ddd); border-radius: 4px; }
+  .ds-trait { display: block; width: 100%; border-top: solid var(--kit-texte, #000); }
+  .ds-esp { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; align-items: center; margin: 0.15rem 0; font-size: 0.75rem; }
+  .ds-esp__b { display: block; height: 0.6rem; background: var(--kit-action, #000091); border-radius: 2px; }
+  .ds-grille { display: flex; }
+  .ds-col { flex: 1; height: 2.5rem; background: var(--kit-accent-fond, #e3e3fd); border: 1px solid var(--kit-accent, #000091); }
+  .ds-rupt, .ds-dur { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; margin: 0.15rem 0; }
+  .ds-rupt__b, .ds-dur__b { display: block; height: 0.5rem; background: var(--kit-action, #000091); }
+  .ds-fmt { display: grid; justify-items: center; gap: 0.25rem; font-size: 0.75rem; }
+  .ds-fmt__r { display: block; border: 2px solid var(--kit-action, #000091); background: var(--kit-surface, #fff); }
+  .ds-cible { display: block; border: 2px dashed var(--kit-action, #000091); background: var(--kit-accent-fond, #e3e3fd); }
+  .ds-focus { display: inline-block; padding: 0.35rem 0.9rem; border: 1px solid var(--kit-bord-champ, #666); outline: solid var(--kit-focus, #0a76f6); outline-offset: 2px; border-radius: 4px; }
+  .ds-puce { display: inline-block; padding: 0 0.6rem; border: 1px solid var(--kit-bord, #ccc); border-radius: 1rem; font-size: 0.8125rem; }
+  .ds-serie { display: flex; border: 1px solid var(--kit-bord, #ccc); border-radius: 4px; overflow: hidden; }
+  .ds-serie__c { flex: 1; height: 2rem; }
+  .ds-comp { display: grid; gap: 0.1rem; padding: 0.4rem 0.6rem; border: 1px solid var(--kit-bord, #ccc); border-radius: 4px; font-size: 0.8125rem; }
+  .ds-slogan { font-size: 1.25rem; font-style: italic; margin: 0.25rem 0; }
 </style>
 </head>
 <body>
@@ -53,6 +102,12 @@
     <h2 id="ds-liste-titre">Vos design systems</h2>
     <p class="ds__note">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Seule une personne peut le rendre actif, ailleurs.</p>
     <ul class="ds__liste" id="ds-lignes"></ul>
+    <div class="ds__depot" id="ds-depot">
+      <p><strong>Des fichiers à ouvrir ?</strong> Déposez-les sur cette page, ou choisissez-les.</p>
+      <p><label class="fr-label" for="ds-fichiers">Choisir des fichiers</label>
+        <input type="file" id="ds-fichiers" multiple accept=".json,application/json"></p>
+      <p class="ds__note">La page reconnaît chacun : un catalogue (les champs à poser), un design system déjà écrit, ou un ThemeDef 1.0 pour partir de ses couleurs.</p>
+    </div>
     <div class="ds__barre" style="margin-top:0.75rem">
       <button type="button" class="fr-btn" id="ds-nouveau">Nouveau design system</button>
       <button type="button" class="fr-btn fr-btn--secondary" id="ds-catalogue-ouvrir">Utiliser un autre catalogue</button>
@@ -84,10 +139,24 @@
         <span class="ds__statut" id="ds-statut"></span>
       </div>
       <p class="ds__note" id="ds-niveau-aide" style="margin-top:0.5rem"></p>
+      <div class="ds__barre" style="margin-top:0.5rem">
+        <label class="ds__case"><input type="checkbox" id="ds-appliquer" checked> Le formulaire prend l’apparence du thème en cours</label>
+        <label for="ds-mode-sel" id="ds-mode-lab">Mode</label>
+        <select id="ds-mode-sel"></select>
+      </div>
+      <p class="ds__note" id="ds-apparence-remarques" style="margin-top:0.25rem"></p>
+      <div class="ds__barre" style="margin-top:0.5rem">
+        <button type="button" class="fr-btn fr-btn--secondary" id="ds-dl-doc">Télécharger le design system</button>
+        <button type="button" class="fr-btn fr-btn--secondary" id="ds-dl-td">Télécharger le ThemeDef</button>
+      </div>
     </div>
     <div class="ds__grille">
       <div class="ds__formulaire" id="ds-formulaire"></div>
       <aside class="ds__aside" aria-label="Ce que dit le document">
+        <div class="ds__carte">
+          <h2 id="ds-apercu-titre">Ce que ça donne</h2>
+          <div id="ds-apercu" aria-live="polite"></div>
+        </div>
         <div class="ds__carte">
           <h2>Où vous en êtes</h2>
           <div class="ds__avance" aria-hidden="true"><span id="ds-avance"></span></div>
@@ -123,6 +192,7 @@
 <script src="shared/limites.js"></script>
 <script src="runtime/engine.js"></script>
 <script src="shared/design-system.js"></script>
+<script src="shared/design-system-apercu.js"></script>
 <script>
 /**
  * Saisir un design system, et le verser dans le document.
@@ -137,13 +207,15 @@
 (function () {
   'use strict';
   var D = window.FormDesignSystem;
+  var A = window.FormDesignSystemApercu;
+  var T = window.FormTheme;
   var E = window.FormEngine;
   var TABLE_CATALOGUE = 'Design_system_catalogue';
   var TAILLE_CATALOGUE_MAX = 400 * 1024;
 
   var S = {
     magasin: null, lignes: [], catalogue: D.CATALOGUE_MINIMAL, source: 'minimal', niveau: 0,
-    courant: null, doc: {}, statut: 'brouillon', plan: null, formdef: null, poignee: null, minuterie: 0, apresEnvoi: false
+    courant: null, doc: {}, statut: 'brouillon', plan: null, formdef: null, poignee: null, minuterie: 0, apresEnvoi: false, mode: 'clair', posees: []
   };
 
   function el(id) { return document.getElementById(id); }
@@ -298,13 +370,16 @@
     el('ds-niveau-aide').textContent = info && info.aide ? info.aide : '';
   }
 
-  /** Le document tel que le formulaire le dit à cet instant (l'étape affichée est relue d'abord). */
+  /**
+   * Le document tel que le formulaire le dit à cet instant (l'étape affichée est relue d'abord), AVEC ce qu'il ne montre
+   * pas : un niveau plus bas, ou un fichier importé, ne perd rien à l'enregistrement.
+   */
   function lireDocument() {
     // Une fois la proposition partie, l'écran n'est plus le formulaire : le document est celui qu'on a enregistré.
     if (!S.poignee || S.apresEnvoi) return S.doc;
     try { S.poignee.valider(); } catch (e) { /* étape non rendue */ }
     var donnees = E.collectSubmitData(S.formdef, S.poignee.valeurs(), {}, { creation: true });
-    return D.assembler(S.plan, donnees);
+    return D.fusionner(S.plan, S.doc, D.assembler(S.plan, donnees));
   }
 
   /** Le statut est celui du geste (brouillon, proposition), pas une question : il est renseigné par la page. */
@@ -325,7 +400,7 @@
         var cols = actions[0][3];
         var donnees = {};
         Object.keys(cols).forEach(function (k) { donnees[k] = cols[k][0]; });
-        var doc = D.assembler(S.plan, donnees);
+        var doc = D.fusionner(S.plan, S.doc, D.assembler(S.plan, donnees));
         var bloquants = D.bloquants(D.controler(doc));
         if (bloquants.length) {
           return Promise.reject(new Error('Pas encore une proposition : ' + bloquants.map(function (b) { return b.message; }).join(' ')));
@@ -405,12 +480,141 @@
     var p = D.projeterThemeDef(doc);
     el('ds-themedef').textContent = JSON.stringify(p.themedef, null, 2);
     el('ds-themedef-remarques').textContent = p.remarques.join(' ');
+    appliquerApparence(doc);
+    afficherApercu(doc);
+  }
+
+  // ── L'apparence : le formulaire s'habille du thème qu'on construit ─────────────────────────────────
+
+  /** Retire tout ce que l'aperçu avait posé sur la page : elle redevient celle d'origine. */
+  function retirerApparence() {
+    var racine = document.documentElement;
+    S.posees.forEach(function (nom) { racine.style.removeProperty(nom); });
+    S.posees = [];
+    racine.style.removeProperty('color-scheme');
+  }
+
+  function remplirModes(modes, mode) {
+    var sel = el('ds-mode-sel');
+    var voulu = modes.join(',');
+    if (sel.getAttribute('data-modes') !== voulu) {
+      sel.setAttribute('data-modes', voulu);
+      sel.innerHTML = modes.map(function (m) { return '<option value="' + m + '">' + (m === 'sombre' ? 'Sombre' : 'Clair') + '</option>'; }).join('');
+    }
+    sel.value = mode;
+    sel.disabled = modes.length < 2;
+  }
+
+  /**
+   * Poser le thème du document sur la page : les variables du kit (jugées par le même module que le moteur, qui n'en retient que
+   * les couleurs sûres), puis ce que le document dit de la forme et des tailles. C'est un APERÇU : le compilateur du kit
+   * reste le juge du thème.
+   */
+  function appliquerApparence(doc) {
+    retirerApparence();
+    var remarques = el('ds-apparence-remarques');
+    var modes = A.modesDisponibles(doc);
+    if (modes.indexOf(S.mode) === -1) S.mode = 'clair';
+    remplirModes(modes, S.mode);
+    if (!el('ds-appliquer').checked) { remarques.textContent = ''; return; }
+    var racine = document.documentElement;
+    var t = A.themeVars(doc, S.mode);
+    var rapport = T.valider(t.vars);
+    function poser(nom, valeur) { racine.style.setProperty(nom, valeur); S.posees.push(nom); }
+    Object.keys(rapport.applique).forEach(function (nom) { poser(nom, rapport.applique[nom]); });
+    // La page d'origine lit ces noms-là : on les accorde au thème, pour que tout suive, du bandeau au dernier champ.
+    var v = rapport.applique;
+    if (v['--kit-fond']) poser('--fond-page', v['--kit-fond']);
+    if (v['--kit-surface']) poser('--fond-carte', v['--kit-surface']);
+    if (v['--kit-texte']) poser('--encre', v['--kit-texte']);
+    if (v['--kit-texte-2']) poser('--encre-douce', v['--kit-texte-2']);
+    if (v['--kit-bord']) poser('--bord', v['--kit-bord']);
+    var forme = A.reglagesForme(doc);
+    Object.keys(forme).forEach(function (nom) { poser(nom, forme[nom]); });
+    racine.style.setProperty('color-scheme', S.mode === 'sombre' ? 'dark' : 'light');
+    remarques.textContent = t.remarques.join(' ');
+  }
+
+  /** L'illustration du module de l'étape affichée. */
+  function afficherApercu(doc) {
+    var titre = el('ds-formulaire').querySelector('.fr-progression__titre');
+    var libelle = titre ? titre.textContent : '';
+    var section = S.formdef.sections.filter(function (sec) { return sec.label === libelle; })[0];
+    var module = section ? String(section.id).replace(/^m_/, '') : '';
+    var html = module ? A.apercuHtml(module, doc) : '';
+    el('ds-apercu-titre').textContent = 'Ce que ça donne' + (libelle ? ' : ' + libelle : '');
+    el('ds-apercu').innerHTML = html || '<p class="ds__note">Rien à montrer encore pour cette étape : l’illustration apparaît dès qu’une valeur est donnée.</p>';
+  }
+
+  // ── Les fichiers : déposés, ouverts, rendus ────────────────────────────────────────────────────────
+
+  function lireFichier(f) {
+    return new Promise(function (resolu, rejete) {
+      if (f.size > TAILLE_CATALOGUE_MAX) { rejete(new Error('dépasse ' + Math.round(TAILLE_CATALOGUE_MAX / 1024) + ' Ko')); return; }
+      var lecteur = new FileReader();
+      lecteur.onload = function () { resolu(String(lecteur.result || '')); };
+      lecteur.onerror = function () { rejete(new Error('lecture impossible')); };
+      lecteur.readAsText(f);
+    });
+  }
+
+  /**
+   * Ouvrir des fichiers : chacun est reconnu à son contenu. Les catalogues se gardent dans le document ; le premier design
+   * system (ou ThemeDef) s'ouvre en brouillon, les suivants attendent leur tour.
+   */
+  function ouvrirFichiers(liste) {
+    var fichiers = Array.prototype.slice.call(liste || []);
+    var bilan = [];
+    var aOuvrir = null;
+    var chaine = Promise.resolve();
+    fichiers.forEach(function (f) {
+      chaine = chaine.then(function () {
+        return lireFichier(f).then(function (texte) {
+          var objet;
+          try { objet = JSON.parse(texte); } catch (e) { bilan.push(f.name + ' : ce n’est pas du JSON lisible'); return null; }
+          var type = D.typeDeFichier(objet);
+          if (type === 'catalogue') {
+            poserCatalogue(objet, 'document');
+            return S.magasin.ecrireCatalogue(texte).then(function () { bilan.push(f.name + ' : catalogue gardé dans le document'); },
+              function () { bilan.push(f.name + ' : catalogue utilisé, mais pas gardé dans le document'); });
+          }
+          if (type === 'document' || type === 'themedef') {
+            if (aOuvrir) { bilan.push(f.name + ' : à ouvrir ensuite (un design system à la fois)'); return null; }
+            aOuvrir = type === 'document' ? objet : D.depuisThemeDef(objet);
+            bilan.push(f.name + (type === 'document' ? ' : design system ouvert en brouillon' : ' : ThemeDef 1.0, ses couleurs et ses seuils ouverts en brouillon'));
+            return null;
+          }
+          bilan.push(f.name + ' : fichier non reconnu (ni catalogue, ni design system, ni ThemeDef 1.0)');
+          return null;
+        }, function (e) { bilan.push(f.name + ' : ' + e.message); });
+      });
+    });
+    return chaine.then(function () {
+      dire(bilan.join(' · '));
+      if (aOuvrir) { ouvrir(null, aOuvrir); return; }
+      if (!el('ds-edition').hidden && S.poignee) { var doc = lireDocument(); S.doc = doc; remplirNiveaux(); monter(D.aplatir(construireNiveau().plan, doc)); }
+    });
+  }
+
+  function telecharger(nom, texte) {
+    var blob = new Blob([texte], { type: 'application/json' });
+    var lien = document.createElement('a');
+    lien.href = URL.createObjectURL(blob);
+    lien.download = nom;
+    document.body.appendChild(lien);
+    lien.click();
+    setTimeout(function () { URL.revokeObjectURL(lien.href); lien.remove(); }, 1000);
+  }
+
+  function nomDeFichier(doc, suffixe) {
+    var base = doc && doc.identite && typeof doc.identite.id === 'string' && doc.identite.id ? doc.identite.id : 'design-system';
+    return base.replace(/[^a-z0-9-]/gi, '-').slice(0, 40) + suffixe;
   }
 
   // ── Les gestes ────────────────────────────────────────────────────────────────────────────────────
 
-  function ouvrir(ligne) {
-    var doc = {};
+  function ouvrir(ligne, docInitial) {
+    var doc = docInitial && typeof docInitial === 'object' ? docInitial : {};
     if (ligne) {
       try { doc = JSON.parse(ligne.dsdef || '{}'); } catch (e) { dire('Ce document n’est pas lisible : il s’ouvre vide.'); }
       S.courant = { id: ligne.id, cle: ligne.cle, actif: !!ligne.actif };
@@ -421,6 +625,7 @@
       S.statut = 'brouillon';
     }
     S.doc = doc;
+    el('ds-catalogue').hidden = true;
     el('ds-liste').hidden = true;
     el('ds-edition').hidden = false;
     remplirNiveaux();
@@ -431,6 +636,7 @@
 
   function revenir() {
     if (S.poignee) { S.poignee.demonter(); S.poignee = null; }
+    retirerApparence();
     el('ds-edition').hidden = true;
     el('ds-liste').hidden = false;
     recharger();
@@ -483,6 +689,27 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dire('ThemeDef copié.'); }, function () { dire('Copie impossible : sélectionnez le texte.'); });
       else dire('Copie impossible : sélectionnez le texte.');
     });
+    el('ds-fichiers').addEventListener('change', function (ev) { ouvrirFichiers(ev.target.files).then(function () { ev.target.value = ''; }); });
+    // Déposer des fichiers n'importe où sur la page.
+    var depot = el('ds-depot');
+    ['dragenter', 'dragover'].forEach(function (t) {
+      document.addEventListener(t, function (ev) {
+        if (!ev.dataTransfer || Array.prototype.indexOf.call(ev.dataTransfer.types || [], 'Files') === -1) return;
+        ev.preventDefault();
+        depot.classList.add('ds__depot--sur');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (t) { document.addEventListener(t, function (ev) { if (!ev.relatedTarget) depot.classList.remove('ds__depot--sur'); }); });
+    document.addEventListener('drop', function (ev) {
+      if (!ev.dataTransfer || !ev.dataTransfer.files || !ev.dataTransfer.files.length) return;
+      ev.preventDefault();
+      depot.classList.remove('ds__depot--sur');
+      ouvrirFichiers(ev.dataTransfer.files);
+    });
+    el('ds-appliquer').addEventListener('change', function () { afficherControles(); });
+    el('ds-mode-sel').addEventListener('change', function (ev) { S.mode = ev.target.value === 'sombre' ? 'sombre' : 'clair'; afficherControles(); });
+    el('ds-dl-doc').addEventListener('click', function () { var doc = lireDocument(); telecharger(nomDeFichier(doc, '.dsdef.json'), JSON.stringify(doc, null, 2)); });
+    el('ds-dl-td').addEventListener('click', function () { var doc = lireDocument(); telecharger(nomDeFichier(doc, '.themedef.json'), JSON.stringify(D.projeterThemeDef(doc).themedef, null, 2)); });
     el('ds-catalogue-ouvrir').addEventListener('click', function () { gererCatalogue('ouvrir'); });
     el('ds-catalogue-garder').addEventListener('click', function () { gererCatalogue('garder'); });
     el('ds-catalogue-minimal').addEventListener('click', function () { gererCatalogue('minimal'); });
