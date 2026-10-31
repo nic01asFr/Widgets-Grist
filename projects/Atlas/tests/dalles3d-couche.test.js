@@ -23,7 +23,7 @@ const nom = (i) => 'FXX_L93_200_E' + ident(i).E + '_N' + ident(i).N;
 const ancrageDe = (i) => ({ schema: 'x#ancrage', identifiant: nom(i), ancrage: { origine_wgs84: [LNG0 + i * DEG_PAR_DALLE, LAT0], altitude_origine_m: 50, convergence_deg: -1.7386, facteur_echelle: 1.000591 } });
 const dalleDispo = (i, niveaux = ['D2', 'D3']) => ({ ...ident(i), identifiant: nom(i), statut: 'livree', niveaux: niveaux.map((n) => ({ niveau: n, empreinte: n + 'e' + i, octets: 1000 })), empreinte_ancrage: 'a' + i });
 
-function banc({ nDalles = 3, parallelisme = 3, budget, camera = null } = {}) {
+function banc({ nDalles = 3, parallelisme = 3, budget, camera = null, chargeur = null } = {}) {
   const j = { demandes: [], ouverts: 0, maxOuverts: 0, version: 'v1', echecsGlb: new Set(), dalles: Array.from({ length: nDalles }, (_, i) => dalleDispo(i)), libere: [] };
   const attente = [];   // téléchargements de GLB en pause : les tests les relâchent à la main
   const ecouteurs = {}, couches = new Map(), sources = new Map();
@@ -58,7 +58,7 @@ function banc({ nDalles = 3, parallelisme = 3, budget, camera = null } = {}) {
     const fin = () => { j.ouverts--; if (j.echecsGlb.has(url)) ko(new Error('HTTP 500')); else ok(new ArrayBuffer(1000)); };
     attente.push({ url, fin });
   });
-  const creerChargeur = () => ({ parse: (octets, base, ok) => { const g = new Groupe(); ok({ scene: g }); } });
+  const creerChargeur = chargeur || (() => ({ parse: (octets, base, ok) => { const g = new Groupe(); ok({ scene: g }); } }));
   const planifie = [];
   const couche = creerCoucheDalles({
     id: 'maquette', urlGrille: URL_GRILLE, THREE, creerChargeur, carte, altitudeBase: () => 50, fetchJson, fetchOctets, journal: { warn: (m) => (j.avertissements = [...(j.avertissements || []), m]) },
@@ -184,4 +184,14 @@ test("la distance est celle de l’ŒIL de la caméra (transform.cameraPosition)
   assert.match(basse.attente.map((a) => a.url).join(), /D2\.glb/);
   const sans = banc({ nDalles: 1 }); sans.carte.transform = undefined; await sans.couche.charger(); await sans.tick();
   assert.match(sans.attente.map((a) => a.url).join(), /D2\.glb/, 'sans caméra lisible : le centre au sol');
+});
+
+test('le chargeur est créé AVEC le moteur de rendu (KTX2Loader en a besoin pour choisir le format de texture du GPU) et libéré au retrait de la couche', async () => {
+  const vus = { renderer: null, liberations: 0 };
+  const b = banc({ nDalles: 1, chargeur: (renderer) => { vus.renderer = renderer; return { parse: (o, base, ok) => ok({ scene: { children: [], traverse() {} } }), liberer: () => { vus.liberations++; } }; } });
+  await b.couche.charger();
+  assert.ok(vus.renderer && vus.renderer === b.j.instance, 'le renderer de la couche est passé à creerChargeur');
+  b.couche.retirer();
+  assert.equal(vus.liberations, 1, 'le chargeur est libéré une fois');
+  b.couche.retirer(); assert.equal(vus.liberations, 1, 'un second retrait ne le libère pas deux fois');
 });

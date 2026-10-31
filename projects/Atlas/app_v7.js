@@ -10,7 +10,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur } from './lib/gltf-chargeur.js?v=20260919a';
+import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=20261031a';
 import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
 import { VERSION_ATLAS } from './lib/version-atlas.js?v=20261026a';
 import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=20261002g';
@@ -14215,7 +14215,7 @@ async function monterDallesHote({ id, grille }) {
     if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
     const couche = creerCoucheDalles({
         id, urlGrille: grille, THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
-        creerChargeur: () => { const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder); return l; },
+        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
         fetchJson: (u) => lireReponseDalles(u, 2 * 1024 * 1024, (r) => r.json()),
         fetchOctets: (u, max) => lireReponseDalles(u, max, (r) => r.arrayBuffer()),
     });

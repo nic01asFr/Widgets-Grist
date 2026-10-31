@@ -55,3 +55,27 @@ export function cheminTranscodeur(resoudre) {
   } catch (_) { /* carte d'import absente : repli */ }
   return TRANSCODEUR_CDN;
 }
+
+/**
+ * Le chargeur glTF d'une maquette en dalles 3D : meshopt toujours, et le KTX2 (textures `KHR_texture_basisu`) dès que le moteur de rendu est connu.
+ *
+ * Les dalles de pix2hdr arrivent compressées (`EXT_meshopt_compression`, `KHR_texture_basisu`, `KHR_mesh_quantization`, `EXT_mesh_gpu_instancing`). Le chargeur des dalles
+ * ne branchait que meshopt : un GLB à textures KTX2 est refusé par `GLTFLoader` (« setKTX2Loader must be called before loading KTX2 textures »). `KTX2Loader` doit connaître
+ * le moteur de rendu pour choisir le format de texture que le GPU accepte (`detectSupport`) : la couche le passe donc à la création du chargeur.
+ *
+ * Pure : les classes de three, le moteur de rendu et le chemin du transcodeur sont injectés ; il se teste sous Node avec des doubles.
+ * @param {{GLTFLoader: Function, MeshoptDecoder: any, KTX2Loader?: Function, renderer?: any, chemin: string, journal?: {warn: Function}}} o
+ * @returns {object} un GLTFLoader, avec `liberer()` qui rend les ressources du transcodeur
+ */
+export function chargeurDalles({ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin, journal = console }) {
+  const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  loader.liberer = () => {};
+  if (!renderer || typeof KTX2Loader !== 'function') return loader;
+  try {
+    const ktx2 = new KTX2Loader().setTranscoderPath(chemin).detectSupport(renderer);
+    loader.setKTX2Loader(ktx2);
+    loader.liberer = () => { try { if (ktx2.dispose) ktx2.dispose(); } catch (_) { /* déjà libéré */ } };
+  } catch (e) { journal.warn('KTX2 indisponible pour les dalles : ' + (e && e.message ? e.message : e)); }
+  return loader;
+}
