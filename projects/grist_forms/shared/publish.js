@@ -38,6 +38,24 @@
     return String(js || '').replace(/<\/script/gi, '<\\/script');
   }
 
+  /**
+   * Une valeur JSON posée dans une balise script : `<`, `>`, `&` et les deux séparateurs de ligne Unicode sont
+   * écrits en échappement. Sans cela, un libellé contenant `</script>` fermerait la balise et laisserait le reste
+   * du libellé s'exécuter comme du HTML.
+   */
+  function jsonPourScript(valeur) {
+    return JSON.stringify(valeur)
+      .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+      .replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028')
+      .replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
+  }
+
+  /** Un texte posé entre deux balises ou dans un attribut. */
+  function echapperHtml(texte) {
+    return String(texte).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function splitHtmlJs(fullHtml) {
     var js = [];
     var html = String(fullHtml || '').replace(
@@ -93,8 +111,8 @@
     var limitesJs = bundles.limitesJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
-    var formDefJson = JSON.stringify(formDef || {});
-    var title = (formDef && (formDef.title || formDef.id)) || 'Formulaire';
+    var formDefJson = jsonPourScript(formDef || {});
+    var title = echapperHtml((formDef && (formDef.title || formDef.id)) || 'Formulaire');
 
     var bootstrap = [
       bridgeJs,
@@ -127,6 +145,10 @@
       '      }, {})]',
       '    ]);',
       '  }',
+    // Le hook d'essai de bout en bout (téléversement sur la page publiée) n'existe que si on le demande : sans
+    // cela, tout autre widget de la même page pourrait, par postMessage, faire écrire une ligne et un fichier
+    // avec les droits du formulaire.
+    ].concat(bundles.e2e ? [
       '  function runRuntimeE2EUpload() {',
       '    try {',
       '      var def = window.__FORM_DEF__;',
@@ -160,7 +182,8 @@
       '      try { ev.source && ev.source.postMessage({ type: "grist-forms-runtime-e2e-result", result: result }, "*"); } catch (e2) {}',
       '      console.log("[runtime-e2e]", result);',
       '    });',
-      '  });',
+      '  });'
+    ] : []).concat([
       '  function monter(valeurs) {',
       "    var cible = document.getElementById('app');",
       '    if (!cible) return;',
@@ -211,7 +234,10 @@
       "    document.addEventListener('DOMContentLoaded', boot);",
       '  } else { boot(); }',
       '})();'
-    ].join('\n');
+    ]).join('\n');
+    // Aucun module embarqué ne doit pouvoir fermer la balise script : un `</script` écrit dans un commentaire ou
+    // une chaîne devient `<\/script`, équivalent pour le moteur JavaScript.
+    bootstrap = sanitizeJsForScriptTag(bootstrap);
 
     return [
       '<!DOCTYPE html>',

@@ -166,7 +166,7 @@
       var typeGeo = (o.geometrie || 'Point');
       // Ce que la page envoie est du WKT ; un texte libre ne situe rien.
       var motif = /Point/.test(typeGeo) ? 'POINT' : (/Line/.test(typeGeo) ? 'LINESTRING' : 'POLYGON');
-      out.push('if ' + col + " and not re.match(r'^(SRID=[0-9]+;)?(MULTI)?" + motif + "\\s*Z?\\s*\\(', " + col + '.strip().upper()):');
+      out.push('if ' + col + " and not re.match(r'^(SRID=[0-9]+;)?(MULTI)?" + motif + "\\s*(Z\\s*)?\\(', " + col + '.strip().upper()):');
       out.push('  m.append(' + py(lib + ' : lieu illisible') + ')');
     }
     var apres = o.apres;

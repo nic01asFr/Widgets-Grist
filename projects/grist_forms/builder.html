@@ -1194,8 +1194,18 @@ let demoNextId = 1;
 // ═══════════════════════════════════════════════════════════
 // UTILITAIRES
 // ═══════════════════════════════════════════════════════════
+/**
+ * Un texte posé dans du HTML : `& < > " '` sont echappes, donc aussi dans un attribut entre guillemets
+ * (un titre `x" onfocus="...` ne sort plus de son attribut).
+ */
 function esc(t) {
-  return (window.GristBridge && GristBridge.util && GristBridge.util.esc) ? GristBridge.util.esc(t) : String(t == null ? '' : t);
+  return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/** Un texte pose entre apostrophes dans un gestionnaire en ligne (onclick="App.f('...')") : JavaScript d'abord, HTML ensuite. */
+function escJs(t) {
+  return esc(String(t == null ? '' : t).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 }
 
 function hintIcon(tip) {
@@ -2120,7 +2130,7 @@ function renderFormsList() {
   if (S.wizardOpen) {
     const templates = (window.FormUx && FormUx.templates) ? FormUx.templates() : [];
     const tplCards = templates.map(t => `
-      <button type="button" class="wizard-card" onclick="App.applyTemplate('${esc(t.id)}')">
+      <button type="button" class="wizard-card" onclick="App.applyTemplate('${escJs(t.id)}')">
         <h3>${esc(t.label)}</h3>
         <p>${esc(t.description)}</p>
       </button>
@@ -2671,7 +2681,7 @@ function optionsDApercu(def, f) {
 function renderAjoutRapide(si) {
   const types = ((window.FormUx && FormUx.SIMPLE_TYPES) || []).map(t =>
     `<button type="button" class="ajout__type${S.typeAjout === t.key ? ' est-actif' : ''}"
-      onclick="App.typeAjout('${esc(t.key)}')">${esc(t.label)}</button>`).join('');
+      onclick="App.typeAjout('${escJs(t.key)}')">${esc(t.label)}</button>`).join('');
   // Les types moins courants (lieu, adresse, signature, curseur, heure…) ne sont pas cachés dans les
   // réglages : une liste les offre dans le même geste que les puces.
   const plus = ((window.FormUx && FormUx.ADVANCED_TYPES) || []);
@@ -2995,9 +3005,9 @@ function renderReglagesCommuns(def, si, f, fi) {
     if (g) {
       html += `<div class="bloc__duo">
         <div class="fr-input-group"><label class="fr-label" for="grp-t-${si}-${fi}">Légende du groupe</label>
-          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${esc(groupeCourant)}', 'titre', this.value)"></div>
+          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${escJs(groupeCourant)}', 'titre', this.value)"></div>
         <div class="fr-select-group"><label class="fr-label" for="grp-c-${si}-${fi}">Disposition</label>
-          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${esc(groupeCourant)}', 'colonnes', this.value)">
+          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${escJs(groupeCourant)}', 'colonnes', this.value)">
             <option value="1" ${g.colonnes === 2 ? '' : 'selected'}>Les unes sous les autres</option>
             <option value="2" ${g.colonnes === 2 ? 'selected' : ''}>Côte à côte si la place le permet</option></select></div>
       </div>`;
@@ -3633,7 +3643,7 @@ function renderLimiteQuestion(def, f) {
   const actif = i >= 0;
   return `<section class="bloc">
     <h4 class="bloc__titre">Nombre de réponses par choix ${hintIcon('Facultatif. Quand un choix a atteint son maximum, il n’est plus proposé : « complet » s’affiche à sa place. Sert à limiter des places, des créneaux, des portions, des salles…')}</h4>
-    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${esc(f.colId)}', this.checked)">
+    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${escJs(f.colId)}', this.checked)">
       <label class="fr-label" for="lim-q-actif">Limiter le nombre de réponses de chaque choix</label></div>
     ${actif ? reglageLimiteChoix(def, parChoix[i], i, f) : ''}
   </section>`;
@@ -6079,7 +6089,9 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText,
+        // Le hook d'essai de bout en bout n'est embarque que pour un essai demande (?e2e=1), jamais en production.
+        e2e: /([?&])e2e=1(?:&|$)/.test(location.search || '') });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
