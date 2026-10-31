@@ -340,7 +340,8 @@
     if (!condition) return { op: 'and', rules: [emptyRule()] };
     if (isCompoundCondition(condition)) {
       return {
-        op: condition.op === 'or' ? 'or' : 'and',
+        // « not » existe dans la grammaire des conditions : le réécrire en « and » inversait la visibilité en silence.
+        op: condition.op === 'or' ? 'or' : (condition.op === 'not' ? 'not' : 'and'),
         rules: (condition.rules.length ? condition.rules : [emptyRule()]).map(normalizeRule)
       };
     }
@@ -354,6 +355,7 @@
       return r && (r.field || r.path || r.source === 'context' || r.source === 'audience');
     }).map(normalizeRule);
     if (!rules.length) return null;
+    // Une règle seule se compacte en forme simple, SAUF sous « not » : elle perdrait sa négation.
     if (rules.length === 1 && (!compound.op || compound.op === 'and')) {
       var one = rules[0];
       if (one.source === 'field' || !one.source) {
@@ -368,12 +370,16 @@
         bind: one.bind
       };
     }
-    return { op: compound.op === 'or' ? 'or' : 'and', rules: rules };
+    return { op: compound.op === 'or' ? 'or' : (compound.op === 'not' ? 'not' : 'and'), rules: rules };
   }
 
   function summarizeCondition(condition) {
     if (!condition) return '';
     if (isCompoundCondition(condition)) {
+      if (condition.op === 'not') {
+        var contenu = (condition.rules || []).map(function (r) { return summarizeCondition(r); }).filter(Boolean).join(' ET ');
+        return contenu ? 'NON (' + contenu + ')' : '';
+      }
       var joiner = condition.op === 'or' ? ' OU ' : ' ET ';
       return (condition.rules || []).map(function (r) {
         return summarizeCondition(r);
