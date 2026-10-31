@@ -69,7 +69,8 @@ function parseHtml(html) {
     var selfClose = m[4] === '/' || tag === 'input';
     if (closing) {
       for (var i = stack.length - 1; i > 0; i--) {
-        if (stack[i].tagName === tag) { stack.length = i; break; }
+        // Un grand champ de texte porte sa valeur dans son contenu, pas dans un attribut.
+        if (stack[i].tagName === tag) { if (tag === 'textarea') stack[i].value = stack[i].textContent; stack.length = i; break; }
       }
       continue;
     }
