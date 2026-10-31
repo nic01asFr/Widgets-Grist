@@ -1132,6 +1132,8 @@
 <script src="shared/session-context.js"></script>
 <script src="shared/conditions.js"></script>
 <script src="shared/limites.js"></script>
+<script src="shared/theme.js"></script>
+<script src="shared/themedef.js"></script>
 <script src="shared/acces.js"></script>
 <script src="shared/carte-geometrie.js"></script>
   <script src="shared/dessin.js"></script>
@@ -2021,11 +2023,31 @@ function loadDemoData() {
   DEMO_TABLES.forEach(t => { S.columnsByTable[t.tableId] = t.columns.slice(); });
 }
 
+/**
+ * Le thème du document (ThemeDef 1.0), lu et jamais écrit : table `Theme_document`, ligne active. Il habille ce que le public
+ * verra (le canevas et l'aperçu), pas l'outil de composition lui-même.
+ */
+async function chargerThemeDocument() {
+  S.themeDocument = null;
+  if (!window.FormThemeDef) return;
+  try { S.themeDocument = await window.FormThemeDef.charger(window.grist.docApi); } catch (e) { S.themeDocument = null; }
+}
+
+/** Pose le thème du document sur ce qui montre le formulaire tel que le public le verra. */
+function habillerApercus() {
+  const t = S.themeDocument;
+  ['canevas', 'preview-mount'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el && t && t.theme && window.FormThemeDef) window.FormThemeDef.appliquer(el, t.theme);
+  });
+}
+
 async function initRealMode() {
   console.log('[builder] GristBridge prêt (window.grist.docApi détecté)');
   await ensureFormulairesTable();
   await loadTablesAndColumns();
   await loadFormulaires();
+  await chargerThemeDocument();
 }
 
 async function init() {
@@ -2102,6 +2124,7 @@ function goStep(step) {
   if (step === 'preview') { renderPreviewStep(); document.getElementById('preview').hidden = false; }
   if (step === 'publish') { renderPublishStep(); document.getElementById('publish-log').hidden = false; }
   if (step === 'synthese') { renderSyntheseStep(); document.getElementById('synthese').hidden = false; }
+  habillerApercus();
 }
 
 /**
@@ -5616,6 +5639,7 @@ function mountPreview() {
       return Promise.resolve();
     }
   };
+  habillerApercus();
   try {
     FormEngine.mount(mountEl, defPourApercu(S.currentDef), Object.assign(previewBridge, {
       // On arrive sur l'etape qu'on etait en train de composer : sans cela,
@@ -6159,8 +6183,8 @@ async function publishForm() {
       return;
     }
 
-    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + limites + engine + CSS)…');
-    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText] =
+    logPublish('Construction du bundle runtime (bridge + types + attachments + session-context + carte + dessin + referentiel + formats + enrichir + saisies + conditions + limites + thème du document + engine + CSS)…');
+    const [bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, themeJs, themeDefJs, engineJs, cssText] =
       await Promise.all([
       fetchScriptSource('shared/grist-bridge.js'),
       fetchScriptSource('shared/types.js'),
@@ -6174,6 +6198,8 @@ async function publishForm() {
       fetchScriptSource('shared/saisies.js'),
       fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('shared/limites.js'),
+      fetchScriptSource('shared/theme.js'),
+      fetchScriptSource('shared/themedef.js'),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');
@@ -6181,7 +6207,7 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText,
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, themeJs, themeDefJs, engineJs, cssText,
         // Le hook d'essai de bout en bout n'est embarque que pour un essai demande (?e2e=1), jamais en production.
         e2e: /([?&])e2e=1(?:&|$)/.test(location.search || '') });
     const { html, js } = Publish.splitHtmlJs(fullHtml);

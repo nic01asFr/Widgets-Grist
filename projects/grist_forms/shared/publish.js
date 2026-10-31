@@ -109,6 +109,9 @@
     var conditionsJs = bundles.conditionsJs || '';
     // Les limites (places, fenêtre d'ouverture) : absentes, un formulaire qui en déclare s'ouvre comme avant.
     var limitesJs = bundles.limitesJs || '';
+    // Le thème du document (ThemeDef 1.0) : absents, le formulaire garde son apparence d'origine.
+    var themeJs = bundles.themeJs || '';
+    var themeDefJs = bundles.themeDefJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
     var formDefJson = jsonPourScript(formDef || {});
@@ -127,6 +130,8 @@
       saisiesJs,
       conditionsJs,
       limitesJs,
+      themeJs,
+      themeDefJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',
@@ -197,6 +202,21 @@
       '        ? function (t) { return window.GristBridge.loadTable(t); } : null',
       '    });',
       '  }',
+      // Le thème du document, s'il en porte un : lu (jamais écrit), posé sur la page, puis le formulaire se monte. Une lecture qui
+      // tarde ne retient personne : au bout d'une seconde et demie, le formulaire s'ouvre avec son apparence d'origine.
+      '  function habiller(suite) {',
+      '    var T = window.FormThemeDef;',
+      '    if (!T || !window.grist || !window.grist.docApi) { suite(); return; }',
+      '    var fini = false;',
+      '    function fin() { if (fini) return; fini = true; suite(); }',
+      '    setTimeout(fin, 1500);',
+      '    try {',
+      '      T.charger(window.grist.docApi).then(function (r) {',
+      '        if (r && r.theme && !fini) T.appliquer(document.documentElement, r.theme);',
+      '        fin();',
+      '      }, fin);',
+      '    } catch (eTheme) { fin(); }',
+      '  }',
       '  function boot() {',
       '    try {',
       "      if (window.grist && window.grist.ready) { window.grist.ready({ requiredAccess: 'full' }); }",
@@ -210,6 +230,7 @@
       // suivre le curseur en silence faisait écraser la ligne 1 par une
       // soumission que le bouton annonçait comme un envoi (mesuré le
       // 18/09/2026 en Grist réel).
+      '      habiller(function () {',
       '      if (window.__FORM_DEF__.editerLigneSelectionnee && window.grist && window.grist.onRecord) {',
       '        var dernier = null;',
       '        window.grist.onRecord(function (rec) {',
@@ -224,6 +245,7 @@
       '        }',
       '      }',
       '      monter({});',
+      '      });',
       '    } catch (err) {',
       "      var mountErr = document.getElementById('app');",
       "      if (mountErr) mountErr.textContent = 'Erreur runtime : ' + ((err && err.message) || String(err));",

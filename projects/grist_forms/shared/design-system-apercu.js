@@ -17,13 +17,13 @@
   'use strict';
   var asNode = typeof process !== 'undefined' && process.versions && process.versions.node;
   if (asNode && typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./design-system.js'));
+    module.exports = factory(require('./design-system.js'), require('./themedef.js'));
   } else if (typeof define === 'function' && define.amd) {
-    define(['./design-system'], factory);
+    define(['./design-system', './themedef'], factory);
   } else {
-    root.FormDesignSystemApercu = factory(root.FormDesignSystem);
+    root.FormDesignSystemApercu = factory(root.FormDesignSystem, root.FormThemeDef);
   }
-}(typeof self !== 'undefined' ? self : this, function (DS) {
+}(typeof self !== 'undefined' ? self : this, function (DS, TD) {
   'use strict';
 
   var HEX = /^#[0-9a-fA-F]{6}$/;
@@ -80,80 +80,18 @@
   }
 
   /**
-   * Le thème d'aperçu d'un document, pour un mode.
+   * Le thème d'aperçu d'un document, pour un mode : les graines du design system, passées à la dérivation que tout widget de Form
+   * Builder partage (`shared/themedef.js`).
    *
-   * @returns {{vars:Object<string,string>, remarques:string[]}} `vars` : variables `--kit-*` (couleurs #rrggbb ou rgba) ; `remarques` : ce
-   *   qui a été redressé pour rester lisible.
+   * @returns {{vars:Object<string,string>, remarques:string[]}} `vars` : variables `--kit-*` (sans le préfixe) ; `remarques` : ce qui a été redressé
    */
   function themeVars(doc, mode) {
     doc = doc || {};
-    var sombre = mode === 'sombre';
     var c = lire(doc, ['couleurs']) || {};
-    var s = (c && c.sombre) || {};
-    var explicite = lire(doc, ['modes', 'sombre']) === 'explicite';
-    var remarques = [];
-
-    var principal = couleurSure(c.principal) || '#3d4f63';
-    var secondaire = couleurSure(c.secondaire);
-    var encre = couleurSure(c.encre);
-    var fond = couleurSure(c.fond);
-    if (sombre) {
-      if (explicite) {
-        principal = couleurSure(s.principal) || principal;
-        encre = couleurSure(s.encre) || '#f6f6f6';
-        fond = couleurSure(s.fond) || '#161616';
-      } else {
-        encre = '#f6f6f6';
-        fond = '#161616';
-      }
-    } else {
-      fond = fond || '#f6f6f6';
-    }
-    var surface = sombre ? melanger(fond, '#ffffff', 0.06) : (clair(fond) ? '#ffffff' : melanger(fond, '#ffffff', 0.08));
-    // Le sens du redressement suit la teinte du fond (un fond noir en mode clair existe) : vers le noir sur du clair, vers le blanc sur du sombre.
-    var vers = clair(surface) ? '#000000' : '#ffffff';
-    var sur = meilleurTexte(surface);
-    var texte = encre || sur;
-    if (rapport(texte, surface) < 3) {
-      remarques.push('Le texte est trop proche du fond (' + (Math.round(rapport(texte, surface) * 100) / 100) + ':1) : l’aperçu le redresse pour rester lisible.');
-      texte = sur;
-    }
-    var texte2 = melanger(texte, surface, 0.3);
-    if (rapport(texte2, surface) < 4.5) texte2 = texte;
-
-    var action = principal;
-    if (sombre && !explicite) action = redresser(principal, surface, 4.5, '#ffffff');
-    if (rapport(action, surface) < 3) {
-      remarques.push('La couleur principale est trop proche du fond pour un bouton : l’aperçu l’assombrit (ou l’éclaircit) pour rester visible.');
-      action = redresser(action, surface, 3, vers);
-    }
-    var actionTexte = meilleurTexte(action);
-    var accent = secondaire || action;
-    if (rapport(accent, surface) < 3) {
-      remarques.push('La couleur secondaire est trop proche du fond pour des titres : l’aperçu la fonce pour rester lisible.');
-      accent = redresser(accent, surface, 3, vers);
-    }
-    var bordChamp = redresser(melanger(surface, texte, 0.3), surface, 3, texte);
-
-    var vars = {
-      'fond': fond, 'surface': surface, 'surface-2': melanger(fond, texte, 0.06),
-      'texte': texte, 'texte-2': texte2,
-      'bord': melanger(surface, texte, 0.2), 'bord-champ': bordChamp,
-      'accent': accent, 'accent-texte': meilleurTexte(accent), 'accent-fond': melanger(surface, accent, 0.12),
-      'action': action, 'action-texte': actionTexte,
-      'action-survol': melanger(action, vers, 0.14), 'action-actif': melanger(action, vers, 0.26),
-      'focus': rapport(action, surface) >= 3 ? action : texte,
-      'papier': '#ffffff', 'ombre': 'rgba(0, 0, 0, 0.25)'
-    };
-    var etats = c.etats || {};
-    Object.keys(ETATS).forEach(function (cle) {
-      var base = couleurSure(etats[ETATS[cle][0]]) || ETATS[cle][1];
-      if (rapport(base, surface) < 4.5) base = redresser(base, surface, 4.5, vers);
-      vars[cle] = base;
-      vars[cle + '-fond'] = melanger(surface, base, sombre ? 0.2 : 0.12);
-    });
-    vars['attention-filet'] = vars.attention;
-    return { vars: vars, remarques: remarques };
+    return TD.deriver({
+      principal: c.principal, secondaire: c.secondaire, encre: c.encre, fond: c.fond, etats: c.etats,
+      sombre: lire(doc, ['modes', 'sombre']), sombreCouleurs: c.sombre
+    }, mode);
   }
 
   /**
