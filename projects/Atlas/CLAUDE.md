@@ -27,7 +27,7 @@ Familles de `lib/` (état du 02/10/2026) :
 | Famille | Modules |
 |---|---|
 | Scène et manifeste | `scene-loader`, `scene-externe`, `dalles3d-geo` (maquettes en dalles 3D, partie pure : manifeste de grille Lambert 93, adresses, niveaux, pose d'une dalle sur la carte avec convergence, échelle et altitude IGN69, cache LRU), `dalles3d-couche` (la couche MapLibre/three.js des dalles : file à priorité, niveau selon la distance, aucun trou, chargée à la demande par `app_v7.js` pour une scène `type: dalles3d`), `scene-prefs`, `manifest-binding`, `declarative-style`, `controls`, `viewer-controls`, `story`, `recit-cles`, `contextes`, `trajet` |
-| Grist (lecture, écriture, droits) | `grist-adapter`, `grist-sync`, `grist-rows`, `grist-bool`, `geo-tables`, `schema-grist`, `atlas-tables`, `table-reference`, `droits-tables`, `data-client`, `view-mode`, `posture`, `exposition` |
+| Grist (lecture, écriture, droits) | `grist-adapter`, `grist-sync`, `grist-rows`, `grist-bool`, `geo-tables`, `schema-grist`, `atlas-tables`, `table-reference`, `droits-tables`, `selection-grist`, `data-client`, `view-mode`, `posture`, `exposition` |
 | Fiche, formulaires, relevé | `fiche-formulaire`, `champ-formulaire`, `formulaire-atlas.css`, `saisie-objet`, `releve`, `ouvrir-objet`, `objets-liste`, `bulle-objet` |
 | Géométrie et dessin | `geometrie-saisie`, `nouvelle-couche`, `wkt`, `point-fallback`, `volume-relief`, `terrain-base`, `viewport` |
 | Objets 3D et catalogue | `model-layer`, `catalogue-objets`, `modele-id`, `palette-objets`, `gltf-chargeur`, `parametres-objet`, `parametres-figer` |
