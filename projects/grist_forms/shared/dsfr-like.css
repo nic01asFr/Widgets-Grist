@@ -408,9 +408,13 @@ html { scroll-padding-bottom: 6rem; }
 .champ-bloc__rendu .fr-checkbox-group:has(input:checked) {
   border-color: var(--kit-accent, var(--blue-france)); background: color-mix(in srgb, var(--kit-accent, var(--blue-france)) 6%, var(--kit-surface, var(--fond-carte)));
 }
+/* Un seul anneau de focus, celui de la carte, et DANS la carte : posé à l'extérieur il est rogné sur les bords
+   quand le conteneur coupe ce qui déborde (vu dans Grist), et le rond natif en dessinait un second par-dessus. */
 .fr-form .fr-radio-group:focus-within, .fr-form .fr-checkbox-group:focus-within {
-  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: 1px;
+  outline: 2px solid var(--kit-focus, var(--kit-accent, var(--blue-france))); outline-offset: -2px;
 }
+.fr-form .fr-radio-group input:focus, .fr-form .fr-checkbox-group input:focus,
+.fr-form .fr-radio-group input:focus-visible, .fr-form .fr-checkbox-group input:focus-visible { outline: none; }
 
 /* Les crans d'une échelle restent en ligne : ce sont des degrés, pas des options. */
 .fr-form .fr-echelle__crans .fr-radio-group,

@@ -105,3 +105,11 @@ describe('Le bandeau d\'actions (feuille de style)', () => {
     assert.match(css, /scroll-margin-bottom:\s*6rem/);
   });
 });
+
+describe('Le focus d\'une carte de choix', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'shared', 'dsfr-like.css'), 'utf8');
+  it('un seul anneau, dans la carte : il n\'est pas rogné sur les bords et le rond natif n\'en ajoute pas un second', () => {
+    assert.match(css, /\.fr-form \.fr-radio-group:focus-within[^{]*\{[^}]*outline-offset:\s*-2px/);
+    assert.match(css, /\.fr-radio-group input:focus-visible[^{]*\{\s*outline:\s*none/);
+  });
+});
