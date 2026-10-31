@@ -1647,15 +1647,23 @@
     }
     return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo" data-lieu-mode="' + mode + '">' +
       renderLabel(field, id) + (mode === 'carte' ? carte : choix) +
-      '<div class="fr-geo__ligne">' +
-      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
-      // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
-      // n'est plus qu'une valeur interne, qu'on ne montre pas.
-      'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
-      '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
-      '</div>' +
+      // Le texte du point (« POINT (longitude latitude) ») n'est pas fait pour le public : il n'est plus montre par
+      // defaut. Il reste atteignable (et au clavier, seule autre voie que la carte) sous « Saisir les coordonnees ».
+      // Avec une saisie par adresse, ce n'est qu'une valeur interne, jamais montree.
+      (mode === 'carte'
+        ? '<div class="fr-geo__ligne"><button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button></div>' +
+          '<details class="fr-geo__avance"' + (values && values['__avance_' + field.colId] ? ' open' : '') + '><summary>Saisir les coordonnées à la main</summary>' +
+          '<p class="fr-hint-text">Format : POINT (longitude latitude), par exemple POINT (5.37 43.29).</p>' +
+          '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+          'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)" /></details>'
+        : '<div class="fr-geo__ligne">' +
+          '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+          'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)" hidden />' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button></div>') +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
-      escapeHtml(phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
+      // Un retour clair apres le clic sur la carte : sans lui, seul un point rouge, non commente, dit que c'est pris.
+      escapeHtml((v && !(values && values[field.colId + '__lieuChoisi']) ? 'Lieu retenu. ' : '') +
+        phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
       mentionEnrichissement(field) +
       '</div>';
   }
@@ -3303,6 +3311,9 @@
             }
             var champGeo = fields.filter(function (f) { return f.colId === colId; })[0];
             if (champGeo) declencherEnrichissement(champGeo, wkt);
+            // Le retour dit que le geste a porté : sans lui, seul un point rouge, non commenté, le suggère.
+            var etatCarte = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"] .fr-geo__etat');
+            if (etatCarte) etatCarte.textContent = wkt ? 'Lieu retenu. ' : '';
           }
         }).then(function (vue) {
           if (demonte) { try { vue.detruire(); } catch (e) { /* déjà parti */ } return; }
@@ -3513,6 +3524,10 @@
         var champ = bloc.querySelector('input[name="' + bloc.getAttribute('data-colid') + '"]') || bloc.querySelector('input[type="text"]');
         var etat = bloc.querySelector('.fr-geo__etat');
         var champGeo = (champsPage || []).filter(function (f) { return f.colId === bloc.getAttribute('data-colid'); })[0];
+        if (champ && typeof champ.addEventListener === 'function' && bloc.querySelector('.fr-geo__avance')) {
+          // Ce qu'on tape à la main ne referme pas le repli au prochain affichage.
+          champ.addEventListener('input', function () { values['__avance_' + bloc.getAttribute('data-colid')] = true; });
+        }
         if (champGeo && champ && typeof champ.addEventListener === 'function') {
           champ.addEventListener('change', function () { declencherEnrichissement(champGeo, champ.value); });
         }

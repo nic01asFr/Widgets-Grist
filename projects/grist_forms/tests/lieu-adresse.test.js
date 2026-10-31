@@ -94,6 +94,19 @@ describe('Lieu — dans le moteur', () => {
     assert.ok(!/placeholder="POINT \(5\.37 43\.29\)" hidden/.test(carte));
   });
 
+  it('la carte seule range le texte du point dans un repli, avec son format', () => {
+    const carte = Engine.renderFieldHtml(geo({}), {}, null, def([]));
+    assert.ok(carte.includes('<details class="fr-geo__avance"><summary>Saisir les coordonnées à la main</summary>'));
+    assert.ok(carte.includes('Format : POINT (longitude latitude)'));
+    const ouvert = Engine.renderFieldHtml(geo({}), {}, null, def([]));
+    assert.ok(!/<details[^>]* open/.test(ouvert), 'fermé par défaut');
+  });
+
+  it('un point retenu est annoncé en clair', () => {
+    const html = Engine.renderFieldHtml(geo({}), { Lieu: 'POINT (5.37 43.29)' }, null, def([]));
+    assert.ok(html.includes('Lieu retenu. '));
+  });
+
   it('« adresse » seule : pas de carte, pas d\'onglet, le champ d\'adresse visible', () => {
     const html = Engine.renderFieldHtml(geo({ saisieLieu: 'adresse' }), {}, null, def([]));
     assert.ok(!/data-carte-de|fr-lieu__bascule/.test(html));

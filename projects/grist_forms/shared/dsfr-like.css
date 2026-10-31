@@ -1120,3 +1120,13 @@ label.fr-radio-group, label.fr-checkbox-group { user-select: none; }
 
 /* La phrase qui dit ce que l'astérisque veut dire : discrète, au-dessus des questions. */
 .fr-form .fr-legende-obligatoire { margin: 0 0 0.5rem; }
+
+/* Saisir un point à la main : replié, c'est le recours du clavier et de ceux
+   qui ont déjà les coordonnées, pas le geste du public. */
+.fr-form .fr-geo__avance, .champ-bloc__rendu .fr-geo__avance { margin-top: 0.75rem; }
+.fr-form .fr-geo__avance > summary, .champ-bloc__rendu .fr-geo__avance > summary {
+  cursor: pointer; font-size: 0.875rem; color: var(--kit-action, #000091);
+  text-decoration: underline; text-underline-offset: 3px; padding: 0.25rem 0;
+}
+.fr-form .fr-geo__avance[open] > summary, .champ-bloc__rendu .fr-geo__avance[open] > summary { margin-bottom: 0.25rem; }
+.fr-form .fr-geo__avance .fr-input, .champ-bloc__rendu .fr-geo__avance .fr-input { width: 100%; }
