@@ -47,7 +47,7 @@ test('carte nue : exportScene3D répond capacite_absente (la scène 3D est celle
 
 test('options : bornes, valeurs par défaut, erreurs lisibles', () => {
   const d = E.normaliserOptions();
-  assert.deepEqual(d, { bbox: null, ancre: null, inclure: { objets: true, extrusions: true, bati: false }, hauteurParDefaut: 3, plafondOctets: 5 * 1024 * 1024, couches: null, simplification: 0.1 });
+  assert.deepEqual(d, { bbox: null, ancre: null, inclure: { objets: true, extrusions: true, bati: false }, hauteurParDefaut: 3, plafondOctets: 5 * 1024 * 1024, couches: null, simplification: 0.1, sol: null });
   const o = E.normaliserOptions({ bbox: [5.3, 43.2, 5.4, 43.3], ancre: { lng: 5.35, lat: 43.25 }, inclure: { bati: true, objets: false }, hauteurParDefaut: 6, plafondOctets: 2 * 1048576, couches: ['a', 'b'], simplification: 0 });
   assert.deepEqual(o.inclure, { objets: false, extrusions: true, bati: true }); assert.equal(o.simplification, 0); assert.deepEqual(o.couches, ['a', 'b']);
   const mauvaises = [{ bbox: [1, 2, 3] }, { bbox: [3, 2, 1, 4] }, { bbox: [0, 0, 181, 1] }, { bbox: [0, 0, 10, 10] }, { ancre: { lng: 200, lat: 0 } }, { ancre: 'x' }, { inclure: 'x' }, { inclure: { relief: true } }, { inclure: { bati: 'oui' } },
@@ -183,4 +183,52 @@ test('application : la commande est branchée dans la façade, charge l exporteu
   assert.match(app, /collect\(opts = \{\}\)/); assert.match(app, /aucun objet exporté/);
   const json = JSON.parse(fs.readFileSync(path.join(ICI, '..', 'vendor-externe.json'), 'utf8'));
   assert.ok(json.bibliotheques.find((b) => b.id === 'three').fichiers.some((f) => f.vers === 'three/addons/exporters/GLTFExporter.js'), 'l exporteur est vendorisé');
+});
+
+test('sol : options vérifiées, normalisées, refus lisibles', () => {
+  assert.equal(E.normaliserSol(undefined), null); assert.equal(E.normaliserSol(false), null); assert.equal(E.normaliserSol(null), null);
+  assert.deepEqual(E.normaliserSol('uni'), { mode: 'uni', couleur: null, epaisseur: 0, marge: 0, resolution: 2048 });
+  assert.deepEqual(E.normaliserSol({ mode: 'carte', resolution: 1024, epaisseur: 4, marge: 10 }), { mode: 'carte', couleur: null, epaisseur: 4, marge: 10, resolution: 1024 });
+  assert.equal(E.normaliserSol({ mode: 'uni', couleur: '#ABCDEF' }).couleur, '#abcdef'); assert.equal(E.normaliserSol(true).mode, 'uni');
+  assert.equal(E.normaliserOptions({ sol: 'carte' }).sol.mode, 'carte');
+  for (const m of ['plan', 'x', { mode: 'cube' }, { mode: 'uni', couleur: 'rouge' }, { mode: 'uni', epaisseur: -1 }, { mode: 'uni', epaisseur: 99 }, { mode: 'uni', marge: 5000 }, { mode: 'carte', resolution: 100 }, { mode: 'carte', resolution: 9000 }, { mode: 'carte', resolution: 1.5 }, { mode: 'uni', inconnu: 1 }, [], 42]) assert.throws(() => E.normaliserSol(m), /exportScene3D : sol/, JSON.stringify(m));
+});
+
+test('sol : un aplat à y = 0 sur toute l emprise (plus la marge), le dessus regarde vers le haut ; avec épaisseur, une dalle fermée dont le toit n est pas doublé', () => {
+  const emprise = [ANCRE.lng - 0.001, ANCRE.lat - 0.0005, ANCRE.lng + 0.001, ANCRE.lat + 0.0005];
+  const base = { ancre: ANCRE, emprise, extrusions: [{ id: 1, couche: 'c', geometrie: { type: 'Polygon', coordinates: [carre(ANCRE.lng, ANCRE.lat, 0.0001, 0.0001)] }, hauteur: 5 }] };
+  const sans = E.construireScene(THREE, base);
+  assert.ok(!sans.scene.children.some((o) => o.name.startsWith('sol')), 'pas de sol par défaut');
+  const plat = E.construireScene(THREE, { ...base, sol: { mode: 'uni', couleur: '#c0d0e0', epaisseur: 0, marge: 0 } });
+  const dessus = plat.scene.children.find((o) => o.name === 'sol_dessus'); assert.ok(dessus); assert.equal(plat.scene.children.some((o) => o.name === 'sol_dalle'), false);
+  const b = new THREE.Box3().setFromObject(dessus), t = b.getSize(new THREE.Vector3());
+  assert.equal(b.min.y, 0); assert.equal(b.max.y, 0); assert.ok(Math.abs(t.x - 2 * 0.001 * Math.PI / 180 * 6378137 * Math.cos(ANCRE.lat * Math.PI / 180) * (180 / Math.PI) * (Math.PI / 180)) < 1e-6 || t.x > 150, 'largeur ~163 m : ' + t.x); assert.ok(t.z > 100 && t.z < 120, 'profondeur ~111 m : ' + t.z);
+  assert.equal(dessus.material.color.getHex(), 0xc0d0e0); assert.equal(plat.stats.sol, 'uni');
+  const idx = dessus.geometry.index.array, pos = dessus.geometry.attributes.position.array;
+  for (let k = 0; k < idx.length; k += 3) { const a = [0, 1, 2].map((i) => [pos[3 * idx[k + i]], pos[3 * idx[k + i] + 1], pos[3 * idx[k + i] + 2]]); const u = [a[1][0] - a[0][0], a[1][2] - a[0][2]], v = [a[2][0] - a[0][0], a[2][2] - a[0][2]]; assert.ok(u[0] * v[1] - u[1] * v[0] < 0, 'dessus tourné vers le haut (sens trigonométrique vu de dessus avec z = sud)'); }
+  const marge = E.construireScene(THREE, { ...base, sol: { mode: 'uni', epaisseur: 0, marge: 20 } }).scene.children.find((o) => o.name === 'sol_dessus');
+  assert.ok(new THREE.Box3().setFromObject(marge).getSize(new THREE.Vector3()).x > t.x + 39.9, 'la marge de 20 m s ajoute de chaque côté');
+  const dalle = E.construireScene(THREE, { ...base, sol: { mode: 'uni', epaisseur: 6, marge: 0 } });
+  const d = dalle.scene.children.find((o) => o.name === 'sol_dalle'), bd = new THREE.Box3().setFromObject(d);
+  assert.equal(bd.min.y, -6); assert.ok(bd.max.y <= 1e-9, 'le toit de la dalle n est pas doublé : elle ne dépasse pas le sol');
+  assert.ok(d.geometry.index.count >= 5 * 6, 'dessous et quatre côtés');
+});
+
+test('sol : en mode carte, la texture couvre l emprise (u de l ouest à l est, v du sud au nord) et le matériau n est pas éclairé', () => {
+  const emprise = [ANCRE.lng - 0.001, ANCRE.lat - 0.0005, ANCRE.lng + 0.001, ANCRE.lat + 0.0005];
+  const texture = new THREE.Texture();
+  const r = E.construireScene(THREE, { ancre: ANCRE, emprise, extrusions: [{ id: 1, couche: 'c', geometrie: { type: 'Polygon', coordinates: [carre(ANCRE.lng, ANCRE.lat, 0.0001, 0.0001)] }, hauteur: 5 }], sol: { mode: 'carte', texture, epaisseur: 0, marge: 0 } });
+  const dessus = r.scene.children.find((o) => o.name === 'sol_dessus');
+  assert.equal(dessus.material.isMeshBasicMaterial, true); assert.equal(dessus.material.map, texture);
+  const uv = dessus.geometry.attributes.uv.array, pos = dessus.geometry.attributes.position.array;
+  assert.deepEqual([...uv], [0, 0, 1, 0, 1, 1, 0, 1]);
+  assert.ok(pos[0] < pos[3], 'u croît vers l est'); assert.ok(pos[2] > pos[8], 'v croît vers le nord (z diminue)');
+});
+
+test('lumières : une lumière d un modèle (luminaire) n est pas exportée ; la mention de licence suit', () => {
+  const racine = new THREE.Group(); racine.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial())); racine.add(new THREE.SpotLight(0xffffff, 1));
+  const r = E.construireScene(THREE, { ancre: ANCRE, objets: [{ id: 1, couche: 'o', racine, lng: ANCRE.lng, lat: ANCRE.lat }], attributions: [{ source: 'Catalogue', licence: 'Licence Ouverte Etalab 2.0', mention: 'Mention à citer' }] });
+  let lumieres = 0; r.scene.traverse((o) => { if (o.isLight) lumieres++; }); assert.equal(lumieres, 0);
+  assert.equal(r.scene.userData.atlas.attributions[0].mention, 'Mention à citer');
+  assert.equal(E.fusionnerAttributions([[{ source: 'A', mention: 'm' }]])[0].mention, 'm');
 });

@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.40.0 — `exportScene3D` : un sol sous la 3D, les luminaires du catalogue
+
+- **Option `sol`** (additive, aucun sol par défaut ; contrat 0.6 inchangé) : `'uni'` (aplat à y = 0 sur l'emprise, couleur donnée ou fond du thème), avec `epaisseur` une dalle de maquette, `marge` pour l'élargir ; `'carte'` : le fond de carte rendu à plat en texture par une seconde carte hors écran (la vue de la personne ne bouge pas), matériau non éclairé, attribution dans les extras et la liste, résolution 256 à 4096 px réduite d'office pour tenir sous le plafond, aplat de repli dit dans les `avertissements`. Mesuré : aplat +0,9 Ko, dalle +2,4 Ko, carte de 1 536 px en 0,7 s et 363 Ko (PNG d'aplats du fond « Thème »). Détail : `docs/CONTRAT-CARTE-BI.md` §6 sexies.
+- **Luminaires du catalogue exportés** : une couche d'éclairage (fiches EclExt, ou type d'éclairage choisi) a son propre rendu à l'écran et était absente de l'export ; elle est relue avec la même résolution du modèle et la même pose, sans les lumières du GLB. **Licences du catalogue** : la licence (SPDX : Licence Ouverte Etalab 2.0…) et la mention à citer (`mention`) sont dans les attributions.
+- Les messages disent quelle couche n'a rien donné (masquée, hors emprise, modèle introuvable, entités sans modèle du catalogue).
+
 ## 1.39.1 — correctif : l'export GLB sur le site publié
 
 - **`exportScene3D` échouait en ligne** (« Failed to fetch dynamically imported module ») : l'exporteur embarqué (`vendor/three/addons/exporters/GLTFExporter.js`) importe `../utils/TextureUtils.js`, qui n'était pas vendorisé ; l'essai local passait parce que le CDN résout tout. Le fichier est embarqué (`vendor-externe.json`), et un test (`tests/vendor-imports-relatifs.test.js`) vérifie désormais que chaque import relatif d'un module three.js embarqué désigne un fichier embarqué, et que chaque fichier embarqué est déclaré. Aucun changement de contrat, ni du client d'hôte.

@@ -18491,6 +18491,57 @@ async function demarrer() {
     return init();
 }
 
+/** Le nom lisible d'une licence du catalogue (identifiant SPDX ou usage). */
+function nomLicence(spdx) {
+    const noms = { 'etalab-2.0': 'Licence Ouverte Etalab 2.0', 'ODbL-1.0': 'ODbL 1.0', 'CC0-1.0': 'CC0 1.0', 'CC-BY-4.0': 'CC BY 4.0', 'CC-BY-SA-4.0': 'CC BY-SA 4.0', 'MIT': 'MIT' };
+    return typeof spdx === 'string' && spdx ? (noms[spdx] || spdx) : null;
+}
+
+/**
+ * Le fond de carte rendu À PLAT sur une emprise, pour servir de sol (`exportScene3D`, `sol: 'carte'`) : une SECONDE carte, hors écran, aux dimensions de l'emprise (nord en haut, aucune
+ * inclinaison), avec le seul fond de la carte courante (couches du fond, sans volumes) tel qu'il est peint (le fond « Thème » donne des aplats très compressibles). La carte de la personne
+ * ne bouge pas. Rend le canevas, si le fond est photographique (JPEG plutôt que PNG) et les attributions déclarées par les sources du fond.
+ */
+async function rendreFondAPlat(bbox, resolution) {
+    const FT = await import('./lib/fond-theme.js?v=20261101a');
+    const merc = (lng, lat) => maplibregl.MercatorCoordinate.fromLngLat([lng, lat]);
+    const nw = merc(bbox[0], bbox[3]), se = merc(bbox[2], bbox[1]);
+    const rapport = (se.x - nw.x) / (se.y - nw.y);
+    const w = rapport >= 1 ? resolution : Math.max(64, Math.round(resolution * rapport)), h = rapport >= 1 ? Math.max(64, Math.round(resolution / rapport)) : resolution;
+    const style = map.getStyle();
+    const couches = style.layers.filter((l) => FT.estCoucheDuFond(l) && l.type !== 'fill-extrusion' && l.layout?.visibility !== 'none');
+    if (!couches.length) throw new Error('aucune couche de fond à rendre (fond uni ou hors réseau)');
+    const sources = {};
+    for (const l of couches) if (l.source && style.sources[l.source]) sources[l.source] = style.sources[l.source];
+    const conteneur = document.createElement('div');
+    conteneur.style.cssText = 'position:fixed;left:-100000px;top:0;width:' + w + 'px;height:' + h + 'px;pointer-events:none';
+    document.body.append(conteneur);
+    let carte2 = null;
+    try {
+        carte2 = new maplibregl.Map({ container: conteneur, style: { version: 8, glyphs: style.glyphs, sprite: style.sprite, sources, layers: couches }, bounds: bbox, fitBoundsOptions: { padding: 0, animate: false }, interactive: false, preserveDrawingBuffer: true, pixelRatio: 1, fadeDuration: 0, maxPitch: 0, locale: LOCALE_CARTE });
+        await new Promise((ok, ko) => {
+            const delai = setTimeout(() => ko(new Error('délai dépassé (25 s) : tuiles du fond non reçues')), 25000);
+            carte2.on('error', (e) => { if (!carte2.loaded()) { /* une tuile ou une icône manquante n'arrête pas le rendu */ } });
+            const verifier = () => { if (carte2.loaded() && carte2.areTilesLoaded()) { clearTimeout(delai); ok(); } };
+            carte2.on('idle', verifier);
+        });
+        const copie = document.createElement('canvas');
+        copie.width = w; copie.height = h;
+        copie.getContext('2d').drawImage(carte2.getCanvas(), 0, 0);
+        // l'attribution d'une source vectorielle vient de son TileJSON (lue par la carte courante), pas du style ; à défaut, celle du fond OpenFreeMap
+        const credits = Object.entries(sources).map(([nom, src]) => {
+            let t = '';
+            try { const vivante = map.getSource(nom); if (vivante && typeof vivante.attribution === 'string') t = vivante.attribution; } catch (_) { /* source retirée */ }
+            if (!t && src && typeof src.attribution === 'string') t = src.attribution;
+            if (!t && nom === 'openmaptiles') t = '© OpenStreetMap contributors, © OpenMapTiles, OpenFreeMap';
+            return t.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        });
+        const attributions = [...new Set(credits.filter(Boolean))];
+        const photo = Object.values(sources).some((s) => s && s.type === 'raster' && /ORTHO/i.test(JSON.stringify(s.tiles || '')));
+        return { canvas: copie, photo, attributions };
+    } finally { try { carte2 && carte2.remove(); } catch (_) { /* déjà retirée */ } conteneur.remove(); }
+}
+
 /**
  * `exportScene3D` (contrat 0.6) : la scène 3D de l'application — objets, couches extrudées, bâti du fond sur demande — en UN GLB (lib/export-scene3d.js). Mêmes poses que l'écran :
  * `Models3D.placement` donne la matrice de chaque objet, ici ramenée à l'ancre de l'export, sol à 0 (le relief n'est pas exporté). Chargée à la demande : ni three.js d'export ni
@@ -18515,6 +18566,7 @@ async function exporter3dScene(entree) {
         // Une couche d'objets qui ne donne rien le dit, au lieu d'un fichier muet : emprise, visibilité, modèle introuvable.
         for (const l of STATE.layers) {
             if ((l.geometryType !== 'Point' && l.geometryType !== 'MultiPoint') || (l.style?.mode !== 'library' && l.style?.mode !== 'custom')) continue;
+            if (coucheEclairage(l)) continue;   // une couche d'éclairage est relue plus bas, et dit elle-même ce qu'elle n'a pas donné
             if (opt.couches && !opt.couches.includes(l.id)) continue;
             if (!items.some((it) => it.layerId === l.id)) avertissements.push('couche « ' + l.id + ' » : aucun objet exporté (' + (l.visible === false ? 'couche masquée' : "aucun objet dans l'emprise, ou modèle introuvable") + ' ; ' + ((l.geojson?.features || []).length) + ' entité(s) dans la couche)');
         }
@@ -18533,12 +18585,49 @@ async function exporter3dScene(entree) {
             objets.push({ id: feature.id ?? it.idx, couche: layer.id, racine, lng: it.lng, lat: it.lat, matrice: m });
             const nom = it.url.split('/').pop();
             if (!licences.has(it.url)) {
+                // un objet du catalogue porte sa licence (`asset.licence` : usage, spdx, mention à citer) ; un modèle de la bibliothèque ou posé à la main, parfois seulement un nom
+                const rc = CATALOGUE_OBJETS.cat ? resolutionCatalogue(layer, feature, 0) : null;
+                const lic = rc?.asset?.licence || null;
                 const mod = findModel(modelIdDeEntite(feature, layer));
-                const licence = mod?.licence?.name || mod?.licence || null;
-                licences.set(it.url, { source: 'Objet 3D ' + (mod?.name || nom), licence: typeof licence === 'string' ? licence : null, url: /^https?:/.test(it.url) ? it.url : new URL(it.url, location.href).href });
+                const licenceModele = mod?.licence?.name || mod?.licence || null;
+                licences.set(it.url, { source: rc?.type ? 'Catalogue d\'objets Atlas : ' + (rc.type.id || nom) : 'Objet 3D ' + (mod?.name || nom), licence: lic ? nomLicence(lic.spdx) : (typeof licenceModele === 'string' ? licenceModele : null), mention: lic?.notice || null, url: /^https?:/.test(it.url) ? it.url : new URL(it.url, location.href).href });
             }
         }
-        for (const a of licences.values()) { attributions.push({ source: a.source, ...(a.licence ? { licence: a.licence } : {}), url: a.url }); if (!a.licence) avertissements.push('licence non précisée pour « ' + a.source + ' » : à renseigner avant diffusion'); }
+        // Les couches d'éclairage (luminaires du catalogue : fiches EclExt, ou type `objet:<type>` d'éclairage) ont leur propre rendu et sont écartées de `collect` : on les relit ici, avec la
+        // même résolution du modèle et la même pose que l'écran (`Eclairage`), sol à zéro.
+        if (CATALOGUE_OBJETS.cat) {
+            const nonResolus = new Set();
+            for (const layer of STATE.layers) {
+                if (layer.visible === false || !coucheEclairage(layer)) continue;
+                if (opt.couches && !opt.couches.includes(layer.id)) continue;
+                const p = resolveFeatureProps({ properties: {} }, layer);
+                for (const f of (filteredGeoJSON(layer)?.features || [])) {
+                    if (f.geometry?.type !== 'Point') continue;
+                    const idx = f.properties?._idx, feature = layer.geojson?.features?.[idx] || f;
+                    const [lng, lat] = feature.geometry.coordinates;
+                    if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) continue;
+                    if (objets.length > E.PLAFOND_OBJETS) break;
+                    const typeId = typeImposeDe(layer, feature);
+                    const res = resoudreEntite(layer, feature, { set: MODEL_LIBRARY.set, lod: 0, public: contextePublic(), echelleCouche: 1, rotationCoucheDeg: p.rotationZ || 0, ...(typeId ? { typeId } : {}) });
+                    const r = res ? res.r : null;
+                    if (!r || r.type?.family !== 'lighting' || !r.url) { nonResolus.add(layer.id); continue; }
+                    const pose = poseLuminaire(r.type.lighting, res.props, r.rotationDeg);
+                    const rot = pose.origineAzimut === 'champ' ? Math.PI - deg2rad(pose.azimutDeg) : deg2rad(pose.azimutDeg);
+                    const racine = await Models3D.ensureMonumentRoot(r.url);
+                    if (!racine) { avertissements.push('luminaire « ' + layer.id + ' / ' + idx + ' » : modèle illisible (' + r.url.split('/').pop() + ')'); continue; }
+                    const lm = Models3D.localMeters(lng, lat);
+                    const m = new THREE.Matrix4().makeTranslation(lm.x - ancreLocale.x, pose.elevation, -lm.y + ancreLocale.y).multiply(new THREE.Matrix4().makeRotationY(rot));
+                    objets.push({ id: layer.id + ':' + idx, couche: layer.id, racine, lng, lat, matrice: m });
+                    if (!licences.has(r.url)) { const lic = r.asset?.licence || null; licences.set(r.url, { source: 'Catalogue d\'objets Atlas : ' + (r.type.id || r.url.split('/').pop()), licence: lic ? nomLicence(lic.spdx) : null, mention: lic?.notice || null, url: /^https?:/.test(r.url) ? r.url : new URL(r.url, location.href).href }); }
+                }
+            }
+            for (const layer of STATE.layers) {
+                if (layer.visible === false || !coucheEclairage(layer) || (opt.couches && !opt.couches.includes(layer.id))) continue;
+                if (!objets.some((o) => o.couche === layer.id)) avertissements.push("couche d'éclairage « " + layer.id + " » : aucun luminaire exporté (hors de l'emprise, ou sans modèle du catalogue)");
+            }
+            for (const id of nonResolus) avertissements.push('couche d\'éclairage « ' + id + ' » : des entités sans modèle du catalogue ne sont pas exportées');
+        }
+        for (const a of licences.values()) { attributions.push({ source: a.source, ...(a.licence ? { licence: a.licence } : {}), ...(a.mention ? { mention: a.mention } : {}), url: a.url }); if (!a.licence) avertissements.push('licence non précisée pour « ' + a.source + ' » : à renseigner avant diffusion'); }
         if (items.length > E.PLAFOND_OBJETS) avertissements.push('objets : plus de ' + E.PLAFOND_OBJETS + ' dans l\'emprise, les premiers seulement');
     }
 
@@ -18581,13 +18670,30 @@ async function exporter3dScene(entree) {
     }
 
     if (!objets.length && !extrusions.length) throw new Error('exportScene3D : aucun élément 3D dans cette emprise (objets, couches extrudées' + (opt.inclure.bati ? ', bâti' : '') + ')');
-    const { scene, stats, avertissements: dits } = E.construireScene(THREE, { ancre, versLocal, objets, extrusions, attributions: E.fusionnerAttributions([attributions]), simplification: opt.simplification, emprise: bbox, genere: new Date().toISOString() });
+    // Le sol : un aplat (couleur donnée, sinon le fond du thème), ou le fond de carte rendu à plat en texture (carte hors écran : la vue de la personne ne bouge pas).
+    let sol = null;
+    if (opt.sol) {
+        sol = { ...opt.sol, couleur: opt.sol.couleur || (_planTheme && _planTheme.fond) || E.SOL_COULEUR_DEFAUT };
+        if (opt.sol.mode === 'carte') {
+            try {
+                const fond = await rendreFondAPlat(bbox, opt.sol.resolution);
+                sol.texture = new THREE.CanvasTexture(fond.canvas);
+                sol.texture.colorSpace = THREE.SRGBColorSpace;
+                sol.texture.userData.mimeType = fond.photo ? 'image/jpeg' : 'image/png';
+                for (const a of fond.attributions) attributions.push({ source: a });
+                if (!fond.attributions.length) avertissements.push('sol : le fond de carte ne déclare aucune source à citer, à renseigner avant diffusion');
+            } catch (e) { avertissements.push('sol : le fond de carte n\'a pas pu être rendu à plat (' + ((e && e.message) || e) + ') : aplat à la place'); sol.mode = 'uni'; }
+        }
+    }
+    const { scene, stats, avertissements: dits } = E.construireScene(THREE, { ancre, versLocal, objets, extrusions, attributions: E.fusionnerAttributions([attributions]), simplification: opt.simplification, emprise: bbox, sol, genere: new Date().toISOString() });
     // les objets portent déjà leur matrice (position, rotation, échelle de l'écran) : `construireScene` la reprend
-    const glb = await E.exporterGlb(GLTFExporter, scene);
+    let glb = await E.exporterGlb(GLTFExporter, scene);
+    // une texture trop lourde pour le plafond est réduite (côté 1024, puis 512) avant de refuser
+    for (const cote of [1024, 512]) { if (glb.byteLength <= opt.plafondOctets || !(sol && sol.texture)) break; glb = await E.exporterGlb(GLTFExporter, scene, { maxTextureSize: cote }); dits.push('sol : texture réduite à ' + cote + ' px pour tenir sous le plafond'); }
     E.verifierPoids(glb.byteLength, opt.plafondOctets);
     return {
         glb, octets: glb.byteLength, ancre, bbox, repere: E.REPERE, format: E.FORMAT,
-        contenu: { objets: stats.objets, extrusions: stats.extrusions },
+        contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}) },
         attributions: E.fusionnerAttributions([attributions]), avertissements: [...avertissements, ...dits],
     };
 }

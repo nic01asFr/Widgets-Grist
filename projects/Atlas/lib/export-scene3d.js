@@ -19,6 +19,8 @@ export const PLAFOND_OBJETS = 2000;
 export const PLAFOND_ENTITES = 5000;
 export const PLAFOND_SOMMETS = 300000;
 export const HAUTEUR_DEFAUT = 3;
+export const SOL_RESOLUTION_DEFAUT = 2048;   // pixels, plus grand côté de la texture du fond (« carte »)
+export const SOL_COULEUR_DEFAUT = '#e9e6df';
 export const SIMPLIFICATION_DEFAUT = 0.1;   // mètres : les sommets qui s'écartent de moins de 10 cm de la forme sont retirés (un relevé OSM ou une tuile en porte des milliers de superflus)
 export const SURFACE_MAX_DEG2 = 4;      // une emprise de plus de 4 degrés carrés n'est pas une scène qu'on pose sur une table
 const fini = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -55,13 +57,33 @@ export function normaliserOptions(o) {
   if (!Number.isInteger(plafondOctets) || plafondOctets < 1024 || plafondOctets > PLAFOND_OCTETS_MAX) throw new Error('exportScene3D : plafondOctets hors bornes (1 Ko à ' + PLAFOND_OCTETS_MAX / 1048576 + ' Mo)');
   const simplification = options.simplification === undefined ? SIMPLIFICATION_DEFAUT : options.simplification;
   if (!fini(simplification) || simplification < 0 || simplification > 5) throw new Error('exportScene3D : simplification hors bornes (0 à 5 mètres)');
+  const sol = normaliserSol(options.sol);
   let couches = null;
   if (options.couches !== undefined && options.couches !== null) {
     if (!Array.isArray(options.couches) || options.couches.length > 64 || !options.couches.every((c) => typeof c === 'string' && c)) throw new Error("exportScene3D : couches doit être une liste d'identifiants (64 au plus)");
     couches = [...options.couches];
   }
   if (!inclure.objets && !inclure.extrusions && !inclure.bati) throw new Error('exportScene3D : rien à exporter (inclure : objets, extrusions, bati tous à faux)');
-  return { bbox, ancre, inclure, hauteurParDefaut, plafondOctets, couches, simplification };
+  return { bbox, ancre, inclure, hauteurParDefaut, plafondOctets, couches, simplification, sol };
+}
+
+/**
+ * L'option `sol` : un plan (ou une dalle) sous la scène, pour que le bâti ne flotte pas quand rien n'est dessous (table, lecteur de téléphone).
+ * Absente ou `false` : pas de sol. `'uni'` ou `{ mode: 'uni', couleur?, epaisseur?, marge? }` : un aplat. `'carte'` ou `{ mode: 'carte', resolution?, epaisseur?, marge? }` : le fond de carte rendu à plat en texture.
+ * @returns {{ mode: 'uni'|'carte', couleur: string|null, epaisseur: number, marge: number, resolution: number }|null}
+ */
+export function normaliserSol(s) {
+  if (s === undefined || s === null || s === false) return null;
+  const o = s === true ? { mode: 'uni' } : typeof s === 'string' ? { mode: s } : s;
+  if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error("exportScene3D : sol doit être 'uni', 'carte' ou un objet ({ mode, couleur, epaisseur, marge, resolution })");
+  for (const k of Object.keys(o)) if (!['mode', 'couleur', 'epaisseur', 'marge', 'resolution'].includes(k)) throw new Error('exportScene3D : sol.' + k + ' inconnu (mode, couleur, epaisseur, marge, resolution)');
+  if (o.mode !== 'uni' && o.mode !== 'carte') throw new Error("exportScene3D : sol.mode doit être 'uni' ou 'carte'");
+  if (o.couleur !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(o.couleur))) throw new Error('exportScene3D : sol.couleur doit s\'écrire #rrggbb');
+  const epaisseur = o.epaisseur === undefined ? 0 : o.epaisseur, marge = o.marge === undefined ? 0 : o.marge, resolution = o.resolution === undefined ? SOL_RESOLUTION_DEFAUT : o.resolution;
+  if (!fini(epaisseur) || epaisseur < 0 || epaisseur > 50) throw new Error('exportScene3D : sol.epaisseur hors bornes (0 à 50 mètres)');
+  if (!fini(marge) || marge < 0 || marge > 1000) throw new Error('exportScene3D : sol.marge hors bornes (0 à 1000 mètres)');
+  if (!Number.isInteger(resolution) || resolution < 256 || resolution > 4096) throw new Error('exportScene3D : sol.resolution hors bornes (256 à 4096 pixels)');
+  return { mode: o.mode, couleur: o.couleur ? String(o.couleur).toLowerCase() : null, epaisseur, marge, resolution };
 }
 
 /** Le centre d'une emprise. */
@@ -165,7 +187,7 @@ export function ajouterPrisme(THREE, lot, anneaux, hauteur, base) {
   const tous = [...ext, ...interieurs.flat()];
   const plan = (y, ny) => { const o = tous.map((p) => pousser(p.x, y, -p.y, 0, ny, 0)); for (const [a, b, c] of faces) triangle(o[a], o[b], o[c], 0, ny, 0); };
   plan(haut, 1);
-  if (base > 0) plan(base, -1);
+  if (base !== 0) plan(base, -1);   // surélevé, ou dalle enterrée (base négative) : un dessous
   return lot.pos.length / 3 - depart;
 }
 
@@ -208,6 +230,8 @@ export function construireScene(THREE, e) {
       r.rotation.set(rad(fini(o.rotX) ? o.rotX : 0), rad(fini(o.azimut) ? o.azimut : 0), rad(fini(o.rotY) ? o.rotY : 0), 'YXZ');
     }
     r.updateMatrix();
+    // les lumières d'un GLB (les `SpotLight` d'un luminaire, lues par Atlas mais jamais rendues) n'ont rien à faire dans un fichier de maquette : elles sont retirées
+    const lumieres = []; r.traverse((n) => { if (n.isLight) lumieres.push(n); }); for (const l of lumieres) if (l.parent) l.parent.remove(l);
     scene.add(r);
     stats.objets++;
   }
@@ -251,23 +275,62 @@ export function construireScene(THREE, e) {
   }
   if (stats.ignores) avertissements.push('ignorés : ' + stats.ignores + ' élément(s) sans géométrie lisible ou au-delà des plafonds (' + PLAFOND_OBJETS + ' objets, ' + PLAFOND_ENTITES + ' surfaces, ' + PLAFOND_SOMMETS + ' sommets)');
 
+  // --- sol : un plan à y = 0 sur l'emprise (aplat, ou texture du fond rendu à plat), avec ou sans épaisseur de maquette
+  if (e.sol && e.emprise) {
+    const s = e.sol, marge = s.marge || 0;
+    const coin = (lng, lat) => local(lng, lat);
+    const sw = coin(e.emprise[0], e.emprise[1]), ne = coin(e.emprise[2], e.emprise[3]);
+    const x0 = sw.x - marge, x1 = ne.x + marge, y0 = sw.y - marge, y1 = ne.y + marge;     // est, nord
+    const eps = s.epaisseur || 0;
+    const geoPlan = (haut, y, ny, uv) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute([x0, y, -y0, x1, y, -y0, x1, y, -y1, x0, y, -y1], 3));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute([0, ny, 0, 0, ny, 0, 0, ny, 0, 0, ny, 0], 3));
+      if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
+      g.setIndex(haut ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);   // le dessus regarde vers le haut, le dessous vers le bas
+      return g;
+    };
+    const couleur = couleurEntiere(s.couleur || SOL_COULEUR_DEFAUT);
+    let dessus;
+    if (s.mode === 'carte' && s.texture) {
+      const m = new THREE.MeshBasicMaterial({ map: s.texture });   // le fond tel qu'il a été vu : sans éclairage, donc sans ombre ni reflet sur la table
+      dessus = new THREE.Mesh(geoPlan(true, 0, 1, true), m);
+    } else dessus = new THREE.Mesh(geoPlan(true, 0, 1, false), new THREE.MeshStandardMaterial({ color: couleur, roughness: 1, metalness: 0 }));
+    dessus.name = 'sol_dessus';
+    scene.add(dessus);
+    if (eps > 0) {
+      // une dalle de maquette : le dessous et les quatre côtés, de la couleur de l'aplat
+      const lot = { pos: [], nor: [], idx: [] };
+      ajouterPrisme(THREE, lot, [[{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }]], eps, -eps);
+      // `ajouterPrisme` pose le toit à `base + hauteur` = 0 (déjà couvert par le dessus) : on ne garde que les parois et le dessous
+      const idx = [];
+      for (let t = 0; t < lot.idx.length; t += 3) { const a = lot.idx[t]; if (lot.nor[3 * a + 1] !== 1) idx.push(lot.idx[t], lot.idx[t + 1], lot.idx[t + 2]); }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(lot.pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(lot.nor, 3)); g.setIndex(idx);
+      const dalle = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: couleur, roughness: 1, metalness: 0 }));
+      dalle.name = 'sol_dalle';
+      scene.add(dalle);
+    }
+    stats.sol = s.mode;
+  }
+
   // --- traçabilité : sources et licences dans les extras du fichier ; la liste à part est celle que la commande rend
   scene.userData = {
     atlas: {
       format: FORMAT, unite: 'm', repere: REPERE, ancre: { lng: e.ancre.lng, lat: e.ancre.lat },
       ...(e.emprise ? { emprise: [...e.emprise] } : {}),
       ...(e.genere ? { genere: e.genere } : {}),
-      contenu: { objets: stats.objets, extrusions: stats.extrusions },
-      attributions: (e.attributions || []).map((a) => ({ source: String(a.source), ...(a.licence ? { licence: String(a.licence) } : {}), ...(a.url ? { url: String(a.url) } : {}) })),
+      contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}) },
+      attributions: (e.attributions || []).map((a) => ({ source: String(a.source), ...(a.licence ? { licence: String(a.licence) } : {}), ...(a.mention ? { mention: String(a.mention) } : {}), ...(a.url ? { url: String(a.url) } : {}) })),
     },
   };
   return { scene, stats, avertissements };
 }
 
-/** Une promesse du GLB binaire de la scène (GLTFExporter, passé en paramètre) ; l'ArrayBuffer rendu est celui du fichier. */
-export function exporterGlb(GLTFExporter, scene) {
+/** Une promesse du GLB binaire de la scène (GLTFExporter, passé en paramètre) ; l'ArrayBuffer rendu est celui du fichier. `maxTextureSize` : côté maximal des textures (réduit pour tenir sous le plafond). */
+export function exporterGlb(GLTFExporter, scene, { maxTextureSize = Infinity } = {}) {
   return new Promise((ok, ko) => {
-    try { new GLTFExporter().parse(scene, (glb) => (glb instanceof ArrayBuffer ? ok(glb) : ko(new Error('export : le résultat n\'est pas binaire'))), ko, { binary: true, onlyVisible: false }); }
+    try { new GLTFExporter().parse(scene, (glb) => (glb instanceof ArrayBuffer ? ok(glb) : ko(new Error('export : le résultat n\'est pas binaire'))), ko, { binary: true, onlyVisible: false, maxTextureSize }); }
     catch (e) { ko(e); }
   });
 }
@@ -279,7 +342,7 @@ export function fusionnerAttributions(listes) {
     if (!a || !a.source) continue;
     const cle = a.source + '|' + (a.licence || '');
     if (vues.has(cle)) continue;
-    vues.add(cle); sortie.push({ source: String(a.source), ...(a.licence ? { licence: String(a.licence) } : {}), ...(a.url ? { url: String(a.url) } : {}) });
+    vues.add(cle); sortie.push({ source: String(a.source), ...(a.licence ? { licence: String(a.licence) } : {}), ...(a.mention ? { mention: String(a.mention) } : {}), ...(a.url ? { url: String(a.url) } : {}) });
   }
   return sortie;
 }
