@@ -366,6 +366,7 @@ export function attacher(map, opts = {}) {
   const horloge = opts.horloge || {};
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
+  let limiteurFeatures = null;    // idem pour getFeatures
   let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
@@ -614,6 +615,24 @@ export function attacher(map, opts = {}) {
       if (zoom < ZOOM_MINIMAL_BATIMENTS) return { ...base, features: [], total: 0, tronque: false, bounds: utile, avertissements: ["zoom-trop-faible : le bâti n'est lu qu'à partir du zoom " + ZOOM_MINIMAL_BATIMENTS + ' (zoom actuel ' + arrondi(zoom, 1) + ')'] };
       const r = batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox: utile, limite: opt.limite, hauteurMin: opt.hauteurMin });
       return { ...base, features: r.features, total: r.total, tronque: r.tronque, bounds: utile.map((v) => arrondi(v, 6)), avertissements: r.avertissements };
+    },
+    /**
+     * Les géométries d'une couche (contrat 0.5), pour une page qui les redessine ou les extrude : GeoJSON borné, avec ce qu'il faut pour redessiner à l'identique
+     * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
+     */
+    async getFeatures(layer, o) {
+      const F = await import('./features.js?v=20261101a');
+      const opt = F.normaliserOptionsFeatures(o);
+      if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
+      if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      if (tables.has(layer)) throw new Error('getFeatures : ' + layer + ' est une table (sans géométrie)');
+      const c = couches.get(layer);
+      if (!c) throw new Error('couche inconnue : ' + layer);
+      if (c.admin) throw new Error('getFeatures : ' + layer + " est une couche administrative (non lue par cette commande)");
+      const r = F.featuresDeEntites(c.features, opt);
+      let legende = null; try { legende = api.getLegend(c.id); } catch (e) { /* une couche sans légende n'en rend pas */ }
+      const clone = (v) => { try { return v === undefined ? null : JSON.parse(JSON.stringify(v)); } catch (e) { return null; } };
+      return { type: 'FeatureCollection', layer: c.id, nom: c.def.name || c.id, geometrie: geom(c), features: r.features, total: r.total, tronque: r.tronque, bounds: opt.bbox, visuel: clone(c.visuel), style: clone(c.def.style), legende: clone(legende), visible: c.visible, avertissements: r.avertissements };
     },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {

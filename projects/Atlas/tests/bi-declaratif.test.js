@@ -165,6 +165,6 @@ test('élément : une configuration illisible émet atlas-bi-erreur avec l\'éta
   await assert.rejects(e.configure, /réponse 404/);
   await new Promise((r) => setTimeout(r, 10));
   const err = vus.find((v) => v[0] === 'atlas-bi-erreur'); assert.ok(err); assert.match(err[1].erreur.message, /404/);
-  assert.equal((await e.ping()).version, '0.4', 'la connexion reste utilisable');
+  assert.equal((await e.ping()).version, '0.5', 'la connexion reste utilisable');
   fin();
 });

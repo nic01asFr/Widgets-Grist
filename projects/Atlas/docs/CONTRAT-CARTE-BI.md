@@ -1,4 +1,4 @@
-# Composant carte BI : contrat 0.4
+# Composant carte BI : contrat 0.5
 
 Atlas peut être embarqué dans une application externe (« l'hôte ») comme **composant de carte** : l'hôte envoie des commandes, la carte renvoie des événements. Ce document fixe le **contrat** (version `0.3`). Le guide du développeur de l'hôte est `EXPLOITATION-EXTERNE-BI.md`.
 
@@ -163,6 +163,17 @@ Ajouts **additifs** pour une page qui pose sa propre 3D au-dessus d'une carte vu
 
 **Non retenu** : un refus général d'un type de couche inconnu (la clé `type` est admise par le validateur de manifeste : le refuser risquerait des hôtes légitimes) ; un fond transparent (non trouvé, à traiter séparément) ; la fusion des fragments de bâtiments ; l'export glTF et WebXR.
 
+## 6 quinquies. Contrat 0.5 : les géométries d'une couche [testé, simulé ; navigateur à faire]
+
+`getFeatures(couche, { bbox, limite })` (capacité `socle`, exige la version 0.5) : pour une page qui redessine ou extrude la figure (vue éclatée, aperçu en réalité augmentée), les géométries et propriétés d'une couche que la carte ne rend qu'en pixels. `getRows` ne donne que les attributs, `getBuildings` que le bâti du fond ; ceci lit n'importe quelle couche de la scène.
+
+- Réponse : `{ type: 'FeatureCollection', layer, nom, geometrie ('point'|'line'|'polygon'), features, total, tronque, bounds, visuel, style, legende, visible, avertissements }`. `visuel`, `style` et `legende` donnent de quoi redessiner à l'identique (couleur, opacité, classes) ; une couche masquée est lue et dit `visible: false`.
+- Géométries : coordonnées arrondies à 7 décimales (environ 1 cm), identifiants et propriétés tels qu'ils sont dans la couche (données de l'hôte ou de l'utilisateur) ; copie indépendante de la couche (modifier la réponse ne change rien à la carte).
+- Plafonds, les mêmes que `getBuildings` : `limite` de 1 à 5000 (2000 par défaut), 20 000 sommets par entité (au-delà : ignorée et nommée), 200 000 sommets et 2 Mo au total (au-delà : `tronque: true` et avertissement), 5 appels par seconde (`trop_frequent`).
+- Refus : couche inconnue ; couche `type: "table"` (sans géométrie) ; couche administrative (hors de cette commande).
+- Pas d'attribution : ce sont les données de l'hôte, pas celles d'un fond tiers. Pour le bâti du fond, `getBuildings` garde son attribution ODbL.
+- Hors de cette commande, volontairement : routes, eau et occupation du sol du fond ; le relief. À ouvrir seulement sur un besoin réel.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -283,5 +294,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.32.3 | 0.3 | profil complet : le voile du premier rendu s'applique aussi (`voile=0` le retire), la page ne montre plus l'application de base puis la carte par défaut avant la scène de l'hôte. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.2 | 0.3 | l'aiguille du nord de la boussole suit la couleur principale. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.35.0 | 0.3 -> 0.4 | contrat 0.4, additif : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode` (vue plane verrouillée), `getBuildings` (bâtiments visibles, hauteurs, fragments), événement `clic` en un point libre ; la carte nue refuse une couche `dalles3d` (`capacite_absente`) ; règle de version : une commande exige au moins la version qui l'a introduite ; `VERSION_CLIENT` 2 ; `ready.version` annonce 0.4 (négocier par `ready.versions`) |
+| à venir (non publié) | 0.4 -> 0.5 | contrat 0.5, additif : `getFeatures(couche, { bbox, limite })` ; `VERSION_CLIENT` 3. Une commande 0.2, 0.3 ou 0.4 reste servie à un hôte resté en 0.2, 0.3 ou 0.4. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

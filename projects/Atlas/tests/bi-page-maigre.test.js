@@ -78,7 +78,8 @@ test('la fermeture de entree.js ne contient AUCUN module de l\'application', () 
   assert.deepEqual(hors, permis, 'un module de plus dans la fermeture est une dépendance de plus pour tous les hôtes : à justifier ici');
   assert.ok(!f.includes('app_v7.js'));
   // 51 depuis le contrat 0.4 : lib/bi/batiments.js (commande getBuildings), importé À LA DEMANDE : il n'est téléchargé que si l'hôte appelle la commande
-  assert.ok(f.length >= 38 && f.length <= 51, 'taille de la fermeture : ' + f.length);
+  // 52 depuis le contrat 0.5 : lib/bi/features.js (commande getFeatures), importé à la demande de la même façon
+  assert.ok(f.length >= 38 && f.length <= 52, 'taille de la fermeture : ' + f.length);
 });
 
 test('la page maigre est promue (bi.html) sous le même numéro de version que l\'application', () => {

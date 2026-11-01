@@ -62,7 +62,7 @@ test('contraste : une classe claire proche du fond est signalée', () => {
 
 // ---- contrat 0.3 : pont, rétrocompatibilité, lot d'ordres ----
 test('contrat 0.3 : commandes ajoutées, événements, rétrocompatibilité 0.2', () => {
-  assert.equal(VERSION, '0.4'); for (const c of COMMANDES_0_3) assert.ok(c in COMMANDES, c); assert.ok(Object.keys(COMMANDES).length >= 28);
+  assert.equal(VERSION, '0.5'); for (const c of COMMANDES_0_3) assert.ok(c in COMMANDES, c); assert.ok(Object.keys(COMMANDES).length >= 28);
   for (const e of ['layer', 'progress', 'drill', 'statistique']) assert.ok(EVENEMENTS.includes(e), e);
   const ctx = { origine: 'https://hote.test', autorisees: ['https://hote.test'] };
   assert.equal(validerCommande({ ...commande('ping', [], 'a'), version: '0.2' }, ctx).ok, true, 'un hôte 0.2 reste servi');
@@ -73,7 +73,7 @@ test('contrat 0.3 : commandes ajoutées, événements, rétrocompatibilité 0.2'
   assert.equal(validerCommande(commande('addAdminLayer', ['region', { source: 'ign' }], 'a'), ctx).ok, true);
   assert.equal(validerCommande(commande('drillDown', ['admin-region', 93], 'a'), ctx).code, 'argument', 'le code d\'unité est une chaîne');
   assert.equal(validerCommande(commande('getRows', ['admin-region', { tri: 'nom' }], 'a'), ctx).ok, true);
-  assert.equal(validerCommande({ ...commande('ping', [], 'a'), version: '0.5' }, ctx).code, 'version', 'une version plus récente que le composant est refusée');
+  assert.equal(validerCommande({ ...commande('ping', [], 'a'), version: '0.6' }, ctx).code, 'version', 'une version plus récente que le composant est refusée');
 });
 test('batch : exécution ordonnée, arrêt à la première erreur, validation de chaque ordre, plafond', async () => {
   const trace = []; const api = { ping: () => 'pong', select: (id) => { trace.push(id); return id; }, flyTo: () => { throw new Error('carte absente'); }, batch: () => 1 };
