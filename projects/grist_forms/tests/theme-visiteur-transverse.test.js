@@ -22,9 +22,9 @@ const GRIST_FORMS = path.join(RACINE, 'projects', 'grist_forms');
 
 /** Les seuls fichiers de code autorisés à nommer la clé ou le socle. Ajouter une ligne ici, c'est ouvrir l'étage « visiteur » à un nouveau lecteur. */
 const AUTORISES = new Set([
-  'projects/grist_forms/shared/theme-visiteur.js'
+  'projects/grist_forms/shared/theme-visiteur.js',
+  'projects/grist_forms/design-system.html' // la page, hors Grist seulement (tests/activation-page.test.js garde le bloc)
   // Étapes suivantes du cadrage (à ajouter UNIQUEMENT quand elles sont faites, une par une) :
-  //   projects/grist_forms/design-system.html   (la page, hors Grist)
   //   projects/grist_forms/demo/index.html      (la démonstration de formulaires)
   //   scripts/generate-vitrine.js               (le pont des six variables des vitrines)
 ]);

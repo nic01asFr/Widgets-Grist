@@ -100,7 +100,7 @@
 
   <section class="ds__carte" id="ds-liste" aria-labelledby="ds-liste-titre">
     <h2 id="ds-liste-titre">Vos design systems</h2>
-    <p class="ds__note">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Un brouillon n’est jamais actif : seule une personne peut appliquer un thème au document, d’un geste confirmé, depuis un design system ouvert.</p>
+    <p class="ds__note" id="ds-aide-liste">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Un brouillon n’est jamais actif : seule une personne peut appliquer un thème au document, d’un geste confirmé, depuis un design system ouvert.</p>
     <ul class="ds__liste" id="ds-lignes"></ul>
     <div class="ds__depot" id="ds-depot">
       <p><strong>Des fichiers à ouvrir ?</strong> Déposez-les sur cette page, ou choisissez-les.</p>
@@ -209,6 +209,7 @@
 <script src="shared/themedef.js"></script>
 <script src="shared/activation.js"></script>
 <script src="shared/activation-geste.js"></script>
+<script src="shared/theme-visiteur.js"></script>
 <script src="shared/design-system-apercu.js"></script>
 <script>
 /**
@@ -229,6 +230,8 @@
   var A = window.FormDesignSystemApercu;
   var T = window.FormTheme;
   var G = window.FormActivationGeste;
+  // Le thème du visiteur : UNIQUEMENT quand la page n'est pas dans Grist (voir `surAppareil`). Dans Grist, tout passe par Theme_document.
+  var VIS = window.FormThemeVisiteur;
   var E = window.FormEngine;
   var TABLE_CATALOGUE = 'Design_system_catalogue';
   var TAILLE_CATALOGUE_MAX = 400 * 1024;
@@ -269,6 +272,7 @@
     }
     return {
       nom: 'grist',
+      cible: 'document',
       lister: function () {
         return tables().then(function (ts) { return ts.indexOf(D.TABLE) === -1 ? [] : api.fetchTable(D.TABLE).then(lignesDe); });
       },
@@ -303,11 +307,15 @@
 
   function magasinLocal() {
     var cle = 'formbuilder:design-system:demo';
-    var memoire = { lignes: [], catalogue: null, suivant: 1, themeDocument: null };
+    var memoire = { lignes: [], catalogue: null, suivant: 1 };
+    var persiste = true;
     try { var brut = window.localStorage.getItem(cle); if (brut) memoire = JSON.parse(brut); } catch (e) { /* mémoire seule */ }
-    function garder() { try { window.localStorage.setItem(cle, JSON.stringify(memoire)); } catch (e) { /* tant pis */ } }
+    function garder() { try { window.localStorage.setItem(cle, JSON.stringify(memoire)); persiste = true; } catch (e) { persiste = false; /* la page continue, et le dit */ } }
     return {
-      nom: 'demo',
+      nom: 'appareil',
+      cible: 'appareil',
+      /** Faux quand le navigateur a refusé de garder : tout est perdu à la fermeture de la page, et la page le dit. */
+      persiste: function () { return persiste; },
       lister: function () { return Promise.resolve(memoire.lignes.map(function (l) { return Object.assign({}, l); })); },
       enregistrer: function (ligne, id) {
         var cible = id ? memoire.lignes.filter(function (l) { return l.id === id; })[0] : null;
@@ -316,23 +324,7 @@
         return Promise.resolve(id);
       },
       lireCatalogue: function () { return Promise.resolve(memoire.catalogue); },
-      ecrireCatalogue: function (texte) { memoire.catalogue = texte; garder(); return Promise.resolve(); },
-      // Le thème du document, en démonstration : une table fictive gardée dans l'onglet, avec les mêmes gestes qu'un vrai document.
-      lireThemeDocument: function () { return Promise.resolve(memoire.themeDocument ? memoire.themeDocument.map(function (l) { return Object.assign({}, l); }) : null); },
-      creerThemeDocument: function () { if (!memoire.themeDocument) { memoire.themeDocument = []; garder(); } return Promise.resolve(); },
-      appliquerLot: function (actions) {
-        if (!memoire.themeDocument) return Promise.reject(new Error('La table Theme_document n’existe pas.'));
-        actions.forEach(function (a) {
-          if (a[0] === 'AddRecord') {
-            var id = memoire.themeDocument.reduce(function (m, l) { return Math.max(m, l.id); }, 0) + 1;
-            memoire.themeDocument.push(Object.assign({ id: id }, a[3]));
-          } else if (a[0] === 'UpdateRecord') {
-            Object.assign(memoire.themeDocument.filter(function (l) { return l.id === a[2]; })[0] || {}, a[3]);
-          }
-        });
-        garder();
-        return Promise.resolve();
-      }
+      ecrireCatalogue: function (texte) { memoire.catalogue = texte; garder(); return Promise.resolve(); }
     };
   }
 
@@ -348,8 +340,21 @@
 
   // ── Appliquer ce thème au document ────────────────────────────────────────────────────────────────
 
+  /** Ce que l'aperçu redresse (texte ou couleur trop proche du fond), mode par mode : à dire AVANT d'écrire, des deux côtés. */
+  function lisibiliteDe(doc) {
+    var l = [];
+    A.modesDisponibles(doc).forEach(function (m) {
+      A.themeVars(doc, m).remarques.forEach(function (r) { var t = (m === 'sombre' ? 'En sombre : ' : '') + r; if (l.indexOf(t) === -1) l.push(t); });
+    });
+    return l;
+  }
+
+  /** La page est-elle HORS de Grist ? Alors le thème se garde sur l'appareil (clé du visiteur) ; dans Grist, jamais. */
+  function surAppareil() { return !!(S.magasin && S.magasin.cible === 'appareil'); }
+
   /** Ce que le document dit aujourd'hui, avec la règle de lecture de tous les lecteurs. */
   function afficherActifDoc() {
+    if (surAppareil()) return afficherActifAppareil();
     return S.magasin.lireThemeDocument().then(function (lignes) {
       var r = G.relire(lignes);
       var phrases = {
@@ -379,6 +384,7 @@
 
   /** Montre ce qui va changer et ne fait RIEN : l'écriture n'a lieu qu'au clic de confirmation. */
   function ouvrirActivation(sorte) {
+    if (surAppareil()) return ouvrirActivationAppareil(sorte);
     fermerActivation();
     return S.magasin.lireThemeDocument().then(function (lignes) {
       var corps = '';
@@ -416,10 +422,7 @@
               : '<p>Ce document ne porte pas de thème actif pour l’instant.</p>');
           // La lisibilité se dit AVANT d'écrire : ce que l'aperçu redresse (un texte ou une couleur trop proche du fond), mode par mode. Ce n'est pas
           // bloquant, mais un lecteur peut corriger cette couleur, ou refuser le thème, et la personne doit le savoir avant de confirmer.
-          var lisibilite = [];
-          A.modesDisponibles(doc).forEach(function (m) {
-            A.themeVars(doc, m).remarques.forEach(function (r) { var t = (m === 'sombre' ? 'En sombre : ' : '') + r; if (lisibilite.indexOf(t) === -1) lisibilite.push(t); });
-          });
+          var lisibilite = lisibiliteDe(doc);
           corps += liste('Lisibilité à revoir', lisibilite);
           if (lisibilite.length) corps += '<p class="ds__note">Selon le lecteur, cette couleur sera corrigée ou le thème ne sera pas appliqué : mieux vaut corriger le design system.</p>';
           corps += liste('Adapté au format du thème', projete.remarques || []);
@@ -453,6 +456,7 @@
   function confirmerActivation() {
     var a = S.activation;
     if (!a) return;
+    if (a.appareil) return confirmerActivationAppareil();
     var bouton = el('ds-activation-confirmer');
     bouton.disabled = true;
     el('ds-activation-erreur').textContent = '';
@@ -482,6 +486,78 @@
       el('ds-activation-erreur').textContent = (tableCreee ? 'La table Theme_document a été créée, mais le thème n’a pas pu y être inscrit : ' : 'Le document n’a pas été modifié : ')
         + (e && e.message ? e.message : e) + ' (les droits d’écriture du document sont peut-être en cause).';
     });
+  }
+
+  // ── Hors Grist : le thème reste sur cet appareil ──────────────────────────────────────────────────────
+
+  function afficherActifAppareil() {
+    var l = VIS.lire();
+    el('ds-actif-doc').textContent = l ? 'Thème sur cet appareil : « ' + (G.nomDe(l.themedef) || 'sans nom') + ' ».' + (l.source === 'memoire' ? ' (Pour cette page seulement : ce navigateur ne retient rien.)' : '')
+      : 'Aucun thème sur cet appareil.';
+    el('ds-retirer').hidden = !l;
+    return Promise.resolve();
+  }
+
+  /** Montre ce qui va changer et ne fait RIEN : le thème n'est gardé qu'au clic de confirmation. */
+  function ouvrirActivationAppareil(sorte) {
+    fermerActivation();
+    var confirmer = el('ds-activation-confirmer');
+    var a = S.activation = { sorte: sorte, appareil: true, themedef: null };
+    var corps = '';
+    if (sorte === 'retirer') {
+      var actuel = VIS.lire();
+      el('ds-activation-titre').textContent = 'Retirer le thème de cet appareil';
+      if (!actuel) { corps = '<p>Aucun thème n’est gardé sur cet appareil : il n’y a rien à retirer.</p>'; confirmer.hidden = true; }
+      else {
+        corps = '<p>Le thème « ' + esc(G.nomDe(actuel.themedef) || 'sans nom') + ' » ne sera plus gardé sur cet appareil. Les démonstrations de ce site retrouveront leur apparence d’origine.</p>';
+        confirmer.hidden = false; confirmer.textContent = 'Retirer le thème';
+      }
+    } else {
+      var doc = lireDocument();
+      var projete = D.projeterThemeDef(doc);
+      a.themedef = projete.themedef;
+      el('ds-activation-titre').textContent = 'Appliquer ce thème sur cet appareil';
+      var prep = G.preparer({ themedef: projete.themedef, cle: 'visiteur', lignes: [], maintenant: Date.now() });
+      var v = VIS.valider(projete.themedef);
+      corps += '<p>Thème « <strong>' + esc(prep.nom || 'sans nom') + '</strong> ».</p>';
+      if (prep.etat === 'refus' || !v.ok) {
+        var phrases = prep.etat === 'refus' ? prep.phrases : ['Ce thème n’est pas lisible (' + v.erreur + ').'];
+        corps += '<p role="alert"><strong>Ce thème ne peut pas être gardé :</strong></p><ul>' + phrases.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'
+          + '<p class="ds__note">Rien n’a été gardé. Corrigez le design system, puis recommencez.</p>';
+        confirmer.hidden = true;
+      } else {
+        var actuelTheme = VIS.lire();
+        corps += actuelTheme ? '<p>Il remplace le thème actuel de cet appareil, « ' + esc(G.nomDe(actuelTheme.themedef) || 'sans nom') + ' ».</p>' : '<p>Cet appareil ne garde aucun thème pour l’instant.</p>';
+        corps += liste('Lisibilité à revoir', lisibiliteDe(doc));
+        if (lisibiliteDe(doc).length) corps += '<p class="ds__note">Selon le lecteur, cette couleur sera corrigée ou le thème ne sera pas appliqué : mieux vaut corriger le design system.</p>';
+        corps += liste('Adapté au format du thème', projete.remarques || []);
+        corps += '<p class="ds__note">Le thème est gardé dans ce navigateur seulement, pour les démonstrations de ce site. Il n’est enregistré nulle part ailleurs : téléchargez-le pour le garder ou l’utiliser dans un document Grist.</p>';
+        confirmer.hidden = false; confirmer.textContent = 'Garder sur cet appareil';
+      }
+    }
+    el('ds-activation-corps').innerHTML = corps;
+    el('ds-activation').hidden = false;
+    el('ds-activation-titre').focus();
+    return Promise.resolve(a);
+  }
+
+  function confirmerActivationAppareil() {
+    var a = S.activation;
+    if (!a || !a.appareil) return;
+    var texte;
+    if (a.sorte === 'retirer') {
+      VIS.effacer();
+      texte = 'Le thème n’est plus gardé sur cet appareil.';
+    } else {
+      var r = VIS.ecrire(a.themedef);
+      if (!r.ok) { el('ds-activation-erreur').textContent = 'Le thème n’a pas été gardé : ' + (r.erreur || 'illisible') + '.'; return; }
+      texte = r.persiste === false
+        ? 'Appliqué pour cette page seulement : ce navigateur ne retient rien. Téléchargez le thème pour le garder.'
+        : 'Thème gardé sur cet appareil. Les démonstrations de ce site le prendront. Il n’est enregistré nulle part ailleurs : téléchargez-le pour le garder.';
+    }
+    fermerActivation();
+    dire(texte);
+    afficherActifAppareil();
   }
 
   // ── Le catalogue ──────────────────────────────────────────────────────────────────────────────────
@@ -836,7 +912,7 @@
     var doc = lireDocument();
     dire('Enregistrement…');
     enregistrer(doc, S.statut === 'valide' ? 'proposition' : (S.statut === 'proposition' ? 'proposition' : 'brouillon')).then(function () {
-      dire('Brouillon enregistré. Vous pouvez le reprendre à tout moment.');
+      dire(S.magasin.persiste && !S.magasin.persiste() ? 'Brouillon gardé le temps de cette page seulement : ce navigateur ne retient rien. Téléchargez-le pour le garder.' : 'Brouillon enregistré. Vous pouvez le reprendre à tout moment.');
     }, function (e) { dire('Enregistrement impossible : ' + (e && e.message ? e.message : e)); });
   }
 
@@ -917,9 +993,12 @@
     brancher();
     choisirMagasin().then(function (m) {
       S.magasin = m;
-      if (m.nom === 'demo') {
+      if (m.cible === 'appareil') {
         el('ds-mode').hidden = false;
-        el('ds-mode').textContent = 'Mode démonstration : aucun document Grist n’est branché, rien n’est écrit ailleurs que dans cet onglet.';
+        el('ds-mode').textContent = 'Hors de Grist : vos brouillons et votre thème sont gardés sur cet appareil, dans ce navigateur seulement. Téléchargez-les pour les garder ou les mettre dans un document Grist.';
+        el('ds-aide-liste').textContent = 'Chacun est gardé sur cet appareil, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Un brouillon n’est jamais appliqué : seule une personne peut appliquer un thème, d’un geste confirmé, depuis un design system ouvert.';
+        el('ds-activer').textContent = 'Appliquer ce thème sur cet appareil…';
+        el('ds-retirer').textContent = 'Retirer le thème de cet appareil…';
       }
       return m.lireCatalogue().then(function (texte) {
         if (texte) {

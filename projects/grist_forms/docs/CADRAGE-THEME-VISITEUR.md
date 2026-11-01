@@ -68,7 +68,7 @@ son appareil. Dans Grist, le même outil écrit dans le document. Une seule règ
 ## 5. Ordre de réalisation
 
 1. Ce cadrage, le socle `shared/theme-visiteur.js`, ses tests, et les tests transverses (cette étape).
-2. La page design system hors Grist : « Enregistrer / Appliquer sur cet appareil » écrivent par le socle ; en Grist, rien ne change.
+2. **Fait (01/11/2026, non publié).** La page design system hors Grist : « Enregistrer / Appliquer sur cet appareil » écrivent par le socle ; en Grist, rien ne change. Le magasin local n'a plus de fausse table : il garde les brouillons et dit quand le navigateur ne retient rien.
 3. Un thème par défaut et le pont des six variables dans la vitrine (D8), avec test d'octets identiques sans thème.
 4. Une page « Mes couleurs » en langage courant (niveau 0).
 5. Le branchement des démonstrations, une à une, après accord de leurs propriétaires (formulaires d'abord).
