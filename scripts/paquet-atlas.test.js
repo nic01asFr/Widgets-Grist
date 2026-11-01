@@ -10,6 +10,8 @@ const { fichiersDuPaquet, construireManifeste, notesDeVersion, versionContrat, e
 
 const RACINE = path.join(__dirname, '..');
 const SOURCE = path.join(RACINE, 'published', 'atlas');
+// le contrat courant, lu dans le pont du composant : le test ne se fige plus sur une version qui change à chaque contrat
+const CONTRAT = /export const VERSION = '([0-9.]+)'/.exec(fs.readFileSync(path.join(SOURCE, 'lib', 'bi', 'pont.js'), 'utf8'))[1];
 
 test('le paquet porte la page maigre, l\'application, le client et les dépendances, sans la vitrine ni les démonstrations', () => {
   const f = fichiersDuPaquet();
@@ -23,7 +25,7 @@ test('le paquet porte la page maigre, l\'application, le client et les dépendan
 test('le manifeste dit la version, le contrat, le client et son empreinte, et l\'empreinte de chaque fichier', () => {
   const m = construireManifeste({ commit: 'abc1234', genere: '2026-10-25T00:00:00.000Z' });
   const pkg = JSON.parse(fs.readFileSync(path.join(SOURCE, 'package.json'), 'utf8'));
-  assert.equal(m.nom, 'atlas-web'); assert.equal(m.version, pkg.version); assert.equal(m.contrat, '0.3'); assert.equal(m.commit, 'abc1234');
+  assert.equal(m.nom, 'atlas-web'); assert.equal(m.version, pkg.version); assert.equal(m.contrat, CONTRAT); assert.equal(m.commit, 'abc1234');
   assert.equal(m.client.fichier, 'lib/bi/client-hote.js'); assert.ok(Number.isInteger(m.client.versionClient));
   const attendu = 'sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(SOURCE, 'lib/bi/client-hote.js'))).digest('base64');
   assert.equal(m.client.empreinte, attendu);
@@ -44,7 +46,7 @@ test('les notes de version sont celles du journal ; une version inconnue n\'en a
   const pkg = JSON.parse(fs.readFileSync(path.join(SOURCE, 'package.json'), 'utf8'));
   const n = notesDeVersion(pkg.version);
   assert.ok(n && n.startsWith('## ' + pkg.version + ' —') && !/^## \d+\.\d+\.\d+ —/m.test(n.slice(5)), 'une seule section');
-  assert.equal(notesDeVersion('0.0.1'), null); assert.equal(versionContrat(), '0.3');
+  assert.equal(notesDeVersion('0.0.1'), null); assert.equal(versionContrat(), CONTRAT);
 });
 
 test('ecrire : le dossier du paquet (avec PAQUET.json) et les notes de la release', () => {
