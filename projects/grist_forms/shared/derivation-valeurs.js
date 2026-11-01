@@ -2,8 +2,8 @@
  * derivation-valeurs.js — dériver les 26 valeurs d'un ThemeDef depuis ses graines et son mode : COPIE du kit, jamais réécrite ici.
  *
  * Fichier généré mécaniquement à partir de kit/jetons/themedef/lib/derivation-valeurs.mjs (appkit, 01/11/2026) :
- *   source sha256 5d244b105b776831abe2e78d67cbe34660e3e586e66d6e149bcfae3912a3601f
- *   vecteurs sha256 cb88a60a5af292d83640c3ec3ea61a46509b82898d6695f1fd95df83f908f7ae (tests/fixtures/themedef-derivation.vecteurs.json, rejoués par tests/derivation-valeurs.test.js)
+ *   source sha256 a1ab777475df5d76a85b363332e74a3388c6708822df87dee5157447e7ca55a5
+ *   vecteurs sha256 db2027c4e82a96374552236814218984f9951dee784d3d2abcf09783b7413e80 (tests/fixtures/themedef-derivation.vecteurs.json, rejoués par tests/derivation-valeurs.test.js)
  * Seules les lignes `export` sont réécrites. Ne pas le modifier à la main : pour le mettre à jour, recopier le kit et rejouer les vecteurs.
  * Il rend exactement les valeurs du compilateur du kit pour des graines et un mode ; il ne connaît ni les exigences, ni les surcharges, ni le sombre explicite.
  */
@@ -100,7 +100,7 @@
   const ETATS = Object.fromEntries(Object.entries(ETATS_BRUTS).map(([k, [c, ...v]]) => [k, [c, ...v.map((x) => '#' + x)]]));
   const alphaNoir = (a) => 'rg' + 'ba(' + [0, 0, 0, a].join(', ') + ')'; // constantes du contrat pour `ombre` (noir, canal alpha), écrites par calcul : le lint R1 les voit sinon comme des couleurs en dur
   const OMBRE = { clair: alphaNoir(0.35), sombre: alphaNoir(0.6) };
-  const SEUILS = { texte: 4.5, nonTexte: 3, actionAAA: 7, actionDeltaE: 0.12, focus: 3, corpsSombre: 7, profonde: 4.5, paleSombreClarte: 0.27, paleSombreChroma: 0.045 };
+  const SEUILS = { texte: 4.5, nonTexte: 3, actionAAA: 4.5, actionDeltaE: 0.03, actionAAAStricte: 7, actionDeltaEStricte: 0.12, survolPas: 0.06, focus: 3, corpsSombre: 7, profonde: 4.5, paleSombreClarte: 0.27, paleSombreChroma: 0.045 };
   /* les 22 portes de kit-theme/0.1 : [premier plan, arrière-plan, seuil] */
   const PAIRES = [
     ['texte', 'fond', 4.5], ['texte', 'surface', 4.5], ['texte-2', 'fond', 4.5], ['texte-2', 'surface', 4.5], ['accent', 'fond', 4.5], ['accent', 'surface', 4.5],
@@ -143,10 +143,11 @@
     for (let L = c.L; L < 0.99; L += 0.0025) { const h = depuisOklch(L, c.C, c.h); if (passe(h)) return h; }
     return M.extremeClaire;
   }
-  function deriverSurvol(fond, texte, moyenne) {
-    if (moyenne !== fond && contraste(texte, moyenne) >= SEUILS.texte) return moyenne;
-    const c = versOklch(fond), sens = luminance(texte) > luminance(fond) ? -1 : 1;
-    for (let pas = 0.04; pas <= 0.3; pas += 0.02) {
+  function deriverSurvol(fond, texte, moyenne, pasMin = 0) {
+    const c = versOklch(fond);
+    if (moyenne !== fond && contraste(texte, moyenne) >= SEUILS.texte && (!pasMin || Math.abs(versOklch(moyenne).L - c.L) >= pasMin)) return moyenne;
+    const sens = luminance(texte) > luminance(fond) ? -1 : 1;
+    for (let pas = Math.max(0.04, pasMin); pas <= 0.3; pas += 0.02) {
       const h = depuisOklch(Math.min(0.98, Math.max(0.05, c.L + sens * pas)), c.C, c.h);
       if (h !== fond && contraste(texte, h) >= SEUILS.texte) return h;
     }
@@ -158,7 +159,9 @@
     const texteDe = (fond) => meilleurTexteSur(fond, M.extremeClaire, M.extremeSombre);
     const tx = texteDe(principale);
     if (contraste(tx, principale) >= SEUILS.actionAAA && dEtats(principale) >= SEUILS.actionDeltaE) {
-      return { fond: principale, texte: tx, contour: profonde, survol: deriverSurvol(principale, tx, moyenne), deltaEMin: dEtats(principale) };
+      // le décalage de survol ne vaut que pour une identité que la porte stricte du noyau (7:1, ΔE 0,12) aurait refusée
+      const stricte = contraste(tx, principale) >= SEUILS.actionAAAStricte && dEtats(principale) >= SEUILS.actionDeltaEStricte;
+      return { fond: principale, texte: tx, contour: profonde, survol: deriverSurvol(principale, tx, moyenne, stricte ? 0 : SEUILS.survolPas), deltaEMin: dEtats(principale) };
     }
     const txr = texteDe(repli.fond);
     if (dEtats(repli.fond) >= SEUILS.actionDeltaE) return { fond: repli.fond, texte: txr, contour: repli.fond, survol: deriverSurvol(repli.fond, txr, repli.survol), deltaEMin: dEtats(repli.fond) };
