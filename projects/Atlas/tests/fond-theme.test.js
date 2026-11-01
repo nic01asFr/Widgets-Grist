@@ -85,3 +85,8 @@ test('application : le fond Thème est le défaut, le thème de l\'instance et d
   assert.match(app, /_charteDuFond = theme\.charte;/);
   assert.match(app, /setBasemapLayersVisibility\('symbol', vis\);\s*\n\s*appliquerFondTheme\(\);/);
 });
+
+test('le composant BI garde le fond Liberty d origine : le fond Thème est celui de l application, pas de la carte d un hôte', () => {
+  const i = app.indexOf('async function demarrerBi()');
+  assert.ok(i > 0); assert.match(app.slice(i, i + 900), /STATE\.settings\.basemap = 'liberty';/);
+});

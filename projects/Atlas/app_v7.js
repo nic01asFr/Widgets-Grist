@@ -18458,6 +18458,8 @@ async function demarrer() {
  */
 async function demarrerBi() {
     CONFIG.viewMode = true;
+    // Le composant garde le fond d'Atlas d'origine (Liberty) : l'hôte le règle lui-même par `setFond`, et le fond « Thème » (celui d'une application ouverte seule ou en widget) ne change pas la carte d'une page qui l'embarque.
+    STATE.settings.basemap = 'liberty';
     // Profil complet : l'interface et la 3D de l'application restent (le pont s'y attache) ; le composant nu masque l'interface et passe à plat.
     if (!PROFIL_COMPLET) {
         document.body.classList.add('mode-bi');
