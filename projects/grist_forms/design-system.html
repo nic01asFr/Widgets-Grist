@@ -100,7 +100,7 @@
 
   <section class="ds__carte" id="ds-liste" aria-labelledby="ds-liste-titre">
     <h2 id="ds-liste-titre">Vos design systems</h2>
-    <p class="ds__note">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Seule une personne peut le rendre actif, ailleurs.</p>
+    <p class="ds__note">Chacun est enregistré dans le document, en brouillon d’abord. Un brouillon s’enregistre à tout moment, même incomplet. Un brouillon n’est jamais actif : seule une personne peut appliquer un thème au document, d’un geste confirmé, depuis un design system ouvert.</p>
     <ul class="ds__liste" id="ds-lignes"></ul>
     <div class="ds__depot" id="ds-depot">
       <p><strong>Des fichiers à ouvrir ?</strong> Déposez-les sur cette page, ou choisissez-les.</p>
@@ -149,6 +149,20 @@
         <button type="button" class="fr-btn fr-btn--secondary" id="ds-dl-doc">Télécharger le design system</button>
         <button type="button" class="fr-btn fr-btn--secondary" id="ds-dl-td">Télécharger le ThemeDef</button>
       </div>
+      <div class="ds__barre" style="margin-top:0.5rem">
+        <button type="button" class="fr-btn" id="ds-activer">Appliquer ce thème au document…</button>
+        <button type="button" class="fr-btn fr-btn--tertiary" id="ds-retirer" hidden>Retirer le thème du document…</button>
+        <span class="ds__note" id="ds-actif-doc"></span>
+      </div>
+      <section class="ds__carte" id="ds-activation" aria-labelledby="ds-activation-titre" hidden style="margin-top:0.75rem">
+        <h2 id="ds-activation-titre" tabindex="-1">Appliquer ce thème au document</h2>
+        <div id="ds-activation-corps"></div>
+        <p class="ds__note" id="ds-activation-erreur" role="alert" style="color:var(--kit-alerte, #ce0500)"></p>
+        <div class="ds__barre" style="margin-top:0.5rem">
+          <button type="button" class="fr-btn" id="ds-activation-confirmer">Appliquer</button>
+          <button type="button" class="fr-btn fr-btn--secondary" id="ds-activation-annuler">Annuler</button>
+        </div>
+      </section>
     </div>
     <div class="ds__grille">
       <div class="ds__formulaire" id="ds-formulaire"></div>
@@ -169,7 +183,7 @@
         </div>
         <div class="ds__carte">
           <h2>Le thème qui en découle</h2>
-          <p class="ds__note">Un ThemeDef 1.0 : le nom, les graines de couleur, le mode sombre et les seuils. Il n’est pas écrit dans le document : l’activation relève de l’éditeur d’apparence.</p>
+          <p class="ds__note">Un ThemeDef 1.0 : le nom, les graines de couleur, le mode sombre et les seuils. Il n’est écrit dans le document que par le geste « Appliquer ce thème au document », que vous confirmez.</p>
           <pre class="ds__json" id="ds-themedef"></pre>
           <p class="ds__note" id="ds-themedef-remarques"></p>
           <button type="button" class="fr-btn fr-btn--secondary" id="ds-copier">Copier le ThemeDef</button>
@@ -193,6 +207,8 @@
 <script src="runtime/engine.js"></script>
 <script src="shared/design-system.js"></script>
 <script src="shared/themedef.js"></script>
+<script src="shared/activation.js"></script>
+<script src="shared/activation-geste.js"></script>
 <script src="shared/design-system-apercu.js"></script>
 <script>
 /**
@@ -202,14 +218,17 @@
  * rejoue les règles. Cette page ne fait que relier : la liste des design systems du document, le formulaire du niveau
  * choisi, un brouillon qui s'enregistre à tout moment, une proposition qui passe les règles.
  *
- * > **Un seul écrivain.** La page écrit dans `Design_system`, avec `actif` faux. Elle n'active jamais : c'est le geste d'une
- * > personne, avec l'éditeur d'apparence du kit. Elle n'écrit pas non plus dans `Theme_document`.
+ * > **Deux tables, deux gestes.** Le brouillon s'écrit dans `Design_system`, avec `actif` faux, à tout moment. `Theme_document` ne reçoit
+ * > qu'UN geste, confirmé par une personne (« Appliquer ce thème au document ») : un seul lot d'actions, produit par la fonction
+ * > commune du kit (`shared/activation.js`, copie de `lotActivation`), sans jamais réécrire la bascule ici. La table n'est créée
+ * > qu'après une confirmation qui le dit ; un thème que le validateur refuse n'ouvre aucune action ; le résultat est relu après coup.
  */
 (function () {
   'use strict';
   var D = window.FormDesignSystem;
   var A = window.FormDesignSystemApercu;
   var T = window.FormTheme;
+  var G = window.FormActivationGeste;
   var E = window.FormEngine;
   var TABLE_CATALOGUE = 'Design_system_catalogue';
   var TAILLE_CATALOGUE_MAX = 400 * 1024;
@@ -253,6 +272,12 @@
       lister: function () {
         return tables().then(function (ts) { return ts.indexOf(D.TABLE) === -1 ? [] : api.fetchTable(D.TABLE).then(lignesDe); });
       },
+      // Le thème du document : lu à part, et écrit par UN geste confirmé (la table n'est créée que sur demande explicite).
+      lireThemeDocument: function () {
+        return tables().then(function (ts) { return ts.indexOf(G.TABLE) === -1 ? null : api.fetchTable(G.TABLE).then(lignesDe); });
+      },
+      creerThemeDocument: function () { return creerSiAbsente(G.TABLE, G.COLONNES); },
+      appliquerLot: function (actions) { return api.applyUserActions(actions); },
       enregistrer: function (ligne, id) {
         return creerSiAbsente(D.TABLE, D.COLONNES).then(function () {
           return api.applyUserActions([id ? ['UpdateRecord', D.TABLE, id, ligne] : ['AddRecord', D.TABLE, null, ligne]]);
@@ -278,7 +303,7 @@
 
   function magasinLocal() {
     var cle = 'formbuilder:design-system:demo';
-    var memoire = { lignes: [], catalogue: null, suivant: 1 };
+    var memoire = { lignes: [], catalogue: null, suivant: 1, themeDocument: null };
     try { var brut = window.localStorage.getItem(cle); if (brut) memoire = JSON.parse(brut); } catch (e) { /* mémoire seule */ }
     function garder() { try { window.localStorage.setItem(cle, JSON.stringify(memoire)); } catch (e) { /* tant pis */ } }
     return {
@@ -291,7 +316,23 @@
         return Promise.resolve(id);
       },
       lireCatalogue: function () { return Promise.resolve(memoire.catalogue); },
-      ecrireCatalogue: function (texte) { memoire.catalogue = texte; garder(); return Promise.resolve(); }
+      ecrireCatalogue: function (texte) { memoire.catalogue = texte; garder(); return Promise.resolve(); },
+      // Le thème du document, en démonstration : une table fictive gardée dans l'onglet, avec les mêmes gestes qu'un vrai document.
+      lireThemeDocument: function () { return Promise.resolve(memoire.themeDocument ? memoire.themeDocument.map(function (l) { return Object.assign({}, l); }) : null); },
+      creerThemeDocument: function () { if (!memoire.themeDocument) { memoire.themeDocument = []; garder(); } return Promise.resolve(); },
+      appliquerLot: function (actions) {
+        if (!memoire.themeDocument) return Promise.reject(new Error('La table Theme_document n’existe pas.'));
+        actions.forEach(function (a) {
+          if (a[0] === 'AddRecord') {
+            var id = memoire.themeDocument.reduce(function (m, l) { return Math.max(m, l.id); }, 0) + 1;
+            memoire.themeDocument.push(Object.assign({ id: id }, a[3]));
+          } else if (a[0] === 'UpdateRecord') {
+            Object.assign(memoire.themeDocument.filter(function (l) { return l.id === a[2]; })[0] || {}, a[3]);
+          }
+        });
+        garder();
+        return Promise.resolve();
+      }
     };
   }
 
@@ -303,6 +344,130 @@
       return Promise.resolve(g.docApi.listTables()).then(function () { return m; }, function () { return magasinLocal(); });
     }
     return Promise.resolve(magasinLocal());
+  }
+
+  // ── Appliquer ce thème au document ────────────────────────────────────────────────────────────────
+
+  /** Ce que le document dit aujourd'hui, avec la règle de lecture de tous les lecteurs. */
+  function afficherActifDoc() {
+    return S.magasin.lireThemeDocument().then(function (lignes) {
+      var r = G.relire(lignes);
+      var phrases = {
+        'applique': 'Thème actif du document : « ' + (r.nom || r.cle) + ' ».',
+        'plusieurs-actifs': 'Plusieurs thèmes sont actifs dans ce document : aucun n’est appliqué.',
+        'invalide': 'Le thème actif du document n’est pas lisible : aucun n’est appliqué.',
+        'aucun-actif': 'Ce document ne porte pas de thème actif.'
+      };
+      el('ds-actif-doc').textContent = phrases[r.raison] || '';
+      el('ds-retirer').hidden = !(lignes && lignes.some(function (l) { return l && l.actif === true; }));
+    }, function () { el('ds-actif-doc').textContent = ''; el('ds-retirer').hidden = true; });
+  }
+
+  function liste(titre, items) {
+    return items.length ? '<p class="ds__note"><strong>' + esc(titre) + '</strong></p><ul>' + items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>' : '';
+  }
+
+  function fermerActivation() {
+    S.activation = null;
+    el('ds-activation').hidden = true;
+    el('ds-activation-erreur').textContent = '';
+    el('ds-activation-confirmer').disabled = false;
+  }
+
+  /** Montre ce qui va changer et ne fait RIEN : l'écriture n'a lieu qu'au clic de confirmation. */
+  function ouvrirActivation(sorte) {
+    fermerActivation();
+    return S.magasin.lireThemeDocument().then(function (lignes) {
+      var corps = '';
+      var confirmer = el('ds-activation-confirmer');
+      var a = S.activation = { sorte: sorte, lignes: lignes, prep: null, themedef: null };
+      if (sorte === 'retirer') {
+        var r = G.retrait(lignes);
+        el('ds-activation-titre').textContent = 'Retirer le thème du document';
+        if (!r.retire.length) { corps = '<p>Ce document ne porte pas de thème actif : il n’y a rien à retirer.</p>'; confirmer.hidden = true; }
+        else {
+          corps = '<p>Le thème « ' + esc(r.retire.map(function (x) { return x.nom || x.cle; }).join('», «')) + ' » ne sera plus actif. Les widgets du document qui lisent <code>Theme_document</code> retrouveront leur apparence d’origine à leur prochaine ouverture.</p>'
+            + '<p class="ds__note">La ligne n’est pas supprimée : elle reste dans la table, désactivée.</p>';
+          confirmer.hidden = false; confirmer.textContent = 'Retirer le thème';
+        }
+      } else {
+        var doc = lireDocument();
+        var projete = D.projeterThemeDef(doc);
+        // La clé de la ligne est l'identifiant du design system (court, en minuscules) ; à défaut, le nom du thème.
+        var identifiant = S.courant && S.courant.cle ? S.courant.cle : (doc.identite && typeof doc.identite.id === 'string' ? doc.identite.id : '');
+        var cle = G.cleDe(identifiant || G.nomDe(projete.themedef));
+        a.themedef = projete.themedef;
+        var prep = a.prep = G.preparer({ themedef: projete.themedef, cle: cle, lignes: lignes, maintenant: Date.now() });
+        el('ds-activation-titre').textContent = 'Appliquer ce thème au document';
+        corps += '<p>Thème « <strong>' + esc(prep.nom || prep.cle) + '</strong> » (ligne <code>' + esc(prep.cle) + '</code>)'
+          + (prep.miseAJour ? ' : cette ligne existe déjà, elle est mise à jour.' : '.') + '</p>';
+        if (prep.etat === 'refus') {
+          corps += '<p role="alert"><strong>Ce thème ne peut pas être appliqué :</strong></p><ul>' + prep.phrases.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'
+            + '<p class="ds__note">Rien n’a été écrit. Corrigez le design system, puis recommencez.</p>';
+          confirmer.hidden = true;
+        } else {
+          corps += prep.remplace.length
+            ? '<p>Il remplace le thème actif « ' + esc(prep.remplace.map(function (x) { return x.nom || x.cle; }).join('», «')) + ' » (désactivé, pas supprimé).</p>'
+            : '<p>Ce document ne porte pas de thème actif pour l’instant.</p>';
+          corps += liste('Rendu plus lisible que prévu', projete.remarques || []);
+          corps += liste('Ce que le format écarte', prep.ecarts);
+          corps += liste('Remarques', prep.avertissements);
+          corps += '<p class="ds__note">Tous les widgets du document qui lisent <code>Theme_document</code> (Form Builder, Atlas…) prendront ce thème à leur prochaine ouverture.</p>';
+          if (prep.etat === 'table-a-creer') {
+            corps += '<p role="status"><strong>La table <code>Theme_document</code> n’existe pas dans ce document.</strong> Confirmer la crée (six colonnes : ' + G.COLONNES.map(function (c) { return esc(c.id); }).join(', ') + '), puis y inscrit ce thème.</p>';
+            confirmer.textContent = 'Créer la table et appliquer le thème';
+          } else {
+            confirmer.textContent = 'Appliquer au document';
+          }
+          confirmer.hidden = false;
+        }
+      }
+      el('ds-activation-corps').innerHTML = corps;
+      el('ds-activation').hidden = false;
+      el('ds-activation-titre').focus();
+    }, function (e) { dire('Le thème du document n’a pas pu être lu : ' + (e && e.message ? e.message : e)); });
+  }
+
+  function phraseVerdict(v, sorte, cle) {
+    if (sorte === 'retirer') return v.raison === 'aucun-actif' ? 'Le document ne porte plus de thème actif.' : 'Relu : le document porte encore un thème actif (' + v.raison + ').';
+    if (v.raison === 'applique' && v.cle === cle) return 'Thème « ' + (v.nom || v.cle) + ' » appliqué au document. Relu : les widgets qui lisent Theme_document le prendront à leur prochaine ouverture.';
+    if (v.raison === 'plusieurs-actifs') return 'Écrit, mais plusieurs thèmes sont actifs (une autre personne a peut-être agi en même temps) : aucun n’est appliqué. Rouvrez le geste pour le refaire.';
+    return 'Écrit, mais relu autrement que prévu (' + v.raison + ') : vérifiez la table Theme_document.';
+  }
+
+  /** Le geste confirmé : un seul lot, relu après coup. Rien n'a été écrit avant ce clic. */
+  function confirmerActivation() {
+    var a = S.activation;
+    if (!a) return;
+    var bouton = el('ds-activation-confirmer');
+    bouton.disabled = true;
+    el('ds-activation-erreur').textContent = '';
+    var tableCreee = false;
+    var suite;
+    var cle = a.prep ? a.prep.cle : null;
+    if (a.sorte === 'retirer') {
+      var r = G.retrait(a.lignes);
+      suite = r.actions.length ? S.magasin.appliquerLot(r.actions) : Promise.resolve();
+    } else {
+      suite = (a.prep.etat === 'table-a-creer'
+        ? S.magasin.creerThemeDocument().then(function () { tableCreee = true; return S.magasin.lireThemeDocument(); })
+        : Promise.resolve(a.lignes)).then(function (lignes) {
+          // Le lot est refait sur ce que la table contient MAINTENANT : ce qu'on a montré peut avoir changé entre-temps.
+          var p2 = G.preparer({ themedef: a.themedef, cle: a.prep.cle, lignes: lignes || [], maintenant: Date.now() });
+          if (p2.etat !== 'pret') throw new Error(p2.phrases.join(' ') || 'ce thème n’est plus applicable');
+          return S.magasin.appliquerLot(p2.actions);
+        });
+    }
+    suite.then(function () { return S.magasin.lireThemeDocument(); }).then(function (lignes) {
+      var texte = phraseVerdict(G.relire(lignes), a.sorte, cle);
+      fermerActivation();
+      dire(texte);
+      return afficherActifDoc();
+    }, function (e) {
+      bouton.disabled = false;
+      el('ds-activation-erreur').textContent = (tableCreee ? 'La table Theme_document a été créée, mais le thème n’a pas pu y être inscrit : ' : 'Le document n’a pas été modifié : ')
+        + (e && e.message ? e.message : e) + ' (les droits d’écriture du document sont peut-être en cause).';
+    });
   }
 
   // ── Le catalogue ──────────────────────────────────────────────────────────────────────────────────
@@ -632,10 +797,12 @@
     remplirNiveaux();
     majStatut();
     monter(D.aplatir(construireNiveau().plan, doc));
+    afficherActifDoc();
     el('ds-edition-titre').focus();
   }
 
   function revenir() {
+    fermerActivation();
     if (S.poignee) { S.poignee.demonter(); S.poignee = null; }
     retirerApparence();
     el('ds-edition').hidden = true;
@@ -710,6 +877,10 @@
     el('ds-appliquer').addEventListener('change', function () { afficherControles(); });
     el('ds-mode-sel').addEventListener('change', function (ev) { S.mode = ev.target.value === 'sombre' ? 'sombre' : 'clair'; afficherControles(); });
     el('ds-dl-doc').addEventListener('click', function () { var doc = lireDocument(); telecharger(nomDeFichier(doc, '.dsdef.json'), JSON.stringify(doc, null, 2)); });
+    el('ds-activer').addEventListener('click', function () { ouvrirActivation('appliquer'); });
+    el('ds-retirer').addEventListener('click', function () { ouvrirActivation('retirer'); });
+    el('ds-activation-confirmer').addEventListener('click', confirmerActivation);
+    el('ds-activation-annuler').addEventListener('click', function () { fermerActivation(); dire(''); });
     el('ds-dl-td').addEventListener('click', function () { var doc = lireDocument(); telecharger(nomDeFichier(doc, '.themedef.json'), JSON.stringify(D.projeterThemeDef(doc).themedef, null, 2)); });
     el('ds-catalogue-ouvrir').addEventListener('click', function () { gererCatalogue('ouvrir'); });
     el('ds-catalogue-garder').addEventListener('click', function () { gererCatalogue('garder'); });
