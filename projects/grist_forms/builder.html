@@ -1335,7 +1335,10 @@ function newFormDef() {
     tableId: '',
     composeMode: 'ensureSchema',
     sections: [newSection(1)],
-    choices: {}
+    choices: {},
+    // Un formulaire NEUF suit le thème du document, sinon celui de Grist. Les formulaires déjà enregistrés ne sont jamais réécrits :
+    // sans `apparence` ils suivent le document seulement, comme avant.
+    apparence: { mode: 'grist' }
   };
 }
 
@@ -2050,7 +2053,28 @@ function themeDuFormulaire() {
   const ap = T.apparenceDe(S.currentDef);
   if (ap.mode === 'aucune') return null;
   if (ap.mode === 'formulaire') return T.themeFormulaire(S.currentDef);
-  return S.themeDocument && S.themeDocument.theme ? S.themeDocument : null;
+  if (S.themeDocument && S.themeDocument.theme) return S.themeDocument;
+  return ap.mode === 'grist' ? themeDeGrist() : null;
+}
+
+/**
+ * Le thème de Grist (mode et couleur d'action de la personne), quand le compositeur est ouvert dans Grist ; `null` sinon. Il sert de repli
+ * à l'outil et aux formulaires qui le demandent (mode « grist »), jamais avant le thème du document.
+ */
+function themeDeGrist() {
+  const T = window.FormThemeDef;
+  if (!T || !S.hote) return null;
+  const t = T.themeHote(S.hote, { mode: T.modeSysteme() });
+  return t ? { theme: t.vars, raison: 'hote', mode: t.mode, nom: t.nom, ligne: null, remarques: t.remarques, hote: true } : null;
+}
+
+/** Lit ce que Grist annonce et le suit à chaud : si la personne change de thème dans Grist, l'outil et les aperçus suivent sans recharger. */
+function suivreGrist() {
+  const T = window.FormThemeDef;
+  if (!T || S.arretHote) return;
+  const lire = function () { try { S.hote = T.lireHote(); } catch (e) { S.hote = null; } };
+  lire();
+  S.arretHote = T.suivreHote(function () { lire(); habillerOutil(); habillerApercus(); });
 }
 
 /**
@@ -2077,6 +2101,7 @@ function habillerOutil() {
   let vars = null;
   if (o.essai) vars = T.resoudre(o.essai, T.modeSysteme()).vars;
   else if (o.suit && S.themeDocument && S.themeDocument.theme) vars = S.themeDocument.theme;
+  else if (o.suit) { const g = themeDeGrist(); if (g) vars = g.theme; }
   if (vars) o.noms = T.appliquer(document.documentElement, vars);
 }
 
@@ -2116,11 +2141,12 @@ function outilHtml() {
   const o = etatOutil();
   const doc = S.themeDocument && S.themeDocument.theme;
   const nom = doc ? (S.themeDocument.nom || S.themeDocument.ligne || 'sans nom') : '';
+  const grist = doc ? null : themeDeGrist();
   return `
     <p class="app-menu__titre">L’apparence de l’outil</p>
     <div class="app-menu__lignes">
-      <label class="app-menu__case"><input type="checkbox" ${o.suit ? 'checked' : ''} onchange="App.outilSuit(this.checked)"> Suivre le thème du document</label>
-      <p class="app-menu__note">${doc ? 'Thème actif : « ' + esc(nom) + ' ».' : 'Ce document ne porte pas de thème actif.'}</p>
+      <label class="app-menu__case"><input type="checkbox" ${o.suit ? 'checked' : ''} onchange="App.outilSuit(this.checked)"> Suivre le thème du document, sinon celui de Grist</label>
+      <p class="app-menu__note">${doc ? 'Thème actif : « ' + esc(nom) + ' ».' : (grist ? 'Ce document ne porte pas de thème actif : l’outil suit le thème de Grist (« ' + esc(grist.nom) + ' »).' : 'Ce document ne porte pas de thème actif.')}</p>
       <button class="app-menu__action" onclick="App.outilEssayer()">Essayer un thème (fichier ThemeDef)…</button>
       ${o.essai ? '<button class="app-menu__action" onclick="App.outilEssayer(null)">Retirer l’essai (' + esc(typeof o.essai.nom === 'string' ? o.essai.nom : 'sans nom') + ')</button>' : ''}
     </div>`;
@@ -2157,6 +2183,7 @@ async function init() {
     S.isDemo = true;
     loadDemoData();
   }
+  suivreGrist();
   habillerOutil();
   render();
 }
@@ -3986,7 +4013,8 @@ function renderApparence(def) {
   return `
       <p class="bloc__intitule">L’apparence <span>les couleurs que le public voit</span></p>
       <div class="apparence" role="radiogroup" aria-label="Apparence du formulaire">
-        ${choix('document', 'Celle du document', nomDoc ? 'Thème actif : « ' + esc(nomDoc) + ' ».' : 'Ce document ne porte pas de thème actif : le formulaire garde son apparence d’origine.')}
+        ${choix('grist', 'Celle du document, sinon celle de Grist', nomDoc ? 'Thème actif du document : « ' + esc(nomDoc) + ' ».' : (themeDeGrist() ? 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend celui de la personne (« ' + esc(themeDeGrist().nom) + ' »), clair ou sombre, avec la couleur des boutons de l’instance.' : 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend le thème de la personne, clair ou sombre.'))}
+        ${choix('document', 'Celle du document seulement', nomDoc ? 'Thème actif : « ' + esc(nomDoc) + ' ».' : 'Ce document ne porte pas de thème actif : le formulaire garde son apparence d’origine.')}
         ${choix('formulaire', 'Un thème pour ce formulaire', 'Un ThemeDef 1.0 déposé ou collé ici, qui part avec le formulaire.')}
         ${choix('aucune', 'L’apparence d’origine', 'Quoi que dise le document.')}
       </div>
@@ -4005,6 +4033,7 @@ function onApparenceMode(mode) {
   const def = S.currentDef;
   S._apparenceErreur = null;
   if (mode === 'document') delete def.apparence;
+  else if (mode === 'grist') def.apparence = { mode: 'grist' };
   else if (mode === 'aucune') def.apparence = { mode: 'aucune' };
   else def.apparence = Object.assign({ mode: 'formulaire' }, def.apparence && def.apparence.themedef ? { themedef: def.apparence.themedef } : {});
   if (mode !== 'formulaire') S._apparenceTexte = null;
@@ -6224,7 +6253,7 @@ async function externeGenerer() {
     // dans la page avec le formulaire (une copie du ThemeDef, jamais une adresse).
     let defExt = def;
     const T = window.FormThemeDef;
-    if (T && T.apparenceDe(def).mode === 'document' && S.themeDocument && S.themeDocument.themedef) {
+    if (T && ['document', 'grist'].indexOf(T.apparenceDe(def).mode) !== -1 && S.themeDocument && S.themeDocument.themedef) {
       defExt = Object.assign({}, def, { apparence: { mode: 'formulaire', themedef: S.themeDocument.themedef } });
     }
     x.page = E.buildExternalDocument(defExt,

@@ -178,11 +178,12 @@
     "apparence": {
       "type": "object",
       "additionalProperties": false,
-      "description": "L'apparence du formulaire. `mode` : `document` (defaut : le theme actif du document, table Theme_document), `formulaire` (le ThemeDef 1.0 donne dans `themedef`, fige avec le formulaire : il s'applique aussi hors de Grist) ou `aucune` (l'apparence d'origine, quoi que dise le document). Un `themedef` illisible n'empeche rien : le formulaire retombe sur le document. La personne passe avant le theme (contraste force ou renforce).",
+      "description": "L'apparence du formulaire. `mode` : `document` (defaut : le theme actif du document, table Theme_document), `grist` (le theme actif du document, sinon celui de Grist : le mode et la couleur d'action de la personne, dans Grist seulement), `formulaire` (le ThemeDef 1.0 donne dans `themedef`, fige avec le formulaire : il s'applique aussi hors de Grist) ou `aucune` (l'apparence d'origine, quoi que dise le document). Un `themedef` illisible n'empeche rien : le formulaire retombe sur le document. La personne passe avant le theme (contraste force ou renforce).",
       "properties": {
         "mode": {
           "enum": [
             "document",
+            "grist",
             "formulaire",
             "aucune"
           ]

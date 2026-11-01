@@ -211,10 +211,8 @@
       '    function fin() { if (fini) return; fini = true; suite(); }',
       '    setTimeout(fin, 1500);',
       '    try {',
-      '      T.charger(window.grist && window.grist.docApi, { def: window.__FORM_DEF__ }).then(function (r) {',
-      '        if (r && r.theme && !fini) T.appliquer(document.documentElement, r.theme);',
-      '        fin();',
-      '      }, fin);',
+      // `habiller` pose le thème, et dans le mode « grist » suit le thème de Grist à chaud (la personne peut en changer dans le même document).
+      '      T.habiller(document.documentElement, window.grist && window.grist.docApi, { def: window.__FORM_DEF__ }).then(fin, fin);',
       '    } catch (eTheme) { fin(); }',
       '  }',
       '  function boot() {',

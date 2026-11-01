@@ -184,3 +184,26 @@ describe('Page autonome : le thème donné avec le formulaire', () => {
     assert.match(html, /if \(!T\) \{ monter\(\); return; \}/);
   });
 });
+
+describe('Formulaire publié : le thème de Grist en repli', () => {
+  it('l\'amorce passe par habiller, qui pose le thème et suit celui de Grist à chaud', () => {
+    const Publish = require('../shared/publish.js');
+    const source = require('fs').readFileSync(require.resolve('../shared/publish.js'), 'utf8');
+    assert.ok(Publish);
+    assert.match(source, /T\.habiller\(document\.documentElement, window\.grist && window\.grist\.docApi, \{ def: window\.__FORM_DEF__ \}\)/);
+    assert.ok(!/T\.charger\(window\.grist/.test(source), 'l\'ancien appel direct est remplacé');
+  });
+
+  it('mode grist sans thème annoncé et sans document : rien n\'est posé, le formulaire se monte', async () => {
+    const r = executer(bundleTheme, gristAvec([], tableTheme(false), []), { mode: 'grist' });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.deepEqual(r.journal, ['mount']);
+  });
+
+  it('mode grist avec un thème actif dans le document : le thème du document est posé avant le montage', async () => {
+    const r = executer(bundleTheme, gristAvec(['Theme_document'], tableTheme(true), []), { mode: 'grist' });
+    await new Promise((resolu) => setTimeout(resolu, 30));
+    assert.ok(r.posees['--kit-action']);
+    assert.ok(r.journal.indexOf('pose') < r.journal.indexOf('mount'));
+  });
+});

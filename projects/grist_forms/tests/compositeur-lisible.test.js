@@ -124,3 +124,45 @@ describe('Compositeur : l\'outil lui-même prend le thème', () => {
     assert.ok(!/--kit-[a-z-]+\s*:/.test(style));
   });
 });
+
+describe('Compositeur : le thème de Grist en repli', () => {
+  it('un formulaire NEUF suit le document puis Grist ; un formulaire enregistré n\'est jamais réécrit', () => {
+    const neuf = BUILDER.slice(BUILDER.indexOf('function newFormDef()'), BUILDER.indexOf('function ensureAudience('));
+    assert.match(neuf, /apparence: \{ mode: 'grist' \}/);
+    const ouvrir = BUILDER.slice(BUILDER.indexOf('function editForm('), BUILDER.indexOf('S.currentRowId = id;', BUILDER.indexOf('function editForm(')));
+    assert.ok(!/apparence/.test(ouvrir), 'rouvrir un formulaire ne touche pas à son apparence');
+  });
+
+  it('l\'ordre : thème donné au formulaire, puis document, puis Grist, puis origine', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function themeDuFormulaire()'), BUILDER.indexOf('function themeDeGrist()'));
+    assert.ok(corps.indexOf("'aucune'") < corps.indexOf("'formulaire'"));
+    assert.ok(corps.indexOf("'formulaire'") < corps.indexOf('S.themeDocument'));
+    assert.ok(corps.indexOf('S.themeDocument') < corps.indexOf('themeDeGrist()'));
+    assert.ok(/ap\.mode === 'grist'/.test(corps), 'le repli sur Grist n\'est demandé que par le mode grist');
+  });
+
+  it('l\'outil : essai, document, puis Grist ; la personne passe avant tout', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function habillerOutil()'), BUILDER.indexOf('function outilSuit('));
+    assert.ok(corps.indexOf('T.personneImpose()') < corps.indexOf('o.essai'));
+    assert.ok(corps.indexOf('o.essai') < corps.indexOf('S.themeDocument'));
+    assert.ok(corps.indexOf('S.themeDocument') < corps.indexOf('themeDeGrist()'));
+  });
+
+  it('le thème de Grist est lu au démarrage et suivi à chaud, une seule fois', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function suivreGrist()'), BUILDER.indexOf('/**', BUILDER.indexOf('function suivreGrist()')));
+    assert.match(corps, /if \(!T \|\| S\.arretHote\) return/);
+    assert.match(corps, /T\.suivreHote\(/);
+    assert.ok(corps.includes('habillerOutil()') && corps.includes('habillerApercus()'));
+    assert.ok(BUILDER.indexOf('suivreGrist();\n  habillerOutil();') > -1, 'au démarrage, avant d\'habiller l\'outil');
+  });
+
+  it('quatre choix d\'apparence, « Celle du document, sinon celle de Grist » en tête', () => {
+    for (const mode of ['grist', 'document', 'formulaire', 'aucune']) assert.ok(BUILDER.includes("choix('" + mode + "'"), mode);
+    assert.ok(BUILDER.indexOf("choix('grist'") < BUILDER.indexOf("choix('document'"));
+    assert.match(BUILDER, /else if \(mode === 'grist'\) def\.apparence = \{ mode: 'grist' \}/);
+  });
+
+  it('la page autonome fige le thème du document aussi pour le mode grist (pas d\'hôte hors de Grist)', () => {
+    assert.match(BUILDER, /\['document', 'grist'\]\.indexOf\(T\.apparenceDe\(def\)\.mode\) !== -1 && S\.themeDocument/);
+  });
+});

@@ -32,6 +32,7 @@
   var TAILLE_MAX = 16384;
   var PROFONDEUR_MAX = 6;
   var LIGNES_MAX = 50;
+  var ATTENTE_HOTE = 400;
   var CLE_LIGNE = /^[a-z][a-z0-9-]{0,39}$/;
   var HEX = /^#[0-9a-fA-F]{6}$/;
   var CLES = ['fond', 'surface', 'surface-2', 'texte', 'texte-2', 'bord', 'bord-champ', 'accent', 'accent-texte', 'accent-fond',
@@ -354,6 +355,160 @@
   /** La personne passe avant le thème : contraste forcé ou renforcé. */
   function personneImpose() { return mediaVrai('(forced-colors: active)') || mediaVrai('(prefers-contrast: more)'); }
 
+  // ── Le thème de Grist (l'étage « hôte ») ────────────────────────────────────
+
+  /**
+   * Quand une page de widget charge `grist-plugin-api.js`, Grist lui pousse le thème de la personne : l'attribut `data-grist-appearance`
+   * (`light` ou `dark`) et `data-grist-theme` sur <html>, et une feuille `#grist-theme` qui déclare `--grist-theme-<nom>`. Sur une instance
+   * qui a son propre `custom.css` (celle de la DINUM, en palette La Suite), ces variables portent SA palette. Mesuré par le kit en Grist réel
+   * (appkit, lot T5) ; ce lecteur en reprend la lecture et les portes, sans dépendre d'appkit.
+   *
+   * On ne reprend que le MODE et la couleur d'ACTION (fond des boutons principaux) : le reste du thème est dérivé de cette couleur par `deriver`,
+   * avec ses garde-fous de lisibilité. Jamais une couleur dont on n'est pas sûr (voir `lireCouleur`).
+   */
+  var VARIABLES_HOTE = { fond: 'control-primary-bg', texte: 'control-primary-fg', survol: 'control-primary-hover-bg' };
+  var ACTION_ORIGINE = '#000091';
+  var NOMS_COULEURS = { white: '#ffffff', black: '#000000' };
+
+  /**
+   * Une couleur lue de l'hôte vers `#rrggbb` (minuscules), ou `''` : hexadécimal court ou long, `rgb()` / `rgba()` OPAQUES, `white`, `black`.
+   * Une couleur transparente ou d'une forme inconnue est refusée : on ne devine pas ce qui se trouve dessous.
+   */
+  function lireCouleur(brut) {
+    if (typeof brut !== 'string') return '';
+    var t = brut.trim().toLowerCase();
+    if (propre(NOMS_COULEURS, t)) return NOMS_COULEURS[t];
+    if (/^#[0-9a-f]{6}$/.test(t)) return t;
+    if (/^#[0-9a-f]{3}$/.test(t)) return '#' + t[1] + t[1] + t[2] + t[2] + t[3] + t[3];
+    var m = /^rgba?\(\s*(\d{1,3})\s*[ ,]\s*(\d{1,3})\s*[ ,]\s*(\d{1,3})\s*(?:[,/]\s*([0-9.]+%?)\s*)?\)$/.exec(t);
+    if (!m) return '';
+    var c = [Number(m[1]), Number(m[2]), Number(m[3])];
+    if (c.some(function (x) { return x > 255; })) return '';
+    if (m[4] !== undefined) {
+      var a = m[4].charAt(m[4].length - 1) === '%' ? Number(m[4].slice(0, -1)) / 100 : Number(m[4]);
+      if (!(a >= 1)) return '';
+    }
+    return hexDe(c);
+  }
+
+  /** L'apparence annoncée par l'hôte (`light`, `dark`) vers le mode du kit, `null` quand elle est absente ou inconnue. */
+  function lireApparenceHote(brut) {
+    var t = typeof brut === 'string' ? brut.trim().toLowerCase() : '';
+    return t === 'dark' ? 'sombre' : t === 'light' ? 'clair' : null;
+  }
+
+  /** Une variable de l'hôte résolue en couleur : la valeur déclarée, sinon (`var()`, `color-mix()`…) lue telle que le navigateur la calcule. */
+  function couleurHote(doc, fenetre, nom) {
+    var racine = doc.documentElement;
+    var cs = fenetre.getComputedStyle ? fenetre.getComputedStyle(racine) : null;
+    var brut = cs ? String(cs.getPropertyValue('--grist-theme-' + nom) || '').trim() : '';
+    if (!brut) return '';
+    var direct = lireCouleur(brut);
+    if (direct) return direct;
+    try {
+      var sonde = doc.createElement('span');
+      sonde.style.color = 'var(--grist-theme-' + nom + ')';
+      sonde.style.display = 'none';
+      racine.appendChild(sonde);
+      var calcule = fenetre.getComputedStyle(sonde).color;
+      racine.removeChild(sonde);
+      return lireCouleur(calcule);
+    } catch (e) { return ''; }
+  }
+
+  /**
+   * Ce que Grist annonce à ce widget, ou `null` hors de Grist (aucun attribut, aucune variable).
+   * @param {{doc?:Document, fenetre?:Window}} [opts]
+   * @returns {{apparence:string|null, nom:string|null, couleurs:{fond:string, texte:string, survol:string}}|null}
+   */
+  function lireHote(opts) {
+    opts = opts || {};
+    var fenetre = opts.fenetre || (typeof window !== 'undefined' ? window : null);
+    var doc = opts.doc || (typeof document !== 'undefined' ? document : null);
+    if (!fenetre || !doc || !doc.documentElement) return null;
+    var h = doc.documentElement;
+    var apparence = lireApparenceHote(h.getAttribute('data-grist-appearance'));
+    var couleurs = {};
+    Object.keys(VARIABLES_HOTE).forEach(function (role) { couleurs[role] = couleurHote(doc, fenetre, VARIABLES_HOTE[role]); });
+    var nomBrut = h.getAttribute('data-grist-theme');
+    var nom = typeof nomBrut === 'string' && nomBrut.trim() ? nomBrut.trim().slice(0, 60) : null;
+    if (!apparence && !couleurs.fond && !couleurs.texte && !couleurs.survol) return null;
+    return { apparence: apparence, nom: nom, couleurs: couleurs };
+  }
+
+  /**
+   * Le thème qu'on peut tirer de ce que Grist annonce : le mode de l'hôte, et sa couleur d'action quand elle tient les portes.
+   *
+   *   H1  texte d'action sur l'action        >= 4,5:1   (bloquante : `deriver` choisit le texte le plus lisible)
+   *   H2  action sur le fond, la surface et la surface douce >= 4,5:1 (bloquante : sinon la couleur est assombrie ou éclaircie jusqu'à tenir, et on le dit)
+   *   H3  écart avec les couleurs d'état : mesurée par le kit, jamais bloquante ici non plus (les états portent glyphe et libellé)
+   *
+   * Un hôte qui n'annonce que le mode clair ne change rien (l'origine est déjà claire) : `null`. Un hôte sombre sans couleur d'action donne le
+   * thème sombre de l'apparence d'origine (son action bleue), jamais une couleur inventée.
+   *
+   * @param {object|null} hote la sortie de `lireHote`
+   * @param {{mode?:string}} [opts] `mode` : le mode à défaut d'apparence annoncée (le mode de l'hôte prime toujours)
+   * @returns {{vars:Object<string,string>, mode:string, nom:string, remarques:string[], action:string}|null} `vars` : les variables
+   *   `--kit-*`, jugées par le même juge que tout thème
+   */
+  function themeHote(hote, opts) {
+    if (!hote || typeof hote !== 'object') return null;
+    opts = opts || {};
+    var mode = hote.apparence === 'sombre' || hote.apparence === 'clair' ? hote.apparence : (opts.mode === 'sombre' ? 'sombre' : 'clair');
+    var couleurs = hote.couleurs || {};
+    var action = couleurSure(couleurs.fond);
+    if (!action && mode !== 'sombre') return null;
+    var remarques = [];
+    var principal = action || ACTION_ORIGINE;
+    var d = deriver({ principal: principal }, mode);
+    var fonds = [d.vars.fond, d.vars.surface, d.vars['surface-2']];
+    var pire = fonds.reduce(function (p, f) { return rapport(d.vars.action, f) < rapport(d.vars.action, p) ? f : p; }, fonds[0]);
+    if (rapport(d.vars.action, pire) < 4.5) {
+      var vers = clair(d.vars.surface) ? '#000000' : '#ffffff';
+      principal = redresser(principal, pire, 4.5, vers);
+      d = deriver({ principal: principal }, mode);
+      remarques.push('La couleur des boutons de Grist ne se détachait pas assez du fond (4,5:1 demandés) : elle est ' + (vers === '#000000' ? 'assombrie' : 'éclaircie') + ' pour rester lisible.');
+    }
+    d.remarques.forEach(function (r) { remarques.push(r); });
+    return { vars: juger(d.vars), mode: mode, nom: hote.nom || 'Grist', remarques: remarques, action: action || '' };
+  }
+
+  function signatureHote(opts) { try { return JSON.stringify(lireHote(opts)); } catch (e) { return 'null'; } }
+
+  /**
+   * Appelle `rappel` quand ce que Grist annonce CHANGE (le thème se change à chaud, dans le même document). On compare les lectures : poser
+   * nos propres variables sur <html> ne rappelle donc jamais personne. Rend la fonction qui arrête l'écoute.
+   */
+  function suivreHote(rappel, opts) {
+    opts = opts || {};
+    var fenetre = opts.fenetre || (typeof window !== 'undefined' ? window : null);
+    var doc = opts.doc || (typeof document !== 'undefined' ? document : null);
+    if (!fenetre || !doc || typeof fenetre.MutationObserver !== 'function' || !doc.documentElement) return function () {};
+    var derniere = signatureHote(opts);
+    var o = new fenetre.MutationObserver(function () {
+      var s = signatureHote(opts);
+      if (s === derniere) return;
+      derniere = s;
+      rappel();
+    });
+    o.observe(doc.documentElement, { attributes: true, attributeFilter: ['data-grist-appearance', 'data-grist-theme', 'style'] });
+    if (doc.head) o.observe(doc.head, { childList: true, subtree: true, characterData: true });
+    return function () { o.disconnect(); };
+  }
+
+  /** La lecture de l'hôte, quand elle est déjà là, sinon au plus `ms` millisecondes d'attente (Grist l'envoie après `grist.ready`). `null` s'il n'en vient pas. */
+  function attendreHote(opts, ms) {
+    var d = lireHote(opts);
+    if (d || !(ms > 0)) return Promise.resolve(d);
+    return new Promise(function (resolu) {
+      var fini = false;
+      var arret = function () {};
+      function fin(valeur) { if (fini) return; fini = true; arret(); resolu(valeur); }
+      arret = suivreHote(function () { fin(lireHote(opts)); }, opts);
+      setTimeout(function () { fin(lireHote(opts)); }, ms);
+    });
+  }
+
   function vide(raison) { return { theme: null, raison: raison, avertissements: [], ligne: null }; }
 
   /**
@@ -361,6 +516,7 @@
    *
    *   - `document` (défaut) : le thème actif du document, quand il en porte un ;
    *   - `formulaire` : le ThemeDef 1.0 donné en entrée avec le formulaire (déposé ou collé dans le compositeur) ;
+   *   - `grist` : le thème actif du document, sinon celui de Grist (mode et couleur d'action de la personne), sinon l'origine ;
    *   - `aucune` : l'apparence d'origine, quoi que dise le document.
    *
    * Un thème de formulaire illisible ne casse rien : le formulaire retombe sur le document, et `erreur` dit pourquoi. Un thème PAS ENCORE
@@ -371,7 +527,7 @@
   function apparenceDe(def) {
     var a = def && typeof def === 'object' ? def.apparence : null;
     if (!objetSimple(a)) return { mode: 'document', themedef: null, erreur: null };
-    var mode = ['document', 'formulaire', 'aucune'].indexOf(a.mode) !== -1 ? a.mode : 'document';
+    var mode = ['document', 'grist', 'formulaire', 'aucune'].indexOf(a.mode) !== -1 ? a.mode : 'document';
     if (mode !== 'formulaire') return { mode: mode, themedef: null, erreur: null };
     if (a.themedef === undefined || a.themedef === null) return { mode: 'document', themedef: null, erreur: null, attente: true };
     var lu = lireThemeDef(a.themedef);
@@ -420,11 +576,45 @@
     if (ap.mode === 'aucune') return Promise.resolve(vide('apparence-aucune'));
     if (ap.mode === 'formulaire') return Promise.resolve(themeFormulaire(opts.def, opts.mode));
     if (!api || typeof api.listTables !== 'function' || typeof api.fetchTable !== 'function') return Promise.resolve(vide('pas-de-document'));
+    // Le thème de Grist ne prend le relais que là où le document n'a RIEN dit : un document qui dit quelque chose d'illisible, ou
+    // de contradictoire (plusieurs actifs), n'applique rien, et l'hôte ne le remplace pas.
+    var REPLI_HOTE = ['aucun-actif', 'table-absente', 'lecture-impossible'];
+    function repli(r) {
+      if (ap.mode !== 'grist' || r.theme || REPLI_HOTE.indexOf(r.raison) === -1) return r;
+      return attendreHote(opts.lecteurHote, opts.attenteHote === undefined ? ATTENTE_HOTE : opts.attenteHote).then(function (hote) {
+        var t = themeHote(hote, { mode: opts.mode });
+        if (!t) return r;
+        return {
+          theme: t.vars, raison: 'hote', mode: t.mode, nom: t.nom, ligne: null, remarques: t.remarques, verifie: false, hote: true,
+          avertissements: [{ code: 'non-verifie', conseil: 'Le thème de Grist est repris tel que Grist l\'annonce : le mode et la couleur des boutons, rendus lisibles.' }]
+        };
+      });
+    }
     return Promise.resolve(api.listTables()).then(function (tables) {
       var noms = (tables || []).map(function (t) { return typeof t === 'string' ? t : (t && t.id); });
       if (noms.indexOf(TABLE) === -1) return vide('table-absente');
       return Promise.resolve(api.fetchTable(TABLE)).then(function (colonnes) { return traiter(lignesDeTable(colonnes), opts); });
-    }).then(null, function () { return vide('lecture-impossible'); });
+    }).then(null, function () { return vide('lecture-impossible'); }).then(repli);
+  }
+
+  /**
+   * Lit puis POSE le thème sur `racine` (le geste complet d'un formulaire publié). Dans le mode `grist`, suit aussi le thème de Grist à chaud :
+   * la promesse rend le résultat de `charger`, avec `arreter()` pour couper le suivi.
+   */
+  function habiller(racine, api, opts) {
+    opts = opts || {};
+    var noms = [];
+    function poser(r) { retirer(racine, noms); noms = r && r.theme ? appliquer(racine, r.theme) : []; return r; }
+    return charger(api, opts).then(function (r) {
+      poser(r);
+      if (api && apparenceDe(opts.def).mode === 'grist' && !personneImpose()) {
+        var suivi = Object.assign({}, opts, { attenteHote: 0 });
+        r.arreter = suivreHote(function () { charger(api, suivi).then(poser); }, opts.lecteurHote);
+      } else {
+        r.arreter = function () {};
+      }
+      return r;
+    });
   }
 
   return {
@@ -444,6 +634,13 @@
     retirer: retirer,
     modeSysteme: modeSysteme,
     personneImpose: personneImpose,
-    charger: charger
+    charger: charger,
+    habiller: habiller,
+    lireCouleur: lireCouleur,
+    lireHote: lireHote,
+    themeHote: themeHote,
+    suivreHote: suivreHote,
+    attendreHote: attendreHote,
+    VARIABLES_HOTE: VARIABLES_HOTE
   };
 }));
