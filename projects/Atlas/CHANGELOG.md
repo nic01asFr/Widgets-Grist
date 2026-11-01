@@ -13,6 +13,11 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.42.2 — correctif : OpenStreetMap depuis l'application
+
+- **Erreur 406 dans l'application Android** (recherche d'adresse, import OpenStreetMap) : Atlas envoie aussi son `Referer`, et si le service refuse encore le client natif (406 ou 403), la requête repart par le moteur web de la page (`CapacitorWebFetch`), qui présente celui d'un navigateur. Non éprouvé sur un appareil.
+- **Reprises** : un refus passager (429, 502, 503, 504) est repris deux fois (attente doublée), avec un message d'attente ; le 502 a son propre message. Aucun changement du contrat ni du client hôte.
+
 ## 1.42.1 — correctif : des icônes propres
 
 - Les flèches précédent et suivant, la croix de fermeture et les boutons de lecture (barre de sélection, carte du récit, panneaux) sont des icônes tracées en SVG, et non des caractères que certains appareils affichent en emoji. Aucun changement du contrat ni du client hôte.
