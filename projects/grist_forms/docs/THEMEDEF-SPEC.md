@@ -132,8 +132,13 @@ Table `Theme_document` du document Grist :
    valeurs vérifiées à chaque lecture, `resolu` ignoré.
 5. Un document invalide n'applique rien et dit pourquoi ; un document partiellement valide applique ce que la
    liste fermée de l'étage A accepte et signale le reste (`ignore`).
-6. Un seul écrivain recommandé (l'éditeur « Apparence » du kit) ; la protection d'écriture est une règle d'accès
-   Grist, pas un contrôle du lecteur.
+6. **Écrivains reconnus** (règle amendée le 01/11/2026, sur la condition du kit et avec l'accord de l'auteur) : l'éditeur « Apparence » du
+   kit et le geste « Appliquer ce thème au document » de Form Builder (`design-system.html`). Tous passent par **la même fonction
+   d'activation**, `lotActivation` du kit (copiée dans `shared/activation.js`, rejouée sur ses 57 vecteurs) : un document refusé par le
+   validateur n'ouvre aucune action, les lignes actives sont désactivées et la cible activée **dans un seul lot**, la table n'est
+   **jamais créée sans confirmation explicite** d'une personne, et on relit le résultat. L'atomicité réelle côté Grist n'est pas garantie
+   (point ouvert, §6) : si deux écrivains agissent en même temps, le résultat sûr est `plusieurs-actifs` (les lecteurs n'appliquent rien),
+   jamais un thème faux. La protection d'écriture est une règle d'accès Grist, pas un contrôle du lecteur.
 
 Hors Grist, le thème est figé à la publication (copie du JSON `valeurs`) ou **tiré par l'hôte**
 (JSON, jamais du CSS ; adresse fixée par l'hôte avec empreinte SHA-256 épinglée ; liste d'origines ; dernier
@@ -156,6 +161,7 @@ du §3, la même que celle d'Atlas) :
 | `mode` | Ce que le formulaire prend |
 |---|---|
 | `document` (défaut) | le thème actif de `Theme_document`, quand le document en porte un |
+| `grist` | le thème actif de `Theme_document` ; **à défaut, celui de Grist** (voir l'étage hôte ci-dessous) ; à défaut, l'origine. **Opt-in** : c'est le choix des formulaires neufs |
 | `formulaire` | le ThemeDef 1.0 donné dans `themedef` (déposé ou collé dans le compositeur) : **il part avec le formulaire**, donc il s'applique aussi hors de Grist (page autonome), sans table à lire |
 | `aucune` | l'apparence d'origine, quoi que dise le document |
 
@@ -163,7 +169,18 @@ Le thème du formulaire prime sur celui du document. Il est lu comme une donnée
 rien : le formulaire retombe sur le document, et le compositeur dit pourquoi. Dans la page autonome, un formulaire qui suit le document
 reçoit une **copie** du ThemeDef actif au moment de la génération (jamais une adresse).
 
-**Le compositeur lui-même est un lecteur.** L'outil (pas seulement les formulaires qu'il produit) suit le thème actif du document : toutes ses couleurs passent par `var(--kit-*, valeur d'origine)`, donc sans thème rien ne change. Menu « ⋯ » : « Suivre le thème du document » (retenu dans le navigateur, jamais écrit dans le document) et « Essayer un thème (fichier ThemeDef) » le temps d'une session. Comme tout lecteur, il cède à la préférence de la personne (contraste forcé ou renforcé) et dérive le sombre.
+**L'étage hôte : le thème que Grist pousse dans le widget.** Dans Grist, `grist-plugin-api.js` pose sur `<html>` `data-grist-appearance` (`light` ou
+`dark`), `data-grist-theme` et une feuille `#grist-theme` qui déclare `--grist-theme-<nom>` ; sur une instance à `custom.css` (celle de la DINUM,
+palette La Suite), ces variables portent la palette de l'instance. Le mode `grist` en reprend **le mode** (qui prime sur `prefers-color-scheme`)
+**et la couleur d'action** (`control-primary-bg`), lues comme le fait le pont du kit (appkit, lot T5) : seuls `#rgb`, `#rrggbb`, `rgb()` opaque,
+`white` et `black` sont acceptés. Le reste du thème est dérivé de cette couleur par `deriver`. Portes : H1 (texte d'action >= 4,5:1) et H2
+(action sur le fond, la surface et la surface douce >= 4,5:1) sont bloquantes, la couleur est alors assombrie ou éclaircie jusqu'à tenir et
+la remarque le dit ; H3 (écart avec les états) n'est pas bloquante, comme chez le kit. Il ne s'applique que **là où le document n'a rien dit**
+(table absente, aucune ligne active, lecture impossible) : un document illisible ou contradictoire (`plusieurs-actifs`) n'applique rien et
+l'hôte ne le remplace pas. Suivi à chaud (l'observateur ne rappelle que si la lecture change), attente bornée à 400 ms après `grist.ready`,
+aucune attente hors de Grist. **Les formulaires existants** (sans `apparence`, ou `document`) ne prennent jamais l'hôte.
+
+**Le compositeur lui-même est un lecteur.** L'outil (pas seulement les formulaires qu'il produit) suit le thème actif du document : toutes ses couleurs passent par `var(--kit-*, valeur d'origine)`, donc sans thème rien ne change. Il suit, dans l'ordre : un thème essayé le temps de la session, le thème du document, puis celui de Grist. Menu « ⋯ » : « Suivre le thème du document, sinon celui de Grist » (retenu dans le navigateur, jamais écrit dans le document) et « Essayer un thème (fichier ThemeDef) » le temps d'une session. Comme tout lecteur, il cède à la préférence de la personne (contraste forcé ou renforcé) et dérive le sombre.
 
 Chaque lecteur est **opt-in par le document** (sans table `Theme_document`, ou sans ligne active, rien ne change) et **ne crée ni n'écrit
 jamais** la table. Les valeurs mesurées de `resolu` s'appliquent quand elles y sont, sans être crues ; sinon les graines en donnent un

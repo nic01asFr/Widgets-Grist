@@ -61,15 +61,16 @@ document (`assembler`) et qui relit un document dans le formulaire (`aplatir`).
 
 Le design system défini ici a pour but de **servir** le document : les widgets compatibles ThemeDef lisent la table `Theme_document`
 (ligne active). Form Builder l'est depuis `shared/themedef.js` : le formulaire publié et l'aperçu du compositeur prennent ce thème.
-Poser le thème d'un design system dans `Theme_document` (l'activation) reste un geste de personne, à venir : cette page n'y écrit pas.
+Poser le thème d'un design system dans `Theme_document` (l'activation) est un geste de personne : le bouton « Appliquer ce thème au document » de cette page, confirmé, par la fonction commune du kit (`shared/activation.js`). Voir `CADRAGE-THEME-GRIST-ET-ACTIVATION.md`.
 
 ## Brouillon, proposition
 
 - **Brouillon** : s'enregistre à tout moment, incomplet ; rien n'est refusé.
 - **Proposition** : l'envoi du formulaire. Elle passe les règles « erreur » ; les « avertissements » doivent être déclarés
   dans `gouvernance.ecarts` (règle G1).
-- **Activation** : jamais par cette page. `actif` reste faux ; une personne active, avec l'éditeur d'apparence du kit
-  (un seul écrivain). Une ligne déjà active le reste.
+- **Activation** : jamais un effet de l'enregistrement. `Design_system.actif` reste faux ; une personne applique le thème au document par le
+  bouton « Appliquer ce thème au document… » (un panneau dit ce qui change, la table `Theme_document` n'est créée qu'après une confirmation qui
+  le dit, un seul lot, relu après). « Retirer le thème du document » met `actif` à faux, sans rien supprimer.
 
 ## Les règles croisées (rejouées dans `controler`)
 
@@ -94,8 +95,8 @@ Table `Design_system` (créée à la première sauvegarde) :
 | `maj` | Numérique | secondes Unix |
 | `hash` | Texte | `sha256-<base64>` de la forme canonique |
 
-Le thème qu'on en tire est un **ThemeDef 1.0** (nom, graines, mode sombre, seuils), affiché et copiable. Il n'est pas écrit
-dans `Theme_document` (activation = l'éditeur d'apparence). Un mode sombre « explicite » y devient « derive » : ThemeDef 1.0
+Le thème qu'on en tire est un **ThemeDef 1.0** (nom, graines, mode sombre, seuils), affiché et copiable. Il n'est écrit
+dans `Theme_document` que par le geste d'activation confirmé. Un mode sombre « explicite » y devient « derive » : ThemeDef 1.0
 en demanderait les 26 valeurs.
 
 ## Mesuré

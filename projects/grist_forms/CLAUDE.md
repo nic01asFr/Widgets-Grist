@@ -45,7 +45,9 @@ projects/grist_forms/
 │   ├── dessin.js            # Annotation et signature sur une image ; `nomDeCouleur`
 │   ├── theme.js             # Contrat de thème `kit-theme/0.1` : juge puis pose les variables --kit-*
 │   ├── design-system.js     # Catalogue → formulaire, réponses → document, règles croisées, ThemeDef 1.0 (page `design-system.html`)
-│   ├── themedef.js          # Lit le thème du document ou celui que le formulaire porte (`apparence`), le résout, l'habille : jamais d'écriture
+│   ├── themedef.js          # Lit le thème du document, celui que le formulaire porte (`apparence`) ou celui de Grist (mode `grist`), le résout, l'habille : jamais d'écriture
+│   ├── activation.js        # COPIE du kit (`lotActivation`, validateur, SHA-256 pur) : la bascule de Theme_document, jamais réécrite ici
+│   ├── activation-geste.js  # Le geste « Appliquer ce thème au document » : préparer, retirer, relire (pur, sans écriture)
 │   ├── design-system-apercu.js  # Illustration de chaque module (couleurs, formes, espacements…)
 │   ├── formdef-from-table.js         # Un FormDef déduit d'une table Grist
 │   ├── formdef-from-grist-form.js    # Un FormDef relu depuis un formulaire natif Grist
@@ -68,7 +70,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1171 tests verts** (dont 49 sur le design system, 45 sur la lecture du thème et l'apparence ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1432 tests verts** (dont 49 sur le design system, 45 sur la lecture du thème et l'apparence ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
 chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)
