@@ -310,6 +310,8 @@ function ignRasterStyle(tiles) {
 }
 // `icon` est un accesseur : le vocabulaire d'icônes (`IC`) est défini plus loin, et il ne doit être lu qu'à l'affichage.
 const BASEMAPS = {
+    // Le thème existe toujours (celui du document, de l'instance Grist, ou à défaut celui d'Atlas) : ce fond reprend ses couleurs (lib/fond-theme.js). C'est le fond par défaut.
+    theme:    { url: STYLE_BASE_URL,  label: 'Thème',      get icon() { return icTrait(IC.palette, 22); } },
     liberty:  { url: STYLE_BASE_URL,  label: 'Liberty 3D', get icon() { return icTrait(IC.cube, 22); } },
     bright:   { url: 'https://tiles.openfreemap.org/styles/bright',   label: 'Plan',       get icon() { return icTrait(IC.carte, 22); } },
     positron: { url: 'https://tiles.openfreemap.org/styles/positron', label: 'Clair',      get icon() { return icTrait(IC.carreClair, 22); } },
@@ -377,7 +379,7 @@ const STATE = {
     currentModule: null,
     selection: { mode: false, layerId: null, features: [], multiIndex: 0 },
     settings: {
-        basemap: 'liberty',
+        basemap: 'theme',
         projection: 'globe',     // 'globe' (façon Google Earth, → mercator en zoom) | 'mercator'
         modelSet: 'colored',     // jeu de modèles 3D : 'colored' | 'mono'
         buildings3D: true,
@@ -3351,7 +3353,7 @@ let _fondDeRepli = false;
 const RATIO_HOTE = (() => { try { return ratioMaxDemande(location.search); } catch (_) { return null; } })();
 
 function initMap() {
-    const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.liberty;
+    const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.theme;
     // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
     _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
     map = new maplibregl.Map({
@@ -3509,6 +3511,7 @@ function onStyleReady() {
     // 3D buildings come with the Liberty style (fill-extrusion). Toggle visibility.
     applyBuildingVisibility();
     applyLabelsVisibility();
+    if (!_planTheme) void rafraichirFondTheme();
 
     // Terrain (source DEM choisie : terrarium mondial ou LIDAR HD IGN)
     addTerrainSource();
@@ -3735,6 +3738,35 @@ function applyLabelsVisibility() {
     if (!map?.getStyle()?.layers) return;
     const vis = STATE.settings.labels ? 'visible' : 'none';
     setBasemapLayersVisibility('symbol', vis);
+    appliquerFondTheme();   // le réglage rend visibles TOUS les symboles du fond : le fond Thème remasque ceux qu'il écarte (pictogrammes)
+}
+
+/**
+ * Le fond « Thème » : le fond de carte repeint avec la charte courante (document, sinon instance Grist, sinon celle d'Atlas qui existe toujours). Le plan est calculé une fois
+ * (`rafraichirFondTheme`) puis posé à chaque style prêt ; `appliquerFondTheme` est synchrone et ne fait rien tant que le plan n'est pas là ou que ce n'est pas le fond choisi.
+ */
+let _planTheme = null, _charteDuFond = null, _fondThemeModule = null;
+function appliquerFondTheme() {
+    try {
+        if (!map || STATE.settings.basemap !== 'theme' || !_planTheme || !_fondThemeModule) return;
+        const couches = map.getStyle()?.layers;
+        if (!couches) return;
+        for (const r of _fondThemeModule.peintureFondTheme(couches, _planTheme)) {
+            if (!map.getLayer(r.id)) continue;
+            if (r.visibilite === 'none') { try { map.setLayoutProperty(r.id, 'visibility', 'none'); } catch (_) { /* couche retirée */ } continue; }
+            if (r.visibilite === 'visible') { try { map.setLayoutProperty(r.id, 'visibility', 'visible'); } catch (_) { /* couche retirée */ } }
+            for (const [k, v] of Object.entries(r.paint)) { try { map.setPaintProperty(r.id, k, v); } catch (_) { /* propriété inconnue de cette couche */ } }
+        }
+    } catch (e) { console.warn('[Atlas] fond Thème', e && e.message); }
+}
+async function rafraichirFondTheme() {
+    try {
+        const [FT, RS, SC] = await Promise.all([import('./lib/fond-theme.js?v=20261101a'), import('./lib/charte/resolution.js'), import('./lib/charte/schema.js')]);
+        const hote = _charteDuFond ? SC.assainir(_charteDuFond).charte : {};
+        _planTheme = { ...RS.resoudre({ hote }).charte.fond.plan };
+        _fondThemeModule = FT;
+    } catch (e) { console.warn('[Atlas] fond Thème', e && e.message); }
+    appliquerFondTheme();
 }
 function addTerrainSource() {
     const cfg = TERRAIN_SOURCES[STATE.settings.terrainSource] || TERRAIN_SOURCES.terrarium;
@@ -12761,6 +12793,7 @@ async function chargerThemeDocument() {
                 try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* le trajet prendra la couleur au prochain dessin */ }
                 if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
                 documentAUnTheme = true;
+                _charteDuFond = theme.charte;
             }
         }
     } catch (e) {
@@ -12768,6 +12801,7 @@ async function chargerThemeDocument() {
     }
     _themeDocumentActif = documentAUnTheme;
     if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
+    else void rafraichirFondTheme();
 }
 
 /**
@@ -12789,9 +12823,10 @@ async function appliquerThemeInstance() {
         const theme = _themeInstance || { appearance: racine.getAttribute('data-grist-appearance') || racine.style.colorScheme || 'light' };
         const t = TI.themeDeLInstance(theme, lireVariable);
         const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: 'clair' }) : { charte: null };
-        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); return; }
+        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
         poserHabillageApplication(variables, AP.VARIABLES);
+        _charteDuFond = r.charte; void rafraichirFondTheme();
         try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
         console.info("[Atlas] thème de l'instance Grist appliqué :", t.nom, "accent", variables["--accent"] || "(inchangé)", "fond", variables["--bg"] || "(inchangé)");
         if (notes.length) console.info('[Atlas] thème de l\'instance, non suivi :', notes.join(', '));
