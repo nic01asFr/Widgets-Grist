@@ -50,7 +50,7 @@ const total = (fichiers) => {
 
 // [description, fichiers, plafond brut (octets), plafond gzip (octets)] ; mesures du 15/10/2026 entre parenthèses
 const BUDGETS = [
-  ['application complète (app.js)', ['app.js'], 1_040_000, 300_000],                                  // 992 153 / 284 850
+  ['application complète (app.js)', ['app.js'], 1_040_000, 305_000],                                  // 992 153 / 284 850 ; 1.41.0 : 294,1 Ko gzip (relief de l'export 3D : lecteur de tuiles, pose sur le terrain, format du fond ; la grille et les altitudes sont dans lib/export-*.js, chargés à la demande)
   ['page (index.html)', ['index.html'], 176_000, 38_000],                                                // 156 478 / 33 196 // 1.38.0 : 35,4 Ko gzip (script de tête de la mémoire de démarrage, règles du thème sombre et du glyphe) ; plafonds 170 -> 176 Ko bruts, 36 -> 38 Ko gzip
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 16_400, 6_100],   // 1.35.0 : 15 586 octets (contrat 0.4 : règle de version, 4 commandes) ; plafond relevé avec la raison dans le commit                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
   ['page maigre du composant (bi.html)', ['bi.html'], 8_000, 3_200],                                    // 5 759 octets : la page de l'application en fait 157 909 // 1.30.0 : 490 Ko bruts (environnement.js, soleil.js, terrain-base.js : chargés À LA DEMANDE, la fermeture les compte, la page seule non) ; plafonds 475 -> 505 Ko bruts, 172 -> 185 Ko gzip

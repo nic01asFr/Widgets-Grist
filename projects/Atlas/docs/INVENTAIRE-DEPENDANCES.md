@@ -34,7 +34,7 @@ Atlas ne dépend d'aucun service pour **démarrer** ; ceux-ci sont sollicités s
 | `nominatim.openstreetmap.org` | recherche de lieux | recherche d'un lieu |
 | `overpass-api.de` | import de données OpenStreetMap | import OSM |
 | `s3.amazonaws.com` | tuiles d'altitude (terrarium) | relief mondial |
-| `github.com`, `nic01asfr.github.io`, `cartes.gouv.fr`, `www.openstreetmap.org` | liens affichés ou ouverts par la personne | clic sur un lien |
+| `github.com`, `nic01asfr.github.io`, `cartes.gouv.fr`, `www.openstreetmap.org`, `registry.opendata.aws` | liens affichés ou ouverts par la personne | clic sur un lien |
 
 Les hôtes `*.example`, `localhost`, `www.opengis.net`, `www.topografix.com`, `json-schema.org` et `x.org` ne sont pas des services : ce sont des exemples de documentation, des espaces de noms XML ou des identifiants de schéma.
 

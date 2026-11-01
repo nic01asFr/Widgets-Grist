@@ -13,6 +13,8 @@ export const VERSION = '1.0.0';
 export const FORMAT = 'atlas-scene3d/1';
 export const REPERE = 'x=est, y=haut, z=sud (nord = -z), mètres, sol y=0';
 
+import { normaliserRelief, elargir, RELIEF_COTE_MAX } from './export-relief.js?v=1.41.0';
+
 export const PLAFOND_OCTETS_DEFAUT = 5 * 1024 * 1024;
 export const PLAFOND_OCTETS_MAX = 32 * 1024 * 1024;
 export const PLAFOND_OBJETS = 2000;
@@ -21,6 +23,7 @@ export const PLAFOND_SOMMETS = 300000;
 export const HAUTEUR_DEFAUT = 3;
 export const SOL_RESOLUTION_DEFAUT = 2048;   // pixels, plus grand côté de la texture du fond (« carte »)
 export const SOL_COULEUR_DEFAUT = '#e9e6df';
+export const ANCRAGE_RELIEF = 0.3;   // mètres dont un volume posé sur le terrain s'enfonce dessous
 export const SIMPLIFICATION_DEFAUT = 0.1;   // mètres : les sommets qui s'écartent de moins de 10 cm de la forme sont retirés (un relevé OSM ou une tuile en porte des milliers de superflus)
 export const SURFACE_MAX_DEG2 = 4;      // une emprise de plus de 4 degrés carrés n'est pas une scène qu'on pose sur une table
 const fini = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -57,14 +60,17 @@ export function normaliserOptions(o) {
   if (!Number.isInteger(plafondOctets) || plafondOctets < 1024 || plafondOctets > PLAFOND_OCTETS_MAX) throw new Error('exportScene3D : plafondOctets hors bornes (1 Ko à ' + PLAFOND_OCTETS_MAX / 1048576 + ' Mo)');
   const simplification = options.simplification === undefined ? SIMPLIFICATION_DEFAUT : options.simplification;
   if (!fini(simplification) || simplification < 0 || simplification > 5) throw new Error('exportScene3D : simplification hors bornes (0 à 5 mètres)');
-  const sol = normaliserSol(options.sol);
+  let sol = normaliserSol(options.sol);
+  const relief = normaliserRelief(options.relief);
+  // un relief sans sol laisserait le bâti en l'air sur des pentes : il en implique un (aplat, sans épaisseur)
+  if (relief && !sol) sol = { mode: 'uni', couleur: null, epaisseur: 0, marge: 0, resolution: SOL_RESOLUTION_DEFAUT };
   let couches = null;
   if (options.couches !== undefined && options.couches !== null) {
     if (!Array.isArray(options.couches) || options.couches.length > 64 || !options.couches.every((c) => typeof c === 'string' && c)) throw new Error("exportScene3D : couches doit être une liste d'identifiants (64 au plus)");
     couches = [...options.couches];
   }
   if (!inclure.objets && !inclure.extrusions && !inclure.bati) throw new Error('exportScene3D : rien à exporter (inclure : objets, extrusions, bati tous à faux)');
-  return { bbox, ancre, inclure, hauteurParDefaut, plafondOctets, couches, simplification, sol };
+  return { bbox, ancre, inclure, hauteurParDefaut, plafondOctets, couches, simplification, sol, relief };
 }
 
 /**
@@ -76,18 +82,31 @@ export function normaliserSol(s) {
   if (s === undefined || s === null || s === false) return null;
   const o = s === true ? { mode: 'uni' } : typeof s === 'string' ? { mode: s } : s;
   if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error("exportScene3D : sol doit être 'uni', 'carte' ou un objet ({ mode, couleur, epaisseur, marge, resolution })");
-  for (const k of Object.keys(o)) if (!['mode', 'couleur', 'epaisseur', 'marge', 'resolution'].includes(k)) throw new Error('exportScene3D : sol.' + k + ' inconnu (mode, couleur, epaisseur, marge, resolution)');
+  for (const k of Object.keys(o)) if (!['mode', 'couleur', 'epaisseur', 'marge', 'resolution', 'format'].includes(k)) throw new Error('exportScene3D : sol.' + k + ' inconnu (mode, couleur, epaisseur, marge, resolution, format)');
+  if (o.format !== undefined && !['auto', 'png', 'jpeg'].includes(o.format)) throw new Error("exportScene3D : sol.format doit être 'auto', 'png' ou 'jpeg'");
   if (o.mode !== 'uni' && o.mode !== 'carte') throw new Error("exportScene3D : sol.mode doit être 'uni' ou 'carte'");
   if (o.couleur !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(o.couleur))) throw new Error('exportScene3D : sol.couleur doit s\'écrire #rrggbb');
   const epaisseur = o.epaisseur === undefined ? 0 : o.epaisseur, marge = o.marge === undefined ? 0 : o.marge, resolution = o.resolution === undefined ? SOL_RESOLUTION_DEFAUT : o.resolution;
   if (!fini(epaisseur) || epaisseur < 0 || epaisseur > 50) throw new Error('exportScene3D : sol.epaisseur hors bornes (0 à 50 mètres)');
   if (!fini(marge) || marge < 0 || marge > 1000) throw new Error('exportScene3D : sol.marge hors bornes (0 à 1000 mètres)');
   if (!Number.isInteger(resolution) || resolution < 256 || resolution > 4096) throw new Error('exportScene3D : sol.resolution hors bornes (256 à 4096 pixels)');
-  return { mode: o.mode, couleur: o.couleur ? String(o.couleur).toLowerCase() : null, epaisseur, marge, resolution };
+  return { mode: o.mode, couleur: o.couleur ? String(o.couleur).toLowerCase() : null, epaisseur, marge, resolution, ...(o.format ? { format: o.format } : {}) };
 }
 
 /** Le centre d'une emprise. */
 export const centreDe = (b) => ({ lng: (b[0] + b[2]) / 2, lat: (b[1] + b[3]) / 2 });
+
+/** Un texte d'attribution sans balises ni entités HTML (« &copy; » devient « © »), pour un fichier ou une légende imprimée. */
+export function texteAttribution(html) {
+  const noms = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', copy: '\u00a9' };
+  return String(html || '').replace(/<[^>]*>/g, '').replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (m, c) => {
+    if (c[0] === '#') { const n = c[1] === 'x' ? parseInt(c.slice(2), 16) : parseInt(c.slice(1), 10); return Number.isFinite(n) && n > 0 && n < 0x110000 ? String.fromCodePoint(n) : m; }
+    return Object.prototype.hasOwnProperty.call(noms, c) ? noms[c] : m;
+  }).replace(/\s+/g, ' ').trim();
+}
+
+/** La licence d'une attribution de fond de carte, quand on la connaît sans ambiguïté : les données d'OpenStreetMap sont sous ODbL. */
+export const licenceDeAttribution = (texte) => (/OpenStreetMap/i.test(texte) ? 'ODbL' : null);
 
 /** Un nom de nœud sûr (glTF laisse passer presque tout, mais le chargeur de three.js retire « : » et « . » : on évite de dépendre de ce nettoyage). */
 export const nomSur = (s, repli = 'x') => String(s === undefined || s === null || s === '' ? repli : s).replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 60);
@@ -133,6 +152,34 @@ export function simplifierAnneau(pts, tol) {
   return sortie.length >= 3 ? sortie : pts;
 }
 
+/**
+ * Un anneau de [lng, lat] rogné à une emprise [ouest, sud, est, nord] (Sutherland-Hodgman, une demi-droite après l'autre) ; rend l'anneau refermé, ou [] s'il ne reste rien.
+ * Un anneau entièrement dedans est rendu tel quel (même tableau). Sur une forme concave, le rognage peut laisser des arêtes de largeur nulle le long du bord : sans effet sur le volume.
+ */
+export function rognerAnneau(ring, b) {
+  const dedans = (p) => p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3];
+  if (ring.every(dedans)) return ring;
+  let pts = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1] ? ring.slice(0, -1) : ring.slice();
+  const bords = [
+    [(p) => p[0] >= b[0], (p, q) => [b[0], p[1] + ((q[1] - p[1]) * (b[0] - p[0])) / (q[0] - p[0])]],
+    [(p) => p[0] <= b[2], (p, q) => [b[2], p[1] + ((q[1] - p[1]) * (b[2] - p[0])) / (q[0] - p[0])]],
+    [(p) => p[1] >= b[1], (p, q) => [p[0] + ((q[0] - p[0]) * (b[1] - p[1])) / (q[1] - p[1]), b[1]]],
+    [(p) => p[1] <= b[3], (p, q) => [p[0] + ((q[0] - p[0]) * (b[3] - p[1])) / (q[1] - p[1]), b[3]]],
+  ];
+  for (const [garde, coupe] of bords) {
+    const sortie = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length], pin = garde(p), qin = garde(q);
+      if (pin && qin) sortie.push(q);
+      else if (pin && !qin) sortie.push(coupe(p, q));
+      else if (!pin && qin) { sortie.push(coupe(p, q)); sortie.push(q); }
+    }
+    pts = sortie;
+    if (pts.length < 3) return [];
+  }
+  return [...pts, pts[0]];
+}
+
 /** Un anneau de [lng, lat] en points locaux {x, y} (est, nord) sans le point de fermeture ni les doublons consécutifs, simplifié à `tol` mètres. */
 function anneauLocal(ring, local, tol = 0) {
   const pts = [];
@@ -150,9 +197,10 @@ const aireSignee = (pts) => { let a = 0; for (let i = 0; i < pts.length; i++) { 
 /**
  * Ajoute à un lot (positions, normales, indices) le prisme d'une surface : parois et toit, et le dessous seulement si la surface est surélevée (`base` > 0). Repère de sortie : x est, y haut,
  * z = -nord. L'anneau extérieur est mis en sens antihoraire, les trous en sens horaire, et chaque triangle est tourné vers l'extérieur (le sens est vérifié, pas supposé).
+ * `dessous` : par défaut, seulement si la base n'est pas à zéro ; faux quand la base est enterrée dans un terrain (le dessous est caché, inutile à écrire).
  * @returns {number} le nombre de sommets ajoutés (0 si la surface est dégénérée)
  */
-export function ajouterPrisme(THREE, lot, anneaux, hauteur, base) {
+export function ajouterPrisme(THREE, lot, anneaux, hauteur, base, dessous = base !== 0) {
   const [exterieur, ...trous] = anneaux;
   if (!exterieur || exterieur.length < 3 || Math.abs(aireSignee(exterieur)) < 1e-9) return 0;
   const sens = (pts, antihoraire) => ((aireSignee(pts) > 0) === antihoraire ? pts : [...pts].reverse());
@@ -187,7 +235,7 @@ export function ajouterPrisme(THREE, lot, anneaux, hauteur, base) {
   const tous = [...ext, ...interieurs.flat()];
   const plan = (y, ny) => { const o = tous.map((p) => pousser(p.x, y, -p.y, 0, ny, 0)); for (const [a, b, c] of faces) triangle(o[a], o[b], o[c], 0, ny, 0); };
   plan(haut, 1);
-  if (base !== 0) plan(base, -1);   // surélevé, ou dalle enterrée (base négative) : un dessous
+  if (dessous) plan(base, -1);   // surélevé, ou dalle enterrée (base négative) : un dessous (sauf si le terrain le cache)
   return lot.pos.length / 3 - depart;
 }
 
@@ -240,7 +288,8 @@ export function construireScene(THREE, e) {
   // --- surfaces extrudées : UNE géométrie INDEXÉE par (couche, couleur, opacité), faite de parois et d'un toit (le fond posé au sol et les coordonnées de texture, inutiles, ne sont pas écrits :
   //     un bâti de quartier pèse ainsi quelques centaines de Ko, et non des Mo). Les trous sont percés, un MultiPolygon donne plusieurs prismes dans la même géométrie.
   const lots = new Map();
-  let entites = 0;
+  const rogne = e.emprise ? elargir(e.emprise, (e.sol && e.sol.marge) || 0) : null;
+  let entites = 0, rognees = 0;
   for (const x of e.extrusions || []) {
     if (!x) { stats.ignores++; continue; }
     if (entites >= PLAFOND_ENTITES || stats.sommets >= PLAFOND_SOMMETS) { stats.ignores++; continue; }
@@ -252,7 +301,23 @@ export function construireScene(THREE, e) {
     if (!lots.has(cle)) lots.set(cle, { couche: x.couche, couleur: x.couleur, opacite, pos: [], nor: [], idx: [] });
     const lot = lots.get(cle);
     let ajoute = 0;
-    for (const rings of polys) ajoute += ajouterPrisme(THREE, lot, rings.map((ring) => anneauLocal(ring, local, e.simplification === undefined ? SIMPLIFICATION_DEFAUT : e.simplification)), hauteur, base);
+    for (const rings of polys) {
+      // rogné à l'emprise du sol (marge comprise) : un bâtiment ou une surface qui déborde ne sort pas du plan
+      let ringsRognes = rings;
+      if (rogne) {
+        const r = rings.map((ring) => rognerAnneau(ring, rogne));
+        if (!r[0].length) { continue; }
+        if (r.some((q, i) => q !== rings[i])) rognees++;
+        ringsRognes = r.filter((q) => q.length >= 4);
+      }
+      const anneaux = ringsRognes.map((ring) => anneauLocal(ring, local, e.simplification === undefined ? SIMPLIFICATION_DEFAUT : e.simplification));
+      if (e.relief) {
+        // posé sur le terrain : la base suit le point le plus BAS de l'emprise au sol (la pente côté haut est mangée par le terrain, et rien ne flotte), enfoncée un peu pour ne laisser aucune fente
+        let zmin = Infinity; for (const [lng, lat] of ringsRognes[0]) zmin = Math.min(zmin, e.relief.hauteur(lng, lat));
+        if (!Number.isFinite(zmin)) zmin = 0;
+        ajoute += base > 0 ? ajouterPrisme(THREE, lot, anneaux, hauteur, zmin + base) : ajouterPrisme(THREE, lot, anneaux, hauteur + ANCRAGE_RELIEF, zmin - ANCRAGE_RELIEF, false);
+      } else ajoute += ajouterPrisme(THREE, lot, anneaux, hauteur, base);
+    }
     if (!ajoute) { stats.ignores++; continue; }
     stats.sommets += ajoute;
     entites++; stats.extrusions++;
@@ -273,10 +338,85 @@ export function construireScene(THREE, e) {
     maillage.name = 'couche_' + nomSur(lot.couche) + (lots.size > 1 ? '_' + nomSur(lot.couleur || 'x') : '');
     scene.add(maillage);
   }
+  if (rognees) avertissements.push('rognés : ' + rognees + ' volume(s) débordaient de l\'emprise, coupés à son bord');
   if (stats.ignores) avertissements.push('ignorés : ' + stats.ignores + ' élément(s) sans géométrie lisible ou au-delà des plafonds (' + PLAFOND_OBJETS + ' objets, ' + PLAFOND_ENTITES + ' surfaces, ' + PLAFOND_SOMMETS + ' sommets)');
 
+  // --- sol en relief : une grille de terrain (altitudes lues par `e.relief.hauteur`, relatives à l'ancre, exagération comprise), texture de la carte ou aplat, jupe et dessous si épaisseur
+  function solRelief() {
+    const s = e.sol, R = e.relief, g = R.emprise || e.emprise;
+    const sw = local(g[0], g[1]), ne = local(g[2], g[3]);
+    const largeur = ne.x - sw.x, profondeur = ne.y - sw.y;
+    let pas = R.pas || Math.max(4, Math.max(largeur, profondeur) / 160);
+    const cote = RELIEF_COTE_MAX - 1;
+    if (Math.ceil(largeur / pas) > cote || Math.ceil(profondeur / pas) > cote) { pas = Math.max(largeur, profondeur) / cote; avertissements.push('relief : maille portée à ' + pas.toFixed(1) + ' m pour tenir sous ' + RELIEF_COTE_MAX + ' sommets par côté'); }
+    const nx = Math.max(1, Math.ceil(largeur / pas)), ny = Math.max(1, Math.ceil(profondeur / pas));
+    const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+    const m0 = merc(g[1]), m1 = merc(g[3]);
+    const texture = s.mode === 'carte' && s.texture;
+    const pos = [], uv = [];
+    let ymin = Infinity, ymax = -Infinity;
+    for (let j = 0; j <= ny; j++) {
+      const lat = g[1] + ((g[3] - g[1]) * j) / ny;
+      for (let i = 0; i <= nx; i++) {
+        const lng = g[0] + ((g[2] - g[0]) * i) / nx, p = local(lng, lat), h = R.hauteur(lng, lat);
+        pos.push(p.x, h, -p.y);
+        uv.push(i / nx, (merc(lat) - m0) / (m1 - m0));
+        if (h < ymin) ymin = h; if (h > ymax) ymax = h;
+      }
+    }
+    const idx = [], pitch = nx + 1;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const a = j * pitch + i, b = a + 1, c = a + pitch + 1, d = a + pitch;
+      idx.push(a, b, c, a, c, d);   // vus de dessus, sens antihoraire : la face regarde vers le haut
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    if (texture) geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(pos.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(idx, 1) : new THREE.Uint16BufferAttribute(idx, 1));
+    const couleur = couleurEntiere(s.couleur || SOL_COULEUR_DEFAUT);
+    let matiere;
+    if (texture) matiere = new THREE.MeshBasicMaterial({ map: s.texture });   // non éclairé : le fond tel qu'il a été vu, sans ombre propre sur la table
+    else { geo.computeVertexNormals(); matiere = new THREE.MeshStandardMaterial({ color: couleur, roughness: 1, metalness: 0 }); }
+    const dessus = new THREE.Mesh(geo, matiere);
+    dessus.name = 'sol_dessus';
+    scene.add(dessus);
+    const eps = s.epaisseur || 0;
+    if (eps > 0) {
+      // une dalle de maquette : le terrain découpé comme une tranche, jupe sur les quatre bords et dessous plat à (point le plus bas - épaisseur)
+      const yb = ymin - eps, lot = { pos: [], nor: [], idx: [] };
+      const quad = (A, B, C2, D, nx_, ny_, nz_) => {
+        const o = lot.pos.length / 3; for (const q of [A, B, C2, D]) { lot.pos.push(q[0], q[1], q[2]); lot.nor.push(nx_, ny_, nz_); }
+        const u = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], v = [C2[0] - A[0], C2[1] - A[1], C2[2] - A[2]];
+        const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        if (n[0] * nx_ + n[1] * ny_ + n[2] * nz_ >= 0) lot.idx.push(o, o + 1, o + 2, o, o + 2, o + 3); else lot.idx.push(o, o + 2, o + 1, o, o + 3, o + 2);
+      };
+      const P = (i, j) => { const k = 3 * (j * pitch + i); return [pos[k], pos[k + 1], pos[k + 2]]; };
+      const bas = (q) => [q[0], yb, q[2]];
+      for (let i = 0; i < nx; i++) {
+        const a = P(i, 0), b = P(i + 1, 0), c = P(i, ny), d = P(i + 1, ny);
+        quad(a, b, bas(b), bas(a), 0, 0, 1);          // bord sud (z positif)
+        quad(c, d, bas(d), bas(c), 0, 0, -1);         // bord nord
+      }
+      for (let j = 0; j < ny; j++) {
+        const a = P(0, j), b = P(0, j + 1), c = P(nx, j), d = P(nx, j + 1);
+        quad(a, b, bas(b), bas(a), -1, 0, 0);         // bord ouest
+        quad(c, d, bas(d), bas(c), 1, 0, 0);          // bord est
+      }
+      quad(bas(P(0, 0)), bas(P(nx, 0)), bas(P(nx, ny)), bas(P(0, ny)), 0, -1, 0);   // dessous, face vers le bas
+      const g2 = new THREE.BufferGeometry();
+      g2.setAttribute('position', new THREE.Float32BufferAttribute(lot.pos, 3)); g2.setAttribute('normal', new THREE.Float32BufferAttribute(lot.nor, 3)); g2.setIndex(lot.idx);
+      const dalle = new THREE.Mesh(g2, new THREE.MeshStandardMaterial({ color: couleur, roughness: 1, metalness: 0 }));
+      dalle.name = 'sol_dalle';
+      scene.add(dalle);
+    }
+    stats.sol = s.mode;
+    stats.relief = { pas: Math.round(pas * 10) / 10, mailles: nx * ny, min: Math.round(ymin * 100) / 100, max: Math.round(ymax * 100) / 100 };
+  }
+
   // --- sol : un plan à y = 0 sur l'emprise (aplat, ou texture du fond rendu à plat), avec ou sans épaisseur de maquette
-  if (e.sol && e.emprise) {
+  if (e.sol && e.emprise && e.relief) {
+    solRelief();
+  } else if (e.sol && e.emprise) {
     const s = e.sol, marge = s.marge || 0;
     const coin = (lng, lat) => local(lng, lat);
     const sw = coin(e.emprise[0], e.emprise[1]), ne = coin(e.emprise[2], e.emprise[3]);
@@ -320,7 +460,8 @@ export function construireScene(THREE, e) {
       format: FORMAT, unite: 'm', repere: REPERE, ancre: { lng: e.ancre.lng, lat: e.ancre.lat },
       ...(e.emprise ? { emprise: [...e.emprise] } : {}),
       ...(e.genere ? { genere: e.genere } : {}),
-      contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}) },
+      contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}), ...(stats.relief ? { relief: true } : {}) },
+      ...(e.relief ? { relief: { source: e.relief.source || 'terrarium', altitudeAncre: e.relief.altitudeAncre, exageration: e.relief.exageration, ...(stats.relief ? { denivele: [stats.relief.min, stats.relief.max] } : {}) } } : {}),
       attributions: (e.attributions || []).map((a) => ({ source: String(a.source), ...(a.licence ? { licence: String(a.licence) } : {}), ...(a.mention ? { mention: String(a.mention) } : {}), ...(a.url ? { url: String(a.url) } : {}) })),
     },
   };
@@ -359,7 +500,7 @@ export function verifierPoids(octets, plafond) {
  * @returns {{ extrusions: object[], credit: object|null, avertissements: string[] }}
  */
 export async function batiDuFond(map, bbox, hauteurParDefaut) {
-  const B = await import('./bi/batiments.js?v=1.40.0');
+  const B = await import('./bi/batiments.js?v=1.41.0');
   if (!map || typeof map.getSource !== 'function' || !map.getSource('openmaptiles') || typeof map.querySourceFeatures !== 'function') return { extrusions: [], credit: null, avertissements: ["bâti : ce fond de carte n'a pas de bâti (source absente)"] };
   if (map.getZoom() < B.ZOOM_MINIMAL) return { extrusions: [], credit: null, avertissements: ["bâti : le bâti n'est lu qu'à partir du zoom " + B.ZOOM_MINIMAL + " (non exporté)"] };
   const r = B.batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox, limite: Math.min(B.LIMITE_MAX, PLAFOND_ENTITES), hauteurMin: 0 });

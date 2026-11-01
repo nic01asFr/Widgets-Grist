@@ -13,7 +13,7 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
-## Prochaine — `exportScene3D` : le relief
+## 1.41.0 — `exportScene3D` : le relief, le bâti rogné, un fond plus léger
 
 - **Option `relief`** (additive, aucun relief par défaut ; contrat 0.6 inchangé) : `true` ou `{ exageration, pas }`. Le sol devient un terrain en grille (altitudes lues à part dans les tuiles terrarium, indépendamment du relief affiché), la carte y est drapée (`sol: 'carte'`), `epaisseur` donne une tranche de maquette avec jupe. y = 0 est l'altitude de l'ancre (`relief.altitudeAncre`) ; objets et luminaires sont posés sur le terrain, bâti et couches extrudées sur le point le plus bas de leur emprise, enfoncés de 0,3 m. Hors réseau : export à plat, dit dans `avertissements`. Mesuré sur la colline de Notre-Dame de la Garde (500 m x 330 m) : 0,6 s, 358 Ko en aplat, 633 Ko avec la carte drapée et une tranche ; détail : `docs/CONTRAT-CARTE-BI.md` §6 sexies.
 - **Correction** : avec `sol: 'carte'` et une `marge`, la texture était rendue sur l'emprise sans la marge puis étirée sur le plan élargi ; elle couvre désormais exactement le plan.

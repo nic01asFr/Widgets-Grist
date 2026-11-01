@@ -311,5 +311,7 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.35.0 | 0.3 -> 0.4 | contrat 0.4, additif : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode` (vue plane verrouillée), `getBuildings` (bâtiments visibles, hauteurs, fragments), événement `clic` en un point libre ; la carte nue refuse une couche `dalles3d` (`capacite_absente`) ; règle de version : une commande exige au moins la version qui l'a introduite ; `VERSION_CLIENT` 2 ; `ready.version` annonce 0.4 (négocier par `ready.versions`) |
 | 1.36.0 | 0.4 -> 0.5 | contrat 0.5, additif : `getFeatures(couche, { bbox, limite })` ; `VERSION_CLIENT` 3. Une commande 0.2, 0.3 ou 0.4 reste servie à un hôte resté en 0.2, 0.3 ou 0.4. |
 | 1.39.0 | 0.5 -> 0.6 | contrat 0.6, additif : `exportScene3D(options)` (profil complet), la scène 3D en un GLB ; `VERSION_CLIENT` 4. Une commande 0.2 à 0.5 reste servie à un hôte resté dans sa version. |
+| 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
+| 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
