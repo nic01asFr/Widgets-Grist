@@ -769,17 +769,21 @@
     if (ap.mode === 'aucune') return Promise.resolve(vide('apparence-aucune'));
     if (ap.mode === 'formulaire') return Promise.resolve(themeFormulaire(opts.def, opts.mode));
     if (!api || typeof api.listTables !== 'function' || typeof api.fetchTable !== 'function') return Promise.resolve(vide('pas-de-document'));
-    // Le thème de Grist ne prend le relais que là où le document n'a RIEN dit : un document qui dit quelque chose d'illisible, ou
-    // de contradictoire (plusieurs actifs), n'applique rien, et l'hôte ne le remplace pas.
+    // Le thème de Grist prend le relais quand le document n'a RIEN dit, ET quand ce qu'il dit est refusé (illisible, incomplet, de version inconnue, ou contradictoire
+    // avec plusieurs actifs) : le refus est dit (`refus`), jamais appliqué à moitié, et le formulaire ne reste pas dans l'apparence d'origine au milieu d'un Grist qui a la sienne
+    // (décision de l'auteur, 01/11/2026, alignée sur Atlas).
     var REPLI_HOTE = ['aucun-actif', 'table-absente', 'lecture-impossible'];
+    var REPLI_APRES_REFUS = ['invalide', 'version-inconnue', 'contraste-insuffisant', 'resolu-incomplet', 'plusieurs-actifs'];
     function repli(r) {
-      if (ap.mode !== 'grist' || r.theme || REPLI_HOTE.indexOf(r.raison) === -1) return r;
+      var refuse = !r.theme && REPLI_APRES_REFUS.indexOf(r.raison) !== -1;
+      if (ap.mode !== 'grist' || r.theme || (REPLI_HOTE.indexOf(r.raison) === -1 && !refuse)) return r;
       return attendreHote(opts.lecteurHote, opts.attenteHote === undefined ? ATTENTE_HOTE : opts.attenteHote).then(function (hote) {
         var t = themeHote(hote, { mode: opts.mode });
         if (!t) return r;
         return {
           theme: t.vars, raison: 'hote', mode: t.mode, nom: t.nom, ligne: null, remarques: t.remarques, verifie: false, hote: true,
-          avertissements: [{ code: 'non-verifie', conseil: 'Le thème de Grist est repris tel que Grist l\'annonce : le mode et la couleur des boutons, rendus lisibles.' }]
+          refus: refuse ? { raison: r.raison, avertissements: r.avertissements || [], ligne: r.ligne || null } : null,
+          avertissements: (refuse ? (r.avertissements || []).concat([{ code: 'document-refuse', raison: r.raison }]) : []).concat([{ code: 'non-verifie', conseil: 'Le thème de Grist est repris tel que Grist l\'annonce : le mode et la couleur des boutons, rendus lisibles.' }])
         };
       });
     }

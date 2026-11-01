@@ -284,17 +284,24 @@ describe('Mode grist : charger', () => {
     }
   });
 
-  it('un document qui dit quelque chose d\'illisible, ou de contradictoire, n\'est PAS remplacé par l\'hôte', async () => {
+  it('un document dont le thème est refusé (illisible, ou plusieurs actifs) : le refus est DIT, puis le thème de Grist prend le relais', async () => {
     const f = grist('dark', '#3e5de7');
     const casse = apiFausse(['Theme_document'], colonnes([{ cle: 'doc', themedef: '{pas du json', actif: true }]));
     const r1 = await T.charger(casse, { def: def({ mode: 'grist' }), lecteurHote: lecteur(f), attenteHote: 0 });
-    assert.equal(r1.raison, 'invalide');
-    assert.equal(r1.theme, null);
+    assert.equal(r1.raison, 'hote');
+    assert.ok(r1.theme && r1.hote);
+    assert.equal(r1.refus.raison, 'invalide');
+    assert.ok(r1.avertissements.some((a) => a.code === 'document-refuse' && a.raison === 'invalide'));
     const deux = apiFausse(['Theme_document'], colonnes([
       { cle: 'a', themedef: JSON.stringify(td()), actif: true }, { cle: 'b', themedef: JSON.stringify(td()), actif: true }]));
     const r2 = await T.charger(deux, { def: def({ mode: 'grist' }), lecteurHote: lecteur(f), attenteHote: 0 });
-    assert.equal(r2.raison, 'plusieurs-actifs');
-    assert.equal(r2.theme, null);
+    assert.equal(r2.raison, 'hote');
+    assert.equal(r2.refus.raison, 'plusieurs-actifs');
+    assert.ok(r2.theme);
+    // sans thème de Grist à reprendre, le refus reste entier : rien n'est posé
+    const seul = await T.charger(deux, { def: def({ mode: 'grist' }), lecteurHote: lecteur(fauxHote()), attenteHote: 0 });
+    assert.equal(seul.raison, 'plusieurs-actifs');
+    assert.equal(seul.theme, null);
   });
 
   it('sans mode grist, l\'hôte n\'est JAMAIS repris : les formulaires existants ne changent pas', async () => {
