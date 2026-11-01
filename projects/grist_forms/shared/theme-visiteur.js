@@ -138,14 +138,18 @@
     } catch (e) { return false; }
   }
 
-  // Les six variables de la vitrine, tirées des variables `--kit-*` du thème.
+  // Les sept variables d'une page de vitrine, tirées des variables `--kit-*` du thème. `--accent` est l'ACTION du ThemeDef (la couleur principale que la personne a
+  // choisie), pas son `accent` (dérivé de la couleur secondaire). La vitrine s'en sert comme couleur de texte (liens, rubriques) ET comme fond de bouton : on la redresse
+  // à 4,5:1 sur le papier et la surface (voir `varsVitrine`). `--sur-accent` est le texte de ces boutons : la feuille de la vitrine l'écrivait en blanc, en dur, illisible
+  // sur un accent clair en sombre.
   var PONT_VITRINE = {
     '--papier': '--kit-fond',
     '--surface': '--kit-surface',
     '--encre': '--kit-texte',
     '--plume': '--kit-texte-2',
     '--filet': '--kit-bord',
-    '--accent': '--kit-action'
+    '--accent': '--kit-action',
+    '--sur-accent': '--kit-action-texte'
   };
   var HEX = /^#[0-9a-f]{6}$/;
 
@@ -164,14 +168,24 @@
       if (typeof valeur !== 'string' || !HEX.test(valeur)) return null;
       sortie[noms[i]] = valeur;
     }
-    // Dernière garde : une page de vitrine se lit. Un thème dont les surcharges rendraient le texte ou l'accent illisibles est refusé (la page garde sa peau).
-    if (!(ThemeDef.contraste(sortie['--encre'], sortie['--papier']) >= 4.5)) return null;
-    if (!(ThemeDef.contraste(sortie['--plume'], sortie['--papier']) >= 3)) return null;
-    if (!(ThemeDef.contraste(sortie['--accent'], sortie['--papier']) >= 3)) return null;
+    // Une page de vitrine se LIT : le texte courant (`--plume`, utilisé partout) et l'accent (texte ET fond de bouton) tiennent 4,5:1 sur le papier et sur la
+    // surface. On redresse ce qui peut l'être (vers le noir sur un papier clair, vers le blanc sur un papier sombre), puis on recalcule le texte du bouton.
+    var papier = sortie['--papier']; var surface = sortie['--surface'];
+    var papierClair = ThemeDef.contraste(papier, '#ffffff') < ThemeDef.contraste(papier, '#000000');
+    var vers = papierClair ? '#000000' : '#ffffff';
+    ['--plume', '--accent'].forEach(function (nom) {
+      sortie[nom] = ThemeDef.redresser(ThemeDef.redresser(sortie[nom], papier, 4.5, vers), surface, 4.5, vers);
+    });
+    sortie['--sur-accent'] = ThemeDef.meilleurTexte(sortie['--accent']);
+    // Ce qui ne peut pas être redressé (surcharges hostiles) fait refuser le thème : la page garde sa peau.
+    if (!(ThemeDef.contraste(sortie['--encre'], papier) >= 4.5)) return null;
+    if (!(ThemeDef.contraste(sortie['--plume'], papier) >= 4.5)) return null;
+    if (!(ThemeDef.contraste(sortie['--accent'], papier) >= 4.5) || !(ThemeDef.contraste(sortie['--accent'], surface) >= 4.5)) return null;
+    if (!(ThemeDef.contraste(sortie['--sur-accent'], sortie['--accent']) >= 4.5)) return null;
     return sortie;
   }
 
-  /** Les six variables pour chaque mode : `{ clair, sombre }`, chacun un jeu complet ou `null` (thème illisible pour ce mode, ou sombre « aucun »). */
+  /** Les sept variables pour chaque mode : `{ clair, sombre }`, chacun un jeu complet ou `null` (thème illisible pour ce mode, ou sombre « aucun »). */
   function vitrineDe(themedef) {
     var modes = themedef && themedef.modes;
     var sansSombre = modes && typeof modes === 'object' && modes.sombre === 'aucun';

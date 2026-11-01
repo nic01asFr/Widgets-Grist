@@ -211,10 +211,10 @@ describe('Thème du visiteur : seulement là où la page l’a demandé, et jama
   });
 });
 
-describe('Thème du visiteur : les six variables de la vitrine', () => {
-  it('rend exactement les six variables, en #rrggbb strict', () => {
+describe('Thème du visiteur : les sept variables de la vitrine', () => {
+  it('rend exactement les sept variables, en #rrggbb strict', () => {
     const v = V.varsVitrine(theme(), 'clair');
-    assert.deepEqual(Object.keys(v).sort(), ['--accent', '--encre', '--filet', '--papier', '--plume', '--surface']);
+    assert.deepEqual(Object.keys(v).sort(), ['--accent', '--encre', '--filet', '--papier', '--plume', '--sur-accent', '--surface']);
     for (const valeur of Object.values(v)) assert.match(valeur, /^#[0-9a-f]{6}$/);
   });
 
@@ -301,14 +301,14 @@ describe('Thème du visiteur : ce qu’on ne croit pas', () => {
   });
 });
 
-describe('Thème du visiteur : les six variables sont gardées déjà calculées, pour chaque mode', () => {
+describe('Thème du visiteur : les sept variables sont gardées déjà calculées, pour chaque mode', () => {
   it('le contenu porte vitrine.clair et vitrine.sombre, deux jeux complets et lisibles', () => {
     const s = faux();
     V.ecrire(theme(), { stockage: s });
     const c = JSON.parse(s.m.get(V.CLE));
     assert.equal(c.v, 1, 'ajout sans changer de version : un lecteur qui l’ignore lit comme avant');
     for (const mode of ['clair', 'sombre']) {
-      assert.deepEqual(Object.keys(c.vitrine[mode]).sort(), ['--accent', '--encre', '--filet', '--papier', '--plume', '--surface'], mode);
+      assert.deepEqual(Object.keys(c.vitrine[mode]).sort(), ['--accent', '--encre', '--filet', '--papier', '--plume', '--sur-accent', '--surface'], mode);
       assert.ok(T.contraste(c.vitrine[mode]['--encre'], c.vitrine[mode]['--papier']) >= 4.5, mode + ' : texte lisible');
     }
     assert.notEqual(c.vitrine.clair['--papier'], c.vitrine.sombre['--papier']);
@@ -334,5 +334,38 @@ describe('Thème du visiteur : les six variables sont gardées déjà calculées
     const s = faux();
     s.m.set(V.CLE, JSON.stringify({ v: 1, maj: 1, themedef: theme(), vitrine: { clair: { '--papier': '#ffffff' }, sombre: null } }));
     assert.equal(V.lire({ stockage: s }).themedef.nom, 'Forêt d’automne');
+  });
+});
+
+describe('Thème du visiteur : une page de vitrine se lit (texte, accent, bouton)', () => {
+  const ratio = (a, b) => T.contraste(a, b);
+  const themes = {
+    'principal vert, secondaire orange, fond crème': theme(),
+    'principal très clair': theme({ graines: { principal: '#f4e04d', fond: '#fdfaf3' } }),
+    'principal très foncé': theme({ graines: { principal: '#0a0a2a', fond: '#ffffff' } }),
+    'fond noir en clair': theme({ graines: { principal: '#7ec8ff', fond: '#101010' } })
+  };
+  for (const [nom, td] of Object.entries(themes)) {
+    for (const mode of ['clair', 'sombre']) {
+      it(nom + ' (' + mode + ') : tout texte tient 4,5:1, l’accent sur le papier ET la surface, le texte du bouton sur l’accent', () => {
+        const v = V.varsVitrine(td, mode);
+        assert.ok(v, 'le thème est utilisable');
+        assert.ok(ratio(v['--encre'], v['--papier']) >= 4.5, 'encre');
+        assert.ok(ratio(v['--plume'], v['--papier']) >= 4.5, 'plume : le texte courant de la vitrine');
+        assert.ok(ratio(v['--accent'], v['--papier']) >= 4.5 && ratio(v['--accent'], v['--surface']) >= 4.5, 'accent comme texte');
+        assert.ok(ratio(v['--sur-accent'], v['--accent']) >= 4.5, 'texte du bouton sur l’accent');
+      });
+    }
+  }
+
+  it('l’accent est la couleur PRINCIPALE choisie, pas la secondaire', () => {
+    const v = V.varsVitrine(theme({ graines: { principal: '#0b6e4f', secondaire: '#d17a22', fond: '#fdfaf3' } }), 'clair');
+    assert.equal(v['--accent'], '#0b6e4f');
+  });
+
+  it('en sombre, un accent clair reçoit un texte de bouton sombre (la feuille écrivait du blanc en dur)', () => {
+    const v = V.varsVitrine(theme(), 'sombre');
+    assert.ok(ratio(v['--accent'], '#ffffff') < 4.5, 'le blanc serait illisible sur cet accent');
+    assert.ok(ratio(v['--sur-accent'], v['--accent']) >= 4.5);
   });
 });

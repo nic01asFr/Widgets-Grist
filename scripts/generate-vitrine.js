@@ -1043,8 +1043,8 @@ const CSS_CONTEXTE_CARROUSEL = `
  * Le thème du visiteur sur une page de vitrine (projects/grist_forms/docs/CADRAGE-THEME-VISITEUR.md). Ajouté UNIQUEMENT aux fiches qui le demandent
  * (`themeVisiteur: true`) : les autres pages ne changent pas d'un octet.
  *
- * Il lit la clé du visiteur, que la page « design system » écrit hors de Grist avec les six variables de la vitrine DÉJÀ calculées pour chaque mode. Il ne croit
- * pas ce cache : couleurs en #rrggbb strict, texte lisible (4,5:1) et accent visible (3:1) sur le papier, sinon il ne pose RIEN. Il pose les six variables en style
+ * Il lit la clé du visiteur, que la page « design system » écrit hors de Grist avec les sept variables de la vitrine DÉJÀ calculées pour chaque mode. Il ne croit
+ * pas ce cache : couleurs en #rrggbb strict, texte courant, accent et texte de bouton à 4,5:1, sinon il ne pose RIEN. Il pose les sept variables en style
  * en ligne sur <html> (aucune règle de plus dans la feuille), suit le mode sombre de la page (même règle que la feuille : préférence du système, sauf
  * `data-theme="light"`), et réagit aux changements faits dans un autre onglet. Sans clé, ou illisible : il ne fait rien.
  */
@@ -1052,7 +1052,7 @@ const JS_VISITEUR = `
 <script>
 (function () {
   var CLE = 'widgets-grist:theme-visiteur';
-  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent'];
+  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent', '--sur-accent'];
   var HEX = /^#[0-9a-f]{6}$/;
   var posees = [];
   function lum(h) {
@@ -1064,7 +1064,7 @@ const JS_VISITEUR = `
     if (!j || typeof j !== 'object') return null;
     var o = {};
     for (var i = 0; i < NOMS.length; i++) { var v = j[NOMS[i]]; if (typeof v !== 'string' || !HEX.test(v)) return null; o[NOMS[i]] = v; }
-    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 3 || ratio(o['--accent'], o['--papier']) < 3) return null;
+    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--surface']) < 4.5 || ratio(o['--sur-accent'], o['--accent']) < 4.5) return null;
     return o;
   }
   function lire() {
@@ -1093,6 +1093,15 @@ const JS_VISITEUR = `
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquer); } catch (e) { /* navigateur ancien */ }
 }());
 </` + `script>`;
+
+/**
+ * Le texte des éléments qui ont l'accent pour fond (boutons, numéros de la séquence) : la feuille commune l'écrit en blanc, en dur, ce qui est illisible sur un accent clair
+ * (le sombre d'un thème du visiteur). Ajouté avec le script du visiteur, aux seules pages qui l'activent : sans thème posé, `--sur-accent` n'existe pas et le blanc reste.
+ */
+const CSS_VISITEUR = `
+.bouton:not(.creux), .lancer { color: var(--sur-accent, #fff); }
+.sequence li::before { color: var(--sur-accent, #fff); }
+`;
 
 /** Le carrousel et le bouton « Copier » : sans ce script, la page reste entierement lisible (toutes les diapositives, le code). */
 const JS_PARCOURS = `
@@ -1634,7 +1643,7 @@ function rendreProjet(p, maintenant, base = '') {
     }) : '',
     // Le style des diapositives est celui des parcours : il suit dès qu'un contexte défile à l'horizontale.
     scriptEntete: v.themeVisiteur === true ? JS_VISITEUR : '',
-    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '')
+    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '') + (v.themeVisiteur === true ? CSS_VISITEUR : '')
       + ((parcours || (produit.contextes || []).some((c) => c.carrousel)) ? CSS_PARCOURS : '')
       + ((produit.contextes || []).some((c) => c.carrousel) ? CSS_CONTEXTE_CARROUSEL : ''),
     corps: `<main>

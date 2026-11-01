@@ -754,6 +754,8 @@
     TABLE: TABLE,
     CLES: CLES,
     contraste: contraste,
+    redresser: redresser,
+    meilleurTexte: meilleurTexte,
     deriver: deriver,
     lireThemeDef: lireThemeDef,
     apparenceDe: apparenceDe,

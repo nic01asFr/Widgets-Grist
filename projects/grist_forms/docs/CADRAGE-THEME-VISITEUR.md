@@ -50,7 +50,7 @@ son appareil. Dans Grist, le même outil écrit dans le document. Une seule règ
   lue ailleurs que par `shared/theme-visiteur.js` et ses consommateurs déclarés (voir les tests).
 - **D7. Ce qui est partagé reste petit.** Le socle est dans `shared/` de Form Builder ; il n'est **pas** copié dans les autres widgets.
   Atlas, TaskFlow et le kit sont des interlocuteurs : on leur parle avant de leur demander de lire quoi que ce soit.
-- **D8. Aucun changement du style commun de la vitrine à ce stade.** Quand il viendra, il posera les six variables existantes en style
+- **D8. Aucun changement du style commun de la vitrine pour les pages qui n'activent rien.** Celles qui l'activent posent les sept variables (les six existantes et `--sur-accent`) en style
   en ligne sur `<html>` (aucune règle de plus dans la feuille) et restera **inerte sans thème** : les pages générées ne doivent pas
   changer d'un octet quand personne n'a rien choisi.
 
@@ -70,7 +70,7 @@ son appareil. Dans Grist, le même outil écrit dans le document. Une seule règ
 1. Ce cadrage, le socle `shared/theme-visiteur.js`, ses tests, et les tests transverses (cette étape).
 2. **Fait (01/11/2026, non publié).** La page design system hors Grist : « Enregistrer / Appliquer sur cet appareil » écrivent par le socle ; en Grist, rien ne change. Le magasin local n'a plus de fausse table : il garde les brouillons et dit quand le navigateur ne retient rien.
 3. **Pont fait (01/11/2026, non publié) ; thème par défaut PAS fait.** Le pont des six variables est un script d'en-tête que le générateur n'ajoute qu'aux fiches qui demandent `themeVisiteur: true` (Form Builder seul pour l'instant) : les autres pages ne changent pas d'un octet (test : `</style>
-</head>` adjacents). Il ne fait que lire la clé, valide un cache de six variables déjà calculées (couleurs strictes, texte 4,5:1, accent 3:1), suit le sombre de la page et les changements d'un autre onglet, cède au contraste forcé. Le thème par défaut du site reste une décision ouverte (D8 : qui le définit).
+</head>` adjacents). Il ne fait que lire la clé, valide un cache de sept variables déjà calculées (couleurs strictes, texte courant, accent et texte de bouton à 4,5:1 ; `--accent` vient de l'`action` du thème, `--sur-accent` de son texte, parce que la feuille écrivait du blanc en dur sur l'accent), suit le sombre de la page et les changements d'un autre onglet, cède au contraste forcé. Le thème par défaut du site reste une décision ouverte (D8 : qui le définit).
 4. Une page « Mes couleurs » en langage courant (niveau 0).
 5. Le branchement des démonstrations, une à une, après accord de leurs propriétaires (formulaires d'abord).
 
@@ -92,7 +92,7 @@ document s'appliquant à leur famille) et **refuse le thème entier** (`contrast
 formulaires publiés avec Form Builder 1.4.0 et après, et le compositeur. Atlas a son propre lecteur (non examiné ici).
 
 **Ce qui a été fait.** Le socle visiteur ne souffre pas de cet écart : il n'accepte jamais `resolu` et recalcule depuis les graines, et il
-refuse en dernier recours un jeu de six variables dont le texte ou l'accent serait illisible (`tests/theme-visiteur.test.js`).
+refuse en dernier recours un jeu de sept variables dont le texte, l'accent ou le texte de bouton serait illisible (`tests/theme-visiteur.test.js`).
 
 **Corrigé le 01/11/2026 (non publié).** Le lecteur de Form Builder refuse maintenant un `resolu` incomplet ou qui rate une des 22 paires (avant et après les surcharges), ignore une surcharge refusée au lieu d'effacer la valeur qu'elle visait, lit la colonne `version`, les colonnes de longueurs inégales et le mode sombre « aucun » comme le kit, et mesure les mêmes couleurs que lui (`#RGB`, `rgb()`, `hsl()`). Les 142 vecteurs sont rejoués (127 en accord ; 15 écarts nommés dans `tests/themedef-lecteur-vecteurs.test.js`). Vérifié en Grist réel : un `Theme_document` hostile actif laisse le formulaire lisible, à l'apparence d'origine. Reste à publier avec Atlas.
 

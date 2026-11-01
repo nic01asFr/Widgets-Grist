@@ -546,7 +546,7 @@ test('une fiche qui le demande reçoit le script, dans l’en-tête, après la f
   const iScript = html.indexOf(CLE_VISITEUR);
   const iFin = html.indexOf('</head>');
   assert.ok(iStyle > -1 && iScript > iStyle && iScript < iFin, 'script d’en-tête, pas de scintillement');
-  for (const n of ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent']) assert.ok(html.slice(iScript - 400, iFin).includes("'" + n + "'"), n);
+  for (const n of ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent', '--sur-accent']) assert.ok(html.slice(iScript - 400, iFin).includes("'" + n + "'"), n);
 });
 
 /** Exécute le script de la page dans un faux navigateur et rend ce qu'il a posé sur <html>. */
@@ -568,8 +568,8 @@ function executerVisiteur(contenuStockage, { sombre = false, contraste = false, 
   return { posees, stock, ecouteurs };
 }
 
-const jeuClair = { '--papier': '#fdfaf3', '--surface': '#ffffff', '--encre': '#161616', '--plume': '#5c5c5c', '--filet': '#d0d0d0', '--accent': '#0b6e4f' };
-const jeuSombre = { '--papier': '#161616', '--surface': '#1e1e1e', '--encre': '#f6f6f6', '--plume': '#c0c0c0', '--filet': '#353535', '--accent': '#59b08f' };
+const jeuClair = { '--papier': '#fdfaf3', '--surface': '#ffffff', '--encre': '#161616', '--plume': '#5c5c5c', '--filet': '#d0d0d0', '--accent': '#0b6e4f', '--sur-accent': '#ffffff' };
+const jeuSombre = { '--papier': '#161616', '--surface': '#1e1e1e', '--encre': '#f6f6f6', '--plume': '#c0c0c0', '--filet': '#353535', '--accent': '#59b08f', '--sur-accent': '#161616' };
 const cache = (extra) => JSON.stringify(Object.assign({ v: 1, maj: 1, themedef: {}, vitrine: { clair: jeuClair, sombre: jeuSombre } }, extra));
 
 test('le script du visiteur pose les six variables du mode de la page, et seulement elles', () => {
@@ -588,6 +588,9 @@ test('un cache fabriqué est refusé en entier : couleurs non strictes, texte il
   const casse = (changements) => executerVisiteur(cache({ vitrine: { clair: Object.assign({}, jeuClair, changements), sombre: null } })).posees;
   assert.deepEqual(casse({ '--encre': '#fdfaf3' }), {}, 'texte sur papier : 1,0:1');
   assert.deepEqual(casse({ '--plume': '#fcf9f1' }), {}, 'texte secondaire illisible');
+  assert.deepEqual(casse({ '--plume': '#8a8a8a' }), {}, 'texte courant entre 3 et 4,5:1 : refusé (il sert partout)');
+  assert.deepEqual(casse({ '--sur-accent': '#0b6e4f' }), {}, 'texte de bouton illisible sur l’accent');
+  assert.deepEqual(casse({ '--accent': '#9a9a9a' }), {}, 'accent entre 3 et 4,5:1 : refusé');
   assert.deepEqual(casse({ '--accent': '#fefaf3' }), {}, 'accent invisible');
   assert.deepEqual(casse({ '--papier': 'red' }), {}, 'pas un #rrggbb');
   assert.deepEqual(casse({ '--papier': 'url(//x)' }), {});
@@ -617,4 +620,14 @@ test('un changement fait dans un autre onglet est repris, et un thème retiré r
   r.stock[CLE_VISITEUR] = cache({ vitrine: { clair: jeuClair, sombre: null } });
   r.ecouteurs.storage({ key: 'une-autre-cle' });
   assert.equal(r.posees['--accent'], '#7a1fa2', 'une autre clé ne déclenche rien');
+});
+
+test('le texte des boutons suit --sur-accent, pour les seules pages qui activent le thème du visiteur', () => {
+  const avec = pageAvec({ themeVisiteur: true });
+  assert.ok(avec.includes('.bouton:not(.creux), .lancer { color: var(--sur-accent, #fff); }'));
+  assert.ok(avec.includes('.sequence li::before { color: var(--sur-accent, #fff); }'));
+  // Sans thème posé, --sur-accent n'existe pas : le blanc d'avant reste (repli de var()).
+  assert.ok(avec.indexOf('var(--sur-accent, #fff)') > avec.indexOf('.bouton { display: inline-block'), 'après la règle commune, pour l’emporter');
+  const sans = pageAvec({});
+  assert.ok(!sans.includes('--sur-accent'), 'une page qui ne le demande pas ne change pas d’un octet');
 });

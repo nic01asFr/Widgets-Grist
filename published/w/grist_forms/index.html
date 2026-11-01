@@ -173,6 +173,9 @@ section { margin: 0 0 3rem; }
   .reveler { opacity: 1; transform: none; transition: none; }
 }
 
+.bouton:not(.creux), .lancer { color: var(--sur-accent, #fff); }
+.sequence li::before { color: var(--sur-accent, #fff); }
+
 .statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
 .statut b { color: var(--encre); font-weight: 600; }
 .ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
@@ -263,7 +266,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
 <script>
 (function () {
   var CLE = 'widgets-grist:theme-visiteur';
-  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent'];
+  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent', '--sur-accent'];
   var HEX = /^#[0-9a-f]{6}$/;
   var posees = [];
   function lum(h) {
@@ -275,7 +278,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
     if (!j || typeof j !== 'object') return null;
     var o = {};
     for (var i = 0; i < NOMS.length; i++) { var v = j[NOMS[i]]; if (typeof v !== 'string' || !HEX.test(v)) return null; o[NOMS[i]] = v; }
-    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 3 || ratio(o['--accent'], o['--papier']) < 3) return null;
+    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--surface']) < 4.5 || ratio(o['--sur-accent'], o['--accent']) < 4.5) return null;
     return o;
   }
   function lire() {
