@@ -12747,20 +12747,55 @@ function poserHabillageApplication(variables, noms) {
  * pas les surfaces (voir `lib/charte/application.js`).
  */
 async function chargerThemeDocument() {
+    let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
         const tables = await grist.docApi.listTables();
-        if (!tables.includes('Theme_document')) return;
-        const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
-        const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
-        if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
-        if (!theme.charte) return;
-        const { variables, notes } = TD.habillageApplication(theme);
-        poserHabillageApplication(variables, AP.VARIABLES);
-        try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* le trajet prendra la couleur au prochain dessin */ }
-        if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
+        if (tables.includes('Theme_document')) {
+            const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
+            const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
+            if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
+            if (theme.charte) {
+                const { variables, notes } = TD.habillageApplication(theme);
+                poserHabillageApplication(variables, AP.VARIABLES);
+                try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* le trajet prendra la couleur au prochain dessin */ }
+                if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
+                documentAUnTheme = true;
+            }
+        }
     } catch (e) {
         console.warn('[Atlas] thème du document', e && e.message);
+    }
+    _themeDocumentActif = documentAUnTheme;
+    if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
+}
+
+/**
+ * Sans thème de document, le thème de l'INSTANCE Grist (`grist-plugin-api.js` : `onThemeChange`, et les variables `--grist-theme-*` qu'il pose sur la page) habille l'application
+ * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
+ */
+let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
+function brancherThemeInstance() {
+    if (_themeInstanceBranche || typeof grist === 'undefined' || typeof grist.onThemeChange !== 'function') return;
+    _themeInstanceBranche = true;
+    try { grist.onThemeChange((t) => { _themeInstance = t; if (!_themeDocumentActif) void appliquerThemeInstance(); }); } catch (e) { console.warn('[Atlas] thème de l\'instance', e && e.message); }
+}
+async function appliquerThemeInstance() {
+    try {
+        if (_themeDocumentActif || !CONFIG.grist.ready) return;
+        const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=20261101a'), import('./lib/charte/depuis-themedef.js?v=20261101a'), import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
+        const racine = document.documentElement;
+        const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
+        const theme = _themeInstance || { appearance: racine.getAttribute('data-grist-appearance') || racine.style.colorScheme || 'light' };
+        const t = TI.themeDeLInstance(theme, lireVariable);
+        const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: 'clair' }) : { charte: null };
+        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); return; }
+        const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
+        poserHabillageApplication(variables, AP.VARIABLES);
+        try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
+        if (notes.length) console.info('[Atlas] thème de l\'instance, non suivi :', notes.join(', '));
+    } catch (e) {
+        console.warn('[Atlas] thème de l\'instance', e && e.message);
     }
 }
 
