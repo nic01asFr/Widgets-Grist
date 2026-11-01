@@ -39,8 +39,9 @@ test('les raisons rendues par le lecteur sont toutes connues de l interface', ()
   assert.equal(themeDuDocument(null).raison, 'aucun-actif');
 });
 
-test('un document qui dit quelque chose d illisible n applique rien et l instance Grist ne le remplace pas ; elle ne prend le relais que sans thème de document', () => {
+test('un thème de document refusé est dit, jamais appliqué à moitié, et l instance Grist prend le relais (décision de l auteur)', () => {
   const doc = corps('chargerThemeDocument');
-  assert.match(doc, /if \(!theme\.charte && theme\.raison !== 'aucun-actif'\) documentADit = true;/);
-  assert.match(doc, /if \(!documentAUnTheme && !documentADit\) \{ brancherThemeInstance\(\); await appliquerThemeInstance\(\); \}/);
+  assert.doesNotMatch(doc, /documentADit/);
+  assert.match(doc, /if \(!documentAUnTheme\) \{ brancherThemeInstance\(\); await appliquerThemeInstance\(\); \}/);
+  assert.match(doc, /showToast\('Le thème de ce document n’est pas appliqué : '/);
 });

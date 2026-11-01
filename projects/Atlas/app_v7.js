@@ -12823,7 +12823,7 @@ function apparenceGrist() {
  * pas les surfaces (voir `lib/charte/application.js`).
  */
 async function chargerThemeDocument() {
-    let documentAUnTheme = false, documentADit = false;
+    let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
         // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
@@ -12836,8 +12836,7 @@ async function chargerThemeDocument() {
             // Un thème refusé est DIT à la personne (la raison nommée), jamais appliqué à moitié ni en silence ; aucun thème, ou « sans mode sombre », reste sans bruit.
             const dit = RAISONS_THEME_REFUSE[theme.raison];
             if (dit && !theme.charte) showToast('Le thème de ce document n’est pas appliqué : ' + dit, 'warning');
-            // Un document qui dit quelque chose d'illisible ou de contradictoire n'applique RIEN, et l'instance Grist ne le remplace pas : elle ne prend le relais que là où le document n'a rien dit.
-            if (!theme.charte && theme.raison !== 'aucun-actif') documentADit = true;
+            // Un thème de document refusé n'est jamais appliqué à moitié : l'application prend alors le thème de l'instance Grist (décision de l'auteur, 02/11/2026), et le refus est dit ci-dessus.
             if (theme.charte) {
                 const { variables, notes } = TD.habillageApplication(theme);
                 poserHabillageApplication(variables, AP.VARIABLES);
@@ -12851,7 +12850,7 @@ async function chargerThemeDocument() {
         console.warn('[Atlas] thème du document', e && e.message);
     }
     _themeDocumentActif = documentAUnTheme;
-    if (!documentAUnTheme && !documentADit) { brancherThemeInstance(); await appliquerThemeInstance(); }
+    if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
     else void rafraichirFondTheme();
 }
 
