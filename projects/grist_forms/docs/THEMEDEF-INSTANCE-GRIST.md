@@ -45,6 +45,8 @@ Clés lues (mesurées sur docs.getgrist.com, GristLight : 497 variables) : `cont
 9. **Source.** Le thème porte `source: 'instance'`, et n'est jamais écrit dans `Theme_document` (seul le geste d'activation écrit).
 10. **Priorité.** Toujours en dessous du thème du document et d'un choix explicite du widget (y compris « sans thème »).
 
+**Sortie : champs nommés dans les deux modes.** `fond`, `texte` et `pile` sont rendus explicitement en clair comme en sombre (demande d'Atlas-BI), pour que tous les lecteurs lisent au même endroit ; en clair ils sont aussi des graines du ThemeDef, en sombre ils n'en sont pas (règle 7).
+
 ## 4. Vecteurs (à construire avec le kit)
 
 Chaque vecteur = une entrée, la sortie attendue (graines, mode, notes, refus), et le verdict du lecteur. Jeu de départ :

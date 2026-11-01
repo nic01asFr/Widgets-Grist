@@ -61,6 +61,8 @@ Conséquence visible : sur docs.getgrist.com (`#16b378`), un formulaire et une c
 
 **E6. Le « sans thème » explicite manque** chez Atlas (additif : réglage ou paramètre `?theme=aucun`), TaskFlow et appkit ; Form Builder l'a (`aucune`). Atlas : sa couche « choix explicite » est la charte donnée par un hôte (`setTheme`).
 
+**E7. Politique par couche propre au widget (écart connu, pas dans le contrat).** appkit ne reprend fond, texte et police que si le mode montré est celui de l'hôte et que six paires tiennent ; Atlas les pose dès que le thème de l'instance est lisible (garde de sa charte), parce qu'il suit lui-même le mode de l'hôte. Le contrat reste une fonction pure ; chaque widget garde sa politique et la dit.
+
 **E2. TaskFlow ne prend pas le thème de Grist par défaut.** Il n'a ni lecteur de `Theme_document` ni repli sur l'instance. Le faire changerait l'aspect de **tous les documents existants** : à ne faire qu'avec accord explicite, opt-in d'abord, et le test « sans thème, identique » ci-dessus.
 
 **E5. La chaîne document puis instance n'existe pas dans appkit** : `theme.pack` est unique (`document`, `hote` ou un paquet public). Un `theme.pack: "document"` avec `repli: "hote"` serait un ajout (validation E-APP-243 et runtime) qui ne change aucun appdef existant ; appkit peut le cadrer, après D-A.
