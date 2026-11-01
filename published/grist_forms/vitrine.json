@@ -2,6 +2,7 @@
   "nom": "Form Builder",
   "pitch": "Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.",
   "couleur": "#000091",
+  "themeVisiteur": true,
   "tags": [
     "Formulaires",
     "Collecte",

@@ -23,10 +23,10 @@ const GRIST_FORMS = path.join(RACINE, 'projects', 'grist_forms');
 /** Les seuls fichiers de code autorisés à nommer la clé ou le socle. Ajouter une ligne ici, c'est ouvrir l'étage « visiteur » à un nouveau lecteur. */
 const AUTORISES = new Set([
   'projects/grist_forms/shared/theme-visiteur.js',
-  'projects/grist_forms/design-system.html' // la page, hors Grist seulement (tests/activation-page.test.js garde le bloc)
-  // Étapes suivantes du cadrage (à ajouter UNIQUEMENT quand elles sont faites, une par une) :
+  'projects/grist_forms/design-system.html', // la page, hors Grist seulement (tests/activation-page.test.js garde le bloc)
+  'scripts/generate-vitrine.js' // le pont des six variables, pour les seules fiches qui le demandent (voir plus bas)
+  // Étape suivante du cadrage (à ajouter UNIQUEMENT quand elle est faite) :
   //   projects/grist_forms/demo/index.html      (la démonstration de formulaires)
-  //   scripts/generate-vitrine.js               (le pont des six variables des vitrines)
 ]);
 
 const EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.html', '.htm', '.css']);
@@ -150,13 +150,29 @@ describe('Thème du visiteur (transverse) : ce qui ne l’embarque jamais', () =
   });
 });
 
-describe('Thème du visiteur (transverse) : les pages de vitrine ne changent pas tant qu’on n’y a pas touché', () => {
-  it('le générateur de vitrines ne mentionne pas encore le socle (étape 3 du cadrage, pas encore faite)', () => {
-    const gen = fs.readFileSync(path.join(RACINE, 'scripts', 'generate-vitrine.js'), 'utf8');
-    for (const m of ['theme-visiteur', 'FormThemeVisiteur', V.CLE]) assert.ok(!gen.includes(m), m);
+describe('Thème du visiteur (transverse) : les pages de vitrine ne le lisent que si leur fiche le demande', () => {
+  const generateur = fs.readFileSync(path.join(RACINE, 'scripts', 'generate-vitrine.js'), 'utf8');
+  const bloc = generateur.slice(generateur.indexOf('const JS_VISITEUR'), generateur.indexOf('/** Le carrousel et le bouton'));
+
+  it('le générateur n’embarque pas le socle : il ne fait que LIRE la clé, jamais l’écrire ni l’effacer', () => {
+    assert.ok(bloc.length > 500, 'le script est bien repéré');
+    assert.ok(!generateur.includes('FormThemeVisiteur'));
+    assert.ok(!/setItem|removeItem|\.clear\(/.test(bloc), 'lecture seule');
+    assert.ok(!/fetch\(|XMLHttpRequest|sendBeacon|document\.cookie/.test(bloc), 'aucun autre canal');
+    // La clé n'apparaît dans le générateur que dans ce script.
+    const hors = generateur.replace(bloc, '');
+    assert.ok(!hors.includes(V.CLE), 'la clé n’est nommée que dans le script du visiteur');
   });
 
-  it('les pages de vitrine publiées ne le mentionnent pas non plus', () => {
+  it('seules les pages dont la fiche le demande le mentionnent', () => {
+    const demandeurs = new Set();
+    for (const e of fs.readdirSync(path.join(RACINE, 'published'), { withFileTypes: true })) {
+      if (!e.isDirectory()) continue;
+      const fiche = path.join(RACINE, 'published', e.name, 'vitrine.json');
+      if (!fs.existsSync(fiche)) continue;
+      if (JSON.parse(fs.readFileSync(fiche, 'utf8')).themeVisiteur === true) demandeurs.add(e.name);
+    }
+    assert.ok(demandeurs.has('grist_forms'), 'Form Builder le demande');
     const dossier = path.join(RACINE, 'published', 'w');
     const pages = [];
     (function marche(d) {
@@ -167,8 +183,10 @@ describe('Thème du visiteur (transverse) : les pages de vitrine ne changent pas
     }(dossier));
     assert.ok(pages.length >= 5, 'les pages de vitrine sont trouvées (' + pages.length + ')');
     for (const p of pages) {
+      const projet = path.relative(dossier, p).split(path.sep)[0];
       const texte = fs.readFileSync(p, 'utf8');
-      for (const m of ['theme-visiteur', 'FormThemeVisiteur']) assert.ok(!texte.includes(m), path.relative(RACINE, p) + ' : ' + m);
+      const mentionne = texte.includes(V.CLE);
+      assert.equal(mentionne, demandeurs.has(projet) && path.basename(p) === 'index.html' && path.dirname(p) === path.join(dossier, projet), path.relative(RACINE, p));
     }
   });
 });

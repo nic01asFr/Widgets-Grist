@@ -69,7 +69,8 @@ son appareil. Dans Grist, le même outil écrit dans le document. Une seule règ
 
 1. Ce cadrage, le socle `shared/theme-visiteur.js`, ses tests, et les tests transverses (cette étape).
 2. **Fait (01/11/2026, non publié).** La page design system hors Grist : « Enregistrer / Appliquer sur cet appareil » écrivent par le socle ; en Grist, rien ne change. Le magasin local n'a plus de fausse table : il garde les brouillons et dit quand le navigateur ne retient rien.
-3. Un thème par défaut et le pont des six variables dans la vitrine (D8), avec test d'octets identiques sans thème.
+3. **Pont fait (01/11/2026, non publié) ; thème par défaut PAS fait.** Le pont des six variables est un script d'en-tête que le générateur n'ajoute qu'aux fiches qui demandent `themeVisiteur: true` (Form Builder seul pour l'instant) : les autres pages ne changent pas d'un octet (test : `</style>
+</head>` adjacents). Il ne fait que lire la clé, valide un cache de six variables déjà calculées (couleurs strictes, texte 4,5:1, accent 3:1), suit le sombre de la page et les changements d'un autre onglet, cède au contraste forcé. Le thème par défaut du site reste une décision ouverte (D8 : qui le définit).
 4. Une page « Mes couleurs » en langage courant (niveau 0).
 5. Le branchement des démonstrations, une à une, après accord de leurs propriétaires (formulaires d'abord).
 

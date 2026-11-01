@@ -299,7 +299,7 @@ code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size:
 }
 
 /** Ouverture et fermeture d'un document — un seul endroit ou elles vivent. */
-function page({ titre, description, accent, peau, corps, css = '', meta = '', ld = '' }) {
+function page({ titre, description, accent, peau, corps, css = '', meta = '', ld = '', scriptEntete = '' }) {
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -307,7 +307,7 @@ function page({ titre, description, accent, peau, corps, css = '', meta = '', ld
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${echapper(titre)}</title>
 <meta name="description" content="${echapper(description || '')}">${meta}${ld}
-<style>${socle(accent, peau)}${css}</style>
+<style>${socle(accent, peau)}${css}</style>${scriptEntete}
 </head>
 <body>
 ${corps}
@@ -1039,6 +1039,61 @@ const CSS_CONTEXTE_CARROUSEL = `
 .diapo.pano .texte { max-width: 46rem; }
 `;
 
+/**
+ * Le thème du visiteur sur une page de vitrine (projects/grist_forms/docs/CADRAGE-THEME-VISITEUR.md). Ajouté UNIQUEMENT aux fiches qui le demandent
+ * (`themeVisiteur: true`) : les autres pages ne changent pas d'un octet.
+ *
+ * Il lit la clé du visiteur, que la page « design system » écrit hors de Grist avec les six variables de la vitrine DÉJÀ calculées pour chaque mode. Il ne croit
+ * pas ce cache : couleurs en #rrggbb strict, texte lisible (4,5:1) et accent visible (3:1) sur le papier, sinon il ne pose RIEN. Il pose les six variables en style
+ * en ligne sur <html> (aucune règle de plus dans la feuille), suit le mode sombre de la page (même règle que la feuille : préférence du système, sauf
+ * `data-theme="light"`), et réagit aux changements faits dans un autre onglet. Sans clé, ou illisible : il ne fait rien.
+ */
+const JS_VISITEUR = `
+<script>
+(function () {
+  var CLE = 'widgets-grist:theme-visiteur';
+  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent'];
+  var HEX = /^#[0-9a-f]{6}$/;
+  var posees = [];
+  function lum(h) {
+    var c = [1, 3, 5].map(function (i) { var x = parseInt(h.slice(i, i + 2), 16) / 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function jeu(j) {
+    if (!j || typeof j !== 'object') return null;
+    var o = {};
+    for (var i = 0; i < NOMS.length; i++) { var v = j[NOMS[i]]; if (typeof v !== 'string' || !HEX.test(v)) return null; o[NOMS[i]] = v; }
+    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 3 || ratio(o['--accent'], o['--papier']) < 3) return null;
+    return o;
+  }
+  function lire() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CLE) || 'null');
+      return c && c.v === 1 && c.vitrine && typeof c.vitrine === 'object' ? c.vitrine : null;
+    } catch (e) { return null; }
+  }
+  function appliquer() {
+    try {
+      var racine = document.documentElement;
+      posees.forEach(function (n) { racine.style.removeProperty(n); });
+      posees = [];
+      // La personne passe avant le thème : contraste forcé ou renforcé, rien n'est posé.
+      if (matchMedia('(forced-colors: active)').matches || matchMedia('(prefers-contrast: more)').matches) return;
+      var v = lire();
+      if (!v) return;
+      var sombre = matchMedia('(prefers-color-scheme: dark)').matches && racine.getAttribute('data-theme') !== 'light';
+      var j = jeu(sombre ? v.sombre : v.clair);
+      if (!j) return;
+      NOMS.forEach(function (n) { racine.style.setProperty(n, j[n]); posees.push(n); });
+    } catch (e) { /* la page garde sa peau */ }
+  }
+  appliquer();
+  try { addEventListener('storage', function (e) { if (e.key === CLE || e.key === null) appliquer(); }); } catch (e) { /* tant pis */ }
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquer); } catch (e) { /* navigateur ancien */ }
+}());
+</` + `script>`;
+
 /** Le carrousel et le bouton « Copier » : sans ce script, la page reste entierement lisible (toutes les diapositives, le code). */
 const JS_PARCOURS = `
 <script>
@@ -1578,6 +1633,7 @@ function rendreProjet(p, maintenant, base = '') {
       ...(maj ? { dateModified: maj.slice(0, 10) } : {}),
     }) : '',
     // Le style des diapositives est celui des parcours : il suit dès qu'un contexte défile à l'horizontale.
+    scriptEntete: v.themeVisiteur === true ? JS_VISITEUR : '',
     css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '')
       + ((parcours || (produit.contextes || []).some((c) => c.carrousel)) ? CSS_PARCOURS : '')
       + ((produit.contextes || []).some((c) => c.carrousel) ? CSS_CONTEXTE_CARROUSEL : ''),

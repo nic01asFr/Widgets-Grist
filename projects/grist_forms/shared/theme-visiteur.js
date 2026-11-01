@@ -72,7 +72,9 @@
     var v = valider(themedef);
     if (!v.ok) return { ok: false, erreur: v.erreur };
     var maintenant = typeof opts.maintenant === 'number' ? opts.maintenant : Date.now();
-    var contenu = { v: VERSION, themedef: v.themedef, maj: Math.floor(maintenant / 1000) };
+    // Les six variables de la vitrine, DÉJÀ calculées pour chaque mode : une page de vitrine les applique sans embarquer le lecteur de thème. C'est un cache : la page
+    // qui le lit le revalide (couleurs strictes, lisibilité), elle ne le croit pas.
+    var contenu = { v: VERSION, themedef: v.themedef, maj: Math.floor(maintenant / 1000), vitrine: vitrineDe(v.themedef) };
     memoire = contenu;
     var s = stockageDe(opts);
     memoireSeule = true;
@@ -169,6 +171,13 @@
     return sortie;
   }
 
+  /** Les six variables pour chaque mode : `{ clair, sombre }`, chacun un jeu complet ou `null` (thème illisible pour ce mode, ou sombre « aucun »). */
+  function vitrineDe(themedef) {
+    var modes = themedef && themedef.modes;
+    var sansSombre = modes && typeof modes === 'object' && modes.sombre === 'aucun';
+    return { clair: varsVitrine(themedef, 'clair'), sombre: sansSombre ? null : varsVitrine(themedef, 'sombre') };
+  }
+
   function slug(texte) {
     var s = String(texte || '').normalize ? String(texte || '').normalize('NFD') : String(texte || '');
     s = s.replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '');
@@ -194,6 +203,7 @@
     effacer: effacer,
     actif: actif,
     varsVitrine: varsVitrine,
+    vitrineDe: vitrineDe,
     exporter: exporter,
     oublierMemoire: oublierMemoire
   };

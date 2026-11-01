@@ -300,3 +300,39 @@ describe('Thème du visiteur : ce qu’on ne croit pas', () => {
     for (const k of Object.keys(v.themedef)) assert.ok(['version', 'nom', 'graines', 'police', 'modes', 'surcharges', 'exigences'].includes(k), k);
   });
 });
+
+describe('Thème du visiteur : les six variables sont gardées déjà calculées, pour chaque mode', () => {
+  it('le contenu porte vitrine.clair et vitrine.sombre, deux jeux complets et lisibles', () => {
+    const s = faux();
+    V.ecrire(theme(), { stockage: s });
+    const c = JSON.parse(s.m.get(V.CLE));
+    assert.equal(c.v, 1, 'ajout sans changer de version : un lecteur qui l’ignore lit comme avant');
+    for (const mode of ['clair', 'sombre']) {
+      assert.deepEqual(Object.keys(c.vitrine[mode]).sort(), ['--accent', '--encre', '--filet', '--papier', '--plume', '--surface'], mode);
+      assert.ok(T.contraste(c.vitrine[mode]['--encre'], c.vitrine[mode]['--papier']) >= 4.5, mode + ' : texte lisible');
+    }
+    assert.notEqual(c.vitrine.clair['--papier'], c.vitrine.sombre['--papier']);
+  });
+
+  it('un thème sans sombre (« aucun ») n’a pas de jeu sombre : la page garde son rendu', () => {
+    const s = faux();
+    V.ecrire(theme({ modes: { sombre: 'aucun' } }), { stockage: s });
+    const c = JSON.parse(s.m.get(V.CLE));
+    assert.ok(c.vitrine.clair);
+    assert.equal(c.vitrine.sombre, null);
+  });
+
+  it('un thème dont les surcharges rendent un mode illisible n’a pas de jeu pour ce mode', () => {
+    const s = faux();
+    assert.equal(V.ecrire(theme({ surcharges: { clair: { texte: '#fdfaf3', fond: '#fdfaf3' } } }), { stockage: s }).ok, true, 'le thème reste valide');
+    const c = JSON.parse(s.m.get(V.CLE));
+    assert.equal(c.vitrine.clair, null);
+    assert.ok(c.vitrine.sombre);
+  });
+
+  it('relire ne dépend pas du cache : lire recalcule la validité depuis le thème', () => {
+    const s = faux();
+    s.m.set(V.CLE, JSON.stringify({ v: 1, maj: 1, themedef: theme(), vitrine: { clair: { '--papier': '#ffffff' }, sombre: null } }));
+    assert.equal(V.lire({ stockage: s }).themedef.nom, 'Forêt d’automne');
+  });
+});
