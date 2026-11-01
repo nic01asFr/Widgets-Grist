@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { identiteAtlas, enTetesOsm, messageRefusOsm, PAGE_ATLAS } from '../lib/osm-requete.js';
+import { identiteAtlas, enTetesOsm, messageRefusOsm, requeteOsm, PAGE_ATLAS } from '../lib/osm-requete.js';
 
 describe('enTetesOsm — se présenter à OpenStreetMap', () => {
   it('l’application nomme Atlas et dit où le trouver', () => {
@@ -58,4 +58,27 @@ it('avecReprises : un refus passager (502, 503, 504, 429) est repris, une répon
   assert.equal(r4.status, 200);
   await assert.rejects(() => avecReprises(async () => { throw new Error('hors ligne'); }, { attendre }), /hors ligne/);
   assert.match(messageRefusOsm(502), /surchargé ou indisponible \(502\)/);
+});
+
+describe('requeteOsm — le moteur web prend le relais d’un client natif refusé', () => {
+  it('l’application présente aussi le Referer d’Atlas', () => {
+    assert.equal(enTetesOsm({ application: true, version: '1.42.1' }).Referer, PAGE_ATLAS);
+    assert.equal(enTetesOsm({ application: false }).Referer, undefined);
+  });
+  it('406 ou 403 : la requête repart par le repli, sans les en-têtes qu’un navigateur refuse', async () => {
+    const appels = [];
+    const natif = async (u, i) => { appels.push(['natif', i.headers]); return { ok: false, status: 406 }; };
+    const repli = async (u, i) => { appels.push(['repli', i.headers]); return { ok: true, status: 200 }; };
+    const r = await requeteOsm('https://x', { headers: { 'User-Agent': 'Atlas/1', Referer: 'https://p/', Accept: 'application/json' } }, { fetch: natif, repli });
+    assert.equal(r.status, 200);
+    assert.deepEqual(appels.map((a) => a[0]), ['natif', 'repli']);
+    assert.deepEqual(appels[1][1], { Accept: 'application/json' });
+  });
+  it('une réponse bonne, un autre refus, ou aucun repli : la réponse est rendue telle quelle', async () => {
+    let n = 0;
+    const repli = async () => { n++; return { ok: true, status: 200 }; };
+    for (const status of [200, 404, 502]) assert.equal((await requeteOsm('u', {}, { fetch: async () => ({ ok: status === 200, status }), repli })).status, status);
+    assert.equal(n, 0);
+    assert.equal((await requeteOsm('u', {}, { fetch: async () => ({ ok: false, status: 406 }), repli: null })).status, 406);
+  });
 });

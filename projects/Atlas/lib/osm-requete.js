@@ -33,7 +33,7 @@ export function identiteAtlas(version = '') {
  * @param {{application?: boolean, version?: string, base?: Record<string,string>}} o
  */
 export function enTetesOsm({ application = false, version = '', base = {} } = {}) {
-  return application ? { ...base, 'User-Agent': identiteAtlas(version) } : { ...base };
+  return application ? { ...base, 'User-Agent': identiteAtlas(version), Referer: PAGE_ATLAS } : { ...base };
 }
 
 /**
@@ -78,4 +78,25 @@ export async function avecReprises(envoyer, { essais = 3, delai = 1500, attendre
     await attendre(delai * 2 ** (n - 1));
   }
   return derniere;
+}
+
+/**
+ * Une requête vers OpenStreetMap depuis l'application. Le client natif de Capacitor émet l'identité d'Atlas (User-Agent et Referer) ; si le service la refuse quand même (406
+ * ou 403 : relevé sur un téléphone le 01/11/2026), la même requête repart par le moteur web de la page (`repli`, le `fetch` d'origine que Capacitor met de côté), qui présente celui
+ * d'un navigateur (son User-Agent et le Referer de la page) : c'est ce chemin que le service accepte pour les pages web. Sans `repli` (navigateur), la réponse est rendue telle quelle.
+ * @param {string} url
+ * @param {{headers?: Record<string,string>, [k: string]: any}} init
+ * @param {{fetch: (u: string, i: object) => Promise<any>, repli?: ((u: string, i: object) => Promise<any>)|null}} o
+ */
+export async function requeteOsm(url, init, { fetch: natif, repli = null }) {
+  const rep = await natif(url, init);
+  if (!repli || (rep.status !== 406 && rep.status !== 403)) return rep;
+  const { 'User-Agent': _ua, Referer: _ref, ...entetes } = init?.headers || {};
+  return repli(url, { ...init, headers: entetes });
+}
+
+/** Le `fetch` d'origine de la page, que Capacitor met de côté avant de le remplacer par son client natif ; null hors application. */
+export function repliWeb(portee = globalThis) {
+  const f = portee?.CapacitorWebFetch;
+  return typeof f === 'function' ? f.bind(portee) : null;
 }
