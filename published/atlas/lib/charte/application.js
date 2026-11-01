@@ -53,16 +53,29 @@ export function variablesApplication(lecture) {
   const encreLisible = encreDonnee && (contraste(encreDonnee, fond) || 0) >= 4.5;
   if (encreDonnee && !encreLisible) notes.push('encre-non-suivie');
   if (encreLisible || fondSombre) {
-    const ink = encreLisible ? encreDonnee : '#ececf1';
+    let ink = encreLisible ? encreDonnee : '#ececf1';
+    // l'encre se lit aussi sur la surface des cartes et panneaux que l'application pose (plus claire que le fond en sombre) : sinon renforcée vers le blanc (fond sombre) ou le noir
+    const surface = variables['--surface'], base = ink;
+    if (surface) { let t = 0; while ((contraste(ink, surface) || 0) < 4.5 && t < 1) { t = Math.round((t + 0.05) * 100) / 100; ink = melanger(base, fondSombre ? '#ffffff' : '#000000', t); } if (ink !== base) notes.push('encre-redressee'); }
     variables['--ink'] = ink;
     variables['--text'] = melanger(ink, fond, 0.12);
-    variables['--muted'] = melanger(fond, ink, 0.62);
+    // le texte secondaire (aides, notes) se lit sur le fond comme le texte : 4,5:1, en renforçant la part d'encre tant qu'il le faut
+    let part = 0.62, muted = melanger(fond, ink, part);
+    while ((contraste(muted, fond) || 0) < 4.5 && part < 0.95) { part += 0.03; muted = melanger(fond, ink, part); }
+    variables['--muted'] = muted;
     variables['--muted-light'] = melanger(fond, ink, 0.4);
   }
   // l'accent sert de couleur de texte et de fond de bouton : trop pâle sur le fond de l'application, il ne se lirait pas
   if (a('principal')) {
     if ((contraste(g.principal, fond) || 0) < 3) notes.push('accent-peu-lisible-non-suivi');
-    else { variables['--accent'] = g.principal; variables['--accent-soft'] = melanger(fond, g.principal, 0.14); }
+    else {
+      // sert de texte et de fond de bouton sur le fond ET sur les surfaces (cartes, panneaux) que l'application pose : 4,5:1 sur chacun, sinon redressé vers le blanc (fond sombre) ou le noir, sans changer de teinte
+      const surfaces = [fond, variables['--surface'] || '#FFFFFF'], tient = (c) => surfaces.every((x) => (contraste(c, x) || 0) >= 4.5);
+      let accent = g.principal, t = 0;
+      while (!tient(accent) && t < 1) { t = Math.round((t + 0.05) * 100) / 100; accent = melanger(g.principal, fondSombre ? '#ffffff' : '#000000', t); }
+      if (accent !== g.principal) notes.push('accent-redresse');
+      variables['--accent'] = accent; variables['--accent-soft'] = melanger(fond, accent, 0.14);
+    }
   }
   // la couleur secondaire sert aussi de TEXTE (aides, notes) : en sombre, celle du thème s'il se lit (4,5:1), sinon un ton d'encre ; l'accent2 d'origine (un vert sombre) y serait illisible
   if (fondSombre) {

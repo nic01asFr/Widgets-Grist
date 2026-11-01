@@ -10,7 +10,7 @@
  * appliqué et `plusieurs-actifs` est dit ; le contenu est une donnée non fiable (`depuis-themedef.js`) ; les valeurs résolues du document sont appliquées sans être crues (`verifie: false`).
  * Ce module ne crée JAMAIS la table et n'écrit rien : l'appelant ne l'interroge que si elle existe (`listTables`).
  */
-import { choisirThemeDefActif, charteDepuisThemeDef } from './depuis-themedef.js';
+import { choisirThemeDefActif, charteDepuisThemeDef, VERSION_THEMEDEF } from './depuis-themedef.js';
 import { assainir } from './schema.js';
 import { resoudre } from './resolution.js';
 import { variablesApplication } from './application.js';
@@ -32,15 +32,21 @@ export function lignesDeTable(contenu) {
  * Le thème que dit la table, pour un mode d'apparence.
  * @param {object|object[]|null|undefined} contenu  le contenu de `Theme_document` (colonnes de `fetchTable`, ou lignes) ; absent : aucun thème
  * @param {{ mode?: 'clair'|'sombre' }} o
- * @returns {{ charte: object|null, ligne: string|null, mode: string|null, source: 'resolu'|'graines'|null, verifie: false, notes: string[], ignore: object[], avertissements: {code:string}[] }}
+ * @returns {{ charte: object|null, ligne: string|null, mode: string|null, source: 'resolu'|'graines'|null, verifie: false, notes: string[], ignore: object[], avertissements: {code:string}[], raison: string }}
+ *   `raison` : `applique`, `aucun-actif`, `plusieurs-actifs`, `version-inconnue` (colonne `version` de la ligne), `invalide`, `sans-mode-sombre`, `contraste-insuffisant`, `resolu-incomplet`
  */
 export function themeDuDocument(contenu, { mode = 'clair' } = {}) {
-  const vide = (avertissements = [], ignore = []) => ({ charte: null, ligne: null, mode: null, source: null, verifie: false, notes: [], ignore, avertissements });
+  const vide = (raison, avertissements = [], ignore = [], ligne = null) => ({ charte: null, ligne, mode: null, source: null, verifie: false, notes: [], ignore, avertissements, raison });
   const lignes = lignesDeTable(contenu);
   const { ligne, avertissements } = choisirThemeDefActif(lignes);
-  if (!ligne) return vide(avertissements);
+  if (!ligne) return vide(avertissements.some((a) => a.code === 'plusieurs-actifs') ? 'plusieurs-actifs' : 'aucun-actif', avertissements);
+  // La colonne `version` de la ligne : vide ou absente est tolérée (la version du document fait foi), toute autre valeur que la nôtre est refusée.
+  const vc = ligne.version;
+  if (vc !== undefined && vc !== null && vc !== '' && vc !== VERSION_THEMEDEF) return vide('version-inconnue', [...avertissements, { code: 'version-inconnue' }], [], String(ligne.cle));
   const r = charteDepuisThemeDef(ligne.themedef, { mode: MODES.includes(mode) ? mode : 'clair' });
-  return { charte: r.charte, ligne: String(ligne.cle), mode: r.mode, source: r.source, verifie: false, notes: r.notes, ignore: r.ignore, avertissements };
+  const raison = r.charte ? 'applique' : (r.refus ? r.refus.code : 'invalide');
+  const dits = r.refus && r.refus.code !== 'sans-mode-sombre' ? [...avertissements, ...(r.refus.echecs.length ? r.refus.echecs.map((e) => ({ code: r.refus.code, paire: e.paire, mesure: e.mesure, seuil: e.seuil })) : [{ code: r.refus.code }])] : avertissements;
+  return { charte: r.charte, ligne: String(ligne.cle), mode: r.mode, source: r.source, verifie: false, notes: r.notes, ignore: r.ignore, avertissements: dits, raison };
 }
 
 /**

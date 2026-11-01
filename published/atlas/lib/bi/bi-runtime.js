@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.41.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.41.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.42.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.42.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.41.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.42.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -480,7 +480,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.41.0');
+          const env = await import('./environnement.js?v=1.42.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
@@ -576,6 +576,7 @@ export function attacher(map, opts = {}) {
       const options = o && typeof o === 'object' ? o : {};
       const garderCap = options.garderCap === undefined ? true : options.garderCap;
       if (typeof garderCap !== 'boolean') throw new Error('setViewMode : garderCap doit être true ou false');
+      if (options.soleil !== undefined && typeof options.soleil !== 'boolean') throw new Error('setViewMode : soleil doit être true ou false');
       const cap = options.bearing;
       if (cap !== undefined && (typeof cap !== 'number' || !Number.isFinite(cap) || cap < -360 || cap > 360)) throw new Error('setViewMode : bearing hors bornes (-360 à 360)');
       const gestes = (nom, f) => { try { const g = map[nom]; if (g && typeof g[f] === 'function') g[f](); } catch (_) { /* un geste que cette carte n'a pas */ } };
@@ -601,7 +602,7 @@ export function attacher(map, opts = {}) {
      */
     async getBuildings(o) {
       // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
-      const B = await import('./batiments.js?v=1.41.0');
+      const B = await import('./batiments.js?v=1.42.0');
       const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
       const opt = normaliserOptionsBatiments(o);
       if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
@@ -621,7 +622,7 @@ export function attacher(map, opts = {}) {
      * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
      */
     async getFeatures(layer, o) {
-      const F = await import('./features.js?v=1.41.0');
+      const F = await import('./features.js?v=1.42.0');
       const opt = F.normaliserOptionsFeatures(o);
       if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
       if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
@@ -639,6 +640,12 @@ export function attacher(map, opts = {}) {
      * complet (`lib/bi/canevas.js` la branche) ; la carte nue répond `capacite_absente`.
      */
     async exportScene3D() { throw new Error("capacite_absente : exportScene3D demande le profil complet (`profil=\"complet\"`) : la scène 3D (objets, couches extrudées) est celle de l'application ; la carte nue n'en a pas"); },
+    /**
+     * Le soleil de la scène (contrat 0.7) : sa date et son heure, ses ombres. Il éclaire la carte et les modèles de l'APPLICATION : comme `exportScene3D`, ces deux commandes n'existent
+     * qu'en profil complet (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
+     */
+    async setSun() { throw new Error("capacite_absente : setSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
+    async getSun() { throw new Error("capacite_absente : getSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
       const actif = o.actif === undefined ? true : o.actif;

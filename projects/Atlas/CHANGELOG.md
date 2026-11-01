@@ -6,20 +6,20 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 | Repère | Valeur actuelle |
 |---|---|
-| Contrat du composant carte BI | 0.6 (additif ; 0.5, 0.4, 0.3 et 0.2 restent servis) |
-| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 4, 15 892 octets |
-| Empreinte du client | `sha384-wD5zs7m2MF8wHLPgO+yiag2x2zOhIxzNqccrX2W6/zLfUWtwHrEyilTSzU3o9yvy` |
+| Contrat du composant carte BI | 0.7 (additif ; 0.6, 0.5, 0.4, 0.3 et 0.2 restent servis) |
+| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 5, 16 045 octets |
+| Empreinte du client | `sha384-pErr+0QQ+ks6NcELEVcQXItMcDu0TsKOk492sbwom9csMDwTRtJe9PAdIlVDJmVU` |
 | Moteur de formulaires vendorisé | celui de la 1.13.1 (une publication d'Atlas ne le fait pas bouger) |
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
-## Prochaine — le soleil de la scène pour la page hôte (contrat 0.7)
+## 1.42.0 — le soleil de la scène pour la page hôte (contrat 0.7), le thème de l'instance aligné
 
 - **Contrat 0.7, additif** (profil complet) : `setSun({ date, actif })` règle la date et l'heure du soleil d'Atlas (ISO 8601 avec son fuseau, ou millisecondes) et l'interrupteur des ombres portées ; `getSun()` rend `{ date, actif, azimut, hauteur, lever, coucher }` (azimut depuis le nord dans le sens horaire, hauteur en degrés) ; l'événement `sun` annonce chaque changement, `origine` `utilisateur` ou `api`. Une commande 0.2 à 0.6 reste servie ; `VERSION_CLIENT` 5, nouvelle empreinte du client (à annoncer sur le fil des hôtes avant publication).
 - **`exportScene3D` rend `soleil: { date, azimut, hauteur }`** pour éclairer le GLB comme la carte, et **`setViewMode(mode, { soleil })`** montre ou masque le dock soleil en mode intégré.
 - Nouveau module pur `lib/soleil-hote.js`, test `tests/bi-soleil-0-7.test.js` ; mesuré dans Chrome (réglage, événements, export). La carte ne montre aucune ombre portée du bâti (limite de MapLibre) : la lumière des faces suit le soleil, les modèles 3D portent leur ombre.
 
-## Prochaine — le lecteur de ThemeDef d'Atlas aligné sur le kit et Form Builder
+### Le lecteur de ThemeDef d'Atlas aligné sur le kit et Form Builder
 
 - **Un seul comportement pour un même document** : `lib/charte/themedef-lecteur.js` lit `Theme_document` comme le kit et Form Builder (les 142 vecteurs de lecture du kit sont rejoués par `tests/themedef-lecteur-vecteurs.test.js`, avec la liste exacte des 15 écarts voulus, la même que celle de Form Builder). Nouveau : les 22 paires de contraste sont mesurées sur le `resolu` (avant ET après les surcharges, seuil selon le premier plan de la paire, exigences du document qui renforcent sans jamais relâcher) ; un `resolu` incomplet (moins de 26 valeurs lisibles) ou qui ne les tient pas est refusé EN ENTIER (plus de retour partiel, plus de repli sur l'autre mode) ; une surcharge refusée est ignorée sans effacer la valeur visée ; la colonne `version` de la ligne est contrôlée ; `sombre: aucun` n'applique rien en sombre ; la mesure lit `#RGB`, `rgb()` et `hsl()`. `themeDuDocument` rend désormais une `raison`. Sans `resolu`, les graines du document restent données à la charte d'Atlas (écart voulu, dit : `source: 'graines'`).
 - **Thème de l'instance Grist : le contrat unique du kit** (arbitré avec Form Builder et appkit) : `lib/charte/theme-instance-contrat.js` est la copie mécanique de la fonction pure du kit (empreinte vérifiée par un test, 32 vecteurs rejoués), et `theme-instance.js` ne fait que brancher Grist dessus. Changements visibles dans Grist, sans thème de document : la couleur d'action doit tenir 4,5:1 (et non plus 3:1) sur le fond ET la surface, sinon elle est redressée et dite (GristLight : `#007548` au lieu de `#009058` ; GristDark : `#1da270`) ; le texte est redressé à 4,5:1 sur le fond et la surface douce ; une apparence inconnue est refusée (valeurs d'origine). Le fond et le texte de l'instance restent repris dans les deux modes (politique d'Atlas, qui suit le mode de l'hôte).
