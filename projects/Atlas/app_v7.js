@@ -6292,6 +6292,10 @@ const IC = {
     formulaire: '<path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M9 11h6M9 15h4"/>',
     controles: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
     reglages:  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    precedent: '<path d="M15 6l-6 6 6 6"/>',
+    suivant:   '<path d="M9 6l6 6-6 6"/>',
+    lecture:   '<path d="M7 4.5v15l12-7.5z"/>',
+    fermer:    '<path d="M6 6l12 12M18 6L6 18"/>',
     camera:    '<path d="M3 7h3l2-3h8l2 3h3v13H3z"/><circle cx="12" cy="13" r="3.2"/>',
     palette:   '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1-.8-1.5-.8-2.4 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-4-4-7.5-9-7.5z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.1" fill="currentColor"/><circle cx="15" cy="8.5" r="1.1" fill="currentColor"/>',
     cube:      '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
@@ -7337,7 +7341,7 @@ function renderControlBody(layer, c, { dock = false } = {}) {
         aria-label="${part === 'min' ? 'Minimum' : 'Maximum'} — ${nomLisible}"
         oninput="A.setControlBound('${lid}','${fid}','${part}', this.value)">`;
     const animer = c.type === 'time'
-        ? `<button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.playTime('${lid}','${fid}')">▶ Animer dans le temps</button>`
+        ? `<button class="btn btn-soft btn-full" style="margin-top:6px" onclick="A.playTime('${lid}','${fid}')">${icLigne(IC.lecture)} Animer dans le temps</button>`
         : '';
     if (c.variant === 'time_between' || c.variant === 'range_between') {
         return `<div class="range-info" style="margin-top:6px">${valeur('min')} → ${valeur('max')}</div>${curseur('min')}${curseur('max', true)}${animer}${note}`;
@@ -8066,10 +8070,10 @@ function renderRecit() {
         body.innerHTML = `
             <div class="hint">Parcours publié — lecture seule.</div>
             ${barreTrajetHtml()}
-            <div class="section"><button class="btn btn-dark btn-full" onclick="A.storyPlay(0)">▶ Lancer le récit</button></div>
+            <div class="section"><button class="btn btn-dark btn-full" onclick="A.storyPlay(0)">${icLigne(IC.lecture)} Lancer le récit</button></div>
             <div class="layer-list">${steps.map((s, i) => `
                 <div class="layer-item" onclick="A.storyPlay(${i})" style="cursor:pointer">
-                    <span class="layer-vis on">▶</span>
+                    <span class="layer-vis on">${icLigne(IC.lecture, 12)}</span>
                     <div class="layer-info">
                         <div class="layer-name">${echapper(s.title || ('Étape ' + (i + 1)))}</div>
                         ${metaEtapeTrajet(s)}
@@ -8080,7 +8084,7 @@ function renderRecit() {
     }
     let html = `<div class="section" style="display:flex;gap:8px">
             <button class="btn btn-primary" style="flex:2" onclick="A.storyCapture()">${icTrait(IC.camera)} Capturer l'étape</button>
-            ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">▶ Lecture</button>` : ''}
+            ${steps.length ? `<button class="btn btn-dark" style="flex:1" onclick="A.storyPlay(0)">${icLigne(IC.lecture)} Lecture</button>` : ''}
         </div>
         ${barreTrajetHtml()}`;
     if (steps.length) html += htmlOuverture(steps);
@@ -8090,7 +8094,7 @@ function renderRecit() {
     }
     html += `<div class="layer-list">${steps.map((s, i) => `
         <div class="layer-item">
-            <span class="layer-vis on" onclick="A.storyPlay(${i})" title="Aller à l'étape">▶</span>
+            <span class="layer-vis on" onclick="A.storyPlay(${i})" title="Aller à l'étape">${icLigne(IC.lecture, 12)}</span>
             <div class="layer-info" style="flex:1">
                 ${metaEtapeTrajet(s)}
                 ${metaPastilles(s)}
@@ -8223,10 +8227,10 @@ function renderStoryPresentation() {
                 : '<button class="btn btn-dark" onclick="A.suivreTrajet()">Suivre</button>'}</div>`)
         : '';
     ov.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
-        <button class="btn btn-soft" onclick="A.storyStep(-1)" ${_storyIdx === 0 ? 'disabled' : ''}>◀</button>
+        <button class="btn btn-soft" onclick="A.storyStep(-1)" aria-label="Étape précédente" ${_storyIdx === 0 ? 'disabled' : ''}>${icTrait(IC.precedent, 18)}</button>
         <div style="flex:1;text-align:center"><div style="font-weight:600;font-size:15px">${echapper(s.title || ('Étape ' + (_storyIdx + 1)))}</div><div style="font-size:10px;color:#6b6256;letter-spacing:.05em">${_storyIdx + 1} / ${n}${ambiance ? ' · ' + ambiance : ''}</div></div>
-        <button class="btn btn-soft" onclick="A.storyStep(1)" ${_storyIdx === n - 1 ? 'disabled' : ''}>▶</button>
-        <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter">✕</button>
+        <button class="btn btn-soft" onclick="A.storyStep(1)" aria-label="Étape suivante" ${_storyIdx === n - 1 ? 'disabled' : ''}>${icTrait(IC.suivant, 18)}</button>
+        <button class="btn btn-soft" onclick="A.storyExit()" title="Quitter" aria-label="Quitter le récit">${icTrait(IC.fermer, 16)}</button>
     </div>
     ${points ? `<div style="display:flex;gap:6px;justify-content:center;margin-top:8px">${points}</div>` : ''}
     ${s.text ? `<div style="margin-top:8px;font-size:13px;line-height:1.45">${assainirTexte(s.text)}</div>` : ''}
@@ -8736,7 +8740,7 @@ function htmlTraficVues() {
         <select class="input" onchange="A.traficReglage('rendu', this.value)">
             ${[['auto', 'Points de loin, 3D de près'], ['3d', 'Modèles 3D seulement'], ['points', 'Points seulement']].map(([k, l]) => `<option value="${k}" ${_traficReglages.rendu === k ? 'selected' : ''}>${l}</option>`).join('')}
         </select>
-        <button class="btn ${_trafic ? 'btn-soft' : 'btn-dark'} btn-full" style="margin-top:8px" onclick="A.traficBasculer()">${_trafic ? '■ Arrêter le trafic' : '▶ Animer le trafic'}</button>
+        <button class="btn ${_trafic ? 'btn-soft' : 'btn-dark'} btn-full" style="margin-top:8px" onclick="A.traficBasculer()">${_trafic ? '■ Arrêter le trafic' : icLigne(IC.lecture) + ' Animer le trafic'}</button>
         ${etat ? `<div class="hint" style="margin-top:6px">${etat.vehicules} véhicules sur ${etat.reseau.troncons} tronçons · trafic <b>simulé</b></div>` : ''}${motifs}
     </div>`;
 }
