@@ -271,6 +271,13 @@ import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
 import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=20261010b';
 import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=20261016a';
+import { ecrireCache } from './lib/demarrage-cache.js?v=20261102a';
+
+// Le style de base est demandé dès le chargement du module (pendant que l'API de plugin et le document se chargent) : la carte est créée déjà peinte aux couleurs du thème, sans
+// image intermédiaire aux couleurs d'origine (voir `initMap`). Hors réseau ou en échec : null, et la carte retombe sur l'adresse du style, comme avant.
+const _styleBasePrefetch = (typeof fetch === 'function' && typeof location !== 'undefined' && !/(?:^|[?&])bi=(?:1|true)(?:&|$)/.test(location.search) && typeof navigator !== 'undefined' && navigator.onLine !== false)
+    ? fetch(STYLE_BASE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    : Promise.resolve(null);
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -3352,18 +3359,32 @@ let _fondDeRepli = false;
 /** Plafond du ratio de pixels demandé par l'hôte (`?ratio=`), lu une fois. */
 const RATIO_HOTE = (() => { try { return ratioMaxDemande(location.search); } catch (_) { return null; } })();
 
-function initMap() {
+async function initMap() {
     const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.theme;
     // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
     _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
+    let styleInitial = _fondDeRepli ? STYLE_HORS_RESEAU : (_bm.style ? _bm.style() : _bm.url);
+    // Le fond « Thème » : le style de base, déjà repeint avec le dernier plan connu (ou celui d'Atlas), pour que la toute première image soit la bonne.
+    if (!_fondDeRepli && _bm === BASEMAPS.theme) {
+        try {
+            const mem = (typeof window !== 'undefined' && window.__atlasDemarrage && window.__atlasDemarrage.theme) || null;
+            _fondThemeModule = await import('./lib/fond-theme.js?v=20261101a');
+            if (mem && mem.plan && mem.plan.fond) _planTheme = { ...mem.plan }; else await rafraichirFondTheme();
+            const json = await _styleBasePrefetch;
+            if (json && Array.isArray(json.layers) && _planTheme) styleInitial = _fondThemeModule.themerStyle(json, _planTheme);
+        } catch (e) { console.warn("[Atlas] style de base peint d'avance", e && e.message); }
+    }
+    // La dernière vue connue pour cette instance : la carte s'ouvre là où la personne l'avait laissée, au lieu de sauter du lieu par défaut à sa vue.
+    const vueMemo = (typeof window !== 'undefined' && window.__atlasDemarrage && window.__atlasDemarrage.vue) || null;
+    if (window.__atlasCleDemarrage) console.info("[Atlas] démarrage : thème mémorisé", !!(window.__atlasDemarrage && window.__atlasDemarrage.theme), "| vue mémorisée", !!vueMemo, "| fond peint d'avance", typeof styleInitial === 'object');
     map = new maplibregl.Map({
         container: 'map',
         locale: LOCALE_CARTE,
-        style: _fondDeRepli ? STYLE_HORS_RESEAU : (_bm.style ? _bm.style() : _bm.url),
-        center: [STATE.location.lng, STATE.location.lat],
-        zoom: CONFIG.defaultZoom,
-        pitch: CONFIG.defaultPitch,
-        bearing: CONFIG.defaultBearing,
+        style: styleInitial,
+        center: vueMemo ? [vueMemo.lng, vueMemo.lat] : [STATE.location.lng, STATE.location.lat],
+        zoom: vueMemo && vueMemo.zoom !== null ? vueMemo.zoom : CONFIG.defaultZoom,
+        pitch: vueMemo && vueMemo.pitch !== null ? vueMemo.pitch : CONFIG.defaultPitch,
+        bearing: vueMemo && vueMemo.bearing !== null ? vueMemo.bearing : CONFIG.defaultBearing,
         antialias: true,
         maxPitch: 80,
         ...(RATIO_HOTE ? { pixelRatio: ratioApplique(window.devicePixelRatio || 1, RATIO_HOTE) } : {}),
@@ -3574,6 +3595,11 @@ function saveMapCamera() {
             bearing: map.getBearing(),
         }));
     } catch (_) { /* quota / mode privé */ }
+    // La même vue, mémorisée pour cette instance : l'ouverture suivante démarre déjà là (lib/demarrage-cache.js).
+    try {
+        const c = map.getCenter();
+        if (window.__atlasCleDemarrage) ecrireCache(localStorage, window.__atlasCleDemarrage, { vue: { lng: c.lng, lat: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() } });
+    } catch (_) { /* stockage refusé */ }
 }
 
 function restoreMapCamera() {
@@ -3745,7 +3771,11 @@ function applyLabelsVisibility() {
  * Le fond « Thème » : le fond de carte repeint avec la charte courante (document, sinon instance Grist, sinon celle d'Atlas qui existe toujours). Le plan est calculé une fois
  * (`rafraichirFondTheme`) puis posé à chaque style prêt ; `appliquerFondTheme` est synchrone et ne fait rien tant que le plan n'est pas là ou que ce n'est pas le fond choisi.
  */
-let _planTheme = null, _charteDuFond = null, _fondThemeModule = null;
+let _planTheme = null, _charteDuFond = null, _fondThemeModule = null, _variablesAppliquees = {}, _modeAppliqueSombre = false;
+/** Le thème appliqué et le plan du fond, mémorisés pour l'instance : la prochaine ouverture les pose avant le premier affichage (lib/demarrage-cache.js). */
+function memoriserDemarrage() {
+    try { if (window.__atlasCleDemarrage) ecrireCache(localStorage, window.__atlasCleDemarrage, { theme: { variables: _variablesAppliquees, mode: _modeAppliqueSombre ? 'sombre' : 'clair', plan: _planTheme || {} } }); } catch (_) { /* stockage refusé */ }
+}
 function appliquerFondTheme() {
     try {
         if (!map || STATE.settings.basemap !== 'theme' || !_planTheme || !_fondThemeModule) return;
@@ -3765,6 +3795,7 @@ async function rafraichirFondTheme() {
         const hote = _charteDuFond ? SC.assainir(_charteDuFond).charte : {};
         _planTheme = { ...RS.resoudre({ hote }).charte.fond.plan };
         _fondThemeModule = FT;
+        memoriserDemarrage();
     } catch (e) { console.warn('[Atlas] fond Thème', e && e.message); }
     appliquerFondTheme();
 }
@@ -12773,6 +12804,7 @@ function poserHabillageApplication(variables, noms) {
     for (const [nom, valeur] of Object.entries(variables)) if (noms.includes(nom)) style.setProperty(nom, valeur);
     // Mode sombre : la page accroche ses règles sombres à `data-mode` et déclare `color-scheme` (champs, ascenseurs natifs) ; sans thème sombre, l'interface claire d'origine.
     const sombre = variables['--mode-application'] === 'sombre';
+    _variablesAppliquees = variables; _modeAppliqueSombre = sombre; memoriserDemarrage();
     if (sombre) racine.setAttribute('data-mode', 'sombre'); else racine.removeAttribute('data-mode');
     style.setProperty('color-scheme', sombre ? 'dark' : 'light');
     try { if (map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
@@ -17340,7 +17372,8 @@ const A = {
         _styleUsable = false; // le style est remplacé : plus rien à monter d'ici là
         map.stop();
         const feuilleAvant = map.style?.stylesheet;
-        map.setStyle(b.style ? b.style() : b.url);
+        // Le fond « Thème » arrive déjà peint (transformStyle) : pas d'image aux couleurs d'origine entre deux fonds.
+        map.setStyle(b.style ? b.style() : b.url, k === 'theme' && _planTheme && _fondThemeModule ? { transformStyle: (avant, apres) => _fondThemeModule.themerStyle(apres, _planTheme) } : undefined);
         // Au premier `idle` du NOUVEAU style (lib/basemap-layers.js) : un
         // `idle` émis pendant la requête du style (une image rendue entre-temps)
         // reposait les calques sur l'ancien, et le nouveau les effaçait ou
@@ -18366,7 +18399,7 @@ async function init() {
     }
     updateMobileLayout();
     wireEvents();
-    initMap();
+    await initMap();
     if (!MODE_BI_NU) probeLocalModels();   // le composant BI nu n'affiche aucun modèle 3D du catalogue ; le profil complet, si
     await initGrist();
     if (CONFIG.sceneExterne) await monterSceneExterne(CONFIG.sceneExterne);
@@ -18396,6 +18429,10 @@ async function init() {
     }, 120000);
     updateLegend();
     updateSunStrip();
+    // Les données sont là : les textes provisoires cachés par le script de tête (`atlas-demarrage`) peuvent apparaître, au premier `idle` de la carte (ou d'office après 4 s).
+    const lever = () => document.documentElement.classList.remove('atlas-demarrage');
+    try { map.once('idle', lever); } catch (_) { /* carte absente */ }
+    setTimeout(lever, 4000);
 }
 
 /**
