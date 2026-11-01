@@ -12,10 +12,10 @@ import { creerClient, VERSION_CLIENT, VERSIONS_CLIENT } from '../lib/bi/client.j
 const ctx = { origine: 'https://hote.test', autorisees: ['https://hote.test'] };
 const cmd = (c, args, version) => ({ source: 'hote-bi', version, id: 'a', cmd: c, args });
 
-test('une seule version du contrat : celle du pont ; 0.2 à 0.5 sont acceptées', () => {
-  assert.equal(VERSION, '0.5'); assert.equal(VERSION_RUNTIME, VERSION);
-  assert.deepEqual([...VERSIONS_ACCEPTEES], ['0.2', '0.3', '0.4', '0.5']);
-  assert.ok(versionsCompatibles('0.5') && !versionsCompatibles('0.3') && !versionsCompatibles('0.4'));
+test('une seule version du contrat : celle du pont ; 0.2 à 0.6 sont acceptées', () => {
+  assert.equal(VERSION, '0.6'); assert.equal(VERSION_RUNTIME, VERSION);
+  assert.deepEqual([...VERSIONS_ACCEPTEES], ['0.2', '0.3', '0.4', '0.5', '0.6']);
+  assert.ok(versionsCompatibles('0.6') && !versionsCompatibles('0.3') && !versionsCompatibles('0.5'));
 });
 
 test('versionAuMoins : comparaison de la mineure, une version illisible n\'est jamais suffisante', () => {
@@ -45,8 +45,8 @@ test('une commande 0.4 n\'est servie qu\'à un hôte en 0.4', () => {
   }
 });
 
-test('client : un hôte qui a négocié 0.3 se voit refuser une commande 0.4 côté hôte, sans envoi ; VERSION_CLIENT est 3 et le client préfère 0.5', async () => {
-  assert.equal(VERSION_CLIENT, 3); assert.deepEqual([...VERSIONS_CLIENT], ['0.5', '0.4', '0.3', '0.2']);
+test('client : un hôte qui a négocié 0.3 se voit refuser une commande 0.4 côté hôte, sans envoi ; VERSION_CLIENT est 4 et le client préfère 0.6', async () => {
+  assert.equal(VERSION_CLIENT, 4); assert.deepEqual([...VERSIONS_CLIENT], ['0.6', '0.5', '0.4', '0.3', '0.2']);
   // une commande 0.4 déclarée : seulement si le contrat en porte déjà ; sinon la règle est couverte par validerCommande ci-dessus
   const nom = COMMANDES_0_4[0]; if (!nom) return;
   const envoyes = [];

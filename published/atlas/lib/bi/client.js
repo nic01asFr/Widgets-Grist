@@ -15,13 +15,13 @@
  *    délai maximal (`delai`, défaut 10 s) ;
  *  - les messages d'une origine ou d'une fenêtre inattendue sont écartés (`transportFenetre`), jamais traités ;
  *  - les commandes partent avec une `targetOrigin` précise, jamais `*` ;
- *  - la version du contrat se négocie (0.5, puis 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
+ *  - la version du contrat se négocie (0.6, puis 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
 import { COMMANDES, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande, versionDeCommande, versionAuMoins } from './pont.js';
 
 /** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
-export const VERSION_CLIENT = 3;
+export const VERSION_CLIENT = 4;
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());

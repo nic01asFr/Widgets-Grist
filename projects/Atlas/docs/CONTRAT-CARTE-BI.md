@@ -1,4 +1,4 @@
-# Composant carte BI : contrat 0.5
+# Composant carte BI : contrat 0.6
 
 Atlas peut être embarqué dans une application externe (« l'hôte ») comme **composant de carte** : l'hôte envoie des commandes, la carte renvoie des événements. Ce document fixe le **contrat** (version `0.3`). Le guide du développeur de l'hôte est `EXPLOITATION-EXTERNE-BI.md`.
 
@@ -174,6 +174,19 @@ Ajouts **additifs** pour une page qui pose sa propre 3D au-dessus d'une carte vu
 - Pas d'attribution : ce sont les données de l'hôte, pas celles d'un fond tiers. Pour le bâti du fond, `getBuildings` garde son attribution ODbL.
 - Hors de cette commande, volontairement : routes, eau et occupation du sol du fond ; le relief. À ouvrir seulement sur un besoin réel.
 
+## 6 sexies. Contrat 0.6 : la scène 3D en un fichier GLB [testé, navigateur]
+
+`exportScene3D(options)` (capacité `socle`, exige la version 0.6, **profil complet seulement** : la scène 3D, ses objets et ses couches extrudées sont ceux de l'application ; la carte nue répond `capacite_absente`). Elle rend **un GLB** que l'hôte charge tel quel (WebXR, lecteur 3D, QR imprimé figé) : plus rien d'Atlas derrière.
+
+- **Options** : `bbox` [ouest, sud, est, nord] (la vue courante par défaut ; 4 degrés carrés au plus) ; `ancre` { lng, lat } (le centre de l'emprise) ; `couches` (identifiants de la scène, 64 au plus ; toutes par défaut) ; `inclure` { `objets` (vrai), `extrusions` (vrai), `bati` (faux) } ; `hauteurParDefaut` (3 m : surface ou bâtiment sans hauteur) ; `simplification` (0,1 m, 0 à 5 : sommets superflus retirés) ; `plafondOctets` (5 Mo ; 1 Ko à 32 Mo).
+- **Contenu** : les **objets** (modèles GLB du catalogue ou posés à la main, avec les mêmes poses que l'écran : échelle, azimut, rotations, décalages, niveau de détail maximal), les **couches extrudées** (surfaces avec hauteur et base, trous percés, MultiPolygon complets ; une géométrie indexée par couche, couleur et opacité), et sur demande le **bâti du fond** (tuiles déjà chargées : la vue courante ; hauteur inconnue remplacée par `hauteurParDefaut`, dit). Ni le relief, ni les lignes, ni les points sans modèle ne sont exportés.
+- **Repère du fichier** (écrit aussi dans ses `extras`) : mètres ; x vers l'est, y vers le haut, z vers le sud (le nord est -z, convention glTF) ; **sol à y = 0** (pas d'altitude absolue) ; origine à l'ancre. Échelle d'affichage : au choix de l'hôte.
+- **Traçabilité** : `scenes[0].extras.atlas` = `{ format: "atlas-scene3d/1", unite, repere, ancre, emprise, genere, contenu, attributions: [{ source, licence?, url? }] }` ; la même liste d'attributions est rendue à part (légende imprimée) ; une source sans licence connue est dite dans `avertissements` (« à renseigner avant diffusion »).
+- **Réponse** : `{ glb (ArrayBuffer), octets, ancre, bbox, repere, format, contenu: { objets, extrusions }, attributions, avertissements }`.
+- **Plafonds et refus** : 5 Mo par défaut (`trop_lourd` dit quoi réduire : emprise, couches, bâti) ; 2000 objets, 5000 surfaces, 300 000 sommets ; emprise trop vaste, option inconnue, rien à exporter, aucun élément dans l'emprise : erreur explicite. Une couche d'objets qui ne donne rien est nommée dans `avertissements` (masquée, hors emprise, modèle introuvable).
+- **Mesuré** (navigateur, trois couches : deux casques GLB de 3,4 Mo avec textures, un bloc de 18 m avec cour, un MultiPolygone) : positions exactes (écart sous 1 % de la distance : mercator local), azimuts et échelles de l'écran conservés, GLB rechargé et rendu par un autre three.js. Bâti d'un quartier du Vieux-Port (66 grosses entités, 98 000 sommets) : 3 Mo.
+- **Pas fait** : le relief, l'USDZ (iPhone : repli caméra et QR chez l'hôte), les textures du fond, l'éclairage. L'exporteur (`GLTFExporter` de three.js r160, MIT, 78 Ko) est chargé à la demande.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -295,5 +308,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.32.2 | 0.3 | l'aiguille du nord de la boussole suit la couleur principale. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.35.0 | 0.3 -> 0.4 | contrat 0.4, additif : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode` (vue plane verrouillée), `getBuildings` (bâtiments visibles, hauteurs, fragments), événement `clic` en un point libre ; la carte nue refuse une couche `dalles3d` (`capacite_absente`) ; règle de version : une commande exige au moins la version qui l'a introduite ; `VERSION_CLIENT` 2 ; `ready.version` annonce 0.4 (négocier par `ready.versions`) |
 | 1.36.0 | 0.4 -> 0.5 | contrat 0.5, additif : `getFeatures(couche, { bbox, limite })` ; `VERSION_CLIENT` 3. Une commande 0.2, 0.3 ou 0.4 reste servie à un hôte resté en 0.2, 0.3 ou 0.4. |
+| 1.39.0 | 0.5 -> 0.6 | contrat 0.6, additif : `exportScene3D(options)` (profil complet), la scène 3D en un GLB ; `VERSION_CLIENT` 4. Une commande 0.2 à 0.5 reste servie à un hôte resté dans sa version. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

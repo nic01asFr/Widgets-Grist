@@ -2283,12 +2283,15 @@ const Models3D = {
     },
 
     // collecte des features 3D dans l'emprise (culling viewport)
-    collect() {
+    collect(opts = {}) {
         const out = [];
         if (!map) return out;
-        const b = map.getBounds(), buf = 0.004;
+        // Un export (`exportScene3D`) donne son emprise, son plafond, ses couches, et veut le niveau de détail maximal (distance nulle) : pas la vue de la caméra.
+        const b = opts.bbox ? { getWest: () => opts.bbox[0], getSouth: () => opts.bbox[1], getEast: () => opts.bbox[2], getNorth: () => opts.bbox[3] } : map.getBounds();
+        const buf = opts.bbox ? 0 : 0.004, plafond = opts.max || MAX_3D_INSTANCES;
         for (const layer of STATE.layers) {
             if (layer.visible === false) continue;
+            if (opts.couches && !opts.couches.includes(layer.id)) continue;
             if (layer.geometryType !== 'Point' && layer.geometryType !== 'MultiPoint') continue;
             if (layer.style?.mode !== 'library' && layer.style?.mode !== 'custom') continue;
             // Les points lumineux EclExt ont leur propre rendu (`Eclairage`) :
@@ -2301,7 +2304,7 @@ const Models3D = {
             if (!defUrl && !categorized && !parObjets) continue;
             // Position de la camera, pour le niveau de detail de chaque objet (un `_modelId`
             // `objet:<type>` peut aussi venir d'un objet d'une couche low-poly).
-            const cam = CATALOGUE_OBJETS.cat ? cameraMetres() : null;
+            const cam = CATALOGUE_OBJETS.cat ? (opts.bbox ? { export: true } : cameraMetres()) : null;
             const feats = (filteredGeoJSON(layer)?.features || []);
             for (let idx = 0; idx < feats.length; idx++) {
                 const f = feats[idx];
@@ -2314,7 +2317,7 @@ const Models3D = {
                 const propre = f.properties?._modelId;
                 if (cam && ((parObjets && !propre) || estIdObjet(propre))) {
                     const feature = layer.geojson?.features?.[srcIdx] || f;
-                    const r = resolutionCatalogue(layer, feature, distanceCamera(cam, lng, lat));
+                    const r = resolutionCatalogue(layer, feature, opts.bbox ? 0 : distanceCamera(cam, lng, lat));
                     // Pas de fichier (absent, licence refusee) : le repli low-poly
                     // du type ; aucun type : le modele de la couche (spec §3.4).
                     if (r) url = r.url || findModel(r.fallback)?.url || defUrl;
@@ -2322,7 +2325,7 @@ const Models3D = {
                 } else if (categorized || propre) { const mm = findModel(modelIdDeEntite(f, layer)); if (mm?.url) url = mm.url; }
                 if (!url) continue;
                 out.push({ layerId: layer.id, idx: srcIdx, lng, lat, url });
-                if (out.length >= MAX_3D_INSTANCES) return out;
+                if (out.length >= plafond) return out;
             }
         }
         return out;
@@ -18489,6 +18492,107 @@ async function demarrer() {
 }
 
 /**
+ * `exportScene3D` (contrat 0.6) : la scène 3D de l'application — objets, couches extrudées, bâti du fond sur demande — en UN GLB (lib/export-scene3d.js). Mêmes poses que l'écran :
+ * `Models3D.placement` donne la matrice de chaque objet, ici ramenée à l'ancre de l'export, sol à 0 (le relief n'est pas exporté). Chargée à la demande : ni three.js d'export ni
+ * l'exporteur ne sont téléchargés tant qu'un hôte n'appelle pas la commande.
+ */
+async function exporter3dScene(entree) {
+    const E = await import('./lib/export-scene3d.js?v=20261102a');
+    const opt = E.normaliserOptions(entree);
+    if (!map || !Models3D) throw new Error('exportScene3D : la carte n\'est pas prête');
+    let bbox = opt.bbox;
+    if (!bbox) { const b = map.getBounds(); bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]; E.normaliserOptions({ bbox }); }
+    const ancre = opt.ancre || E.centreDe(bbox);
+    const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
+    if (!Models3D.origin) Models3D.setOrigin(ancre.lng, ancre.lat);
+    const versLocal = (lng, lat) => { const m = Models3D.localMeters(lng, lat); return { x: m.x, y: m.y }; };   // x est, y nord : les mêmes mètres que l'écran
+    const ancreLocale = versLocal(ancre.lng, ancre.lat);
+    const attributions = [], avertissements = [];
+    const objets = [], extrusions = [];
+
+    if (opt.inclure.objets) {
+        const items = Models3D.collect({ bbox, max: E.PLAFOND_OBJETS + 1, couches: opt.couches });
+        // Une couche d'objets qui ne donne rien le dit, au lieu d'un fichier muet : emprise, visibilité, modèle introuvable.
+        for (const l of STATE.layers) {
+            if ((l.geometryType !== 'Point' && l.geometryType !== 'MultiPoint') || (l.style?.mode !== 'library' && l.style?.mode !== 'custom')) continue;
+            if (opt.couches && !opt.couches.includes(l.id)) continue;
+            if (!items.some((it) => it.layerId === l.id)) avertissements.push('couche « ' + l.id + ' » : aucun objet exporté (' + (l.visible === false ? 'couche masquée' : "aucun objet dans l'emprise, ou modèle introuvable") + ' ; ' + ((l.geojson?.features || []).length) + ' entité(s) dans la couche)');
+        }
+        const licences = new Map();
+        for (const it of items) {
+            const layer = STATE.layers.find((l) => l.id === it.layerId), feature = layer?.geojson?.features?.[it.idx];
+            if (!layer || !feature) continue;
+            const racine = await Models3D.ensureMonumentRoot(it.url);
+            if (!racine) { avertissements.push('objet « ' + it.layerId + '/' + it.idx + ' » : modèle illisible (' + it.url.split('/').pop() + ')'); continue; }
+            const m = Models3D.placement(layer, feature).clone();
+            // ramené à l'ancre, sol à zéro : la position de l'écran porte l'écart au relief (`ecartAuSol`), qu'on retire
+            const eOff = ecartAuSol(Models3D.elevRaw(it.lng, it.lat), Models3D.originElev);
+            m.elements[12] -= ancreLocale.x;   // x est ; z = -nord : l'ancre recule la scène vers l'origine
+            m.elements[14] += ancreLocale.y;
+            m.elements[13] -= eOff || 0;
+            objets.push({ id: feature.id ?? it.idx, couche: layer.id, racine, lng: it.lng, lat: it.lat, matrice: m });
+            const nom = it.url.split('/').pop();
+            if (!licences.has(it.url)) {
+                const mod = findModel(modelIdDeEntite(feature, layer));
+                const licence = mod?.licence?.name || mod?.licence || null;
+                licences.set(it.url, { source: 'Objet 3D ' + (mod?.name || nom), licence: typeof licence === 'string' ? licence : null, url: /^https?:/.test(it.url) ? it.url : new URL(it.url, location.href).href });
+            }
+        }
+        for (const a of licences.values()) { attributions.push({ source: a.source, ...(a.licence ? { licence: a.licence } : {}), url: a.url }); if (!a.licence) avertissements.push('licence non précisée pour « ' + a.source + ' » : à renseigner avant diffusion'); }
+        if (items.length > E.PLAFOND_OBJETS) avertissements.push('objets : plus de ' + E.PLAFOND_OBJETS + ' dans l\'emprise, les premiers seulement');
+    }
+
+    if (opt.inclure.extrusions) {
+        for (const layer of STATE.layers) {
+            if (layer.visible === false || (layer.geometryType !== 'Polygon' && layer.geometryType !== 'MultiPolygon') || layer.style?.polygonMode === 'flat') continue;
+            if (opt.couches && !opt.couches.includes(layer.id)) continue;
+            const sym = initSymbolization(layer), s = layer.style || {};
+            const champ = layer.heightField || s.heightField;
+            const gradue = sym.size.mode === 'graduated' && sym.size.field;
+            const r = gradue ? getNumericRange(layer, sym.size.field) : null;
+            const base = Number.isFinite(sym.extrusion?.base) ? sym.extrusion.base : 0;
+            const opacite = Number.isFinite(sym.opacity) ? sym.opacity : 1;
+            let n = 0;
+            for (const f of (filteredGeoJSON(layer)?.features || [])) {
+                if (!f.geometry || !f.geometry.coordinates) continue;
+                const polys = E.polygonesDe(f.geometry);
+                if (!polys.length) continue;
+                // dans l'emprise : au moins un sommet dedans
+                const dedans = polys.some((rings) => rings[0].some(([lng, lat]) => lng >= bbox[0] && lng <= bbox[2] && lat >= bbox[1] && lat <= bbox[3]));
+                if (!dedans) continue;
+                const p = f.properties || {};
+                let h = sym.size.value || 12;
+                if (gradue && r && r.count) h = interpolateValue(p[sym.size.field], [r.min, r.max], sym.size.outputRange || [0.5, 3], sym.size.method);
+                else if (champ && Number.isFinite(Number(p[champ]))) h = Number(p[champ]);
+                extrusions.push({ id: p._idx ?? f.id ?? n, couche: layer.id, geometrie: f.geometry, hauteur: Number.isFinite(h) && h > 0 ? h : opt.hauteurParDefaut, base, couleur: typeof p._fill_color === 'string' ? p._fill_color : (typeof layer.color === 'string' ? layer.color : '#9a9a9a'), opacite });
+                n++;
+            }
+            if (n) attributions.push({ source: 'Couche « ' + (layer.name || layer.id) + ' »', ...(layer.licence ? { licence: String(layer.licence) } : {}) });
+        }
+    }
+
+    if (opt.inclure.bati) {
+        try {
+            const r = await E.batiDuFond(map, bbox, opt.hauteurParDefaut);
+            for (const f of r.extrusions) extrusions.push(f);
+            if (r.credit) attributions.push(r.credit);
+            avertissements.push(...r.avertissements);
+        } catch (e) { avertissements.push('bâti : ' + (e && e.message)); }
+    }
+
+    if (!objets.length && !extrusions.length) throw new Error('exportScene3D : aucun élément 3D dans cette emprise (objets, couches extrudées' + (opt.inclure.bati ? ', bâti' : '') + ')');
+    const { scene, stats, avertissements: dits } = E.construireScene(THREE, { ancre, versLocal, objets, extrusions, attributions: E.fusionnerAttributions([attributions]), simplification: opt.simplification, emprise: bbox, genere: new Date().toISOString() });
+    // les objets portent déjà leur matrice (position, rotation, échelle de l'écran) : `construireScene` la reprend
+    const glb = await E.exporterGlb(GLTFExporter, scene);
+    E.verifierPoids(glb.byteLength, opt.plafondOctets);
+    return {
+        glb, octets: glb.byteLength, ancre, bbox, repere: E.REPERE, format: E.FORMAT,
+        contenu: { objets: stats.objets, extrusions: stats.extrusions },
+        attributions: E.fusionnerAttributions([attributions]), avertissements: [...avertissements, ...dits],
+    };
+}
+
+/**
  * Démarrage du composant carte BI (`?bi=1`) : Atlas s'ouvre en lecture, sans accueil, la page ne montre que la carte
  * (`body.mode-bi`, voir index_v7.html), puis le runtime de `lib/bi/` s'attache à la carte par son point d'accès officiel.
  * Le module est importé pendant que la carte se construit : le téléchargement ne retarde pas `init()`.
@@ -18513,6 +18617,7 @@ async function demarrerBi() {
             window.__atlasCanevas = Object.freeze({
                 monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: (fn) => { _abonneHote = fn; return () => { if (_abonneHote === fn) _abonneHote = null; }; }, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
+                exporter3d: exporter3dScene,   // la scène 3D en un GLB (contrat 0.6)
                 // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
                 // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.

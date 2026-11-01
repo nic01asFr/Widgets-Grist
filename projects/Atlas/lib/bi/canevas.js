@@ -175,6 +175,8 @@ export function brancher(rt, canevas) {
     const habiller = () => { try { Promise.resolve(canevas.habiller(rt.api.getTheme())).catch(() => { /* l'interface garde ses jetons */ }); } catch (_) { /* idem */ } };
     rt.on('theme', habiller);
   }
+  // la scène 3D de l'application en un GLB (contrat 0.6) : elle n'existe qu'ici, la carte nue répond `capacite_absente`
+  if (typeof canevas.exporter3d === 'function') api.exportScene3D = (o) => canevas.exporter3d(o);
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
   return { couches: () => ({ ...correspondance }), desabonner };
 }

@@ -6,12 +6,18 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 | Repère | Valeur actuelle |
 |---|---|
-| Contrat du composant carte BI | 0.5 (additif ; 0.4, 0.3 et 0.2 restent servis) |
-| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 3, 15 745 octets |
-| Empreinte du client | `sha384-g5sAYVxj16rSreyNXIZOR7wfzwPkr+oWX420nQ1UPVFv4RCBmRphpaDp8dH4o72j` |
+| Contrat du composant carte BI | 0.6 (additif ; 0.5, 0.4, 0.3 et 0.2 restent servis) |
+| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 4, 15 892 octets |
+| Empreinte du client | `sha384-wD5zs7m2MF8wHLPgO+yiag2x2zOhIxzNqccrX2W6/zLfUWtwHrEyilTSzU3o9yvy` |
 | Moteur de formulaires vendorisé | celui de la 1.13.1 (une publication d'Atlas ne le fait pas bouger) |
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
+
+## 1.39.0 — contrat carte BI 0.6 : la scène 3D en un fichier GLB
+
+- **Contrat 0.6** (additif) : `exportScene3D({ bbox, ancre, couches, inclure: { objets, extrusions, bati }, hauteurParDefaut, simplification, plafondOctets })` rend UN GLB (`ArrayBuffer`) de la scène 3D, profil complet seulement (la carte nue répond `capacite_absente`). Objets du catalogue ou posés à la main avec les poses de l'écran, couches extrudées (trous percés, MultiPolygon complets), bâti du fond sur demande ; mètres, x est, y haut, z sud, sol à 0, origine à une ancre WGS84 ; licences et attributions dans les `extras` du fichier ET en liste à part ; 5 Mo par défaut (`trop_lourd` dit quoi réduire). Détail et mesures : `docs/CONTRAT-CARTE-BI.md` §6 sexies. Pour la réalité augmentée, les QR imprimés figés et tout lecteur 3D.
+- **`ready.version` et `ping().version` annoncent maintenant `0.6`** : un hôte qui les compare à `'0.5'` en dur doit négocier par `ready.versions`. Nouveau client d'hôte : `VERSION_CLIENT` 4, empreinte ci-dessus.
+- **L'exporteur** (`GLTFExporter` de three.js r160, MIT) est vendorisé (`vendor/three/addons/exporters/`) et chargé à la demande.
 
 ## 1.38.0 — démarrage propre : la première image est déjà la bonne
 

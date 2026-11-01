@@ -26,6 +26,11 @@
       "integrite": "sha384-oxY9vSeh7Mrt5WmhN8xfWoDRnmoW9krEiRBY7vJKaK90jMUidM0fhbUwcblpBgTu",
       "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js"
     },
+    "three/addons/exporters/GLTFExporter.js": {
+      "taille": 77714,
+      "integrite": "sha384-+9EXeA3QCWZZAs5mVgcIc9Jas6GG02zkZCLLL1VZGGLl+/8OEgeCIR44lgyZwK0J",
+      "origine": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/exporters/GLTFExporter.js"
+    },
     "three/addons/utils/BufferGeometryUtils.js": {
       "taille": 31906,
       "integrite": "sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf",

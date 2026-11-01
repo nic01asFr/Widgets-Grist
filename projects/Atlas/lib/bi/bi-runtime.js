@@ -634,6 +634,11 @@ export function attacher(map, opts = {}) {
       const clone = (v) => { try { return v === undefined ? null : JSON.parse(JSON.stringify(v)); } catch (e) { return null; } };
       return { type: 'FeatureCollection', layer: c.id, nom: c.def.name || c.id, geometrie: geom(c), features: r.features, total: r.total, tronque: r.tronque, bounds: opt.bbox, visuel: clone(c.visuel), style: clone(c.def.style), legende: clone(legende), visible: c.visible, avertissements: r.avertissements };
     },
+    /**
+     * La scène 3D en UN GLB (contrat 0.6) : objets, couches extrudées, bâti du fond. Elle vit dans l'application (three.js, modèles du catalogue) : cette commande n'existe donc qu'en profil
+     * complet (`lib/bi/canevas.js` la branche) ; la carte nue répond `capacite_absente`.
+     */
+    async exportScene3D() { throw new Error("capacite_absente : exportScene3D demande le profil complet (`profil=\"complet\"`) : la scène 3D (objets, couches extrudées) est celle de l'application ; la carte nue n'en a pas"); },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
       const actif = o.actif === undefined ? true : o.actif;

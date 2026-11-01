@@ -1,8 +1,8 @@
 /**
  * Client JavaScript de l'application HÔTE du composant carte d'Atlas, en UN SEUL FICHIER, sans import.
  *
- * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (62ffdaed15fe15bb) et lib/bi/pont.js (816f3188ed3d9e83).
- * Ne pas modifier à la main : relancer le générateur. Contrat 0.5 ; les tables de commandes sont celles du pont (test d'égalité).
+ * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (7b9809f75c54332a) et lib/bi/pont.js (b41f29f20fcb66a5).
+ * Ne pas modifier à la main : relancer le générateur. Contrat 0.6 ; les tables de commandes sont celles du pont (test d'égalité).
  * Usage : voir docs/EXPLOITATION-EXTERNE-BI.md.
  */
 
@@ -23,18 +23,19 @@
  *    délai maximal (`delai`, défaut 10 s) ;
  *  - les messages d'une origine ou d'une fenêtre inattendue sont écartés (`transportFenetre`), jamais traités ;
  *  - les commandes partent avec une `targetOrigin` précise, jamais `*` ;
- *  - la version du contrat se négocie (0.5, puis 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
+ *  - la version du contrat se négocie (0.6, puis 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
 // ---- Ce que le client utilise du pont (tables lues du pont, fonctions reprises de ses sources) ----
-export const VERSION = "0.5";
-export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4","0.5"]);
+export const VERSION = "0.6";
+export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4","0.5","0.6"]);
 export const SOURCE_RUNTIME = "atlas-bi";
 export const SOURCE_HOTE = "hote-bi";
-export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]]});
+export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]],"exportScene3D":[["object",false]]});
 export const COMMANDES_0_3 = Object.freeze(["addAdminLayer","removeLayer","setChoropleth","setStatistique","drillDown","drillUp","setDrillAuto","setUnitFilter","batch","setHorsLigne","getTheme"]);
 export const COMMANDES_0_4 = Object.freeze(["getCamera","watchCamera","setViewMode","getBuildings"]);
 export const COMMANDES_0_5 = Object.freeze(["getFeatures"]);
+export const COMMANDES_0_6 = Object.freeze(["exportScene3D"]);
 /** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
   const p = (v) => (typeof v === 'string' ? v : '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);
@@ -43,7 +44,7 @@ export function versionsCompatibles(a, b = VERSION) {
 /** Une commande du contrat, en propriété PROPRE : `constructor`, `__proto__`... ne sont pas des commandes. */
 export const estCommande = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, c);
 /** La plus petite version du contrat qui connaît la commande. */
-export function versionDeCommande(cmd) { return COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
+export function versionDeCommande(cmd) { return COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
 /** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
 export function versionAuMoins(v, min) {
   const mineure = (x) => { const [maj, min2] = String(x).split('.').map(Number); return maj === 0 && Number.isFinite(min2) ? min2 : NaN; };
@@ -52,7 +53,7 @@ export function versionAuMoins(v, min) {
 // ---- Fin ----
 
 /** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
-export const VERSION_CLIENT = 3;
+export const VERSION_CLIENT = 4;
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
