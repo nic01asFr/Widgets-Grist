@@ -142,3 +142,31 @@ test('application : le relief est lu à part, ramène objets et luminaires sur l
   assert.match(app, /rendreFondAPlat\(emprise,/);
   assert.match(app, /scène à plat/);
 });
+
+test('rognage : un bâtiment qui déborde de l emprise est coupé à son bord, un anneau dedans est gardé tel quel, un anneau dehors disparaît', () => {
+  const b = [0, 0, 10, 10];
+  const dedans = [[2, 2], [4, 2], [4, 4], [2, 2]];
+  assert.equal(E.rognerAnneau(dedans, b), dedans);
+  assert.deepEqual(E.rognerAnneau([[20, 20], [30, 20], [30, 30], [20, 20]], b), []);
+  const deborde = E.rognerAnneau([[5, 5], [15, 5], [15, 15], [5, 15], [5, 5]], b);
+  assert.ok(deborde.length >= 5 && deborde.every(([x, y]) => x >= 0 && x <= 10 && y >= 0 && y <= 10), JSON.stringify(deborde));
+  assert.deepEqual(deborde[0], deborde[deborde.length - 1]);
+  const xs = deborde.map((p) => p[0]), ys = deborde.map((p) => p[1]);
+  assert.deepEqual([Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)], [5, 10, 5, 10]);
+});
+
+test('rognage : dans la scène, le volume ne sort pas du plan du sol (marge comprise) et l écart est dit', () => {
+  const grand = { id: 1, couche: 'c', geometrie: { type: 'Polygon', coordinates: [carre(ANCRE.lng - 0.01, ANCRE.lat - 0.01, 0.02, 0.02)] }, hauteur: 8 };
+  const r = E.construireScene(THREE, { ancre: ANCRE, emprise, sol: { mode: 'uni', epaisseur: 0, marge: 0 }, extrusions: [grand] });
+  const v = new THREE.Box3().setFromObject(r.scene.children.find((o) => o.name.startsWith('couche_'))), s = new THREE.Box3().setFromObject(r.scene.children.find((o) => o.name === 'sol_dessus'));
+  assert.ok(v.min.x >= s.min.x - 0.05 && v.max.x <= s.max.x + 0.05 && v.min.z >= s.min.z - 0.05 && v.max.z <= s.max.z + 0.05, 'volume ' + v.min.x + '..' + v.max.x + ' sol ' + s.min.x + '..' + s.max.x);
+  assert.ok(r.avertissements.some((a) => /rognés : 1/.test(a)));
+  const loin = E.construireScene(THREE, { ancre: ANCRE, emprise, extrusions: [grand, { ...grand, id: 2, geometrie: { type: 'Polygon', coordinates: [carre(ANCRE.lng + 0.5, ANCRE.lat, 0.001, 0.001)] } }] });
+  assert.equal(loin.stats.extrusions, 1, 'celui qui est hors emprise n est pas écrit');
+});
+
+test('attribution : les entités HTML sont décodées, la licence d OpenStreetMap est ODbL', () => {
+  assert.equal(E.texteAttribution('<a href="x">OpenFreeMap</a> &copy; OpenMapTiles Data from OpenStreetMap &amp; co &#169; &#x41;'), 'OpenFreeMap © OpenMapTiles Data from OpenStreetMap & co © A');
+  assert.equal(E.texteAttribution('a &inconnue; b'), 'a &inconnue; b');
+  assert.equal(E.licenceDeAttribution('OpenFreeMap © OpenMapTiles Data from OpenStreetMap'), 'ODbL'); assert.equal(E.licenceDeAttribution('© IGN'), null);
+});

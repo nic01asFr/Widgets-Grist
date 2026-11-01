@@ -13,7 +13,7 @@ export const VERSION = '1.0.0';
 export const FORMAT = 'atlas-scene3d/1';
 export const REPERE = 'x=est, y=haut, z=sud (nord = -z), mètres, sol y=0';
 
-import { normaliserRelief, RELIEF_COTE_MAX } from './export-relief.js?v=20261102a';
+import { normaliserRelief, elargir, RELIEF_COTE_MAX } from './export-relief.js?v=20261102a';
 
 export const PLAFOND_OCTETS_DEFAUT = 5 * 1024 * 1024;
 export const PLAFOND_OCTETS_MAX = 32 * 1024 * 1024;
@@ -95,6 +95,18 @@ export function normaliserSol(s) {
 /** Le centre d'une emprise. */
 export const centreDe = (b) => ({ lng: (b[0] + b[2]) / 2, lat: (b[1] + b[3]) / 2 });
 
+/** Un texte d'attribution sans balises ni entités HTML (« &copy; » devient « © »), pour un fichier ou une légende imprimée. */
+export function texteAttribution(html) {
+  const noms = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', copy: '\u00a9' };
+  return String(html || '').replace(/<[^>]*>/g, '').replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (m, c) => {
+    if (c[0] === '#') { const n = c[1] === 'x' ? parseInt(c.slice(2), 16) : parseInt(c.slice(1), 10); return Number.isFinite(n) && n > 0 && n < 0x110000 ? String.fromCodePoint(n) : m; }
+    return Object.prototype.hasOwnProperty.call(noms, c) ? noms[c] : m;
+  }).replace(/\s+/g, ' ').trim();
+}
+
+/** La licence d'une attribution de fond de carte, quand on la connaît sans ambiguïté : les données d'OpenStreetMap sont sous ODbL. */
+export const licenceDeAttribution = (texte) => (/OpenStreetMap/i.test(texte) ? 'ODbL' : null);
+
 /** Un nom de nœud sûr (glTF laisse passer presque tout, mais le chargeur de three.js retire « : » et « . » : on évite de dépendre de ce nettoyage). */
 export const nomSur = (s, repli = 'x') => String(s === undefined || s === null || s === '' ? repli : s).replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 60);
 
@@ -137,6 +149,34 @@ export function simplifierAnneau(pts, tol) {
   rec(0, loin); rec(loin, e.length - 1);
   const sortie = pts.filter((_, k) => garde[k]);
   return sortie.length >= 3 ? sortie : pts;
+}
+
+/**
+ * Un anneau de [lng, lat] rogné à une emprise [ouest, sud, est, nord] (Sutherland-Hodgman, une demi-droite après l'autre) ; rend l'anneau refermé, ou [] s'il ne reste rien.
+ * Un anneau entièrement dedans est rendu tel quel (même tableau). Sur une forme concave, le rognage peut laisser des arêtes de largeur nulle le long du bord : sans effet sur le volume.
+ */
+export function rognerAnneau(ring, b) {
+  const dedans = (p) => p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3];
+  if (ring.every(dedans)) return ring;
+  let pts = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1] ? ring.slice(0, -1) : ring.slice();
+  const bords = [
+    [(p) => p[0] >= b[0], (p, q) => [b[0], p[1] + ((q[1] - p[1]) * (b[0] - p[0])) / (q[0] - p[0])]],
+    [(p) => p[0] <= b[2], (p, q) => [b[2], p[1] + ((q[1] - p[1]) * (b[2] - p[0])) / (q[0] - p[0])]],
+    [(p) => p[1] >= b[1], (p, q) => [p[0] + ((q[0] - p[0]) * (b[1] - p[1])) / (q[1] - p[1]), b[1]]],
+    [(p) => p[1] <= b[3], (p, q) => [p[0] + ((q[0] - p[0]) * (b[3] - p[1])) / (q[1] - p[1]), b[3]]],
+  ];
+  for (const [garde, coupe] of bords) {
+    const sortie = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length], pin = garde(p), qin = garde(q);
+      if (pin && qin) sortie.push(q);
+      else if (pin && !qin) sortie.push(coupe(p, q));
+      else if (!pin && qin) { sortie.push(coupe(p, q)); sortie.push(q); }
+    }
+    pts = sortie;
+    if (pts.length < 3) return [];
+  }
+  return [...pts, pts[0]];
 }
 
 /** Un anneau de [lng, lat] en points locaux {x, y} (est, nord) sans le point de fermeture ni les doublons consécutifs, simplifié à `tol` mètres. */
@@ -247,7 +287,8 @@ export function construireScene(THREE, e) {
   // --- surfaces extrudées : UNE géométrie INDEXÉE par (couche, couleur, opacité), faite de parois et d'un toit (le fond posé au sol et les coordonnées de texture, inutiles, ne sont pas écrits :
   //     un bâti de quartier pèse ainsi quelques centaines de Ko, et non des Mo). Les trous sont percés, un MultiPolygon donne plusieurs prismes dans la même géométrie.
   const lots = new Map();
-  let entites = 0;
+  const rogne = e.emprise ? elargir(e.emprise, (e.sol && e.sol.marge) || 0) : null;
+  let entites = 0, rognees = 0;
   for (const x of e.extrusions || []) {
     if (!x) { stats.ignores++; continue; }
     if (entites >= PLAFOND_ENTITES || stats.sommets >= PLAFOND_SOMMETS) { stats.ignores++; continue; }
@@ -260,10 +301,18 @@ export function construireScene(THREE, e) {
     const lot = lots.get(cle);
     let ajoute = 0;
     for (const rings of polys) {
-      const anneaux = rings.map((ring) => anneauLocal(ring, local, e.simplification === undefined ? SIMPLIFICATION_DEFAUT : e.simplification));
+      // rogné à l'emprise du sol (marge comprise) : un bâtiment ou une surface qui déborde ne sort pas du plan
+      let ringsRognes = rings;
+      if (rogne) {
+        const r = rings.map((ring) => rognerAnneau(ring, rogne));
+        if (!r[0].length) { continue; }
+        if (r.some((q, i) => q !== rings[i])) rognees++;
+        ringsRognes = r.filter((q) => q.length >= 4);
+      }
+      const anneaux = ringsRognes.map((ring) => anneauLocal(ring, local, e.simplification === undefined ? SIMPLIFICATION_DEFAUT : e.simplification));
       if (e.relief) {
         // posé sur le terrain : la base suit le point le plus BAS de l'emprise au sol (la pente côté haut est mangée par le terrain, et rien ne flotte), enfoncée un peu pour ne laisser aucune fente
-        let zmin = Infinity; for (const [lng, lat] of rings[0]) zmin = Math.min(zmin, e.relief.hauteur(lng, lat));
+        let zmin = Infinity; for (const [lng, lat] of ringsRognes[0]) zmin = Math.min(zmin, e.relief.hauteur(lng, lat));
         if (!Number.isFinite(zmin)) zmin = 0;
         ajoute += base > 0 ? ajouterPrisme(THREE, lot, anneaux, hauteur, zmin + base) : ajouterPrisme(THREE, lot, anneaux, hauteur + ANCRAGE_RELIEF, zmin - ANCRAGE_RELIEF, false);
       } else ajoute += ajouterPrisme(THREE, lot, anneaux, hauteur, base);
@@ -288,6 +337,7 @@ export function construireScene(THREE, e) {
     maillage.name = 'couche_' + nomSur(lot.couche) + (lots.size > 1 ? '_' + nomSur(lot.couleur || 'x') : '');
     scene.add(maillage);
   }
+  if (rognees) avertissements.push('rognés : ' + rognees + ' volume(s) débordaient de l\'emprise, coupés à son bord');
   if (stats.ignores) avertissements.push('ignorés : ' + stats.ignores + ' élément(s) sans géométrie lisible ou au-delà des plafonds (' + PLAFOND_OBJETS + ' objets, ' + PLAFOND_ENTITES + ' surfaces, ' + PLAFOND_SOMMETS + ' sommets)');
 
   // --- sol en relief : une grille de terrain (altitudes lues par `e.relief.hauteur`, relatives à l'ancre, exagération comprise), texture de la carte ou aplat, jupe et dessous si épaisseur

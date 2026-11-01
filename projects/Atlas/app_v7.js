@@ -18504,6 +18504,7 @@ function nomLicence(spdx) {
  */
 async function rendreFondAPlat(bbox, resolution) {
     const FT = await import('./lib/fond-theme.js?v=20261101a');
+    const E = await import('./lib/export-scene3d.js?v=20261102b');
     const merc = (lng, lat) => maplibregl.MercatorCoordinate.fromLngLat([lng, lat]);
     const nw = merc(bbox[0], bbox[3]), se = merc(bbox[2], bbox[1]);
     const rapport = (se.x - nw.x) / (se.y - nw.y);
@@ -18534,7 +18535,7 @@ async function rendreFondAPlat(bbox, resolution) {
             try { const vivante = map.getSource(nom); if (vivante && typeof vivante.attribution === 'string') t = vivante.attribution; } catch (_) { /* source retirée */ }
             if (!t && src && typeof src.attribution === 'string') t = src.attribution;
             if (!t && nom === 'openmaptiles') t = '© OpenStreetMap contributors, © OpenMapTiles, OpenFreeMap';
-            return t.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            return E.texteAttribution(t);
         });
         const attributions = [...new Set(credits.filter(Boolean))];
         const photo = Object.values(sources).some((s) => s && s.type === 'raster' && /ORTHO/i.test(JSON.stringify(s.tiles || '')));
@@ -18715,7 +18716,7 @@ async function exporter3dScene(entree) {
                 sol.texture = new THREE.CanvasTexture(fond.canvas);
                 sol.texture.colorSpace = THREE.SRGBColorSpace;
                 sol.texture.userData.mimeType = fond.photo ? 'image/jpeg' : 'image/png';
-                for (const a of fond.attributions) attributions.push({ source: a });
+                for (const a of fond.attributions) attributions.push({ source: a, ...(E.licenceDeAttribution(a) ? { licence: E.licenceDeAttribution(a) } : {}) });
                 if (!fond.attributions.length) avertissements.push('sol : le fond de carte ne déclare aucune source à citer, à renseigner avant diffusion');
             } catch (e) { avertissements.push('sol : le fond de carte n\'a pas pu être rendu à plat (' + ((e && e.message) || e) + ') : aplat à la place'); sol.mode = 'uni'; }
         }
