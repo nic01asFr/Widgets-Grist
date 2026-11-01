@@ -241,11 +241,15 @@
 
   /** La table en colonnes (`fetchTable`) → des lignes. */
   function lignesDeTable(colonnes) {
-    var n = colonnes && colonnes.id ? colonnes.id.length : 0;
+    if (!colonnes || typeof colonnes !== 'object' || Array.isArray(colonnes)) return [];
+    // Une colonne qui n'est pas un tableau (un texte, un nombre) est ignorée ; la table a la longueur de la plus longue des colonnes qu'on lit.
+    var noms = Object.keys(colonnes).filter(function (k) { return Array.isArray(colonnes[k]); });
+    var n = 0;
+    ['id', 'cle', 'themedef', 'actif'].forEach(function (k) { if (Array.isArray(colonnes[k]) && colonnes[k].length > n) n = colonnes[k].length; });
     var out = [];
     for (var i = 0; i < n && i < LIGNES_MAX; i++) {
       var l = {};
-      Object.keys(colonnes).forEach(function (k) { l[k] = colonnes[k][i]; });
+      noms.forEach(function (k) { l[k] = colonnes[k][i]; });
       out.push(l);
     }
     return out;
@@ -301,17 +305,107 @@
    *
    * @returns {{mode:string, source:'resolu'|'graines', vars:Object<string,string>, remarques:string[], verifie:false}} `vars` : `--kit-*` → valeur
    */
+  /**
+   * Les 22 paires que le kit mesure sur un `resolu` (docs/THEMEDEF-SPEC.md §5, arbitrage du 01/11/2026) : [premier plan, arrière-plan].
+   * Le seuil se choisit selon le PREMIER PLAN : `bord-champ`, `focus` et `attention-filet` prennent le seuil des composants (3:1), toutes
+   * les autres paires celui du texte (4,5:1). `bord` est décoratif : dans aucune paire. Un test compare cette liste à celle du kit.
+   */
+  var PAIRES = [
+    ['texte', 'fond'], ['texte', 'surface'], ['texte-2', 'fond'], ['texte-2', 'surface'], ['accent', 'fond'], ['accent', 'surface'],
+    ['accent-texte', 'accent'], ['action-texte', 'action'], ['action-texte', 'action-survol'], ['action-texte', 'action-actif'],
+    ['bord-champ', 'surface'], ['focus', 'fond'], ['focus', 'surface'],
+    ['ok', 'ok-fond'], ['ok', 'surface'], ['attention', 'attention-fond'], ['attention', 'surface'],
+    ['alerte', 'alerte-fond'], ['alerte', 'surface'], ['info', 'info-fond'], ['info', 'surface'],
+    ['attention-filet', 'surface']
+  ];
+  var PREMIERS_PLANS_COMPOSANT = ['bord-champ', 'focus', 'attention-filet'];
+
+  /** Les seuils d'un document : ses exigences renforcent chaque famille, jamais elles ne la relâchent. */
+  function seuilsDe(td) {
+    var e = lire(td, ['exigences']);
+    e = e && typeof e === 'object' && !Array.isArray(e) ? e : {};
+    return {
+      texte: typeof e.contrasteTexte === 'number' && e.contrasteTexte > 4.5 ? e.contrasteTexte : 4.5,
+      composant: typeof e.contrasteComposant === 'number' && e.contrasteComposant > 3 ? e.contrasteComposant : 3
+    };
+  }
+
+  var MOTIF_HEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+  var MOTIF_FONCTION = /^(rgb|hsl)\(\s*([^)]*?)\s*\)$/;
+  var MOTIF_NOMBRE = /^[0-9]+(?:\.[0-9]+)?%?$/;
+
+  function depuisHsl(h, sat, lum) {
+    var a = sat * Math.min(lum, 1 - lum);
+    function k(n) { return (n + h / 30) % 12; }
+    return [0, 8, 4].map(function (n) { return Math.round((lum - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))) * 255); });
+  }
+
+  /**
+   * [r, g, b] (0 à 255) d'une couleur OPAQUE, comme le lecteur du kit la mesure : #RGB, #RRGGBB, rgb() ou hsl() à trois nombres (pourcentages admis,
+   * saturation et clarté écrêtées à 100 %, canaux entiers) ; `null` pour le reste (var(), transparence, 4 ou 8 chiffres) : une valeur qu'on ne sait pas
+   * mesurer ne fait jamais échouer une paire.
+   */
+  function rvb(valeur) {
+    if (typeof valeur !== 'string') return null;
+    var h = MOTIF_HEX.exec(valeur);
+    if (h) {
+      var six = h[1].length === 3 ? h[1].split('').map(function (c) { return c + c; }).join('') : h[1];
+      return [0, 2, 4].map(function (i) { return parseInt(six.slice(i, i + 2), 16); });
+    }
+    var f = MOTIF_FONCTION.exec(valeur);
+    if (!f) return null;
+    var t = f[2].split(/[\s,]+/);
+    if (t.length !== 3 || !t.every(function (x) { return MOTIF_NOMBRE.test(x); })) return null;
+    var n = t.map(parseFloat);
+    if (f[1] === 'rgb') return t.map(function (x, i) { return Math.min(255, Math.round(x.charAt(x.length - 1) === '%' ? n[i] * 2.55 : n[i])); });
+    return depuisHsl(n[0], Math.min(1, n[1] / 100), Math.min(1, n[2] / 100));
+  }
+
+  function contrasteRvb(a, b) {
+    function lum(c) {
+      var l = c.map(function (v) { var x = v / 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+      return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+    }
+    var la = lum(a); var lb = lum(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+
+  /** Mesure les 22 paires sur des valeurs courtes (`texte`, `fond`…). Rend les paires qui échouent, avec la mesure TRONQUÉE à deux décimales. */
+  function mesurerPaires(valeurs, seuils) {
+    var echecs = [];
+    PAIRES.forEach(function (p) {
+      var a = rvb(valeurs[p[0]]); var b = rvb(valeurs[p[1]]);
+      if (!a || !b) return;
+      var seuil = PREMIERS_PLANS_COMPOSANT.indexOf(p[0]) !== -1 ? seuils.composant : seuils.texte;
+      var c = contrasteRvb(a, b);
+      if (c < seuil) echecs.push({ paire: p[0] + '-sur-' + p[1], mesure: Math.floor(c * 100) / 100, seuil: seuil });
+    });
+    return echecs;
+  }
+
+  function refuse(code, echecs, chemin) { return { code: code, echecs: echecs || [], chemin: chemin }; }
+
   function resoudre(td, mode) {
     var dispo = modesDe(td);
     var m = mode === 'sombre' && dispo.indexOf('sombre') !== -1 ? 'sombre' : 'clair';
     var remarques = [];
     var source = 'graines';
     var brut;
-    var mesure = lire(td, ['resolu', 'modes', m, 'valeurs']);
+    // En sombre « explicite », les surcharges font la base et le resolu n'est pas consulté.
+    var explicite = m === 'sombre' && lire(td, ['modes', 'sombre']) === 'explicite';
+    var mesure = explicite ? null : lire(td, ['resolu', 'modes', m, 'valeurs']);
+    var chemin = '/resolu/modes/' + m + '/valeurs';
+    var seuils = seuilsDe(td);
     if (mesure && typeof mesure === 'object' && !Array.isArray(mesure)) {
       brut = {};
       Object.keys(mesure).forEach(function (k) { brut[k] = mesure[k]; });
       source = 'resolu';
+      // Un resolu ne fait pas foi : il doit être COMPLET (les 26 valeurs, toutes lisibles) et tenir les 22 paires. Sinon le thème est refusé en entier :
+      // jamais d'application partielle, jamais de retour sur les graines (un document incohérent n'est pas réparé en silence).
+      var lisibles = Object.keys(juger(Object.assign({}, brut))).length;
+      if (lisibles < CLES.length) return { mode: m, source: source, vars: {}, remarques: [], verifie: false, refus: refuse('resolu-incomplet', [], chemin) };
+      var avant = mesurerPaires(brut, seuils);
+      if (avant.length) return { mode: m, source: source, vars: {}, remarques: [], verifie: false, refus: refuse('contraste-insuffisant', avant, chemin) };
     } else {
       var g = td.graines || {};
       var d = deriver({ principal: g.principal, secondaire: g.secondaire, encre: g.encre, fond: g.fond, sombre: lire(td, ['modes', 'sombre']) }, m);
@@ -320,9 +414,28 @@
     }
     var sur = lire(td, ['surcharges', m]);
     if (sur && typeof sur === 'object' && !Array.isArray(sur)) {
-      Object.keys(sur).forEach(function (k) { if (CLES.indexOf(k.indexOf('--kit-') === 0 ? k.slice(6) : k) !== -1) brut[k.indexOf('--kit-') === 0 ? k.slice(6) : k] = sur[k]; });
+      // Une surcharge dont la valeur est refusée est IGNORÉE : elle n'efface pas la valeur que le thème avait déjà.
+      Object.keys(sur).forEach(function (k) {
+        var nom = k.indexOf('--kit-') === 0 ? k.slice(6) : k;
+        if (CLES.indexOf(nom) === -1) return;
+        var essai = {}; essai[nom] = sur[k];
+        if (Object.keys(juger(essai)).length === 1) brut[nom] = sur[k];
+      });
     }
-    return { mode: m, source: source, vars: juger(brut), remarques: remarques, verifie: false };
+    var final = juger(brut);
+    if (source === 'resolu') {
+      // Le résultat APRÈS surcharges est mesuré aussi : une surcharge qui casse une paire fait refuser le thème.
+      var apres = mesurerPaires(depuisVarsKit(final), seuils);
+      if (apres.length) return { mode: m, source: source, vars: {}, remarques: [], verifie: false, refus: refuse('contraste-insuffisant', apres, chemin) };
+    }
+    return { mode: m, source: source, vars: final, remarques: remarques, verifie: false, refus: null };
+  }
+
+  /** Les variables `--kit-*` jugées, sous leurs noms courts. */
+  function depuisVarsKit(vars) {
+    var o = {};
+    Object.keys(vars).forEach(function (k) { o[k.indexOf('--kit-') === 0 ? k.slice(6) : k] = vars[k]; });
+    return o;
   }
 
   /** Ce que la page d'origine lit sous d'autres noms : on les accorde au thème, pour que tout suive. */
@@ -539,7 +652,10 @@
   function themeFormulaire(def, mode) {
     var ap = apparenceDe(def);
     if (ap.mode !== 'formulaire') return null;
-    var r = resoudre(ap.themedef, mode || modeSysteme());
+    var modeVoulu = mode || modeSysteme();
+    if (modeVoulu === 'sombre' && lire(ap.themedef, ['modes', 'sombre']) === 'aucun') return { theme: null, raison: 'sans-mode-sombre', avertissements: [], ligne: null };
+    var r = resoudre(ap.themedef, modeVoulu);
+    if (r.refus) return { theme: null, raison: r.refus.code, avertissements: r.refus.echecs.map(function (e) { return { code: r.refus.code, chemin: r.refus.chemin, paire: e.paire, mesure: e.mesure, seuil: e.seuil }; }), ligne: null };
     return {
       theme: r.vars, raison: 'formulaire', mode: r.mode, source: r.source, nom: typeof ap.themedef.nom === 'string' ? ap.themedef.nom.slice(0, 80) : '',
       ligne: null, remarques: r.remarques, verifie: false, themedef: ap.themedef,
@@ -550,9 +666,25 @@
   function traiter(lignes, opts) {
     var choix = choisirActif(lignes);
     if (!choix.ligne) return { theme: null, raison: choix.avertissements.some(function (a) { return a.code === 'plusieurs-actifs'; }) ? 'plusieurs-actifs' : 'aucun-actif', avertissements: choix.avertissements, ligne: null };
+    // La colonne `version` de la ligne : vide ou absente est tolérée (la version du document fait foi), toute autre valeur que la nôtre est refusée.
+    var vc = choix.ligne.version;
+    if (vc !== undefined && vc !== null && vc !== '' && vc !== VERSION) {
+      return { theme: null, raison: 'version-inconnue', avertissements: [{ code: 'version-inconnue', chemin: '/ligne/version' }], ligne: choix.ligne.cle };
+    }
     var lu = lireThemeDef(choix.ligne.themedef);
     if (!lu.ok) return { theme: null, raison: 'invalide', avertissements: [{ code: 'themedef-invalide', detail: lu.erreur }], ligne: choix.ligne.cle };
-    var r = resoudre(lu.themedef, opts.mode || modeSysteme());
+    var modeDemande = opts.mode || modeSysteme();
+    // Un thème qui ne fournit pas de sombre (`modes.sombre: 'aucun'`) n'applique rien en sombre : l'hôte garde son rendu, sans bruit.
+    if (modeDemande === 'sombre' && lire(lu.themedef, ['modes', 'sombre']) === 'aucun') return { theme: null, raison: 'sans-mode-sombre', avertissements: [], ligne: choix.ligne.cle };
+    var r = resoudre(lu.themedef, modeDemande);
+    if (r.refus) {
+      return {
+        theme: null, raison: r.refus.code, ligne: choix.ligne.cle, source: r.source,
+        avertissements: r.refus.echecs.length
+          ? r.refus.echecs.map(function (e) { return { code: r.refus.code, chemin: r.refus.chemin, paire: e.paire, mesure: e.mesure, seuil: e.seuil }; })
+          : [{ code: r.refus.code, chemin: r.refus.chemin }]
+      };
+    }
     return {
       theme: r.vars, raison: 'applique', mode: r.mode, source: r.source, nom: typeof lu.themedef.nom === 'string' ? lu.themedef.nom.slice(0, 80) : '',
       ligne: choix.ligne.cle, remarques: r.remarques, verifie: false, themedef: lu.themedef,
@@ -630,11 +762,15 @@
     choisirActif: choisirActif,
     modesDe: modesDe,
     resoudre: resoudre,
+    PAIRES: PAIRES,
+    seuilsDe: seuilsDe,
+    mesurerPaires: mesurerPaires,
     appliquer: appliquer,
     retirer: retirer,
     modeSysteme: modeSysteme,
     personneImpose: personneImpose,
     charger: charger,
+    lireLignes: traiter,
     habiller: habiller,
     lireCouleur: lireCouleur,
     lireHote: lireHote,

@@ -2090,6 +2090,20 @@ function etatOutil() {
   return S.outil;
 }
 
+/** Le thème actif du document est dans la table, mais un lecteur le REFUSE (contraste insuffisant, valeurs mesurées incomplètes…) : on le dit au lieu de répondre « pas de thème ». */
+function refusDuDocument() {
+  const d = S.themeDocument;
+  if (!d || d.theme) return '';
+  const phrases = {
+    'contraste-insuffisant': 'contraste insuffisant',
+    'resolu-incomplet': 'valeurs mesurées incomplètes',
+    'version-inconnue': 'version inconnue',
+    'invalide': 'thème illisible',
+    'plusieurs-actifs': 'plusieurs thèmes actifs'
+  };
+  return phrases[d.raison] ? 'Le thème actif du document est refusé (' + phrases[d.raison] + ') : aucun n’est appliqué.' : '';
+}
+
 function habillerOutil() {
   const T = window.FormThemeDef;
   if (!T) return;
@@ -2146,7 +2160,7 @@ function outilHtml() {
     <p class="app-menu__titre">L’apparence de l’outil</p>
     <div class="app-menu__lignes">
       <label class="app-menu__case"><input type="checkbox" ${o.suit ? 'checked' : ''} onchange="App.outilSuit(this.checked)"> Suivre le thème du document, sinon celui de Grist</label>
-      <p class="app-menu__note">${doc ? 'Thème actif : « ' + esc(nom) + ' ».' : (grist ? 'Ce document ne porte pas de thème actif : l’outil suit le thème de Grist (« ' + esc(grist.nom) + ' »).' : 'Ce document ne porte pas de thème actif.')}</p>
+      <p class="app-menu__note">${doc ? 'Thème actif : « ' + esc(nom) + ' ».' : (refusDuDocument() ? esc(refusDuDocument()) : grist ? 'Ce document ne porte pas de thème actif : l’outil suit le thème de Grist (« ' + esc(grist.nom) + ' »).' : 'Ce document ne porte pas de thème actif.')}</p>
       <button class="app-menu__action" onclick="App.outilEssayer()">Essayer un thème (fichier ThemeDef)…</button>
       ${o.essai ? '<button class="app-menu__action" onclick="App.outilEssayer(null)">Retirer l’essai (' + esc(typeof o.essai.nom === 'string' ? o.essai.nom : 'sans nom') + ')</button>' : ''}
     </div>`;
@@ -4013,7 +4027,7 @@ function renderApparence(def) {
   return `
       <p class="bloc__intitule">L’apparence <span>les couleurs que le public voit</span></p>
       <div class="apparence" role="radiogroup" aria-label="Apparence du formulaire">
-        ${choix('grist', 'Celle du document, sinon celle de Grist', nomDoc ? 'Thème actif du document : « ' + esc(nomDoc) + ' ».' : (themeDeGrist() ? 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend celui de la personne (« ' + esc(themeDeGrist().nom) + ' »), clair ou sombre, avec la couleur des boutons de l’instance.' : 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend le thème de la personne, clair ou sombre.'))}
+        ${choix('grist', 'Celle du document, sinon celle de Grist', nomDoc ? 'Thème actif du document : « ' + esc(nomDoc) + ' ».' : (refusDuDocument() ? esc(refusDuDocument()) : themeDeGrist() ? 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend celui de la personne (« ' + esc(themeDeGrist().nom) + ' »), clair ou sombre, avec la couleur des boutons de l’instance.' : 'Ce document ne porte pas de thème actif : dans Grist, le formulaire prend le thème de la personne, clair ou sombre.'))}
         ${choix('document', 'Celle du document seulement', nomDoc ? 'Thème actif : « ' + esc(nomDoc) + ' ».' : 'Ce document ne porte pas de thème actif : le formulaire garde son apparence d’origine.')}
         ${choix('formulaire', 'Un thème pour ce formulaire', 'Un ThemeDef 1.0 déposé ou collé ici, qui part avec le formulaire.')}
         ${choix('aucune', 'L’apparence d’origine', 'Quoi que dise le document.')}

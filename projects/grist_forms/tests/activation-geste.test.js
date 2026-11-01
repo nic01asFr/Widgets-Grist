@@ -192,3 +192,33 @@ describe('Geste : de bout en bout sur une table simulée', () => {
     assert.equal(G.TABLE, A.TABLE);
   });
 });
+
+describe('Geste : relire dit ce que les LECTEURS feront, pas seulement ce que la table contient', () => {
+  const resoluKit = () => JSON.parse(require('./fixtures/themedef-lecteur.vecteurs.json').lectures.find((x) => x.id === 'active-valide-clair').contenu[0].themedef).resolu;
+  const ligneAvec = (themedef) => [{ id: 1, cle: 'foret', actif: true, themedef: JSON.stringify(themedef) }];
+
+  it('un thème bien compilé par le kit est appliqué', () => {
+    assert.equal(G.relire(ligneAvec(theme({ resolu: resoluKit() }))).raison, 'applique');
+  });
+
+  it('un resolu fabriqué (texte et fond identiques) est dans la table mais REFUSÉ par les lecteurs : on ne dit pas « appliqué »', () => {
+    const resolu = resoluKit();
+    resolu.modes.clair.valeurs.texte = '#ffffff';
+    resolu.modes.clair.valeurs.fond = '#ffffff';
+    const r = G.relire(ligneAvec(theme({ resolu })));
+    assert.equal(r.raison, 'contraste-insuffisant');
+    assert.equal(r.mode, 'clair');
+    assert.equal(r.nom, 'Forêt');
+    assert.ok(r.avertissements.some((a) => a.paire === 'texte-sur-fond'));
+  });
+
+  it('un resolu incomplet est refusé de même', () => {
+    const resolu = resoluKit();
+    delete resolu.modes.clair.valeurs.action;
+    assert.equal(G.relire(ligneAvec(theme({ resolu }))).raison, 'resolu-incomplet');
+  });
+
+  it('un thème sans resolu, depuis ses graines, reste appliqué (l’aperçu de Form Builder)', () => {
+    assert.equal(G.relire(ligneAvec(theme())).raison, 'applique');
+  });
+});

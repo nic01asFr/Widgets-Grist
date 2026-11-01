@@ -102,3 +102,11 @@ describe('Page design-system : le geste d\'activation', () => {
     assert.match(local, /La table Theme_document n’existe pas/);
   });
 });
+
+describe('Page design-system : un thème refusé par les lecteurs est dit tel quel', () => {
+  it('l’état du document et le verdict après écriture nomment le refus', () => {
+    assert.match(PAGE, /'contraste-insuffisant': 'Le thème actif du document/);
+    assert.match(PAGE, /'resolu-incomplet': 'Le thème actif du document/);
+    assert.match(PAGE, /\['contraste-insuffisant', 'resolu-incomplet', 'version-inconnue'\]\.indexOf\(v\.raison\) !== -1\) return 'Écrit, mais les lecteurs le refusent/);
+  });
+});

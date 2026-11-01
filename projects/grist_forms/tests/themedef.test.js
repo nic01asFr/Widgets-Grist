@@ -158,13 +158,70 @@ describe('ThemeDef : résolu pour un mode', () => {
     }
   });
 
-  it('les valeurs mesurées de `resolu` priment, sans être crues', () => {
-    const resolu = { modes: { clair: { valeurs: { fond: '#ffffff', texte: '#000000', action: '#112233', 'cle-inconnue': '#ffffff', accent: 'url(x)' } } } };
+  // Un `resolu` complet et lisible, tel que le kit l'écrit (tiré de ses vecteurs de lecture).
+  const resoluDuKit = () => JSON.parse(require('./fixtures/themedef-lecteur.vecteurs.json').lectures.find((x) => x.id === 'active-valide-clair').contenu[0].themedef).resolu;
+
+  it('les valeurs mesurées de `resolu` priment quand elles sont complètes et tiennent les 22 paires', () => {
+    const resolu = resoluDuKit();
     const r = T.resoudre(td({ resolu }), 'clair');
     assert.equal(r.source, 'resolu');
-    assert.equal(r.vars['--kit-action'], '#112233');
-    assert.ok(!('--kit-accent' in r.vars), 'une valeur interdite ne passe pas');
+    assert.equal(r.refus, null);
+    assert.equal(r.vars['--kit-action'].toLowerCase(), resolu.modes.clair.valeurs.action.toLowerCase());
+    assert.equal(Object.keys(r.vars).length, 26);
     assert.equal(r.verifie, false);
+  });
+
+  it('un `resolu` incomplet ou aux valeurs interdites est refusé en entier : ni application partielle, ni retour sur les graines', () => {
+    const complet = resoluDuKit();
+    const sans = JSON.parse(JSON.stringify(complet)); delete sans.modes.clair.valeurs.action;
+    const interdite = JSON.parse(JSON.stringify(complet)); interdite.modes.clair.valeurs.accent = 'url(x)';
+    for (const resolu of [sans, interdite, { modes: { clair: { valeurs: { fond: '#ffffff', texte: '#000000' } } } }]) {
+      const r = T.resoudre(td({ resolu }), 'clair');
+      assert.equal(r.refus.code, 'resolu-incomplet');
+      assert.deepEqual(r.vars, {}, 'rien n’est appliqué');
+    }
+  });
+
+  it('un `resolu` qui rate une paire est refusé en entier, même si une surcharge le réparerait', () => {
+    const resolu = resoluDuKit();
+    resolu.modes.clair.valeurs.texte = '#ffffff';
+    resolu.modes.clair.valeurs.fond = '#ffffff';
+    const r = T.resoudre(td({ resolu, surcharges: { clair: { texte: '#000000' } } }), 'clair');
+    assert.equal(r.refus.code, 'contraste-insuffisant');
+    assert.ok(r.refus.echecs.some((e) => e.paire === 'texte-sur-fond' && e.mesure === 1 && e.seuil === 4.5));
+    assert.deepEqual(r.vars, {});
+  });
+
+  it('une surcharge qui casse une paire après coup fait refuser le thème', () => {
+    const r = T.resoudre(td({ resolu: resoluDuKit(), surcharges: { clair: { texte: '#ffffff' } } }), 'clair');
+    assert.equal(r.refus.code, 'contraste-insuffisant');
+  });
+
+  it('les exigences du document renforcent chaque famille et ne la relâchent jamais', () => {
+    assert.deepEqual(T.seuilsDe(td()), { texte: 4.5, composant: 3 });
+    assert.deepEqual(T.seuilsDe(td({ exigences: { contrasteTexte: 7, contrasteComposant: 4.5 } })), { texte: 7, composant: 4.5 });
+    assert.deepEqual(T.seuilsDe(td({ exigences: { contrasteTexte: 2, contrasteComposant: 1 } })), { texte: 4.5, composant: 3 }, 'jamais plus lâche');
+    const exigeant = T.resoudre(td({ resolu: resoluDuKit(), exigences: { contrasteTexte: 21 } }), 'clair');
+    assert.equal(exigeant.refus.code, 'contraste-insuffisant', 'un seuil impossible refuse un resolu pourtant correct');
+  });
+
+  it('les 22 paires sont celles du kit, et le seuil se choisit selon le premier plan', () => {
+    const kit = require('./fixtures/themedef-lecteur.vecteurs.json').paires;
+    assert.equal(T.PAIRES.length, 22);
+    assert.deepEqual(T.PAIRES.map((p) => p.join('-sur-')), kit.map((p) => p.a + '-sur-' + p.b));
+    const seuilKit = (a) => kit.find((p) => p.a === a).seuil;
+    for (const [a] of T.PAIRES) assert.equal(['bord-champ', 'focus', 'attention-filet'].includes(a) ? 3 : 4.5, seuilKit(a), a);
+  });
+
+  it('les couleurs de la mesure sont celles du kit : #RGB, rgb() et hsl() avec pourcentages, jamais var() ni la transparence', () => {
+    const base = resoluDuKit();
+    const avec = (v) => { const r = JSON.parse(JSON.stringify(base)); Object.assign(r.modes.clair.valeurs, v); return r; };
+    for (const blanc of ['#fff', 'rgb(255,255,255)', 'rgb(100%, 100%, 100%)', 'hsl(0, 0%, 100%)']) {
+      const r = T.resoudre(td({ resolu: avec({ texte: blanc, fond: '#ffffff' }) }), 'clair');
+      assert.equal(r.refus && r.refus.code, 'contraste-insuffisant', blanc + ' sur blanc est mesuré, donc refusé');
+    }
+    const nonMesurable = T.resoudre(td({ resolu: avec({ 'texte-2': 'var(--x)' }) }), 'clair');
+    assert.equal(nonMesurable.refus, null, 'une valeur qu’on ne sait pas mesurer ne fait jamais échouer une paire');
   });
 
   it('les surcharges passent après, et seulement sur les 26 clés', () => {

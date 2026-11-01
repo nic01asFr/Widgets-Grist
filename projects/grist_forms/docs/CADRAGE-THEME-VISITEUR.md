@@ -93,6 +93,8 @@ formulaires publiés avec Form Builder 1.4.0 et après, et le compositeur. Atlas
 **Ce qui a été fait.** Le socle visiteur ne souffre pas de cet écart : il n'accepte jamais `resolu` et recalcule depuis les graines, et il
 refuse en dernier recours un jeu de six variables dont le texte ou l'accent serait illisible (`tests/theme-visiteur.test.js`).
 
-**Ce qui reste à décider.** Rejouer les 142 vecteurs de lecture du kit (`kit/jetons/themedef/vecteurs/themedef-lecteur.vecteurs.json`) sur
+**Corrigé le 01/11/2026 (non publié).** Le lecteur de Form Builder refuse maintenant un `resolu` incomplet ou qui rate une des 22 paires (avant et après les surcharges), ignore une surcharge refusée au lieu d'effacer la valeur qu'elle visait, lit la colonne `version`, les colonnes de longueurs inégales et le mode sombre « aucun » comme le kit, et mesure les mêmes couleurs que lui (`#RGB`, `rgb()`, `hsl()`). Les 142 vecteurs sont rejoués (127 en accord ; 15 écarts nommés dans `tests/themedef-lecteur-vecteurs.test.js`). Vérifié en Grist réel : un `Theme_document` hostile actif laisse le formulaire lisible, à l'apparence d'origine. Reste à publier avec Atlas.
+
+**Ce qui était à décider (ancien texte).** Rejouer les 142 vecteurs de lecture du kit (`kit/jetons/themedef/vecteurs/themedef-lecteur.vecteurs.json`) sur
 notre lecteur avec un adaptateur, puis corriger : refuser un `resolu` qui rate une paire, comme le kit, pour que **le même document donne le
 même résultat dans tous les widgets**. Changement de comportement d'un lecteur déjà en production : à faire sur accord, avec les vecteurs.

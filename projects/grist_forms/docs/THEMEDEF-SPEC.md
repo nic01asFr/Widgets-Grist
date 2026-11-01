@@ -250,8 +250,11 @@ refuse. Pour qu'**un même document donne le même résultat dans tous les widge
   des `#RRGGBB`, ce qui est plus strict.
 
 Cette règle ne s'applique qu'à partir du jour où chaque lecteur est aligné sur les vecteurs de lecture du kit : un lecteur qui ne l'a pas encore fait
-l'écrit dans sa documentation. État au 01/11/2026 : kit **conforme** ; Form Builder et Atlas **non conformes**, correction prévue dans un lot dédié
-chacun, publiée ensemble.
+l'écrit dans sa documentation. État au 01/11/2026 : kit **conforme** ; **Form Builder conforme sur la sûreté** (127 des 142 vecteurs de lecture rejoués en accord,
+`tests/themedef-lecteur-vecteurs.test.js`, les 15 écarts nommés un à un : l'aperçu depuis les graines quand le `resolu` manque, qu'on garde parce que la page design
+system n'en produit pas d'autre, et le mode invalide, impossible chez nous), **correction non publiée** ; Atlas **non conforme**, lot dédié prévu, publication commune.
+Quand un `resolu` manque, Form Builder dérive un APERÇU depuis les graines et redresse tout texte ou bouton illisible ; le lecteur de référence rend `non-compile`
+et n'applique rien (point 28 du kit) : même document, deux rendus possibles, jamais un rendu illisible.
 
 ## 6. Ce qui reste ouvert
 

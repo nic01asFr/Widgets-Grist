@@ -166,3 +166,12 @@ describe('Compositeur : le thème de Grist en repli', () => {
     assert.match(BUILDER, /\['document', 'grist'\]\.indexOf\(T\.apparenceDe\(def\)\.mode\) !== -1 && S\.themeDocument/);
   });
 });
+
+describe('Compositeur : un thème du document refusé par le lecteur est dit, pas confondu avec « aucun thème »', () => {
+  it('refusDuDocument existe, nomme chaque raison, et sert dans le menu et dans le choix d’apparence', () => {
+    const f = BUILDER.slice(BUILDER.indexOf('function refusDuDocument()'), BUILDER.indexOf('function habillerOutil()'));
+    for (const code of ['contraste-insuffisant', 'resolu-incomplet', 'version-inconnue', 'invalide', 'plusieurs-actifs']) assert.ok(f.includes("'" + code + "'"), code);
+    assert.ok(f.includes('est refusé'));
+    assert.ok((BUILDER.match(/refusDuDocument\(\)/g) || []).length >= 5, 'utilisé dans le menu de l’outil et dans les deux choix d’apparence');
+  });
+});

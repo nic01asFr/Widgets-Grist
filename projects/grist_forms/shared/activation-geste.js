@@ -124,7 +124,17 @@
     }
     var lu = ThemeDef.lireThemeDef(choix.ligne.themedef);
     if (!lu.ok) return { raison: 'invalide', cle: choix.ligne.cle, nom: '' };
-    return { raison: 'applique', cle: choix.ligne.cle, nom: nomDe(lu.themedef) };
+    // Ce que les lecteurs en feront, dans chaque mode : un thème que la table porte mais qu'un lecteur refuse (contraste insuffisant, valeurs mesurées
+    // incomplètes, version inconnue) n'est PAS « appliqué ».
+    var nom = nomDe(lu.themedef);
+    var modes = ['clair', 'sombre'];
+    for (var i = 0; i < modes.length; i++) {
+      var r = ThemeDef.lireLignes(lignes, { mode: modes[i] });
+      if (!r.theme && ['contraste-insuffisant', 'resolu-incomplet', 'version-inconnue'].indexOf(r.raison) !== -1) {
+        return { raison: r.raison, cle: choix.ligne.cle, nom: nom, mode: modes[i], avertissements: r.avertissements };
+      }
+    }
+    return { raison: 'applique', cle: choix.ligne.cle, nom: nom };
   }
 
   return { TABLE: TABLE, COLONNES: COLONNES, cleDe: cleDe, nomDe: nomDe, preparer: preparer, retrait: retrait, relire: relire };

@@ -355,6 +355,9 @@
       var phrases = {
         'applique': 'Thème actif du document : « ' + (r.nom || r.cle) + ' ».',
         'plusieurs-actifs': 'Plusieurs thèmes sont actifs dans ce document : aucun n’est appliqué.',
+        'contraste-insuffisant': 'Le thème actif du document (« ' + (r.nom || r.cle) + ' ») est refusé par les lecteurs : contraste insuffisant. Aucun n’est appliqué.',
+        'resolu-incomplet': 'Le thème actif du document (« ' + (r.nom || r.cle) + ' ») est refusé par les lecteurs : valeurs mesurées incomplètes. Aucun n’est appliqué.',
+        'version-inconnue': 'Le thème actif du document (« ' + (r.nom || r.cle) + ' ») est refusé par les lecteurs : version inconnue. Aucun n’est appliqué.',
         'invalide': 'Le thème actif du document n’est pas lisible : aucun n’est appliqué.',
         'aucun-actif': 'Ce document ne porte pas de thème actif.'
       };
@@ -441,6 +444,7 @@
   function phraseVerdict(v, sorte, cle) {
     if (sorte === 'retirer') return v.raison === 'aucun-actif' ? 'Le document ne porte plus de thème actif.' : 'Relu : le document porte encore un thème actif (' + v.raison + ').';
     if (v.raison === 'applique' && v.cle === cle) return 'Thème « ' + (v.nom || v.cle) + ' » appliqué au document. Relu : les widgets qui lisent Theme_document le prendront à leur prochaine ouverture.';
+    if (['contraste-insuffisant', 'resolu-incomplet', 'version-inconnue'].indexOf(v.raison) !== -1) return 'Écrit, mais les lecteurs le refusent (' + v.raison + ') : aucun thème n’est appliqué. Corrigez le design system.';
     if (v.raison === 'plusieurs-actifs') return 'Écrit, mais plusieurs thèmes sont actifs (une autre personne a peut-être agi en même temps) : aucun n’est appliqué. Rouvrez le geste pour le refaire.';
     return 'Écrit, mais relu autrement que prévu (' + v.raison + ') : vérifiez la table Theme_document.';
   }
