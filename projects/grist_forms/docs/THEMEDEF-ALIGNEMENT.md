@@ -42,7 +42,7 @@ Retirer une couche ne doit jamais laisser le widget illisible : la couche du des
 | C2 lecture `Theme_document` | oui, 22 paires, 127/142 vecteurs, 15 écarts nommés | oui, aligné (mêmes 15 écarts) | **non**, volontairement (aucun lecteur) | oui, c'est le lecteur de référence (142/142), branché au runtime |
 | C3 repli instance Grist | oui, mode `grist` (opt-in ; neuf = `grist`) | oui (`theme-instance.js`), **par défaut** | **non** | existe (paquet `hote`, opt-in), **pas chaîné** après le document : `theme.pack` est unique |
 | C4 clair/sombre | oui | clair seulement pour l'application complète (`fond-sombre-non-suivi`) | `prefers-color-scheme` seul | oui, bascule à chaud sans perdre saisie ni focus |
-| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer | à confirmer | oui ; `forced-colors` mesuré en Chrome, `prefers-contrast` unitaire seulement |
+| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer | **non** : aucune occurrence de `forced-colors`/`prefers-contrast` dans les 8 fichiers ; sans lecteur, aucun thème n'est posé (la question se pose dès qu'un lecteur est ajouté) | oui ; `forced-colors` mesuré en Chrome, `prefers-contrast` unitaire seulement |  |
 | C6 écriture | geste d'activation (57 vecteurs) | lecture seule | aucune | le runtime n'écrit jamais ; l'éditeur d'apparence écrit par `lotActivation` |
 | C7 thème visiteur | oui (vitrine Form Builder) | vitrine : pas encore (`themeVisiteur`) | pas branché | n/a |
 | C8 compatibilité | tests dédiés | à confirmer | « repli = valeur d'avant » | non-régression 337 + 389 tests, parité 40/40 ; conformité complète non rejouée |
