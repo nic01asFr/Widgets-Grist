@@ -12826,11 +12826,16 @@ async function chargerThemeDocument() {
     let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
+        // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
+        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=20261025a'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
         const tables = await grist.docApi.listTables();
         if (tables.includes('Theme_document')) {
             const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
             const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: apparenceGrist() === 'dark' ? 'sombre' : 'clair' });
             if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
+            // Un thème refusé est DIT à la personne (la raison nommée), jamais appliqué à moitié ni en silence ; aucun thème, ou « sans mode sombre », reste sans bruit.
+            const dit = RAISONS_THEME_REFUSE[theme.raison];
+            if (dit && !theme.charte) showToast('Le thème de ce document n’est pas appliqué : ' + dit, 'warning');
             if (theme.charte) {
                 const { variables, notes } = TD.habillageApplication(theme);
                 poserHabillageApplication(variables, AP.VARIABLES);
@@ -12853,6 +12858,15 @@ async function chargerThemeDocument() {
  * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
  */
 let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
+/** `?theme=aucun` : le choix explicite « sans thème ». */
+function themeAucunDemande() { try { return new URLSearchParams(location.search).get('theme') === 'aucun'; } catch (_) { return false; } }
+const RAISONS_THEME_REFUSE = {
+    'contraste-insuffisant': 'certaines couleurs ne sont pas assez lisibles ensemble',
+    'resolu-incomplet': 'ses couleurs calculées sont incomplètes',
+    'plusieurs-actifs': 'plusieurs thèmes sont actifs dans la table',
+    'version-inconnue': 'sa version n’est pas reconnue',
+    'invalide': 'il est illisible',
+};
 function brancherThemeInstance() {
     if (_themeInstanceBranche || typeof grist === 'undefined' || typeof grist.onThemeChange !== 'function') return;
     _themeInstanceBranche = true;
@@ -12860,7 +12874,7 @@ function brancherThemeInstance() {
 }
 async function appliquerThemeInstance() {
     try {
-        if (_themeDocumentActif || !CONFIG.grist.ready) return;
+        if (_themeDocumentActif || !CONFIG.grist.ready || themeAucunDemande()) return;
         const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=20261101a'), import('./lib/charte/depuis-themedef.js?v=20261101a'), import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
         const racine = document.documentElement;
         const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
