@@ -1994,7 +1994,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.42.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.42.1" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -2165,13 +2165,13 @@
                     <span class="sel-dot"></span>
                     <span id="sel-label"><strong>0 objet</strong> sélectionné</span>
                     <span class="vsep"></span>
-                    <button class="sel-btn" id="sel-prev">◀</button>
+                    <button class="sel-btn" id="sel-prev" aria-label="Objet précédent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
                     <span class="sel-count" id="sel-pos">1 / 1</span>
-                    <button class="sel-btn" id="sel-next">▶</button>
+                    <button class="sel-btn" id="sel-next" aria-label="Objet suivant"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
                     <span class="vsep"></span>
                     <button class="sel-btn" id="sel-all" style="width:auto">✓ Tout</button>
                     <button class="sel-btn" id="sel-clear" style="width:auto">Désélectionner</button>
-                    <button class="sel-btn danger" id="sel-exit">✕</button>
+                    <button class="sel-btn danger" id="sel-exit" aria-label="Quitter la sélection"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
                 </div>
 
                 <div class="loading" id="loading">
@@ -2253,6 +2253,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.42.0"></script>
+    <script type="module" src="./app.js?v=1.42.1"></script>
 </body>
 </html>

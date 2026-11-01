@@ -13,6 +13,10 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.42.1 — correctif : des icônes propres
+
+- Les flèches précédent et suivant, la croix de fermeture et les boutons de lecture (barre de sélection, carte du récit, panneaux) sont des icônes tracées en SVG, et non des caractères que certains appareils affichent en emoji. Aucun changement du contrat ni du client hôte.
+
 ## 1.42.0 — le soleil de la scène pour la page hôte (contrat 0.7), le thème de l'instance aligné
 
 - **Contrat 0.7, additif** (profil complet) : `setSun({ date, actif })` règle la date et l'heure du soleil d'Atlas (ISO 8601 avec son fuseau, ou millisecondes) et l'interrupteur des ombres portées ; `getSun()` rend `{ date, actif, azimut, hauteur, lever, coucher }` (azimut depuis le nord dans le sens horaire, hauteur en degrés) ; l'événement `sun` annonce chaque changement, `origine` `utilisateur` ou `api`. Une commande 0.2 à 0.6 reste servie ; `VERSION_CLIENT` 5, nouvelle empreinte du client (à annoncer sur le fil des hôtes avant publication).

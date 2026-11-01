@@ -13,7 +13,7 @@ export const VERSION = '1.0.0';
 export const FORMAT = 'atlas-scene3d/1';
 export const REPERE = 'x=est, y=haut, z=sud (nord = -z), mètres, sol y=0';
 
-import { normaliserRelief, elargir, RELIEF_COTE_MAX } from './export-relief.js?v=1.42.0';
+import { normaliserRelief, elargir, RELIEF_COTE_MAX } from './export-relief.js?v=1.42.1';
 
 export const PLAFOND_OCTETS_DEFAUT = 5 * 1024 * 1024;
 export const PLAFOND_OCTETS_MAX = 32 * 1024 * 1024;
@@ -500,7 +500,7 @@ export function verifierPoids(octets, plafond) {
  * @returns {{ extrusions: object[], credit: object|null, avertissements: string[] }}
  */
 export async function batiDuFond(map, bbox, hauteurParDefaut) {
-  const B = await import('./bi/batiments.js?v=1.42.0');
+  const B = await import('./bi/batiments.js?v=1.42.1');
   if (!map || typeof map.getSource !== 'function' || !map.getSource('openmaptiles') || typeof map.querySourceFeatures !== 'function') return { extrusions: [], credit: null, avertissements: ["bâti : ce fond de carte n'a pas de bâti (source absente)"] };
   if (map.getZoom() < B.ZOOM_MINIMAL) return { extrusions: [], credit: null, avertissements: ["bâti : le bâti n'est lu qu'à partir du zoom " + B.ZOOM_MINIMAL + " (non exporté)"] };
   const r = B.batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox, limite: Math.min(B.LIMITE_MAX, PLAFOND_ENTITES), hauteurMin: 0 });
