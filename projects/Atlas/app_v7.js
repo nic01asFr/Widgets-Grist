@@ -12793,6 +12793,7 @@ async function appliquerThemeInstance() {
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
         poserHabillageApplication(variables, AP.VARIABLES);
         try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
+        console.info("[Atlas] thème de l'instance Grist appliqué :", t.nom, "accent", variables["--accent"] || "(inchangé)", "fond", variables["--bg"] || "(inchangé)");
         if (notes.length) console.info('[Atlas] thème de l\'instance, non suivi :', notes.join(', '));
     } catch (e) {
         console.warn('[Atlas] thème de l\'instance', e && e.message);
