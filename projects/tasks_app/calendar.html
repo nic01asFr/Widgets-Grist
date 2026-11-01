@@ -7,28 +7,28 @@
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <style>
         :root {
-            /* Primary */
-            --primary: #3e5de7;
-            --primary-dark: #2845c1;
-            --primary-light: #dce6ff;
+            /* Primary — compatible ThemeDef (--kit-*), repli = valeur d'avant */
+            --primary: var(--kit-accent, #3e5de7);
+            --primary-dark: var(--kit-accent-survol, #2845c1);
+            --primary-light: var(--kit-accent-fond, #dce6ff);
             /* Semantic */
-            --success: #10b981;
-            --success-light: #d1fae5;
-            --warning: #f59e0b;
-            --warning-light: #fef3c7;
-            --danger: #ef4444;
-            --danger-light: #fee2e2;
-            --info: #3b82f6;
-            --info-light: #dbeafe;
+            --success: var(--kit-ok, #10b981);
+            --success-light: var(--kit-ok-fond, #d1fae5);
+            --warning: var(--kit-attention, #f59e0b);
+            --warning-light: var(--kit-attention-fond, #fef3c7);
+            --danger: var(--kit-alerte, #ef4444);
+            --danger-light: var(--kit-alerte-fond, #fee2e2);
+            --info: var(--kit-info, #3b82f6);
+            --info-light: var(--kit-info-fond, #dbeafe);
             /* Backgrounds */
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
+            --bg: var(--kit-fond, #f8fafc);
+            --card-bg: var(--kit-surface, #ffffff);
             /* Text */
-            --text: #1e293b;
-            --text-muted: #64748b;
+            --text: var(--kit-texte, #1e293b);
+            --text-muted: var(--kit-texte-2, #64748b);
             --text-light: #94a3b8;
             /* Borders */
-            --border: #e2e8f0;
+            --border: var(--kit-bord, #e2e8f0);
             --border-dark: #cbd5e1;
             /* Shadows */
             --shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -196,7 +196,7 @@
         .week-event-bar.milestone.p2::before { color: var(--warning); }
         .week-event-bar.milestone.p3::before { color: var(--info); }
         .week-event-bar.milestone.p4::before { color: var(--text-muted); }
-        .week-event-bar.done { opacity: 0.5; }
+        .week-event-bar.done { opacity: 0.5; }
 
         /* Year View */
         .year-grid { flex: 1; display: none; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; overflow-y: auto; background: var(--bg); }
@@ -307,7 +307,14 @@
         .form-input.title-input:focus { border-bottom-color: var(--primary); box-shadow: none; }
         .form-textarea { min-height: 70px; resize: vertical; font-size: var(--fs-sm); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
+        /* Cas B1 (cadrage geolocalisation) : liste de suggestions de FormReferentiel.monter() — adaptee aux variables TaskFlow (deja compatibles --kit-*) */
+        .fr-referentiel__liste { position: absolute; left: 0; right: 0; z-index: 20; margin: 4px 0 0; padding: 4px 0; list-style: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); max-height: 220px; overflow-y: auto; }
+        .fr-referentiel__liste[hidden] { display: none; }
+        .fr-referentiel__option { display: flex; align-items: center; min-height: 34px; padding: 6px 12px; line-height: 1.3; cursor: pointer; font-size: var(--fs-sm); color: var(--text); }
+        .fr-referentiel__option:hover, .fr-referentiel__option[aria-selected="true"] { background: var(--primary-light); }
+        .fr-referentiel__etat { min-height: 1.3em; margin: 4px 0 0; font-size: var(--fs-xs); color: var(--text-muted); }
+        .fr-referentiel__mention { margin: 2px 0 0; font-size: var(--fs-2xs); color: var(--text-light); }
+
         .priority-selector { display: flex; gap: 6px; }
         .priority-pill { flex: 1; padding: 8px 4px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: var(--fs-xs); font-weight: 600; transition: all 0.15s; background: var(--card-bg); }
         .priority-pill:hover { transform: scale(1.02); }
@@ -617,16 +624,16 @@
         /* ═════ Dark / Light automatique (selon le navigateur) ═════ */
         @media (prefers-color-scheme: dark) {
             :root {
-                --primary:#7b8cff; --primary-dark:#6878f5; --primary-light:#22306e;
-                --success:#3fcf8e; --success-light:#0f2e22;
-                --warning:#f5b454; --warning-light:#3a2c14;
-                --danger:#ff6168; --danger-light:#3a1c22;
-                --info:#7b9cff; --info-light:#16264a;
-                --bg:#0f1626; --card-bg:#18223a;
-                --text:#dde3ef; --text-muted:#9aa6bd; --text-light:#6c788f;
-                --border:#283145; --border-dark:#3a455c;
+                --primary: var(--kit-accent, #7b8cff); --primary-dark: var(--kit-accent-survol, #6878f5); --primary-light: var(--kit-accent-fond, #22306e);
+                --success: var(--kit-ok, #3fcf8e); --success-light: var(--kit-ok-fond, #0f2e22);
+                --warning: var(--kit-attention, #f5b454); --warning-light: var(--kit-attention-fond, #3a2c14);
+                --danger: var(--kit-alerte, #ff6168); --danger-light: var(--kit-alerte-fond, #3a1c22);
+                --info: var(--kit-info, #7b9cff); --info-light: var(--kit-info-fond, #16264a);
+                --bg: var(--kit-fond, #0f1626); --card-bg: var(--kit-surface, #18223a);
+                --text: var(--kit-texte, #dde3ef); --text-muted: var(--kit-texte-2, #9aa6bd); --text-light:#6c788f;
+                --border: var(--kit-bord, #283145); --border-dark:#3a455c;
                 --shadow:0 1px 2px rgba(0,0,0,0.4); --shadow-lg:0 24px 60px -16px rgba(0,0,0,0.7);
-                --p-50:#1a2150; --p-100:#22306e; --surface-2:#161f33; --warn-ink:#f5b454;
+                --p-50:#1a2150; --p-100:#22306e; --surface-2: var(--kit-surface-2, #161f33); --warn-ink:#f5b454;
             }
             .demo-badge { color: #1f2738; }
             .toast { background: #060a14; }
@@ -1011,6 +1018,406 @@
     <div class="save-indicator" id="saveIndicator">Enregistré</div>
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Cas B1 (cadrage geolocalisation) : vendore depuis projects/grist_forms/shared/referentiel.js (01/11/2026).
+         Module autonome, sans dependance a Grist ni a ce projet : copier ce bloc depuis la source pour le mettre a jour. -->
+    <script>
+    /**
+     * referentiel.js — désigner une chose qui existe déjà, plutôt que la décrire.
+     *
+     * Ce module ne dessine pas le formulaire et ne connaît pas Grist. Il sait
+     * trois choses : interroger une source, normaliser sa réponse, et brancher une
+     * liste de suggestions accessible sur un champ texte qui existe déjà.
+     *
+     * Une seule source aujourd'hui : la BAN, par le service de géocodage de la
+     * Géoplateforme (CORS ouvert, sans clé, mesuré le 18/10/2026 par Form Builder).
+     */
+    (function (root, factory) {
+      'use strict';
+      if (typeof module === 'object' && module.exports) module.exports = factory();
+      else if (typeof define === 'function' && define.amd) define([], factory);
+      else root.FormReferentiel = factory();
+    }(typeof self !== 'undefined' ? self : this, function () {
+      'use strict';
+
+      var VERSION = '1.0.0';
+
+      var SOURCES = {
+        ban: {
+          nom: 'Base Adresse Nationale',
+          url: 'https://data.geopf.fr/geocodage/search',
+          minimum: 3,
+          limite: 5,
+          intervalleMs: 1000,
+          attenteFrappeMs: 500,
+          delaiMs: 6000,
+          mention: 'Pour proposer des adresses, les caractères saisis sont envoyés à la Géoplateforme, ' +
+            'service de l’État.',
+          annexes: {
+            codePostal: { type: 'Text', label: 'Code postal' },
+            commune: { type: 'Text', label: 'Commune' },
+            insee: { type: 'Text', label: 'Code INSEE' },
+            latitude: { type: 'Numeric', label: 'Latitude' },
+            longitude: { type: 'Numeric', label: 'Longitude' },
+            identifiant: { type: 'Text', label: 'Identifiant BAN' }
+          }
+        }
+      };
+
+      function sourceConnue(nom) {
+        return Object.prototype.hasOwnProperty.call(SOURCES, String(nom));
+      }
+
+      function annexesDe(nom) {
+        return sourceConnue(nom) ? SOURCES[nom].annexes : {};
+      }
+
+      function ErreurReferentiel(code, message, statut) {
+        this.name = 'ErreurReferentiel';
+        this.code = code;
+        this.message = message;
+        this.statut = statut;
+      }
+      ErreurReferentiel.prototype = Object.create(Error.prototype);
+      ErreurReferentiel.prototype.constructor = ErreurReferentiel;
+
+      function nettoyer(texte) {
+        return String(texte == null ? '' : texte).replace(/\s+/g, ' ').trim();
+      }
+
+      function normaliserSuggestion(feature) {
+        if (!feature || typeof feature !== 'object') return null;
+        var p = feature.properties || {};
+        var libelle = nettoyer(p.label);
+        if (!libelle) return null;
+        var c = (feature.geometry && feature.geometry.coordinates) || [];
+        var lon = Number(c[0]);
+        var lat = Number(c[1]);
+        var aCoordonnees = isFinite(lon) && isFinite(lat) && c.length >= 2;
+        return {
+          libelle: libelle,
+          codePostal: p.postcode ? String(p.postcode) : null,
+          commune: p.city ? String(p.city) : null,
+          insee: p.citycode ? String(p.citycode) : null,
+          latitude: aCoordonnees ? Number(lat.toFixed(6)) : null,
+          longitude: aCoordonnees ? Number(lon.toFixed(6)) : null,
+          identifiant: p.banId ? String(p.banId) : (p.id ? String(p.id) : null),
+          type: p.type ? String(p.type) : null
+        };
+      }
+
+      function construireUrl(nom, texte, options) {
+        var src = SOURCES[nom];
+        var u = new URL(src.url);
+        u.searchParams.set('q', nettoyer(texte));
+        u.searchParams.set('limit', String((options && options.limite) || src.limite));
+        u.searchParams.set('autocomplete', '1');
+        return u.toString();
+      }
+
+      function delaiAvantAppel(dernier, maintenant, intervalle) {
+        if (!dernier) return 0;
+        var ecoule = maintenant - dernier;
+        return ecoule >= intervalle ? 0 : intervalle - ecoule;
+      }
+
+      function indexSuivant(actif, n) {
+        if (!n) return -1;
+        return actif + 1 >= n ? 0 : actif + 1;
+      }
+
+      function indexPrecedent(actif, n) {
+        if (!n) return -1;
+        return actif <= 0 ? n - 1 : actif - 1;
+      }
+
+      function phraseResultats(n) {
+        if (!n) {
+          return 'Aucune adresse proposée : elle sera enregistrée telle que vous l’avez saisie.';
+        }
+        if (n === 1) return '1 adresse proposée. Flèche bas puis Entrée pour la choisir.';
+        return n + ' adresses proposées. Flèches haut et bas pour parcourir, Entrée pour choisir.';
+      }
+
+      function phraseErreur(erreur) {
+        if (erreur && erreur.code === 'limite') {
+          return 'Trop de recherches d’affilée : patientez une seconde, puis recommencez.';
+        }
+        return 'La recherche d’adresse ne répond pas : saisissez l’adresse en entier, ' +
+          'elle sera enregistrée telle quelle.';
+      }
+
+      function rechercher(texte, opts) {
+        opts = opts || {};
+        var nom = opts.source || 'ban';
+        if (!sourceConnue(nom)) {
+          return Promise.reject(new ErreurReferentiel('source', 'Source inconnue : ' + nom));
+        }
+        var src = SOURCES[nom];
+        var q = nettoyer(texte);
+        if (q.length < src.minimum) return Promise.resolve([]);
+
+        var appel = opts.fetch || (typeof fetch === 'function' ? fetch : null);
+        if (!appel) {
+          return Promise.reject(new ErreurReferentiel('reseau', 'Aucun moyen d’interroger le réseau.'));
+        }
+        var controleur = opts.controleur ||
+          (typeof AbortController === 'function' ? new AbortController() : null);
+        var delai = setTimeout(function () {
+          if (controleur) controleur.abort();
+        }, opts.delaiMs || src.delaiMs);
+
+        var init = controleur ? { signal: controleur.signal } : {};
+        return Promise.resolve()
+          .then(function () { return appel(construireUrl(nom, q, opts), init); })
+          .then(function (reponse) {
+            clearTimeout(delai);
+            if (reponse.status === 429) {
+              throw new ErreurReferentiel('limite', 'Trop de requêtes.', 429);
+            }
+            if (!reponse.ok) {
+              throw new ErreurReferentiel('http', 'Réponse ' + reponse.status, reponse.status);
+            }
+            return reponse.json();
+          })
+          .then(function (donnees) {
+            var liste = (donnees && donnees.features) || [];
+            return liste.map(normaliserSuggestion).filter(Boolean).slice(0, src.limite);
+          })
+          .catch(function (e) {
+            clearTimeout(delai);
+            if (e instanceof ErreurReferentiel) throw e;
+            throw new ErreurReferentiel('reseau', (e && e.message) || 'Réseau indisponible.');
+          });
+      }
+
+      function monter(champ, opts) {
+        opts = opts || {};
+        var nom = opts.source || 'ban';
+        var src = SOURCES[nom];
+        if (!src || !champ) return { detruire: function () {}, chercher: function () {} };
+
+        var doc = champ.ownerDocument || document;
+        var declenchement = opts.declenchement === 'frappe' ? 'frappe' : 'validation';
+        var etat = opts.etat || null;
+        var hote = opts.hote || champ.parentNode;
+        var bouton = opts.bouton || null;
+        var idListe = (champ.id || 'referentiel') + '-liste';
+
+        var options = [];
+        var actif = -1;
+        var jeton = 0;
+        var controleur = null;
+        var minuteur = null;
+        var attente = null;
+        var dernierAppel = 0;
+        var detruit = false;
+
+        champ.setAttribute('role', 'combobox');
+        champ.setAttribute('aria-autocomplete', 'list');
+        champ.setAttribute('aria-haspopup', 'listbox');
+        champ.setAttribute('aria-expanded', 'false');
+        champ.setAttribute('aria-controls', idListe);
+        champ.setAttribute('autocomplete', 'off');
+
+        var liste = doc.createElement('ul');
+        liste.id = idListe;
+        liste.className = 'fr-referentiel__liste';
+        liste.setAttribute('role', 'listbox');
+        liste.setAttribute('aria-label', 'Adresses proposées');
+        liste.hidden = true;
+        var ligne = champ.parentNode;
+        if (ligne && ligne.parentNode === hote && ligne.nextSibling) {
+          hote.insertBefore(liste, ligne.nextSibling);
+        } else {
+          hote.appendChild(liste);
+        }
+
+        function annoncer(texte) {
+          if (etat) etat.textContent = texte || '';
+        }
+
+        function fermer() {
+          liste.hidden = true;
+          champ.setAttribute('aria-expanded', 'false');
+          champ.removeAttribute('aria-activedescendant');
+          actif = -1;
+          for (var i = 0; i < liste.children.length; i++) {
+            liste.children[i].setAttribute('aria-selected', 'false');
+          }
+        }
+
+        function designer(index) {
+          actif = index;
+          for (var i = 0; i < liste.children.length; i++) {
+            var estActif = i === index;
+            liste.children[i].setAttribute('aria-selected', estActif ? 'true' : 'false');
+            if (estActif) {
+              champ.setAttribute('aria-activedescendant', liste.children[i].id);
+              if (typeof liste.children[i].scrollIntoView === 'function') {
+                liste.children[i].scrollIntoView({ block: 'nearest' });
+              }
+            }
+          }
+          if (index < 0) champ.removeAttribute('aria-activedescendant');
+        }
+
+        function ouvrir() {
+          if (!options.length) return;
+          liste.hidden = false;
+          champ.setAttribute('aria-expanded', 'true');
+        }
+
+        function afficher(propositions) {
+          options = propositions;
+          liste.innerHTML = '';
+          propositions.forEach(function (s, i) {
+            var li = doc.createElement('li');
+            li.id = idListe + '-' + i;
+            li.className = 'fr-referentiel__option';
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', 'false');
+            li.textContent = s.libelle;
+            li.addEventListener('mousedown', function (ev) {
+              ev.preventDefault();
+            });
+            li.addEventListener('click', function () {
+              choisir(i);
+            });
+            liste.appendChild(li);
+          });
+          if (propositions.length) {
+            ouvrir();
+            designer(-1);
+          } else {
+            fermer();
+          }
+          annoncer(phraseResultats(propositions.length));
+        }
+
+        function choisir(index) {
+          var s = options[index];
+          if (!s) return;
+          champ.value = s.libelle;
+          fermer();
+          annoncer('Adresse choisie : ' + s.libelle + '.');
+          if (typeof opts.onChoisir === 'function') opts.onChoisir(s);
+        }
+
+        function chercher() {
+          if (detruit) return;
+          clearTimeout(minuteur);
+          var q = nettoyer(champ.value);
+          if (q.length < src.minimum) {
+            fermer();
+            annoncer('Saisissez au moins ' + src.minimum + ' caractères pour chercher.');
+            return;
+          }
+          var mien = ++jeton;
+          if (controleur) controleur.abort();
+          controleur = typeof AbortController === 'function' ? new AbortController() : null;
+          var courant = controleur;
+          annoncer('Recherche en cours…');
+          clearTimeout(attente);
+          attente = setTimeout(function () {
+            if (mien !== jeton || detruit) return;
+            dernierAppel = Date.now();
+            rechercher(q, { source: nom, fetch: opts.fetch, controleur: courant })
+              .then(function (propositions) {
+                if (mien !== jeton || detruit) return;
+                afficher(propositions);
+              }, function (e) {
+                if (mien !== jeton || detruit) return;
+                fermer();
+                annoncer(phraseErreur(e));
+              });
+          }, delaiAvantAppel(dernierAppel, Date.now(), src.intervalleMs));
+        }
+
+        function surSaisie() {
+          var texte = champ.value;
+          if (typeof opts.onTexte === 'function') opts.onTexte(texte);
+          fermer();
+          jeton++;
+          if (controleur) controleur.abort();
+          clearTimeout(attente);
+          clearTimeout(minuteur);
+          annoncer('');
+          if (declenchement === 'frappe' && nettoyer(texte).length >= src.minimum) {
+            minuteur = setTimeout(chercher, src.attenteFrappeMs);
+          }
+        }
+
+        function surTouche(ev) {
+          var touche = ev.key;
+          var ouverte = !liste.hidden;
+          if (touche === 'ArrowDown') {
+            ev.preventDefault();
+            if (!ouverte) ouvrir();
+            designer(indexSuivant(actif, options.length));
+          } else if (touche === 'ArrowUp') {
+            ev.preventDefault();
+            if (!ouverte) ouvrir();
+            designer(indexPrecedent(actif, options.length));
+          } else if (touche === 'Enter') {
+            ev.preventDefault();
+            if (ouverte && actif >= 0) choisir(actif);
+            else if (declenchement === 'validation') chercher();
+          } else if (touche === 'Escape') {
+            if (ouverte) {
+              ev.preventDefault();
+              fermer();
+            }
+          }
+        }
+
+        function surDepart() {
+          fermer();
+        }
+
+        function surBouton() {
+          chercher();
+        }
+
+        champ.addEventListener('input', surSaisie);
+        champ.addEventListener('keydown', surTouche);
+        champ.addEventListener('blur', surDepart);
+        if (bouton) bouton.addEventListener('click', surBouton);
+
+        return {
+          chercher: chercher,
+          detruire: function () {
+            detruit = true;
+            jeton++;
+            clearTimeout(minuteur);
+            clearTimeout(attente);
+            if (controleur) controleur.abort();
+            champ.removeEventListener('input', surSaisie);
+            champ.removeEventListener('keydown', surTouche);
+            champ.removeEventListener('blur', surDepart);
+            if (bouton) bouton.removeEventListener('click', surBouton);
+            if (liste.parentNode) liste.parentNode.removeChild(liste);
+          }
+        };
+      }
+
+      return {
+        VERSION: VERSION,
+        SOURCES: SOURCES,
+        ErreurReferentiel: ErreurReferentiel,
+        sourceConnue: sourceConnue,
+        annexesDe: annexesDe,
+        normaliserSuggestion: normaliserSuggestion,
+        construireUrl: construireUrl,
+        rechercher: rechercher,
+        monter: monter,
+        delaiAvantAppel: delaiAvantAppel,
+        indexSuivant: indexSuivant,
+        indexPrecedent: indexPrecedent,
+        phraseResultats: phraseResultats,
+        phraseErreur: phraseErreur
+      };
+    }));
+    </script>
     <script>
         // ═══════════════════════════════════════════════════════════════════════
         // SCHEMA & CONSTANTS
@@ -1018,7 +1425,7 @@
         const TASKFLOW_SCHEMA = {
             Team: [{ id: 'nom', type: 'Text' }, { id: 'email', type: 'Text' }, { id: 'avatar', type: 'Text' }, { id: 'role', type: 'Choice' }, { id: 'actif', type: 'Bool' }, { id: 'couleur', type: 'Text' }],  // TEAM-01 (capaciteHebdo/indispos creees a la demande par le widget Plan)
             Projects: [{ id: 'nom', type: 'Text' }, { id: 'couleur', type: 'Text' }, { id: 'dateDebut', type: 'Date' }, { id: 'dateFin', type: 'Date' }, { id: 'responsable', type: 'Ref:Team' }, { id: 'actif', type: 'Bool' }],
-            Tasks: [{ id: 'titre', type: 'Text' }, { id: 'description', type: 'Text' }, { id: 'dateDebut', type: 'Date' }, { id: 'dateEcheance', type: 'Date' }, { id: 'priorite', type: 'Choice' }, { id: 'statut', type: 'Choice' }, { id: 'progression', type: 'Numeric' }, { id: 'projet', type: 'Ref:Projects' }, { id: 'assignees', type: 'RefList:Team' }, { id: 'type', type: 'Choice' }, { id: 'dependDe', type: 'RefList:Tasks' }, { id: 'tags', type: 'ChoiceList' }, { id: 'estimationH', type: 'Numeric' }, { id: 'tempsPasse', type: 'Numeric' }, { id: 'couleur', type: 'Text' }, { id: 'subtasks', type: 'Text' }, { id: 'parentTask', type: 'Ref:Tasks' }]
+            Tasks: [{ id: 'titre', type: 'Text' }, { id: 'description', type: 'Text' }, { id: 'dateDebut', type: 'Date' }, { id: 'dateEcheance', type: 'Date' }, { id: 'priorite', type: 'Choice' }, { id: 'statut', type: 'Choice' }, { id: 'progression', type: 'Numeric' }, { id: 'projet', type: 'Ref:Projects' }, { id: 'assignees', type: 'RefList:Team' }, { id: 'type', type: 'Choice' }, { id: 'dependDe', type: 'RefList:Tasks' }, { id: 'tags', type: 'ChoiceList' }, { id: 'estimationH', type: 'Numeric' }, { id: 'tempsPasse', type: 'Numeric' }, { id: 'couleur', type: 'Text' }, { id: 'subtasks', type: 'Text' }, { id: 'parentTask', type: 'Ref:Tasks' }, { id: 'lieu', type: 'Text' }, { id: 'geometrie', type: 'Text' }]  // lieu/geometrie: une reunion est localisable par defaut (01/11/2026)
         };
 
         const PRIORITY_LABELS = { 1: 'Critique', 2: 'Haute', 3: 'Moyenne', 4: 'Basse' };
@@ -1435,7 +1842,8 @@
                 print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
                 image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
                 plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-                today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
+                today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>',
+                pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
             };
             const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
@@ -2458,6 +2866,7 @@
         let tasks = [], team = [], projects = [], gristReady = false;
         let TASK_COLS = new Set(); // colonnes reelles de Tasks (sweet spot : charges/dateCloture n'existent que si le widget Plan a ete ouvert)
         let CRA_ACTIVE = false; // Feuille de temps active -> tempsPasse = rollup CRA, saisie manuelle figee (anti-doublon)
+        let rattachements = [], HAS_RATTACH = false; // Cas A (01/11/2026) : table satellite opt-in Rattachements, rattache une tache a une ligne de n'importe quelle table
         function pruneTaskRecord(rec) { if (TASK_COLS.size) { for (const k in rec) if (!TASK_COLS.has(k)) delete rec[k]; } return rec; }
         let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques, alimente par TF.loadStatusConfig
         let currentView = localStorage.getItem('taskflow_calendar_view') || 'month', currentDate = new Date(), selectedDate = null, selectedTaskId = null;
@@ -2768,6 +3177,7 @@
             try { const _raw = await grist.docApi.fetchTable('Tasks'); TASK_COLS = new Set(Object.keys(_raw || {})); tasks = convertGristToRecords(_raw); } catch (e) { tasks = []; }
             try { team = convertGristToRecords(await grist.docApi.fetchTable('Team')); } catch (e) { team = []; }
             try { projects = convertGristToRecords(await grist.docApi.fetchTable('Projects')); } catch (e) { projects = []; }
+            try { rattachements = convertGristToRecords(await grist.docApi.fetchTable('Rattachements')); HAS_RATTACH = true; } catch (e) { rattachements = []; HAS_RATTACH = false; }
             gristReady = true;
             rebuildChildrenCache();
             try { statusCfg = await TF.loadStatusConfig(grist, 'Tasks', 'statut', tasks.map(t => t && t.statut)); } catch (e) {}
@@ -3151,10 +3561,12 @@
         // Construit le contenu d'une barre adaptative selon son niveau de détail
         function buildBarContent(bar, task, level, continuedFromPrev, continuesNext, isMilestone) {
             const title = task.titre || 'Sans titre';
+            const addPin = (container) => { if (task.lieu) { const s = document.createElement('span'); s.className = 'eb-pin'; s.style.cssText = 'display:inline-flex;vertical-align:middle;margin-right:2px'; s.innerHTML = TF.ui.icon('pin', 10); container.appendChild(s); } };
 
             if (isMilestone || level === 'compact') {
                 // Layout horizontal : [◄] titre [►]
                 if (continuedFromPrev) { const a = document.createElement('span'); a.className = 'bar-chevron bar-chevron-left'; a.textContent = '◄'; bar.appendChild(a); }
+                addPin(bar);
                 const t = document.createElement('span'); t.className = 'eb-title'; t.textContent = title; bar.appendChild(t);
                 if (continuesNext) { const a = document.createElement('span'); a.className = 'bar-chevron bar-chevron-right'; a.textContent = '►'; bar.appendChild(a); }
                 return;
@@ -3167,6 +3579,7 @@
             const rowTop = document.createElement('div');
             rowTop.className = 'eb-row-top';
             if (continuedFromPrev) { const a = document.createElement('span'); a.className = 'bar-chevron bar-chevron-left'; a.textContent = '◄'; rowTop.appendChild(a); }
+            addPin(rowTop);
             const t = document.createElement('span'); t.className = 'eb-title'; t.textContent = title; rowTop.appendChild(t);
             const si = getStatusInfo(task.statut);
             const badge = document.createElement('span'); badge.className = 'eb-status'; badge.textContent = si.label; badge.style.background = si.bg; rowTop.appendChild(badge);
@@ -3600,6 +4013,7 @@
         }
 
         function closePanel() {
+            if (panelState._lieuCtrl) { try { panelState._lieuCtrl.detruire(); } catch (e) {} }
             panelState.open = false;
             document.getElementById('panel').classList.remove('open');
             document.getElementById('gridContainer').classList.remove('panel-open');
@@ -3737,7 +4151,8 @@
                 subtasks: getSubtasks(task),
                 couleur: task.couleur || null,
                 parentTask: task.parentTask || null,
-                charges: TF.parseCharges(task.charges), dateCloture: task.dateCloture || null
+                charges: TF.parseCharges(task.charges), dateCloture: task.dateCloture || null,
+                lieu: task.lieu || '', geometrie: task.geometrie || null
             };
         }
         
@@ -3765,6 +4180,8 @@
             task.couleur = data.couleur || null;
             task.parentTask = data.parentTask || null;
             task.charges = TF.chargesToJson((data.charges || []).filter(c => data.assignees.includes(c.teamId)));
+            task.lieu = data.lieu || '';
+            task.geometrie = data.geometrie || null;
         }
 
         function backToPeriod(force) {
@@ -3951,6 +4368,16 @@
                             : `<div class="dates-inline"><input type="date" value="${s ? formatDate(s, 'iso') : ''}" onchange="updateField('dateDebut', this.value)"><span class="dates-arrow">→</span><input type="date" value="${e ? formatDate(e, 'iso') : ''}" onchange="updateField('dateEcheance', this.value)"><button class="today-btn" onclick="setTodayDate()">Auj.</button></div>`
                         }</div>
                     </div>
+                    ${data.type === 'reunion' && TASK_COLS.has('lieu') ? `
+                    <div class="prop-row">
+                        <span class="prop-label">Lieu</span>
+                        <div class="prop-value">
+                            <div class="lieu-wrap" style="position:relative">
+                                <input type="text" id="lieuInput" class="form-input" placeholder="Tapez une adresse..." autocomplete="off" value="${escapeHtml(data.lieu || '')}" onchange="updateField('lieu', this.value)">
+                            </div>
+                            ${data.lieu ? `<div style="margin-top:6px;font-size: var(--fs-xs);color:var(--text-muted);display:flex;align-items:center;gap:4px">${TF.ui.icon('pin', 12)} ${escapeHtml(data.lieu)}</div>` : ''}
+                        </div>
+                    </div>` : ''}
                     <div class="prop-row">
                         <span class="prop-label">Projet</span>
                         <div class="prop-value"><div class="project-select-wrap">
@@ -3979,6 +4406,14 @@
                                     <button class="btn" style="padding:4px 10px;font-size: var(--fs-xs)" onclick="detachFromParent()">Détacher</button>
                                   </div>`
                                 : `<select class="form-select" onchange="if(this.value)setParent(parseInt(this.value))"><option value="">— Tâche racine —</option>${tasks.filter(t => t.id !== panelState.taskId && canSetParent(panelState.taskId, t.id)).map(t => `<option value="${t.id}">${escapeHtml(t.titre)}</option>`).join('')}</select>`}
+                        </div>
+                    </div>` : ''}
+                    ${!panelState.isNew ? `
+                    <div class="prop-row">
+                        <span class="prop-label">Objets liés</span>
+                        <div class="prop-value">
+                            ${(HAS_RATTACH ? rattachements.filter(r => r.tache === panelState.taskId) : []).length ? `<div class="asg-list" style="margin-bottom:6px">${(HAS_RATTACH ? rattachements.filter(r => r.tache === panelState.taskId) : []).map(r => `<span class="multi-select-chip" style="background:var(--primary-light);color:var(--primary)" title="${escapeHtml(r.tableCibleNom || '')} · #${r.ligneCibleId}">${escapeHtml(r.cleCible || ('#' + r.ligneCibleId))}<span class="remove" onclick="rattachRemove(${r.id})">×</span></span>`).join('')}</div>` : ''}
+                            <div class="multi-select" id="rattachSelect"><button class="addbtn" onclick="openRattachPicker()"><span style="font-size: var(--fs-lg);line-height:1">+</span> Lier un objet</button><div class="multi-select-dropdown" id="rattachDropdown"></div></div>
                         </div>
                     </div>` : ''}
                     <div class="prop-row">
@@ -4083,7 +4518,187 @@
             } else {
                 footer.innerHTML = '';
             }
+            wireLieuInput();
         }
+
+        // Cas B1 (cadrage geolocalisation) : champ adresse BAN, vendore de grist_forms/shared/referentiel.js.
+        function wireLieuInput() {
+            if (panelState._lieuCtrl) { try { panelState._lieuCtrl.detruire(); } catch (e) {} panelState._lieuCtrl = null; }
+            const champ = document.getElementById('lieuInput');
+            if (!champ || typeof FormReferentiel === 'undefined') return;
+            panelState._lieuCtrl = FormReferentiel.monter(champ, {
+                source: 'ban',
+                declenchement: 'frappe',
+                onChoisir: function (s) {
+                    updateField('lieu', s.libelle || champ.value);
+                    if (s.longitude != null && s.latitude != null) updateField('geometrie', 'POINT(' + s.longitude + ' ' + s.latitude + ')');
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // RATTACHEMENT D'OBJET (Cas A, 01/11/2026) — table satellite opt-in Rattachements :
+        // rattache une tache a une ligne de n'importe quelle autre table du document (pas seulement geo).
+        // Detection geo vendoree depuis published/atlas/lib/geo-tables.js (schema seul, zero dependance Atlas).
+        // ═══════════════════════════════════════════════════════════════════════
+        const RATTACH_GEOM_ALIASES = ['geometry_json', 'geometry', 'geom', 'wkt'];
+        const RATTACH_LATLNG_ALIASES = { lat: ['latitude', 'lat', 'y'], lng: ['longitude', 'lng', 'lon', 'x'] };
+        const RATTACH_LABEL_CANDIDATES = ['nom', 'titre', 'libelle', 'name', 'label'];
+        const RATTACH_SYSTEM_PREFIX = /^(_grist_|GristHidden_|GristSummary_)/;
+        // Tables propres à TaskFlow : rattacher une tâche à une Team/Projects/Tasks passerait à côté des champs dédiés
+        // (assignees, projet, dependDe...) — Rattachements sert à brancher des tables EXTERNES (parc d'objets, etc.).
+        const RATTACH_OWN_TABLES = new Set(['Tasks', 'Team', 'Projects', 'Rattachements', 'Disponibilites', 'Portefeuilles', 'TimeEntries']);
+
+        function rattachDetectGeo(colIds) {
+            const lower = colIds.map(c => c.toLowerCase());
+            if (RATTACH_GEOM_ALIASES.some(a => lower.includes(a))) return true;
+            const hasLat = RATTACH_LATLNG_ALIASES.lat.some(a => lower.includes(a));
+            const hasLng = RATTACH_LATLNG_ALIASES.lng.some(a => lower.includes(a));
+            return hasLat && hasLng;
+        }
+        // Colonne a afficher pour une ligne : convention deja en place dans ce depot (Team.nom, Projects.nom, Tasks.titre),
+        // puis synonymes usuels, puis premiere colonne Texte non-formule, a defaut l'id de ligne (#N).
+        function rattachLabelColumn(columns) {
+            const texty = columns.filter(c => !c.isFormula && (c.type === 'Text' || c.type === 'Choice'));
+            for (const cand of RATTACH_LABEL_CANDIDATES) {
+                const hit = texty.find(c => c.colId.toLowerCase() === cand);
+                if (hit) return hit.colId;
+            }
+            return texty[0] ? texty[0].colId : null;
+        }
+        // Scan schema seul (2 tables systeme, jamais les donnees) : mêmes deux lectures qu'Atlas pour les memes raisons de cout.
+        async function rattachScanTables() {
+            const [tbl, cols] = await Promise.all([
+                grist.docApi.fetchTable('_grist_Tables').catch(() => null),
+                grist.docApi.fetchTable('_grist_Tables_column').catch(() => null)
+            ]);
+            if (!tbl || !cols) return [];
+            const stableIdByName = {}, nameByRef = {};
+            (tbl.id || []).forEach((id, i) => { nameByRef[id] = tbl.tableId[i]; stableIdByName[tbl.tableId[i]] = id; });
+            const colsByTable = {};
+            (cols.id || []).forEach((_, i) => {
+                const t = nameByRef[cols.parentId[i]];
+                if (!t) return;
+                (colsByTable[t] = colsByTable[t] || []).push({ colId: cols.colId[i], type: cols.type[i] || 'Text', isFormula: !!cols.isFormula[i] });
+            });
+            const out = [];
+            Object.keys(colsByTable).forEach(t => {
+                if (RATTACH_SYSTEM_PREFIX.test(t) || RATTACH_OWN_TABLES.has(t)) return;
+                const colIds = colsByTable[t].map(c => c.colId);
+                out.push({ tableId: t, stableId: stableIdByName[t], isGeo: rattachDetectGeo(colIds), labelCol: rattachLabelColumn(colsByTable[t]) });
+            });
+            return out.sort((a, b) => (b.isGeo - a.isGeo) || a.tableId.localeCompare(b.tableId));
+        }
+        // Donnees de la table cible chargees seulement au moment ou la personne la choisit (meme principe qu'Atlas : jamais au scan).
+        async function rattachLoadRows(tableId, labelCol) {
+            const data = await grist.docApi.fetchTable(tableId).catch(() => null);
+            if (!data || !data.id) return [];
+            return data.id.map((id, i) => ({ id, label: labelCol ? String(data[labelCol][i] ?? '') : ('#' + id) }));
+        }
+        async function ensureRattachementsSchema() {
+            try {
+                const exists = await grist.docApi.fetchTable('Rattachements').then(() => true).catch(() => false);
+                if (!exists) {
+                    await grist.docApi.applyUserActions([
+                        ['AddTable', 'Rattachements', [
+                            { id: 'tache', type: 'Ref:Tasks', label: 'Tâche' },
+                            { id: 'tableCibleRef', type: 'Numeric', label: 'Table (id)' },
+                            { id: 'tableCibleNom', type: 'Text', label: 'Table' },
+                            { id: 'ligneCibleId', type: 'Numeric', label: 'Ligne' },
+                            { id: 'cleCible', type: 'Text', label: 'Libellé' },
+                            { id: 'creeLe', type: 'DateTime', label: 'Créé le' }
+                        ]],
+                        ['AddReverseColumn', 'Rattachements', 'tache']
+                    ]);
+                }
+                const data = await grist.docApi.fetchTable('Rattachements').catch(() => null);
+                rattachements = data ? convertGristToRecords(data) : [];
+                HAS_RATTACH = !!data;
+            } catch (e) { HAS_RATTACH = false; }
+        }
+        async function openRattachPicker() {
+            if (!HAS_RATTACH) {
+                const ok = await TF.confirm({ title: 'Lier un objet', message: 'Rattacher cette tâche à une ligne d\'une autre table nécessite la table « Rattachements », créée automatiquement (sans impact sur l\'existant). La créer maintenant ?', confirmLabel: 'Créer' });
+                if (!ok) return;
+                await ensureRattachementsSchema();
+                if (!HAS_RATTACH) { showToast('Création impossible (droits ?)', 'error'); return; }
+                renderPanelTask();
+            }
+            panelState.rattachStep = 'tables';
+            panelState.rattachTable = null;
+            panelState.rattachTables = undefined;
+            toggleMultiSelect('rattachSelect');
+            renderRattachDropdown();
+            const list = await rattachScanTables();
+            panelState.rattachTables = list;
+            renderRattachDropdown();
+        }
+        function renderRattachDropdown() {
+            const el = document.getElementById('rattachDropdown');
+            if (!el) return;
+            if (panelState.rattachStep === 'rows') {
+                const t = panelState.rattachTable;
+                el.innerHTML = '<div class="multi-select-option" style="font-weight:600;color:var(--text-muted)" onclick="event.stopPropagation();rattachBackToTables()">← ' + escapeHtml(t.tableId) + '</div>' +
+                    '<div style="padding:4px 10px"><input type="text" class="form-input" id="rattachSearch" placeholder="Rechercher..." style="font-size: var(--fs-xs)" oninput="rattachFilterInput(this.value)" value=""></div>' +
+                    '<div id="rattachResults"></div>';
+                const si = document.getElementById('rattachSearch'); if (si) si.focus();
+                renderRattachResults();
+                return;
+            }
+            const list = panelState.rattachTables;
+            el.innerHTML = list === undefined ? '<div class="multi-select-empty">Chargement…</div>' :
+                !list.length ? '<div class="multi-select-empty">Aucune autre table dans ce document</div>' :
+                list.map(t => '<div class="multi-select-option" onclick="event.stopPropagation();rattachPickTable(\'' + t.tableId + '\')">' + (t.isGeo ? TF.ui.icon('pin', 11) + ' ' : '') + escapeHtml(t.tableId) + '</div>').join('');
+        }
+        function renderRattachResults() {
+            const el = document.getElementById('rattachResults');
+            if (!el) return;
+            const rows = panelState.rattachRows;
+            const q = (panelState.rattachSearch || '').toLowerCase();
+            if (rows == null) { el.innerHTML = '<div class="multi-select-empty">Chargement…</div>'; return; }
+            const filtered = rows.filter(r => !q || r.label.toLowerCase().includes(q));
+            el.innerHTML = !filtered.length ? '<div class="multi-select-empty">Aucun résultat</div>' :
+                filtered.slice(0, 50).map(r => '<div class="multi-select-option" onclick="rattachPickRow(' + r.id + ')">' + escapeHtml(r.label || ('#' + r.id)) + '</div>').join('');
+        }
+        function rattachFilterInput(v) { panelState.rattachSearch = v; renderRattachResults(); }
+        async function rattachPickTable(tableId) {
+            const t = (panelState.rattachTables || []).find(x => x.tableId === tableId);
+            if (!t) return;
+            panelState.rattachStep = 'rows';
+            panelState.rattachTable = t;
+            panelState.rattachSearch = '';
+            panelState.rattachRows = null;
+            renderRattachDropdown();
+            const rows = await rattachLoadRows(t.tableId, t.labelCol);
+            panelState.rattachRows = rows;
+            renderRattachResults();
+        }
+        function rattachBackToTables() { panelState.rattachStep = 'tables'; panelState.rattachTable = null; renderRattachDropdown(); }
+        async function rattachPickRow(rowId) {
+            const t = panelState.rattachTable;
+            const row = (panelState.rattachRows || []).find(r => r.id === rowId);
+            if (!t || !row || !gristReady || !panelState.taskId) return;
+            const sel = document.getElementById('rattachSelect'); if (sel) sel.classList.remove('open');
+            try {
+                await grist.docApi.applyUserActions([['AddRecord', 'Rattachements', null, {
+                    tache: panelState.taskId, tableCibleRef: t.stableId, tableCibleNom: t.tableId,
+                    ligneCibleId: row.id, cleCible: row.label, creeLe: Math.floor(Date.now() / 1000)
+                }]]);
+                rattachements = convertGristToRecords(await grist.docApi.fetchTable('Rattachements'));
+                showSaveIndicator();
+                renderPanelTask();
+            } catch (e) { showToast('Erreur de rattachement', 'error'); }
+        }
+        async function rattachRemove(id) {
+            if (!gristReady) return;
+            try {
+                await grist.docApi.applyUserActions([['RemoveRecord', 'Rattachements', id]]);
+                rattachements = rattachements.filter(r => r.id !== id);
+                showSaveIndicator();
+                renderPanelTask();
+            } catch (e) { showToast('Erreur suppression', 'error'); }
+        }
+
 
         // ═══════════════════════════════════════════════════════════════════════
         // FIELD UPDATES & HANDLERS
@@ -4369,6 +4984,7 @@
                 subtasks: subtasksToJson(data.subtasks),
                 couleur: data.couleur || null,
                 parentTask: data.parentTask || null,
+                lieu: data.lieu || '', geometrie: data.geometrie || null,
                 charges: TF.chargesToJson((data.charges || []).filter(c => data.assignees.includes(c.teamId))), dateCloture: data.dateCloture || null
             };
 
@@ -4411,6 +5027,7 @@
                 subtasks: subtasksToJson(data.subtasks),
                 couleur: data.couleur || null,
                 parentTask: data.parentTask || null,
+                lieu: data.lieu || '', geometrie: data.geometrie || null,
                 charges: TF.chargesToJson((data.charges || []).filter(c => data.assignees.includes(c.teamId))), dateCloture: data.dateCloture || null
             };
 
@@ -4438,8 +5055,10 @@
             const n = plan.removed.length;
             const msg = n > 1 ? n + ' tâches supprimées' : (plan.detached.length ? 'Supprimée (sous-tâches conservées)' : 'Supprimée');
             if (gristReady) {
+                // Rattachements des taches supprimees : dans le meme lot, sinon elles restent orphelines (Grist ne cascade pas une Ref).
+                const actions = plan.actions.concat(HAS_RATTACH ? rattachements.filter(r => plan.removed.includes(r.tache)).map(r => ['RemoveRecord', 'Rattachements', r.id]) : []);
                 try {
-                    await grist.docApi.applyUserActions(plan.actions);
+                    await grist.docApi.applyUserActions(actions);
                     showToast(msg, 'success');
                     await loadAllData();
                     backToPeriod(true);
