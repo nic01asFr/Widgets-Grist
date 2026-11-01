@@ -38,27 +38,30 @@ Retirer une couche ne doit jamais laisser le widget illisible : la couche du des
 
 | Capacité | Form Builder | Atlas | TaskFlow | appkit |
 |----------|--------------|-------|----------|--------|
-| C1 crochet `--kit-*` | oui (`dsfr-like.css`, `theme.js`) | oui (`depuis-kit.js`) | oui, branche locale `taskflow/themedef-compatible` | à confirmer |
-| C2 lecture `Theme_document` | oui, 22 paires, 127/142 vecteurs, 15 écarts nommés | oui, aligné (mêmes 15 écarts) | **non**, volontairement (aucun lecteur) | à confirmer |
-| C3 repli instance Grist | oui, mode `grist` (opt-in ; neuf = `grist`) | oui (`theme-instance.js`), **par défaut** | **non** | à confirmer |
-| C4 clair/sombre | oui | clair seulement pour l'application complète (`fond-sombre-non-suivi`) | `prefers-color-scheme` seul | à confirmer |
-| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer | à confirmer | à confirmer |
-| C6 écriture | geste d'activation (57 vecteurs) | lecture seule | aucune | à confirmer |
+| C1 crochet `--kit-*` | oui (`dsfr-like.css`, `theme.js`) | oui (`depuis-kit.js`) | oui, branche locale `taskflow/themedef-compatible` | **partiel** : jetons propres `--c-*`, projection de 21 clés `kit-theme/0.1` posée par `setProperty` (désactivable) ; sans thème, paquet public de repli (parité 40/40) |
+| C2 lecture `Theme_document` | oui, 22 paires, 127/142 vecteurs, 15 écarts nommés | oui, aligné (mêmes 15 écarts) | **non**, volontairement (aucun lecteur) | oui, c'est le lecteur de référence (142/142), branché au runtime |
+| C3 repli instance Grist | oui, mode `grist` (opt-in ; neuf = `grist`) | oui (`theme-instance.js`), **par défaut** | **non** | existe (paquet `hote`, opt-in), **pas chaîné** après le document : `theme.pack` est unique |
+| C4 clair/sombre | oui | clair seulement pour l'application complète (`fond-sombre-non-suivi`) | `prefers-color-scheme` seul | oui, bascule à chaud sans perdre saisie ni focus |
+| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer | à confirmer | oui ; `forced-colors` mesuré en Chrome, `prefers-contrast` unitaire seulement |
+| C6 écriture | geste d'activation (57 vecteurs) | lecture seule | aucune | le runtime n'écrit jamais ; l'éditeur d'apparence écrit par `lotActivation` |
 | C7 thème visiteur | oui (vitrine Form Builder) | vitrine : pas encore (`themeVisiteur`) | pas branché | n/a |
-| C8 compatibilité | tests dédiés | à confirmer | « repli = valeur d'avant » | à confirmer |
-| C9 refus dit | oui | `raison` rendue, à confirmer côté interface | n/a | à confirmer |
-| C10 vecteurs communs | lecteur : oui ; instance Grist : **non** | lecteur : oui ; instance : propre | n/a | à confirmer |
+| C8 compatibilité | tests dédiés | à confirmer | « repli = valeur d'avant » | non-régression 337 + 389 tests, parité 40/40 ; conformité complète non rejouée |
+| C9 refus dit | oui | `raison` rendue, à confirmer côté interface | n/a | oui, toast de 4 s avec la raison et les couleurs fautives |
+| C10 vecteurs communs | lecteur : oui ; instance Grist : **non** | lecteur : oui ; instance : propre | n/a | lecteur : oui ; instance : tests propres du pont |
 
 ## 4. Écarts déjà identifiés
 
-**E1. Le thème de l'instance Grist n'est pas lu pareil dans Form Builder et dans Atlas.** Pour une même instance, les deux ne choisissent pas la même couleur d'action.
+**E1. Le thème de l'instance Grist est lu de trois façons** (Form Builder, Atlas, appkit). Pour une même instance, les trois ne choisissent pas la même couleur d'action.
 
 - Form Builder : couleur d'action = `--grist-theme-control-primary-bg` seule, redressée à 4,5:1 sur les trois fonds ; mode = `data-grist-appearance` ; seuls ce mode et cette couleur sont repris (le reste est dérivé).
+- appkit (pont `hote`, lot T5) : la même couleur d'action et le même mode que Form Builder, mêmes exigences à 4,5:1, mais quand elles échouent il **retombe sur son repli** au lieu d'assombrir.
 - Atlas : première couleur qui tient 3:1 parmi `control-primary-bg`, `primary-muted`, `primary-dim`, `accent-text`, `control-fg`, `link`, `primary` ; reprend aussi `page-bg` (fond) et `text` (texte) ; la police devient `systeme`.
 
-Conséquence visible : sur docs.getgrist.com (`#16b378`), un formulaire et une carte ne seraient pas du même vert. À traiter par un seul contrat « thème de l'instance → ThemeDef de graines » avec des vecteurs (GristLight, GristDark, une instance à palette propre), dont les propriétaires de chaque widget rejouent le verdict. La décision de fond (reprendre le fond et le texte de Grist, ou seulement mode + action) revient à l'auteur.
+Conséquence visible : sur docs.getgrist.com (`#16b378`), un formulaire et une carte ne seraient pas du même vert. À traiter par un seul contrat « thème de l'instance → ThemeDef de graines », porté par le kit (`kit/jetons/themedef`, proposition d'appkit acceptée), avec des vecteurs (GristLight, GristDark, une instance à palette propre), dont les propriétaires de chaque widget rejouent le verdict. La décision de fond (reprendre le fond et le texte de Grist, ou seulement mode + action) revient à l'auteur.
 
 **E2. TaskFlow ne prend pas le thème de Grist par défaut.** Il n'a ni lecteur de `Theme_document` ni repli sur l'instance. Le faire changerait l'aspect de **tous les documents existants** : à ne faire qu'avec accord explicite, opt-in d'abord, et le test « sans thème, identique » ci-dessus.
+
+**E5. La chaîne document puis instance n'existe pas dans appkit** : `theme.pack` est unique (`document`, `hote` ou un paquet public). Un `theme.pack: "document"` avec `repli: "hote"` serait un ajout (validation E-APP-243 et runtime) qui ne change aucun appdef existant ; appkit peut le cadrer, après D-A.
 
 **E3. Le mode par défaut n'est pas le même.** Form Builder : formulaires existants en `document`, nouveaux en `grist`. Atlas : repli instance par défaut. À aligner sur une règle écrite (voir la décision D-A).
 
