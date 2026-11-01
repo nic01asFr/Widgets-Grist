@@ -23,6 +23,14 @@ describe('Thème de Grist : les copies du kit accompagnent le lecteur', () => {
     assert.ok(i > -1 && d > i && t > d);
   });
 
+  it("la page design system charge aussi les deux copies, avant le lecteur (ses aperçus et le thème gardé sur l'appareil viennent de la dérivation du kit)", () => {
+    const page = fs.readFileSync(path.join(RACINE, 'design-system.html'), 'utf8');
+    const i = page.indexOf('<script src="shared/theme-instance.js"></script>');
+    const d = page.indexOf('<script src="shared/derivation-valeurs.js"></script>');
+    const t = page.indexOf('<script src="shared/themedef.js"></script>');
+    assert.ok(i > -1 && d > i && t > d);
+  });
+
   it('un formulaire publié embarque le paquet complet, jamais le lecteur seul', () => {
     assert.equal((BUILDER.match(/fetchScriptSource\('shared\/themedef\.js'\)/g) || []).length, 1, 'seul le paquet lit le fichier du lecteur');
     assert.equal((BUILDER.match(/fetchThemeDefBundle\(\)/g) || []).length, 3, 'définition + les deux endroits d\'empaquetage');

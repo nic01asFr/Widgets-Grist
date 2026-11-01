@@ -148,8 +148,8 @@
     '--encre': '--kit-texte',
     '--plume': '--kit-texte-2',
     '--filet': '--kit-bord',
-    '--accent': '--kit-action',
-    '--sur-accent': '--kit-action-texte'
+    '--accent': '--kit-accent',
+    '--sur-accent': '--kit-accent-texte'
   };
   var HEX = /^#[0-9a-f]{6}$/;
 

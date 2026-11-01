@@ -408,9 +408,22 @@
       if (avant.length) return { mode: m, source: source, vars: {}, remarques: [], verifie: false, refus: refuse('contraste-insuffisant', avant, chemin) };
     } else {
       var g = td.graines || {};
-      var d = deriver({ principal: g.principal, secondaire: g.secondaire, encre: g.encre, fond: g.fond, sombre: lire(td, ['modes', 'sombre']) }, m);
-      brut = d.vars;
-      remarques = d.remarques;
+      if (Derivation && !explicite) {
+        // La dérivation du KIT (copie mécanique) : exactement les valeurs du compilateur, et ses portes d'interface. Un thème qu'elle refuse est refusé en entier.
+        var k = Derivation.deriverValeurs({ principal: g.principal, secondaire: g.secondaire, encre: g.encre, fond: g.fond, mode: m });
+        if (!k.ok) {
+          var portes = (k.echecs || []).map(function (e) { return { paire: e.porte || e.code, mesure: e.mesure, seuil: e.seuil }; });
+          return { mode: m, source: source, vars: {}, remarques: [], verifie: false, refus: refuse('contraste-insuffisant', portes, '/graines') };
+        }
+        brut = {};
+        Object.keys(k.valeurs).forEach(function (cle) { brut[cle] = String(k.valeurs[cle]).toLowerCase(); });
+        remarques = [];
+      } else {
+        // Sans la copie du kit, ou pour un sombre « explicite » (que la copie ne connaît pas) : la dérivation d'origine, un aperçu non mesuré.
+        var d = deriver({ principal: g.principal, secondaire: g.secondaire, encre: g.encre, fond: g.fond, sombre: lire(td, ['modes', 'sombre']) }, m);
+        brut = d.vars;
+        remarques = d.remarques;
+      }
     }
     var sur = lire(td, ['surcharges', m]);
     if (sur && typeof sur === 'object' && !Array.isArray(sur)) {

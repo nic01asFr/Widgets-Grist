@@ -232,10 +232,8 @@ describe('Thème du visiteur : les sept variables de la vitrine', () => {
     assert.ok(T.contraste(sombre['--accent'], sombre['--papier']) >= 3, 'accent visible en sombre');
   });
 
-  it('un thème qui ferait un texte illisible est redressé, jamais appliqué tel quel', () => {
-    const v = V.varsVitrine(theme({ graines: { principal: '#fdfaf3', encre: '#fefefe', fond: '#ffffff' } }), 'clair');
-    assert.ok(T.contraste(v['--encre'], v['--papier']) >= 3, 'texte lisible malgré une encre quasi blanche');
-    assert.ok(T.contraste(v['--accent'], v['--papier']) >= 3, 'accent visible malgré un principal quasi blanc');
+  it('un thème dont les graines donnent un texte illisible est refusé en entier par la dérivation du kit, jamais appliqué tel quel ni à moitié', () => {
+    assert.equal(V.varsVitrine(theme({ graines: { principal: '#fdfaf3', encre: '#fefefe', fond: '#ffffff' } }), 'clair'), null);
   });
 
   it('un thème refusé ne donne rien (null), pas des variables à moitié', () => {
@@ -343,7 +341,7 @@ describe('Thème du visiteur : une page de vitrine se lit (texte, accent, bouton
     'principal vert, secondaire orange, fond crème': theme(),
     'principal très clair': theme({ graines: { principal: '#f4e04d', fond: '#fdfaf3' } }),
     'principal très foncé': theme({ graines: { principal: '#0a0a2a', fond: '#ffffff' } }),
-    'fond noir en clair': theme({ graines: { principal: '#7ec8ff', fond: '#101010' } })
+    'principal bleu clair, fond par défaut': theme({ graines: { principal: '#7ec8ff' } })
   };
   for (const [nom, td] of Object.entries(themes)) {
     for (const mode of ['clair', 'sombre']) {
