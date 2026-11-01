@@ -69,7 +69,8 @@ function parseHtml(html) {
     var selfClose = m[4] === '/' || tag === 'input';
     if (closing) {
       for (var i = stack.length - 1; i > 0; i--) {
-        if (stack[i].tagName === tag) { stack.length = i; break; }
+        // Un grand champ de texte porte sa valeur dans son contenu, pas dans un attribut.
+        if (stack[i].tagName === tag) { if (tag === 'textarea') stack[i].value = stack[i].textContent; stack.length = i; break; }
       }
       continue;
     }
@@ -90,7 +91,8 @@ function parseHtml(html) {
 }
 
 function matchesSimple(el, simple) {
-  var m = /^([a-zA-Z0-9]*)((?:\[[^\]]+\])*)(:checked)?$/.exec(simple.trim());
+  // Une valeur entre guillemets peut contenir des crochets (name="couleurs[0].nom").
+  var m = /^([a-zA-Z0-9]*)((?:\[(?:[^\]"]|"[^"]*")+\])*)(:checked)?$/.exec(simple.trim());
   if (!m) return false;
   var tag = m[1], attrsPart = m[2], pseudo = m[3];
   if (tag && el.tagName !== tag) return false;

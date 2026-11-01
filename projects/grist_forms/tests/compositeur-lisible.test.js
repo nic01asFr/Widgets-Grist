@@ -55,3 +55,123 @@ describe('Compositeur : le canevas suit la frappe', () => {
     assert.ok(corps.includes('canevas.contains(document.activeElement)'));
   });
 });
+
+describe('Compositeur : l\'apparence d\'un formulaire', () => {
+  it('trois choix, un thème déposé ou collé, des phrases pour chaque défaut', () => {
+    assert.match(BUILDER, /function renderApparence\(def\)/);
+    for (const mode of ['document', 'formulaire', 'aucune']) assert.ok(BUILDER.includes("choix('" + mode + "'"), mode);
+    for (const geste of ['onApparenceMode', 'onApparenceTexte', 'onApparenceFichier']) {
+      assert.ok(BUILDER.includes('function ' + geste + '('), geste);
+      assert.match(BUILDER, new RegExp('window\\.App = \\{[\\s\\S]*' + geste));
+    }
+    for (const code of ['trop-gros', 'json', 'version', 'principal', 'explicite-incomplet', 'exigence']) assert.ok(BUILDER.includes("'" + code + "':"), code);
+  });
+
+  it('un thème illisible n\'entre jamais dans le formulaire, et l\'aperçu suit le choix', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function onApparenceTexte('), BUILDER.indexOf('function onApparenceFichier('));
+    assert.ok(corps.indexOf('if (!lu.ok)') < corps.indexOf('def.apparence ='), 'le défaut est traité avant d\'écrire dans le formulaire');
+    assert.match(BUILDER, /function themeDuFormulaire\(\)/);
+    assert.ok(BUILDER.includes("T.apparenceDe(S.currentDef)"));
+  });
+
+  it('un thème pas encore donné attend, sans message d\'erreur', () => {
+    assert.match(BUILDER, /ap\.attente \?/);
+    assert.ok(BUILDER.includes('Rien n’est encore donné'));
+  });
+
+  it('la page autonome fige le thème du document, jamais une adresse', () => {
+    const gen = BUILDER.slice(BUILDER.indexOf('async function externeGenerer()'));
+    assert.match(gen, /S\.themeDocument\.themedef/);
+    assert.ok(!/themedef[^\n]*https?:/i.test(gen.slice(0, gen.indexOf('x.nom ='))));
+  });
+});
+
+describe('Compositeur : l\'outil lui-même prend le thème', () => {
+  const style = BUILDER.slice(BUILDER.indexOf('<style'), BUILDER.indexOf('</style>'));
+
+  it('le thème du document est suivi par défaut, un essai le remplace, la personne passe avant', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function habillerOutil()'), BUILDER.indexOf('function outilSuit('));
+    assert.ok(corps.indexOf('T.personneImpose()') < corps.indexOf('T.appliquer('), 'la préférence de la personne est testée avant de poser quoi que ce soit');
+    assert.ok(corps.indexOf('o.essai') < corps.indexOf('o.suit'), 'un thème essayé prime sur celui du document');
+    assert.ok(corps.includes('T.retirer('), 'le thème d\'avant est retiré');
+  });
+
+  it('il ne s\'écrit jamais dans le document : seul le choix « suivre » est retenu, dans le navigateur', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function etatOutil()'), BUILDER.indexOf('function habillerOutil()'));
+    assert.ok(corps.includes('localStorage'));
+    const gestes = BUILDER.slice(BUILDER.indexOf('function outilSuit('), BUILDER.indexOf('function outilHtml()'));
+    assert.ok(!/docApi|applyUserActions|BulkAddRecord/.test(gestes));
+  });
+
+  it('un thème essayé est lu comme une donnée non fiable (16 Ko, version, graines)', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function outilEssayer('), BUILDER.indexOf('function outilHtml()'));
+    assert.ok(corps.includes('16384'));
+    assert.ok(corps.indexOf('lireThemeDef') < corps.indexOf('.essai = lu.themedef'));
+  });
+
+  it('les gestes sont dans le menu et dans App', () => {
+    assert.match(BUILDER, /window\.App = \{[\s\S]*outilSuit, outilEssayer/);
+    assert.ok(BUILDER.includes('outilHtml() +'));
+  });
+
+  it('les couleurs de l\'outil passent par le kit d\'abord, la valeur DSFR d\'origine en repli', () => {
+    assert.ok(!/var\(--(?!kit-)[a-z0-9-]+, var\(--kit-/.test(style), 'une variable DSFR ne doit pas passer avant le thème');
+    assert.ok((style.match(/var\(--kit-[a-z0-9-]+, /g) || []).length > 200);
+    assert.ok(/var\(--kit-action, var\(--blue-france, #000091\)\)/.test(style));
+  });
+
+  it('aucun défaut --kit-* n\'est posé par l\'outil : sans thème, l\'apparence d\'origine est intacte', () => {
+    assert.ok(!/--kit-[a-z-]+\s*:/.test(style));
+  });
+});
+
+describe('Compositeur : le thème de Grist en repli', () => {
+  it('un formulaire NEUF suit le document puis Grist ; un formulaire enregistré n\'est jamais réécrit', () => {
+    const neuf = BUILDER.slice(BUILDER.indexOf('function newFormDef()'), BUILDER.indexOf('function ensureAudience('));
+    assert.match(neuf, /apparence: \{ mode: 'grist' \}/);
+    const ouvrir = BUILDER.slice(BUILDER.indexOf('function editForm('), BUILDER.indexOf('S.currentRowId = id;', BUILDER.indexOf('function editForm(')));
+    assert.ok(!/apparence/.test(ouvrir), 'rouvrir un formulaire ne touche pas à son apparence');
+  });
+
+  it('l\'ordre : thème donné au formulaire, puis document, puis Grist, puis origine', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function themeDuFormulaire()'), BUILDER.indexOf('function themeDeGrist()'));
+    assert.ok(corps.indexOf("'aucune'") < corps.indexOf("'formulaire'"));
+    assert.ok(corps.indexOf("'formulaire'") < corps.indexOf('S.themeDocument'));
+    assert.ok(corps.indexOf('S.themeDocument') < corps.indexOf('themeDeGrist()'));
+    assert.ok(/ap\.mode === 'grist'/.test(corps), 'le repli sur Grist n\'est demandé que par le mode grist');
+  });
+
+  it('l\'outil : essai, document, puis Grist ; la personne passe avant tout', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function habillerOutil()'), BUILDER.indexOf('function outilSuit('));
+    assert.ok(corps.indexOf('T.personneImpose()') < corps.indexOf('o.essai'));
+    assert.ok(corps.indexOf('o.essai') < corps.indexOf('S.themeDocument'));
+    assert.ok(corps.indexOf('S.themeDocument') < corps.indexOf('themeDeGrist()'));
+  });
+
+  it('le thème de Grist est lu au démarrage et suivi à chaud, une seule fois', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function suivreGrist()'), BUILDER.indexOf('/**', BUILDER.indexOf('function suivreGrist()')));
+    assert.match(corps, /if \(!T \|\| S\.arretHote\) return/);
+    assert.match(corps, /T\.suivreHote\(/);
+    assert.ok(corps.includes('habillerOutil()') && corps.includes('habillerApercus()'));
+    assert.ok(BUILDER.indexOf('suivreGrist();\n  habillerOutil();') > -1, 'au démarrage, avant d\'habiller l\'outil');
+  });
+
+  it('quatre choix d\'apparence, « Celle du document, sinon celle de Grist » en tête', () => {
+    for (const mode of ['grist', 'document', 'formulaire', 'aucune']) assert.ok(BUILDER.includes("choix('" + mode + "'"), mode);
+    assert.ok(BUILDER.indexOf("choix('grist'") < BUILDER.indexOf("choix('document'"));
+    assert.match(BUILDER, /else if \(mode === 'grist'\) def\.apparence = \{ mode: 'grist' \}/);
+  });
+
+  it('la page autonome fige le thème du document aussi pour le mode grist (pas d\'hôte hors de Grist)', () => {
+    assert.match(BUILDER, /\['document', 'grist'\]\.indexOf\(T\.apparenceDe\(def\)\.mode\) !== -1 && S\.themeDocument/);
+  });
+});
+
+describe('Compositeur : un thème du document refusé par le lecteur est dit, pas confondu avec « aucun thème »', () => {
+  it('refusDuDocument existe, nomme chaque raison, et sert dans le menu et dans le choix d’apparence', () => {
+    const f = BUILDER.slice(BUILDER.indexOf('function refusDuDocument()'), BUILDER.indexOf('function habillerOutil()'));
+    for (const code of ['contraste-insuffisant', 'resolu-incomplet', 'version-inconnue', 'invalide', 'plusieurs-actifs']) assert.ok(f.includes("'" + code + "'"), code);
+    assert.ok(f.includes('est refusé'));
+    assert.ok((BUILDER.match(/refusDuDocument\(\)/g) || []).length >= 5, 'utilisé dans le menu de l’outil et dans les deux choix d’apparence');
+  });
+});

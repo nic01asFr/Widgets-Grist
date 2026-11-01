@@ -189,6 +189,24 @@ L'étape « Mettre en ligne » du compositeur prépare la table, vous collez le 
 Ce que ce mode **n'est pas** : une protection. Toute personne qui a la page peut envoyer, sans limite, et Grist accepte la ligne avant qu'une colonne ne la juge.
 Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page hors de Grist. Tout est mesuré et expliqué dans `docs/ENVOI-EXTERNE.md`.
 
+## L'apparence : le thème du document, ou celui de Grist
+
+Un formulaire peut prendre trois apparences, au choix du compositeur (réglage « L'apparence ») :
+
+- **Celle du document, sinon celle de Grist** (le choix des formulaires neufs) : le thème actif du document s'il y en
+  a un ; sinon, dans Grist, celui de la personne — clair ou sombre, avec la couleur des boutons de l'instance —, suivi
+  quand elle en change. Hors de Grist, le thème du document est figé dans la page.
+- **Celle du document seulement**, ou **un thème pour ce formulaire** (un fichier ThemeDef, déposé ou collé), ou
+  **l'apparence d'origine**.
+
+Les formulaires déjà composés ne changent pas : sans choix, ils suivent le document seulement, comme avant. La
+préférence de la personne (contraste renforcé ou forcé) passe toujours avant. Le compositeur s'habille du même thème.
+
+**Un thème pour le document.** La page `design-system.html` saisit l'identité d'une organisation, mesure les
+contrastes, et son bouton « Appliquer ce thème au document » l'inscrit dans la table `Theme_document` : un panneau dit
+ce qui change, la table n'est créée qu'après une confirmation, un thème refusé n'écrit rien, « Retirer » désactive sans
+supprimer. Voir `docs/DESIGN-SYSTEM.md` et `docs/THEMEDEF-SPEC.md`.
+
 ## Ce que ça ne fait pas
 
 - **Pas de tableaux de bord.** La synthèse rend le sens que seule la définition
@@ -210,5 +228,6 @@ Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page
 - `docs/PUBLICATION.md` — ce que la mise en ligne fabrique exactement.
 - `docs/MANUAL_TEST.md` — la liste des vérifications faites à la main.
 - `runtime/formdef.schema.json` — la définition d'un formulaire, en JSON Schema.
+- `docs/DESIGN-SYSTEM.md`, `docs/THEMEDEF-SPEC.md` — le thème du document : saisie, format, activation.
 
 Licence et conditions : voir le dépôt.

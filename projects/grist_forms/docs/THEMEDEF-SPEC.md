@@ -90,8 +90,21 @@ Piège : le mot « alerte » désigne le rouge côté kit et l'orange côté Atl
 `exigences` ne renforce que les portes d'**interface** (`contrasteTexte`, `contrasteComposant`). Les exigences de
 **visualisation** d'Atlas (`contrasteMinimal`, `ecartMinimal`, `classesMax`) sont **hors ThemeDef 1.0**.
 
-Tailles : document ≤ 16 Ko, profondeur ≤ 6, aucune clé `__proto__` / `constructor` / `prototype`. Toute clé
+Tailles : document ≤ 16 Ko **en octets UTF-8**, profondeur ≤ 6, aucune clé `__proto__` / `constructor` / `prototype`. Toute clé
 inconnue est signalée, jamais interprétée.
+
+**Arbitrage du 31/10/2026** (points soulevés par le kit à la livraison de TD-1) :
+
+- **Valeur de surcharge : 48 caractères au plus** (l'étude 57 disait 64 : 48 retenu, c'est aussi la limite du juge du moteur).
+- **Profondeur : le niveau 1 est la racine, et chaque valeur compte un niveau, feuilles comprises** (comme Atlas). Passé le sixième
+  niveau, le document est refusé.
+- **Graines : `#RRGGBB` strict.** `#abc` est refusé (la spec l'a toujours dit) ; un lecteur qui l'acceptait s'aligne.
+- **Forme canonique** : un LF final qui entre dans l'empreinte ; le producteur du document ARRONDIT les contrastes à 2 décimales
+  (le canonicaliseur n'arrondit rien : il est une fonction pure des valeurs) ; l'empreinte est celle du document **sans `resolu` ni
+  champ `hash`** (un document n'entre pas lui-même dans son empreinte).
+- **Refus ou valeur écartée** — *refusés* : version, taille, type, profondeur, clé interdite, section qui n'est pas un objet,
+  `principal` absent ou mal écrit, mode sombre hors liste, mode sombre explicite sans ses 26 valeurs, exigence plus lâche que
+  4,5 / 3. *Écartées et dites* : clé inconnue, surcharge refusée, police hors liste, graine facultative mal écrite, `resolu`.
 
 **Hors ThemeDef** : le halo, le lavis et le plan de carte d'Atlas ne sont **pas** des champs du ThemeDef. Atlas les
 calcule par défaut à partir des variables lues. Même chose pour les rampes de visualisation, les rayons, les
@@ -119,14 +132,60 @@ Table `Theme_document` du document Grist :
    valeurs vérifiées à chaque lecture, `resolu` ignoré.
 5. Un document invalide n'applique rien et dit pourquoi ; un document partiellement valide applique ce que la
    liste fermée de l'étage A accepte et signale le reste (`ignore`).
-6. Un seul écrivain recommandé (l'éditeur « Apparence » du kit) ; la protection d'écriture est une règle d'accès
-   Grist, pas un contrôle du lecteur.
+6. **Écrivains reconnus** (règle amendée le 01/11/2026, sur la condition du kit et avec l'accord de l'auteur) : l'éditeur « Apparence » du
+   kit et le geste « Appliquer ce thème au document » de Form Builder (`design-system.html`). Tous passent par **la même fonction
+   d'activation**, `lotActivation` du kit (copiée dans `shared/activation.js`, rejouée sur ses 57 vecteurs) : un document refusé par le
+   validateur n'ouvre aucune action, les lignes actives sont désactivées et la cible activée **dans un seul lot**, la table n'est
+   **jamais créée sans confirmation explicite** d'une personne, et on relit le résultat. L'atomicité réelle côté Grist n'est pas garantie
+   (point ouvert, §6) : si deux écrivains agissent en même temps, le résultat sûr est `plusieurs-actifs` (les lecteurs n'appliquent rien),
+   jamais un thème faux. La protection d'écriture est une règle d'accès Grist, pas un contrôle du lecteur.
 
 Hors Grist, le thème est figé à la publication (copie du JSON `valeurs`) ou **tiré par l'hôte**
 (JSON, jamais du CSS ; adresse fixée par l'hôte avec empreinte SHA-256 épinglée ; liste d'origines ; dernier
 thème valide gardé ; échec = rendu neutre). Atlas n'accepte aucune adresse dans son composant.
 
 Priorité : la personne (`forced-colors`, `prefers-contrast`) > thème posé par l'hôte > document > rendu d'origine.
+
+### Les lecteurs de Form Builder
+
+Le moteur de formulaire ne lit toujours pas de ThemeDef : ce sont ses **hôtes** qui le font, avec `shared/themedef.js` (règle de lecture
+du §3, la même que celle d'Atlas) :
+
+- le **formulaire publié** (bundle figé) : lit `Theme_document`, pose les variables `--kit-*` sur la page, puis se monte ; au bout de 1,5 s
+  sans réponse il s'ouvre avec son apparence d'origine ;
+- le **compositeur** : habille son canevas et son aperçu (ce que le public verra), pas l'outil lui-même ;
+- la page **design-system** : applique le thème en cours de construction (aperçu).
+
+**Un ThemeDef en entrée du formulaire.** Le FormDef porte une `apparence` facultative : `{ mode, themedef }`.
+
+| `mode` | Ce que le formulaire prend |
+|---|---|
+| `document` (défaut) | le thème actif de `Theme_document`, quand le document en porte un |
+| `grist` | le thème actif de `Theme_document` ; **à défaut, celui de Grist** (voir l'étage hôte ci-dessous) ; à défaut, l'origine. **Opt-in** : c'est le choix des formulaires neufs |
+| `formulaire` | le ThemeDef 1.0 donné dans `themedef` (déposé ou collé dans le compositeur) : **il part avec le formulaire**, donc il s'applique aussi hors de Grist (page autonome), sans table à lire |
+| `aucune` | l'apparence d'origine, quoi que dise le document |
+
+Le thème du formulaire prime sur celui du document. Il est lu comme une donnée non fiable à chaque ouverture ; illisible, il n'empêche
+rien : le formulaire retombe sur le document, et le compositeur dit pourquoi. Dans la page autonome, un formulaire qui suit le document
+reçoit une **copie** du ThemeDef actif au moment de la génération (jamais une adresse).
+
+**L'étage hôte : le thème que Grist pousse dans le widget.** Dans Grist, `grist-plugin-api.js` pose sur `<html>` `data-grist-appearance` (`light` ou
+`dark`), `data-grist-theme` et une feuille `#grist-theme` qui déclare `--grist-theme-<nom>` ; sur une instance à `custom.css` (celle de la DINUM,
+palette La Suite), ces variables portent la palette de l'instance. Le mode `grist` en reprend **le mode** (qui prime sur `prefers-color-scheme`)
+**et la couleur d'action** (`control-primary-bg`), lues comme le fait le pont du kit (appkit, lot T5) : seuls `#rgb`, `#rrggbb`, `rgb()` opaque,
+`white` et `black` sont acceptés. Le reste du thème est dérivé de cette couleur par `deriver`. Portes : H1 (texte d'action >= 4,5:1) et H2
+(action sur le fond, la surface et la surface douce >= 4,5:1) sont bloquantes, la couleur est alors assombrie ou éclaircie jusqu'à tenir et
+la remarque le dit ; H3 (écart avec les états) n'est pas bloquante, comme chez le kit. Il ne s'applique que **là où le document n'a rien dit**
+(table absente, aucune ligne active, lecture impossible) : un document illisible ou contradictoire (`plusieurs-actifs`) n'applique rien et
+l'hôte ne le remplace pas. Suivi à chaud (l'observateur ne rappelle que si la lecture change), attente bornée à 400 ms après `grist.ready`,
+aucune attente hors de Grist. **Les formulaires existants** (sans `apparence`, ou `document`) ne prennent jamais l'hôte.
+
+**Le compositeur lui-même est un lecteur.** L'outil (pas seulement les formulaires qu'il produit) suit le thème actif du document : toutes ses couleurs passent par `var(--kit-*, valeur d'origine)`, donc sans thème rien ne change. Il suit, dans l'ordre : un thème essayé le temps de la session, le thème du document, puis celui de Grist. Menu « ⋯ » : « Suivre le thème du document, sinon celui de Grist » (retenu dans le navigateur, jamais écrit dans le document) et « Essayer un thème (fichier ThemeDef) » le temps d'une session. Comme tout lecteur, il cède à la préférence de la personne (contraste forcé ou renforcé) et dérive le sombre.
+
+Chaque lecteur est **opt-in par le document** (sans table `Theme_document`, ou sans ligne active, rien ne change) et **ne crée ni n'écrit
+jamais** la table. Les valeurs mesurées de `resolu` s'appliquent quand elles y sont, sans être crues ; sinon les graines en donnent un
+**aperçu** (le compilateur du kit reste seul juge). La personne passe avant le thème : sous `forced-colors` ou `prefers-contrast: more`,
+rien n'est posé. Les formulaires déjà publiés (bundles figés avant ce lecteur) ne changent pas tant qu'on ne les remet pas en ligne.
 
 ## 4. Forme canonique, `hash` et `resolu`
 
@@ -176,6 +235,26 @@ table de correspondance, empreinte de chaque fichier). Tout lecteur doit :
 Mesures du kit à connaître : `bord` est décoratif (1,36 à 1,71:1 sur la surface, informatif seulement) ; le
 bord d'un champ est `bord-champ` (4,54:1 en clair, 5,36:1 en sombre) ; `action-actif` est **dérivé**
 (`derive: true`), les 25 autres viennent de jetons ; aucune paire ne tombe sous son seuil sur les paquets publics.
+
+**Arbitrage du 01/11/2026 : la mesure d'un `resolu`** (points 23, 24 et 26 de `kit/jetons/themedef/QUESTIONS.md`). Mesuré le même jour : les lecteurs
+de Form Builder et d'Atlas appliquent un `resolu` fabriqué (texte, fond et action en `#ffffff`) sans le mesurer, alors que le lecteur du kit le
+refuse. Pour qu'**un même document donne le même résultat dans tous les widgets**, la règle de référence est celle du kit, retenue telle quelle :
+
+- **Les 22 paires du générateur sont mesurées** (liste dans `vecteurs/themedef-lecteur.vecteurs.json`, clé `paires`), pas les quatre de l'étude :
+  seuil du composant (3:1) pour `bord-champ`, `focus` et `attention-filet`, seuil du texte (4,5:1) pour les dix-huit autres ; `bord` est décoratif et
+  n'est dans aucune paire. Les exigences du document (`contrasteTexte`, `contrasteComposant`) renforcent chacune sa famille, jamais l'autre.
+- **Un `resolu` qui rate une paire est refusé en entier** (`contraste-insuffisant`, rien n'est appliqué), même si une surcharge le réparerait :
+  c'est un document incohérent. Un lecteur ne retombe pas sur les graines et ne « répare » pas.
+- **Un `resolu` incomplet** (une des 26 valeurs manque ou est refusée) est refusé en entier (`resolu-incomplet`).
+- Une valeur qu'un lecteur ne sait pas mesurer reste appliquée avec `verifie: false` (point 25, inchangé) ; Form Builder n'accepte de toute façon que
+  des `#RRGGBB`, ce qui est plus strict.
+
+Cette règle ne s'applique qu'à partir du jour où chaque lecteur est aligné sur les vecteurs de lecture du kit : un lecteur qui ne l'a pas encore fait
+l'écrit dans sa documentation. État au 01/11/2026 : kit **conforme** ; **Form Builder conforme sur la sûreté** (127 des 142 vecteurs de lecture rejoués en accord,
+`tests/themedef-lecteur-vecteurs.test.js`, les 15 écarts nommés un à un : l'aperçu depuis les graines quand le `resolu` manque, qu'on garde parce que la page design
+system n'en produit pas d'autre, et le mode invalide, impossible chez nous), **correction non publiée** ; Atlas **non conforme**, lot dédié prévu, publication commune.
+Quand un `resolu` manque, Form Builder dérive un APERÇU depuis les graines et redresse tout texte ou bouton illisible ; le lecteur de référence rend `non-compile`
+et n'applique rien (point 28 du kit) : même document, deux rendus possibles, jamais un rendu illisible.
 
 ## 6. Ce qui reste ouvert
 

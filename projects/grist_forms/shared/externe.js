@@ -373,7 +373,7 @@
    * La page autonome : le moteur, le formulaire figé, et l'envoi par la clé.
    *
    * @param {object} formDef
-   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, engineJs, cssText }
+   * @param {object} bundles  { typesJs, sessionContextJs, carteJs, referentielJs, formatsJs, enrichirJs, saisiesJs, prefillJs, conditionsJs, limitesJs, themeJs, themeDefJs, engineJs, cssText }
    * @param {object} opts     { adresse: <lien du formulaire publié> }
    */
   function buildExternalDocument(formDef, bundles, opts) {
@@ -385,7 +385,7 @@
 
     var script = [
       bundles.typesJs || '', bundles.sessionContextJs || '', bundles.carteJs || '',
-      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.conditionsJs || '', bundles.limitesJs || '', bundles.engineJs || '',
+      bundles.referentielJs || '', bundles.formatsJs || '', bundles.enrichirJs || '', bundles.saisiesJs || '', bundles.prefillJs || '', bundles.conditionsJs || '', bundles.limitesJs || '', bundles.themeJs || '', bundles.themeDefJs || '', bundles.engineJs || '',
       '(function () {',
       '  var DEF = ' + jsonPourScript(formDef || {}) + ';',
       '  var GUICHET = ' + jsonPourScript(guichet.base) + ';',
@@ -416,11 +416,22 @@
       "    if (!window.FormEngine) { zone.textContent = 'Le formulaire n’a pas pu se charger.'; return; }",
       '    var pre = window.FormPrefill ? window.FormPrefill.lire(DEF, location.search)',
       '      : { values: {}, verrouilles: [], libelles: {} };',
-      '    window.FormEngine.mount(zone, DEF, {',
-      '      skipProbe: true, submit: envoyer,',
-      '      values: pre.values, verrouilles: pre.verrouilles, libelles: pre.libelles,',
-      '      brouillon: true',
-      '    });',
+      '    function monter() {',
+      '      window.FormEngine.mount(zone, DEF, {',
+      '        skipProbe: true, submit: envoyer,',
+      '        values: pre.values, verrouilles: pre.verrouilles, libelles: pre.libelles,',
+      '        brouillon: true',
+      '      });',
+      '    }',
+      // Hors de Grist, le thème est celui que le formulaire porte (figé à la publication) : aucune table à lire, aucune adresse à suivre.
+      '    var T = window.FormThemeDef;',
+      '    if (!T) { monter(); return; }',
+      '    try {',
+      '      T.charger(null, { def: DEF }).then(function (r) {',
+      '        if (r && r.theme) T.appliquer(document.documentElement, r.theme);',
+      '        monter();',
+      '      }, monter);',
+      '    } catch (eTheme) { monter(); }',
       '  }',
       "  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();",
       '})();'

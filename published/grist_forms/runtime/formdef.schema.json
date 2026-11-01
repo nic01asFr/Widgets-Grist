@@ -174,6 +174,20 @@
         }
       }
     },
+    "apparence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "L'apparence du formulaire. `mode` : `document` (defaut : le theme actif du document, table Theme_document), `grist` (le theme actif du document, sinon celui de Grist : le mode et la couleur d'action de la personne, dans Grist seulement), `formulaire` (le ThemeDef 1.0 donne dans `themedef`, fige avec le formulaire : il s'applique aussi hors de Grist) ou `aucune` (l'apparence d'origine, quoi que dise le document). Un `themedef` illisible n'empeche rien : le formulaire retombe sur le document. La personne passe avant le theme (contraste force ou renforce).",
+      "properties": {
+        "mode": {
+          "enum": ["document", "grist", "formulaire", "aucune"]
+        },
+        "themedef": {
+          "type": "object",
+          "description": "Un ThemeDef 1.0 (docs/THEMEDEF-SPEC.md) : 16 Ko au plus, lu comme une donnee non fiable a chaque ouverture."
+        }
+      }
+    },
     "limites": {
       "type": "object",
       "description": "Jusqu'ou le formulaire accepte de reponses : un atelier de 12 places, une fenetre d'ouverture, un plafond. Le formulaire LIT ce qui est deja pris (table lisible par la personne qui repond) et ferme ce qui est plein ; la table TRANCHE par une formule d'ordre d'arrivee (shared/limites.js, `formulePlace`) quand deux envois se croisent. Une table illisible ne bloque personne : seule la fenetre d'ouverture s'applique.",
@@ -389,7 +403,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure. Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure, couleur, groupe (une liste de lignes a repeter : voir `options.champs`). Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
@@ -655,6 +669,38 @@
                 "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
               },
               "description": "Couleur de chaque choix d'une question en pastilles : { valeur: '#rrggbb' }. Seuls #rgb et #rrggbb sont acceptes (la couleur finit dans un attribut de style)."
+            },
+            "motif": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Une expression reguliere que la reponse doit suivre (200 caracteres au plus). Une reponse vide n'est pas jugee ici : c'est le role de `required`. Un widget `couleur` a deja le sien (#RRGGBB)."
+            },
+            "motifMessage": {
+              "type": "string",
+              "description": "Ce que dit la question quand la reponse ne suit pas `motif`."
+            },
+            "lignesDepart": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Groupe repetable : combien de lignes sont montrees au depart (une par defaut, jamais moins que `min`)."
+            },
+            "libelleLigne": {
+              "type": "string",
+              "description": "Groupe repetable : le mot qui nomme une ligne (« Couleur » donne « Couleur 1 », « Couleur 2 »). « Ligne » par defaut."
+            },
+            "libelleAjout": {
+              "type": "string",
+              "description": "Groupe repetable : le texte du bouton qui ajoute une ligne. « Ajouter une ligne » par defaut."
+            },
+            "colonnesLigne": {
+              "enum": [1, 2],
+              "description": "Groupe repetable : les questions d'une ligne en une ou deux colonnes (deux quand la place le permet)."
+            },
+            "champs": {
+              "type": "array",
+              "maxItems": 20,
+              "items": { "type": "object", "required": ["colId"], "properties": { "colId": { "type": "string" } } },
+              "description": "Groupe repetable : les questions d'une ligne, ecrites comme des questions ordinaires (colId, label, type, widget, required, options). Le colId d'une question de ligne ne contient ni `[` ni `]`. Pas de groupe dans un groupe."
             }
           }
         },
