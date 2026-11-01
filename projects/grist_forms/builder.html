@@ -1140,6 +1140,8 @@
 <script src="shared/conditions.js"></script>
 <script src="shared/limites.js"></script>
 <script src="shared/theme.js"></script>
+<script src="shared/theme-instance.js"></script>
+<script src="shared/derivation-valeurs.js"></script>
 <script src="shared/themedef.js"></script>
 <script src="shared/acces.js"></script>
 <script src="shared/carte-geometrie.js"></script>
@@ -6259,7 +6261,7 @@ async function externeGenerer() {
       fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('shared/limites.js'),
       fetchScriptSource('shared/theme.js'),
-      fetchScriptSource('shared/themedef.js'),
+      fetchThemeDefBundle(),
       fetchScriptSource('runtime/engine.js'),
       fetchScriptSource('shared/dsfr-like.css')
     ]);
@@ -6310,6 +6312,18 @@ function fetchScriptSource(relPath) {
     if (!r.ok) throw new Error('Impossible de charger ' + relPath + ' (HTTP ' + r.status + ')');
     return r.text();
   });
+}
+
+/**
+ * Le lecteur de thème embarqué avec un formulaire : le contrat du thème de l'instance Grist et la dérivation des graines (deux copies du kit) ET le lecteur lui-même,
+ * dans cet ordre, en un seul morceau. Sans les deux copies, le lecteur ne poserait aucun thème de Grist (docs/THEMEDEF-INSTANCE-GRIST.md).
+ */
+function fetchThemeDefBundle() {
+  return Promise.all([
+    fetchScriptSource('shared/theme-instance.js'),
+    fetchScriptSource('shared/derivation-valeurs.js'),
+    fetchScriptSource('shared/themedef.js')
+  ]).then(parts => parts.join('\n'));
 }
 
 function extractSectionRef(result) {
@@ -6443,7 +6457,7 @@ async function publishForm() {
       fetchScriptSource('shared/conditions.js'),
       fetchScriptSource('shared/limites.js'),
       fetchScriptSource('shared/theme.js'),
-      fetchScriptSource('shared/themedef.js'),
+      fetchThemeDefBundle(),
       fetchScriptSource('runtime/engine.js'),
       fetch('shared/dsfr-like.css').then(function (r) {
         if (!r.ok) throw new Error('Impossible de charger dsfr-like.css (' + r.status + ')');

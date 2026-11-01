@@ -74,7 +74,7 @@ describe('Étage hôte : lire ce que Grist annonce', () => {
   it('lit le mode, le nom du thème et la couleur des boutons principaux', () => {
     const f = grist('dark', '#3e5de7', { '--grist-theme-control-primary-fg': 'white', '--grist-theme-control-primary-hover-bg': 'rgb(1, 2, 3)' });
     assert.deepEqual(T.lireHote({ doc: f.doc, fenetre: f.fenetre }), {
-      apparence: 'sombre', nom: 'GristDark', couleurs: { fond: '#3e5de7', texte: '#ffffff', survol: '#010203' }
+      apparence: 'sombre', nom: 'GristDark', couleurs: { fond: '#3e5de7', texte: '#ffffff', survol: '#010203' }, vars: { 'control-primary-bg': '#3e5de7' }
     });
   });
 
@@ -97,47 +97,83 @@ describe('Étage hôte : lire ce que Grist annonce', () => {
 describe('Étage hôte : le thème qu\'on en tire', () => {
   const ratio = (a, b) => T.contraste(a, b);
 
-  it('reprend la couleur d\'action de l\'instance, rendue lisible (H2), et le dit', () => {
+  const paires = (t) => T.mesurerPaires(Object.fromEntries(Object.keys(t.vars).map((k) => [k.slice(6), t.vars[k]])), T.seuilsDe({}));
+
+  it('une couleur d\'action qui tient déjà 4,5:1 est reprise telle quelle, sans remarque (contrat du kit)', () => {
     const t = T.themeHote({ apparence: 'clair', nom: 'GristLight', couleurs: { fond: '#3e5de7', texte: '', survol: '' } });
     assert.equal(t.mode, 'clair');
     assert.equal(t.nom, 'GristLight');
-    ['fond', 'surface', 'surface-2'].forEach((f) => assert.ok(ratio(t.vars['--kit-action'], t.vars['--kit-' + f]) >= 4.5, 'action sur ' + f));
-    assert.ok(ratio(t.vars['--kit-action-texte'], t.vars['--kit-action']) >= 4.5, 'H1');
-    assert.ok(t.remarques.some((r) => /assombrie/.test(r)));
-    assert.equal(Object.keys(t.vars).length, 26);
-  });
-
-  it('une couleur qui tient déjà les portes est gardée telle quelle, sans remarque', () => {
-    const t = T.themeHote({ apparence: 'clair', couleurs: { fond: '#0b3d91' } });
-    assert.equal(t.vars['--kit-action'], '#0b3d91');
+    // Dans la dérivation du kit, la graine principale est l'ACCENT ; l'action (boutons) en est dérivée.
+    assert.equal(t.vars['--kit-accent'], '#3e5de7');
     assert.deepEqual(t.remarques, []);
+    assert.equal(Object.keys(t.vars).length, 26);
+    assert.deepEqual(paires(t), [], 'les 22 paires tiennent');
   });
 
-  it('une couleur qui ne tient pas est ramenée jusqu\'à 4,5:1 sur le fond, la surface et la surface douce', () => {
+  it('GristLight mesuré en réel : l\'action est primary-dim #007548, le fond et le texte de l\'instance sont repris', () => {
+    const t = T.themeHote({
+      apparence: 'clair', nom: 'GristLight', couleurs: {},
+      vars: { 'control-primary-bg': '#16b378', 'primary-muted': '#009058', 'primary-dim': '#007548', 'accent-text': '#16b378', 'control-fg': '#16b378', link: '#16b378', primary: '#16b378', 'page-bg': '#f7f7f7', text: '#262633', 'font-family': 'Arial, sans-serif' }
+    });
+    assert.equal(t.vars['--kit-accent'], '#007548');
+    assert.equal(t.vars['--kit-fond'], '#f7f7f7');
+    assert.equal(t.vars['--kit-texte'], '#262633');
+    assert.deepEqual(t.repris, { fond: true, texte: true });
+    assert.equal(t.pile, 'Arial, sans-serif');
+    assert.deepEqual(paires(t), []);
+  });
+
+  it('une instance à palette propre (numerique.gouv, mesurée en réel) : #3e5de7, fond #f6f8f9, texte #222631, police nommée mise de côté', () => {
+    const t = T.themeHote({
+      apparence: 'clair', nom: 'GristLight', couleurs: {},
+      vars: { 'control-primary-bg': '#3e5de7', 'primary-muted': '#2845c1', 'primary-dim': '#223e9e', 'page-bg': '#f6f8f9', text: '#222631', 'font-family': 'Marianne,-apple-system,BlinkMacSystemFont,Liberation Sans, Helvetica,Arial,sans-serif' }
+    });
+    assert.equal(t.vars['--kit-accent'], '#3e5de7');
+    assert.equal(t.vars['--kit-fond'], '#f6f8f9');
+    assert.equal(t.vars['--kit-texte'], '#222631');
+    assert.deepEqual(t.remarques, []);
+    assert.deepEqual(paires(t), []);
+  });
+
+  it('une couleur qui ne tient pas est redressée à 4,5:1 sur le fond et la surface, et le dit ; les 22 paires tiennent', () => {
     const t = T.themeHote({ apparence: 'clair', couleurs: { fond: '#ffff00' } });
-    ['fond', 'surface', 'surface-2'].forEach((f) => assert.ok(ratio(t.vars['--kit-action'], t.vars['--kit-' + f]) >= 4.5, f));
-    assert.ok(t.remarques.length >= 1);
+    assert.ok(t.remarques.some((r) => /ajust/.test(r)));
+    assert.deepEqual(paires(t), []);
+    assert.ok(T.contraste(t.vars['--kit-accent'], t.vars['--kit-fond']) >= 4.5);
   });
 
-  it('en sombre, la couleur est éclaircie (jamais une action sombre sur fond sombre)', () => {
+  it('en sombre : mode sombre du kit, jamais une action sombre sur fond sombre, et les 22 paires tiennent', () => {
     const t = T.themeHote({ apparence: 'sombre', couleurs: { fond: '#0b3d91' } });
     assert.equal(t.mode, 'sombre');
     assert.equal(t.vars['--kit-fond'], '#161616');
-    ['fond', 'surface', 'surface-2'].forEach((f) => assert.ok(ratio(t.vars['--kit-action'], t.vars['--kit-' + f]) >= 4.5, f));
+    assert.deepEqual(paires(t), []);
+    assert.ok(T.contraste(t.vars['--kit-accent'], t.vars['--kit-fond']) >= 4.5);
+  });
+
+  it('en sombre, le fond et le texte de l\'instance ne sont repris que si les paires tiennent, sinon l\'action seule et on le dit', () => {
+    const base = { apparence: 'sombre', couleurs: {}, vars: { 'control-primary-bg': '#3e5de7', 'link': '#a2b6ff' } };
+    const bon = T.themeHote(Object.assign({}, base, { vars: Object.assign({}, base.vars, { 'page-bg': '#161616', text: '#f6f6f6' }) }));
+    assert.deepEqual(paires(bon), []);
+    assert.deepEqual(bon.repris, { fond: true, texte: true });
+    const mauvais = T.themeHote(Object.assign({}, base, { vars: Object.assign({}, base.vars, { 'page-bg': '#5a5a6a', text: '#ffffff' }) }));
+    assert.deepEqual(mauvais.repris, { fond: false, texte: false });
+    assert.equal(mauvais.vars['--kit-fond'], '#161616');
+    assert.ok(mauvais.remarques.some((r) => /ne tiennent pas/.test(r)));
+    assert.deepEqual(paires(mauvais), []);
   });
 
   it('clair sans couleur : rien à changer (null). Sombre sans couleur : le sombre de l\'origine, jamais une couleur inventée', () => {
     assert.equal(T.themeHote({ apparence: 'clair', couleurs: { fond: '', texte: '', survol: '' } }), null);
     const s = T.themeHote({ apparence: 'sombre', couleurs: {} });
     assert.equal(s.vars['--kit-fond'], '#161616');
-    assert.ok(ratio(s.vars['--kit-action'], s.vars['--kit-surface']) >= 4.5);
+    assert.deepEqual(paires(s), []);
     assert.equal(s.action, '');
   });
 
-  it('le mode de l\'hôte prime sur celui du système ; à défaut d\'apparence, le mode demandé', () => {
+  it('le mode de l\'hôte fait foi ; sans apparence annoncée, le contrat refuse et rien n\'est posé', () => {
     assert.equal(T.themeHote({ apparence: 'clair', couleurs: { fond: '#0b3d91' } }, { mode: 'sombre' }).mode, 'clair');
-    assert.equal(T.themeHote({ apparence: null, couleurs: { fond: '#0b3d91' } }, { mode: 'sombre' }).mode, 'sombre');
-    assert.equal(T.themeHote({ apparence: null, couleurs: { fond: '#0b3d91' } }).mode, 'clair');
+    assert.equal(T.themeHote({ apparence: null, couleurs: { fond: '#0b3d91' } }, { mode: 'sombre' }), null);
+    assert.equal(T.themeHote({ apparence: null, couleurs: { fond: '#0b3d91' } }), null);
   });
 
   it('refuse une entrée qui n\'est pas une lecture', () => {
@@ -312,7 +348,7 @@ describe('Mode grist : habiller suit le thème de Grist à chaud', () => {
     const api = apiFausse([], null);
     const r = await T.habiller(f.racine, api, { def: def({ mode: 'grist' }), lecteurHote: lecteur(f), attenteHote: 0 });
     assert.equal(r.raison, 'hote');
-    assert.equal(f.style.poses['--kit-fond'], '#f6f6f6');
+    assert.equal(f.style.poses['--kit-fond'], '#ffffff');
     assert.equal(f.style.poses['--kit-action'], '#0b3d91');
 
     f.etat.attrs['data-grist-appearance'] = 'dark';

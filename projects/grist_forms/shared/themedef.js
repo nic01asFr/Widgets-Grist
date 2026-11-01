@@ -18,13 +18,13 @@
   'use strict';
   var asNode = typeof process !== 'undefined' && process.versions && process.versions.node;
   if (asNode && typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./theme.js'));
+    module.exports = factory(require('./theme.js'), require('./theme-instance.js'), require('./derivation-valeurs.js'));
   } else if (typeof define === 'function' && define.amd) {
-    define(['./theme'], factory);
+    define(['./theme', './theme-instance', './derivation-valeurs'], factory);
   } else {
-    root.FormThemeDef = factory(root.FormTheme);
+    root.FormThemeDef = factory(root.FormTheme, root.FormThemeInstance, root.FormThemeDerivation);
   }
-}(typeof self !== 'undefined' ? self : this, function (Theme) {
+}(typeof self !== 'undefined' ? self : this, function (Theme, Instance, Derivation) {
   'use strict';
 
   var VERSION = 'themedef-1.0';
@@ -545,45 +545,93 @@
     Object.keys(VARIABLES_HOTE).forEach(function (role) { couleurs[role] = couleurHote(doc, fenetre, VARIABLES_HOTE[role]); });
     var nomBrut = h.getAttribute('data-grist-theme');
     var nom = typeof nomBrut === 'string' && nomBrut.trim() ? nomBrut.trim().slice(0, 60) : null;
-    if (!apparence && !couleurs.fond && !couleurs.texte && !couleurs.survol) return null;
-    return { apparence: apparence, nom: nom, couleurs: couleurs };
+    // Les variables que lit le contrat de l'instance (docs/THEMEDEF-INSTANCE-GRIST.md) : les couleurs, résolues par le navigateur, et la pile de polices brute.
+    var vars = {};
+    if (Instance && Instance.CLES_INSTANCE) {
+      Instance.CLES_INSTANCE.forEach(function (cle) {
+        if (cle === 'font-family') {
+          var cs = fenetre.getComputedStyle ? fenetre.getComputedStyle(h) : null;
+          var brute = cs ? String(cs.getPropertyValue('--grist-theme-font-family') || '').trim() : '';
+          if (brute) vars[cle] = brute;
+        } else {
+          var c = couleurHote(doc, fenetre, cle);
+          if (c) vars[cle] = c;
+        }
+      });
+    }
+    if (!apparence && !couleurs.fond && !couleurs.texte && !couleurs.survol && !Object.keys(vars).length) return null;
+    return { apparence: apparence, nom: nom, couleurs: couleurs, vars: vars };
   }
 
   /**
-   * Le thème qu'on peut tirer de ce que Grist annonce : le mode de l'hôte, et sa couleur d'action quand elle tient les portes.
+   * Le thème qu'on peut tirer de ce que Grist annonce (docs/THEMEDEF-INSTANCE-GRIST.md, décisions D-A et D-B de l'auteur) :
    *
-   *   H1  texte d'action sur l'action        >= 4,5:1   (bloquante : `deriver` choisit le texte le plus lisible)
-   *   H2  action sur le fond, la surface et la surface douce >= 4,5:1 (bloquante : sinon la couleur est assombrie ou éclaircie jusqu'à tenir, et on le dit)
-   *   H3  écart avec les couleurs d'état : mesurée par le kit, jamais bloquante ici non plus (les états portent glyphe et libellé)
+   *   1. le CONTRAT du kit (`shared/theme-instance.js`, copie) transforme les variables de Grist en graines : mode, couleur d'action (première candidate à 4,5:1, sinon
+   *      redressée), et, en clair, fond et texte de l'instance ;
+   *   2. la DÉRIVATION du kit (`shared/derivation-valeurs.js`, copie) en tire les 26 valeurs, exactement celles du compilateur ;
+   *   3. les 22 paires de lisibilité sont MESURÉES sur ce résultat. Une paire qui échoue : on retombe sur l'action seule, puis sur l'origine. Jamais d'application à moitié ;
+   *   4. en sombre, fond et texte de l'instance sont des graines du mode clair : ils ne se superposent aux valeurs dérivées que si les paires tiennent encore (politique du widget,
+   *      écart E7 de THEMEDEF-ALIGNEMENT.md), sinon l'action seule est gardée et on le dit.
    *
-   * Un hôte qui n'annonce que le mode clair ne change rien (l'origine est déjà claire) : `null`. Un hôte sombre sans couleur d'action donne le
-   * thème sombre de l'apparence d'origine (son action bleue), jamais une couleur inventée.
+   * La POLICE de l'instance n'est pas reprise : aucune des 26 variables du kit n'est une police. La pile est rendue (`pile`) pour un widget qui saurait la poser.
+   * Un hôte clair sans couleur reprenable ne change rien (l'origine est déjà claire) : `null`. Un hôte sombre sans couleur d'action donne le thème sombre de l'apparence
+   * d'origine (son action bleue), jamais une couleur inventée. Sans les deux copies du kit, aucun thème de l'hôte n'est posé.
    *
    * @param {object|null} hote la sortie de `lireHote`
-   * @param {{mode?:string}} [opts] `mode` : le mode à défaut d'apparence annoncée (le mode de l'hôte prime toujours)
-   * @returns {{vars:Object<string,string>, mode:string, nom:string, remarques:string[], action:string}|null} `vars` : les variables
-   *   `--kit-*`, jugées par le même juge que tout thème
+   * @param {{mode?:string}} [opts] `mode` : conservé pour compatibilité ; l'apparence que l'hôte annonce prime, et le contrat refuse une apparence absente
+   * @returns {{vars:Object<string,string>, mode:string, nom:string, remarques:string[], action:string, repris:{fond:boolean, texte:boolean}, pile:string|null}|null}
    */
   function themeHote(hote, opts) {
-    if (!hote || typeof hote !== 'object') return null;
-    opts = opts || {};
-    var mode = hote.apparence === 'sombre' || hote.apparence === 'clair' ? hote.apparence : (opts.mode === 'sombre' ? 'sombre' : 'clair');
-    var couleurs = hote.couleurs || {};
-    var action = couleurSure(couleurs.fond);
-    if (!action && mode !== 'sombre') return null;
+    if (!hote || typeof hote !== 'object' || !Instance || !Derivation) return null;
+    var mode = hote.apparence === 'sombre' || hote.apparence === 'clair' ? hote.apparence : null;
+    if (!mode) return null;
+    var hvars = hote.vars && typeof hote.vars === 'object' ? Object.assign({}, hote.vars) : {};
+    // Une lecture à l'ancienne forme (la seule couleur des boutons dans `couleurs.fond`) reste lisible : c'est `control-primary-bg`.
+    if (!hvars['control-primary-bg'] && hote.couleurs && hote.couleurs.fond) hvars['control-primary-bg'] = hote.couleurs.fond;
+    var r = Instance.themeInstance({ apparence: mode, vars: hvars });
+    if (r.refus) return null;
     var remarques = [];
-    var principal = action || ACTION_ORIGINE;
-    var d = deriver({ principal: principal }, mode);
-    var fonds = [d.vars.fond, d.vars.surface, d.vars['surface-2']];
-    var pire = fonds.reduce(function (p, f) { return rapport(d.vars.action, f) < rapport(d.vars.action, p) ? f : p; }, fonds[0]);
-    if (rapport(d.vars.action, pire) < 4.5) {
-      var vers = clair(d.vars.surface) ? '#000000' : '#ffffff';
-      principal = redresser(principal, pire, 4.5, vers);
-      d = deriver({ principal: principal }, mode);
-      remarques.push('La couleur des boutons de Grist ne se détachait pas assez du fond (4,5:1 demandés) : elle est ' + (vers === '#000000' ? 'assombrie' : 'éclaircie') + ' pour rester lisible.');
+    var action = r.themedef ? r.themedef.graines.principal : '';
+    var principal = action;
+    if (!principal) {
+      if (mode !== 'sombre') return null;
+      principal = ACTION_ORIGINE;
     }
-    d.remarques.forEach(function (r) { remarques.push(r); });
-    return { vars: juger(d.vars), mode: mode, nom: hote.nom || 'Grist', remarques: remarques, action: action || '' };
+    (r.notes || []).forEach(function (n) {
+      if (n.code === 'action-redressee') remarques.push('La couleur des boutons de Grist ne se détachait pas assez du fond (4,5:1 demandés) : elle est ajustée pour rester lisible.');
+      else if (n.code === 'texte-redresse') remarques.push('Le texte de Grist ne se détachait pas assez du fond (4,5:1 demandés) : il est ajusté pour rester lisible.');
+    });
+    var seuils = seuilsDe({});
+    function deriveEtMesure(graines) {
+      var d = Derivation.deriverValeurs(Object.assign({}, graines, { mode: mode }));
+      if (!d || !d.ok) return null;
+      var val = {};
+      Object.keys(d.valeurs).forEach(function (k) { val[k] = String(d.valeurs[k]).toLowerCase(); });
+      return mesurerPaires(val, seuils).length ? null : val;
+    }
+    var graines = { principal: principal };
+    var repris = { fond: false, texte: false };
+    var valeurs = null;
+    if (mode === 'clair' && r.themedef) {
+      if (r.themedef.graines.fond) graines.fond = r.themedef.graines.fond;
+      if (r.themedef.graines.encre) graines.encre = r.themedef.graines.encre;
+      valeurs = deriveEtMesure(graines);
+      if (valeurs) { repris.fond = !!graines.fond; repris.texte = !!graines.encre; }
+      else if (graines.fond || graines.encre) {
+        remarques.push("Le fond et le texte de Grist n'ont pas pu être repris tout en gardant le formulaire lisible : seule la couleur des boutons est reprise.");
+        graines = { principal: principal };
+      }
+    }
+    if (!valeurs) valeurs = deriveEtMesure(graines);
+    if (!valeurs) return null;
+    if (mode === 'sombre' && (r.fond || r.texte)) {
+      var essai = Object.assign({}, valeurs);
+      if (r.fond) essai.fond = r.fond;
+      if (r.texte) essai.texte = r.texte;
+      if (mesurerPaires(essai, seuils).length === 0) { valeurs = essai; repris.fond = !!r.fond; repris.texte = !!r.texte; }
+      else remarques.push('Le fond et le texte de Grist ne tiennent pas la lisibilité avec les couleurs du formulaire : seuls le mode sombre et la couleur des boutons sont repris.');
+    }
+    return { vars: juger(valeurs), mode: mode, nom: hote.nom || 'Grist', remarques: remarques, action: action || '', repris: repris, pile: r.pile || null };
   }
 
   function signatureHote(opts) { try { return JSON.stringify(lireHote(opts)); } catch (e) { return 'null'; } }

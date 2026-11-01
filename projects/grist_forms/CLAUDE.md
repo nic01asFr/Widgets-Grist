@@ -47,6 +47,8 @@ projects/grist_forms/
 │   ├── design-system.js     # Catalogue → formulaire, réponses → document, règles croisées, ThemeDef 1.0 (page `design-system.html`)
 │   ├── themedef.js          # Lit le thème du document, celui que le formulaire porte (`apparence`) ou celui de Grist (mode `grist`), le résout, l'habille : jamais d'écriture
 │   ├── theme-visiteur.js    # Le thème du visiteur HORS Grist (une clé de stockage, jamais lue en production) : voir docs/CADRAGE-THEME-VISITEUR.md
+│   ├── theme-instance.js    # COPIE du kit (contrat du thème de l'instance Grist, 32 vecteurs) : variables de Grist vers graines ThemeDef ; voir docs/THEMEDEF-INSTANCE-GRIST.md
+│   ├── derivation-valeurs.js # COPIE du kit (graines + mode vers les 26 valeurs, 126 vecteurs) : le thème de Grist est dérivé ici, jamais par une dérivation maison
 │   ├── activation.js        # COPIE du kit (`lotActivation`, validateur, SHA-256 pur) : la bascule de Theme_document, jamais réécrite ici
 │   ├── activation-geste.js  # Le geste « Appliquer ce thème au document » : préparer, retirer, relire (pur, sans écriture)
 │   ├── design-system-apercu.js  # Illustration de chaque module (couleurs, formes, espacements…)
