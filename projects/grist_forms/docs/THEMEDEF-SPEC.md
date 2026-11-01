@@ -236,6 +236,23 @@ Mesures du kit à connaître : `bord` est décoratif (1,36 à 1,71:1 sur la surf
 bord d'un champ est `bord-champ` (4,54:1 en clair, 5,36:1 en sombre) ; `action-actif` est **dérivé**
 (`derive: true`), les 25 autres viennent de jetons ; aucune paire ne tombe sous son seuil sur les paquets publics.
 
+**Arbitrage du 01/11/2026 : la mesure d'un `resolu`** (points 23, 24 et 26 de `kit/jetons/themedef/QUESTIONS.md`). Mesuré le même jour : les lecteurs
+de Form Builder et d'Atlas appliquent un `resolu` fabriqué (texte, fond et action en `#ffffff`) sans le mesurer, alors que le lecteur du kit le
+refuse. Pour qu'**un même document donne le même résultat dans tous les widgets**, la règle de référence est celle du kit, retenue telle quelle :
+
+- **Les 22 paires du générateur sont mesurées** (liste dans `vecteurs/themedef-lecteur.vecteurs.json`, clé `paires`), pas les quatre de l'étude :
+  seuil du composant (3:1) pour `bord-champ`, `focus` et `attention-filet`, seuil du texte (4,5:1) pour les dix-huit autres ; `bord` est décoratif et
+  n'est dans aucune paire. Les exigences du document (`contrasteTexte`, `contrasteComposant`) renforcent chacune sa famille, jamais l'autre.
+- **Un `resolu` qui rate une paire est refusé en entier** (`contraste-insuffisant`, rien n'est appliqué), même si une surcharge le réparerait :
+  c'est un document incohérent. Un lecteur ne retombe pas sur les graines et ne « répare » pas.
+- **Un `resolu` incomplet** (une des 26 valeurs manque ou est refusée) est refusé en entier (`resolu-incomplet`).
+- Une valeur qu'un lecteur ne sait pas mesurer reste appliquée avec `verifie: false` (point 25, inchangé) ; Form Builder n'accepte de toute façon que
+  des `#RRGGBB`, ce qui est plus strict.
+
+Cette règle ne s'applique qu'à partir du jour où chaque lecteur est aligné sur les vecteurs de lecture du kit : un lecteur qui ne l'a pas encore fait
+l'écrit dans sa documentation. État au 01/11/2026 : kit **conforme** ; Form Builder et Atlas **non conformes**, correction prévue dans un lot dédié
+chacun, publiée ensemble.
+
 ## 6. Ce qui reste ouvert
 
 - Le comportement réel dans Grist : atomicité d'un lot « désactiver l'ancien, activer le nouveau », lecture d'une
