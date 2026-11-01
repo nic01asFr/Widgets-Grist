@@ -12768,9 +12768,18 @@ const TABLE_SCHEMAS = {
  * ceux que la charte précédente avait posés sont retirés d'abord, donc sans identité l'application retrouve ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi).
  */
 function poserHabillageApplication(variables, noms) {
-    const style = document.documentElement.style;
+    const racine = document.documentElement, style = racine.style;
     for (const nom of noms) style.removeProperty(nom);
     for (const [nom, valeur] of Object.entries(variables)) if (noms.includes(nom)) style.setProperty(nom, valeur);
+    // Mode sombre : la page accroche ses règles sombres à `data-mode` et déclare `color-scheme` (champs, ascenseurs natifs) ; sans thème sombre, l'interface claire d'origine.
+    const sombre = variables['--mode-application'] === 'sombre';
+    if (sombre) racine.setAttribute('data-mode', 'sombre'); else racine.removeAttribute('data-mode');
+    style.setProperty('color-scheme', sombre ? 'dark' : 'light');
+    try { if (map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
+}
+/** Le mode d'apparence de l'instance Grist : l'attribut que Grist pose, sinon ce que dit `onThemeChange`, sinon clair. */
+function apparenceGrist() {
+    return document.documentElement.getAttribute('data-grist-appearance') || (_themeInstance && _themeInstance.appearance) || 'light';
 }
 
 /**
@@ -12785,7 +12794,7 @@ async function chargerThemeDocument() {
         const tables = await grist.docApi.listTables();
         if (tables.includes('Theme_document')) {
             const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
-            const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
+            const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: apparenceGrist() === 'dark' ? 'sombre' : 'clair' });
             if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
             if (theme.charte) {
                 const { variables, notes } = TD.habillageApplication(theme);
@@ -12820,15 +12829,17 @@ async function appliquerThemeInstance() {
         const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=20261101a'), import('./lib/charte/depuis-themedef.js?v=20261101a'), import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
         const racine = document.documentElement;
         const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
-        const theme = _themeInstance || { appearance: racine.getAttribute('data-grist-appearance') || racine.style.colorScheme || 'light' };
+        const theme = _themeInstance || { appearance: apparenceGrist() };
         const t = TI.themeDeLInstance(theme, lireVariable);
-        const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: 'clair' }) : { charte: null };
+        const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: t.sombre ? 'sombre' : 'clair' }) : { charte: null };
         if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
+        // la police de l'instance : sa pile exacte (celle de Grist, ou Marianne puis les polices système chez DINUM), pas seulement la police système de ThemeDef
+        if (t.pile) { variables['--sans'] = t.pile; variables['--serif'] = t.pile; }
         poserHabillageApplication(variables, AP.VARIABLES);
         _charteDuFond = r.charte; void rafraichirFondTheme();
         try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
-        console.info("[Atlas] thème de l'instance Grist appliqué :", t.nom, "accent", variables["--accent"] || "(inchangé)", "fond", variables["--bg"] || "(inchangé)");
+        console.info("[Atlas] thème de l'instance Grist appliqué :", t.nom, "accent", variables["--accent"] || "(inchangé)", "fond", variables["--bg"] || "(inchangé)", "police", String(variables["--sans"] || "(inchangée)").slice(0, 40));
         if (notes.length) console.info('[Atlas] thème de l\'instance, non suivi :', notes.join(', '));
     } catch (e) {
         console.warn('[Atlas] thème de l\'instance', e && e.message);

@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { themeDeLInstance, hexSur, CLES, PREFIXE } from '../lib/charte/theme-instance.js';
+import { themeDeLInstance, hexSur, pileSure, CLES, PREFIXE } from '../lib/charte/theme-instance.js';
 import { charteDepuisThemeDef } from '../lib/charte/depuis-themedef.js';
 import { habillageApplication } from '../lib/charte/theme-document.js';
 import { contraste } from '../lib/charte/couleurs.js';
@@ -41,12 +41,13 @@ test('chaîne complète, thème clair : l\'application prend l\'accent de Grist,
   for (const nom of Object.keys(h.variables)) assert.ok(VARIABLES.includes(nom), nom + ' est un jeton connu de l\'application');
 });
 
-test('thème sombre : l\'interface claire d\'Atlas n\'est pas retournée (fond et encre non suivis, dits), l\'accent lisible est gardé', () => {
+test('thème sombre : l interface est retournée (mode sombre, fond et encre du thème), l accent est celui qui se lit sur ce fond', () => {
   const { t, h } = variablesDe(SOMBRE);
   assert.equal(t.sombre, true);
-  assert.ok(h.notes.includes('fond-sombre-non-suivi') && h.notes.includes('encre-non-suivie'), h.notes.join());
-  assert.equal(h.variables['--bg'], undefined); assert.equal(h.variables['--ink'], undefined);
-  assert.equal(h.variables['--accent'], '#157a54', 'la variante sombre qui se lit sur le fond d Atlas');
+  assert.equal(h.variables['--mode-application'], 'sombre');
+  assert.equal(h.variables['--bg'], '#262633'); assert.equal(h.variables['--ink'], '#efefef');
+  assert.equal(h.variables['--accent'], '#17b378', 'la couleur de contrôle de Grist, lisible sur son fond sombre');
+  assert.ok(!h.notes.includes('fond-sombre-non-suivi'));
 });
 
 test('une couleur qui n\'est pas #rrggbb est écartée et dite ; sans accent, aucun thème repris', () => {
@@ -76,4 +77,25 @@ test('l accent pris tient toujours 3:1 sur le fond que l application aura ; sino
   const pale = { colors: { 'control-primary-bg': '#cde8d9', 'primary-muted': '#d5eadf', 'page-bg': '#f7f7f7' } };
   const v = variablesDe(pale);
   assert.equal(v.h.variables['--accent'], undefined); assert.ok(v.h.notes.includes('accent-peu-lisible-non-suivi'));
+});
+
+const PILE_GRIST = ['-apple-system,BlinkMacSystemFont,Segoe UI,Liberation Sans,', '    Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol'].join(String.fromCharCode(10));
+const PILE_DINUM = 'Marianne,-apple-system,BlinkMacSystemFont,Liberation Sans, Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol';
+
+test('la police de l instance : sa pile exacte, relevée sur docs.getgrist.com et sur DINUM (Marianne en tête)', () => {
+  const grist = themeDeLInstance({ colors: { 'control-primary-bg': '#16b378', 'font-family': PILE_GRIST } });
+  assert.equal(grist.pile, '-apple-system,BlinkMacSystemFont,Segoe UI,Liberation Sans, Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol');
+  const dinum = themeDeLInstance({ colors: { 'control-primary-bg': '#3E5DE7', 'font-family': PILE_DINUM } });
+  assert.ok(dinum.pile.startsWith('Marianne,')); assert.ok(dinum.themedef.police === 'systeme', 'ThemeDef garde la police système, la pile exacte est reprise à part');
+});
+
+test('une pile qui pourrait sortir de la déclaration est refusée : le point-virgule, l accolade, url(, un texte trop long', () => {
+  for (const mauvaise of ['Arial; background: red', 'a } b {', 'url(http://x/f.woff)', 'x'.repeat(301), '', null, 42, 'Arial, <script>']) assert.equal(pileSure(mauvaise), null, String(mauvaise).slice(0, 30));
+  assert.equal(pileSure('Marianne, "Segoe UI", sans-serif'), 'Marianne, "Segoe UI", sans-serif');
+});
+
+test('la pile se lit aussi dans les variables CSS --grist-theme-font-family', () => {
+  const css = { [PREFIXE + 'control-primary-bg']: '#16b378', [PREFIXE + 'font-family']: PILE_DINUM };
+  assert.ok(themeDeLInstance({ appearance: 'light' }, (n) => css[n] || '').pile.startsWith('Marianne'));
+  assert.equal(themeDeLInstance({ colors: { 'control-primary-bg': '#16b378' } }).pile, null);
 });

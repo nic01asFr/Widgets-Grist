@@ -1061,6 +1061,11 @@
             justify-content: center; gap: 6px; transition: var(--t-fast);
         }
         .btn-primary { background: var(--accent); color: white; }
+        /* Thème sombre : l'accent est une couleur CLAIRE (celle qui se lit sur le fond sombre) ; le texte posé dessus prend donc la couleur du fond, pas du blanc. */
+        html[data-mode="sombre"] .btn-primary,
+        html[data-mode="sombre"] .synchro-pastille.etat-alerte, html[data-mode="sombre"] #hote-synchro.etat-alerte,
+        html[data-mode="sombre"] .atlas-bulle .bulle-actions button[data-action="visite"],
+        html[data-mode="sombre"] #insp-body .liste-visite, html[data-mode="sombre"] .rail-badge { color: var(--bg); }
         .btn-primary:hover { background: #AE3A2C; }
         .btn-dark { background: var(--ink); color: var(--bg); }
         .btn-dark:hover { background: #34302A; }

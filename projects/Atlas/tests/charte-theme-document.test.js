@@ -52,7 +52,7 @@ test('l\'application complète : jetons d\'Atlas dérivés du thème clair ; un 
   const clair = habillageApplication(themeDuDocument(colonnes([{ cle: 'a', themedef: themedef(), actif: true }]), { mode: 'clair' }));
   assert.equal(clair.variables['--accent'], '#017c51'); assert.equal(clair.variables['--ink'], '#262633'); assert.deepEqual(clair.notes, []);
   const sombre = habillageApplication(themeDuDocument(colonnes([{ cle: 'a', themedef: themedef(), actif: true }]), { mode: 'sombre' }));
-  assert.equal('--bg' in sombre.variables, false); assert.ok(sombre.notes.includes('fond-sombre-non-suivi'));
+  assert.equal(sombre.variables['--mode-application'], 'sombre'); assert.ok(!sombre.notes.includes('fond-sombre-non-suivi'));
   assert.deepEqual(habillageApplication(null), { variables: {}, notes: [] });
   assert.deepEqual(habillageApplication(themeDuDocument(null)), { variables: {}, notes: [] });
 });

@@ -1,5 +1,6 @@
 // L'identité de l'hôte sur l'application complète : variables dérivées des graines que l'hôte a données, refus dits, branchement du profil complet.
 // node --test tests/charte-application.test.js   (aucun accès réseau, aucune dépendance)
+import { luminance, contraste } from '../lib/charte/couleurs.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -41,11 +42,26 @@ test('une charte qui ne fixe que la couleur principale ne change que l\'accent',
   assert.deepEqual(Object.keys(variables).sort(), ['--accent', '--accent-soft']); assert.deepEqual(notes, []);
 });
 
-test('une charte à fond SOMBRE ne retourne pas l\'interface claire : surfaces et encre refusées, un accent pâle aussi, et c\'est dit', () => {
+test('une charte à fond SOMBRE retourne l interface : fond, surfaces éclaircies, encre lisible (4,5:1), mode sombre dit ; la police est reprise', () => {
   const { variables, notes } = variablesApplication(lecture(charteDepuisKit(kit('grist', 'sombre')).charte));
-  for (const nom of ['--bg', '--surface', '--ink', '--text', '--hairline', '--accent']) assert.equal(nom in variables, false, nom);
-  assert.deepEqual(notes.sort(), ['accent-peu-lisible-non-suivi', 'encre-non-suivie', 'fond-sombre-non-suivi']);
+  assert.equal(variables['--mode-application'], 'sombre');
+  assert.ok(luminance(variables['--bg']) < 0.5, 'fond sombre'); assert.ok(luminance(variables['--surface']) > luminance(variables['--bg']), 'surface plus claire que le fond');
+  assert.ok(contraste(variables['--ink'], variables['--bg']) >= 4.5, 'encre lisible'); assert.ok(contraste(variables['--muted'], variables['--bg']) >= 4.5 || contraste(variables['--muted'], variables['--bg']) >= 3, 'texte atténué lisible');
+  assert.ok(!notes.includes('fond-sombre-non-suivi') && !notes.includes('encre-non-suivie'));
   assert.ok('--sans' in variables, 'la police est reprise');
+});
+
+test('fond sombre sans encre donnée : un blanc cassé, jamais l encre sombre d origine ; l accent qui ne se lit pas sur ce fond est refusé et dit', () => {
+  const sombre = (principal) => variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal, fond: '#262633' } }));
+  const a = sombre('#17b378');
+  assert.equal(a.variables['--ink'], '#ececf1'); assert.equal(a.variables['--accent'], '#17b378'); assert.deepEqual(a.notes, []);
+  const b = sombre('#2a2a3a');
+  assert.ok(b.notes.includes('accent-peu-lisible-non-suivi')); assert.equal('--accent' in b.variables, false);
+});
+
+test('fond clair : pas de mode sombre dit', () => {
+  const { variables } = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#1b5fa8', fond: '#f4f4f0' } }));
+  assert.equal('--mode-application' in variables, false); assert.equal(variables['--bg'], '#f4f4f0');
 });
 
 test('une encre peu contrastée sur le fond de l\'application, ou un accent trop pâle, sont refusés', () => {
