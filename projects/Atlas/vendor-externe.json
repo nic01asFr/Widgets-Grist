@@ -14,6 +14,7 @@
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "vers": "three/three.module.js" },
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js", "vers": "three/addons/loaders/GLTFLoader.js" },
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/exporters/GLTFExporter.js", "vers": "three/addons/exporters/GLTFExporter.js" },
+        { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/TextureUtils.js", "vers": "three/addons/utils/TextureUtils.js" },
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js", "vers": "three/addons/utils/BufferGeometryUtils.js" },
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/KTX2Loader.js", "vers": "three/addons/loaders/KTX2Loader.js" },
         { "depuis": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/WorkerPool.js", "vers": "three/addons/utils/WorkerPool.js" },

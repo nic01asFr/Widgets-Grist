@@ -13,6 +13,10 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.39.1 — correctif : l'export GLB sur le site publié
+
+- **`exportScene3D` échouait en ligne** (« Failed to fetch dynamically imported module ») : l'exporteur embarqué (`vendor/three/addons/exporters/GLTFExporter.js`) importe `../utils/TextureUtils.js`, qui n'était pas vendorisé ; l'essai local passait parce que le CDN résout tout. Le fichier est embarqué (`vendor-externe.json`), et un test (`tests/vendor-imports-relatifs.test.js`) vérifie désormais que chaque import relatif d'un module three.js embarqué désigne un fichier embarqué, et que chaque fichier embarqué est déclaré. Aucun changement de contrat, ni du client d'hôte.
+
 ## 1.39.0 — contrat carte BI 0.6 : la scène 3D en un fichier GLB
 
 - **Contrat 0.6** (additif) : `exportScene3D({ bbox, ancre, couches, inclure: { objets, extrusions, bati }, hauteurParDefaut, simplification, plafondOctets })` rend UN GLB (`ArrayBuffer`) de la scène 3D, profil complet seulement (la carte nue répond `capacite_absente`). Objets du catalogue ou posés à la main avec les poses de l'écran, couches extrudées (trous percés, MultiPolygon complets), bâti du fond sur demande ; mètres, x est, y haut, z sud, sol à 0, origine à une ancre WGS84 ; licences et attributions dans les `extras` du fichier ET en liste à part ; 5 Mo par défaut (`trop_lourd` dit quoi réduire). Détail et mesures : `docs/CONTRAT-CARTE-BI.md` §6 sexies. Pour la réalité augmentée, les QR imprimés figés et tout lecteur 3D.

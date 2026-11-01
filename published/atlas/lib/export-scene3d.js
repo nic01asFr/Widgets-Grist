@@ -296,7 +296,7 @@ export function verifierPoids(octets, plafond) {
  * @returns {{ extrusions: object[], credit: object|null, avertissements: string[] }}
  */
 export async function batiDuFond(map, bbox, hauteurParDefaut) {
-  const B = await import('./bi/batiments.js?v=1.39.0');
+  const B = await import('./bi/batiments.js?v=1.39.1');
   if (!map || typeof map.getSource !== 'function' || !map.getSource('openmaptiles') || typeof map.querySourceFeatures !== 'function') return { extrusions: [], credit: null, avertissements: ["bâti : ce fond de carte n'a pas de bâti (source absente)"] };
   if (map.getZoom() < B.ZOOM_MINIMAL) return { extrusions: [], credit: null, avertissements: ["bâti : le bâti n'est lu qu'à partir du zoom " + B.ZOOM_MINIMAL + " (non exporté)"] };
   const r = B.batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox, limite: Math.min(B.LIMITE_MAX, PLAFOND_ENTITES), hauteurMin: 0 });
