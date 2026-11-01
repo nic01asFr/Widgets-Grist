@@ -59,3 +59,12 @@ test('contraste : couleurs forcées ou contraste élevé demandé par la personn
   assert.match(corps('chargerThemeDocument'), /suivrePreferenceContraste\(\);/);
   assert.match(app, /addEventListener\('change', \(\) => \{ void chargerThemeDocument\(\); \}\)/);
 });
+
+test('thème à chaud : l API de plugin n expose pas onThemeChange (mesuré en Grist réel), Atlas observe donc les attributs que Grist pose, et ne suit rien avant d avoir lu la table de thème', () => {
+  const brancher = app.slice(app.indexOf('function brancherThemeInstance()'), app.indexOf('async function appliquerThemeInstance()'));
+  assert.match(brancher, /new MutationObserver\(suivre\)\.observe\(document\.documentElement, \{ attributes: true, attributeFilter: \['data-grist-theme', 'data-grist-appearance'\] \}\)/);
+  assert.match(brancher, /typeof grist\.onThemeChange === 'function'/, 'si elle l expose un jour, elle est préférée');
+  assert.match(brancher, /_themeDocumentLu && !_themeDocumentActif/);
+  assert.doesNotMatch(app, /setAttribute\('data-grist-(theme|appearance)'/, 'Atlas ne pose jamais lui-même ces attributs (sinon, boucle)');
+  assert.match(app, /_themeDocumentLu = true;/);
+});

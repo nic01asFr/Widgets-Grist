@@ -12901,6 +12901,7 @@ async function chargerThemeDocument() {
         console.warn('[Atlas] thème du document', e && e.message);
     }
     _themeDocumentActif = documentAUnTheme;
+    _themeDocumentLu = true;   // dès lors, un changement de thème de l'instance est suivi (avant, la table de thème n'est pas encore lue)
     if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
     else void rafraichirFondTheme();
 }
@@ -12909,7 +12910,7 @@ async function chargerThemeDocument() {
  * Sans thème de document, le thème de l'INSTANCE Grist (`grist-plugin-api.js` : `onThemeChange`, et les variables `--grist-theme-*` qu'il pose sur la page) habille l'application
  * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
  */
-let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
+let _themeDocumentActif = false, _themeDocumentLu = false, _themeInstance = null, _themeInstanceBranche = false;
 /**
  * Pas de thème de document ni d'instance posé : `?theme=aucun` (le choix explicite « sans thème »), ou une préférence de contraste de la personne (couleurs forcées, contraste élevé),
  * qui passe avant tout thème (ordre des couches arbitré avec Form Builder et le kit). La page garde alors ses valeurs d'origine ; elle suit la préférence quand elle change.
@@ -12929,10 +12930,19 @@ const RAISONS_THEME_REFUSE = {
     'version-inconnue': 'sa version n’est pas reconnue',
     'invalide': 'il est illisible',
 };
+/**
+ * Suit le thème de l'instance à chaud (clair/sombre, autre thème). L'API de plugin de Grist n'expose pas `onThemeChange` (mesuré en Grist réel : `grist.onThemeChange` est `undefined`), mais elle
+ * pose elle-même, à chaque changement, les variables `--grist-theme-*` et les attributs `data-grist-theme` et `data-grist-appearance` sur la page : on observe ces attributs. S'il existait, `onThemeChange`
+ * serait préféré. Le thème de l'instance se relit alors dans les variables de la page (`appliquerThemeInstance`).
+ */
 function brancherThemeInstance() {
-    if (_themeInstanceBranche || typeof grist === 'undefined' || typeof grist.onThemeChange !== 'function') return;
+    if (_themeInstanceBranche || typeof grist === 'undefined') return;
     _themeInstanceBranche = true;
-    try { grist.onThemeChange((t) => { _themeInstance = t; if (!_themeDocumentActif) void appliquerThemeInstance(); }); } catch (e) { console.warn('[Atlas] thème de l\'instance', e && e.message); }
+    const suivre = () => { _themeInstance = null; if (_themeDocumentLu && !_themeDocumentActif) void appliquerThemeInstance(); };
+    try {
+        if (typeof grist.onThemeChange === 'function') grist.onThemeChange((t) => { _themeInstance = t; if (_themeDocumentLu && !_themeDocumentActif) void appliquerThemeInstance(); });
+        else new MutationObserver(suivre).observe(document.documentElement, { attributes: true, attributeFilter: ['data-grist-theme', 'data-grist-appearance'] });
+    } catch (e) { console.warn("[Atlas] thème de l'instance", e && e.message); }
 }
 async function appliquerThemeInstance() {
     try {
@@ -12943,7 +12953,10 @@ async function appliquerThemeInstance() {
         const theme = _themeInstance || { appearance: apparenceGrist() };
         const t = TI.themeDeLInstance(theme, lireVariable);
         const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: t.sombre ? 'sombre' : 'clair' }) : { charte: null };
-        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }
+        if (!r.charte) {
+            console.info("[Atlas] thème de l'instance non appliqué (" + (theme.appearance || 'apparence inconnue') + ') :', (t.refus || (r.refus && r.refus.code) || (t.themedef ? 'refusé par la charte' : 'aucune couleur reprenable')), (t.ecartes || []).map((e) => e.cle + ':' + e.code).join(', '));
+            poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return;
+        }
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
         // la police de l'instance : sa pile exacte (celle de Grist, ou Marianne puis les polices système chez DINUM), pas seulement la police système de ThemeDef
         if (t.pile) { variables['--sans'] = t.pile; variables['--serif'] = t.pile; }
