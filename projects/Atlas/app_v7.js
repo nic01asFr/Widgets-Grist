@@ -18544,11 +18544,32 @@ async function rendreFondAPlat(bbox, resolution) {
 
 /**
  * `exportScene3D` (contrat 0.6) : la scène 3D de l'application — objets, couches extrudées, bâti du fond sur demande — en UN GLB (lib/export-scene3d.js). Mêmes poses que l'écran :
- * `Models3D.placement` donne la matrice de chaque objet, ici ramenée à l'ancre de l'export, sol à 0 (le relief n'est pas exporté). Chargée à la demande : ni three.js d'export ni
+ * `Models3D.placement` donne la matrice de chaque objet, ici ramenée à l'ancre de l'export, sol à 0 (le relief, sur demande, est relu à part dans les tuiles d'altitude : `lib/export-relief.js`). Chargée à la demande : ni three.js d'export ni
  * l'exporteur ne sont téléchargés tant qu'un hôte n'appelle pas la commande.
  */
+/** Une tuile d'altitude (terrarium) décodée en RGBA, pour `exportScene3D` (`relief`) : lue directement, sans passer par la carte (le relief affiché peut être éteint ou d'une autre source). */
+async function lireTuileRelief(z, x, y) {
+    const R = await import('./lib/export-relief.js?v=20261102a');
+    // un appel borné par l'horloge (sur l'application, le client natif ignore `AbortController`)
+    let minuteur;
+    const horloge = new Promise((_, ko) => { minuteur = setTimeout(() => ko(new Error('tuile ' + z + '/' + x + '/' + y + ' : pas de réponse en 20 s')), 20000); });
+    let blob;
+    try {
+        const rep = await Promise.race([fetch(R.URL_TUILE_TERRARIUM.replace('{z}', z).replace('{x}', x).replace('{y}', y)), horloge]);
+        if (!rep.ok) throw new Error('tuile ' + z + '/' + x + '/' + y + ' : HTTP ' + rep.status);
+        blob = await Promise.race([rep.blob(), horloge]);
+    } finally { clearTimeout(minuteur); }
+    const adresse = URL.createObjectURL(blob);
+    const bmp = await new Promise((ok, ko) => { const im = document.createElement('img'); im.onload = () => ok(im); im.onerror = () => ko(new Error('tuile ' + z + '/' + x + '/' + y + ' : image illisible')); im.src = adresse; }).finally(() => URL.revokeObjectURL(adresse));
+    const c = document.createElement('canvas'); c.width = bmp.naturalWidth; c.height = bmp.naturalHeight;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bmp, 0, 0);
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    return { data: img.data, width: img.width, height: img.height };
+}
+
 async function exporter3dScene(entree) {
-    const E = await import('./lib/export-scene3d.js?v=20261102a');
+    const E = await import('./lib/export-scene3d.js?v=20261102b');
     const opt = E.normaliserOptions(entree);
     if (!map || !Models3D) throw new Error('exportScene3D : la carte n\'est pas prête');
     let bbox = opt.bbox;
@@ -18560,6 +18581,19 @@ async function exporter3dScene(entree) {
     const ancreLocale = versLocal(ancre.lng, ancre.lat);
     const attributions = [], avertissements = [];
     const objets = [], extrusions = [];
+    const RL = await import('./lib/export-relief.js?v=20261102a');
+    const emprise = RL.elargir(bbox, opt.sol ? opt.sol.marge : 0);   // l'emprise du sol : celle de l'export, plus la marge demandée
+    // Le relief (sur demande) : altitudes lues dans les tuiles terrarium, relatives à l'altitude de l'ancre (y = 0 à l'ancre), exagération comprise. Une source en panne laisse l'export à plat, dit.
+    let relief = null;
+    if (opt.relief) {
+        try {
+            const r = await RL.chargerRelief(emprise, lireTuileRelief);
+            const altitudeAncre = r.altitude(ancre.lng, ancre.lat), ex = opt.relief.exageration;
+            relief = { hauteur: (lng, lat) => (r.altitude(lng, lat) - altitudeAncre) * ex, altitudeAncre: Math.round(altitudeAncre * 10) / 10, exageration: ex, pas: opt.relief.pas, emprise, source: 'terrarium', zoom: r.zoom };
+            attributions.push(RL.RELIEF_ATTRIBUTION);
+            if (r.zoom < RL.RELIEF_ZOOM_MAX - 1) avertissements.push('relief : emprise vaste, altitudes lues au zoom ' + r.zoom + ' (moins fines)');
+        } catch (e) { avertissements.push('relief : altitudes indisponibles (' + ((e && e.message) || e) + ') : scène à plat'); }
+    }
 
     if (opt.inclure.objets) {
         const items = Models3D.collect({ bbox, max: E.PLAFOND_OBJETS + 1, couches: opt.couches });
@@ -18582,6 +18616,7 @@ async function exporter3dScene(entree) {
             m.elements[12] -= ancreLocale.x;   // x est ; z = -nord : l'ancre recule la scène vers l'origine
             m.elements[14] += ancreLocale.y;
             m.elements[13] -= eOff || 0;
+            if (relief) m.elements[13] += relief.hauteur(it.lng, it.lat);   // posé sur le terrain exporté
             objets.push({ id: feature.id ?? it.idx, couche: layer.id, racine, lng: it.lng, lat: it.lat, matrice: m });
             const nom = it.url.split('/').pop();
             if (!licences.has(it.url)) {
@@ -18616,7 +18651,7 @@ async function exporter3dScene(entree) {
                     const racine = await Models3D.ensureMonumentRoot(r.url);
                     if (!racine) { avertissements.push('luminaire « ' + layer.id + ' / ' + idx + ' » : modèle illisible (' + r.url.split('/').pop() + ')'); continue; }
                     const lm = Models3D.localMeters(lng, lat);
-                    const m = new THREE.Matrix4().makeTranslation(lm.x - ancreLocale.x, pose.elevation, -lm.y + ancreLocale.y).multiply(new THREE.Matrix4().makeRotationY(rot));
+                    const m = new THREE.Matrix4().makeTranslation(lm.x - ancreLocale.x, pose.elevation + (relief ? relief.hauteur(lng, lat) : 0), -lm.y + ancreLocale.y).multiply(new THREE.Matrix4().makeRotationY(rot));
                     objets.push({ id: layer.id + ':' + idx, couche: layer.id, racine, lng, lat, matrice: m });
                     if (!licences.has(r.url)) { const lic = r.asset?.licence || null; licences.set(r.url, { source: 'Catalogue d\'objets Atlas : ' + (r.type.id || r.url.split('/').pop()), licence: lic ? nomLicence(lic.spdx) : null, mention: lic?.notice || null, url: /^https?:/.test(r.url) ? r.url : new URL(r.url, location.href).href }); }
                 }
@@ -18676,7 +18711,7 @@ async function exporter3dScene(entree) {
         sol = { ...opt.sol, couleur: opt.sol.couleur || (_planTheme && _planTheme.fond) || E.SOL_COULEUR_DEFAUT };
         if (opt.sol.mode === 'carte') {
             try {
-                const fond = await rendreFondAPlat(bbox, opt.sol.resolution);
+                const fond = await rendreFondAPlat(emprise, opt.sol.resolution);   // l'emprise du sol (marge comprise) : la texture couvre exactement le plan
                 sol.texture = new THREE.CanvasTexture(fond.canvas);
                 sol.texture.colorSpace = THREE.SRGBColorSpace;
                 sol.texture.userData.mimeType = fond.photo ? 'image/jpeg' : 'image/png';
@@ -18685,7 +18720,7 @@ async function exporter3dScene(entree) {
             } catch (e) { avertissements.push('sol : le fond de carte n\'a pas pu être rendu à plat (' + ((e && e.message) || e) + ') : aplat à la place'); sol.mode = 'uni'; }
         }
     }
-    const { scene, stats, avertissements: dits } = E.construireScene(THREE, { ancre, versLocal, objets, extrusions, attributions: E.fusionnerAttributions([attributions]), simplification: opt.simplification, emprise: bbox, sol, genere: new Date().toISOString() });
+    const { scene, stats, avertissements: dits } = E.construireScene(THREE, { ancre, versLocal, objets, extrusions, attributions: E.fusionnerAttributions([attributions]), simplification: opt.simplification, emprise: bbox, sol, relief, genere: new Date().toISOString() });
     // les objets portent déjà leur matrice (position, rotation, échelle de l'écran) : `construireScene` la reprend
     let glb = await E.exporterGlb(GLTFExporter, scene);
     // une texture trop lourde pour le plafond est réduite (côté 1024, puis 512) avant de refuser
@@ -18693,7 +18728,8 @@ async function exporter3dScene(entree) {
     E.verifierPoids(glb.byteLength, opt.plafondOctets);
     return {
         glb, octets: glb.byteLength, ancre, bbox, repere: E.REPERE, format: E.FORMAT,
-        contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}) },
+        contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}), ...(stats.relief ? { relief: true } : {}) },
+        ...(relief && stats.relief ? { relief: { source: relief.source, altitudeAncre: relief.altitudeAncre, exageration: relief.exageration, denivele: [stats.relief.min, stats.relief.max], pas: stats.relief.pas, zoom: relief.zoom } } : {}),
         attributions: E.fusionnerAttributions([attributions]), avertissements: [...avertissements, ...dits],
     };
 }

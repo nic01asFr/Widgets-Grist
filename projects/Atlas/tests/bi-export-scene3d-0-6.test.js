@@ -47,7 +47,7 @@ test('carte nue : exportScene3D répond capacite_absente (la scène 3D est celle
 
 test('options : bornes, valeurs par défaut, erreurs lisibles', () => {
   const d = E.normaliserOptions();
-  assert.deepEqual(d, { bbox: null, ancre: null, inclure: { objets: true, extrusions: true, bati: false }, hauteurParDefaut: 3, plafondOctets: 5 * 1024 * 1024, couches: null, simplification: 0.1, sol: null });
+  assert.deepEqual(d, { bbox: null, ancre: null, inclure: { objets: true, extrusions: true, bati: false }, hauteurParDefaut: 3, plafondOctets: 5 * 1024 * 1024, couches: null, simplification: 0.1, sol: null, relief: null });
   const o = E.normaliserOptions({ bbox: [5.3, 43.2, 5.4, 43.3], ancre: { lng: 5.35, lat: 43.25 }, inclure: { bati: true, objets: false }, hauteurParDefaut: 6, plafondOctets: 2 * 1048576, couches: ['a', 'b'], simplification: 0 });
   assert.deepEqual(o.inclure, { objets: false, extrusions: true, bati: true }); assert.equal(o.simplification, 0); assert.deepEqual(o.couches, ['a', 'b']);
   const mauvaises = [{ bbox: [1, 2, 3] }, { bbox: [3, 2, 1, 4] }, { bbox: [0, 0, 181, 1] }, { bbox: [0, 0, 10, 10] }, { ancre: { lng: 200, lat: 0 } }, { ancre: 'x' }, { inclure: 'x' }, { inclure: { relief: true } }, { inclure: { bati: 'oui' } },

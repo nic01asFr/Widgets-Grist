@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## Prochaine — `exportScene3D` : le relief
+
+- **Option `relief`** (additive, aucun relief par défaut ; contrat 0.6 inchangé) : `true` ou `{ exageration, pas }`. Le sol devient un terrain en grille (altitudes lues à part dans les tuiles terrarium, indépendamment du relief affiché), la carte y est drapée (`sol: 'carte'`), `epaisseur` donne une tranche de maquette avec jupe. y = 0 est l'altitude de l'ancre (`relief.altitudeAncre`) ; objets et luminaires sont posés sur le terrain, bâti et couches extrudées sur le point le plus bas de leur emprise, enfoncés de 0,3 m. Hors réseau : export à plat, dit dans `avertissements`. Mesuré sur la colline de Notre-Dame de la Garde (500 m x 330 m) : 0,6 s, 358 Ko en aplat, 633 Ko avec la carte drapée et une tranche ; détail : `docs/CONTRAT-CARTE-BI.md` §6 sexies.
+- **Correction** : avec `sol: 'carte'` et une `marge`, la texture était rendue sur l'emprise sans la marge puis étirée sur le plan élargi ; elle couvre désormais exactement le plan.
+- Nouveau module `lib/export-relief.js` (lecture et interpolation des altitudes, sans réseau en propre : la lecture des tuiles est injectée), test `tests/bi-export-relief-0-6.test.js`.
+
 ## 1.40.0 — `exportScene3D` : un sol sous la 3D, les luminaires du catalogue
 
 - **Option `sol`** (additive, aucun sol par défaut ; contrat 0.6 inchangé) : `'uni'` (aplat à y = 0 sur l'emprise, couleur donnée ou fond du thème), avec `epaisseur` une dalle de maquette, `marge` pour l'élargir ; `'carte'` : le fond de carte rendu à plat en texture par une seconde carte hors écran (la vue de la personne ne bouge pas), matériau non éclairé, attribution dans les extras et la liste, résolution 256 à 4096 px réduite d'office pour tenir sous le plafond, aplat de repli dit dans les `avertissements`. Mesuré : aplat +0,9 Ko, dalle +2,4 Ko, carte de 1 536 px en 0,7 s et 363 Ko (PNG d'aplats du fond « Thème »). Détail : `docs/CONTRAT-CARTE-BI.md` §6 sexies.
