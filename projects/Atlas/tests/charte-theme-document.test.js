@@ -42,9 +42,9 @@ test('une ligne active : la charte du mode demandé, non vérifiée, avec la lig
 
 test('un contenu illisible n\'applique rien et le dit : JSON cassé, version inconnue, trop gros', () => {
   const t = themeDuDocument(colonnes([{ cle: 'a', themedef: '{pas du json', actif: true }]));
-  assert.equal(t.charte, null); assert.equal(t.ignore[0].code, 'json-illisible');
-  assert.equal(themeDuDocument(colonnes([{ cle: 'a', themedef: JSON.stringify({ version: 'themedef-9', graines: { principal: '#000000' } }), actif: true }])).ignore[0].code, 'version-inconnue');
-  assert.equal(themeDuDocument(colonnes([{ cle: 'a', themedef: 'x'.repeat(20000), actif: true }])).ignore[0].code, 'taille');
+  assert.equal(t.charte, null); assert.equal(t.ignore[0].code, 'json'); assert.equal(t.raison, 'invalide');
+  assert.equal(themeDuDocument(colonnes([{ cle: 'a', themedef: JSON.stringify({ version: 'themedef-9', graines: { principal: '#000000' } }), actif: true }])).ignore[0].code, 'version');
+  assert.equal(themeDuDocument(colonnes([{ cle: 'a', themedef: 'x'.repeat(20000), actif: true }])).ignore[0].code, 'trop-gros');
   assert.equal(themeDuDocument(colonnes([{ cle: 'A MAJ', themedef: themedef(), actif: true }])).charte, null, 'une clé de ligne hors format est écartée');
 });
 
