@@ -54,7 +54,7 @@ test('une charte à fond SOMBRE retourne l interface : fond, surfaces éclaircie
 test('fond sombre sans encre donnée : un blanc cassé, jamais l encre sombre d origine ; l accent qui ne se lit pas sur ce fond est refusé et dit', () => {
   const sombre = (principal) => variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal, fond: '#262633' } }));
   const a = sombre('#17b378');
-  assert.equal(a.variables['--ink'], '#ececf1'); assert.equal(a.variables['--accent'], '#17b378'); assert.deepEqual(a.notes, []);
+  assert.equal(a.variables['--ink'], '#ececf1'); assert.equal(a.variables['--accent'], '#23b77f', 'le vert de l accent (3,6:1 sur la surface des cartes) est éclairci jusqu à 4,5:1, sans changer de teinte'); assert.deepEqual(a.notes, ['accent-redresse']);
   const b = sombre('#2a2a3a');
   assert.ok(b.notes.includes('accent-peu-lisible-non-suivi')); assert.equal('--accent' in b.variables, false);
 });

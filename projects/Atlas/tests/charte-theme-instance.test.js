@@ -46,7 +46,7 @@ test('thème sombre : l interface est retournée (mode sombre, fond et encre du 
   assert.equal(t.sombre, true);
   assert.equal(h.variables['--mode-application'], 'sombre');
   assert.equal(h.variables['--bg'], '#262633'); assert.equal(h.variables['--ink'], '#efefef');
-  assert.equal(h.variables['--accent'], '#1da270', 'la première couleur de Grist qui tient 4,5:1 sur son fond sombre (control-primary-bg #157a54 est trop sombre, 2,8:1)');
+  assert.equal(h.variables['--accent'], '#4ab58d', 'la couleur de Grist retenue par le contrat (#1da270, 4,5:1 sur le fond) est éclaircie jusqu à tenir 4,5:1 sur la surface des cartes que l application pose');
   assert.ok(!h.notes.includes('fond-sombre-non-suivi'));
 });
 
