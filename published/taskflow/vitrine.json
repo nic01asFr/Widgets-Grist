@@ -40,6 +40,10 @@
   ],
   "journal": [
     {
+      "version": "v1.4.0",
+      "texte": "Les huit vues peuvent désormais prendre la charte de votre document (table Theme_document) ou, à défaut, celle de votre instance Grist — couleurs, mode clair/sombre et police, sans rien configurer. Un réglage « sans thème » reste disponible par widget pour qui préfère l'apparence d'origine. Lieu de réunion géolocalisé et rattachement d'objets externes sur les tâches (Kanban, Gantt, Calendrier). Correction d'un bug au Gantt sur le panneau des tâches rattachées."
+    },
+    {
       "version": "v1.3.1",
       "texte": "Hors d'un document Grist (aperçu en direct de cette page, lanceur ouvert seul), le Dashboard, le Kanban, le Gantt et le Calendrier restaient sur leur squelette : ils affichent de nouveau leurs données d'exemple, aussitôt. Dans un document Grist, rien ne change."
     },

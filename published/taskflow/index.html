@@ -6,29 +6,30 @@
 <title>TaskFlow</title>
 <style>
 :root {
-  --primary: #3e5de7;
-  --primary-dark: #2845c1;
-  --primary-light: #dce6ff;
-  --bg: #f8fafc;
-  --card-bg: #fff;
-  --text: #1e293b;
-  --text-muted: #64748b;
+  /* compatible ThemeDef (--kit-*), repli = valeur d'avant */
+  --primary: var(--kit-accent, #3e5de7);
+  --primary-dark: var(--kit-accent-survol, #2845c1);
+  --primary-light: var(--kit-accent-fond, #dce6ff);
+  --bg: var(--kit-fond, #f8fafc);
+  --card-bg: var(--kit-surface, #fff);
+  --text: var(--kit-texte, #1e293b);
+  --text-muted: var(--kit-texte-2, #64748b);
   --text-light: #94a3b8;
-  --border: #e2e8f0;
+  --border: var(--kit-bord, #e2e8f0);
   --shadow: 0 1px 3px rgba(0,0,0,.08);
 }
 /* Dark mode auto (aligné sur les widgets) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #6b7cff;
-    --primary-dark: #8b9bff;
-    --primary-light: #232f52;
-    --bg: #0f1525;
-    --card-bg: #1a2236;
-    --text: #e2e8f0;
-    --text-muted: #94a3b8;
+    --primary: var(--kit-accent, #6b7cff);
+    --primary-dark: var(--kit-accent-survol, #8b9bff);
+    --primary-light: var(--kit-accent-fond, #232f52);
+    --bg: var(--kit-fond, #0f1525);
+    --card-bg: var(--kit-surface, #1a2236);
+    --text: var(--kit-texte, #e2e8f0);
+    --text-muted: var(--kit-texte-2, #94a3b8);
     --text-light: #64748b;
-    --border: #2a3550;
+    --border: var(--kit-bord, #2a3550);
     --shadow: 0 1px 3px rgba(0,0,0,.35);
   }
 }

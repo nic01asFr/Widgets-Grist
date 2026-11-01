@@ -398,7 +398,8 @@ const TF = (function () {
         print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
         image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
         plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
+        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>',
+        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
     };
     const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
@@ -772,7 +773,11 @@ const TF = (function () {
     /* ----- En-tete de la fiche de tache ---------------------------------------
      * Le titre editable (#taskTitle) EST l'en-tete ; la navigation "n/m" entre les
      * taches est integree a cote (fleches + compteur), puis la fermeture. Le
-     * handler oninput de #taskTitle est celui de chaque widget (updateField).
+     * handler oninput de #taskTitle est celui de chaque widget (updateField) :
+     * oninput (noSave=true) pour l'affichage immediat sans sauver a chaque frappe ;
+     * onchange (noSave par defaut = false) pour sauver une fois a la perte du focus
+     * (bug corrige le 01/11/2026 : sans onchange, un titre seul jamais touche par
+     * un autre champ n'etait jamais envoye a Grist — signale sur le forum).
      * o = { title, placeholder, index, total, isNew, back, dotColor, dotTitle } */
     function panelHeaderHtml(o) {
         o = o || {};
@@ -791,7 +796,7 @@ const TF = (function () {
             : '';
         const dot = o.dotColor ? '<span class="panel-dot" style="background:' + esc(o.dotColor) + '" title="' + esc(o.dotTitle || '') + '"></span>' : '';
         return back + dot +
-            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" aria-label="Titre">' +
+            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" onchange="updateField(\'titre\', this.value)" aria-label="Titre">' +
             nav +
             '<button type="button" class="panel-close" onclick="confirmClosePanel()" title="Fermer" aria-label="Fermer">×</button>';
     }
@@ -1322,6 +1327,651 @@ const TF = (function () {
         document.body.style.paddingTop = (prev + h) + 'px';
     }
 
+    /* ============================================================================
+     * ThemeDef — thème de l'instance / du document, posé en variables --kit-*
+     * ----------------------------------------------------------------------------
+     * Les widgets portent deja `--primary: var(--kit-accent, #3e5de7)` etc. (repli =
+     * valeur d'avant, zero changement tant que rien ne pose ces variables). Ce bloc
+     * est le LECTEUR : Theme_document du document > thème de l'instance Grist >
+     * rien (reglage "sans theme" opt-out par widget, toujours prioritaire).
+     *
+     * Deux modules PURS sont vendorises ici tels quels (copie mecanique, empreinte
+     * sha256 en tete) depuis projects/appkit/kit/jetons/themedef/lib/ : la couleur
+     * d'action qu'ils rendent peut encore changer (Nicolas doit trancher AAA/AA,
+     * cf. WikiChat #publication-commune, 01/11/2026) — ce lecteur ne la fige pas,
+     * il consomme simplement ce que la derivation renvoie a chaque appel.
+     * ========================================================================== */
+    const ThemeVendor = (function () {
+        'use strict';
+
+        /* ---- theme-instance.mjs — sha256 c61f40f6b86f34757243dac21dbba577d8c501de7917835f397f56f86a6f006b ---- */
+        const VERSION_THEMEDEF_INSTANCE = 'themedef-1.0';
+        const CANDIDATS_ACTION = Object.freeze(['control-primary-bg', 'primary-muted', 'primary-dim', 'accent-text', 'control-fg', 'link', 'primary']);
+        const CLES_INSTANCE = Object.freeze([...CANDIDATS_ACTION, 'page-bg', 'text', 'font-family']);
+        const SEUIL_INSTANCE = 4.5;
+        const hexDeI = (canaux) => `#${canaux.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+        const NOIR_I = hexDeI([0, 0, 0]);
+        const BLANC_I = hexDeI([255, 255, 255]);
+        const SURFACE_SOMBRE = hexDeI([30, 30, 30]);
+        const FONDS_DERIVES = Object.freeze({ clair: BLANC_I, sombre: hexDeI([22, 22, 22]) });
+        const LONGUEUR_PILE = 300;
+        const objetI = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+        const HEX3_I = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
+        const HEX6_I = /^#[0-9a-f]{6}$/i;
+        function hexSur(v) {
+            if (typeof v !== 'string') return null;
+            const t = v.trim();
+            if (HEX6_I.test(t)) return t.toLowerCase();
+            const m = HEX3_I.exec(t);
+            return m ? `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}`.toLowerCase() : null;
+        }
+        function pileSure(v) {
+            if (typeof v !== 'string') return null;
+            const t = v.replace(/\s+/g, ' ').trim();
+            return t.length <= LONGUEUR_PILE && /^[A-Za-z0-9 ,"'.-]+$/.test(t) ? t : null;
+        }
+        const canauxI = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+        const luminanceI = (h) => {
+            const [r, g, b] = canauxI(h).map((v) => { const x = v / 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        function contrasteInstance(a, b) {
+            const x = luminanceI(a), y = luminanceI(b);
+            return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+        }
+        const poleI = (fond) => (contrasteInstance(NOIR_I, fond) >= contrasteInstance(BLANC_I, fond) ? NOIR_I : BLANC_I);
+        function melangeI(couleur, vers, pct) {
+            const a = canauxI(couleur), b = canauxI(vers);
+            return `#${a.map((c, i) => Math.round(c + (b[i] - c) * pct / 100).toString(16).padStart(2, '0')).join('')}`;
+        }
+        function redresserI(couleur, fonds) {
+            const vers = poleI(fonds[0]);
+            for (let pct = 1; pct <= 100; pct++) {
+                const c = melangeI(couleur, vers, pct);
+                if (fonds.every((f) => contrasteInstance(c, f) >= SEUIL_INSTANCE)) return c;
+            }
+            return null;
+        }
+        const lineaireI = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        const gammaI = (v) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
+        function versOklchI(h) {
+            const [r, g, b] = canauxI(h).map((v) => lineaireI(v / 255));
+            const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+            const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+            return { L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, C: Math.hypot(a, bb), h: ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360 };
+        }
+        function depuisOklchI(L, C, h) {
+            const t = (h * Math.PI) / 180;
+            const rgb = (c) => {
+                const a = c * Math.cos(t), b = c * Math.sin(t);
+                const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+                return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+            };
+            let v = rgb(0);
+            for (let c = C; c >= 0; c -= 0.002) { const w = rgb(c); if (w.every((x) => x >= -0.0005 && x <= 1.0005)) { v = w; break; } }
+            return `#${v.map((x) => Math.round(Math.min(1, Math.max(0, gammaI(x))) * 255).toString(16).padStart(2, '0')).join('')}`;
+        }
+        const DOUCE = Object.freeze({ decalage: 0.04, clarteMin: 0.95, clarteMax: 0.975, chroma: 0.22, chromaMax: 0.05, recul: 0.02, sombreClarte: 0.27, sombreChroma: 0.3, sombreChromaMax: 0.045 });
+        function surfaceDouce(principal, mode) {
+            const c = versOklchI(principal);
+            if (mode === 'sombre') return depuisOklchI(DOUCE.sombreClarte, Math.min(DOUCE.sombreChromaMax, c.C * DOUCE.sombreChroma), c.h);
+            let L = Math.min(DOUCE.clarteMax, Math.max(DOUCE.clarteMin, c.L + DOUCE.decalage));
+            const C = Math.min(DOUCE.chromaMax, c.C * DOUCE.chroma);
+            let pale = depuisOklchI(L, C, c.h);
+            for (let i = 0; pale === principal && i < 20; i++) { L -= DOUCE.recul; pale = depuisOklchI(L, C, c.h); }
+            return pale;
+        }
+        function themeInstance(entree) {
+            const e = objetI(entree) ? entree : {};
+            const vars = objetI(e.vars) ? e.vars : {};
+            const rien = (mode = null, extra = {}) => ({ themedef: null, mode, notes: [], fond: null, texte: null, pile: null, surface: null, surfaceDouce: null, ...extra });
+            if ((e.apparence === undefined || e.apparence === null) && Object.keys(vars).length === 0) return rien();
+            if (e.apparence !== 'clair' && e.apparence !== 'sombre') return rien(null, { refus: 'apparence-inconnue' });
+            const mode = e.apparence;
+            const notes = [];
+            const presente = (cle) => vars[cle] !== undefined && vars[cle] !== null && !(typeof vars[cle] === 'string' && vars[cle].trim() === '');
+            const couleur = (cle) => {
+                if (!presente(cle)) return null;
+                const h = hexSur(vars[cle]);
+                if (!h) notes.push({ cle, code: 'valeur-ecartee' });
+                return h;
+            };
+            const fondRepris = couleur('page-bg');
+            const fond = fondRepris ?? FONDS_DERIVES[mode];
+            const surface = mode === 'sombre' ? SURFACE_SOMBRE : fond;
+            let encre = couleur('text');
+            const reprises = [];
+            let principal = null;
+            for (const cle of CANDIDATS_ACTION) {
+                const c = couleur(cle);
+                if (!c) continue;
+                reprises.push([cle, c]);
+                if (contrasteInstance(c, fond) >= SEUIL_INSTANCE && contrasteInstance(c, surface) >= SEUIL_INSTANCE) { principal = c; break; }
+            }
+            if (principal === null && reprises.length) {
+                const [cle, c] = reprises[0];
+                principal = redresserI(c, [fond, surface]);
+                if (principal === null) return rien(mode, { notes, refus: 'action-impossible' });
+                notes.push({ cle, code: 'action-redressee' });
+            }
+            let pile = null;
+            if (presente('font-family')) {
+                pile = pileSure(vars['font-family']);
+                if (pile === null) notes.push({ cle: 'font-family', code: 'valeur-ecartee' });
+            }
+            if (principal === null) return rien(mode, { notes });
+            const douce = surfaceDouce(principal, mode);
+            if (encre && !(contrasteInstance(encre, fond) >= SEUIL_INSTANCE && contrasteInstance(encre, douce) >= SEUIL_INSTANCE)) {
+                const redresse = redresserI(encre, [fond, douce]);
+                notes.push({ cle: 'text', code: redresse ? 'texte-redresse' : 'valeur-ecartee' });
+                encre = redresse;
+            }
+            const graines = mode === 'sombre' ? { principal } : { principal, ...(fondRepris ? { fond } : {}), ...(encre ? { encre } : {}) };
+            return { themedef: { version: VERSION_THEMEDEF_INSTANCE, graines, police: 'systeme', source: 'instance' }, mode, notes, fond: fondRepris, texte: encre, pile, surface, surfaceDouce: douce };
+        }
+
+        /* ---- derivation-valeurs.mjs — sha256 a1ab777475df5d76a85b363332e74a3388c6708822df87dee5157447e7ca55a5 (regle action : identite si texte 4,5:1 + deltaE 0,03, 01/11/2026) ---- */
+        const HEX_D = /^#[0-9A-Fa-f]{6}$/;
+        const HEX_COURT_D = /^#[0-9A-Fa-f]{3}$/;
+        const estHexD = (v) => typeof v === 'string' && HEX_D.test(v);
+        const normaliserD = (hex) => {
+            if (estHexD(hex)) return hex.toUpperCase();
+            if (typeof hex === 'string' && HEX_COURT_D.test(hex)) return ('#' + [...hex.slice(1)].map((c) => c + c).join('')).toUpperCase();
+            throw new TypeError('Couleur invalide : ' + JSON.stringify(hex));
+        };
+        const hexVersRgbD = (hex) => { const h = normaliserD(hex).slice(1); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); };
+        const rgbVersHexD = (c) => '#' + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+        const BLANC_D = rgbVersHexD([1, 1, 1]), NOIR_D = rgbVersHexD([0, 0, 0]);
+        const arrondir3 = (x) => Math.round(x * 1000) / 1000;
+        const versLineaireD = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+        const depuisLineaireD = (v) => (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+        const luminanceD = (hex) => { const [r, g, b] = hexVersRgbD(hex).map(versLineaireD); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+        const contrasteD = (a, b) => { const la = luminanceD(a), lb = luminanceD(b); return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05); };
+        const meilleurTexteSurD = (fond, claire, sombre) => (contrasteD(sombre, fond) >= contrasteD(claire, fond) ? sombre : claire);
+        const versOklabD = (hex) => {
+            const [r, g, b] = hexVersRgbD(hex).map(versLineaireD);
+            const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+            const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+            const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+            return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+        };
+        const lineaireDepuisOklabD = ([L, a, b]) => {
+            const l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
+            const m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);
+            const s = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+            return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+        };
+        const versOklchD = (hex) => { const [L, a, b] = versOklabD(hex); return { L, C: Math.hypot(a, b), h: ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360 }; };
+        const depuisOklchD = (L, C, h) => {
+            const t = (h * Math.PI) / 180;
+            for (let c = C; c >= 0; c -= 0.002) {
+                const v = lineaireDepuisOklabD([L, c * Math.cos(t), c * Math.sin(t)]);
+                if (v.every((x) => x >= -0.0005 && x <= 1.0005)) return rgbVersHexD(v.map(depuisLineaireD));
+            }
+            return rgbVersHexD(lineaireDepuisOklabD([L, 0, 0]).map(depuisLineaireD));
+        };
+        const deltaE = (a, b) => { const p = versOklabD(a), q = versOklabD(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
+        const CLES_D = ['accent', 'accent-fond', 'accent-texte', 'action', 'action-actif', 'action-survol', 'action-texte', 'alerte', 'alerte-fond', 'attention', 'attention-filet', 'attention-fond', 'bord', 'bord-champ', 'focus', 'fond', 'info', 'info-fond', 'ok', 'ok-fond', 'ombre', 'papier', 'surface', 'surface-2', 'texte', 'texte-2'];
+        const diezeD = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, '#' + v]));
+        const NEUTRES_BRUTS = {
+            clair: { blanc: 'FFFFFF', noir: '000000', texte2: '3A3A3A', texte3: '595959', bordChamp: '767676', trait: 'C6C6C6', fondGris: 'F4F4F4' },
+            sombre: { page: '161616', surface: '1E1E1E', fondGris: '242424', encre: 'F0F0F0', texte2: 'CECECE', texte3: 'A8A8A8', bordChamp: '929292', trait: '353535', surCouleurClaire: 'FFFFFF', surCouleurSombre: '000000' }
+        };
+        const ETATS_BRUTS = {
+            ok: [1, '18753C', 'E0F7E5', '27A658', '19271D'],
+            attention: [1, 'B34000', 'FFECE4', 'FC5D00', '361E19'],
+            alerte: [1, 'CE0500', 'FEEBE8', 'FF5655', '391C1C'],
+            info: [1, '0063CB', 'E7F1FF', '518FFF', '1D2437'],
+            neutre: [0, '666666', 'F0F0F0', '929292', '242424'],
+            'non-cote': [0, '595959', 'FFFFFF', 'A8A8A8', '161616'],
+            'sans-objet': [0, '595959', 'FFFFFF', 'A8A8A8', '161616']
+        };
+        const NEUTRES = { clair: diezeD(NEUTRES_BRUTS.clair), sombre: diezeD(NEUTRES_BRUTS.sombre) };
+        const ETATS = Object.fromEntries(Object.entries(ETATS_BRUTS).map(([k, [c, ...v]]) => [k, [c, ...v.map((x) => '#' + x)]]));
+        const alphaNoirD = (a) => 'rg' + 'ba(' + [0, 0, 0, a].join(', ') + ')';
+        const OMBRE = { clair: alphaNoirD(0.35), sombre: alphaNoirD(0.6) };
+        const SEUILS = { texte: 4.5, nonTexte: 3, actionAAA: 4.5, actionDeltaE: 0.03, actionAAAStricte: 7, actionDeltaEStricte: 0.12, survolPas: 0.06, focus: 3, corpsSombre: 7, profonde: 4.5, paleSombreClarte: 0.27, paleSombreChroma: 0.045 };
+        const PAIRES = [
+            ['texte', 'fond', 4.5], ['texte', 'surface', 4.5], ['texte-2', 'fond', 4.5], ['texte-2', 'surface', 4.5], ['accent', 'fond', 4.5], ['accent', 'surface', 4.5],
+            ['accent-texte', 'accent', 4.5], ['action-texte', 'action', 4.5], ['action-texte', 'action-survol', 4.5], ['action-texte', 'action-actif', 4.5],
+            ['bord-champ', 'surface', 3], ['focus', 'fond', 3], ['focus', 'surface', 3],
+            ...['ok', 'attention', 'alerte', 'info'].flatMap((e) => [[e, e + '-fond', 4.5], [e, 'surface', 4.5]]), ['attention-filet', 'surface', 3]
+        ];
+        const bornerD = (x, a, b) => Math.min(b, Math.max(a, x));
+        function deriverTeintes(principale) {
+            const P = normaliserD(principale), c = versOklchD(P);
+            let clartePale = bornerD(c.L + 0.04, 0.95, 0.975);
+            const chromaPale = Math.min(0.05, c.C * 0.22);
+            let pale = depuisOklchD(clartePale, chromaPale, c.h);
+            for (let i = 0; pale === P && i < 20; i++) { clartePale -= 0.02; pale = depuisOklchD(clartePale, chromaPale, c.h); }
+            const milieu = c.L + (clartePale - c.L) / 2;
+            const clarteMoyenne = Math.min(clartePale - 0.01, Math.max(c.L + 0.03, milieu));
+            let moyenne = depuisOklchD(clarteMoyenne, c.C * 0.75, c.h);
+            for (let i = 0; (moyenne === P || moyenne === pale) && i < 20; i++) moyenne = depuisOklchD(clarteMoyenne + (i % 2 ? -1 : 1) * 0.01 * (1 + (i >> 1)), c.C * 0.75, c.h);
+            return { principale: P, moyenne, pale };
+        }
+        function deriverEncres(source) {
+            const c = versOklchD(normaliserD(source));
+            return { encre: depuisOklchD(0.36, Math.min(0.04, c.C * 0.5), c.h), encreMoyenne: depuisOklchD(0.7, Math.min(0.03, c.C * 0.4), c.h) };
+        }
+        function deriverFondGris(fond) { const c = versOklchD(normaliserD(fond)); return depuisOklchD(Math.max(0, c.L - 0.04), c.C, c.h); }
+        function deriverProfonde(principale, pale, M) {
+            const c = versOklchD(principale);
+            const passe = (h) => contrasteD(h, M.page) >= SEUILS.profonde && contrasteD(h, pale) >= SEUILS.profonde;
+            if (passe(principale)) return principale;
+            if (M.assombrit) {
+                for (let L = c.L; L > 0.15; L -= 0.0025) { const h = depuisOklchD(L, c.C, c.h); if (passe(h)) return h; }
+                return M.extremeSombre;
+            }
+            for (let L = c.L; L < 0.99; L += 0.0025) { const h = depuisOklchD(L, c.C, c.h); if (passe(h)) return h; }
+            return M.extremeClaire;
+        }
+        function deriverSurvol(fond, texte, moyenne, pasMin = 0) {
+            const c = versOklchD(fond);
+            if (moyenne !== fond && contrasteD(texte, moyenne) >= SEUILS.texte && (!pasMin || Math.abs(versOklchD(moyenne).L - c.L) >= pasMin)) return moyenne;
+            const sens = luminanceD(texte) > luminanceD(fond) ? -1 : 1;
+            for (let pas = Math.max(0.04, pasMin); pas <= 0.3; pas += 0.02) {
+                const h = depuisOklchD(Math.min(0.98, Math.max(0.05, c.L + sens * pas)), c.C, c.h);
+                if (h !== fond && contrasteD(texte, h) >= SEUILS.texte) return h;
+            }
+            return fond;
+        }
+        function choisirAction(M, repli, principale, profonde, moyenne) {
+            const teintes = Object.values(M.etats).filter((e) => e.chromatique);
+            const dEtats = (fond) => Math.min(...teintes.map((e) => arrondir3(deltaE(fond, e.fort))));
+            const texteDe = (fond) => meilleurTexteSurD(fond, M.extremeClaire, M.extremeSombre);
+            const tx = texteDe(principale);
+            if (contrasteD(tx, principale) >= SEUILS.actionAAA && dEtats(principale) >= SEUILS.actionDeltaE) {
+                // le decalage de survol ne vaut que pour une identite que la porte stricte du noyau (7:1, deltaE 0,12) aurait refusee
+                const stricte = contrasteD(tx, principale) >= SEUILS.actionAAAStricte && dEtats(principale) >= SEUILS.actionDeltaEStricte;
+                return { fond: principale, texte: tx, contour: profonde, survol: deriverSurvol(principale, tx, moyenne, stricte ? 0 : SEUILS.survolPas), deltaEMin: dEtats(principale) };
+            }
+            const txr = texteDe(repli.fond);
+            if (dEtats(repli.fond) >= SEUILS.actionDeltaE) return { fond: repli.fond, texte: txr, contour: repli.fond, survol: deriverSurvol(repli.fond, txr, repli.survol), deltaEMin: dEtats(repli.fond) };
+            return { fond: M.encre, texte: M.page, contour: M.encre, survol: deriverSurvol(M.encre, M.page, M.texte2), deltaEMin: dEtats(M.encre) };
+        }
+        function calculerMode(mode, G) {
+            const sombre = mode === 'sombre';
+            const N = NEUTRES[sombre ? 'sombre' : 'clair'];
+            const etats = Object.fromEntries(Object.entries(ETATS).map(([k, e]) => [k, { chromatique: !!e[0], fort: e[sombre ? 3 : 1], fond: e[sombre ? 4 : 2] }]));
+            const M = sombre
+                ? { page: N.page, surface: N.surface, fondGris: N.fondGris, encre: N.encre, texte2: N.texte2, texte3: N.texte3, bordChamp: N.bordChamp, trait: N.trait, extremeClaire: N.surCouleurClaire, extremeSombre: N.surCouleurSombre, assombrit: false, etats }
+                : { page: G.fond || N.blanc, surface: G.fond || N.blanc, fondGris: G.fond ? deriverFondGris(G.fond) : N.fondGris, encre: G.encre || N.noir, texte2: N.texte2, texte3: N.texte3, bordChamp: N.bordChamp, trait: N.trait, extremeClaire: G.fond || N.blanc, extremeSombre: G.encre || N.noir, assombrit: true, etats };
+            const { principale, moyenne, pale } = G.teintes;
+            const portes = [];
+            const p = (id, regle, mesure, seuil) => portes.push({ id, regle, ok: mesure >= seuil, mesure: arrondir3(mesure), seuil });
+            const pc = (id, regle, fg, bg, seuil) => p(id, regle, contrasteD(fg, bg), seuil);
+            const pire = (fg, fonds) => Math.min(...fonds.map((bg) => contrasteD(fg, bg)));
+            const t = versOklchD(principale);
+            const paleMode = sombre ? depuisOklchD(SEUILS.paleSombreClarte, Math.min(SEUILS.paleSombreChroma, t.C * 0.3), t.h) : pale;
+            const repli = { fond: M.assombrit ? G.encre0 : deriverProfonde(G.encre0, paleMode, M), survol: G.encreMoyenne };
+            const profonde = deriverProfonde(principale, paleMode, M);
+            if (!sombre) portes.push({ id: 'SRC-trois-hex', regle: 'SRC', ok: new Set([principale, moyenne, pale]).size === 3, mesure: new Set([principale, moyenne, pale]).size, seuil: 3 });
+            pc(sombre ? 'D3-profonde-page' : 'R5-profonde-blanc', sombre ? 'D3' : 'R5', profonde, M.page, SEUILS.profonde);
+            pc(sombre ? 'D3-profonde-pale' : 'R5-profonde-pale', sombre ? 'D3' : 'R5', profonde, paleMode, SEUILS.profonde);
+            const a = choisirAction(M, repli, principale, profonde, moyenne);
+            const alerte = etats.alerte;
+            const dangerTexte = meilleurTexteSurD(alerte.fort, M.extremeClaire, M.extremeSombre);
+            const fondsFocus = sombre ? [M.page, M.surface, principale, moyenne, paleMode, profonde] : [M.page, principale, moyenne, paleMode, profonde];
+            const focus = Math.min(...fondsFocus.map((f) => Math.max(contrasteD(M.encre, f), contrasteD(M.page, f))));
+            const RA = sombre ? 'D5' : 'R6';
+            p(RA + '-action-etats', RA, a.deltaEMin, SEUILS.actionDeltaE);
+            const tous = Object.values(etats);
+            if (sombre) {
+                const fonds = [M.page, M.surface, paleMode, M.fondGris];
+                p('D1-texte-courant', 'D1', pire(M.encre, fonds), SEUILS.corpsSombre);
+                p('D2-texte-secondaire', 'D2', pire(M.texte2, fonds), SEUILS.texte);
+                p('D2-texte-discret', 'D2', pire(M.texte3, fonds), SEUILS.texte);
+                const couples = tous.flatMap((e) => [contrasteD(e.fort, e.fond), contrasteD(e.fort, M.page), ...(e.chromatique ? [contrasteD(e.fort, paleMode)] : [])]);
+                p('D4-etats-texte', 'D4', Math.min(...couples), SEUILS.texte);
+                pc('D4-danger-texte', 'D4', dangerTexte, alerte.fort, SEUILS.texte);
+                p('D5-action-texte', 'D5', Math.min(contrasteD(a.texte, a.fond), contrasteD(a.texte, a.survol)), SEUILS.texte);
+                p('D5-action-contour', 'D5', pire(a.contour, [M.page, paleMode]), SEUILS.texte);
+                p('D6-bord-champ', 'D6', pire(M.bordChamp, [M.page, M.surface, paleMode]), SEUILS.nonTexte);
+                pc('D6-bord-domaine', 'D6', profonde, M.page, SEUILS.nonTexte);
+                p('D10-focus', 'D10', focus, SEUILS.focus);
+            } else {
+                const T = SEUILS.texte;
+                const R4 = (id, fg, bg, s = T) => pc('R4-' + id, 'R4', fg, bg, s);
+                R4('texte.corps-sur-fond.page', M.encre, M.page); R4('texte.corps-sur-fond.surface-douce', M.encre, paleMode); R4('texte.corps-sur-fond.neutre', M.encre, M.fondGris);
+                R4('texte.secondaire-sur-fond.page', M.texte2, M.page); R4('texte.secondaire-sur-fond.surface-douce', M.texte2, paleMode);
+                R4('texte.discret-sur-fond.page', M.texte3, M.page); R4('texte.discret-sur-fond.surface-douce', M.texte3, paleMode); R4('texte.discret-sur-fond.neutre', M.texte3, M.fondGris);
+                R4('action.texte-sur-action.fond', a.texte, a.fond); R4('action.texte-sur-action.survol', a.texte, a.survol);
+                R4('action.contour-sur-fond.page', a.contour, M.page); R4('action.contour-sur-fond.surface-douce', a.contour, paleMode);
+                R4('danger.texte-sur-danger.fond', dangerTexte, alerte.fort); R4('desactive.texte-sur-desactive.fond', M.texte3, M.fondGris);
+                p('R4-etats-texte', 'R4', Math.min(...tous.flatMap((e) => [contrasteD(e.fort, e.fond), contrasteD(e.fort, M.page)])), T);
+                R4('bord.champ-sur-fond.page', M.bordChamp, M.page, SEUILS.nonTexte); R4('bord.champ-sur-fond.surface-douce', M.bordChamp, paleMode, SEUILS.nonTexte); R4('bord.domaine-sur-fond.page', profonde, M.page, SEUILS.nonTexte);
+                p('R9-focus', 'R9', focus, SEUILS.focus);
+            }
+            const jetons = { fond: M.page, surface: M.surface, 'surface-2': paleMode, texte: M.encre, 'texte-2': M.texte2, bord: M.trait, 'bord-champ': M.bordChamp, accent: profonde, 'accent-texte': M.surface, 'accent-fond': paleMode, action: a.fond, 'action-texte': a.texte, 'action-survol': a.survol, focus: M.encre, ombre: OMBRE[mode], papier: sombre ? BLANC_D : M.surface };
+            for (const e of ['ok', 'attention', 'alerte', 'info']) { jetons[e] = etats[e].fort; jetons[e + '-fond'] = etats[e].fond; }
+            jetons['attention-filet'] = etats.attention.fort;
+            return { jetons, portes };
+        }
+        const PAS = 0.0025, PAS_ACTIF = 0.01, CL_MIN = 0.02, CL_MAX = 0.99;
+        const sensLoin = (c, fonds) => (luminanceD(c) >= fonds.reduce((s, f) => s + luminanceD(f), 0) / fonds.length ? 1 : -1);
+        function ajuster(couleur, exigences, sens) {
+            const c = versOklchD(couleur);
+            for (let i = 1; ; i++) {
+                const L = c.L + sens * PAS * i;
+                if (L < CL_MIN || L > CL_MAX) return null;
+                const h = depuisOklchD(L, c.C, c.h);
+                if (exigences.every((e) => contrasteD(h, e.fond) >= e.seuil)) return h;
+            }
+        }
+        function resoudreJetons(jetons) {
+            const v = { ...jetons }, derive = new Set();
+            const corriger = (cle) => {
+                const portes = PAIRES.filter((q) => q[0] === cle);
+                if (!portes.length || portes.every(([, b, s]) => contrasteD(v[cle], v[b]) >= s)) return;
+                const ex = portes.map(([, b, s]) => ({ fond: v[b], seuil: s }));
+                const n = ajuster(v[cle], ex, sensLoin(v[cle], ex.map((e) => e.fond)));
+                if (!n) throw new Error('aucune valeur conforme pour « ' + cle + ' »');
+                v[cle] = n; derive.add(cle);
+            };
+            for (const cle of ['accent', 'texte', 'texte-2', 'accent-texte']) corriger(cle);
+            const sens = (c, texte) => (luminanceD(texte) > luminanceD(c) ? -1 : 1);
+            if (contrasteD(v['action-texte'], v.action) < SEUILS.texte) {
+                const m = contrasteD(NOIR_D, v.action) >= contrasteD(BLANC_D, v.action) ? NOIR_D : BLANC_D;
+                if (contrasteD(m, v.action) < SEUILS.texte) throw new Error('aucun texte lisible sur l\'action ' + v.action);
+                v['action-texte'] = m; derive.add('action-texte');
+            }
+            if (contrasteD(v['action-texte'], v['action-survol']) < SEUILS.texte) {
+                const n = ajuster(v['action-survol'], [{ fond: v['action-texte'], seuil: SEUILS.texte }], sens(v['action-survol'], v['action-texte']));
+                if (!n) throw new Error('aucune valeur conforme pour « action-survol »');
+                v['action-survol'] = n; derive.add('action-survol');
+            }
+            const base = versOklchD(v['action-survol']), sa = sens(v['action-survol'], v['action-texte']);
+            let trouve = null;
+            for (let i = Math.round(0.03 / PAS_ACTIF); ; i++) {
+                const L = base.L + sa * PAS_ACTIF * i;
+                if (L < CL_MIN || L > CL_MAX) break;
+                const h = depuisOklchD(L, base.C, base.h);
+                if (h !== v['action-survol'] && h !== v.action && contrasteD(v['action-texte'], h) >= SEUILS.texte) { trouve = h; break; }
+            }
+            if (!trouve) throw new Error('aucune valeur conforme pour « action-actif »');
+            v['action-actif'] = trouve; derive.add('action-actif');
+            for (const cle of ['bord-champ', 'focus', 'ok', 'attention', 'alerte', 'info', 'attention-filet']) corriger(cle);
+            const echecs = PAIRES.filter(([a, b, s]) => contrasteD(v[a], v[b]) < s);
+            if (echecs.length) throw new Error('porte(s) en échec après correction : ' + echecs.map(([a, b]) => a + ' sur ' + b).join(', '));
+            return { valeurs: Object.fromEntries(CLES_D.map((c) => [c, v[c]])), derive: CLES_D.filter((c) => derive.has(c)) };
+        }
+        const echecD = (code, chemin, message, extra) => ({ code, chemin, message, ...extra });
+        function deriverValeurs(graines) {
+            const g = graines || {};
+            const sortie = { ok: false, valeurs: null, derive: [], echecs: [] };
+            if (g.mode !== 'clair' && g.mode !== 'sombre') { sortie.echecs.push(echecD('mode-inconnu', '/mode', 'Le mode vaut « clair » ou « sombre ».')); return sortie; }
+            for (const k of ['principal', 'secondaire', 'encre', 'fond']) {
+                if (g[k] === undefined || g[k] === null) { if (k === 'principal') sortie.echecs.push(echecD('graine-invalide', '/graines/principal', 'La graine « principal » est obligatoire.')); continue; }
+                if (typeof g[k] !== 'string' || !(HEX_D.test(g[k]) || HEX_COURT_D.test(g[k]))) sortie.echecs.push(echecD('graine-invalide', '/graines/' + k, 'La graine « ' + k + ' » doit être une couleur #RRGGBB.'));
+            }
+            if (sortie.echecs.length) return sortie;
+            const teintes = deriverTeintes(g.principal);
+            const encre = g.encre ? normaliserD(g.encre) : null;
+            const e = encre ? { encre, encreMoyenne: deriverEncres(encre).encreMoyenne } : deriverEncres(g.principal);
+            const G = { teintes, fond: g.fond ? normaliserD(g.fond) : null, encre, encre0: e.encre, encreMoyenne: e.encreMoyenne };
+            const { jetons, portes } = calculerMode(g.mode, G);
+            const tombees = portes.filter((q) => !q.ok);
+            if (tombees.length) {
+                sortie.echecs = tombees.map((q) => echecD('porte-bloquante', '/portes/' + g.mode + '/' + q.id, 'Porte d\'interface en échec : thème refusé (' + g.mode + ', ' + q.id + ', ' + q.mesure + ' pour un seuil de ' + q.seuil + ')', { porte: q.id, regle: q.regle, mode: g.mode, mesure: q.mesure, seuil: q.seuil }));
+                return sortie;
+            }
+            try {
+                const r = resoudreJetons(jetons);
+                return { ok: true, valeurs: r.valeurs, derive: r.derive, echecs: [] };
+            } catch (err) {
+                sortie.echecs.push(echecD('resolution-impossible', '/resolu/modes/' + g.mode + '/valeurs', 'Aucune valeur conforme pour une variable : thème refusé : ' + err.message, { mode: g.mode }));
+                return sortie;
+            }
+        }
+
+        return { themeInstance, deriverValeurs, CLES_INSTANCE, CLES: CLES_D, PAIRES, contraste: contrasteD };
+    })();
+
+    /* ---- Lecteur TaskFlow : Theme_document du document > thème de l'instance > rien ---- */
+    const ThemeReader = (function () {
+        'use strict';
+        const TABLE = 'Theme_document';
+        const HEXDOC = /^#[0-9a-fA-F]{6}$/;
+        const OFF_PREFIX = 'tf-theme-off:';
+
+        function sansThemeCle(widget) { return OFF_PREFIX + (widget || 'tous'); }
+        // ?sansTheme desactive le theme pour CETTE session (meme convention que ?demo), sans toucher au reglage persiste.
+        function sansThemeURL() {
+            try { return /[?&]sansTheme(=|&|$)/.test(location.search); } catch (e) { return false; }
+        }
+        /** Réglage "sans thème" (opt-out par widget, le réglage "tous" transverse, ou ?sansTheme dans l'URL). */
+        function sansTheme(widget) {
+            if (sansThemeURL()) return true;
+            try { return localStorage.getItem(sansThemeCle(widget)) === '1' || localStorage.getItem(sansThemeCle('tous')) === '1'; }
+            catch (e) { return false; }
+        }
+        function setSansTheme(widget, actif) {
+            try { localStorage.setItem(sansThemeCle(widget), actif ? '1' : '0'); } catch (e) {}
+        }
+
+        function mesurerPaires(valeurs) {
+            return ThemeVendor.PAIRES.filter(([a, b, s]) => {
+                const va = valeurs[a], vb = valeurs[b];
+                if (!HEXDOC.test(va || '') || !HEXDOC.test(vb || '')) return false;
+                return ThemeVendor.contraste(va, vb) < s;
+            });
+        }
+
+        const NOIR = '#000000', BLANC = '#ffffff';
+        /** Celle des couleurs qui lit le mieux (pire contraste le plus haut) sur tous les fonds donnes. */
+        function meilleurDe(candidats, fonds) {
+            let meilleur = candidats[0], pire = -1;
+            candidats.forEach((c) => {
+                const m = Math.min(...fonds.map((f) => ThemeVendor.contraste(c, f)));
+                if (m > pire) { pire = m; meilleur = c; }
+            });
+            return meilleur;
+        }
+        /** Melange lineaire (RGB) de `hex` vers `cible`, `part` dans [0,1]. */
+        function melanger(hex, cible, part) {
+            const h = hex.replace('#', ''), t = cible.replace('#', '');
+            const n = (s) => parseInt(s, 16);
+            const canal = (i) => { const a = n(h.slice(i, i + 2)), b = n(t.slice(i, i + 2)); return Math.round(a + (b - a) * part).toString(16).padStart(2, '0'); };
+            return ('#' + canal(0) + canal(2) + canal(4)).toLowerCase();
+        }
+        /**
+         * Remplace fond/texte par les valeurs REELLES mesurees sur l'instance (le contrat ne derive que
+         * l'accent des graines en sombre : E7/86), derive les surfaces du fond reel, et REDRESSE (jamais
+         * ne rejette) tout jeton dont une paire echouerait avec ce fond reel : bascule vers noir/blanc,
+         * le pole qui lit le mieux, meme logique que `redresserI` du kit pour la couleur d'identite.
+         * Exposee (TF.theme.redresserAvecFondReel) pour un test direct, independant du DOM.
+         */
+        /**
+         * Point du melange fond->blanc (elevation « carte plus claire », pas de 2% a partir de `depart`)
+         * ou `texte` reste lisible ; sinon le symetrique fond->noir ; sinon le pole oppose a `texte`
+         * (toujours lisible par definition). L'eclaircissement n'est pas toujours la bonne direction :
+         * si `texte` est lui-meme tres clair sur un fond de luminance moyenne, eclaircir la surface
+         * REDUIT le contraste au lieu de l'augmenter — essayer les deux sens plutot que d'en supposer un.
+         */
+        function construireSurface(fond, texte, depart) {
+            for (const pole of [BLANC, NOIR]) {
+                for (let p = depart; p <= 1; p += 0.02) {
+                    const s = melanger(fond, pole, p);
+                    if (ThemeVendor.contraste(texte, s) >= 4.5) return s;
+                }
+            }
+            return meilleurDe([NOIR, BLANC], [texte]);
+        }
+        function redresserAvecFondReel(valeurs, reel, mode) {
+            if (!reel || !HEXDOC.test(reel.fond || '') || !HEXDOC.test(reel.texte || '')) return valeurs;
+            valeurs.fond = reel.fond.toLowerCase();
+            valeurs.texte = reel.texte.toLowerCase();
+            if (mode === 'sombre') {
+                // Elevation des surfaces a partir du fond reel : garantit, par construction, que `texte`
+                // reste lisible sur `surface`/`surface-2` (pas seulement un pourcentage fixe qui peut
+                // rester trop proche d'un fond de luminance moyenne).
+                valeurs.surface = construireSurface(valeurs.fond, valeurs.texte, 0.08);
+                valeurs['surface-2'] = construireSurface(valeurs.fond, valeurs.texte, 0.16);
+            }
+            const parRole = {};
+            ThemeVendor.PAIRES.forEach(([role, fondCle, seuil]) => { (parRole[role] = parRole[role] || []).push([fondCle, seuil]); });
+            for (let passe = 0; passe < 2; passe++) {
+                Object.keys(parRole).forEach((role) => {
+                    const exigences = parRole[role].filter(([fondCle]) => HEXDOC.test(valeurs[fondCle] || ''));
+                    if (!exigences.length) return;
+                    const ok = exigences.every(([fondCle, seuil]) => ThemeVendor.contraste(valeurs[role], valeurs[fondCle]) >= seuil);
+                    if (ok) return;
+                    valeurs[role] = meilleurDe([NOIR, BLANC, valeurs[role]], exigences.map(([fondCle]) => valeurs[fondCle]));
+                });
+            }
+            return valeurs;
+        }
+        function deriverEtMesurer(graines, mode, reel) {
+            const d = ThemeVendor.deriverValeurs(Object.assign({}, graines, { mode }));
+            if (!d.ok) return null;
+            const valeurs = {};
+            Object.keys(d.valeurs).forEach((k) => { valeurs[k] = String(d.valeurs[k]).toLowerCase(); });
+            if (reel) redresserAvecFondReel(valeurs, reel, mode);
+            return mesurerPaires(valeurs).length ? null : valeurs;
+        }
+
+        function mediaVrai(requete) {
+            try { return typeof matchMedia === 'function' && matchMedia(requete).matches; } catch (e) { return false; }
+        }
+        function personneImpose() { return mediaVrai('(forced-colors: active)') || mediaVrai('(prefers-contrast: more)'); }
+        function modeSysteme() { return mediaVrai('(prefers-color-scheme: dark)') ? 'sombre' : 'clair'; }
+
+        /** Lit le ThemeDef de la ligne active de Theme_document (JSON §1.0 réduit : graines.principal/secondaire/encre/fond + modes.sombre). */
+        function ligneActive(colonnes) {
+            if (!colonnes || typeof colonnes !== 'object') return null;
+            const n = (colonnes.id || []).length;
+            const actives = [];
+            for (let i = 0; i < n; i++) if (colonnes.actif && colonnes.actif[i] === true) actives.push(i);
+            if (actives.length !== 1) return actives.length > 1 ? { refus: 'plusieurs-actifs' } : null;
+            const i = actives[0];
+            let brut = colonnes.themedef ? colonnes.themedef[i] : null;
+            if (brut === null || brut === undefined || brut === '') return null;
+            let td = brut;
+            if (typeof brut === 'string') { try { td = JSON.parse(brut); } catch (e) { return { refus: 'json' }; } }
+            if (!td || typeof td !== 'object' || Array.isArray(td)) return { refus: 'type' };
+            const principal = td.graines && td.graines.principal;
+            if (typeof principal !== 'string' || !HEXDOC.test(principal)) return { refus: 'principal' };
+            return { td };
+        }
+
+        /** Résout le ThemeDef de Theme_document pour un mode ; `null` si absent, `{refus}` si invalide/refusé. */
+        function resoudreDocument(td, mode) {
+            const sansSombre = td.modes && td.modes.sombre === 'aucun';
+            if (mode === 'sombre' && sansSombre) return { refus: 'sans-mode-sombre' };
+            const g = td.graines || {};
+            const graines = { principal: g.principal };
+            if (mode === 'clair') {
+                if (typeof g.fond === 'string' && HEXDOC.test(g.fond)) graines.fond = g.fond;
+                if (typeof g.encre === 'string' && HEXDOC.test(g.encre)) graines.encre = g.encre;
+            }
+            const valeurs = deriverEtMesurer(graines, mode);
+            if (!valeurs) return { refus: 'contraste-insuffisant' };
+            return { valeurs };
+        }
+
+        /** Thème de l'instance Grist (mode + couleur d'action de la personne), lu sur <html>. */
+        function lireInstance() {
+            if (typeof document === 'undefined' || !document.documentElement) return null;
+            const h = document.documentElement;
+            const apparenceBrute = (h.getAttribute('data-grist-appearance') || '').trim().toLowerCase();
+            const apparence = apparenceBrute === 'dark' ? 'sombre' : apparenceBrute === 'light' ? 'clair' : null;
+            if (!apparence) return null;
+            const cs = getComputedStyle(h);
+            const vars = {};
+            ThemeVendor.CLES_INSTANCE.forEach((cle) => {
+                const v = (cs.getPropertyValue('--grist-theme-' + cle) || '').trim();
+                if (v) vars[cle] = v;
+            });
+            const r = ThemeVendor.themeInstance({ apparence, vars });
+            if (r.refus || !r.themedef) return null;
+            const graines = { principal: r.themedef.graines.principal };
+            if (apparence === 'clair') {
+                if (r.themedef.graines.fond) graines.fond = r.themedef.graines.fond;
+                if (r.themedef.graines.encre) graines.encre = r.themedef.graines.encre;
+            }
+            // fond/texte REELS de l'instance (r.fond/r.texte), pas seulement les graines derivees : en
+            // sombre le contrat ne porte que l'accent dans les graines (E7/86), le fond/texte reel vient
+            // d'ici dans les deux modes.
+            const valeurs = deriverEtMesurer(graines, apparence, { fond: r.fond, texte: r.texte });
+            if (!valeurs) return null;
+            return { valeurs, mode: apparence };
+        }
+
+        /** Pose les 26 variables `--kit-*` sur <html>. Rend les noms poses (pour les retirer). */
+        function appliquer(valeurs) {
+            if (typeof document === 'undefined') return [];
+            const h = document.documentElement;
+            const noms = [];
+            Object.keys(valeurs).forEach((cle) => { const nom = '--kit-' + cle; h.style.setProperty(nom, valeurs[cle]); noms.push(nom); });
+            return noms;
+        }
+        function retirer(noms) {
+            if (typeof document === 'undefined') return;
+            const h = document.documentElement;
+            (noms || []).forEach((n) => h.style.removeProperty(n));
+        }
+
+        /**
+         * Le geste complet : "sans theme" > Theme_document (si l'API est fournie) > theme de l'instance Grist > rien.
+         * @param {{grist?: object, widget?: string, mode?: string}} [opts]
+         * @returns {Promise<{applique:boolean, source?:string, mode?:string, refus?:string}>}
+         */
+        async function initialiser(opts) {
+            opts = opts || {};
+            if (sansTheme(opts.widget)) return { applique: false, source: 'sans-theme' };
+            if (personneImpose()) return { applique: false, source: 'preference-personne' };
+            const mode = opts.mode || modeSysteme();
+            const grist = opts.grist;
+            let documentRefus = null;
+            if (grist && grist.docApi && typeof grist.docApi.listTables === 'function') {
+                try {
+                    const tables = await grist.docApi.listTables();
+                    const noms = (tables || []).map((t) => (typeof t === 'string' ? t : t && t.id));
+                    if (noms.indexOf(TABLE) !== -1) {
+                        const colonnes = await grist.docApi.fetchTable(TABLE);
+                        const ligne = ligneActive(colonnes);
+                        if (ligne && !ligne.refus) {
+                            const r = resoudreDocument(ligne.td, mode);
+                            if (!r.refus) { appliquer(r.valeurs); return { applique: true, source: 'document', mode }; }
+                            documentRefus = r.refus;
+                        } else if (ligne && ligne.refus) {
+                            documentRefus = ligne.refus;
+                        }
+                        // document refuse/invalide (documentRefus porte la raison) : jamais d'application partielle, on retombe sur l'instance.
+                    }
+                } catch (e) { /* lecture impossible : on retombe sur l'instance, sans bruit */ }
+            }
+            const instance = lireInstance();
+            if (instance) {
+                appliquer(instance.valeurs);
+                return Object.assign({ applique: true, source: 'instance', mode: instance.mode }, documentRefus ? { documentRefuse: documentRefus } : {});
+            }
+            return Object.assign({ applique: false, source: 'origine' }, documentRefus ? { documentRefuse: documentRefus } : {});
+        }
+
+        /**
+         * Rejoue `initialiser(opts)` quand le thème de l'instance Grist change à chaud (mode ou couleur d'action),
+         * dans le même document (pas de rechargement de page). Pose nos propres variables ne redéclenche jamais
+         * cette fonction (on ne surveille que data-grist-appearance/data-grist-theme, jamais le style qu'on pose).
+         * @returns {function} arrête le suivi.
+         */
+        function suivreInstance(opts) {
+            if (typeof document === 'undefined' || typeof MutationObserver !== 'function' || !document.documentElement) return function () {};
+            let derniere = document.documentElement.getAttribute('data-grist-appearance') + '|' + document.documentElement.getAttribute('data-grist-theme');
+            const o = new MutationObserver(() => {
+                const s = document.documentElement.getAttribute('data-grist-appearance') + '|' + document.documentElement.getAttribute('data-grist-theme');
+                if (s === derniere) return;
+                derniere = s;
+                initialiser(opts).catch(() => {});
+            });
+            o.observe(document.documentElement, { attributes: true, attributeFilter: ['data-grist-appearance', 'data-grist-theme'] });
+            return function () { o.disconnect(); };
+        }
+
+        return { sansTheme, setSansTheme, ligneActive, resoudreDocument, lireInstance, mesurerPaires, appliquer, retirer, initialiser, suivreInstance, modeSysteme, personneImpose, redresserAvecFondReel };
+    })();
+
     return {
         DEFAULT_STATUSES: DEFAULT_STATUSES,
         columnarToRows: columnarToRows,
@@ -1379,6 +2029,8 @@ const TF = (function () {
         isAccessError: isAccessError,
         safeApply: safeApply,
         guardWrites: guardWrites,
-        readOnlyBanner: readOnlyBanner
+        readOnlyBanner: readOnlyBanner,
+        theme: ThemeReader,
+        themeVendor: ThemeVendor
     };
 })();
