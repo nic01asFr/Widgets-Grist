@@ -13,6 +13,16 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.37.0 — Atlas aux couleurs de son hôte : thème du document ou de l'instance Grist, thème sombre, fond Thème, marque neutre
+
+- **Thème de l'instance Grist** : sans `Theme_document`, l'application reprend le thème de l'instance où elle s'ouvre (`grist.onThemeChange` ou variables `--grist-theme-*`, mesurées sur docs.getgrist.com et grist.numerique.gouv.fr) : accent (la première couleur de Grist qui se lit sur le fond), fond de page, texte, et la pile de polices exacte de l'instance. Un thème de document passe toujours avant. Module `lib/charte/theme-instance.js`.
+- **Thème sombre** : une charte à fond sombre retourne l'interface (fond, surfaces, encre, filets, couleur secondaire lisible, crédits de la carte, `color-scheme: dark`). Avant, un thème sombre était écarté et dit.
+- **Fond « Thème »** : le fond de carte est repeint en aplats avec la charte courante (document, instance, sinon celle d'Atlas), bâti en volume gardé ; nouveau choix en tête du panneau « Fond de carte », défaut des nouvelles scènes (une scène qui a enregistré un autre fond le garde). Module `lib/fond-theme.js`.
+- **Marque neutre** : le glyphe seul (sans le mot « Atlas ») aux couleurs de la charte, titres d'onglet « Atlas » et « Atlas — carte » ; en widget Grist, pas de logo par défaut. `?marque=atlas` rend le nom, `?marque=aucune` retire le glyphe.
+- **Collage au thème** : la couleur d'accent de la carte (trajet, halo de sélection, tracé de saisie, pastille d'étape) et les teintes du CSS suivent `--accent` ; la police de la légende suit `--sans`. Le rouge d'origine n'est plus qu'un repli.
+- **Plus d'italique** dans l'interface.
+- **Composant carte BI inchangé** : une page qui embarque Atlas garde le fond Liberty d'origine et le contrat 0.5 (client `lib/bi/client-hote.js` inchangé, 15 745 octets).
+
 ## 1.36.0 — contrat carte BI 0.5, lecture des géométries d'une couche
 
 - **Contrat 0.5** (additif) : `getFeatures(couche, { bbox, limite })` rend les géométries d'une couche en GeoJSON, avec propriétés, `visuel`, `style`, `légende` et `visible`, pour une page qui les redessine ou les extrude (vue éclatée, aperçu en réalité augmentée). Plafonds comme `getBuildings` : 5000 entités, 20 000 sommets par entité, 200 000 sommets et 2 Mo au total, 5 appels par seconde ; une table (sans géométrie) et une couche administrative sont refusées. Détail : `docs/CONTRAT-CARTE-BI.md` §6 quinquies. Vérifié en navigateur sur trois couches (surface, ligne, points).

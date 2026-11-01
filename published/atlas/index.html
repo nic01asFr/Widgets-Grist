@@ -10,9 +10,9 @@
          vers l'exterieur (tests/csp-meta.test.js le verifie). -->
     <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
     <link rel="icon" href="data:," />
-    <title>Atlas — Maquette 3D Territoriale</title>
+    <title>Atlas</title>
 
-    <script>try { var mq = new URLSearchParams(location.search).get('marque'); if (mq === 'icone' || mq === 'aucune') document.documentElement.setAttribute('data-marque', mq); } catch (e) { /* adresse illisible : la marque d'origine */ }</script>
+    <script>try { var mq = new URLSearchParams(location.search).get('marque'); document.documentElement.setAttribute('data-marque', mq === 'atlas' || mq === 'aucune' ? mq : 'icone'); } catch (e) { document.documentElement.setAttribute('data-marque', 'icone'); /* adresse illisible : le glyphe seul */ }</script>
 
     <!-- Le composant carte BI (paramètre bi=1) n'a pas besoin de l'application : ce script, le PREMIER de la page, mène à la page maigre (index_bi.html, publiée sous
          le nom bi.html) avec les mêmes paramètres, et la page de l'application s'arrête là. Aucun hôte ne change d'adresse. Une scène externe
@@ -241,9 +241,12 @@
         .commande-hote:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .commande-hote[hidden] { display: none; }
         .brand { display: flex; align-items: center; gap: 10px; }
+        /* Le glyphe est generique et prend les couleurs de la charte (jeton --accent, que le thème du document ou de l'hôte redéfinit) ; un autre logo viendra du thème, pas d'ici. */
+        .brand-logo-corps { fill: var(--accent); }
+        .brand-logo-trait { stroke: var(--surface); }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
-        /* La marque de l'en-tête, réglée par `?marque=` : « atlas » (défaut), « icone » (le logo seul), « aucune » (ni logo ni nom : le nom du projet seul). */
+        /* La marque de l'en-tête, réglée par `?marque=` : « icone » (défaut : le glyphe seul), « atlas » (le glyphe et le nom), « aucune » (ni glyphe ni nom : le nom du projet seul ; c'est le défaut en widget Grist). */
         html[data-marque="icone"] .brand-name, html[data-marque="icone"] .brand-chevron { display: none !important; }
         html[data-marque="aucune"] .brand > svg, html[data-marque="aucune"] .brand-name, html[data-marque="aucune"] .brand-chevron, html[data-marque="aucune"] .brand-sep { display: none !important; }
         .brand-project { font-size: 13px; color: var(--text); font-weight: 500; }
@@ -306,7 +309,7 @@
         /* Une pastille a cote du nom du projet : calme (rouge doux) hors reseau ou en attente, pleine quand il faut verifier. */
         .synchro-pastille {
             display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; margin-left: 4px;
-            border-radius: 13px; border: 1px solid rgba(196, 69, 54, 0.28); background: var(--accent-soft); color: var(--accent);
+            border-radius: 13px; border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); background: var(--accent-soft); color: var(--accent);
             font: 600 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto;
         }
         .synchro-pastille[hidden], #hote-synchro[hidden] { display: none; }
@@ -314,7 +317,7 @@
         .synchro-pastille:focus-visible, #hote-synchro:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .synchro-pastille.etat-alerte { background: var(--accent); border-color: var(--accent); color: #fff; }
         /* Sur la carte (barre retiree) : meme signal, en rond. */
-        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: rgba(196, 69, 54, 0.35); }
+        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
         #hote-synchro.etat-alerte { background: var(--accent); color: #fff; border-color: var(--accent); }
         .panneau-synchro { width: min(360px, calc(100vw - 24px)); padding: 10px 12px; }
         .panneau-synchro .dock-slot-data { padding: 0; }
@@ -388,7 +391,7 @@
             padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between;
             flex-shrink: 0;
         }
-        .panel-head h2 { font-family: var(--serif); font-style: italic; font-size: 16px; font-weight: 500; color: var(--ink); }
+        .panel-head h2 { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--ink); }
         .panel-body { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
         .panel-foot { flex-shrink: 0; border-top: 1px solid var(--hairline); padding: 12px 16px; }
 
@@ -396,6 +399,8 @@
         .map-frame { flex: 1; position: relative; background: var(--bg); overflow: hidden; min-width: 0; }
         #map { position: absolute; inset: 0; }
         #map .maplibregl-ctrl-attrib { background: rgba(255,255,255,0.7); font-size: 10px; }
+        html[data-mode="sombre"] #map .maplibregl-ctrl-attrib { background: color-mix(in srgb, var(--surface) 78%, transparent); }
+        html[data-mode="sombre"] #map .maplibregl-ctrl-attrib, html[data-mode="sombre"] #map .maplibregl-ctrl-attrib a { color: var(--text); }
 
         /* Inspector (right) — ouvert / fermé (pas de pastille carte) */
         .inspector {
@@ -569,19 +574,19 @@
         .dock-epingle .dock-fab:hover { border-color: var(--hairline-strong); }
         .map-controls-dock .dock-fab.active,
         .dock-epingle .dock-fab.active {
-            border-color: rgba(196,69,54,0.4);
-            box-shadow: 0 3px 10px rgba(196,69,54,0.16);
+            border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+            box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 16%, transparent);
             transform: translateY(-1px);
         }
         .map-controls-dock .dock-fab.alerte,
         .dock-epingle .dock-fab.alerte {
-            border-color: rgba(196,69,54,0.85);
-            box-shadow: 0 0 0 3px rgba(196,69,54,0.28);
+            border-color: color-mix(in srgb, var(--accent) 85%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
         }
         .trajet-poignee {
             min-width: 22px; height: 22px; padding: 0 5px;
             border-radius: 11px;
-            background: #C44536; border: 2px solid #fff;
+            background: var(--accent); border: 2px solid var(--surface);
             box-shadow: 0 1px 4px rgba(0,0,0,.35);
             cursor: grab; box-sizing: border-box;
             color: #fff; font: 700 11px/18px system-ui, sans-serif;
@@ -591,7 +596,7 @@
         .trajet-poignee:active { cursor: grabbing; }
         .trajet-sens {
             width: 0; height: 0;
-            border-left: 7px solid #C44536;
+            border-left: 7px solid var(--accent);
             border-top: 5px solid transparent;
             border-bottom: 5px solid transparent;
             filter: drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.35));
@@ -661,12 +666,12 @@
         }
         .dock-slot-tag {
             font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase;
-            color: var(--accent); background: rgba(196,69,54,0.08);
-            border: 1px solid rgba(196,69,54,0.2);
+            color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent);
+            border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
             border-radius: 999px; padding: 2px 7px; flex-shrink: 0;
         }
         .dock-slot-body {
-            background: rgba(244,239,227,0.52);
+            background: color-mix(in srgb, var(--bg) 52%, transparent);
             border: 1px solid var(--hairline);
             border-radius: 10px;
             padding: 8px 10px;
@@ -688,7 +693,7 @@
         .dock-slot-synchro .synchro-ligne { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12px; line-height: 1.4; }
         .dock-slot-synchro .synchro-ligne:first-of-type { border-top: none; }
         .dock-slot-synchro .synchro-etat { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.06); margin-right: 4px; }
-        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: rgba(196,69,54,.12); color: var(--accent); }
+        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
         .dock-slot-synchro .synchro-raison { font-size: 11px; color: var(--muted); margin-top: 3px; }
         .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
         .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
@@ -710,7 +715,7 @@
             border: 1px solid var(--hairline); background: transparent; color: var(--muted);
             font: inherit; font-size: 12px; cursor: pointer;
         }
-        #insp-body .liste-tri button.on { color: var(--ink); border-color: var(--accent); background: rgba(196,69,54,0.08); }
+        #insp-body .liste-tri button.on { color: var(--ink); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
         #insp-body .liste-lignes { display: flex; flex-direction: column; }
         #insp-body .liste-ligne {
             display: flex; align-items: center; gap: 10px; min-height: 52px;
@@ -768,7 +773,7 @@
         .dock-chip:hover { border-color: var(--hairline-strong); }
         .dock-chip.active {
             border-color: var(--accent);
-            background: rgba(196, 69, 54, 0.08); color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--accent);
         }
         .dock-collapse {
             flex-shrink: 0;
@@ -867,7 +872,7 @@
         .dock-ligne-outils { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 11px; color: var(--muted); }
         .dock-outils { display: flex; gap: 2px; }
         .dock-outils .ctl-mini { border: none; background: none; padding: 3px 7px; border-radius: 6px; color: var(--accent); font: 600 11.5px/1 var(--sans); cursor: pointer; }
-        .dock-outils .ctl-mini:hover { background: rgba(196,69,54,0.08); }
+        .dock-outils .ctl-mini:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
         .dock-slot-title .info-i { margin-left: 6px; }
         /* Téléphone : les fonds se reconnaissent à leur pastille ; seul le fond choisi garde son nom. */
         @media (max-width: 480px) {
@@ -901,7 +906,7 @@
             padding: 10px 14px; border-bottom: 1px solid var(--hairline);
             display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
-        .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); font-style: italic; }
+        .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); }
         .legend-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
         /* Barre de défilement fine standard dans les cadres arrondis qui rognent (légende, bulle d'objet) : la barre native y laissait sa piste se dessiner
            hors du cadre — bande beige au-dessus de la légende. */
@@ -953,8 +958,8 @@
         }
         .sel-btn:hover { background: var(--hairline); }
         .sel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-        .sel-btn.danger { background: rgba(196,69,54,0.12); border-color: rgba(196,69,54,0.35); color: var(--accent); }
-        .sel-btn.danger:hover { background: rgba(196,69,54,0.22); }
+        .sel-btn.danger { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent); }
+        .sel-btn.danger:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
         .sel-count { font-family: var(--mono); font-size: 11px; opacity: 0.85; }
         /* La barre de sélection se compacte selon la largeur de la CARTE, pas de la fenêtre : rail, module et fiche la rétrécissent, et la barre
            (chaque libellé sur une ligne) débordait de sa capsule. Du moins utile au plus utile : « Désélectionner », puis « Tout », puis le
@@ -970,7 +975,7 @@
         /* Selection box (shift-drag) */
         .selection-box {
             position: absolute; border: 2px dashed var(--accent);
-            background: rgba(196,69,54,0.12); pointer-events: none; z-index: 9;
+            background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; z-index: 9;
         }
         .map-frame.select-mode #map canvas { cursor: crosshair; }
 
@@ -988,7 +993,7 @@
             display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
             width: 15px; height: 15px; margin-left: 6px; border-radius: 50%;
             border: 1px solid var(--muted); color: var(--muted);
-            font: italic 600 10px/1 var(--serif, Georgia, serif); text-transform: none; letter-spacing: 0;
+            font: 600 10px/1 var(--serif, Georgia, serif); text-transform: none; letter-spacing: 0;
             cursor: help; user-select: none; flex: 0 0 auto;
         }
         .info-i:hover, .info-i:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
@@ -1047,7 +1052,7 @@
             border: 1px solid var(--hairline-strong); border-radius: 8px;
             color: var(--ink); font-size: 13px; font-family: inherit; transition: var(--t-fast);
         }
-        .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196,69,54,0.12); }
+        .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
         select.input { cursor: pointer; }
 
         .btn {
@@ -1056,6 +1061,11 @@
             justify-content: center; gap: 6px; transition: var(--t-fast);
         }
         .btn-primary { background: var(--accent); color: white; }
+        /* Thème sombre : l'accent est une couleur CLAIRE (celle qui se lit sur le fond sombre) ; le texte posé dessus prend donc la couleur du fond, pas du blanc. */
+        html[data-mode="sombre"] .btn-primary,
+        html[data-mode="sombre"] .synchro-pastille.etat-alerte, html[data-mode="sombre"] #hote-synchro.etat-alerte,
+        html[data-mode="sombre"] .atlas-bulle .bulle-actions button[data-action="visite"],
+        html[data-mode="sombre"] #insp-body .liste-visite, html[data-mode="sombre"] .rail-badge { color: var(--bg); }
         .btn-primary:hover { background: #AE3A2C; }
         .btn-dark { background: var(--ink); color: var(--bg); }
         .btn-dark:hover { background: #34302A; }
@@ -1109,7 +1119,7 @@
         .slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
         .slider-head .lbl { font-size: 12.5px; color: var(--text); font-weight: 500; }
         .slider-head .val { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
-        .slider-head .val.mixed { color: var(--muted-light); font-style: italic; }
+        .slider-head .val.mixed { color: var(--muted-light); }
         input[type=range].rng { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--hairline); border-radius: 2px; cursor: pointer; }
         input[type=range].rng::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 7px; background: white; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.15); cursor: pointer; }
         input[type=range].rng.acc::-webkit-slider-thumb { border-color: var(--accent); }
@@ -1118,7 +1128,7 @@
         /* Palette */
         .palette-list { display: flex; flex-direction: column; gap: 6px; }
         .palette-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 7px; background: transparent; border: 1px solid transparent; cursor: pointer; }
-        .palette-item.active { background: var(--accent-soft); border-color: rgba(196,69,54,0.2); }
+        .palette-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
         .palette-strip { display: flex; height: 16px; border-radius: 3px; overflow: hidden; width: 100px; flex-shrink: 0; }
         .palette-strip > span { flex: 1; }
         .palette-item .pname { font-size: 12px; color: var(--text); }
@@ -1134,7 +1144,7 @@
         }
         .ctl-mini:hover { border-color: var(--hairline-strong); }
         .ctl-mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-        .cat-row-vide .cat-value { font-style: italic; color: var(--muted); }
+        .cat-row-vide .cat-value { color: var(--muted); }
         .cat-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--hairline); font-size: 11.5px; }
         .cat-row:last-child { border-bottom: none; }
         .cat-swatch { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; cursor: pointer; }
@@ -1210,7 +1220,7 @@
             cursor: pointer; border: 1px solid transparent; transition: var(--t-fast);
         }
         .layer-item:hover { background: var(--surface-muted); }
-        .layer-item.active { background: var(--accent-soft); border-color: rgba(196,69,54,0.2); }
+        .layer-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
         .layer-vis { font-size: 14px; cursor: pointer; color: var(--muted); flex-shrink: 0; line-height: 1; }
         .layer-vis.on { color: var(--text); }
         .layer-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
@@ -1225,7 +1235,7 @@
         .badge-copie { background: var(--muted); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .layer-del { background: transparent; border: none; cursor: pointer; opacity: 0.3; font-size: 13px; padding: 2px; border-radius: 4px; }
         .layer-item:hover .layer-del { opacity: 0.7; }
-        .layer-del:hover { opacity: 1; background: rgba(196,69,54,0.15); }
+        .layer-del:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 15%, transparent); }
         .layer-act { background: transparent; border: none; cursor: pointer; opacity: 0.4; font-size: 13px; padding: 2px; border-radius: 4px; transition: var(--t-fast); flex-shrink: 0; }
         .layer-item:hover .layer-act { opacity: 0.85; }
         .layer-act:hover { opacity: 1; background: var(--surface-muted); }
@@ -1303,7 +1313,7 @@
         .rot-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 3px; background: var(--ink); }
 
         /* Loading */
-        .loading { position: absolute; inset: 0; background: rgba(244,239,227,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; }
+        .loading { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; }
         .loading.show { display: flex; }
         .spinner { width: 38px; height: 38px; border: 3px solid var(--hairline); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -1348,7 +1358,7 @@
             display: inline-flex; align-items: center;
             font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
             text-transform: uppercase; padding: 3px 8px; border-radius: 6px;
-            background: rgba(196, 69, 54, 0.12); color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent);
             margin-left: 8px;
         }
         .view-mode-badge[hidden] { display: none !important; }
@@ -1518,9 +1528,9 @@
         #story-present {
             position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
             z-index: 1000; width: 88%; max-width: 520px; padding: 12px 16px;
-            background: rgba(244,239,227,0.96); color: #1F1B14; border-radius: 12px;
+            background: color-mix(in srgb, var(--bg) 96%, transparent); color: var(--ink); border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-            font-family: 'Hanken Grotesk', sans-serif;
+            font-family: var(--sans);
         }
         body:not(.mobile-layout) .legend {
             bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
@@ -1585,10 +1595,10 @@
         body.view-mode .inspector { display: none !important; }
         body.view-mode #mobile-nav { display: none !important; }
         .legend-row.legend-clickable { cursor: pointer; border-radius: 6px; margin: 0 -4px; padding: 3px 4px; }
-        .legend-row.legend-clickable:hover { background: rgba(196, 69, 54, 0.08); }
+        .legend-row.legend-clickable:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
         .legend-row.legend-clickable.legend-focused {
-            background: rgba(196, 69, 54, 0.14);
-            outline: 1px solid rgba(196, 69, 54, 0.35);
+            background: color-mix(in srgb, var(--accent) 14%, transparent);
+            outline: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
         }
         /* L'indication dit que les lignes de la légende ciblent : vraie dans toutes les postures, tant qu'il y a des lignes. */
         .legend:has(.legend-clickable) .legend-head .t::after {
@@ -1960,7 +1970,7 @@
             body.view-mode.mobile-layout .rail-item[data-module="formulaires"] { display: none !important; }
         }
     </style>
-    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.36.0" />
+    <link rel="stylesheet" href="./lib/formulaire-atlas.css?v=1.37.0" />
     <script>window.__ATLAS_VENDOR__ = "./vendor/";</script>
 </head>
 <body>
@@ -1973,9 +1983,9 @@
         <!-- HEADER -->
         <header class="app-header" id="app-header">
             <div class="brand">
-                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                    <path d="M4 24 16 6l12 18-12 4z" fill="#C44536" />
-                    <path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2" />
+                <svg class="brand-logo" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path class="brand-logo-corps" d="M4 24 16 6l12 18-12 4z" />
+                    <path class="brand-logo-trait" d="M16 6v22" stroke-width="1.2" />
                 </svg>
                 <span class="brand-name">Atlas</span>
                 <span class="brand-chevron" aria-hidden="true">▾</span>
@@ -2075,9 +2085,9 @@
                      ce qu'elle portait passe ici (voir `appliquerBarre`). -->
                 <div class="commandes-hote" id="commandes-hote">
                     <button type="button" class="commande-hote" id="hote-menu" title="Menu principal" aria-label="Menu principal">
-                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                            <path d="M4 24 16 6l12 18-12 4z" fill="#C44536" />
-                            <path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2" />
+                        <svg class="brand-logo" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <path class="brand-logo-corps" d="M4 24 16 6l12 18-12 4z" />
+                            <path class="brand-logo-trait" d="M16 6v22" stroke-width="1.2" />
                         </svg>
                     </button>
                     <button type="button" class="commande-hote" id="hote-recherche" title="Rechercher un objet, une couche, un lieu" aria-label="Rechercher un objet, une couche, un lieu">
@@ -2219,6 +2229,6 @@
     <input type="file" id="file-input" accept=".geojson,.json,.gpx,.kml,.csv,.txt" style="display:none" />
     <input type="file" id="project-input" accept=".json,.geojson,.gpx,.kml,.csv,.txt" style="display:none" />
 
-    <script type="module" src="./app.js?v=1.36.0"></script>
+    <script type="module" src="./app.js?v=1.37.0"></script>
 </body>
 </html>

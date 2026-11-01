@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="TaskFlow — widget Grist">
 <meta name="twitter:description" content="Une suite de gestion de projet qui travaille sur vos propres tables : les mêmes tâches vues en tableau, en planning, en calendrier, en charge par personne. Changez de vue, pas de données.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"TaskFlow","description":"Une suite de gestion de projet qui travaille sur vos propres tables : les mêmes tâches vues en tableau, en planning, en calendrier, en charge par personne. Changez de vue, pas de données.","url":"https://nic01asfr.github.io/Widgets-Grist/w/taskflow/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/tasks_app","dateModified":"2026-10-05"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"TaskFlow","description":"Une suite de gestion de projet qui travaille sur vos propres tables : les mêmes tâches vues en tableau, en planning, en calendrier, en charge par personne. Changez de vue, pas de données.","url":"https://nic01asfr.github.io/Widgets-Grist/w/taskflow/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/tasks_app","dateModified":"2026-10-18"}</script>
 <style>
 :root { --papier: #F5F7FB; --surface: #FFFFFF; --encre: #1F2738; --plume: #6C788F; --filet: #E7EBF2; --accent: #3E5DE7; }
 @media (prefers-color-scheme: dark) {
@@ -95,6 +95,15 @@ section { margin: 0 0 3rem; }
 .cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cadre iframe { display: block; width: 100%; height: 100%; border: 0; }
 .cadre.vivant { aspect-ratio: auto; height: 70vh; min-height: 26rem; }
+/* Une demonstration d'application (figure vivante) a besoin de largeur : la colonne de la page la ferait tenir sur un telephone, carte
+   hors de vue. Lancee, elle passe au premier plan, presque plein ecran, et se referme (bouton ou Echap). */
+.cadre.plein { position: fixed; inset: 3vh 3vw; z-index: 60; height: auto; min-height: 0; border-radius: 10px; background: #fff; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 100vmax rgba(20, 16, 12, .62); }
+.cadre.plein iframe { flex: 1; min-height: 0; height: auto; }
+.barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .4rem .6rem .4rem .9rem; border-bottom: 1px solid #ddd5c8;
+  background: #fff; color: #1f2933; font-size: .85rem; border-radius: 10px 10px 0 0; }
+.fermer { flex: none; min-height: 44px; padding: .35rem 1rem; border: 1px solid #1f2933; border-radius: 6px; background: #fff; color: #1f2933; font: inherit; font-size: .85rem; cursor: pointer; }
+.fermer:hover { background: #eef2f6; }
 .lancer { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
   padding: .8rem 1.4rem; border-radius: 999px; border: 0; cursor: pointer;
   font: inherit; font-weight: 600; color: #fff; background: var(--accent);
@@ -114,7 +123,7 @@ section { margin: 0 0 3rem; }
   <div class="faits">
     <span><b>8</b> widgets</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
+    <span>Mis à jour il y a 13 j</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asfr.github.io/Widgets-Grist/taskflow/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -143,9 +152,9 @@ section { margin: 0 0 3rem; }
 
   </section>
   <section>
-    <h2>Les vues</h2>
-    <div class="liste">
-      <div class="vue">
+      <h2>Les vues</h2>
+      <div class="liste">
+        <div class="vue">
         <b>TaskFlow — Suite complète</b>
         <span>Suite tout-en-un : Dashboard, Kanban, Gantt, Calendar, Plan, Feuille de temps, Organigramme, Whiteboard dans un seul widget</span>
         <a href="https://nic01asfr.github.io/Widgets-Grist/taskflow/" target="_blank" rel="noopener">ouvrir</a>
@@ -185,24 +194,26 @@ section { margin: 0 0 3rem; }
         <span>Annuaire et organigramme des entités, avec droits d&#39;accès dérivés de la hiérarchie</span>
         <a href="https://nic01asfr.github.io/Widgets-Grist/taskflow/orgchart/" target="_blank" rel="noopener">ouvrir</a>
       </div>
-    </div>
-  </section>
+      </div>
+    </section>
   <section>
-    <h2>Journal</h2>
-    <div class="journal">
-      <div><b>v1.3.1</b><p>Hors d&#39;un document Grist (aperçu en direct de cette page, lanceur ouvert seul), le Dashboard, le Kanban, le Gantt et le Calendrier restaient sur leur squelette : ils affichent de nouveau leurs données d&#39;exemple, aussitôt. Dans un document Grist, rien ne change.</p></div>
+      <h2>Journal</h2>
+      <div class="journal">
+        <div><b>v1.3.1</b><p>Hors d&#39;un document Grist (aperçu en direct de cette page, lanceur ouvert seul), le Dashboard, le Kanban, le Gantt et le Calendrier restaient sur leur squelette : ils affichent de nouveau leurs données d&#39;exemple, aussitôt. Dans un document Grist, rien ne change.</p></div>
       <div><b>v1.3.0</b><p>La tâche parente suit ses sous-tâches : si l&#39;on déplace une sous-tâche hors de ses bornes, la parente s&#39;ajuste en un seul geste, annulable d&#39;un Ctrl+Z. Filtres, tri et vues nommées partagés entre le Kanban, le Gantt, le Calendrier et le Dashboard ; statut au Gantt et au Calendrier ; frise du Gantt complète et défilante ; statuts fait / annulé / actif ; une série de corrections issues de l&#39;audit (dates décalées d&#39;un jour, tâches qui disparaissaient, suppression d&#39;un parent).</p></div>
       <div><b>v1.2.0</b><p>Feuille de temps et Organigramme, droits d&#39;accès dérivés de la hiérarchie, réalisé daté dans le Plan de charge.</p></div>
       <div><b>v1.1.2</b><p>Whiteboard harmonisé : thème sombre automatique, notes lisibles, initialisation silencieuse.</p></div>
       <div><b>v1.1.1</b><p>Liste à cocher éditable, navigation d&#39;une sous-tâche vers sa tâche parente.</p></div>
       <div><b>v1.1.0</b><p>Plan de charge — cinquième vue : allocation éditable, capacité datée, réalisé daté.</p></div>
-    </div>
-  </section>
+      </div>
+    </section>
 </main>
 <script>
-  document.querySelectorAll('.cadre').forEach(function (cadre) {
+  function armer(cadre) {
     var bouton = cadre.querySelector('.lancer');
     if (!bouton) return;
+    var origine = cadre.innerHTML;
+    var grand = !!cadre.closest('figure.vivante');
     bouton.addEventListener('click', function () {
       var f = document.createElement('iframe');
       f.src = cadre.dataset.widget;
@@ -212,7 +223,33 @@ section { margin: 0 0 3rem; }
       cadre.innerHTML = '';
       cadre.appendChild(f);
       cadre.classList.add('vivant');
+      if (!grand) return;
+      cadre.classList.add('plein');
+      var barre = document.createElement('div'); barre.className = 'barre';
+      var libelleDemo = cadre.dataset.titre || 'Démonstration, données fictives';
+      var titre = document.createElement('span'); titre.textContent = libelleDemo; barre.appendChild(titre);
+      f.title = libelleDemo; cadre.setAttribute('role', 'dialog'); cadre.setAttribute('aria-modal', 'true'); cadre.setAttribute('aria-label', libelleDemo);
+      var garde = function (e) { if (!cadre.contains(e.target)) x.focus(); };   // tant que la démonstration est ouverte, le focus ne sort pas du cadre
+      document.addEventListener('focusin', garde);
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'fermer'; x.textContent = 'Fermer';
+      barre.appendChild(x);
+      x.addEventListener('click', function () {
+        cadre.classList.remove('vivant', 'plein');
+        cadre.removeAttribute('role'); cadre.removeAttribute('aria-modal'); cadre.removeAttribute('aria-label');
+        document.removeEventListener('focusin', garde);
+        cadre.innerHTML = origine;
+        armer(cadre);
+        var relancer = cadre.querySelector('.lancer'); if (relancer) relancer.focus();   // le focus revient au bouton qui a ouvert la démonstration
+      });
+      cadre.insertBefore(barre, f);
+      x.focus();
     });
+  }
+  document.querySelectorAll('.cadre').forEach(armer);
+  document.addEventListener('keydown', function (e) {
+    var x = e.key === 'Escape' && document.querySelector('.cadre.plein .fermer');
+    if (x) x.click();
   });
 </script>
 <footer class="pied">

@@ -4,33 +4,33 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.36.0';
+import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.37.0';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=1.36.0';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.36.0';
-import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.36.0';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.36.0';
+import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=1.37.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.37.0';
+import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.37.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.37.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.36.0';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.36.0';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.36.0';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.36.0';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.36.0';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.36.0';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.36.0';
-import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.36.0';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.36.0';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.36.0';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.36.0';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.36.0';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.36.0';
+} from './lib/parametres-objet.js?v=1.37.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.37.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.37.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.37.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.37.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.37.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.37.0';
+import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.37.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.37.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.37.0';
+import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.37.0';
+import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.37.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.37.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -38,8 +38,8 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.36.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.36.0';
+} from './lib/scene-loader.js?v=1.37.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.37.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
   lireFormulaires, reglagesFormulaire, libelleFormulaire,
@@ -48,55 +48,55 @@ import {
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.36.0';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.36.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.36.0';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.36.0';
+} from './lib/fiche-formulaire.js?v=1.37.0';
+import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.37.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.37.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.37.0';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.36.0';
+} from './lib/classes.js?v=1.37.0';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.36.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.36.0';
+} from './lib/grappes.js?v=1.37.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.37.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.36.0';
+} from './lib/layer-order.js?v=1.37.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.36.0';
+} from './lib/table-reference.js?v=1.37.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.36.0';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.36.0';
-import { attributionSure } from './lib/attribution.js?v=1.36.0';
-import { creerToast } from './lib/toast.js?v=1.36.0';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.36.0';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.36.0';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.36.0';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.36.0';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.36.0';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.36.0';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.36.0';
-import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=1.36.0';
-import { creerAccesDalles } from './lib/dalles3d-acces.js?v=1.36.0';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.36.0';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.36.0';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.36.0';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.36.0';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.36.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.36.0';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.36.0';
+} from './lib/bulle-objet.js?v=1.37.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.37.0';
+import { attributionSure } from './lib/attribution.js?v=1.37.0';
+import { creerToast } from './lib/toast.js?v=1.37.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.37.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.37.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.37.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.37.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.37.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.37.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.37.0';
+import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=1.37.0';
+import { creerAccesDalles } from './lib/dalles3d-acces.js?v=1.37.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.37.0';
+import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.37.0';
+import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.37.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.37.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.37.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.37.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.37.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.36.0';
+} from './lib/terrain-base.js?v=1.37.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -114,20 +114,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.36.0';
+} from './lib/grist-sync.js?v=1.37.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.36.0';
+} from './lib/nouvelle-couche.js?v=1.37.0';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.36.0';
+} from './lib/champ-formulaire.js?v=1.37.0';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.36.0';
+} from './lib/saisie-objet.js?v=1.37.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -135,7 +135,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.36.0';
+} from './lib/geometrie-saisie.js?v=1.37.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -147,14 +147,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.36.0';
+} from './lib/declarative-style.js?v=1.37.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.36.0';
+} from './lib/geo-tables.js?v=1.37.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -179,7 +179,7 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.36.0';
+} from './lib/controls.js?v=1.37.0';
 import {
   captureStoryState,
   saveStoryToGrist,
@@ -187,7 +187,7 @@ import {
   assurerCles,
   storyToManifestFragment,
   coucheDuRecit,
-} from './lib/story.js?v=1.36.0';
+} from './lib/story.js?v=1.37.0';
 import {
   copieLineaire,
   estLineaire,
@@ -209,11 +209,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.36.0';
+} from './lib/trajet.js?v=1.37.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.36.0';
+} from './lib/manifest-binding.js?v=1.37.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -226,7 +226,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.36.0';
+} from './lib/viewport.js?v=1.37.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -241,36 +241,36 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.36.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.36.0';
-import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.36.0';
-import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.36.0';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.36.0';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.36.0';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.36.0';
-import { capUtilisable } from './lib/cap-position.js?v=1.36.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.36.0';
+} from './lib/view-mode.js?v=1.37.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.37.0';
+import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.37.0';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.37.0';
+import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=1.37.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.37.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.37.0';
+import { capUtilisable } from './lib/cap-position.js?v=1.37.0';
+import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.37.0';
 import {
   etageCoteACote,
   legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.36.0';
+} from './lib/habillage-carte.js?v=1.37.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.36.0';
+} from './lib/viewer-controls.js?v=1.37.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.36.0';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.36.0';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.36.0';
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.36.0';
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=1.36.0';
+} from './lib/scene-prefs.js?v=1.37.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.37.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.37.0';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.37.0';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=1.37.0';
 
 const $ = (id) => document.getElementById(id);
 const deg2rad = (d) => (d * Math.PI) / 180;
@@ -310,6 +310,8 @@ function ignRasterStyle(tiles) {
 }
 // `icon` est un accesseur : le vocabulaire d'icônes (`IC`) est défini plus loin, et il ne doit être lu qu'à l'affichage.
 const BASEMAPS = {
+    // Le thème existe toujours (celui du document, de l'instance Grist, ou à défaut celui d'Atlas) : ce fond reprend ses couleurs (lib/fond-theme.js). C'est le fond par défaut.
+    theme:    { url: STYLE_BASE_URL,  label: 'Thème',      get icon() { return icTrait(IC.palette, 22); } },
     liberty:  { url: STYLE_BASE_URL,  label: 'Liberty 3D', get icon() { return icTrait(IC.cube, 22); } },
     bright:   { url: 'https://tiles.openfreemap.org/styles/bright',   label: 'Plan',       get icon() { return icTrait(IC.carte, 22); } },
     positron: { url: 'https://tiles.openfreemap.org/styles/positron', label: 'Clair',      get icon() { return icTrait(IC.carreClair, 22); } },
@@ -377,7 +379,7 @@ const STATE = {
     currentModule: null,
     selection: { mode: false, layerId: null, features: [], multiIndex: 0 },
     settings: {
-        basemap: 'liberty',
+        basemap: 'theme',
         projection: 'globe',     // 'globe' (façon Google Earth, → mercator en zoom) | 'mercator'
         modelSet: 'colored',     // jeu de modèles 3D : 'colored' | 'mono'
         buildings3D: true,
@@ -3351,7 +3353,7 @@ let _fondDeRepli = false;
 const RATIO_HOTE = (() => { try { return ratioMaxDemande(location.search); } catch (_) { return null; } })();
 
 function initMap() {
-    const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.liberty;
+    const _bm = BASEMAPS[STATE.settings.basemap] || BASEMAPS.theme;
     // L'appareil dit déjà qu'il n'a pas de réseau : inutile d'attendre un style qui ne viendra pas.
     _fondDeRepli = typeof navigator !== 'undefined' && navigator.onLine === false;
     map = new maplibregl.Map({
@@ -3509,6 +3511,7 @@ function onStyleReady() {
     // 3D buildings come with the Liberty style (fill-extrusion). Toggle visibility.
     applyBuildingVisibility();
     applyLabelsVisibility();
+    if (!_planTheme) void rafraichirFondTheme();
 
     // Terrain (source DEM choisie : terrarium mondial ou LIDAR HD IGN)
     addTerrainSource();
@@ -3735,6 +3738,35 @@ function applyLabelsVisibility() {
     if (!map?.getStyle()?.layers) return;
     const vis = STATE.settings.labels ? 'visible' : 'none';
     setBasemapLayersVisibility('symbol', vis);
+    appliquerFondTheme();   // le réglage rend visibles TOUS les symboles du fond : le fond Thème remasque ceux qu'il écarte (pictogrammes)
+}
+
+/**
+ * Le fond « Thème » : le fond de carte repeint avec la charte courante (document, sinon instance Grist, sinon celle d'Atlas qui existe toujours). Le plan est calculé une fois
+ * (`rafraichirFondTheme`) puis posé à chaque style prêt ; `appliquerFondTheme` est synchrone et ne fait rien tant que le plan n'est pas là ou que ce n'est pas le fond choisi.
+ */
+let _planTheme = null, _charteDuFond = null, _fondThemeModule = null;
+function appliquerFondTheme() {
+    try {
+        if (!map || STATE.settings.basemap !== 'theme' || !_planTheme || !_fondThemeModule) return;
+        const couches = map.getStyle()?.layers;
+        if (!couches) return;
+        for (const r of _fondThemeModule.peintureFondTheme(couches, _planTheme)) {
+            if (!map.getLayer(r.id)) continue;
+            if (r.visibilite === 'none') { try { map.setLayoutProperty(r.id, 'visibility', 'none'); } catch (_) { /* couche retirée */ } continue; }
+            if (r.visibilite === 'visible') { try { map.setLayoutProperty(r.id, 'visibility', 'visible'); } catch (_) { /* couche retirée */ } }
+            for (const [k, v] of Object.entries(r.paint)) { try { map.setPaintProperty(r.id, k, v); } catch (_) { /* propriété inconnue de cette couche */ } }
+        }
+    } catch (e) { console.warn('[Atlas] fond Thème', e && e.message); }
+}
+async function rafraichirFondTheme() {
+    try {
+        const [FT, RS, SC] = await Promise.all([import('./lib/fond-theme.js?v=1.37.0'), import('./lib/charte/resolution.js'), import('./lib/charte/schema.js')]);
+        const hote = _charteDuFond ? SC.assainir(_charteDuFond).charte : {};
+        _planTheme = { ...RS.resoudre({ hote }).charte.fond.plan };
+        _fondThemeModule = FT;
+    } catch (e) { console.warn('[Atlas] fond Thème', e && e.message); }
+    appliquerFondTheme();
 }
 function addTerrainSource() {
     const cfg = TERRAIN_SOURCES[STATE.settings.terrainSource] || TERRAIN_SOURCES.terrarium;
@@ -4996,7 +5028,7 @@ function assurerCoucheTrajet() {
             id: 'atlas-trajet-line',
             type: 'line',
             source: 'atlas-trajet',
-            paint: { 'line-color': '#C44536', 'line-width': 3, 'line-opacity': 0.92 },
+            paint: { 'line-color': accentCourant(), 'line-width': 3, 'line-opacity': 0.92 },
         });
     }
     releverLigneTrajet();
@@ -8097,7 +8129,7 @@ function renderStoryPresentation() {
     const ambiance = storyAmbianceLabel(s.state);
     const trace = traceActuelle();
     const points = trace ? STATE.story.map((_, i) =>
-        `<button type="button" onclick="A.storyGo(${i})" aria-label="Étape ${i + 1}" style="width:8px;height:8px;border-radius:50%;border:0;padding:0;background:${i === _storyIdx ? '#C44536' : '#d9d3cb'}"></button>`).join('') : '';
+        `<button type="button" onclick="A.storyGo(${i})" aria-label="Étape ${i + 1}" style="width:8px;height:8px;border-radius:50%;border:0;padding:0;background:${i === _storyIdx ? 'var(--accent, #C44536)' : '#d9d3cb'}"></button>`).join('') : '';
     const formulaires = (s.state?.saisies || []).map((x) => x.titre).filter(Boolean);
     const suiviBtn = trace && localisationDisponible()
         ? (_trajetSuivi && !_trajetPause
@@ -8786,7 +8818,7 @@ function legendeContour(layer) {
     const lignes = tries.map((s, i) => (s.color && comptes[i])
         ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${escLegend(s.color)};border-radius:50%;box-sizing:border-box"></span><span class="nm">${escLegend(libelleClasse(st.regle.stops, i))}</span><span class="ct">${comptes[i]}</span></div>` : '').join('');
     if (!lignes) return '';
-    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
+    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
 }
 
 /** La légende d'une couleur graduée en classes posées à la main : une ligne par classe, avec son nombre. */
@@ -10392,7 +10424,13 @@ let _derniereCreation = null;
 /** La dernière forme modifiée, avec ses cellules d'origine, tant que l'objet reste sélectionné. */
 let _derniereModification = null;
 const SAISIE_SOURCE = 'atlas-saisie';
-const COULEUR_TRACE = '#C44536';
+// La couleur d'accent COURANTE : le jeton --accent que le thème du document ou de l'hôte redéfinit (la carte ne lit pas le CSS : ses couleurs sont lues ici, au moment de dessiner).
+const ACCENT_PAR_DEFAUT = '#C44536';
+function accentCourant() {
+    try { const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); return /^#[0-9a-f]{6}$/i.test(v) ? v : ACCENT_PAR_DEFAUT; } catch (e) { return ACCENT_PAR_DEFAUT; }
+}
+const accentRgba = (a) => { const c = accentCourant(); return 'rgba(' + parseInt(c.slice(1, 3), 16) + ',' + parseInt(c.slice(3, 5), 16) + ',' + parseInt(c.slice(5, 7), 16) + ',' + a + ')'; };
+const couleurTrace = accentCourant;
 
 function dessinerSaisie() {
     if (!map) return;
@@ -10404,7 +10442,7 @@ function dessinerSaisie() {
     if (!map.getLayer(SAISIE_SOURCE)) {
         map.addLayer({
             id: SAISIE_SOURCE, type: 'circle', source: SAISIE_SOURCE,
-            paint: { 'circle-radius': 8, 'circle-color': COULEUR_TRACE, 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 },
+            paint: { 'circle-radius': 8, 'circle-color': couleurTrace(), 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 },
         });
     } else {
         map.moveLayer(SAISIE_SOURCE);
@@ -10475,9 +10513,9 @@ async function demarrerTrace(s, layer) {
         showCoordinatePoints: true,
     };
     const poignees = {
-        closingPointColor: '#FFFFFF', closingPointOutlineColor: COULEUR_TRACE, closingPointWidth: 6, closingPointOutlineWidth: 2,
+        closingPointColor: '#FFFFFF', closingPointOutlineColor: couleurTrace(), closingPointWidth: 6, closingPointOutlineWidth: 2,
         snappingPointColor: '#1F6FEB', snappingPointOutlineColor: '#FFFFFF', snappingPointWidth: 6, snappingPointOutlineWidth: 2,
-        coordinatePointColor: COULEUR_TRACE, coordinatePointOutlineColor: '#FFFFFF', coordinatePointWidth: 4, coordinatePointOutlineWidth: 1,
+        coordinatePointColor: couleurTrace(), coordinatePointOutlineColor: '#FFFFFF', coordinatePointWidth: 4, coordinatePointOutlineWidth: 1,
     };
     const mode = famille === 'Polygon'
         ? new lib.TerraDrawPolygonMode({
@@ -10491,11 +10529,11 @@ async function demarrerTrace(s, layer) {
                 if (!r.valid) signalerRecoupe();
                 return r;
             },
-            styles: { fillColor: COULEUR_TRACE, fillOpacity: 0.18, outlineColor: COULEUR_TRACE, outlineWidth: 3, ...poignees },
+            styles: { fillColor: couleurTrace(), fillOpacity: 0.18, outlineColor: couleurTrace(), outlineWidth: 3, ...poignees },
         })
         : new lib.TerraDrawLineStringMode({
             ...commun,
-            styles: { lineStringColor: COULEUR_TRACE, lineStringWidth: 3, ...poignees },
+            styles: { lineStringColor: couleurTrace(), lineStringWidth: 3, ...poignees },
         });
     // Modifier une forme passe par le mode sélection de terra-draw : sommets à
     // glisser, points milieux pour en insérer, clic droit pour en retirer,
@@ -10523,12 +10561,12 @@ async function demarrerTrace(s, layer) {
                 },
             },
             styles: {
-                selectedLineStringColor: COULEUR_TRACE, selectedLineStringWidth: 3,
-                selectedPolygonColor: COULEUR_TRACE, selectedPolygonFillOpacity: 0.18,
-                selectedPolygonOutlineColor: COULEUR_TRACE, selectedPolygonOutlineWidth: 3,
-                selectionPointColor: '#FFFFFF', selectionPointOutlineColor: COULEUR_TRACE,
+                selectedLineStringColor: couleurTrace(), selectedLineStringWidth: 3,
+                selectedPolygonColor: couleurTrace(), selectedPolygonFillOpacity: 0.18,
+                selectedPolygonOutlineColor: couleurTrace(), selectedPolygonOutlineWidth: 3,
+                selectionPointColor: '#FFFFFF', selectionPointOutlineColor: couleurTrace(),
                 selectionPointWidth: 6, selectionPointOutlineWidth: 2,
-                midPointColor: COULEUR_TRACE, midPointOutlineColor: '#FFFFFF', midPointWidth: 4, midPointOutlineWidth: 1,
+                midPointColor: couleurTrace(), midPointOutlineColor: '#FFFFFF', midPointWidth: 4, midPointOutlineWidth: 1,
             },
         });
         modes.push(selection);
@@ -12152,16 +12190,16 @@ function afterSelectionChange() {
 // plus épais, dessiné par-dessus. Tous au même halo, on ne savait pas lequel
 // on était en train de modifier.
 const EST_COURANT = ['==', ['get', '_courant'], true];
-const HALO_SELECTION = [
+const haloSelection = () => [
     { id: 'sel-hl-fill', type: 'fill', types: ['Polygon', 'MultiPolygon'],
-      paint: { 'fill-color': '#C44536', 'fill-opacity': ['case', EST_COURANT, 0.32, 0.08] } },
+      paint: { 'fill-color': accentCourant(), 'fill-opacity': ['case', EST_COURANT, 0.32, 0.08] } },
     { id: 'sel-hl-line', type: 'line', types: ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'],
-      paint: { 'line-color': '#C44536', 'line-width': ['case', EST_COURANT, 4, 1.5],
+      paint: { 'line-color': accentCourant(), 'line-width': ['case', EST_COURANT, 4, 1.5],
                'line-opacity': ['case', EST_COURANT, 1, 0.55] } },
     { id: 'sel-hl-ring', type: 'circle', types: ['Point', 'MultiPoint'],
       paint: { 'circle-radius': ['case', EST_COURANT, 18, 11],
-               'circle-color': ['case', EST_COURANT, 'rgba(196,69,54,0.22)', 'rgba(196,69,54,0.06)'],
-               'circle-stroke-color': '#C44536', 'circle-stroke-width': ['case', EST_COURANT, 4, 1.5],
+               'circle-color': ['case', EST_COURANT, accentRgba(0.22), accentRgba(0.06)],
+               'circle-stroke-color': accentCourant(), 'circle-stroke-width': ['case', EST_COURANT, 4, 1.5],
                'circle-stroke-opacity': ['case', EST_COURANT, 1, 0.55] } },
 ];
 
@@ -12177,7 +12215,7 @@ function updateHighlight() {
     const data = { type: 'FeatureCollection', features };
     if (!map.getSource('sel-hl')) map.addSource('sel-hl', optionsSourceGeojson(data));
     else map.getSource('sel-hl').setData(data);
-    for (const h of HALO_SELECTION) {
+    for (const h of haloSelection()) {
         if (map.getLayer(h.id)) continue;
         map.addLayer({
             id: h.id, type: h.type, source: 'sel-hl',
@@ -12187,7 +12225,7 @@ function updateHighlight() {
     }
 }
 function clearHighlight() {
-    for (const h of HALO_SELECTION) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
+    for (const h of haloSelection()) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
     if (map.getSource('sel-hl')) map.removeSource('sel-hl');
 }
 /**
@@ -12730,9 +12768,18 @@ const TABLE_SCHEMAS = {
  * ceux que la charte précédente avait posés sont retirés d'abord, donc sans identité l'application retrouve ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi).
  */
 function poserHabillageApplication(variables, noms) {
-    const style = document.documentElement.style;
+    const racine = document.documentElement, style = racine.style;
     for (const nom of noms) style.removeProperty(nom);
     for (const [nom, valeur] of Object.entries(variables)) if (noms.includes(nom)) style.setProperty(nom, valeur);
+    // Mode sombre : la page accroche ses règles sombres à `data-mode` et déclare `color-scheme` (champs, ascenseurs natifs) ; sans thème sombre, l'interface claire d'origine.
+    const sombre = variables['--mode-application'] === 'sombre';
+    if (sombre) racine.setAttribute('data-mode', 'sombre'); else racine.removeAttribute('data-mode');
+    style.setProperty('color-scheme', sombre ? 'dark' : 'light');
+    try { if (map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
+}
+/** Le mode d'apparence de l'instance Grist : l'attribut que Grist pose, sinon ce que dit `onThemeChange`, sinon clair. */
+function apparenceGrist() {
+    return document.documentElement.getAttribute('data-grist-appearance') || (_themeInstance && _themeInstance.appearance) || 'light';
 }
 
 /**
@@ -12741,19 +12788,61 @@ function poserHabillageApplication(variables, noms) {
  * pas les surfaces (voir `lib/charte/application.js`).
  */
 async function chargerThemeDocument() {
+    let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
         const tables = await grist.docApi.listTables();
-        if (!tables.includes('Theme_document')) return;
-        const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.36.0'), import('./lib/charte/application.js?v=1.36.0')]);
-        const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: 'clair' });
-        if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
-        if (!theme.charte) return;
-        const { variables, notes } = TD.habillageApplication(theme);
-        poserHabillageApplication(variables, AP.VARIABLES);
-        if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
+        if (tables.includes('Theme_document')) {
+            const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.37.0'), import('./lib/charte/application.js?v=1.37.0')]);
+            const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: apparenceGrist() === 'dark' ? 'sombre' : 'clair' });
+            if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
+            if (theme.charte) {
+                const { variables, notes } = TD.habillageApplication(theme);
+                poserHabillageApplication(variables, AP.VARIABLES);
+                try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* le trajet prendra la couleur au prochain dessin */ }
+                if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
+                documentAUnTheme = true;
+                _charteDuFond = theme.charte;
+            }
+        }
     } catch (e) {
         console.warn('[Atlas] thème du document', e && e.message);
+    }
+    _themeDocumentActif = documentAUnTheme;
+    if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
+    else void rafraichirFondTheme();
+}
+
+/**
+ * Sans thème de document, le thème de l'INSTANCE Grist (`grist-plugin-api.js` : `onThemeChange`, et les variables `--grist-theme-*` qu'il pose sur la page) habille l'application
+ * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
+ */
+let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
+function brancherThemeInstance() {
+    if (_themeInstanceBranche || typeof grist === 'undefined' || typeof grist.onThemeChange !== 'function') return;
+    _themeInstanceBranche = true;
+    try { grist.onThemeChange((t) => { _themeInstance = t; if (!_themeDocumentActif) void appliquerThemeInstance(); }); } catch (e) { console.warn('[Atlas] thème de l\'instance', e && e.message); }
+}
+async function appliquerThemeInstance() {
+    try {
+        if (_themeDocumentActif || !CONFIG.grist.ready) return;
+        const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=1.37.0'), import('./lib/charte/depuis-themedef.js?v=1.37.0'), import('./lib/charte/theme-document.js?v=1.37.0'), import('./lib/charte/application.js?v=1.37.0')]);
+        const racine = document.documentElement;
+        const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
+        const theme = _themeInstance || { appearance: apparenceGrist() };
+        const t = TI.themeDeLInstance(theme, lireVariable);
+        const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: t.sombre ? 'sombre' : 'clair' }) : { charte: null };
+        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }
+        const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
+        // la police de l'instance : sa pile exacte (celle de Grist, ou Marianne puis les polices système chez DINUM), pas seulement la police système de ThemeDef
+        if (t.pile) { variables['--sans'] = t.pile; variables['--serif'] = t.pile; }
+        poserHabillageApplication(variables, AP.VARIABLES);
+        _charteDuFond = r.charte; void rafraichirFondTheme();
+        try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* au prochain dessin */ }
+        console.info("[Atlas] thème de l'instance Grist appliqué :", t.nom, "accent", variables["--accent"] || "(inchangé)", "fond", variables["--bg"] || "(inchangé)", "police", String(variables["--sans"] || "(inchangée)").slice(0, 40));
+        if (notes.length) console.info('[Atlas] thème de l\'instance, non suivi :', notes.join(', '));
+    } catch (e) {
+        console.warn('[Atlas] thème de l\'instance', e && e.message);
     }
 }
 
@@ -13299,7 +13388,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.36.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.37.0');
     return Feuille;
 }
 
@@ -13520,15 +13609,17 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.36.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.37.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.36.0');
+        const dc = await import('./lib/data-client.js?v=1.37.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
     // n'aurait rien a offrir — ni liste de scenes, ni connexion possible. Une
     // marque actionnable qui ouvre un menu vide vaut moins que pas de bouton.
+    // Widget : pas de logo par défaut (l'hôte a le sien), sauf si l'adresse demande une marque.
+    if (caps.mode === 'grist' && !new URLSearchParams(location.search).has('marque')) document.documentElement.setAttribute('data-marque', 'aucune');
     if (caps.mode === 'grist' || !caps.decouverte) return;
 
     marque.classList.add('brand-menu');
@@ -14210,7 +14301,7 @@ async function lireReponseDalles(url, maxOctets, lecture) {
 
 /** Monte une maquette en dalles 3D désignée par l'adresse de son manifeste de grille. Chargé À LA DEMANDE : rien de tout cela sans une scène de dalles. */
 async function monterDallesHote({ id, grille }) {
-    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.36.0');
+    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.37.0');
     const cle = 'dalles:' + id;
     if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
     const couche = creerCoucheDalles({
@@ -14343,7 +14434,7 @@ async function loadLayersFromGrist({ monter = true, dejaLiees = null, dejaNommee
             if (!binding && dejaNommees?.has(rec.Name?.[i])) continue;
             const layer = {
                 id: 'layer-grist-' + ids[i], gristId: ids[i],
-                name: rec.Name?.[i] || 'Sans nom', color: rec.Color?.[i] || '#C44536',
+                name: rec.Name?.[i] || 'Sans nom', color: rec.Color?.[i] || accentCourant(),
                 visible: parseGristBool(rec.Visible?.[i], true), geometryType: rec.GeomType?.[i] || 'Point',
                 source: 'grist', geojson, style, _modelCat: 'furniture',
                 controls: ctrls || [],
@@ -15804,7 +15895,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openIGN: () => import('./lib/vue-import-ign.js?v=1.36.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
+    openIGN: () => import('./lib/vue-import-ign.js?v=1.37.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
             A.zoomLayer(id);
@@ -16656,7 +16747,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.36.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.37.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -16702,7 +16793,7 @@ const A = {
         const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
-            const m = await import('./lib/trafic-couche.js?v=1.36.0');
+            const m = await import('./lib/trafic-couche.js?v=1.37.0');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
             _traficRepli3d = false;
             if (_traficReglages.rendu !== 'points') {
@@ -18347,9 +18438,9 @@ async function demarrer() {
     }
     if (MODE_BI) return demarrerBi();   // ni accueil ni document : les données viennent de l'hôte
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.36.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.37.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.36.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.37.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
@@ -18367,6 +18458,8 @@ async function demarrer() {
  */
 async function demarrerBi() {
     CONFIG.viewMode = true;
+    // Le composant garde le fond d'Atlas d'origine (Liberty) : l'hôte le règle lui-même par `setFond`, et le fond « Thème » (celui d'une application ouverte seule ou en widget) ne change pas la carte d'une page qui l'embarque.
+    STATE.settings.basemap = 'liberty';
     // Profil complet : l'interface et la 3D de l'application restent (le pont s'y attache) ; le composant nu masque l'interface et passe à plat.
     if (!PROFIL_COMPLET) {
         document.body.classList.add('mode-bi');
@@ -18374,7 +18467,7 @@ async function demarrerBi() {
         CONFIG.defaultPitch = 0;
         Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
     }
-    const chargement = import('./lib/bi/montage.js?v=1.36.0');
+    const chargement = import('./lib/bi/montage.js?v=1.37.0');
     chargement.catch(() => {});
     try {
         await init();
@@ -18388,7 +18481,7 @@ async function demarrerBi() {
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.
                 sceneBi: (oui) => document.body.classList.toggle('scene-bi', !!oui),
                 habiller: async (lecture) => {
-                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.36.0');
+                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.37.0');
                     const { variables, notes } = variablesApplication(lecture);
                     poserHabillageApplication(variables, VARIABLES);
                     return notes;
