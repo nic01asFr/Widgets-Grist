@@ -4536,7 +4536,7 @@
                 if (!ok) return;
                 await ensureRattachementsSchema();
                 if (!HAS_RATTACH) { showToast('Création impossible (droits ?)', 'error'); return; }
-                renderPanelTask();
+                renderPanel();
             }
             panelState.rattachStep = 'tables';
             panelState.rattachTable = null;
@@ -4600,7 +4600,7 @@
                 }]]);
                 rattachements = convert(await grist.docApi.fetchTable('Rattachements'));
                 showSaveIndicator();
-                renderPanelTask();
+                renderPanel();
             } catch (e) { showToast('Erreur de rattachement', 'error'); }
         }
         async function rattachRemove(id) {
@@ -4609,7 +4609,7 @@
                 await grist.docApi.applyUserActions([['RemoveRecord', 'Rattachements', id]]);
                 rattachements = rattachements.filter(r => r.id !== id);
                 showSaveIndicator();
-                renderPanelTask();
+                renderPanel();
             } catch (e) { showToast('Erreur suppression', 'error'); }
         }
 
