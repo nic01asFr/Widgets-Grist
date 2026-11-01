@@ -8786,7 +8786,7 @@ function legendeContour(layer) {
     const lignes = tries.map((s, i) => (s.color && comptes[i])
         ? `<div class="legend-row legend-sub"><span class="swatch" style="background:transparent;border:2.5px solid ${escLegend(s.color)};border-radius:50%;box-sizing:border-box"></span><span class="nm">${escLegend(libelleClasse(st.regle.stops, i))}</span><span class="ct">${comptes[i]}</span></div>` : '').join('');
     if (!lignes) return '';
-    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="font-style:italic;color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
+    return `<div class="legend-row legend-sub" style="margin-top:2px"><span class="nm" style="color:var(--muted)">Contour · ${escLegend(st.regle.field)}</span></div>${lignes}`;
 }
 
 /** La légende d'une couleur graduée en classes posées à la main : une ligne par classe, avec son nombre. */

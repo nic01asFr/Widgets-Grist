@@ -393,7 +393,7 @@
             padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between;
             flex-shrink: 0;
         }
-        .panel-head h2 { font-family: var(--serif); font-style: italic; font-size: 16px; font-weight: 500; color: var(--ink); }
+        .panel-head h2 { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--ink); }
         .panel-body { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
         .panel-foot { flex-shrink: 0; border-top: 1px solid var(--hairline); padding: 12px 16px; }
 
@@ -906,7 +906,7 @@
             padding: 10px 14px; border-bottom: 1px solid var(--hairline);
             display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
-        .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); font-style: italic; }
+        .legend-head span.t { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ink); }
         .legend-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
         /* Barre de défilement fine standard dans les cadres arrondis qui rognent (légende, bulle d'objet) : la barre native y laissait sa piste se dessiner
            hors du cadre — bande beige au-dessus de la légende. */
@@ -993,7 +993,7 @@
             display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
             width: 15px; height: 15px; margin-left: 6px; border-radius: 50%;
             border: 1px solid var(--muted); color: var(--muted);
-            font: italic 600 10px/1 var(--serif, Georgia, serif); text-transform: none; letter-spacing: 0;
+            font: 600 10px/1 var(--serif, Georgia, serif); text-transform: none; letter-spacing: 0;
             cursor: help; user-select: none; flex: 0 0 auto;
         }
         .info-i:hover, .info-i:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
@@ -1114,7 +1114,7 @@
         .slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
         .slider-head .lbl { font-size: 12.5px; color: var(--text); font-weight: 500; }
         .slider-head .val { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
-        .slider-head .val.mixed { color: var(--muted-light); font-style: italic; }
+        .slider-head .val.mixed { color: var(--muted-light); }
         input[type=range].rng { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--hairline); border-radius: 2px; cursor: pointer; }
         input[type=range].rng::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 7px; background: white; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.15); cursor: pointer; }
         input[type=range].rng.acc::-webkit-slider-thumb { border-color: var(--accent); }
@@ -1139,7 +1139,7 @@
         }
         .ctl-mini:hover { border-color: var(--hairline-strong); }
         .ctl-mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-        .cat-row-vide .cat-value { font-style: italic; color: var(--muted); }
+        .cat-row-vide .cat-value { color: var(--muted); }
         .cat-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--hairline); font-size: 11.5px; }
         .cat-row:last-child { border-bottom: none; }
         .cat-swatch { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; cursor: pointer; }
