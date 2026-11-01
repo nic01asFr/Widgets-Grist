@@ -408,8 +408,18 @@
         } else {
           corps += prep.remplace.length
             ? '<p>Il remplace le thème actif « ' + esc(prep.remplace.map(function (x) { return x.nom || x.cle; }).join('», «')) + ' » (désactivé, pas supprimé).</p>'
-            : '<p>Ce document ne porte pas de thème actif pour l’instant.</p>';
-          corps += liste('Rendu plus lisible que prévu', projete.remarques || []);
+            : ((lignes || []).some(function (l) { return l && l.cle === prep.cle && l.actif === true; })
+              ? '<p>Ce thème est déjà le thème actif du document : la ligne est mise à jour.</p>'
+              : '<p>Ce document ne porte pas de thème actif pour l’instant.</p>');
+          // La lisibilité se dit AVANT d'écrire : ce que l'aperçu redresse (un texte ou une couleur trop proche du fond), mode par mode. Ce n'est pas
+          // bloquant, mais un lecteur peut corriger cette couleur, ou refuser le thème, et la personne doit le savoir avant de confirmer.
+          var lisibilite = [];
+          A.modesDisponibles(doc).forEach(function (m) {
+            A.themeVars(doc, m).remarques.forEach(function (r) { var t = (m === 'sombre' ? 'En sombre : ' : '') + r; if (lisibilite.indexOf(t) === -1) lisibilite.push(t); });
+          });
+          corps += liste('Lisibilité à revoir', lisibilite);
+          if (lisibilite.length) corps += '<p class="ds__note">Selon le lecteur, cette couleur sera corrigée ou le thème ne sera pas appliqué : mieux vaut corriger le design system.</p>';
+          corps += liste('Adapté au format du thème', projete.remarques || []);
           corps += liste('Ce que le format écarte', prep.ecarts);
           corps += liste('Remarques', prep.avertissements);
           corps += '<p class="ds__note">Tous les widgets du document qui lisent <code>Theme_document</code> (Form Builder, Atlas…) prendront ce thème à leur prochaine ouverture.</p>';

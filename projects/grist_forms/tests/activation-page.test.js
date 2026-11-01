@@ -40,6 +40,14 @@ describe('Page design-system : le geste d\'activation', () => {
     }
   });
 
+  it('la lisibilité à revoir est dite avant d’écrire, mode par mode, et une ligne déjà active n’est pas présentée comme absente', () => {
+    const f = fonction('ouvrirActivation');
+    assert.match(f, /A\.modesDisponibles\(doc\)\.forEach/);
+    assert.match(f, /A\.themeVars\(doc, m\)\.remarques/);
+    assert.ok(f.indexOf('Lisibilité à revoir') > -1 && f.indexOf('Lisibilité à revoir') < f.indexOf('table-a-creer'), 'avant la demande de créer la table');
+    assert.match(f, /déjà le thème actif du document/);
+  });
+
   it('ouvrir le geste ne fait que lire et montrer', () => {
     const f = fonction('ouvrirActivation');
     assert.match(f, /lireThemeDocument\(\)/);
