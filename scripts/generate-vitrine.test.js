@@ -491,3 +491,37 @@ test('le texte d’une demonstration est echappe, pas injecte', () => {
   assert.ok(!/<img src=x/.test(html), 'le titre doit ressortir echappe');
   assert.match(html, /&lt;img/);
 });
+
+test('un contexte peut défiler à l’horizontale : diapositives, flèches, sommaire, et seulement quand la fiche le demande', () => {
+  const W1 = [W('x', 'https://s.io/r/x/')];
+  const fiche = (extra) => ({ id: 'x', widgets: W1, presentation: { produit: { contextes: [Object.assign({
+    role: 'Pour qui', titre: 'Une identité', texte: 'dit tout', images: [
+      { image: 'a.jpg', titre: 'Premier', alt: 'Une capture', legende: 'Ce qu’on voit en premier' },
+      { image: 'b.jpg', titre: 'Second', legende: 'Ce qu’on voit ensuite' },
+      { image: 'c.jpg', legende: 'Sans titre : écartée' },
+    ] }, extra)] } } });
+
+  const empile = V.rendreProjet(fiche({}), Date.now(), 'https://s.io/r/');
+  assert.ok(!empile.includes('<section class="carrousel"') && !empile.includes('<article class="contexte avec-carrousel">'), 'sans demande, les figures restent en pile');
+  assert.equal((empile.match(/<figure class="large">/g) || []).length, 3);
+
+  const defile = V.rendreProjet(fiche({ carrousel: true }), Date.now(), 'https://s.io/r/');
+  assert.match(defile, /<article class="contexte avec-carrousel">/);
+  assert.match(defile, /<section class="carrousel" aria-roledescription="carrousel" aria-label="Une identité" id="contexte-1">/);
+  assert.equal((defile.match(/class="diapo/g) || []).length, 2, 'une image sans titre n’est pas une diapositive');
+  assert.match(defile, /<h4>Premier<\/h4><p>Ce qu’on voit en premier<\/p>/);
+  assert.match(defile, /alt="Une capture"/);
+  assert.match(defile, /alt="Ce qu’on voit ensuite"/, 'sans alt, la légende en tient lieu');
+  assert.match(defile, /aria-label="Diapositive suivante"/);
+  assert.match(defile, /<ul class="sommaire"[^>]*><li><button type="button" data-n="0" aria-current="true">Premier<\/button><\/li>/);
+  assert.ok(defile.includes("querySelectorAll('.carrousel')"), 'le script du carrousel est embarqué');
+  assert.ok(defile.includes('.diapo { flex: 0 0 88%'), 'et son style');
+  assert.ok(!defile.includes('<figure class="large">'), 'plus de figures en pile pour ce contexte');
+});
+
+test('un contexte en carrousel dont plus rien n’est valide retombe sur ses figures', () => {
+  const html = V.rendreProjet({ id: 'x', widgets: [W('x', 'https://s.io/r/x/')], presentation: { produit: { contextes: [{
+    titre: 'Rien', texte: 't', carrousel: true, images: [{ image: 'a.jpg', legende: 'sans titre' }] }] } } }, Date.now(), 'https://s.io/r/');
+  assert.ok(!html.includes('<section class="carrousel"') && !html.includes('<article class="contexte avec-carrousel">'));
+  assert.match(html, /<figure class="large">/);
+});

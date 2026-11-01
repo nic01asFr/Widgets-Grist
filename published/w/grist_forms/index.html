@@ -172,6 +172,93 @@ section { margin: 0 0 3rem; }
 @media (prefers-reduced-motion: reduce) {
   .reveler { opacity: 1; transform: none; transition: none; }
 }
+
+.statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
+.statut b { color: var(--encre); font-weight: 600; }
+.ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
+  background: color-mix(in srgb, var(--papier) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--filet); }
+.ancres::-webkit-scrollbar { display: none; }
+.ancres a { white-space: nowrap; text-decoration: none; font-size: .9rem; color: var(--plume); padding: .45rem .8rem; border-radius: 999px; min-height: 2.5rem; display: inline-flex; align-items: center; }
+.ancres a:hover { background: var(--filet); color: var(--encre); }
+.partie { margin: 0; padding: 3.2rem 0 .5rem; scroll-margin-top: 4rem; }
+.entete { max-width: 44rem; margin-bottom: 1.8rem; } .entete h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: .6rem; } .entete p { font-size: 1.02rem; margin: 0; }
+.avant-apres, .preuves { margin: 0 0 2.6rem; padding: 0; }
+.comparaison { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--filet); font-size: .93rem; }
+.comparaison caption { text-align: left; font-weight: 600; padding-bottom: .5rem; }
+.comparaison th, .comparaison td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--filet); vertical-align: top; font-weight: 400; }
+.comparaison thead th { background: var(--papier); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; }
+.comparaison tbody th { color: var(--plume); } .comparaison td:last-child { color: var(--encre); font-weight: 500; }
+.preuves ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.preuves li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1rem 1.1rem; }
+.preuves b { display: block; font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.9rem; line-height: 1.1; color: var(--encre); }
+.preuves span { display: block; font-size: .88rem; color: var(--plume); margin-top: .3rem; } .preuves em { display: block; font-size: .76rem; color: var(--plume); margin-top: .5rem; font-style: normal; }
+.chap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 2.4rem; align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--filet); }
+.chap.haut { display: block; } .chap.inverse .dit { order: 2; } .chap > .detail, .chap > .pleine { grid-column: 1 / -1; }
+.chap > .pleine:empty { display: none; }
+.chap .dit { max-width: 46rem; } .chap .dit h3 { font-size: 1.45rem; margin-bottom: .7rem; }
+.chap .num { display: block; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+.chap .dit p { font-size: .97rem; }
+.chap .pourquoi { font-size: .93rem; padding-left: .9rem; border-left: 3px solid var(--accent); color: var(--encre); }
+.chap .liens { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 0; }
+.chap .lien { color: var(--accent); }
+.chap figure { margin: 0; } .chap figure img { width: 100%; height: auto; display: block; border: 1px solid var(--filet); border-radius: 12px; } .chap figcaption { font-size: .82rem; color: var(--plume); margin-top: .5rem; }
+.chap .montre figure.vivante .cadre { aspect-ratio: 1200 / 760; }
+.demo-parcours { margin: 0 0 1rem; } .demo-parcours figure { margin: 0; } .demo-parcours figcaption { font-size: .85rem; color: var(--plume); margin-top: .5rem; }
+.demo-parcours .cadre { aspect-ratio: 16 / 9; }
+.detail { background: var(--surface); border: 1px solid var(--filet); border-radius: 12px; margin: 1rem 0 .6rem; }
+.detail > summary { cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; }
+.detail > summary::-webkit-details-marker { display: none; } .detail > summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; } .detail[open] > summary::after { content: "−"; }
+.detail > div { padding: 0 1.1rem 1rem; } .detail h4 { margin: .8rem 0 .2rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; } .detail h4:first-child { margin-top: 0; }
+.detail p, .detail li { font-size: .93rem; } .detail .comparaison { margin-top: .4rem; }
+.liste-simple { margin: 0 0 .6rem; padding-left: 1.2rem; color: var(--plume); } .liste-simple li { margin-bottom: .35rem; }
+.flux { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+.flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
+.flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
+.titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
+.bloc-code pre { scrollbar-color: #5b5446 #1C1A17; }
+.annexe-bloc { margin: 0 0 2.4rem; max-width: 46rem; } .annexe-bloc h2 { font-size: 1.4rem; } .annexe-bloc .bloc-code, .annexe-bloc .comparaison { max-width: 100%; margin: .6rem 0 1rem; } .annexe-bloc .liens { display: flex; flex-wrap: wrap; gap: .6rem; } .annexe-bloc .lien { color: var(--accent); }
+.bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
+.entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
+.copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
+.bloc-code pre { margin: 0; padding: 1.1rem 1.2rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; tab-size: 2; }
+.bloc-code code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+.carrousel { margin-top: 1.6rem; position: relative; }
+.pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
+.pistes::-webkit-scrollbar { display: none; }
+.pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; }
+.diapo img { opacity: .45; transition: opacity .25s; }
+.diapo.actif img, .carrousel:not(.pret) .diapo img { opacity: 1; }
+.diapo.tel { grid-template-columns: 14rem 1fr; }
+.diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
+.diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
+.diapo h4 { font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0 0 .7rem; text-wrap: balance; } .diapo p { font-size: .95rem; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: .8rem 0 0; padding: 0; } .etiquettes li { font-size: .74rem; border: 1px solid var(--filet); border-radius: 999px; padding: .1rem .55rem; color: var(--plume); }
+.prec, .suiv { position: absolute; top: 38%; z-index: 3; width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--filet); background: var(--surface); color: var(--encre); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.prec { left: -1.2rem; } .suiv { right: -1.2rem; } .prec:hover:not(:disabled), .suiv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); } .prec:disabled, .suiv:disabled { opacity: 0; pointer-events: none; }
+.carrousel:not(.pret) .prec, .carrousel:not(.pret) .suiv { display: none; }
+.commandes { display: flex; align-items: center; gap: .8rem; margin-top: .4rem; }
+.compteur { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--plume); min-width: 3.4rem; }
+.sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
+.sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
+.sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+@media (prefers-reduced-motion: reduce) { .diapo img { transition: none; } }
+@media (max-width: 52rem) {
+  .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
+  .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
+  .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
+}
+
+/* Un contexte qui défile à l'horizontale : le texte au-dessus, les diapositives dessous sur toute la largeur. */
+@media (min-width: 52rem) { .contexte.avec-carrousel { grid-template-columns: minmax(0, 1fr); } }
+.contexte.avec-carrousel .montre { min-width: 0; }
+.contexte.avec-carrousel .dit { max-width: 46rem; }
+.contexte.avec-carrousel .carrousel { margin-top: .4rem; }
+.contexte.avec-carrousel .pistes { align-items: flex-start; }
+/* Une capture large se lit mal dans une colonne : elle prend toute la largeur de la diapositive, le texte dessous. */
+.diapo.pano { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.diapo.pano .texte { max-width: 46rem; }
 </style>
 </head>
 <body>
@@ -283,7 +370,7 @@ section { margin: 0 0 3rem; }
         </figure>
       </div>
     </article>
-    <article class="contexte">
+    <article class="contexte avec-carrousel">
       <div class="dit">
         <p class="role">Pour qui tient l’identité d’un document</p>
         <h3>Une identité, partout dans le document</h3>
@@ -293,30 +380,37 @@ section { margin: 0 0 3rem; }
         <ul class="utilise"><li>Page Design system</li><li>Thème du document</li><li>Thème de Grist, clair et sombre</li><li>Apparence d’un formulaire</li></ul>
       </div>
       <div class="montre">
-        <figure class="large">
-          <img src="cas-design-system.jpeg" alt="La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière." loading="lazy">
-          <figcaption>La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-activation.jpeg" alt="Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer." loading="lazy">
-          <figcaption>Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-theme-instance.jpeg" alt="Dans Grist, sans thème dans le document : le formulaire prend la couleur des boutons de l’instance." loading="lazy">
-          <figcaption>Dans Grist, sans thème dans le document : le formulaire prend la couleur des boutons de l’instance.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-theme-sombre.jpeg" alt="Quand la personne passe Grist en sombre, le même formulaire suit, sans rechargement." loading="lazy">
-          <figcaption>Quand la personne passe Grist en sombre, le même formulaire suit, sans rechargement.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-theme-document.jpeg" alt="Une fois un thème appliqué au document, le même formulaire le prend : ici un vert et un cuivre." loading="lazy">
-          <figcaption>Une fois un thème appliqué au document, le même formulaire le prend : ici un vert et un cuivre.</figcaption>
-        </figure>
-        <figure class="large">
-          <img src="cas-theme-compositeur.jpeg" alt="Le compositeur prend le thème lui aussi (ici un fichier de thème essayé en démonstration)." loading="lazy">
-          <figcaption>Le compositeur prend le thème lui aussi (ici un fichier de thème essayé en démonstration).</figcaption>
-        </figure>
+<section class="carrousel" aria-roledescription="carrousel" aria-label="Une identité, partout dans le document" id="contexte-5">
+      <div class="pistes" tabindex="0" aria-label="Une identité, partout dans le document : flèches gauche et droite pour parcourir">
+      <div class="diapo" role="group" aria-roledescription="diapositive" aria-label="1 sur 6">
+        <figure><img src="cas-theme-instance.jpeg" alt="Un formulaire de contact dans Grist, titre, filets de champs et bouton « Envoyer » dans le bleu de l’instance, sur fond clair." width="1181" height="859"></figure>
+        <div class="texte"><h4>Sans rien régler</h4><p>Dans Grist, sans thème dans le document : le formulaire prend la couleur des boutons de l’instance.</p></div>
+      </div>
+      <div class="diapo" role="group" aria-roledescription="diapositive" aria-label="2 sur 6">
+        <figure><img src="cas-theme-sombre.jpeg" alt="Le même formulaire de contact en thème sombre : fond noir, titre et bouton « Envoyer » en violet clair." width="1181" height="859" loading="lazy" decoding="async"></figure>
+        <div class="texte"><h4>En sombre</h4><p>Quand la personne passe Grist en sombre, le même formulaire suit, sans rechargement.</p></div>
+      </div>
+      <div class="diapo pano" role="group" aria-roledescription="diapositive" aria-label="3 sur 6">
+        <figure><img src="cas-design-system.jpeg" alt="La page Design system à l’étape Couleurs : les couleurs saisies à gauche, trois pastilles et un contraste de 6 pour 1 mesuré à droite." width="1500" height="802" loading="lazy" decoding="async"></figure>
+        <div class="texte"><h4>On saisit l’identité</h4><p>La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière.</p></div>
+      </div>
+      <div class="diapo pano" role="group" aria-roledescription="diapositive" aria-label="4 sur 6">
+        <figure><img src="cas-activation.jpeg" alt="Le panneau « Appliquer ce thème au document » : le nom du thème, la mention qu’il n’y a pas de thème actif, et un bouton « Créer la table et appliquer le thème »." width="1500" height="456" loading="lazy" decoding="async"></figure>
+        <div class="texte"><h4>On confirme</h4><p>Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer.</p></div>
+      </div>
+      <div class="diapo" role="group" aria-roledescription="diapositive" aria-label="5 sur 6">
+        <figure><img src="cas-theme-document.jpeg" alt="Le même formulaire de contact une fois le thème appliqué au document : titre et filets en cuivre, bouton « Envoyer » en vert." width="1181" height="859" loading="lazy" decoding="async"></figure>
+        <div class="texte"><h4>Le document change</h4><p>Une fois un thème appliqué au document, le même formulaire le prend : ici un vert et un cuivre.</p></div>
+      </div>
+      <div class="diapo pano" role="group" aria-roledescription="diapositive" aria-label="6 sur 6">
+        <figure><img src="cas-theme-compositeur.jpeg" alt="Le compositeur de formulaires, onglets, panneau de pages et réglages dans les mêmes tons vert et cuivre." width="1600" height="724" loading="lazy" decoding="async"></figure>
+        <div class="texte"><h4>L’outil aussi</h4><p>Le compositeur prend le thème lui aussi (ici un fichier de thème essayé en démonstration).</p></div>
+      </div>
+      </div>
+      <button type="button" class="prec" aria-label="Diapositive précédente" disabled>←</button>
+      <button type="button" class="suiv" aria-label="Diapositive suivante">→</button>
+      <div class="commandes"><span class="compteur" aria-live="polite">1 / 6</span><ul class="sommaire" aria-label="Aller à une diapositive"><li><button type="button" data-n="0" aria-current="true">Sans rien régler</button></li><li><button type="button" data-n="1">En sombre</button></li><li><button type="button" data-n="2">On saisit l’identité</button></li><li><button type="button" data-n="3">On confirme</button></li><li><button type="button" data-n="4">Le document change</button></li><li><button type="button" data-n="5">L’outil aussi</button></li></ul></div>
+    </section>
       </div>
     </article>
   </section>
@@ -441,6 +535,47 @@ section { margin: 0 0 3rem; }
   document.addEventListener('keydown', function (e) {
     var x = e.key === 'Escape' && document.querySelector('.cadre.plein .fermer');
     if (x) x.click();
+  });
+</script>
+<script>
+  document.querySelectorAll('.carrousel').forEach(function (c) {
+    var piste = c.querySelector('.pistes'), diapos = [].slice.call(piste.querySelectorAll('.diapo')), n = diapos.length;
+    var prec = c.querySelector('.prec'), suiv = c.querySelector('.suiv'), cpt = c.querySelector('.compteur'), sommaire = c.querySelector('.sommaire'), puces = [].slice.call(sommaire.querySelectorAll('button'));
+    var doux = function () { return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; };
+    var courant = function () {
+      if (piste.scrollLeft >= piste.scrollWidth - piste.clientWidth - 2) return n - 1;
+      var k = 0, d = Infinity;
+      diapos.forEach(function (x, j) { var e = Math.abs(x.offsetLeft - piste.offsetLeft - piste.scrollLeft); if (e < d) { d = e; k = j; } });
+      return k;
+    };
+    var aller = function (k) { k = Math.max(0, Math.min(n - 1, k)); piste.scrollTo({ left: diapos[k].offsetLeft - piste.offsetLeft, behavior: doux() }); };
+    var maj = function () {
+      var k = courant(); cpt.textContent = (k + 1) + ' / ' + n; prec.disabled = k === 0; suiv.disabled = k === n - 1;
+      diapos.forEach(function (x, j) { x.classList.toggle('actif', j === k); });
+      puces.forEach(function (p, j) {
+        if (j === k) { p.setAttribute('aria-current', 'true'); sommaire.scrollTo({ left: p.offsetLeft - sommaire.clientWidth / 2 + p.clientWidth / 2, behavior: 'auto' }); }
+        else p.removeAttribute('aria-current');
+      });
+    };
+    prec.addEventListener('click', function () { aller(courant() - 1); });
+    suiv.addEventListener('click', function () { aller(courant() + 1); });
+    puces.forEach(function (p) { p.addEventListener('click', function () { aller(Number(p.dataset.n)); }); });
+    piste.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); aller(courant() + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); aller(courant() - 1); }
+    });
+    var t; piste.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(maj, 50); }, { passive: true });
+    addEventListener('resize', maj);
+    c.classList.add('pret'); maj();
+  });
+  document.querySelectorAll('.bloc-code').forEach(function (b) {
+    var bouton = b.querySelector('.copier'); if (!bouton) return;
+    bouton.hidden = false;
+    bouton.addEventListener('click', function () {
+      var texte = b.querySelector('code').textContent;
+      var dit = function (m) { bouton.textContent = m; setTimeout(function () { bouton.textContent = 'Copier'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dit('Copié'); }, function () { dit('Sélectionnez le code'); });
+      else dit('Sélectionnez le code');
+    });
   });
 </script>
 <script>

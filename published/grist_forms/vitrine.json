@@ -229,30 +229,43 @@
         ],
         "images": [
           {
-            "image": "cas-design-system.jpeg",
-            "legende": "La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière."
-          },
-          {
-            "image": "cas-activation.jpeg",
-            "legende": "Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer."
-          },
-          {
             "image": "cas-theme-instance.jpeg",
+            "titre": "Sans rien régler",
+            "alt": "Un formulaire de contact dans Grist, titre, filets de champs et bouton « Envoyer » dans le bleu de l’instance, sur fond clair.",
             "legende": "Dans Grist, sans thème dans le document : le formulaire prend la couleur des boutons de l’instance."
           },
           {
             "image": "cas-theme-sombre.jpeg",
+            "titre": "En sombre",
+            "alt": "Le même formulaire de contact en thème sombre : fond noir, titre et bouton « Envoyer » en violet clair.",
             "legende": "Quand la personne passe Grist en sombre, le même formulaire suit, sans rechargement."
           },
           {
+            "image": "cas-design-system.jpeg",
+            "titre": "On saisit l’identité",
+            "alt": "La page Design system à l’étape Couleurs : les couleurs saisies à gauche, trois pastilles et un contraste de 6 pour 1 mesuré à droite.",
+            "legende": "La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière."
+          },
+          {
+            "image": "cas-activation.jpeg",
+            "titre": "On confirme",
+            "alt": "Le panneau « Appliquer ce thème au document » : le nom du thème, la mention qu’il n’y a pas de thème actif, et un bouton « Créer la table et appliquer le thème ».",
+            "legende": "Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer."
+          },
+          {
             "image": "cas-theme-document.jpeg",
+            "titre": "Le document change",
+            "alt": "Le même formulaire de contact une fois le thème appliqué au document : titre et filets en cuivre, bouton « Envoyer » en vert.",
             "legende": "Une fois un thème appliqué au document, le même formulaire le prend : ici un vert et un cuivre."
           },
           {
             "image": "cas-theme-compositeur.jpeg",
+            "titre": "L’outil aussi",
+            "alt": "Le compositeur de formulaires, onglets, panneau de pages et réglages dans les mêmes tons vert et cuivre.",
             "legende": "Le compositeur prend le thème lui aussi (ici un fichier de thème essayé en démonstration)."
           }
-        ]
+        ],
+        "carrousel": true
       }
     ],
     "apercu": {

@@ -646,7 +646,16 @@ ${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libel
         </figure>`);
   // Qui fait quoi : le rôle (l'auteur, l'agent de terrain, le lecteur) précède le titre, et les fonctions du produit qu'un chapitre
   // met en jeu sont nommées en pastilles, pour qu'on retrouve « où l'on s'en sert » sans relire le texte.
-  const article = (c) => `    <article class="contexte">
+  // Un contexte qui a beaucoup à montrer peut le faire défiler à l'horizontale (`carrousel: true`), comme les parcours : le texte au-dessus,
+  // les diapositives dessous sur toute la largeur. Chaque image porte alors un `titre` (la puce du sommaire), un `alt` (ce que dit l'image
+  // à qui ne la voit pas) et sa `legende` (le texte à côté). Une image sans titre ou sans alt est écartée et dite, comme dans un parcours ;
+  // si plus rien ne reste, le contexte retombe sur ses figures en pile.
+  const diapositives = (c) => (c.carrousel
+    ? (c.images || []).map((i) => ({ image: i.image, titre: i.titre, alt: i.alt || i.legende, legende: '', texte: i.legende }))
+    : []);
+  const article = (c, k) => {
+    const carrousel = diapositives(c).length ? carrouselParcours(`contexte-${k + 1}`, c.titre, diapositives(c), { racine: base, pano: true }) : '';
+    return `    <article class="contexte${carrousel ? ' avec-carrousel' : ''}">
       <div class="dit">
         ${c.role ? `<p class="role">${echapper(c.role)}</p>` : ''}
         <h3>${echapper(c.titre)}</h3>
@@ -656,9 +665,10 @@ ${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libel
         ${(c.utilise || []).length ? `<ul class="utilise">${c.utilise.map((u) => `<li>${echapper(u)}</li>`).join('')}</ul>` : ''}
       </div>
       <div class="montre${c.format === 'mobile' ? ' telephones' : ''}">
-${(c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
+${carrousel || (c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
       </div>
     </article>`;
+  };
   return `  <section class="contextes reveler">
     <h2>${echapper(produit.titreContextes || 'Où ça tourne')}</h2>
 ${l.map(article).join('\n')}
@@ -779,6 +789,7 @@ function imageParcours(racine, nom, alt, { differee = true } = {}) {
   return {
     html: `<img src="${echapper(nom)}" alt="${echapper(alt)}"${dim ? ` width="${dim.w}" height="${dim.h}"` : ''}${differee ? ' loading="lazy" decoding="async"' : ''}>`,
     vertical: !!dim && dim.h > dim.w,
+    panoramique: !!dim && dim.w / dim.h > 1.6,
   };
 }
 
@@ -807,7 +818,7 @@ function carrouselParcours(id, libelle, diapos, ctx) {
   const n = valides.length;
   const pistes = valides.map((d, k) => {
     const img = imageParcours(ctx.racine, d.image, d.alt, { differee: k > 0 });
-    return `<div class="diapo${img.vertical ? ' tel' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
+    return `<div class="diapo${img.vertical ? ' tel' : ''}${ctx.pano && img.panoramique ? ' pano' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
         <figure>${img.html}${d.legende ? `<figcaption>${enLigne(d.legende)}</figcaption>` : ''}</figure>
         <div class="texte"><h4>${echapper(d.titre)}</h4>${d.texte ? `<p>${enLigne(d.texte)}</p>` : ''}${(d.etiquettes || []).length ? `<ul class="etiquettes">${d.etiquettes.map((t) => `<li>${echapper(t)}</li>`).join('')}</ul>` : ''}</div>
       </div>`;
@@ -1013,6 +1024,19 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
   .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
 }
+`;
+
+/** Le style d'un contexte qui défile à l'horizontale : ajouté seulement aux pages qui en ont un (le reste de la page ne le paie pas). */
+const CSS_CONTEXTE_CARROUSEL = `
+/* Un contexte qui défile à l'horizontale : le texte au-dessus, les diapositives dessous sur toute la largeur. */
+@media (min-width: 52rem) { .contexte.avec-carrousel { grid-template-columns: minmax(0, 1fr); } }
+.contexte.avec-carrousel .montre { min-width: 0; }
+.contexte.avec-carrousel .dit { max-width: 46rem; }
+.contexte.avec-carrousel .carrousel { margin-top: .4rem; }
+.contexte.avec-carrousel .pistes { align-items: flex-start; }
+/* Une capture large se lit mal dans une colonne : elle prend toute la largeur de la diapositive, le texte dessous. */
+.diapo.pano { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.diapo.pano .texte { max-width: 46rem; }
 `;
 
 /** Le carrousel et le bouton « Copier » : sans ce script, la page reste entierement lisible (toutes les diapositives, le code). */
@@ -1553,7 +1577,10 @@ function rendreProjet(p, maintenant, base = '') {
       ...(v.depot ? { codeRepository: v.depot } : {}),
       ...(maj ? { dateModified: maj.slice(0, 10) } : {}),
     }) : '',
-    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '') + (parcours ? CSS_PARCOURS : ''),
+    // Le style des diapositives est celui des parcours : il suit dès qu'un contexte défile à l'horizontale.
+    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '')
+      + ((parcours || (produit.contextes || []).some((c) => c.carrousel)) ? CSS_PARCOURS : '')
+      + ((produit.contextes || []).some((c) => c.carrousel) ? CSS_CONTEXTE_CARROUSEL : ''),
     corps: `<main>
   <a class="retour" href="../../">← Tous les widgets</a>
   <p class="eyebrow">${echapper((parcours && parcours.eyebrow) || 'Widget Grist')}</p>
