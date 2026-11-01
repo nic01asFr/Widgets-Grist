@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.38.0 — démarrage propre : la première image est déjà la bonne
+
+- **Mémoire de démarrage** (`lib/demarrage-cache.js`) : embarqué (widget Grist), Atlas garde par instance hôte le dernier thème appliqué, le plan du fond et la dernière vue ; un script de tête de `index_v7.html` les relit AVANT le premier affichage (couleurs, mode sombre, police). Chaque valeur relue est vérifiée (variables permises seulement, pas de `url(`, couleurs `#rrggbb`, coordonnées valides). Au tout premier chargement, rien à relire : le thème d'origine, puis le thème appliqué, comme avant.
+- **Carte créée déjà peinte** : le style de base est demandé dès le chargement du module, repeint avec le plan (mémorisé ou celui d'Atlas) avant la création de la carte, et au changement de fond (`transformStyle`) : plus d'image aux couleurs d'origine suivie d'un repeint. La carte s'ouvre sur la dernière vue connue, au lieu de sauter du lieu par défaut à sa vue.
+- **Textes provisoires cachés** (`atlas-demarrage`) : « Nouveau projet », légende vide et pastille de modification n'apparaissent qu'avec les données (au premier `idle` de la carte, d'office après 4 s ; 10 s au plus).
+- Sans effet sur le composant carte BI (`?bi=1`), ni hors d'une page hôte ; contrat 0.5 et client d'hôte inchangés.
+
 ## 1.37.0 — Atlas aux couleurs de son hôte : thème du document ou de l'instance Grist, thème sombre, fond Thème, marque neutre
 
 - **Thème de l'instance Grist** : sans `Theme_document`, l'application reprend le thème de l'instance où elle s'ouvre (`grist.onThemeChange` ou variables `--grist-theme-*`, mesurées sur docs.getgrist.com et grist.numerique.gouv.fr) : accent (la première couleur de Grist qui se lit sur le fond), fond de page, texte, et la pile de polices exacte de l'instance. Un thème de document passe toujours avant. Module `lib/charte/theme-instance.js`.

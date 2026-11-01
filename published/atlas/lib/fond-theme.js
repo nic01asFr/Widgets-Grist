@@ -35,3 +35,21 @@ export function peintureFondTheme(couches, jetons = PLAN_DEFAUT) {
   }
   return rendu;
 }
+
+/**
+ * Un style MapLibre (JSON) déjà peint avec le plan : pour créer la carte, ou remplacer son style, SANS image intermédiaire aux couleurs d'origine. Ne modifie pas le style reçu.
+ * Les couches de données et le reste du style (sources, sprite, glyphes) sont gardés tels quels.
+ */
+export function themerStyle(style, jetons = PLAN_DEFAUT) {
+  if (!style || !Array.isArray(style.layers)) return style;
+  const parId = new Map(peintureFondTheme(style.layers, jetons).map((r) => [r.id, r]));
+  const layers = style.layers.map((l) => {
+    const r = parId.get(l.id);
+    if (!r) return l;
+    const copie = { ...l, paint: { ...(l.paint || {}), ...r.paint } };
+    if (r.visibilite === 'none') copie.layout = { ...(l.layout || {}), visibility: 'none' };
+    else if (r.visibilite === 'visible') copie.layout = { ...(l.layout || {}), visibility: 'visible' };
+    return copie;
+  });
+  return { ...style, layers };
+}
