@@ -246,7 +246,7 @@ import {
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=20261010a';
 import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=20261010a';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=20260926a';
+import { enTetesOsm, messageRefusOsm, avecReprises, requeteOsm, repliWeb } from './lib/osm-requete.js?v=20261101b';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
 import { capUtilisable } from './lib/cap-position.js?v=20261010a';
@@ -12184,7 +12184,7 @@ async function onLocationPick(e) {
     markDirty();
     showToast('Lieu défini', 'success');
     try {
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${lat}&lon=${lng}&accept-language=fr`, { headers: enTetesOSM({ Accept: 'application/json' }) });
+        const r = await fetchOSM(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${lat}&lon=${lng}&accept-language=fr`, { headers: enTetesOSM({ Accept: 'application/json' }) });
         const d = await r.json();
         if (d?.display_name) { STATE.location.name = d.display_name.split(',').slice(0, 2).join(',').trim(); if (STATE.currentModule === 'lieu') renderLieu(); }
     } catch (e2) {}
@@ -12371,6 +12371,11 @@ function majEmpriseOSM() {
  * l'application, Atlas se présente, sans quoi Overpass répond 406
  * (`lib/osm-requete.js`).
  */
+/** `fetch` vers OpenStreetMap : dans l'application, le moteur web de la page prend le relais si le service refuse l'identité envoyée par le client natif. */
+function fetchOSM(url, init) {
+    return requeteOsm(url, init, { fetch: (u, i) => fetch(u, i), repli: peutSAuthentifier() ? repliWeb() : null });
+}
+
 function enTetesOSM(base) {
     const version = document.querySelector('meta[name="atlas-version"]')?.content || '';
     return enTetesOsm({ application: peutSAuthentifier(), version, base });
@@ -12386,7 +12391,9 @@ async function runOSM(key) {
         const b = map.getBounds();
         const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
         const q = `[out:json][timeout:30];(${preset.query}(${bbox}););out body geom;`;
-        const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: enTetesOSM({ 'Content-Type': 'application/x-www-form-urlencoded' }), body: 'data=' + encodeURIComponent(q) });
+        const res = await avecReprises(
+            () => fetchOSM('https://overpass-api.de/api/interpreter', { method: 'POST', headers: enTetesOSM({ 'Content-Type': 'application/x-www-form-urlencoded' }), body: 'data=' + encodeURIComponent(q) }),
+            { surReprise: (n) => showLoading('OpenStreetMap est occupé, nouvel essai (' + (n + 1) + '/3)…') });
         if (!res.ok) throw new Error(messageRefusOsm(res.status));
         const data = await res.json();
         const geojson = osmToGeoJSON(data.elements || []);
@@ -14919,7 +14926,7 @@ function searchLocation(q) {
     if (q.length < 3) { box.classList.remove('open'); return; }
     searchTimer = setTimeout(async () => {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
+            const res = await fetchOSM(`https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
             const data = await res.json();
             box.innerHTML = data.map((d) => `<div class="sr-item" onclick="A.pickSearch('${chaineJs(d.display_name)}', ${Number(d.lat)}, ${Number(d.lon)})"><div class="sr-title">${echapper((d.display_name || '').split(',')[0])}</div><div class="sr-sub">${echapper(d.display_name)}</div></div>`).join('');
             box.classList.toggle('open', data.length > 0);
@@ -15344,7 +15351,7 @@ function objetsPourLaPalette(q) {
 /** Géocodage du premier résultat (Nominatim), sans changer le lieu du projet. */
 async function allerAuLieu(q) {
     try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
+        const res = await fetchOSM(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=${encodeURIComponent(q)}`, { headers: enTetesOSM({ Accept: 'application/json' }) });
         const [d] = await res.json();
         if (!d) { showToast(`Lieu introuvable : ${q}`, 'warning'); return; }
         map?.flyTo({ center: [+d.lon, +d.lat], zoom: 16, duration: 1200 });

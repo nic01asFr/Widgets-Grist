@@ -5,7 +5,7 @@
  * Conventions rendues à l'hôte : azimut en degrés depuis le NORD, dans le sens horaire (est = 90), hauteur en degrés au-dessus de l'horizon,
  * dates en ISO 8601 UTC. L'azimut et la hauteur sont ceux qui servent à éclairer la carte (lumière du bâti, ombres des modèles).
  */
-import { heureLocale } from './eclairage-profil.js?v=1.42.1';
+import { heureLocale } from './eclairage-profil.js?v=1.42.2';
 
 /** Bornes d'une date acceptée : l'année 1900 à 2200 (au-delà, la position du soleil n'a plus de sens pour une scène). */
 const MS_MIN = Date.UTC(1900, 0, 1), MS_MAX = Date.UTC(2200, 0, 1);
