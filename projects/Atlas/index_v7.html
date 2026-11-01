@@ -10,9 +10,9 @@
          vers l'exterieur (tests/csp-meta.test.js le verifie). -->
     <meta http-equiv="Content-Security-Policy" content="base-uri 'self'; object-src 'none'; form-action 'self'" />
     <link rel="icon" href="data:," />
-    <title>Atlas v7 — Maquette 3D Territoriale</title>
+    <title>Atlas</title>
 
-    <script>try { var mq = new URLSearchParams(location.search).get('marque'); if (mq === 'icone' || mq === 'aucune') document.documentElement.setAttribute('data-marque', mq); } catch (e) { /* adresse illisible : la marque d'origine */ }</script>
+    <script>try { var mq = new URLSearchParams(location.search).get('marque'); document.documentElement.setAttribute('data-marque', mq === 'atlas' || mq === 'aucune' ? mq : 'icone'); } catch (e) { document.documentElement.setAttribute('data-marque', 'icone'); /* adresse illisible : le glyphe seul */ }</script>
 
     <!-- Le composant carte BI (paramètre bi=1) n'a pas besoin de l'application : ce script, le PREMIER de la page, mène à la page maigre (index_bi.html, publiée sous
          le nom bi.html) avec les mêmes paramètres, et la page de l'application s'arrête là. Aucun hôte ne change d'adresse. Une scène externe
@@ -243,9 +243,12 @@
         .commande-hote:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .commande-hote[hidden] { display: none; }
         .brand { display: flex; align-items: center; gap: 10px; }
+        /* Le glyphe est generique et prend les couleurs de la charte (jeton --accent, que le thème du document ou de l'hôte redéfinit) ; un autre logo viendra du thème, pas d'ici. */
+        .brand-logo-corps { fill: var(--accent); }
+        .brand-logo-trait { stroke: var(--surface); }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
-        /* La marque de l'en-tête, réglée par `?marque=` : « atlas » (défaut), « icone » (le logo seul), « aucune » (ni logo ni nom : le nom du projet seul). */
+        /* La marque de l'en-tête, réglée par `?marque=` : « icone » (défaut : le glyphe seul), « atlas » (le glyphe et le nom), « aucune » (ni glyphe ni nom : le nom du projet seul ; c'est le défaut en widget Grist). */
         html[data-marque="icone"] .brand-name, html[data-marque="icone"] .brand-chevron { display: none !important; }
         html[data-marque="aucune"] .brand > svg, html[data-marque="aucune"] .brand-name, html[data-marque="aucune"] .brand-chevron, html[data-marque="aucune"] .brand-sep { display: none !important; }
         .brand-project { font-size: 13px; color: var(--text); font-weight: 500; }
@@ -1974,9 +1977,9 @@
         <!-- HEADER -->
         <header class="app-header" id="app-header">
             <div class="brand">
-                <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                    <path d="M4 24 16 6l12 18-12 4z" fill="#C44536" />
-                    <path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2" />
+                <svg class="brand-logo" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path class="brand-logo-corps" d="M4 24 16 6l12 18-12 4z" />
+                    <path class="brand-logo-trait" d="M16 6v22" stroke-width="1.2" />
                 </svg>
                 <span class="brand-name">Atlas</span>
                 <span class="brand-chevron" aria-hidden="true">▾</span>
@@ -2076,9 +2079,9 @@
                      ce qu'elle portait passe ici (voir `appliquerBarre`). -->
                 <div class="commandes-hote" id="commandes-hote">
                     <button type="button" class="commande-hote" id="hote-menu" title="Menu principal" aria-label="Menu principal">
-                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                            <path d="M4 24 16 6l12 18-12 4z" fill="#C44536" />
-                            <path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2" />
+                        <svg class="brand-logo" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <path class="brand-logo-corps" d="M4 24 16 6l12 18-12 4z" />
+                            <path class="brand-logo-trait" d="M16 6v22" stroke-width="1.2" />
                         </svg>
                     </button>
                     <button type="button" class="commande-hote" id="hote-recherche" title="Rechercher un objet, une couche, un lieu" aria-label="Rechercher un objet, une couche, un lieu">

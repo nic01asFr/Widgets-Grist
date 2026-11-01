@@ -13529,6 +13529,8 @@ async function cablerMenuPrincipal() {
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
     // n'aurait rien a offrir — ni liste de scenes, ni connexion possible. Une
     // marque actionnable qui ouvre un menu vide vaut moins que pas de bouton.
+    // Widget : pas de logo par défaut (l'hôte a le sien), sauf si l'adresse demande une marque.
+    if (caps.mode === 'grist' && !new URLSearchParams(location.search).has('marque')) document.documentElement.setAttribute('data-marque', 'aucune');
     if (caps.mode === 'grist' || !caps.decouverte) return;
 
     marque.classList.add('brand-menu');
