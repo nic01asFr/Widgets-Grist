@@ -13,7 +13,7 @@ import { contraste } from '../lib/charte/couleurs.js';
 import { VARIABLES } from '../lib/charte/application.js';
 
 const CLAIR = { appearance: 'light', name: 'GristLight', colors: { 'control-primary-bg': '#16b378', 'primary-muted': '#009058', 'primary-dim': '#007548', 'page-bg': '#f7f7f7', 'text': '#262633', 'widget-bg': '#ffffff', 'bg': 'url("img/gplaypattern.png")' } };
-const SOMBRE = { appearance: 'dark', name: 'GristDark', colors: { 'control-primary-bg': '#17b378', 'primary-muted': '#1da270', 'primary-dim': '#157a54', 'page-bg': '#262633', 'text': '#efefef' } };
+const SOMBRE = { appearance: 'dark', name: 'GristDark', colors: { 'control-primary-bg': '#157a54', 'primary-muted': '#1da270', 'primary-dim': '#157a54', 'link': '#17b378', 'control-fg': '#17b378', 'primary': '#17b378', 'page-bg': '#262633', 'text': '#efefef' } };
 const variablesDe = (theme, lire) => {
   const t = themeDeLInstance(theme, lire);
   const r = t.themedef ? charteDepuisThemeDef(t.themedef, { mode: 'clair' }) : { charte: null, ignore: [] };
@@ -25,16 +25,16 @@ test('hexSur : #rrggbb et #rgb repris, tout le reste écarté', () => {
   for (const mauvais of ['rgba(22,179,120,0.5)', 'red', 'url("img/x.png")', '#12345', '#1234567', '', null, 42, undefined]) assert.equal(hexSur(mauvais), null, String(mauvais));
 });
 
-test('thème clair de Grist : le vert d accent (2,5:1, trop pâle) cède à sa variante « muted » (4:1) ; fond de page et texte deviennent des graines ThemeDef, police système', () => {
+test('thème clair de Grist (contrat unique, 4,5:1) : le vert d accent (2,5:1) et sa variante « muted » (3,8:1) ne tiennent pas, « dim » est retenu ; fond de page et texte deviennent des graines ThemeDef, police système', () => {
   const t = themeDeLInstance(CLAIR);
-  assert.deepEqual(t.themedef, { version: 'themedef-1.0', nom: 'Instance Grist (GristLight)', graines: { principal: '#009058', fond: '#f7f7f7', encre: '#262633' }, police: 'systeme' });
+  assert.deepEqual(t.themedef, { version: 'themedef-1.0', nom: 'Instance Grist (GristLight)', graines: { principal: '#007548', fond: '#f7f7f7', encre: '#262633' }, police: 'systeme' });
   assert.equal(t.sombre, false); assert.deepEqual(t.ecartes, []);
 });
 
 test('chaîne complète, thème clair : l\'application prend l\'accent de Grist, son fond et sa police', () => {
   const { r, h } = variablesDe(CLAIR);
   assert.equal(r.source, 'graines'); assert.deepEqual(r.ignore, []);
-  assert.equal(h.variables['--accent'], '#009058');
+  assert.equal(h.variables['--accent'], '#007548');
   assert.equal(h.variables['--bg'], '#f7f7f7');
   assert.equal(h.variables['--ink'], '#262633');
   assert.match(h.variables['--sans'], /system-ui/);
@@ -46,22 +46,23 @@ test('thème sombre : l interface est retournée (mode sombre, fond et encre du 
   assert.equal(t.sombre, true);
   assert.equal(h.variables['--mode-application'], 'sombre');
   assert.equal(h.variables['--bg'], '#262633'); assert.equal(h.variables['--ink'], '#efefef');
-  assert.equal(h.variables['--accent'], '#17b378', 'la couleur de contrôle de Grist, lisible sur son fond sombre');
+  assert.equal(h.variables['--accent'], '#1da270', 'la première couleur de Grist qui tient 4,5:1 sur son fond sombre (control-primary-bg #157a54 est trop sombre, 2,8:1)');
   assert.ok(!h.notes.includes('fond-sombre-non-suivi'));
 });
 
-test('une couleur qui n\'est pas #rrggbb est écartée et dite ; sans accent, aucun thème repris', () => {
+test('une couleur qui n\'est pas #rrggbb est écartée et dite ; sans accent reprenable, aucun thème repris', () => {
   const t = themeDeLInstance({ colors: { 'control-primary-bg': 'rgba(22,179,120,0.5)', 'page-bg': '#f7f7f7', 'text': 'noir' } });
   assert.equal(t.themedef, null);
-  assert.deepEqual(t.ecartes, [{ cle: 'control-primary-bg', code: 'couleur-non-reprise' }, { cle: 'text', code: 'couleur-non-reprise' }]);
+  assert.deepEqual(t.ecartes.map((e) => e.cle + ':' + e.code).sort(), ['control-primary-bg:valeur-ecartee', 'text:valeur-ecartee']);
   const u = themeDeLInstance({ colors: { 'control-primary-bg': '#16b378', 'page-bg': 'url(x)' } });
-  assert.deepEqual(u.themedef.graines, { principal: '#16b378' }); assert.deepEqual(u.ecartes.map((e) => e.cle + ':' + e.code), ['page-bg:couleur-non-reprise', 'text:absent']);
+  assert.equal(u.themedef.graines.principal, '#11865a', 'l action trop pâle est redressée à 4,5:1 (règle 5), et dit'); assert.equal(u.themedef.graines.fond, undefined);
+  assert.deepEqual(u.ecartes.map((e) => e.cle + ':' + e.code).sort(), ['control-primary-bg:action-redressee', 'page-bg:valeur-ecartee']);
 });
 
 test('à défaut de `colors`, les variables CSS --grist-theme-* sont lues ; entrée absente ou illisible : rien, sans bruit', () => {
   const css = { [PREFIXE + CLES.principal]: '#16b378', [PREFIXE + CLES.fond]: '#f7f7f7', [PREFIXE + CLES.encre]: '#262633' };
   const t = themeDeLInstance({ appearance: 'light' }, (nom) => css[nom] || '');
-  assert.equal(t.themedef.graines.principal, '#16b378'); assert.equal(t.themedef.nom, 'Instance Grist');
+  assert.equal(t.themedef.graines.principal, '#108156', 'redressé à 4,5:1 sur le fond #f7f7f7'); assert.equal(t.themedef.nom, 'Instance Grist');
   for (const rien of [null, undefined, 'x', 42, []]) assert.equal(themeDeLInstance(rien).themedef, null);
   assert.equal(themeDeLInstance({ colors: null }).themedef, null);
 });
@@ -71,19 +72,20 @@ test('le nom du thème ne passe pas tel quel : tronqué', () => {
   assert.ok(t.themedef.nom.length <= 60);
 });
 
-test('l accent pris tient toujours 3:1 sur le fond que l application aura ; sinon l application garde le sien et le dit', () => {
+test('l accent pris tient toujours 4,5:1 sur le fond que l application aura (contrat unique : redressé s il ne tient pas, et dit)', () => {
   const { h } = variablesDe(CLAIR);
-  assert.ok(contraste(h.variables['--accent'], h.variables['--bg']) >= 3);
+  assert.ok(contraste(h.variables['--accent'], h.variables['--bg']) >= 4.5);
   const pale = { colors: { 'control-primary-bg': '#cde8d9', 'primary-muted': '#d5eadf', 'page-bg': '#f7f7f7' } };
   const v = variablesDe(pale);
-  assert.equal(v.h.variables['--accent'], undefined); assert.ok(v.h.notes.includes('accent-peu-lisible-non-suivi'));
+  assert.ok(v.t.ecartes.some((e) => e.code === 'action-redressee'));
+  assert.ok(contraste(v.t.themedef.graines.principal, '#f7f7f7') >= 4.5);
 });
 
 const PILE_GRIST = ['-apple-system,BlinkMacSystemFont,Segoe UI,Liberation Sans,', '    Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol'].join(String.fromCharCode(10));
 const PILE_DINUM = 'Marianne,-apple-system,BlinkMacSystemFont,Liberation Sans, Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol';
 
 test('la police de l instance : sa pile exacte, relevée sur docs.getgrist.com et sur DINUM (Marianne en tête)', () => {
-  const grist = themeDeLInstance({ colors: { 'control-primary-bg': '#16b378', 'font-family': PILE_GRIST } });
+  const grist = themeDeLInstance({ colors: { 'control-primary-bg': '#007548', 'font-family': PILE_GRIST } });
   assert.equal(grist.pile, '-apple-system,BlinkMacSystemFont,Segoe UI,Liberation Sans, Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol');
   const dinum = themeDeLInstance({ colors: { 'control-primary-bg': '#3E5DE7', 'font-family': PILE_DINUM } });
   assert.ok(dinum.pile.startsWith('Marianne,')); assert.ok(dinum.themedef.police === 'systeme', 'ThemeDef garde la police système, la pile exacte est reprise à part');
@@ -95,7 +97,7 @@ test('une pile qui pourrait sortir de la déclaration est refusée : le point-vi
 });
 
 test('la pile se lit aussi dans les variables CSS --grist-theme-font-family', () => {
-  const css = { [PREFIXE + 'control-primary-bg']: '#16b378', [PREFIXE + 'font-family']: PILE_DINUM };
+  const css = { [PREFIXE + 'control-primary-bg']: '#007548', [PREFIXE + 'font-family']: PILE_DINUM };
   assert.ok(themeDeLInstance({ appearance: 'light' }, (n) => css[n] || '').pile.startsWith('Marianne'));
-  assert.equal(themeDeLInstance({ colors: { 'control-primary-bg': '#16b378' } }).pile, null);
+  assert.equal(themeDeLInstance({ colors: { 'control-primary-bg': '#007548' } }).pile, null);
 });
