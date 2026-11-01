@@ -20,41 +20,12 @@ export const VERSION_THEMEDEF = 'themedef-1.0';
 export const LIMITES_THEMEDEF = Object.freeze({ octets: 16384, profondeur: 6, lignes: 50 });
 
 const CLE_LIGNE = /^[a-z][a-z0-9-]{0,39}$/;
-const INTERDITES = new Set(['__proto__', 'constructor', 'prototype']);
 // Une graine ThemeDef s'écrit #RRGGBB (arbitrage du 01/11/2026) ; la lecture générale des chartes, elle, reste tolérante.
 const GRAINE_STRICTE = /^#[0-9a-fA-F]{6}$/;
 const GRAINES_THEMEDEF =Object.freeze({ principal: 'principal', secondaire: 'secondaire', encre: 'encre', fond: 'fond' });
 const ETATS_IGNORES = Object.freeze(['ok', 'attention', 'alerte', 'info']);
 const MODES = Object.freeze(['clair', 'sombre']);
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const octets = (t) => new TextEncoder().encode(t).length;
-
-function profondeurOk(v, niveau = 1) {
-  if (niveau > LIMITES_THEMEDEF.profondeur) return false;
-  if (Array.isArray(v)) return v.every((x) => profondeurOk(x, niveau + 1));
-  if (estObjet(v)) return Object.keys(v).every((k) => !INTERDITES.has(k) && profondeurOk(v[k], niveau + 1));
-  return true;
-}
-
-/** Valide la forme d'un ThemeDef (texte JSON ou objet). @returns {{themedef: object|null, ignore: {chemin: string, code: string, valeur: string}[]}} */
-export function lireThemeDef(brut) {
-  const ignore = [];
-  const refuser = (chemin, code, valeur = '') => { ignore.push({ chemin, code, valeur: String(valeur).slice(0, 30) }); return { themedef: null, ignore }; };
-  let doc = brut;
-  if (typeof brut === 'string') {
-    if (octets(brut) > LIMITES_THEMEDEF.octets) return refuser('themedef', 'taille', brut.length);
-    try { doc = JSON.parse(brut); } catch (e) { return refuser('themedef', 'json-illisible'); }
-  } else if (estObjet(brut)) {
-    let t = Infinity; try { t = octets(JSON.stringify(brut)); } catch (e) { /* cyclique : refusé */ }
-    if (t > LIMITES_THEMEDEF.octets) return refuser('themedef', 'taille', t);
-  }
-  if (!estObjet(doc)) return refuser('themedef', 'type', typeof doc);
-  if (doc.version !== VERSION_THEMEDEF) return refuser('version', 'version-inconnue', doc.version);
-  if (!profondeurOk(doc)) return refuser('themedef', 'profondeur-ou-cle-interdite');
-  if (!estObjet(doc.graines) || typeof doc.graines.principal !== 'string') return refuser('graines.principal', 'absent');
-  if (!GRAINE_STRICTE.test(doc.graines.principal)) return refuser('graines.principal', 'couleur-invalide');
-  return { themedef: doc, ignore };
-}
 
 /**
  * Parmi les lignes de `Theme_document`, celle qui s'applique. @param {object[]|null|undefined} lignes  `{cle, themedef, actif}`
