@@ -7,14 +7,15 @@
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <style>
         :root {
-            --primary: #3e5de7; --primary-dark: #2845c1; --primary-light: #dce6ff;
-            --success: #10b981; --success-light: #d1fae5;
-            --warning: #f59e0b; --warning-light: #fef3c7;
-            --danger: #ef4444;  --danger-light: #fee2e2;
-            --info: #3b82f6;    --info-light: #dbeafe;
-            --bg: #f8fafc; --card-bg: #ffffff;
-            --text: #1e293b; --text-muted: #64748b; --text-light: #94a3b8;
-            --border: #e2e8f0; --border-dark: #cbd5e1;
+            /* compatible ThemeDef (--kit-*), repli = valeur d'avant */
+            --primary: var(--kit-accent, #3e5de7); --primary-dark: var(--kit-accent-survol, #2845c1); --primary-light: var(--kit-accent-fond, #dce6ff);
+            --success: var(--kit-ok, #10b981); --success-light: var(--kit-ok-fond, #d1fae5);
+            --warning: var(--kit-attention, #f59e0b); --warning-light: var(--kit-attention-fond, #fef3c7);
+            --danger: var(--kit-alerte, #ef4444);  --danger-light: var(--kit-alerte-fond, #fee2e2);
+            --info: var(--kit-info, #3b82f6);    --info-light: var(--kit-info-fond, #dbeafe);
+            --bg: var(--kit-fond, #f8fafc); --card-bg: var(--kit-surface, #ffffff);
+            --text: var(--kit-texte, #1e293b); --text-muted: var(--kit-texte-2, #64748b); --text-light: #94a3b8;
+            --border: var(--kit-bord, #e2e8f0); --border-dark: #cbd5e1;
             --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
             --edit-panel-width: 288px;
         }
@@ -128,30 +129,30 @@
             .edit-panel { width: 100% !important; }
         }
         :root {
-            --primary:#3e5de7; --primary-dark:#2742b8; --primary-light:#e7ecfe;
-            --success:#15a06b; --success-light:#e4f6ee;
-            --warning:#f0982d; --warning-light:#fdf1e1;
-            --danger:#e5484d; --danger-light:#fdeced;
-            --info:#4c7ef3; --info-light:#e9f0fe;
-            --bg:#f5f7fb; --card-bg:#ffffff;
-            --text:#1f2738; --text-muted:#5a6679; --text-light:#8a97ab;
-            --border:#e7ebf2; --border-dark:#d3dae5;
+            --primary: var(--kit-accent, #3e5de7); --primary-dark: var(--kit-accent-survol, #2742b8); --primary-light: var(--kit-accent-fond, #e7ecfe);
+            --success: var(--kit-ok, #15a06b); --success-light: var(--kit-ok-fond, #e4f6ee);
+            --warning: var(--kit-attention, #f0982d); --warning-light: var(--kit-attention-fond, #fdf1e1);
+            --danger: var(--kit-alerte, #e5484d); --danger-light: var(--kit-alerte-fond, #fdeced);
+            --info: var(--kit-info, #4c7ef3); --info-light: var(--kit-info-fond, #e9f0fe);
+            --bg: var(--kit-fond, #f5f7fb); --card-bg: var(--kit-surface, #ffffff);
+            --text: var(--kit-texte, #1f2738); --text-muted: var(--kit-texte-2, #5a6679); --text-light:#8a97ab;
+            --border: var(--kit-bord, #e7ebf2); --border-dark:#d3dae5;
             --shadow:0 1px 2px rgba(16,24,40,0.05),0 1px 3px rgba(16,24,40,0.04);
             --shadow-lg:0 18px 48px -12px rgba(16,24,40,0.22),0 6px 16px -8px rgba(16,24,40,0.12);
-            --p-50:#eef2ff; --p-100:#dfe5ff; --surface-2:#eef2f7;
+            --p-50:#eef2ff; --p-100:#dfe5ff; --surface-2: var(--kit-surface-2, #eef2f7);
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --primary:#7b8cff; --primary-dark:#6878f5; --primary-light:#22306e;
-                --success:#3fcf8e; --success-light:#0f2e22;
-                --warning:#f5b454; --warning-light:#3a2c14;
-                --danger:#ff6168; --danger-light:#3a1c22;
-                --info:#7b9cff; --info-light:#16264a;
-                --bg:#0f1626; --card-bg:#18223a;
-                --text:#dde3ef; --text-muted:#9aa6bd; --text-light:#6c788f;
-                --border:#283145; --border-dark:#3a455c;
+                --primary: var(--kit-accent, #7b8cff); --primary-dark: var(--kit-accent-survol, #6878f5); --primary-light: var(--kit-accent-fond, #22306e);
+                --success: var(--kit-ok, #3fcf8e); --success-light: var(--kit-ok-fond, #0f2e22);
+                --warning: var(--kit-attention, #f5b454); --warning-light: var(--kit-attention-fond, #3a2c14);
+                --danger: var(--kit-alerte, #ff6168); --danger-light: var(--kit-alerte-fond, #3a1c22);
+                --info: var(--kit-info, #7b9cff); --info-light: var(--kit-info-fond, #16264a);
+                --bg: var(--kit-fond, #0f1626); --card-bg: var(--kit-surface, #18223a);
+                --text: var(--kit-texte, #dde3ef); --text-muted: var(--kit-texte-2, #9aa6bd); --text-light:#6c788f;
+                --border: var(--kit-bord, #283145); --border-dark:#3a455c;
                 --shadow:0 1px 2px rgba(0,0,0,0.4); --shadow-lg:0 24px 60px -16px rgba(0,0,0,0.7);
-                --p-50:#1a2150; --p-100:#22306e; --surface-2:#161f33;
+                --p-50:#1a2150; --p-100:#22306e; --surface-2: var(--kit-surface-2, #161f33);
             }
             .demo-badge { color: #1f2738; }
         }
@@ -1136,7 +1137,8 @@ const TF = (function () {
         print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
         image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
         plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>'
+        today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>',
+        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
     };
     const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
