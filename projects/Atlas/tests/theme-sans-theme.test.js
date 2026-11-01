@@ -45,3 +45,17 @@ test('un thème de document refusé est dit, jamais appliqué à moitié, et l i
   assert.match(doc, /if \(!documentAUnTheme\) \{ brancherThemeInstance\(\); await appliquerThemeInstance\(\); \}/);
   assert.match(doc, /showToast\('Le thème de ce document n’est pas appliqué : '/);
 });
+
+test('contraste : couleurs forcées ou contraste élevé demandé par la personne = aucun thème posé, comme « sans thème », et la page suit la préférence quand elle change', () => {
+  const extrait = (debut) => { const i = app.indexOf(debut); assert.ok(i > 0, debut); return app.slice(i, app.indexOf('\n', i)); };
+  const source = extrait('function preferenceContraste()') + '\n' + extrait('function themeAucunDemande()');
+  const evaluer = (recherche, requetes) => new Function('window', 'location', 'URLSearchParams', source + '; return themeAucunDemande();')(
+    { matchMedia: (q) => ({ matches: requetes.includes(q) }) }, { search: recherche }, URLSearchParams);
+  assert.equal(evaluer('', []), false, 'aucune préférence : le thème s applique');
+  assert.equal(evaluer('?theme=aucun', []), true);
+  assert.equal(evaluer('', ['(forced-colors: active)']), true);
+  assert.equal(evaluer('', ['(prefers-contrast: more)']), true);
+  assert.equal(evaluer('?theme=x', ['(prefers-contrast: less)']), false, 'un contraste réduit ne retire pas le thème');
+  assert.match(corps('chargerThemeDocument'), /suivrePreferenceContraste\(\);/);
+  assert.match(app, /addEventListener\('change', \(\) => \{ void chargerThemeDocument\(\); \}\)/);
+});

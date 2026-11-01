@@ -12876,6 +12876,7 @@ async function chargerThemeDocument() {
     let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
+        suivrePreferenceContraste();
         // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
         if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=20261025a'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
         const tables = await grist.docApi.listTables();
@@ -12909,8 +12910,18 @@ async function chargerThemeDocument() {
  * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
  */
 let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
-/** `?theme=aucun` : le choix explicite « sans thème ». */
-function themeAucunDemande() { try { return new URLSearchParams(location.search).get('theme') === 'aucun'; } catch (_) { return false; } }
+/**
+ * Pas de thème de document ni d'instance posé : `?theme=aucun` (le choix explicite « sans thème »), ou une préférence de contraste de la personne (couleurs forcées, contraste élevé),
+ * qui passe avant tout thème (ordre des couches arbitré avec Form Builder et le kit). La page garde alors ses valeurs d'origine ; elle suit la préférence quand elle change.
+ */
+function preferenceContraste() { try { return window.matchMedia('(forced-colors: active)').matches || window.matchMedia('(prefers-contrast: more)').matches; } catch (_) { return false; } }
+function themeAucunDemande() { try { return new URLSearchParams(location.search).get('theme') === 'aucun' || preferenceContraste(); } catch (_) { return false; } }
+let _contrasteSuivi = false;
+function suivrePreferenceContraste() {
+    if (_contrasteSuivi) return;
+    _contrasteSuivi = true;
+    try { for (const q of ['(forced-colors: active)', '(prefers-contrast: more)']) window.matchMedia(q).addEventListener('change', () => { void chargerThemeDocument(); }); } catch (_) { /* un navigateur sans cette requête garde ses valeurs */ }
+}
 const RAISONS_THEME_REFUSE = {
     'contraste-insuffisant': 'certaines couleurs ne sont pas assez lisibles ensemble',
     'resolu-incomplet': 'ses couleurs calculées sont incomplètes',
