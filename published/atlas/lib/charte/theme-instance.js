@@ -21,7 +21,6 @@ export const PREFIXE = '--grist-theme-';
 export const CLES = Object.freeze({ principal: 'control-primary-bg', fond: 'page-bg', encre: 'text' });
 /** L'accent, du plus voulu au plus sombre : la première couleur qui tient 3:1 sur le fond est prise (seuil d'`application.js`). */
 export const CANDIDATS_PRINCIPAL = Object.freeze(['control-primary-bg', 'primary-muted', 'primary-dim', 'accent-text', 'control-fg', 'link', 'primary']);   // les trois derniers : les couleurs de TEXTE de Grist, claires en thème sombre (DINUM : #a2b6ff)
-const FOND_DE_REPLI = '#f4efe3';   // le fond de l'application quand le thème n'en donne pas
 const HEX3 = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i, HEX6 = /^#[0-9a-f]{6}$/i;
 
 /**
